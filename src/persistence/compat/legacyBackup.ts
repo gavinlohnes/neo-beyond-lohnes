@@ -75,9 +75,15 @@ const recommendationSchema = z
     priority: z.number(),
     title: z.string(),
     rationale: z.string(),
-    suggestedCommand: z.string().nullable(),
+    // Confirmed against real data: suggestedCommand is sometimes the key
+    // omitted entirely rather than explicitly null. statusAtIssue's only
+    // confirmed values are "ACTION" and "NO_ACTION_REQUIRED" (never the
+    // generic "NO_ACTION" checkpoint 03 originally guessed), but this
+    // importer accepts any string rather than an enum so a genuine future
+    // real export isn't rejected over an unanticipated value.
+    suggestedCommand: z.string().nullable().optional(),
     trace: decisionTraceSchema,
-    statusAtIssue: z.enum(["ACTION", "NO_ACTION"]),
+    statusAtIssue: z.string(),
   })
   .passthrough();
 
