@@ -1,0 +1,1865 @@
+{
+  "format": "BEYOND_BACKUP",
+  "formatVersion": 1,
+  "exportedAt": "2026-08-17T23:15:09.360Z",
+  "appVersion": "0.1.0",
+  "dataSchemaVersion": 2,
+  "payload": {
+    "meta": [
+      {
+        "key": "appDataFormatVersion",
+        "value": 1
+      },
+      {
+        "key": "createdAt",
+        "value": "2026-08-17T04:35:31.749Z"
+      },
+      {
+        "key": "createdByAppVersion",
+        "value": "0.1.0"
+      },
+      {
+        "key": "schemaVersion",
+        "value": 2
+      }
+    ],
+    "beyondDays": [
+      {
+        "id": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "schemaVersion": 1,
+        "startedAt": "2026-08-17T04:39:12.007Z",
+        "timezoneId": "America/Chicago",
+        "workContext": "UNKNOWN",
+        "status": "ACTIVE",
+        "createdAt": "2026-08-17T04:39:12.007Z",
+        "updatedAt": "2026-08-17T04:39:12.007Z"
+      }
+    ],
+    "events": [
+      {
+        "id": "03ae4b2e-82c4-4fd8-bd80-f31476e415eb",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:44.502Z",
+        "recordedAt": "2026-08-17T04:42:44.502Z",
+        "payload": {
+          "recommendationId": "96354bee-7aca-4655-8356-8be706215808",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "b5491a77-86ca-43f3-a5fb-a0bdf2258561"
+      },
+      {
+        "id": "0ee84e92-3fd3-4a1b-b826-3d8d8d2bfc60",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:44:12.593Z",
+        "recordedAt": "2026-08-17T04:44:12.593Z",
+        "payload": {
+          "id": "8fea5ff9-7122-402a-b766-742754684eac",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:44:12.593Z",
+          "energy": 4,
+          "stress": 2,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "8aeeae5e-39ae-4fa7-a84e-969ad72e2772"
+      },
+      {
+        "id": "1353e95c-9b51-46f0-b4c9-1f0b39f15915",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:12:12.580Z",
+        "recordedAt": "2026-08-17T05:12:12.580Z",
+        "payload": {
+          "id": "0b881f04-ae3b-4435-9fdf-f93cfedf7e1c",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T05:12:12.580Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "98309392-f852-4016-aa98-9ba8f745ca5d"
+      },
+      {
+        "id": "1a1b1f8c-b040-4c52-873c-b759c1cd4fcc",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:51.305Z",
+        "recordedAt": "2026-08-17T04:42:51.305Z",
+        "payload": {
+          "recommendationId": "3df92de3-8ecf-4d93-ae7e-3456b4769f36",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "006490fa-24af-46dc-9f69-1f3713cce866"
+      },
+      {
+        "id": "1dbdca8b-92fb-4616-81e4-6f5862de7dc4",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:10:09.668Z",
+        "recordedAt": "2026-08-17T05:10:09.668Z",
+        "payload": {
+          "recommendationId": "2a6d152f-734c-44bc-9776-3c555114b2e9",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "887da64d-5625-433e-856e-5dbac885e256"
+      },
+      {
+        "id": "20c8f7bd-b14c-470c-8afe-e0ce71a68b83",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:43.125Z",
+        "recordedAt": "2026-08-17T04:43:43.125Z",
+        "payload": {
+          "id": "95871826-bcf8-4b61-9b2f-4e31c8195613",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:43:43.125Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "073f0589-5956-402e-922b-49a62712b99c"
+      },
+      {
+        "id": "22f7e505-0149-4f95-8a82-2fc89ee50adf",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:46.392Z",
+        "recordedAt": "2026-08-17T04:42:46.392Z",
+        "payload": {
+          "recommendationId": "894d28f1-7a6d-4269-8a18-c5ece7a5fe5e",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "72cdda65-dbdb-4fab-bcdc-0353b08efe06"
+      },
+      {
+        "id": "237fb7c9-07ba-4848-b592-14d5a57c6370",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:43.135Z",
+        "recordedAt": "2026-08-17T04:43:43.135Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "073f0589-5956-402e-922b-49a62712b99c",
+        "causationId": "636a9f29-dfc8-420a-a0f1-da275198c01b"
+      },
+      {
+        "id": "255bd70d-9ba9-4e92-b780-08d0d0f4cd59",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:10.083Z",
+        "recordedAt": "2026-08-17T04:43:10.083Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "9c7d4739-afef-452f-93f4-83325be842dc",
+        "causationId": "99d04904-bfdc-4188-b5a1-2844ab6feb48"
+      },
+      {
+        "id": "26e9d268-b975-4b46-b1d6-8df8f9d70845",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:40.640Z",
+        "recordedAt": "2026-08-17T04:43:40.640Z",
+        "payload": {
+          "recommendationId": "c9e0cabe-6b9e-43d2-aa07-e3943a7a1c8c",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "5953fad8-633f-4cad-8398-72313d8e8da2"
+      },
+      {
+        "id": "27edeeaa-7e19-4006-a7e0-4eaafe2c8cc9",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T07:17:18.815Z",
+        "recordedAt": "2026-08-17T07:17:18.815Z",
+        "payload": {
+          "recommendationId": "d56ce0e4-bb36-4bf4-aa31-6a3d4a3e91a6",
+          "kind": "NO_ACTION_REQUIRED"
+        },
+        "source": "ENGINE",
+        "causationId": "5da059bf-90f5-4425-bd3c-1766f66e6b0b"
+      },
+      {
+        "id": "2ee101f1-3bce-4e03-aa22-4c41f867a8f3",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:09.127Z",
+        "recordedAt": "2026-08-17T04:43:09.127Z",
+        "payload": {
+          "recommendationId": "e79223ed-63a2-4ae4-b3a3-32c345e55bda",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "8bd5f46a-2f4f-4fae-b78f-b17523759fa6"
+      },
+      {
+        "id": "2ee60af6-520e-45d3-8629-698ee403a402",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:12:12.605Z",
+        "recordedAt": "2026-08-17T05:12:12.605Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "98309392-f852-4016-aa98-9ba8f745ca5d"
+      },
+      {
+        "id": "2f375c63-e070-4c22-8a00-4a91f2b12ff2",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:42.032Z",
+        "recordedAt": "2026-08-17T04:43:42.032Z",
+        "payload": {
+          "id": "6b859b50-316c-49d4-9bde-64a445d190dd",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:43:42.032Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "77d0b168-c8d8-49e8-822e-81d6dbc79a0c"
+      },
+      {
+        "id": "2f407d0d-fed9-4c7e-802d-88d7a85bf6ed",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ACCEPTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:10:32.799Z",
+        "recordedAt": "2026-08-17T05:10:32.799Z",
+        "payload": {
+          "recommendationId": "2a6d152f-734c-44bc-9776-3c555114b2e9"
+        },
+        "source": "USER",
+        "causationId": "2a6d152f-734c-44bc-9776-3c555114b2e9"
+      },
+      {
+        "id": "3215bcd5-b041-4aff-a01e-f00612e1ec29",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:42.671Z",
+        "recordedAt": "2026-08-17T04:43:42.671Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "ba00510b-3aab-4241-8654-d1b5c301cf4c",
+        "causationId": "8d91b1fb-96f3-4766-901b-c132d3acc567"
+      },
+      {
+        "id": "36711556-299d-457d-b8be-af739f8f6ff7",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:42.040Z",
+        "recordedAt": "2026-08-17T04:43:42.040Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "77d0b168-c8d8-49e8-822e-81d6dbc79a0c",
+        "causationId": "9275356b-8958-416c-9801-27ba8085db71"
+      },
+      {
+        "id": "37b29952-6d3b-468e-a0f4-201f5438a9fc",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T07:17:18.837Z",
+        "recordedAt": "2026-08-17T07:17:18.837Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "5da059bf-90f5-4425-bd3c-1766f66e6b0b",
+        "causationId": "66e69d68-ca0e-45d9-bdd7-5e323c08d2f7"
+      },
+      {
+        "id": "443e35e1-fc73-41ab-98f9-ca3828962f30",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:42.032Z",
+        "recordedAt": "2026-08-17T04:43:42.032Z",
+        "payload": {
+          "recommendationId": "dcdf080d-9d64-417e-a3aa-b0e2083ea73c",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "77d0b168-c8d8-49e8-822e-81d6dbc79a0c"
+      },
+      {
+        "id": "4caee585-fe25-4ada-8d4f-6bf95a9974fe",
+        "schemaVersion": 1,
+        "type": "RESET_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:37:28.536Z",
+        "recordedAt": "2026-08-17T05:37:28.536Z",
+        "payload": {
+          "commandId": "1d694b5c-c9ac-4ced-9dd3-5fb9648aaf4f",
+          "intensity": 3
+        },
+        "source": "USER",
+        "correlationId": "1d694b5c-c9ac-4ced-9dd3-5fb9648aaf4f",
+        "causationId": "b5e15202-fe1f-422c-bd88-34ff201a9215"
+      },
+      {
+        "id": "4e7533e5-6e25-46a1-a56f-e97ece9b1fd3",
+        "schemaVersion": 1,
+        "type": "NO_ACTION_RECORDED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T07:18:27.766Z",
+        "recordedAt": "2026-08-17T07:18:27.766Z",
+        "payload": {
+          "recommendationId": "d56ce0e4-bb36-4bf4-aa31-6a3d4a3e91a6"
+        },
+        "source": "USER",
+        "causationId": "d56ce0e4-bb36-4bf4-aa31-6a3d4a3e91a6"
+      },
+      {
+        "id": "5132d4ff-5f2f-4d18-bbd8-f52b1052caf0",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:40:40.844Z",
+        "recordedAt": "2026-08-17T04:40:40.844Z",
+        "payload": {
+          "recommendationId": "4a7e6827-1c8a-452e-8722-a179896e6354",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "94261ee3-f682-4471-995b-e126c9dc6ae2"
+      },
+      {
+        "id": "55497c72-0bae-468b-907a-5f2dd6c96b0a",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:51.317Z",
+        "recordedAt": "2026-08-17T04:42:51.317Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "006490fa-24af-46dc-9f69-1f3713cce866",
+        "causationId": "b47f5b08-81a0-4e95-bb44-687976e088d6"
+      },
+      {
+        "id": "5927e953-f6cd-477c-8ca2-195c2d7cac35",
+        "schemaVersion": 1,
+        "type": "DAY_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:39:12.007Z",
+        "recordedAt": "2026-08-17T04:39:12.007Z",
+        "payload": {
+          "workContext": "UNKNOWN"
+        },
+        "source": "USER"
+      },
+      {
+        "id": "59666d02-abdc-415c-be9a-374ebeb9f448",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:40.662Z",
+        "recordedAt": "2026-08-17T04:43:40.662Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "5953fad8-633f-4cad-8398-72313d8e8da2",
+        "causationId": "c789cd97-22c9-468f-9288-48e487b32366"
+      },
+      {
+        "id": "5d4555c2-0499-4eaf-8ffa-de2bcd74198a",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:44:12.606Z",
+        "recordedAt": "2026-08-17T04:44:12.606Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "8aeeae5e-39ae-4fa7-a84e-969ad72e2772"
+      },
+      {
+        "id": "636a9f29-dfc8-420a-a0f1-da275198c01b",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:43.135Z",
+        "recordedAt": "2026-08-17T04:43:43.135Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "073f0589-5956-402e-922b-49a62712b99c"
+      },
+      {
+        "id": "665a0309-5167-4dfe-921b-0e321233c675",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:40:40.853Z",
+        "recordedAt": "2026-08-17T04:40:40.853Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "94261ee3-f682-4471-995b-e126c9dc6ae2"
+      },
+      {
+        "id": "66e69d68-ca0e-45d9-bdd7-5e323c08d2f7",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T07:17:18.835Z",
+        "recordedAt": "2026-08-17T07:17:18.835Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "5da059bf-90f5-4425-bd3c-1766f66e6b0b"
+      },
+      {
+        "id": "683a8e5d-dfa4-47e9-a050-79f5a2a8188b",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:45.804Z",
+        "recordedAt": "2026-08-17T04:42:45.804Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "6f0791e1-d8c7-452d-9fe7-ab3d544977f4"
+      },
+      {
+        "id": "68808d2e-645e-4251-9db9-3e186be0d993",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:45.796Z",
+        "recordedAt": "2026-08-17T04:42:45.796Z",
+        "payload": {
+          "recommendationId": "0211f983-2871-4799-8a50-77abbb3a4e53",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "6f0791e1-d8c7-452d-9fe7-ab3d544977f4"
+      },
+      {
+        "id": "6a38f330-c81a-4e1b-814b-3211f71058cd",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:10:09.668Z",
+        "recordedAt": "2026-08-17T05:10:09.668Z",
+        "payload": {
+          "id": "76e4eb2e-8d23-422d-8269-425b6881e19b",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T05:10:09.668Z",
+          "energy": 5,
+          "stress": 1,
+          "mood": 4,
+          "soreness": 1,
+          "alcoholUrge": 2
+        },
+        "source": "USER",
+        "correlationId": "887da64d-5625-433e-856e-5dbac885e256"
+      },
+      {
+        "id": "6ff14a0d-50ef-4955-9a78-794147bd492d",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:44.512Z",
+        "recordedAt": "2026-08-17T04:42:44.512Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "b5491a77-86ca-43f3-a5fb-a0bdf2258561"
+      },
+      {
+        "id": "70fd5cd1-4e60-4401-88c9-871cd225b8ec",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:45.796Z",
+        "recordedAt": "2026-08-17T04:42:45.796Z",
+        "payload": {
+          "id": "526e905b-f2a6-48c4-ac8b-a13497e9350f",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:42:45.796Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "6f0791e1-d8c7-452d-9fe7-ab3d544977f4"
+      },
+      {
+        "id": "74947faf-4348-4293-aa35-78b99c540246",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:44.502Z",
+        "recordedAt": "2026-08-17T04:42:44.502Z",
+        "payload": {
+          "id": "72704316-c92d-4378-b0d2-5646bc6ef919",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:42:44.502Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "b5491a77-86ca-43f3-a5fb-a0bdf2258561"
+      },
+      {
+        "id": "74ec95da-0ebb-4d9c-881c-66347e57f4e4",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:42.659Z",
+        "recordedAt": "2026-08-17T04:43:42.659Z",
+        "payload": {
+          "recommendationId": "d5ca15ea-3eb6-46e0-9ac6-451a73e8fd17",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "ba00510b-3aab-4241-8654-d1b5c301cf4c"
+      },
+      {
+        "id": "7aa2e5a3-4241-4a90-b8d7-b4a0c7423881",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:12:12.580Z",
+        "recordedAt": "2026-08-17T05:12:12.580Z",
+        "payload": {
+          "recommendationId": "11a33007-741c-4c64-bd8c-d1cc36bbed0d",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "98309392-f852-4016-aa98-9ba8f745ca5d"
+      },
+      {
+        "id": "7ff4837a-457e-41cc-9fff-3946f6c559e1",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:12:12.605Z",
+        "recordedAt": "2026-08-17T05:12:12.605Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "98309392-f852-4016-aa98-9ba8f745ca5d",
+        "causationId": "2ee60af6-520e-45d3-8629-698ee403a402"
+      },
+      {
+        "id": "83d16d6f-e0ab-4231-aa71-590928092906",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T07:17:18.815Z",
+        "recordedAt": "2026-08-17T07:17:18.815Z",
+        "payload": {
+          "id": "e90dd5d0-3f09-4a74-a316-aa7cf74f7c6f",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T07:17:18.815Z",
+          "energy": 5,
+          "stress": 1,
+          "mood": 5,
+          "soreness": 0,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "5da059bf-90f5-4425-bd3c-1766f66e6b0b"
+      },
+      {
+        "id": "88a6caf3-8953-4603-ad08-f1c628ee529a",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:46.402Z",
+        "recordedAt": "2026-08-17T04:42:46.402Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "72cdda65-dbdb-4fab-bcdc-0353b08efe06",
+        "causationId": "d08fdb73-6bfa-4327-ab4f-9ef1a309c7c2"
+      },
+      {
+        "id": "8ae0cf5a-4a31-4fdc-b633-6c5575f71f21",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:09.152Z",
+        "recordedAt": "2026-08-17T04:43:09.152Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "8bd5f46a-2f4f-4fae-b78f-b17523759fa6"
+      },
+      {
+        "id": "8d91b1fb-96f3-4766-901b-c132d3acc567",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:42.671Z",
+        "recordedAt": "2026-08-17T04:43:42.671Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "ba00510b-3aab-4241-8654-d1b5c301cf4c"
+      },
+      {
+        "id": "8f46dc6b-4924-4a4f-bb34-624670dd2eb1",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:10.071Z",
+        "recordedAt": "2026-08-17T04:43:10.071Z",
+        "payload": {
+          "id": "6a144ea2-35ff-4695-8e02-afdb15087a09",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:43:10.071Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "9c7d4739-afef-452f-93f4-83325be842dc"
+      },
+      {
+        "id": "8ff30052-1771-4faf-8734-ef8d71cb2a80",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:43.125Z",
+        "recordedAt": "2026-08-17T04:43:43.125Z",
+        "payload": {
+          "recommendationId": "8b39312d-80aa-4735-8529-d3ebf52398f9",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "073f0589-5956-402e-922b-49a62712b99c"
+      },
+      {
+        "id": "9275356b-8958-416c-9801-27ba8085db71",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:42.040Z",
+        "recordedAt": "2026-08-17T04:43:42.040Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "77d0b168-c8d8-49e8-822e-81d6dbc79a0c"
+      },
+      {
+        "id": "9462f402-6126-4617-b79e-fe7f719a305f",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:40.640Z",
+        "recordedAt": "2026-08-17T04:43:40.640Z",
+        "payload": {
+          "id": "dbb0dc18-b2d9-4d84-92b7-8d5790f492f6",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:43:40.640Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "5953fad8-633f-4cad-8398-72313d8e8da2"
+      },
+      {
+        "id": "99d04904-bfdc-4188-b5a1-2844ab6feb48",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:10.083Z",
+        "recordedAt": "2026-08-17T04:43:10.083Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "9c7d4739-afef-452f-93f4-83325be842dc"
+      },
+      {
+        "id": "9bc212a7-44e3-47e6-b9ab-42d29ab38936",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:51.305Z",
+        "recordedAt": "2026-08-17T04:42:51.305Z",
+        "payload": {
+          "id": "019ff377-46ff-4ace-ad46-0218d70ae6b0",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:42:51.305Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "006490fa-24af-46dc-9f69-1f3713cce866"
+      },
+      {
+        "id": "9caf3b2c-923f-426c-9bcd-2078f7c8262f",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:46.392Z",
+        "recordedAt": "2026-08-17T04:42:46.392Z",
+        "payload": {
+          "id": "18c6adf5-3da5-4030-9acf-5c90a28f8410",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:42:46.392Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "72cdda65-dbdb-4fab-bcdc-0353b08efe06"
+      },
+      {
+        "id": "a8766b54-fada-49f0-8ad6-7114facdefa2",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:40:40.854Z",
+        "recordedAt": "2026-08-17T04:40:40.854Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "94261ee3-f682-4471-995b-e126c9dc6ae2",
+        "causationId": "665a0309-5167-4dfe-921b-0e321233c675"
+      },
+      {
+        "id": "aaaeda2e-280d-4632-ac3b-86d23479ce3b",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:45.805Z",
+        "recordedAt": "2026-08-17T04:42:45.805Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "6f0791e1-d8c7-452d-9fe7-ab3d544977f4",
+        "causationId": "683a8e5d-dfa4-47e9-a050-79f5a2a8188b"
+      },
+      {
+        "id": "b2a143a1-71f3-43f3-bfbd-9f8a17ddd462",
+        "schemaVersion": 1,
+        "type": "RESET_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:38:07.103Z",
+        "recordedAt": "2026-08-17T05:38:07.103Z",
+        "payload": {
+          "commandId": "1d694b5c-c9ac-4ced-9dd3-5fb9648aaf4f"
+        },
+        "source": "USER",
+        "correlationId": "1d694b5c-c9ac-4ced-9dd3-5fb9648aaf4f"
+      },
+      {
+        "id": "b47f5b08-81a0-4e95-bb44-687976e088d6",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:51.316Z",
+        "recordedAt": "2026-08-17T04:42:51.316Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "006490fa-24af-46dc-9f69-1f3713cce866"
+      },
+      {
+        "id": "b5e15202-fe1f-422c-bd88-34ff201a9215",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:37:28.534Z",
+        "recordedAt": "2026-08-17T05:37:28.534Z",
+        "payload": {
+          "commandName": "START_RESET"
+        },
+        "source": "USER",
+        "correlationId": "1d694b5c-c9ac-4ced-9dd3-5fb9648aaf4f"
+      },
+      {
+        "id": "bbcdce1b-b3b8-4129-af0c-0435f13d0983",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:09.127Z",
+        "recordedAt": "2026-08-17T04:43:09.127Z",
+        "payload": {
+          "id": "264654d2-e8e2-4917-82ac-1730fc54e7a5",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:43:09.127Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "8bd5f46a-2f4f-4fae-b78f-b17523759fa6"
+      },
+      {
+        "id": "c789cd97-22c9-468f-9288-48e487b32366",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:40.661Z",
+        "recordedAt": "2026-08-17T04:43:40.661Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "5953fad8-633f-4cad-8398-72313d8e8da2"
+      },
+      {
+        "id": "c9e5cf28-2eed-4deb-8328-75489b4aeeb8",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:44.512Z",
+        "recordedAt": "2026-08-17T04:42:44.512Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "b5491a77-86ca-43f3-a5fb-a0bdf2258561",
+        "causationId": "6ff14a0d-50ef-4955-9a78-794147bd492d"
+      },
+      {
+        "id": "c9e7bf04-f8ff-4fec-9f37-d284f00370dd",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:37:28.537Z",
+        "recordedAt": "2026-08-17T05:37:28.537Z",
+        "payload": {
+          "commandName": "START_RESET"
+        },
+        "source": "SYSTEM",
+        "correlationId": "1d694b5c-c9ac-4ced-9dd3-5fb9648aaf4f",
+        "causationId": "b5e15202-fe1f-422c-bd88-34ff201a9215"
+      },
+      {
+        "id": "d08fdb73-6bfa-4327-ab4f-9ef1a309c7c2",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:42:46.401Z",
+        "recordedAt": "2026-08-17T04:42:46.401Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "72cdda65-dbdb-4fab-bcdc-0353b08efe06"
+      },
+      {
+        "id": "d2bb30bc-5718-47c8-8924-a986f1ffde34",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:44:12.593Z",
+        "recordedAt": "2026-08-17T04:44:12.593Z",
+        "payload": {
+          "recommendationId": "28dd9b0e-e1bc-4271-8728-c40b9e9ab693",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "8aeeae5e-39ae-4fa7-a84e-969ad72e2772"
+      },
+      {
+        "id": "e0995916-bac6-4593-b93a-d762732d4ff8",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ISSUED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:10.071Z",
+        "recordedAt": "2026-08-17T04:43:10.071Z",
+        "payload": {
+          "recommendationId": "d8fcb21e-374e-4367-abc0-2fb2997dff9a",
+          "kind": "RECOVER"
+        },
+        "source": "ENGINE",
+        "causationId": "9c7d4739-afef-452f-93f4-83325be842dc"
+      },
+      {
+        "id": "e2957683-4e0e-463b-ae2f-8d4fd2f300ab",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ACCEPTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:49:20.937Z",
+        "recordedAt": "2026-08-17T04:49:20.937Z",
+        "payload": {
+          "recommendationId": "28dd9b0e-e1bc-4271-8728-c40b9e9ab693"
+        },
+        "source": "USER",
+        "causationId": "28dd9b0e-e1bc-4271-8728-c40b9e9ab693"
+      },
+      {
+        "id": "e6dbb775-a3d8-47d0-bdde-357c78eeca96",
+        "schemaVersion": 1,
+        "type": "COMMAND_STARTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:10:09.695Z",
+        "recordedAt": "2026-08-17T05:10:09.695Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "USER",
+        "correlationId": "887da64d-5625-433e-856e-5dbac885e256"
+      },
+      {
+        "id": "e887958f-b351-4279-abc3-3bd70bcd2738",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:40:40.844Z",
+        "recordedAt": "2026-08-17T04:40:40.844Z",
+        "payload": {
+          "id": "75380e7a-218f-4845-a653-0269ca67cb85",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:40:40.844Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "94261ee3-f682-4471-995b-e126c9dc6ae2"
+      },
+      {
+        "id": "ee9b665c-d455-4db7-ae97-ac61d56f779c",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:09.152Z",
+        "recordedAt": "2026-08-17T04:43:09.152Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "8bd5f46a-2f4f-4fae-b78f-b17523759fa6",
+        "causationId": "8ae0cf5a-4a31-4fdc-b633-6c5575f71f21"
+      },
+      {
+        "id": "ef3294cf-8251-408c-b992-5bb85c0afc2f",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:44:12.606Z",
+        "recordedAt": "2026-08-17T04:44:12.606Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "8aeeae5e-39ae-4fa7-a84e-969ad72e2772",
+        "causationId": "5d4555c2-0499-4eaf-8ffa-de2bcd74198a"
+      },
+      {
+        "id": "f3b20b5e-3a8f-4bc2-a737-9ba87496364e",
+        "schemaVersion": 1,
+        "type": "RECOMMENDATION_ACCEPTED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:12:14.347Z",
+        "recordedAt": "2026-08-17T05:12:14.347Z",
+        "payload": {
+          "recommendationId": "11a33007-741c-4c64-bd8c-d1cc36bbed0d"
+        },
+        "source": "USER",
+        "causationId": "11a33007-741c-4c64-bd8c-d1cc36bbed0d"
+      },
+      {
+        "id": "f42a0e0f-c602-426b-87a3-6ffc2b1e510c",
+        "schemaVersion": 1,
+        "type": "STATE_CHECKED_IN",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T04:43:42.659Z",
+        "recordedAt": "2026-08-17T04:43:42.659Z",
+        "payload": {
+          "id": "ef1b4873-90f1-4c82-9299-577514112cc6",
+          "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+          "recordedAt": "2026-08-17T04:43:42.659Z",
+          "energy": 2,
+          "stress": 4,
+          "mood": 2,
+          "soreness": 1,
+          "alcoholUrge": 0
+        },
+        "source": "USER",
+        "correlationId": "ba00510b-3aab-4241-8654-d1b5c301cf4c"
+      },
+      {
+        "id": "ffbb10ca-e63e-4b18-aca1-3efda73f3a52",
+        "schemaVersion": 1,
+        "type": "COMMAND_COMPLETED",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "occurredAt": "2026-08-17T05:10:09.695Z",
+        "recordedAt": "2026-08-17T05:10:09.695Z",
+        "payload": {
+          "commandName": "REASSESS"
+        },
+        "source": "SYSTEM",
+        "correlationId": "887da64d-5625-433e-856e-5dbac885e256",
+        "causationId": "e6dbb775-a3d8-47d0-bdde-357c78eeca96"
+      }
+    ],
+    "recommendations": [
+      {
+        "id": "0211f983-2871-4799-8a50-77abbb3a4e53",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:42:45.796Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:42:45.796Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "11a33007-741c-4c64-bd8c-d1cc36bbed0d",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T05:12:12.580Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T05:12:12.580Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "28dd9b0e-e1bc-4271-8728-c40b9e9ab693",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:44:12.593Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:44:12.593Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "2a6d152f-734c-44bc-9776-3c555114b2e9",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T05:10:09.668Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T05:10:09.668Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "3df92de3-8ecf-4d93-ae7e-3456b4769f36",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:42:51.305Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:42:51.305Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "4a7e6827-1c8a-452e-8722-a179896e6354",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:40:40.844Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:40:40.844Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "894d28f1-7a6d-4269-8a18-c5ece7a5fe5e",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:42:46.392Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:42:46.392Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "8b39312d-80aa-4735-8529-d3ebf52398f9",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:43:43.125Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:43:43.125Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "96354bee-7aca-4655-8356-8be706215808",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:42:44.502Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:42:44.502Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "c9e0cabe-6b9e-43d2-aa07-e3943a7a1c8c",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:43:40.640Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:43:40.640Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "d56ce0e4-bb36-4bf4-aa31-6a3d4a3e91a6",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T07:17:18.815Z",
+        "kind": "NO_ACTION_REQUIRED",
+        "priority": 4,
+        "title": "No action required",
+        "rationale": "No higher-priority rule currently requires action.",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T07:17:18.815Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "GREEN"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": false,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "NO_ACTION_REQUIRED",
+          "selectionReason": "No higher-priority rule matched."
+        },
+        "statusAtIssue": "NO_ACTION_REQUIRED"
+      },
+      {
+        "id": "d5ca15ea-3eb6-46e0-9ac6-451a73e8fd17",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:43:42.659Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:43:42.659Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "d8fcb21e-374e-4367-abc0-2fb2997dff9a",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:43:10.071Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:43:10.071Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "dcdf080d-9d64-417e-a3aa-b0e2083ea73c",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:43:42.032Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:43:42.032Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      },
+      {
+        "id": "e79223ed-63a2-4ae4-b3a3-32c345e55bda",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "issuedAt": "2026-08-17T04:43:09.127Z",
+        "kind": "RECOVER",
+        "priority": 2,
+        "title": "Protect recovery",
+        "rationale": "Capacity is constrained.",
+        "suggestedCommand": "RECOVERY_SESSION",
+        "trace": {
+          "engineVersion": "0.1.0",
+          "evaluatedAt": "2026-08-17T04:43:09.127Z",
+          "inputs": [
+            {
+              "key": "hasCheckIn",
+              "value": true
+            },
+            {
+              "key": "hasPlannedWork",
+              "value": false
+            }
+          ],
+          "derived": [
+            {
+              "key": "capacity",
+              "value": "YELLOW"
+            }
+          ],
+          "matchedRules": [
+            {
+              "ruleId": "STABILIZE",
+              "result": false,
+              "reason": "RED capacity"
+            },
+            {
+              "ruleId": "RECOVER",
+              "result": true,
+              "reason": "YELLOW capacity"
+            },
+            {
+              "ruleId": "EXECUTE_PLANNED_WORK",
+              "result": false,
+              "reason": "GREEN capacity with planned work"
+            }
+          ],
+          "selectedRecommendation": "RECOVER",
+          "selectionReason": "RECOVER matched after STABILIZE did not."
+        },
+        "statusAtIssue": "ACTION"
+      }
+    ],
+    "outcomes": [
+      {
+        "id": "1c0d3b4c-3cee-48ef-aa9c-f5b542516d28",
+        "recommendationId": "2a6d152f-734c-44bc-9776-3c555114b2e9",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "recordedAt": "2026-08-17T05:10:32.799Z",
+        "result": "UNKNOWN"
+      },
+      {
+        "id": "25713ca0-addc-4c7b-a98a-730c9fbde3ba",
+        "recommendationId": "d56ce0e4-bb36-4bf4-aa31-6a3d4a3e91a6",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "recordedAt": "2026-08-17T07:18:27.767Z",
+        "result": "NO_ACTION"
+      },
+      {
+        "id": "3425af00-67a3-4d33-801f-88bc6f8246a7",
+        "recommendationId": "28dd9b0e-e1bc-4271-8728-c40b9e9ab693",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "recordedAt": "2026-08-17T04:49:20.938Z",
+        "result": "UNKNOWN"
+      },
+      {
+        "id": "ce65fa4b-392b-4473-b491-22d6b20df00d",
+        "recommendationId": "11a33007-741c-4c64-bd8c-d1cc36bbed0d",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "recordedAt": "2026-08-17T05:12:14.348Z",
+        "result": "UNKNOWN"
+      },
+      {
+        "id": "d9acb01d-27a3-4d3b-bca4-19617b5cf88a",
+        "commandExecutionId": "1d694b5c-c9ac-4ced-9dd3-5fb9648aaf4f",
+        "beyondDayId": "31014bdb-f21b-40bf-aed5-07e97d1f346f",
+        "recordedAt": "2026-08-17T05:38:07.103Z",
+        "result": "COMPLETED"
+      }
+    ],
+    "workoutSessions": [],
+    "performedSets": []
+  }
+}
