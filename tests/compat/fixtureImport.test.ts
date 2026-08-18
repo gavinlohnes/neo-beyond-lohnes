@@ -1,12 +1,13 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { BeyondDB } from "../../src/persistence/db";
 import { importLegacyBackup, parseLegacyBackup } from "../../src/persistence/compat/legacyBackup";
 import { getEffectiveHydrationTotal, getHydrationEntries } from "../../src/application/queries";
 
-const PROTECTED_DIR = join(__dirname, "../../test-fixtures/protected");
+const PROTECTED_DIR = fileURLToPath(new URL("../../test-fixtures/protected", import.meta.url));
 
 const FIXTURE_A = {
   file: "beyond-backup-2026-08-17T23-15-09-360Z.json",

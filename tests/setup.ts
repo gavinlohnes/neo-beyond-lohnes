@@ -1,14 +1,51 @@
-// Gives Dexie a real (in-memory) IndexedDB implementation under Vitest's
-// Node environment. Must be imported before any module that constructs a
-// Dexie database.
+// Must be the very first import: dexie caches its indexedDB dependency at
+// module load time, so fake-indexeddb's global indexedDB has to exist
+// before "dexie" (imported below, and transitively by every test file) is
+// ever loaded — otherwise Dexie.dependencies.indexedDB stays undefined.
 import "fake-indexeddb/auto";
-import { IDBFactory } from "fake-indexeddb";
+import Dexie from "dexie";
 import { afterEach } from "vitest";
 
-// BeyondDB always opens a fixed-name database ("beyond"). Without a reset,
-// every test file would share the same underlying in-memory store. Give
-// each test a clean IndexedDB registry instead of parameterizing the
-// production db name just for tests.
-afterEach(() => {
-  globalThis.indexedDB = new IDBFactory();
+// dexie-export-import assumes a browser/worker-style global `self`, which
+// Vitest's plain Node environment doesn't provide. Must be set before
+// anything imports "dexie-export-import" (src/persistence/backup.ts does,
+// as a side effect).
+if (typeof globalThis.self === "undefined") {
+  (globalThis as unknown as { self: typeof globalThis }).self = globalThis;
+}
+
+// dexie-export-import also reads Blob content via the browser FileReader
+// API (readBlobAsync), which Node doesn't provide either. Minimal
+// polyfill backed by Node's own Blob.arrayBuffer() — only readAsArrayBuffer
+// plus onload/onerror/onabort are needed for the paths this app exercises.
+if (typeof globalThis.FileReader === "undefined") {
+  class NodeFileReaderPolyfill {
+    result: ArrayBuffer | null = null;
+    onload: ((ev: { target: { result: ArrayBuffer | null } }) => void) | null = null;
+    onerror: ((ev: { target: { error: unknown } }) => void) | null = null;
+    onabort: ((ev: unknown) => void) | null = null;
+
+    readAsArrayBuffer(blob: Blob): void {
+      blob
+        .arrayBuffer()
+        .then((buf) => {
+          this.result = buf;
+          this.onload?.({ target: { result: buf } });
+        })
+        .catch((err: unknown) => {
+          this.onerror?.({ target: { error: err } });
+        });
+    }
+  }
+  (globalThis as unknown as { FileReader: unknown }).FileReader = NodeFileReaderPolyfill;
+}
+
+// BeyondDB always opens a fixed-name database ("beyond"). Swapping
+// globalThis.indexedDB here does NOT isolate tests, because Dexie caches
+// its indexedDB dependency once at module load rather than re-reading the
+// global per call — deleting the actual named database is what works
+// (confirmed by tests/persistence/schemaMigration.test.ts and
+// tests/compat/fixtureImport.test.ts, which already relied on this).
+afterEach(async () => {
+  await Dexie.delete("beyond");
 });

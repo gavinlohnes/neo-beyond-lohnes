@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const PROTECTED_DIR = join(__dirname, "../../test-fixtures/protected");
+const PROTECTED_DIR = fileURLToPath(new URL("../../test-fixtures/protected", import.meta.url));
 
 const FIXTURES = [
   {
