@@ -1,0 +1,29 @@
+:root {
+  --bg: #0a0a0a;
+  --surface-1: #131313;
+  --surface-2: #1c1c1c;
+  --surface-active: #221414;
+  --border-subtle: #2a2a2a;
+  --border-strong: #3a3a3a;
+  --text-1: #f2f2f2;
+  --text-2: #a8a8a8;
+  --text-3: #6e6e6e;
+  --accent: #c81e2c;
+  --success: #2f9e5b;
+  --warning: #c8901e;
+  --danger: #c8302e;
+  --focus: #e2454f;
+
+  --radius: 4px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
