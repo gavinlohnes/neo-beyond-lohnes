@@ -123,6 +123,6 @@ export function evaluate(input: EvaluateInput): Recommendation {
     rationale: "No rule requires attention right now.",
     suggestedCommand: null,
     trace: trace("NO_ACTION_REQUIRED", "No higher-priority rule matched."),
-    statusAtIssue: "NO_ACTION",
+    statusAtIssue: "NO_ACTION_REQUIRED",
   };
 }

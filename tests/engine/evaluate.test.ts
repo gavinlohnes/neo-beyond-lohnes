@@ -26,7 +26,7 @@ describe("evaluate — one primary recommendation per call", () => {
   it("no check-in yet -> NO_ACTION_REQUIRED, not an error or empty state", () => {
     const result = evaluate({ beyondDayId: "day-1", checkIn: null, hasPlannedWork: false });
     expect(result.kind).toBe("NO_ACTION_REQUIRED");
-    expect(result.statusAtIssue).toBe("NO_ACTION");
+    expect(result.statusAtIssue).toBe("NO_ACTION_REQUIRED");
     expect(result.suggestedCommand).toBeNull();
   });
 
@@ -73,7 +73,7 @@ describe("evaluate — one primary recommendation per call", () => {
     expect(result.kind).toBe("NO_ACTION_REQUIRED");
     expect(result.priority).toBe(4);
     expect(result.suggestedCommand).toBeNull();
-    expect(result.statusAtIssue).toBe("NO_ACTION");
+    expect(result.statusAtIssue).toBe("NO_ACTION_REQUIRED");
   });
 });
 

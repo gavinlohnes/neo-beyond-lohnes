@@ -54,7 +54,10 @@ export interface Recommendation {
   rationale: string;
   suggestedCommand: string | null;
   trace: DecisionTrace;
-  statusAtIssue: "ACTION" | "NO_ACTION";
+  // Confirmed against both real historical backups: NO_ACTION_REQUIRED
+  // recommendations carry statusAtIssue "NO_ACTION_REQUIRED", not the
+  // generic "NO_ACTION" checkpoint 03 originally guessed.
+  statusAtIssue: "ACTION" | "NO_ACTION_REQUIRED";
 }
 
 /**
