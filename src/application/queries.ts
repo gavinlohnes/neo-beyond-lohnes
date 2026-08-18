@@ -5,6 +5,8 @@ import type {
   HydrationEntry,
   Recommendation,
   StateCheckIn,
+  WaterLogCorrectedPayload,
+  WaterLoggedPayload,
 } from "../domain/common/types";
 
 export async function getActiveDay(): Promise<BeyondDay | undefined> {
@@ -45,12 +47,11 @@ export async function getHydrationEntries(
   beyondDayId: string,
 ): Promise<HydrationEntry[]> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const logged = events.filter((e): e is DomainEvent<{ commandId: string; amountOz: number }> =>
-    e.type === "WATER_LOGGED",
+  const logged = events.filter(
+    (e): e is DomainEvent<WaterLoggedPayload> => e.type === "WATER_LOGGED",
   );
   const corrections = events.filter(
-    (e): e is DomainEvent<{ correctsEventId: string; amountOz: number }> =>
-      e.type === "WATER_LOG_CORRECTED",
+    (e): e is DomainEvent<WaterLogCorrectedPayload> => e.type === "WATER_LOG_CORRECTED",
   );
 
   return logged
@@ -60,12 +61,12 @@ export async function getHydrationEntries(
       let count = 0;
       // Walk the chain forward: find the correction targeting the current
       // head, repeat, until no further correction exists.
-      let next = corrections.find((c) => c.payload.correctsEventId === headId);
+      let next = corrections.find((c) => c.payload.supersedesEventId === headId);
       while (next) {
         headId = next.id;
         headAmount = next.payload.amountOz;
         count += 1;
-        next = corrections.find((c) => c.payload.correctsEventId === headId);
+        next = corrections.find((c) => c.payload.supersedesEventId === headId);
       }
       return {
         rootEventId: root.id,

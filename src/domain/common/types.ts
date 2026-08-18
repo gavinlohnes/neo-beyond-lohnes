@@ -86,6 +86,27 @@ export interface HydrationEntry {
   recordedAt: string;
 }
 
+export interface WaterLoggedPayload {
+  commandId: string;
+  amountOz: number;
+}
+
+/**
+ * Field names confirmed against the real historical app's backup export
+ * (test-fixtures/protected/beyond-backup-2026-08-18T06-33-36-443Z.json):
+ * originalEventId identifies the root/original fact and stays constant
+ * across an entire correction chain; supersedesEventId identifies the
+ * immediate currently-effective fact this correction replaces (the chain's
+ * current HEAD at the time of correction, which may itself already be a
+ * correction).
+ */
+export interface WaterLogCorrectedPayload {
+  commandId: string;
+  originalEventId: string;
+  supersedesEventId: string;
+  amountOz: number;
+}
+
 export interface DomainEvent<TPayload = unknown> {
   id: string;
   type: DomainEventType;

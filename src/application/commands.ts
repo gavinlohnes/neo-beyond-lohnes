@@ -5,6 +5,8 @@ import type {
   DomainEvent,
   Recommendation,
   StateCheckIn,
+  WaterLogCorrectedPayload,
+  WaterLoggedPayload,
 } from "../domain/common/types";
 
 function newId(): string {
@@ -139,6 +141,10 @@ export async function logWater(
  * correction chain (the original log, or the most recent correction) —
  * correcting a stale/already-superseded entry is rejected to prevent a
  * forked chain, per the proven Android acceptance behavior.
+ *
+ * Payload field names (originalEventId, supersedesEventId) are confirmed
+ * against the real historical app's backup export — see
+ * WaterLogCorrectedPayload in domain/common/types.ts.
  */
 export async function correctWater(
   beyondDayId: string,
@@ -146,10 +152,10 @@ export async function correctWater(
   newAmountOz: number,
 ): Promise<void> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const corrections = events.filter((e) => e.type === "WATER_LOG_CORRECTED");
-  const alreadySuperseded = corrections.some(
-    (c) => (c.payload as { correctsEventId: string }).correctsEventId === targetEventId,
+  const corrections = events.filter(
+    (e): e is DomainEvent<WaterLogCorrectedPayload> => e.type === "WATER_LOG_CORRECTED",
   );
+  const alreadySuperseded = corrections.some((c) => c.payload.supersedesEventId === targetEventId);
   if (alreadySuperseded) {
     throw new Error(
       "STALE_CORRECTION_TARGET: this entry has already been corrected — correct the latest value instead.",
@@ -159,19 +165,28 @@ export async function correctWater(
   if (!target) {
     throw new Error("CORRECTION_TARGET_NOT_FOUND");
   }
+  if (target.type !== "WATER_LOGGED" && target.type !== "WATER_LOG_CORRECTED") {
+    throw new Error("CORRECTION_TARGET_INVALID_TYPE");
+  }
   const currentAmount =
     target.type === "WATER_LOGGED"
-      ? (target.payload as { amountOz: number }).amountOz
-      : (target.payload as { amountOz: number }).amountOz;
+      ? (target.payload as WaterLoggedPayload).amountOz
+      : (target.payload as WaterLogCorrectedPayload).amountOz;
   if (currentAmount === newAmountOz) {
     throw new Error("NO_OP_CORRECTION: new value matches current effective value — no event created.");
   }
+  const originalEventId =
+    target.type === "WATER_LOGGED"
+      ? target.id
+      : (target.payload as WaterLogCorrectedPayload).originalEventId;
+
+  const correlationId = newId();
   await logEvent(
     beyondDayId,
     "WATER_LOG_CORRECTED",
-    { correctsEventId: targetEventId, amountOz: newAmountOz },
+    { commandId: correlationId, originalEventId, supersedesEventId: targetEventId, amountOz: newAmountOz },
     "USER",
-    newId(),
+    correlationId,
     targetEventId,
   );
 }
