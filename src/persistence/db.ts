@@ -2,8 +2,11 @@ import Dexie, { type Table } from "dexie";
 import type {
   BeyondDay,
   DomainEvent,
+  Outcome,
+  PerformedSetRaw,
   Recommendation,
   StateCheckIn,
+  WorkoutSession,
 } from "../domain/common/types";
 
 export class BeyondDB extends Dexie {
@@ -11,6 +14,9 @@ export class BeyondDB extends Dexie {
   events!: Table<DomainEvent, string>;
   checkIns!: Table<StateCheckIn, string>;
   recommendations!: Table<Recommendation, string>;
+  outcomes!: Table<Outcome, string>;
+  workoutSessions!: Table<WorkoutSession, string>;
+  performedSets!: Table<PerformedSetRaw, string>;
 
   constructor() {
     super("beyond");
@@ -19,6 +25,19 @@ export class BeyondDB extends Dexie {
       events: "id, beyondDayId, type, occurredAt",
       checkIns: "id, beyondDayId, recordedAt",
       recommendations: "id, beyondDayId, issuedAt",
+    });
+    // v2: adds outcomes/workoutSessions/performedSets tables. Not driven by
+    // new app functionality (TRAIN remains deferred) — required to
+    // faithfully reconstruct the real historical BEYOND_BACKUP fixtures,
+    // which include these record types. Existing v1 tables/data untouched.
+    this.version(2).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId",
     });
   }
 }

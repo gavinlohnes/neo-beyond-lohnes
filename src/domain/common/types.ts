@@ -57,6 +57,48 @@ export interface Recommendation {
   statusAtIssue: "ACTION" | "NO_ACTION";
 }
 
+/**
+ * Confirmed against both real historical backup exports. Outcome carries
+ * either a recommendationId or a commandExecutionId (mutually exclusive in
+ * both observed fixtures — never both, never neither), linking a result
+ * back to the recommendation or command it resolves.
+ */
+export interface Outcome {
+  id: string;
+  beyondDayId: string;
+  recordedAt: string;
+  result: "UNKNOWN" | "NO_ACTION" | "COMPLETED" | "ABANDONED";
+  recommendationId?: string;
+  commandExecutionId?: string;
+}
+
+/** Confirmed against beyond-backup-2026-08-18T06-33-36-443Z.json. */
+export interface WorkoutSession {
+  id: string;
+  schemaVersion: number;
+  beyondDayId: string;
+  templateId: string;
+  sessionType: string;
+  status: string;
+  startedAt: string;
+  endedAt?: string;
+}
+
+/**
+ * UNCONFIRMED SHAPE: both protected fixtures contain zero performedSets
+ * rows, so no real field names have been observed. Stored as opaque
+ * historical data (id/beyondDayId only are relied upon) rather than
+ * inventing a detailed schema the Canonical Spec's TRAIN doctrine implies
+ * (exercise, ordinal, weight, reps, completion) but that no evidence
+ * confirms yet. Replace with a confirmed shape once real performedSets
+ * evidence exists.
+ */
+export interface PerformedSetRaw {
+  id: string;
+  beyondDayId: string;
+  [key: string]: unknown;
+}
+
 export type DomainEventType =
   | "DAY_STARTED"
   | "STATE_CHECKED_IN"
