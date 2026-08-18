@@ -19,9 +19,10 @@ import type {
  * briefing ("do not alter the historical fixture ... implement a separate
  * historical compatibility importer/adapter at the boundary").
  *
- * Deliberately NOT wired into MoreScreen's restore UI in this checkpoint —
- * that's a UI decision for a later checkpoint. This module is exercised
- * directly by tests/integration/legacyBackupImport.test.ts.
+ * Wired into MoreScreen's restore UI via persistence/restore.ts, which
+ * detects this format vs. the native one and dispatches accordingly.
+ * Exercised directly by tests/compat/*.test.ts (parsing/fixture import)
+ * and, as wired UI behavior, by tests/integration/restoreWiring.test.ts.
  */
 
 const metaEntrySchema = z.object({ key: z.string(), value: z.unknown() });

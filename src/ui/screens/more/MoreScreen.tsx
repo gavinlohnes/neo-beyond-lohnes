@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { db } from "../../../persistence/db";
-import { exportBackup, previewRestore, applyRestore, type RestorePreview } from "../../../persistence/backup";
+import { exportBackup } from "../../../persistence/backup";
+import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
 import { getActiveDay, getDayCount, getEventCount, getRecommendationCount } from "../../../application/queries";
 
 const APP_VERSION = "0.1.0"; // chat-built checkpoint — NOT the same lineage as the surviving 0.2.0 app
@@ -32,7 +33,7 @@ export function MoreScreen() {
     if (!file) return;
     setStatus(null);
     try {
-      const p = await previewRestore(file);
+      const p = await previewAnyRestore(file);
       setPreview(p);
       setPendingFile(file);
     } catch (e) {
@@ -44,7 +45,7 @@ export function MoreScreen() {
 
   async function handleConfirmRestore() {
     if (!pendingFile) return;
-    await applyRestore(pendingFile);
+    await applyAnyRestore(pendingFile);
     setPreview(null);
     setPendingFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -69,6 +70,7 @@ export function MoreScreen() {
         <h2 className="card-title">Restore</h2>
         <p className="card-body" style={{ marginBottom: 12 }}>
           Replace-only restoration. BEYOND validates the file and shows a preview before any data can be replaced.
+          Accepts either this app's own backup export or a real historical BEYOND_BACKUP export (app 0.1.0/0.2.0).
         </p>
         <input
           ref={fileInputRef}
@@ -79,6 +81,11 @@ export function MoreScreen() {
         {preview && (
           <div style={{ marginTop: 12, border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", padding: 12 }}>
             <p className="card-title" style={{ fontSize: 14 }}>This will replace all current data with:</p>
+            <p className="meta">
+              {preview.format === "LEGACY"
+                ? `historical BEYOND_BACKUP — app ${preview.appVersion}, data schema ${preview.dataSchemaVersion}, exported ${preview.exportedAt}`
+                : `this app's own backup — database "${preview.databaseName}" v${preview.databaseVersion}`}
+            </p>
             {preview.tables.map((t) => (
               <p key={t.name} className="meta">{t.name}: {t.rowCount} rows</p>
             ))}
