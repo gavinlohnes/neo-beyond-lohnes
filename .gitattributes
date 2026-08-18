@@ -1,0 +1,4 @@
+# Protected historical fixtures must be byte-identical forever. Never let
+# git normalize their line endings on add/checkout regardless of local
+# autocrlf configuration — see test-fixtures/protected/MANIFEST.md.
+test-fixtures/protected/*.json -text -diff
