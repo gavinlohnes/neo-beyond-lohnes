@@ -105,10 +105,11 @@ export function TodayScreen() {
     if (!day) return;
     setBusy(true);
     try {
-      const result = await submitCheckIn(day.id, values);
-      setCheckIn(result.checkIn);
-      setRecommendation(result.recommendation);
-      setRecorded(false);
+      await submitCheckIn(day.id, values);
+      // Refetch everything derived from the new recommendation — not just
+      // checkIn/recommendation — so pendingOutcome (CP10) and any other
+      // derived state stay in sync without requiring a page reload.
+      await refresh();
     } finally {
       setBusy(false);
     }
@@ -118,10 +119,8 @@ export function TodayScreen() {
     if (!day) return;
     setBusy(true);
     try {
-      const result = await submitCheckIn(day.id, quickCheckInValues);
-      setCheckIn(result.checkIn);
-      setRecommendation(result.recommendation);
-      setRecorded(false);
+      await submitCheckIn(day.id, quickCheckInValues);
+      await refresh();
     } finally {
       setBusy(false);
     }
@@ -132,7 +131,7 @@ export function TodayScreen() {
     setBusy(true);
     try {
       await recordRecommendation(day.id, recommendation);
-      setRecorded(true);
+      await refresh();
     } finally {
       setBusy(false);
     }
