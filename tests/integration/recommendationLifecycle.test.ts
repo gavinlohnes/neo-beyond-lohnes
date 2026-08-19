@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/persistence/db";
 import {
   completeReset,
+  completeShiftDown,
   recordRecommendation,
   startDay,
   startReset,
@@ -126,23 +127,20 @@ describe("RESET lifecycle", () => {
 });
 
 describe("SHIFT DOWN override", () => {
-  it("records a COMMAND_STARTED/COMMAND_COMPLETED pair sharing one correlationId", async () => {
+  it("requires a duration input and a START/COMPLETE two-step, same shape as RESET", async () => {
     const day = await startDay();
-    await startShiftDown(day.id);
+    const startedId = await startShiftDown(day.id, 20);
+    await completeShiftDown(day.id, startedId);
 
     const events = await db.events.where("beyondDayId").equals(day.id).toArray();
-    const started = events.find(
-      (e) =>
-        e.type === "COMMAND_STARTED" &&
-        (e.payload as { commandName: string }).commandName === "START_SHIFT_DOWN",
-    );
-    const completed = events.find(
-      (e) =>
-        e.type === "COMMAND_COMPLETED" &&
-        (e.payload as { commandName: string }).commandName === "START_SHIFT_DOWN",
-    );
+    const started = events.find((e) => e.type === "SHIFT_DOWN_STARTED");
+    const completed = events.find((e) => e.type === "SHIFT_DOWN_COMPLETED");
     expect(started).toBeDefined();
     expect(completed).toBeDefined();
-    expect(completed!.correlationId).toBe(started!.correlationId);
+    expect((started!.payload as { durationMinutes: number }).durationMinutes).toBe(20);
+    expect((completed!.payload as { shiftDownStartedEventId: string }).shiftDownStartedEventId).toBe(
+      startedId,
+    );
+    expect(completed!.causationId).toBe(startedId);
   });
 });

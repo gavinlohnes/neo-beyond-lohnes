@@ -112,6 +112,8 @@ export type DomainEventType =
   | "COMMAND_COMPLETED"
   | "RESET_STARTED"
   | "RESET_COMPLETED"
+  | "SHIFT_DOWN_STARTED"
+  | "SHIFT_DOWN_COMPLETED"
   | "WORKOUT_STARTED"
   | "WORKOUT_ABANDONED"
   | "WATER_LOGGED"
@@ -150,6 +152,17 @@ export interface WaterLogCorrectedPayload {
   originalEventId: string;
   supersedesEventId: string;
   amountOz: number;
+}
+
+/** SHIFT DOWN mirrors RESET's shape: duration input, then a two-step START/COMPLETE flow. */
+export interface ShiftDownStartedPayload {
+  commandId: string;
+  durationMinutes: number;
+}
+
+export interface ShiftDownCompletedPayload {
+  commandId: string;
+  shiftDownStartedEventId: string;
 }
 
 export interface DomainEvent<TPayload = unknown> {

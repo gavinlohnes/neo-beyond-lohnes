@@ -115,10 +115,44 @@ export async function completeReset(
   );
 }
 
-export async function startShiftDown(beyondDayId: string): Promise<void> {
+/**
+ * SHIFT DOWN needs its own duration input, same shape as RESET (BEYOND —
+ * Context & Safety Decisions, 2026-08-19): a value chosen up front, then an
+ * explicit START/COMPLETE two-step, rather than a single one-tap action.
+ */
+export async function startShiftDown(
+  beyondDayId: string,
+  durationMinutes: number,
+): Promise<string> {
   const correlationId = newId();
-  await logEvent(beyondDayId, "COMMAND_STARTED", { commandName: "START_SHIFT_DOWN" }, "USER", correlationId);
-  await logEvent(beyondDayId, "COMMAND_COMPLETED", { commandName: "START_SHIFT_DOWN" }, "SYSTEM", correlationId);
+  const eventId = await logEvent(
+    beyondDayId,
+    "SHIFT_DOWN_STARTED",
+    { commandId: correlationId, durationMinutes },
+    "USER",
+    correlationId,
+  );
+  return eventId;
+}
+
+/**
+ * Event type name matches the Decision Register's WORK TRANSITION section
+ * verbatim ("SHIFT_DOWN_COMPLETED clears the post-shift requirement") so
+ * that hook is ready to wire up whenever the workContext/post-shift
+ * mechanism is built — not implemented by this command itself.
+ */
+export async function completeShiftDown(
+  beyondDayId: string,
+  shiftDownStartedEventId: string,
+): Promise<void> {
+  await logEvent(
+    beyondDayId,
+    "SHIFT_DOWN_COMPLETED",
+    { commandId: newId(), shiftDownStartedEventId },
+    "USER",
+    newId(),
+    shiftDownStartedEventId,
+  );
 }
 
 export async function logWater(

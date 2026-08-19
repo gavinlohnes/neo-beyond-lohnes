@@ -7,6 +7,7 @@ import {
   startReset,
   completeReset,
   startShiftDown,
+  completeShiftDown,
 } from "../../../application/commands";
 import {
   getActiveDay,
@@ -43,6 +44,9 @@ export function TodayScreen() {
   const [activeResetId, setActiveResetId] = useState<string | null>(null);
   const [resetIntensity, setResetIntensity] = useState<1 | 2 | 3 | 4 | 5>(3);
   const [showReset, setShowReset] = useState(false);
+  const [activeShiftDownId, setActiveShiftDownId] = useState<string | null>(null);
+  const [shiftDownDuration, setShiftDownDuration] = useState(10);
+  const [showShiftDown, setShowShiftDown] = useState(false);
 
   useEffect(() => {
     void refresh();
@@ -105,9 +109,17 @@ export function TodayScreen() {
     setShowReset(false);
   }
 
-  async function handleShiftDown() {
+  async function handleStartShiftDown() {
     if (!day) return;
-    await startShiftDown(day.id);
+    const id = await startShiftDown(day.id, shiftDownDuration);
+    setActiveShiftDownId(id);
+  }
+
+  async function handleCompleteShiftDown() {
+    if (!day || !activeShiftDownId) return;
+    await completeShiftDown(day.id, activeShiftDownId);
+    setActiveShiftDownId(null);
+    setShowShiftDown(false);
   }
 
   const recordLabel = recommendation?.kind === "NO_ACTION_REQUIRED" ? "RECORD NO ACTION" : "ACCEPT";
@@ -165,7 +177,7 @@ export function TodayScreen() {
               <button
                 className="btn-primary"
                 style={{ background: "var(--surface-2)" }}
-                onClick={() => void handleShiftDown()}
+                onClick={() => setShowShiftDown((s) => !s)}
               >
                 SHIFT DOWN
               </button>
@@ -196,6 +208,40 @@ export function TodayScreen() {
                 ) : (
                   <button className="btn-primary" onClick={() => void handleCompleteReset()}>
                     COMPLETE RESET
+                  </button>
+                )}
+              </div>
+            )}
+            {showShiftDown && (
+              <div style={{ marginTop: 12 }}>
+                <p className="meta" style={{ marginBottom: 8 }}>Duration (minutes)</p>
+                <input
+                  type="number"
+                  min={1}
+                  value={shiftDownDuration}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    setShiftDownDuration(Number.isNaN(v) || v < 1 ? 1 : v);
+                  }}
+                  disabled={activeShiftDownId !== null}
+                  style={{
+                    width: "100%",
+                    background: "var(--surface-2)",
+                    border: "1px solid var(--border-subtle)",
+                    borderRadius: "var(--radius)",
+                    color: "var(--text-1)",
+                    padding: "10px 12px",
+                    fontSize: 15,
+                    marginBottom: 8,
+                  }}
+                />
+                {!activeShiftDownId ? (
+                  <button className="btn-primary" onClick={() => void handleStartShiftDown()}>
+                    START SHIFT DOWN
+                  </button>
+                ) : (
+                  <button className="btn-primary" onClick={() => void handleCompleteShiftDown()}>
+                    COMPLETE SHIFT DOWN
                   </button>
                 )}
               </div>
