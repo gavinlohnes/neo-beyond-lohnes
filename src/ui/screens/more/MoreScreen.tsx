@@ -17,6 +17,7 @@ export function MoreScreen() {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [archiveStatus, setArchiveStatus] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -30,8 +31,19 @@ export function MoreScreen() {
     setActiveDayYes((await getActiveDay()) !== undefined);
   }
 
+  async function handleExportBackup() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await exportBackup();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleFileChosen(file: File | undefined) {
-    if (!file) return;
+    if (busy || !file) return;
+    setBusy(true);
     setStatus(null);
     try {
       const p = await previewAnyRestore(file);
@@ -41,20 +53,47 @@ export function MoreScreen() {
       setStatus(e instanceof Error ? e.message : "Could not read file.");
       setPreview(null);
       setPendingFile(null);
+    } finally {
+      setBusy(false);
     }
   }
 
+  /**
+   * Restore safety (P0): before replacing anything, automatically export
+   * the CURRENT data first — a real rollback file, not just a warning —
+   * then apply the restore, then force a full page reload rather than
+   * re-fetching each screen's own state individually. A replace-only
+   * restore touches every table at once; a full reload is the only way
+   * to guarantee every screen (not just whichever ones happen to be
+   * mounted right now) reflects it, and matches how drastic the action
+   * actually is. Errors are now caught and surfaced instead of leaving
+   * an unhandled rejection with no feedback.
+   */
   async function handleConfirmRestore() {
-    if (!pendingFile) return;
-    await applyAnyRestore(pendingFile);
+    if (busy || !pendingFile) return;
+    setBusy(true);
+    setStatus("Backing up current data before restoring...");
+    try {
+      await exportBackup();
+      setStatus("Restoring...");
+      await applyAnyRestore(pendingFile);
+      window.location.reload();
+    } catch (e) {
+      setStatus(e instanceof Error ? `Restore failed: ${e.message}` : "Restore failed.");
+      setBusy(false);
+    }
+  }
+
+  function handleCancelRestore() {
     setPreview(null);
     setPendingFile(null);
+    setStatus(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
-    setStatus("Restore complete.");
-    await refresh();
   }
 
   async function handleArchive() {
+    if (busy) return;
+    setBusy(true);
     setArchiveStatus(null);
     try {
       const result = await shareBackup();
@@ -65,6 +104,8 @@ export function MoreScreen() {
       );
     } catch (e) {
       setArchiveStatus(e instanceof Error ? e.message : "Could not start archive.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -75,7 +116,7 @@ export function MoreScreen() {
 
       <div className="card">
         <h2 className="card-title">Backup</h2>
-        <button className="btn-primary" onClick={() => void exportBackup()}>
+        <button className="btn-primary" disabled={busy} onClick={() => void handleExportBackup()}>
           EXPORT BACKUP
         </button>
         <p className="meta" style={{ marginTop: 8 }}>Application-owned JSON. Local history only.</p>
@@ -87,7 +128,7 @@ export function MoreScreen() {
           Quarterly archival via the device's native share sheet — you pick the destination (e.g. Drive).
           Data stays on-device; this never deletes anything.
         </p>
-        <button className="btn-primary" style={{ background: "var(--surface-2)" }} onClick={() => void handleArchive()}>
+        <button className="btn-primary" style={{ background: "var(--surface-2)" }} disabled={busy} onClick={() => void handleArchive()}>
           SHARE / ARCHIVE
         </button>
         {archiveStatus && <p className="meta" style={{ marginTop: 8 }}>{archiveStatus}</p>}
@@ -96,29 +137,53 @@ export function MoreScreen() {
       <div className="card">
         <h2 className="card-title">Restore</h2>
         <p className="card-body" style={{ marginBottom: 12 }}>
-          Replace-only restoration. BEYOND validates the file and shows a preview before any data can be replaced.
-          Accepts either this app's own backup export or a real historical BEYOND_BACKUP export (app 0.1.0/0.2.0).
+          Replace-only restoration. Your current data is automatically backed up right before anything is
+          replaced, so a mistaken restore is always recoverable. BEYOND validates the file and shows a preview
+          before any data can be replaced. Accepts either this app's own backup export or a real historical
+          BEYOND_BACKUP export (app 0.1.0/0.2.0).
         </p>
         <input
           ref={fileInputRef}
           type="file"
           accept="application/json"
+          disabled={busy}
           onChange={(e) => void handleFileChosen(e.target.files?.[0])}
         />
         {preview && (
           <div style={{ marginTop: 12, border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", padding: 12 }}>
-            <p className="card-title" style={{ fontSize: 14 }}>This will replace all current data with:</p>
-            <p className="meta">
+            <p className="card-title" style={{ fontSize: 14 }}>
+              This will permanently replace everything currently on this device.
+            </p>
+            <p className="meta" style={{ marginTop: 8, marginBottom: 8 }}>
               {preview.format === "LEGACY"
-                ? `historical BEYOND_BACKUP — app ${preview.appVersion}, data schema ${preview.dataSchemaVersion}, exported ${preview.exportedAt}`
-                : `this app's own backup — database "${preview.databaseName}" v${preview.databaseVersion}`}
+                ? `From a historical backup — app ${preview.appVersion}, data schema ${preview.dataSchemaVersion}, exported ${new Date(preview.exportedAt).toLocaleString()}.`
+                : `From this app's own backup — database "${preview.databaseName}" version ${preview.databaseVersion}.`}
+            </p>
+            <p className="meta" style={{ marginBottom: 4 }}>
+              Right now on this device: {days} {days === 1 ? "day" : "days"}, {events} events, {recommendations} recommendations.
+            </p>
+            <p className="meta" style={{ marginBottom: 8 }}>
+              In the backup you're about to restore:
             </p>
             {preview.tables.map((t) => (
-              <p key={t.name} className="meta">{t.name}: {t.rowCount} rows</p>
+              <p key={t.name} className="meta" style={{ paddingLeft: 8 }}>{t.name}: {t.rowCount} rows</p>
             ))}
-            <button className="btn-primary" style={{ marginTop: 8 }} onClick={() => void handleConfirmRestore()}>
-              CONFIRM REPLACE
-            </button>
+            <p className="meta" style={{ marginTop: 8, marginBottom: 8 }}>
+              A backup of what's currently here will be downloaded automatically before this replaces it.
+            </p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn-primary" disabled={busy} onClick={() => void handleConfirmRestore()}>
+                CONFIRM REPLACE
+              </button>
+              <button
+                className="btn-primary"
+                style={{ background: "var(--surface-2)" }}
+                disabled={busy}
+                onClick={handleCancelRestore}
+              >
+                CANCEL
+              </button>
+            </div>
           </div>
         )}
         {status && <p className="meta" style={{ marginTop: 8 }}>{status}</p>}
