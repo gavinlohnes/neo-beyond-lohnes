@@ -8,6 +8,7 @@ import {
   type CheckInValues,
   type PartialCheckInValues,
 } from "./checkInFields";
+import { describeSchedulePrediction } from "./workContextCopy";
 import {
   startDay,
   ensureActiveDay,
@@ -507,30 +508,32 @@ export function TodayScreen() {
 
       {day && scheduledContext && (
         <div className="card">
-          <p className="eyebrow" style={{ marginBottom: 4 }}>SCHEDULE (PREDICTION, NOT FACT)</p>
-          <p className="card-body" style={{ marginBottom: 12 }}>
-            Week {scheduledContext.week} — {scheduledContext.phase.replace(/_/g, " ")}
-            {scheduledContext.todayIsScheduledWorkDay ? " (scheduled work day)" : " (scheduled off)"}.
-            Current context: {day.workContext}.
-          </p>
-          <div style={{ display: "flex", gap: 8 }}>
+          <p className="eyebrow" style={{ marginBottom: 4 }}>WORK CONTEXT</p>
+          <h2 className="card-title">Are you working today?</h2>
+          <div style={{ display: "flex", gap: 8, marginTop: 12, marginBottom: 12 }}>
             <button
               className="btn-primary"
-              style={{ width: "auto", padding: "8px 16px", background: day.workContext === "WORK" ? "var(--accent)" : "var(--surface-2)" }}
+              style={{ flex: 1, background: day.workContext === "WORK" ? "var(--accent)" : "var(--surface-2)" }}
               disabled={busy}
               onClick={() => void handleAcceptScheduledContext("WORK")}
             >
-              CONFIRM WORK
+              YES
             </button>
             <button
               className="btn-primary"
-              style={{ width: "auto", padding: "8px 16px", background: day.workContext === "OFF" ? "var(--accent)" : "var(--surface-2)" }}
+              style={{ flex: 1, background: day.workContext === "OFF" ? "var(--accent)" : "var(--surface-2)" }}
               disabled={busy}
               onClick={() => void handleAcceptScheduledContext("OFF")}
             >
-              CONFIRM OFF
+              NO
             </button>
           </div>
+          <p className="card-body" style={{ fontSize: 13 }}>{describeSchedulePrediction(scheduledContext)}</p>
+          {day.workContext !== "UNKNOWN" && (
+            <p className="meta" style={{ marginTop: 8 }}>
+              Currently set: {day.workContext === "WORK" ? "working today" : "off today"}.
+            </p>
+          )}
         </div>
       )}
 
