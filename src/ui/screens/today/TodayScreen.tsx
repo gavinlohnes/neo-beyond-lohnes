@@ -12,6 +12,7 @@ import { describeSchedulePrediction } from "./workContextCopy";
 import { describeCapacity } from "./capacityCopy";
 import { deriveCapacity } from "../../../engine/capacity";
 import { describeRecommendationAction, describeRecommendationEffect } from "./recommendationCopy";
+import { dismissOutcome, isOutcomeDismissed } from "../../../persistence/outcomeDismissals";
 import {
   startDay,
   ensureActiveDay,
@@ -79,7 +80,6 @@ export function TodayScreen() {
   const [suggestEndDay, setSuggestEndDay] = useState(false);
   const [daysSinceBackup, setDaysSinceBackup] = useState<number | null>(null);
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
-  const [outcomeDismissed, setOutcomeDismissed] = useState(false);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
 
@@ -98,7 +98,8 @@ export function TodayScreen() {
       setRecommendation(rec);
       setRecorded(rec ? await wasRecommendationRecorded(activeDay.id, rec.id) : false);
       setSuggestEndDay(await shouldSuggestEndDay(activeDay.id));
-      setPendingOutcome((await getPendingOutcomeRating(activeDay.id)) ?? null);
+      const pending = (await getPendingOutcomeRating(activeDay.id)) ?? null;
+      setPendingOutcome(pending && !isOutcomeDismissed(pending.id) ? pending : null);
       setMinimumDay(await getMinimumDayStatus(activeDay.id));
 
       const openReset = await getOpenReset(activeDay.id);
@@ -278,6 +279,12 @@ export function TodayScreen() {
     }
   }
 
+  function handleDismissOutcome() {
+    if (!pendingOutcome) return;
+    dismissOutcome(pendingOutcome.id);
+    setPendingOutcome(null);
+  }
+
   return (
     <div className="screen">
       <p className="eyebrow">BEYOND // TODAY</p>
@@ -293,13 +300,16 @@ export function TodayScreen() {
         </div>
       )}
 
-      {pendingOutcome && !outcomeDismissed && (
+      {pendingOutcome && (
         <div className="card">
           <p className="eyebrow" style={{ marginBottom: 4 }}>LAST TIME</p>
-          <p className="card-body" style={{ marginBottom: 12 }}>
-            {pendingOutcome.title} — how'd that go?
+          <p className="card-body" style={{ marginBottom: 8 }}>
+            Last time, BEYOND recommended "{pendingOutcome.title}" — how did that go?
           </p>
-          <div style={{ display: "flex", gap: 8 }}>
+          <p className="meta" style={{ marginBottom: 12 }}>
+            This just records your answer for later review. It won't change today's guidance.
+          </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button className="btn-primary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("GOOD")}>
               GOOD
             </button>
@@ -312,7 +322,8 @@ export function TodayScreen() {
             <button
               className="btn-primary"
               style={{ width: "auto", padding: "8px 16px", background: "var(--surface-2)" }}
-              onClick={() => setOutcomeDismissed(true)}
+              disabled={busy}
+              onClick={handleDismissOutcome}
             >
               DISMISS
             </button>
