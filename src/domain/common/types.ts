@@ -119,6 +119,7 @@ export type DomainEventType =
   | "BODYWEIGHT_LOGGED"
   | "PROTEIN_LOGGED"
   | "OUTCOME_RATED"
+  | "WORK_CONTEXT_SET"
   | "STATE_CHECKED_IN"
   | "RECOMMENDATION_ISSUED"
   | "RECOMMENDATION_ACCEPTED"
@@ -224,6 +225,20 @@ export interface OutcomeRatedPayload {
   commandId: string;
   recommendationId: string;
   rating: "GOOD" | "NEUTRAL" | "BAD";
+}
+
+/**
+ * Work schedule / predictive context (Decision Register, "WORK SCHEDULE /
+ * CONTEXT — SUPERSEDING REFINEMENT", 2026-08-19): the ONLY way
+ * BeyondDay.workContext ever changes. Schedule-derived predictions never
+ * write this directly — every change is this one explicit, confirmed
+ * fact, whether the user typed it manually or accepted a schedule
+ * suggestion. Doctrine: PREDICTION IS NOT FACT.
+ */
+export interface WorkContextSetPayload {
+  commandId: string;
+  workContext: "WORK" | "OFF";
+  source: "MANUAL" | "SCHEDULE_SUGGESTION_ACCEPTED";
 }
 
 /** Field names confirmed against real historical WORKOUT_STARTED events. */

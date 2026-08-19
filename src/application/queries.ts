@@ -8,6 +8,7 @@ import type {
   WaterLogCorrectedPayload,
   WaterLoggedPayload,
 } from "../domain/common/types";
+import { deriveScheduledContext, type ScheduledContext } from "../engine/scheduledContext";
 
 /**
  * Only one BeyondDay should ever be ACTIVE at a time (startDay() closes
@@ -172,6 +173,16 @@ export async function getTotalProteinGrams(beyondDayId: string): Promise<number>
  * Only a RECORDED (accepted/no-action) recommendation is ratable, and
  * only once, per recommendation.
  */
+/**
+ * Thin wrapper so the UI has one query entry point rather than importing
+ * the engine function directly, matching every other derived-state query
+ * in this file. Defaults to real "now" in production; tests inject a
+ * fixed Date. Purely a read — never touches BeyondDay.workContext.
+ */
+export function getScheduledContext(now: Date = new Date()): ScheduledContext {
+  return deriveScheduledContext(now);
+}
+
 export async function getPendingOutcomeRating(beyondDayId: string): Promise<Recommendation | undefined> {
   const recommendations = (await db.recommendations.where("beyondDayId").equals(beyondDayId).toArray()).sort(
     (a, b) => a.issuedAt.localeCompare(b.issuedAt),

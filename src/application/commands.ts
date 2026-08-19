@@ -263,6 +263,36 @@ export async function rateOutcome(
   );
 }
 
+/**
+ * The ONLY way BeyondDay.workContext ever changes (Decision Register,
+ * WORK SCHEDULE / CONTEXT reconciliation, 2026-08-19). Schedule/time may
+ * SUGGEST a context via engine/scheduledContext.ts, but nothing writes
+ * workContext except this explicit, confirmed command — whether the
+ * trigger was typing it manually or accepting a schedule suggestion.
+ * Manual corrections/overrides beat generated schedule context by
+ * construction: this command has no memory of "where the value came
+ * from" beyond the source label on the event, and always simply sets
+ * whatever value the caller passed.
+ */
+export async function setWorkContext(
+  beyondDayId: string,
+  workContext: "WORK" | "OFF",
+  source: "MANUAL" | "SCHEDULE_SUGGESTION_ACCEPTED",
+): Promise<void> {
+  await db.beyondDays.update(beyondDayId, {
+    workContext,
+    updatedAt: new Date().toISOString(),
+  });
+  const correlationId = newId();
+  await logEvent(
+    beyondDayId,
+    "WORK_CONTEXT_SET",
+    { commandId: correlationId, workContext, source },
+    "USER",
+    correlationId,
+  );
+}
+
 export async function logWater(
   beyondDayId: string,
   amountOz: number,

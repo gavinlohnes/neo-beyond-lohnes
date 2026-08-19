@@ -10,6 +10,7 @@ import {
   completeShiftDown,
   endDay,
   rateOutcome,
+  setWorkContext,
 } from "../../../application/commands";
 import {
   getActiveDay,
@@ -18,8 +19,10 @@ import {
   wasRecommendationRecorded,
   shouldSuggestEndDay,
   getPendingOutcomeRating,
+  getScheduledContext,
 } from "../../../application/queries";
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
+import type { ScheduledContext } from "../../../engine/scheduledContext";
 
 const BACKUP_NUDGE_THRESHOLD_DAYS = 7;
 
@@ -73,10 +76,12 @@ export function TodayScreen() {
   const [daysSinceBackup, setDaysSinceBackup] = useState<number | null>(null);
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [outcomeDismissed, setOutcomeDismissed] = useState(false);
+  const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
 
   useEffect(() => {
     void refresh();
     setDaysSinceBackup(getDaysSinceLastBackup());
+    setScheduledContext(getScheduledContext());
   }, []);
 
   async function refresh() {
@@ -168,6 +173,17 @@ export function TodayScreen() {
     setBusy(true);
     try {
       await endDay(day.id, "EXPLICIT_END_DAY");
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleAcceptScheduledContext(value: "WORK" | "OFF") {
+    if (!day) return;
+    setBusy(true);
+    try {
+      await setWorkContext(day.id, value, "SCHEDULE_SUGGESTION_ACCEPTED");
       await refresh();
     } finally {
       setBusy(false);
@@ -398,6 +414,35 @@ export function TodayScreen() {
               last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
             </p>
           )}
+        </div>
+      )}
+
+      {day && scheduledContext && (
+        <div className="card">
+          <p className="eyebrow" style={{ marginBottom: 4 }}>SCHEDULE (PREDICTION, NOT FACT)</p>
+          <p className="card-body" style={{ marginBottom: 12 }}>
+            Week {scheduledContext.week} — {scheduledContext.phase.replace(/_/g, " ")}
+            {scheduledContext.todayIsScheduledWorkDay ? " (scheduled work day)" : " (scheduled off)"}.
+            Current context: {day.workContext}.
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="btn-primary"
+              style={{ width: "auto", padding: "8px 16px", background: day.workContext === "WORK" ? "var(--accent)" : "var(--surface-2)" }}
+              disabled={busy}
+              onClick={() => void handleAcceptScheduledContext("WORK")}
+            >
+              CONFIRM WORK
+            </button>
+            <button
+              className="btn-primary"
+              style={{ width: "auto", padding: "8px 16px", background: day.workContext === "OFF" ? "var(--accent)" : "var(--surface-2)" }}
+              disabled={busy}
+              onClick={() => void handleAcceptScheduledContext("OFF")}
+            >
+              CONFIRM OFF
+            </button>
+          </div>
         </div>
       )}
 
