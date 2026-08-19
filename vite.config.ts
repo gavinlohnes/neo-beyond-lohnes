@@ -2,7 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
+// GitHub Pages project site: served from /neo-beyond-lohnes/, not the
+// domain root. Vite rewrites index.html's asset references and the PWA
+// plugin's manifest start_url/scope to match this automatically.
 export default defineConfig({
+  base: "/neo-beyond-lohnes/",
   plugins: [
     react(),
     VitePWA({
