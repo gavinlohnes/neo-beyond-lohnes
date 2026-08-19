@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { BeyondDay, Capacity, WorkoutSession } from "../../../domain/common/types";
+import type { Capacity, WorkoutSession } from "../../../domain/common/types";
 import type { PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
 import { WORKOUT_TEMPLATES, getReducedExercises } from "../../../domain/workout/types";
 import { deriveCapacity } from "../../../engine/capacity";
@@ -7,6 +7,7 @@ import { suggestSessionVariant } from "../../../engine/trainSuggestion";
 import type { ProgressionSuggestion } from "../../../engine/progression";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import { getActiveDay, getLatestCheckIn } from "../../../application/queries";
+import { ensureActiveDay } from "../../../application/commands";
 import {
   getActiveWorkoutSession,
   getPerformedSets,
@@ -33,7 +34,6 @@ function exercisesFor(templateId: WorkoutTemplateId, sessionType: SessionType) {
 }
 
 export function TrainScreen() {
-  const [day, setDay] = useState<BeyondDay | null>(null);
   const [capacity, setCapacity] = useState<Capacity | null>(null);
   const [suggestedTemplate, setSuggestedTemplate] = useState<WorkoutTemplateId>("A");
   const [chosenTemplate, setChosenTemplate] = useState<WorkoutTemplateId>("A");
@@ -52,11 +52,13 @@ export function TrainScreen() {
   }, []);
 
   async function refresh() {
-    const activeDay = (await getActiveDay()) ?? null;
-    setDay(activeDay);
-    if (!activeDay) return;
+    // Template/variant suggestion don't require a day to already exist —
+    // rotation history is global, and capacity naturally reads as "no
+    // check-in yet" when there's no active day. Only an ACTIVE session
+    // genuinely requires one (nothing to resume before any day exists).
+    const activeDay = await getActiveDay();
 
-    const checkIn = await getLatestCheckIn(activeDay.id);
+    const checkIn = activeDay ? await getLatestCheckIn(activeDay.id) : undefined;
     const cap = checkIn ? deriveCapacity(checkIn).capacity : null;
     setCapacity(cap);
 
@@ -67,7 +69,7 @@ export function TrainScreen() {
     setSuggestedTemplate(nextTemplate);
     setChosenTemplate(nextTemplate);
 
-    const active = (await getActiveWorkoutSession(activeDay.id)) ?? null;
+    const active = activeDay ? ((await getActiveWorkoutSession(activeDay.id)) ?? null) : null;
     setSession(active);
     if (active) {
       setSets(await getPerformedSets(active.id));
@@ -99,11 +101,12 @@ export function TrainScreen() {
   }
 
   async function actuallyStart() {
-    if (!day) return;
+    if (busy) return;
     setBusy(true);
     try {
+      const activeDay = await ensureActiveDay();
       const started = await startWorkout(
-        day.id,
+        activeDay.id,
         chosenVariant === "RECOVERY" ? null : chosenTemplate,
         chosenVariant,
         { overrideConfirmed: true },
@@ -117,7 +120,7 @@ export function TrainScreen() {
   }
 
   async function handleStart() {
-    if (!day) return;
+    if (busy) return;
     if (chosenVariant === "STANDARD") {
       guard(capacity, () => actuallyStart());
     } else {
@@ -139,11 +142,11 @@ export function TrainScreen() {
   }
 
   async function handleLogSet(exerciseId: string, setNumber: number) {
-    if (!day || !session) return;
+    if (busy || !session) return;
     const { weight, reps } = getInput(exerciseId, setNumber);
     setBusy(true);
     try {
-      await logSet(day.id, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined);
+      await logSet(session.beyondDayId, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined);
       setSets(await getPerformedSets(session.id));
     } finally {
       setBusy(false);
@@ -151,10 +154,10 @@ export function TrainScreen() {
   }
 
   async function handleSkipSet(exerciseId: string, setNumber: number) {
-    if (!day || !session) return;
+    if (busy || !session) return;
     setBusy(true);
     try {
-      await skipSet(day.id, session.id, exerciseId, setNumber);
+      await skipSet(session.beyondDayId, session.id, exerciseId, setNumber);
       setSets(await getPerformedSets(session.id));
     } finally {
       setBusy(false);
@@ -162,10 +165,10 @@ export function TrainScreen() {
   }
 
   async function handleCompleteWorkout(status: "COMPLETED" | "PARTIAL") {
-    if (!day || !session) return;
+    if (busy || !session) return;
     setBusy(true);
     try {
-      await completeWorkout(day.id, session.id, session.sessionType as SessionType, status);
+      await completeWorkout(session.beyondDayId, session.id, session.sessionType as SessionType, status);
       await refresh();
     } finally {
       setBusy(false);
@@ -173,10 +176,10 @@ export function TrainScreen() {
   }
 
   async function handleAbandonWorkout() {
-    if (!day || !session) return;
+    if (busy || !session) return;
     setBusy(true);
     try {
-      await abandonWorkout(day.id, session.id, session.sessionType as SessionType);
+      await abandonWorkout(session.beyondDayId, session.id, session.sessionType as SessionType);
       await refresh();
     } finally {
       setBusy(false);
@@ -184,24 +187,14 @@ export function TrainScreen() {
   }
 
   async function handleCompleteRecovery() {
-    if (!day || !session) return;
+    if (busy || !session) return;
     setBusy(true);
     try {
-      await completeRecoverySession(day.id, session.id, recoveryMinutes);
+      await completeRecoverySession(session.beyondDayId, session.id, recoveryMinutes);
       await refresh();
     } finally {
       setBusy(false);
     }
-  }
-
-  if (!day) {
-    return (
-      <div className="screen">
-        <p className="eyebrow">BEYOND // TRAIN</p>
-        <h1 className="title">Train</h1>
-        <p className="card-body">Start your day on TODAY first.</p>
-      </div>
-    );
   }
 
   const hasLoggedAnySet = sets.length > 0;

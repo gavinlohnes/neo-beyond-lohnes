@@ -42,6 +42,19 @@ export async function startDay(): Promise<BeyondDay> {
 }
 
 /**
+ * Lazy day creation (P0): a meaningful action creates today's BeyondDay
+ * automatically if none is active, rather than requiring an explicit
+ * START DAY click first. Explicit startDay() remains available and
+ * unchanged for anyone who prefers to start deliberately; this is just
+ * the fallback every write command now goes through first.
+ */
+export async function ensureActiveDay(): Promise<BeyondDay> {
+  const existing = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
+  if (existing) return existing;
+  return startDay();
+}
+
+/**
  * Explicit END DAY. Closes silently — no recap (Context & Safety
  * Decisions, 2026-08-19). The Engine may SUGGEST calling this right after
  * primary sleep is logged (see queries.shouldSuggestEndDay), but ending is

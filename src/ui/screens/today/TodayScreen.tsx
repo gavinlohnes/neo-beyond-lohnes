@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { BeyondDay, Recommendation, StateCheckIn } from "../../../domain/common/types";
 import {
   startDay,
+  ensureActiveDay,
   submitCheckIn,
   recordRecommendation,
   startReset,
@@ -26,6 +27,8 @@ import {
   getPendingOutcomeRating,
   getScheduledContext,
   getMinimumDayStatus,
+  getOpenReset,
+  getOpenShiftDown,
   type MinimumDayStatus,
 } from "../../../application/queries";
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
@@ -103,10 +106,29 @@ export function TodayScreen() {
       setSuggestEndDay(await shouldSuggestEndDay(activeDay.id));
       setPendingOutcome((await getPendingOutcomeRating(activeDay.id)) ?? null);
       setMinimumDay(await getMinimumDayStatus(activeDay.id));
+
+      const openReset = await getOpenReset(activeDay.id);
+      if (openReset) {
+        setActiveResetId(openReset.eventId);
+        setResetIntensity(openReset.intensity);
+        setShowReset(true);
+      } else {
+        setActiveResetId(null);
+      }
+
+      const openShiftDown = await getOpenShiftDown(activeDay.id);
+      if (openShiftDown) {
+        setActiveShiftDownId(openShiftDown.eventId);
+        setShiftDownDuration(openShiftDown.durationMinutes);
+        setShowShiftDown(true);
+      } else {
+        setActiveShiftDownId(null);
+      }
     }
   }
 
   async function handleStartDay() {
+    if (busy) return;
     setBusy(true);
     try {
       setDay(await startDay());
@@ -116,10 +138,11 @@ export function TodayScreen() {
   }
 
   async function handleCheckIn() {
-    if (!day) return;
+    if (busy) return;
     setBusy(true);
     try {
-      await submitCheckIn(day.id, values);
+      const activeDay = await ensureActiveDay();
+      await submitCheckIn(activeDay.id, values);
       // Refetch everything derived from the new recommendation — not just
       // checkIn/recommendation — so pendingOutcome (CP10) and any other
       // derived state stay in sync without requiring a page reload.
@@ -130,10 +153,11 @@ export function TodayScreen() {
   }
 
   async function handleQuickCheckIn() {
-    if (!day) return;
+    if (busy) return;
     setBusy(true);
     try {
-      await submitCheckIn(day.id, quickCheckInValues);
+      const activeDay = await ensureActiveDay();
+      await submitCheckIn(activeDay.id, quickCheckInValues);
       await refresh();
     } finally {
       setBusy(false);
@@ -141,7 +165,7 @@ export function TodayScreen() {
   }
 
   async function handleRecord() {
-    if (!day || !recommendation) return;
+    if (busy || !day || !recommendation) return;
     setBusy(true);
     try {
       await recordRecommendation(day.id, recommendation);
@@ -152,33 +176,53 @@ export function TodayScreen() {
   }
 
   async function handleStartReset() {
-    if (!day) return;
-    const id = await startReset(day.id, resetIntensity);
-    setActiveResetId(id);
+    if (busy || !day) return;
+    setBusy(true);
+    try {
+      const id = await startReset(day.id, resetIntensity);
+      setActiveResetId(id);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleCompleteReset() {
-    if (!day || !activeResetId) return;
-    await completeReset(day.id, activeResetId);
-    setActiveResetId(null);
-    setShowReset(false);
+    if (busy || !day || !activeResetId) return;
+    setBusy(true);
+    try {
+      await completeReset(day.id, activeResetId);
+      setActiveResetId(null);
+      setShowReset(false);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleStartShiftDown() {
-    if (!day) return;
-    const id = await startShiftDown(day.id, shiftDownDuration);
-    setActiveShiftDownId(id);
+    if (busy || !day) return;
+    setBusy(true);
+    try {
+      const id = await startShiftDown(day.id, shiftDownDuration);
+      setActiveShiftDownId(id);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleCompleteShiftDown() {
-    if (!day || !activeShiftDownId) return;
-    await completeShiftDown(day.id, activeShiftDownId);
-    setActiveShiftDownId(null);
-    setShowShiftDown(false);
+    if (busy || !day || !activeShiftDownId) return;
+    setBusy(true);
+    try {
+      await completeShiftDown(day.id, activeShiftDownId);
+      setActiveShiftDownId(null);
+      setShowShiftDown(false);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleEndDay() {
-    if (!day) return;
+    if (busy || !day) return;
     setBusy(true);
     try {
       await endDay(day.id, "EXPLICIT_END_DAY");
@@ -189,7 +233,7 @@ export function TodayScreen() {
   }
 
   async function handleAcceptScheduledContext(value: "WORK" | "OFF") {
-    if (!day) return;
+    if (busy || !day) return;
     setBusy(true);
     try {
       await setWorkContext(day.id, value, "SCHEDULE_SUGGESTION_ACCEPTED");
@@ -200,7 +244,7 @@ export function TodayScreen() {
   }
 
   async function handleEnableMinimumDay() {
-    if (!day) return;
+    if (busy || !day) return;
     setBusy(true);
     try {
       await enableMinimumDay(day.id);
@@ -211,7 +255,7 @@ export function TodayScreen() {
   }
 
   async function handleMarkMinimum(kind: "MEDS" | "HYGIENE" | "MOVE" | "RECOVER_CONNECT") {
-    if (!day) return;
+    if (busy || !day) return;
     setBusy(true);
     try {
       if (kind === "MEDS") await markMedsCompleted(day.id);
@@ -225,7 +269,7 @@ export function TodayScreen() {
   }
 
   async function handleRateOutcome(rating: "GOOD" | "NEUTRAL" | "BAD") {
-    if (!day || !pendingOutcome) return;
+    if (busy || !day || !pendingOutcome) return;
     setBusy(true);
     try {
       await rateOutcome(day.id, pendingOutcome.id, rating);
@@ -352,11 +396,11 @@ export function TodayScreen() {
                   ))}
                 </div>
                 {!activeResetId ? (
-                  <button className="btn-primary" onClick={() => void handleStartReset()}>
+                  <button className="btn-primary" disabled={busy} onClick={() => void handleStartReset()}>
                     START RESET
                   </button>
                 ) : (
-                  <button className="btn-primary" onClick={() => void handleCompleteReset()}>
+                  <button className="btn-primary" disabled={busy} onClick={() => void handleCompleteReset()}>
                     COMPLETE RESET
                   </button>
                 )}
@@ -386,11 +430,11 @@ export function TodayScreen() {
                   }}
                 />
                 {!activeShiftDownId ? (
-                  <button className="btn-primary" onClick={() => void handleStartShiftDown()}>
+                  <button className="btn-primary" disabled={busy} onClick={() => void handleStartShiftDown()}>
                     START SHIFT DOWN
                   </button>
                 ) : (
-                  <button className="btn-primary" onClick={() => void handleCompleteShiftDown()}>
+                  <button className="btn-primary" disabled={busy} onClick={() => void handleCompleteShiftDown()}>
                     COMPLETE SHIFT DOWN
                   </button>
                 )}
@@ -400,56 +444,54 @@ export function TodayScreen() {
         </div>
       )}
 
-      {day && (
-        <div className="card">
-          <p className="eyebrow" style={{ marginBottom: 4 }}>STATE INPUT</p>
-          <h2 className="card-title">State check-in</h2>
-          <button
-            className="btn-primary"
-            style={{ marginBottom: 12 }}
-            disabled={busy}
-            onClick={() => void handleQuickCheckIn()}
-          >
-            ALL GOOD
-          </button>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-            {fields.map(({ key, min }) => (
-              <div className="field" key={key}>
-                <label>
-                  <span style={{ textTransform: "capitalize" }}>{key}</span>
-                </label>
-                <input
-                  type="number"
-                  min={min}
-                  max={5}
-                  value={values[key]}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    setValues((s) => ({ ...s, [key]: Number.isNaN(v) ? min : v }));
-                  }}
-                  style={{
-                    width: "100%",
-                    background: "var(--surface-2)",
-                    border: "1px solid var(--border-subtle)",
-                    borderRadius: "var(--radius)",
-                    color: "var(--text-1)",
-                    padding: "10px 12px",
-                    fontSize: 15,
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-          <button className="btn-primary" disabled={busy} onClick={() => void handleCheckIn()}>
-            SUBMIT CHECK-IN
-          </button>
-          {checkIn && (
-            <p className="meta" style={{ marginTop: 8 }}>
-              last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
-            </p>
-          )}
+      <div className="card">
+        <p className="eyebrow" style={{ marginBottom: 4 }}>STATE INPUT</p>
+        <h2 className="card-title">State check-in</h2>
+        <button
+          className="btn-primary"
+          style={{ marginBottom: 12 }}
+          disabled={busy}
+          onClick={() => void handleQuickCheckIn()}
+        >
+          ALL GOOD
+        </button>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+          {fields.map(({ key, min }) => (
+            <div className="field" key={key}>
+              <label>
+                <span style={{ textTransform: "capitalize" }}>{key}</span>
+              </label>
+              <input
+                type="number"
+                min={min}
+                max={5}
+                value={values[key]}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setValues((s) => ({ ...s, [key]: Number.isNaN(v) ? min : v }));
+                }}
+                style={{
+                  width: "100%",
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border-subtle)",
+                  borderRadius: "var(--radius)",
+                  color: "var(--text-1)",
+                  padding: "10px 12px",
+                  fontSize: 15,
+                }}
+              />
+            </div>
+          ))}
         </div>
-      )}
+        <button className="btn-primary" disabled={busy} onClick={() => void handleCheckIn()}>
+          SUBMIT CHECK-IN
+        </button>
+        {checkIn && (
+          <p className="meta" style={{ marginTop: 8 }}>
+            last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
+          </p>
+        )}
+      </div>
 
       {day && scheduledContext && (
         <div className="card">

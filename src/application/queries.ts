@@ -268,3 +268,50 @@ export async function getPendingOutcomeRating(beyondDayId: string): Promise<Reco
   }
   return undefined;
 }
+
+export interface OpenResetInfo {
+  eventId: string;
+  intensity: 1 | 2 | 3 | 4 | 5;
+}
+
+export interface OpenShiftDownInfo {
+  eventId: string;
+  durationMinutes: number;
+}
+
+/**
+ * Interrupted-session reconstruction (P0): RESET/SHIFT DOWN's in-progress
+ * state previously lived only in React component state, so a reload while
+ * one was open would lose track of it entirely — the panel would forget
+ * it was ever started, letting a fresh START create a second, orphaned
+ * RESET_STARTED with no matching completion. Finds a RESET_STARTED (or
+ * SHIFT_DOWN_STARTED) with no matching *_COMPLETED event (matched by
+ * causationId) and returns the original chosen value so the UI can
+ * restore the exact in-progress state, not just "something is open."
+ * If more than one is somehow open, the most recent wins.
+ */
+export async function getOpenReset(beyondDayId: string): Promise<OpenResetInfo | undefined> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const completedTargets = new Set(
+    events.filter((e) => e.type === "RESET_COMPLETED").map((e) => e.causationId),
+  );
+  const open = events
+    .filter((e) => e.type === "RESET_STARTED" && !completedTargets.has(e.id))
+    .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))
+    .at(-1);
+  if (!open) return undefined;
+  return { eventId: open.id, intensity: (open.payload as { intensity: 1 | 2 | 3 | 4 | 5 }).intensity };
+}
+
+export async function getOpenShiftDown(beyondDayId: string): Promise<OpenShiftDownInfo | undefined> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const completedTargets = new Set(
+    events.filter((e) => e.type === "SHIFT_DOWN_COMPLETED").map((e) => e.causationId),
+  );
+  const open = events
+    .filter((e) => e.type === "SHIFT_DOWN_STARTED" && !completedTargets.has(e.id))
+    .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))
+    .at(-1);
+  if (!open) return undefined;
+  return { eventId: open.id, durationMinutes: (open.payload as { durationMinutes: number }).durationMinutes };
+}

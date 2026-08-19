@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import type { BeyondDay, HydrationEntry } from "../../../domain/common/types";
-import { logWater, correctWater, logSleep, logBodyweight, logProtein } from "../../../application/commands";
+import {
+  logWater,
+  correctWater,
+  logSleep,
+  logBodyweight,
+  logProtein,
+  ensureActiveDay,
+} from "../../../application/commands";
 import {
   getActiveDay,
   getEffectiveHydrationTotal,
@@ -43,7 +50,7 @@ export function BodyScreen() {
   }
 
   async function handleLogSleep() {
-    if (!day) return;
+    if (busy) return;
     const minutes = Number(sleepInput);
     if (!Number.isFinite(minutes) || minutes <= 0) {
       setError("Enter a positive number of minutes.");
@@ -52,7 +59,8 @@ export function BodyScreen() {
     setBusy(true);
     setError(null);
     try {
-      await logSleep(day.id, minutes);
+      const activeDay = await ensureActiveDay();
+      await logSleep(activeDay.id, minutes);
       setSleepInput("");
       await refresh();
     } finally {
@@ -61,7 +69,7 @@ export function BodyScreen() {
   }
 
   async function handleLogBodyweight() {
-    if (!day) return;
+    if (busy) return;
     const weight = Number(bodyweightInput);
     if (!Number.isFinite(weight) || weight <= 0) {
       setError("Enter a positive weight in lbs.");
@@ -70,7 +78,8 @@ export function BodyScreen() {
     setBusy(true);
     setError(null);
     try {
-      await logBodyweight(day.id, weight);
+      const activeDay = await ensureActiveDay();
+      await logBodyweight(activeDay.id, weight);
       setBodyweightInput("");
       await refresh();
     } finally {
@@ -79,7 +88,7 @@ export function BodyScreen() {
   }
 
   async function handleLogProtein() {
-    if (!day) return;
+    if (busy) return;
     const grams = Number(proteinInput);
     if (!Number.isFinite(grams) || grams <= 0) {
       setError("Enter a positive number of grams.");
@@ -88,7 +97,8 @@ export function BodyScreen() {
     setBusy(true);
     setError(null);
     try {
-      await logProtein(day.id, grams);
+      const activeDay = await ensureActiveDay();
+      await logProtein(activeDay.id, grams);
       setProteinInput("");
       await refresh();
     } finally {
@@ -97,7 +107,7 @@ export function BodyScreen() {
   }
 
   async function handleLog() {
-    if (!day) return;
+    if (busy) return;
     const amount = Number(input);
     if (!Number.isFinite(amount) || amount <= 0) {
       setError("Enter a positive number of ounces.");
@@ -106,7 +116,8 @@ export function BodyScreen() {
     setBusy(true);
     setError(null);
     try {
-      await logWater(day.id, amount);
+      const activeDay = await ensureActiveDay();
+      await logWater(activeDay.id, amount);
       setInput("");
       await refresh();
     } finally {
@@ -115,7 +126,7 @@ export function BodyScreen() {
   }
 
   async function handleCorrect(entry: HydrationEntry) {
-    if (!day) return;
+    if (busy || !day) return;
     const amount = Number(correctionInput);
     if (!Number.isFinite(amount) || amount <= 0) {
       setError("Enter a positive number of ounces.");
@@ -133,16 +144,6 @@ export function BodyScreen() {
     } finally {
       setBusy(false);
     }
-  }
-
-  if (!day) {
-    return (
-      <div className="screen">
-        <p className="eyebrow">BEYOND // BODY</p>
-        <h1 className="title">Readiness inputs</h1>
-        <p className="card-body">Start your day on TODAY first.</p>
-      </div>
-    );
   }
 
   return (
