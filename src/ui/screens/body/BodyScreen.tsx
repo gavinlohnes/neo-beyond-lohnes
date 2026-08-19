@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import type { BeyondDay, HydrationEntry } from "../../../domain/common/types";
-import { logWater, correctWater, logSleep } from "../../../application/commands";
+import { logWater, correctWater, logSleep, logBodyweight, logProtein } from "../../../application/commands";
 import {
   getActiveDay,
   getEffectiveHydrationTotal,
   getHydrationEntries,
   getLatestSleepMinutes,
+  getLatestBodyweight,
+  getTotalProteinGrams,
 } from "../../../application/queries";
 
 export function BodyScreen() {
@@ -19,6 +21,10 @@ export function BodyScreen() {
   const [busy, setBusy] = useState(false);
   const [sleepMinutes, setSleepMinutes] = useState<number | undefined>(undefined);
   const [sleepInput, setSleepInput] = useState("");
+  const [bodyweight, setBodyweight] = useState<number | undefined>(undefined);
+  const [bodyweightInput, setBodyweightInput] = useState("");
+  const [proteinTotal, setProteinTotal] = useState(0);
+  const [proteinInput, setProteinInput] = useState("");
 
   useEffect(() => {
     void refresh();
@@ -31,6 +37,8 @@ export function BodyScreen() {
       setEntries(await getHydrationEntries(activeDay.id));
       setTotal(await getEffectiveHydrationTotal(activeDay.id));
       setSleepMinutes(await getLatestSleepMinutes(activeDay.id));
+      setBodyweight(await getLatestBodyweight(activeDay.id));
+      setProteinTotal(await getTotalProteinGrams(activeDay.id));
     }
   }
 
@@ -46,6 +54,42 @@ export function BodyScreen() {
     try {
       await logSleep(day.id, minutes);
       setSleepInput("");
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleLogBodyweight() {
+    if (!day) return;
+    const weight = Number(bodyweightInput);
+    if (!Number.isFinite(weight) || weight <= 0) {
+      setError("Enter a positive weight in lbs.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await logBodyweight(day.id, weight);
+      setBodyweightInput("");
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleLogProtein() {
+    if (!day) return;
+    const grams = Number(proteinInput);
+    if (!Number.isFinite(grams) || grams <= 0) {
+      setError("Enter a positive number of grams.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await logProtein(day.id, grams);
+      setProteinInput("");
       await refresh();
     } finally {
       setBusy(false);
@@ -145,6 +189,68 @@ export function BodyScreen() {
         </div>
         <button className="btn-primary" disabled={busy} onClick={() => void handleLogSleep()}>
           LOG SLEEP
+        </button>
+      </div>
+
+      <div className="card">
+        <p className="eyebrow" style={{ marginBottom: 4 }}>BODYWEIGHT</p>
+        <h2 className="card-title">Log bodyweight</h2>
+        <p className="card-body" style={{ marginBottom: 12 }}>
+          A fact only — no goal.
+        </p>
+        {bodyweight !== undefined && (
+          <p className="meta" style={{ marginBottom: 8 }}>Latest: {bodyweight} lbs</p>
+        )}
+        <div className="field">
+          <label><span>Weight (lbs)</span></label>
+          <input
+            type="number"
+            min={0}
+            value={bodyweightInput}
+            onChange={(e) => setBodyweightInput(e.target.value)}
+            style={{
+              width: "100%",
+              background: "var(--surface-2)",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "var(--radius)",
+              color: "var(--text-1)",
+              padding: "10px 12px",
+              fontSize: 15,
+            }}
+          />
+        </div>
+        <button className="btn-primary" disabled={busy} onClick={() => void handleLogBodyweight()}>
+          LOG BODYWEIGHT
+        </button>
+      </div>
+
+      <div className="card">
+        <p className="eyebrow" style={{ marginBottom: 4 }}>PROTEIN</p>
+        <h2 className="card-title">Log protein</h2>
+        <p className="card-body" style={{ marginBottom: 12 }}>
+          No daily target — logs the amount only.
+        </p>
+        <p className="meta" style={{ marginBottom: 8 }}>Today: {proteinTotal} g</p>
+        <div className="field">
+          <label><span>Protein (g)</span></label>
+          <input
+            type="number"
+            min={0}
+            value={proteinInput}
+            onChange={(e) => setProteinInput(e.target.value)}
+            style={{
+              width: "100%",
+              background: "var(--surface-2)",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "var(--radius)",
+              color: "var(--text-1)",
+              padding: "10px 12px",
+              fontSize: 15,
+            }}
+          />
+        </div>
+        <button className="btn-primary" disabled={busy} onClick={() => void handleLogProtein()}>
+          LOG PROTEIN
         </button>
       </div>
 

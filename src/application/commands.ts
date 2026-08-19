@@ -201,6 +201,37 @@ export async function completeShiftDown(
   );
 }
 
+/**
+ * Bodyweight logging (BODY & Backup / Context & Safety Decisions,
+ * 2026-08-19): a fact only — no goal/target in this checkpoint.
+ */
+export async function logBodyweight(beyondDayId: string, weightLbs: number): Promise<void> {
+  const correlationId = newId();
+  await logEvent(
+    beyondDayId,
+    "BODYWEIGHT_LOGGED",
+    { commandId: correlationId, weightLbs },
+    "USER",
+    correlationId,
+  );
+}
+
+/**
+ * Protein logging (BODY & Backup Decisions, 2026-08-19, locked): amount
+ * only, explicitly no daily target — "not carrying over the old legacy
+ * mockup's 165g+ target."
+ */
+export async function logProtein(beyondDayId: string, grams: number): Promise<void> {
+  const correlationId = newId();
+  await logEvent(
+    beyondDayId,
+    "PROTEIN_LOGGED",
+    { commandId: correlationId, grams },
+    "USER",
+    correlationId,
+  );
+}
+
 export async function logWater(
   beyondDayId: string,
   amountOz: number,

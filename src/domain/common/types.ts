@@ -106,6 +106,8 @@ export type DomainEventType =
   | "DAY_STARTED"
   | "DAY_ENDED"
   | "SLEEP_LOGGED"
+  | "BODYWEIGHT_LOGGED"
+  | "PROTEIN_LOGGED"
   | "STATE_CHECKED_IN"
   | "RECOMMENDATION_ISSUED"
   | "RECOMMENDATION_ACCEPTED"
@@ -179,6 +181,26 @@ export interface DayEndedPayload {
 export interface SleepLoggedPayload {
   commandId: string;
   durationMinutes: number;
+}
+
+/**
+ * Bodyweight logging (BODY & Backup / Context & Safety Decisions,
+ * 2026-08-19): a fact only in this checkpoint — no goal/target field.
+ * Tonight's phone session proposed carrying forward a 210->165 goal from
+ * the legacy mockup, but the 2026-08-19 authority reconciliation rejected
+ * the parallel sleep-goal proposal on "goals remain deferred" grounds and
+ * flagged the bodyweight goal as hinging on the same question — Gavin's
+ * checkpoint instructions explicitly scope this to logging only.
+ */
+export interface BodyweightLoggedPayload {
+  commandId: string;
+  weightLbs: number;
+}
+
+/** Protein logging: amount only, no daily target (2026-08-19, locked — explicitly not carrying over the legacy mockup's 165g+ target). */
+export interface ProteinLoggedPayload {
+  commandId: string;
+  grams: number;
 }
 
 /** Field names confirmed against real historical WORKOUT_STARTED events. */

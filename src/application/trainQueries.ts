@@ -3,13 +3,19 @@ import { doesSessionAdvanceRotation, suggestNextTemplate } from "../engine/train
 import type { PerformedSet, SessionType, WorkoutSessionStatus, WorkoutTemplateId } from "../domain/workout/types";
 import type { WorkoutSession } from "../domain/common/types";
 
-/** For resuming an in-progress session across refresh/reopen. */
+/**
+ * For resuming an in-progress session across refresh/reopen. Only one
+ * session should ever be ACTIVE at a time in normal use, but sorted by
+ * startedAt rather than relying on Dexie's .last() (which orders by
+ * primary key, not time) for defense in depth if that invariant is ever
+ * violated.
+ */
 export async function getActiveWorkoutSession(beyondDayId: string): Promise<WorkoutSession | undefined> {
-  return db.workoutSessions
-    .where("beyondDayId")
-    .equals(beyondDayId)
+  const sessions = await db.workoutSessions.where("beyondDayId").equals(beyondDayId).toArray();
+  return sessions
     .filter((s) => s.status === "ACTIVE")
-    .last();
+    .sort((a, b) => a.startedAt.localeCompare(b.startedAt))
+    .at(-1);
 }
 
 /**
