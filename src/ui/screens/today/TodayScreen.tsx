@@ -9,6 +9,8 @@ import {
   type PartialCheckInValues,
 } from "./checkInFields";
 import { describeSchedulePrediction } from "./workContextCopy";
+import { describeCapacity } from "./capacityCopy";
+import { deriveCapacity } from "../../../engine/capacity";
 import {
   startDay,
   ensureActiveDay,
@@ -333,10 +335,18 @@ export function TodayScreen() {
         <div className="card card--action">
           <p className="eyebrow" style={{ marginBottom: 4 }}>PRIMARY GUIDANCE</p>
           <p className="meta" style={{ marginBottom: 12 }}>Context: {day.workContext}</p>
+          {checkIn && (() => {
+            const { capacity, reasonCodes } = deriveCapacity(checkIn);
+            return (
+              <p className="card-body" style={{ fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
+                {describeCapacity(capacity, reasonCodes)}
+              </p>
+            );
+          })()}
           <h2 className="card-title">{recommendation.title}</h2>
           <p className="card-body">{recommendation.rationale}</p>
           <details className="why">
-            <summary>WHY</summary>
+            <summary>How BEYOND decided</summary>
             {recommendation.trace.matchedRules.map((r) => (
               <div key={r.ruleId} className={`why-rule ${r.result ? "why-rule--matched" : ""}`}>
                 <span>{r.ruleId}</span>
