@@ -6,7 +6,7 @@ import { getActiveDay, getDayCount, getEventCount, getRecommendationCount } from
 
 const APP_VERSION = "0.1.0"; // chat-built checkpoint — NOT the same lineage as the surviving 0.2.0 app
 const ENGINE_VERSION = "0.1.0";
-const DATA_SCHEMA = 2; // this checkpoint's own schema (v2 adds outcomes/workoutSessions/performedSets) — not yet reconciled with the real app's schema 3
+const DATA_SCHEMA = 3; // this checkpoint's own schema (v3 adds sessionId/exerciseId indexes to performedSets for TRAIN) — not yet reconciled with the real app's schema 3 (same number, different lineage)
 
 export function MoreScreen() {
   const [days, setDays] = useState(0);

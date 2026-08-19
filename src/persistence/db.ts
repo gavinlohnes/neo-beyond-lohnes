@@ -39,6 +39,19 @@ export class BeyondDB extends Dexie {
       workoutSessions: "id, beyondDayId, templateId, status, startedAt",
       performedSets: "id, beyondDayId",
     });
+    // v3: adds sessionId/exerciseId indexes to performedSets, now that
+    // TRAIN (this checkpoint) gives it a real, confirmed shape instead of
+    // the previously opaque placeholder. Existing v1/v2 tables/data
+    // untouched.
+    this.version(3).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+    });
   }
 }
 

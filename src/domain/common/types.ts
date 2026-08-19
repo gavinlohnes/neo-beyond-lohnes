@@ -118,6 +118,9 @@ export type DomainEventType =
   | "SHIFT_DOWN_COMPLETED"
   | "WORKOUT_STARTED"
   | "WORKOUT_ABANDONED"
+  | "WORKOUT_COMPLETED"
+  | "SET_LOGGED"
+  | "SET_SKIPPED"
   | "WATER_LOGGED"
   | "WATER_LOG_CORRECTED";
 
@@ -176,6 +179,43 @@ export interface DayEndedPayload {
 export interface SleepLoggedPayload {
   commandId: string;
   durationMinutes: number;
+}
+
+/** Field names confirmed against real historical WORKOUT_STARTED events. */
+export interface WorkoutStartedPayload {
+  commandId: string;
+  sessionId: string;
+  templateId: string;
+  sessionType: string;
+}
+
+/**
+ * Shared shape for WORKOUT_COMPLETED and WORKOUT_ABANDONED (field names
+ * confirmed against the real historical WORKOUT_ABANDONED event) — the
+ * event `type` and `status` distinguish the outcome.
+ */
+export interface WorkoutEndedPayload {
+  commandId: string;
+  sessionId: string;
+  status: string;
+  sessionType: string;
+}
+
+export interface SetLoggedPayload {
+  commandId: string;
+  sessionId: string;
+  exerciseId: string;
+  setNumber: number;
+  weight: number;
+  reps: number;
+  substitutedName?: string;
+}
+
+export interface SetSkippedPayload {
+  commandId: string;
+  sessionId: string;
+  exerciseId: string;
+  setNumber: number;
 }
 
 /** SHIFT DOWN mirrors RESET's shape: duration input, then a two-step START/COMPLETE flow. */

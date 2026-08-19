@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
+import { TrainScreen } from "../ui/screens/train/TrainScreen";
 import { BodyScreen } from "../ui/screens/body/BodyScreen";
 import { MoreScreen } from "../ui/screens/more/MoreScreen";
 
@@ -11,16 +12,7 @@ export function App() {
   return (
     <div style={{ paddingBottom: 64 }}>
       {tab === "TODAY" && <TodayScreen />}
-      {tab === "TRAIN" && (
-        <div className="screen">
-          <p className="eyebrow">TRAIN</p>
-          <h1 className="title">Not yet built</h1>
-          <p className="card-body">
-            Deferred to a later checkpoint per the Build Log — hydration and the recommendation
-            lifecycle came first.
-          </p>
-        </div>
-      )}
+      {tab === "TRAIN" && <TrainScreen />}
       {tab === "BODY" && <BodyScreen />}
       {tab === "MORE" && <MoreScreen />}
 

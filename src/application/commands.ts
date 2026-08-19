@@ -271,7 +271,7 @@ export async function correctWater(
   );
 }
 
-async function logEvent(
+export async function logEvent(
   beyondDayId: string,
   type: DomainEvent["type"],
   payload: unknown,

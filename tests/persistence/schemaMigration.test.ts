@@ -5,20 +5,22 @@ import { BeyondDB } from "../../src/persistence/db";
 /**
  * A real checkpoint-03 user's browser already has an IndexedDB database at
  * schema v1 (no outcomes/workoutSessions/performedSets tables). Dexie must
- * upgrade that database to v2 in place, in the browser, without losing any
- * existing data. This test builds a genuine v1 database by hand (bypassing
- * BeyondDB, which only knows the current v2 schema) and then opens it
- * through the real BeyondDB class to prove the upgrade is safe.
+ * upgrade that database to the current schema in place, in the browser,
+ * without losing any existing data. This test builds a genuine v1
+ * database by hand (bypassing BeyondDB, which only knows the current
+ * schema) and then opens it through the real BeyondDB class to prove the
+ * upgrade chain (v1 -> v2 -> v3) is safe end to end.
  */
 
 const DB_NAME = "beyond";
+const CURRENT_SCHEMA_VERSION = 3;
 
 afterEach(async () => {
   await Dexie.delete(DB_NAME);
 });
 
-describe("Dexie v1 -> v2 migration", () => {
-  it("preserves existing v1 data and adds the new v2 tables empty", async () => {
+describe("Dexie v1 -> current schema migration", () => {
+  it("preserves existing v1 data and adds the newer tables empty", async () => {
     const v1 = new Dexie(DB_NAME);
     v1.version(1).stores({
       beyondDays: "id, status, startedAt",
@@ -51,7 +53,7 @@ describe("Dexie v1 -> v2 migration", () => {
     const upgraded = new BeyondDB();
     await upgraded.open();
 
-    expect(upgraded.verno).toBe(2);
+    expect(upgraded.verno).toBe(CURRENT_SCHEMA_VERSION);
     const day = await upgraded.beyondDays.get("day-1");
     expect(day).toBeDefined();
     expect(day!.status).toBe("ACTIVE");
