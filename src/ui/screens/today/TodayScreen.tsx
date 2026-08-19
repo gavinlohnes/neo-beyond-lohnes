@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import type { BeyondDay, Recommendation, StateCheckIn } from "../../../domain/common/types";
 import {
+  CHECK_IN_FIELDS,
+  describeCheckInValues,
+  isCheckInComplete,
+  rangeForField,
+  type CheckInValues,
+  type PartialCheckInValues,
+} from "./checkInFields";
+import {
   startDay,
   ensureActiveDay,
   submitCheckIn,
@@ -36,16 +44,6 @@ import type { ScheduledContext } from "../../../engine/scheduledContext";
 
 const BACKUP_NUDGE_THRESHOLD_DAYS = 7;
 
-type Values = Omit<StateCheckIn, "id" | "beyondDayId" | "recordedAt">;
-
-const defaultValues: Values = {
-  energy: 3,
-  stress: 3,
-  mood: 3,
-  soreness: 1,
-  alcoholUrge: 0,
-};
-
 /**
  * Quick check-in default ("all good" one-tap, Context & Safety Decisions
  * 2026-08-19). Still produces a real StateCheckIn the Engine evaluates —
@@ -53,7 +51,7 @@ const defaultValues: Values = {
  * chosen to land comfortably GREEN as "a genuinely fine day," not the
  * most extreme possible values. Confirmed with Gavin 2026-08-19.
  */
-export const quickCheckInValues: Values = {
+export const quickCheckInValues: CheckInValues = {
   energy: 4,
   stress: 2,
   mood: 4,
@@ -61,20 +59,12 @@ export const quickCheckInValues: Values = {
   alcoholUrge: 0,
 };
 
-const fields: { key: keyof Values; min: number }[] = [
-  { key: "energy", min: 1 },
-  { key: "stress", min: 1 },
-  { key: "mood", min: 1 },
-  { key: "soreness", min: 0 },
-  { key: "alcoholUrge", min: 0 },
-];
-
 export function TodayScreen() {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [recorded, setRecorded] = useState(false);
-  const [values, setValues] = useState<Values>(defaultValues);
+  const [values, setValues] = useState<PartialCheckInValues>({});
   const [busy, setBusy] = useState(false);
   const [activeResetId, setActiveResetId] = useState<string | null>(null);
   const [resetIntensity, setResetIntensity] = useState<1 | 2 | 3 | 4 | 5>(3);
@@ -138,7 +128,7 @@ export function TodayScreen() {
   }
 
   async function handleCheckIn() {
-    if (busy) return;
+    if (busy || !isCheckInComplete(values)) return;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
@@ -147,6 +137,11 @@ export function TodayScreen() {
       // checkIn/recommendation — so pendingOutcome (CP10) and any other
       // derived state stay in sync without requiring a page reload.
       await refresh();
+      // Empty must look empty (Phase 2): a just-submitted check-in is
+      // already reflected by "last recorded" below, not by the fields
+      // still showing the values as if pending. Reset so a returning user
+      // never mistakes leftover selections for a new, unsubmitted check-in.
+      setValues({});
     } finally {
       setBusy(false);
     }
@@ -447,45 +442,62 @@ export function TodayScreen() {
       <div className="card">
         <p className="eyebrow" style={{ marginBottom: 4 }}>STATE INPUT</p>
         <h2 className="card-title">State check-in</h2>
+        <p className="card-body" style={{ marginBottom: 12 }}>
+          How are you doing right now? Tap a number for each — nothing here is filled in for you.
+        </p>
         <button
           className="btn-primary"
-          style={{ marginBottom: 12 }}
+          style={{ marginBottom: 4 }}
           disabled={busy}
           onClick={() => void handleQuickCheckIn()}
         >
           ALL GOOD
         </button>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-          {fields.map(({ key, min }) => (
-            <div className="field" key={key}>
-              <label>
-                <span style={{ textTransform: "capitalize" }}>{key}</span>
-              </label>
-              <input
-                type="number"
-                min={min}
-                max={5}
-                value={values[key]}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  setValues((s) => ({ ...s, [key]: Number.isNaN(v) ? min : v }));
-                }}
-                style={{
-                  width: "100%",
-                  background: "var(--surface-2)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius)",
-                  color: "var(--text-1)",
-                  padding: "10px 12px",
-                  fontSize: 15,
-                }}
-              />
+        <p className="meta" style={{ marginBottom: 16 }}>
+          Sets {describeCheckInValues(quickCheckInValues)} — submits immediately.
+        </p>
+        {CHECK_IN_FIELDS.map((field) => (
+          <div key={field.key} style={{ marginBottom: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+              <span className="card-body" style={{ margin: 0, fontWeight: 600, color: "var(--text-1)" }}>
+                {field.label}
+              </span>
+              <span className="meta">{field.directionLabel}</span>
             </div>
-          ))}
-        </div>
-        <button className="btn-primary" disabled={busy} onClick={() => void handleCheckIn()}>
+            <div style={{ display: "flex", gap: 6 }}>
+              {rangeForField(field).map((n) => {
+                const selected = values[field.key] === n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    className="btn-primary"
+                    aria-pressed={selected}
+                    disabled={busy}
+                    style={{
+                      flex: 1,
+                      width: "auto",
+                      padding: "10px 0",
+                      fontSize: 14,
+                      minHeight: 40,
+                      background: selected ? "var(--accent)" : "var(--surface-2)",
+                      border: selected ? "1px solid var(--accent)" : "1px solid var(--border-subtle)",
+                    }}
+                    onClick={() => setValues((s) => ({ ...s, [field.key]: n }))}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        <button className="btn-primary" disabled={busy || !isCheckInComplete(values)} onClick={() => void handleCheckIn()}>
           SUBMIT CHECK-IN
         </button>
+        {!isCheckInComplete(values) && (
+          <p className="meta" style={{ marginTop: 8 }}>Select all five to submit.</p>
+        )}
         {checkIn && (
           <p className="meta" style={{ marginTop: 8 }}>
             last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
