@@ -17,6 +17,9 @@ import {
   wasRecommendationRecorded,
   shouldSuggestEndDay,
 } from "../../../application/queries";
+import { getDaysSinceLastBackup } from "../../../persistence/backup";
+
+const BACKUP_NUDGE_THRESHOLD_DAYS = 7;
 
 type Values = Omit<StateCheckIn, "id" | "beyondDayId" | "recordedAt">;
 
@@ -65,9 +68,11 @@ export function TodayScreen() {
   const [shiftDownDuration, setShiftDownDuration] = useState(10);
   const [showShiftDown, setShowShiftDown] = useState(false);
   const [suggestEndDay, setSuggestEndDay] = useState(false);
+  const [daysSinceBackup, setDaysSinceBackup] = useState<number | null>(null);
 
   useEffect(() => {
     void refresh();
+    setDaysSinceBackup(getDaysSinceLastBackup());
   }, []);
 
   async function refresh() {
@@ -171,6 +176,16 @@ export function TodayScreen() {
     <div className="screen">
       <p className="eyebrow">BEYOND // TODAY</p>
       <h1 className="title">Command</h1>
+
+      {(daysSinceBackup === null || daysSinceBackup >= BACKUP_NUDGE_THRESHOLD_DAYS) && (
+        <div className="card" style={{ borderColor: "var(--border-strong)" }}>
+          <p className="meta">
+            {daysSinceBackup === null
+              ? "No backup on record yet — export one from MORE."
+              : `It's been ${daysSinceBackup} days since your last backup — export one from MORE.`}
+          </p>
+        </div>
+      )}
 
       {!day && (
         <div className="card card--action">

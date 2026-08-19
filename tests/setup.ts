@@ -40,6 +40,24 @@ if (typeof globalThis.FileReader === "undefined") {
   (globalThis as unknown as { FileReader: unknown }).FileReader = NodeFileReaderPolyfill;
 }
 
+// localStorage exists in real browsers (where persistence/backup.ts's
+// last-backup-timestamp tracking runs) but is only available in Node
+// behind an experimental flag. Minimal synchronous in-memory polyfill —
+// only the subset backup.ts actually uses (getItem/setItem).
+if (typeof globalThis.localStorage === "undefined") {
+  const store = new Map<string, string>();
+  (globalThis as unknown as { localStorage: Storage }).localStorage = {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => void store.set(key, value),
+    removeItem: (key: string) => void store.delete(key),
+    clear: () => store.clear(),
+    key: (index: number) => Array.from(store.keys())[index] ?? null,
+    get length() {
+      return store.size;
+    },
+  } as Storage;
+}
+
 // BeyondDB always opens a fixed-name database ("beyond"). Swapping
 // globalThis.indexedDB here does NOT isolate tests, because Dexie caches
 // its indexedDB dependency once at module load rather than re-reading the
@@ -48,4 +66,5 @@ if (typeof globalThis.FileReader === "undefined") {
 // tests/compat/fixtureImport.test.ts, which already relied on this).
 afterEach(async () => {
   await Dexie.delete("beyond");
+  localStorage.clear();
 });

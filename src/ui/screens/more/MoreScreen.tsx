@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { db } from "../../../persistence/db";
-import { exportBackup } from "../../../persistence/backup";
+import { exportBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
 import { getActiveDay, getDayCount, getEventCount, getRecommendationCount } from "../../../application/queries";
 
@@ -16,6 +16,7 @@ export function MoreScreen() {
   const [preview, setPreview] = useState<RestorePreview | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [archiveStatus, setArchiveStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -53,6 +54,20 @@ export function MoreScreen() {
     await refresh();
   }
 
+  async function handleArchive() {
+    setArchiveStatus(null);
+    try {
+      const result = await shareBackup();
+      setArchiveStatus(
+        result.shared
+          ? "Sent to share sheet — pick a destination there."
+          : "Share sheet unavailable on this device; downloaded a backup file instead.",
+      );
+    } catch (e) {
+      setArchiveStatus(e instanceof Error ? e.message : "Could not start archive.");
+    }
+  }
+
   return (
     <div className="screen">
       <p className="eyebrow">MORE</p>
@@ -64,6 +79,18 @@ export function MoreScreen() {
           EXPORT BACKUP
         </button>
         <p className="meta" style={{ marginTop: 8 }}>Application-owned JSON. Local history only.</p>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">Archive</h2>
+        <p className="card-body" style={{ marginBottom: 12 }}>
+          Quarterly archival via the device's native share sheet — you pick the destination (e.g. Drive).
+          Data stays on-device; this never deletes anything.
+        </p>
+        <button className="btn-primary" style={{ background: "var(--surface-2)" }} onClick={() => void handleArchive()}>
+          SHARE / ARCHIVE
+        </button>
+        {archiveStatus && <p className="meta" style={{ marginTop: 8 }}>{archiveStatus}</p>}
       </div>
 
       <div className="card">

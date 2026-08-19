@@ -2,16 +2,75 @@ import { db } from "./db";
 // Side-effect import: extends Dexie/Dexie.prototype with export()/import().
 import "dexie-export-import";
 
+/**
+ * Backup reminder (BODY & Backup Decisions, 2026-08-19, locked): a weekly
+ * nudge, implemented as an on-open "days since last backup" check with an
+ * in-app banner at 7+ days — not a push notification, since BEYOND has no
+ * backend to support one without contradicting local-first doctrine.
+ *
+ * Last-backup timestamp is operational/UI bookkeeping, not meaningful
+ * domain history ("event significance must earn storage") — stored in
+ * localStorage rather than as a domain event.
+ */
+const LAST_BACKUP_AT_KEY = "beyond:lastBackupAt";
+
+function recordBackupExported(): void {
+  localStorage.setItem(LAST_BACKUP_AT_KEY, new Date().toISOString());
+}
+
+/** Null if a backup has never been exported on this device — treat as "due." */
+export function getDaysSinceLastBackup(): number | null {
+  const raw = localStorage.getItem(LAST_BACKUP_AT_KEY);
+  if (!raw) return null;
+  const lastBackupAt = new Date(raw).getTime();
+  if (Number.isNaN(lastBackupAt)) return null;
+  return Math.floor((Date.now() - lastBackupAt) / (1000 * 60 * 60 * 24));
+}
+
+function backupFilename(): string {
+  return `beyond-backup-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+}
+
 export async function exportBackup(): Promise<void> {
   const blob = await db.export({ prettyJson: true });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `beyond-backup-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+  a.download = backupFilename();
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+  recordBackupExported();
+}
+
+/**
+ * Quarterly archival (BODY & Backup Decisions, 2026-08-19, locked): via
+ * the existing backup export handed to the device's native share sheet,
+ * so Gavin picks the destination (e.g. Drive) himself — full in-app
+ * Google/Drive OAuth integration was explicitly considered and REJECTED.
+ * Archived data stays on-device; this never deletes anything, it only
+ * hands a copy of the same export to the OS share flow. Falls back to a
+ * plain download when the Web Share API (or file sharing specifically)
+ * isn't available — most desktop browsers.
+ */
+export async function shareBackup(): Promise<{ shared: boolean }> {
+  const blob = await db.export({ prettyJson: true });
+  const file = new File([blob], backupFilename(), { type: "application/json" });
+
+  const nav = navigator as Navigator & {
+    canShare?: (data: { files: File[] }) => boolean;
+    share?: (data: { files: File[]; title?: string; text?: string }) => Promise<void>;
+  };
+
+  if (nav.canShare?.({ files: [file] }) && nav.share) {
+    await nav.share({ files: [file], title: "BEYOND backup", text: "BEYOND data archive" });
+    recordBackupExported();
+    return { shared: true };
+  }
+
+  await exportBackup();
+  return { shared: false };
 }
 
 export interface RestorePreview {
