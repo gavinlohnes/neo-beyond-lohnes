@@ -11,6 +11,7 @@ import {
 import { describeSchedulePrediction } from "./workContextCopy";
 import { describeCapacity } from "./capacityCopy";
 import { deriveCapacity } from "../../../engine/capacity";
+import { describeRecommendationAction, describeRecommendationEffect } from "./recommendationCopy";
 import {
   startDay,
   ensureActiveDay,
@@ -277,8 +278,6 @@ export function TodayScreen() {
     }
   }
 
-  const recordLabel = recommendation?.kind === "NO_ACTION_REQUIRED" ? "RECORD NO ACTION" : "ACCEPT";
-
   return (
     <div className="screen">
       <p className="eyebrow">BEYOND // TODAY</p>
@@ -360,8 +359,13 @@ export function TodayScreen() {
               disabled={busy || recorded}
               onClick={() => void handleRecord()}
             >
-              {recorded ? "RECORDED" : recordLabel}
+              {recorded ? "RECORDED" : describeRecommendationAction(recommendation.kind)}
             </button>
+            {!recorded && (
+              <p className="meta" style={{ marginTop: 8 }}>
+                {describeRecommendationEffect(recommendation.kind)}
+              </p>
+            )}
           </div>
 
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
