@@ -120,6 +120,11 @@ export type DomainEventType =
   | "PROTEIN_LOGGED"
   | "OUTCOME_RATED"
   | "WORK_CONTEXT_SET"
+  | "MINIMUM_DAY_ENABLED"
+  | "MEDS_COMPLETED"
+  | "HYGIENE_COMPLETED"
+  | "MOVE_COMPLETED"
+  | "RECOVER_CONNECT_COMPLETED"
   | "STATE_CHECKED_IN"
   | "RECOMMENDATION_ISSUED"
   | "RECOMMENDATION_ACCEPTED"
@@ -241,6 +246,18 @@ export interface WorkContextSetPayload {
   source: "MANUAL" | "SCHEDULE_SUGGESTION_ACCEPTED";
 }
 
+/**
+ * MINIMUM DAY (Decision Register, RESET/CAPACITY — locked six-item
+ * baseline). MEDS/HYGIENE are always this generic shape ("no medication
+ * names/doses" / "no private detail" — the completion fact itself is all
+ * that's ever stored). MOVE_COMPLETED/RECOVER_CONNECT_COMPLETED use the
+ * same shape as the manual fallback when no RECOVERY session duration
+ * satisfies them automatically.
+ */
+export interface GenericCompletionPayload {
+  commandId: string;
+}
+
 /** Field names confirmed against real historical WORKOUT_STARTED events. */
 export interface WorkoutStartedPayload {
   commandId: string;
@@ -259,6 +276,8 @@ export interface WorkoutEndedPayload {
   sessionId: string;
   status: string;
   sessionType: string;
+  /** RECOVERY sessions only — the actual logged duration, needed for MINIMUM DAY's MOVE/RECOVER-CONNECT derivation. */
+  durationMinutes?: number;
 }
 
 export interface SetLoggedPayload {

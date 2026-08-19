@@ -183,6 +183,74 @@ export function getScheduledContext(now: Date = new Date()): ScheduledContext {
   return deriveScheduledContext(now);
 }
 
+export interface MinimumDayStatus {
+  enabled: boolean;
+  hydrate: boolean;
+  protein: boolean;
+  meds: boolean;
+  hygiene: boolean;
+  move: boolean;
+  recoverConnect: boolean;
+  allSatisfied: boolean;
+}
+
+const MINIMUM_DAY_HYDRATE_OZ = 40;
+const MINIMUM_DAY_PROTEIN_G = 25;
+const MINIMUM_DAY_MOVE_MINUTES = 5;
+const MINIMUM_DAY_RECOVER_CONNECT_MINUTES = 10;
+
+/**
+ * MINIMUM DAY (Decision Register, RESET/CAPACITY — locked six-item
+ * baseline, reconfirmed by the 2026-08-19 authority reconciliation which
+ * explicitly rejected the simplified "any check-in + any BODY log"
+ * proposal). HYDRATE/PROTEIN derive automatically from existing BODY
+ * logs; MOVE/RECOVER_CONNECT derive automatically from a RECOVERY
+ * session's actual duration where it proves the condition, with manual
+ * completion as the documented fallback; MEDS/HYGIENE are always manual
+ * (generic completion, no details stored — there's no event that could
+ * "prove" them automatically without collecting private detail).
+ */
+export async function getMinimumDayStatus(beyondDayId: string): Promise<MinimumDayStatus> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const enabled = events.some((e) => e.type === "MINIMUM_DAY_ENABLED");
+
+  const hydrateTotal = await getEffectiveHydrationTotal(beyondDayId);
+  const proteinTotal = await getTotalProteinGrams(beyondDayId);
+
+  const meds = events.some((e) => e.type === "MEDS_COMPLETED");
+  const hygiene = events.some((e) => e.type === "HYGIENE_COMPLETED");
+
+  const recoveryDurations = events
+    .filter(
+      (e) =>
+        (e.type === "WORKOUT_COMPLETED" || e.type === "WORKOUT_ABANDONED") &&
+        (e.payload as { sessionType?: string }).sessionType === "RECOVERY",
+    )
+    .map((e) => (e.payload as { durationMinutes?: number }).durationMinutes)
+    .filter((d): d is number => d !== undefined);
+
+  const move =
+    recoveryDurations.some((d) => d >= MINIMUM_DAY_MOVE_MINUTES) ||
+    events.some((e) => e.type === "MOVE_COMPLETED");
+  const recoverConnect =
+    recoveryDurations.some((d) => d >= MINIMUM_DAY_RECOVER_CONNECT_MINUTES) ||
+    events.some((e) => e.type === "RECOVER_CONNECT_COMPLETED");
+
+  const hydrate = hydrateTotal >= MINIMUM_DAY_HYDRATE_OZ;
+  const protein = proteinTotal >= MINIMUM_DAY_PROTEIN_G;
+
+  return {
+    enabled,
+    hydrate,
+    protein,
+    meds,
+    hygiene,
+    move,
+    recoverConnect,
+    allSatisfied: hydrate && protein && meds && hygiene && move && recoverConnect,
+  };
+}
+
 export async function getPendingOutcomeRating(beyondDayId: string): Promise<Recommendation | undefined> {
   const recommendations = (await db.recommendations.where("beyondDayId").equals(beyondDayId).toArray()).sort(
     (a, b) => a.issuedAt.localeCompare(b.issuedAt),

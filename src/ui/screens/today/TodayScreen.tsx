@@ -11,6 +11,11 @@ import {
   endDay,
   rateOutcome,
   setWorkContext,
+  enableMinimumDay,
+  markMedsCompleted,
+  markHygieneCompleted,
+  markMoveCompleted,
+  markRecoverConnectCompleted,
 } from "../../../application/commands";
 import {
   getActiveDay,
@@ -20,6 +25,8 @@ import {
   shouldSuggestEndDay,
   getPendingOutcomeRating,
   getScheduledContext,
+  getMinimumDayStatus,
+  type MinimumDayStatus,
 } from "../../../application/queries";
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
@@ -77,6 +84,7 @@ export function TodayScreen() {
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [outcomeDismissed, setOutcomeDismissed] = useState(false);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
+  const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
 
   useEffect(() => {
     void refresh();
@@ -94,6 +102,7 @@ export function TodayScreen() {
       setRecorded(rec ? await wasRecommendationRecorded(activeDay.id, rec.id) : false);
       setSuggestEndDay(await shouldSuggestEndDay(activeDay.id));
       setPendingOutcome((await getPendingOutcomeRating(activeDay.id)) ?? null);
+      setMinimumDay(await getMinimumDayStatus(activeDay.id));
     }
   }
 
@@ -184,6 +193,31 @@ export function TodayScreen() {
     setBusy(true);
     try {
       await setWorkContext(day.id, value, "SCHEDULE_SUGGESTION_ACCEPTED");
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleEnableMinimumDay() {
+    if (!day) return;
+    setBusy(true);
+    try {
+      await enableMinimumDay(day.id);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleMarkMinimum(kind: "MEDS" | "HYGIENE" | "MOVE" | "RECOVER_CONNECT") {
+    if (!day) return;
+    setBusy(true);
+    try {
+      if (kind === "MEDS") await markMedsCompleted(day.id);
+      else if (kind === "HYGIENE") await markHygieneCompleted(day.id);
+      else if (kind === "MOVE") await markMoveCompleted(day.id);
+      else await markRecoverConnectCompleted(day.id);
       await refresh();
     } finally {
       setBusy(false);
@@ -443,6 +477,55 @@ export function TodayScreen() {
               CONFIRM OFF
             </button>
           </div>
+        </div>
+      )}
+
+      {day && minimumDay && (
+        <div className="card">
+          <p className="eyebrow" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
+          {!minimumDay.enabled ? (
+            <>
+              <p className="card-body" style={{ marginBottom: 12 }}>
+                Reduced six-minimum baseline for a low-capacity day. Lowers expectations, doesn't add work.
+              </p>
+              <button className="btn-primary" disabled={busy} onClick={() => void handleEnableMinimumDay()}>
+                ENABLE MINIMUM DAY
+              </button>
+            </>
+          ) : (
+            <>
+              {(
+                [
+                  { key: "hydrate", label: "HYDRATE ≥40oz" },
+                  { key: "protein", label: "PROTEIN ≥25g" },
+                  { key: "meds", label: "MEDS", mark: "MEDS" as const },
+                  { key: "hygiene", label: "HYGIENE", mark: "HYGIENE" as const },
+                  { key: "move", label: "MOVE ≥5min", mark: "MOVE" as const },
+                  { key: "recoverConnect", label: "RECOVER/CONNECT ≥10min", mark: "RECOVER_CONNECT" as const },
+                ] as const
+              ).map((item) => {
+                const done = minimumDay[item.key as keyof MinimumDayStatus] as boolean;
+                return (
+                  <div key={item.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0" }}>
+                    <span className="card-body" style={{ margin: 0 }}>
+                      {done ? "✓ " : ""}
+                      {item.label}
+                    </span>
+                    {!done && "mark" in item && (
+                      <button
+                        className="btn-primary"
+                        style={{ width: "auto", padding: "4px 12px", fontSize: 12, background: "var(--surface-2)" }}
+                        disabled={busy}
+                        onClick={() => void handleMarkMinimum(item.mark)}
+                      >
+                        MARK DONE
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       )}
 

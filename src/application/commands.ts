@@ -293,6 +293,64 @@ export async function setWorkContext(
   );
 }
 
+/**
+ * MINIMUM DAY (Decision Register, RESET/CAPACITY, locked six-item
+ * baseline — reconfirmed, not the simplified "any check-in + any BODY
+ * log" version that was explicitly rejected in the 2026-08-19 authority
+ * reconciliation). Enabling is an explicit user action, not automatic;
+ * it lowers execution expectations rather than adding work, is scoped to
+ * the active BeyondDay, and ends with it — there is no separate "disable"
+ * command, since it simply stops applying once the day ends.
+ */
+export async function enableMinimumDay(beyondDayId: string): Promise<void> {
+  const correlationId = newId();
+  await logEvent(
+    beyondDayId,
+    "MINIMUM_DAY_ENABLED",
+    { commandId: correlationId },
+    "USER",
+    correlationId,
+  );
+}
+
+/**
+ * Generic completion only — no medication names or doses stored, per the
+ * locked MEDS minimum's privacy constraint.
+ */
+export async function markMedsCompleted(beyondDayId: string): Promise<void> {
+  const correlationId = newId();
+  await logEvent(beyondDayId, "MEDS_COMPLETED", { commandId: correlationId }, "USER", correlationId);
+}
+
+/** Generic completion only — no private detail stored, per the locked HYGIENE minimum. */
+export async function markHygieneCompleted(beyondDayId: string): Promise<void> {
+  const correlationId = newId();
+  await logEvent(beyondDayId, "HYGIENE_COMPLETED", { commandId: correlationId }, "USER", correlationId);
+}
+
+/**
+ * Manual fallback for MOVE (>=5min intentional movement) — used when no
+ * RECOVERY session already proves it (see queries.getMinimumDayStatus,
+ * which checks RECOVERY session duration first per the locked doctrine
+ * that "existing domain events may satisfy a minimum automatically").
+ */
+export async function markMoveCompleted(beyondDayId: string): Promise<void> {
+  const correlationId = newId();
+  await logEvent(beyondDayId, "MOVE_COMPLETED", { commandId: correlationId }, "USER", correlationId);
+}
+
+/** Manual fallback for RECOVER/CONNECT (>=10min) — same pattern as markMoveCompleted. */
+export async function markRecoverConnectCompleted(beyondDayId: string): Promise<void> {
+  const correlationId = newId();
+  await logEvent(
+    beyondDayId,
+    "RECOVER_CONNECT_COMPLETED",
+    { commandId: correlationId },
+    "USER",
+    correlationId,
+  );
+}
+
 export async function logWater(
   beyondDayId: string,
   amountOz: number,

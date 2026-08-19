@@ -150,13 +150,20 @@ export async function completeWorkout(
   sessionId: string,
   sessionType: SessionType,
   status: "COMPLETED" | "PARTIAL",
+  durationMinutes?: number,
 ): Promise<void> {
   await db.workoutSessions.update(sessionId, { status, endedAt: new Date().toISOString() });
   const correlationId = newId();
   await logEvent(
     beyondDayId,
     "WORKOUT_COMPLETED",
-    { commandId: correlationId, sessionId, status, sessionType },
+    {
+      commandId: correlationId,
+      sessionId,
+      status,
+      sessionType,
+      ...(durationMinutes !== undefined ? { durationMinutes } : {}),
+    },
     "USER",
     correlationId,
   );
@@ -171,6 +178,7 @@ export async function abandonWorkout(
   beyondDayId: string,
   sessionId: string,
   sessionType: SessionType,
+  durationMinutes?: number,
 ): Promise<void> {
   await db.workoutSessions.update(sessionId, {
     status: "ABANDONED" as WorkoutSessionStatus,
@@ -180,7 +188,13 @@ export async function abandonWorkout(
   await logEvent(
     beyondDayId,
     "WORKOUT_ABANDONED",
-    { commandId: correlationId, sessionId, status: "ABANDONED", sessionType },
+    {
+      commandId: correlationId,
+      sessionId,
+      status: "ABANDONED",
+      sessionType,
+      ...(durationMinutes !== undefined ? { durationMinutes } : {}),
+    },
     "USER",
     correlationId,
   );
@@ -199,8 +213,8 @@ export async function completeRecoverySession(
 ): Promise<void> {
   const status = deriveRecoverySessionStatus(durationMinutes);
   if (status === "ABANDONED") {
-    await abandonWorkout(beyondDayId, sessionId, "RECOVERY");
+    await abandonWorkout(beyondDayId, sessionId, "RECOVERY", durationMinutes);
     return;
   }
-  await completeWorkout(beyondDayId, sessionId, "RECOVERY", status);
+  await completeWorkout(beyondDayId, sessionId, "RECOVERY", status, durationMinutes);
 }
