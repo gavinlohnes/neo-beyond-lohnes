@@ -19,12 +19,25 @@ export type SessionType = "STANDARD" | "REDUCED" | "RECOVERY";
  */
 export type WorkoutSessionStatus = "ACTIVE" | "COMPLETED" | "PARTIAL" | "ABANDONED";
 
+/**
+ * incrementLbs: "NEXT AVAILABLE INCREMENT" (Decision Register TRAIN +
+ * 2026-08-19 reconciliation) implies a per-exercise/equipment increment,
+ * not one universal number — the reconciliation explicitly rejected a
+ * flat +2.5lb rule as a domain-wide constant, valid "only where it
+ * actually represents the configured/available next increment for the
+ * relevant exercise/equipment." No real per-machine increment values are
+ * documented anywhere, so every exercise below uses the same 5lb default
+ * for now — an explicit implementation placeholder (structured so it's
+ * easy to configure per exercise once real equipment data exists), not a
+ * claimed-locked value.
+ */
 export interface ExercisePrescription {
   exerciseId: string;
   name: string;
   sets: number;
   repRangeLow: number;
   repRangeHigh: number;
+  incrementLbs: number;
 }
 
 export interface WorkoutTemplateDefinition {
@@ -32,23 +45,25 @@ export interface WorkoutTemplateDefinition {
   exercises: ExercisePrescription[];
 }
 
+const DEFAULT_INCREMENT_LBS = 5;
+
 export const WORKOUT_TEMPLATES: Record<WorkoutTemplateId, WorkoutTemplateDefinition> = {
   A: {
     id: "A",
     exercises: [
-      { exerciseId: "machine-chest-press", name: "Machine Chest Press", sets: 3, repRangeLow: 8, repRangeHigh: 12 },
-      { exerciseId: "pec-deck", name: "Pec Deck", sets: 3, repRangeLow: 10, repRangeHigh: 15 },
-      { exerciseId: "leg-press", name: "Leg Press", sets: 3, repRangeLow: 8, repRangeHigh: 12 },
-      { exerciseId: "triceps-pressdown", name: "Triceps Pressdown", sets: 2, repRangeLow: 10, repRangeHigh: 15 },
+      { exerciseId: "machine-chest-press", name: "Machine Chest Press", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: DEFAULT_INCREMENT_LBS },
+      { exerciseId: "pec-deck", name: "Pec Deck", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
+      { exerciseId: "leg-press", name: "Leg Press", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: DEFAULT_INCREMENT_LBS },
+      { exerciseId: "triceps-pressdown", name: "Triceps Pressdown", sets: 2, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
     ],
   },
   B: {
     id: "B",
     exercises: [
-      { exerciseId: "lat-pulldown", name: "Lat Pulldown", sets: 3, repRangeLow: 8, repRangeHigh: 12 },
-      { exerciseId: "seated-cable-row", name: "Seated Cable Row", sets: 3, repRangeLow: 8, repRangeHigh: 12 },
-      { exerciseId: "leg-curl", name: "Leg Curl", sets: 3, repRangeLow: 10, repRangeHigh: 15 },
-      { exerciseId: "preacher-curl", name: "Preacher Curl", sets: 2, repRangeLow: 10, repRangeHigh: 15 },
+      { exerciseId: "lat-pulldown", name: "Lat Pulldown", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: DEFAULT_INCREMENT_LBS },
+      { exerciseId: "seated-cable-row", name: "Seated Cable Row", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: DEFAULT_INCREMENT_LBS },
+      { exerciseId: "leg-curl", name: "Leg Curl", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
+      { exerciseId: "preacher-curl", name: "Preacher Curl", sets: 2, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
     ],
   },
   C: {
@@ -60,13 +75,25 @@ export const WORKOUT_TEMPLATES: Record<WorkoutTemplateId, WorkoutTemplateDefinit
         sets: 3,
         repRangeLow: 8,
         repRangeHigh: 12,
+        incrementLbs: DEFAULT_INCREMENT_LBS,
       },
-      { exerciseId: "preacher-curl", name: "Preacher Curl", sets: 3, repRangeLow: 10, repRangeHigh: 15 },
-      { exerciseId: "triceps-pressdown", name: "Triceps Pressdown", sets: 3, repRangeLow: 10, repRangeHigh: 15 },
-      { exerciseId: "reverse-pec-deck", name: "Reverse Pec Deck", sets: 3, repRangeLow: 12, repRangeHigh: 15 },
+      { exerciseId: "preacher-curl", name: "Preacher Curl", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
+      { exerciseId: "triceps-pressdown", name: "Triceps Pressdown", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
+      { exerciseId: "reverse-pec-deck", name: "Reverse Pec Deck", sets: 3, repRangeLow: 12, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
     ],
   },
 };
+
+/** Finds the prescribed shape for one exercise slot within a STANDARD or REDUCED context. Returns undefined for RECOVERY (no exercises) or an unknown exerciseId. */
+export function getPrescription(
+  templateId: WorkoutTemplateId,
+  sessionType: "STANDARD" | "REDUCED",
+  exerciseId: string,
+): ExercisePrescription | undefined {
+  const exercises =
+    sessionType === "REDUCED" ? getReducedExercises(templateId) : WORKOUT_TEMPLATES[templateId].exercises;
+  return exercises.find((ex) => ex.exerciseId === exerciseId);
+}
 
 export const WORKOUT_TEMPLATE_ORDER: WorkoutTemplateId[] = ["A", "B", "C"];
 

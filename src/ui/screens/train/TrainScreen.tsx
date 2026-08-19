@@ -4,11 +4,13 @@ import type { PerformedSet, SessionType, WorkoutTemplateId } from "../../../doma
 import { WORKOUT_TEMPLATES, getReducedExercises } from "../../../domain/workout/types";
 import { deriveCapacity } from "../../../engine/capacity";
 import { suggestSessionVariant } from "../../../engine/trainSuggestion";
+import type { ProgressionSuggestion } from "../../../engine/progression";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import { getActiveDay, getLatestCheckIn } from "../../../application/queries";
 import {
   getActiveWorkoutSession,
   getPerformedSets,
+  getProgressionSuggestion,
   suggestTemplateForNextWorkout,
 } from "../../../application/trainQueries";
 import {
@@ -23,6 +25,13 @@ import {
 const TEMPLATE_ORDER: WorkoutTemplateId[] = ["A", "B", "C"];
 const VARIANT_ORDER: SessionType[] = ["STANDARD", "REDUCED", "RECOVERY"];
 
+function exercisesFor(templateId: WorkoutTemplateId, sessionType: SessionType) {
+  if (sessionType === "RECOVERY") return [];
+  return sessionType === "REDUCED"
+    ? getReducedExercises(templateId)
+    : WORKOUT_TEMPLATES[templateId].exercises;
+}
+
 export function TrainScreen() {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [capacity, setCapacity] = useState<Capacity | null>(null);
@@ -35,6 +44,7 @@ export function TrainScreen() {
   const [recoveryMinutes, setRecoveryMinutes] = useState(10);
   const [subs, setSubs] = useState<Record<string, string>>({});
   const [inputs, setInputs] = useState<Record<string, { weight: number; reps: number }>>({});
+  const [progressionSuggestions, setProgressionSuggestions] = useState<Record<string, ProgressionSuggestion>>({});
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
@@ -61,9 +71,31 @@ export function TrainScreen() {
     setSession(active);
     if (active) {
       setSets(await getPerformedSets(active.id));
+      await loadProgressionSuggestions(active);
     } else {
       setSets([]);
+      setProgressionSuggestions({});
     }
+  }
+
+  /**
+   * Advisory only (Decision Register TRAIN, locked): loaded once per
+   * session start/resume so the suggestion is visible before the user
+   * logs anything, but never used to pre-fill or otherwise silently
+   * change what the weight/rep inputs default to.
+   */
+  async function loadProgressionSuggestions(activeSession: WorkoutSession) {
+    if (activeSession.sessionType === "RECOVERY") {
+      setProgressionSuggestions({});
+      return;
+    }
+    const templateId = activeSession.templateId as WorkoutTemplateId;
+    const sessionType = activeSession.sessionType as "STANDARD" | "REDUCED";
+    const exercises = exercisesFor(templateId, activeSession.sessionType as SessionType);
+    const entries = await Promise.all(
+      exercises.map(async (ex) => [ex.exerciseId, await getProgressionSuggestion(templateId, sessionType, ex.exerciseId)] as const),
+    );
+    setProgressionSuggestions(Object.fromEntries(entries));
   }
 
   async function actuallyStart() {
@@ -78,6 +110,7 @@ export function TrainScreen() {
       );
       setSession(started);
       setSets([]);
+      await loadProgressionSuggestions(started);
     } finally {
       setBusy(false);
     }
@@ -172,12 +205,9 @@ export function TrainScreen() {
   }
 
   const hasLoggedAnySet = sets.length > 0;
-  const activeExercises =
-    session && session.sessionType !== "RECOVERY"
-      ? session.sessionType === "REDUCED"
-        ? getReducedExercises(session.templateId as WorkoutTemplateId)
-        : WORKOUT_TEMPLATES[session.templateId as WorkoutTemplateId].exercises
-      : [];
+  const activeExercises = session
+    ? exercisesFor(session.templateId as WorkoutTemplateId, session.sessionType as SessionType)
+    : [];
 
   return (
     <div className="screen">
@@ -285,6 +315,17 @@ export function TrainScreen() {
               <p className="meta" style={{ marginBottom: 8 }}>
                 {ex.sets} sets x {ex.repRangeLow}-{ex.repRangeHigh} reps
               </p>
+              {progressionSuggestions[ex.exerciseId] && progressionSuggestions[ex.exerciseId]!.recommendation !== "NO_HISTORY" && (
+                <details className="why" style={{ marginBottom: 8 }}>
+                  <summary>
+                    PROGRESSION: {progressionSuggestions[ex.exerciseId]!.recommendation}
+                    {progressionSuggestions[ex.exerciseId]!.suggestedNextWeight !== undefined
+                      ? ` → ${progressionSuggestions[ex.exerciseId]!.suggestedNextWeight}lb`
+                      : ""}
+                  </summary>
+                  <p className="meta">{progressionSuggestions[ex.exerciseId]!.reason}</p>
+                </details>
+              )}
               <input
                 type="text"
                 placeholder="Substitute exercise (optional)"
