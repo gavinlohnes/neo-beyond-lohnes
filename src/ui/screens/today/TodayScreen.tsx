@@ -28,6 +28,21 @@ const defaultValues: Values = {
   alcoholUrge: 0,
 };
 
+/**
+ * Quick check-in default ("all good" one-tap, Context & Safety Decisions
+ * 2026-08-19). Still produces a real StateCheckIn the Engine evaluates —
+ * these values feed the locked capacity rule directly, so they were
+ * chosen to land comfortably GREEN as "a genuinely fine day," not the
+ * most extreme possible values. Confirmed with Gavin 2026-08-19.
+ */
+export const quickCheckInValues: Values = {
+  energy: 4,
+  stress: 2,
+  mood: 4,
+  soreness: 1,
+  alcoholUrge: 0,
+};
+
 const fields: { key: keyof Values; min: number }[] = [
   { key: "energy", min: 1 },
   { key: "stress", min: 1 },
@@ -81,6 +96,19 @@ export function TodayScreen() {
     setBusy(true);
     try {
       const result = await submitCheckIn(day.id, values);
+      setCheckIn(result.checkIn);
+      setRecommendation(result.recommendation);
+      setRecorded(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleQuickCheckIn() {
+    if (!day) return;
+    setBusy(true);
+    try {
+      const result = await submitCheckIn(day.id, quickCheckInValues);
       setCheckIn(result.checkIn);
       setRecommendation(result.recommendation);
       setRecorded(false);
@@ -269,6 +297,14 @@ export function TodayScreen() {
         <div className="card">
           <p className="eyebrow" style={{ marginBottom: 4 }}>STATE INPUT</p>
           <h2 className="card-title">State check-in</h2>
+          <button
+            className="btn-primary"
+            style={{ marginBottom: 12 }}
+            disabled={busy}
+            onClick={() => void handleQuickCheckIn()}
+          >
+            ALL GOOD
+          </button>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
             {fields.map(({ key, min }) => (
               <div className="field" key={key}>
