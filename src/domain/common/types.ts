@@ -104,6 +104,8 @@ export interface PerformedSetRaw {
 
 export type DomainEventType =
   | "DAY_STARTED"
+  | "DAY_ENDED"
+  | "SLEEP_LOGGED"
   | "STATE_CHECKED_IN"
   | "RECOMMENDATION_ISSUED"
   | "RECOMMENDATION_ACCEPTED"
@@ -152,6 +154,28 @@ export interface WaterLogCorrectedPayload {
   originalEventId: string;
   supersedesEventId: string;
   amountOz: number;
+}
+
+/**
+ * BeyondDay lifecycle (Context & Safety Decisions, 2026-08-19): ends via
+ * explicit END DAY action only, or as a fallback auto-close when a new day
+ * starts while one is still ACTIVE. Calendar midnight is explicitly
+ * rejected as a boundary. END DAY closes silently — no recap.
+ */
+export interface DayEndedPayload {
+  reason: "EXPLICIT_END_DAY" | "AUTO_CLOSED_ON_NEW_DAY_START";
+}
+
+/**
+ * V0.1 sleep logging (Decision Register, BODY/SLEEP): duration only, in
+ * whole minutes, of the primary sleep period preceding the active
+ * BeyondDay. No goal/target, no dedicated table — stored as event history
+ * only. Minimal prerequisite for CP4's "Engine suggests ending right after
+ * primary sleep is logged" behavior.
+ */
+export interface SleepLoggedPayload {
+  commandId: string;
+  durationMinutes: number;
 }
 
 /** SHIFT DOWN mirrors RESET's shape: duration input, then a two-step START/COMPLETE flow. */

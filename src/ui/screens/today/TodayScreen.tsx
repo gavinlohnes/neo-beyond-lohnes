@@ -8,12 +8,14 @@ import {
   completeReset,
   startShiftDown,
   completeShiftDown,
+  endDay,
 } from "../../../application/commands";
 import {
   getActiveDay,
   getLatestCheckIn,
   getLatestRecommendation,
   wasRecommendationRecorded,
+  shouldSuggestEndDay,
 } from "../../../application/queries";
 
 type Values = Omit<StateCheckIn, "id" | "beyondDayId" | "recordedAt">;
@@ -47,6 +49,7 @@ export function TodayScreen() {
   const [activeShiftDownId, setActiveShiftDownId] = useState<string | null>(null);
   const [shiftDownDuration, setShiftDownDuration] = useState(10);
   const [showShiftDown, setShowShiftDown] = useState(false);
+  const [suggestEndDay, setSuggestEndDay] = useState(false);
 
   useEffect(() => {
     void refresh();
@@ -60,6 +63,7 @@ export function TodayScreen() {
       const rec = (await getLatestRecommendation(activeDay.id)) ?? null;
       setRecommendation(rec);
       setRecorded(rec ? await wasRecommendationRecorded(activeDay.id, rec.id) : false);
+      setSuggestEndDay(await shouldSuggestEndDay(activeDay.id));
     }
   }
 
@@ -120,6 +124,17 @@ export function TodayScreen() {
     await completeShiftDown(day.id, activeShiftDownId);
     setActiveShiftDownId(null);
     setShowShiftDown(false);
+  }
+
+  async function handleEndDay() {
+    if (!day) return;
+    setBusy(true);
+    try {
+      await endDay(day.id, "EXPLICIT_END_DAY");
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
   }
 
   const recordLabel = recommendation?.kind === "NO_ACTION_REQUIRED" ? "RECORD NO ACTION" : "ACCEPT";
@@ -290,6 +305,20 @@ export function TodayScreen() {
               last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
             </p>
           )}
+        </div>
+      )}
+
+      {day && (
+        <div className="card">
+          <p className="eyebrow" style={{ marginBottom: 4 }}>BEYONDDAY</p>
+          {suggestEndDay && (
+            <p className="card-body" style={{ marginBottom: 12 }}>
+              Primary sleep logged — this BeyondDay looks done. End it whenever you're ready.
+            </p>
+          )}
+          <button className="btn-primary" style={{ background: "var(--surface-2)" }} disabled={busy} onClick={() => void handleEndDay()}>
+            END DAY
+          </button>
         </div>
       )}
     </div>

@@ -98,3 +98,26 @@ export async function getRecommendationCount(beyondDayId?: string): Promise<numb
 export async function getDayCount(): Promise<number> {
   return db.beyondDays.count();
 }
+
+/**
+ * The Engine suggests ending the BeyondDay right after primary sleep is
+ * logged (Context & Safety Decisions, 2026-08-19) — a suggestion, not an
+ * automatic close. True once a SLEEP_LOGGED event exists for this day and
+ * it hasn't already been ended.
+ */
+export async function shouldSuggestEndDay(beyondDayId: string): Promise<boolean> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const hasSleepLogged = events.some((e) => e.type === "SLEEP_LOGGED");
+  const hasEnded = events.some((e) => e.type === "DAY_ENDED");
+  return hasSleepLogged && !hasEnded;
+}
+
+/** Most recent primary sleep duration logged for this BeyondDay, if any. Duration only — no goal/target. */
+export async function getLatestSleepMinutes(beyondDayId: string): Promise<number | undefined> {
+  const latest = await db.events
+    .where("beyondDayId")
+    .equals(beyondDayId)
+    .filter((e) => e.type === "SLEEP_LOGGED")
+    .last();
+  return latest ? (latest.payload as { durationMinutes: number }).durationMinutes : undefined;
+}

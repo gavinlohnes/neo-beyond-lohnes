@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import type { BeyondDay, HydrationEntry } from "../../../domain/common/types";
-import { logWater, correctWater } from "../../../application/commands";
-import { getActiveDay, getEffectiveHydrationTotal, getHydrationEntries } from "../../../application/queries";
+import { logWater, correctWater, logSleep } from "../../../application/commands";
+import {
+  getActiveDay,
+  getEffectiveHydrationTotal,
+  getHydrationEntries,
+  getLatestSleepMinutes,
+} from "../../../application/queries";
 
 export function BodyScreen() {
   const [day, setDay] = useState<BeyondDay | null>(null);
@@ -12,6 +17,8 @@ export function BodyScreen() {
   const [correctionInput, setCorrectionInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [sleepMinutes, setSleepMinutes] = useState<number | undefined>(undefined);
+  const [sleepInput, setSleepInput] = useState("");
 
   useEffect(() => {
     void refresh();
@@ -23,6 +30,25 @@ export function BodyScreen() {
     if (activeDay) {
       setEntries(await getHydrationEntries(activeDay.id));
       setTotal(await getEffectiveHydrationTotal(activeDay.id));
+      setSleepMinutes(await getLatestSleepMinutes(activeDay.id));
+    }
+  }
+
+  async function handleLogSleep() {
+    if (!day) return;
+    const minutes = Number(sleepInput);
+    if (!Number.isFinite(minutes) || minutes <= 0) {
+      setError("Enter a positive number of minutes.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await logSleep(day.id, minutes);
+      setSleepInput("");
+      await refresh();
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -86,6 +112,40 @@ export function BodyScreen() {
       <div className="card">
         <p className="eyebrow" style={{ marginBottom: 4 }}>WATER</p>
         <p className="title" style={{ fontSize: 28, marginBottom: 0 }}>{total} oz</p>
+      </div>
+
+      <div className="card">
+        <p className="eyebrow" style={{ marginBottom: 4 }}>SLEEP</p>
+        <h2 className="card-title">Primary sleep</h2>
+        <p className="card-body" style={{ marginBottom: 12 }}>
+          Duration only. No target — logged as a historical fact.
+        </p>
+        {sleepMinutes !== undefined && (
+          <p className="meta" style={{ marginBottom: 8 }}>
+            Logged: {Math.floor(sleepMinutes / 60)}h {sleepMinutes % 60}m
+          </p>
+        )}
+        <div className="field">
+          <label><span>Duration (minutes)</span></label>
+          <input
+            type="number"
+            min={0}
+            value={sleepInput}
+            onChange={(e) => setSleepInput(e.target.value)}
+            style={{
+              width: "100%",
+              background: "var(--surface-2)",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "var(--radius)",
+              color: "var(--text-1)",
+              padding: "10px 12px",
+              fontSize: 15,
+            }}
+          />
+        </div>
+        <button className="btn-primary" disabled={busy} onClick={() => void handleLogSleep()}>
+          LOG SLEEP
+        </button>
       </div>
 
       <div className="card">

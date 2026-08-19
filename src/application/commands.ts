@@ -13,7 +13,19 @@ function newId(): string {
   return crypto.randomUUID();
 }
 
+/**
+ * Auto-close is a FALLBACK only, for when a new day starts while one is
+ * still ACTIVE (Context & Safety Decisions, 2026-08-19). Calendar midnight
+ * is explicitly rejected as a boundary; the primary mechanism is always
+ * explicit endDay(). This never fires on the normal path where the prior
+ * day was already ended before the next one starts.
+ */
 export async function startDay(): Promise<BeyondDay> {
+  const existingActive = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
+  if (existingActive) {
+    await endDay(existingActive.id, "AUTO_CLOSED_ON_NEW_DAY_START");
+  }
+
   const now = new Date().toISOString();
   const day: BeyondDay = {
     id: newId(),
@@ -27,6 +39,40 @@ export async function startDay(): Promise<BeyondDay> {
   await db.beyondDays.add(day);
   await logEvent(day.id, "DAY_STARTED", { dayId: day.id }, "USER", newId());
   return day;
+}
+
+/**
+ * Explicit END DAY. Closes silently — no recap (Context & Safety
+ * Decisions, 2026-08-19). The Engine may SUGGEST calling this right after
+ * primary sleep is logged (see queries.shouldSuggestEndDay), but ending is
+ * always a distinct user (or fallback) action, never automatic on its own.
+ */
+export async function endDay(
+  beyondDayId: string,
+  reason: "EXPLICIT_END_DAY" | "AUTO_CLOSED_ON_NEW_DAY_START" = "EXPLICIT_END_DAY",
+): Promise<void> {
+  await db.beyondDays.update(beyondDayId, {
+    status: "ENDED",
+    updatedAt: new Date().toISOString(),
+  });
+  await logEvent(beyondDayId, "DAY_ENDED", { reason }, reason === "EXPLICIT_END_DAY" ? "USER" : "SYSTEM", newId());
+}
+
+/**
+ * V0.1 sleep logging: duration only, no goal/target (Decision Register,
+ * BODY/SLEEP — goals remain deferred; confirmed again in the 2026-08-19
+ * authority reconciliation, which rejected a fixed 7-hour target). No
+ * dedicated table; stored as event history only.
+ */
+export async function logSleep(beyondDayId: string, durationMinutes: number): Promise<void> {
+  const correlationId = newId();
+  await logEvent(
+    beyondDayId,
+    "SLEEP_LOGGED",
+    { commandId: correlationId, durationMinutes },
+    "USER",
+    correlationId,
+  );
 }
 
 export async function submitCheckIn(
