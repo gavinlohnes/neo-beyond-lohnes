@@ -9,6 +9,7 @@ import {
   startShiftDown,
   completeShiftDown,
   endDay,
+  rateOutcome,
 } from "../../../application/commands";
 import {
   getActiveDay,
@@ -16,6 +17,7 @@ import {
   getLatestRecommendation,
   wasRecommendationRecorded,
   shouldSuggestEndDay,
+  getPendingOutcomeRating,
 } from "../../../application/queries";
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
 
@@ -69,6 +71,8 @@ export function TodayScreen() {
   const [showShiftDown, setShowShiftDown] = useState(false);
   const [suggestEndDay, setSuggestEndDay] = useState(false);
   const [daysSinceBackup, setDaysSinceBackup] = useState<number | null>(null);
+  const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
+  const [outcomeDismissed, setOutcomeDismissed] = useState(false);
 
   useEffect(() => {
     void refresh();
@@ -84,6 +88,7 @@ export function TodayScreen() {
       setRecommendation(rec);
       setRecorded(rec ? await wasRecommendationRecorded(activeDay.id, rec.id) : false);
       setSuggestEndDay(await shouldSuggestEndDay(activeDay.id));
+      setPendingOutcome((await getPendingOutcomeRating(activeDay.id)) ?? null);
     }
   }
 
@@ -170,6 +175,17 @@ export function TodayScreen() {
     }
   }
 
+  async function handleRateOutcome(rating: "GOOD" | "NEUTRAL" | "BAD") {
+    if (!day || !pendingOutcome) return;
+    setBusy(true);
+    try {
+      await rateOutcome(day.id, pendingOutcome.id, rating);
+      setPendingOutcome(null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const recordLabel = recommendation?.kind === "NO_ACTION_REQUIRED" ? "RECORD NO ACTION" : "ACCEPT";
 
   return (
@@ -184,6 +200,33 @@ export function TodayScreen() {
               ? "No backup on record yet — export one from MORE."
               : `It's been ${daysSinceBackup} days since your last backup — export one from MORE.`}
           </p>
+        </div>
+      )}
+
+      {pendingOutcome && !outcomeDismissed && (
+        <div className="card">
+          <p className="eyebrow" style={{ marginBottom: 4 }}>LAST TIME</p>
+          <p className="card-body" style={{ marginBottom: 12 }}>
+            {pendingOutcome.title} — how'd that go?
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn-primary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("GOOD")}>
+              GOOD
+            </button>
+            <button className="btn-primary" style={{ width: "auto", padding: "8px 16px", background: "var(--surface-2)" }} disabled={busy} onClick={() => void handleRateOutcome("NEUTRAL")}>
+              NEUTRAL
+            </button>
+            <button className="btn-primary" style={{ width: "auto", padding: "8px 16px", background: "var(--surface-2)" }} disabled={busy} onClick={() => void handleRateOutcome("BAD")}>
+              BAD
+            </button>
+            <button
+              className="btn-primary"
+              style={{ width: "auto", padding: "8px 16px", background: "var(--surface-2)" }}
+              onClick={() => setOutcomeDismissed(true)}
+            >
+              DISMISS
+            </button>
+          </div>
         </div>
       )}
 

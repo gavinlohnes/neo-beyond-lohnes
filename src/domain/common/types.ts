@@ -66,6 +66,15 @@ export interface Recommendation {
  * both observed fixtures — never both, never neither), linking a result
  * back to the recommendation or command it resolves.
  */
+/**
+ * `rating` (GOOD/NEUTRAL/BAD) is a distinct new concept added this
+ * checkpoint (Context & Safety Decisions, 2026-08-19, locked) — a light,
+ * explicit user signal on how a recommendation actually went, captured
+ * separately from `result`'s confirmed historical completion-status
+ * meaning (UNKNOWN/NO_ACTION/COMPLETED/ABANDONED). BEYOND does not
+ * silently adjust its own rules from this data; it's for later review
+ * (BATCAVE pattern-surfacing), not automatic learning.
+ */
 export interface Outcome {
   id: string;
   beyondDayId: string;
@@ -73,6 +82,7 @@ export interface Outcome {
   result: "UNKNOWN" | "NO_ACTION" | "COMPLETED" | "ABANDONED";
   recommendationId?: string;
   commandExecutionId?: string;
+  rating?: "GOOD" | "NEUTRAL" | "BAD";
 }
 
 /** Confirmed against beyond-backup-2026-08-18T06-33-36-443Z.json. */
@@ -108,6 +118,7 @@ export type DomainEventType =
   | "SLEEP_LOGGED"
   | "BODYWEIGHT_LOGGED"
   | "PROTEIN_LOGGED"
+  | "OUTCOME_RATED"
   | "STATE_CHECKED_IN"
   | "RECOMMENDATION_ISSUED"
   | "RECOMMENDATION_ACCEPTED"
@@ -201,6 +212,18 @@ export interface BodyweightLoggedPayload {
 export interface ProteinLoggedPayload {
   commandId: string;
   grams: number;
+}
+
+/**
+ * Outcome rating (Context & Safety Decisions, 2026-08-19, locked):
+ * captured via a light, explicit signal (thumbs up/down/neutral), tied to
+ * the recommendation lifecycle — not folded into quick check-in, not
+ * automatic inference.
+ */
+export interface OutcomeRatedPayload {
+  commandId: string;
+  recommendationId: string;
+  rating: "GOOD" | "NEUTRAL" | "BAD";
 }
 
 /** Field names confirmed against real historical WORKOUT_STARTED events. */

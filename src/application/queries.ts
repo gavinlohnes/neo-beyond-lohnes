@@ -162,3 +162,30 @@ export async function getTotalProteinGrams(beyondDayId: string): Promise<number>
     .filter((e) => e.type === "PROTEIN_LOGGED")
     .reduce((sum, e) => sum + (e.payload as { grams: number }).grams, 0);
 }
+
+/**
+ * Outcome rating placement (Context & Safety Decisions, 2026-08-19,
+ * locked): "the next time TODAY is opened after a recommendation was
+ * recorded, it can optionally show 'Last time: {recommendation} — how'd
+ * that go?'" — tied to the recommendation lifecycle, appearing alongside
+ * a genuinely newer recommendation, not the one currently on screen.
+ * Only a RECORDED (accepted/no-action) recommendation is ratable, and
+ * only once, per recommendation.
+ */
+export async function getPendingOutcomeRating(beyondDayId: string): Promise<Recommendation | undefined> {
+  const recommendations = (await db.recommendations.where("beyondDayId").equals(beyondDayId).toArray()).sort(
+    (a, b) => a.issuedAt.localeCompare(b.issuedAt),
+  );
+  if (recommendations.length < 2) return undefined; // no "last time" without a newer one on screen
+
+  const past = recommendations.slice(0, -1);
+  const outcomes = await db.outcomes.where("beyondDayId").equals(beyondDayId).toArray();
+  const rated = new Set(outcomes.filter((o) => o.rating).map((o) => o.recommendationId));
+
+  for (let i = past.length - 1; i >= 0; i--) {
+    const candidate = past[i]!;
+    if (rated.has(candidate.id)) continue;
+    if (await wasRecommendationRecorded(beyondDayId, candidate.id)) return candidate;
+  }
+  return undefined;
+}

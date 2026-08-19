@@ -232,6 +232,37 @@ export async function logProtein(beyondDayId: string, grams: number): Promise<vo
   );
 }
 
+/**
+ * Outcome rating (Context & Safety Decisions, 2026-08-19, locked): a
+ * light explicit signal (GOOD/NEUTRAL/BAD), tied to the recommendation
+ * lifecycle rather than folded into quick check-in. BEYOND records the
+ * fact and never silently adjusts its own rules from it — that's a
+ * BATCAVE pattern-surfacing concern for later, explicitly out of scope
+ * here.
+ */
+export async function rateOutcome(
+  beyondDayId: string,
+  recommendationId: string,
+  rating: "GOOD" | "NEUTRAL" | "BAD",
+): Promise<void> {
+  const correlationId = newId();
+  await db.outcomes.add({
+    id: newId(),
+    beyondDayId,
+    recordedAt: new Date().toISOString(),
+    result: "UNKNOWN",
+    recommendationId,
+    rating,
+  });
+  await logEvent(
+    beyondDayId,
+    "OUTCOME_RATED",
+    { commandId: correlationId, recommendationId, rating },
+    "USER",
+    correlationId,
+  );
+}
+
 export async function logWater(
   beyondDayId: string,
   amountOz: number,
