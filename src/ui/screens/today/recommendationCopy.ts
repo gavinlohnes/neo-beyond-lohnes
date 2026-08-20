@@ -44,3 +44,17 @@ export function describeRecommendationEffect(kind: RecommendationKind): string {
 export function describeRecordedDecision(decision: RecommendationDecision): string {
   return decision === "DECLINED" ? "NOT DOING THIS — RECORDED" : "RECORDED";
 }
+
+/**
+ * Product Experience Sprint, P3 (TODAY command-surface rebuild):
+ * "Do not hide uncertainty/missing data. Clearly indicate when a
+ * recommendation is based on limited/no check-in data." Without a
+ * check-in, evaluate.ts's capacity is null and every rule falls through
+ * to the same NO_ACTION_REQUIRED text a genuinely fine GREEN day would
+ * also show — indistinguishable without this caveat. Purely a UI-layer
+ * addition; the Engine's own rationale/trace text is untouched.
+ */
+export function describeEvidenceBasis(hasCheckIn: boolean): string | null {
+  if (hasCheckIn) return null;
+  return "No check-in yet today — this default doesn't reflect how you're actually doing. Check in below for a real read.";
+}

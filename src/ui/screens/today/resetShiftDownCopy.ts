@@ -19,6 +19,20 @@ export const RESET_EXPLANATION =
 export const SHIFT_DOWN_EXPLANATION =
   "SHIFT DOWN is a deliberate, timed wind-down — a stretch of minutes to come down out of high alert before doing anything else. Pick how long, then start when you're ready.";
 
+/**
+ * Product Experience Sprint, P3 (TODAY command-surface rebuild): the full
+ * explanation above is the right depth once a tool is the actual
+ * recommendation, active, or opened — but as an always-available, not-
+ * currently-recommended option sitting near the primary recommendation
+ * card, the full paragraph competed for attention (doc: "RESET and SHIFT
+ * DOWN remain rapidly accessible... without competing with the primary
+ * recommendation"). These one-line versions are what shows in that
+ * collapsed state; tapping OPEN reveals the full card unchanged.
+ */
+export const RESET_EXPLANATION_SHORT = "A short, body-first grounding routine.";
+
+export const SHIFT_DOWN_EXPLANATION_SHORT = "A deliberate, timed wind-down.";
+
 /** Common duration choices, offered as taps; a custom value is still available for anything else. */
 export const SHIFT_DOWN_DURATION_PRESETS = [5, 10, 15, 20, 30] as const;
 

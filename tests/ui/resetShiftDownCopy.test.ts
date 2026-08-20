@@ -8,8 +8,10 @@ import {
   isPrimaryReset,
   isPrimaryShiftDown,
   RESET_EXPLANATION,
+  RESET_EXPLANATION_SHORT,
   SHIFT_DOWN_DURATION_PRESETS,
   SHIFT_DOWN_EXPLANATION,
+  SHIFT_DOWN_EXPLANATION_SHORT,
 } from "../../src/ui/screens/today/resetShiftDownCopy";
 import type { StateCheckIn } from "../../src/domain/common/types";
 
@@ -88,6 +90,13 @@ describe("in-progress and result copy", () => {
   });
 });
 
+describe("short (collapsed-state) explanations", () => {
+  it("are meaningfully shorter than the full explanations, so they actually reduce visual weight", () => {
+    expect(RESET_EXPLANATION_SHORT.length).toBeLessThan(RESET_EXPLANATION.length);
+    expect(SHIFT_DOWN_EXPLANATION_SHORT.length).toBeLessThan(SHIFT_DOWN_EXPLANATION.length);
+  });
+});
+
 describe("SHIFT_DOWN_DURATION_PRESETS", () => {
   it("is a sensible ascending set of common durations", () => {
     expect(SHIFT_DOWN_DURATION_PRESETS).toEqual([5, 10, 15, 20, 30]);
@@ -115,7 +124,9 @@ describe("tone audit — no shame, failure, or pressure language in RESET/SHIFT 
   it("contains none of the banned words/phrases, case-insensitively", () => {
     const strings = [
       RESET_EXPLANATION,
+      RESET_EXPLANATION_SHORT,
       SHIFT_DOWN_EXPLANATION,
+      SHIFT_DOWN_EXPLANATION_SHORT,
       describeResetInProgress(3),
       describeShiftDownInProgress(15),
       describeResetResult("COMPLETED"),

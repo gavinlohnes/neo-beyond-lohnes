@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DECLINE_LABEL,
+  describeEvidenceBasis,
   describeRecommendationAction,
   describeRecommendationEffect,
   describeRecordedDecision,
@@ -68,5 +69,17 @@ describe("describeRecordedDecision", () => {
 
   it("shows the plain RECORDED label for an acknowledged no-action decision", () => {
     expect(describeRecordedDecision("NO_ACTION_RECORDED")).toBe("RECORDED");
+  });
+});
+
+describe("describeEvidenceBasis", () => {
+  it("returns null when a check-in exists — no caveat needed", () => {
+    expect(describeEvidenceBasis(true)).toBeNull();
+  });
+
+  it("surfaces the missing-data caveat when there is no check-in yet", () => {
+    const text = describeEvidenceBasis(false);
+    expect(text).not.toBeNull();
+    expect(text).toContain("No check-in yet");
   });
 });

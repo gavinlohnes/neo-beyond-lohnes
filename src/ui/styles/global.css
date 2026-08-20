@@ -57,6 +57,19 @@ button, input {
   margin: 0 0 var(--space-2);
 }
 
+/* P3 (TODAY command-surface rebuild): the one recommendation TODAY is
+   actually asking you to look at needs its own typographic step between
+   .card-title (18px, used for every other card heading) and .title
+   (28px, the screen title) — otherwise it reads as just another card
+   among equals. Used nowhere else; one recommendation, one size. */
+.recommendation-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--space-2);
+}
+
 .card-body {
   color: var(--text-2);
   font-size: 16px;

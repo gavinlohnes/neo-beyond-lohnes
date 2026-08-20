@@ -13,6 +13,7 @@ import { describeCapacity } from "./capacityCopy";
 import { deriveCapacity } from "../../../engine/capacity";
 import {
   DECLINE_LABEL,
+  describeEvidenceBasis,
   describeRecommendationAction,
   describeRecommendationEffect,
   describeRecordedDecision,
@@ -34,8 +35,10 @@ import {
   isPrimaryReset,
   isPrimaryShiftDown,
   RESET_EXPLANATION,
+  RESET_EXPLANATION_SHORT,
   SHIFT_DOWN_DURATION_PRESETS,
   SHIFT_DOWN_EXPLANATION,
+  SHIFT_DOWN_EXPLANATION_SHORT,
   type SessionOutcome,
 } from "./resetShiftDownCopy";
 import {
@@ -121,6 +124,15 @@ export function TodayScreen() {
   const [minimumDayProteinG, setMinimumDayProteinG] = useState(0);
   const [mdWaterInput, setMdWaterInput] = useState("");
   const [mdProteinInput, setMdProteinInput] = useState("");
+  // Product Experience Sprint, P3: RESET/SHIFT DOWN/check-in each default
+  // to a compact row once they're not the thing TODAY needs you looking
+  // at (see renderResetCard/renderShiftDownCard and the check-in section
+  // below) — these track whether the user has explicitly opened the full
+  // form anyway. Never gates the tools themselves, only their default
+  // visual weight.
+  const [resetOpen, setResetOpen] = useState(false);
+  const [shiftDownOpen, setShiftDownOpen] = useState(false);
+  const [checkInFormOpen, setCheckInFormOpen] = useState(false);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
@@ -191,6 +203,10 @@ export function TodayScreen() {
       // still showing the values as if pending. Reset so a returning user
       // never mistakes leftover selections for a new, unsubmitted check-in.
       setValues({});
+      // P3: collapse back to the compact summary — the form having just
+      // been submitted is exactly the moment it should stop dominating
+      // the screen.
+      setCheckInFormOpen(false);
     } finally {
       setBusy(false);
     }
@@ -442,6 +458,20 @@ export function TodayScreen() {
   function renderResetCard(prominent: boolean) {
     if (!day) return null;
     const active = activeResetId !== null;
+    const open = prominent || active || resetOpen;
+    if (!open) {
+      return (
+        <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+          <div>
+            <p className="eyebrow" style={{ marginBottom: 2 }}>RESET</p>
+            <p className="meta">{RESET_EXPLANATION_SHORT}</p>
+          </div>
+          <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setResetOpen(true)}>
+            OPEN
+          </button>
+        </div>
+      );
+    }
     return (
       <div className="card" style={prominent || active ? { borderColor: "var(--accent)" } : undefined}>
         <p className="eyebrow" style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined }}>
@@ -458,12 +488,7 @@ export function TodayScreen() {
               <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteReset()}>
                 COMPLETE RESET
               </button>
-              <button
-                className="btn-primary"
-                style={{ flex: 1, background: "var(--surface-2)" }}
-                disabled={busy}
-                onClick={() => void handleCancelReset()}
-              >
+              <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelReset()}>
                 CANCEL RESET
               </button>
             </div>
@@ -480,13 +505,9 @@ export function TodayScreen() {
               {([1, 2, 3, 4, 5] as const).map((n) => (
                 <button
                   key={n}
-                  className="btn-primary"
-                  style={{
-                    flex: 1,
-                    width: "auto",
-                    background: resetIntensity === n ? "var(--accent)" : "var(--surface-2)",
-                    padding: "8px 0",
-                  }}
+                  type="button"
+                  className={`chip ${resetIntensity === n ? "chip--selected" : ""}`}
+                  aria-pressed={resetIntensity === n}
                   disabled={busy}
                   onClick={() => setResetIntensity(n)}
                 >
@@ -506,6 +527,20 @@ export function TodayScreen() {
   function renderShiftDownCard(prominent: boolean) {
     if (!day) return null;
     const active = activeShiftDownId !== null;
+    const open = prominent || active || shiftDownOpen;
+    if (!open) {
+      return (
+        <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+          <div>
+            <p className="eyebrow" style={{ marginBottom: 2 }}>SHIFT DOWN</p>
+            <p className="meta">{SHIFT_DOWN_EXPLANATION_SHORT}</p>
+          </div>
+          <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setShiftDownOpen(true)}>
+            OPEN
+          </button>
+        </div>
+      );
+    }
     return (
       <div className="card" style={prominent || active ? { borderColor: "var(--accent)" } : undefined}>
         <p className="eyebrow" style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined }}>
@@ -522,12 +557,7 @@ export function TodayScreen() {
               <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteShiftDown()}>
                 COMPLETE SHIFT DOWN
               </button>
-              <button
-                className="btn-primary"
-                style={{ flex: 1, background: "var(--surface-2)" }}
-                disabled={busy}
-                onClick={() => void handleCancelShiftDown()}
-              >
+              <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelShiftDown()}>
                 CANCEL SHIFT DOWN
               </button>
             </div>
@@ -542,14 +572,10 @@ export function TodayScreen() {
               {SHIFT_DOWN_DURATION_PRESETS.map((n) => (
                 <button
                   key={n}
-                  className="btn-primary"
-                  style={{
-                    flex: 1,
-                    minWidth: 50,
-                    width: "auto",
-                    padding: "8px 0",
-                    background: shiftDownDuration === n ? "var(--accent)" : "var(--surface-2)",
-                  }}
+                  type="button"
+                  className={`chip ${shiftDownDuration === n ? "chip--selected" : ""}`}
+                  style={{ minWidth: 50 }}
+                  aria-pressed={shiftDownDuration === n}
                   disabled={busy}
                   onClick={() => setShiftDownDuration(n)}
                 >
@@ -611,8 +637,8 @@ export function TodayScreen() {
                     </span>
                     {!done && item.key === "meds" && (
                       <button
-                        className="btn-primary"
-                        style={{ width: "auto", padding: "4px 12px", fontSize: 16, background: "var(--surface-2)" }}
+                        className="btn-secondary"
+                        style={{ width: "auto", padding: "4px 12px", fontSize: 16 }}
                         disabled={busy}
                         onClick={() => void handleMarkMinimum("MEDS")}
                       >
@@ -621,8 +647,8 @@ export function TodayScreen() {
                     )}
                     {!done && item.key === "hygiene" && (
                       <button
-                        className="btn-primary"
-                        style={{ width: "auto", padding: "4px 12px", fontSize: 16, background: "var(--surface-2)" }}
+                        className="btn-secondary"
+                        style={{ width: "auto", padding: "4px 12px", fontSize: 16 }}
                         disabled={busy}
                         onClick={() => void handleMarkMinimum("HYGIENE")}
                       >
@@ -631,8 +657,8 @@ export function TodayScreen() {
                     )}
                     {!done && item.key === "move" && (
                       <button
-                        className="btn-primary"
-                        style={{ width: "auto", padding: "4px 12px", fontSize: 16, background: "var(--surface-2)" }}
+                        className="btn-secondary"
+                        style={{ width: "auto", padding: "4px 12px", fontSize: 16 }}
                         disabled={busy}
                         onClick={() => void handleMarkMinimum("MOVE")}
                       >
@@ -686,16 +712,16 @@ export function TodayScreen() {
                   {!done && item.key === "recoverConnect" && (
                     <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
                       <button
-                        className="btn-primary"
-                        style={{ flex: 1, padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
+                        className="btn-secondary"
+                        style={{ flex: 1, padding: "6px 12px", fontSize: 16 }}
                         disabled={busy}
                         onClick={() => void handleMarkMinimum("RECOVER")}
                       >
                         MARK RECOVER
                       </button>
                       <button
-                        className="btn-primary"
-                        style={{ flex: 1, padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
+                        className="btn-secondary"
+                        style={{ flex: 1, padding: "6px 12px", fontSize: 16 }}
                         disabled={busy}
                         onClick={() => void handleMarkMinimum("CONNECT")}
                       >
@@ -712,74 +738,38 @@ export function TodayScreen() {
     );
   }
 
+  const evidenceBasis = describeEvidenceBasis(checkIn !== null);
+
   return (
     <div className="screen">
       <p className="eyebrow">BEYOND // TODAY</p>
       <h1 className="title">Command</h1>
 
-      {(daysSinceBackup === null || daysSinceBackup >= BACKUP_NUDGE_THRESHOLD_DAYS) && (
-        <div className="card" style={{ borderColor: "var(--border-strong)" }}>
-          <p className="meta">
-            {daysSinceBackup === null
-              ? "No backup on record yet — export one from MORE."
-              : `It's been ${daysSinceBackup} days since your last backup — export one from MORE.`}
-          </p>
-        </div>
-      )}
-
-      {pendingOutcome && (
-        <div className="card">
-          <p className="eyebrow" style={{ marginBottom: 4 }}>LAST TIME</p>
-          <p className="card-body" style={{ marginBottom: 8 }}>
-            Last time, BEYOND recommended "{pendingOutcome.title}" — how did that go?
-          </p>
-          <p className="meta" style={{ marginBottom: 12 }}>
-            This just records your answer for later review. It won't change today's guidance.
-          </p>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button className="btn-primary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("GOOD")}>
-              GOOD
-            </button>
-            <button className="btn-primary" style={{ width: "auto", padding: "8px 16px", background: "var(--surface-2)" }} disabled={busy} onClick={() => void handleRateOutcome("NEUTRAL")}>
-              NEUTRAL
-            </button>
-            <button className="btn-primary" style={{ width: "auto", padding: "8px 16px", background: "var(--surface-2)" }} disabled={busy} onClick={() => void handleRateOutcome("BAD")}>
-              BAD
-            </button>
-            <button
-              className="btn-primary"
-              style={{ width: "auto", padding: "8px 16px", background: "var(--surface-2)" }}
-              disabled={busy}
-              onClick={handleDismissOutcome}
-            >
-              DISMISS
-            </button>
-          </div>
-        </div>
-      )}
-
       {!day && (
-        <div className="card card--action">
-          <h2 className="card-title">Start your day</h2>
-          <p className="card-body">No active BeyondDay. Starting begins wake-to-sleep tracking for today.</p>
-          <button className="btn-primary" disabled={busy} onClick={() => void handleStartDay()}>
+        <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+          <p className="card-body" style={{ margin: 0 }}>No day started yet.</p>
+          <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleStartDay()}>
             START DAY
           </button>
         </div>
       )}
 
+      {/* P3: state -> recommendation -> action -> reason -> WHY, as one
+          command surface — the single largest, most prominent thing on
+          the screen. Everything else on TODAY is deliberately quieter
+          than this card. */}
       {day && recommendation && (
         <div className="card card--action">
-          <p className="eyebrow" style={{ marginBottom: 4 }}>PRIMARY GUIDANCE</p>
-          <p className="meta" style={{ marginBottom: 12 }}>Context: {day.workContext}</p>
-          {capacityResult && (
-            <p className="card-body" style={{ fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
-              {describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}
-            </p>
-          )}
-          <h2 className="card-title">{recommendation.title}</h2>
+          <p className="meta" style={{ marginBottom: 12 }}>
+            {day.workContext === "UNKNOWN" ? "Context not set yet" : day.workContext === "WORK" ? "Working today" : "Off today"}
+            {capacityResult ? ` · ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}` : ""}
+          </p>
+          <h2 className="recommendation-title">{recommendation.title}</h2>
           <p className="card-body">{recommendation.rationale}</p>
-          <details className="why">
+          {evidenceBasis && (
+            <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
+          )}
+          <details className="why" style={{ marginTop: 12 }}>
             <summary>How BEYOND decided</summary>
             {recommendation.trace.matchedRules.map((r) => (
               <div key={r.ruleId} className={`why-rule ${r.result ? "why-rule--matched" : ""}`}>
@@ -805,12 +795,7 @@ export function TodayScreen() {
                     {describeRecommendationAction(recommendation.kind)}
                   </button>
                   {recommendation.kind !== "NO_ACTION_REQUIRED" && (
-                    <button
-                      className="btn-primary"
-                      style={{ flex: 1, background: "var(--surface-2)" }}
-                      disabled={busy}
-                      onClick={handleDecline}
-                    >
+                    <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={handleDecline}>
                       {DECLINE_LABEL}
                     </button>
                   )}
@@ -844,9 +829,6 @@ export function TodayScreen() {
       <div className="card">
         <p className="eyebrow" style={{ marginBottom: 4 }}>STATE INPUT</p>
         <h2 className="card-title">State check-in</h2>
-        <p className="card-body" style={{ marginBottom: 12 }}>
-          How are you doing right now? Tap a number for each — nothing here is filled in for you.
-        </p>
         <button
           className="btn-primary"
           style={{ marginBottom: 4 }}
@@ -855,55 +837,66 @@ export function TodayScreen() {
         >
           ALL GOOD
         </button>
-        <p className="meta" style={{ marginBottom: 16 }}>
+        <p className="meta" style={{ marginBottom: checkIn && !checkInFormOpen ? 12 : 16 }}>
           Sets {describeCheckInValues(quickCheckInValues)} — submits immediately.
         </p>
-        {CHECK_IN_FIELDS.map((field) => (
-          <div key={field.key} style={{ marginBottom: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-              <span className="card-body" style={{ margin: 0, fontWeight: 600, color: "var(--text-1)" }}>
-                {field.label}
-              </span>
-              <span className="meta">{field.directionLabel}</span>
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              {rangeForField(field).map((n) => {
-                const selected = values[field.key] === n;
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    className="btn-primary"
-                    aria-pressed={selected}
-                    disabled={busy}
-                    style={{
-                      flex: 1,
-                      width: "auto",
-                      padding: "10px 0",
-                      fontSize: 16,
-                      minHeight: 40,
-                      background: selected ? "var(--accent)" : "var(--surface-2)",
-                      border: selected ? "1px solid var(--accent)" : "1px solid var(--border-subtle)",
-                    }}
-                    onClick={() => setValues((s) => ({ ...s, [field.key]: n }))}
-                  >
-                    {n}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-        <button className="btn-primary" disabled={busy || !isCheckInComplete(values)} onClick={() => void handleCheckIn()}>
-          SUBMIT CHECK-IN
-        </button>
-        {!isCheckInComplete(values) && (
-          <p className="meta" style={{ marginTop: 8 }}>Select all five to submit.</p>
-        )}
-        {checkIn && (
-          <p className="meta" style={{ marginTop: 8 }}>
-            last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
-          </p>
+
+        {checkIn && !checkInFormOpen ? (
+          <>
+            <p className="card-body" style={{ marginBottom: 8 }}>
+              Last check-in: {describeCheckInValues(checkIn)}
+            </p>
+            <p className="meta" style={{ marginBottom: 12 }}>
+              recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
+            </p>
+            <button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>
+              MANUAL CHECK-IN
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="card-body" style={{ marginBottom: 12 }}>
+              How are you doing right now? Tap a number for each — nothing here is filled in for you.
+            </p>
+            {CHECK_IN_FIELDS.map((field) => (
+              <div key={field.key} style={{ marginBottom: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                  <span className="card-body" style={{ margin: 0, fontWeight: 600, color: "var(--text-1)" }}>
+                    {field.label}
+                  </span>
+                  <span className="meta">{field.directionLabel}</span>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {rangeForField(field).map((n) => {
+                    const selected = values[field.key] === n;
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        className={`chip ${selected ? "chip--selected" : ""}`}
+                        aria-pressed={selected}
+                        disabled={busy}
+                        onClick={() => setValues((s) => ({ ...s, [field.key]: n }))}
+                      >
+                        {n}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            <button className="btn-primary" disabled={busy || !isCheckInComplete(values)} onClick={() => void handleCheckIn()}>
+              SUBMIT CHECK-IN
+            </button>
+            {!isCheckInComplete(values) && (
+              <p className="meta" style={{ marginTop: 8 }}>Select all five to submit.</p>
+            )}
+            {checkIn && (
+              <p className="meta" style={{ marginTop: 8 }}>
+                last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
+              </p>
+            )}
+          </>
         )}
       </div>
 
@@ -913,16 +906,18 @@ export function TodayScreen() {
           <h2 className="card-title">Are you working today?</h2>
           <div style={{ display: "flex", gap: 8, marginTop: 12, marginBottom: 12 }}>
             <button
-              className="btn-primary"
-              style={{ flex: 1, background: day.workContext === "WORK" ? "var(--accent)" : "var(--surface-2)" }}
+              type="button"
+              className={`chip ${day.workContext === "WORK" ? "chip--selected" : ""}`}
+              aria-pressed={day.workContext === "WORK"}
               disabled={busy}
               onClick={() => void handleSetWorkContext("WORK")}
             >
               YES
             </button>
             <button
-              className="btn-primary"
-              style={{ flex: 1, background: day.workContext === "OFF" ? "var(--accent)" : "var(--surface-2)" }}
+              type="button"
+              className={`chip ${day.workContext === "OFF" ? "chip--selected" : ""}`}
+              aria-pressed={day.workContext === "OFF"}
               disabled={busy}
               onClick={() => void handleSetWorkContext("OFF")}
             >
@@ -940,6 +935,37 @@ export function TodayScreen() {
 
       {day && minimumDay && !showProminentMinimumDay && renderMinimumDayCard(false)}
 
+      {pendingOutcome && (
+        <div className="card">
+          <p className="eyebrow" style={{ marginBottom: 4 }}>LAST TIME</p>
+          <p className="card-body" style={{ marginBottom: 8 }}>
+            Last time, BEYOND recommended "{pendingOutcome.title}" — how did that go?
+          </p>
+          <p className="meta" style={{ marginBottom: 12 }}>
+            This just records your answer for later review. It won't change today's guidance.
+          </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button className="btn-primary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("GOOD")}>
+              GOOD
+            </button>
+            <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("NEUTRAL")}>
+              NEUTRAL
+            </button>
+            <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("BAD")}>
+              BAD
+            </button>
+            <button
+              className="btn-secondary"
+              style={{ width: "auto", padding: "8px 16px" }}
+              disabled={busy}
+              onClick={handleDismissOutcome}
+            >
+              DISMISS
+            </button>
+          </div>
+        </div>
+      )}
+
       {day && (
         <div className="card">
           <p className="eyebrow" style={{ marginBottom: 4 }}>BEYONDDAY</p>
@@ -948,10 +974,18 @@ export function TodayScreen() {
               Primary sleep logged — this BeyondDay looks done. End it whenever you're ready.
             </p>
           )}
-          <button className="btn-primary" style={{ background: "var(--surface-2)" }} disabled={busy} onClick={() => void handleEndDay()}>
+          <button className="btn-secondary" disabled={busy} onClick={() => void handleEndDay()}>
             END DAY
           </button>
         </div>
+      )}
+
+      {(daysSinceBackup === null || daysSinceBackup >= BACKUP_NUDGE_THRESHOLD_DAYS) && (
+        <p className="meta" style={{ marginTop: 4 }}>
+          {daysSinceBackup === null
+            ? "No backup on record yet — export one from MORE."
+            : `It's been ${daysSinceBackup} days since your last backup — export one from MORE.`}
+        </p>
       )}
     </div>
   );
