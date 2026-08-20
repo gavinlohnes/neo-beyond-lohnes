@@ -87,9 +87,9 @@ export async function logSleep(
   beyondDayId: string,
   durationMinutes: number,
   kind: "PRIMARY" | "SUPPLEMENTAL" = "PRIMARY",
-): Promise<void> {
+): Promise<string> {
   const correlationId = newId();
-  await logEvent(
+  return logEvent(
     beyondDayId,
     "SLEEP_LOGGED",
     { commandId: correlationId, durationMinutes, kind },
@@ -308,9 +308,9 @@ export async function cancelShiftDown(
  * Bodyweight logging (BODY & Backup / Context & Safety Decisions,
  * 2026-08-19): a fact only — no goal/target in this checkpoint.
  */
-export async function logBodyweight(beyondDayId: string, weightLbs: number): Promise<void> {
+export async function logBodyweight(beyondDayId: string, weightLbs: number): Promise<string> {
   const correlationId = newId();
-  await logEvent(
+  return logEvent(
     beyondDayId,
     "BODYWEIGHT_LOGGED",
     { commandId: correlationId, weightLbs },
@@ -324,9 +324,9 @@ export async function logBodyweight(beyondDayId: string, weightLbs: number): Pro
  * only, explicitly no daily target — "not carrying over the old legacy
  * mockup's 165g+ target."
  */
-export async function logProtein(beyondDayId: string, grams: number): Promise<void> {
+export async function logProtein(beyondDayId: string, grams: number): Promise<string> {
   const correlationId = newId();
-  await logEvent(
+  return logEvent(
     beyondDayId,
     "PROTEIN_LOGGED",
     { commandId: correlationId, grams },
@@ -467,9 +467,9 @@ export async function markRecoverConnectCompleted(
 export async function logWater(
   beyondDayId: string,
   amountOz: number,
-): Promise<void> {
+): Promise<string> {
   const correlationId = newId();
-  await logEvent(
+  return logEvent(
     beyondDayId,
     "WATER_LOGGED",
     { commandId: correlationId, amountOz },
