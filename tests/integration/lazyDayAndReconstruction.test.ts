@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/persistence/db";
 import {
+  cancelReset,
+  cancelShiftDown,
   completeReset,
   completeShiftDown,
   endDay,
@@ -61,18 +63,26 @@ describe("getOpenReset — interrupted RESET reconstruction", () => {
     expect(await getOpenReset(day.id)).toBeUndefined();
   });
 
-  it("finds a started-but-not-completed RESET and returns its original intensity", async () => {
+  it("finds a started-but-not-completed RESET and returns its original intensity and start time", async () => {
     const day = await startDay();
     const startedId = await startReset(day.id, 4);
 
     const open = await getOpenReset(day.id);
-    expect(open).toEqual({ eventId: startedId, intensity: 4 });
+    expect(open).toEqual({ eventId: startedId, intensity: 4, startedAt: expect.any(String) });
   });
 
   it("is undefined again once the RESET is completed", async () => {
     const day = await startDay();
     const startedId = await startReset(day.id, 2);
     await completeReset(day.id, startedId);
+
+    expect(await getOpenReset(day.id)).toBeUndefined();
+  });
+
+  it("is undefined again once the RESET is cancelled (Phase 4: cancel is also terminal, not just complete)", async () => {
+    const day = await startDay();
+    const startedId = await startReset(day.id, 2);
+    await cancelReset(day.id, startedId);
 
     expect(await getOpenReset(day.id)).toBeUndefined();
   });
@@ -84,7 +94,18 @@ describe("getOpenReset — interrupted RESET reconstruction", () => {
     const second = await startReset(day.id, 5);
 
     const open = await getOpenReset(day.id);
-    expect(open).toEqual({ eventId: second, intensity: 5 });
+    expect(open).toEqual({ eventId: second, intensity: 5, startedAt: expect.any(String) });
+  });
+
+  it("a cancelled RESET does not block starting a fresh one afterward", async () => {
+    const day = await startDay();
+    const first = await startReset(day.id, 3);
+    await cancelReset(day.id, first);
+    const second = await startReset(day.id, 5);
+
+    const open = await getOpenReset(day.id);
+    expect(open?.eventId).toBe(second);
+    expect(open?.intensity).toBe(5);
   });
 });
 
@@ -94,12 +115,12 @@ describe("getOpenShiftDown — interrupted SHIFT DOWN reconstruction", () => {
     expect(await getOpenShiftDown(day.id)).toBeUndefined();
   });
 
-  it("finds a started-but-not-completed SHIFT DOWN and returns its original duration", async () => {
+  it("finds a started-but-not-completed SHIFT DOWN and returns its original duration and start time", async () => {
     const day = await startDay();
     const startedId = await startShiftDown(day.id, 25);
 
     const open = await getOpenShiftDown(day.id);
-    expect(open).toEqual({ eventId: startedId, durationMinutes: 25 });
+    expect(open).toEqual({ eventId: startedId, durationMinutes: 25, startedAt: expect.any(String) });
   });
 
   it("is undefined again once the SHIFT DOWN is completed", async () => {
@@ -108,6 +129,25 @@ describe("getOpenShiftDown — interrupted SHIFT DOWN reconstruction", () => {
     await completeShiftDown(day.id, startedId);
 
     expect(await getOpenShiftDown(day.id)).toBeUndefined();
+  });
+
+  it("is undefined again once the SHIFT DOWN is cancelled (Phase 4: cancel is also terminal, not just complete)", async () => {
+    const day = await startDay();
+    const startedId = await startShiftDown(day.id, 15);
+    await cancelShiftDown(day.id, startedId);
+
+    expect(await getOpenShiftDown(day.id)).toBeUndefined();
+  });
+
+  it("a cancelled SHIFT DOWN does not block starting a fresh one afterward", async () => {
+    const day = await startDay();
+    const first = await startShiftDown(day.id, 10);
+    await cancelShiftDown(day.id, first);
+    const second = await startShiftDown(day.id, 20);
+
+    const open = await getOpenShiftDown(day.id);
+    expect(open?.eventId).toBe(second);
+    expect(open?.durationMinutes).toBe(20);
   });
 });
 

@@ -27,6 +27,18 @@ import {
   MINIMUM_DAY_PROMINENT_TITLE,
 } from "./minimumDayCopy";
 import {
+  describeResetInProgress,
+  describeResetResult,
+  describeShiftDownInProgress,
+  describeShiftDownResult,
+  isPrimaryReset,
+  isPrimaryShiftDown,
+  RESET_EXPLANATION,
+  SHIFT_DOWN_DURATION_PRESETS,
+  SHIFT_DOWN_EXPLANATION,
+  type SessionOutcome,
+} from "./resetShiftDownCopy";
+import {
   startDay,
   ensureActiveDay,
   submitCheckIn,
@@ -34,8 +46,10 @@ import {
   declineRecommendation,
   startReset,
   completeReset,
+  cancelReset,
   startShiftDown,
   completeShiftDown,
+  cancelShiftDown,
   endDay,
   rateOutcome,
   setWorkContext,
@@ -92,10 +106,12 @@ export function TodayScreen() {
   const [busy, setBusy] = useState(false);
   const [activeResetId, setActiveResetId] = useState<string | null>(null);
   const [resetIntensity, setResetIntensity] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [showReset, setShowReset] = useState(false);
+  const [openResetStartedAt, setOpenResetStartedAt] = useState<string | null>(null);
+  const [lastResetOutcome, setLastResetOutcome] = useState<SessionOutcome | null>(null);
   const [activeShiftDownId, setActiveShiftDownId] = useState<string | null>(null);
   const [shiftDownDuration, setShiftDownDuration] = useState(10);
-  const [showShiftDown, setShowShiftDown] = useState(false);
+  const [openShiftDownStartedAt, setOpenShiftDownStartedAt] = useState<string | null>(null);
+  const [lastShiftDownOutcome, setLastShiftDownOutcome] = useState<SessionOutcome | null>(null);
   const [suggestEndDay, setSuggestEndDay] = useState(false);
   const [daysSinceBackup, setDaysSinceBackup] = useState<number | null>(null);
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
@@ -132,18 +148,20 @@ export function TodayScreen() {
       if (openReset) {
         setActiveResetId(openReset.eventId);
         setResetIntensity(openReset.intensity);
-        setShowReset(true);
+        setOpenResetStartedAt(openReset.startedAt);
       } else {
         setActiveResetId(null);
+        setOpenResetStartedAt(null);
       }
 
       const openShiftDown = await getOpenShiftDown(activeDay.id);
       if (openShiftDown) {
         setActiveShiftDownId(openShiftDown.eventId);
         setShiftDownDuration(openShiftDown.durationMinutes);
-        setShowShiftDown(true);
+        setOpenShiftDownStartedAt(openShiftDown.startedAt);
       } else {
         setActiveShiftDownId(null);
+        setOpenShiftDownStartedAt(null);
       }
     }
   }
@@ -234,8 +252,9 @@ export function TodayScreen() {
     if (busy || !day) return;
     setBusy(true);
     try {
-      const id = await startReset(day.id, resetIntensity);
-      setActiveResetId(id);
+      await startReset(day.id, resetIntensity);
+      setLastResetOutcome(null);
+      await refresh();
     } finally {
       setBusy(false);
     }
@@ -246,8 +265,21 @@ export function TodayScreen() {
     setBusy(true);
     try {
       await completeReset(day.id, activeResetId);
-      setActiveResetId(null);
-      setShowReset(false);
+      setLastResetOutcome("COMPLETED");
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Distinct from completing — "started this but didn't go through with it," never recorded as done. */
+  async function handleCancelReset() {
+    if (busy || !day || !activeResetId) return;
+    setBusy(true);
+    try {
+      await cancelReset(day.id, activeResetId);
+      setLastResetOutcome("CANCELLED");
+      await refresh();
     } finally {
       setBusy(false);
     }
@@ -257,8 +289,9 @@ export function TodayScreen() {
     if (busy || !day) return;
     setBusy(true);
     try {
-      const id = await startShiftDown(day.id, shiftDownDuration);
-      setActiveShiftDownId(id);
+      await startShiftDown(day.id, shiftDownDuration);
+      setLastShiftDownOutcome(null);
+      await refresh();
     } finally {
       setBusy(false);
     }
@@ -269,8 +302,20 @@ export function TodayScreen() {
     setBusy(true);
     try {
       await completeShiftDown(day.id, activeShiftDownId);
-      setActiveShiftDownId(null);
-      setShowShiftDown(false);
+      setLastShiftDownOutcome("COMPLETED");
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCancelShiftDown() {
+    if (busy || !day || !activeShiftDownId) return;
+    setBusy(true);
+    try {
+      await cancelShiftDown(day.id, activeShiftDownId);
+      setLastShiftDownOutcome("CANCELLED");
+      await refresh();
     } finally {
       setBusy(false);
     }
@@ -384,6 +429,164 @@ export function TodayScreen() {
     ? isSeriouslyConstrained(capacityResult.capacity, capacityResult.reasonCodes.length)
     : false;
   const showProminentMinimumDay = seriouslyConstrained && !!minimumDay && !minimumDay.enabled;
+
+  // Item 6 (Phase 4): when a tool IS the actual Engine recommendation
+  // (Recommendation.suggestedCommand), it shouldn't read as an "override"
+  // of that recommendation — it IS the recommendation. shiftDownIsPrimary
+  // is reachable today (STABILIZE -> START_SHIFT_DOWN); resetIsPrimary is
+  // always false under the current locked engine (no recommendation kind
+  // has a START_RESET suggestedCommand) — see resetShiftDownCopy.ts.
+  const shiftDownIsPrimary = isPrimaryShiftDown(recommendation);
+  const resetIsPrimary = isPrimaryReset(recommendation);
+
+  function renderResetCard(prominent: boolean) {
+    if (!day) return null;
+    const active = activeResetId !== null;
+    return (
+      <div className="card" style={prominent || active ? { borderColor: "var(--accent)" } : undefined}>
+        <p className="eyebrow" style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined }}>
+          {active ? "● RESET IN PROGRESS" : prominent ? "RECOMMENDED — RESET" : "RESET"}
+        </p>
+        <p className="card-body" style={{ marginBottom: 12 }}>{RESET_EXPLANATION}</p>
+        {active ? (
+          <>
+            <p className="card-body" style={{ marginBottom: 12 }}>
+              {describeResetInProgress(resetIntensity)}
+              {openResetStartedAt ? ` Started ${new Date(openResetStartedAt).toLocaleTimeString()}.` : ""}
+            </p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteReset()}>
+                COMPLETE RESET
+              </button>
+              <button
+                className="btn-primary"
+                style={{ flex: 1, background: "var(--surface-2)" }}
+                disabled={busy}
+                onClick={() => void handleCancelReset()}
+              >
+                CANCEL RESET
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {lastResetOutcome && (
+              <p className="meta" style={{ marginBottom: 12 }}>{describeResetResult(lastResetOutcome)}</p>
+            )}
+            <p className="meta" style={{ marginBottom: 8 }}>
+              BODY BEFORE STORY — how much do you need? 1 is a light touch, 5 is fully immersive.
+            </p>
+            <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+              {([1, 2, 3, 4, 5] as const).map((n) => (
+                <button
+                  key={n}
+                  className="btn-primary"
+                  style={{
+                    flex: 1,
+                    width: "auto",
+                    background: resetIntensity === n ? "var(--accent)" : "var(--surface-2)",
+                    padding: "8px 0",
+                  }}
+                  disabled={busy}
+                  onClick={() => setResetIntensity(n)}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <button className="btn-primary" disabled={busy} onClick={() => void handleStartReset()}>
+              START RESET
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  function renderShiftDownCard(prominent: boolean) {
+    if (!day) return null;
+    const active = activeShiftDownId !== null;
+    return (
+      <div className="card" style={prominent || active ? { borderColor: "var(--accent)" } : undefined}>
+        <p className="eyebrow" style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined }}>
+          {active ? "● SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
+        </p>
+        <p className="card-body" style={{ marginBottom: 12 }}>{SHIFT_DOWN_EXPLANATION}</p>
+        {active ? (
+          <>
+            <p className="card-body" style={{ marginBottom: 12 }}>
+              {describeShiftDownInProgress(shiftDownDuration)}
+              {openShiftDownStartedAt ? ` Started ${new Date(openShiftDownStartedAt).toLocaleTimeString()}.` : ""}
+            </p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteShiftDown()}>
+                COMPLETE SHIFT DOWN
+              </button>
+              <button
+                className="btn-primary"
+                style={{ flex: 1, background: "var(--surface-2)" }}
+                disabled={busy}
+                onClick={() => void handleCancelShiftDown()}
+              >
+                CANCEL SHIFT DOWN
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {lastShiftDownOutcome && (
+              <p className="meta" style={{ marginBottom: 12 }}>{describeShiftDownResult(lastShiftDownOutcome)}</p>
+            )}
+            <p className="meta" style={{ marginBottom: 8 }}>How many minutes?</p>
+            <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
+              {SHIFT_DOWN_DURATION_PRESETS.map((n) => (
+                <button
+                  key={n}
+                  className="btn-primary"
+                  style={{
+                    flex: 1,
+                    minWidth: 50,
+                    width: "auto",
+                    padding: "8px 0",
+                    background: shiftDownDuration === n ? "var(--accent)" : "var(--surface-2)",
+                  }}
+                  disabled={busy}
+                  onClick={() => setShiftDownDuration(n)}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 12 }}>
+              <span className="meta">Custom:</span>
+              <input
+                type="number"
+                min={1}
+                value={shiftDownDuration}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setShiftDownDuration(Number.isNaN(v) || v < 1 ? 1 : v);
+                }}
+                style={{
+                  flex: 1,
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border-subtle)",
+                  borderRadius: "var(--radius)",
+                  color: "var(--text-1)",
+                  padding: "8px 10px",
+                  fontSize: 14,
+                }}
+              />
+              <span className="meta">min</span>
+            </div>
+            <button className="btn-primary" disabled={busy} onClick={() => void handleStartShiftDown()}>
+              START SHIFT DOWN
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
 
   function renderMinimumDayCard(prominent: boolean) {
     if (!minimumDay) return null;
@@ -640,92 +843,22 @@ export function TodayScreen() {
             )}
             <ConfirmPanel />
           </div>
-
-          <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <p className="meta" style={{ marginBottom: 8 }}>OVERRIDE</p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                className="btn-primary"
-                style={{ background: "var(--surface-2)" }}
-                onClick={() => setShowReset((s) => !s)}
-              >
-                RESET
-              </button>
-              <button
-                className="btn-primary"
-                style={{ background: "var(--surface-2)" }}
-                onClick={() => setShowShiftDown((s) => !s)}
-              >
-                SHIFT DOWN
-              </button>
-            </div>
-            {showReset && (
-              <div style={{ marginTop: 12 }}>
-                <p className="meta" style={{ marginBottom: 8 }}>BODY BEFORE STORY — intensity</p>
-                <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-                  {([1, 2, 3, 4, 5] as const).map((n) => (
-                    <button
-                      key={n}
-                      className="btn-primary"
-                      style={{
-                        background: resetIntensity === n ? "var(--accent)" : "var(--surface-2)",
-                        padding: "8px 14px",
-                        width: "auto",
-                      }}
-                      onClick={() => setResetIntensity(n)}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-                {!activeResetId ? (
-                  <button className="btn-primary" disabled={busy} onClick={() => void handleStartReset()}>
-                    START RESET
-                  </button>
-                ) : (
-                  <button className="btn-primary" disabled={busy} onClick={() => void handleCompleteReset()}>
-                    COMPLETE RESET
-                  </button>
-                )}
-              </div>
-            )}
-            {showShiftDown && (
-              <div style={{ marginTop: 12 }}>
-                <p className="meta" style={{ marginBottom: 8 }}>Duration (minutes)</p>
-                <input
-                  type="number"
-                  min={1}
-                  value={shiftDownDuration}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    setShiftDownDuration(Number.isNaN(v) || v < 1 ? 1 : v);
-                  }}
-                  disabled={activeShiftDownId !== null}
-                  style={{
-                    width: "100%",
-                    background: "var(--surface-2)",
-                    border: "1px solid var(--border-subtle)",
-                    borderRadius: "var(--radius)",
-                    color: "var(--text-1)",
-                    padding: "10px 12px",
-                    fontSize: 15,
-                    marginBottom: 8,
-                  }}
-                />
-                {!activeShiftDownId ? (
-                  <button className="btn-primary" disabled={busy} onClick={() => void handleStartShiftDown()}>
-                    START SHIFT DOWN
-                  </button>
-                ) : (
-                  <button className="btn-primary" disabled={busy} onClick={() => void handleCompleteShiftDown()}>
-                    COMPLETE SHIFT DOWN
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       )}
+
+      {day &&
+        recommendation &&
+        (shiftDownIsPrimary ? (
+          <>
+            {renderShiftDownCard(true)}
+            {renderResetCard(resetIsPrimary)}
+          </>
+        ) : (
+          <>
+            {renderResetCard(resetIsPrimary)}
+            {renderShiftDownCard(false)}
+          </>
+        ))}
 
       {showProminentMinimumDay && renderMinimumDayCard(true)}
 

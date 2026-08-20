@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/persistence/db";
 import {
+  cancelReset,
+  cancelShiftDown,
   completeReset,
   completeShiftDown,
   recordRecommendation,
@@ -124,6 +126,24 @@ describe("RESET lifecycle", () => {
     expect((started!.payload as { intensity: number }).intensity).toBe(4);
     expect(completed!.causationId).toBe(startedId);
   });
+
+  /**
+   * Phase 4 (guided RESET/SHIFT DOWN experience): cancelling is a distinct
+   * historical fact from completing — "started this but didn't go through
+   * with it" vs. "did this." Both close out the open RESET the same way
+   * (see getOpenReset), but they must never be recorded as the same event.
+   */
+  it("records RESET_CANCELLED as a distinct event from RESET_COMPLETED, causally linked to the start", async () => {
+    const day = await startDay();
+    const startedId = await startReset(day.id, 3);
+    await cancelReset(day.id, startedId);
+
+    const events = await db.events.where("beyondDayId").equals(day.id).toArray();
+    expect(events.some((e) => e.type === "RESET_CANCELLED")).toBe(true);
+    expect(events.some((e) => e.type === "RESET_COMPLETED")).toBe(false);
+    const cancelled = events.find((e) => e.type === "RESET_CANCELLED");
+    expect(cancelled!.causationId).toBe(startedId);
+  });
 });
 
 describe("SHIFT DOWN override", () => {
@@ -142,5 +162,20 @@ describe("SHIFT DOWN override", () => {
       startedId,
     );
     expect(completed!.causationId).toBe(startedId);
+  });
+
+  it("records SHIFT_DOWN_CANCELLED as a distinct event from SHIFT_DOWN_COMPLETED, causally linked to the start", async () => {
+    const day = await startDay();
+    const startedId = await startShiftDown(day.id, 10);
+    await cancelShiftDown(day.id, startedId);
+
+    const events = await db.events.where("beyondDayId").equals(day.id).toArray();
+    expect(events.some((e) => e.type === "SHIFT_DOWN_CANCELLED")).toBe(true);
+    expect(events.some((e) => e.type === "SHIFT_DOWN_COMPLETED")).toBe(false);
+    const cancelled = events.find((e) => e.type === "SHIFT_DOWN_CANCELLED");
+    expect((cancelled!.payload as { shiftDownStartedEventId: string }).shiftDownStartedEventId).toBe(
+      startedId,
+    );
+    expect(cancelled!.causationId).toBe(startedId);
   });
 });

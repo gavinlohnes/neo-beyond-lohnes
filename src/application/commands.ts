@@ -220,6 +220,27 @@ export async function completeReset(
 }
 
 /**
+ * Phase 4 (guided RESET/SHIFT DOWN experience): a distinct terminal fact
+ * from RESET_COMPLETED — "I started this but didn't go through with it"
+ * is not the same historical claim as "I did this." Same causationId
+ * linkage as completeReset, so getOpenReset (application/queries.ts)
+ * treats either one as closing out the open RESET.
+ */
+export async function cancelReset(
+  beyondDayId: string,
+  resetStartedEventId: string,
+): Promise<void> {
+  await logEvent(
+    beyondDayId,
+    "RESET_CANCELLED",
+    { resetStartedEventId },
+    "USER",
+    newId(),
+    resetStartedEventId,
+  );
+}
+
+/**
  * SHIFT DOWN needs its own duration input, same shape as RESET (BEYOND —
  * Context & Safety Decisions, 2026-08-19): a value chosen up front, then an
  * explicit START/COMPLETE two-step, rather than a single one-tap action.
@@ -252,6 +273,21 @@ export async function completeShiftDown(
   await logEvent(
     beyondDayId,
     "SHIFT_DOWN_COMPLETED",
+    { commandId: newId(), shiftDownStartedEventId },
+    "USER",
+    newId(),
+    shiftDownStartedEventId,
+  );
+}
+
+/** Distinct terminal fact from SHIFT_DOWN_COMPLETED — see cancelReset's doc comment for the same reasoning. */
+export async function cancelShiftDown(
+  beyondDayId: string,
+  shiftDownStartedEventId: string,
+): Promise<void> {
+  await logEvent(
+    beyondDayId,
+    "SHIFT_DOWN_CANCELLED",
     { commandId: newId(), shiftDownStartedEventId },
     "USER",
     newId(),

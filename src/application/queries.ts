@@ -292,11 +292,13 @@ export async function getPendingOutcomeRating(beyondDayId: string): Promise<Reco
 export interface OpenResetInfo {
   eventId: string;
   intensity: 1 | 2 | 3 | 4 | 5;
+  startedAt: string;
 }
 
 export interface OpenShiftDownInfo {
   eventId: string;
   durationMinutes: number;
+  startedAt: string;
 }
 
 /**
@@ -305,33 +307,52 @@ export interface OpenShiftDownInfo {
  * one was open would lose track of it entirely — the panel would forget
  * it was ever started, letting a fresh START create a second, orphaned
  * RESET_STARTED with no matching completion. Finds a RESET_STARTED (or
- * SHIFT_DOWN_STARTED) with no matching *_COMPLETED event (matched by
+ * SHIFT_DOWN_STARTED) with no matching terminal event (matched by
  * causationId) and returns the original chosen value so the UI can
  * restore the exact in-progress state, not just "something is open."
  * If more than one is somehow open, the most recent wins.
+ *
+ * Phase 4 (guided RESET/SHIFT DOWN): *_CANCELLED is now a second terminal
+ * event alongside *_COMPLETED — cancelling closes out an open RESET/SHIFT
+ * DOWN exactly like completing it does, it just means something different
+ * historically (see cancelReset/cancelShiftDown). startedAt (the original
+ * STARTED event's occurredAt) is exposed so the in-progress UI can show
+ * when it began, not just that something is open.
  */
 export async function getOpenReset(beyondDayId: string): Promise<OpenResetInfo | undefined> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const completedTargets = new Set(
-    events.filter((e) => e.type === "RESET_COMPLETED").map((e) => e.causationId),
+  const terminalTargets = new Set(
+    events
+      .filter((e) => e.type === "RESET_COMPLETED" || e.type === "RESET_CANCELLED")
+      .map((e) => e.causationId),
   );
   const open = events
-    .filter((e) => e.type === "RESET_STARTED" && !completedTargets.has(e.id))
+    .filter((e) => e.type === "RESET_STARTED" && !terminalTargets.has(e.id))
     .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))
     .at(-1);
   if (!open) return undefined;
-  return { eventId: open.id, intensity: (open.payload as { intensity: 1 | 2 | 3 | 4 | 5 }).intensity };
+  return {
+    eventId: open.id,
+    intensity: (open.payload as { intensity: 1 | 2 | 3 | 4 | 5 }).intensity,
+    startedAt: open.occurredAt,
+  };
 }
 
 export async function getOpenShiftDown(beyondDayId: string): Promise<OpenShiftDownInfo | undefined> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const completedTargets = new Set(
-    events.filter((e) => e.type === "SHIFT_DOWN_COMPLETED").map((e) => e.causationId),
+  const terminalTargets = new Set(
+    events
+      .filter((e) => e.type === "SHIFT_DOWN_COMPLETED" || e.type === "SHIFT_DOWN_CANCELLED")
+      .map((e) => e.causationId),
   );
   const open = events
-    .filter((e) => e.type === "SHIFT_DOWN_STARTED" && !completedTargets.has(e.id))
+    .filter((e) => e.type === "SHIFT_DOWN_STARTED" && !terminalTargets.has(e.id))
     .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))
     .at(-1);
   if (!open) return undefined;
-  return { eventId: open.id, durationMinutes: (open.payload as { durationMinutes: number }).durationMinutes };
+  return {
+    eventId: open.id,
+    durationMinutes: (open.payload as { durationMinutes: number }).durationMinutes,
+    startedAt: open.occurredAt,
+  };
 }
