@@ -8,7 +8,7 @@ import {
   type CheckInValues,
   type PartialCheckInValues,
 } from "./checkInFields";
-import { describeSchedulePrediction } from "./workContextCopy";
+import { describeSchedulePrediction, resolveWorkContextSource } from "./workContextCopy";
 import { describeCapacity } from "./capacityCopy";
 import { deriveCapacity } from "../../../engine/capacity";
 import { describeRecommendationAction, describeRecommendationEffect } from "./recommendationCopy";
@@ -232,11 +232,12 @@ export function TodayScreen() {
     }
   }
 
-  async function handleAcceptScheduledContext(value: "WORK" | "OFF") {
-    if (busy || !day) return;
+  async function handleSetWorkContext(value: "WORK" | "OFF") {
+    if (busy || !day || !scheduledContext) return;
     setBusy(true);
     try {
-      await setWorkContext(day.id, value, "SCHEDULE_SUGGESTION_ACCEPTED");
+      const source = resolveWorkContextSource(scheduledContext.todayIsScheduledWorkDay, value);
+      await setWorkContext(day.id, value, source);
       await refresh();
     } finally {
       setBusy(false);
@@ -540,7 +541,7 @@ export function TodayScreen() {
               className="btn-primary"
               style={{ flex: 1, background: day.workContext === "WORK" ? "var(--accent)" : "var(--surface-2)" }}
               disabled={busy}
-              onClick={() => void handleAcceptScheduledContext("WORK")}
+              onClick={() => void handleSetWorkContext("WORK")}
             >
               YES
             </button>
@@ -548,7 +549,7 @@ export function TodayScreen() {
               className="btn-primary"
               style={{ flex: 1, background: day.workContext === "OFF" ? "var(--accent)" : "var(--surface-2)" }}
               disabled={busy}
-              onClick={() => void handleAcceptScheduledContext("OFF")}
+              onClick={() => void handleSetWorkContext("OFF")}
             >
               NO
             </button>

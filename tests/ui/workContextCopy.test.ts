@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeSchedulePrediction } from "../../src/ui/screens/today/workContextCopy";
+import { describeSchedulePrediction, resolveWorkContextSource } from "../../src/ui/screens/today/workContextCopy";
 import type { ScheduledContext } from "../../src/engine/scheduledContext";
 
 describe("describeSchedulePrediction", () => {
@@ -23,5 +23,23 @@ describe("describeSchedulePrediction", () => {
       const ctx: ScheduledContext = { week: "A", todayIsScheduledWorkDay: true, phase };
       expect(describeSchedulePrediction(ctx)).toContain("This is a prediction, not a fact, until you confirm.");
     }
+  });
+});
+
+describe("resolveWorkContextSource", () => {
+  it("is SCHEDULE_SUGGESTION_ACCEPTED when the answer agrees with a predicted work day", () => {
+    expect(resolveWorkContextSource(true, "WORK")).toBe("SCHEDULE_SUGGESTION_ACCEPTED");
+  });
+
+  it("is SCHEDULE_SUGGESTION_ACCEPTED when the answer agrees with a predicted day off", () => {
+    expect(resolveWorkContextSource(false, "OFF")).toBe("SCHEDULE_SUGGESTION_ACCEPTED");
+  });
+
+  it("is MANUAL when the answer overrides a predicted work day with OFF", () => {
+    expect(resolveWorkContextSource(true, "OFF")).toBe("MANUAL");
+  });
+
+  it("is MANUAL when the answer overrides a predicted day off with WORK", () => {
+    expect(resolveWorkContextSource(false, "WORK")).toBe("MANUAL");
   });
 });
