@@ -29,7 +29,9 @@ import {
 } from "../../../application/trainCommands";
 import {
   describePartialAdvancement,
+  describePartialAdvancementResult,
   describeProgressionAdvisory,
+  describeRecommendationLabel,
   describeRecoveryPreview,
   describeStopAction,
   describeStopConfirm,
@@ -53,6 +55,25 @@ interface SetInputState {
   reps: string;
 }
 
+/**
+ * Product Experience Sprint, P4 (workout completion state): captured at
+ * the moment completeWorkout is called, from state that's about to be
+ * cleared by refresh() — never recomputed later, so the summary always
+ * reflects exactly what this session did, not whatever TRAIN shows next.
+ */
+interface CompletionSummary {
+  status: "COMPLETED" | "PARTIAL";
+  sessionType: SessionType;
+  bodyAreas: string;
+  exercisesTouched: number;
+  totalExercises: number;
+  setsLogged: number;
+  setsSkipped: number;
+  durationMinutes: number | null;
+  nextTemplate: WorkoutTemplateId;
+  advisoryChanges: { name: string; before: string; after: string }[];
+}
+
 export function TrainScreen() {
   const [capacity, setCapacity] = useState<Capacity | null>(null);
   const [suggestedTemplate, setSuggestedTemplate] = useState<WorkoutTemplateId>("A");
@@ -70,6 +91,12 @@ export function TrainScreen() {
   const [lastPerformedSets, setLastPerformedSets] = useState<Record<string, LastSetInfo>>({});
   const [recentSubstitutions, setRecentSubstitutions] = useState<Record<string, string[]>>({});
   const [showStopConfirm, setShowStopConfirm] = useState(false);
+  // P4 (one-handed execution mode): which exercise is the focused
+  // "current" one. null means "let the derived first-incomplete-exercise
+  // logic decide" — set explicitly only when the lifter taps into a
+  // different exercise out of order via the compact list below.
+  const [focusedExerciseId, setFocusedExerciseId] = useState<string | null>(null);
+  const [completionSummary, setCompletionSummary] = useState<CompletionSummary | null>(null);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
@@ -159,6 +186,8 @@ export function TrainScreen() {
       );
       setSession(started);
       setSets([]);
+      setFocusedExerciseId(null);
+      setCompletionSummary(null);
       await loadExerciseAdvisory(started);
     } finally {
       setBusy(false);
@@ -219,14 +248,6 @@ export function TrainScreen() {
     setInputs((prev) => ({ ...prev, [key]: { ...current, ...patch } }));
   }
 
-  /** Item 5: explicit repeat-last control — re-applies the suggestion even if the user had already changed the field. */
-  function handleRepeatLast(exerciseId: string, setNumber: number) {
-    const suggestion = suggestedInputFor(exerciseId, setNumber);
-    if (!suggestion) return;
-    const key = inputKey(exerciseId, setNumber);
-    setInputs((prev) => ({ ...prev, [key]: { weight: String(suggestion.weight), reps: String(suggestion.reps) } }));
-  }
-
   function adjustWeight(exerciseId: string, setNumber: number, deltaLbs: number) {
     const current = getInputDisplay(exerciseId, setNumber);
     const next = Math.max(0, (Number(current.weight) || 0) + deltaLbs);
@@ -253,6 +274,32 @@ export function TrainScreen() {
     }
   }
 
+  /**
+   * P4: exact repeat of a prior set in one tap — logs directly with the
+   * suggested weight/reps rather than filling the input first and
+   * requiring a separate LOG tap. Same logSet call handleLogSet makes;
+   * this only skips the "fill, then submit" round trip when the values
+   * are already known to be exactly what was suggested.
+   */
+  async function handleLogExactRepeat(exerciseId: string, setNumber: number, suggestion: LastSetInfo) {
+    if (busy || !session) return;
+    setBusy(true);
+    try {
+      await logSet(
+        session.beyondDayId,
+        session.id,
+        exerciseId,
+        setNumber,
+        suggestion.weight,
+        suggestion.reps,
+        subs[exerciseId] || undefined,
+      );
+      setSets(await getPerformedSets(session.id));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSkipSet(exerciseId: string, setNumber: number) {
     if (busy || !session) return;
     setBusy(true);
@@ -264,11 +311,66 @@ export function TrainScreen() {
     }
   }
 
+  /**
+   * P4 (restrained completion state): captures the facts BEFORE refresh()
+   * clears session/sets/progressionSuggestions — everything here is a real
+   * fact about the session that just ended, nothing inferred or "learned."
+   * durationMinutes comes from session.startedAt (known) and the current
+   * time (now) — reliably available without needing a separate timer
+   * feature, and is passed through to completeWorkout so it's actually
+   * persisted on the WORKOUT_COMPLETED event, not just displayed once.
+   * advisoryChanges re-queries getProgressionSuggestion AFTER completing —
+   * once the session's status is no longer ACTIVE, its own just-logged
+   * sets become visible to that query (trainQueries.ts filters out ACTIVE
+   * sessions), so this genuinely reflects what changed, not a guess.
+   */
   async function handleCompleteWorkout(status: "COMPLETED" | "PARTIAL") {
     if (busy || !session) return;
     setBusy(true);
     try {
-      await completeWorkout(session.beyondDayId, session.id, session.sessionType as SessionType, status);
+      const sessionType = session.sessionType as SessionType;
+      const templateId = session.templateId as WorkoutTemplateId;
+      const startedAtMs = new Date(session.startedAt).getTime();
+      const durationMinutes = Number.isFinite(startedAtMs)
+        ? Math.max(0, Math.round((Date.now() - startedAtMs) / 60000))
+        : null;
+      const exercisesTouched = new Set(sets.filter((s) => !s.skipped).map((s) => s.exerciseId)).size;
+      const setsLogged = sets.filter((s) => !s.skipped).length;
+      const setsSkipped = sets.filter((s) => s.skipped).length;
+      const bodyAreas = describeTemplateSummary(activeExercises).bodyAreas;
+      const beforeSuggestions = progressionSuggestions;
+
+      await completeWorkout(session.beyondDayId, session.id, sessionType, status, durationMinutes ?? undefined);
+
+      const advisoryChanges: CompletionSummary["advisoryChanges"] = [];
+      if (sessionType === "STANDARD" || sessionType === "REDUCED") {
+        for (const ex of activeExercises) {
+          const before = beforeSuggestions[ex.exerciseId];
+          if (!before) continue;
+          const after = await getProgressionSuggestion(templateId, sessionType, ex.exerciseId);
+          if (before.recommendation !== after.recommendation) {
+            advisoryChanges.push({
+              name: ex.name,
+              before: describeRecommendationLabel(before.recommendation),
+              after: describeRecommendationLabel(after.recommendation),
+            });
+          }
+        }
+      }
+
+      setCompletionSummary({
+        status,
+        sessionType,
+        bodyAreas,
+        exercisesTouched,
+        totalExercises: activeExercises.length,
+        setsLogged,
+        setsSkipped,
+        durationMinutes,
+        nextTemplate: await suggestTemplateForNextWorkout(),
+        advisoryChanges,
+      });
+
       await refresh();
     } finally {
       setBusy(false);
@@ -319,6 +421,35 @@ export function TrainScreen() {
   const suggestedExercises = exercisesFor(chosenTemplate, chosenVariant === "RECOVERY" ? "STANDARD" : chosenVariant);
   const suggestedSummary = describeTemplateSummary(suggestedExercises);
 
+  // P4 (one-handed execution mode): "current" is whichever exercise still
+  // has an unlogged set, unless the lifter explicitly focused a different
+  // one via the compact list. If every exercise is fully logged, "current"
+  // stays on the last one so Exercise X of Y still reads sensibly while
+  // COMPLETE/PARTIAL is the obvious next tap.
+  function loggedSetNumbers(exerciseId: string): Set<number> {
+    return new Set(sets.filter((s) => s.exerciseId === exerciseId).map((s) => s.setNumber));
+  }
+  function isExerciseComplete(ex: { exerciseId: string; sets: number }): boolean {
+    const logged = loggedSetNumbers(ex.exerciseId);
+    for (let n = 1; n <= ex.sets; n++) if (!logged.has(n)) return false;
+    return true;
+  }
+  function nextUnloggedSetNumber(ex: { exerciseId: string; sets: number }): number | null {
+    const logged = loggedSetNumbers(ex.exerciseId);
+    for (let n = 1; n <= ex.sets; n++) if (!logged.has(n)) return n;
+    return null;
+  }
+  const firstIncompleteExercise = activeExercises.find((ex) => !isExerciseComplete(ex));
+  const currentExercise =
+    (focusedExerciseId ? activeExercises.find((ex) => ex.exerciseId === focusedExerciseId) : undefined) ??
+    firstIncompleteExercise ??
+    activeExercises.at(-1) ??
+    null;
+  const currentExerciseIndex = currentExercise
+    ? activeExercises.findIndex((ex) => ex.exerciseId === currentExercise.exerciseId)
+    : -1;
+  const currentSetNumber = currentExercise ? nextUnloggedSetNumber(currentExercise) : null;
+
   return (
     <div className="screen">
       <p className="eyebrow">BEYOND // TRAIN</p>
@@ -326,7 +457,45 @@ export function TrainScreen() {
 
       <ConfirmPanel />
 
-      {!session && noCheckIn && (
+      {completionSummary && (
+        <div className="card card--action">
+          <p className="eyebrow" style={{ marginBottom: 4 }}>
+            {completionSummary.status === "COMPLETED" ? "WORKOUT COMPLETE" : "WORKOUT SAVED — PARTIAL"}
+          </p>
+          <h2 className="recommendation-title" style={{ textTransform: "capitalize" }}>
+            {completionSummary.bodyAreas || "Workout"}
+          </h2>
+          <p className="card-body" style={{ marginBottom: 4 }}>
+            {completionSummary.exercisesTouched} of {completionSummary.totalExercises} exercises · {completionSummary.setsLogged}{" "}
+            {completionSummary.setsLogged === 1 ? "set" : "sets"} logged
+            {completionSummary.setsSkipped > 0
+              ? ` · ${completionSummary.setsSkipped} skipped`
+              : ""}
+            {completionSummary.durationMinutes !== null ? ` · ${completionSummary.durationMinutes} min` : ""}
+          </p>
+          {completionSummary.status === "PARTIAL" && (
+            <p className="meta" style={{ marginBottom: 8 }}>
+              {describePartialAdvancementResult(completionSummary.sessionType)}
+            </p>
+          )}
+          <p className="meta" style={{ marginBottom: 8 }}>Next up: Template {completionSummary.nextTemplate}.</p>
+          {completionSummary.advisoryChanges.length > 0 && (
+            <div style={{ marginTop: 8, marginBottom: 8 }}>
+              <p className="meta" style={{ marginBottom: 4 }}>Advisories that changed:</p>
+              {completionSummary.advisoryChanges.map((c) => (
+                <p key={c.name} className="card-body" style={{ margin: 0 }}>
+                  {c.name}: {c.before} → {c.after}
+                </p>
+              ))}
+            </div>
+          )}
+          <button className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setCompletionSummary(null)}>
+            DONE
+          </button>
+        </div>
+      )}
+
+      {!session && !completionSummary && noCheckIn && (
         <div className="card" style={{ borderColor: "var(--warning)" }}>
           <p className="eyebrow" style={{ color: "var(--warning)", marginBottom: 4 }}>NO CHECK-IN YET</p>
           <p className="card-body" style={{ marginBottom: 12 }}>
@@ -338,7 +507,7 @@ export function TrainScreen() {
         </div>
       )}
 
-      {!session && (
+      {!session && !completionSummary && (
         <div className="card card--action">
           <p className="eyebrow" style={{ marginBottom: 4 }}>
             {noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
@@ -363,12 +532,10 @@ export function TrainScreen() {
             {TEMPLATE_ORDER.map((t) => (
               <button
                 key={t}
-                className="btn-primary"
-                style={{
-                  background: chosenTemplate === t ? "var(--accent)" : "var(--surface-2)",
-                  width: "auto",
-                  padding: "8px 16px",
-                }}
+                type="button"
+                className={`chip ${chosenTemplate === t ? "chip--selected" : ""}`}
+                style={{ flex: "none", padding: "8px 16px" }}
+                aria-pressed={chosenTemplate === t}
                 disabled={chosenVariant === "RECOVERY"}
                 onClick={() => setChosenTemplate(t)}
               >
@@ -382,13 +549,10 @@ export function TrainScreen() {
             {VARIANT_ORDER.map((v) => (
               <button
                 key={v}
-                className="btn-primary"
-                style={{
-                  background: chosenVariant === v ? "var(--accent)" : "var(--surface-2)",
-                  width: "auto",
-                  padding: "8px 14px",
-                  fontSize: 16,
-                }}
+                type="button"
+                className={`chip ${chosenVariant === v ? "chip--selected" : ""}`}
+                style={{ flex: "none", padding: "8px 14px" }}
+                aria-pressed={chosenVariant === v}
                 onClick={() => setChosenVariant(v)}
               >
                 {v}
@@ -402,7 +566,7 @@ export function TrainScreen() {
         </div>
       )}
 
-      {session && session.sessionType === "RECOVERY" && (
+      {session && session.sessionType === "RECOVERY" && !completionSummary && (
         <div className="card card--action">
           <p className="eyebrow" style={{ marginBottom: 4 }}>RECOVERY — IN PROGRESS</p>
           <p className="card-body" style={{ marginBottom: 12 }}>
@@ -425,7 +589,7 @@ export function TrainScreen() {
         </div>
       )}
 
-      {session && session.sessionType !== "RECOVERY" && (
+      {session && session.sessionType !== "RECOVERY" && !completionSummary && (
         <div className="card card--action">
           {(() => {
             const summary = describeTemplateSummary(activeExercises);
@@ -441,137 +605,188 @@ export function TrainScreen() {
             );
           })()}
 
-          {activeExercises.map((ex) => (
-            <div
-              key={ex.exerciseId}
-              style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 12, marginTop: 12 }}
-            >
-              <p className="card-title" style={{ marginBottom: 2 }}>{ex.name}</p>
-              <p className="meta" style={{ marginBottom: 8 }}>
-                {ex.sets} sets x {ex.repRangeLow}-{ex.repRangeHigh} reps
+          {/* P4: the focused exercise — everything the lifter needs for
+              the set they're on right now, and nothing else competing
+              for attention. */}
+          {currentExercise && (
+            <div>
+              <p className="meta" style={{ marginBottom: 2 }}>
+                Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>
-              {lastPerformedSets[ex.exerciseId] && (
+              <h2 className="recommendation-title" style={{ marginBottom: 2 }}>{currentExercise.name}</h2>
+              <p className="meta" style={{ marginBottom: 8 }}>
+                {currentExercise.sets} sets x {currentExercise.repRangeLow}-{currentExercise.repRangeHigh} reps
+                {currentSetNumber !== null ? ` · Set ${currentSetNumber} of ${currentExercise.sets}` : " · All sets logged"}
+              </p>
+              {lastPerformedSets[currentExercise.exerciseId] && (
                 <p className="card-body" style={{ marginBottom: 4 }}>
-                  Last time: {lastPerformedSets[ex.exerciseId]!.weight} lb x {lastPerformedSets[ex.exerciseId]!.reps}
+                  Last time: {lastPerformedSets[currentExercise.exerciseId]!.weight} lb x{" "}
+                  {lastPerformedSets[currentExercise.exerciseId]!.reps}
                 </p>
               )}
-              {progressionSuggestions[ex.exerciseId] && describeProgressionAdvisory(progressionSuggestions[ex.exerciseId]!) && (
-                <p className="card-body" style={{ fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
-                  {describeProgressionAdvisory(progressionSuggestions[ex.exerciseId]!)}
-                </p>
+              {progressionSuggestions[currentExercise.exerciseId] &&
+                describeProgressionAdvisory(progressionSuggestions[currentExercise.exerciseId]!) && (
+                  <p className="card-body" style={{ fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
+                    {describeProgressionAdvisory(progressionSuggestions[currentExercise.exerciseId]!)}
+                  </p>
+                )}
+
+              {!loggedSetNumbers(currentExercise.exerciseId).size && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Substitute exercise (optional)"
+                    value={subs[currentExercise.exerciseId] ?? ""}
+                    onChange={(e) => setSubs((prev) => ({ ...prev, [currentExercise.exerciseId]: e.target.value }))}
+                    className="input"
+                    style={{ marginBottom: 8 }}
+                  />
+                  {recentSubstitutions[currentExercise.exerciseId] &&
+                    recentSubstitutions[currentExercise.exerciseId]!.length > 0 && (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                        {recentSubstitutions[currentExercise.exerciseId]!.map((name) => (
+                          <button
+                            key={name}
+                            type="button"
+                            className="btn-secondary"
+                            style={{ width: "auto", padding: "4px 10px", fontSize: 16 }}
+                            onClick={() => setSubs((prev) => ({ ...prev, [currentExercise.exerciseId]: name }))}
+                          >
+                            {name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                </>
               )}
-              <input
-                type="text"
-                placeholder="Substitute exercise (optional)"
-                value={subs[ex.exerciseId] ?? ""}
-                onChange={(e) => setSubs((prev) => ({ ...prev, [ex.exerciseId]: e.target.value }))}
-                disabled={hasLoggedAnySet}
-                className="input"
-                style={{ marginBottom: 8 }}
-              />
-              {!hasLoggedAnySet && recentSubstitutions[ex.exerciseId] && recentSubstitutions[ex.exerciseId]!.length > 0 && (
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-                  {recentSubstitutions[ex.exerciseId]!.map((name) => (
-                    <button
-                      key={name}
-                      type="button"
-                      className="btn-primary"
-                      style={{ width: "auto", padding: "4px 10px", fontSize: 16, background: "var(--surface-2)" }}
-                      onClick={() => setSubs((prev) => ({ ...prev, [ex.exerciseId]: name }))}
-                    >
-                      {name}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {Array.from({ length: ex.sets }, (_, i) => i + 1).map((setNumber) => {
+
+              {Array.from({ length: currentExercise.sets }, (_, i) => i + 1).map((setNumber) => {
+                const ex = currentExercise;
                 const loggedSet = sets.find((s) => s.exerciseId === ex.exerciseId && s.setNumber === setNumber);
                 const display = getInputDisplay(ex.exerciseId, setNumber);
-                const hasSuggestion = suggestedInputFor(ex.exerciseId, setNumber) !== undefined;
+                const suggestion = suggestedInputFor(ex.exerciseId, setNumber);
+                if (loggedSet) {
+                  return (
+                    <p key={setNumber} className="meta" style={{ marginBottom: 4 }}>
+                      #{setNumber} — {loggedSet.skipped ? "SKIPPED" : `${loggedSet.weight} lb x ${loggedSet.reps}`}
+                    </p>
+                  );
+                }
                 return (
-                  <div key={setNumber} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
-                    <span className="meta" style={{ width: 24 }}>#{setNumber}</span>
-                    {loggedSet ? (
-                      <span className="meta">
-                        {loggedSet.skipped ? "SKIPPED" : `${loggedSet.weight} lb x ${loggedSet.reps}`}
-                      </span>
-                    ) : (
-                      <>
-                        <button
-                          className="btn-primary"
-                          style={{ width: "auto", padding: "4px 10px" }}
-                          onClick={() => adjustWeight(ex.exerciseId, setNumber, -ex.incrementLbs)}
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          placeholder="lb"
-                          value={display.weight}
-                          onChange={(e) => patchInput(ex.exerciseId, setNumber, { weight: e.target.value })}
-                          style={{ width: 60, padding: "4px 6px", background: "var(--surface-2)", color: "var(--text-1)" }}
-                        />
-                        <button
-                          className="btn-primary"
-                          style={{ width: "auto", padding: "4px 10px" }}
-                          onClick={() => adjustWeight(ex.exerciseId, setNumber, ex.incrementLbs)}
-                        >
-                          +
-                        </button>
-                        <span className="meta">lb x</span>
-                        <button
-                          className="btn-primary"
-                          style={{ width: "auto", padding: "4px 10px" }}
-                          onClick={() => adjustReps(ex.exerciseId, setNumber, -1)}
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          placeholder="reps"
-                          value={display.reps}
-                          onChange={(e) => patchInput(ex.exerciseId, setNumber, { reps: e.target.value })}
-                          style={{ width: 44, padding: "4px 6px", background: "var(--surface-2)", color: "var(--text-1)" }}
-                        />
-                        <button
-                          className="btn-primary"
-                          style={{ width: "auto", padding: "4px 10px" }}
-                          onClick={() => adjustReps(ex.exerciseId, setNumber, 1)}
-                        >
-                          +
-                        </button>
-                        {hasSuggestion && (
-                          <button
-                            className="btn-primary"
-                            style={{ width: "auto", padding: "4px 10px", fontSize: 16, background: "var(--surface-2)" }}
-                            onClick={() => handleRepeatLast(ex.exerciseId, setNumber)}
-                          >
-                            REPEAT LAST
-                          </button>
-                        )}
-                        <button
-                          className="btn-primary"
-                          style={{ width: "auto", padding: "4px 10px", fontSize: 16 }}
-                          disabled={busy}
-                          onClick={() => void handleLogSet(ex.exerciseId, setNumber)}
-                        >
-                          LOG
-                        </button>
-                        <button
-                          className="btn-primary"
-                          style={{ width: "auto", padding: "4px 10px", fontSize: 16, background: "var(--surface-2)" }}
-                          disabled={busy}
-                          onClick={() => void handleSkipSet(ex.exerciseId, setNumber)}
-                        >
-                          SKIP
-                        </button>
-                      </>
+                  <div key={setNumber} style={{ marginBottom: 10 }}>
+                    {/* P4: exact repeat in one tap — the primary, fastest path. */}
+                    {suggestion && (
+                      <button
+                        className="btn-primary"
+                        style={{ marginBottom: 6 }}
+                        disabled={busy}
+                        onClick={() => void handleLogExactRepeat(ex.exerciseId, setNumber, suggestion)}
+                      >
+                        SET {setNumber}: SAME AS LAST TIME — {suggestion.weight} lb x {suggestion.reps}
+                      </button>
                     )}
+                    {/* Small adjustment path: one tap on +/- to bump the pending
+                        value, one tap on LOG — approximately two taps. */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
+                      <span className="meta" style={{ width: 24 }}>#{setNumber}</span>
+                      <button
+                        className="btn-secondary"
+                        style={{ width: "auto", padding: "8px 12px" }}
+                        onClick={() => adjustWeight(ex.exerciseId, setNumber, -ex.incrementLbs)}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        placeholder="lb"
+                        value={display.weight}
+                        onChange={(e) => patchInput(ex.exerciseId, setNumber, { weight: e.target.value })}
+                        className="input"
+                        style={{ width: 64, padding: "8px 6px" }}
+                      />
+                      <button
+                        className="btn-secondary"
+                        style={{ width: "auto", padding: "8px 12px" }}
+                        onClick={() => adjustWeight(ex.exerciseId, setNumber, ex.incrementLbs)}
+                      >
+                        +
+                      </button>
+                      <span className="meta">lb x</span>
+                      <button
+                        className="btn-secondary"
+                        style={{ width: "auto", padding: "8px 12px" }}
+                        onClick={() => adjustReps(ex.exerciseId, setNumber, -1)}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        placeholder="reps"
+                        value={display.reps}
+                        onChange={(e) => patchInput(ex.exerciseId, setNumber, { reps: e.target.value })}
+                        className="input"
+                        style={{ width: 52, padding: "8px 6px" }}
+                      />
+                      <button
+                        className="btn-secondary"
+                        style={{ width: "auto", padding: "8px 12px" }}
+                        onClick={() => adjustReps(ex.exerciseId, setNumber, 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        className="btn-primary"
+                        style={{ flex: 1 }}
+                        disabled={busy}
+                        onClick={() => void handleLogSet(ex.exerciseId, setNumber)}
+                      >
+                        LOG
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        style={{ flex: 1 }}
+                        disabled={busy}
+                        onClick={() => void handleSkipSet(ex.exerciseId, setNumber)}
+                      >
+                        SKIP
+                      </button>
+                    </div>
                   </div>
                 );
               })}
             </div>
-          ))}
+          )}
+
+          {/* P4: compact, quiet list of the rest of the session — status
+              at a glance, tap any to jump there out of order. */}
+          {activeExercises.length > 1 && (
+            <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+              <p className="meta" style={{ marginBottom: 8 }}>Other exercises</p>
+              {activeExercises
+                .filter((ex) => ex.exerciseId !== currentExercise?.exerciseId)
+                .map((ex) => {
+                  const done = isExerciseComplete(ex);
+                  const loggedCount = loggedSetNumbers(ex.exerciseId).size;
+                  return (
+                    <button
+                      key={ex.exerciseId}
+                      type="button"
+                      className="btn-secondary"
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}
+                      onClick={() => setFocusedExerciseId(ex.exerciseId)}
+                    >
+                      <span>
+                        {done ? "✓ " : ""}
+                        {ex.name}
+                      </span>
+                      <span className="meta">{loggedCount}/{ex.sets}</span>
+                    </button>
+                  );
+                })}
+            </div>
+          )}
 
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
             <p className="meta" style={{ marginBottom: 8 }}>{describePartialAdvancement(session.sessionType as SessionType)}</p>
@@ -579,20 +794,10 @@ export function TrainScreen() {
               <button className="btn-primary" disabled={busy} onClick={() => void handleCompleteWorkout("COMPLETED")}>
                 COMPLETE
               </button>
-              <button
-                className="btn-primary"
-                style={{ background: "var(--surface-2)" }}
-                disabled={busy}
-                onClick={() => void handleCompleteWorkout("PARTIAL")}
-              >
+              <button className="btn-secondary" disabled={busy} onClick={() => void handleCompleteWorkout("PARTIAL")}>
                 PARTIAL
               </button>
-              <button
-                className="btn-primary"
-                style={{ background: "var(--surface-2)" }}
-                disabled={busy}
-                onClick={handleStopClick}
-              >
+              <button className="btn-secondary" disabled={busy} onClick={handleStopClick}>
                 {describeStopAction(hasLoggedAnySet)}
               </button>
             </div>
@@ -603,11 +808,7 @@ export function TrainScreen() {
                   <button className="btn-primary" disabled={busy} onClick={() => void actuallyStop()}>
                     STOP WORKOUT
                   </button>
-                  <button
-                    className="btn-primary"
-                    style={{ background: "var(--surface-2)" }}
-                    onClick={() => setShowStopConfirm(false)}
-                  >
+                  <button className="btn-secondary" onClick={() => setShowStopConfirm(false)}>
                     KEEP GOING
                   </button>
                 </div>

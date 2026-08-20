@@ -103,6 +103,40 @@ export function describePartialAdvancement(sessionType: SessionType): string {
   return "Saving as PARTIAL will NOT advance your rotation — only COMPLETED does for a STANDARD session.";
 }
 
+/**
+ * Product Experience Sprint, P4 (workout completion state): the past-tense
+ * sibling of describePartialAdvancement, for restating in the completion
+ * summary what actually just happened rather than what would happen —
+ * same real locked rule (doesSessionAdvanceRotation), only reworded.
+ */
+export function describePartialAdvancementResult(sessionType: SessionType): string {
+  const advances = doesSessionAdvanceRotation(sessionType, "PARTIAL" as WorkoutSessionStatus);
+  if (advances) {
+    return "PARTIAL still advanced your rotation, same as COMPLETED.";
+  }
+  return "PARTIAL did NOT advance your rotation — only COMPLETED does for a STANDARD session.";
+}
+
+/**
+ * Product Experience Sprint, P4 (workout completion state): a short label
+ * for evaluateProgression's recommendation, used only to say which way an
+ * advisory changed ("hold -> increase") in the completion summary — never
+ * a replacement for describeProgressionAdvisory's full sentence, which
+ * remains the only advisory text shown during an active workout.
+ */
+export function describeRecommendationLabel(recommendation: ProgressionSuggestion["recommendation"]): string {
+  switch (recommendation) {
+    case "INCREASE":
+      return "increase";
+    case "HOLD":
+      return "hold";
+    case "REDUCE":
+      return "reduce";
+    case "NO_HISTORY":
+      return "no suggestion yet";
+  }
+}
+
 /** Item 7: live preview of how the entered RECOVERY duration will be recorded, using the real locked thresholds. */
 export function describeRecoveryPreview(durationMinutes: number): string {
   const status = deriveRecoverySessionStatus(durationMinutes);

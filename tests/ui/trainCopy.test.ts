@@ -3,7 +3,9 @@ import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
 import { doesSessionAdvanceRotation, deriveRecoverySessionStatus } from "../../src/engine/trainSuggestion";
 import {
   describePartialAdvancement,
+  describePartialAdvancementResult,
   describeProgressionAdvisory,
+  describeRecommendationLabel,
   describeRecoveryPreview,
   describeStopAction,
   describeStopConfirm,
@@ -97,6 +99,27 @@ describe("describePartialAdvancement — reflects the real locked rotation rule,
   it("REDUCED PARTIAL does advance — matches doesSessionAdvanceRotation directly", () => {
     expect(doesSessionAdvanceRotation("REDUCED", "PARTIAL")).toBe(true);
     expect(describePartialAdvancement("REDUCED")).toContain("will still advance");
+  });
+});
+
+describe("describePartialAdvancementResult — past-tense sibling, same real locked rule", () => {
+  it("STANDARD: matches doesSessionAdvanceRotation directly", () => {
+    expect(doesSessionAdvanceRotation("STANDARD", "PARTIAL")).toBe(false);
+    expect(describePartialAdvancementResult("STANDARD")).toContain("did NOT advance");
+  });
+
+  it("REDUCED: matches doesSessionAdvanceRotation directly", () => {
+    expect(doesSessionAdvanceRotation("REDUCED", "PARTIAL")).toBe(true);
+    expect(describePartialAdvancementResult("REDUCED")).toContain("still advanced");
+  });
+});
+
+describe("describeRecommendationLabel", () => {
+  it("labels every real recommendation value plainly", () => {
+    expect(describeRecommendationLabel("INCREASE")).toBe("increase");
+    expect(describeRecommendationLabel("HOLD")).toBe("hold");
+    expect(describeRecommendationLabel("REDUCE")).toBe("reduce");
+    expect(describeRecommendationLabel("NO_HISTORY")).toBe("no suggestion yet");
   });
 });
 
