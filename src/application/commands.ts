@@ -534,6 +534,105 @@ export async function correctWater(
   );
 }
 
+/**
+ * Phase 5 (BODY logging): shared correction-chain mechanism for the
+ * single-value logs (sleep, protein, bodyweight) that gained correction
+ * support this phase — same rules as correctWater (which is left
+ * untouched, not routed through this): target must be the current chain
+ * HEAD, a no-op new value is rejected, the original fact is never
+ * touched. One implementation shared across all three rather than three
+ * hand-copies that could quietly drift from each other or from water's
+ * proven behavior.
+ */
+async function correctSingleValueLog(params: {
+  beyondDayId: string;
+  targetEventId: string;
+  newValue: number;
+  loggedType: DomainEvent["type"];
+  correctedType: DomainEvent["type"];
+  valueKey: string;
+}): Promise<void> {
+  const { beyondDayId, targetEventId, newValue, loggedType, correctedType, valueKey } = params;
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const corrections = events.filter((e) => e.type === correctedType);
+  const alreadySuperseded = corrections.some(
+    (c) => (c.payload as { supersedesEventId: string }).supersedesEventId === targetEventId,
+  );
+  if (alreadySuperseded) {
+    throw new Error(
+      "STALE_CORRECTION_TARGET: this entry has already been corrected — correct the latest value instead.",
+    );
+  }
+  const target = events.find((e) => e.id === targetEventId);
+  if (!target) {
+    throw new Error("CORRECTION_TARGET_NOT_FOUND");
+  }
+  if (target.type !== loggedType && target.type !== correctedType) {
+    throw new Error("CORRECTION_TARGET_INVALID_TYPE");
+  }
+  const currentValue = (target.payload as Record<string, number>)[valueKey];
+  if (currentValue === newValue) {
+    throw new Error("NO_OP_CORRECTION: new value matches current effective value — no event created.");
+  }
+  const originalEventId =
+    target.type === loggedType ? target.id : (target.payload as { originalEventId: string }).originalEventId;
+
+  const correlationId = newId();
+  await logEvent(
+    beyondDayId,
+    correctedType,
+    { commandId: correlationId, originalEventId, supersedesEventId: targetEventId, [valueKey]: newValue },
+    "USER",
+    correlationId,
+    targetEventId,
+  );
+}
+
+export async function correctSleep(
+  beyondDayId: string,
+  targetEventId: string,
+  newDurationMinutes: number,
+): Promise<void> {
+  return correctSingleValueLog({
+    beyondDayId,
+    targetEventId,
+    newValue: newDurationMinutes,
+    loggedType: "SLEEP_LOGGED",
+    correctedType: "SLEEP_LOG_CORRECTED",
+    valueKey: "durationMinutes",
+  });
+}
+
+export async function correctProtein(
+  beyondDayId: string,
+  targetEventId: string,
+  newGrams: number,
+): Promise<void> {
+  return correctSingleValueLog({
+    beyondDayId,
+    targetEventId,
+    newValue: newGrams,
+    loggedType: "PROTEIN_LOGGED",
+    correctedType: "PROTEIN_LOG_CORRECTED",
+    valueKey: "grams",
+  });
+}
+
+export async function correctBodyweight(
+  beyondDayId: string,
+  targetEventId: string,
+  newWeightLbs: number,
+): Promise<void> {
+  return correctSingleValueLog({
+    beyondDayId,
+    targetEventId,
+    newValue: newWeightLbs,
+    loggedType: "BODYWEIGHT_LOGGED",
+    correctedType: "BODYWEIGHT_LOG_CORRECTED",
+    valueKey: "weightLbs",
+  });
+}
+
 export async function logEvent(
   beyondDayId: string,
   type: DomainEvent["type"],

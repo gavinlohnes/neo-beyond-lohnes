@@ -161,36 +161,148 @@ export async function shouldSuggestEndDay(beyondDayId: string): Promise<boolean>
 }
 
 /**
- * Most recent primary sleep duration logged for this BeyondDay, if any.
- * Duration only — no goal/target. See getLatestCheckIn's note: sorted
- * explicitly by recordedAt rather than relying on Dexie's .last(), which
- * would order by primary key (random UUID) among same-beyondDayId rows.
+ * Phase 5 (BODY logging): shared chain-walk for the single-value
+ * correction chains (sleep, protein, bodyweight) — same walking logic as
+ * getHydrationEntries (left untouched, not routed through this) applied
+ * generically, since these three all gained the identical
+ * logged-then-corrected shape this phase.
+ */
+function walkCorrectionChain(
+  correctionEvents: DomainEvent[],
+  rootId: string,
+  rootValue: number,
+  valueKey: string,
+): { headEventId: string; effectiveValue: number; correctionCount: number } {
+  let headId = rootId;
+  let headValue = rootValue;
+  let count = 0;
+  let next = correctionEvents.find(
+    (c) => (c.payload as { supersedesEventId: string }).supersedesEventId === headId,
+  );
+  while (next) {
+    headId = next.id;
+    headValue = (next.payload as Record<string, number>)[valueKey]!;
+    count += 1;
+    next = correctionEvents.find(
+      (c) => (c.payload as { supersedesEventId: string }).supersedesEventId === headId,
+    );
+  }
+  return { headEventId: headId, effectiveValue: headValue, correctionCount: count };
+}
+
+export interface SleepEntry {
+  rootEventId: string;
+  headEventId: string;
+  originalDurationMinutes: number;
+  effectiveDurationMinutes: number;
+  correctionCount: number;
+  recordedAt: string;
+  kind: "PRIMARY" | "SUPPLEMENTAL";
+}
+
+/** Every sleep log for the day (PRIMARY and SUPPLEMENTAL), with corrections resolved to each entry's effective value. */
+export async function getSleepEntries(beyondDayId: string): Promise<SleepEntry[]> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const logged = events.filter((e) => e.type === "SLEEP_LOGGED");
+  const corrections = events.filter((e) => e.type === "SLEEP_LOG_CORRECTED");
+  return logged
+    .map((root): SleepEntry => {
+      const payload = root.payload as { durationMinutes: number; kind?: "PRIMARY" | "SUPPLEMENTAL" };
+      const chain = walkCorrectionChain(corrections, root.id, payload.durationMinutes, "durationMinutes");
+      return {
+        rootEventId: root.id,
+        headEventId: chain.headEventId,
+        originalDurationMinutes: payload.durationMinutes,
+        effectiveDurationMinutes: chain.effectiveValue,
+        correctionCount: chain.correctionCount,
+        recordedAt: root.recordedAt,
+        kind: payload.kind ?? "PRIMARY",
+      };
+    })
+    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+}
+
+/**
+ * Most recent sleep duration logged for this BeyondDay (any kind), if
+ * any — its effective (corrected) value, not necessarily the originally
+ * logged one. See getLatestCheckIn's note on why this is sorted
+ * explicitly rather than relying on Dexie's .last().
  */
 export async function getLatestSleepMinutes(beyondDayId: string): Promise<number | undefined> {
-  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const latest = events
-    .filter((e) => e.type === "SLEEP_LOGGED")
-    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))
-    .at(-1);
-  return latest ? (latest.payload as { durationMinutes: number }).durationMinutes : undefined;
+  const entries = await getSleepEntries(beyondDayId);
+  return entries.at(-1)?.effectiveDurationMinutes;
 }
 
-/** Most recent bodyweight logged for this BeyondDay, if any. A fact only — no goal/target. Sorted as above. */
+export interface BodyweightEntry {
+  rootEventId: string;
+  headEventId: string;
+  originalWeightLbs: number;
+  effectiveWeightLbs: number;
+  correctionCount: number;
+  recordedAt: string;
+}
+
+/** Every bodyweight log for the day, with corrections resolved to each entry's effective value. */
+export async function getBodyweightEntries(beyondDayId: string): Promise<BodyweightEntry[]> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const logged = events.filter((e) => e.type === "BODYWEIGHT_LOGGED");
+  const corrections = events.filter((e) => e.type === "BODYWEIGHT_LOG_CORRECTED");
+  return logged
+    .map((root): BodyweightEntry => {
+      const payload = root.payload as { weightLbs: number };
+      const chain = walkCorrectionChain(corrections, root.id, payload.weightLbs, "weightLbs");
+      return {
+        rootEventId: root.id,
+        headEventId: chain.headEventId,
+        originalWeightLbs: payload.weightLbs,
+        effectiveWeightLbs: chain.effectiveValue,
+        correctionCount: chain.correctionCount,
+        recordedAt: root.recordedAt,
+      };
+    })
+    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+}
+
+/** Most recent bodyweight logged for this BeyondDay, if any — its effective (corrected) value. A fact only — no goal/target. */
 export async function getLatestBodyweight(beyondDayId: string): Promise<number | undefined> {
-  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const latest = events
-    .filter((e) => e.type === "BODYWEIGHT_LOGGED")
-    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))
-    .at(-1);
-  return latest ? (latest.payload as { weightLbs: number }).weightLbs : undefined;
+  const entries = await getBodyweightEntries(beyondDayId);
+  return entries.at(-1)?.effectiveWeightLbs;
 }
 
-/** Total protein logged for this BeyondDay (sum of all entries — no target/goal). */
-export async function getTotalProteinGrams(beyondDayId: string): Promise<number> {
+export interface ProteinEntry {
+  rootEventId: string;
+  headEventId: string;
+  originalGrams: number;
+  effectiveGrams: number;
+  correctionCount: number;
+  recordedAt: string;
+}
+
+/** Every protein log for the day, with corrections resolved to each entry's effective value. */
+export async function getProteinEntries(beyondDayId: string): Promise<ProteinEntry[]> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  return events
-    .filter((e) => e.type === "PROTEIN_LOGGED")
-    .reduce((sum, e) => sum + (e.payload as { grams: number }).grams, 0);
+  const logged = events.filter((e) => e.type === "PROTEIN_LOGGED");
+  const corrections = events.filter((e) => e.type === "PROTEIN_LOG_CORRECTED");
+  return logged
+    .map((root): ProteinEntry => {
+      const payload = root.payload as { grams: number };
+      const chain = walkCorrectionChain(corrections, root.id, payload.grams, "grams");
+      return {
+        rootEventId: root.id,
+        headEventId: chain.headEventId,
+        originalGrams: payload.grams,
+        effectiveGrams: chain.effectiveValue,
+        correctionCount: chain.correctionCount,
+        recordedAt: root.recordedAt,
+      };
+    })
+    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+}
+
+/** Total protein logged for this BeyondDay — sum of every entry's effective (corrected) value, no target/goal. */
+export async function getTotalProteinGrams(beyondDayId: string): Promise<number> {
+  const entries = await getProteinEntries(beyondDayId);
+  return entries.reduce((sum, e) => sum + e.effectiveGrams, 0);
 }
 
 /**

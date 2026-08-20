@@ -116,8 +116,11 @@ export type DomainEventType =
   | "DAY_STARTED"
   | "DAY_ENDED"
   | "SLEEP_LOGGED"
+  | "SLEEP_LOG_CORRECTED"
   | "BODYWEIGHT_LOGGED"
+  | "BODYWEIGHT_LOG_CORRECTED"
   | "PROTEIN_LOGGED"
+  | "PROTEIN_LOG_CORRECTED"
   | "OUTCOME_RATED"
   | "WORK_CONTEXT_SET"
   | "MINIMUM_DAY_ENABLED"
@@ -213,6 +216,22 @@ export interface SleepLoggedPayload {
 }
 
 /**
+ * Phase 5 (BODY logging): same correction-chain shape as
+ * WaterLogCorrectedPayload — originalEventId is the chain's root and
+ * never changes; supersedesEventId is the HEAD this correction replaces.
+ * `kind` is NOT correctable here — a correction fixes the duration typo,
+ * not whether it was a nap; re-logging under the other kind is the way
+ * to fix a kind mistake, matching how a wrong WATER_LOGGED amount is
+ * corrected rather than the fact of having logged water at all.
+ */
+export interface SleepLogCorrectedPayload {
+  commandId: string;
+  originalEventId: string;
+  supersedesEventId: string;
+  durationMinutes: number;
+}
+
+/**
  * Bodyweight logging (BODY & Backup / Context & Safety Decisions,
  * 2026-08-19): a fact only in this checkpoint — no goal/target field.
  * Tonight's phone session proposed carrying forward a 210->165 goal from
@@ -226,9 +245,25 @@ export interface BodyweightLoggedPayload {
   weightLbs: number;
 }
 
+/** Phase 5 (BODY logging): same correction-chain shape as WaterLogCorrectedPayload. */
+export interface BodyweightLogCorrectedPayload {
+  commandId: string;
+  originalEventId: string;
+  supersedesEventId: string;
+  weightLbs: number;
+}
+
 /** Protein logging: amount only, no daily target (2026-08-19, locked — explicitly not carrying over the legacy mockup's 165g+ target). */
 export interface ProteinLoggedPayload {
   commandId: string;
+  grams: number;
+}
+
+/** Phase 5 (BODY logging): same correction-chain shape as WaterLogCorrectedPayload. */
+export interface ProteinLogCorrectedPayload {
+  commandId: string;
+  originalEventId: string;
+  supersedesEventId: string;
   grams: number;
 }
 
