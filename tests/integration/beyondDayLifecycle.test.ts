@@ -70,13 +70,51 @@ describe("sleep-triggered END DAY suggestion", () => {
     expect(await shouldSuggestEndDay(day.id)).toBe(false);
   });
 
-  it("sleep logging records duration only, as a plain event fact (no target, no dedicated table)", async () => {
+  it("sleep logging records duration and defaults to PRIMARY kind, as a plain event fact (no target, no dedicated table)", async () => {
     const day = await startDay();
     await logSleep(day.id, 390);
     const events = await db.events.where("beyondDayId").equals(day.id).toArray();
     const logged = events.find((e) => e.type === "SLEEP_LOGGED");
     expect(logged).toBeDefined();
     expect((logged!.payload as { durationMinutes: number }).durationMinutes).toBe(390);
+    expect((logged!.payload as { kind: string }).kind).toBe("PRIMARY");
+  });
+
+  /**
+   * Sleep/Day-Ownership Model DECISION (2026-08-19): a SUPPLEMENTAL (nap)
+   * log must never suggest ending the day — that's the whole point of
+   * the kind field (e.g. a pre-shift nap shouldn't suggest ending a day
+   * that's really still going through an overnight shift).
+   */
+  it("does NOT suggest ending after a SUPPLEMENTAL (nap) sleep log", async () => {
+    const day = await startDay();
+    await logSleep(day.id, 45, "SUPPLEMENTAL");
+    expect(await shouldSuggestEndDay(day.id)).toBe(false);
+  });
+
+  it("suggests ending once a PRIMARY sleep log follows a SUPPLEMENTAL one", async () => {
+    const day = await startDay();
+    await logSleep(day.id, 45, "SUPPLEMENTAL");
+    expect(await shouldSuggestEndDay(day.id)).toBe(false);
+    await logSleep(day.id, 420, "PRIMARY");
+    expect(await shouldSuggestEndDay(day.id)).toBe(true);
+  });
+
+  it("treats a pre-decision event with no kind field at all as PRIMARY, not reinterpreted", async () => {
+    const day = await startDay();
+    // Simulates a real historical SLEEP_LOGGED event logged before the
+    // Sleep/Day-Ownership Model DECISION existed — no `kind` field.
+    await db.events.add({
+      id: "legacy-sleep-event",
+      type: "SLEEP_LOGGED",
+      beyondDayId: day.id,
+      occurredAt: new Date().toISOString(),
+      recordedAt: new Date().toISOString(),
+      payload: { commandId: "legacy", durationMinutes: 400 },
+      source: "USER",
+      correlationId: "legacy",
+    });
+    expect(await shouldSuggestEndDay(day.id)).toBe(true);
   });
 });
 

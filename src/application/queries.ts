@@ -139,16 +139,25 @@ export async function getDayCount(): Promise<number> {
 }
 
 /**
- * The Engine suggests ending the BeyondDay right after primary sleep is
- * logged (Context & Safety Decisions, 2026-08-19) — a suggestion, not an
- * automatic close. True once a SLEEP_LOGGED event exists for this day and
- * it hasn't already been ended.
+ * The Engine suggests ending the BeyondDay right after PRIMARY sleep is
+ * logged (Context & Safety Decisions, 2026-08-19; refined by the Sleep/
+ * Day-Ownership Model DECISION, 2026-08-19) — a suggestion, not an
+ * automatic close. A SUPPLEMENTAL (nap) log never triggers this, so a
+ * pre-shift nap doesn't prematurely suggest ending a day that's really
+ * still going (e.g. through an overnight shift to the real closing
+ * sleep afterward). Events logged before this decision have no `kind`
+ * field at all — treated as PRIMARY, the only kind that existed then,
+ * never reinterpreted as a nap.
  */
 export async function shouldSuggestEndDay(beyondDayId: string): Promise<boolean> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const hasSleepLogged = events.some((e) => e.type === "SLEEP_LOGGED");
+  const hasPrimarySleepLogged = events.some(
+    (e) =>
+      e.type === "SLEEP_LOGGED" &&
+      ((e.payload as { kind?: "PRIMARY" | "SUPPLEMENTAL" }).kind ?? "PRIMARY") === "PRIMARY",
+  );
   const hasEnded = events.some((e) => e.type === "DAY_ENDED");
-  return hasSleepLogged && !hasEnded;
+  return hasPrimarySleepLogged && !hasEnded;
 }
 
 /**

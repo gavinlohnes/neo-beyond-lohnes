@@ -28,6 +28,7 @@ export function BodyScreen() {
   const [busy, setBusy] = useState(false);
   const [sleepMinutes, setSleepMinutes] = useState<number | undefined>(undefined);
   const [sleepInput, setSleepInput] = useState("");
+  const [sleepKind, setSleepKind] = useState<"PRIMARY" | "SUPPLEMENTAL">("PRIMARY");
   const [bodyweight, setBodyweight] = useState<number | undefined>(undefined);
   const [bodyweightInput, setBodyweightInput] = useState("");
   const [proteinTotal, setProteinTotal] = useState(0);
@@ -60,8 +61,9 @@ export function BodyScreen() {
     setError(null);
     try {
       const activeDay = await ensureActiveDay();
-      await logSleep(activeDay.id, minutes);
+      await logSleep(activeDay.id, minutes, sleepKind);
       setSleepInput("");
+      setSleepKind("PRIMARY");
       await refresh();
     } finally {
       setBusy(false);
@@ -170,6 +172,29 @@ export function BodyScreen() {
             Logged: {Math.floor(sleepMinutes / 60)}h {sleepMinutes % 60}m
           </p>
         )}
+        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+          <button
+            type="button"
+            className="btn-primary"
+            style={{ flex: 1, background: sleepKind === "PRIMARY" ? "var(--accent)" : "var(--surface-2)" }}
+            onClick={() => setSleepKind("PRIMARY")}
+          >
+            MAIN SLEEP
+          </button>
+          <button
+            type="button"
+            className="btn-primary"
+            style={{ flex: 1, background: sleepKind === "SUPPLEMENTAL" ? "var(--accent)" : "var(--surface-2)" }}
+            onClick={() => setSleepKind("SUPPLEMENTAL")}
+          >
+            NAP
+          </button>
+        </div>
+        <p className="meta" style={{ marginBottom: 12 }}>
+          {sleepKind === "PRIMARY"
+            ? "Main sleep suggests ending your day on TODAY once logged."
+            : "A nap doesn't suggest ending your day — log the sleep that actually closes it out as Main Sleep."}
+        </p>
         <div className="field">
           <label><span>Duration (minutes)</span></label>
           <input

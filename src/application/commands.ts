@@ -73,17 +73,26 @@ export async function endDay(
 }
 
 /**
- * V0.1 sleep logging: duration only, no goal/target (Decision Register,
+ * Sleep logging: duration only, no goal/target (Decision Register,
  * BODY/SLEEP — goals remain deferred; confirmed again in the 2026-08-19
  * authority reconciliation, which rejected a fixed 7-hour target). No
  * dedicated table; stored as event history only.
+ *
+ * `kind` defaults to PRIMARY, matching the only kind that existed before
+ * the Sleep/Day-Ownership Model DECISION (2026-08-19) — callers that
+ * genuinely mean a nap must pass "SUPPLEMENTAL" explicitly; the UI's
+ * one-tap Main Sleep / Nap classification always does.
  */
-export async function logSleep(beyondDayId: string, durationMinutes: number): Promise<void> {
+export async function logSleep(
+  beyondDayId: string,
+  durationMinutes: number,
+  kind: "PRIMARY" | "SUPPLEMENTAL" = "PRIMARY",
+): Promise<void> {
   const correlationId = newId();
   await logEvent(
     beyondDayId,
     "SLEEP_LOGGED",
-    { commandId: correlationId, durationMinutes },
+    { commandId: correlationId, durationMinutes, kind },
     "USER",
     correlationId,
   );

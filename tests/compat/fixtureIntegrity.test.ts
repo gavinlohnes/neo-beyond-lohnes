@@ -28,4 +28,19 @@ describe("protected historical backup fixtures", () => {
       expect(createHash("sha256").update(bytes).digest("hex")).toBe(sha256);
     },
   );
+
+  /**
+   * Sleep/Day-Ownership Model DECISION (2026-08-19), item 5: confirmed
+   * as a non-issue since neither protected fixture has any SLEEP_LOGGED
+   * events to migrate or reconcile with the new `kind` field — asserted
+   * here directly rather than only checked once by hand, so it stays
+   * true if these files are ever (carefully) updated.
+   */
+  it.each(FIXTURES)("$file has zero SLEEP_LOGGED events", ({ file }) => {
+    const parsed = JSON.parse(readFileSync(join(PROTECTED_DIR, file), "utf8")) as {
+      payload: { events: { type: string }[] };
+    };
+    const sleepEvents = parsed.payload.events.filter((e) => e.type === "SLEEP_LOGGED");
+    expect(sleepEvents).toHaveLength(0);
+  });
 });

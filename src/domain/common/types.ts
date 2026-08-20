@@ -192,15 +192,24 @@ export interface DayEndedPayload {
 }
 
 /**
- * V0.1 sleep logging (Decision Register, BODY/SLEEP): duration only, in
- * whole minutes, of the primary sleep period preceding the active
- * BeyondDay. No goal/target, no dedicated table — stored as event history
- * only. Minimal prerequisite for CP4's "Engine suggests ending right after
- * primary sleep is logged" behavior.
+ * Sleep logging (Decision Register, BODY/SLEEP; Sleep/Day-Ownership Model
+ * DECISION, 2026-08-19): duration in whole minutes, no goal/target, no
+ * dedicated table — stored as event history only.
+ *
+ * `kind` (Sleep/Day-Ownership DECISION): PRIMARY is the sleep that
+ * actually closes a BeyondDay out — CP4's "Engine suggests ending right
+ * after primary sleep is logged" only fires on PRIMARY. SUPPLEMENTAL is a
+ * nap or other non-day-closing sleep; logging one never suggests ending
+ * the day. Backward compatibility: events logged before this decision
+ * have no `kind` field at all — application/queries.ts's
+ * shouldSuggestEndDay treats an absent kind as PRIMARY (the only kind
+ * that existed when they were logged), never reinterpreting them as
+ * SUPPLEMENTAL.
  */
 export interface SleepLoggedPayload {
   commandId: string;
   durationMinutes: number;
+  kind: "PRIMARY" | "SUPPLEMENTAL";
 }
 
 /**
