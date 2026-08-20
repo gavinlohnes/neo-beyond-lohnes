@@ -136,6 +136,38 @@ describe("MOVE and RECOVER/CONNECT — auto-derived from a real RECOVERY session
   });
 });
 
+describe("RECOVER/CONNECT — distinct manual choices satisfy the same requirement (Phase 3)", () => {
+  it("marking RECOVER satisfies recoverConnect and records which activity was chosen", async () => {
+    const day = await startDay();
+    await markRecoverConnectCompleted(day.id, "RECOVER");
+
+    expect((await getMinimumDayStatus(day.id)).recoverConnect).toBe(true);
+    const events = await db.events.where("beyondDayId").equals(day.id).toArray();
+    const completed = events.find((e) => e.type === "RECOVER_CONNECT_COMPLETED")!;
+    expect((completed.payload as { activity?: string }).activity).toBe("RECOVER");
+  });
+
+  it("marking CONNECT satisfies the same recoverConnect requirement and records CONNECT", async () => {
+    const day = await startDay();
+    await markRecoverConnectCompleted(day.id, "CONNECT");
+
+    expect((await getMinimumDayStatus(day.id)).recoverConnect).toBe(true);
+    const events = await db.events.where("beyondDayId").equals(day.id).toArray();
+    const completed = events.find((e) => e.type === "RECOVER_CONNECT_COMPLETED")!;
+    expect((completed.payload as { activity?: string }).activity).toBe("CONNECT");
+  });
+
+  it("still works with no activity given (backward compatible), recording no activity field", async () => {
+    const day = await startDay();
+    await markRecoverConnectCompleted(day.id);
+
+    expect((await getMinimumDayStatus(day.id)).recoverConnect).toBe(true);
+    const events = await db.events.where("beyondDayId").equals(day.id).toArray();
+    const completed = events.find((e) => e.type === "RECOVER_CONNECT_COMPLETED")!;
+    expect((completed.payload as { activity?: string }).activity).toBeUndefined();
+  });
+});
+
 describe("allSatisfied", () => {
   it("is true only once every one of the six is satisfied", async () => {
     const day = await startDay();

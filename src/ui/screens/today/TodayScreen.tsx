@@ -20,6 +20,13 @@ import {
 import { dismissOutcome, isOutcomeDismissed } from "../../../persistence/outcomeDismissals";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import {
+  isSeriouslyConstrained,
+  MINIMUM_DAY_ENABLE_BODY,
+  MINIMUM_DAY_ITEMS,
+  MINIMUM_DAY_PROMINENT_BODY,
+  MINIMUM_DAY_PROMINENT_TITLE,
+} from "./minimumDayCopy";
+import {
   startDay,
   ensureActiveDay,
   submitCheckIn,
@@ -37,6 +44,8 @@ import {
   markHygieneCompleted,
   markMoveCompleted,
   markRecoverConnectCompleted,
+  logWater,
+  logProtein,
 } from "../../../application/commands";
 import {
   getActiveDay,
@@ -47,6 +56,8 @@ import {
   getPendingOutcomeRating,
   getScheduledContext,
   getMinimumDayStatus,
+  getEffectiveHydrationTotal,
+  getTotalProteinGrams,
   getOpenReset,
   getOpenShiftDown,
   type MinimumDayStatus,
@@ -90,6 +101,10 @@ export function TodayScreen() {
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
+  const [minimumDayHydrateOz, setMinimumDayHydrateOz] = useState(0);
+  const [minimumDayProteinG, setMinimumDayProteinG] = useState(0);
+  const [mdWaterInput, setMdWaterInput] = useState("");
+  const [mdProteinInput, setMdProteinInput] = useState("");
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
@@ -110,6 +125,8 @@ export function TodayScreen() {
       const pending = (await getPendingOutcomeRating(activeDay.id)) ?? null;
       setPendingOutcome(pending && !isOutcomeDismissed(pending.id) ? pending : null);
       setMinimumDay(await getMinimumDayStatus(activeDay.id));
+      setMinimumDayHydrateOz(await getEffectiveHydrationTotal(activeDay.id));
+      setMinimumDayProteinG(await getTotalProteinGrams(activeDay.id));
 
       const openReset = await getOpenReset(activeDay.id);
       if (openReset) {
@@ -293,14 +310,49 @@ export function TodayScreen() {
     }
   }
 
-  async function handleMarkMinimum(kind: "MEDS" | "HYGIENE" | "MOVE" | "RECOVER_CONNECT") {
+  async function handleMarkMinimum(kind: "MEDS" | "HYGIENE" | "MOVE" | "RECOVER" | "CONNECT") {
     if (busy || !day) return;
     setBusy(true);
     try {
       if (kind === "MEDS") await markMedsCompleted(day.id);
       else if (kind === "HYGIENE") await markHygieneCompleted(day.id);
       else if (kind === "MOVE") await markMoveCompleted(day.id);
-      else await markRecoverConnectCompleted(day.id);
+      else await markRecoverConnectCompleted(day.id, kind);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /**
+   * Item 3 (Phase 3): logs directly from the same commands/events BODY
+   * uses (logWater/logProtein) — no separate record-keeping path, so
+   * there's no way for this to create a duplicate of a BODY-side log.
+   */
+  async function handleMinimumDayLogWater() {
+    if (busy) return;
+    const amount = Number(mdWaterInput);
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    setBusy(true);
+    try {
+      const activeDay = await ensureActiveDay();
+      await logWater(activeDay.id, amount);
+      setMdWaterInput("");
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleMinimumDayLogProtein() {
+    if (busy) return;
+    const grams = Number(mdProteinInput);
+    if (!Number.isFinite(grams) || grams <= 0) return;
+    setBusy(true);
+    try {
+      const activeDay = await ensureActiveDay();
+      await logProtein(activeDay.id, grams);
+      setMdProteinInput("");
       await refresh();
     } finally {
       setBusy(false);
@@ -322,6 +374,160 @@ export function TodayScreen() {
     if (!pendingOutcome) return;
     dismissOutcome(pendingOutcome.id);
     setPendingOutcome(null);
+  }
+
+  const capacityResult = checkIn ? deriveCapacity(checkIn) : null;
+  // Item 1 (Phase 3): RED or multi-factor YELLOW offers Minimum Day
+  // prominently, but only while it isn't already enabled — once it's on,
+  // there's nothing left to "offer."
+  const seriouslyConstrained = capacityResult
+    ? isSeriouslyConstrained(capacityResult.capacity, capacityResult.reasonCodes.length)
+    : false;
+  const showProminentMinimumDay = seriouslyConstrained && !!minimumDay && !minimumDay.enabled;
+
+  function renderMinimumDayCard(prominent: boolean) {
+    if (!minimumDay) return null;
+    return (
+      <div className="card" style={prominent ? { borderColor: "var(--accent)" } : undefined}>
+        <p className="eyebrow" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
+        {!minimumDay.enabled ? (
+          <>
+            <h2 className="card-title">{prominent ? MINIMUM_DAY_PROMINENT_TITLE : "Reduced baseline"}</h2>
+            <p className="card-body" style={{ marginBottom: 12 }}>
+              {prominent ? MINIMUM_DAY_PROMINENT_BODY : MINIMUM_DAY_ENABLE_BODY}
+            </p>
+            <button className="btn-primary" disabled={busy} onClick={() => void handleEnableMinimumDay()}>
+              ENABLE MINIMUM DAY
+            </button>
+          </>
+        ) : (
+          <>
+            {MINIMUM_DAY_ITEMS.map((item) => {
+              const done = minimumDay[item.key];
+              return (
+                <div key={item.key} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-subtle)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span className="card-body" style={{ margin: 0 }}>
+                      {done ? "✓ " : ""}
+                      {item.label}
+                      {item.key === "hydrate" ? ` — ${minimumDayHydrateOz}oz logged` : ""}
+                      {item.key === "protein" ? ` — ${minimumDayProteinG}g logged` : ""}
+                    </span>
+                    {!done && item.key === "meds" && (
+                      <button
+                        className="btn-primary"
+                        style={{ width: "auto", padding: "4px 12px", fontSize: 12, background: "var(--surface-2)" }}
+                        disabled={busy}
+                        onClick={() => void handleMarkMinimum("MEDS")}
+                      >
+                        MARK DONE
+                      </button>
+                    )}
+                    {!done && item.key === "hygiene" && (
+                      <button
+                        className="btn-primary"
+                        style={{ width: "auto", padding: "4px 12px", fontSize: 12, background: "var(--surface-2)" }}
+                        disabled={busy}
+                        onClick={() => void handleMarkMinimum("HYGIENE")}
+                      >
+                        MARK DONE
+                      </button>
+                    )}
+                    {!done && item.key === "move" && (
+                      <button
+                        className="btn-primary"
+                        style={{ width: "auto", padding: "4px 12px", fontSize: 12, background: "var(--surface-2)" }}
+                        disabled={busy}
+                        onClick={() => void handleMarkMinimum("MOVE")}
+                      >
+                        MARK DONE
+                      </button>
+                    )}
+                  </div>
+                  <p className="meta" style={{ marginTop: 4 }}>{item.updateNote}</p>
+                  {!done && item.key === "hydrate" && (
+                    <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="oz"
+                        value={mdWaterInput}
+                        onChange={(e) => setMdWaterInput(e.target.value)}
+                        style={{
+                          flex: 1,
+                          background: "var(--surface-2)",
+                          border: "1px solid var(--border-subtle)",
+                          borderRadius: "var(--radius)",
+                          color: "var(--text-1)",
+                          padding: "8px 10px",
+                          fontSize: 14,
+                        }}
+                      />
+                      <button
+                        className="btn-primary"
+                        style={{ width: "auto", padding: "8px 14px", fontSize: 12 }}
+                        disabled={busy || !(Number(mdWaterInput) > 0)}
+                        onClick={() => void handleMinimumDayLogWater()}
+                      >
+                        LOG WATER
+                      </button>
+                    </div>
+                  )}
+                  {!done && item.key === "protein" && (
+                    <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="g"
+                        value={mdProteinInput}
+                        onChange={(e) => setMdProteinInput(e.target.value)}
+                        style={{
+                          flex: 1,
+                          background: "var(--surface-2)",
+                          border: "1px solid var(--border-subtle)",
+                          borderRadius: "var(--radius)",
+                          color: "var(--text-1)",
+                          padding: "8px 10px",
+                          fontSize: 14,
+                        }}
+                      />
+                      <button
+                        className="btn-primary"
+                        style={{ width: "auto", padding: "8px 14px", fontSize: 12 }}
+                        disabled={busy || !(Number(mdProteinInput) > 0)}
+                        onClick={() => void handleMinimumDayLogProtein()}
+                      >
+                        LOG PROTEIN
+                      </button>
+                    </div>
+                  )}
+                  {!done && item.key === "recoverConnect" && (
+                    <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                      <button
+                        className="btn-primary"
+                        style={{ flex: 1, padding: "6px 12px", fontSize: 12, background: "var(--surface-2)" }}
+                        disabled={busy}
+                        onClick={() => void handleMarkMinimum("RECOVER")}
+                      >
+                        MARK RECOVER
+                      </button>
+                      <button
+                        className="btn-primary"
+                        style={{ flex: 1, padding: "6px 12px", fontSize: 12, background: "var(--surface-2)" }}
+                        disabled={busy}
+                        onClick={() => void handleMarkMinimum("CONNECT")}
+                      >
+                        MARK CONNECT
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -384,14 +590,11 @@ export function TodayScreen() {
         <div className="card card--action">
           <p className="eyebrow" style={{ marginBottom: 4 }}>PRIMARY GUIDANCE</p>
           <p className="meta" style={{ marginBottom: 12 }}>Context: {day.workContext}</p>
-          {checkIn && (() => {
-            const { capacity, reasonCodes } = deriveCapacity(checkIn);
-            return (
-              <p className="card-body" style={{ fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
-                {describeCapacity(capacity, reasonCodes)}
-              </p>
-            );
-          })()}
+          {capacityResult && (
+            <p className="card-body" style={{ fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
+              {describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}
+            </p>
+          )}
           <h2 className="card-title">{recommendation.title}</h2>
           <p className="card-body">{recommendation.rationale}</p>
           <details className="why">
@@ -524,6 +727,8 @@ export function TodayScreen() {
         </div>
       )}
 
+      {showProminentMinimumDay && renderMinimumDayCard(true)}
+
       <div className="card">
         <p className="eyebrow" style={{ marginBottom: 4 }}>STATE INPUT</p>
         <h2 className="card-title">State check-in</h2>
@@ -621,54 +826,7 @@ export function TodayScreen() {
         </div>
       )}
 
-      {day && minimumDay && (
-        <div className="card">
-          <p className="eyebrow" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
-          {!minimumDay.enabled ? (
-            <>
-              <p className="card-body" style={{ marginBottom: 12 }}>
-                Reduced six-minimum baseline for a low-capacity day. Lowers expectations, doesn't add work.
-              </p>
-              <button className="btn-primary" disabled={busy} onClick={() => void handleEnableMinimumDay()}>
-                ENABLE MINIMUM DAY
-              </button>
-            </>
-          ) : (
-            <>
-              {(
-                [
-                  { key: "hydrate", label: "HYDRATE ≥40oz" },
-                  { key: "protein", label: "PROTEIN ≥25g" },
-                  { key: "meds", label: "MEDS", mark: "MEDS" as const },
-                  { key: "hygiene", label: "HYGIENE", mark: "HYGIENE" as const },
-                  { key: "move", label: "MOVE ≥5min", mark: "MOVE" as const },
-                  { key: "recoverConnect", label: "RECOVER/CONNECT ≥10min", mark: "RECOVER_CONNECT" as const },
-                ] as const
-              ).map((item) => {
-                const done = minimumDay[item.key as keyof MinimumDayStatus] as boolean;
-                return (
-                  <div key={item.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0" }}>
-                    <span className="card-body" style={{ margin: 0 }}>
-                      {done ? "✓ " : ""}
-                      {item.label}
-                    </span>
-                    {!done && "mark" in item && (
-                      <button
-                        className="btn-primary"
-                        style={{ width: "auto", padding: "4px 12px", fontSize: 12, background: "var(--surface-2)" }}
-                        disabled={busy}
-                        onClick={() => void handleMarkMinimum(item.mark)}
-                      >
-                        MARK DONE
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </>
-          )}
-        </div>
-      )}
+      {day && minimumDay && !showProminentMinimumDay && renderMinimumDayCard(false)}
 
       {day && (
         <div className="card">

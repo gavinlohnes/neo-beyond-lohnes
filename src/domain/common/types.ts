@@ -259,6 +259,20 @@ export interface GenericCompletionPayload {
   commandId: string;
 }
 
+/**
+ * RECOVER_CONNECT_COMPLETED's payload (Phase 3, low-capacity experience):
+ * "activity" is optional so the requirement itself hasn't changed — either
+ * still satisfies the same single recoverConnect boolean
+ * (application/queries.ts's getMinimumDayStatus) — it only records which
+ * of the two the user says they actually did, since TodayScreen now offers
+ * Recover and Connect as distinct tap targets rather than one generic
+ * "mark done." Omitted for the automatic RECOVERY-session-duration path,
+ * which has no such distinction to record.
+ */
+export interface RecoverConnectCompletedPayload extends GenericCompletionPayload {
+  activity?: "RECOVER" | "CONNECT";
+}
+
 /** Field names confirmed against real historical WORKOUT_STARTED events. */
 export interface WorkoutStartedPayload {
   commandId: string;

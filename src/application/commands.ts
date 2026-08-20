@@ -397,13 +397,23 @@ export async function markMoveCompleted(beyondDayId: string): Promise<void> {
   await logEvent(beyondDayId, "MOVE_COMPLETED", { commandId: correlationId }, "USER", correlationId);
 }
 
-/** Manual fallback for RECOVER/CONNECT (>=10min) — same pattern as markMoveCompleted. */
-export async function markRecoverConnectCompleted(beyondDayId: string): Promise<void> {
+/**
+ * Manual fallback for RECOVER/CONNECT (>=10min) — same pattern as
+ * markMoveCompleted. `activity` (Phase 3) records which of the two
+ * distinct choices the UI now offers the user actually made; it's
+ * optional and doesn't change what's required — either value (or none,
+ * for the automatic RECOVERY-session-duration path) satisfies the same
+ * single recoverConnect boolean in getMinimumDayStatus.
+ */
+export async function markRecoverConnectCompleted(
+  beyondDayId: string,
+  activity?: "RECOVER" | "CONNECT",
+): Promise<void> {
   const correlationId = newId();
   await logEvent(
     beyondDayId,
     "RECOVER_CONNECT_COMPLETED",
-    { commandId: correlationId },
+    { commandId: correlationId, ...(activity ? { activity } : {}) },
     "USER",
     correlationId,
   );
