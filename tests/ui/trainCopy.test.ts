@@ -3,6 +3,7 @@ import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
 import { doesSessionAdvanceRotation, deriveRecoverySessionStatus } from "../../src/engine/trainSuggestion";
 import {
   describePartialAdvancement,
+  describeProgressionAdvisory,
   describeRecoveryPreview,
   describeStopAction,
   describeStopConfirm,
@@ -10,6 +11,8 @@ import {
   describeTemplateSummary,
   describeVariantSuggestion,
 } from "../../src/ui/screens/train/trainCopy";
+import { evaluateProgression } from "../../src/engine/progression";
+import type { ExercisePrescription } from "../../src/domain/workout/types";
 
 describe("describeTemplateSummary — descriptive, not just the bare letter", () => {
   it("names the actual exercises for template A", () => {
@@ -113,5 +116,131 @@ describe("describeRecoveryPreview — matches the real locked thresholds exactly
     const text = describeRecoveryPreview(0);
     expect(text).toContain("stopped early");
     expect(text).toContain("ABANDONED");
+  });
+});
+
+const prescription: ExercisePrescription = {
+  exerciseId: "machine-chest-press",
+  name: "Machine Chest Press",
+  sets: 3,
+  repRangeLow: 8,
+  repRangeHigh: 12,
+  incrementLbs: 5,
+};
+
+describe("describeProgressionAdvisory — reflects evaluateProgression's real output, never reimplements it", () => {
+  it("is null for NO_HISTORY (nothing to advise on, distinct from a real HOLD)", () => {
+    const suggestion = evaluateProgression(prescription, []);
+    expect(suggestion.recommendation).toBe("NO_HISTORY");
+    expect(describeProgressionAdvisory(suggestion)).toBeNull();
+  });
+
+  it("names the real suggested weight for INCREASE", () => {
+    const sets = [1, 2, 3].map((n) => ({
+      id: `s${n}`,
+      beyondDayId: "d",
+      sessionId: "sess",
+      exerciseId: "machine-chest-press",
+      setNumber: n,
+      weight: 135,
+      reps: 12,
+      skipped: false,
+      recordedAt: new Date().toISOString(),
+    }));
+    const suggestion = evaluateProgression(prescription, sets);
+    expect(suggestion.recommendation).toBe("INCREASE");
+    expect(describeProgressionAdvisory(suggestion)).toBe(
+      "Last time hit the top of the rep range — suggests increasing to 140lb.",
+    );
+  });
+
+  it("names the real suggested weight for REDUCE", () => {
+    const sets = [1, 2, 3].map((n) => ({
+      id: `s${n}`,
+      beyondDayId: "d",
+      sessionId: "sess",
+      exerciseId: "machine-chest-press",
+      setNumber: n,
+      weight: 135,
+      reps: 5,
+      skipped: false,
+      recordedAt: new Date().toISOString(),
+    }));
+    const suggestion = evaluateProgression(prescription, sets);
+    expect(suggestion.recommendation).toBe("REDUCE");
+    expect(describeProgressionAdvisory(suggestion)).toBe(
+      "Last time was below the rep-range minimum — suggests reducing to 130lb.",
+    );
+  });
+
+  it("names the real last weight for HOLD", () => {
+    const sets = [1, 2, 3].map((n) => ({
+      id: `s${n}`,
+      beyondDayId: "d",
+      sessionId: "sess",
+      exerciseId: "machine-chest-press",
+      setNumber: n,
+      weight: 135,
+      reps: 10,
+      skipped: false,
+      recordedAt: new Date().toISOString(),
+    }));
+    const suggestion = evaluateProgression(prescription, sets);
+    expect(suggestion.recommendation).toBe("HOLD");
+    expect(describeProgressionAdvisory(suggestion)).toBe("Suggests holding at 135lb.");
+  });
+
+  /**
+   * Real bug caught by browser verification: evaluateProgression's HOLD
+   * has THREE distinct paths (engine/progression.ts) — only one of them
+   * (clean within-range evidence) sets lastWeight. The incomplete-evidence
+   * and mixed-weights HOLD paths do not, so naively interpolating
+   * suggestion.lastWeight produced "Suggests holding at undefinedlb."
+   * live in the browser. Both must fall back to the engine's own reason
+   * text instead of fabricating a weight that was never computed.
+   */
+  it("HOLD from incomplete evidence (fewer sets than prescribed) falls back to the engine's own reason, not a fabricated weight", () => {
+    const suggestion = evaluateProgression(prescription, [
+      {
+        id: "s1",
+        beyondDayId: "d",
+        sessionId: "sess",
+        exerciseId: "machine-chest-press",
+        setNumber: 1,
+        weight: 135,
+        reps: 10,
+        skipped: false,
+        recordedAt: new Date().toISOString(),
+      },
+    ]);
+    expect(suggestion.recommendation).toBe("HOLD");
+    expect(suggestion.lastWeight).toBeUndefined();
+    const text = describeProgressionAdvisory(suggestion);
+    expect(text).not.toContain("undefined");
+    expect(text).toBe(suggestion.reason);
+  });
+
+  it("HOLD from mixed weights across sets falls back to the engine's own reason, not a fabricated weight", () => {
+    const sets = [
+      { weight: 135, reps: 10 },
+      { weight: 140, reps: 10 },
+      { weight: 135, reps: 10 },
+    ].map((s, i) => ({
+      id: `s${i}`,
+      beyondDayId: "d",
+      sessionId: "sess",
+      exerciseId: "machine-chest-press",
+      setNumber: i + 1,
+      weight: s.weight,
+      reps: s.reps,
+      skipped: false,
+      recordedAt: new Date().toISOString(),
+    }));
+    const suggestion = evaluateProgression(prescription, sets);
+    expect(suggestion.recommendation).toBe("HOLD");
+    expect(suggestion.lastWeight).toBeUndefined();
+    const text = describeProgressionAdvisory(suggestion);
+    expect(text).not.toContain("undefined");
+    expect(text).toBe(suggestion.reason);
   });
 });

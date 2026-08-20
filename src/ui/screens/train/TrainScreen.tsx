@@ -15,6 +15,7 @@ import {
   getLastPerformedSetForExercise,
   getPerformedSets,
   getProgressionSuggestion,
+  getRecentSubstitutions,
   suggestTemplateForNextWorkout,
   type LastSetInfo,
 } from "../../../application/trainQueries";
@@ -28,6 +29,7 @@ import {
 } from "../../../application/trainCommands";
 import {
   describePartialAdvancement,
+  describeProgressionAdvisory,
   describeRecoveryPreview,
   describeStopAction,
   describeStopConfirm,
@@ -66,6 +68,7 @@ export function TrainScreen() {
   const [inputs, setInputs] = useState<Record<string, SetInputState>>({});
   const [progressionSuggestions, setProgressionSuggestions] = useState<Record<string, ProgressionSuggestion>>({});
   const [lastPerformedSets, setLastPerformedSets] = useState<Record<string, LastSetInfo>>({});
+  const [recentSubstitutions, setRecentSubstitutions] = useState<Record<string, string[]>>({});
   const [showStopConfirm, setShowStopConfirm] = useState(false);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
@@ -104,6 +107,7 @@ export function TrainScreen() {
       setSets([]);
       setProgressionSuggestions({});
       setLastPerformedSets({});
+      setRecentSubstitutions({});
       setInputs({});
     }
   }
@@ -120,6 +124,7 @@ export function TrainScreen() {
     if (activeSession.sessionType === "RECOVERY") {
       setProgressionSuggestions({});
       setLastPerformedSets({});
+      setRecentSubstitutions({});
       return;
     }
     const templateId = activeSession.templateId as WorkoutTemplateId;
@@ -135,6 +140,10 @@ export function TrainScreen() {
     setLastPerformedSets(
       Object.fromEntries(lastSetEntries.filter((entry): entry is [string, LastSetInfo] => entry[1] !== undefined)),
     );
+    const substitutionEntries = await Promise.all(
+      exercises.map(async (ex) => [ex.exerciseId, await getRecentSubstitutions(ex.exerciseId)] as const),
+    );
+    setRecentSubstitutions(Object.fromEntries(substitutionEntries));
   }
 
   async function actuallyStart() {
@@ -449,16 +458,15 @@ export function TrainScreen() {
               <p className="meta" style={{ marginBottom: 8 }}>
                 {ex.sets} sets x {ex.repRangeLow}-{ex.repRangeHigh} reps
               </p>
-              {progressionSuggestions[ex.exerciseId] && progressionSuggestions[ex.exerciseId]!.recommendation !== "NO_HISTORY" && (
-                <details className="why" style={{ marginBottom: 8 }}>
-                  <summary>
-                    PROGRESSION: {progressionSuggestions[ex.exerciseId]!.recommendation}
-                    {progressionSuggestions[ex.exerciseId]!.suggestedNextWeight !== undefined
-                      ? ` → ${progressionSuggestions[ex.exerciseId]!.suggestedNextWeight}lb`
-                      : ""}
-                  </summary>
-                  <p className="meta">{progressionSuggestions[ex.exerciseId]!.reason}</p>
-                </details>
+              {lastPerformedSets[ex.exerciseId] && (
+                <p className="card-body" style={{ marginBottom: 4 }}>
+                  Last time: {lastPerformedSets[ex.exerciseId]!.weight} lb x {lastPerformedSets[ex.exerciseId]!.reps}
+                </p>
+              )}
+              {progressionSuggestions[ex.exerciseId] && describeProgressionAdvisory(progressionSuggestions[ex.exerciseId]!) && (
+                <p className="card-body" style={{ fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
+                  {describeProgressionAdvisory(progressionSuggestions[ex.exerciseId]!)}
+                </p>
               )}
               <input
                 type="text"
@@ -477,6 +485,21 @@ export function TrainScreen() {
                   marginBottom: 8,
                 }}
               />
+              {!hasLoggedAnySet && recentSubstitutions[ex.exerciseId] && recentSubstitutions[ex.exerciseId]!.length > 0 && (
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                  {recentSubstitutions[ex.exerciseId]!.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      className="btn-primary"
+                      style={{ width: "auto", padding: "4px 10px", fontSize: 16, background: "var(--surface-2)" }}
+                      onClick={() => setSubs((prev) => ({ ...prev, [ex.exerciseId]: name }))}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              )}
               {Array.from({ length: ex.sets }, (_, i) => i + 1).map((setNumber) => {
                 const loggedSet = sets.find((s) => s.exerciseId === ex.exerciseId && s.setNumber === setNumber);
                 const display = getInputDisplay(ex.exerciseId, setNumber);

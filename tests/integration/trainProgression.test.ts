@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/persistence/db";
 import { startDay } from "../../src/application/commands";
 import { completeWorkout, logSet, skipSet, startWorkout } from "../../src/application/trainCommands";
-import { getLastPerformedSetForExercise, getProgressionSuggestion } from "../../src/application/trainQueries";
+import {
+  getLastPerformedSetForExercise,
+  getProgressionSuggestion,
+  getRecentSubstitutions,
+} from "../../src/application/trainQueries";
 
 /**
  * TRAIN progression, exercised through the real command/query layer
@@ -164,5 +168,44 @@ describe("getLastPerformedSetForExercise — pre-fill source for a new set", () 
       reps: 12,
     });
     expect(await getLastPerformedSetForExercise("A", "STANDARD", "machine-chest-press")).toBeUndefined();
+  });
+});
+
+/**
+ * Priority 1 (fast exercise substitution): one-tap re-select of a
+ * previously-typed free-text substitution, reusing substitutedName
+ * exactly as already stored — no new substitution data invented.
+ */
+describe("getRecentSubstitutions — fast re-select from real substitution history", () => {
+  it("is empty before any substitution has ever been logged for this exercise", async () => {
+    expect(await getRecentSubstitutions("machine-chest-press")).toEqual([]);
+  });
+
+  it("returns a real prior substitution", async () => {
+    const day = await startDay();
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 135, 10, "Smith Machine Bench Press");
+
+    expect(await getRecentSubstitutions("machine-chest-press")).toEqual(["Smith Machine Bench Press"]);
+  });
+
+  it("most recent first, deduplicated, capped at the given limit", async () => {
+    const day = await startDay();
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 135, 10, "Dumbbell Press");
+    await logSet(day.id, session.id, "machine-chest-press", 2, 135, 10, "Smith Machine Bench Press");
+    await logSet(day.id, session.id, "machine-chest-press", 3, 135, 10, "Dumbbell Press"); // repeat, should not duplicate
+
+    const result = await getRecentSubstitutions("machine-chest-press", 5);
+    expect(result).toEqual(["Dumbbell Press", "Smith Machine Bench Press"]);
+  });
+
+  it("does not mix substitutions logged for a different exercise", async () => {
+    const day = await startDay();
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "pec-deck", 1, 80, 12, "Cable Fly");
+
+    expect(await getRecentSubstitutions("machine-chest-press")).toEqual([]);
+    expect(await getRecentSubstitutions("pec-deck")).toEqual(["Cable Fly"]);
   });
 });

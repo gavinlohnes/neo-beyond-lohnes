@@ -2,6 +2,7 @@ import type { ExercisePrescription, SessionType, WorkoutSessionStatus, WorkoutTe
 import { WORKOUT_TEMPLATE_ORDER } from "../../../domain/workout/types";
 import type { SessionVariantSuggestion } from "../../../engine/trainSuggestion";
 import { doesSessionAdvanceRotation, deriveRecoverySessionStatus } from "../../../engine/trainSuggestion";
+import type { ProgressionSuggestion } from "../../../engine/progression";
 
 /**
  * Phase 6 (TRAIN redesign): pure copy/derivation helpers, kept separate
@@ -108,4 +109,30 @@ export function describeRecoveryPreview(durationMinutes: number): string {
   if (status === "COMPLETED") return `At ${durationMinutes} min, this will save as COMPLETED.`;
   if (status === "PARTIAL") return `At ${durationMinutes} min, this will save as PARTIAL.`;
   return "At 0 min, this will save as stopped early (no movement) — recorded as ABANDONED.";
+}
+
+/**
+ * Priority 1 (prominent advisory signal): plain-language rendering of
+ * evaluateProgression's real recommendation — never reimplements the
+ * advisory logic (engine/progression.ts stays the sole source of truth),
+ * only rewords its already-computed output so it can lead the exercise
+ * block instead of hiding behind a disclosure. null for NO_HISTORY,
+ * matching the existing "nothing to advise on yet" distinction from HOLD.
+ */
+export function describeProgressionAdvisory(suggestion: ProgressionSuggestion): string | null {
+  if (suggestion.recommendation === "NO_HISTORY") return null;
+  if (suggestion.recommendation === "INCREASE" && suggestion.suggestedNextWeight !== undefined) {
+    return `Last time hit the top of the rep range — suggests increasing to ${suggestion.suggestedNextWeight}lb.`;
+  }
+  if (suggestion.recommendation === "REDUCE" && suggestion.suggestedNextWeight !== undefined) {
+    return `Last time was below the rep-range minimum — suggests reducing to ${suggestion.suggestedNextWeight}lb.`;
+  }
+  if (suggestion.recommendation === "HOLD" && suggestion.lastWeight !== undefined) {
+    return `Suggests holding at ${suggestion.lastWeight}lb.`;
+  }
+  // HOLD from incomplete evidence or mixed weights carries no single
+  // lastWeight/suggestedNextWeight to name — the engine's own reason is
+  // already the correct plain explanation for those cases, so use it
+  // directly rather than fabricating a weight that isn't there.
+  return suggestion.reason;
 }

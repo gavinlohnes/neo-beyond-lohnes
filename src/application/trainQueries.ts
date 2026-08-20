@@ -54,6 +54,34 @@ export async function getLastAdvancingTemplate(): Promise<WorkoutTemplateId | nu
   return last ? (last.templateId as WorkoutTemplateId) : null;
 }
 
+/**
+ * Priority 1 (fast exercise substitution): the most recent distinct
+ * free-text substitutions actually used for this exerciseId across all
+ * history, most recent first — lets the UI offer a one-tap re-select of
+ * something the user has genuinely typed before instead of retyping it.
+ * Reuses substitutedName exactly as already stored (PerformedSet); does
+ * not invent any exercise-equivalence list or new substitution data.
+ */
+export async function getRecentSubstitutions(exerciseId: string, limit = 3): Promise<string[]> {
+  const sets = (await db.performedSets.where("exerciseId").equals(exerciseId).toArray()) as unknown as PerformedSet[];
+  // Tiebreak on setNumber when recordedAt collides (millisecond resolution,
+  // same session logged in quick succession) — a higher setNumber within
+  // the same burst is still the more recent action.
+  const withSubs = sets
+    .filter((s): s is PerformedSet & { substitutedName: string } => !!s.substitutedName)
+    .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt) || b.setNumber - a.setNumber);
+
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const s of withSubs) {
+    if (seen.has(s.substitutedName)) continue;
+    seen.add(s.substitutedName);
+    result.push(s.substitutedName);
+    if (result.length >= limit) break;
+  }
+  return result;
+}
+
 export async function getPerformedSets(sessionId: string): Promise<PerformedSet[]> {
   const sets = await db.performedSets.where("sessionId").equals(sessionId).toArray();
   return sets as unknown as PerformedSet[];
