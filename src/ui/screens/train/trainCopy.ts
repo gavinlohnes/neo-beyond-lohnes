@@ -54,6 +54,18 @@ export function describeTemplateSummary(exercises: ExercisePrescription[]): Temp
   return { bodyAreas: joinWithAnd(areas), exerciseNames: exercises.map((ex) => ex.name) };
 }
 
+/**
+ * Product Experience Sprint, P7 (microcopy sweep): describeVariantSuggestion
+ * below explains WHY one variant is suggested; this explains WHAT each of
+ * the three options generically means, since only the suggested one gets
+ * a sentence otherwise — a first-time look at the STANDARD/REDUCED/
+ * RECOVERY chips with no other context is exactly the kind of hesitation
+ * point the sprint's outsider test calls out. Shown once, next to the
+ * picker, regardless of which is currently suggested.
+ */
+export const VARIANT_MEANINGS =
+  "STANDARD: the full session. REDUCED: the same exercises, fewer sets. RECOVERY: light movement only, tracked by duration.";
+
 /** Item 2: plain-language explanation for the suggested variant, same spirit as TODAY's capacity sentence. */
 export function describeVariantSuggestion(suggestion: SessionVariantSuggestion): string {
   if (suggestion.noCheckIn) {

@@ -12,6 +12,7 @@ import {
   describeTemplateSuggestion,
   describeTemplateSummary,
   describeVariantSuggestion,
+  VARIANT_MEANINGS,
 } from "../../src/ui/screens/train/trainCopy";
 import { evaluateProgression } from "../../src/engine/progression";
 import type { ExercisePrescription } from "../../src/domain/workout/types";
@@ -57,6 +58,14 @@ describe("describeVariantSuggestion", () => {
   it("makes clear a no-check-in STANDARD default is not a real suggestion", () => {
     const text = describeVariantSuggestion({ variant: "STANDARD", reason: "x", noCheckIn: true });
     expect(text.toLowerCase()).toContain("no check-in");
+  });
+});
+
+describe("VARIANT_MEANINGS — plain-language explanation shown regardless of which variant is suggested", () => {
+  it("explains all three real variants", () => {
+    expect(VARIANT_MEANINGS).toContain("STANDARD");
+    expect(VARIANT_MEANINGS).toContain("REDUCED");
+    expect(VARIANT_MEANINGS).toContain("RECOVERY");
   });
 });
 

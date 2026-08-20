@@ -38,6 +38,7 @@ import {
   describeTemplateSuggestion,
   describeTemplateSummary,
   describeVariantSuggestion,
+  VARIANT_MEANINGS,
 } from "./trainCopy";
 
 const TEMPLATE_ORDER: WorkoutTemplateId[] = ["A", "B", "C"];
@@ -545,6 +546,7 @@ export function TrainScreen() {
           </div>
 
           <p className="meta" style={{ marginBottom: 6 }}>Variant (override always available)</p>
+          <p className="meta" style={{ marginBottom: 6 }}>{VARIANT_MEANINGS}</p>
           <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
             {VARIANT_ORDER.map((v) => (
               <button

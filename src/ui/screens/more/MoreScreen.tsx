@@ -153,7 +153,7 @@ export function MoreScreen() {
         <button className="btn-primary" disabled={busy} onClick={() => void handleExportBackup()}>
           EXPORT BACKUP
         </button>
-        <p className="meta" style={{ marginTop: 8 }}>Application-owned JSON. Local history only.</p>
+        <p className="meta" style={{ marginTop: 8 }}>A file with everything on this device. Nothing leaves unless you share it.</p>
       </div>
 
       <div className="card">

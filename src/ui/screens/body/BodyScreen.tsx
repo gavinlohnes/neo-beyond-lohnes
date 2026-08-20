@@ -349,7 +349,7 @@ export function BodyScreen() {
       <p className="eyebrow">BODY // ESSENTIALS</p>
       <h1 className="title">Readiness inputs</h1>
       <p className="card-body" style={{ marginBottom: 16 }}>
-        Fast inputs. Committed history only. Correct mistakes without erasing what happened.
+        Fast inputs, kept as a permanent record. Correct mistakes without erasing what happened.
       </p>
 
       {/* WATER — one consolidated card: current total, fastest actions, custom fallback, collapsed history. */}
@@ -414,7 +414,7 @@ export function BodyScreen() {
             {waterHistoryOpen && (
               <div style={{ marginTop: 12 }}>
                 <p className="card-body" style={{ marginBottom: 12 }}>
-                  Correction preserves the original fact and changes only the effective value.
+                  Correcting an entry keeps the original and shows the corrected number — nothing is deleted.
                 </p>
                 {entries.map((entry) => (
                   <div
