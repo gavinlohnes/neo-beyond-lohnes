@@ -2,10 +2,16 @@ import { useState } from "react";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import { TrainScreen } from "../ui/screens/train/TrainScreen";
 import { BodyScreen } from "../ui/screens/body/BodyScreen";
-import { HistoryScreen } from "../ui/screens/history/HistoryScreen";
 import { MoreScreen } from "../ui/screens/more/MoreScreen";
 
-type Tab = "TODAY" | "TRAIN" | "BODY" | "HISTORY" | "MORE";
+/**
+ * Product Experience Sprint, P1 (navigation authority reconciliation):
+ * the Decision Register locks primary navigation to these four
+ * destinations. HISTORY is not deleted — its screen, queries, copy
+ * helpers, and tests are all untouched — it's reachable from MORE
+ * instead of competing for a fifth primary tab slot.
+ */
+type Tab = "TODAY" | "TRAIN" | "BODY" | "MORE";
 
 export function App() {
   const [tab, setTab] = useState<Tab>("TODAY");
@@ -15,7 +21,6 @@ export function App() {
       {tab === "TODAY" && <TodayScreen />}
       {tab === "TRAIN" && <TrainScreen />}
       {tab === "BODY" && <BodyScreen />}
-      {tab === "HISTORY" && <HistoryScreen />}
       {tab === "MORE" && <MoreScreen />}
 
       <nav
@@ -29,7 +34,7 @@ export function App() {
           background: "var(--bg)",
         }}
       >
-        {(["TODAY", "TRAIN", "BODY", "HISTORY", "MORE"] as Tab[]).map((t) => (
+        {(["TODAY", "TRAIN", "BODY", "MORE"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}

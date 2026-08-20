@@ -62,9 +62,15 @@ required one so far):
 - **`src/application`** — commands (writes, one per user action) and
   queries (reads). The UI layer never touches Dexie directly, only
   `application/*`.
-- **`src/ui/screens`** — TODAY, TRAIN, BODY, HISTORY, MORE (see below).
+- **`src/ui/screens`** — TODAY, TRAIN, BODY, MORE (primary navigation)
+  plus HISTORY, nested under MORE (see below).
 
 ## Screens
+
+Primary navigation is **TODAY / TRAIN / BODY / MORE**, per the Decision
+Register (Product Experience Sprint, P1 — an earlier build had briefly
+added HISTORY as a fifth primary tab; that was a placement error, now
+corrected. HISTORY itself, its queries, and its tests are unchanged).
 
 - **TODAY** — start/end the day, state check-in, the current
   recommendation with its WHY trace, RESET / SHIFT DOWN guided flows,
@@ -79,12 +85,12 @@ required one so far):
   (original event untouched, a `*_CORRECTED` event supersedes it,
   queries resolve the head of the chain) with on-screen confirmation
   and immediate undo.
-- **HISTORY** — read-only, complete: every `BeyondDay` and every event
-  on it, chronological within the day, most-recent-day-first, collapsed
-  per day by default.
 - **MORE** — backup export/share, restore (preview-before-write,
-  replace-only), backup-reminder banner, and app/engine/schema
-  diagnostics (see Versions below).
+  replace-only), backup-reminder banner, app/engine/schema diagnostics
+  (see Versions below), and access to HISTORY.
+- **HISTORY** (nested under MORE) — read-only, complete: every
+  `BeyondDay` and every event on it, chronological within the day,
+  most-recent-day-first, collapsed per day by default.
 
 Full behavioral rationale for all of the above — what's locked, why,
 and what NOT to change without sign-off — lives in

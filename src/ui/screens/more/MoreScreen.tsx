@@ -3,12 +3,14 @@ import { db } from "../../../persistence/db";
 import { exportBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
 import { getActiveDay, getDayCount, getEventCount, getRecommendationCount } from "../../../application/queries";
+import { HistoryScreen } from "../history/HistoryScreen";
 
 const APP_VERSION = "0.1.0"; // chat-built checkpoint — NOT the same lineage as the surviving 0.2.0 app
 const ENGINE_VERSION = "0.1.0";
 const DATA_SCHEMA = 3; // this checkpoint's own schema (v3 adds sessionId/exerciseId indexes to performedSets for TRAIN) — not yet reconciled with the real app's schema 3 (same number, different lineage)
 
 export function MoreScreen() {
+  const [view, setView] = useState<"MENU" | "HISTORY">("MENU");
   const [days, setDays] = useState(0);
   const [events, setEvents] = useState(0);
   const [recommendations, setRecommendations] = useState(0);
@@ -109,10 +111,35 @@ export function MoreScreen() {
     }
   }
 
+  if (view === "HISTORY") {
+    return (
+      <div className="screen">
+        <button
+          className="btn-primary"
+          style={{ width: "auto", padding: "8px 14px", background: "var(--surface-2)", marginBottom: 12 }}
+          onClick={() => setView("MENU")}
+        >
+          ← BACK TO MORE
+        </button>
+        <HistoryScreen />
+      </div>
+    );
+  }
+
   return (
     <div className="screen">
       <p className="eyebrow">MORE</p>
       <h1 className="title">Foundation</h1>
+
+      <div className="card">
+        <h2 className="card-title">History</h2>
+        <p className="card-body" style={{ marginBottom: 12 }}>
+          Every day and every event, exactly as it happened. Read-only.
+        </p>
+        <button className="btn-primary" onClick={() => setView("HISTORY")}>
+          VIEW HISTORY
+        </button>
+      </div>
 
       <div className="card">
         <h2 className="card-title">Backup</h2>
