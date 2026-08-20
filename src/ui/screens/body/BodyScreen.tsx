@@ -55,6 +55,7 @@ export function BodyScreen() {
   const [correctingId, setCorrectingId] = useState<string | null>(null);
   const [correctionInput, setCorrectionInput] = useState("");
   const [waterConfirmation, setWaterConfirmation] = useState<Confirmation>(null);
+  const [waterHistoryOpen, setWaterHistoryOpen] = useState(false);
 
   // Sleep
   const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
@@ -66,6 +67,7 @@ export function BodyScreen() {
   const [sleepCorrectionHours, setSleepCorrectionHours] = useState("");
   const [sleepCorrectionMinutes, setSleepCorrectionMinutes] = useState("");
   const [sleepConfirmation, setSleepConfirmation] = useState<Confirmation>(null);
+  const [sleepHistoryOpen, setSleepHistoryOpen] = useState(false);
 
   // Bodyweight
   const [bodyweightEntries, setBodyweightEntries] = useState<BodyweightEntry[]>([]);
@@ -74,6 +76,7 @@ export function BodyScreen() {
   const [bodyweightCorrectingId, setBodyweightCorrectingId] = useState<string | null>(null);
   const [bodyweightCorrectionInput, setBodyweightCorrectionInput] = useState("");
   const [bodyweightConfirmation, setBodyweightConfirmation] = useState<Confirmation>(null);
+  const [bodyweightHistoryOpen, setBodyweightHistoryOpen] = useState(false);
 
   // Protein
   const [proteinEntries, setProteinEntries] = useState<ProteinEntry[]>([]);
@@ -82,6 +85,7 @@ export function BodyScreen() {
   const [proteinCorrectingId, setProteinCorrectingId] = useState<string | null>(null);
   const [proteinCorrectionInput, setProteinCorrectionInput] = useState("");
   const [proteinConfirmation, setProteinConfirmation] = useState<Confirmation>(null);
+  const [proteinHistoryOpen, setProteinHistoryOpen] = useState(false);
 
   useEffect(() => {
     void refresh();
@@ -100,6 +104,10 @@ export function BodyScreen() {
   }
 
   const proteinTotal = proteinEntries.reduce((sum, e) => sum + e.effectiveGrams, 0);
+  const lastWaterAmount = entries.length > 0 ? entries[entries.length - 1]!.effectiveAmountOz : null;
+  const lastSleepEntry = sleepEntries.length > 0 ? sleepEntries[sleepEntries.length - 1]! : null;
+  const lastBodyweightEntry = bodyweightEntries.length > 0 ? bodyweightEntries[bodyweightEntries.length - 1]! : null;
+  const lastProteinEntry = proteinEntries.length > 0 ? proteinEntries[proteinEntries.length - 1]! : null;
 
   // ---- SLEEP ----
 
@@ -139,6 +147,10 @@ export function BodyScreen() {
     setSleepCorrectionHours(String(hours));
     setSleepCorrectionMinutes(String(minutes));
     setError(null);
+    // The correction row lives inside the collapsed history disclosure —
+    // called from the just-logged confirmation banner too, where that
+    // disclosure may still be closed.
+    setSleepHistoryOpen(true);
   }
 
   async function handleSaveSleepCorrection() {
@@ -166,20 +178,10 @@ export function BodyScreen() {
 
   // ---- BODYWEIGHT ----
 
-  async function handleLogBodyweight(skipConfirm = false) {
-    if (busy) return;
-    const weight = Number(bodyweightInput);
-    if (!Number.isFinite(weight) || weight <= 0) {
-      setError("Enter a positive weight in lbs.");
-      return;
-    }
-    if (!skipConfirm && isImplausible(weight, BODYWEIGHT_PLAUSIBLE_RANGE)) {
-      setBodyweightPendingConfirm(true);
-      return;
-    }
+  async function handleLogBodyweightAmount(weight: number) {
+    if (busy || weight <= 0) return;
     setBusy(true);
     setError(null);
-    setBodyweightPendingConfirm(false);
     try {
       const activeDay = await ensureActiveDay();
       const eventId = await logBodyweight(activeDay.id, weight);
@@ -191,10 +193,26 @@ export function BodyScreen() {
     }
   }
 
+  async function handleLogBodyweight(skipConfirm = false) {
+    if (busy) return;
+    const weight = Number(bodyweightInput);
+    if (!Number.isFinite(weight) || weight <= 0) {
+      setError("Enter a positive weight in lbs.");
+      return;
+    }
+    if (!skipConfirm && isImplausible(weight, BODYWEIGHT_PLAUSIBLE_RANGE)) {
+      setBodyweightPendingConfirm(true);
+      return;
+    }
+    setBodyweightPendingConfirm(false);
+    await handleLogBodyweightAmount(weight);
+  }
+
   function beginCorrectBodyweight(entry: BodyweightEntry) {
     setBodyweightCorrectingId(entry.headEventId);
     setBodyweightCorrectionInput(String(entry.effectiveWeightLbs));
     setError(null);
+    setBodyweightHistoryOpen(true);
   }
 
   async function handleSaveBodyweightCorrection() {
@@ -220,20 +238,10 @@ export function BodyScreen() {
 
   // ---- PROTEIN ----
 
-  async function handleLogProtein(skipConfirm = false) {
-    if (busy) return;
-    const grams = Number(proteinInput);
-    if (!Number.isFinite(grams) || grams <= 0) {
-      setError("Enter a positive number of grams.");
-      return;
-    }
-    if (!skipConfirm && isImplausible(grams, PROTEIN_PLAUSIBLE_RANGE)) {
-      setProteinPendingConfirm(true);
-      return;
-    }
+  async function handleLogProteinAmount(grams: number) {
+    if (busy || grams <= 0) return;
     setBusy(true);
     setError(null);
-    setProteinPendingConfirm(false);
     try {
       const activeDay = await ensureActiveDay();
       const eventId = await logProtein(activeDay.id, grams);
@@ -245,10 +253,26 @@ export function BodyScreen() {
     }
   }
 
+  async function handleLogProtein(skipConfirm = false) {
+    if (busy) return;
+    const grams = Number(proteinInput);
+    if (!Number.isFinite(grams) || grams <= 0) {
+      setError("Enter a positive number of grams.");
+      return;
+    }
+    if (!skipConfirm && isImplausible(grams, PROTEIN_PLAUSIBLE_RANGE)) {
+      setProteinPendingConfirm(true);
+      return;
+    }
+    setProteinPendingConfirm(false);
+    await handleLogProteinAmount(grams);
+  }
+
   function beginCorrectProtein(entry: ProteinEntry) {
     setProteinCorrectingId(entry.headEventId);
     setProteinCorrectionInput(String(entry.effectiveGrams));
     setError(null);
+    setProteinHistoryOpen(true);
   }
 
   async function handleSaveProteinCorrection() {
@@ -320,8 +344,6 @@ export function BodyScreen() {
     }
   }
 
-  const lastWaterAmount = entries.length > 0 ? entries[entries.length - 1]!.effectiveAmountOz : null;
-
   return (
     <div className="screen">
       <p className="eyebrow">BODY // ESSENTIALS</p>
@@ -330,22 +352,135 @@ export function BodyScreen() {
         Fast inputs. Committed history only. Correct mistakes without erasing what happened.
       </p>
 
+      {/* WATER — one consolidated card: current total, fastest actions, custom fallback, collapsed history. */}
       <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>WATER</p>
-        <p className="title" style={{ fontSize: 28, marginBottom: 0 }}>{total} oz</p>
+        <p className="eyebrow" style={{ marginBottom: 4 }}>HYDRATION</p>
+        <p className="recommendation-title" style={{ marginBottom: 12 }}>{total} oz today</p>
+        <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
+          {WATER_QUICK_ADD_OZ.map((amount) => (
+            <button
+              key={amount}
+              className="btn-secondary"
+              style={{ flex: 1, minWidth: 60 }}
+              disabled={busy}
+              onClick={() => void handleLogWaterAmount(amount)}
+            >
+              +{amount} oz
+            </button>
+          ))}
+          <button
+            className="btn-secondary"
+            style={{ flex: 1, minWidth: 100 }}
+            disabled={busy || lastWaterAmount === null}
+            onClick={() => lastWaterAmount !== null && void handleLogWaterAmount(lastWaterAmount)}
+          >
+            {lastWaterAmount !== null ? `Repeat last (${lastWaterAmount} oz)` : "Repeat last"}
+          </button>
+        </div>
+        <div className="field">
+          <label><span>Custom (oz)</span></label>
+          <input type="number" min={0} value={input} onChange={(e) => setInput(e.target.value)} className="input" />
+        </div>
+        <button className="btn-primary" disabled={busy} onClick={() => void handleLog()}>
+          LOG WATER
+        </button>
+        {waterConfirmation && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+            <p className="meta">{waterConfirmation.message}</p>
+            <button
+              className="btn-secondary"
+              style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
+              onClick={() => {
+                const entry = entries.find((e) => e.headEventId === waterConfirmation.headEventId);
+                if (entry) {
+                  setCorrectingId(entry.headEventId);
+                  setCorrectionInput(String(entry.effectiveAmountOz));
+                  setError(null);
+                  setWaterHistoryOpen(true);
+                }
+              }}
+            >
+              CORRECT
+            </button>
+          </div>
+        )}
+        {error && <p className="meta" style={{ color: "var(--danger)", marginTop: 8 }}>{error}</p>}
+
+        {entries.length > 0 && (
+          <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+            <button className="btn-secondary" onClick={() => setWaterHistoryOpen((v) => !v)}>
+              {waterHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES ({entries.length})
+            </button>
+            {waterHistoryOpen && (
+              <div style={{ marginTop: 12 }}>
+                <p className="card-body" style={{ marginBottom: 12 }}>
+                  Correction preserves the original fact and changes only the effective value.
+                </p>
+                {entries.map((entry) => (
+                  <div
+                    key={entry.rootEventId}
+                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveAmountOz} oz</p>
+                        <p className="meta">
+                          {new Date(entry.recordedAt).toLocaleTimeString()}
+                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                        </p>
+                      </div>
+                      <button
+                        className="btn-secondary"
+                        style={{ width: "auto", padding: "8px 14px" }}
+                        onClick={() => {
+                          setCorrectingId(entry.headEventId);
+                          setCorrectionInput(String(entry.effectiveAmountOz));
+                          setError(null);
+                        }}
+                      >
+                        CORRECT
+                      </button>
+                    </div>
+                    {correctingId === entry.headEventId && (
+                      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                        <input
+                          type="number"
+                          value={correctionInput}
+                          onChange={(e) => setCorrectionInput(e.target.value)}
+                          className="input"
+                          style={{ flex: 1 }}
+                        />
+                        <button
+                          className="btn-primary"
+                          style={{ width: "auto", padding: "10px 16px" }}
+                          disabled={busy}
+                          onClick={() => void handleCorrect(entry)}
+                        >
+                          SAVE
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
+      {/* SLEEP */}
       <div className="card">
         <p className="eyebrow" style={{ marginBottom: 4 }}>SLEEP</p>
-        <h2 className="card-title">Sleep</h2>
         <p className="card-body" style={{ marginBottom: 12 }}>
-          Duration only. No target — logged as a historical fact.
+          {lastSleepEntry
+            ? `Last: ${lastSleepEntry.kind === "PRIMARY" ? "main sleep" : "nap"}, ${formatDuration(lastSleepEntry.effectiveDurationMinutes)} at ${new Date(lastSleepEntry.recordedAt).toLocaleTimeString()}`
+            : "No sleep logged yet today."}
         </p>
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
           <button
             type="button"
-            className="btn-primary"
-            style={{ flex: 1, background: sleepKind === "PRIMARY" ? "var(--accent)" : "var(--surface-2)" }}
+            className={`chip ${sleepKind === "PRIMARY" ? "chip--selected" : ""}`}
+            aria-pressed={sleepKind === "PRIMARY"}
             onClick={() => {
               setSleepKind("PRIMARY");
               setSleepPendingConfirm(false);
@@ -355,8 +490,8 @@ export function BodyScreen() {
           </button>
           <button
             type="button"
-            className="btn-primary"
-            style={{ flex: 1, background: sleepKind === "SUPPLEMENTAL" ? "var(--accent)" : "var(--surface-2)" }}
+            className={`chip ${sleepKind === "SUPPLEMENTAL" ? "chip--selected" : ""}`}
+            aria-pressed={sleepKind === "SUPPLEMENTAL"}
             onClick={() => {
               setSleepKind("SUPPLEMENTAL");
               setSleepPendingConfirm(false);
@@ -406,7 +541,7 @@ export function BodyScreen() {
                 hoursAndMinutesToTotalMinutes(Number(sleepHoursInput) || 0, Number(sleepMinutesInput) || 0),
               )}
             </p>
-            <button className="btn-primary" style={{ background: "var(--surface-2)" }} disabled={busy} onClick={() => void handleLogSleep(true)}>
+            <button className="btn-secondary" disabled={busy} onClick={() => void handleLogSleep(true)}>
               LOG ANYWAY
             </button>
           </div>
@@ -420,8 +555,8 @@ export function BodyScreen() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
             <p className="meta">{sleepConfirmation.message}</p>
             <button
-              className="btn-primary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
+              className="btn-secondary"
+              style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
               onClick={() => {
                 const entry = sleepEntries.find((e) => e.headEventId === sleepConfirmation.headEventId);
                 if (entry) beginCorrectSleep(entry);
@@ -434,57 +569,72 @@ export function BodyScreen() {
 
         {sleepEntries.length > 0 && (
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <p className="meta" style={{ marginBottom: 8 }}>TODAY'S SLEEP</p>
-            {sleepEntries.map((entry) => (
-              <div
-                key={entry.rootEventId}
-                style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>
-                      {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}
-                    </p>
-                    <p className="meta">
-                      {new Date(entry.recordedAt).toLocaleTimeString()}
-                      {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                    </p>
-                  </div>
-                  <button
-                    className="btn-primary"
-                    style={{ background: "var(--surface-2)", width: "auto", padding: "8px 14px" }}
-                    onClick={() => beginCorrectSleep(entry)}
+            <button className="btn-secondary" onClick={() => setSleepHistoryOpen((v) => !v)}>
+              {sleepHistoryOpen ? "HIDE" : "SHOW"} TODAY'S SLEEP ({sleepEntries.length})
+            </button>
+            {sleepHistoryOpen && (
+              <div style={{ marginTop: 12 }}>
+                {sleepEntries.map((entry) => (
+                  <div
+                    key={entry.rootEventId}
+                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
                   >
-                    CORRECT
-                  </button>
-                </div>
-                {sleepCorrectingId === entry.headEventId && (
-                  <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
-                    <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                      <label><span>Hours</span></label>
-                      <input type="number" min={0} value={sleepCorrectionHours} onChange={(e) => setSleepCorrectionHours(e.target.value)} className="input" />
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>
+                          {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}
+                        </p>
+                        <p className="meta">
+                          {new Date(entry.recordedAt).toLocaleTimeString()}
+                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                        </p>
+                      </div>
+                      <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectSleep(entry)}>
+                        CORRECT
+                      </button>
                     </div>
-                    <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                      <label><span>Minutes</span></label>
-                      <input type="number" min={0} max={59} value={sleepCorrectionMinutes} onChange={(e) => setSleepCorrectionMinutes(e.target.value)} className="input" />
-                    </div>
-                    <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveSleepCorrection()}>
-                      SAVE
-                    </button>
+                    {sleepCorrectingId === entry.headEventId && (
+                      <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
+                        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+                          <label><span>Hours</span></label>
+                          <input type="number" min={0} value={sleepCorrectionHours} onChange={(e) => setSleepCorrectionHours(e.target.value)} className="input" />
+                        </div>
+                        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+                          <label><span>Minutes</span></label>
+                          <input type="number" min={0} max={59} value={sleepCorrectionMinutes} onChange={(e) => setSleepCorrectionMinutes(e.target.value)} className="input" />
+                        </div>
+                        <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveSleepCorrection()}>
+                          SAVE
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>
 
+      {/* BODYWEIGHT */}
       <div className="card">
         <p className="eyebrow" style={{ marginBottom: 4 }}>BODYWEIGHT</p>
-        <h2 className="card-title">Log bodyweight</h2>
         <p className="card-body" style={{ marginBottom: 12 }}>
-          A fact only — no goal.
+          {lastBodyweightEntry
+            ? `Last: ${lastBodyweightEntry.effectiveWeightLbs} lbs at ${new Date(lastBodyweightEntry.recordedAt).toLocaleTimeString()}`
+            : "No bodyweight logged yet today."}
+          {" "}A fact only — no goal.
         </p>
+        {lastBodyweightEntry && (
+          <button
+            className="btn-secondary"
+            style={{ marginBottom: 12 }}
+            disabled={busy}
+            onClick={() => void handleLogBodyweightAmount(lastBodyweightEntry.effectiveWeightLbs)}
+          >
+            SAME AS LAST ({lastBodyweightEntry.effectiveWeightLbs} lbs)
+          </button>
+        )}
         <div className="field">
           <label><span>Weight (lbs)</span></label>
           <input
@@ -503,7 +653,7 @@ export function BodyScreen() {
             <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
               {describeImplausibleBodyweight(Number(bodyweightInput) || 0)}
             </p>
-            <button className="btn-primary" style={{ background: "var(--surface-2)" }} disabled={busy} onClick={() => void handleLogBodyweight(true)}>
+            <button className="btn-secondary" disabled={busy} onClick={() => void handleLogBodyweight(true)}>
               LOG ANYWAY
             </button>
           </div>
@@ -517,8 +667,8 @@ export function BodyScreen() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
             <p className="meta">{bodyweightConfirmation.message}</p>
             <button
-              className="btn-primary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
+              className="btn-secondary"
+              style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
               onClick={() => {
                 const entry = bodyweightEntries.find((e) => e.headEventId === bodyweightConfirmation.headEventId);
                 if (entry) beginCorrectBodyweight(entry);
@@ -531,49 +681,60 @@ export function BodyScreen() {
 
         {bodyweightEntries.length > 0 && (
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <p className="meta" style={{ marginBottom: 8 }}>TODAY'S BODYWEIGHT</p>
-            {bodyweightEntries.map((entry) => (
-              <div
-                key={entry.rootEventId}
-                style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveWeightLbs} lbs</p>
-                    <p className="meta">
-                      {new Date(entry.recordedAt).toLocaleTimeString()}
-                      {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                    </p>
-                  </div>
-                  <button
-                    className="btn-primary"
-                    style={{ background: "var(--surface-2)", width: "auto", padding: "8px 14px" }}
-                    onClick={() => beginCorrectBodyweight(entry)}
+            <button className="btn-secondary" onClick={() => setBodyweightHistoryOpen((v) => !v)}>
+              {bodyweightHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES ({bodyweightEntries.length})
+            </button>
+            {bodyweightHistoryOpen && (
+              <div style={{ marginTop: 12 }}>
+                {bodyweightEntries.map((entry) => (
+                  <div
+                    key={entry.rootEventId}
+                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
                   >
-                    CORRECT
-                  </button>
-                </div>
-                {bodyweightCorrectingId === entry.headEventId && (
-                  <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                    <input type="number" value={bodyweightCorrectionInput} onChange={(e) => setBodyweightCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
-                    <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
-                      SAVE
-                    </button>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveWeightLbs} lbs</p>
+                        <p className="meta">
+                          {new Date(entry.recordedAt).toLocaleTimeString()}
+                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                        </p>
+                      </div>
+                      <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectBodyweight(entry)}>
+                        CORRECT
+                      </button>
+                    </div>
+                    {bodyweightCorrectingId === entry.headEventId && (
+                      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                        <input type="number" value={bodyweightCorrectionInput} onChange={(e) => setBodyweightCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
+                        <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
+                          SAVE
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>
 
+      {/* PROTEIN */}
       <div className="card">
         <p className="eyebrow" style={{ marginBottom: 4 }}>PROTEIN</p>
-        <h2 className="card-title">Log protein</h2>
         <p className="card-body" style={{ marginBottom: 12 }}>
-          No daily target — logs the amount only.
+          Today: {proteinTotal} g. No daily target — logs the amount only.
         </p>
-        <p className="meta" style={{ marginBottom: 8 }}>Today: {proteinTotal} g</p>
+        {lastProteinEntry && (
+          <button
+            className="btn-secondary"
+            style={{ marginBottom: 12 }}
+            disabled={busy}
+            onClick={() => void handleLogProteinAmount(lastProteinEntry.effectiveGrams)}
+          >
+            REPEAT LAST ({lastProteinEntry.effectiveGrams} g)
+          </button>
+        )}
         <div className="field">
           <label><span>Protein (g)</span></label>
           <input
@@ -592,7 +753,7 @@ export function BodyScreen() {
             <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
               {describeImplausibleProtein(Number(proteinInput) || 0)}
             </p>
-            <button className="btn-primary" style={{ background: "var(--surface-2)" }} disabled={busy} onClick={() => void handleLogProtein(true)}>
+            <button className="btn-secondary" disabled={busy} onClick={() => void handleLogProtein(true)}>
               LOG ANYWAY
             </button>
           </div>
@@ -606,8 +767,8 @@ export function BodyScreen() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
             <p className="meta">{proteinConfirmation.message}</p>
             <button
-              className="btn-primary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
+              className="btn-secondary"
+              style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
               onClick={() => {
                 const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId);
                 if (entry) beginCorrectProtein(entry);
@@ -620,158 +781,42 @@ export function BodyScreen() {
 
         {proteinEntries.length > 0 && (
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <p className="meta" style={{ marginBottom: 8 }}>TODAY'S PROTEIN</p>
-            {proteinEntries.map((entry) => (
-              <div
-                key={entry.rootEventId}
-                style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveGrams} g</p>
-                    <p className="meta">
-                      {new Date(entry.recordedAt).toLocaleTimeString()}
-                      {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                    </p>
-                  </div>
-                  <button
-                    className="btn-primary"
-                    style={{ background: "var(--surface-2)", width: "auto", padding: "8px 14px" }}
-                    onClick={() => beginCorrectProtein(entry)}
+            <button className="btn-secondary" onClick={() => setProteinHistoryOpen((v) => !v)}>
+              {proteinHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES ({proteinEntries.length})
+            </button>
+            {proteinHistoryOpen && (
+              <div style={{ marginTop: 12 }}>
+                {proteinEntries.map((entry) => (
+                  <div
+                    key={entry.rootEventId}
+                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
                   >
-                    CORRECT
-                  </button>
-                </div>
-                {proteinCorrectingId === entry.headEventId && (
-                  <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                    <input type="number" value={proteinCorrectionInput} onChange={(e) => setProteinCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
-                    <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
-                      SAVE
-                    </button>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveGrams} g</p>
+                        <p className="meta">
+                          {new Date(entry.recordedAt).toLocaleTimeString()}
+                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                        </p>
+                      </div>
+                      <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectProtein(entry)}>
+                        CORRECT
+                      </button>
+                    </div>
+                    {proteinCorrectingId === entry.headEventId && (
+                      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                        <input type="number" value={proteinCorrectionInput} onChange={(e) => setProteinCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
+                        <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
+                          SAVE
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>HYDRATION</p>
-        <h2 className="card-title">Log water</h2>
-        <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
-          {WATER_QUICK_ADD_OZ.map((amount) => (
-            <button
-              key={amount}
-              className="btn-primary"
-              style={{ flex: 1, minWidth: 60, background: "var(--surface-2)" }}
-              disabled={busy}
-              onClick={() => void handleLogWaterAmount(amount)}
-            >
-              +{amount} oz
-            </button>
-          ))}
-          <button
-            className="btn-primary"
-            style={{ flex: 1, minWidth: 100, background: "var(--surface-2)" }}
-            disabled={busy || lastWaterAmount === null}
-            onClick={() => lastWaterAmount !== null && void handleLogWaterAmount(lastWaterAmount)}
-          >
-            {lastWaterAmount !== null ? `Repeat last (${lastWaterAmount} oz)` : "Repeat last"}
-          </button>
-        </div>
-        <div className="field">
-          <label><span>Custom (oz)</span></label>
-          <input
-            type="number"
-            min={0}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="input"
-          />
-        </div>
-        <button className="btn-primary" disabled={busy} onClick={() => void handleLog()}>
-          LOG WATER
-        </button>
-        {waterConfirmation && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <p className="meta">{waterConfirmation.message}</p>
-            <button
-              className="btn-primary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
-              onClick={() => {
-                const entry = entries.find((e) => e.headEventId === waterConfirmation.headEventId);
-                if (entry) {
-                  setCorrectingId(entry.headEventId);
-                  setCorrectionInput(String(entry.effectiveAmountOz));
-                  setError(null);
-                }
-              }}
-            >
-              CORRECT
-            </button>
-          </div>
-        )}
-        {error && <p className="meta" style={{ color: "var(--danger)", marginTop: 8 }}>{error}</p>}
-      </div>
-
-      <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>TODAY'S HYDRATION HISTORY</p>
-        <h2 className="card-title">Water entries</h2>
-        <p className="card-body" style={{ marginBottom: 12 }}>
-          Correction preserves the original fact and changes only the effective value.
-        </p>
-        {entries.length === 0 && <p className="meta">No entries yet.</p>}
-        {entries.map((entry) => (
-          <div
-            key={entry.rootEventId}
-            style={{
-              border: "1px solid var(--border-subtle)",
-              borderRadius: "var(--radius)",
-              padding: 12,
-              marginBottom: 8,
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <p className="card-title" style={{ marginBottom: 2 }}>{entry.effectiveAmountOz} oz</p>
-                <p className="meta">
-                  {new Date(entry.recordedAt).toLocaleTimeString()}
-                  {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                </p>
-              </div>
-              <button
-                className="btn-primary"
-                style={{ background: "var(--surface-2)", width: "auto", padding: "8px 14px" }}
-                onClick={() => {
-                  setCorrectingId(entry.headEventId);
-                  setCorrectionInput(String(entry.effectiveAmountOz));
-                  setError(null);
-                }}
-              >
-                CORRECT
-              </button>
-            </div>
-            {correctingId === entry.headEventId && (
-              <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                <input
-                  type="number"
-                  value={correctionInput}
-                  onChange={(e) => setCorrectionInput(e.target.value)}
-                  className="input" style={{ flex: 1 }}
-                />
-                <button
-                  className="btn-primary"
-                  style={{ width: "auto", padding: "10px 16px" }}
-                  disabled={busy}
-                  onClick={() => void handleCorrect(entry)}
-                >
-                  SAVE
-                </button>
+                ))}
               </div>
             )}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
