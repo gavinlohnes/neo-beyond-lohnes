@@ -35,6 +35,25 @@ export async function suggestTemplateForNextWorkout(): Promise<WorkoutTemplateId
   return suggestNextTemplate(last ? (last.templateId as WorkoutTemplateId) : null);
 }
 
+/**
+ * Phase 6 (TRAIN redesign), item 2: purely for explaining WHY a template
+ * is suggested — which prior session's rotation-advancing result the
+ * current suggestion is actually based on, or null if nothing has ever
+ * advanced yet (so the UI can say "first in rotation" instead of
+ * inventing a false "after C"). Does not change
+ * suggestTemplateForNextWorkout's own behavior, shape, or the extensive
+ * existing test coverage asserting its bare WorkoutTemplateId return —
+ * this is a separate, additive query reusing the same filter.
+ */
+export async function getLastAdvancingTemplate(): Promise<WorkoutTemplateId | null> {
+  const sessions = await db.workoutSessions.toArray();
+  const advancing = sessions
+    .filter((s) => doesSessionAdvanceRotation(s.sessionType as SessionType, s.status as WorkoutSessionStatus))
+    .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
+  const last = advancing.at(-1);
+  return last ? (last.templateId as WorkoutTemplateId) : null;
+}
+
 export async function getPerformedSets(sessionId: string): Promise<PerformedSet[]> {
   const sets = await db.performedSets.where("sessionId").equals(sessionId).toArray();
   return sets as unknown as PerformedSet[];
@@ -76,4 +95,39 @@ export async function getProgressionSuggestion(
     }
   }
   return { recommendation: "NO_HISTORY", reason: "No prior performance recorded for this exercise in this context yet." };
+}
+
+export interface LastSetInfo {
+  weight: number;
+  reps: number;
+}
+
+/**
+ * Phase 6 (TRAIN redesign), item 4: the most recently performed
+ * (non-skipped) values for this exercise in this exact (templateId,
+ * sessionType) context — used only to pre-fill/suggest a NEW set's
+ * inputs, never to write anything. Same "most recent matching session"
+ * walk as getProgressionSuggestion, but returns the actual weight/reps
+ * rather than an advisory recommendation — progression's lastWeight
+ * alone doesn't carry reps, and pre-filling needs both.
+ */
+export async function getLastPerformedSetForExercise(
+  templateId: WorkoutTemplateId,
+  sessionType: "STANDARD" | "REDUCED",
+  exerciseId: string,
+): Promise<LastSetInfo | undefined> {
+  const sessions = (await db.workoutSessions.toArray())
+    .filter((s) => s.templateId === templateId && s.sessionType === sessionType && s.status !== "ACTIVE")
+    .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
+
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    const sets = (await getPerformedSets(sessions[i]!.id))
+      .filter((s) => s.exerciseId === exerciseId && !s.skipped)
+      .sort((a, b) => a.setNumber - b.setNumber);
+    if (sets.length > 0) {
+      const first = sets[0]!;
+      return { weight: first.weight, reps: first.reps };
+    }
+  }
+  return undefined;
 }

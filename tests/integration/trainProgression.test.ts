@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/persistence/db";
 import { startDay } from "../../src/application/commands";
 import { completeWorkout, logSet, skipSet, startWorkout } from "../../src/application/trainCommands";
-import { getProgressionSuggestion } from "../../src/application/trainQueries";
+import { getLastPerformedSetForExercise, getProgressionSuggestion } from "../../src/application/trainQueries";
 
 /**
  * TRAIN progression, exercised through the real command/query layer
@@ -102,5 +102,67 @@ describe("getProgressionSuggestion — real session history", () => {
 
     const result = await getProgressionSuggestion("A", "STANDARD", "machine-chest-press");
     expect(result.recommendation).toBe("HOLD");
+  });
+});
+
+/**
+ * Phase 6 (TRAIN redesign), item 4: pre-fill/suggest previous weight+reps
+ * for a new set. Separate from progression's advisory recommendation —
+ * this returns the actual last performed values, needed since
+ * ProgressionSuggestion.lastWeight alone doesn't carry reps.
+ */
+describe("getLastPerformedSetForExercise — pre-fill source for a new set", () => {
+  it("is undefined before any session has ever been logged for this exercise", async () => {
+    const result = await getLastPerformedSetForExercise("A", "STANDARD", "machine-chest-press");
+    expect(result).toBeUndefined();
+  });
+
+  it("returns the first (lowest setNumber) non-skipped set's weight/reps from the most recent matching session", async () => {
+    const day = await startDay();
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 135, 10);
+    await logSet(day.id, session.id, "machine-chest-press", 2, 135, 9);
+    await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
+
+    const result = await getLastPerformedSetForExercise("A", "STANDARD", "machine-chest-press");
+    expect(result).toEqual({ weight: 135, reps: 10 });
+  });
+
+  it("uses the MOST RECENT matching session, not an older one", async () => {
+    const day = await startDay();
+    const first = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, first.id, "machine-chest-press", 1, 100, 12);
+    await completeWorkout(day.id, first.id, "STANDARD", "COMPLETED");
+
+    const second = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, second.id, "machine-chest-press", 1, 130, 8);
+    await completeWorkout(day.id, second.id, "STANDARD", "PARTIAL");
+
+    const result = await getLastPerformedSetForExercise("A", "STANDARD", "machine-chest-press");
+    expect(result).toEqual({ weight: 130, reps: 8 });
+  });
+
+  it("skips over a skipped set number 1 and returns the first actually-performed set", async () => {
+    const day = await startDay();
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await skipSet(day.id, session.id, "machine-chest-press", 1);
+    await logSet(day.id, session.id, "machine-chest-press", 2, 125, 11);
+    await completeWorkout(day.id, session.id, "STANDARD", "PARTIAL");
+
+    const result = await getLastPerformedSetForExercise("A", "STANDARD", "machine-chest-press");
+    expect(result).toEqual({ weight: 125, reps: 11 });
+  });
+
+  it("does not cross-contaminate between different (templateId, sessionType) contexts, same as progression", async () => {
+    const day = await startDay();
+    const session = await startWorkout(day.id, "A", "REDUCED");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 135, 12);
+    await completeWorkout(day.id, session.id, "REDUCED", "COMPLETED");
+
+    expect(await getLastPerformedSetForExercise("A", "REDUCED", "machine-chest-press")).toEqual({
+      weight: 135,
+      reps: 12,
+    });
+    expect(await getLastPerformedSetForExercise("A", "STANDARD", "machine-chest-press")).toBeUndefined();
   });
 });

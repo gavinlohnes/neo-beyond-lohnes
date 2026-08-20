@@ -11,6 +11,7 @@ import {
 } from "../../src/application/trainCommands";
 import {
   getActiveWorkoutSession,
+  getLastAdvancingTemplate,
   getPerformedSets,
   suggestTemplateForNextWorkout,
 } from "../../src/application/trainQueries";
@@ -176,6 +177,31 @@ describe("A -> B -> C rotation advancement", () => {
     const c = await startWorkout(day.id, "C", "STANDARD");
     await completeWorkout(day.id, c.id, "STANDARD", "COMPLETED");
     expect(await suggestTemplateForNextWorkout()).toBe("A");
+  });
+});
+
+/**
+ * Phase 6 (TRAIN redesign), item 2: explains WHY a template is suggested
+ * without inventing false history. Additive query, doesn't touch
+ * suggestTemplateForNextWorkout's own tested behavior above.
+ */
+describe("getLastAdvancingTemplate — basis for explaining the rotation suggestion", () => {
+  it("is null when nothing has ever advanced the rotation", async () => {
+    expect(await getLastAdvancingTemplate()).toBeNull();
+  });
+
+  it("names the real template once a session has advanced the rotation", async () => {
+    const day = await startDay();
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
+    expect(await getLastAdvancingTemplate()).toBe("A");
+  });
+
+  it("does not count a non-advancing session (e.g. STANDARD PARTIAL)", async () => {
+    const day = await startDay();
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await completeWorkout(day.id, session.id, "STANDARD", "PARTIAL");
+    expect(await getLastAdvancingTemplate()).toBeNull();
   });
 });
 
