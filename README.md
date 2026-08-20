@@ -32,7 +32,8 @@ npm run test:watch   # vitest, watch mode
 ## Architecture
 
 Strict layering, enforced by convention (no framework-level boundary
-yet — see Known limitations):
+yet, e.g. a lint rule forbidding cross-layer imports — nothing has
+required one so far):
 
 - **`src/domain`** — pure types only (`BeyondDay`, `StateCheckIn`,
   `Recommendation`, `DomainEvent`, workout types). No React, no Dexie,
@@ -177,23 +178,16 @@ deadlocks `fake-indexeddb`'s internal scheduling).
 
 ## Known limitations
 
-Documented rather than fixed, per this session's scope (test-writing
-and measurement only, no new product decisions):
-
-- **`ensureActiveDay()` race**: two truly concurrent calls (e.g.
-  `Promise.all([ensureActiveDay(), ensureActiveDay()])`) can both
-  observe "no active day" before either writes, creating two ACTIVE
-  `BeyondDay` rows instead of one. Only reachable via genuine
-  concurrency — normal sequential UI usage never triggers it. Possible
-  fixes: a Dexie transaction around the read+write, or a shared
-  in-flight promise cache. See
-  `tests/integration/stabilizationRegressionSuite.test.ts`.
-- **`startWorkout()` has no existing-active-session guard**: two calls
-  for the same day create two simultaneously-ACTIVE `WorkoutSession`
-  rows. `getActiveWorkoutSession`'s most-recent-by-`startedAt` sort
-  means the UI still resolves the right one, so there's no functional
-  breakage — but the first session is orphaned ACTIVE indefinitely. A
-  data-hygiene gap, not data loss.
+- **Concurrency guards are single-tab only.** `ensureActiveDay()` and
+  `startWorkout()` (Product Experience Sprint, Phase 0) both use an
+  in-process in-flight-promise guard to prevent duplicate ACTIVE rows
+  from calls racing within one JS context — see
+  `tests/integration/stabilizationRegressionSuite.test.ts` for the
+  regression coverage. This does not protect against two different
+  browser tabs writing at the same instant; that's a materially larger
+  problem (would need the Web Locks API or an IndexedDB-transaction-based
+  cross-tab mutex) and isn't reachable through any normal single-tab
+  usage, so it's out of scope unless it's ever actually observed.
 
 ## Explicitly out of scope
 

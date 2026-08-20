@@ -30,39 +30,73 @@ async function currentCapacity(beyondDayId: string): Promise<Capacity | null> {
  * enforced here at the command layer, not just in the UI, so it can't be
  * silently bypassed by a UI bug. REDUCED and RECOVERY are always
  * RED-appropriate and never require this confirmation.
+ *
+ * Stability Gate (Product Experience Sprint, Phase 0.2): previously had
+ * no guard against an existing ACTIVE session for the same day, so two
+ * rapid/racing calls could create two simultaneously-ACTIVE
+ * WorkoutSession rows (the first orphaned forever). Now idempotent per
+ * beyondDayId — if a session is already ACTIVE, that same session is
+ * returned rather than creating (or silently discarding) another one.
+ * The existing-session check happens before the RED-override gate,
+ * since resuming an already-active session isn't "starting a new
+ * STANDARD session" and shouldn't require re-confirming an override
+ * that already applied when it was first started. A shared in-flight
+ * promise (keyed by day, same pattern as ensureActiveDay) closes the
+ * remaining read-then-write race for calls landing in the same tick.
  */
+const startWorkoutInFlight = new Map<string, Promise<WorkoutSession>>();
+
 export async function startWorkout(
   beyondDayId: string,
   templateId: WorkoutTemplateId | null,
   sessionType: SessionType,
   options: { overrideConfirmed?: boolean } = {},
 ): Promise<WorkoutSession> {
-  if (sessionType === "STANDARD") {
-    const capacity = await currentCapacity(beyondDayId);
-    assertRedOverrideConfirmed(capacity, options.overrideConfirmed ?? false);
+  const inFlight = startWorkoutInFlight.get(beyondDayId);
+  if (inFlight) return inFlight;
+
+  const attempt = (async () => {
+    const existingActive = await db.workoutSessions
+      .where("beyondDayId")
+      .equals(beyondDayId)
+      .filter((s) => s.status === "ACTIVE")
+      .first();
+    if (existingActive) return existingActive;
+
+    if (sessionType === "STANDARD") {
+      const capacity = await currentCapacity(beyondDayId);
+      assertRedOverrideConfirmed(capacity, options.overrideConfirmed ?? false);
+    }
+
+    const id = newId();
+    const session: WorkoutSession = {
+      id,
+      schemaVersion: 1,
+      beyondDayId,
+      templateId: templateId ?? "",
+      sessionType,
+      status: "ACTIVE",
+      startedAt: new Date().toISOString(),
+    };
+    await db.workoutSessions.add(session);
+
+    const correlationId = newId();
+    await logEvent(
+      beyondDayId,
+      "WORKOUT_STARTED",
+      { commandId: correlationId, sessionId: id, templateId: session.templateId, sessionType },
+      "USER",
+      correlationId,
+    );
+    return session;
+  })();
+
+  startWorkoutInFlight.set(beyondDayId, attempt);
+  try {
+    return await attempt;
+  } finally {
+    startWorkoutInFlight.delete(beyondDayId);
   }
-
-  const id = newId();
-  const session: WorkoutSession = {
-    id,
-    schemaVersion: 1,
-    beyondDayId,
-    templateId: templateId ?? "",
-    sessionType,
-    status: "ACTIVE",
-    startedAt: new Date().toISOString(),
-  };
-  await db.workoutSessions.add(session);
-
-  const correlationId = newId();
-  await logEvent(
-    beyondDayId,
-    "WORKOUT_STARTED",
-    { commandId: correlationId, sessionId: id, templateId: session.templateId, sessionType },
-    "USER",
-    correlationId,
-  );
-  return session;
 }
 
 /**

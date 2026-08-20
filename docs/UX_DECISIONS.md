@@ -16,9 +16,10 @@ signal this register needs updating, not that the code is wrong.
 - **Lazy day creation.** No day exists until the first action of the day
   needs one; `ensureActiveDay()` creates it on demand rather than
   requiring an explicit "start my day" ritual. [queries.ts](../src/application/queries.ts)
-- **One ACTIVE `BeyondDay` at a time**, by convention/invariant — see
-  Known Limitations in the README for the one case (true concurrent
-  calls) where this isn't currently enforced.
+- **One ACTIVE `BeyondDay` at a time**, enforced by `ensureActiveDay()`'s
+  in-flight-promise guard (Product Experience Sprint, Phase 0) — see
+  README "Known limitations" for the one narrower case (true
+  cross-tab concurrency) this doesn't cover.
 - **Sleep/Day-Ownership Model** (locked): sleep logs carry a `kind` field,
   `PRIMARY` or `SUPPLEMENTAL`. Only a `PRIMARY` sleep log can trigger the
   "did your day end?" suggestion (`shouldSuggestEndDay`); naps and other

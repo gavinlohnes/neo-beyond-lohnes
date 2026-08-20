@@ -48,11 +48,32 @@ export async function startDay(): Promise<BeyondDay> {
  * START DAY click first. Explicit startDay() remains available and
  * unchanged for anyone who prefers to start deliberately; this is just
  * the fallback every write command now goes through first.
+ *
+ * Stability Gate (Product Experience Sprint, Phase 0.1): the read
+ * (check for an existing ACTIVE day) and the write (startDay() if none)
+ * are not atomic, so two truly concurrent calls could previously both
+ * observe "none exists" before either wrote, creating two ACTIVE days.
+ * Fixed with a shared in-flight promise: the first call's read+write is
+ * memoized synchronously, so any call landing while it's still pending
+ * joins the same promise instead of racing it. This only protects
+ * concurrency within one JS context (i.e. one browser tab) — the only
+ * kind that's actually reachable here, since ensureActiveDay is called
+ * from application code, never across tabs/workers.
  */
+let ensureActiveDayInFlight: Promise<BeyondDay> | null = null;
+
 export async function ensureActiveDay(): Promise<BeyondDay> {
-  const existing = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
-  if (existing) return existing;
-  return startDay();
+  if (ensureActiveDayInFlight) return ensureActiveDayInFlight;
+  ensureActiveDayInFlight = (async () => {
+    try {
+      const existing = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
+      if (existing) return existing;
+      return await startDay();
+    } finally {
+      ensureActiveDayInFlight = null;
+    }
+  })();
+  return ensureActiveDayInFlight;
 }
 
 /**

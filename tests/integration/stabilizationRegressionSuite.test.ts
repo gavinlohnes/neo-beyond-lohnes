@@ -15,7 +15,7 @@ import {
   getRecommendationDecision,
   shouldSuggestEndDay,
 } from "../../src/application/queries";
-import { startWorkout } from "../../src/application/trainCommands";
+import { completeWorkout, startWorkout } from "../../src/application/trainCommands";
 import { getActiveWorkoutSession, getLastAdvancingTemplate, suggestTemplateForNextWorkout } from "../../src/application/trainQueries";
 import { getHistoryDays } from "../../src/application/historyQueries";
 import { generateDayHistory } from "../helpers/generateHistory";
@@ -39,7 +39,7 @@ import { generateDayHistory } from "../helpers/generateHistory";
  *  8. Interrupted workout .............. tests/integration/trainWorkout.test.ts
  *  9. Hydration correction chain ....... tests/integration/hydrationCorrection.test.ts
  * 10. Corrections generally ............ tests/integration/bodyCorrection.test.ts (sleep/protein/bodyweight) + hydrationCorrection.test.ts (water)
- * 11. Rapid/concurrent repeated submission this file, below (real gap found)
+ * 11. Rapid/concurrent repeated submission this file, below (two real gaps found in Priority 2, fixed in the Product Experience Sprint Phase 0 — ensureActiveDay and startWorkout are now both concurrency-safe)
  * 12. Failed restore ................... tests/integration/restoreWiring.test.ts, tests/compat/legacyBackupParsing.test.ts
  * 13. Successful restore ............... tests/integration/restoreWiring.test.ts, tests/compat/fixtureImport.test.ts
  * 14. Seven constrained days ........... tests/ui/minimumDayCopy.test.ts (copy-layer) + this file (domain-layer, below)
@@ -59,22 +59,33 @@ afterEach(async () => {
 
 describe("Rapid/concurrent repeated submission", () => {
   it(
-    "REAL BUG FOUND: ensureActiveDay called truly concurrently (Promise.all) creates TWO ACTIVE days, " +
-      "violating the documented 'only one BeyondDay should ever be ACTIVE at a time' invariant " +
-      "(application/queries.ts's getActiveDay comment). Root cause: ensureActiveDay's read-then-write " +
-      "(check for an existing ACTIVE day, then startDay() if none) has no transaction/lock, so two " +
-      "calls landing in the same tick can both read 'none exists' before either writes. This is a real " +
-      "correctness gap, not a locked-behavior question — documented here rather than silently fixed, " +
-      "since Priority 2 is scoped to test-writing only; flagged prominently in the Build Log for Gavin's " +
-      "decision on the right fix (e.g. a Dexie transaction around the read+write, or a shared in-flight " +
-      "promise). In practice this needs two calls to genuinely race in the same microtask window — normal " +
-      "sequential UI usage (the only way ensureActiveDay is ever actually called today) does not trigger it.",
+    "FIXED (Product Experience Sprint, Phase 0.1): ensureActiveDay called truly concurrently " +
+      "(Promise.all) no longer creates two ACTIVE days. A shared in-flight promise means the second " +
+      "call joins the first call's read+write instead of racing it — both calls resolve to the exact " +
+      "same BeyondDay.",
     async () => {
-      await Promise.all([ensureActiveDay(), ensureActiveDay()]);
+      const [a, b] = await Promise.all([ensureActiveDay(), ensureActiveDay()]);
       const activeDays = await db.beyondDays.filter((d) => d.status === "ACTIVE").toArray();
-      expect(activeDays.length).toBeGreaterThanOrEqual(1); // current behavior: often 2, sometimes 1 depending on scheduling
+      expect(activeDays).toHaveLength(1);
+      expect(a.id).toBe(b.id);
+      expect(a.id).toBe(activeDays[0]!.id);
     },
   );
+
+  it("three-way concurrent ensureActiveDay also converges on a single ACTIVE day", async () => {
+    const results = await Promise.all([ensureActiveDay(), ensureActiveDay(), ensureActiveDay()]);
+    const activeDays = await db.beyondDays.filter((d) => d.status === "ACTIVE").toArray();
+    expect(activeDays).toHaveLength(1);
+    expect(new Set(results.map((d) => d.id))).toEqual(new Set([activeDays[0]!.id]));
+  });
+
+  it("ensureActiveDay is not left permanently locked after a race — a later sequential call still works normally", async () => {
+    const [first] = await Promise.all([ensureActiveDay(), ensureActiveDay()]);
+    await endDay(first.id);
+    const next = await ensureActiveDay();
+    expect(next.id).not.toBe(first.id);
+    expect(await getActiveDay()).toEqual(expect.objectContaining({ id: next.id }));
+  });
 
   it("startDay called back-to-back auto-closes the first every time, never leaving two ACTIVE days", async () => {
     const first = await startDay();
@@ -86,33 +97,64 @@ describe("Rapid/concurrent repeated submission", () => {
   });
 
   it(
-    "documents current behavior: startWorkout has no existing-active-session guard, so two rapid " +
-      "calls DO create two ACTIVE sessions — getActiveWorkoutSession still resolves correctly to the " +
-      "most recent one (same defensive pattern as getActiveDay). Not a data-loss bug, but a real gap: " +
-      "the first session is orphaned ACTIVE forever unless manually stopped. Flagged, not fixed — " +
-      "changing startWorkout's behavior is a product decision outside this session's authorization.",
+    "FIXED (Product Experience Sprint, Phase 0.2): startWorkout is now idempotent per BeyondDay — " +
+      "a second call while a session is already ACTIVE returns the SAME session (same id, original " +
+      "templateId 'A', not the second call's requested 'B') rather than creating an orphaned second " +
+      "ACTIVE row. Nothing is silently discarded: the first session is exactly what's returned.",
     async () => {
       const day = await startDay();
       const first = await startWorkout(day.id, "A", "STANDARD");
-      // startedAt has millisecond resolution; a real gap avoids a tie
-      // that would make "most recent" ambiguous — the same timing
-      // caveat already documented elsewhere in this suite, unrelated to
-      // the actual gap this test is about.
-      await new Promise((resolve) => setTimeout(resolve, 5));
       const second = await startWorkout(day.id, "B", "STANDARD");
+
+      expect(second.id).toBe(first.id);
+      expect(second.templateId).toBe("A");
 
       const activeSessions = await db.workoutSessions
         .where("beyondDayId")
         .equals(day.id)
         .filter((s) => s.status === "ACTIVE")
         .toArray();
-      expect(activeSessions).toHaveLength(2);
+      expect(activeSessions).toHaveLength(1);
 
       const resumed = await getActiveWorkoutSession(day.id);
-      expect(resumed!.id).toBe(second.id);
-      expect(first.id).not.toBe(second.id);
+      expect(resumed!.id).toBe(first.id);
     },
   );
+
+  it("truly concurrent startWorkout calls (Promise.all) for the same day also converge on one ACTIVE session", async () => {
+    const day = await startDay();
+    const [a, b, c] = await Promise.all([
+      startWorkout(day.id, "A", "STANDARD"),
+      startWorkout(day.id, "B", "STANDARD"),
+      startWorkout(day.id, "C", "STANDARD"),
+    ]);
+    expect(new Set([a.id, b.id, c.id]).size).toBe(1);
+
+    const activeSessions = await db.workoutSessions
+      .where("beyondDayId")
+      .equals(day.id)
+      .filter((s) => s.status === "ACTIVE")
+      .toArray();
+    expect(activeSessions).toHaveLength(1);
+  });
+
+  it("starting a new workout after the active one completes is unaffected by the idempotency guard", async () => {
+    const day = await startDay();
+    const first = await startWorkout(day.id, "A", "STANDARD");
+    await completeWorkout(day.id, first.id, "STANDARD", "COMPLETED");
+
+    const second = await startWorkout(day.id, "B", "STANDARD");
+    expect(second.id).not.toBe(first.id);
+    expect(second.templateId).toBe("B");
+
+    const activeSessions = await db.workoutSessions
+      .where("beyondDayId")
+      .equals(day.id)
+      .filter((s) => s.status === "ACTIVE")
+      .toArray();
+    expect(activeSessions).toHaveLength(1);
+    expect(activeSessions[0]!.id).toBe(second.id);
+  });
 });
 
 describe("Storage-failure behavior", () => {
