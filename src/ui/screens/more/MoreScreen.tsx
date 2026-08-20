@@ -115,8 +115,8 @@ export function MoreScreen() {
     return (
       <div className="screen">
         <button
-          className="btn-primary"
-          style={{ width: "auto", padding: "8px 14px", background: "var(--surface-2)", marginBottom: 12 }}
+          className="btn-secondary"
+          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
           onClick={() => setView("MENU")}
         >
           ← BACK TO MORE
@@ -155,7 +155,7 @@ export function MoreScreen() {
           Quarterly archival via the device's native share sheet — you pick the destination (e.g. Drive).
           Data stays on-device; this never deletes anything.
         </p>
-        <button className="btn-primary" style={{ background: "var(--surface-2)" }} disabled={busy} onClick={() => void handleArchive()}>
+        <button className="btn-secondary" disabled={busy} onClick={() => void handleArchive()}>
           SHARE / ARCHIVE
         </button>
         {archiveStatus && <p className="meta" style={{ marginTop: 8 }}>{archiveStatus}</p>}
@@ -203,8 +203,7 @@ export function MoreScreen() {
                 CONFIRM REPLACE
               </button>
               <button
-                className="btn-primary"
-                style={{ background: "var(--surface-2)" }}
+                className="btn-secondary"
                 disabled={busy}
                 onClick={handleCancelRestore}
               >

@@ -415,15 +415,7 @@ export function TrainScreen() {
               min={0}
               value={recoveryMinutes}
               onChange={(e) => setRecoveryMinutes(Math.max(0, Number(e.target.value) || 0))}
-              style={{
-                width: "100%",
-                background: "var(--surface-2)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "var(--radius)",
-                color: "var(--text-1)",
-                padding: "10px 12px",
-                fontSize: 16,
-              }}
+              className="input"
             />
           </div>
           <p className="meta" style={{ marginBottom: 12 }}>{describeRecoveryPreview(recoveryMinutes)}</p>
@@ -474,16 +466,8 @@ export function TrainScreen() {
                 value={subs[ex.exerciseId] ?? ""}
                 onChange={(e) => setSubs((prev) => ({ ...prev, [ex.exerciseId]: e.target.value }))}
                 disabled={hasLoggedAnySet}
-                style={{
-                  width: "100%",
-                  background: "var(--surface-2)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius)",
-                  color: "var(--text-1)",
-                  padding: "8px 10px",
-                  fontSize: 16,
-                  marginBottom: 8,
-                }}
+                className="input"
+                style={{ marginBottom: 8 }}
               />
               {!hasLoggedAnySet && recentSubstitutions[ex.exerciseId] && recentSubstitutions[ex.exerciseId]!.length > 0 && (
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>

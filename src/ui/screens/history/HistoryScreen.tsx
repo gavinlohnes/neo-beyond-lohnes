@@ -28,11 +28,11 @@ export function HistoryScreen() {
         Every day and every event, exactly as it happened. Read-only.
       </p>
 
-      {loading && <p className="meta">Loading…</p>}
+      {loading && <p className="empty-state">Loading…</p>}
       {!loading && days.length === 0 && (
-        <div className="card">
-          <p className="card-body">No days yet.</p>
-        </div>
+        <p className="empty-state">
+          No days yet. Your first check-in, log, or workout will start today's entry here.
+        </p>
       )}
 
       {days.map(({ day, events }) => {
@@ -58,8 +58,8 @@ export function HistoryScreen() {
               </div>
               <button
                 type="button"
-                className="btn-primary"
-                style={{ width: "auto", padding: "8px 14px", background: "var(--surface-2)" }}
+                className="btn-secondary"
+                style={{ width: "auto", padding: "8px 14px" }}
                 onClick={(e) => {
                   e.stopPropagation();
                   setExpanded((prev) => ({ ...prev, [day.id]: !isOpen }));

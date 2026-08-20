@@ -108,6 +108,124 @@ button, input {
   cursor: default;
 }
 
+/*
+ * P2 (Product Experience Sprint) design-system additions below. Each
+ * primitive here replaces a pattern that was already duplicated ad hoc
+ * (inline style objects) across three or more screens — see the P2
+ * checkpoint report for the specific call sites. Nothing here is
+ * speculative: every class exists because real repeated code asked
+ * for it.
+ */
+
+/* Secondary action — same shape/sizing as .btn-primary, quieter
+   surface. For CANCEL/BACK/dismiss-style actions that share a row
+   with a primary action, never for a primary call to action itself. */
+.btn-secondary {
+  width: 100%;
+  background: var(--surface-2);
+  color: var(--text-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 14px var(--space-4);
+  font-size: 16px;
+  font-weight: 600;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.btn-secondary:active {
+  filter: brightness(1.15);
+}
+
+.btn-secondary:disabled {
+  color: var(--text-3);
+  cursor: default;
+}
+
+/* Text/number input — the exact style previously copy-pasted as a
+   local `inputStyle` object in BodyScreen/TrainScreen/TodayScreen. */
+.input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  color: var(--text-1);
+  padding: 10px 12px;
+  font-size: 16px;
+  min-height: 44px;
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+/* Selectable chip — the "pick one of N" pattern used by check-in
+   sliders, RESET intensity, SHIFT DOWN duration presets, and quick-add
+   amounts: unselected sits on --surface-2, selected switches to
+   --accent. This is the same visual rule those screens already
+   hand-roll per callsite; formalized here for the P3-P5 rebuilds to
+   consume as each screen's own phase touches this markup. */
+.chip {
+  flex: 1;
+  width: auto;
+  min-height: 44px;
+  background: var(--surface-2);
+  color: var(--text-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip--selected {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Empty state — a distinct, explanatory placeholder, never a bare
+   "NO DATA". Reserves comfortable vertical space so its arrival
+   doesn't cause a layout jump once real content replaces it. */
+.empty-state {
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+  color: var(--text-3);
+  font-size: 16px;
+}
+
+/* Restrained system motif (Decision Register: "core diamond glyph, no
+   bat-wing mark" — same shape as the app icon, scripts/generate-icons.mjs).
+   A small solid marker for active selection / current recommendation /
+   navigation focus / completion. Never decorative wallpaper — one
+   instance per meaningful state, not per row. */
+.diamond {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+/* Accessibility outranks aesthetic purity: every focusable element
+   gets a visible ring on keyboard/switch focus, never on mouse/touch
+   (":focus-visible", not ":focus"). */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .meta {
   font-family: var(--font-mono);
   font-size: 16px;

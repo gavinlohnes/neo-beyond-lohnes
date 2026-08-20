@@ -38,17 +38,28 @@ export function App() {
           <button
             key={t}
             onClick={() => setTab(t)}
+            aria-current={tab === t ? "page" : undefined}
             style={{
               flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 4,
               background: "none",
               border: "none",
-              padding: "14px 0",
+              padding: "12px 0",
+              minHeight: 44,
               color: tab === t ? "var(--accent)" : "var(--text-2)",
               fontWeight: tab === t ? 700 : 400,
               fontSize: 16,
               letterSpacing: "0.04em",
             }}
           >
+            <span
+              aria-hidden="true"
+              className="diamond"
+              style={{ background: tab === t ? "var(--accent)" : "transparent", visibility: tab === t ? "visible" : "hidden" }}
+            />
             {t}
           </button>
         ))}

@@ -41,16 +41,6 @@ import {
   WATER_QUICK_ADD_OZ,
 } from "./bodyScreenCopy";
 
-const inputStyle = {
-  width: "100%",
-  background: "var(--surface-2)",
-  border: "1px solid var(--border-subtle)",
-  borderRadius: "var(--radius)",
-  color: "var(--text-1)",
-  padding: "10px 12px",
-  fontSize: 16,
-} as const;
-
 type Confirmation = { message: string; headEventId: string } | null;
 
 export function BodyScreen() {
@@ -391,7 +381,7 @@ export function BodyScreen() {
                 setSleepHoursInput(e.target.value);
                 setSleepPendingConfirm(false);
               }}
-              style={inputStyle}
+              className="input"
             />
           </div>
           <div className="field" style={{ flex: 1, marginBottom: 0 }}>
@@ -405,7 +395,7 @@ export function BodyScreen() {
                 setSleepMinutesInput(e.target.value);
                 setSleepPendingConfirm(false);
               }}
-              style={inputStyle}
+              className="input"
             />
           </div>
         </div>
@@ -472,11 +462,11 @@ export function BodyScreen() {
                   <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
                     <div className="field" style={{ flex: 1, marginBottom: 0 }}>
                       <label><span>Hours</span></label>
-                      <input type="number" min={0} value={sleepCorrectionHours} onChange={(e) => setSleepCorrectionHours(e.target.value)} style={inputStyle} />
+                      <input type="number" min={0} value={sleepCorrectionHours} onChange={(e) => setSleepCorrectionHours(e.target.value)} className="input" />
                     </div>
                     <div className="field" style={{ flex: 1, marginBottom: 0 }}>
                       <label><span>Minutes</span></label>
-                      <input type="number" min={0} max={59} value={sleepCorrectionMinutes} onChange={(e) => setSleepCorrectionMinutes(e.target.value)} style={inputStyle} />
+                      <input type="number" min={0} max={59} value={sleepCorrectionMinutes} onChange={(e) => setSleepCorrectionMinutes(e.target.value)} className="input" />
                     </div>
                     <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveSleepCorrection()}>
                       SAVE
@@ -505,7 +495,7 @@ export function BodyScreen() {
               setBodyweightInput(e.target.value);
               setBodyweightPendingConfirm(false);
             }}
-            style={inputStyle}
+            className="input"
           />
         </div>
         {bodyweightPendingConfirm && (
@@ -565,7 +555,7 @@ export function BodyScreen() {
                 </div>
                 {bodyweightCorrectingId === entry.headEventId && (
                   <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                    <input type="number" value={bodyweightCorrectionInput} onChange={(e) => setBodyweightCorrectionInput(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                    <input type="number" value={bodyweightCorrectionInput} onChange={(e) => setBodyweightCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
                     <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
                       SAVE
                     </button>
@@ -594,7 +584,7 @@ export function BodyScreen() {
               setProteinInput(e.target.value);
               setProteinPendingConfirm(false);
             }}
-            style={inputStyle}
+            className="input"
           />
         </div>
         {proteinPendingConfirm && (
@@ -654,7 +644,7 @@ export function BodyScreen() {
                 </div>
                 {proteinCorrectingId === entry.headEventId && (
                   <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                    <input type="number" value={proteinCorrectionInput} onChange={(e) => setProteinCorrectionInput(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                    <input type="number" value={proteinCorrectionInput} onChange={(e) => setProteinCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
                     <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
                       SAVE
                     </button>
@@ -697,7 +687,7 @@ export function BodyScreen() {
             min={0}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            style={inputStyle}
+            className="input"
           />
         </div>
         <button className="btn-primary" disabled={busy} onClick={() => void handleLog()}>
@@ -768,7 +758,7 @@ export function BodyScreen() {
                   type="number"
                   value={correctionInput}
                   onChange={(e) => setCorrectionInput(e.target.value)}
-                  style={{ ...inputStyle, flex: 1 }}
+                  className="input" style={{ flex: 1 }}
                 />
                 <button
                   className="btn-primary"

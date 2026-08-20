@@ -567,15 +567,8 @@ export function TodayScreen() {
                   const v = Number(e.target.value);
                   setShiftDownDuration(Number.isNaN(v) || v < 1 ? 1 : v);
                 }}
-                style={{
-                  flex: 1,
-                  background: "var(--surface-2)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius)",
-                  color: "var(--text-1)",
-                  padding: "8px 10px",
-                  fontSize: 16,
-                }}
+                className="input"
+                style={{ flex: 1 }}
               />
               <span className="meta">min</span>
             </div>
@@ -656,15 +649,8 @@ export function TodayScreen() {
                         placeholder="oz"
                         value={mdWaterInput}
                         onChange={(e) => setMdWaterInput(e.target.value)}
-                        style={{
-                          flex: 1,
-                          background: "var(--surface-2)",
-                          border: "1px solid var(--border-subtle)",
-                          borderRadius: "var(--radius)",
-                          color: "var(--text-1)",
-                          padding: "8px 10px",
-                          fontSize: 16,
-                        }}
+                        className="input"
+                        style={{ flex: 1 }}
                       />
                       <button
                         className="btn-primary"
@@ -684,15 +670,8 @@ export function TodayScreen() {
                         placeholder="g"
                         value={mdProteinInput}
                         onChange={(e) => setMdProteinInput(e.target.value)}
-                        style={{
-                          flex: 1,
-                          background: "var(--surface-2)",
-                          border: "1px solid var(--border-subtle)",
-                          borderRadius: "var(--radius)",
-                          color: "var(--text-1)",
-                          padding: "8px 10px",
-                          fontSize: 16,
-                        }}
+                        className="input"
+                        style={{ flex: 1 }}
                       />
                       <button
                         className="btn-primary"

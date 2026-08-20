@@ -26,4 +26,16 @@
   --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
   --font-body: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Product Experience Sprint, P2: interaction motion should explain a
+     state change, never decorate. 150ms is the default for most
+     transitions (expand/collapse, selection); 220ms for larger surface
+     replacement (e.g. a recommendation card swapping content). Both
+     sit inside the 100-250ms target range. Actual `transition`
+     declarations are added per-component as each screen's phase wires
+     up real motion (P8) — these are just the shared numbers so every
+     component that does agrees on the same feel. */
+  --motion-fast: 150ms;
+  --motion-base: 220ms;
+  --motion-easing: ease-out;
 }
