@@ -58,7 +58,7 @@ export function App() {
             <span
               aria-hidden="true"
               className="diamond"
-              style={{ background: tab === t ? "var(--accent)" : "transparent", visibility: tab === t ? "visible" : "hidden" }}
+              style={{ opacity: tab === t ? 1 : 0 }}
             />
             {t}
           </button>

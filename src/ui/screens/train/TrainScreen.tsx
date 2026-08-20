@@ -452,14 +452,14 @@ export function TrainScreen() {
   const currentSetNumber = currentExercise ? nextUnloggedSetNumber(currentExercise) : null;
 
   return (
-    <div className="screen">
+    <div className="screen fade-in">
       <p className="eyebrow">BEYOND // TRAIN</p>
       <h1 className="title">Train</h1>
 
       <ConfirmPanel />
 
       {completionSummary && (
-        <div className="card card--action">
+        <div className="card card--action fade-in">
           <p className="eyebrow" style={{ marginBottom: 4 }}>
             {completionSummary.status === "COMPLETED" ? "WORKOUT COMPLETE" : "WORKOUT SAVED — PARTIAL"}
           </p>
@@ -611,7 +611,7 @@ export function TrainScreen() {
               the set they're on right now, and nothing else competing
               for attention. */}
           {currentExercise && (
-            <div>
+            <div key={currentExercise.exerciseId} className="fade-in">
               <p className="meta" style={{ marginBottom: 2 }}>
                 Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>

@@ -345,7 +345,7 @@ export function BodyScreen() {
   }
 
   return (
-    <div className="screen">
+    <div className="screen fade-in">
       <p className="eyebrow">BODY // ESSENTIALS</p>
       <h1 className="title">Readiness inputs</h1>
       <p className="card-body" style={{ marginBottom: 16 }}>
@@ -385,7 +385,7 @@ export function BodyScreen() {
           LOG WATER
         </button>
         {waterConfirmation && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+          <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
             <p className="meta">{waterConfirmation.message}</p>
             <button
               className="btn-secondary"
@@ -412,7 +412,7 @@ export function BodyScreen() {
               {waterHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES ({entries.length})
             </button>
             {waterHistoryOpen && (
-              <div style={{ marginTop: 12 }}>
+              <div className="fade-in" style={{ marginTop: 12 }}>
                 <p className="card-body" style={{ marginBottom: 12 }}>
                   Correcting an entry keeps the original and shows the corrected number — nothing is deleted.
                 </p>
@@ -552,7 +552,7 @@ export function BodyScreen() {
           </button>
         )}
         {sleepConfirmation && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+          <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
             <p className="meta">{sleepConfirmation.message}</p>
             <button
               className="btn-secondary"
@@ -573,7 +573,7 @@ export function BodyScreen() {
               {sleepHistoryOpen ? "HIDE" : "SHOW"} TODAY'S SLEEP ({sleepEntries.length})
             </button>
             {sleepHistoryOpen && (
-              <div style={{ marginTop: 12 }}>
+              <div className="fade-in" style={{ marginTop: 12 }}>
                 {sleepEntries.map((entry) => (
                   <div
                     key={entry.rootEventId}
@@ -664,7 +664,7 @@ export function BodyScreen() {
           </button>
         )}
         {bodyweightConfirmation && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+          <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
             <p className="meta">{bodyweightConfirmation.message}</p>
             <button
               className="btn-secondary"
@@ -685,7 +685,7 @@ export function BodyScreen() {
               {bodyweightHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES ({bodyweightEntries.length})
             </button>
             {bodyweightHistoryOpen && (
-              <div style={{ marginTop: 12 }}>
+              <div className="fade-in" style={{ marginTop: 12 }}>
                 {bodyweightEntries.map((entry) => (
                   <div
                     key={entry.rootEventId}
@@ -764,7 +764,7 @@ export function BodyScreen() {
           </button>
         )}
         {proteinConfirmation && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+          <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
             <p className="meta">{proteinConfirmation.message}</p>
             <button
               className="btn-secondary"
@@ -785,7 +785,7 @@ export function BodyScreen() {
               {proteinHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES ({proteinEntries.length})
             </button>
             {proteinHistoryOpen && (
-              <div style={{ marginTop: 12 }}>
+              <div className="fade-in" style={{ marginTop: 12 }}>
                 {proteinEntries.map((entry) => (
                   <div
                     key={entry.rootEventId}

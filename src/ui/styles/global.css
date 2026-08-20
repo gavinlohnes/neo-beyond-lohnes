@@ -220,6 +220,7 @@ button, input {
   background: var(--accent);
   transform: rotate(45deg);
   flex-shrink: 0;
+  transition: opacity var(--motion-fast) var(--motion-easing);
 }
 
 /* Accessibility outranks aesthetic purity: every focusable element
@@ -228,6 +229,28 @@ button, input {
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* P8 (motion/interaction polish): one restrained entrance animation,
+   applied only where content genuinely just changed — an expanded
+   disclosure, a swapped recommendation, a just-arrived completion
+   summary. Never applied to content that was already on screen; never
+   looping. React `key`-based remounts are what make this re-trigger on
+   a state REPLACEMENT (e.g. key={recommendation.id}) rather than every
+   re-render. */
+@keyframes beyond-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: beyond-fade-in var(--motion-base) var(--motion-easing);
 }
 
 @media (prefers-reduced-motion: reduce) {

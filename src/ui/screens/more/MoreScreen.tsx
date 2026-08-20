@@ -113,7 +113,7 @@ export function MoreScreen() {
 
   if (view === "HISTORY") {
     return (
-      <div className="screen">
+      <div className="screen fade-in">
         <button
           className="btn-secondary"
           style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
@@ -127,7 +127,7 @@ export function MoreScreen() {
   }
 
   return (
-    <div className="screen">
+    <div className="screen fade-in">
       <p className="eyebrow">MORE</p>
       <h1 className="title">Foundation</h1>
 

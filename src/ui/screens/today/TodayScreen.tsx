@@ -473,7 +473,11 @@ export function TodayScreen() {
       );
     }
     return (
-      <div className="card" style={prominent || active ? { borderColor: "var(--accent)" } : undefined}>
+      <div
+        key={active ? "in-progress" : "picker"}
+        className="card fade-in"
+        style={prominent || active ? { borderColor: "var(--accent)" } : undefined}
+      >
         <p className="eyebrow" style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined }}>
           {active ? "● RESET IN PROGRESS" : prominent ? "RECOMMENDED — RESET" : "RESET"}
         </p>
@@ -542,7 +546,11 @@ export function TodayScreen() {
       );
     }
     return (
-      <div className="card" style={prominent || active ? { borderColor: "var(--accent)" } : undefined}>
+      <div
+        key={active ? "in-progress" : "picker"}
+        className="card fade-in"
+        style={prominent || active ? { borderColor: "var(--accent)" } : undefined}
+      >
         <p className="eyebrow" style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined }}>
           {active ? "● SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
         </p>
@@ -741,7 +749,7 @@ export function TodayScreen() {
   const evidenceBasis = describeEvidenceBasis(checkIn !== null);
 
   return (
-    <div className="screen">
+    <div className="screen fade-in">
       <p className="eyebrow">BEYOND // TODAY</p>
       <h1 className="title">Command</h1>
 
@@ -759,7 +767,7 @@ export function TodayScreen() {
           the screen. Everything else on TODAY is deliberately quieter
           than this card. */}
       {day && recommendation && (
-        <div className="card card--action">
+        <div key={recommendation.id} className="card card--action fade-in">
           <p className="meta" style={{ marginBottom: 12 }}>
             {day.workContext === "UNKNOWN" ? "Context not set yet" : day.workContext === "WORK" ? "Working today" : "Off today"}
             {capacityResult ? ` · ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}` : ""}
@@ -842,7 +850,7 @@ export function TodayScreen() {
         </p>
 
         {checkIn && !checkInFormOpen ? (
-          <>
+          <div key="summary" className="fade-in">
             <p className="card-body" style={{ marginBottom: 8 }}>
               Last check-in: {describeCheckInValues(checkIn)}
             </p>
@@ -852,9 +860,9 @@ export function TodayScreen() {
             <button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>
               MANUAL CHECK-IN
             </button>
-          </>
+          </div>
         ) : (
-          <>
+          <div key="form" className="fade-in">
             <p className="card-body" style={{ marginBottom: 12 }}>
               How are you doing right now? Tap a number for each — nothing here is filled in for you.
             </p>
@@ -896,7 +904,7 @@ export function TodayScreen() {
                 last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
               </p>
             )}
-          </>
+          </div>
         )}
       </div>
 
