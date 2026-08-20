@@ -1,5 +1,6 @@
 import { db } from "../persistence/db";
 import { evaluate } from "../engine/evaluate";
+import { assertRedOverrideConfirmed } from "../engine/redOverride";
 import type {
   BeyondDay,
   DomainEvent,
@@ -139,6 +140,50 @@ export async function recordRecommendation(
   await logEvent(
     beyondDayId,
     type,
+    { recommendationId: recommendation.id, kind: recommendation.kind },
+    "USER",
+    newId(),
+  );
+}
+
+/**
+ * Explicit "I'm not doing this" for an ACTION-kind recommendation
+ * (STABILIZE/RECOVER/EXECUTE_PLANNED_WORK) — distinct from both
+ * RECOMMENDATION_ACCEPTED and NO_ACTION_RECORDED. NO_ACTION_REQUIRED has
+ * no decline path: there's nothing being declined, only acknowledged, so
+ * that kind must go through recordRecommendation instead.
+ *
+ * A STABILIZE recommendation is only ever issued when capacity is RED
+ * (engine/evaluate.ts's only path to that kind) — declining it is
+ * therefore always an override of RED-tier guidance, so it goes through
+ * the same shared confirm-every-time mechanism TRAIN uses for overriding
+ * RED with a STANDARD session (engine/redOverride.ts), enforced here at
+ * the command layer so a UI bug can't silently bypass it. RECOVER
+ * (YELLOW) and EXECUTE_PLANNED_WORK (GREEN) never need this — RED never
+ * produces those kinds.
+ *
+ * Purely a historical/outcome record, same philosophy as rateOutcome:
+ * declining does not change future Engine behavior or suppress
+ * re-issuance. The Engine will issue STABILIZE again on the next RED
+ * check-in regardless of any prior decline — "rules provide consistency,
+ * outcomes provide correction," not silent rule adjustment.
+ */
+export async function declineRecommendation(
+  beyondDayId: string,
+  recommendation: Recommendation,
+  options: { overrideConfirmed?: boolean } = {},
+): Promise<void> {
+  if (recommendation.kind === "NO_ACTION_REQUIRED") {
+    throw new Error(
+      "CANNOT_DECLINE_NO_ACTION_REQUIRED: NO_ACTION_REQUIRED has nothing to decline — use recordRecommendation instead.",
+    );
+  }
+  if (recommendation.kind === "STABILIZE") {
+    assertRedOverrideConfirmed("RED", options.overrideConfirmed ?? false);
+  }
+  await logEvent(
+    beyondDayId,
+    "RECOMMENDATION_DECLINED",
     { recommendationId: recommendation.id, kind: recommendation.kind },
     "USER",
     newId(),

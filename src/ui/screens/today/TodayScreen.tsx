@@ -11,13 +11,20 @@ import {
 import { describeSchedulePrediction, resolveWorkContextSource } from "./workContextCopy";
 import { describeCapacity } from "./capacityCopy";
 import { deriveCapacity } from "../../../engine/capacity";
-import { describeRecommendationAction, describeRecommendationEffect } from "./recommendationCopy";
+import {
+  DECLINE_LABEL,
+  describeRecommendationAction,
+  describeRecommendationEffect,
+  describeRecordedDecision,
+} from "./recommendationCopy";
 import { dismissOutcome, isOutcomeDismissed } from "../../../persistence/outcomeDismissals";
+import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import {
   startDay,
   ensureActiveDay,
   submitCheckIn,
   recordRecommendation,
+  declineRecommendation,
   startReset,
   completeReset,
   startShiftDown,
@@ -35,7 +42,7 @@ import {
   getActiveDay,
   getLatestCheckIn,
   getLatestRecommendation,
-  wasRecommendationRecorded,
+  getRecommendationDecision,
   shouldSuggestEndDay,
   getPendingOutcomeRating,
   getScheduledContext,
@@ -43,6 +50,7 @@ import {
   getOpenReset,
   getOpenShiftDown,
   type MinimumDayStatus,
+  type RecommendationDecision,
 } from "../../../application/queries";
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
@@ -68,7 +76,7 @@ export function TodayScreen() {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
-  const [recorded, setRecorded] = useState(false);
+  const [decision, setDecision] = useState<RecommendationDecision | undefined>(undefined);
   const [values, setValues] = useState<PartialCheckInValues>({});
   const [busy, setBusy] = useState(false);
   const [activeResetId, setActiveResetId] = useState<string | null>(null);
@@ -82,6 +90,7 @@ export function TodayScreen() {
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
+  const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
     void refresh();
@@ -96,7 +105,7 @@ export function TodayScreen() {
       setCheckIn((await getLatestCheckIn(activeDay.id)) ?? null);
       const rec = (await getLatestRecommendation(activeDay.id)) ?? null;
       setRecommendation(rec);
-      setRecorded(rec ? await wasRecommendationRecorded(activeDay.id, rec.id) : false);
+      setDecision(rec ? await getRecommendationDecision(activeDay.id, rec.id) : undefined);
       setSuggestEndDay(await shouldSuggestEndDay(activeDay.id));
       const pending = (await getPendingOutcomeRating(activeDay.id)) ?? null;
       setPendingOutcome(pending && !isOutcomeDismissed(pending.id) ? pending : null);
@@ -172,6 +181,35 @@ export function TodayScreen() {
       await refresh();
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function actuallyDecline() {
+    if (!day || !recommendation) return;
+    setBusy(true);
+    try {
+      await declineRecommendation(day.id, recommendation, { overrideConfirmed: true });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /**
+   * A STABILIZE recommendation only ever exists because capacity was RED
+   * (engine/evaluate.ts's only path to that kind) — declining it is always
+   * an override of RED-tier guidance, so it goes through the same shared
+   * confirm-every-time mechanism TRAIN uses (useRedCapacityOverrideGate).
+   * RECOVER/EXECUTE_PLANNED_WORK never pair with RED and skip straight to
+   * actuallyDecline, matching how TRAIN's REDUCED/RECOVERY variants skip
+   * the same gate for startWorkout.
+   */
+  function handleDecline() {
+    if (busy || !day || !recommendation) return;
+    if (recommendation.kind === "STABILIZE") {
+      guard("RED", () => actuallyDecline());
+    } else {
+      void actuallyDecline();
     }
   }
 
@@ -366,18 +404,38 @@ export function TodayScreen() {
             ))}
           </details>
           <div style={{ marginTop: 12 }}>
-            <button
-              className="btn-primary"
-              disabled={busy || recorded}
-              onClick={() => void handleRecord()}
-            >
-              {recorded ? "RECORDED" : describeRecommendationAction(recommendation.kind)}
-            </button>
-            {!recorded && (
-              <p className="meta" style={{ marginTop: 8 }}>
-                {describeRecommendationEffect(recommendation.kind)}
-              </p>
+            {decision ? (
+              <button className="btn-primary" disabled>
+                {describeRecordedDecision(decision)}
+              </button>
+            ) : (
+              <>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    className="btn-primary"
+                    style={{ flex: 1 }}
+                    disabled={busy}
+                    onClick={() => void handleRecord()}
+                  >
+                    {describeRecommendationAction(recommendation.kind)}
+                  </button>
+                  {recommendation.kind !== "NO_ACTION_REQUIRED" && (
+                    <button
+                      className="btn-primary"
+                      style={{ flex: 1, background: "var(--surface-2)" }}
+                      disabled={busy}
+                      onClick={handleDecline}
+                    >
+                      {DECLINE_LABEL}
+                    </button>
+                  )}
+                </div>
+                <p className="meta" style={{ marginTop: 8 }}>
+                  {describeRecommendationEffect(recommendation.kind)}
+                </p>
+              </>
             )}
+            <ConfirmPanel />
           </div>
 
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>

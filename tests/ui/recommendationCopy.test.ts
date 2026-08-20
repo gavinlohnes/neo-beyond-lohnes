@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  DECLINE_LABEL,
   describeRecommendationAction,
   describeRecommendationEffect,
+  describeRecordedDecision,
 } from "../../src/ui/screens/today/recommendationCopy";
 import type { RecommendationKind } from "../../src/domain/common/types";
 
@@ -40,5 +42,31 @@ describe("describeRecommendationEffect", () => {
 
   it("makes clear NO_ACTION_REQUIRED has nothing to start", () => {
     expect(describeRecommendationEffect("NO_ACTION_REQUIRED")).toContain("Nothing to start");
+  });
+
+  it("tells the user recording an action-kind decision won't change future recommendations", () => {
+    for (const kind of actionKinds) {
+      expect(describeRecommendationEffect(kind)).toContain("won't change what BEYOND recommends next time");
+    }
+  });
+});
+
+describe("DECLINE_LABEL", () => {
+  it("matches the tone of the accept label", () => {
+    expect(DECLINE_LABEL).toBe("Not doing this");
+  });
+});
+
+describe("describeRecordedDecision", () => {
+  it("shows a distinct label once a recommendation was declined", () => {
+    expect(describeRecordedDecision("DECLINED")).toBe("NOT DOING THIS — RECORDED");
+  });
+
+  it("shows the plain RECORDED label for an accepted decision", () => {
+    expect(describeRecordedDecision("ACCEPTED")).toBe("RECORDED");
+  });
+
+  it("shows the plain RECORDED label for an acknowledged no-action decision", () => {
+    expect(describeRecordedDecision("NO_ACTION_RECORDED")).toBe("RECORDED");
   });
 });

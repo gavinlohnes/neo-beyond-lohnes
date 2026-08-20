@@ -44,16 +44,36 @@ export async function getLatestRecommendation(
   return all.sort((a, b) => a.issuedAt.localeCompare(b.issuedAt)).at(-1);
 }
 
+export type RecommendationDecision = "ACCEPTED" | "DECLINED" | "NO_ACTION_RECORDED";
+
+/**
+ * Which of the three mutually-exclusive decisions (if any) was recorded
+ * for a given recommendation: accepted it, declined it, or acknowledged
+ * no action was needed. undefined means no decision has been made yet.
+ */
+export async function getRecommendationDecision(
+  beyondDayId: string,
+  recommendationId: string,
+): Promise<RecommendationDecision | undefined> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const match = events.find(
+    (e) =>
+      (e.type === "RECOMMENDATION_ACCEPTED" ||
+        e.type === "RECOMMENDATION_DECLINED" ||
+        e.type === "NO_ACTION_RECORDED") &&
+      (e.payload as { recommendationId?: string }).recommendationId === recommendationId,
+  );
+  if (!match) return undefined;
+  if (match.type === "RECOMMENDATION_ACCEPTED") return "ACCEPTED";
+  if (match.type === "RECOMMENDATION_DECLINED") return "DECLINED";
+  return "NO_ACTION_RECORDED";
+}
+
 export async function wasRecommendationRecorded(
   beyondDayId: string,
   recommendationId: string,
 ): Promise<boolean> {
-  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  return events.some(
-    (e) =>
-      (e.type === "NO_ACTION_RECORDED" || e.type === "RECOMMENDATION_ACCEPTED") &&
-      (e.payload as { recommendationId?: string }).recommendationId === recommendationId,
-  );
+  return (await getRecommendationDecision(beyondDayId, recommendationId)) !== undefined;
 }
 
 /**
