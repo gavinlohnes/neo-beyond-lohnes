@@ -574,7 +574,7 @@ export function TodayScreen() {
                   borderRadius: "var(--radius)",
                   color: "var(--text-1)",
                   padding: "8px 10px",
-                  fontSize: 14,
+                  fontSize: 16,
                 }}
               />
               <span className="meta">min</span>
@@ -619,7 +619,7 @@ export function TodayScreen() {
                     {!done && item.key === "meds" && (
                       <button
                         className="btn-primary"
-                        style={{ width: "auto", padding: "4px 12px", fontSize: 12, background: "var(--surface-2)" }}
+                        style={{ width: "auto", padding: "4px 12px", fontSize: 16, background: "var(--surface-2)" }}
                         disabled={busy}
                         onClick={() => void handleMarkMinimum("MEDS")}
                       >
@@ -629,7 +629,7 @@ export function TodayScreen() {
                     {!done && item.key === "hygiene" && (
                       <button
                         className="btn-primary"
-                        style={{ width: "auto", padding: "4px 12px", fontSize: 12, background: "var(--surface-2)" }}
+                        style={{ width: "auto", padding: "4px 12px", fontSize: 16, background: "var(--surface-2)" }}
                         disabled={busy}
                         onClick={() => void handleMarkMinimum("HYGIENE")}
                       >
@@ -639,7 +639,7 @@ export function TodayScreen() {
                     {!done && item.key === "move" && (
                       <button
                         className="btn-primary"
-                        style={{ width: "auto", padding: "4px 12px", fontSize: 12, background: "var(--surface-2)" }}
+                        style={{ width: "auto", padding: "4px 12px", fontSize: 16, background: "var(--surface-2)" }}
                         disabled={busy}
                         onClick={() => void handleMarkMinimum("MOVE")}
                       >
@@ -663,12 +663,12 @@ export function TodayScreen() {
                           borderRadius: "var(--radius)",
                           color: "var(--text-1)",
                           padding: "8px 10px",
-                          fontSize: 14,
+                          fontSize: 16,
                         }}
                       />
                       <button
                         className="btn-primary"
-                        style={{ width: "auto", padding: "8px 14px", fontSize: 12 }}
+                        style={{ width: "auto", padding: "8px 14px", fontSize: 16 }}
                         disabled={busy || !(Number(mdWaterInput) > 0)}
                         onClick={() => void handleMinimumDayLogWater()}
                       >
@@ -691,12 +691,12 @@ export function TodayScreen() {
                           borderRadius: "var(--radius)",
                           color: "var(--text-1)",
                           padding: "8px 10px",
-                          fontSize: 14,
+                          fontSize: 16,
                         }}
                       />
                       <button
                         className="btn-primary"
-                        style={{ width: "auto", padding: "8px 14px", fontSize: 12 }}
+                        style={{ width: "auto", padding: "8px 14px", fontSize: 16 }}
                         disabled={busy || !(Number(mdProteinInput) > 0)}
                         onClick={() => void handleMinimumDayLogProtein()}
                       >
@@ -708,7 +708,7 @@ export function TodayScreen() {
                     <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
                       <button
                         className="btn-primary"
-                        style={{ flex: 1, padding: "6px 12px", fontSize: 12, background: "var(--surface-2)" }}
+                        style={{ flex: 1, padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
                         disabled={busy}
                         onClick={() => void handleMarkMinimum("RECOVER")}
                       >
@@ -716,7 +716,7 @@ export function TodayScreen() {
                       </button>
                       <button
                         className="btn-primary"
-                        style={{ flex: 1, padding: "6px 12px", fontSize: 12, background: "var(--surface-2)" }}
+                        style={{ flex: 1, padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
                         disabled={busy}
                         onClick={() => void handleMarkMinimum("CONNECT")}
                       >
@@ -901,7 +901,7 @@ export function TodayScreen() {
                       flex: 1,
                       width: "auto",
                       padding: "10px 0",
-                      fontSize: 14,
+                      fontSize: 16,
                       minHeight: 40,
                       background: selected ? "var(--accent)" : "var(--surface-2)",
                       border: selected ? "1px solid var(--accent)" : "1px solid var(--border-subtle)",
@@ -950,7 +950,7 @@ export function TodayScreen() {
               NO
             </button>
           </div>
-          <p className="card-body" style={{ fontSize: 13 }}>{describeSchedulePrediction(scheduledContext)}</p>
+          <p className="card-body" style={{ fontSize: 16 }}>{describeSchedulePrediction(scheduledContext)}</p>
           {day.workContext !== "UNKNOWN" && (
             <p className="meta" style={{ marginTop: 8 }}>
               Currently set: {day.workContext === "WORK" ? "working today" : "off today"}.

@@ -38,7 +38,7 @@ export function App() {
               padding: "14px 0",
               color: tab === t ? "var(--accent)" : "var(--text-2)",
               fontWeight: tab === t ? 700 : 400,
-              fontSize: 13,
+              fontSize: 16,
               letterSpacing: "0.04em",
             }}
           >

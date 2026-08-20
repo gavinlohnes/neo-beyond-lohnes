@@ -151,7 +151,7 @@ export function MoreScreen() {
         />
         {preview && (
           <div style={{ marginTop: 12, border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", padding: 12 }}>
-            <p className="card-title" style={{ fontSize: 14 }}>
+            <p className="card-title" style={{ fontSize: 16 }}>
               This will permanently replace everything currently on this device.
             </p>
             <p className="meta" style={{ marginTop: 8, marginBottom: 8 }}>

@@ -48,7 +48,7 @@ const inputStyle = {
   borderRadius: "var(--radius)",
   color: "var(--text-1)",
   padding: "10px 12px",
-  fontSize: 15,
+  fontSize: 16,
 } as const;
 
 type Confirmation = { message: string; headEventId: string } | null;
@@ -431,7 +431,7 @@ export function BodyScreen() {
             <p className="meta">{sleepConfirmation.message}</p>
             <button
               className="btn-primary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 12, background: "var(--surface-2)" }}
+              style={{ width: "auto", padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
               onClick={() => {
                 const entry = sleepEntries.find((e) => e.headEventId === sleepConfirmation.headEventId);
                 if (entry) beginCorrectSleep(entry);
@@ -452,7 +452,7 @@ export function BodyScreen() {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <p className="card-title" style={{ marginBottom: 2, fontSize: 15 }}>
+                    <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>
                       {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}
                     </p>
                     <p className="meta">
@@ -528,7 +528,7 @@ export function BodyScreen() {
             <p className="meta">{bodyweightConfirmation.message}</p>
             <button
               className="btn-primary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 12, background: "var(--surface-2)" }}
+              style={{ width: "auto", padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
               onClick={() => {
                 const entry = bodyweightEntries.find((e) => e.headEventId === bodyweightConfirmation.headEventId);
                 if (entry) beginCorrectBodyweight(entry);
@@ -549,7 +549,7 @@ export function BodyScreen() {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <p className="card-title" style={{ marginBottom: 2, fontSize: 15 }}>{entry.effectiveWeightLbs} lbs</p>
+                    <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveWeightLbs} lbs</p>
                     <p className="meta">
                       {new Date(entry.recordedAt).toLocaleTimeString()}
                       {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
@@ -617,7 +617,7 @@ export function BodyScreen() {
             <p className="meta">{proteinConfirmation.message}</p>
             <button
               className="btn-primary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 12, background: "var(--surface-2)" }}
+              style={{ width: "auto", padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
               onClick={() => {
                 const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId);
                 if (entry) beginCorrectProtein(entry);
@@ -638,7 +638,7 @@ export function BodyScreen() {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <p className="card-title" style={{ marginBottom: 2, fontSize: 15 }}>{entry.effectiveGrams} g</p>
+                    <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveGrams} g</p>
                     <p className="meta">
                       {new Date(entry.recordedAt).toLocaleTimeString()}
                       {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
@@ -708,7 +708,7 @@ export function BodyScreen() {
             <p className="meta">{waterConfirmation.message}</p>
             <button
               className="btn-primary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 12, background: "var(--surface-2)" }}
+              style={{ width: "auto", padding: "6px 12px", fontSize: 16, background: "var(--surface-2)" }}
               onClick={() => {
                 const entry = entries.find((e) => e.headEventId === waterConfirmation.headEventId);
                 if (entry) {

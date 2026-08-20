@@ -378,7 +378,7 @@ export function TrainScreen() {
                   background: chosenVariant === v ? "var(--accent)" : "var(--surface-2)",
                   width: "auto",
                   padding: "8px 14px",
-                  fontSize: 13,
+                  fontSize: 16,
                 }}
                 onClick={() => setChosenVariant(v)}
               >
@@ -413,7 +413,7 @@ export function TrainScreen() {
                 borderRadius: "var(--radius)",
                 color: "var(--text-1)",
                 padding: "10px 12px",
-                fontSize: 15,
+                fontSize: 16,
               }}
             />
           </div>
@@ -473,7 +473,7 @@ export function TrainScreen() {
                   borderRadius: "var(--radius)",
                   color: "var(--text-1)",
                   padding: "8px 10px",
-                  fontSize: 13,
+                  fontSize: 16,
                   marginBottom: 8,
                 }}
               />
@@ -536,7 +536,7 @@ export function TrainScreen() {
                         {hasSuggestion && (
                           <button
                             className="btn-primary"
-                            style={{ width: "auto", padding: "4px 10px", fontSize: 12, background: "var(--surface-2)" }}
+                            style={{ width: "auto", padding: "4px 10px", fontSize: 16, background: "var(--surface-2)" }}
                             onClick={() => handleRepeatLast(ex.exerciseId, setNumber)}
                           >
                             REPEAT LAST
@@ -544,7 +544,7 @@ export function TrainScreen() {
                         )}
                         <button
                           className="btn-primary"
-                          style={{ width: "auto", padding: "4px 10px", fontSize: 12 }}
+                          style={{ width: "auto", padding: "4px 10px", fontSize: 16 }}
                           disabled={busy}
                           onClick={() => void handleLogSet(ex.exerciseId, setNumber)}
                         >
@@ -552,7 +552,7 @@ export function TrainScreen() {
                         </button>
                         <button
                           className="btn-primary"
-                          style={{ width: "auto", padding: "4px 10px", fontSize: 12, background: "var(--surface-2)" }}
+                          style={{ width: "auto", padding: "4px 10px", fontSize: 16, background: "var(--surface-2)" }}
                           disabled={busy}
                           onClick={() => void handleSkipSet(ex.exerciseId, setNumber)}
                         >

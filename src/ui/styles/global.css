@@ -27,7 +27,7 @@ button, input {
 
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 16px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
@@ -59,7 +59,7 @@ button, input {
 
 .card-body {
   color: var(--text-2);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
   margin: 0;
 }
@@ -75,7 +75,7 @@ button, input {
 .field label {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-2);
   margin-bottom: var(--space-2);
 }
@@ -92,7 +92,7 @@ button, input {
   border: none;
   border-radius: var(--radius);
   padding: 14px var(--space-4);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   min-height: 44px;
   cursor: pointer;
@@ -110,7 +110,7 @@ button, input {
 
 .meta {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 16px;
   color: var(--text-3);
 }
 
@@ -121,7 +121,7 @@ button, input {
 }
 
 .why summary {
-  font-size: 12px;
+  font-size: 16px;
   color: var(--text-2);
   cursor: pointer;
 }
@@ -130,7 +130,7 @@ button, input {
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 16px;
   padding: var(--space-1) 0;
   color: var(--text-3);
 }
