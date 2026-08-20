@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { db } from "../../../persistence/db";
 import { exportBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
@@ -131,8 +131,14 @@ export function MoreScreen() {
       <p className="eyebrow">MORE</p>
       <h1 className="title">Foundation</h1>
 
+      {/* P6: grouped by what the user is actually trying to do, not by
+          implementation — History / Backup & restore / App info /
+          Diagnostics, per the sprint's execution package. Section labels
+          are plain text, not a new component — nothing here justified
+          building a dedicated primitive for it. */}
+      <SectionLabel>History</SectionLabel>
       <div className="card">
-        <h2 className="card-title">History</h2>
+        <h2 className="card-title">Every day, every event</h2>
         <p className="card-body" style={{ marginBottom: 12 }}>
           Every day and every event, exactly as it happened. Read-only.
         </p>
@@ -141,6 +147,7 @@ export function MoreScreen() {
         </button>
       </div>
 
+      <SectionLabel>Backup &amp; restore</SectionLabel>
       <div className="card">
         <h2 className="card-title">Backup</h2>
         <button className="btn-primary" disabled={busy} onClick={() => void handleExportBackup()}>
@@ -161,7 +168,13 @@ export function MoreScreen() {
         {archiveStatus && <p className="meta" style={{ marginTop: 8 }}>{archiveStatus}</p>}
       </div>
 
-      <div className="card">
+      {/* Restore is the one genuinely dangerous, rare action on this
+          screen — replaces everything on the device. Kept functionally
+          identical (same auto-backup-first, preview-before-write
+          contract) but visually flagged so it doesn't read as routine
+          as EXPORT BACKUP or SHARE / ARCHIVE above it. */}
+      <div className="card" style={{ borderColor: "var(--border-strong)" }}>
+        <p className="eyebrow" style={{ color: "var(--danger)", marginBottom: 4 }}>REPLACES ALL DATA</p>
         <h2 className="card-title">Restore</h2>
         <p className="card-body" style={{ marginBottom: 12 }}>
           Replace-only restoration. Your current data is automatically backed up right before anything is
@@ -215,11 +228,15 @@ export function MoreScreen() {
         {status && <p className="meta" style={{ marginTop: 8 }}>{status}</p>}
       </div>
 
+      <SectionLabel>App information</SectionLabel>
       <div className="card">
-        <h2 className="card-title">Diagnostics</h2>
         <DiagRow label="App" value={APP_VERSION} />
         <DiagRow label="Engine" value={ENGINE_VERSION} />
         <DiagRow label="Data schema" value={String(DATA_SCHEMA)} />
+      </div>
+
+      <SectionLabel>Diagnostics</SectionLabel>
+      <div className="card">
         <DiagRow label="Dexie" value={String(db.verno)} />
         <DiagRow label="Active day" value={activeDayYes ? "YES" : "NO"} />
         <DiagRow label="Days" value={String(days)} />
@@ -227,6 +244,22 @@ export function MoreScreen() {
         <DiagRow label="Recommendations" value={String(recommendations)} />
       </div>
     </div>
+  );
+}
+
+function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <p
+      className="meta"
+      style={{
+        marginTop: 24,
+        marginBottom: 8,
+        textTransform: "uppercase",
+        letterSpacing: "0.08em",
+      }}
+    >
+      {children}
+    </p>
   );
 }
 
