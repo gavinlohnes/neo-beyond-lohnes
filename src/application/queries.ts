@@ -500,3 +500,43 @@ export async function getOpenShiftDown(beyondDayId: string): Promise<OpenShiftDo
     startedAt: open.occurredAt,
   };
 }
+
+export interface WorkPeriodEndedInfo {
+  eventId: string;
+  occurredAt: string;
+}
+
+/**
+ * Drop 02b (Explicit Work Transition): the day's one effective
+ * WORK_PERIOD_ENDED fact, if any — application/commands.ts's
+ * markWorkEnded is the only writer, and is itself idempotent, so there is
+ * at most one of these per BeyondDay. Returns it regardless of whether a
+ * later SHIFT_DOWN_COMPLETED has since cleared the post-shift requirement
+ * (see hasUnresolvedPostShift below for that check) — this query answers
+ * "did work ever end today," not "is it still unresolved."
+ */
+export async function getWorkPeriodEnded(beyondDayId: string): Promise<WorkPeriodEndedInfo | undefined> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const ended = events.find((e) => e.type === "WORK_PERIOD_ENDED");
+  if (!ended) return undefined;
+  return { eventId: ended.id, occurredAt: ended.occurredAt };
+}
+
+/**
+ * Drop 02b: true exactly when this BeyondDay has a WORK_PERIOD_ENDED fact
+ * that no SHIFT_DOWN_COMPLETED has happened after (Decision Register:
+ * "SHIFT_DOWN_COMPLETED clears the post-shift requirement"). A
+ * SHIFT_DOWN_COMPLETED that happened BEFORE the work-ended fact (an
+ * earlier, unrelated shift-down) does not clear a later requirement. Feeds
+ * engine/evaluate.ts's EvaluateInput.hasUnresolvedPostShift — the Engine
+ * itself stays pure and never touches Dexie.
+ */
+export async function hasUnresolvedPostShift(beyondDayId: string): Promise<boolean> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const ended = events.find((e) => e.type === "WORK_PERIOD_ENDED");
+  if (!ended) return false;
+  const clearedAfter = events.some(
+    (e) => e.type === "SHIFT_DOWN_COMPLETED" && e.occurredAt > ended.occurredAt,
+  );
+  return !clearedAfter;
+}

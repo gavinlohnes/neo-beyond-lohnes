@@ -31,25 +31,31 @@ function checkIn(overrides: Partial<Omit<StateCheckIn, "id" | "beyondDayId" | "r
 
 describe("isPrimaryShiftDown — true only when SHIFT DOWN is the actual Engine recommendation", () => {
   it("is true for a RED (STABILIZE) recommendation", () => {
-    const rec = evaluate({ beyondDayId: "d", checkIn: checkIn({ stress: 5 }), hasPlannedWork: false });
+    const rec = evaluate({ beyondDayId: "d", checkIn: checkIn({ stress: 5 }), hasPlannedWork: false, hasUnresolvedPostShift: false });
     expect(rec.kind).toBe("STABILIZE");
     expect(isPrimaryShiftDown(rec)).toBe(true);
   });
 
+  it("is true for a POST_SHIFT_TRANSITION recommendation (Drop 02b)", () => {
+    const rec = evaluate({ beyondDayId: "d", checkIn: checkIn({}), hasPlannedWork: false, hasUnresolvedPostShift: true });
+    expect(rec.kind).toBe("POST_SHIFT_TRANSITION");
+    expect(isPrimaryShiftDown(rec)).toBe(true);
+  });
+
   it("is false for RECOVER (YELLOW)", () => {
-    const rec = evaluate({ beyondDayId: "d", checkIn: checkIn({ soreness: 4 }), hasPlannedWork: false });
+    const rec = evaluate({ beyondDayId: "d", checkIn: checkIn({ soreness: 4 }), hasPlannedWork: false, hasUnresolvedPostShift: false });
     expect(rec.kind).toBe("RECOVER");
     expect(isPrimaryShiftDown(rec)).toBe(false);
   });
 
   it("is false for EXECUTE_PLANNED_WORK (GREEN + planned work)", () => {
-    const rec = evaluate({ beyondDayId: "d", checkIn: checkIn({}), hasPlannedWork: true });
+    const rec = evaluate({ beyondDayId: "d", checkIn: checkIn({}), hasPlannedWork: true, hasUnresolvedPostShift: false });
     expect(rec.kind).toBe("EXECUTE_PLANNED_WORK");
     expect(isPrimaryShiftDown(rec)).toBe(false);
   });
 
   it("is false for NO_ACTION_REQUIRED", () => {
-    const rec = evaluate({ beyondDayId: "d", checkIn: checkIn({}), hasPlannedWork: false });
+    const rec = evaluate({ beyondDayId: "d", checkIn: checkIn({}), hasPlannedWork: false, hasUnresolvedPostShift: false });
     expect(rec.kind).toBe("NO_ACTION_REQUIRED");
     expect(isPrimaryShiftDown(rec)).toBe(false);
   });
@@ -60,13 +66,14 @@ describe("isPrimaryShiftDown — true only when SHIFT DOWN is the actual Engine 
 });
 
 describe("isPrimaryReset — no engine path produces this today, verified against every real recommendation kind", () => {
-  it("is false for all four kinds the locked engine can actually issue", () => {
-    const stabilize = evaluate({ beyondDayId: "d", checkIn: checkIn({ stress: 5 }), hasPlannedWork: false });
-    const recover = evaluate({ beyondDayId: "d", checkIn: checkIn({ soreness: 4 }), hasPlannedWork: false });
-    const executePlannedWork = evaluate({ beyondDayId: "d", checkIn: checkIn({}), hasPlannedWork: true });
-    const noActionRequired = evaluate({ beyondDayId: "d", checkIn: checkIn({}), hasPlannedWork: false });
+  it("is false for all five kinds the locked engine can actually issue", () => {
+    const stabilize = evaluate({ beyondDayId: "d", checkIn: checkIn({ stress: 5 }), hasPlannedWork: false, hasUnresolvedPostShift: false });
+    const postShiftTransition = evaluate({ beyondDayId: "d", checkIn: checkIn({}), hasPlannedWork: false, hasUnresolvedPostShift: true });
+    const recover = evaluate({ beyondDayId: "d", checkIn: checkIn({ soreness: 4 }), hasPlannedWork: false, hasUnresolvedPostShift: false });
+    const executePlannedWork = evaluate({ beyondDayId: "d", checkIn: checkIn({}), hasPlannedWork: true, hasUnresolvedPostShift: false });
+    const noActionRequired = evaluate({ beyondDayId: "d", checkIn: checkIn({}), hasPlannedWork: false, hasUnresolvedPostShift: false });
 
-    for (const rec of [stabilize, recover, executePlannedWork, noActionRequired]) {
+    for (const rec of [stabilize, postShiftTransition, recover, executePlannedWork, noActionRequired]) {
       expect(isPrimaryReset(rec)).toBe(false);
     }
   });

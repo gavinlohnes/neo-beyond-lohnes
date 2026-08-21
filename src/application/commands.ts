@@ -11,6 +11,7 @@ import type {
   WaterLoggedPayload,
 } from "../domain/common/types";
 import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
+import { getWorkPeriodEnded, hasUnresolvedPostShift } from "./queries";
 
 function newId(): string {
   return crypto.randomUUID();
@@ -142,6 +143,10 @@ export async function submitCheckIn(
     beyondDayId,
     checkIn,
     hasPlannedWork: false,
+    // Drop 02b: derived from event history (WORK_PERIOD_ENDED, cleared by
+    // a later SHIFT_DOWN_COMPLETED), never from clock/schedule — the
+    // Engine only ever sees what queries.ts already determined is true.
+    hasUnresolvedPostShift: await hasUnresolvedPostShift(beyondDayId),
   });
   await db.recommendations.add(recommendation);
   await logEvent(
@@ -294,9 +299,11 @@ export async function startShiftDown(
 
 /**
  * Event type name matches the Decision Register's WORK TRANSITION section
- * verbatim ("SHIFT_DOWN_COMPLETED clears the post-shift requirement") so
- * that hook is ready to wire up whenever the workContext/post-shift
- * mechanism is built — not implemented by this command itself.
+ * verbatim ("SHIFT_DOWN_COMPLETED clears the post-shift requirement").
+ * Drop 02b wires that up entirely on the read side — queries.ts's
+ * hasUnresolvedPostShift treats any SHIFT_DOWN_COMPLETED after a
+ * WORK_PERIOD_ENDED fact as clearing it — so this command itself needs no
+ * changes to satisfy that doctrine.
  */
 export async function completeShiftDown(
   beyondDayId: string,
@@ -414,6 +421,46 @@ export async function setWorkContext(
     beyondDayId,
     "WORK_CONTEXT_SET",
     { commandId: correlationId, workContext, source },
+    "USER",
+    correlationId,
+  );
+}
+
+/**
+ * Drop 02b (Explicit Work Transition, Decision Register "WORK TRANSITION",
+ * 2026-08-19 locked). The only writer of WORK_PERIOD_ENDED — the one
+ * historical fact marking a work shift as actually over. Created solely
+ * on this explicit user action; schedule/time may predict a shift has
+ * probably ended (engine/scheduledContext.ts's EXPECTED_POST_WORK phase)
+ * but nothing infers this fact automatically. "Shift end is never
+ * inferred from time, schedule, GPS, inactivity, or other hidden
+ * signals."
+ *
+ * Only valid on the active BeyondDay while workContext is WORK — throws
+ * otherwise rather than silently doing nothing, so a UI bug surfaces
+ * immediately instead of quietly failing to record a real transition.
+ *
+ * "Exactly one effective work-ended fact": idempotent by construction — a
+ * day that already has a WORK_PERIOD_ENDED event is left untouched rather
+ * than logging a duplicate, so rapid double-taps or a retried request
+ * can't fork the history. This is not a correction chain (see
+ * WorkPeriodEndedPayload's doc comment) — there is nothing to correct
+ * about "did the shift end," only whether it has been marked yet.
+ */
+export async function markWorkEnded(beyondDayId: string): Promise<void> {
+  const day = await db.beyondDays.get(beyondDayId);
+  if (!day || day.status !== "ACTIVE" || day.workContext !== "WORK") {
+    throw new Error(
+      "NOT_AN_ACTIVE_WORK_DAY: markWorkEnded requires the active BeyondDay to have workContext WORK.",
+    );
+  }
+  const existing = await getWorkPeriodEnded(beyondDayId);
+  if (existing) return;
+  const correlationId = newId();
+  await logEvent(
+    beyondDayId,
+    "WORK_PERIOD_ENDED",
+    { commandId: correlationId },
     "USER",
     correlationId,
   );
