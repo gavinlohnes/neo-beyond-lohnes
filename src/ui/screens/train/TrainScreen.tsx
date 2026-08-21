@@ -699,7 +699,7 @@ export function TrainScreen() {
                       <span className="meta" style={{ width: 24 }}>#{setNumber}</span>
                       <button
                         className="btn-secondary"
-                        style={{ width: "auto", padding: "8px 12px" }}
+                        style={{ width: "auto", minWidth: 44, padding: "8px 12px" }}
                         onClick={() => adjustWeight(ex.exerciseId, setNumber, -ex.incrementLbs)}
                       >
                         -
@@ -714,7 +714,7 @@ export function TrainScreen() {
                       />
                       <button
                         className="btn-secondary"
-                        style={{ width: "auto", padding: "8px 12px" }}
+                        style={{ width: "auto", minWidth: 44, padding: "8px 12px" }}
                         onClick={() => adjustWeight(ex.exerciseId, setNumber, ex.incrementLbs)}
                       >
                         +
@@ -722,7 +722,7 @@ export function TrainScreen() {
                       <span className="meta">lb x</span>
                       <button
                         className="btn-secondary"
-                        style={{ width: "auto", padding: "8px 12px" }}
+                        style={{ width: "auto", minWidth: 44, padding: "8px 12px" }}
                         onClick={() => adjustReps(ex.exerciseId, setNumber, -1)}
                       >
                         -
@@ -737,7 +737,7 @@ export function TrainScreen() {
                       />
                       <button
                         className="btn-secondary"
-                        style={{ width: "auto", padding: "8px 12px" }}
+                        style={{ width: "auto", minWidth: 44, padding: "8px 12px" }}
                         onClick={() => adjustReps(ex.exerciseId, setNumber, 1)}
                       >
                         +
