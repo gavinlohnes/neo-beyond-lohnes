@@ -9,7 +9,7 @@ import {
   type CheckInValues,
   type PartialCheckInValues,
 } from "./checkInFields";
-import { describeSchedulePrediction, resolveWorkContextSource } from "./workContextCopy";
+import { describeContextStrip, describeSchedulePrediction, resolveWorkContextSource } from "./workContextCopy";
 import { describeCapacity } from "./capacityCopy";
 import { deriveCapacity } from "../../../engine/capacity";
 import {
@@ -80,6 +80,7 @@ import {
   getOpenReset,
   getOpenShiftDown,
   getWorkPeriodEnded,
+  hasUnresolvedPostShift,
   type MinimumDayStatus,
   type RecommendationDecision,
 } from "../../../application/queries";
@@ -123,6 +124,7 @@ export function TodayScreen() {
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
+  const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
   const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
   const [minimumDayHydrateOz, setMinimumDayHydrateOz] = useState(0);
   const [minimumDayProteinG, setMinimumDayProteinG] = useState(0);
@@ -182,6 +184,7 @@ export function TodayScreen() {
 
       const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
       setWorkPeriodEndedAt(workPeriodEnded ? workPeriodEnded.occurredAt : null);
+      setUnresolvedPostShift(await hasUnresolvedPostShift(activeDay.id));
     }
   }
 
@@ -809,7 +812,7 @@ export function TodayScreen() {
       {day && recommendation && (
         <div key={recommendation.id} className="card card--action fade-in">
           <p className="meta" style={{ marginBottom: 12 }}>
-            {day.workContext === "UNKNOWN" ? "Context not set yet" : day.workContext === "WORK" ? "Working today" : "Off today"}
+            {describeContextStrip(day.workContext, scheduledContext, unresolvedPostShift)}
             {capacityResult ? ` · ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}` : ""}
           </p>
           <h2 className="recommendation-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>

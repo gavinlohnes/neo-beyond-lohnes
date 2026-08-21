@@ -8,7 +8,7 @@ import type { ScheduledContext, SchedulePhase } from "../../../engine/scheduledC
  * confirmation, matching the locked "prediction is not fact" doctrine.
  */
 
-const PHASE_LABELS: Record<SchedulePhase, string> = {
+export const PHASE_LABELS: Record<SchedulePhase, string> = {
   PRE_WORK: "before your shift",
   SCHEDULED_SHIFT: "during your scheduled shift",
   EXPECTED_POST_WORK: "just after your shift",
@@ -18,6 +18,38 @@ const PHASE_LABELS: Record<SchedulePhase, string> = {
 export function describeSchedulePrediction(ctx: ScheduledContext): string {
   const dayKind = ctx.todayIsScheduledWorkDay ? "a work day" : "a day off";
   return `Your schedule (Week ${ctx.week}) predicts ${dayKind} today — right now looks like ${PHASE_LABELS[ctx.phase]}. This is a prediction, not a fact, until you confirm.`;
+}
+
+/**
+ * Priority 3 (Daily Intelligence follow-on): the one-line "where am I in
+ * the day" context on TODAY's primary command card. Deliberately a single
+ * clause appended to the existing workContext summary, not a new card —
+ * "do not create a dashboard wall." Confirmed workContext (WORK/OFF) is a
+ * FACT and is stated plainly; an unconfirmed day states the schedule's
+ * phase prediction explicitly labeled as a prediction, preserving
+ * PREDICTION IS NOT FACT even in the compressed one-line form. An
+ * unresolved post-shift fact is the most specific, most decision-relevant
+ * thing BEYOND knows about right now, so it preempts the generic phase
+ * label — but only while it's actually unresolved. A WORK_PERIOD_ENDED
+ * fact that a later SHIFT_DOWN_COMPLETED has already cleared (same rule
+ * application/queries.ts's hasUnresolvedPostShift uses) must not keep
+ * showing "not yet shifted down" forever just because work ended at some
+ * point today.
+ */
+export function describeContextStrip(
+  workContext: "WORK" | "OFF" | "UNKNOWN",
+  scheduledContext: ScheduledContext | null,
+  hasUnresolvedPostShift: boolean,
+): string {
+  if (workContext === "WORK") {
+    if (hasUnresolvedPostShift) return "Working today — shift ended, not yet shifted down";
+    if (scheduledContext) return `Working today — ${PHASE_LABELS[scheduledContext.phase]}`;
+    return "Working today";
+  }
+  if (workContext === "OFF") return "Off today";
+  if (!scheduledContext) return "Context not set yet";
+  const predicted = scheduledContext.todayIsScheduledWorkDay ? "a work day" : "a day off";
+  return `Not confirmed yet — schedule predicts ${predicted} (${PHASE_LABELS[scheduledContext.phase]})`;
 }
 
 /**
