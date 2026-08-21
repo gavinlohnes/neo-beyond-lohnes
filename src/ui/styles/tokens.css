@@ -9,10 +9,28 @@
   --text-2: #a8a8a8;
   --text-3: #6e6e6e;
   --accent: #c81e2c;
+  /* Overdrive Phase 1: a second, brighter accent tier for the handful of
+     moments that genuinely need more visual weight than restrained red
+     already carries (RED capacity, high-emphasis warnings) — reuses the
+     existing --focus red rather than inventing a new hue, so the palette
+     stays a closed, already-vetted set. Never a global brightening: the
+     base --accent stays the restrained-red default everywhere else. */
+  --accent-strong: #e2454f;
   --success: #2f9e5b;
   --warning: #c8901e;
   --danger: #c8302e;
   --focus: #e2454f;
+
+  /* Overdrive Phase 1: restrained elevation for the one card per screen
+     that's meant to visually lead (the primary recommendation card,
+     an active/prominent RESET or SHIFT DOWN state) — not a global
+     card treatment. Kept deliberately subtle; this is spatial hierarchy,
+     not a redesign. */
+  --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.32);
+
+  /* Overdrive Phase 1: tactile press feedback for primary controls,
+     respecting prefers-reduced-motion like every other transition here. */
+  --tap-scale: 0.985;
 
   --radius: 4px;
   --space-1: 4px;

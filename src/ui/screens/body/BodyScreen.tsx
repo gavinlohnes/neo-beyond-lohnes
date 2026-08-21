@@ -353,6 +353,32 @@ export function BodyScreen() {
         Fast inputs, kept as a permanent record. Correct mistakes without erasing what happened.
       </p>
 
+      {/* Overdrive Phase 5: a single glanceable status strip before the
+          four separate logging cards, so BODY reads as one physical-status
+          subsystem at a glance instead of four unrelated forms you have to
+          scroll through to piece together. Purely a summary of state
+          already computed below (total/proteinTotal/lastSleepEntry/
+          lastBodyweightEntry) — no new query, no new fact, nothing this
+          strip shows isn't already the source of truth for its own card. */}
+      <div className="card" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div>
+          <p className="meta" style={{ margin: 0 }}>WATER</p>
+          <p className="status-value">{total} oz</p>
+        </div>
+        <div>
+          <p className="meta" style={{ margin: 0 }}>PROTEIN</p>
+          <p className="status-value">{proteinTotal} g</p>
+        </div>
+        <div>
+          <p className="meta" style={{ margin: 0 }}>SLEEP</p>
+          <p className="status-value">{lastSleepEntry ? formatDuration(lastSleepEntry.effectiveDurationMinutes) : "Not logged"}</p>
+        </div>
+        <div>
+          <p className="meta" style={{ margin: 0 }}>WEIGHT</p>
+          <p className="status-value">{lastBodyweightEntry ? `${lastBodyweightEntry.effectiveWeightLbs} lbs` : "Not logged"}</p>
+        </div>
+      </div>
+
       {/* WATER — one consolidated card: current total, fastest actions, custom fallback, collapsed history. */}
       <div className="card">
         <p className="eyebrow" style={{ marginBottom: 4 }}>HYDRATION</p>
