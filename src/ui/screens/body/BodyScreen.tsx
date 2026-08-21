@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ConfirmIcon } from "../../icons/Icon";
 import type { BeyondDay, HydrationEntry } from "../../../domain/common/types";
 import {
   logWater,
@@ -386,7 +387,10 @@ export function BodyScreen() {
         </button>
         {waterConfirmation && (
           <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <p className="meta">{waterConfirmation.message}</p>
+            <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <ConfirmIcon size={20} />
+              {waterConfirmation.message}
+            </p>
             <button
               className="btn-secondary"
               style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
@@ -553,7 +557,10 @@ export function BodyScreen() {
         )}
         {sleepConfirmation && (
           <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <p className="meta">{sleepConfirmation.message}</p>
+            <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <ConfirmIcon size={20} />
+              {sleepConfirmation.message}
+            </p>
             <button
               className="btn-secondary"
               style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
@@ -665,7 +672,10 @@ export function BodyScreen() {
         )}
         {bodyweightConfirmation && (
           <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <p className="meta">{bodyweightConfirmation.message}</p>
+            <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <ConfirmIcon size={20} />
+              {bodyweightConfirmation.message}
+            </p>
             <button
               className="btn-secondary"
               style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
@@ -765,7 +775,10 @@ export function BodyScreen() {
         )}
         {proteinConfirmation && (
           <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <p className="meta">{proteinConfirmation.message}</p>
+            <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <ConfirmIcon size={20} />
+              {proteinConfirmation.message}
+            </p>
             <button
               className="btn-secondary"
               style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}

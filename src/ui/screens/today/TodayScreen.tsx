@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { BeyondDay, Recommendation, StateCheckIn } from "../../../domain/common/types";
+import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
 import {
   CHECK_IN_FIELDS,
   describeCheckInValues,
@@ -463,7 +464,10 @@ export function TodayScreen() {
       return (
         <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
           <div>
-            <p className="eyebrow" style={{ marginBottom: 2 }}>RESET</p>
+            <p className="eyebrow" style={{ marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
+              <Icon name="reset" size={20} />
+              RESET
+            </p>
             <p className="meta">{RESET_EXPLANATION_SHORT}</p>
           </div>
           <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setResetOpen(true)}>
@@ -478,8 +482,13 @@ export function TodayScreen() {
         className="card fade-in"
         style={prominent || active ? { borderColor: "var(--accent)" } : undefined}
       >
-        <p className="eyebrow" style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined }}>
-          {active ? "● RESET IN PROGRESS" : prominent ? "RECOMMENDED — RESET" : "RESET"}
+        <p
+          className="eyebrow"
+          style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
+        >
+          {prominent ? <SignalIcon key="on" name="reset" size={20} /> : <Icon key="off" name="reset" size={20} />}
+          {active && <span aria-hidden="true" className="diamond" />}
+          {active ? "RESET IN PROGRESS" : prominent ? "RECOMMENDED — RESET" : "RESET"}
         </p>
         <p className="card-body" style={{ marginBottom: 12 }}>{RESET_EXPLANATION}</p>
         {active ? (
@@ -500,7 +509,10 @@ export function TodayScreen() {
         ) : (
           <>
             {lastResetOutcome && (
-              <p className="meta" style={{ marginBottom: 12 }}>{describeResetResult(lastResetOutcome)}</p>
+              <p className="meta" style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                <ConfirmIcon size={20} />
+                {describeResetResult(lastResetOutcome)}
+              </p>
             )}
             <p className="meta" style={{ marginBottom: 8 }}>
               BODY BEFORE STORY — how much do you need? 1 is a light touch, 5 is fully immersive.
@@ -536,7 +548,10 @@ export function TodayScreen() {
       return (
         <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
           <div>
-            <p className="eyebrow" style={{ marginBottom: 2 }}>SHIFT DOWN</p>
+            <p className="eyebrow" style={{ marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
+              <Icon name="shiftDown" size={20} />
+              SHIFT DOWN
+            </p>
             <p className="meta">{SHIFT_DOWN_EXPLANATION_SHORT}</p>
           </div>
           <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setShiftDownOpen(true)}>
@@ -551,8 +566,13 @@ export function TodayScreen() {
         className="card fade-in"
         style={prominent || active ? { borderColor: "var(--accent)" } : undefined}
       >
-        <p className="eyebrow" style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined }}>
-          {active ? "● SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
+        <p
+          className="eyebrow"
+          style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
+        >
+          {prominent ? <SignalIcon key="on" name="shiftDown" size={20} /> : <Icon key="off" name="shiftDown" size={20} />}
+          {active && <span aria-hidden="true" className="diamond" />}
+          {active ? "SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
         </p>
         <p className="card-body" style={{ marginBottom: 12 }}>{SHIFT_DOWN_EXPLANATION}</p>
         {active ? (
@@ -573,7 +593,10 @@ export function TodayScreen() {
         ) : (
           <>
             {lastShiftDownOutcome && (
-              <p className="meta" style={{ marginBottom: 12 }}>{describeShiftDownResult(lastShiftDownOutcome)}</p>
+              <p className="meta" style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                <ConfirmIcon size={20} />
+                {describeShiftDownResult(lastShiftDownOutcome)}
+              </p>
             )}
             <p className="meta" style={{ marginBottom: 8 }}>How many minutes?</p>
             <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
@@ -638,7 +661,7 @@ export function TodayScreen() {
                 <div key={item.key} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-subtle)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span className="card-body" style={{ margin: 0 }}>
-                      {done ? "✓ " : ""}
+                      {done && <span aria-hidden="true" className="diamond" style={{ marginRight: 6, verticalAlign: 1 }} />}
                       {item.label}
                       {item.key === "hydrate" ? ` — ${minimumDayHydrateOz}oz logged` : ""}
                       {item.key === "protein" ? ` — ${minimumDayProteinG}g logged` : ""}
@@ -772,7 +795,10 @@ export function TodayScreen() {
             {day.workContext === "UNKNOWN" ? "Context not set yet" : day.workContext === "WORK" ? "Working today" : "Off today"}
             {capacityResult ? ` · ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}` : ""}
           </p>
-          <h2 className="recommendation-title">{recommendation.title}</h2>
+          <h2 className="recommendation-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <ResolveIcon size={24} />
+            {recommendation.title}
+          </h2>
           <p className="card-body">{recommendation.rationale}</p>
           {evidenceBasis && (
             <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
