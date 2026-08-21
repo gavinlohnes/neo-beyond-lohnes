@@ -13,6 +13,22 @@ import { DEFAULT_SCHEDULE_PATTERN, deriveScheduledContext, type ScheduledContext
 import { parseSchedulePattern } from "../persistence/schedulePatternValidation";
 
 /**
+ * Deterministic "most recent" comparator, shared by every query in this
+ * file that needs one. Real recorded/occurred/issued time is always the
+ * primary sort key; `seq` (application/commands.ts's nextSeq) is only a
+ * tie-break for a genuine same-instant collision — never itself a stand-in
+ * for time. Records without a seq (all pre-existing historical data, which
+ * predates this field) simply compare as equal on the tie-break, identical
+ * to this app's original sort behavior for them — no migration, no
+ * reinterpretation of old history.
+ */
+function byTimeThenSeq(timeA: string, seqA: number | undefined, timeB: string, seqB: number | undefined): number {
+  const byTime = timeA.localeCompare(timeB);
+  if (byTime !== 0) return byTime;
+  return (seqA ?? 0) - (seqB ?? 0);
+}
+
+/**
  * Only one BeyondDay should ever be ACTIVE at a time (startDay() closes
  * any prior ACTIVE day first). Sorted by startedAt rather than relying on
  * Dexie's .last() (primary-key order, not time) for defense in depth if
@@ -35,7 +51,7 @@ export async function getLatestCheckIn(
   beyondDayId: string,
 ): Promise<StateCheckIn | undefined> {
   const all = await db.checkIns.where("beyondDayId").equals(beyondDayId).toArray();
-  return all.sort((a, b) => a.recordedAt.localeCompare(b.recordedAt)).at(-1);
+  return all.sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq)).at(-1);
 }
 
 /** See getLatestCheckIn's note — same fix, sorted by issuedAt. */
@@ -43,7 +59,7 @@ export async function getLatestRecommendation(
   beyondDayId: string,
 ): Promise<Recommendation | undefined> {
   const all = await db.recommendations.where("beyondDayId").equals(beyondDayId).toArray();
-  return all.sort((a, b) => a.issuedAt.localeCompare(b.issuedAt)).at(-1);
+  return all.sort((a, b) => byTimeThenSeq(a.issuedAt, a.seq, b.issuedAt, b.seq)).at(-1);
 }
 
 export type RecommendationDecision = "ACCEPTED" | "DECLINED" | "NO_ACTION_RECORDED";
@@ -96,6 +112,7 @@ export async function getHydrationEntries(
   );
 
   return logged
+    .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
     .map((root): HydrationEntry => {
       let headId = root.id;
       let headAmount = root.payload.amountOz;
@@ -117,8 +134,7 @@ export async function getHydrationEntries(
         correctionCount: count,
         recordedAt: root.recordedAt,
       };
-    })
-    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+    });
 }
 
 export async function getEffectiveHydrationTotal(beyondDayId: string): Promise<number> {
@@ -208,6 +224,7 @@ export async function getSleepEntries(beyondDayId: string): Promise<SleepEntry[]
   const logged = events.filter((e) => e.type === "SLEEP_LOGGED");
   const corrections = events.filter((e) => e.type === "SLEEP_LOG_CORRECTED");
   return logged
+    .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
     .map((root): SleepEntry => {
       const payload = root.payload as { durationMinutes: number; kind?: "PRIMARY" | "SUPPLEMENTAL" };
       const chain = walkCorrectionChain(corrections, root.id, payload.durationMinutes, "durationMinutes");
@@ -220,8 +237,7 @@ export async function getSleepEntries(beyondDayId: string): Promise<SleepEntry[]
         recordedAt: root.recordedAt,
         kind: payload.kind ?? "PRIMARY",
       };
-    })
-    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+    });
 }
 
 /**
@@ -250,6 +266,7 @@ export async function getBodyweightEntries(beyondDayId: string): Promise<Bodywei
   const logged = events.filter((e) => e.type === "BODYWEIGHT_LOGGED");
   const corrections = events.filter((e) => e.type === "BODYWEIGHT_LOG_CORRECTED");
   return logged
+    .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
     .map((root): BodyweightEntry => {
       const payload = root.payload as { weightLbs: number };
       const chain = walkCorrectionChain(corrections, root.id, payload.weightLbs, "weightLbs");
@@ -261,8 +278,7 @@ export async function getBodyweightEntries(beyondDayId: string): Promise<Bodywei
         correctionCount: chain.correctionCount,
         recordedAt: root.recordedAt,
       };
-    })
-    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+    });
 }
 
 /** Most recent bodyweight logged for this BeyondDay, if any — its effective (corrected) value. A fact only — no goal/target. */
@@ -286,6 +302,7 @@ export async function getProteinEntries(beyondDayId: string): Promise<ProteinEnt
   const logged = events.filter((e) => e.type === "PROTEIN_LOGGED");
   const corrections = events.filter((e) => e.type === "PROTEIN_LOG_CORRECTED");
   return logged
+    .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
     .map((root): ProteinEntry => {
       const payload = root.payload as { grams: number };
       const chain = walkCorrectionChain(corrections, root.id, payload.grams, "grams");
@@ -297,8 +314,7 @@ export async function getProteinEntries(beyondDayId: string): Promise<ProteinEnt
         correctionCount: chain.correctionCount,
         recordedAt: root.recordedAt,
       };
-    })
-    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+    });
 }
 
 /** Total protein logged for this BeyondDay — sum of every entry's effective (corrected) value, no target/goal. */
@@ -472,7 +488,7 @@ export async function getOpenReset(beyondDayId: string): Promise<OpenResetInfo |
   );
   const open = events
     .filter((e) => e.type === "RESET_STARTED" && !terminalTargets.has(e.id))
-    .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))
+    .sort((a, b) => byTimeThenSeq(a.occurredAt, a.seq, b.occurredAt, b.seq))
     .at(-1);
   if (!open) return undefined;
   return {
@@ -491,7 +507,7 @@ export async function getOpenShiftDown(beyondDayId: string): Promise<OpenShiftDo
   );
   const open = events
     .filter((e) => e.type === "SHIFT_DOWN_STARTED" && !terminalTargets.has(e.id))
-    .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))
+    .sort((a, b) => byTimeThenSeq(a.occurredAt, a.seq, b.occurredAt, b.seq))
     .at(-1);
   if (!open) return undefined;
   return {

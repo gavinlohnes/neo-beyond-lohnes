@@ -13,24 +13,62 @@ import type {
 import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
 import { getWorkPeriodEnded, hasUnresolvedPostShift } from "./queries";
 
-// Bug fix (discovered via CI flake in tests/integration/bodyAdditions.test.ts,
-// unrelated to any feature in this checkpoint): two events logged within the
-// same JS-clock millisecond get identical recordedAt/occurredAt strings.
-// Every "most recent X" query (getLatestBodyweight, getLatestSleepMinutes,
-// etc.) sorts by that string, and on a tie falls back to whatever order
-// Dexie's non-unique-index query happens to return — effectively the
-// random UUID primary key order, not true chronological order. Guarantees
-// strictly increasing timestamps for every event this app logs, fixing the
-// tie at its one shared source (logEvent) rather than patching every
-// consumer's sort. Does not change any stored field's shape or meaning —
-// only nudges a colliding timestamp forward by whole milliseconds, which
-// in practice only ever happens under fast sequential automated calls.
-let lastEventTimestampMs = 0;
-function monotonicNowIso(): string {
-  const now = Date.now();
-  const ts = now > lastEventTimestampMs ? now : lastEventTimestampMs + 1;
-  lastEventTimestampMs = ts;
-  return new Date(ts).toISOString();
+/**
+ * Deterministic tie-break for "most recent X" queries — redesigned after
+ * the original CI-discovered fix (nudging occurredAt/recordedAt forward on
+ * a collision) was correctly rejected for manufacturing historical time
+ * that never actually happened. occurredAt/recordedAt/issuedAt stay real,
+ * untouched `new Date().toISOString()` values everywhere in this file now;
+ * a genuine same-millisecond tie (routine on a fast CI runner, rare under
+ * real use) is resolved instead by this explicit, persisted `seq` field —
+ * assigned here and reused for StateCheckIn/Recommendation wherever they're
+ * stored, so all three share one ordering space.
+ *
+ * Seeded once per session from the current max `seq` already on disk
+ * (events/checkIns/recommendations), never from the clock — immune to
+ * system-clock rollback, and correct across restarts because it's
+ * re-derived from what's actually stored rather than cached anywhere
+ * fragile. Deliberately not a Dexie-indexed field: no schema version bump,
+ * no migration: existing historical data simply has no `seq` and falls
+ * back to whatever ordering it already had. dexie-export-import carries
+ * the field automatically since it's just a plain property — no backup.ts/
+ * restore.ts changes needed, same as SchedulePattern in Drop 02a.
+ */
+interface SeqBox {
+  current: number;
+}
+let seqBoxPromise: Promise<SeqBox> | null = null;
+
+async function currentMaxSeq(): Promise<number> {
+  const [events, checkIns, recommendations] = await Promise.all([
+    db.events.toArray(),
+    db.checkIns.toArray(),
+    db.recommendations.toArray(),
+  ]);
+  let max = 0;
+  for (const row of [...events, ...checkIns, ...recommendations]) {
+    if (typeof row.seq === "number" && row.seq > max) max = row.seq;
+  }
+  return max;
+}
+
+function seqBox(): Promise<SeqBox> {
+  if (!seqBoxPromise) {
+    seqBoxPromise = currentMaxSeq().then((max) => ({ current: max }));
+  }
+  return seqBoxPromise;
+}
+
+/**
+ * No await between reading and mutating `box.current`, so concurrent
+ * in-flight calls (all resolved from the same memoized seqBox()) each still
+ * get a unique, strictly increasing value — safe in this single-threaded
+ * JS environment without needing a lock.
+ */
+async function nextSeq(): Promise<number> {
+  const box = await seqBox();
+  box.current += 1;
+  return box.current;
 }
 
 function newId(): string {
@@ -144,12 +182,13 @@ export async function logSleep(
 
 export async function submitCheckIn(
   beyondDayId: string,
-  values: Omit<StateCheckIn, "id" | "beyondDayId" | "recordedAt">,
+  values: Omit<StateCheckIn, "id" | "beyondDayId" | "recordedAt" | "seq">,
 ): Promise<{ checkIn: StateCheckIn; recommendation: Recommendation }> {
   const checkIn: StateCheckIn = {
     id: newId(),
     beyondDayId,
     recordedAt: new Date().toISOString(),
+    seq: await nextSeq(),
     ...values,
   };
   const correlationId = newId();
@@ -159,15 +198,20 @@ export async function submitCheckIn(
   // Engine reassesses immediately after new evidence. Issuing a
   // recommendation is automatic; RECORDING it (accept / no-action) is a
   // separate, explicit user step — see recordRecommendation below.
-  const recommendation = evaluate({
-    beyondDayId,
-    checkIn,
-    hasPlannedWork: false,
-    // Drop 02b: derived from event history (WORK_PERIOD_ENDED, cleared by
-    // a later SHIFT_DOWN_COMPLETED), never from clock/schedule — the
-    // Engine only ever sees what queries.ts already determined is true.
-    hasUnresolvedPostShift: await hasUnresolvedPostShift(beyondDayId),
-  });
+  // evaluate() stays pure (no I/O, no seq assignment) — seq is stamped
+  // here, at the one place its result is actually persisted.
+  const recommendation: Recommendation = {
+    ...evaluate({
+      beyondDayId,
+      checkIn,
+      hasPlannedWork: false,
+      // Drop 02b: derived from event history (WORK_PERIOD_ENDED, cleared by
+      // a later SHIFT_DOWN_COMPLETED), never from clock/schedule — the
+      // Engine only ever sees what queries.ts already determined is true.
+      hasUnresolvedPostShift: await hasUnresolvedPostShift(beyondDayId),
+    }),
+    seq: await nextSeq(),
+  };
   await db.recommendations.add(recommendation);
   await logEvent(
     beyondDayId,
@@ -760,7 +804,7 @@ export async function logEvent(
   correlationId: string,
   causationId?: string,
 ): Promise<string> {
-  const timestamp = monotonicNowIso();
+  const timestamp = new Date().toISOString();
   const event: DomainEvent = {
     id: newId(),
     type,
@@ -770,6 +814,7 @@ export async function logEvent(
     payload,
     source,
     correlationId,
+    seq: await nextSeq(),
     ...(causationId ? { causationId } : {}),
   };
   await db.events.add(event);

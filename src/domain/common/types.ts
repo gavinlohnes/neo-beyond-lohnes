@@ -26,6 +26,15 @@ export interface StateCheckIn {
   mood: 1 | 2 | 3 | 4 | 5;
   soreness: 0 | 1 | 2 | 3 | 4 | 5;
   alcoholUrge: 0 | 1 | 2 | 3 | 4 | 5;
+  /**
+   * Deterministic same-instant tie-break (event-ordering redesign,
+   * following Drop 02b): recordedAt stays the real, unmodified moment this
+   * was recorded — seq only disambiguates two records that are otherwise
+   * indistinguishable in time. Optional and unindexed: existing historical
+   * rows simply don't have it and are unaffected. See
+   * application/commands.ts's nextSeq for how it's assigned.
+   */
+  seq?: number;
 }
 
 export interface BeyondDay {
@@ -67,6 +76,8 @@ export interface Recommendation {
   // recommendations carry statusAtIssue "NO_ACTION_REQUIRED", not the
   // generic "NO_ACTION" checkpoint 03 originally guessed.
   statusAtIssue: "ACTION" | "NO_ACTION_REQUIRED";
+  /** See StateCheckIn.seq's doc comment — same deterministic tie-break, same shared counter. */
+  seq?: number;
 }
 
 /**
@@ -455,4 +466,6 @@ export interface DomainEvent<TPayload = unknown> {
   source: "USER" | "ENGINE" | "SYSTEM";
   correlationId: string;
   causationId?: string;
+  /** See StateCheckIn.seq's doc comment — same deterministic tie-break, same shared counter. */
+  seq?: number;
 }
