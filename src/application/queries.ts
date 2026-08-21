@@ -1,6 +1,7 @@
 import { db } from "../persistence/db";
 import type {
   BeyondDay,
+  CaptureItem,
   DomainEvent,
   HydrationEntry,
   Recommendation,
@@ -555,4 +556,21 @@ export async function hasUnresolvedPostShift(beyondDayId: string): Promise<boole
     (e) => e.type === "SHIFT_DOWN_COMPLETED" && e.occurredAt > ended.occurredAt,
   );
   return !clearedAfter;
+}
+
+/**
+ * Overdrive Phase 10: everything currently open in the inbox, oldest
+ * first — reading order matches capture order, not urgency ("inbox age
+ * is not urgency" is about not auto-promoting old items, not about how
+ * they're listed).
+ */
+export async function getOpenCaptureItems(): Promise<CaptureItem[]> {
+  const items = await db.captureItems.where("status").equals("OPEN").toArray();
+  return items.sort((a, b) => byTimeThenSeq(a.capturedAt, a.seq, b.capturedAt, b.seq));
+}
+
+/** Every capture regardless of status, oldest first — the full history view. */
+export async function getAllCaptureItems(): Promise<CaptureItem[]> {
+  const items = await db.captureItems.toArray();
+  return items.sort((a, b) => byTimeThenSeq(a.capturedAt, a.seq, b.capturedAt, b.seq));
 }

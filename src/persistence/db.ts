@@ -1,6 +1,7 @@
 import Dexie, { type Table } from "dexie";
 import type {
   BeyondDay,
+  CaptureItem,
   DomainEvent,
   Outcome,
   PerformedSetRaw,
@@ -20,6 +21,7 @@ export class BeyondDB extends Dexie {
   workoutSessions!: Table<WorkoutSession, string>;
   performedSets!: Table<PerformedSetRaw, string>;
   schedulePatterns!: Table<SchedulePattern, string>;
+  captureItems!: Table<CaptureItem, string>;
 
   constructor() {
     super("beyond");
@@ -79,6 +81,22 @@ export class BeyondDB extends Dexie {
       .upgrade(async (tx) => {
         await tx.table("schedulePatterns").put(DEFAULT_SCHEDULE_PATTERN);
       });
+    // v5 (Overdrive Phase 10, first connective capability): adds
+    // captureItems — raw, timestamped, unclassified capture ("capture
+    // first, organize second"). Purely additive; no upgrade callback
+    // needed since there's no equivalent prior data to seed or migrate.
+    // Existing v1-v4 tables/data untouched.
+    this.version(5).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+    });
   }
 }
 
