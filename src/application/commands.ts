@@ -13,6 +13,26 @@ import type {
 import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
 import { getWorkPeriodEnded, hasUnresolvedPostShift } from "./queries";
 
+// Bug fix (discovered via CI flake in tests/integration/bodyAdditions.test.ts,
+// unrelated to any feature in this checkpoint): two events logged within the
+// same JS-clock millisecond get identical recordedAt/occurredAt strings.
+// Every "most recent X" query (getLatestBodyweight, getLatestSleepMinutes,
+// etc.) sorts by that string, and on a tie falls back to whatever order
+// Dexie's non-unique-index query happens to return — effectively the
+// random UUID primary key order, not true chronological order. Guarantees
+// strictly increasing timestamps for every event this app logs, fixing the
+// tie at its one shared source (logEvent) rather than patching every
+// consumer's sort. Does not change any stored field's shape or meaning —
+// only nudges a colliding timestamp forward by whole milliseconds, which
+// in practice only ever happens under fast sequential automated calls.
+let lastEventTimestampMs = 0;
+function monotonicNowIso(): string {
+  const now = Date.now();
+  const ts = now > lastEventTimestampMs ? now : lastEventTimestampMs + 1;
+  lastEventTimestampMs = ts;
+  return new Date(ts).toISOString();
+}
+
 function newId(): string {
   return crypto.randomUUID();
 }
@@ -740,12 +760,13 @@ export async function logEvent(
   correlationId: string,
   causationId?: string,
 ): Promise<string> {
+  const timestamp = monotonicNowIso();
   const event: DomainEvent = {
     id: newId(),
     type,
     beyondDayId,
-    occurredAt: new Date().toISOString(),
-    recordedAt: new Date().toISOString(),
+    occurredAt: timestamp,
+    recordedAt: timestamp,
     payload,
     source,
     correlationId,
