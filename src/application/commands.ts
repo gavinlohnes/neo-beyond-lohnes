@@ -5,10 +5,12 @@ import type {
   BeyondDay,
   DomainEvent,
   Recommendation,
+  SchedulePattern,
   StateCheckIn,
   WaterLogCorrectedPayload,
   WaterLoggedPayload,
 } from "../domain/common/types";
+import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
 
 function newId(): string {
   return crypto.randomUUID();
@@ -415,6 +417,35 @@ export async function setWorkContext(
     "USER",
     correlationId,
   );
+}
+
+/**
+ * Drop 02a (Daily Intelligence / Context, first slice): the only writer of
+ * the schedulePatterns "current" row. This is configuration, not domain
+ * history — same treatment as BeyondDay's own directly-mutated fields
+ * (createdAt/updatedAt bookkeeping, no per-edit DomainEvent) rather than
+ * the correction-chain/event-sourced treatment given to facts like
+ * hydration or work context. It isn't day-scoped (DomainEvent requires a
+ * beyondDayId; a schedule edit has no natural one), and it isn't a
+ * historical fact about what happened in the user's day — it's what the
+ * prediction layer should now assume going forward. Explicit rejection on
+ * malformed input (unlike the read path's silent DEFAULT_SCHEDULE_PATTERN
+ * fallback) because this is the user's own live edit, not a possibly-
+ * corrupted imported file — a mistake here should surface immediately,
+ * not silently substitute a different schedule.
+ */
+export async function updateSchedulePattern(input: SchedulePatternInput): Promise<SchedulePattern> {
+  const parsed = schedulePatternInputSchema.parse(input);
+  const existing = await db.schedulePatterns.get("current");
+  const now = new Date().toISOString();
+  const record: SchedulePattern = {
+    id: "current",
+    ...parsed,
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
+  };
+  await db.schedulePatterns.put(record);
+  return record;
 }
 
 /**

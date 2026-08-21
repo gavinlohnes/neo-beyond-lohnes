@@ -294,6 +294,56 @@ export interface WorkContextSetPayload {
 }
 
 /**
+ * Drop 02a (Daily Intelligence / Context — first slice). One entry in a
+ * rotating work schedule's cycle. `workdays` uses JS Date.getDay()
+ * convention (0=Sunday..6=Saturday) to match engine/scheduledContext.ts's
+ * existing date arithmetic.
+ */
+export interface ScheduleWeekDefinition {
+  workdays: number[];
+}
+
+/**
+ * Drop 02a: the user-editable configuration that used to be hardcoded
+ * constants in engine/scheduledContext.ts (ANCHOR_MONDAY, WEEK_A/B_WORKDAYS,
+ * SHIFT_START/END_HOUR). Stored so it can be edited from MORE -> Work
+ * Schedule instead of requiring a code change.
+ *
+ * `weeks` is an array, not fixed weekA/weekB fields, specifically so a
+ * future rotation longer than two weeks doesn't require a storage
+ * migration — only `weeks.length` changes. 02a's editor only ever writes
+ * exactly two entries; the shape simply doesn't forbid more.
+ *
+ * This is configuration, not domain history: single mutable row (id
+ * "current"), no DomainEvent per edit, same treatment as BeyondDay's own
+ * directly-mutated fields. It becomes canonical BEYOND-owned state once
+ * saved and is included in native export/import automatically (a real
+ * Dexie table, no special-casing needed in persistence/backup.ts).
+ *
+ * `anchorMonday` (YYYY-MM-DD, local calendar date of a Monday) is which
+ * real-world Monday begins `weeks[0]`. The editor never asks the user to
+ * pick this directly — it derives it from "which week is active right
+ * now," per Decision Register/R&D guidance to keep this a config detail,
+ * not user-facing jargon.
+ */
+export interface SchedulePattern {
+  id: string;
+  anchorMonday: string;
+  weeks: ScheduleWeekDefinition[];
+  shiftStartHour: number;
+  shiftEndHour: number;
+  /**
+   * Hours after shift end that EXPECTED_POST_WORK still applies, before
+   * falling back to PRE_WORK/OFF. Not itself a locked schedule value (see
+   * scheduledContext.ts) — carried forward as configuration so a future
+   * evidence-driven change doesn't require touching source.
+   */
+  postWorkTailHours: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
  * MINIMUM DAY (Decision Register, RESET/CAPACITY — locked six-item
  * baseline). MEDS/HYGIENE are always this generic shape ("no medication
  * names/doses" / "no private detail" — the completion fact itself is all

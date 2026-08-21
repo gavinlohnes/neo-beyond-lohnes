@@ -139,7 +139,7 @@ export function TodayScreen() {
   useEffect(() => {
     void refresh();
     setDaysSinceBackup(getDaysSinceLastBackup());
-    setScheduledContext(getScheduledContext());
+    void getScheduledContext().then(setScheduledContext);
   }, []);
 
   async function refresh() {

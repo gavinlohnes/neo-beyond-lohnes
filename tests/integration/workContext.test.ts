@@ -25,15 +25,21 @@ describe("getScheduledContext — zero silent work-history creation", () => {
     const before = await db.beyondDays.get(day.id);
     const eventsBefore = await db.events.where("beyondDayId").equals(day.id).count();
 
+    const patternCountBefore = await db.schedulePatterns.count();
+
     // Call it many times, as the UI would on every render.
-    getScheduledContext(new Date(2026, 7, 21, 19, 0));
-    getScheduledContext(new Date(2026, 7, 22, 8, 0));
-    getScheduledContext();
+    await getScheduledContext(new Date(2026, 7, 21, 19, 0));
+    await getScheduledContext(new Date(2026, 7, 22, 8, 0));
+    await getScheduledContext();
 
     const after = await db.beyondDays.get(day.id);
     const eventsAfter = await db.events.where("beyondDayId").equals(day.id).count();
     expect(after).toEqual(before);
     expect(eventsAfter).toBe(eventsBefore);
+    // Drop 02a: reading/deriving schedule context (including its
+    // getSchedulePattern lookup) must not write the schedulePatterns
+    // table either — same doctrine, one more table it now touches.
+    expect(await db.schedulePatterns.count()).toBe(patternCountBefore);
   });
 });
 
