@@ -2,8 +2,17 @@
 
 export type Capacity = "GREEN" | "YELLOW" | "RED";
 
+/**
+ * POST_SHIFT_TRANSITION (Drop 02b, Decision Register "WORK TRANSITION",
+ * 2026-08-19 locked): "Engine priority: Stabilize -> explicit post-shift
+ * transition when applicable -> Recover -> Execute planned work." A
+ * distinct tier from STABILIZE — STABILIZE means capacity is critically
+ * low; POST_SHIFT_TRANSITION means an explicit WORK_PERIOD_ENDED fact is
+ * unresolved, regardless of capacity (except RED, which still wins).
+ */
 export type RecommendationKind =
   | "STABILIZE"
+  | "POST_SHIFT_TRANSITION"
   | "RECOVER"
   | "EXECUTE_PLANNED_WORK"
   | "NO_ACTION_REQUIRED";
@@ -147,7 +156,8 @@ export type DomainEventType =
   | "SET_LOGGED"
   | "SET_SKIPPED"
   | "WATER_LOGGED"
-  | "WATER_LOG_CORRECTED";
+  | "WATER_LOG_CORRECTED"
+  | "WORK_PERIOD_ENDED";
 
 /**
  * DERIVED, not stored. Computed by walking a WATER_LOGGED event and any
@@ -291,6 +301,22 @@ export interface WorkContextSetPayload {
   commandId: string;
   workContext: "WORK" | "OFF";
   source: "MANUAL" | "SCHEDULE_SUGGESTION_ACCEPTED";
+}
+
+/**
+ * Drop 02b (Explicit Work Transition, Decision Register "WORK TRANSITION",
+ * 2026-08-19 locked): the only historical fact marking a work shift as
+ * actually over. Created solely by application/commands.ts's
+ * markWorkEnded on explicit user confirmation — never inferred from clock
+ * time, schedule prediction, or any other automatic signal. "Shift end is
+ * never inferred from time, schedule, GPS, inactivity, or other hidden
+ * signals." At most one effective WORK_PERIOD_ENDED event exists per
+ * BeyondDay — markWorkEnded is idempotent, not a correction chain, since
+ * there is nothing to correct about "did the shift end," only whether it
+ * has been marked yet.
+ */
+export interface WorkPeriodEndedPayload {
+  commandId: string;
 }
 
 /**

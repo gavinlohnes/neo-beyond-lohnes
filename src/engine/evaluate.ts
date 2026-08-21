@@ -12,6 +12,14 @@ export interface EvaluateInput {
   beyondDayId: string;
   checkIn: StateCheckIn | null;
   hasPlannedWork: boolean;
+  /**
+   * Drop 02b: true when the active WORK BeyondDay has an unresolved
+   * WORK_PERIOD_ENDED fact (application/queries.ts's hasUnresolvedPostShift
+   * — derived from event history, not recomputed here). The Engine stays
+   * pure and time-blind; the application layer decides whether this is
+   * currently true and passes it in, same as hasPlannedWork.
+   */
+  hasUnresolvedPostShift: boolean;
 }
 
 /**
@@ -25,6 +33,12 @@ export function evaluate(input: EvaluateInput): Recommendation {
   const capacity: Capacity | null = capacityResult ? capacityResult.capacity : null;
   const reasonCodes = capacityResult ? capacityResult.reasonCodes : [];
 
+  // RED still wins regardless of an unresolved post-shift fact (Decision
+  // Register: "On the next check-in, RED capacity still wins; otherwise
+  // unresolved post-shift context recommends SHIFT DOWN before generic
+  // recovery or execution.").
+  const postShiftApplies = capacity !== "RED" && input.hasUnresolvedPostShift;
+
   const matchedRules: DecisionTrace["matchedRules"] = [
     {
       ruleId: "STABILIZE",
@@ -32,13 +46,22 @@ export function evaluate(input: EvaluateInput): Recommendation {
       reason: capacity === "RED" ? "RED capacity" : `${capacity ?? "unknown"} capacity`,
     },
     {
+      ruleId: "POST_SHIFT_TRANSITION",
+      result: postShiftApplies,
+      reason: postShiftApplies
+        ? "unresolved WORK_PERIOD_ENDED fact"
+        : input.hasUnresolvedPostShift
+          ? "RED capacity outranks it"
+          : "no unresolved WORK_PERIOD_ENDED fact",
+    },
+    {
       ruleId: "RECOVER",
-      result: capacity === "YELLOW",
+      result: capacity === "YELLOW" && !postShiftApplies,
       reason: capacity === "YELLOW" ? "YELLOW capacity" : `${capacity ?? "unknown"} capacity`,
     },
     {
       ruleId: "EXECUTE_PLANNED_WORK",
-      result: capacity === "GREEN" && input.hasPlannedWork,
+      result: capacity === "GREEN" && input.hasPlannedWork && !postShiftApplies,
       reason:
         capacity === "GREEN" && input.hasPlannedWork
           ? "GREEN capacity with planned work"
@@ -86,15 +109,31 @@ export function evaluate(input: EvaluateInput): Recommendation {
     };
   }
 
+  if (postShiftApplies) {
+    return {
+      ...base,
+      kind: "POST_SHIFT_TRANSITION",
+      priority: 2,
+      title: "Shift down after work",
+      rationale: "Your shift ended and hasn't been shifted down from yet.",
+      suggestedCommand: "START_SHIFT_DOWN",
+      trace: trace(
+        "POST_SHIFT_TRANSITION",
+        "POST_SHIFT_TRANSITION matched after STABILIZE did not — an unresolved work-ended fact outranks RECOVER/EXECUTE_PLANNED_WORK.",
+      ),
+      statusAtIssue: "ACTION",
+    };
+  }
+
   if (capacity === "YELLOW") {
     return {
       ...base,
       kind: "RECOVER",
-      priority: 2,
+      priority: 3,
       title: "Protect recovery",
       rationale: "Capacity is constrained.",
       suggestedCommand: "RECOVERY_SESSION",
-      trace: trace("RECOVER", "RECOVER matched after STABILIZE did not."),
+      trace: trace("RECOVER", "RECOVER matched after STABILIZE and POST_SHIFT_TRANSITION did not."),
       statusAtIssue: "ACTION",
     };
   }
@@ -103,13 +142,13 @@ export function evaluate(input: EvaluateInput): Recommendation {
     return {
       ...base,
       kind: "EXECUTE_PLANNED_WORK",
-      priority: 3,
+      priority: 4,
       title: "Proceed with planned work",
       rationale: "Capacity is good and there is planned work for today.",
       suggestedCommand: "START_WORKOUT",
       trace: trace(
         "EXECUTE_PLANNED_WORK",
-        "EXECUTE_PLANNED_WORK matched after STABILIZE and RECOVER did not.",
+        "EXECUTE_PLANNED_WORK matched after STABILIZE, POST_SHIFT_TRANSITION, and RECOVER did not.",
       ),
       statusAtIssue: "ACTION",
     };
@@ -118,7 +157,7 @@ export function evaluate(input: EvaluateInput): Recommendation {
   return {
     ...base,
     kind: "NO_ACTION_REQUIRED",
-    priority: 4,
+    priority: 5,
     title: "No action required",
     rationale: "No rule requires attention right now.",
     suggestedCommand: null,

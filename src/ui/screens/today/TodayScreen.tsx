@@ -57,6 +57,7 @@ import {
   endDay,
   rateOutcome,
   setWorkContext,
+  markWorkEnded,
   enableMinimumDay,
   markMedsCompleted,
   markHygieneCompleted,
@@ -78,6 +79,7 @@ import {
   getTotalProteinGrams,
   getOpenReset,
   getOpenShiftDown,
+  getWorkPeriodEnded,
   type MinimumDayStatus,
   type RecommendationDecision,
 } from "../../../application/queries";
@@ -120,6 +122,7 @@ export function TodayScreen() {
   const [daysSinceBackup, setDaysSinceBackup] = useState<number | null>(null);
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
+  const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
   const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
   const [minimumDayHydrateOz, setMinimumDayHydrateOz] = useState(0);
   const [minimumDayProteinG, setMinimumDayProteinG] = useState(0);
@@ -176,6 +179,9 @@ export function TodayScreen() {
         setActiveShiftDownId(null);
         setOpenShiftDownStartedAt(null);
       }
+
+      const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
+      setWorkPeriodEndedAt(workPeriodEnded ? workPeriodEnded.occurredAt : null);
     }
   }
 
@@ -355,6 +361,17 @@ export function TodayScreen() {
     try {
       const source = resolveWorkContextSource(scheduledContext.todayIsScheduledWorkDay, value);
       await setWorkContext(day.id, value, source);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleMarkWorkEnded() {
+    if (busy || !day) return;
+    setBusy(true);
+    try {
+      await markWorkEnded(day.id);
       await refresh();
     } finally {
       setBusy(false);
@@ -963,6 +980,25 @@ export function TodayScreen() {
             <p className="meta" style={{ marginTop: 8 }}>
               Currently set: {day.workContext === "WORK" ? "working today" : "off today"}.
             </p>
+          )}
+          {day.workContext === "WORK" && (
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
+              {workPeriodEndedAt ? (
+                <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <ConfirmIcon size={20} />
+                  Work ended at {new Date(workPeriodEndedAt).toLocaleTimeString()}.
+                </p>
+              ) : (
+                <>
+                  <p className="meta" style={{ marginBottom: 8 }}>
+                    When your shift is actually over, mark it — BEYOND never guesses this from the clock.
+                  </p>
+                  <button className="btn-secondary" disabled={busy} onClick={() => void handleMarkWorkEnded()}>
+                    MARK WORK ENDED
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
       )}

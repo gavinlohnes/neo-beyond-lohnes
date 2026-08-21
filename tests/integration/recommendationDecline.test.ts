@@ -73,7 +73,7 @@ describe("declineRecommendation — EXECUTE_PLANNED_WORK (GREEN) needs no RED-ov
     // submitCheckIn always passes hasPlannedWork: false, so EXECUTE_PLANNED_WORK
     // isn't reachable through it today — construct it directly via evaluate(),
     // same as the engine would if hasPlannedWork were ever wired up to true.
-    const recommendation = evaluate({ beyondDayId: day.id, checkIn, hasPlannedWork: true });
+    const recommendation = evaluate({ beyondDayId: day.id, checkIn, hasPlannedWork: true, hasUnresolvedPostShift: false });
     expect(recommendation.kind).toBe("EXECUTE_PLANNED_WORK");
 
     await declineRecommendation(day.id, recommendation);

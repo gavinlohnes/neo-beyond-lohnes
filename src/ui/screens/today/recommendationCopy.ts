@@ -31,6 +31,8 @@ export function describeRecommendationEffect(kind: RecommendationKind): string {
   switch (kind) {
     case "STABILIZE":
       return "Records your decision — it doesn't start SHIFT DOWN for you, and it won't change what BEYOND recommends next time. Use SHIFT DOWN below when you're ready.";
+    case "POST_SHIFT_TRANSITION":
+      return "Records your decision — it doesn't start SHIFT DOWN for you, and it won't change what BEYOND recommends next time. Use SHIFT DOWN below when you're ready.";
     case "RECOVER":
       return "Records your decision — it doesn't start a session for you, and it won't change what BEYOND recommends next time. Start it on TRAIN when you're ready.";
     case "EXECUTE_PLANNED_WORK":
