@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { BeyondDay, Recommendation, StateCheckIn } from "../../../domain/common/types";
-import { Icon } from "../../icons/Icon";
+import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
 import {
   CHECK_IN_FIELDS,
   describeCheckInValues,
@@ -486,7 +486,7 @@ export function TodayScreen() {
           className="eyebrow"
           style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
         >
-          <Icon name="reset" size={20} />
+          {prominent ? <SignalIcon key="on" name="reset" size={20} /> : <Icon key="off" name="reset" size={20} />}
           {active ? "● RESET IN PROGRESS" : prominent ? "RECOMMENDED — RESET" : "RESET"}
         </p>
         <p className="card-body" style={{ marginBottom: 12 }}>{RESET_EXPLANATION}</p>
@@ -508,7 +508,10 @@ export function TodayScreen() {
         ) : (
           <>
             {lastResetOutcome && (
-              <p className="meta" style={{ marginBottom: 12 }}>{describeResetResult(lastResetOutcome)}</p>
+              <p className="meta" style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                <ConfirmIcon size={20} />
+                {describeResetResult(lastResetOutcome)}
+              </p>
             )}
             <p className="meta" style={{ marginBottom: 8 }}>
               BODY BEFORE STORY — how much do you need? 1 is a light touch, 5 is fully immersive.
@@ -566,7 +569,7 @@ export function TodayScreen() {
           className="eyebrow"
           style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
         >
-          <Icon name="shiftDown" size={20} />
+          {prominent ? <SignalIcon key="on" name="shiftDown" size={20} /> : <Icon key="off" name="shiftDown" size={20} />}
           {active ? "● SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
         </p>
         <p className="card-body" style={{ marginBottom: 12 }}>{SHIFT_DOWN_EXPLANATION}</p>
@@ -588,7 +591,10 @@ export function TodayScreen() {
         ) : (
           <>
             {lastShiftDownOutcome && (
-              <p className="meta" style={{ marginBottom: 12 }}>{describeShiftDownResult(lastShiftDownOutcome)}</p>
+              <p className="meta" style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                <ConfirmIcon size={20} />
+                {describeShiftDownResult(lastShiftDownOutcome)}
+              </p>
             )}
             <p className="meta" style={{ marginBottom: 8 }}>How many minutes?</p>
             <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
@@ -787,7 +793,10 @@ export function TodayScreen() {
             {day.workContext === "UNKNOWN" ? "Context not set yet" : day.workContext === "WORK" ? "Working today" : "Off today"}
             {capacityResult ? ` · ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}` : ""}
           </p>
-          <h2 className="recommendation-title">{recommendation.title}</h2>
+          <h2 className="recommendation-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <ResolveIcon size={24} />
+            {recommendation.title}
+          </h2>
           <p className="card-body">{recommendation.rationale}</p>
           {evidenceBasis && (
             <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>

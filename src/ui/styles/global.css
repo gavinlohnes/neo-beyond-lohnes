@@ -253,9 +253,52 @@ button, input {
   animation: beyond-fade-in var(--motion-base) var(--motion-easing);
 }
 
+/* Phase C motion primitives (RESOLVE / SIGNAL / CONFIRM) — one-shot,
+   never looping, played by mounting a fresh node (key the parent on
+   the state transition that should trigger it). See Icon.tsx's
+   ResolveIcon / SignalIcon / ConfirmIcon. */
+@keyframes beyond-resolve-in {
+  from { opacity: 0; transform: scale(0.3); }
+  to { opacity: 1; transform: scale(1); }
+}
+.icon-resolve-core {
+  transform-origin: 12px 12px;
+  animation: beyond-resolve-in var(--motion-base) var(--motion-easing);
+}
+
+@keyframes beyond-signal-pulse {
+  0% { opacity: 1; }
+  20% { opacity: 0.35; }
+  45% { opacity: 1; }
+  65% { opacity: 0.35; }
+  100% { opacity: 1; }
+}
+.icon-signal {
+  animation: beyond-signal-pulse calc(var(--motion-base) * 4) var(--motion-easing) 1;
+}
+
+@keyframes beyond-confirm-diamond {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes beyond-confirm-draw {
+  to { stroke-dashoffset: 0; }
+}
+.icon-confirm-diamond {
+  transform-origin: 12px 12px;
+  animation: beyond-confirm-diamond var(--motion-fast) var(--motion-easing);
+}
+.icon-confirm-check {
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  animation: beyond-confirm-draw var(--motion-base) var(--motion-easing) forwards;
+  animation-delay: var(--motion-fast);
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;

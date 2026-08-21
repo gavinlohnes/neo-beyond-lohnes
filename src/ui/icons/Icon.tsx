@@ -71,3 +71,40 @@ export function Icon({ name, size = 24 }: { name: IconName; size?: number }) {
     </svg>
   );
 }
+
+/**
+ * Phase C motion primitives (see motion-prototypes artifact). Each is a
+ * one-shot animation driven by CSS (icon-resolve-core / icon-signal /
+ * icon-confirm-diamond / icon-confirm-check in global.css), so the
+ * caller triggers it purely by mounting a fresh DOM node — key the
+ * parent on whatever state transition should replay it.
+ */
+export function ResolveIcon({ size = 24 }: { size?: number }) {
+  return (
+    <svg aria-hidden="true" focusable="false" width={size} height={size} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+      <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
+        <path d="M12 3.5 L20.5 12 L12 20.5 L3.5 12 Z" />
+        <path className="icon-resolve-core" d="M12 8.8 L15.2 12 L12 15.2 L8.8 12 Z" fill="currentColor" stroke="none" />
+      </g>
+    </svg>
+  );
+}
+
+export function SignalIcon({ name, size = 20 }: { name: "reset" | "shiftDown"; size?: number }) {
+  return (
+    <svg aria-hidden="true" focusable="false" width={size} height={size} viewBox="0 0 24 24" className="icon-signal" style={{ flexShrink: 0 }}>
+      {PATHS[name]}
+    </svg>
+  );
+}
+
+export function ConfirmIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg aria-hidden="true" focusable="false" width={size} height={size} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+      <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
+        <path className="icon-confirm-diamond" d="M12 3.5 L20.5 12 L12 20.5 L3.5 12 Z" />
+        <path className="icon-confirm-check" d="M7.2 12.4 L10.6 15.8 L17 8.2" strokeWidth={2.4} />
+      </g>
+    </svg>
+  );
+}

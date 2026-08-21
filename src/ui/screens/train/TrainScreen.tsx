@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Icon } from "../../icons/Icon";
+import { ConfirmIcon } from "../../icons/Icon";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
 import type { PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
 import { WORKOUT_TEMPLATES, getReducedExercises } from "../../../domain/workout/types";
@@ -462,7 +462,7 @@ export function TrainScreen() {
       {completionSummary && (
         <div className="card card--action fade-in">
           <p className="eyebrow" style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-            {completionSummary.status === "COMPLETED" && <Icon name="success" size={20} />}
+            {completionSummary.status === "COMPLETED" && <ConfirmIcon size={20} />}
             {completionSummary.status === "COMPLETED" ? "WORKOUT COMPLETE" : "WORKOUT SAVED — PARTIAL"}
           </p>
           <h2 className="recommendation-title" style={{ textTransform: "capitalize" }}>
