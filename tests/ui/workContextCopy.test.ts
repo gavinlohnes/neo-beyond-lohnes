@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { describeSchedulePrediction, resolveWorkContextSource } from "../../src/ui/screens/today/workContextCopy";
+import {
+  describeContextStrip,
+  describeSchedulePrediction,
+  resolveWorkContextSource,
+} from "../../src/ui/screens/today/workContextCopy";
 import type { ScheduledContext } from "../../src/engine/scheduledContext";
 
 describe("describeSchedulePrediction", () => {
@@ -41,5 +45,45 @@ describe("resolveWorkContextSource", () => {
 
   it("is MANUAL when the answer overrides a predicted day off with WORK", () => {
     expect(resolveWorkContextSource(false, "WORK")).toBe("MANUAL");
+  });
+});
+
+describe("describeContextStrip — Priority 3 (Daily Intelligence follow-on)", () => {
+  it("confirmed WORK with a resolved phase, no unresolved post-shift fact", () => {
+    const ctx: ScheduledContext = { week: "A", todayIsScheduledWorkDay: true, phase: "SCHEDULED_SHIFT" };
+    expect(describeContextStrip("WORK", ctx, false)).toBe("Working today — during your scheduled shift");
+  });
+
+  it("confirmed WORK with an unresolved post-shift fact preempts the generic phase label", () => {
+    const ctx: ScheduledContext = { week: "A", todayIsScheduledWorkDay: true, phase: "EXPECTED_POST_WORK" };
+    expect(describeContextStrip("WORK", ctx, true)).toBe("Working today — shift ended, not yet shifted down");
+  });
+
+  it("a work-ended fact that has since been cleared by SHIFT_DOWN_COMPLETED reverts to the generic phase label", () => {
+    // hasUnresolvedPostShift is false once cleared, even though a
+    // WORK_PERIOD_ENDED fact exists somewhere in history — this function
+    // only ever receives the already-resolved boolean, never the raw fact.
+    const ctx: ScheduledContext = { week: "A", todayIsScheduledWorkDay: true, phase: "EXPECTED_POST_WORK" };
+    expect(describeContextStrip("WORK", ctx, false)).toBe("Working today — just after your shift");
+  });
+
+  it("confirmed WORK with no scheduledContext yet falls back to the plain fact", () => {
+    expect(describeContextStrip("WORK", null, false)).toBe("Working today");
+  });
+
+  it("confirmed OFF ignores any predicted phase — manual fact beats prediction", () => {
+    const ctx: ScheduledContext = { week: "A", todayIsScheduledWorkDay: true, phase: "SCHEDULED_SHIFT" };
+    expect(describeContextStrip("OFF", ctx, false)).toBe("Off today");
+  });
+
+  it("UNKNOWN with a schedule available states the prediction explicitly, never as fact", () => {
+    const ctx: ScheduledContext = { week: "B", todayIsScheduledWorkDay: false, phase: "OFF" };
+    expect(describeContextStrip("UNKNOWN", ctx, false)).toBe(
+      "Not confirmed yet — schedule predicts a day off (off hours)",
+    );
+  });
+
+  it("UNKNOWN with no scheduledContext at all", () => {
+    expect(describeContextStrip("UNKNOWN", null, false)).toBe("Context not set yet");
   });
 });
