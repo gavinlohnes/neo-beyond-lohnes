@@ -28,6 +28,7 @@ button, input {
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 16px;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
@@ -77,8 +78,50 @@ button, input {
   margin: 0;
 }
 
+/* Overdrive Phase 5: BODY's glanceable status-strip value — one size
+   between .card-body (16px, prose) and .card-title (18px, headings),
+   bold enough to actually scan as a number, not a sentence. */
+.status-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  margin: 2px 0 0;
+  letter-spacing: -0.01em;
+}
+
+/* Overdrive Phase 3: capacity (GREEN/YELLOW/RED) is the single most
+   consequence-bearing fact on TODAY's primary card, and used to be
+   communicated by color-coded text alone — easy to skim past. A small
+   solid dot makes it perceptible at a glance without touching the
+   locked semantic color values themselves or turning the card into a
+   colored banner. RED reuses --accent-strong specifically so the
+   single highest-stakes state gets the same emphasis tier RESET/SHIFT
+   DOWN's SIGNAL motion already reserves for "this needs you." */
+.capacity-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.capacity-dot--green {
+  background: var(--success);
+}
+.capacity-dot--yellow {
+  background: var(--warning);
+}
+.capacity-dot--red {
+  background: var(--accent-strong);
+}
+
+/* Overdrive Phase 1: restrained elevation — the one card meant to lead
+   the screen (the primary recommendation, an active RESET/SHIFT DOWN)
+   gets a soft shadow in addition to its existing accent border, so it
+   reads as spatially "above" the rest of the screen, not just outlined
+   differently. Never applied to ordinary .card instances. */
 .card--action {
   border-color: var(--accent);
+  box-shadow: var(--shadow-panel);
 }
 
 .field {
@@ -109,10 +152,12 @@ button, input {
   font-weight: 600;
   min-height: 44px;
   cursor: pointer;
+  transition: transform var(--motion-fast) var(--motion-easing);
 }
 
 .btn-primary:active {
   filter: brightness(0.9);
+  transform: scale(var(--tap-scale));
 }
 
 .btn-primary:disabled {
@@ -144,10 +189,12 @@ button, input {
   font-weight: 600;
   min-height: 44px;
   cursor: pointer;
+  transition: transform var(--motion-fast) var(--motion-easing);
 }
 
 .btn-secondary:active {
   filter: brightness(1.15);
+  transform: scale(var(--tap-scale));
 }
 
 .btn-secondary:disabled {

@@ -811,9 +811,14 @@ export function TodayScreen() {
           than this card. */}
       {day && recommendation && (
         <div key={recommendation.id} className="card card--action fade-in">
-          <p className="meta" style={{ marginBottom: 12 }}>
-            {describeContextStrip(day.workContext, scheduledContext, unresolvedPostShift)}
-            {capacityResult ? ` · ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}` : ""}
+          <p className="meta" style={{ marginBottom: 12, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+            <span>{describeContextStrip(day.workContext, scheduledContext, unresolvedPostShift)}</span>
+            {capacityResult && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
+                {`· ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}`}
+              </span>
+            )}
           </p>
           <h2 className="recommendation-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <ResolveIcon size={24} />
