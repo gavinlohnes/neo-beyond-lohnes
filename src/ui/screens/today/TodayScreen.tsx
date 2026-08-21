@@ -487,7 +487,8 @@ export function TodayScreen() {
           style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
         >
           {prominent ? <SignalIcon key="on" name="reset" size={20} /> : <Icon key="off" name="reset" size={20} />}
-          {active ? "● RESET IN PROGRESS" : prominent ? "RECOMMENDED — RESET" : "RESET"}
+          {active && <span aria-hidden="true" className="diamond" />}
+          {active ? "RESET IN PROGRESS" : prominent ? "RECOMMENDED — RESET" : "RESET"}
         </p>
         <p className="card-body" style={{ marginBottom: 12 }}>{RESET_EXPLANATION}</p>
         {active ? (
@@ -570,7 +571,8 @@ export function TodayScreen() {
           style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
         >
           {prominent ? <SignalIcon key="on" name="shiftDown" size={20} /> : <Icon key="off" name="shiftDown" size={20} />}
-          {active ? "● SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
+          {active && <span aria-hidden="true" className="diamond" />}
+          {active ? "SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
         </p>
         <p className="card-body" style={{ marginBottom: 12 }}>{SHIFT_DOWN_EXPLANATION}</p>
         {active ? (
@@ -659,7 +661,7 @@ export function TodayScreen() {
                 <div key={item.key} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-subtle)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span className="card-body" style={{ margin: 0 }}>
-                      {done ? "✓ " : ""}
+                      {done && <span aria-hidden="true" className="diamond" style={{ marginRight: 6, verticalAlign: 1 }} />}
                       {item.label}
                       {item.key === "hydrate" ? ` — ${minimumDayHydrateOz}oz logged` : ""}
                       {item.key === "protein" ? ` — ${minimumDayProteinG}g logged` : ""}

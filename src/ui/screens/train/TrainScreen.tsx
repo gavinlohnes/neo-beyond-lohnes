@@ -462,7 +462,11 @@ export function TrainScreen() {
       {completionSummary && (
         <div className="card card--action fade-in">
           <p className="eyebrow" style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-            {completionSummary.status === "COMPLETED" && <ConfirmIcon size={20} />}
+            {completionSummary.status === "COMPLETED" ? (
+              <ConfirmIcon size={20} />
+            ) : (
+              <span aria-hidden="true" className="diamond" />
+            )}
             {completionSummary.status === "COMPLETED" ? "WORKOUT COMPLETE" : "WORKOUT SAVED — PARTIAL"}
           </p>
           <h2 className="recommendation-title" style={{ textTransform: "capitalize" }}>
@@ -782,7 +786,7 @@ export function TrainScreen() {
                       onClick={() => setFocusedExerciseId(ex.exerciseId)}
                     >
                       <span>
-                        {done ? "✓ " : ""}
+                        {done && <span aria-hidden="true" className="diamond" style={{ marginRight: 6, verticalAlign: 1 }} />}
                         {ex.name}
                       </span>
                       <span className="meta">{loggedCount}/{ex.sets}</span>
