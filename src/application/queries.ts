@@ -4,11 +4,13 @@ import type {
   DomainEvent,
   HydrationEntry,
   Recommendation,
+  SchedulePattern,
   StateCheckIn,
   WaterLogCorrectedPayload,
   WaterLoggedPayload,
 } from "../domain/common/types";
-import { deriveScheduledContext, type ScheduledContext } from "../engine/scheduledContext";
+import { DEFAULT_SCHEDULE_PATTERN, deriveScheduledContext, type ScheduledContext } from "../engine/scheduledContext";
+import { parseSchedulePattern } from "../persistence/schedulePatternValidation";
 
 /**
  * Only one BeyondDay should ever be ACTIVE at a time (startDay() closes
@@ -315,13 +317,34 @@ export async function getTotalProteinGrams(beyondDayId: string): Promise<number>
  * only once, per recommendation.
  */
 /**
+ * Drop 02a: the schedule pattern's I/O boundary. Reads the single stored
+ * row, validates it, and falls back to DEFAULT_SCHEDULE_PATTERN if none
+ * exists yet (a fresh v4 install is seeded by the Dexie migration, so this
+ * only matters for in-memory/test databases opened without going through
+ * that upgrade) or if the stored row is malformed (e.g. a hand-edited or
+ * corrupted imported backup) — "unknown is better than false precision"
+ * beats surfacing a broken schedule or throwing. Never writes.
+ */
+export async function getSchedulePattern(): Promise<SchedulePattern> {
+  const raw = await db.schedulePatterns.get("current");
+  if (!raw) return DEFAULT_SCHEDULE_PATTERN;
+  return parseSchedulePattern(raw) ?? DEFAULT_SCHEDULE_PATTERN;
+}
+
+/**
  * Thin wrapper so the UI has one query entry point rather than importing
  * the engine function directly, matching every other derived-state query
  * in this file. Defaults to real "now" in production; tests inject a
  * fixed Date. Purely a read — never touches BeyondDay.workContext.
+ *
+ * Drop 02a: loads the stored SchedulePattern first (persistence retrieves
+ * configuration), then calls the pure deriver (engine interprets it).
+ * deriveScheduledContext itself does no I/O and stays fully testable in
+ * isolation with an explicit pattern argument.
  */
-export function getScheduledContext(now: Date = new Date()): ScheduledContext {
-  return deriveScheduledContext(now);
+export async function getScheduledContext(now: Date = new Date()): Promise<ScheduledContext> {
+  const pattern = await getSchedulePattern();
+  return deriveScheduledContext(now, pattern);
 }
 
 export interface MinimumDayStatus {

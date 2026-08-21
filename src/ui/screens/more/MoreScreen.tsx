@@ -4,13 +4,14 @@ import { exportBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
 import { getActiveDay, getDayCount, getEventCount, getRecommendationCount } from "../../../application/queries";
 import { HistoryScreen } from "../history/HistoryScreen";
+import { WorkScheduleScreen } from "./WorkScheduleScreen";
 
 const APP_VERSION = "0.1.0"; // chat-built checkpoint — NOT the same lineage as the surviving 0.2.0 app
 const ENGINE_VERSION = "0.1.0";
-const DATA_SCHEMA = 3; // this checkpoint's own schema (v3 adds sessionId/exerciseId indexes to performedSets for TRAIN) — not yet reconciled with the real app's schema 3 (same number, different lineage)
+const DATA_SCHEMA = 4; // v4 (Drop 02a) adds schedulePatterns — not yet reconciled with the real app's own schema-numbering lineage
 
 export function MoreScreen() {
-  const [view, setView] = useState<"MENU" | "HISTORY">("MENU");
+  const [view, setView] = useState<"MENU" | "HISTORY" | "WORK_SCHEDULE">("MENU");
   const [days, setDays] = useState(0);
   const [events, setEvents] = useState(0);
   const [recommendations, setRecommendations] = useState(0);
@@ -126,6 +127,23 @@ export function MoreScreen() {
     );
   }
 
+  if (view === "WORK_SCHEDULE") {
+    return (
+      <div className="screen fade-in">
+        <button
+          className="btn-secondary"
+          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
+          onClick={() => setView("MENU")}
+        >
+          ← BACK TO MORE
+        </button>
+        <p className="eyebrow">WORK SCHEDULE</p>
+        <h1 className="title">Your rotation</h1>
+        <WorkScheduleScreen />
+      </div>
+    );
+  }
+
   return (
     <div className="screen fade-in">
       <p className="eyebrow">MORE</p>
@@ -144,6 +162,18 @@ export function MoreScreen() {
         </p>
         <button className="btn-primary" onClick={() => setView("HISTORY")}>
           VIEW HISTORY
+        </button>
+      </div>
+
+      <SectionLabel>Work schedule</SectionLabel>
+      <div className="card">
+        <h2 className="card-title">Your rotation</h2>
+        <p className="card-body" style={{ marginBottom: 12 }}>
+          The work rotation BEYOND uses to predict a work day and shift phase. Configuration, not a daily
+          check-in — edits here never create a historical work record by themselves.
+        </p>
+        <button className="btn-secondary" onClick={() => setView("WORK_SCHEDULE")}>
+          WORK SCHEDULE
         </button>
       </div>
 

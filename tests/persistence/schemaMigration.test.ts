@@ -1,6 +1,7 @@
 import Dexie from "dexie";
 import { afterEach, describe, expect, it } from "vitest";
 import { BeyondDB } from "../../src/persistence/db";
+import { DEFAULT_SCHEDULE_PATTERN, deriveScheduledContext } from "../../src/engine/scheduledContext";
 
 /**
  * A real checkpoint-03 user's browser already has an IndexedDB database at
@@ -9,11 +10,11 @@ import { BeyondDB } from "../../src/persistence/db";
  * without losing any existing data. This test builds a genuine v1
  * database by hand (bypassing BeyondDB, which only knows the current
  * schema) and then opens it through the real BeyondDB class to prove the
- * upgrade chain (v1 -> v2 -> v3) is safe end to end.
+ * upgrade chain (v1 -> v2 -> v3 -> v4) is safe end to end.
  */
 
 const DB_NAME = "beyond";
-const CURRENT_SCHEMA_VERSION = 3;
+const CURRENT_SCHEMA_VERSION = 4;
 
 afterEach(async () => {
   await Dexie.delete(DB_NAME);
@@ -63,7 +64,91 @@ describe("Dexie v1 -> current schema migration", () => {
     expect(await upgraded.outcomes.count()).toBe(0);
     expect(await upgraded.workoutSessions.count()).toBe(0);
     expect(await upgraded.performedSets.count()).toBe(0);
+    expect(await upgraded.schedulePatterns.count()).toBe(1);
+    expect(await upgraded.schedulePatterns.get("current")).toEqual(DEFAULT_SCHEDULE_PATTERN);
 
     upgraded.close();
+  });
+});
+
+/**
+ * Drop 02a (Daily Intelligence / Context, first slice): the schedule that
+ * used to be hardcoded constants in engine/scheduledContext.ts moves into
+ * this new table. A real v3 install has no schedulePatterns row at all —
+ * this proves the v4 upgrade seeds one equivalent to those old constants,
+ * and that deriveScheduledContext(now, seededPattern) predicts identically
+ * to what the pre-Drop-02a hardcoded deriveScheduledContext(now) always
+ * produced, for a spread of instants covering every SchedulePhase.
+ */
+describe("Dexie v3 -> v4 migration (Drop 02a: schedulePatterns)", () => {
+  it("seeds exactly one schedulePatterns row equal to DEFAULT_SCHEDULE_PATTERN", async () => {
+    const v3 = new Dexie(DB_NAME);
+    v3.version(1).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+    });
+    v3.version(2).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId",
+    });
+    v3.version(3).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+    });
+    await v3.open();
+    expect(v3.verno).toBe(3);
+    v3.close();
+
+    const upgraded = new BeyondDB();
+    await upgraded.open();
+
+    expect(upgraded.verno).toBe(4);
+    expect(await upgraded.schedulePatterns.count()).toBe(1);
+    expect(await upgraded.schedulePatterns.get("current")).toEqual(DEFAULT_SCHEDULE_PATTERN);
+
+    upgraded.close();
+  });
+
+  it("predictions are unchanged immediately before and after the v3->v4 migration", async () => {
+    // "Before": the pre-Drop-02a hardcoded behavior, reproduced directly by
+    // calling the pure deriver with the exact pattern those old constants
+    // held (DEFAULT_SCHEDULE_PATTERN) — there is no other pattern a v3
+    // install could have been running with, since the schedule wasn't
+    // configurable yet.
+    const sampleInstants = [
+      new Date(2026, 7, 21, 17, 59), // PRE_WORK
+      new Date(2026, 7, 21, 18, 0), // SCHEDULED_SHIFT (evening)
+      new Date(2026, 7, 22, 2, 0), // SCHEDULED_SHIFT (past midnight)
+      new Date(2026, 7, 22, 8, 0), // EXPECTED_POST_WORK
+      new Date(2026, 7, 20, 15, 0), // OFF
+    ];
+    const before = sampleInstants.map((now) => deriveScheduledContext(now, DEFAULT_SCHEDULE_PATTERN));
+
+    const v3 = new Dexie(DB_NAME);
+    v3.version(1).stores({ beyondDays: "id, status, startedAt", events: "id, beyondDayId, type, occurredAt", checkIns: "id, beyondDayId, recordedAt", recommendations: "id, beyondDayId, issuedAt" });
+    v3.version(2).stores({ beyondDays: "id, status, startedAt", events: "id, beyondDayId, type, occurredAt", checkIns: "id, beyondDayId, recordedAt", recommendations: "id, beyondDayId, issuedAt", outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt", workoutSessions: "id, beyondDayId, templateId, status, startedAt", performedSets: "id, beyondDayId" });
+    v3.version(3).stores({ beyondDays: "id, status, startedAt", events: "id, beyondDayId, type, occurredAt", checkIns: "id, beyondDayId, recordedAt", recommendations: "id, beyondDayId, issuedAt", outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt", workoutSessions: "id, beyondDayId, templateId, status, startedAt", performedSets: "id, beyondDayId, sessionId, exerciseId" });
+    await v3.open();
+    v3.close();
+
+    const upgraded = new BeyondDB();
+    await upgraded.open();
+    const seededPattern = (await upgraded.schedulePatterns.get("current"))!;
+    const after = sampleInstants.map((now) => deriveScheduledContext(now, seededPattern));
+    upgraded.close();
+
+    expect(after).toEqual(before);
   });
 });
