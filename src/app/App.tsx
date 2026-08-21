@@ -3,6 +3,7 @@ import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import { TrainScreen } from "../ui/screens/train/TrainScreen";
 import { BodyScreen } from "../ui/screens/body/BodyScreen";
 import { MoreScreen } from "../ui/screens/more/MoreScreen";
+import { Icon, type IconName } from "../ui/icons/Icon";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -12,6 +13,14 @@ import { MoreScreen } from "../ui/screens/more/MoreScreen";
  * instead of competing for a fifth primary tab slot.
  */
 type Tab = "TODAY" | "TRAIN" | "BODY" | "MORE";
+
+// MORE has no destination icon in the locked pilot set — it keeps the
+// plain diamond marker rather than inventing a fourth glyph.
+const TAB_ICON: Partial<Record<Tab, IconName>> = {
+  TODAY: "mission",
+  TRAIN: "train",
+  BODY: "body",
+};
 
 export function App() {
   const [tab, setTab] = useState<Tab>("TODAY");
@@ -55,11 +64,15 @@ export function App() {
               letterSpacing: "0.04em",
             }}
           >
-            <span
-              aria-hidden="true"
-              className="diamond"
-              style={{ opacity: tab === t ? 1 : 0 }}
-            />
+            {TAB_ICON[t] ? (
+              <Icon name={TAB_ICON[t]!} size={24} />
+            ) : (
+              <span
+                aria-hidden="true"
+                className="diamond"
+                style={{ opacity: tab === t ? 1 : 0 }}
+              />
+            )}
             {t}
           </button>
         ))}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { BeyondDay, Recommendation, StateCheckIn } from "../../../domain/common/types";
+import { Icon } from "../../icons/Icon";
 import {
   CHECK_IN_FIELDS,
   describeCheckInValues,
@@ -463,7 +464,10 @@ export function TodayScreen() {
       return (
         <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
           <div>
-            <p className="eyebrow" style={{ marginBottom: 2 }}>RESET</p>
+            <p className="eyebrow" style={{ marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
+              <Icon name="reset" size={20} />
+              RESET
+            </p>
             <p className="meta">{RESET_EXPLANATION_SHORT}</p>
           </div>
           <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setResetOpen(true)}>
@@ -478,7 +482,11 @@ export function TodayScreen() {
         className="card fade-in"
         style={prominent || active ? { borderColor: "var(--accent)" } : undefined}
       >
-        <p className="eyebrow" style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined }}>
+        <p
+          className="eyebrow"
+          style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
+        >
+          <Icon name="reset" size={20} />
           {active ? "● RESET IN PROGRESS" : prominent ? "RECOMMENDED — RESET" : "RESET"}
         </p>
         <p className="card-body" style={{ marginBottom: 12 }}>{RESET_EXPLANATION}</p>
@@ -536,7 +544,10 @@ export function TodayScreen() {
       return (
         <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
           <div>
-            <p className="eyebrow" style={{ marginBottom: 2 }}>SHIFT DOWN</p>
+            <p className="eyebrow" style={{ marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
+              <Icon name="shiftDown" size={20} />
+              SHIFT DOWN
+            </p>
             <p className="meta">{SHIFT_DOWN_EXPLANATION_SHORT}</p>
           </div>
           <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setShiftDownOpen(true)}>
@@ -551,7 +562,11 @@ export function TodayScreen() {
         className="card fade-in"
         style={prominent || active ? { borderColor: "var(--accent)" } : undefined}
       >
-        <p className="eyebrow" style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined }}>
+        <p
+          className="eyebrow"
+          style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
+        >
+          <Icon name="shiftDown" size={20} />
           {active ? "● SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
         </p>
         <p className="card-body" style={{ marginBottom: 12 }}>{SHIFT_DOWN_EXPLANATION}</p>
