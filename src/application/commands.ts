@@ -3,6 +3,7 @@ import { evaluate } from "../engine/evaluate";
 import { assertRedOverrideConfirmed } from "../engine/redOverride";
 import type {
   BeyondDay,
+  CaptureItem,
   DomainEvent,
   Recommendation,
   SchedulePattern,
@@ -557,6 +558,49 @@ export async function updateSchedulePattern(input: SchedulePatternInput): Promis
   };
   await db.schedulePatterns.put(record);
   return record;
+}
+
+/**
+ * Overdrive Phase 10 (first connective capability). The only writer of a
+ * new CaptureItem — "capture first, organize second, act only when
+ * earned." Deliberately does nothing else: no classification, no
+ * deduplication, no linking to any other domain, no AI. Rejects empty/
+ * whitespace-only text outright (nothing meaningful was actually
+ * captured) rather than silently creating a blank record.
+ */
+export async function captureItem(text: string): Promise<CaptureItem> {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    throw new Error("EMPTY_CAPTURE: capture text cannot be empty.");
+  }
+  const item: CaptureItem = {
+    id: newId(),
+    text: trimmed,
+    capturedAt: new Date().toISOString(),
+    status: "OPEN",
+    seq: await nextSeq(),
+  };
+  await db.captureItems.add(item);
+  return item;
+}
+
+/**
+ * Marks a capture resolved — the user decided it, acted on it elsewhere,
+ * or it no longer needs attention. Does not delete or reclassify it;
+ * "resolved" is a state, not an erasure, so it stays in getAllCaptureItems
+ * (just not getOpenCaptureItems) for as long as the rest of BEYOND's
+ * history does.
+ */
+export async function resolveCaptureItem(id: string): Promise<void> {
+  await db.captureItems.update(id, { status: "RESOLVED", resolvedAt: new Date().toISOString() });
+}
+
+/** Undoes an accidental resolve — same reasoning as RESET/SHIFT DOWN's cancel path having a real undo, not a one-way door. */
+export async function reopenCaptureItem(id: string): Promise<void> {
+  const existing = await db.captureItems.get(id);
+  if (!existing) return;
+  const { resolvedAt: _resolvedAt, ...withoutResolvedAt } = existing;
+  await db.captureItems.put({ ...withoutResolvedAt, status: "OPEN" });
 }
 
 /**

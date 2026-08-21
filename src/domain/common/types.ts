@@ -469,3 +469,33 @@ export interface DomainEvent<TPayload = unknown> {
   /** See StateCheckIn.seq's doc comment — same deterministic tie-break, same shared counter. */
   seq?: number;
 }
+
+/**
+ * Overdrive Phase 10 (Daily Intelligence -> first connective capability):
+ * the smallest slice of the approved CAPTURE / Universal Inbox R&D that
+ * doesn't require inventing unbuilt policy. The R&D's own core doctrine —
+ * "capture first, organize second, act only when earned... capture should
+ * be extremely low friction and preserve raw input before classification"
+ * — is fully satisfied by this shape alone. The fuller CAPTURE PROCESSOR
+ * design (Future R&D Register #14) describes routing captures to
+ * KNOWLEDGE/ENTITY_UPDATE/OBLIGATION_PROPOSAL/MISSION_PROPOSAL/etc. — none
+ * of those domain concepts exist in BEYOND yet, so building that router
+ * now would mean inventing their policy from scratch rather than
+ * implementing approved design. Deliberately not attempted here.
+ *
+ * Not day-scoped and not a DomainEvent: a capture can (and often should)
+ * outlive the BeyondDay it was written during — "inbox age is not
+ * urgency" — so it has no beyondDayId and isn't part of any day's event
+ * history. It is its own small, directly-mutable record, same treatment
+ * as SchedulePattern: `text`/`capturedAt` never change after creation;
+ * only `status`/`resolvedAt` do, via resolveCaptureItem/reopenCaptureItem.
+ */
+export interface CaptureItem {
+  id: string;
+  text: string;
+  capturedAt: string;
+  status: "OPEN" | "RESOLVED";
+  resolvedAt?: string;
+  /** See StateCheckIn.seq's doc comment — same deterministic tie-break, same shared counter. */
+  seq?: number;
+}

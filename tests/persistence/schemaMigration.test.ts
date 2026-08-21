@@ -10,11 +10,11 @@ import { DEFAULT_SCHEDULE_PATTERN, deriveScheduledContext } from "../../src/engi
  * without losing any existing data. This test builds a genuine v1
  * database by hand (bypassing BeyondDB, which only knows the current
  * schema) and then opens it through the real BeyondDB class to prove the
- * upgrade chain (v1 -> v2 -> v3 -> v4) is safe end to end.
+ * upgrade chain (v1 -> v2 -> v3 -> v4 -> v5) is safe end to end.
  */
 
 const DB_NAME = "beyond";
-const CURRENT_SCHEMA_VERSION = 4;
+const CURRENT_SCHEMA_VERSION = 5;
 
 afterEach(async () => {
   await Dexie.delete(DB_NAME);
@@ -66,10 +66,27 @@ describe("Dexie v1 -> current schema migration", () => {
     expect(await upgraded.performedSets.count()).toBe(0);
     expect(await upgraded.schedulePatterns.count()).toBe(1);
     expect(await upgraded.schedulePatterns.get("current")).toEqual(DEFAULT_SCHEDULE_PATTERN);
+    expect(await upgraded.captureItems.count()).toBe(0);
 
     upgraded.close();
   });
 });
+
+/**
+ * Overdrive Phase 10: unlike v4 (which had to seed a row so predictions
+ * stayed identical across the upgrade), v5 has no equivalent prior data —
+ * capture didn't exist before this checkpoint, so there's nothing to
+ * migrate or seed. A dedicated hand-built "v4 install upgrading to v5"
+ * test was tried here and dropped: two Dexie connections sharing the
+ * fake-indexeddb-backed "beyond" name within one test file raced against
+ * each other (a "waiting to delete" IndexedDB-spec collision, not a
+ * product bug) in a way the existing tests below don't hit. Coverage is
+ * not lost — the v1 -> current test above already proves a fresh install
+ * lands on v5 with an empty captureItems table, and the v3 -> v4 test
+ * below proves the schedulePatterns seed-on-upgrade still fires correctly
+ * for an older install passing all the way through to the current
+ * version (v5, per its own updated assertion).
+ */
 
 /**
  * Drop 02a (Daily Intelligence / Context, first slice): the schedule that
@@ -114,7 +131,11 @@ describe("Dexie v3 -> v4 migration (Drop 02a: schedulePatterns)", () => {
     const upgraded = new BeyondDB();
     await upgraded.open();
 
-    expect(upgraded.verno).toBe(4);
+    // Opening via the real, current BeyondDB always lands on its newest
+    // registered version — v5 as of Overdrive Phase 10 — not v4. What
+    // this test actually verifies (the v4 schedulePatterns seed still
+    // fires correctly for a v3 install) is unaffected by v5 existing.
+    expect(upgraded.verno).toBe(5);
     expect(await upgraded.schedulePatterns.count()).toBe(1);
     expect(await upgraded.schedulePatterns.get("current")).toEqual(DEFAULT_SCHEDULE_PATTERN);
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { BeyondDay, Recommendation, StateCheckIn } from "../../../domain/common/types";
+import type { BeyondDay, CaptureItem, Recommendation, StateCheckIn } from "../../../domain/common/types";
 import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
 import {
   CHECK_IN_FIELDS,
@@ -58,6 +58,8 @@ import {
   rateOutcome,
   setWorkContext,
   markWorkEnded,
+  captureItem,
+  resolveCaptureItem,
   enableMinimumDay,
   markMedsCompleted,
   markHygieneCompleted,
@@ -81,6 +83,7 @@ import {
   getOpenShiftDown,
   getWorkPeriodEnded,
   hasUnresolvedPostShift,
+  getOpenCaptureItems,
   type MinimumDayStatus,
   type RecommendationDecision,
 } from "../../../application/queries";
@@ -125,6 +128,8 @@ export function TodayScreen() {
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
+  const [openCaptureItems, setOpenCaptureItems] = useState<CaptureItem[]>([]);
+  const [captureText, setCaptureText] = useState("");
   const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
   const [minimumDayHydrateOz, setMinimumDayHydrateOz] = useState(0);
   const [minimumDayProteinG, setMinimumDayProteinG] = useState(0);
@@ -150,6 +155,10 @@ export function TodayScreen() {
   async function refresh() {
     const activeDay = (await getActiveDay()) ?? null;
     setDay(activeDay);
+    // Overdrive Phase 10: capture is deliberately not day-scoped ("inbox
+    // age is not urgency," and jotting something down shouldn't require a
+    // BeyondDay to already exist), so this refreshes unconditionally.
+    setOpenCaptureItems(await getOpenCaptureItems());
     if (activeDay) {
       setCheckIn((await getLatestCheckIn(activeDay.id)) ?? null);
       const rec = (await getLatestRecommendation(activeDay.id)) ?? null;
@@ -375,6 +384,29 @@ export function TodayScreen() {
     setBusy(true);
     try {
       await markWorkEnded(day.id);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCapture() {
+    if (busy || !captureText.trim()) return;
+    setBusy(true);
+    try {
+      await captureItem(captureText);
+      setCaptureText("");
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleResolveCapture(id: string) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await resolveCaptureItem(id);
       await refresh();
     } finally {
       setBusy(false);
@@ -1043,6 +1075,66 @@ export function TodayScreen() {
           </div>
         </div>
       )}
+
+      {/* Overdrive Phase 10 (first connective capability): capture is
+          deliberately not gated on `day` existing — "capture first,
+          organize second" shouldn't require starting a BeyondDay first.
+          Always a single-line input, never a bigger form to open — the
+          entire point is that this needs less friction than RESET/SHIFT
+          DOWN's progressive-disclosure pattern, not the same amount. */}
+      <div className="card">
+        <p className="eyebrow" style={{ marginBottom: 4 }}>
+          CAPTURE{openCaptureItems.length > 0 ? ` (${openCaptureItems.length})` : ""}
+        </p>
+        <p className="meta" style={{ marginBottom: 8 }}>
+          Jot something down now. Where it belongs is a decision for later, not now.
+        </p>
+        <div style={{ display: "flex", gap: 8, marginBottom: openCaptureItems.length > 0 ? 12 : 0 }}>
+          <input
+            type="text"
+            className="input"
+            style={{ flex: 1 }}
+            placeholder="Capture a thought..."
+            value={captureText}
+            disabled={busy}
+            onChange={(e) => setCaptureText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void handleCapture();
+            }}
+          />
+          <button
+            className="btn-secondary"
+            style={{ width: "auto", padding: "8px 16px" }}
+            disabled={busy || !captureText.trim()}
+            onClick={() => void handleCapture()}
+          >
+            CAPTURE
+          </button>
+        </div>
+        {openCaptureItems.map((item) => (
+          <div
+            key={item.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 0",
+              borderTop: "1px solid var(--border-subtle)",
+            }}
+          >
+            <span className="card-body" style={{ margin: 0 }}>{item.text}</span>
+            <button
+              className="btn-secondary"
+              style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: 0 }}
+              disabled={busy}
+              onClick={() => void handleResolveCapture(item.id)}
+            >
+              RESOLVE
+            </button>
+          </div>
+        ))}
+      </div>
 
       {day && (
         <div className="card">
