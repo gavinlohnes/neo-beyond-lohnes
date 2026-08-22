@@ -248,16 +248,22 @@ export function MoreScreen() {
         <input
           ref={fileInputRef}
           type="file"
-          // Drop 01 acceptance correction: Android's Storage Access
-          // Framework file picker filters by the file's OS-recorded MIME
-          // type, not by extension — a bare "application/json" accept
-          // list previously excluded any backup whose provider-recorded
-          // type didn't match exactly (see backup.ts's exportBackup doc
-          // comment for why that could happen even for a BEYOND-produced
-          // file). Listing every real-world variant plus the raw
-          // extension is defense in depth — it also still recognizes any
-          // backup already downloaded before that export-side fix.
-          accept="application/json,text/json,.json"
+          // Drop 01 acceptance correction (real-device retest, 2026-08-22):
+          // no `accept` filter at all, deliberately. A prior attempt
+          // listed several MIME variants plus ".json" and still failed on
+          // a real Android device — Android's Storage Access Framework
+          // filters candidates by whatever MIME type its DocumentsProvider
+          // already recorded for that file at download time, which BEYOND
+          // cannot reliably control or predict (it can vary by Chrome
+          // version/OEM and has been observed not to match ANY specific
+          // MIME string, including application/json, for a locally
+          // generated blob download) — so no accept list is provably safe
+          // against being filtered out on some device. The OS picker's
+          // job is only to let the operator choose a candidate file;
+          // previewAnyRestore/applyAnyRestore below still fully validate
+          // its actual content and reject anything that isn't a
+          // recognized BEYOND backup (INVALID_BACKUP_FILE), so accepting
+          // every file at the picker level costs nothing in safety.
           disabled={busy}
           onChange={(e) => void handleFileChosen(e.target.files?.[0])}
         />

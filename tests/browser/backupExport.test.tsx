@@ -12,14 +12,23 @@ import { startDay } from "../../src/application/commands";
  * own doc comment) — this is the real-Chromium coverage that gap left
  * for the DOM-triggering path itself.
  *
- * Root cause of the Android restore failure: dexie-export-import's own
- * Blob is hardcoded to `type: "text/json"` (not application/json), and
- * Android's Storage Access Framework file picker filters strictly by a
- * file's OS-recorded MIME type. This proves exportBackup() now hands the
- * browser a file explicitly typed application/json instead of relying on
- * that library-internal type — the actual fix. It cannot prove Android's
- * own SAF picker then accepts the file; that still requires a real
- * device round-trip (see the completion report's Android retest steps).
+ * A first fix attempt (re-typing the export Blob as application/json,
+ * plus listing several accept MIME variants on the restore input) still
+ * failed a real Android round trip: the file appeared in the picker but
+ * stayed unselectable. Root cause, confirmed on retest: Android's Storage
+ * Access Framework filters candidates by whatever MIME type its
+ * DocumentsProvider recorded for the file at download time — which
+ * BEYOND cannot reliably predict or control, and which was observed not
+ * to match any of the MIME strings tried. No test in this file can
+ * observe that OS-level behavior directly (it isn't reproducible outside
+ * a real device); what CAN be proven here is the actual code-level fix:
+ * exportBackup() still declares an explicit, correct type on its own
+ * side (harmless, arguably still best practice), and — the part that
+ * actually matters this time — the restore input applies no `accept`
+ * filter at all, so no Android MIME mismatch can exclude a candidate
+ * file from the picker in the first place. Safety is unaffected: content
+ * is still fully validated after selection by previewAnyRestore/
+ * applyAnyRestore, untouched by this file.
  */
 
 beforeEach(async () => {
@@ -61,12 +70,12 @@ describe("exportBackup — download MIME type", () => {
   });
 });
 
-describe("MoreScreen restore picker — accept filter", () => {
+describe("MoreScreen restore picker — no accept filter (Drop 01 acceptance retest)", () => {
   afterEach(() => {
     cleanup();
   });
 
-  it("accepts application/json, text/json, and the raw .json extension (Android SAF hardening)", async () => {
+  it("applies no accept restriction, so Android's SAF picker cannot exclude a candidate file by MIME", async () => {
     // MoreScreen fires an async refresh() on mount (getDayCount/getActiveDay/
     // etc.) with no exposed "loading" flag; starting a day first and
     // waiting for its own visible effect ("Active day: YES") is a real
@@ -78,9 +87,9 @@ describe("MoreScreen restore picker — accept filter", () => {
     const screen = await render(<MoreScreen />);
     await expect.element(screen.getByText("YES", { exact: true })).toBeVisible();
 
-    const fileInput = document.querySelector('input[type="file"]');
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
     expect(fileInput).not.toBeNull();
-    const accept = (fileInput as HTMLInputElement).accept;
-    expect(accept.split(",")).toEqual(expect.arrayContaining(["application/json", "text/json", ".json"]));
+    expect(fileInput!.accept).toBe("");
+    expect(fileInput!.hasAttribute("accept")).toBe(false);
   });
 });
