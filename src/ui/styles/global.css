@@ -382,3 +382,55 @@ button, input {
 .why-rule--matched {
   color: var(--text-1);
 }
+
+/* Overdrive Phase 11 (TODAY -> COMMAND 2.0): groups multiple cards under
+   one quiet typographic label instead of wrapping them in yet another
+   card — the "no dashboard wall" constraint means hierarchy has to come
+   from composition/typography, not from nesting more boxes. Deliberately
+   quieter than .eyebrow (text-3, not accent red): eyebrow marks what a
+   single card IS, section-label marks how several cards RELATE. */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+.section-label:first-child {
+  margin-top: 0;
+}
+
+.section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+/* Angular corner-flag: the restrained "this leads" marker for whichever
+   card is the actual leading surface in its group (the primary
+   recommendation, an active/recommended RESET or SHIFT DOWN, a
+   prominent Minimum Day offer). A clipped-corner tab rather than a
+   glow/border-only treatment, so leadership reads as the same angular
+   framing language as the diamond motif and the pilot icon geometry —
+   never applied to an ordinary .card. */
+.corner-flag {
+  position: relative;
+}
+
+.corner-flag::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 40px;
+  height: 5px;
+  background: var(--accent);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 100%, 0 100%);
+}
