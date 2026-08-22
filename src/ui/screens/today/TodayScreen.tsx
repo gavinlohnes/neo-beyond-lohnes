@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { BeyondDay, CaptureItem, Recommendation, StateCheckIn } from "../../../domain/common/types";
 import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
+import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { ConfirmBanner } from "../../components/ConfirmBanner";
 import {
   CHECK_IN_FIELDS,
   describeCheckInValues,
@@ -566,18 +568,12 @@ export function TodayScreen() {
     const open = prominent || active || resetOpen;
     if (!open) {
       return (
-        <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-          <div>
-            <p className="eyebrow" style={{ marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
-              <Icon name="reset" size={20} />
-              RESET
-            </p>
-            <p className="meta">{RESET_EXPLANATION_SHORT}</p>
-          </div>
-          <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setResetOpen(true)}>
-            OPEN
-          </button>
-        </div>
+        <CollapsibleRow
+          name="RESET"
+          icon={<Icon name="reset" size={20} />}
+          summary={RESET_EXPLANATION_SHORT}
+          onOpen={() => setResetOpen(true)}
+        />
       );
     }
     return (
@@ -650,18 +646,12 @@ export function TodayScreen() {
     const open = prominent || active || shiftDownOpen;
     if (!open) {
       return (
-        <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-          <div>
-            <p className="eyebrow" style={{ marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
-              <Icon name="shiftDown" size={20} />
-              SHIFT DOWN
-            </p>
-            <p className="meta">{SHIFT_DOWN_EXPLANATION_SHORT}</p>
-          </div>
-          <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setShiftDownOpen(true)}>
-            OPEN
-          </button>
-        </div>
+        <CollapsibleRow
+          name="SHIFT DOWN"
+          icon={<Icon name="shiftDown" size={20} />}
+          summary={SHIFT_DOWN_EXPLANATION_SHORT}
+          onOpen={() => setShiftDownOpen(true)}
+        />
       );
     }
     return (
@@ -1080,21 +1070,7 @@ export function TodayScreen() {
               day.workContext === "OFF"
                 ? "Off today."
                 : `Working today — ended ${new Date(workPeriodEndedAt!).toLocaleTimeString()}.`;
-            return (
-              <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                <div>
-                  <p className="eyebrow" style={{ marginBottom: 2 }}>WORK CONTEXT</p>
-                  <p className="meta">{summary}</p>
-                </div>
-                <button
-                  className="btn-secondary"
-                  style={{ width: "auto", padding: "8px 16px" }}
-                  onClick={() => setWorkContextOpen(true)}
-                >
-                  OPEN
-                </button>
-              </div>
-            );
+            return <CollapsibleRow name="WORK CONTEXT" summary={summary} onOpen={() => setWorkContextOpen(true)} />;
           }
           return (
             <div className="card">
@@ -1252,31 +1228,13 @@ export function TodayScreen() {
           </div>
         ))}
         {justResolvedCapture && (
-          <div
-            className="fade-in"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 8,
-              marginTop: 8,
-              paddingTop: 8,
-              borderTop: "1px solid var(--border-subtle)",
-            }}
-          >
-            <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6, margin: 0 }}>
-              <ConfirmIcon size={20} />
-              Resolved "{justResolvedCapture.text}"
-            </p>
-            <button
-              className="btn-secondary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: 0 }}
-              disabled={busy}
-              onClick={() => void handleUndoResolveCapture()}
-            >
-              UNDO
-            </button>
-          </div>
+          <ConfirmBanner
+            message={`Resolved "${justResolvedCapture.text}"`}
+            actionLabel="UNDO"
+            onAction={() => void handleUndoResolveCapture()}
+            disabled={busy}
+            divider
+          />
         )}
       </div>
 

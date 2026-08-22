@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ConfirmIcon } from "../../icons/Icon";
+import { ConfirmBanner } from "../../components/ConfirmBanner";
 import type { BeyondDay, HydrationEntry } from "../../../domain/common/types";
 import {
   logWater,
@@ -447,27 +447,19 @@ export function BodyScreen() {
           </div>
         )}
         {waterConfirmation && (
-          <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <ConfirmIcon size={20} />
-              {waterConfirmation.message}
-            </p>
-            <button
-              className="btn-secondary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
-              onClick={() => {
-                const entry = entries.find((e) => e.headEventId === waterConfirmation.headEventId);
-                if (entry) {
-                  setCorrectingId(entry.headEventId);
-                  setCorrectionInput(String(entry.effectiveAmountOz));
-                  setError(null);
-                  setWaterHistoryOpen(true);
-                }
-              }}
-            >
-              CORRECT
-            </button>
-          </div>
+          <ConfirmBanner
+            message={waterConfirmation.message}
+            actionLabel="CORRECT"
+            onAction={() => {
+              const entry = entries.find((e) => e.headEventId === waterConfirmation.headEventId);
+              if (entry) {
+                setCorrectingId(entry.headEventId);
+                setCorrectionInput(String(entry.effectiveAmountOz));
+                setError(null);
+                setWaterHistoryOpen(true);
+              }
+            }}
+          />
         )}
         {error && <p className="meta" style={{ color: "var(--danger)", marginTop: 8 }}>{error}</p>}
 
@@ -617,22 +609,14 @@ export function BodyScreen() {
           </button>
         )}
         {sleepConfirmation && (
-          <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <ConfirmIcon size={20} />
-              {sleepConfirmation.message}
-            </p>
-            <button
-              className="btn-secondary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
-              onClick={() => {
-                const entry = sleepEntries.find((e) => e.headEventId === sleepConfirmation.headEventId);
-                if (entry) beginCorrectSleep(entry);
-              }}
-            >
-              CORRECT
-            </button>
-          </div>
+          <ConfirmBanner
+            message={sleepConfirmation.message}
+            actionLabel="CORRECT"
+            onAction={() => {
+              const entry = sleepEntries.find((e) => e.headEventId === sleepConfirmation.headEventId);
+              if (entry) beginCorrectSleep(entry);
+            }}
+          />
         )}
 
         {sleepEntries.length > 0 && (
@@ -749,22 +733,14 @@ export function BodyScreen() {
           </div>
         )}
         {bodyweightConfirmation && (
-          <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <ConfirmIcon size={20} />
-              {bodyweightConfirmation.message}
-            </p>
-            <button
-              className="btn-secondary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
-              onClick={() => {
-                const entry = bodyweightEntries.find((e) => e.headEventId === bodyweightConfirmation.headEventId);
-                if (entry) beginCorrectBodyweight(entry);
-              }}
-            >
-              CORRECT
-            </button>
-          </div>
+          <ConfirmBanner
+            message={bodyweightConfirmation.message}
+            actionLabel="CORRECT"
+            onAction={() => {
+              const entry = bodyweightEntries.find((e) => e.headEventId === bodyweightConfirmation.headEventId);
+              if (entry) beginCorrectBodyweight(entry);
+            }}
+          />
         )}
 
         {bodyweightEntries.length > 0 && (
@@ -865,22 +841,14 @@ export function BodyScreen() {
           </div>
         )}
         {proteinConfirmation && (
-          <div className="fade-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <ConfirmIcon size={20} />
-              {proteinConfirmation.message}
-            </p>
-            <button
-              className="btn-secondary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
-              onClick={() => {
-                const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId);
-                if (entry) beginCorrectProtein(entry);
-              }}
-            >
-              CORRECT
-            </button>
-          </div>
+          <ConfirmBanner
+            message={proteinConfirmation.message}
+            actionLabel="CORRECT"
+            onAction={() => {
+              const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId);
+              if (entry) beginCorrectProtein(entry);
+            }}
+          />
         )}
 
         {proteinEntries.length > 0 && (
