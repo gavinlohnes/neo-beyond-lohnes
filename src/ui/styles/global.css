@@ -699,3 +699,34 @@ button, input {
   border-top: none;
   padding-top: 0;
 }
+
+/*
+ * FIELD ALPHA Phase 1 (2026-08-22): the collapsed-row disclosure control.
+ * CollapsibleRow used to be a static row with a small rectangular "OPEN"
+ * button bolted on — a generic web-app pattern the campaign asked to
+ * re-evaluate. The row itself is now the control: a real <button>,
+ * full width, laid out exactly like .equipment-row (same padding/top
+ * rule, via the paired class) but with UA button chrome stripped from
+ * the sides .equipment-row doesn't already own. Left/right/bottom
+ * border and background are neutralized here; border-top and padding
+ * are left untouched so .equipment-row's own rule (including its
+ * :first-child exception) keeps applying unmodified. */
+.equipment-row--control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  appearance: none;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+.disclosure-chevron {
+  flex-shrink: 0;
+  color: var(--text-3-strong);
+}

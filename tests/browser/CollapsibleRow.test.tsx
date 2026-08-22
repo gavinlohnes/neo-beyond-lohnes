@@ -43,4 +43,31 @@ describe("CollapsibleRow (real browser)", () => {
     await expect.element(screen.getByRole("button", { name: "Open RESET" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open SHIFT DOWN" })).toBeVisible();
   });
+
+  /**
+   * FIELD ALPHA Phase 1: the collapsed row itself is now the control —
+   * a small rectangular "OPEN" button bolted onto a static row read as
+   * a generic web-app pattern, so the whole row became a real <button>
+   * styled as .equipment-row (matching every other TOOLS-tier surface),
+   * with .tool-label replacing .eyebrow (now reserved for identity/
+   * RED-authority text) and a lean disclosure chevron replacing the
+   * boxed secondary button.
+   */
+  it("is a single button covering the whole row (Suit grammar: .equipment-row + .tool-label, not .card + .eyebrow)", async () => {
+    const screen = await render(<CollapsibleRow name="RESET" summary="Quick reset." onOpen={() => {}} />);
+    const button = screen.getByRole("button", { name: "Open RESET" }).element();
+
+    expect(button.tagName).toBe("BUTTON");
+    expect(button.className).toContain("equipment-row");
+    expect(button.className).not.toContain("card");
+    expect(button.querySelector(".tool-label")).not.toBeNull();
+    expect(button.querySelector(".eyebrow")).toBeNull();
+  });
+
+  it("opens when the summary text itself is tapped, not only some inner sub-element", async () => {
+    const onOpen = vi.fn();
+    const screen = await render(<CollapsibleRow name="RESET" summary="Quick reset." onOpen={onOpen} />);
+    await screen.getByText("Quick reset.").click();
+    expect(onOpen).toHaveBeenCalledOnce();
+  });
 });
