@@ -21,7 +21,7 @@ button, input {
 .screen {
   max-width: 480px;
   margin: 0 auto;
-  padding: var(--space-5) var(--space-4) var(--space-7);
+  padding: var(--space-5) var(--gutter) var(--space-7);
   min-height: 100%;
 }
 
@@ -356,6 +356,20 @@ button, input {
   font-family: var(--font-mono);
   font-size: 16px;
   color: var(--text-3);
+}
+
+/* Overdrive Phase 18 (REAL-DEVICE ACCEPTANCE CORRECTION, typography
+   audit): .meta's --text-3 grey is right for genuine auxiliary metadata
+   (timestamps, counts, hint labels) but was also carrying operationally
+   critical state during a workout — "Exercise X of Y", "Set X of Y" —
+   where low contrast on a real phone actually costs comprehension.
+   Still mono (this is system/state character, not prose — stays out of
+   .card-body's sans-serif prose voice), just promoted to --text-2. */
+.meta-strong {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-2);
 }
 
 .why {

@@ -154,6 +154,12 @@ export function TodayScreen() {
   const [resetOpen, setResetOpen] = useState(false);
   const [shiftDownOpen, setShiftDownOpen] = useState(false);
   const [checkInFormOpen, setCheckInFormOpen] = useState(false);
+  // Overdrive Phase 18 (TODAY PRIORITY COMPRESSION): WORK CONTEXT used to
+  // stay a fully-expanded card all day even once there was nothing left
+  // to decide (OFF, or WORK with the shift already marked ended) — same
+  // "default to a compact row once it's not the thing needing attention"
+  // pattern RESET/SHIFT DOWN already use (resetOpen/shiftDownOpen above).
+  const [workContextOpen, setWorkContextOpen] = useState(false);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
@@ -531,6 +537,18 @@ export function TodayScreen() {
   const shiftDownIsPrimary = isPrimaryShiftDown(recommendation);
   const resetIsPrimary = isPrimaryReset(recommendation);
 
+  // Overdrive Phase 18 (REAL-DEVICE ACCEPTANCE CORRECTION, ACTIVE MODE
+  // DOMINANCE): an in-progress RESET or SHIFT DOWN is the single most
+  // urgent thing on the screen right now — more so than the recommendation
+  // that led to it, which has already served its purpose. When either is
+  // active: (1) it gets the full card--action + corner-flag leadership
+  // treatment (previously only an inline accent border, weaker than the
+  // recommendation card above it), and (2) the recommendation card steps
+  // back to a plain, quieter card rather than continuing to compete for
+  // the same visual tier. This is display ordering/emphasis only — no
+  // Engine policy, no decision/session state, changes.
+  const activeModeInProgress = activeResetId !== null || activeShiftDownId !== null;
+
   // Overdrive Phase 11 (COMMAND 2.0): whether the trailing low-priority
   // group (non-prominent Minimum Day, pending outcome rating, END DAY,
   // backup nudge) has anything to show at all, so its "System" section
@@ -565,8 +583,8 @@ export function TodayScreen() {
     return (
       <div
         key={active ? "in-progress" : "picker"}
-        className={`card fade-in ${prominent || active ? "corner-flag" : ""}`}
-        style={prominent || active ? { borderColor: "var(--accent)" } : undefined}
+        className={`card fade-in ${active ? "card--action corner-flag" : prominent ? "corner-flag" : ""}`}
+        style={!active && prominent ? { borderColor: "var(--accent)" } : undefined}
       >
         <p
           className="eyebrow"
@@ -600,7 +618,7 @@ export function TodayScreen() {
                 {describeResetResult(lastResetOutcome)}
               </p>
             )}
-            <p className="meta" style={{ marginBottom: 8 }}>
+            <p className="card-body" style={{ marginBottom: 8 }}>
               BODY BEFORE STORY — how much do you need? 1 is a light touch, 5 is fully immersive.
             </p>
             <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
@@ -649,8 +667,8 @@ export function TodayScreen() {
     return (
       <div
         key={active ? "in-progress" : "picker"}
-        className={`card fade-in ${prominent || active ? "corner-flag" : ""}`}
-        style={prominent || active ? { borderColor: "var(--accent)" } : undefined}
+        className={`card fade-in ${active ? "card--action corner-flag" : prominent ? "corner-flag" : ""}`}
+        style={!active && prominent ? { borderColor: "var(--accent)" } : undefined}
       >
         <p
           className="eyebrow"
@@ -878,7 +896,10 @@ export function TodayScreen() {
       {day && recommendation && <p className="section-label">Command</p>}
 
       {day && recommendation && (
-        <div key={recommendation.id} className="card card--action corner-flag fade-in">
+        <div
+          key={recommendation.id}
+          className={`card fade-in ${activeModeInProgress ? "" : "card--action corner-flag"}`}
+        >
           <p className="meta" style={{ marginBottom: 12, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
             <span>{describeContextStrip(day.workContext, scheduledContext, unresolvedPostShift)}</span>
             {capacityResult && (
@@ -937,9 +958,24 @@ export function TodayScreen() {
         </div>
       )}
 
+      {/* Overdrive Phase 18: ordering follows actual active state first,
+          the "primary" prediction only as a fallback for when nothing is
+          actually running yet — a manually-started SHIFT DOWN that isn't
+          the engine's own suggested command still needs to render first
+          once it's genuinely in progress. */}
       {day &&
         recommendation &&
-        (shiftDownIsPrimary ? (
+        (activeShiftDownId !== null ? (
+          <>
+            {renderShiftDownCard(shiftDownIsPrimary)}
+            {renderResetCard(resetIsPrimary)}
+          </>
+        ) : activeResetId !== null ? (
+          <>
+            {renderResetCard(resetIsPrimary)}
+            {renderShiftDownCard(shiftDownIsPrimary)}
+          </>
+        ) : shiftDownIsPrimary ? (
           <>
             {renderShiftDownCard(true)}
             {renderResetCard(resetIsPrimary)}
@@ -1027,57 +1063,100 @@ export function TodayScreen() {
         )}
       </div>
 
-      {day && scheduledContext && (
-        <div className="card">
-          <p className="eyebrow" style={{ marginBottom: 4 }}>WORK CONTEXT</p>
-          <h2 className="card-title">Are you working today?</h2>
-          <div style={{ display: "flex", gap: 8, marginTop: 12, marginBottom: 12 }}>
-            <button
-              type="button"
-              className={`chip ${day.workContext === "WORK" ? "chip--selected" : ""}`}
-              aria-pressed={day.workContext === "WORK"}
-              disabled={busy}
-              onClick={() => void handleSetWorkContext("WORK")}
-            >
-              YES
-            </button>
-            <button
-              type="button"
-              className={`chip ${day.workContext === "OFF" ? "chip--selected" : ""}`}
-              aria-pressed={day.workContext === "OFF"}
-              disabled={busy}
-              onClick={() => void handleSetWorkContext("OFF")}
-            >
-              NO
-            </button>
-          </div>
-          <p className="card-body" style={{ fontSize: 16 }}>{describeSchedulePrediction(scheduledContext)}</p>
-          {day.workContext !== "UNKNOWN" && (
-            <p className="meta" style={{ marginTop: 8 }}>
-              Currently set: {day.workContext === "WORK" ? "working today" : "off today"}.
-            </p>
-          )}
-          {day.workContext === "WORK" && (
-            <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
-              {workPeriodEndedAt ? (
-                <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <ConfirmIcon size={20} />
-                  Work ended at {new Date(workPeriodEndedAt).toLocaleTimeString()}.
+      {/* Overdrive Phase 18 (TODAY PRIORITY COMPRESSION): once work
+          context is settled for the day — OFF, or WORK with the shift
+          already marked ended — there's nothing left to decide here, so
+          it collapses to the same compact summary-row pattern RESET/
+          SHIFT DOWN already use rather than staying a permanently
+          full-weight card. Still WORK and not yet ended keeps the full
+          card open, since MARK WORK ENDED is a real pending action. */}
+      {day &&
+        scheduledContext &&
+        (() => {
+          const settled = day.workContext === "OFF" || (day.workContext === "WORK" && workPeriodEndedAt !== null);
+          const open = workContextOpen || !settled;
+          if (!open) {
+            const summary =
+              day.workContext === "OFF"
+                ? "Off today."
+                : `Working today — ended ${new Date(workPeriodEndedAt!).toLocaleTimeString()}.`;
+            return (
+              <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                <div>
+                  <p className="eyebrow" style={{ marginBottom: 2 }}>WORK CONTEXT</p>
+                  <p className="meta">{summary}</p>
+                </div>
+                <button
+                  className="btn-secondary"
+                  style={{ width: "auto", padding: "8px 16px" }}
+                  onClick={() => setWorkContextOpen(true)}
+                >
+                  OPEN
+                </button>
+              </div>
+            );
+          }
+          return (
+            <div className="card">
+              <p className="eyebrow" style={{ marginBottom: 4 }}>WORK CONTEXT</p>
+              <h2 className="card-title">Are you working today?</h2>
+              <div style={{ display: "flex", gap: 8, marginTop: 12, marginBottom: 12 }}>
+                <button
+                  type="button"
+                  className={`chip ${day.workContext === "WORK" ? "chip--selected" : ""}`}
+                  aria-pressed={day.workContext === "WORK"}
+                  disabled={busy}
+                  onClick={() => void handleSetWorkContext("WORK")}
+                >
+                  YES
+                </button>
+                <button
+                  type="button"
+                  className={`chip ${day.workContext === "OFF" ? "chip--selected" : ""}`}
+                  aria-pressed={day.workContext === "OFF"}
+                  disabled={busy}
+                  onClick={() => void handleSetWorkContext("OFF")}
+                >
+                  NO
+                </button>
+              </div>
+              <p className="card-body" style={{ fontSize: 16 }}>{describeSchedulePrediction(scheduledContext)}</p>
+              {day.workContext !== "UNKNOWN" && (
+                <p className="meta" style={{ marginTop: 8 }}>
+                  Currently set: {day.workContext === "WORK" ? "working today" : "off today"}.
                 </p>
-              ) : (
-                <>
-                  <p className="meta" style={{ marginBottom: 8 }}>
-                    When your shift is actually over, mark it — BEYOND never guesses this from the clock.
-                  </p>
-                  <button className="btn-secondary" disabled={busy} onClick={() => void handleMarkWorkEnded()}>
-                    MARK WORK ENDED
-                  </button>
-                </>
+              )}
+              {day.workContext === "WORK" && (
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
+                  {workPeriodEndedAt ? (
+                    <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <ConfirmIcon size={20} />
+                      Work ended at {new Date(workPeriodEndedAt).toLocaleTimeString()}.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="meta" style={{ marginBottom: 8 }}>
+                        When your shift is actually over, mark it — BEYOND never guesses this from the clock.
+                      </p>
+                      <button className="btn-secondary" disabled={busy} onClick={() => void handleMarkWorkEnded()}>
+                        MARK WORK ENDED
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+              {settled && (
+                <button
+                  className="btn-secondary"
+                  style={{ marginTop: 12 }}
+                  onClick={() => setWorkContextOpen(false)}
+                >
+                  COLLAPSE
+                </button>
               )}
             </div>
-          )}
-        </div>
-      )}
+          );
+        })()}
 
       {showSystemSection && <p className="section-label">System</p>}
 
