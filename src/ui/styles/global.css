@@ -122,16 +122,6 @@ button, input {
   background: var(--accent-strong);
 }
 
-/* Overdrive Phase 1: restrained elevation — the one card meant to lead
-   the screen (the primary recommendation, an active RESET/SHIFT DOWN)
-   gets a soft shadow in addition to its existing accent border, so it
-   reads as spatially "above" the rest of the screen, not just outlined
-   differently. Never applied to ordinary .card instances. */
-.card--action {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-panel);
-}
-
 .field {
   margin-bottom: var(--space-4);
 }
@@ -467,8 +457,9 @@ button, input {
    capacity) — TODAY // SUIT LAYER 01 (DEC-003). A thin bordered strip
    with a left accent tick gives capacity/context state its own tactile
    "instrument reading" presence instead of floating bare text, while
-   staying far quieter than .card--action (no shadow, no corner-flag,
-   1px border) so it never competes with the primary recommendation.
+   staying far quieter than .command-surface (no red wash, no left
+   accent bar, just a thin 1px border) so it never competes with the
+   primary recommendation.
    Reusable token-level primitive, not TODAY-specific markup — intended
    to propagate to other screens' own compact status lines later. */
 .status-strip {
@@ -517,47 +508,17 @@ button, input {
   background: var(--border-subtle);
 }
 
-/* Angular corner-flag: the restrained "this leads" marker for whichever
-   card is the actual leading surface in its group (the primary
-   recommendation, an active/recommended RESET or SHIFT DOWN, a
-   prominent Minimum Day offer). A clipped-corner tab rather than a
-   glow/border-only treatment, so leadership reads as the same angular
-   framing language as the diamond motif and the pilot icon geometry —
-   never applied to an ordinary .card. */
-.corner-flag {
-  position: relative;
-}
-
-.corner-flag::before {
-  content: "";
-  position: absolute;
-  top: -1px;
-  left: 0;
-  width: 40px;
-  height: 5px;
-  background: var(--accent);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 100%, 0 100%);
-}
-
-/* Overdrive Phase 12 (TRAIN -> EXECUTION MODE 2.0): the current exercise
-   is the single thing a lifter's eyes should land on inside the active-
-   session card — a left accent bar lifts it above the jump rail and
-   session chrome sharing the same card, without a second nested card
-   (still one continuous execution surface, not a stack of boxes). */
-.exercise-focus {
-  border-left: 3px solid var(--accent);
-  padding-left: var(--space-3);
-}
-
 /*
  * Suit Layer 01 — Visual System Hardening (2026-08-22). The current
  * FIELD surface grammar, hardened on TODAY only (see the completion
  * report for the full surface audit) — not yet propagated to
- * TRAIN/BODY/MORE. Two roles added here; every other role already
- * existed (.card--action/.corner-flag for the dominant NOW surface,
- * CollapsibleRow for a collapsed tool row, .machinery-panel for
- * expandable detail, ConfirmBanner/.meta+icon for confirmation feedback,
- * .meta for passive metadata).
+ * TRAIN/BODY/MORE at the time. Two roles added here; every other role
+ * already existed (.card--action/.corner-flag for the dominant NOW
+ * surface — since retired in Suit Implementation 01B and FIELD ALPHA
+ * Phase 2, replaced everywhere by .command-surface below — CollapsibleRow
+ * for a collapsed tool row, .machinery-panel for expandable detail,
+ * ConfirmBanner/.meta+icon for confirmation feedback, .meta for passive
+ * metadata).
  */
 
 /* TOOL LABEL — the header for an ordinary utility/tool card (STATE
@@ -585,12 +546,12 @@ button, input {
  * has genuinely earned attention, unresolved Capture), and a
  * recommended-but-not-yet-started tool (RESET/SHIFT DOWN/MINIMUM DAY
  * when the Engine suggests it but it isn't the dominant NOW surface).
- * Deliberately NOT .card--action/.corner-flag — that treatment is
- * reserved for the one genuinely dominant NOW surface; stacking a second
- * full accent-bordered/shadowed card directly under it (as the old
- * "prominent" treatment did) competed with, rather than supported, the
- * dominant surface. A thin left accent tick plus tighter padding reads
- * as "worth a glance" without claiming NOW's own visual authority.
+ * Deliberately NOT .command-surface — that treatment is reserved for
+ * the one genuinely dominant surface; stacking a second full red-wash
+ * surface directly under it (as the old "prominent" treatment did)
+ * competed with, rather than supported, the dominant surface. A thin
+ * left accent tick plus tighter padding reads as "worth a glance"
+ * without claiming the dominant surface's own visual authority.
  */
 .signal-row {
   padding: var(--space-3);
@@ -604,11 +565,19 @@ button, input {
  * otherwise real." Nine of ten roles TODAY needs already had a real,
  * correct implementation before this checkpoint (built across Drop 02
  * and Suit Layer 01) — recorded here as the map, not rebuilt as new
- * primitives:
+ * primitives.
  *
- *   PRIMARY DECISION   -> .card--action + .corner-flag (the one
- *                         dominant NOW surface — recommendation, or an
- *                         active RESET/SHIFT DOWN that has taken over).
+ * SUPERSEDED (Suit Implementation 01B, then FIELD ALPHA Phase 2):
+ * PRIMARY DECISION/EXECUTION below originally read ".card--action +
+ * .corner-flag" — both classes are retired. Current primitive is
+ * .command-surface (see its own doc comment further down this file),
+ * now shared by TODAY's dominant recommendation/active RESET-SHIFT DOWN
+ * surface AND TRAIN's own pre-session picker/active-exercise/recovery
+ * surfaces.
+ *
+ *   PRIMARY DECISION   -> .command-surface (the one dominant surface —
+ *                         recommendation, or an active RESET/SHIFT DOWN
+ *                         that has taken over).
  *   EXECUTION          -> the same dominant surface while a RESET/SHIFT
  *                         DOWN is actually in progress (its "IN
  *                         PROGRESS" .tool-label, forced to
@@ -650,9 +619,16 @@ button, input {
  * bordered rectangle: a bold directional red bar (not a thin tick) plus
  * --surface-active (an existing token, defined at launch, never wired
  * up until now) — a flat, dark red-black wash, not a gradient — is the
- * "meaningful red territory" Part 5 calls for. Deliberately NOT
- * .card/.card--action — this zone must read as its own territory, not
- * another card among equals. */
+ * "meaningful red territory" Part 5 calls for. Deliberately NOT a plain
+ * .card — this zone must read as its own territory, not another card
+ * among equals.
+ *
+ * FIELD ALPHA Phase 2: propagated to TRAIN — the pre-session picker
+ * (the one decision before a workout starts), the active exercise (the
+ * one thing being executed right now), and an active RECOVERY session
+ * all use this exact primitive, same as TODAY's dominant recommendation
+ * surface. Genuinely shared Suit Grammar, not a TODAY-specific pattern
+ * forced onto a different screen. */
 .command-surface {
   background: var(--surface-active);
   border-left: 6px solid var(--accent);

@@ -463,25 +463,29 @@ export function TrainScreen() {
 
   return (
     <div className="screen fade-in">
-      <p className="eyebrow">BEYOND // TRAIN</p>
-      <h1 className="title">Train</h1>
+      {/* FIELD ALPHA Phase 2: the identity zone is deliberately quiet, same
+          principle TODAY applied (Suit Implementation 01B) for the same
+          reason — freed territory belongs to whatever's actually being
+          executed below, not to screen chrome. A real <h1> for correct
+          heading structure. */}
+      <h1 className="eyebrow">BEYOND // TRAIN</h1>
 
       <ConfirmPanel />
 
       {completionSummary && (
-        <div className="card card--action corner-flag fade-in">
-          <p className="eyebrow" style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+        <div className="fade-in" style={{ padding: "var(--space-6) 0", marginBottom: "var(--space-5)" }}>
+          <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {completionSummary.status === "COMPLETED" ? (
               <ConfirmIcon size={20} />
             ) : (
               <span aria-hidden="true" className="diamond" />
             )}
             {completionSummary.status === "COMPLETED" ? "WORKOUT COMPLETE" : "WORKOUT SAVED — PARTIAL"}
-          </p>
-          <h2 className="recommendation-title" style={{ textTransform: "capitalize" }}>
-            {completionSummary.bodyAreas || "Workout"}
           </h2>
-          <p className="card-body" style={{ marginBottom: 4 }}>
+          <p className="card-body" style={{ textTransform: "capitalize", marginBottom: 8 }}>
+            {completionSummary.bodyAreas || "Workout"}
+          </p>
+          <p className="meta" style={{ marginBottom: 4 }}>
             {completionSummary.exercisesTouched} of {completionSummary.totalExercises} exercises · {completionSummary.setsLogged}{" "}
             {completionSummary.setsLogged === 1 ? "set" : "sets"} logged
             {completionSummary.setsSkipped > 0
@@ -506,7 +510,7 @@ export function TrainScreen() {
               ))}
             </div>
           )}
-          <button className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setCompletionSummary(null)}>
+          <button className="btn-secondary" style={{ marginTop: 8, width: "auto", padding: "8px 16px" }} onClick={() => setCompletionSummary(null)}>
             DONE
           </button>
         </div>
@@ -524,28 +528,31 @@ export function TrainScreen() {
         </div>
       )}
 
+      {/* FIELD ALPHA Phase 2B: the pre-session picker IS the one decision
+          on screen right now (what to train) — TRAIN's own PRIMARY
+          DECISION moment before execution starts, same .command-surface
+          role TODAY's dominant recommendation uses. The "why suggested"
+          reasoning (variant/template rationale + what STANDARD/REDUCED/
+          RECOVERY generically mean) moves behind disclosure — every
+          template/variant chip and its short override hint stays directly
+          visible, since that's the actual decision surface, not the
+          explanation of it. */}
       {!session && !completionSummary && (
-        <div className="card card--action corner-flag">
-          <p className="eyebrow" style={{ marginBottom: 4 }}>
+        <div className="command-surface fade-in">
+          <p className="tool-label" style={{ marginBottom: 4 }}>
             {noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
           </p>
-          <h2 className="card-title" style={{ textTransform: "capitalize" }}>
+          <h2 className="command-title" style={{ textTransform: "capitalize" }}>
             {chosenVariant === "RECOVERY" ? "Recovery session" : suggestedSummary.bodyAreas || "Workout"}
           </h2>
           {chosenVariant !== "RECOVERY" && (
-            <p className="meta" style={{ marginBottom: 8 }}>
+            <p className="meta" style={{ marginBottom: 12 }}>
               Template {chosenTemplate} · {suggestedSummary.exerciseNames.join(", ")}
-            </p>
-          )}
-          <p className="card-body" style={{ marginBottom: 6 }}>{describeVariantSuggestion(variantSuggestion)}</p>
-          {chosenVariant !== "RECOVERY" && (
-            <p className="card-body" style={{ marginBottom: 12 }}>
-              {describeTemplateSuggestion(suggestedTemplate, lastAdvancingTemplate)}
             </p>
           )}
 
           <p className="meta" style={{ marginBottom: 6 }}>Template (override always available)</p>
-          <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
             {TEMPLATE_ORDER.map((t) => (
               <button
                 key={t}
@@ -562,8 +569,7 @@ export function TrainScreen() {
           </div>
 
           <p className="meta" style={{ marginBottom: 6 }}>Variant (override always available)</p>
-          <p className="card-body" style={{ marginBottom: 6 }}>{VARIANT_MEANINGS}</p>
-          <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
             {VARIANT_ORDER.map((v) => (
               <button
                 key={v}
@@ -578,21 +584,52 @@ export function TrainScreen() {
             ))}
           </div>
 
-          <button className="btn-primary" disabled={busy} onClick={() => void handleStart()}>
+          <details className="why" style={{ marginBottom: 12 }}>
+            <summary>Why this suggestion</summary>
+            <div style={{ marginTop: 8 }}>
+              <p className="card-body" style={{ marginBottom: 6 }}>{describeVariantSuggestion(variantSuggestion)}</p>
+              {chosenVariant !== "RECOVERY" && (
+                <p className="card-body" style={{ marginBottom: 6 }}>
+                  {describeTemplateSuggestion(suggestedTemplate, lastAdvancingTemplate)}
+                </p>
+              )}
+              <p className="card-body">{VARIANT_MEANINGS}</p>
+            </div>
+          </details>
+
+          <button
+            className="btn-primary"
+            style={{ fontSize: 18, padding: "18px var(--space-4)" }}
+            disabled={busy}
+            onClick={() => void handleStart()}
+          >
             START WORKOUT
           </button>
         </div>
       )}
 
       {session && session.sessionType === "RECOVERY" && !completionSummary && (
-        <div className="card card--action corner-flag">
-          <p className="eyebrow" style={{ marginBottom: 4 }}>RECOVERY — IN PROGRESS</p>
+        <div className="command-surface fade-in">
+          <p className="tool-label" style={{ marginBottom: 4 }}>RECOVERY — IN PROGRESS</p>
+          <h2 className="command-title" style={{ fontSize: 24, marginBottom: 8 }}>Light movement</h2>
           <p className="card-body" style={{ marginBottom: 12 }}>
             Duration only — how it saves depends on how many minutes you enter.
           </p>
+          {/* FIELD ALPHA Phase 2I (accessibility): this exact
+              <label><span>label</span></label> + sibling <input> pattern
+              (no htmlFor/id, no nesting) is shared verbatim with several
+              BodyScreen.tsx fields and never actually associates the
+              label with its input — a real axe finding this checkpoint's
+              new coverage surfaced. Fixed here (TRAIN-only, in scope);
+              BODY's identical instances are out of this checkpoint's
+              scope and left untouched. htmlFor/id rather than nesting the
+              input inside the label, so .field label's existing
+              space-between layout (text above, input below) is
+              unchanged. */}
           <div className="field">
-            <label><span>Minutes</span></label>
+            <label htmlFor="recovery-minutes"><span>Minutes</span></label>
             <input
+              id="recovery-minutes"
               type="number"
               min={0}
               value={recoveryMinutes}
@@ -601,48 +638,56 @@ export function TrainScreen() {
             />
           </div>
           <p className="meta" style={{ marginBottom: 12 }}>{describeRecoveryPreview(recoveryMinutes)}</p>
-          <button className="btn-primary" disabled={busy} onClick={() => void handleCompleteRecovery()}>
+          <button
+            className="btn-primary"
+            style={{ fontSize: 18, padding: "18px var(--space-4)" }}
+            disabled={busy}
+            onClick={() => void handleCompleteRecovery()}
+          >
             END RECOVERY
           </button>
         </div>
       )}
 
       {session && session.sessionType !== "RECOVERY" && !completionSummary && (
-        <div className="card card--action corner-flag">
+        <>
+          {/* FIELD ALPHA Phase 2B: STATUS/PROTOCOL — compact instrumentation
+              (reusing TODAY's .status-strip primitive, already documented
+              as "not TODAY-specific... intended to propagate to other
+              screens' own compact status lines"), not a card. Orients the
+              operator without competing with the execution surface below. */}
           {(() => {
             const summary = describeTemplateSummary(activeExercises);
             return (
-              <>
-                <p className="eyebrow" style={{ marginBottom: 4, textTransform: "capitalize" }}>
-                  {summary.bodyAreas} — {session.sessionType} — IN PROGRESS
-                </p>
-                <p className="meta" style={{ marginBottom: 12 }}>
-                  Template {session.templateId} · Rest ~60-90s between sets.
-                </p>
-              </>
+              <p className="status-strip" style={{ textTransform: "capitalize" }}>
+                {summary.bodyAreas} — {session.sessionType} — in progress · Template {session.templateId} · Rest ~60-90s
+              </p>
             );
           })()}
 
           <p className="section-label">Exercise</p>
 
-          {/* P4/Overdrive Phase 12: the focused exercise — everything the
-              lifter needs for the set they're on right now, and nothing
-              else competing for attention. The left accent bar (not a
-              nested card — still one continuous execution surface) is
-              what actually lifts it above the jump rail/session chrome
-              sharing this same card. */}
+          {/* P4/Overdrive Phase 12, FIELD ALPHA Phase 2B: the focused
+              exercise IS TRAIN's PRIMARY EXECUTION surface — the same
+              .command-surface/.command-title territory TODAY's dominant
+              recommendation uses, not a lighter left-bar-only treatment.
+              Everything the lifter needs for the set they're on right
+              now, and nothing else competing for attention. */}
           {currentExercise && (
-            <div key={currentExercise.exerciseId} className="exercise-focus fade-in">
-              <p className="meta-strong" style={{ marginBottom: 2 }}>
+            <div key={currentExercise.exerciseId} className="command-surface fade-in">
+              <p className="meta" style={{ marginBottom: 2 }}>
                 Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>
-              <h2 className="recommendation-title" style={{ marginBottom: 2 }}>{currentExercise.name}</h2>
+              <h2 className="command-title" style={{ marginBottom: 4 }}>{currentExercise.name}</h2>
               <p className="meta-strong" style={{ marginBottom: 8 }}>
                 {currentExercise.sets} sets x {currentExercise.repRangeLow}-{currentExercise.repRangeHigh} reps
                 {currentSetNumber !== null ? ` · Set ${currentSetNumber} of ${currentExercise.sets}` : " · All sets logged"}
               </p>
+              {/* FIELD ALPHA Phase 2F: previous performance is
+                  machine/system-derived context, not prose directed at the
+                  lifter — restrained mono (.meta) rather than .card-body. */}
               {lastPerformedSets[currentExercise.exerciseId] && (
-                <p className="card-body" style={{ marginBottom: 4 }}>
+                <p className="meta" style={{ marginBottom: 4 }}>
                   Last time: {lastPerformedSets[currentExercise.exerciseId]!.weight} lb x{" "}
                   {lastPerformedSets[currentExercise.exerciseId]!.reps}
                 </p>
@@ -718,14 +763,17 @@ export function TrainScreen() {
                 // without wrapping, and read as plainly labeled fields
                 // instead of a symbol-decoded strip. Same adjustWeight/
                 // adjustReps/handleLogSet/handleSkipSet calls — no new
-                // behavior, only clearer layout.
+                // behavior, only clearer layout. FIELD ALPHA Phase 2:
+                // LOG (and SAME AS LAST TIME) enlarged to match the
+                // dominant-surface primary-action treatment — the single
+                // most important control on the whole screen.
                 return (
                   <div key={setNumber} style={{ marginBottom: 14 }}>
                     {/* P4: exact repeat in one tap — the primary, fastest path. */}
                     {suggestion && (
                       <button
                         className="btn-primary"
-                        style={{ marginBottom: 8 }}
+                        style={{ marginBottom: 8, fontSize: 18, padding: "18px var(--space-4)" }}
                         disabled={busy}
                         onClick={() => void handleLogExactRepeat(ex.exerciseId, setNumber, suggestion)}
                       >
@@ -786,7 +834,7 @@ export function TrainScreen() {
                     <div style={{ display: "flex", gap: 8 }}>
                       <button
                         className="btn-primary"
-                        style={{ flex: 1 }}
+                        style={{ flex: 1, fontSize: 18, padding: "18px var(--space-4)" }}
                         disabled={busy}
                         onClick={() => void handleLogSet(ex.exerciseId, setNumber)}
                       >
@@ -807,17 +855,17 @@ export function TrainScreen() {
             </div>
           )}
 
-          {/* Overdrive Phase 12: compact horizontal jump rail replacing the
-              old full-width vertical button-per-exercise list — the same
-              tap-to-jump behavior (setFocusedExerciseId), but as a row of
-              chips so Exercise X of Y reads as one glance instead of a
-              scroll. Includes the current exercise too (chip--selected)
-              so the rail alone shows whole-session progress, not just
-              "the others." Exercise names stay in the aria-label so the
+          {/* Overdrive Phase 12, FIELD ALPHA Phase 2B (NEXT): compact
+              horizontal jump rail — subordinate to the execution surface
+              above, a shared top rule (.equipment-row) rather than a
+              second bespoke inline border. Same tap-to-jump behavior
+              (setFocusedExerciseId); includes the current exercise too
+              (chip--selected) so the rail alone shows whole-session
+              progress. Exercise names stay in the aria-label so the
               compact numeric/fraction display never loses the accessible
-              name — reduces scrolling, doesn't hide anything. */}
+              name. */}
           {activeExercises.length > 1 && (
-            <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
+            <div className="equipment-row">
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {activeExercises.map((ex, i) => {
                   const done = isExerciseComplete(ex);
@@ -848,20 +896,31 @@ export function TrainScreen() {
 
           <p className="section-label">Finish</p>
 
-          <div>
+          <div className="equipment-row">
             <p className="meta" style={{ marginBottom: 8 }}>{describePartialAdvancement(session.sessionType as SessionType)}</p>
+            {/* FIELD ALPHA Phase 2K (real-device density test, phone-width
+                fix): .btn-primary/.btn-secondary both set width:100% —
+                without flex:1 here, three such buttons each demand their
+                own full container width. flex:1 alone still wasn't
+                enough at 320-375px: flex items default to min-width:auto,
+                which floors shrinking at the widest unbreakable word
+                ("COULDN'T"), still forcing real overflow — minWidth:0
+                lets a button's own text wrap onto a second line instead.
+                Pre-existing gap (no browser test previously verified
+                this), not a Phase 2 regression. */}
             <div style={{ display: "flex", gap: 8 }}>
               <button
                 className={allExercisesComplete ? "btn-primary" : "btn-secondary"}
+                style={{ flex: 1, minWidth: 0 }}
                 disabled={busy}
                 onClick={() => void handleCompleteWorkout("COMPLETED")}
               >
                 COMPLETE
               </button>
-              <button className="btn-secondary" disabled={busy} onClick={() => void handleCompleteWorkout("PARTIAL")}>
+              <button className="btn-secondary" style={{ flex: 1, minWidth: 0 }} disabled={busy} onClick={() => void handleCompleteWorkout("PARTIAL")}>
                 PARTIAL
               </button>
-              <button className="btn-secondary" disabled={busy} onClick={handleStopClick}>
+              <button className="btn-secondary" style={{ flex: 1, minWidth: 0 }} disabled={busy} onClick={handleStopClick}>
                 {describeStopAction(hasLoggedAnySet)}
               </button>
             </div>
@@ -869,17 +928,17 @@ export function TrainScreen() {
               <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--border-strong)", borderRadius: "var(--radius)" }}>
                 <p className="card-body" style={{ marginBottom: 12 }}>{describeStopConfirm(sets.length)}</p>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button className="btn-primary" disabled={busy} onClick={() => void actuallyStop()}>
+                  <button className="btn-primary" style={{ flex: 1, minWidth: 0 }} disabled={busy} onClick={() => void actuallyStop()}>
                     STOP WORKOUT
                   </button>
-                  <button className="btn-secondary" onClick={() => setShowStopConfirm(false)}>
+                  <button className="btn-secondary" style={{ flex: 1, minWidth: 0 }} onClick={() => setShowStopConfirm(false)}>
                     KEEP GOING
                   </button>
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </>
       )}
     </div>
   );
