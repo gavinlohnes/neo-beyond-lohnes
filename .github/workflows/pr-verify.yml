@@ -1,0 +1,32 @@
+name: PR Verification
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-verify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: PR Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check:architecture
+      - run: npx tsc -b
+      - run: npx playwright install --with-deps chromium
+      - run: npx vitest run
+      - run: node scripts/classify-risk.mjs ${{ github.event.pull_request.base.sha }}
+      - run: npm run build

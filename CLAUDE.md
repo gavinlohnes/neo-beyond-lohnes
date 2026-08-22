@@ -1,15 +1,16 @@
 # CLAUDE.md — BEYOND Navigation & Guardrails
 
 This is a navigation/guardrail document, not a product spec. For product doctrine and locked
-decisions, see `docs/UX_DECISIONS.md`. For the active implementation campaign, see
-`docs/FIELD_ALPHA_CAMPAIGN.md`.
+decisions, see `docs/UX_DECISIONS.md`. For the current Drop's own brief, if one is in flight,
+use whatever it names as authoritative for its own scope — no single named campaign is
+permanently authoritative here.
 
 ## Authority order (use when sources disagree)
 
 1. Direct owner decision.
 2. BEYOND Product Constitution / Operator Doctrine.
 3. Canonical Spec + later explicitly locked Decision Register entries (`docs/UX_DECISIONS.md`).
-4. The active FIELD ALPHA campaign (`docs/FIELD_ALPHA_CAMPAIGN.md`).
+4. The current Drop's own brief, if one is in flight.
 5. Current repository implementation truth (the code itself).
 6. Current visual/interaction contracts.
 7. R&D / North Star material.
@@ -18,27 +19,33 @@ decisions, see `docs/UX_DECISIONS.md`. For the active implementation campaign, s
 Repository truth answers WHAT EXISTS. Higher product authority answers WHAT IT IS ALLOWED TO
 MEAN. Do not silently reconcile a genuine conflict between these — surface it.
 
+## Repo-first / Drive-escalation policy
+
+Routine and Architectural Drops use this file + `docs/UX_DECISIONS.md` + the code itself — no
+Google Drive read is needed to start. Consult Drive only when: (a) repo truth and stated
+doctrine genuinely conflict and neither this file nor the Decision Register resolves it; (b)
+the Drop brief itself names a specific Drive document to check; (c) a High-Risk Drop touches a
+boundary the Decision Register is silent on and the owner hasn't ruled on it directly in-chat;
+(d) the work is a genuinely new campaign/product-direction question, not a routine Drop, where
+R&D/North Star material may be the only authoritative framing. Product-authority ambiguity that
+isn't resolved by any of the above still triggers escalation to the owner directly — it never
+becomes silent guessing just because Drive wasn't consulted.
+
 ## Architecture layer rules
 
 ```
 src/engine/         pure, deterministic, no I/O. Never imports application/* or persistence/*
                      (persistence/db.ts has a top-level `new BeyondDB()` side effect — engine
-                     stays free of it so it's unit-testable without fake-indexeddb).
+                     stays free of it so it's unit-testable without fake-indexeddb). See
+                     .claude/rules/engine.md when editing this layer.
 src/application/     commands (writes, one per user action) + queries (reads). Sole gateway to
                      persistence/db.ts. The UI layer never touches Dexie directly.
 src/domain/          pure types shared across engine/application/ui.
-src/persistence/     Dexie schema (db.ts), backup/restore, legacy-format compat.
+src/persistence/     Dexie schema (db.ts), backup/restore, legacy-format compat. See
+                     .claude/rules/persistence.md when editing this layer.
 src/ui/              screens + components. Calls application/* only, never engine/* directly
                      for anything requiring persistence, never persistence/* directly.
 ```
-
-The Engine (`src/engine/evaluate.ts`) is the sole source of recommendation truth: same inputs
-→ same output, always, with a full `DecisionTrace`. UI and persistence never encode this logic
-themselves. `capacity.ts` (RED/YELLOW/GREEN) and `progression.ts`'s advisory rule are explicitly
-LOCKED — do not replace with a weighted score or heuristic without an explicit product decision
-recorded in `docs/UX_DECISIONS.md`. `obligationRelevance.ts` is a parallel interpretation layer,
-NOT part of `evaluate.ts`'s arbitration — obligations do not participate in primary
-recommendation arbitration; `engine/evaluate.ts` must never import from it.
 
 ## Immutable doctrine
 
@@ -71,14 +78,13 @@ npm run typecheck      tsc -b
 npm test               vitest run              (full suite: node + real-Chromium browser projects)
 npm run test:browser   vitest run --project browser
 npm run build          tsc -b && vite build
+npm run verify         the standard local final gate — see .claude/skills/beyond-drop
 ```
 
 ## Protected fixtures — never edit in place
 
-`test-fixtures/protected/*.json` + `MANIFEST.md` — real historical BEYOND backup exports, the
-sole surviving evidence of a recovered prior app instance's export format. Enforced by
-`tests/compat/fixtureIntegrity.test.ts` (exact byte-length + SHA-256 check on every run). If a
-test needs a mutated variant, copy the JSON into a synthetic fixture elsewhere.
+`test-fixtures/protected/*.json` + `MANIFEST.md` — real historical BEYOND backup exports. See
+`.claude/rules/protected-fixtures.md` when touching this path.
 
 ## Escalate before continuing
 
@@ -93,5 +99,7 @@ user choice is experienced; or a genuine conflict between current code and highe
 ## Pointers
 
 - `docs/UX_DECISIONS.md` — BEYOND UX Decision Register, the canonical locked-decision log.
-- `docs/FIELD_ALPHA_CAMPAIGN.md` — active implementation campaign (current work).
+- `.claude/rules/` — path-scoped detail for Engine, persistence, and protected fixtures.
+- `.claude/skills/beyond-drop/` — Drop task-contract templates, completion-report templates,
+  risk classification, verification, and the git/CI ship procedure.
 - `README.md` — architecture overview and screen map.
