@@ -434,3 +434,13 @@ button, input {
   background: var(--accent);
   clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 100%, 0 100%);
 }
+
+/* Overdrive Phase 12 (TRAIN -> EXECUTION MODE 2.0): the current exercise
+   is the single thing a lifter's eyes should land on inside the active-
+   session card — a left accent bar lifts it above the jump rail and
+   session chrome sharing the same card, without a second nested card
+   (still one continuous execution surface, not a stack of boxes). */
+.exercise-focus {
+  border-left: 3px solid var(--accent);
+  padding-left: var(--space-3);
+}
