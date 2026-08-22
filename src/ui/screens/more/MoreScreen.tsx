@@ -4,12 +4,12 @@ import { exportBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
 import { getActiveDay, getDayCount, getEventCount, getRecommendationCount } from "../../../application/queries";
 import { ENGINE_VERSION } from "../../../engine/evaluate";
+import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../../app/buildInfo";
 import { HistoryScreen } from "../history/HistoryScreen";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
 import { IntentScreen } from "./IntentScreen";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 
-const APP_VERSION = "0.1.0"; // chat-built checkpoint — NOT the same lineage as the surviving 0.2.0 app
 // FIELD ALPHA Phase 0 truth-hygiene fix: this was hardcoded at 4 (stale
 // since the Drop 02a/schedulePatterns migration) while the live Dexie
 // version below in Diagnostics had already moved on to 6 (captureItems,
@@ -313,24 +313,40 @@ export function MoreScreen() {
           real proof of the SYSTEM STATE grammar outside TODAY/TRAIN's
           .status-strip. Reuses BODY's .instrument-cluster verbatim (a
           grid of independent glance-depth readings is exactly what this
-          is) for the four NORMAL-tier facts an operator would want at a
-          glance; the three raw counts are TECHNICAL DETAIL, not GLANCE
-          content, so they move behind a <details> the same way TODAY's
-          WHY panel already tucks away its own machinery — one tap from
-          "what's the current state" to "what's actually in the
-          database," never dumped as a permanent wall of numbers. No
-          AVAILABLE ACTION or DEGRADED state is rendered here because
-          none currently exists in the app (no update-check mechanism,
-          no schema-incompatibility detector) — inventing one would be
-          fabricated telemetry, which this checkpoint is explicitly
-          forbidden from doing. The former "Data schema"/"Dexie" rows
-          both showed the identical db.verno value on the same screen;
-          collapsed into one SCHEMA reading. */}
+          is) for the NORMAL-tier facts an operator would want at a
+          glance; the raw counts and exact build timestamp are TECHNICAL
+          DETAIL, not GLANCE content, so they move behind a <details> the
+          same way TODAY's WHY panel already tucks away its own machinery
+          — one tap from "what's the current state" to "what's actually
+          in the database/build," never dumped as a permanent wall of
+          numbers. No AVAILABLE ACTION or DEGRADED state is rendered here
+          because none currently exists in the app (no update-check
+          mechanism, no schema-incompatibility detector) — inventing one
+          would be fabricated telemetry, which this checkpoint is
+          explicitly forbidden from doing. The former "Data schema"/
+          "Dexie" rows both showed the identical db.verno value on the
+          same screen; collapsed into one SCHEMA reading.
+
+          Factory Drop 02: APP/BUILD now come from src/app/buildInfo.ts,
+          itself derived at build time from package.json's version and
+          the actual git commit/timestamp (vite.config.ts's `define`) —
+          not a second hand-typed literal. APP stays the deliberate,
+          human-bumped release identity (see README's "Versions &
+          lineage" for why its value is what it is); BUILD is the thing
+          that actually answers "is this the current deployment," since a
+          release number nobody remembers to bump can't. ENGINE is
+          untouched — Engine architecture, out of scope this Drop, and
+          already single-sourced from evaluate.ts's own exported
+          constant. */}
       <p className="section-label">System</p>
       <div className="instrument-cluster">
         <div>
           <p className="meta" style={{ margin: 0 }}>APP</p>
-          <p className="status-value">{APP_VERSION}</p>
+          <p className="status-value">{APP_RELEASE}</p>
+        </div>
+        <div>
+          <p className="meta" style={{ margin: 0 }}>BUILD</p>
+          <p className="status-value">{BUILD_COMMIT}</p>
         </div>
         <div>
           <p className="meta" style={{ margin: 0 }}>ENGINE</p>
@@ -346,8 +362,9 @@ export function MoreScreen() {
         </div>
       </div>
       <details className="why">
-        <summary>Database contents</summary>
+        <summary>Diagnostic detail</summary>
         <div style={{ marginTop: 8 }}>
+          <DiagRow label="Built" value={BUILD_TIME} />
           <DiagRow label="Days" value={String(days)} />
           <DiagRow label="Events" value={String(events)} />
           <DiagRow label="Recommendations" value={String(recommendations)} />

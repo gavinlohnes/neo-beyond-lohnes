@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import { buildInfoDefine } from "./build-info.config.ts";
 
 // GitHub Pages project site: served from /neo-beyond-lohnes/, not the
 // domain root. Vite rewrites index.html's asset references and the PWA
@@ -16,6 +17,7 @@ import { VitePWA } from "vite-plugin-pwa";
 // virtual:pwa-register/react hook) instead of auto-reloading silently.
 export default defineConfig({
   base: "/neo-beyond-lohnes/",
+  define: buildInfoDefine(),
   plugins: [
     react(),
     VitePWA({

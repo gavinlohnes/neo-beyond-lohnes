@@ -121,10 +121,18 @@ the whole reason a second backup format exists (see below).
 
 | | This codebase (current) | Historical app (recovered fixtures only) |
 |---|---|---|
-| App version | `0.1.0` (`APP_VERSION` in [MoreScreen.tsx](src/ui/screens/more/MoreScreen.tsx)) | `0.1.0` → `0.2.0` (per fixture metadata) |
-| Engine version | `0.1.0` | n/a (not preserved in fixtures) |
+| App version | `0.1.0` — `package.json`'s `version`, the single source (`APP_RELEASE` in [buildInfo.ts](src/app/buildInfo.ts)) | `0.1.0` → `0.2.0` (per fixture metadata) |
+| Engine version | `0.1.0` (`ENGINE_VERSION` in [evaluate.ts](src/engine/evaluate.ts); stamped onto every `Recommendation.trace`) | n/a (not preserved in fixtures) |
 | Data schema | `6` (Dexie schema — see Migration behavior) | `2` → `3` (per fixture metadata; different numbering scheme, same numbers by coincidence) |
 | Backup format | `dexie-export-import` native (`format: "dexie"`) | `BEYOND_BACKUP`, `formatVersion: 1` |
+
+App/Engine version are deliberate, human-bumped identities — see the paragraph above on why the
+number itself carries lineage meaning. Neither is a build indicator: since this app ships as one
+atomic bundle, "what's actually deployed right now" is answered separately by **Build**, shown
+alongside App/Engine in MORE → SYSTEM (`BUILD_COMMIT`/`BUILD_TIME` in
+[buildInfo.ts](src/app/buildInfo.ts)) — the short git commit and build timestamp, both derived
+automatically at build time (`vite.config.ts`'s `define`), never hand-maintained, and immune to
+the "forgot to bump it" drift that App/Engine are inherently subject to.
 
 The historical app no longer runs; nothing in this repo executes its
 code. What survives is two real backup exports it produced, preserved

@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
+import { buildInfoDefine } from "./build-info.config.ts";
 
 /**
  * Harvest Checkpoint 4: a small, separate real-browser acceptance layer
@@ -24,6 +25,11 @@ export default defineConfig({
   resolve: {
     dedupe: ["react", "react-dom"],
   },
+  // Factory Drop 02: __APP_RELEASE__/__BUILD_COMMIT__/__BUILD_TIME__ are
+  // real `vite.config.ts` build-time constants (see src/app/buildInfo.ts)
+  // — vitest's own root config doesn't inherit that file, so it needs the
+  // identical `define` from the same shared source, not a second copy.
+  define: buildInfoDefine(),
   test: {
     projects: [
       {
