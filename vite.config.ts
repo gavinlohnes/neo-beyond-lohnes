@@ -21,6 +21,15 @@ export default defineConfig({
     VitePWA({
       registerType: "prompt",
       injectRegister: null,
+      // Suit Implementation 01B: self-hosted webfonts (src/ui/styles/
+      // fonts.ts) are only genuinely "offline-first" if the service
+      // worker actually precaches the .woff2 files Vite emits for them —
+      // explicit rather than trusting an unverified default glob, since
+      // "must actually render offline on the FIELD device" is a hard
+      // requirement this checkpoint set out to fix, not a nice-to-have.
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+      },
       manifest: {
         name: "BEYOND",
         short_name: "BEYOND",
