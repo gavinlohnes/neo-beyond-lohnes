@@ -906,3 +906,70 @@ is a static, evidence-based repository analysis, not a UI check.
   TRAIN execution-UX layout, TODAY progressive disclosure, BODY
   glanceability, typography contrast pass).
 - **Working tree:** clean, nothing staged or modified.
+
+---
+
+## Addendum — Harvest Dependency Register (Harvest Implementation 001, Checkpoint 6)
+
+Recorded for future use. **None of these are installed.** Version/license
+facts below were checked against the npm registry on the date of this
+addendum — re-verify before actually adopting any of them, since this is
+a point-in-time record, not a standing guarantee.
+
+### MiniSearch
+- **Registry:** `minisearch@7.2.0`, MIT license, zero runtime
+  dependencies.
+- **Preferred first candidate when Personal Search is formally
+  promoted** (per this checkpoint's explicit instruction). **Not built
+  this sprint** — Personal Search itself is out of scope.
+- Why it's the right shape for BEYOND specifically: it indexes an
+  in-memory array of plain objects (exactly what `getAllCaptureItems()`/
+  `getHistoryDays()` already return) with no server, no persistence
+  layer of its own, and no schema migration story to reconcile with
+  BEYOND's own — a local-first-native fit, not an integration project.
+
+### Base UI vs. Radix (accessible interaction primitives — drawers/dialogs/popovers)
+- **Base UI:** `@base-ui-components/react@1.0.0-rc.0`, MIT. Still a
+  release candidate, not yet a stable 1.0 — worth re-checking maturity
+  before adoption.
+- **Radix:** `@radix-ui/react-dialog@1.1.23` (representative primitive),
+  MIT. Stable, widely deployed, unbundled (each primitive is its own
+  package).
+- **Both are candidates only** for whichever future BEYOND interaction
+  genuinely requires non-trivial custom focus-trap/keyboard/mobile-
+  overlay machinery that would otherwise mean hand-building that
+  machinery from scratch. **Do not install either until that real
+  interaction need arrives** — nothing in the current app (a bottom tab
+  bar, cards, `<details>`, plain buttons/inputs) needs one today. When
+  the need arrives: a one-component bakeoff (implement the same real
+  BEYOND interaction against both), then pick one ecosystem — never
+  both side by side.
+
+### Lucide
+- **Registry:** `lucide-react@1.33.0`, ISC license, peer range
+  `react: ^16.5.1 || ^17 || ^18 || ^19` — confirmed compatible with the
+  installed React 19.2.8.
+- May supply **commodity icons** where a genuinely generic glyph is
+  needed (e.g. a settings gear, a generic chevron) — never for anything
+  BEYOND-specific.
+- **Hard boundary, restated:** must never replace the locked Abstract-B
+  mark, the six locked pilot icons (`mission`/`train`/`body`/`reset`/
+  `shiftDown`/`success`), or any other deliberately BEYOND-specific
+  system symbol (including the additive `more` icon and the angular/
+  diamond visual grammar). Those stay hand-drawn inline SVG, forever,
+  regardless of what this library offers.
+
+### Sonner
+- **Registry:** `sonner@2.0.8`, MIT license, peer range
+  `react: ^18 || ^19 || ^19-rc` — confirmed compatible with the
+  installed React 19.2.8.
+- **Adopt only if transient success/error notification duplication
+  becomes a demonstrated problem** — i.e., if a future checkpoint finds
+  itself hand-rolling a third or fourth ad hoc toast/banner pattern
+  (BODY's `ConfirmBanner`-shaped confirmations and TODAY's own banners
+  already cover the current, small need without it). **No speculative
+  install.**
+
+**Verification for this addendum:** read-only `npm view` registry
+queries only — nothing installed, nothing added to `package.json`,
+`node_modules` unchanged.
