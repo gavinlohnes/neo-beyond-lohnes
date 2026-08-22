@@ -3,12 +3,13 @@ import { db } from "../../../persistence/db";
 import { exportBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
 import { getActiveDay, getDayCount, getEventCount, getRecommendationCount } from "../../../application/queries";
+import { ENGINE_VERSION } from "../../../engine/evaluate";
 import { HistoryScreen } from "../history/HistoryScreen";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
 import { IntentScreen } from "./IntentScreen";
+import { CollapsibleRow } from "../../components/CollapsibleRow";
 
 const APP_VERSION = "0.1.0"; // chat-built checkpoint — NOT the same lineage as the surviving 0.2.0 app
-const ENGINE_VERSION = "0.1.0";
 // FIELD ALPHA Phase 0 truth-hygiene fix: this was hardcoded at 4 (stale
 // since the Drop 02a/schedulePatterns migration) while the live Dexie
 // version below in Diagnostics had already moved on to 6 (captureItems,
@@ -144,8 +145,7 @@ export function MoreScreen() {
         >
           ← BACK TO MORE
         </button>
-        <p className="eyebrow">WORK SCHEDULE</p>
-        <h1 className="title">Your rotation</h1>
+        <h1 className="eyebrow">MORE // WORK SCHEDULE</h1>
         <WorkScheduleScreen />
       </div>
     );
@@ -161,8 +161,7 @@ export function MoreScreen() {
         >
           ← BACK TO MORE
         </button>
-        <p className="eyebrow">INTENT &amp; COMMITMENT</p>
-        <h1 className="title">Missions &amp; Obligations</h1>
+        <h1 className="eyebrow">MORE // MISSIONS &amp; OBLIGATIONS</h1>
         <IntentScreen />
       </div>
     );
@@ -170,64 +169,47 @@ export function MoreScreen() {
 
   return (
     <div className="screen fade-in">
-      <p className="eyebrow">MORE</p>
-      <h1 className="title">Foundation</h1>
+      {/* FIELD ALPHA Phase 4: identity zone quieted, same principle
+          applied to TODAY/TRAIN/BODY — MORE is the SYSTEM surface, not a
+          fifth destination competing for its own display title. */}
+      <h1 className="eyebrow">MORE // SYSTEM</h1>
 
-      {/* P6: grouped by what the user is actually trying to do, not by
-          implementation — History / Backup & restore / App info /
-          Diagnostics, per the sprint's execution package. Overdrive Phase
-          14: these now use the shared .section-label class (see
-          TODAY/TRAIN/BODY) instead of a MORE-local SectionLabel helper —
-          the local version predated that shared primitive and had drifted
-          to different spacing/no divider rule; converged onto the one
-          grammar. */}
-      <p className="section-label">History</p>
-      <div className="card">
-        <h2 className="card-title">Every day, every event</h2>
-        <p className="card-body" style={{ marginBottom: 12 }}>
-          Every day and every event, exactly as it happened. Read-only.
+      {/* FIELD ALPHA Phase 4B: reorganized by functional meaning
+          (OPERATIONS / RECORDS / SYSTEM) rather than historical screen
+          order. OPERATIONS entries the operator navigates into
+          (Missions & Obligations, Work Schedule, History) reuse
+          CollapsibleRow — already established across TODAY/TRAIN as
+          "a whole row is the disclosure control" — its onOpen callback
+          doesn't care whether "opening" means an inline expand or a
+          view-swap, so this is genuine reuse, not a forced fit. Backup/
+          Archive/Restore are immediate actions, not navigation, so they
+          use .equipment-row instead. */}
+      <p className="section-label">Operations</p>
+
+      <CollapsibleRow
+        name="MISSIONS & OBLIGATIONS"
+        summary="Durable direction and commitments requiring deliberate resolution."
+        onOpen={() => setView("INTENT")}
+      />
+      <CollapsibleRow
+        name="WORK SCHEDULE"
+        summary="The rotation BEYOND predicts a work day and shift phase from."
+        onOpen={() => setView("WORK_SCHEDULE")}
+      />
+
+      <div className="equipment-row">
+        <p className="tool-label" style={{ marginBottom: 4 }}>BACKUP</p>
+        <p className="card-body" style={{ marginBottom: 8 }}>
+          A file with everything on this device. Nothing leaves unless you share it.
         </p>
-        <button className="btn-primary" onClick={() => setView("HISTORY")}>
-          VIEW HISTORY
-        </button>
-      </div>
-
-      <p className="section-label">Missions &amp; Obligations</p>
-      <div className="card">
-        <h2 className="card-title">Intent &amp; Commitment</h2>
-        <p className="card-body" style={{ marginBottom: 12 }}>
-          Durable direction and the conditions requiring deliberate resolution. Separate from TODAY —
-          nothing here becomes a task list.
-        </p>
-        <button className="btn-secondary" onClick={() => setView("INTENT")}>
-          OPEN
-        </button>
-      </div>
-
-      <p className="section-label">Work schedule</p>
-      <div className="card">
-        <h2 className="card-title">Your rotation</h2>
-        <p className="card-body" style={{ marginBottom: 12 }}>
-          The work rotation BEYOND uses to predict a work day and shift phase. Configuration, not a daily
-          check-in — edits here never create a historical work record by themselves.
-        </p>
-        <button className="btn-secondary" onClick={() => setView("WORK_SCHEDULE")}>
-          WORK SCHEDULE
-        </button>
-      </div>
-
-      <p className="section-label">Backup &amp; restore</p>
-      <div className="card">
-        <h2 className="card-title">Backup</h2>
         <button className="btn-primary" disabled={busy} onClick={() => void handleExportBackup()}>
           EXPORT BACKUP
         </button>
-        <p className="meta" style={{ marginTop: 8 }}>A file with everything on this device. Nothing leaves unless you share it.</p>
       </div>
 
-      <div className="card">
-        <h2 className="card-title">Archive</h2>
-        <p className="card-body" style={{ marginBottom: 12 }}>
+      <div className="equipment-row">
+        <p className="tool-label" style={{ marginBottom: 4 }}>ARCHIVE</p>
+        <p className="card-body" style={{ marginBottom: 8 }}>
           Quarterly archival via the device's native share sheet — you pick the destination (e.g. Drive).
           Data stays on-device; this never deletes anything.
         </p>
@@ -240,11 +222,13 @@ export function MoreScreen() {
       {/* Restore is the one genuinely dangerous, rare action on this
           screen — replaces everything on the device. Kept functionally
           identical (same auto-backup-first, preview-before-write
-          contract) but visually flagged so it doesn't read as routine
-          as EXPORT BACKUP or SHARE / ARCHIVE above it. */}
-      <div className="card" style={{ borderColor: "var(--border-strong)" }}>
-        <p className="eyebrow" style={{ color: "var(--danger)", marginBottom: 4 }}>REPLACES ALL DATA</p>
-        <h2 className="card-title">Restore</h2>
+          contract) but visually flagged so it doesn't read as routine —
+          a danger-colored left accent (not .eyebrow, which is reserved
+          for screen identity/red-authority) instead of a red-bordered
+          card, matching the "danger stays distinct from identity red"
+          rule at a lower, less card-stack-like weight. */}
+      <div className="equipment-row" style={{ borderLeft: "2px solid var(--danger)", paddingLeft: "var(--space-3)" }}>
+        <p className="tool-label" style={{ color: "var(--danger)", marginBottom: 4 }}>RESTORE — REPLACES ALL DATA</p>
         <p className="card-body" style={{ marginBottom: 12 }}>
           Replace-only restoration. Your current data is automatically backed up right before anything is
           replaced, so a mistaken restore is always recoverable. BEYOND validates the file and shows a preview
@@ -254,6 +238,7 @@ export function MoreScreen() {
         <input
           ref={fileInputRef}
           type="file"
+          aria-label="Choose a backup file to restore"
           // Drop 01 acceptance correction (real-device retest, 2026-08-22):
           // no `accept` filter at all, deliberately. A prior attempt
           // listed several MIME variants plus ".json" and still failed on
@@ -296,11 +281,12 @@ export function MoreScreen() {
               A backup of what's currently here will be downloaded automatically before this replaces it.
             </p>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn-primary" disabled={busy} onClick={() => void handleConfirmRestore()}>
+              <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleConfirmRestore()}>
                 CONFIRM REPLACE
               </button>
               <button
                 className="btn-secondary"
+                style={{ flex: 1 }}
                 disabled={busy}
                 onClick={handleCancelRestore}
               >
@@ -312,21 +298,61 @@ export function MoreScreen() {
         {status && <p className="meta" style={{ marginTop: 8 }}>{status}</p>}
       </div>
 
-      <p className="section-label">App information</p>
-      <div className="card">
-        <DiagRow label="App" value={APP_VERSION} />
-        <DiagRow label="Engine" value={ENGINE_VERSION} />
-        <DiagRow label="Data schema" value={String(DATA_SCHEMA)} />
-      </div>
+      {/* FIELD ALPHA Phase 4B/4H: RECORDS — historical/review-oriented,
+          distinct from OPERATIONS above. History stays a clean single
+          entry point per Phase 4H — no charts/trends/summaries added,
+          none existed to preserve. */}
+      <p className="section-label">Records</p>
+      <CollapsibleRow
+        name="HISTORY"
+        summary="Every day and every event, exactly as it happened. Read-only."
+        onOpen={() => setView("HISTORY")}
+      />
 
-      <p className="section-label">Diagnostics</p>
-      <div className="card">
-        <DiagRow label="Dexie" value={String(db.verno)} />
-        <DiagRow label="Active day" value={activeDayYes ? "YES" : "NO"} />
-        <DiagRow label="Days" value={String(days)} />
-        <DiagRow label="Events" value={String(events)} />
-        <DiagRow label="Recommendations" value={String(recommendations)} />
+      {/* FIELD ALPHA Phase 4C: SYSTEM — BEYOND's own state, the first
+          real proof of the SYSTEM STATE grammar outside TODAY/TRAIN's
+          .status-strip. Reuses BODY's .instrument-cluster verbatim (a
+          grid of independent glance-depth readings is exactly what this
+          is) for the four NORMAL-tier facts an operator would want at a
+          glance; the three raw counts are TECHNICAL DETAIL, not GLANCE
+          content, so they move behind a <details> the same way TODAY's
+          WHY panel already tucks away its own machinery — one tap from
+          "what's the current state" to "what's actually in the
+          database," never dumped as a permanent wall of numbers. No
+          AVAILABLE ACTION or DEGRADED state is rendered here because
+          none currently exists in the app (no update-check mechanism,
+          no schema-incompatibility detector) — inventing one would be
+          fabricated telemetry, which this checkpoint is explicitly
+          forbidden from doing. The former "Data schema"/"Dexie" rows
+          both showed the identical db.verno value on the same screen;
+          collapsed into one SCHEMA reading. */}
+      <p className="section-label">System</p>
+      <div className="instrument-cluster">
+        <div>
+          <p className="meta" style={{ margin: 0 }}>APP</p>
+          <p className="status-value">{APP_VERSION}</p>
+        </div>
+        <div>
+          <p className="meta" style={{ margin: 0 }}>ENGINE</p>
+          <p className="status-value">{ENGINE_VERSION}</p>
+        </div>
+        <div>
+          <p className="meta" style={{ margin: 0 }}>SCHEMA</p>
+          <p className="status-value">{String(DATA_SCHEMA)}</p>
+        </div>
+        <div>
+          <p className="meta" style={{ margin: 0 }}>ACTIVE DAY</p>
+          <p className="status-value">{activeDayYes ? "YES" : "NO"}</p>
+        </div>
       </div>
+      <details className="why">
+        <summary>Database contents</summary>
+        <div style={{ marginTop: 8 }}>
+          <DiagRow label="Days" value={String(days)} />
+          <DiagRow label="Events" value={String(events)} />
+          <DiagRow label="Recommendations" value={String(recommendations)} />
+        </div>
+      </details>
     </div>
   );
 }

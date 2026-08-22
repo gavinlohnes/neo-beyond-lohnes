@@ -5,6 +5,7 @@ import { startDay, submitCheckIn, startShiftDown } from "../../src/application/c
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
+import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { CollapsibleRow } from "../../src/ui/components/CollapsibleRow";
 import { ConfirmBanner } from "../../src/ui/components/ConfirmBanner";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
@@ -153,6 +154,19 @@ describe("accessibility (real browser, axe-core)", () => {
     await screen.getByRole("spinbutton", { name: "Protein (g)" }).fill("30");
     await screen.getByRole("button", { name: "LOG PROTEIN" }).click();
     await expect.element(screen.getByText("30 g today", { exact: true })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
+  /**
+   * FIELD ALPHA Phase 4: MORE's first accessibility coverage — the MENU
+   * surface (CollapsibleRow navigation rows, .equipment-row action rows,
+   * .instrument-cluster SYSTEM readout).
+   */
+  it("MoreScreen (MENU) has no violations beyond the known color-contrast exception", async () => {
+    const screen = await render(<MoreScreen />);
+    await expect.element(screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);

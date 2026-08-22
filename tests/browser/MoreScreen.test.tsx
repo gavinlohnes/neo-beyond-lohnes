@@ -1,0 +1,135 @@
+import { afterEach, describe, expect, it } from "vitest";
+import { page } from "vitest/browser";
+import { render, cleanup } from "vitest-browser-react";
+import axe from "axe-core";
+import { db } from "../../src/persistence/db";
+import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
+
+/**
+ * BEYOND FIELD ALPHA Phase 4 — first real-browser acceptance layer for
+ * MORE. There was no browser-level UI coverage for the MENU/System
+ * surface itself before this checkpoint (tests/browser/backupExport.test.tsx
+ * renders MoreScreen but only ever checks the restore file input's
+ * missing `accept` attribute; tests/browser/IntentScreen.test.tsx covers
+ * the nested Intent screen directly, not reached through MORE). This
+ * file covers the MENU surface's own composition, navigation into each
+ * nested view and back, and that SYSTEM diagnostics reflect live truth
+ * rather than any fabricated/hardcoded state.
+ */
+
+afterEach(() => {
+  cleanup();
+});
+
+describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
+  it("renders the three functional sections with every capability reachable", async () => {
+    const screen = await render(<MoreScreen />);
+
+    await expect.element(screen.getByText("Operations", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Records", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("System", { exact: true })).toBeVisible();
+
+    await expect.element(screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open WORK SCHEDULE" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open HISTORY" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "EXPORT BACKUP" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "SHARE / ARCHIVE" })).toBeVisible();
+    await expect.element(screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true })).toBeVisible();
+  });
+
+  it("the ampersand in MISSIONS & OBLIGATIONS renders as a real character, not an escaped entity", async () => {
+    // Regression guard: a JS string prop ("MISSIONS &amp; OBLIGATIONS")
+    // does not HTML-decode the way JSX children text does — this exact
+    // mistake was made and caught while building this checkpoint.
+    const screen = await render(<MoreScreen />);
+    expect(screen.getByText("MISSIONS &amp; OBLIGATIONS", { exact: true }).elements()).toHaveLength(0);
+    await expect.element(screen.getByText("MISSIONS & OBLIGATIONS", { exact: true })).toBeVisible();
+  });
+
+  it("no dominant .command-surface exists — MORE has no single primary decision, only system access", async () => {
+    await render(<MoreScreen />);
+    expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
+  });
+
+  it("the SYSTEM instrument cluster reflects live truth, not a fabricated or duplicated reading", async () => {
+    const screen = await render(<MoreScreen />);
+
+    await expect.element(screen.getByText("SCHEMA", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(String(db.verno), { exact: true })).toBeVisible();
+    // The old screen showed the identical db.verno value twice under two
+    // different labels ("Data schema" and "Dexie") — now just once.
+    expect(screen.getByText("Dexie", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("Data schema", { exact: true }).elements()).toHaveLength(0);
+  });
+
+  it("database contents (raw counts) are TECHNICAL DETAIL, tucked behind disclosure, not permanently visible", async () => {
+    const screen = await render(<MoreScreen />);
+
+    await expect.element(screen.getByText("Database contents", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Days", { exact: true })).not.toBeVisible();
+
+    await screen.getByText("Database contents", { exact: true }).click();
+    await expect.element(screen.getByText("Days", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Events", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Recommendations", { exact: true })).toBeVisible();
+  });
+
+  it("restore's file input still has no accept filter (Android SAF compatibility, unchanged)", async () => {
+    const screen = await render(<MoreScreen />);
+    const fileInput = screen.container.querySelector('input[type="file"]');
+    expect(fileInput).not.toBeNull();
+    expect(fileInput!.hasAttribute("accept")).toBe(false);
+  });
+});
+
+describe("MoreScreen (real browser) — nested navigation", () => {
+  it("opens Missions & Obligations and returns to MENU", async () => {
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" }).click();
+
+    await expect.element(screen.getByText("MORE // MISSIONS & OBLIGATIONS", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Missions", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
+    await expect.element(screen.getByText("Operations", { exact: true })).toBeVisible();
+  });
+
+  it("opens Work Schedule and returns to MENU", async () => {
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open WORK SCHEDULE" }).click();
+
+    await expect.element(screen.getByText("MORE // WORK SCHEDULE", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/working days/i).first()).toBeVisible();
+
+    await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
+    await expect.element(screen.getByText("Operations", { exact: true })).toBeVisible();
+  });
+
+  it("opens History and returns to MENU", async () => {
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open HISTORY" }).click();
+
+    await expect.element(screen.getByText("MORE // HISTORY", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
+    await expect.element(screen.getByText("Records", { exact: true })).toBeVisible();
+  });
+});
+
+describe("MoreScreen (real browser) — narrow phone widths", () => {
+  it.each([320, 360, 375])("has no horizontal overflow at %ipx", async (width) => {
+    await page.viewport(width, 800);
+    const screen = await render(<MoreScreen />);
+    await expect.element(screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" })).toBeVisible();
+
+    await expect.poll(() => document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+  });
+});
+
+describe("MoreScreen (real browser) — accessibility", () => {
+  it("passes real WCAG AA color-contrast beyond the known app-wide exception", async () => {
+    const screen = await render(<MoreScreen />);
+    const results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
+    expect(results.violations).toEqual([]);
+  });
+});
