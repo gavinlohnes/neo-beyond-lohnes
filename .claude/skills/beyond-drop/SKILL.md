@@ -78,16 +78,69 @@ Drive needed: NO / <doc, if YES>
 
 ## 3. Verification
 
-Run `npm run verify` (= `vitest run && npm run build`). `build` already runs `tsc -b` internally,
-so this covers typecheck + full test suite + production build — the same meaningful steps CI
-runs — without running typecheck twice. This is the local final gate; keep it aligned with
-`.github/workflows/deploy-pages.yml` if that workflow's meaningful steps ever change (CI itself
+Run `npm run verify` (= `check:architecture && vitest run && npm run build`). `build` already
+runs `tsc -b` internally, so this covers architecture-boundary check + typecheck + full test
+suite + production build — the same meaningful steps CI runs — without running typecheck twice.
+This is the local final gate; keep it aligned with `.github/workflows/deploy-pages.yml` and
+`.github/workflows/pr-verify.yml` if either workflow's meaningful steps ever change (CI itself
 is not modified by this skill).
+
+Two machine checks back this up, both zero-dependency Node scripts:
+- `npm run check:architecture` (`scripts/check-architecture-boundaries.mjs`) — hard-fails on an
+  Engine → application/persistence import, an application → ui import, or a new ui → persistence
+  direct import outside the documented pre-existing allowlist. Part of `npm run verify`, so it
+  runs locally and in both CI workflows.
+- `npm run check:risk [baseRef]` (`scripts/classify-risk.mjs`, default `origin/master`) —
+  buckets the current diff by path (Engine/domain/persistence-schema/backup/protected-fixtures/
+  dependencies/UI/process-docs) and prints a suggested minimum tier. This is evidence for the
+  risk classification in §1, not a replacement for it — it does not fail the build for Engine/
+  domain/dependency triggers on its own. The one hard, build-failing gate: `test-fixtures/
+  protected/**` changed without `tests/compat/fixtureIntegrity.test.ts` also changing in the same
+  diff exits 1 — an unacknowledged protected-fixture byte change is treated as an accident, not a
+  judgment call. `.github/workflows/pr-verify.yml` runs this against the PR's actual base SHA.
 
 High-Risk Drops additionally run whatever compatibility surface the boundary touches before
 calling verification complete — e.g. `npx vitest run tests/compat/` for anything near protected
 fixtures or legacy-format parsing, or the relevant `tests/integration/*` for schema/migration or
 restore-wiring changes.
+
+## 3a. PR verification vs. deployment (kept separate)
+
+`.github/workflows/pr-verify.yml` runs the full verification chain (architecture check, typecheck,
+full test suite including Playwright/browser tests, risk classification against the PR's base,
+production build) on every pull request targeting `master`. It deploys nothing. `.github/
+workflows/deploy-pages.yml` is unchanged: it only runs on an actual push to `master` (i.e. after a
+PR has merged) and is the sole workflow that deploys. A PR can be fully verified without ever
+publishing anything, and nothing deploys without first having been verified as a PR (once branch
+protection in §7 is in place) or, at minimum, deploying only from an already-merged master.
+
+## 3b. Failure-disposition mechanism
+
+When verification (local or CI) fails, or a review surfaces something wrong, name which of these
+it is before fixing it — this determines where the fix belongs, not just that a fix happens:
+
+1. **One-off** — a mistake local to this Drop's own change; fix it in the same Drop, no other
+   artifact needs to change.
+2. **Regression test** — a real behavior gap verification didn't previously catch; add/extend a
+   test alongside the fix so it can't silently regress again.
+3. **Architecture rule** — the failure reveals a boundary that should be mechanically enforced;
+   extend `scripts/check-architecture-boundaries.mjs` or a `.claude/rules/*` file.
+4. **Repository guidance** — `CLAUDE.md` or a `.claude/rules/*` file was ambiguous or silent on a
+   case that came up; clarify it in place, don't just fix the symptom.
+5. **Skill** — the same manual procedure was reconstructed from memory again; fold it into this
+   skill instead of re-describing it in a future Drop's report.
+6. **Hook/CI** — a check that's currently manual (e.g. a step run by hand) should run automatically
+   on every relevant push/PR; wire it into `pr-verify.yml` or `deploy-pages.yml`.
+7. **FIELD contract** — a past campaign's stated visual/UX doctrine (see `docs/UX_DECISIONS.md`)
+   was violated or under-specified; correct the doctrine record, not just the code.
+8. **Authority correction** — the owner's actual intent differs from what a repo doc currently
+   says; escalate and update the doc once corrected, rather than silently overriding it.
+9. **Factory-policy improvement** — this skill's own process (templates, tiers, ship procedure)
+   has a gap the failure exposed; propose the smallest edit to this file that closes it.
+
+Pick the narrowest disposition that actually explains the failure — don't reach for "factory-policy
+improvement" when it was a one-off, and don't call something a one-off if the same class of
+mistake would recur under this same skill's current rules.
 
 ## 4. Report templates
 
@@ -151,3 +204,18 @@ Default repo-first for every Drop tier — see `CLAUDE.md`'s "Repo-first / Drive
 policy" for the exact four conditions that warrant a Drive read. Don't re-derive that policy
 here; this skill only reminds you it exists before a High-Risk Drop's task contract asks
 "Drive needed?".
+
+## 7. Branch protection (master)
+
+`master` requires the `PR Verification` status check (from `pr-verify.yml`) to pass, with
+`enforce_admins: false` and no required PR-review count — configured via the GitHub REST API
+(`PUT /repos/.../branches/master/protection`) using the same `git credential fill`-sourced token
+as the CI-poll step in §5. Because `enforce_admins` is off and the repo owner has admin
+permission, the §5 direct-push ship procedure (branch → commit → merge --no-ff → push master)
+is **not** blocked by this — admin pushes bypass required checks entirely. The required check
+only actually gates a PR opened through GitHub's own UI/API by a non-admin (or an admin choosing
+to go through PR review); it does not turn every Drop into a mandatory-PR workflow.
+
+To change what's required (e.g. add a second check, or start enforcing for admins too once the
+team grows), re-run the same PUT with an updated payload — don't hand-edit protection in the
+GitHub UI without recording the change here.
