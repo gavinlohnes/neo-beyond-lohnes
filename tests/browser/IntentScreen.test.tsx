@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { IntentScreen } from "../../src/ui/screens/more/IntentScreen";
-import { createMission, createObligation, satisfyObligation } from "../../src/application/intentCommands";
+import { archiveMission, createMission, createObligation, satisfyObligation } from "../../src/application/intentCommands";
 
 /**
  * Intent & Commitment Spine — Drop 01 (2026-08-22, approved). Real-browser
@@ -34,10 +34,29 @@ afterEach(() => {
 describe("IntentScreen (real browser)", () => {
   it("renders with no missions/obligations and no console errors", async () => {
     const screen = await render(<IntentScreen />);
-    await expect.element(screen.getByText("No missions yet.")).toBeVisible();
+    await expect.element(screen.getByText("No active missions.")).toBeVisible();
     await expect.element(screen.getByText("Nothing here.")).toBeVisible();
     expect(consoleErrors).toEqual([]);
   });
+
+  it(
+    "Drop 01 acceptance correction: an ARCHIVED mission disappears from the default ACTIVE view " +
+      "but remains reachable (and clearly labeled) under ALL",
+    async () => {
+      const mission = await createMission({ title: "WORK ON BEYOND" });
+      await archiveMission(mission.id);
+
+      const screen = await render(<IntentScreen />);
+      await expect.element(screen.getByText("No active missions.")).toBeVisible();
+
+      await screen.getByRole("button", { name: "ALL" }).first().click();
+      await expect.element(screen.getByText("WORK ON BEYOND", { exact: true }).first()).toBeVisible();
+
+      await screen.getByRole("button", { name: "Open WORK ON BEYOND" }).click();
+      await expect.element(screen.getByText("ARCHIVED", { exact: true }).first()).toBeVisible();
+      expect(consoleErrors).toEqual([]);
+    },
+  );
 
   it("shows an existing Mission and its linked Obligation, and opening detail shows history", async () => {
     const mission = await createMission({ title: "Get promoted" });

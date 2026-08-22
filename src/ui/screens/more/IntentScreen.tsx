@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { DomainEvent } from "../../../domain/common/types";
 import type { Mission, Obligation, ObligationStatus } from "../../../domain/intent/types";
 import {
+  getActiveMissions,
   getMissionHistory,
   getMissions,
   getObligationHistory,
@@ -58,6 +59,7 @@ export function IntentScreen() {
   const [view, setView] = useState<View>({ kind: "LIST" });
   const [missions, setMissions] = useState<Mission[]>([]);
   const [obligations, setObligations] = useState<Obligation[]>([]);
+  const [showAllMissions, setShowAllMissions] = useState(false);
   const [showAllObligations, setShowAllObligations] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,10 +72,19 @@ export function IntentScreen() {
 
   useEffect(() => {
     void refreshList();
-  }, [showAllObligations]);
+  }, [showAllMissions, showAllObligations]);
 
+  /**
+   * Drop 01 acceptance correction (real-device evidence, 2026-08-22): the
+   * default Missions surface represents current/active direction — an
+   * ARCHIVED mission is historical truth, not deleted, but must not sit
+   * in the default list forever. Same progressive-disclosure shape
+   * Obligations already used (UNRESOLVED/ALL); archiveMission's own
+   * one-way ACTIVE->ARCHIVED semantics are unchanged — this is a query/
+   * presentation fix only.
+   */
   async function refreshList() {
-    setMissions(await getMissions());
+    setMissions(showAllMissions ? await getMissions() : await getActiveMissions());
     setObligations(showAllObligations ? await getObligations() : await getUnresolvedObligations());
   }
 
@@ -144,7 +155,15 @@ export function IntentScreen() {
   return (
     <div>
       <p className="section-label">Missions</p>
-      {missions.length === 0 && <p className="empty-state">No missions yet.</p>}
+      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <button className={`chip ${!showAllMissions ? "chip--selected" : ""}`} onClick={() => setShowAllMissions(false)}>
+          ACTIVE
+        </button>
+        <button className={`chip ${showAllMissions ? "chip--selected" : ""}`} onClick={() => setShowAllMissions(true)}>
+          ALL
+        </button>
+      </div>
+      {missions.length === 0 && <p className="empty-state">{showAllMissions ? "No missions yet." : "No active missions."}</p>}
       {missions.map((m) => (
         <CollapsibleRow
           key={m.id}

@@ -64,6 +64,10 @@ describe("shareBackup — Web Share API path", () => {
     const call = shareMock.mock.calls[0]![0] as { files: File[] };
     expect(call.files).toHaveLength(1);
     expect(call.files[0]!.name).toMatch(/^beyond-backup-.*\.json$/);
+    // Locks in the type shareBackup already got right (Drop 01 acceptance
+    // correction: exportBackup's plain-download path didn't match this
+    // until 2026-08-22 — see backup.ts's exportBackup doc comment).
+    expect(call.files[0]!.type).toBe("application/json");
   });
 
   it("does not touch the share API when canShare returns false", async () => {

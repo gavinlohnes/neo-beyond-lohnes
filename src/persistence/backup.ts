@@ -31,12 +31,31 @@ function backupFilename(): string {
   return `beyond-backup-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
 }
 
+/**
+ * Drop 01 acceptance correction (real-device evidence, 2026-08-22):
+ * dexie-export-import's own exportDB hardcodes its Blob as
+ * `{ type: "text/json" }` internally (confirmed in
+ * node_modules/dexie-export-import/dist/dexie-export-import.mjs) — not
+ * configurable via ExportOptions. Chrome on Android preserves that
+ * declared MIME type as the downloaded file's provider-recorded content
+ * type; BEYOND's own restore <input accept="application/json"> then
+ * triggers Android's Storage Access Framework picker with an exact-MIME
+ * filter, which excludes a file recorded as text/json — so a backup
+ * exported via this path could never be selected again from the same
+ * device. shareBackup (below) already re-wraps the blob in
+ * `new File([blob], name, { type: "application/json" })` before handing
+ * it to the OS and was never affected; this makes exportBackup do the
+ * same, for the same reason, rather than loosening the restore picker's
+ * filter alone (see MoreScreen.tsx's accept list for the picker-side
+ * hardening, which is a separate, complementary fix).
+ */
 export async function exportBackup(): Promise<void> {
   const blob = await db.export({ prettyJson: true });
-  const url = URL.createObjectURL(blob);
+  const file = new File([blob], backupFilename(), { type: "application/json" });
+  const url = URL.createObjectURL(file);
   const a = document.createElement("a");
   a.href = url;
-  a.download = backupFilename();
+  a.download = file.name;
   document.body.appendChild(a);
   a.click();
   a.remove();
