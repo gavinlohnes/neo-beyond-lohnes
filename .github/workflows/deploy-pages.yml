@@ -25,6 +25,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc -b
+      # Harvest Checkpoint 4: the "browser" Vitest project needs Chromium
+      # actually present — npm ci alone doesn't fetch Playwright's browser
+      # binary. --with-deps also installs the OS-level libraries Chromium
+      # needs on a bare Ubuntu runner (Linux-only flag; not needed/valid
+      # for local Windows/macOS installs, which is why this step lives
+      # only here, not in package.json).
+      - run: npx playwright install --with-deps chromium
       - run: npx vitest run
       - run: npm run build
       - uses: actions/configure-pages@v5
