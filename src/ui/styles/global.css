@@ -397,6 +397,80 @@ button, input {
   color: var(--text-1);
 }
 
+/* TODAY // SUIT LAYER 01 (DEC-003): the "exposed machinery" reveal
+   inside WHY. Opening WHY should feel like an access panel exposing the
+   real deterministic reasoning underneath, not just more prose — a
+   distinct inset surface (one step lighter than the card it sits in)
+   separates "what BEYOND is telling you" (the card's own rationale)
+   from "the actual machinery that produced it" (this panel). --surface-2
+   + --text-1 is the same pairing .input already uses, not a new
+   contrast risk. Reuses .why-rule for every row inside it — one
+   primitive, not a parallel set. */
+.machinery-panel {
+  margin-top: var(--space-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+}
+
+/* Subsection label inside a .machinery-panel (STATE INPUT / DERIVED /
+   RULES EVALUATED). Deliberately --text-2, not --text-3 — this is new
+   surface added by this Drop, and the existing --text-3-on-background
+   contrast gap (tracked separately, a pre-existing product decision,
+   not this Drop's to fix) should not be compounded by anything new. */
+.why-group-label {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin: var(--space-3) 0 var(--space-1);
+}
+
+.why-group-label:first-child {
+  margin-top: 0;
+}
+
+/* The panel's closing verdict line (DecisionTrace.selectionReason) —
+   the one real sentence that names why this specific recommendation, and
+   no other, won. Visually closes the reveal: brightest text tier, a
+   top divider separating it from the rows above. */
+.why-selection {
+  margin: var(--space-2) 0 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+/* Compact operational readout for TODAY's STATUS line (work context +
+   capacity) — TODAY // SUIT LAYER 01 (DEC-003). A thin bordered strip
+   with a left accent tick gives capacity/context state its own tactile
+   "instrument reading" presence instead of floating bare text, while
+   staying far quieter than .card--action (no shadow, no corner-flag,
+   1px border) so it never competes with the primary recommendation.
+   Reusable token-level primitive, not TODAY-specific markup — intended
+   to propagate to other screens' own compact status lines later. */
+.status-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 10px var(--space-3);
+  margin-bottom: var(--space-5);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--text-2);
+}
+
 /* Overdrive Phase 11 (TODAY -> COMMAND 2.0): groups multiple cards under
    one quiet typographic label instead of wrapping them in yet another
    card — the "no dashboard wall" constraint means hierarchy has to come
