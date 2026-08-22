@@ -5,13 +5,14 @@ import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../.
 import { getActiveDay, getDayCount, getEventCount, getRecommendationCount } from "../../../application/queries";
 import { HistoryScreen } from "../history/HistoryScreen";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
+import { IntentScreen } from "./IntentScreen";
 
 const APP_VERSION = "0.1.0"; // chat-built checkpoint — NOT the same lineage as the surviving 0.2.0 app
 const ENGINE_VERSION = "0.1.0";
 const DATA_SCHEMA = 4; // v4 (Drop 02a) adds schedulePatterns — not yet reconciled with the real app's own schema-numbering lineage
 
 export function MoreScreen() {
-  const [view, setView] = useState<"MENU" | "HISTORY" | "WORK_SCHEDULE">("MENU");
+  const [view, setView] = useState<"MENU" | "HISTORY" | "WORK_SCHEDULE" | "INTENT">("MENU");
   const [days, setDays] = useState(0);
   const [events, setEvents] = useState(0);
   const [recommendations, setRecommendations] = useState(0);
@@ -144,6 +145,23 @@ export function MoreScreen() {
     );
   }
 
+  if (view === "INTENT") {
+    return (
+      <div className="screen fade-in">
+        <button
+          className="btn-secondary"
+          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
+          onClick={() => setView("MENU")}
+        >
+          ← BACK TO MORE
+        </button>
+        <p className="eyebrow">INTENT &amp; COMMITMENT</p>
+        <h1 className="title">Missions &amp; Obligations</h1>
+        <IntentScreen />
+      </div>
+    );
+  }
+
   return (
     <div className="screen fade-in">
       <p className="eyebrow">MORE</p>
@@ -165,6 +183,18 @@ export function MoreScreen() {
         </p>
         <button className="btn-primary" onClick={() => setView("HISTORY")}>
           VIEW HISTORY
+        </button>
+      </div>
+
+      <p className="section-label">Missions &amp; Obligations</p>
+      <div className="card">
+        <h2 className="card-title">Intent &amp; Commitment</h2>
+        <p className="card-body" style={{ marginBottom: 12 }}>
+          Durable direction and the conditions requiring deliberate resolution. Separate from TODAY —
+          nothing here becomes a task list.
+        </p>
+        <button className="btn-secondary" onClick={() => setView("INTENT")}>
+          OPEN
         </button>
       </div>
 

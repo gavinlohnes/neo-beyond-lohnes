@@ -14,7 +14,7 @@ import { DEFAULT_SCHEDULE_PATTERN, deriveScheduledContext } from "../../src/engi
  */
 
 const DB_NAME = "beyond";
-const CURRENT_SCHEMA_VERSION = 5;
+const CURRENT_SCHEMA_VERSION = 6;
 
 afterEach(async () => {
   await Dexie.delete(DB_NAME);
@@ -67,6 +67,104 @@ describe("Dexie v1 -> current schema migration", () => {
     expect(await upgraded.schedulePatterns.count()).toBe(1);
     expect(await upgraded.schedulePatterns.get("current")).toEqual(DEFAULT_SCHEDULE_PATTERN);
     expect(await upgraded.captureItems.count()).toBe(0);
+    expect(await upgraded.missions.count()).toBe(0);
+    expect(await upgraded.obligations.count()).toBe(0);
+
+    upgraded.close();
+  });
+});
+
+/**
+ * Intent & Commitment Spine (Drop 01, 2026-08-22): a real v5 install (the
+ * schema immediately before this Drop) has captureItems data but no
+ * missions/obligations tables at all. Proves the v6 upgrade adds both
+ * empty, leaves every v1-v5 table/row untouched, and that the `events`
+ * table's two new indexes (missionId, obligationId) don't disturb an
+ * existing event that predates them.
+ */
+describe("Dexie v5 -> v6 migration (Drop 01: missions/obligations)", () => {
+  it("adds empty missions/obligations tables and preserves existing v5 data", async () => {
+    const v5 = new Dexie(DB_NAME);
+    v5.version(1).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+    });
+    v5.version(2).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId",
+    });
+    v5.version(3).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+    });
+    v5.version(4)
+      .stores({
+        beyondDays: "id, status, startedAt",
+        events: "id, beyondDayId, type, occurredAt",
+        checkIns: "id, beyondDayId, recordedAt",
+        recommendations: "id, beyondDayId, issuedAt",
+        outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+        workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+        performedSets: "id, beyondDayId, sessionId, exerciseId",
+        schedulePatterns: "id",
+      })
+      .upgrade(async (tx) => {
+        await tx.table("schedulePatterns").put(DEFAULT_SCHEDULE_PATTERN);
+      });
+    v5.version(5).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+    });
+    await v5.open();
+    await v5.table("captureItems").add({
+      id: "capture-1",
+      text: "pre-existing capture",
+      capturedAt: "2026-08-21T12:00:00.000Z",
+      status: "OPEN",
+    });
+    await v5.table("events").add({
+      id: "event-pre-v6",
+      type: "DAY_STARTED",
+      beyondDayId: "day-1",
+      occurredAt: "2026-08-21T12:00:00.000Z",
+      recordedAt: "2026-08-21T12:00:00.000Z",
+      payload: { dayId: "day-1" },
+      source: "USER",
+      correlationId: "corr-1",
+    });
+    v5.close();
+
+    const upgraded = new BeyondDB();
+    await upgraded.open();
+
+    expect(upgraded.verno).toBe(CURRENT_SCHEMA_VERSION);
+    expect(await upgraded.missions.count()).toBe(0);
+    expect(await upgraded.obligations.count()).toBe(0);
+    expect(await upgraded.captureItems.count()).toBe(1);
+    expect((await upgraded.captureItems.get("capture-1"))?.text).toBe("pre-existing capture");
+    const preExistingEvent = await upgraded.events.get("event-pre-v6");
+    expect(preExistingEvent).toBeDefined();
+    expect(preExistingEvent!.missionId).toBeUndefined();
+    expect(preExistingEvent!.obligationId).toBeUndefined();
 
     upgraded.close();
   });
@@ -132,10 +230,11 @@ describe("Dexie v3 -> v4 migration (Drop 02a: schedulePatterns)", () => {
     await upgraded.open();
 
     // Opening via the real, current BeyondDB always lands on its newest
-    // registered version — v5 as of Overdrive Phase 10 — not v4. What
-    // this test actually verifies (the v4 schedulePatterns seed still
-    // fires correctly for a v3 install) is unaffected by v5 existing.
-    expect(upgraded.verno).toBe(5);
+    // registered version — v6 as of Intent & Commitment Spine Drop 01 —
+    // not v4. What this test actually verifies (the v4 schedulePatterns
+    // seed still fires correctly for a v3 install) is unaffected by later
+    // versions existing.
+    expect(upgraded.verno).toBe(CURRENT_SCHEMA_VERSION);
     expect(await upgraded.schedulePatterns.count()).toBe(1);
     expect(await upgraded.schedulePatterns.get("current")).toEqual(DEFAULT_SCHEDULE_PATTERN);
 
