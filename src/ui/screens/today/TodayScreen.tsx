@@ -5,7 +5,11 @@ import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
 import { describeCommitmentsSummary, describeObligationRelevance } from "./commitmentsCopy";
-import { getMostRelevantUnresolvedObligation, hasObligationRequiringAttention } from "../../../engine/obligationRelevance";
+import {
+  getMostRelevantUnresolvedObligation,
+  hasObligationRequiringAttention,
+  isAttentionWorthyTier,
+} from "../../../engine/obligationRelevance";
 import { getUnresolvedObligations } from "../../../application/intentQueries";
 import { formatLocalDate } from "../../../engine/scheduledContext";
 import type { Obligation } from "../../../domain/intent/types";
@@ -100,8 +104,31 @@ import {
 } from "../../../application/queries";
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
+import type { ReactNode } from "react";
 
 const BACKUP_NUDGE_THRESHOLD_DAYS = 7;
+
+/**
+ * Suit Layer 01 — Visual System Hardening (2026-08-22): the "earned but
+ * not commanding" role (see global.css's .signal-row doc comment) —
+ * shared by every ATTENTION-tier surface (LAST TIME, unresolved
+ * Capture-in-attention) and reused by renderEndDayCard/
+ * renderCommitmentsCard/renderResetCard/renderShiftDownCard/
+ * renderMinimumDayCard for their own "recommended but not dominant"
+ * states. Module-level (not defined inside TodayScreen) specifically so
+ * it isn't re-created as a new component identity on every render — it
+ * has no dependency on TodayScreen's own state/closures. File-local for
+ * now; extracting to ui/components/ can wait for a second real caller
+ * outside this screen.
+ */
+function SignalRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="card signal-row">
+      <p className="tool-label">{label}</p>
+      {children}
+    </div>
+  );
+}
 
 /**
  * Quick check-in default ("all good" one-tap, Context & Safety Decisions
@@ -602,6 +629,38 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
   const commitmentInAttention = isInAttention(attentionPlan, "COMMITMENT_DUE");
 
   /**
+   * Suit Layer 01: the Capture list-row markup was hand-copied verbatim
+   * between the ATTENTION-tier list and the TOOLS-tier list (renderCaptureToolsCard) —
+   * a real, current duplication, extracted here rather than left as two
+   * copies that could quietly drift.
+   */
+  function renderCaptureListRow(item: CaptureItem) {
+    return (
+      <div
+        key={item.id}
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 8,
+          padding: "8px 0",
+          borderTop: "1px solid var(--border-subtle)",
+        }}
+      >
+        <span className="card-body" style={{ margin: 0 }}>{item.text}</span>
+        <button
+          className="btn-secondary"
+          style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: 0 }}
+          disabled={busy}
+          onClick={() => void handleResolveCapture(item)}
+        >
+          RESOLVE
+        </button>
+      </div>
+    );
+  }
+
+  /**
    * Harvest Checkpoint 3: `isDominant` is separate from `active` — both
    * RESET and SHIFT DOWN could in principle be simultaneously active
    * (independent state machines, no mutual exclusion enforced), but
@@ -630,12 +689,13 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
     return (
       <div
         key={active ? "in-progress" : "picker"}
-        className={`card fade-in ${active ? (isDominant ? "card--action corner-flag" : "") : prominent ? "corner-flag" : ""}`}
-        style={!active && prominent ? { borderColor: "var(--accent)" } : undefined}
+        className={`card fade-in ${
+          active ? (isDominant ? "card--action corner-flag" : "") : prominent ? "signal-row" : ""
+        }`}
       >
         <p
-          className="eyebrow"
-          style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
+          className="tool-label"
+          style={{ marginBottom: 4, color: active ? "var(--accent-strong)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
         >
           {prominent ? <SignalIcon key="on" name="reset" size={20} /> : <Icon key="off" name="reset" size={20} />}
           {active && <span aria-hidden="true" className="diamond" />}
@@ -709,12 +769,13 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
     return (
       <div
         key={active ? "in-progress" : "picker"}
-        className={`card fade-in ${active ? (isDominant ? "card--action corner-flag" : "") : prominent ? "corner-flag" : ""}`}
-        style={!active && prominent ? { borderColor: "var(--accent)" } : undefined}
+        className={`card fade-in ${
+          active ? (isDominant ? "card--action corner-flag" : "") : prominent ? "signal-row" : ""
+        }`}
       >
         <p
-          className="eyebrow"
-          style={{ marginBottom: 4, color: active ? "var(--accent)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
+          className="tool-label"
+          style={{ marginBottom: 4, color: active ? "var(--accent-strong)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
         >
           {prominent ? <SignalIcon key="on" name="shiftDown" size={20} /> : <Icon key="off" name="shiftDown" size={20} />}
           {active && <span aria-hidden="true" className="diamond" />}
@@ -787,8 +848,8 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
   function renderMinimumDayCard(prominent: boolean) {
     if (!minimumDay) return null;
     return (
-      <div className={`card ${prominent ? "corner-flag" : ""}`} style={prominent ? { borderColor: "var(--accent)" } : undefined}>
-        <p className="eyebrow" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
+      <div className={`card ${prominent ? "signal-row" : ""}`}>
+        <p className="tool-label" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
         {!minimumDay.enabled ? (
           <>
             <h2 className="card-title">{prominent ? MINIMUM_DAY_PROMINENT_TITLE : "Reduced baseline"}</h2>
@@ -1063,9 +1124,12 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
         <CollapsibleRow name="BEYONDDAY" summary="End your day whenever you're ready." onOpen={() => setEndDayOpen(true)} />
       );
     }
-    return (
-      <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>BEYONDDAY</p>
+    // Suit Layer 01: styled by real urgency (suggestEndDay), not merely
+    // by whether it won the scarce ATTENTION slot — the same underlying
+    // fact should look the same whether or not it's currently displayed
+    // in ATTENTION or (capped out) still in TOOLS.
+    const body = (
+      <>
         {suggestEndDay && (
           <p className="card-body" style={{ marginBottom: 12 }}>
             Primary sleep logged — this BeyondDay looks done. End it whenever you're ready.
@@ -1074,6 +1138,15 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
         <button className="btn-secondary" disabled={busy} onClick={() => void handleEndDay()}>
           END DAY
         </button>
+      </>
+    );
+    if (suggestEndDay) {
+      return <SignalRow label="BEYONDDAY">{body}</SignalRow>;
+    }
+    return (
+      <div className="card">
+        <p className="tool-label" style={{ marginBottom: 4 }}>BEYONDDAY</p>
+        {body}
       </div>
     );
   }
@@ -1116,9 +1189,8 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       );
     }
 
-    return (
-      <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>COMMITMENT</p>
+    const body = (
+      <>
         <h2 className="card-title">{obligation.title}</h2>
         {obligation.description && <p className="card-body">{obligation.description}</p>}
         <p className="meta" style={{ marginBottom: otherCount > 0 ? 4 : 12 }}>
@@ -1139,6 +1211,18 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
             </button>
           )}
         </div>
+      </>
+    );
+    // Suit Layer 01: styled by the headline's own real tier, not by
+    // whether it happened to win the scarce ATTENTION slot — same
+    // reasoning as renderEndDayCard above.
+    if (isAttentionWorthyTier(tier)) {
+      return <SignalRow label="COMMITMENT">{body}</SignalRow>;
+    }
+    return (
+      <div className="card">
+        <p className="tool-label" style={{ marginBottom: 4 }}>COMMITMENT</p>
+        {body}
       </div>
     );
   }
@@ -1160,7 +1244,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
     const showListHere = hasOpenItems && !captureInAttention;
     return (
       <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>
+        <p className="tool-label" style={{ marginBottom: 4 }}>
           CAPTURE{hasOpenItems ? ` (${openCaptureItems.length})` : ""}
         </p>
         <p className="meta" style={{ marginBottom: 8 }}>
@@ -1190,29 +1274,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
         </div>
         {showListHere && (
           <>
-            {openCaptureItems.map((item) => (
-              <div
-                key={item.id}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "8px 0",
-                  borderTop: "1px solid var(--border-subtle)",
-                }}
-              >
-                <span className="card-body" style={{ margin: 0 }}>{item.text}</span>
-                <button
-                  className="btn-secondary"
-                  style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: 0 }}
-                  disabled={busy}
-                  onClick={() => void handleResolveCapture(item)}
-                >
-                  RESOLVE
-                </button>
-              </div>
-            ))}
+            {openCaptureItems.map((item) => renderCaptureListRow(item))}
             {justResolvedCapture && (
               <ConfirmBanner
                 message={`Resolved "${justResolvedCapture.text}"`}
@@ -1286,8 +1348,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
           {commitmentInAttention && renderCommitmentsCard()}
 
           {pendingOutcomeInAttention && pendingOutcome && (
-            <div className="card">
-              <p className="eyebrow" style={{ marginBottom: 4 }}>LAST TIME</p>
+            <SignalRow label="LAST TIME">
               <p className="card-body" style={{ marginBottom: 8 }}>
                 Last time, BEYOND recommended "{pendingOutcome.title}" — how did that go?
               </p>
@@ -1313,35 +1374,12 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
                   DISMISS
                 </button>
               </div>
-            </div>
+            </SignalRow>
           )}
 
           {captureInAttention && (
-            <div className="card">
-              <p className="eyebrow" style={{ marginBottom: 4 }}>CAPTURE ({openCaptureItems.length})</p>
-              {openCaptureItems.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "8px 0",
-                    borderTop: "1px solid var(--border-subtle)",
-                  }}
-                >
-                  <span className="card-body" style={{ margin: 0 }}>{item.text}</span>
-                  <button
-                    className="btn-secondary"
-                    style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: 0 }}
-                    disabled={busy}
-                    onClick={() => void handleResolveCapture(item)}
-                  >
-                    RESOLVE
-                  </button>
-                </div>
-              ))}
+            <SignalRow label={`CAPTURE (${openCaptureItems.length})`}>
+              {openCaptureItems.map((item) => renderCaptureListRow(item))}
               {justResolvedCapture && (
                 <ConfirmBanner
                   message={`Resolved "${justResolvedCapture.text}"`}
@@ -1351,7 +1389,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
                   divider
                 />
               )}
-            </div>
+            </SignalRow>
           )}
         </>
       )}
@@ -1366,7 +1404,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       {day && recommendation && dominant !== "RECOMMENDATION" && renderRecommendationCard(false)}
 
       <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>STATE INPUT</p>
+        <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>
         <h2 className="card-title">State check-in</h2>
         <button
           className="btn-primary"
@@ -1460,7 +1498,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
           }
           return (
             <div className="card">
-              <p className="eyebrow" style={{ marginBottom: 4 }}>WORK CONTEXT</p>
+              <p className="tool-label" style={{ marginBottom: 4 }}>WORK CONTEXT</p>
               <h2 className="card-title">Are you working today?</h2>
               <div style={{ display: "flex", gap: 8, marginTop: 12, marginBottom: 12 }}>
                 <button

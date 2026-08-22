@@ -162,3 +162,15 @@ const ATTENTION_WORTHY_TIERS: ReadonlySet<ObligationRelevanceTier> = new Set([
 export function hasObligationRequiringAttention(obligations: Obligation[], today: string): boolean {
   return obligations.some((obligation) => ATTENTION_WORTHY_TIERS.has(classifyObligation(obligation, today)));
 }
+
+/**
+ * Suit Layer 01 — Visual System Hardening (2026-08-22): exposes the same
+ * attention-worthy check per single tier, for presentation code (TODAY's
+ * Commitments card) that needs to style one already-classified
+ * Obligation by real urgency rather than by whether it happened to win
+ * TODAY's scarce 2-slot ATTENTION cap. Pure re-export of the existing
+ * set — no new classification logic.
+ */
+export function isAttentionWorthyTier(tier: ObligationRelevanceTier): boolean {
+  return ATTENTION_WORTHY_TIERS.has(tier);
+}

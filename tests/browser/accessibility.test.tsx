@@ -14,19 +14,19 @@ import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
  * deps) called directly against the real rendered DOM, since the test
  * code itself already executes inside the browser context.
  *
- * IMPORTANT — a real, pre-existing finding, not fixed here: axe-core
- * immediately flagged that BEYOND's own `.eyebrow` (--accent on --bg)
- * and `.meta` (--text-3 on --bg) design tokens fail WCAG AA color
- * contrast (measured 3.25:1 and 3.64:1; 4.5:1 required) — this affects
- * every eyebrow/meta element across the entire app, not anything
- * touched this sprint. Changing either token is a product decision
- * about BEYOND's protected "restrained visual identity," not an
- * incidental fix to bundle with adding a test tool — surfaced in the
- * final report for the owner to decide, not silently patched. Every
- * check below disables only the `color-contrast` rule so this gate
- * still catches genuine regressions (missing labels, invalid ARIA,
- * broken structure) without permanently failing on a known, separate,
- * already-shipped design decision.
+ * UPDATE — Suit Layer 01 (Visual System Hardening, 2026-08-22): the
+ * `.eyebrow` (--accent on --bg, was 3.25:1) and `.meta` (--text-3 on
+ * --bg, was 3.64:1) findings originally flagged here are now FIXED
+ * (--accent-strong / --text-3-strong, both ≥4.5:1 — see
+ * tests/browser/SuitLayer01VisualGrammar.test.tsx for a scoped,
+ * rule-enabled proof on each). This blanket exception remains only for
+ * classes this checkpoint deliberately left untouched and still using
+ * the original --text-3 (~3.6:1): `.section-label` and `.empty-state`
+ * (both shared across TRAIN/BODY/MORE, out of this checkpoint's TODAY-
+ * only scope) and disabled-button text (arguably WCAG-exempt anyway,
+ * being non-operable). Kept as a full rule-disable rather than a
+ * per-selector exception for simplicity; narrow further once those
+ * remaining classes are addressed.
  */
 const KNOWN_COLOR_CONTRAST_EXCEPTION = { rules: { "color-contrast": { enabled: false } } };
 
