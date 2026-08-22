@@ -28,8 +28,18 @@ export type DominantSurface = "RECOMMENDATION" | "RESET_ACTIVE" | "SHIFT_DOWN_AC
  * Ordered by priority for the (rare) case more than ATTENTION_MAX
  * candidates are true simultaneously — see deriveAttentionPlan's doc
  * comment for the reasoning behind this specific order.
+ *
+ * COMMITMENT_DUE (Intent & Commitment Spine, Drop 02, temporal
+ * corrections binding 2026-08-22): true only when
+ * engine/obligationRelevance.ts's hasObligationRequiringAttention says an
+ * unresolved Obligation is OVERDUE, DUE_TODAY, DUE_SOON, or PLANNED_TODAY
+ * — never for a merely WAITING or QUIET one. This is a second, orthogonal
+ * domain (Obligations) earning the same scarce ATTENTION budget Capture/
+ * end-day/outcome already compete for; it does not change what the
+ * Engine recommends (engine/evaluate.ts has no knowledge of Obligations
+ * at all, by design).
  */
-export type AttentionItem = "END_DAY_SUGGESTED" | "PENDING_OUTCOME" | "CAPTURE_UNRESOLVED";
+export type AttentionItem = "END_DAY_SUGGESTED" | "COMMITMENT_DUE" | "PENDING_OUTCOME" | "CAPTURE_UNRESOLVED";
 
 export interface AttentionInput {
   /** Non-null exactly when a RESET is genuinely in progress (getOpenReset). */
@@ -42,6 +52,8 @@ export interface AttentionInput {
   hasPendingOutcome: boolean;
   /** getOpenCaptureItems().length > 0. */
   hasUnresolvedCapture: boolean;
+  /** hasObligationRequiringAttention(unresolvedObligations, today) — see AttentionItem's doc comment. */
+  hasCommitmentDue: boolean;
 }
 
 export interface AttentionPlan {
@@ -73,9 +85,12 @@ export function deriveDominantSurface(input: Pick<AttentionInput, "activeResetId
  * ATTENTION_MAX are true at once:
  *   1. END_DAY_SUGGESTED — a real, time-sensitive domain signal (primary
  *      sleep already logged); the day is objectively likely over.
- *   2. PENDING_OUTCOME — explicit, lightweight, backward-looking feedback;
+ *   2. COMMITMENT_DUE (Drop 02) — a genuinely due/overdue/operator-planned
+ *      commitment is real forward-looking risk of something being missed,
+ *      ranked above the purely backward-looking outcome-rating nudge.
+ *   3. PENDING_OUTCOME — explicit, lightweight, backward-looking feedback;
  *      worth surfacing before it's forgotten, but nothing else depends on it.
- *   3. CAPTURE_UNRESOLVED — deliberately last: Capture's own doctrine is
+ *   4. CAPTURE_UNRESOLVED — deliberately last: Capture's own doctrine is
  *      "inbox age is not urgency," so if attention is genuinely scarce,
  *      Capture is the one that waits. It never disappears — it's always
  *      reachable in AVAILABLE either way.
@@ -85,6 +100,7 @@ export function deriveAttentionPlan(input: AttentionInput): AttentionPlan {
 
   const candidates: AttentionItem[] = [];
   if (input.suggestEndDay) candidates.push("END_DAY_SUGGESTED");
+  if (input.hasCommitmentDue) candidates.push("COMMITMENT_DUE");
   if (input.hasPendingOutcome) candidates.push("PENDING_OUTCOME");
   if (input.hasUnresolvedCapture) candidates.push("CAPTURE_UNRESOLVED");
 

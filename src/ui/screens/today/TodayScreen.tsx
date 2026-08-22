@@ -4,6 +4,11 @@ import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
+import { describeCommitmentsSummary, describeObligationRelevance } from "./commitmentsCopy";
+import { getMostRelevantUnresolvedObligation, hasObligationRequiringAttention } from "../../../engine/obligationRelevance";
+import { getUnresolvedObligations } from "../../../application/intentQueries";
+import { formatLocalDate } from "../../../engine/scheduledContext";
+import type { Obligation } from "../../../domain/intent/types";
 import {
   CHECK_IN_FIELDS,
   describeCheckInValues,
@@ -111,7 +116,15 @@ export const quickCheckInValues: CheckInValues = {
   alcoholUrge: 0,
 };
 
-export function TodayScreen() {
+/**
+ * Intent & Commitment Spine — Drop 02: onViewCommitments is optional and
+ * unused unless a caller wires it up — App.tsx passes a callback that
+ * switches to the MORE tab. TodayScreen itself has no navigation
+ * mechanism of its own (see renderCommitmentsCard's doc comment on why
+ * VIEW stops at "switch tabs" rather than deep-linking to the specific
+ * Obligation).
+ */
+export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => void } = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
@@ -170,6 +183,11 @@ export function TodayScreen() {
   // under the new attention policy.
   const [recommendationOpen, setRecommendationOpen] = useState(false);
   const [endDayOpen, setEndDayOpen] = useState(false);
+  // Intent & Commitment Spine, Drop 02: unresolved Obligations, fetched
+  // unconditionally like openCaptureItems above — Obligations are not
+  // day-scoped either (see application/intentQueries.ts).
+  const [unresolvedObligations, setUnresolvedObligations] = useState<Obligation[]>([]);
+  const [commitmentsOpen, setCommitmentsOpen] = useState(false);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
@@ -185,6 +203,9 @@ export function TodayScreen() {
     // age is not urgency," and jotting something down shouldn't require a
     // BeyondDay to already exist), so this refreshes unconditionally.
     setOpenCaptureItems(await getOpenCaptureItems());
+    // Intent & Commitment Spine, Drop 02: same reasoning — Obligations are
+    // not day-scoped either.
+    setUnresolvedObligations(await getUnresolvedObligations());
     if (activeDay) {
       setCheckIn((await getLatestCheckIn(activeDay.id)) ?? null);
       const rec = (await getLatestRecommendation(activeDay.id)) ?? null;
@@ -547,6 +568,17 @@ export function TodayScreen() {
   const shiftDownIsPrimary = isPrimaryShiftDown(recommendation);
   const resetIsPrimary = isPrimaryReset(recommendation);
 
+  // Intent & Commitment Spine, Drop 02: the single most relevant
+  // unresolved Obligation, and whether it's genuinely due/overdue/
+  // planned-today enough to earn TODAY's scarce ATTENTION slot — see
+  // engine/obligationRelevance.ts for the locked temporal rule. `today`
+  // is computed once per render from the real clock (formatLocalDate),
+  // never cached — the same reasoning getScheduledContext()'s default
+  // `now` parameter already uses.
+  const todayLocalDate = formatLocalDate(new Date());
+  const headlineCommitment = getMostRelevantUnresolvedObligation(unresolvedObligations, todayLocalDate);
+  const hasCommitmentDue = hasObligationRequiringAttention(unresolvedObligations, todayLocalDate);
+
   // Harvest Checkpoint 2/3 (TODAY presentation policy): a pure,
   // presentation-only classification of already-known state into
   // NOW (dominant)/ATTENTION/TOOLS — see attentionPolicy.ts. This
@@ -559,11 +591,13 @@ export function TodayScreen() {
     suggestEndDay,
     hasPendingOutcome: !!pendingOutcome,
     hasUnresolvedCapture: openCaptureItems.length > 0,
+    hasCommitmentDue,
   });
   const dominant = attentionPlan.dominant;
   const endDayInAttention = isInAttention(attentionPlan, "END_DAY_SUGGESTED");
   const pendingOutcomeInAttention = isInAttention(attentionPlan, "PENDING_OUTCOME");
   const captureInAttention = isInAttention(attentionPlan, "CAPTURE_UNRESOLVED");
+  const commitmentInAttention = isInAttention(attentionPlan, "COMMITMENT_DUE");
 
   /**
    * Harvest Checkpoint 3: `isDominant` is separate from `active` — both
@@ -988,6 +1022,71 @@ export function TodayScreen() {
   }
 
   /**
+   * Intent & Commitment Spine — Drop 02 (temporal corrections binding,
+   * 2026-08-22). Called once; placed in ATTENTION when
+   * commitmentInAttention earned it, otherwise TOOLS — same shape as
+   * renderEndDayCard. Shows only the single most relevant unresolved
+   * Obligation (engine/obligationRelevance.ts's fixed ranking), plus a
+   * plain count of anything else unresolved — never a per-item list, so
+   * this never competes with the primary recommendation the way a real
+   * task list would.
+   *
+   * Read-only by design (Drop 02 product ruling): no satisfy/release/
+   * mark-waiting/edit control here. VIEW switches to the MORE tab, where
+   * canonical mutation already lives (Missions & Obligations) — it does
+   * not deep-link to this specific Obligation's detail, since that would
+   * require lifting new "pending navigation" state through App.tsx,
+   * MoreScreen.tsx, AND IntentScreen.tsx (none of which coordinate
+   * navigation with each other today, and Drop 02's own approved plan
+   * listed both of the latter two files as unchanged) — disproportionate
+   * plumbing for one button, per this Drop's own instruction not to build
+   * a routing subsystem for it. onViewCommitments is optional; if TODAY
+   * is ever rendered without it (e.g. a future embedding), VIEW simply
+   * doesn't render rather than doing nothing silently.
+   */
+  function renderCommitmentsCard() {
+    if (!headlineCommitment) return null;
+    const otherCount = unresolvedObligations.length - 1;
+    const { obligation, tier } = headlineCommitment;
+
+    if (!commitmentsOpen) {
+      return (
+        <CollapsibleRow
+          name={obligation.title}
+          summary={describeCommitmentsSummary(tier, obligation, otherCount)}
+          onOpen={() => setCommitmentsOpen(true)}
+        />
+      );
+    }
+
+    return (
+      <div className="card">
+        <p className="eyebrow" style={{ marginBottom: 4 }}>COMMITMENT</p>
+        <h2 className="card-title">{obligation.title}</h2>
+        {obligation.description && <p className="card-body">{obligation.description}</p>}
+        <p className="meta" style={{ marginBottom: otherCount > 0 ? 4 : 12 }}>
+          {describeObligationRelevance(tier, obligation)}
+        </p>
+        {otherCount > 0 && (
+          <p className="meta" style={{ marginBottom: 12 }}>
+            +{otherCount} more unresolved.
+          </p>
+        )}
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setCommitmentsOpen(false)}>
+            CLOSE
+          </button>
+          {onViewCommitments && (
+            <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={onViewCommitments}>
+              VIEW
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  /**
    * Harvest Checkpoint 3 (TOOLS): the quick-capture input itself is NEVER
    * collapsed — Capture's own doctrine (Overdrive Phase 10) is "always a
    * single-line input, never a bigger form to open... less friction than
@@ -1122,6 +1221,8 @@ export function TodayScreen() {
           <p className="section-label">Attention</p>
 
           {endDayInAttention && renderEndDayCard()}
+
+          {commitmentInAttention && renderCommitmentsCard()}
 
           {pendingOutcomeInAttention && pendingOutcome && (
             <div className="card">
@@ -1361,6 +1462,8 @@ export function TodayScreen() {
       {day && minimumDay && !showProminentMinimumDay && renderMinimumDayCard(false)}
 
       {renderCaptureToolsCard()}
+
+      {!commitmentInAttention && renderCommitmentsCard()}
 
       {!endDayInAttention && renderEndDayCard()}
 

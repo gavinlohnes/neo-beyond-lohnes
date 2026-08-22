@@ -12,6 +12,7 @@ const QUIET: Parameters<typeof deriveAttentionPlan>[0] = {
   suggestEndDay: false,
   hasPendingOutcome: false,
   hasUnresolvedCapture: false,
+  hasCommitmentDue: false,
 };
 
 describe("deriveDominantSurface", () => {
@@ -59,15 +60,42 @@ describe("deriveAttentionPlan", () => {
     expect(plan.attention).toEqual(["END_DAY_SUGGESTED", "CAPTURE_UNRESOLVED"]);
   });
 
+  it("a due/overdue/planned-today commitment alone earns exactly one attention slot", () => {
+    const plan = deriveAttentionPlan({ ...QUIET, hasCommitmentDue: true });
+    expect(plan.attention).toEqual(["COMMITMENT_DUE"]);
+  });
+
+  it("COMMITMENT_DUE ranks below END_DAY_SUGGESTED but above PENDING_OUTCOME and CAPTURE_UNRESOLVED", () => {
+    const plan = deriveAttentionPlan({
+      ...QUIET,
+      suggestEndDay: true,
+      hasCommitmentDue: true,
+      hasPendingOutcome: true,
+      hasUnresolvedCapture: true,
+    });
+    expect(plan.attention).toEqual(["END_DAY_SUGGESTED", "COMMITMENT_DUE"]);
+  });
+
   it("never exceeds ATTENTION_MAX even when every candidate is true", () => {
     const plan = deriveAttentionPlan({
       ...QUIET,
       suggestEndDay: true,
+      hasCommitmentDue: true,
       hasPendingOutcome: true,
       hasUnresolvedCapture: true,
     });
     expect(plan.attention).toHaveLength(ATTENTION_MAX);
-    expect(plan.attention).toEqual(["END_DAY_SUGGESTED", "PENDING_OUTCOME"]);
+    expect(plan.attention).toEqual(["END_DAY_SUGGESTED", "COMMITMENT_DUE"]);
+  });
+
+  it("without END_DAY_SUGGESTED, COMMITMENT_DUE and PENDING_OUTCOME fill both slots ahead of CAPTURE_UNRESOLVED", () => {
+    const plan = deriveAttentionPlan({
+      ...QUIET,
+      hasCommitmentDue: true,
+      hasPendingOutcome: true,
+      hasUnresolvedCapture: true,
+    });
+    expect(plan.attention).toEqual(["COMMITMENT_DUE", "PENDING_OUTCOME"]);
   });
 
   it("dominance is independent of attention — an active RESET with a pending outcome still surfaces both", () => {
