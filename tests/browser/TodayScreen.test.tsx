@@ -1,7 +1,9 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import { startDay, submitCheckIn, startShiftDown, captureItem, logSleep } from "../../src/application/commands";
+import { createObligation, markObligationWaiting } from "../../src/application/intentCommands";
+import { formatLocalDate } from "../../src/engine/scheduledContext";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 
@@ -95,6 +97,78 @@ describe("TodayScreen (real browser) — END DAY relevance", () => {
     await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/BeyondDay looks done/)).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "END DAY" })).toBeVisible();
+  });
+});
+
+describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine, Drop 02)", () => {
+  function dateOffset(days: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return formatLocalDate(d);
+  }
+
+  it("adds no new visual footprint when there are zero unresolved Obligations", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    expect(screen.getByText("COMMITMENT", { exact: true }).elements()).toHaveLength(0);
+  });
+
+  it("a QUIET obligation (no dueAt/plannedAt) shows only as a quiet Tools row, never in Attention", async () => {
+    await createObligation({ title: "Someday maybe" });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByRole("button", { name: "Open Someday maybe" })).toBeVisible();
+    expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
+  });
+
+  it("an OVERDUE obligation earns an Attention slot and is inspectable read-only via VIEW", async () => {
+    await createObligation({ title: "Renew passport", dueAt: dateOffset(-1) });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const onViewCommitments = vi.fn();
+    const screen = await render(<TodayScreen onViewCommitments={onViewCommitments} />);
+
+    await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open Renew passport" })).toBeVisible();
+
+    await screen.getByRole("button", { name: "Open Renew passport" }).click();
+    await expect.element(screen.getByText(/Overdue/)).toBeVisible();
+    // Read-only: no satisfy/release/mark-waiting control on TODAY.
+    expect(screen.getByRole("button", { name: "SATISFY" }).elements()).toHaveLength(0);
+
+    await screen.getByRole("button", { name: "VIEW" }).click();
+    expect(onViewCommitments).toHaveBeenCalledTimes(1);
+  });
+
+  it("a WAITING obligation never earns Attention, even with a past dueAt", async () => {
+    const obligation = await createObligation({ title: "Blocked on someone else", dueAt: dateOffset(-3) });
+    await markObligationWaiting(obligation.id);
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+
+    expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
+    await expect.element(screen.getByRole("button", { name: "Open Blocked on someone else" })).toBeVisible();
+  });
+
+  it("a PLANNED_TODAY obligation earns an Attention slot", async () => {
+    await createObligation({ title: "Write the report", plannedAt: dateOffset(0) });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open Write the report" })).toBeVisible();
   });
 });
 

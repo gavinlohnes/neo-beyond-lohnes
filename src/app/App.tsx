@@ -84,7 +84,12 @@ export function App() {
 
   return (
     <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
-      {tab === "TODAY" && <TodayScreen />}
+      {/* Intent & Commitment Spine, Drop 02: the only cross-screen
+          navigation TODAY needs — VIEW on a surfaced commitment switches
+          to the MORE tab (where Missions & Obligations already lives),
+          rather than deep-linking to the specific Obligation, which would
+          require lifting new state through MoreScreen/IntentScreen too. */}
+      {tab === "TODAY" && <TodayScreen onViewCommitments={() => setTab("MORE")} />}
       {tab === "TRAIN" && <TrainScreen />}
       {tab === "BODY" && <BodyScreen />}
       {tab === "MORE" && <MoreScreen />}
