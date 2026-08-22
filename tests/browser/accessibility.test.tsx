@@ -3,6 +3,7 @@ import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn, startShiftDown } from "../../src/application/commands";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import { CollapsibleRow } from "../../src/ui/components/CollapsibleRow";
 import { ConfirmBanner } from "../../src/ui/components/ConfirmBanner";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
@@ -84,6 +85,45 @@ describe("accessibility (real browser, axe-core)", () => {
     const screen = await render(<TodayScreen />);
     await screen.getByText("How BEYOND decided", { exact: true }).click();
     await expect.element(screen.getByText("State input", { exact: true })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
+  /**
+   * FIELD ALPHA Phase 2: TRAIN's first accessibility coverage — the
+   * pre-session picker, active-execution, and RECOVERY states all reuse
+   * .command-surface/.status-strip/.equipment-row (already proven
+   * accessible on TODAY), exercised here with TRAIN's own content/length.
+   */
+  it("TrainScreen (pre-session picker) has no violations beyond the known color-contrast exception", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
+  it("TrainScreen (active STANDARD execution) has no violations beyond the known color-contrast exception", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
+  it("TrainScreen (RECOVERY in progress) has no violations beyond the known color-contrast exception", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "RECOVERY", exact: true }).click();
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await expect.element(screen.getByText("RECOVERY — IN PROGRESS", { exact: true })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);
