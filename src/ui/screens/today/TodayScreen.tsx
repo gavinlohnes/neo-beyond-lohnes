@@ -3,6 +3,7 @@ import type { BeyondDay, CaptureItem, Recommendation, StateCheckIn } from "../..
 import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
+import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
 import {
   CHECK_IN_FIELDS,
   describeCheckInValues,
@@ -162,6 +163,13 @@ export function TodayScreen() {
   // "default to a compact row once it's not the thing needing attention"
   // pattern RESET/SHIFT DOWN already use (resetOpen/shiftDownOpen above).
   const [workContextOpen, setWorkContextOpen] = useState(false);
+  // Harvest Checkpoint 3 (COMMAND 3.0): same "collapsed until it's the
+  // thing needing attention, one tap to reopen" pattern as
+  // resetOpen/shiftDownOpen/workContextOpen/checkInFormOpen above,
+  // applied to the three pieces that move between NOW/ATTENTION/TOOLS
+  // under the new attention policy.
+  const [recommendationOpen, setRecommendationOpen] = useState(false);
+  const [endDayOpen, setEndDayOpen] = useState(false);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
@@ -539,30 +547,37 @@ export function TodayScreen() {
   const shiftDownIsPrimary = isPrimaryShiftDown(recommendation);
   const resetIsPrimary = isPrimaryReset(recommendation);
 
-  // Overdrive Phase 18 (REAL-DEVICE ACCEPTANCE CORRECTION, ACTIVE MODE
-  // DOMINANCE): an in-progress RESET or SHIFT DOWN is the single most
-  // urgent thing on the screen right now — more so than the recommendation
-  // that led to it, which has already served its purpose. When either is
-  // active: (1) it gets the full card--action + corner-flag leadership
-  // treatment (previously only an inline accent border, weaker than the
-  // recommendation card above it), and (2) the recommendation card steps
-  // back to a plain, quieter card rather than continuing to compete for
-  // the same visual tier. This is display ordering/emphasis only — no
-  // Engine policy, no decision/session state, changes.
-  const activeModeInProgress = activeResetId !== null || activeShiftDownId !== null;
+  // Harvest Checkpoint 2/3 (TODAY presentation policy): a pure,
+  // presentation-only classification of already-known state into
+  // NOW (dominant)/ATTENTION/TOOLS — see attentionPolicy.ts. This
+  // supersedes the old ad hoc activeModeInProgress/showSystemSection
+  // booleans with one tested module; no Engine policy, capacity, or
+  // domain fact is touched by it.
+  const attentionPlan = deriveAttentionPlan({
+    activeResetId,
+    activeShiftDownId,
+    suggestEndDay,
+    hasPendingOutcome: !!pendingOutcome,
+    hasUnresolvedCapture: openCaptureItems.length > 0,
+  });
+  const dominant = attentionPlan.dominant;
+  const endDayInAttention = isInAttention(attentionPlan, "END_DAY_SUGGESTED");
+  const pendingOutcomeInAttention = isInAttention(attentionPlan, "PENDING_OUTCOME");
+  const captureInAttention = isInAttention(attentionPlan, "CAPTURE_UNRESOLVED");
 
-  // Overdrive Phase 11 (COMMAND 2.0): whether the trailing low-priority
-  // group (non-prominent Minimum Day, pending outcome rating, END DAY,
-  // backup nudge) has anything to show at all, so its "System" section
-  // label doesn't appear over an empty group.
-  const showSystemSection =
-    (!!day && !!minimumDay && !showProminentMinimumDay) ||
-    !!pendingOutcome ||
-    !!day ||
-    daysSinceBackup === null ||
-    daysSinceBackup >= BACKUP_NUDGE_THRESHOLD_DAYS;
-
-  function renderResetCard(prominent: boolean) {
+  /**
+   * Harvest Checkpoint 3: `isDominant` is separate from `active` — both
+   * RESET and SHIFT DOWN could in principle be simultaneously active
+   * (independent state machines, no mutual exclusion enforced), but
+   * "exactly one operating surface receives primary visual attention"
+   * (COMMAND 3.0's NOW tier) must hold even then. `active` still decides
+   * WHAT renders (in-progress content, COMPLETE/CANCEL); `isDominant`
+   * only decides whether THIS card gets the corner-flag/card--action
+   * leadership treatment — an active-but-not-dominant session (the rare
+   * both-active case) still shows full, usable content, just without
+   * competing visually with whichever one actually owns NOW.
+   */
+  function renderResetCard(prominent: boolean, isDominant: boolean) {
     if (!day) return null;
     const active = activeResetId !== null;
     const open = prominent || active || resetOpen;
@@ -579,7 +594,7 @@ export function TodayScreen() {
     return (
       <div
         key={active ? "in-progress" : "picker"}
-        className={`card fade-in ${active ? "card--action corner-flag" : prominent ? "corner-flag" : ""}`}
+        className={`card fade-in ${active ? (isDominant ? "card--action corner-flag" : "") : prominent ? "corner-flag" : ""}`}
         style={!active && prominent ? { borderColor: "var(--accent)" } : undefined}
       >
         <p
@@ -640,7 +655,8 @@ export function TodayScreen() {
     );
   }
 
-  function renderShiftDownCard(prominent: boolean) {
+  /** Harvest Checkpoint 3: see renderResetCard's doc comment for `isDominant`. */
+  function renderShiftDownCard(prominent: boolean, isDominant: boolean) {
     if (!day) return null;
     const active = activeShiftDownId !== null;
     const open = prominent || active || shiftDownOpen;
@@ -657,7 +673,7 @@ export function TodayScreen() {
     return (
       <div
         key={active ? "in-progress" : "picker"}
-        className={`card fade-in ${active ? "card--action corner-flag" : prominent ? "corner-flag" : ""}`}
+        className={`card fade-in ${active ? (isDominant ? "card--action corner-flag" : "") : prominent ? "corner-flag" : ""}`}
         style={!active && prominent ? { borderColor: "var(--accent)" } : undefined}
       >
         <p
@@ -865,6 +881,197 @@ export function TodayScreen() {
 
   const evidenceBasis = describeEvidenceBasis(checkIn !== null);
 
+  /**
+   * Harvest Checkpoint 3 (NOW): the recommendation card, extracted into
+   * its own function so it can render either as the dominant NOW surface
+   * (full card--action + corner-flag) or — once an active RESET/SHIFT
+   * DOWN takes over dominance — as a quiet TOOLS-tier CollapsibleRow,
+   * still one tap from the full WHY trace and accept/decline. Recording
+   * a decision remains available either way; only its visual weight
+   * changes. STATUS's own context-strip line used to live inside this
+   * card's header — moved out to its own compact, always-visible line
+   * (see the STATUS block in the return below) so it reads even before
+   * a check-in exists, and so this card is purely about the one
+   * decision it's asking for.
+   */
+  function renderRecommendationCard(isDominant: boolean) {
+    if (!day || !recommendation) return null;
+    const open = isDominant || recommendationOpen;
+    if (!open) {
+      return (
+        <CollapsibleRow
+          name="RECOMMENDATION"
+          summary={decision ? `${recommendation.title} — ${describeRecordedDecision(decision)}` : recommendation.title}
+          onOpen={() => setRecommendationOpen(true)}
+        />
+      );
+    }
+    return (
+      <div key={recommendation.id} className={`card fade-in ${isDominant ? "card--action corner-flag" : ""}`}>
+        <h2 className="recommendation-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <ResolveIcon size={24} />
+          {recommendation.title}
+        </h2>
+        <p className="card-body">{recommendation.rationale}</p>
+        {evidenceBasis && (
+          <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
+        )}
+        <details className="why" style={{ marginTop: 12 }}>
+          <summary>How BEYOND decided</summary>
+          {recommendation.trace.matchedRules.map((r) => (
+            <div key={r.ruleId} className={`why-rule ${r.result ? "why-rule--matched" : ""}`}>
+              <span>{r.ruleId}</span>
+              <span>{r.result ? r.reason : "—"}</span>
+            </div>
+          ))}
+        </details>
+        <div style={{ marginTop: 12 }}>
+          {decision ? (
+            <button className="btn-primary" disabled>
+              {describeRecordedDecision(decision)}
+            </button>
+          ) : (
+            <>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  className="btn-primary"
+                  style={{ flex: 1 }}
+                  disabled={busy}
+                  onClick={() => void handleRecord()}
+                >
+                  {describeRecommendationAction(recommendation.kind)}
+                </button>
+                {recommendation.kind !== "NO_ACTION_REQUIRED" && (
+                  <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={handleDecline}>
+                    {DECLINE_LABEL}
+                  </button>
+                )}
+              </div>
+              <p className="meta" style={{ marginTop: 8 }}>
+                {describeRecommendationEffect(recommendation.kind)}
+              </p>
+            </>
+          )}
+          <ConfirmPanel />
+        </div>
+      </div>
+    );
+  }
+
+  /**
+   * Harvest Checkpoint 3 (ATTENTION/TOOLS): called once; placed in
+   * ATTENTION when suggestEndDay earned it, otherwise in TOOLS as a
+   * quiet, always-reachable CollapsibleRow — ending the day is always
+   * possible, not only when the Engine-adjacent signal suggests it.
+   */
+  function renderEndDayCard() {
+    if (!day) return null;
+    const open = suggestEndDay || endDayOpen;
+    if (!open) {
+      return (
+        <CollapsibleRow name="BEYONDDAY" summary="End your day whenever you're ready." onOpen={() => setEndDayOpen(true)} />
+      );
+    }
+    return (
+      <div className="card">
+        <p className="eyebrow" style={{ marginBottom: 4 }}>BEYONDDAY</p>
+        {suggestEndDay && (
+          <p className="card-body" style={{ marginBottom: 12 }}>
+            Primary sleep logged — this BeyondDay looks done. End it whenever you're ready.
+          </p>
+        )}
+        <button className="btn-secondary" disabled={busy} onClick={() => void handleEndDay()}>
+          END DAY
+        </button>
+      </div>
+    );
+  }
+
+  /**
+   * Harvest Checkpoint 3 (TOOLS): the quick-capture input itself is NEVER
+   * collapsed — Capture's own doctrine (Overdrive Phase 10) is "always a
+   * single-line input, never a bigger form to open... less friction than
+   * RESET/SHIFT DOWN's progressive disclosure, not the same amount." Only
+   * the open-items LIST is tiered: when it already earned a compact slot
+   * in ATTENTION, it isn't repeated here (no second dashboard hiding
+   * underneath the first) — otherwise (zero items, or the rare case it
+   * lost the 2-slot cap to END DAY + a pending outcome both being true)
+   * it renders right here instead, so nothing captured is ever more than
+   * one section away.
+   */
+  function renderCaptureToolsCard() {
+    const hasOpenItems = openCaptureItems.length > 0;
+    const showListHere = hasOpenItems && !captureInAttention;
+    return (
+      <div className="card">
+        <p className="eyebrow" style={{ marginBottom: 4 }}>
+          CAPTURE{hasOpenItems ? ` (${openCaptureItems.length})` : ""}
+        </p>
+        <p className="meta" style={{ marginBottom: 8 }}>
+          Jot something down now. Where it belongs is a decision for later, not now.
+        </p>
+        <div style={{ display: "flex", gap: 8, marginBottom: showListHere ? 12 : 0 }}>
+          <input
+            type="text"
+            className="input"
+            style={{ flex: 1 }}
+            placeholder="Capture a thought..."
+            value={captureText}
+            disabled={busy}
+            onChange={(e) => setCaptureText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void handleCapture();
+            }}
+          />
+          <button
+            className="btn-secondary"
+            style={{ width: "auto", padding: "8px 16px" }}
+            disabled={busy || !captureText.trim()}
+            onClick={() => void handleCapture()}
+          >
+            CAPTURE
+          </button>
+        </div>
+        {showListHere && (
+          <>
+            {openCaptureItems.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 0",
+                  borderTop: "1px solid var(--border-subtle)",
+                }}
+              >
+                <span className="card-body" style={{ margin: 0 }}>{item.text}</span>
+                <button
+                  className="btn-secondary"
+                  style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: 0 }}
+                  disabled={busy}
+                  onClick={() => void handleResolveCapture(item)}
+                >
+                  RESOLVE
+                </button>
+              </div>
+            ))}
+            {justResolvedCapture && (
+              <ConfirmBanner
+                message={`Resolved "${justResolvedCapture.text}"`}
+                actionLabel="UNDO"
+                onAction={() => void handleUndoResolveCapture()}
+                disabled={busy}
+                divider
+              />
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="screen fade-in">
       <p className="eyebrow">BEYOND // TODAY</p>
@@ -879,105 +1086,122 @@ export function TodayScreen() {
         </div>
       )}
 
-      {/* P3: state -> recommendation -> action -> reason -> WHY, as one
-          command surface — the single largest, most prominent thing on
-          the screen. Everything else on TODAY is deliberately quieter
-          than this card. */}
-      {day && recommendation && <p className="section-label">Command</p>}
-
-      {day && recommendation && (
-        <div
-          key={recommendation.id}
-          className={`card fade-in ${activeModeInProgress ? "" : "card--action corner-flag"}`}
-        >
-          <p className="meta" style={{ marginBottom: 12, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
-            <span>{describeContextStrip(day.workContext, scheduledContext, unresolvedPostShift)}</span>
-            {capacityResult && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
-                {`· ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}`}
-              </span>
-            )}
-          </p>
-          <h2 className="recommendation-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <ResolveIcon size={24} />
-            {recommendation.title}
-          </h2>
-          <p className="card-body">{recommendation.rationale}</p>
-          {evidenceBasis && (
-            <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
+      {/* STATUS — Harvest Checkpoint 3: compact, glanceable context, never
+          its own card. The same content that used to live inside the
+          recommendation card's own header — moved out so it's visible
+          even before a check-in exists, and so NOW is purely about the
+          one thing needing a decision. describeContextStrip is designed
+          to accept a still-loading (null) scheduledContext gracefully
+          (falls back to "Context not set yet"/"Working today" without a
+          phase) — gating on `day` alone matches its actual contract. */}
+      {day && (
+        <p className="meta-strong" style={{ marginBottom: 16, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+          {describeContextStrip(day.workContext, scheduledContext, unresolvedPostShift)}
+          {capacityResult && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
+              {`· ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}`}
+            </span>
           )}
-          <details className="why" style={{ marginTop: 12 }}>
-            <summary>How BEYOND decided</summary>
-            {recommendation.trace.matchedRules.map((r) => (
-              <div key={r.ruleId} className={`why-rule ${r.result ? "why-rule--matched" : ""}`}>
-                <span>{r.ruleId}</span>
-                <span>{r.result ? r.reason : "—"}</span>
-              </div>
-            ))}
-          </details>
-          <div style={{ marginTop: 12 }}>
-            {decision ? (
-              <button className="btn-primary" disabled>
-                {describeRecordedDecision(decision)}
-              </button>
-            ) : (
-              <>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button
-                    className="btn-primary"
-                    style={{ flex: 1 }}
-                    disabled={busy}
-                    onClick={() => void handleRecord()}
-                  >
-                    {describeRecommendationAction(recommendation.kind)}
-                  </button>
-                  {recommendation.kind !== "NO_ACTION_REQUIRED" && (
-                    <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={handleDecline}>
-                      {DECLINE_LABEL}
-                    </button>
-                  )}
-                </div>
-                <p className="meta" style={{ marginTop: 8 }}>
-                  {describeRecommendationEffect(recommendation.kind)}
-                </p>
-              </>
-            )}
-            <ConfirmPanel />
-          </div>
-        </div>
+        </p>
       )}
 
-      {/* Overdrive Phase 18: ordering follows actual active state first,
-          the "primary" prediction only as a fallback for when nothing is
-          actually running yet — a manually-started SHIFT DOWN that isn't
-          the engine's own suggested command still needs to render first
-          once it's genuinely in progress. */}
-      {day &&
-        recommendation &&
-        (activeShiftDownId !== null ? (
-          <>
-            {renderShiftDownCard(shiftDownIsPrimary)}
-            {renderResetCard(resetIsPrimary)}
-          </>
-        ) : activeResetId !== null ? (
-          <>
-            {renderResetCard(resetIsPrimary)}
-            {renderShiftDownCard(shiftDownIsPrimary)}
-          </>
-        ) : shiftDownIsPrimary ? (
-          <>
-            {renderShiftDownCard(true)}
-            {renderResetCard(resetIsPrimary)}
-          </>
-        ) : (
-          <>
-            {renderResetCard(resetIsPrimary)}
-            {renderShiftDownCard(false)}
-          </>
-        ))}
+      {/* NOW — exactly one dominant operating surface: the recommendation,
+          unless a genuinely active RESET or SHIFT DOWN has taken over. */}
+      {day && recommendation && <p className="section-label">Now</p>}
+      {day && recommendation && dominant === "SHIFT_DOWN_ACTIVE" && renderShiftDownCard(shiftDownIsPrimary, true)}
+      {day && recommendation && dominant === "RESET_ACTIVE" && renderResetCard(resetIsPrimary, true)}
+      {day && recommendation && dominant === "RECOMMENDATION" && renderRecommendationCard(true)}
 
       {showProminentMinimumDay && renderMinimumDayCard(true)}
+
+      {/* ATTENTION — earned, capped at ATTENTION_MAX, and disappears
+          entirely when nothing currently qualifies (attentionPolicy.ts). */}
+      {attentionPlan.attention.length > 0 && (
+        <>
+          <p className="section-label">Attention</p>
+
+          {endDayInAttention && renderEndDayCard()}
+
+          {pendingOutcomeInAttention && pendingOutcome && (
+            <div className="card">
+              <p className="eyebrow" style={{ marginBottom: 4 }}>LAST TIME</p>
+              <p className="card-body" style={{ marginBottom: 8 }}>
+                Last time, BEYOND recommended "{pendingOutcome.title}" — how did that go?
+              </p>
+              <p className="meta" style={{ marginBottom: 12 }}>
+                This just records your answer for later review. It won't change today's guidance.
+              </p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button className="btn-primary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("GOOD")}>
+                  GOOD
+                </button>
+                <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("NEUTRAL")}>
+                  NEUTRAL
+                </button>
+                <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("BAD")}>
+                  BAD
+                </button>
+                <button
+                  className="btn-secondary"
+                  style={{ width: "auto", padding: "8px 16px" }}
+                  disabled={busy}
+                  onClick={handleDismissOutcome}
+                >
+                  DISMISS
+                </button>
+              </div>
+            </div>
+          )}
+
+          {captureInAttention && (
+            <div className="card">
+              <p className="eyebrow" style={{ marginBottom: 4 }}>CAPTURE ({openCaptureItems.length})</p>
+              {openCaptureItems.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "8px 0",
+                    borderTop: "1px solid var(--border-subtle)",
+                  }}
+                >
+                  <span className="card-body" style={{ margin: 0 }}>{item.text}</span>
+                  <button
+                    className="btn-secondary"
+                    style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: 0 }}
+                    disabled={busy}
+                    onClick={() => void handleResolveCapture(item)}
+                  >
+                    RESOLVE
+                  </button>
+                </div>
+              ))}
+              {justResolvedCapture && (
+                <ConfirmBanner
+                  message={`Resolved "${justResolvedCapture.text}"`}
+                  actionLabel="UNDO"
+                  onAction={() => void handleUndoResolveCapture()}
+                  disabled={busy}
+                  divider
+                />
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* TOOLS — quiet, always-reachable capabilities that aren't
+          currently competing with NOW. No capability is deleted; every
+          item below is one tap from full content. */}
+      <p className="section-label">Tools</p>
+
+      {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && renderShiftDownCard(shiftDownIsPrimary, false)}
+      {day && recommendation && dominant !== "RESET_ACTIVE" && renderResetCard(resetIsPrimary, false)}
+      {day && recommendation && dominant !== "RECOMMENDATION" && renderRecommendationCard(false)}
 
       <div className="card">
         <p className="eyebrow" style={{ marginBottom: 4 }}>STATE INPUT</p>
@@ -1134,123 +1358,11 @@ export function TodayScreen() {
           );
         })()}
 
-      {showSystemSection && <p className="section-label">System</p>}
-
       {day && minimumDay && !showProminentMinimumDay && renderMinimumDayCard(false)}
 
-      {pendingOutcome && (
-        <div className="card">
-          <p className="eyebrow" style={{ marginBottom: 4 }}>LAST TIME</p>
-          <p className="card-body" style={{ marginBottom: 8 }}>
-            Last time, BEYOND recommended "{pendingOutcome.title}" — how did that go?
-          </p>
-          <p className="meta" style={{ marginBottom: 12 }}>
-            This just records your answer for later review. It won't change today's guidance.
-          </p>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button className="btn-primary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("GOOD")}>
-              GOOD
-            </button>
-            <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("NEUTRAL")}>
-              NEUTRAL
-            </button>
-            <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleRateOutcome("BAD")}>
-              BAD
-            </button>
-            <button
-              className="btn-secondary"
-              style={{ width: "auto", padding: "8px 16px" }}
-              disabled={busy}
-              onClick={handleDismissOutcome}
-            >
-              DISMISS
-            </button>
-          </div>
-        </div>
-      )}
+      {renderCaptureToolsCard()}
 
-      {/* Overdrive Phase 10 (first connective capability): capture is
-          deliberately not gated on `day` existing — "capture first,
-          organize second" shouldn't require starting a BeyondDay first.
-          Always a single-line input, never a bigger form to open — the
-          entire point is that this needs less friction than RESET/SHIFT
-          DOWN's progressive-disclosure pattern, not the same amount. */}
-      <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>
-          CAPTURE{openCaptureItems.length > 0 ? ` (${openCaptureItems.length})` : ""}
-        </p>
-        <p className="meta" style={{ marginBottom: 8 }}>
-          Jot something down now. Where it belongs is a decision for later, not now.
-        </p>
-        <div style={{ display: "flex", gap: 8, marginBottom: openCaptureItems.length > 0 ? 12 : 0 }}>
-          <input
-            type="text"
-            className="input"
-            style={{ flex: 1 }}
-            placeholder="Capture a thought..."
-            value={captureText}
-            disabled={busy}
-            onChange={(e) => setCaptureText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void handleCapture();
-            }}
-          />
-          <button
-            className="btn-secondary"
-            style={{ width: "auto", padding: "8px 16px" }}
-            disabled={busy || !captureText.trim()}
-            onClick={() => void handleCapture()}
-          >
-            CAPTURE
-          </button>
-        </div>
-        {openCaptureItems.map((item) => (
-          <div
-            key={item.id}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 0",
-              borderTop: "1px solid var(--border-subtle)",
-            }}
-          >
-            <span className="card-body" style={{ margin: 0 }}>{item.text}</span>
-            <button
-              className="btn-secondary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: 0 }}
-              disabled={busy}
-              onClick={() => void handleResolveCapture(item)}
-            >
-              RESOLVE
-            </button>
-          </div>
-        ))}
-        {justResolvedCapture && (
-          <ConfirmBanner
-            message={`Resolved "${justResolvedCapture.text}"`}
-            actionLabel="UNDO"
-            onAction={() => void handleUndoResolveCapture()}
-            disabled={busy}
-            divider
-          />
-        )}
-      </div>
-
-      {day && (
-        <div className="card">
-          <p className="eyebrow" style={{ marginBottom: 4 }}>BEYONDDAY</p>
-          {suggestEndDay && (
-            <p className="card-body" style={{ marginBottom: 12 }}>
-              Primary sleep logged — this BeyondDay looks done. End it whenever you're ready.
-            </p>
-          )}
-          <button className="btn-secondary" disabled={busy} onClick={() => void handleEndDay()}>
-            END DAY
-          </button>
-        </div>
-      )}
+      {!endDayInAttention && renderEndDayCard()}
 
       {(daysSinceBackup === null || daysSinceBackup >= BACKUP_NUDGE_THRESHOLD_DAYS) && (
         <p className="meta" style={{ marginTop: 4 }}>
