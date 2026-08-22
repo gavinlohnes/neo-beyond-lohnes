@@ -360,6 +360,15 @@ export function BodyScreen() {
           already computed below (total/proteinTotal/lastSleepEntry/
           lastBodyweightEntry) — no new query, no new fact, nothing this
           strip shows isn't already the source of truth for its own card. */}
+      {/* Overdrive Phase 13 (BODY -> PHYSICAL STATUS 2.0): "Status" / "Log"
+          section-labels give this screen the two groups it actually has
+          instead of leaving the strip unlabeled above four identical
+          cards. No corner-flag here, deliberately — BODY's four trackers
+          are peer subsystems, not one leading recommendation the way
+          TODAY/TRAIN have; marking any single one of them as "the leader"
+          would manufacture a hierarchy that doesn't exist in the product. */}
+      <p className="section-label">Status</p>
+
       <div className="card" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
           <p className="meta" style={{ margin: 0 }}>WATER</p>
@@ -378,6 +387,8 @@ export function BodyScreen() {
           <p className="status-value">{lastBodyweightEntry ? `${lastBodyweightEntry.effectiveWeightLbs} lbs` : "Not logged"}</p>
         </div>
       </div>
+
+      <p className="section-label">Log</p>
 
       {/* WATER — one consolidated card: current total, fastest actions, custom fallback, collapsed history. */}
       <div className="card">
