@@ -14,12 +14,15 @@ import { Icon, type IconName } from "../ui/icons/Icon";
  */
 type Tab = "TODAY" | "TRAIN" | "BODY" | "MORE";
 
-// MORE has no destination icon in the locked pilot set — it keeps the
-// plain diamond marker rather than inventing a fourth glyph.
-const TAB_ICON: Partial<Record<Tab, IconName>> = {
+// Overdrive Phase 14: MORE now has its own icon ("more" — three small
+// diamonds, additive to the six locked pilot icons, not a redesign of
+// any of them) — see Icon.tsx. All four primary destinations have a
+// real glyph now, so this is a complete Record, not Partial.
+const TAB_ICON: Record<Tab, IconName> = {
   TODAY: "mission",
   TRAIN: "train",
   BODY: "body",
+  MORE: "more",
 };
 
 export function App() {
@@ -64,15 +67,7 @@ export function App() {
               letterSpacing: "0.04em",
             }}
           >
-            {TAB_ICON[t] ? (
-              <Icon name={TAB_ICON[t]!} size={24} />
-            ) : (
-              <span
-                aria-hidden="true"
-                className="diamond"
-                style={{ opacity: tab === t ? 1 : 0 }}
-              />
-            )}
+            <Icon name={TAB_ICON[t]} size={24} />
             {t}
           </button>
         ))}

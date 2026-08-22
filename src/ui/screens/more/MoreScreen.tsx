@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { db } from "../../../persistence/db";
 import { exportBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
@@ -151,10 +151,13 @@ export function MoreScreen() {
 
       {/* P6: grouped by what the user is actually trying to do, not by
           implementation — History / Backup & restore / App info /
-          Diagnostics, per the sprint's execution package. Section labels
-          are plain text, not a new component — nothing here justified
-          building a dedicated primitive for it. */}
-      <SectionLabel>History</SectionLabel>
+          Diagnostics, per the sprint's execution package. Overdrive Phase
+          14: these now use the shared .section-label class (see
+          TODAY/TRAIN/BODY) instead of a MORE-local SectionLabel helper —
+          the local version predated that shared primitive and had drifted
+          to different spacing/no divider rule; converged onto the one
+          grammar. */}
+      <p className="section-label">History</p>
       <div className="card">
         <h2 className="card-title">Every day, every event</h2>
         <p className="card-body" style={{ marginBottom: 12 }}>
@@ -165,7 +168,7 @@ export function MoreScreen() {
         </button>
       </div>
 
-      <SectionLabel>Work schedule</SectionLabel>
+      <p className="section-label">Work schedule</p>
       <div className="card">
         <h2 className="card-title">Your rotation</h2>
         <p className="card-body" style={{ marginBottom: 12 }}>
@@ -177,7 +180,7 @@ export function MoreScreen() {
         </button>
       </div>
 
-      <SectionLabel>Backup &amp; restore</SectionLabel>
+      <p className="section-label">Backup &amp; restore</p>
       <div className="card">
         <h2 className="card-title">Backup</h2>
         <button className="btn-primary" disabled={busy} onClick={() => void handleExportBackup()}>
@@ -258,14 +261,14 @@ export function MoreScreen() {
         {status && <p className="meta" style={{ marginTop: 8 }}>{status}</p>}
       </div>
 
-      <SectionLabel>App information</SectionLabel>
+      <p className="section-label">App information</p>
       <div className="card">
         <DiagRow label="App" value={APP_VERSION} />
         <DiagRow label="Engine" value={ENGINE_VERSION} />
         <DiagRow label="Data schema" value={String(DATA_SCHEMA)} />
       </div>
 
-      <SectionLabel>Diagnostics</SectionLabel>
+      <p className="section-label">Diagnostics</p>
       <div className="card">
         <DiagRow label="Dexie" value={String(db.verno)} />
         <DiagRow label="Active day" value={activeDayYes ? "YES" : "NO"} />
@@ -274,22 +277,6 @@ export function MoreScreen() {
         <DiagRow label="Recommendations" value={String(recommendations)} />
       </div>
     </div>
-  );
-}
-
-function SectionLabel({ children }: { children: ReactNode }) {
-  return (
-    <p
-      className="meta"
-      style={{
-        marginTop: 24,
-        marginBottom: 8,
-        textTransform: "uppercase",
-        letterSpacing: "0.08em",
-      }}
-    >
-      {children}
-    </p>
   );
 }
 

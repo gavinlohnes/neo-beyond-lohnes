@@ -13,7 +13,7 @@
  */
 import type { ReactElement } from "react";
 
-export type IconName = "mission" | "train" | "body" | "reset" | "shiftDown" | "success";
+export type IconName = "mission" | "train" | "body" | "reset" | "shiftDown" | "success" | "more";
 
 const PATHS: Record<IconName, ReactElement> = {
   mission: (
@@ -53,6 +53,24 @@ const PATHS: Record<IconName, ReactElement> = {
     <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
       <path d="M12 3.5 L20.5 12 L12 20.5 L3.5 12 Z" />
       <path d="M7.2 12.4 L10.6 15.8 L17 8.2" strokeWidth={2.4} />
+    </g>
+  ),
+  /**
+   * Overdrive Phase 14 (system icon family completion): MORE has no
+   * destination glyph in the six locked pilot icons (App.tsx previously
+   * fell back to the plain diamond marker for it) — this is a new,
+   * additive seventh icon, not a redesign of any locked one. Three small
+   * solid diamonds — the same rotated-square unit the locked family
+   * already uses as a core/fill motif (mission/body/success) and the
+   * standalone .diamond CSS marker — read as "more/overflow" without
+   * borrowing the outer diamond-frame silhouette the destination icons
+   * share.
+   */
+  more: (
+    <g fill="currentColor" stroke="none">
+      <path d="M4.8 9 L7.8 12 L4.8 15 L1.8 12 Z" />
+      <path d="M12 9 L15 12 L12 15 L9 12 Z" />
+      <path d="M19.2 9 L22.2 12 L19.2 15 L16.2 12 Z" />
     </g>
   ),
 };

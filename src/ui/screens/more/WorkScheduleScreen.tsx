@@ -210,10 +210,12 @@ export function WorkScheduleScreen() {
       </div>
 
       {preview && (
-        <div className="card" style={{ borderColor: "var(--border-strong)" }}>
-          <p className="eyebrow" style={{ marginBottom: 4 }}>PREVIEW</p>
-          <p className="card-body">{preview}</p>
-        </div>
+        <>
+          <p className="section-label">Preview</p>
+          <div className="card" style={{ borderColor: "var(--border-strong)" }}>
+            <p className="card-body">{preview}</p>
+          </div>
+        </>
       )}
 
       <button className="btn-primary" disabled={saving || shiftHoursInvalid} onClick={() => void handleSave()}>
