@@ -9,7 +9,13 @@ import { IntentScreen } from "./IntentScreen";
 
 const APP_VERSION = "0.1.0"; // chat-built checkpoint — NOT the same lineage as the surviving 0.2.0 app
 const ENGINE_VERSION = "0.1.0";
-const DATA_SCHEMA = 4; // v4 (Drop 02a) adds schedulePatterns — not yet reconciled with the real app's own schema-numbering lineage
+// FIELD ALPHA Phase 0 truth-hygiene fix: this was hardcoded at 4 (stale
+// since the Drop 02a/schedulePatterns migration) while the live Dexie
+// version below in Diagnostics had already moved on to 6 (captureItems,
+// then missions/obligations) — the same screen was showing two different
+// answers to "what schema is this?" Now reads the live value directly so
+// it can't drift again.
+const DATA_SCHEMA = db.verno;
 
 export function MoreScreen() {
   const [view, setView] = useState<"MENU" | "HISTORY" | "WORK_SCHEDULE" | "INTENT">("MENU");
