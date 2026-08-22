@@ -148,3 +148,46 @@ describe("auto-close as fallback when a new day starts while one is active", () 
     expect(firstEventsAfter).toBe(firstEventsBefore);
   });
 });
+
+/**
+ * Leverage Implementation 001 (deterministic ordering hardening,
+ * 2026-08-22): getActiveDay's sort was audited alongside
+ * getPendingOutcomeRating/getHistoryDays (both hardened onto
+ * byTimeThenSeq this same checkpoint) but deliberately LEFT UNCHANGED —
+ * BeyondDay carries no `seq` field, unlike StateCheckIn/Recommendation/
+ * DomainEvent, and adding one would be a schema-adjacent change outside
+ * this checkpoint's explicit scope. This test manufactures the otherwise
+ * unreachable state directly (startDay() always closes any prior ACTIVE
+ * day first — this invariant is not something the app's own commands can
+ * violate) purely to characterize, and put a regression tripwire on,
+ * today's known-ambiguous behavior — not to prove a fix.
+ */
+describe("getActiveDay — residual risk with identical startedAt (documented, not fixed this checkpoint)", () => {
+  it("resolves ambiguously (order-dependent, not deterministic) when two ACTIVE-flagged rows share an identical startedAt", async () => {
+    const now = new Date().toISOString();
+    await db.beyondDays.add({
+      id: "residual-day-a",
+      startedAt: now,
+      timezoneId: "UTC",
+      workContext: "UNKNOWN",
+      status: "ACTIVE",
+      createdAt: now,
+      updatedAt: now,
+    });
+    await db.beyondDays.add({
+      id: "residual-day-b",
+      startedAt: now,
+      timezoneId: "UTC",
+      workContext: "UNKNOWN",
+      status: "ACTIVE",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const active = await getActiveDay();
+    expect(active).toBeDefined();
+    // Deliberately NOT asserting which one wins — that's the point being
+    // documented: BeyondDay has no seq to make this deterministic today.
+    expect(["residual-day-a", "residual-day-b"]).toContain(active!.id);
+  });
+});

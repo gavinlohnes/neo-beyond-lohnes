@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
 import { endDay, logWater, startDay } from "../../src/application/commands";
 import { getHistoryDays } from "../../src/application/historyQueries";
@@ -14,6 +14,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   db.close();
+  vi.useRealTimers(); // safety net in case a fake-timer test below throws before restoring them
 });
 
 describe("getHistoryDays", () => {
@@ -53,6 +54,34 @@ describe("getHistoryDays", () => {
     const history = await getHistoryDays();
     const waterEvents = history[0]!.events.filter((e) => e.type === "WATER_LOGGED");
     expect(waterEvents).toHaveLength(2);
+    expect((waterEvents[0]!.payload as { amountOz: number }).amountOz).toBe(8);
+    expect((waterEvents[1]!.payload as { amountOz: number }).amountOz).toBe(12);
+  });
+
+  /**
+   * Leverage Implementation 001 (deterministic ordering hardening,
+   * 2026-08-22): getHistoryDays's per-day event sort used to compare raw
+   * `occurredAt` strings only — the test above works around that with a
+   * manual 5ms delay specifically because a genuine same-millisecond
+   * collision made ordering ambiguous. DomainEvent carries `seq`, so this
+   * now resolves deterministically by real call order without needing an
+   * artificial delay at all.
+   */
+  it("orders two events logged in the exact same millisecond by real call order, with no artificial delay needed", async () => {
+    const day = await startDay();
+
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-22T12:00:00.000Z"));
+
+    await logWater(day.id, 8);
+    await logWater(day.id, 12);
+
+    vi.useRealTimers();
+
+    const history = await getHistoryDays();
+    const waterEvents = history[0]!.events.filter((e) => e.type === "WATER_LOGGED");
+    expect(waterEvents).toHaveLength(2);
+    expect(waterEvents[0]!.occurredAt).toBe(waterEvents[1]!.occurredAt); // genuine tie, not a flaky near-miss
     expect((waterEvents[0]!.payload as { amountOz: number }).amountOz).toBe(8);
     expect((waterEvents[1]!.payload as { amountOz: number }).amountOz).toBe(12);
   });
