@@ -51,6 +51,24 @@ export interface MinimumDayItemConfig {
   updateNote: string;
 }
 
+/**
+ * FIELD ALPHA Gate A correction (2026-08-22): real-device evidence
+ * showed Minimum Day's full six-item contents consuming substantial
+ * vertical space even when it wasn't the operator's primary concern.
+ * This is the GLANCE-depth summary line for its collapsed
+ * CollapsibleRow — completion count when active, a plain "off" state
+ * otherwise. Purely descriptive of existing MinimumDayStatus fields;
+ * no new completion/urgency logic.
+ */
+export function describeMinimumDaySummary(status: { enabled: boolean } & Record<MinimumDayItemKey, boolean>): string {
+  if (!status.enabled) {
+    return "Off — a reduced six-item baseline, if it'd help.";
+  }
+  const total = MINIMUM_DAY_ITEMS.length;
+  const done = MINIMUM_DAY_ITEMS.filter((item) => status[item.key]).length;
+  return `Reduced baseline · ${done} / ${total}`;
+}
+
 export const MINIMUM_DAY_ITEMS: MinimumDayItemConfig[] = [
   {
     key: "hydrate",

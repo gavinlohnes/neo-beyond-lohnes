@@ -37,6 +37,7 @@ import {
 import { dismissOutcome, isOutcomeDismissed } from "../../../persistence/outcomeDismissals";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import {
+  describeMinimumDaySummary,
   isSeriouslyConstrained,
   MINIMUM_DAY_ENABLE_BODY,
   MINIMUM_DAY_ITEMS,
@@ -190,6 +191,15 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
   // under the new attention policy.
   const [recommendationOpen, setRecommendationOpen] = useState(false);
   const [endDayOpen, setEndDayOpen] = useState(false);
+  // FIELD ALPHA Gate A correction: same "collapsed until it's the thing
+  // needing attention, one tap to reopen" pattern as resetOpen/
+  // shiftDownOpen/workContextOpen above, added because Minimum Day's
+  // full six-item contents were consuming substantial vertical space
+  // even when it wasn't the operator's primary concern. Only used for
+  // the non-prominent placement — the prominent (seriously constrained)
+  // case already earns its full visible presence via existing product
+  // truth and is unaffected.
+  const [minimumDayOpen, setMinimumDayOpen] = useState(false);
   // Intent & Commitment Spine, Drop 02: unresolved Obligations, fetched
   // unconditionally like openCaptureItems above — Obligations are not
   // day-scoped either (see application/intentQueries.ts).
@@ -840,6 +850,22 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
 
   function renderMinimumDayCard(prominent: boolean) {
     if (!minimumDay) return null;
+    // FIELD ALPHA Gate A correction: the prominent (seriously
+    // constrained, not yet enabled) case already earns its full visible
+    // presence via existing product truth (isSeriouslyConstrained) and
+    // is unchanged. Everywhere else, Minimum Day defaults to a compact
+    // GLANCE-depth CollapsibleRow — its full six-item contents (once
+    // enabled) or its enable offer (once not) were consuming substantial
+    // vertical space even when it wasn't the operator's primary concern.
+    if (!prominent && !minimumDayOpen) {
+      return (
+        <CollapsibleRow
+          name="MINIMUM DAY"
+          summary={describeMinimumDaySummary(minimumDay)}
+          onOpen={() => setMinimumDayOpen(true)}
+        />
+      );
+    }
     return (
       <div className={prominent ? "card signal-row" : "equipment-row"}>
         <p className="tool-label" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
@@ -1190,9 +1216,15 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
     const { obligation, tier } = headlineCommitment;
 
     if (!commitmentsOpen) {
+      // FIELD ALPHA Gate A correction: the header is the object's fixed
+      // role ("COMMITMENT" — matching what's shown once expanded below),
+      // not the obligation's own title, which used to sit here
+      // unlabeled and could visually collide with TODAY's "Now" section
+      // header above it. The title itself still appears, in the summary
+      // line, via describeCommitmentsSummary.
       return (
         <CollapsibleRow
-          name={obligation.title}
+          name="COMMITMENT"
           summary={describeCommitmentsSummary(tier, obligation, otherCount)}
           onOpen={() => setCommitmentsOpen(true)}
         />
@@ -1430,8 +1462,19 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>
         <h2 className="card-title">State check-in</h2>
+        {/* FIELD ALPHA Gate A correction: ALL GOOD is a routine, always-
+            available shortcut, not a decision — as .btn-primary (solid
+            --accent red, full width) it was reading as one of the
+            strongest visual objects on the whole screen even when the
+            actual primary recommendation was NO ACTION REQUIRED,
+            conflicting with the Red Budget doctrine (significance earns
+            intensity). .btn-secondary is the existing quieter primitive
+            with identical sizing/tap target/disabled treatment — reused
+            rather than inventing a new one. Functionality, defaults, and
+            Engine inputs are unchanged; only the button's own visual
+            weight moved. */}
         <button
-          className="btn-primary"
+          className="btn-secondary"
           style={{ marginBottom: 4 }}
           disabled={busy}
           onClick={() => void handleQuickCheckIn()}
