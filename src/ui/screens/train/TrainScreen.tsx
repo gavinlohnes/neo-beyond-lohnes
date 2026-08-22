@@ -490,7 +490,8 @@ export function TrainScreen() {
             <div style={{ marginTop: 8, marginBottom: 8 }}>
               <p className="meta" style={{ marginBottom: 4 }}>Advisories that changed:</p>
               {completionSummary.advisoryChanges.map((c) => (
-                <p key={c.name} className="card-body" style={{ margin: 0 }}>
+                <p key={c.name} className="card-body" style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                  <ConfirmIcon size={20} />
                   {c.name}: {c.before} → {c.after}
                 </p>
               ))}
@@ -679,8 +680,21 @@ export function TrainScreen() {
                 const display = getInputDisplay(ex.exerciseId, setNumber);
                 const suggestion = suggestedInputFor(ex.exerciseId, setNumber);
                 if (loggedSet) {
+                  // Overdrive Phase 15 (motion-language expansion): this
+                  // <p> replaces the unlogged <div> above at the same key —
+                  // a different element type at the same key is always a
+                  // fresh DOM mount to React, so fade-in genuinely plays
+                  // exactly once, right when the set is actually logged.
+                  // ConfirmIcon only for a real logged set, never for
+                  // SKIPPED — skip stays neutral, per the established
+                  // "neutral wording, not fail" rule for skip/partial.
                   return (
-                    <p key={setNumber} className="meta" style={{ marginBottom: 4 }}>
+                    <p
+                      key={setNumber}
+                      className="meta fade-in"
+                      style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      {!loggedSet.skipped && <ConfirmIcon size={20} />}
                       #{setNumber} — {loggedSet.skipped ? "SKIPPED" : `${loggedSet.weight} lb x ${loggedSet.reps}`}
                     </p>
                   );
