@@ -5,3 +5,10 @@ dist-ssr
 .DS_Store
 *.tsbuildinfo
 coverage
+
+# Harvest Checkpoint 4: real-browser test artifacts (failure screenshots,
+# Playwright reports) — never fixtures, always regenerable.
+tests/browser/__screenshots__
+.vitest-attachments
+test-results
+playwright-report
