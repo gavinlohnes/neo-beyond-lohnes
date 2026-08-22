@@ -23,7 +23,7 @@ import { parseSchedulePattern } from "../persistence/schedulePatternValidation";
  * to this app's original sort behavior for them — no migration, no
  * reinterpretation of old history.
  */
-function byTimeThenSeq(timeA: string, seqA: number | undefined, timeB: string, seqB: number | undefined): number {
+export function byTimeThenSeq(timeA: string, seqA: number | undefined, timeB: string, seqB: number | undefined): number {
   const byTime = timeA.localeCompare(timeB);
   if (byTime !== 0) return byTime;
   return (seqA ?? 0) - (seqB ?? 0);

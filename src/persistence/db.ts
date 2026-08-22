@@ -10,6 +10,7 @@ import type {
   StateCheckIn,
   WorkoutSession,
 } from "../domain/common/types";
+import type { Mission, Obligation } from "../domain/intent/types";
 import { DEFAULT_SCHEDULE_PATTERN } from "../engine/scheduledContext";
 
 export class BeyondDB extends Dexie {
@@ -22,6 +23,8 @@ export class BeyondDB extends Dexie {
   performedSets!: Table<PerformedSetRaw, string>;
   schedulePatterns!: Table<SchedulePattern, string>;
   captureItems!: Table<CaptureItem, string>;
+  missions!: Table<Mission, string>;
+  obligations!: Table<Obligation, string>;
 
   constructor() {
     super("beyond");
@@ -96,6 +99,32 @@ export class BeyondDB extends Dexie {
       performedSets: "id, beyondDayId, sessionId, exerciseId",
       schedulePatterns: "id",
       captureItems: "id, status, capturedAt",
+    });
+    // v6 (Intent & Commitment Spine, Drop 01, 2026-08-22): adds missions
+    // and obligations — the first BEYOND records that are not day-scoped
+    // but still require real historical DomainEvent truth (see
+    // DomainEvent.missionId/obligationId in domain/common/types.ts).
+    // `events` gains two new optional indexes (missionId, obligationId)
+    // so Mission/Obligation history can be queried directly, same
+    // treatment v2->v3 already gave performedSets when it needed new
+    // indexes on an existing table — no upgrade() callback required
+    // either time, since existing rows simply have no value for a new
+    // index until written the new way. Purely additive: v1-v5 tables/data
+    // untouched, and no upgrade callback for missions/obligations
+    // themselves since (like captureItems at v5) there is no equivalent
+    // prior data to seed or migrate.
+    this.version(6).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
     });
   }
 }

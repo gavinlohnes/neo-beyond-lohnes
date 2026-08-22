@@ -168,7 +168,16 @@ export type DomainEventType =
   | "SET_SKIPPED"
   | "WATER_LOGGED"
   | "WATER_LOG_CORRECTED"
-  | "WORK_PERIOD_ENDED";
+  | "WORK_PERIOD_ENDED"
+  | "MISSION_CREATED"
+  | "MISSION_MODIFIED"
+  | "MISSION_ARCHIVED"
+  | "OBLIGATION_CREATED"
+  | "OBLIGATION_MODIFIED"
+  | "OBLIGATION_MARKED_WAITING"
+  | "OBLIGATION_MARKED_OPEN"
+  | "OBLIGATION_SATISFIED"
+  | "OBLIGATION_RELEASED";
 
 /**
  * DERIVED, not stored. Computed by walking a WATER_LOGGED event and any
@@ -331,6 +340,75 @@ export interface WorkPeriodEndedPayload {
 }
 
 /**
+ * Intent & Commitment Spine — Drop 01 (2026-08-22, approved): event
+ * payloads for the Mission/Obligation lifecycle. Every mutation of a
+ * Mission/Obligation canonical record (src/domain/intent/types.ts) is
+ * paired with one of these, logged via application/intentCommands.ts's
+ * logIntentEvent — same DomainEvent shape as every other fact in BEYOND,
+ * scoped by missionId/obligationId instead of beyondDayId (see
+ * DomainEvent's doc comment above). `commandId` doubles as
+ * DomainEvent.correlationId, matching every other command in this file.
+ */
+export interface MissionCreatedPayload {
+  commandId: string;
+  missionId: string;
+  title: string;
+}
+
+export interface MissionModifiedPayload {
+  commandId: string;
+  missionId: string;
+  changes: { title?: string; description?: string };
+}
+
+export interface MissionArchivedPayload {
+  commandId: string;
+  missionId: string;
+}
+
+export interface ObligationCreatedPayload {
+  commandId: string;
+  obligationId: string;
+  title: string;
+  missionId?: string;
+}
+
+export interface ObligationModifiedPayload {
+  commandId: string;
+  obligationId: string;
+  changes: {
+    title?: string;
+    description?: string;
+    missionId?: string;
+    dueAt?: string;
+    plannedAt?: string;
+    recurrence?: { freq: "DAILY" | "WEEKLY" | "MONTHLY"; interval: number };
+  };
+}
+
+export interface ObligationMarkedWaitingPayload {
+  commandId: string;
+  obligationId: string;
+}
+
+export interface ObligationMarkedOpenPayload {
+  commandId: string;
+  obligationId: string;
+}
+
+export interface ObligationSatisfiedPayload {
+  commandId: string;
+  obligationId: string;
+  resolutionNote?: string;
+}
+
+export interface ObligationReleasedPayload {
+  commandId: string;
+  obligationId: string;
+  resolutionNote?: string;
+}
+
+/**
  * Drop 02a (Daily Intelligence / Context — first slice). One entry in a
  * rotating work schedule's cycle. `workdays` uses JS Date.getDay()
  * convention (0=Sunday..6=Saturday) to match engine/scheduledContext.ts's
@@ -459,7 +537,24 @@ export interface ShiftDownCompletedPayload {
 export interface DomainEvent<TPayload = unknown> {
   id: string;
   type: DomainEventType;
-  beyondDayId: string;
+  /**
+   * Intent & Commitment Spine (Drop 01, 2026-08-22): widened from required
+   * to optional. Every event logged before this Drop always carried a real
+   * BeyondDay it happened on and still does — nothing about that changes.
+   * Mission/Obligation lifecycle events are the first events in BEYOND
+   * that are NOT day-scoped (same reasoning CaptureItem's own doc comment
+   * already gives for why it isn't a DomainEvent at all: "a capture can
+   * outlive the BeyondDay it was written during"). Missions/Obligations
+   * must still produce real historical DomainEvents (locked Drop 01
+   * doctrine), so the day-scoping requirement is loosened here rather than
+   * inventing a second, parallel event shape. See missionId/obligationId
+   * below for how those events are scoped instead.
+   */
+  beyondDayId?: string;
+  /** Intent & Commitment Spine (Drop 01): set on MISSION_* events instead of beyondDayId. */
+  missionId?: string;
+  /** Intent & Commitment Spine (Drop 01): set on OBLIGATION_* events instead of beyondDayId. */
+  obligationId?: string;
   occurredAt: string;
   recordedAt: string;
   payload: TPayload;

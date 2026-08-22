@@ -66,13 +66,15 @@ function seqBox(): Promise<SeqBox> {
  * get a unique, strictly increasing value — safe in this single-threaded
  * JS environment without needing a lock.
  */
-async function nextSeq(): Promise<number> {
+/** Exported for application/intentCommands.ts — Mission/Obligation events share this same ordering space (see doc comment above). */
+export async function nextSeq(): Promise<number> {
   const box = await seqBox();
   box.current += 1;
   return box.current;
 }
 
-function newId(): string {
+/** Exported for application/intentCommands.ts. */
+export function newId(): string {
   return crypto.randomUUID();
 }
 
