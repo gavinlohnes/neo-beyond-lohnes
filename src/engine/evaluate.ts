@@ -6,7 +6,11 @@ import type {
 } from "../domain/common/types";
 import { deriveCapacity } from "./capacity";
 
-const ENGINE_VERSION = "0.1.0";
+// FIELD ALPHA Phase 4 truth-hygiene fix: exported so MoreScreen's SYSTEM
+// diagnostics can display the real value the Engine actually stamps onto
+// every Recommendation.engineVersion, instead of a second, independently
+// hardcoded literal that could silently drift from this one.
+export const ENGINE_VERSION = "0.1.0";
 
 export interface EvaluateInput {
   beyondDayId: string;

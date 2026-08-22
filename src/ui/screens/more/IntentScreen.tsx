@@ -179,6 +179,7 @@ export function IntentScreen() {
             type="text"
             className="input"
             style={{ flex: 1 }}
+            aria-label="New mission title"
             placeholder="What is this mission?"
             value={newMissionTitle}
             disabled={busy}
@@ -217,6 +218,7 @@ export function IntentScreen() {
           type="text"
           className="input"
           style={{ marginBottom: 8 }}
+          aria-label="New obligation title"
           placeholder="What needs to be resolved?"
           value={newObligationTitle}
           disabled={busy}
@@ -225,6 +227,7 @@ export function IntentScreen() {
         <select
           className="input"
           style={{ marginBottom: 8 }}
+          aria-label="Linked mission"
           value={newObligationMissionId}
           disabled={busy}
           onChange={(e) => setNewObligationMissionId(e.target.value)}
@@ -236,12 +239,12 @@ export function IntentScreen() {
         </select>
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
           <div style={{ flex: 1 }}>
-            <label className="meta" style={{ display: "block", marginBottom: 4 }}>Due</label>
-            <input type="date" className="input" value={newObligationDueAt} disabled={busy} onChange={(e) => setNewObligationDueAt(e.target.value)} />
+            <label htmlFor="new-obligation-due" className="meta" style={{ display: "block", marginBottom: 4 }}>Due</label>
+            <input id="new-obligation-due" type="date" className="input" value={newObligationDueAt} disabled={busy} onChange={(e) => setNewObligationDueAt(e.target.value)} />
           </div>
           <div style={{ flex: 1 }}>
-            <label className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
-            <input type="date" className="input" value={newObligationPlannedAt} disabled={busy} onChange={(e) => setNewObligationPlannedAt(e.target.value)} />
+            <label htmlFor="new-obligation-planned" className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
+            <input id="new-obligation-planned" type="date" className="input" value={newObligationPlannedAt} disabled={busy} onChange={(e) => setNewObligationPlannedAt(e.target.value)} />
           </div>
         </div>
         <button className="btn-secondary" disabled={busy || !newObligationTitle.trim()} onClick={() => void handleCreateObligation()}>
@@ -349,8 +352,8 @@ function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () =>
               </>
             ) : (
               <>
-                <input type="text" className="input" style={{ marginBottom: 8 }} value={title} onChange={(e) => setTitle(e.target.value)} />
-                <textarea className="input" style={{ marginBottom: 8, minHeight: 80 }} value={description} onChange={(e) => setDescription(e.target.value)} />
+                <input type="text" className="input" style={{ marginBottom: 8 }} aria-label="Mission title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <textarea className="input" style={{ marginBottom: 8, minHeight: 80 }} aria-label="Mission description" value={description} onChange={(e) => setDescription(e.target.value)} />
                 <div style={{ display: "flex", gap: 8 }}>
                   <button className="btn-primary" disabled={busy} onClick={() => void handleSave()}>
                     SAVE
@@ -514,16 +517,16 @@ function ObligationDetail({
               </>
             ) : (
               <>
-                <input type="text" className="input" style={{ marginBottom: 8 }} value={title} onChange={(e) => setTitle(e.target.value)} />
-                <textarea className="input" style={{ marginBottom: 8, minHeight: 80 }} value={description} onChange={(e) => setDescription(e.target.value)} />
+                <input type="text" className="input" style={{ marginBottom: 8 }} aria-label="Obligation title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <textarea className="input" style={{ marginBottom: 8, minHeight: 80 }} aria-label="Obligation description" value={description} onChange={(e) => setDescription(e.target.value)} />
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                   <div style={{ flex: 1 }}>
-                    <label className="meta" style={{ display: "block", marginBottom: 4 }}>Due</label>
-                    <input type="date" className="input" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
+                    <label htmlFor="obligation-due" className="meta" style={{ display: "block", marginBottom: 4 }}>Due</label>
+                    <input id="obligation-due" type="date" className="input" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
-                    <input type="date" className="input" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} />
+                    <label htmlFor="obligation-planned" className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
+                    <input id="obligation-planned" type="date" className="input" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} />
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>

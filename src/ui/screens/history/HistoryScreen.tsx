@@ -22,8 +22,10 @@ export function HistoryScreen() {
 
   return (
     <div className="screen">
-      <p className="eyebrow">BEYOND // HISTORY</p>
-      <h1 className="title">History</h1>
+      {/* FIELD ALPHA Phase 4: identity zone quieted, same principle as
+          TODAY/TRAIN/BODY/MORE — HISTORY is evidence, not a destination
+          that needs its own big display title. */}
+      <h1 className="eyebrow">MORE // HISTORY</h1>
       <p className="card-body" style={{ marginBottom: 16 }}>
         Every day and every event, exactly as it happened. Read-only.
       </p>
