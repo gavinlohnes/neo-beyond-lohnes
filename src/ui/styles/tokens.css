@@ -8,6 +8,16 @@
   --text-1: #f2f2f2;
   --text-2: #a8a8a8;
   --text-3: #6e6e6e;
+  /* Suit Layer 01 — Visual System Hardening (2026-08-22): the known axe
+     finding was that --text-3 as TEXT (.meta) measures ~3.6:1 on --bg,
+     below WCAG AA's 4.5:1. Per "split semantic roles rather than
+     globally bleaching the palette" — --text-3 itself is left exactly as
+     it was (still used by disabled-button states, .empty-state, and
+     .section-label, none of which this checkpoint touches) and a
+     distinct, brighter sibling is added for the specific text roles that
+     need to actually pass AA (.meta, .why-rule's unmatched rows).
+     Computed: rgb(140,140,140) on #0a0a0a ≈ 5.9:1. */
+  --text-3-strong: #8c8c8c;
   --accent: #c81e2c;
   /* Overdrive Phase 1: a second, brighter accent tier for the handful of
      moments that genuinely need more visual weight than restrained red

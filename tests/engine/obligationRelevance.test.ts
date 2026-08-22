@@ -3,6 +3,7 @@ import {
   classifyObligation,
   getMostRelevantUnresolvedObligation,
   hasObligationRequiringAttention,
+  isAttentionWorthyTier,
 } from "../../src/engine/obligationRelevance";
 import type { Obligation } from "../../src/domain/intent/types";
 
@@ -161,5 +162,16 @@ describe("hasObligationRequiringAttention", () => {
 
   it("false for an empty list", () => {
     expect(hasObligationRequiringAttention([], TODAY)).toBe(false);
+  });
+});
+
+describe("isAttentionWorthyTier", () => {
+  it("true for OVERDUE, DUE_TODAY, DUE_SOON, PLANNED_TODAY; false for WAITING, QUIET", () => {
+    expect(isAttentionWorthyTier("OVERDUE")).toBe(true);
+    expect(isAttentionWorthyTier("DUE_TODAY")).toBe(true);
+    expect(isAttentionWorthyTier("DUE_SOON")).toBe(true);
+    expect(isAttentionWorthyTier("PLANNED_TODAY")).toBe(true);
+    expect(isAttentionWorthyTier("WAITING")).toBe(false);
+    expect(isAttentionWorthyTier("QUIET")).toBe(false);
   });
 });

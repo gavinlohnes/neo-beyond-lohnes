@@ -25,13 +25,21 @@ button, input {
   min-height: 100%;
 }
 
+/* Suit Layer 01 — Visual System Hardening (2026-08-22): color changed
+   from --accent (~3.3:1 on --bg, the known axe finding) to --accent-strong
+   (~4.9:1, passes WCAG AA). --accent itself is untouched — this class was
+   always a pure text role, never doing double duty as a border/dot/chip
+   color, so this is a text-only fix, not a decorative-vs-textual
+   conflict needing a split token. App-wide (every screen uses .eyebrow),
+   but a color-contrast correction only — no layout/role change
+   propagates from this. */
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-strong);
   margin: 0 0 var(--space-2);
 }
 
@@ -352,10 +360,15 @@ button, input {
   }
 }
 
+/* Suit Layer 01 — Visual System Hardening (2026-08-22): color changed
+   from --text-3 (~3.6:1, the known axe finding) to --text-3-strong
+   (~5.9:1, passes WCAG AA) — see tokens.css's doc comment on why a new
+   token was added rather than reusing --text-2 (that would flatten the
+   .meta / .meta-strong hierarchy the app already deliberately built). */
 .meta {
   font-family: var(--font-mono);
   font-size: 16px;
-  color: var(--text-3);
+  color: var(--text-3-strong);
 }
 
 /* Overdrive Phase 18 (REAL-DEVICE ACCEPTANCE CORRECTION, typography
@@ -384,13 +397,16 @@ button, input {
   cursor: pointer;
 }
 
+/* Suit Layer 01 — Visual System Hardening (2026-08-22): color changed
+   from --text-3 to --text-3-strong (same AA-contrast fix as .meta above)
+   — only used inside TODAY's WHY panel, so this is fully TODAY-scoped. */
 .why-rule {
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono);
   font-size: 16px;
   padding: var(--space-1) 0;
-  color: var(--text-3);
+  color: var(--text-3-strong);
 }
 
 .why-rule--matched {
@@ -531,4 +547,52 @@ button, input {
 .exercise-focus {
   border-left: 3px solid var(--accent);
   padding-left: var(--space-3);
+}
+
+/*
+ * Suit Layer 01 — Visual System Hardening (2026-08-22). The current
+ * FIELD surface grammar, hardened on TODAY only (see the completion
+ * report for the full surface audit) — not yet propagated to
+ * TRAIN/BODY/MORE. Two roles added here; every other role already
+ * existed (.card--action/.corner-flag for the dominant NOW surface,
+ * CollapsibleRow for a collapsed tool row, .machinery-panel for
+ * expandable detail, ConfirmBanner/.meta+icon for confirmation feedback,
+ * .meta for passive metadata).
+ */
+
+/* TOOL LABEL — the header for an ordinary utility/tool card (STATE
+ * INPUT, MINIMUM DAY, WORK CONTEXT, CAPTURE, RESET/SHIFT DOWN's own
+ * inactive label). Same size/weight/mono/letter-spacing as .eyebrow, but
+ * --text-2 instead of accent — red is reserved for real identity/
+ * committed-action emphasis (the screen eyebrow, an active RESET/SHIFT
+ * DOWN's own inline color override, chip--selected, capacity RED), not
+ * for labeling every ordinary tool card. This is the accent-budget
+ * correction: before this Drop, every card on TODAY used .eyebrow
+ * regardless of function, so red carried no actual signal.
+ */
+.tool-label {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin: 0 0 var(--space-2);
+}
+
+/* SIGNAL ROW — an earned-but-not-commanding surface: an ATTENTION-tier
+ * item (LAST TIME, an unresolved Commitment/END DAY suggestion once it
+ * has genuinely earned attention, unresolved Capture), and a
+ * recommended-but-not-yet-started tool (RESET/SHIFT DOWN/MINIMUM DAY
+ * when the Engine suggests it but it isn't the dominant NOW surface).
+ * Deliberately NOT .card--action/.corner-flag — that treatment is
+ * reserved for the one genuinely dominant NOW surface; stacking a second
+ * full accent-bordered/shadowed card directly under it (as the old
+ * "prominent" treatment did) competed with, rather than supported, the
+ * dominant surface. A thin left accent tick plus tighter padding reads
+ * as "worth a glance" without claiming NOW's own visual authority.
+ */
+.signal-row {
+  padding: var(--space-3);
+  border-left: 2px solid var(--accent);
 }
