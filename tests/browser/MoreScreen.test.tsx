@@ -4,6 +4,8 @@ import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { db } from "../../src/persistence/db";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
+import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../src/app/buildInfo";
+import { ENGINE_VERSION } from "../../src/engine/evaluate";
 
 /**
  * BEYOND FIELD ALPHA Phase 4 — first real-browser acceptance layer for
@@ -62,13 +64,41 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     expect(screen.getByText("Data schema", { exact: true }).elements()).toHaveLength(0);
   });
 
+  it("Factory Drop 02: APP/BUILD/ENGINE come from the shared build-info/engine source, not a second hardcoded literal", async () => {
+    // Regression guard for the exact bug this Drop fixed: MoreScreen used
+    // to carry its own independent `const APP_VERSION = "0.1.0"` literal,
+    // completely disconnected from package.json's `version`. Reads the
+    // instrument-cluster's own label→value structure directly (rather
+    // than a global text search) since APP_RELEASE and ENGINE_VERSION can
+    // coincidentally share the same string value.
+    const screen = await render(<MoreScreen />);
+
+    const cells = screen.container.querySelectorAll(".instrument-cluster > div");
+    const readings = Array.from(cells).reduce<Record<string, string>>((acc, cell) => {
+      const label = cell.querySelector(".meta")?.textContent ?? "";
+      const value = cell.querySelector(".status-value")?.textContent ?? "";
+      acc[label] = value;
+      return acc;
+    }, {});
+
+    expect(readings["APP"]).toBe(APP_RELEASE);
+    expect(readings["BUILD"]).toBe(BUILD_COMMIT);
+    expect(readings["ENGINE"]).toBe(ENGINE_VERSION);
+
+    // The exact build timestamp is technical detail behind the
+    // disclosure, not permanently visible in the glance grid.
+    await expect.element(screen.getByText(BUILD_TIME, { exact: true })).not.toBeVisible();
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
+    await expect.element(screen.getByText(BUILD_TIME, { exact: true })).toBeVisible();
+  });
+
   it("database contents (raw counts) are TECHNICAL DETAIL, tucked behind disclosure, not permanently visible", async () => {
     const screen = await render(<MoreScreen />);
 
-    await expect.element(screen.getByText("Database contents", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Diagnostic detail", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Days", { exact: true })).not.toBeVisible();
 
-    await screen.getByText("Database contents", { exact: true }).click();
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
     await expect.element(screen.getByText("Days", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Events", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Recommendations", { exact: true })).toBeVisible();
