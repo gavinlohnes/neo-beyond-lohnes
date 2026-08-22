@@ -1,9 +1,10 @@
 # BEYOND FIELD ALPHA — Autonomous Implementation Campaign
 
-Status: **ACTIVE**. Kicked off 2026-08-22. This document transcribes the owner's campaign
-authority verbatim/faithfully — it is the reference for every phase of this campaign, not a
-new product spec. See `CLAUDE.md` for the general authority order and architecture rules that
-apply beyond this campaign.
+Status: COMPLETE — 2026-08-22. All four phases (TODAY/TRAIN/BODY/MORE) and the campaign-closeout
+audit are merged to master; CI confirmed green on each merge commit. This document remains a
+historical record of the campaign's authority and phase-by-phase reasoning — it is no longer an
+active-campaign pointer from `CLAUDE.md` (see Development Protocol V2.1). See `CLAUDE.md` for
+the general authority order and architecture rules that apply beyond this campaign.
 
 ## Mission
 

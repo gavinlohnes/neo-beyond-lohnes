@@ -10,7 +10,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:browser": "vitest run --project browser"
+    "test:browser": "vitest run --project browser",
+    "verify": "vitest run && npm run build"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.3.0",
