@@ -50,7 +50,13 @@ function AppUpdateBanner() {
         position: "fixed",
         left: "var(--gutter)",
         right: "var(--gutter)",
-        bottom: 76,
+        // Harvest Checkpoint 7 (phone hardening): index.html sets
+        // viewport-fit=cover for edge-to-edge display, which requires
+        // respecting env(safe-area-inset-*) wherever content sits near a
+        // screen edge — otherwise a device with a home-indicator/gesture
+        // inset (bottom) renders this UNDER it. calc() with an env()
+        // fallback is a no-op (adds 0px) on any device without one.
+        bottom: "calc(76px + env(safe-area-inset-bottom, 0px))",
         zIndex: 50,
         marginBottom: 0,
         maxWidth: 480 - 24,
@@ -77,7 +83,7 @@ export function App() {
   const [tab, setTab] = useState<Tab>("TODAY");
 
   return (
-    <div style={{ paddingBottom: 64 }}>
+    <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
       {tab === "TODAY" && <TodayScreen />}
       {tab === "TRAIN" && <TrainScreen />}
       {tab === "BODY" && <BodyScreen />}
@@ -94,6 +100,7 @@ export function App() {
           display: "flex",
           borderTop: "1px solid var(--border-subtle)",
           background: "var(--bg)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
         {(["TODAY", "TRAIN", "BODY", "MORE"] as Tab[]).map((t) => (
