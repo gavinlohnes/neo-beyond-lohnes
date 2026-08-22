@@ -56,6 +56,11 @@ required one so far):
     (RED→RESET, YELLOW→REDUCED, GREEN→STANDARD), user-overridable.
   - `progression.ts` — per-exercise INCREASE/HOLD/REDUCE advisory,
     never auto-applied.
+  - `obligationRelevance.ts` — classifies Obligations into a relevance
+    tier (OVERDUE/DUE_TODAY/DUE_SOON/PLANNED_TODAY/WAITING/QUIET). A
+    parallel interpretation layer, not part of `evaluate.ts`'s
+    arbitration — Obligations do not yet participate in primary
+    recommendation arbitration.
 - **`src/persistence`** — Dexie/IndexedDB (`db.ts`), backup export
   (`backup.ts`), restore with format detection (`restore.ts`), and the
   historical-format compatibility importer (`compat/legacyBackup.ts`).
@@ -87,10 +92,17 @@ corrected. HISTORY itself, its queries, and its tests are unchanged).
   and immediate undo.
 - **MORE** — backup export/share, restore (preview-before-write,
   replace-only), backup-reminder banner, app/engine/schema diagnostics
-  (see Versions below), and access to HISTORY.
+  (see Versions below), and access to HISTORY, Missions & Obligations
+  (Intent & Commitment Spine), and Work Schedule.
 - **HISTORY** (nested under MORE) — read-only, complete: every
   `BeyondDay` and every event on it, chronological within the day,
   most-recent-day-first, collapsed per day by default.
+- **Missions & Obligations** (nested under MORE, `IntentScreen.tsx`) —
+  dedicated deep management for the Intent & Commitment Spine, separate
+  from TODAY's own lightweight "one most-relevant commitment" surfacing.
+- **Work Schedule** (nested under MORE, `WorkScheduleScreen.tsx`) —
+  configures the Week A/B rotation pattern `scheduledContext.ts` derives
+  its (non-authoritative) work-phase suggestion from.
 
 Full behavioral rationale for all of the above — what's locked, why,
 and what NOT to change without sign-off — lives in
@@ -111,7 +123,7 @@ the whole reason a second backup format exists (see below).
 |---|---|---|
 | App version | `0.1.0` (`APP_VERSION` in [MoreScreen.tsx](src/ui/screens/more/MoreScreen.tsx)) | `0.1.0` → `0.2.0` (per fixture metadata) |
 | Engine version | `0.1.0` | n/a (not preserved in fixtures) |
-| Data schema | `3` (Dexie schema — see Migration behavior) | `2` → `3` (per fixture metadata; different numbering scheme, same numbers by coincidence) |
+| Data schema | `6` (Dexie schema — see Migration behavior) | `2` → `3` (per fixture metadata; different numbering scheme, same numbers by coincidence) |
 | Backup format | `dexie-export-import` native (`format: "dexie"`) | `BEYOND_BACKUP`, `formatVersion: 1` |
 
 The historical app no longer runs; nothing in this repo executes its
@@ -143,6 +155,15 @@ across versions:
 - **v3** — adds `sessionId`/`exerciseId` indexes to `performedSets`,
   once TRAIN gave that table a real, confirmed shape. v1/v2 tables and
   data are untouched by this change.
+- **v4** (Drop 02a, Daily Intelligence/Context) — adds `schedulePatterns`
+  (single-row work-rotation config), seeded via `.upgrade()` with a
+  default pattern so existing predictions are unchanged across the
+  migration.
+- **v5** (Overdrive Phase 10) — adds `captureItems` ("capture first,
+  organize second"), purely additive.
+- **v6** (Intent & Commitment Spine, Drop 01) — adds `missions` and
+  `obligations`, plus optional `missionId`/`obligationId` indexes on the
+  existing `events` table.
 
 **Restore is always replace-only.** Both the native and legacy import
 paths clear existing tables before writing (`clearTablesBeforeImport`,
@@ -162,11 +183,15 @@ in the imported payload, since its own write path always produces both.
 npm test
 ```
 
-39 files / 379 tests as of this writing (Vitest, plain Node
-environment — no jsdom, `fake-indexeddb` standing in for IndexedDB; see
-`tests/setup.ts` for the polyfills this requires, notably that
-`vi.useFakeTimers()` must be scoped to `{ toFake: ["Date"] }` or it
-deadlocks `fake-indexeddb`'s internal scheduling).
+62 files / 630 tests as of this writing (Vitest, two projects — see
+`vitest.config.ts`). The "node" project (everything below except
+`tests/browser`) runs in a plain Node environment — no jsdom,
+`fake-indexeddb` standing in for IndexedDB; see `tests/setup.ts` for the
+polyfills this requires, notably that `vi.useFakeTimers()` must be
+scoped to `{ toFake: ["Date"] }` or it deadlocks `fake-indexeddb`'s
+internal scheduling. The "browser" project (`tests/browser/*.test.tsx`,
+`npm run test:browser`) renders against a real headless Chromium via
+Playwright, and is where UI/accessibility (`axe-core`) assertions live.
 
 - `tests/engine`, `tests/ui`, `tests/persistence`, `tests/compat` —
   unit tests near the layer they cover.
@@ -177,6 +202,9 @@ deadlocks `fake-indexeddb`'s internal scheduling).
   storage-failure handling, and long-history correctness) and
   `performanceBenchmarks.test.ts` (30/90/365-day timing at the query
   layer).
+- `tests/browser` — real-Chromium UI tests (Vitest Browser Mode +
+  `vitest-browser-react`), including accessibility (`axe-core`) checks
+  against the actually-rendered DOM.
 - `tests/helpers/generateHistory.ts` — shared realistic-history
   generator, reused by both of the above.
 - `test-fixtures/protected/` — real historical backup exports, read-only,
