@@ -460,7 +460,7 @@ export function TrainScreen() {
       <ConfirmPanel />
 
       {completionSummary && (
-        <div className="card card--action fade-in">
+        <div className="card card--action corner-flag fade-in">
           <p className="eyebrow" style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
             {completionSummary.status === "COMPLETED" ? (
               <ConfirmIcon size={20} />
@@ -515,7 +515,7 @@ export function TrainScreen() {
       )}
 
       {!session && !completionSummary && (
-        <div className="card card--action">
+        <div className="card card--action corner-flag">
           <p className="eyebrow" style={{ marginBottom: 4 }}>
             {noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
           </p>
@@ -575,7 +575,7 @@ export function TrainScreen() {
       )}
 
       {session && session.sessionType === "RECOVERY" && !completionSummary && (
-        <div className="card card--action">
+        <div className="card card--action corner-flag">
           <p className="eyebrow" style={{ marginBottom: 4 }}>RECOVERY — IN PROGRESS</p>
           <p className="card-body" style={{ marginBottom: 12 }}>
             Duration only — how it saves depends on how many minutes you enter.
@@ -598,7 +598,7 @@ export function TrainScreen() {
       )}
 
       {session && session.sessionType !== "RECOVERY" && !completionSummary && (
-        <div className="card card--action">
+        <div className="card card--action corner-flag">
           {(() => {
             const summary = describeTemplateSummary(activeExercises);
             return (
@@ -613,11 +613,16 @@ export function TrainScreen() {
             );
           })()}
 
-          {/* P4: the focused exercise — everything the lifter needs for
-              the set they're on right now, and nothing else competing
-              for attention. */}
+          <p className="section-label">Exercise</p>
+
+          {/* P4/Overdrive Phase 12: the focused exercise — everything the
+              lifter needs for the set they're on right now, and nothing
+              else competing for attention. The left accent bar (not a
+              nested card — still one continuous execution surface) is
+              what actually lifts it above the jump rail/session chrome
+              sharing this same card. */}
           {currentExercise && (
-            <div key={currentExercise.exerciseId} className="fade-in">
+            <div key={currentExercise.exerciseId} className="exercise-focus fade-in">
               <p className="meta" style={{ marginBottom: 2 }}>
                 Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>
@@ -767,36 +772,48 @@ export function TrainScreen() {
             </div>
           )}
 
-          {/* P4: compact, quiet list of the rest of the session — status
-              at a glance, tap any to jump there out of order. */}
+          {/* Overdrive Phase 12: compact horizontal jump rail replacing the
+              old full-width vertical button-per-exercise list — the same
+              tap-to-jump behavior (setFocusedExerciseId), but as a row of
+              chips so Exercise X of Y reads as one glance instead of a
+              scroll. Includes the current exercise too (chip--selected)
+              so the rail alone shows whole-session progress, not just
+              "the others." Exercise names stay in the aria-label so the
+              compact numeric/fraction display never loses the accessible
+              name — reduces scrolling, doesn't hide anything. */}
           {activeExercises.length > 1 && (
-            <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-              <p className="meta" style={{ marginBottom: 8 }}>Other exercises</p>
-              {activeExercises
-                .filter((ex) => ex.exerciseId !== currentExercise?.exerciseId)
-                .map((ex) => {
+            <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {activeExercises.map((ex, i) => {
                   const done = isExerciseComplete(ex);
+                  const isCurrent = ex.exerciseId === currentExercise?.exerciseId;
                   const loggedCount = loggedSetNumbers(ex.exerciseId).size;
                   return (
                     <button
                       key={ex.exerciseId}
                       type="button"
-                      className="btn-secondary"
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}
+                      className={`chip ${isCurrent ? "chip--selected" : ""}`}
+                      style={{ flex: "none", display: "flex", alignItems: "center", gap: 6, padding: "8px 12px" }}
+                      aria-pressed={isCurrent}
+                      aria-label={`${ex.name} — ${loggedCount} of ${ex.sets} sets${done ? ", complete" : ""}`}
+                      disabled={busy}
                       onClick={() => setFocusedExerciseId(ex.exerciseId)}
                     >
-                      <span>
-                        {done && <span aria-hidden="true" className="diamond" style={{ marginRight: 6, verticalAlign: 1 }} />}
-                        {ex.name}
+                      {done && <span aria-hidden="true" className="diamond" />}
+                      <span aria-hidden="true">{i + 1}</span>
+                      <span aria-hidden="true" className="meta" style={{ color: isCurrent ? "var(--text-1)" : undefined }}>
+                        {loggedCount}/{ex.sets}
                       </span>
-                      <span className="meta">{loggedCount}/{ex.sets}</span>
                     </button>
                   );
                 })}
+              </div>
             </div>
           )}
 
-          <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+          <p className="section-label">Finish</p>
+
+          <div>
             <p className="meta" style={{ marginBottom: 8 }}>{describePartialAdvancement(session.sessionType as SessionType)}</p>
             <div style={{ display: "flex", gap: 8 }}>
               <button className="btn-primary" disabled={busy} onClick={() => void handleCompleteWorkout("COMPLETED")}>
