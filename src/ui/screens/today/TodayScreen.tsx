@@ -508,6 +508,17 @@ export function TodayScreen() {
   const shiftDownIsPrimary = isPrimaryShiftDown(recommendation);
   const resetIsPrimary = isPrimaryReset(recommendation);
 
+  // Overdrive Phase 11 (COMMAND 2.0): whether the trailing low-priority
+  // group (non-prominent Minimum Day, pending outcome rating, END DAY,
+  // backup nudge) has anything to show at all, so its "System" section
+  // label doesn't appear over an empty group.
+  const showSystemSection =
+    (!!day && !!minimumDay && !showProminentMinimumDay) ||
+    !!pendingOutcome ||
+    !!day ||
+    daysSinceBackup === null ||
+    daysSinceBackup >= BACKUP_NUDGE_THRESHOLD_DAYS;
+
   function renderResetCard(prominent: boolean) {
     if (!day) return null;
     const active = activeResetId !== null;
@@ -531,7 +542,7 @@ export function TodayScreen() {
     return (
       <div
         key={active ? "in-progress" : "picker"}
-        className="card fade-in"
+        className={`card fade-in ${prominent || active ? "corner-flag" : ""}`}
         style={prominent || active ? { borderColor: "var(--accent)" } : undefined}
       >
         <p
@@ -615,7 +626,7 @@ export function TodayScreen() {
     return (
       <div
         key={active ? "in-progress" : "picker"}
-        className="card fade-in"
+        className={`card fade-in ${prominent || active ? "corner-flag" : ""}`}
         style={prominent || active ? { borderColor: "var(--accent)" } : undefined}
       >
         <p
@@ -693,7 +704,7 @@ export function TodayScreen() {
   function renderMinimumDayCard(prominent: boolean) {
     if (!minimumDay) return null;
     return (
-      <div className="card" style={prominent ? { borderColor: "var(--accent)" } : undefined}>
+      <div className={`card ${prominent ? "corner-flag" : ""}`} style={prominent ? { borderColor: "var(--accent)" } : undefined}>
         <p className="eyebrow" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
         {!minimumDay.enabled ? (
           <>
@@ -841,8 +852,10 @@ export function TodayScreen() {
           command surface — the single largest, most prominent thing on
           the screen. Everything else on TODAY is deliberately quieter
           than this card. */}
+      {day && recommendation && <p className="section-label">Command</p>}
+
       {day && recommendation && (
-        <div key={recommendation.id} className="card card--action fade-in">
+        <div key={recommendation.id} className="card card--action corner-flag fade-in">
           <p className="meta" style={{ marginBottom: 12, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
             <span>{describeContextStrip(day.workContext, scheduledContext, unresolvedPostShift)}</span>
             {capacityResult && (
@@ -1042,6 +1055,8 @@ export function TodayScreen() {
           )}
         </div>
       )}
+
+      {showSystemSection && <p className="section-label">System</p>}
 
       {day && minimumDay && !showProminentMinimumDay && renderMinimumDayCard(false)}
 
