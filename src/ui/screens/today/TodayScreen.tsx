@@ -60,6 +60,7 @@ import {
   markWorkEnded,
   captureItem,
   resolveCaptureItem,
+  reopenCaptureItem,
   enableMinimumDay,
   markMedsCompleted,
   markHygieneCompleted,
@@ -130,6 +131,15 @@ export function TodayScreen() {
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
   const [openCaptureItems, setOpenCaptureItems] = useState<CaptureItem[]>([]);
   const [captureText, setCaptureText] = useState("");
+  // Overdrive Phase 17 (Capture 1.1): reopenCaptureItem already existed
+  // (application/commands.ts) and was already tested
+  // (captureInbox.test.ts, "reopening undoes an accidental resolve") but
+  // had no UI wired to it — an accidental RESOLVE tap had no way back.
+  // Tracks only the single most-recently-resolved item, mirroring how
+  // BODY's own confirmation-with-undo banners work (each new one simply
+  // replaces the last) — not a resolved-items history browser, which
+  // would start pulling Capture toward task management.
+  const [justResolvedCapture, setJustResolvedCapture] = useState<{ id: string; text: string } | null>(null);
   const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
   const [minimumDayHydrateOz, setMinimumDayHydrateOz] = useState(0);
   const [minimumDayProteinG, setMinimumDayProteinG] = useState(0);
@@ -402,11 +412,24 @@ export function TodayScreen() {
     }
   }
 
-  async function handleResolveCapture(id: string) {
+  async function handleResolveCapture(item: CaptureItem) {
     if (busy) return;
     setBusy(true);
     try {
-      await resolveCaptureItem(id);
+      await resolveCaptureItem(item.id);
+      setJustResolvedCapture({ id: item.id, text: item.text });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleUndoResolveCapture() {
+    if (busy || !justResolvedCapture) return;
+    setBusy(true);
+    try {
+      await reopenCaptureItem(justResolvedCapture.id);
+      setJustResolvedCapture(null);
       await refresh();
     } finally {
       setBusy(false);
@@ -1143,12 +1166,39 @@ export function TodayScreen() {
               className="btn-secondary"
               style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: 0 }}
               disabled={busy}
-              onClick={() => void handleResolveCapture(item.id)}
+              onClick={() => void handleResolveCapture(item)}
             >
               RESOLVE
             </button>
           </div>
         ))}
+        {justResolvedCapture && (
+          <div
+            className="fade-in"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 8,
+              paddingTop: 8,
+              borderTop: "1px solid var(--border-subtle)",
+            }}
+          >
+            <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6, margin: 0 }}>
+              <ConfirmIcon size={20} />
+              Resolved "{justResolvedCapture.text}"
+            </p>
+            <button
+              className="btn-secondary"
+              style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: 0 }}
+              disabled={busy}
+              onClick={() => void handleUndoResolveCapture()}
+            >
+              UNDO
+            </button>
+          </div>
+        )}
       </div>
 
       {day && (
