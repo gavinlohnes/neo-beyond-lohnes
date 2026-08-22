@@ -248,7 +248,16 @@ export function MoreScreen() {
         <input
           ref={fileInputRef}
           type="file"
-          accept="application/json"
+          // Drop 01 acceptance correction: Android's Storage Access
+          // Framework file picker filters by the file's OS-recorded MIME
+          // type, not by extension — a bare "application/json" accept
+          // list previously excluded any backup whose provider-recorded
+          // type didn't match exactly (see backup.ts's exportBackup doc
+          // comment for why that could happen even for a BEYOND-produced
+          // file). Listing every real-world variant plus the raw
+          // extension is defense in depth — it also still recognizes any
+          // backup already downloaded before that export-side fix.
+          accept="application/json,text/json,.json"
           disabled={busy}
           onChange={(e) => void handleFileChosen(e.target.files?.[0])}
         />
