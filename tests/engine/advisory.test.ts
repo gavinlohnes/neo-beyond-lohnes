@@ -91,11 +91,11 @@ describe("composeAdvisoryNotesFromObligations", () => {
 describe("engine boundary: advisory.ts is a one-way dependency", () => {
   it("evaluate.ts never imports advisory.ts", () => {
     const source = readFileSync(new URL("../../src/engine/evaluate.ts", import.meta.url), "utf8");
-    expect(source).not.toMatch(/from\s+["']\.\/advisory["']/);
+    expect(source).not.toMatch(/["']\.\/advisory["']/);
   });
 
   it("obligationRelevance.ts never imports advisory.ts", () => {
     const source = readFileSync(new URL("../../src/engine/obligationRelevance.ts", import.meta.url), "utf8");
-    expect(source).not.toMatch(/from\s+["']\.\/advisory["']/);
+    expect(source).not.toMatch(/["']\.\/advisory["']/);
   });
 });
