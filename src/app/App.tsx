@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRegisterSW } from "virtual:pwa-register/react";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import { TrainScreen } from "../ui/screens/train/TrainScreen";
 import { BodyScreen } from "../ui/screens/body/BodyScreen";
@@ -25,6 +26,53 @@ const TAB_ICON: Record<Tab, IconName> = {
   MORE: "more",
 };
 
+/**
+ * Harvest Checkpoint 0 (PWA update safety): registerType is "prompt" and
+ * injectRegister is null (vite.config.ts) — nothing auto-reloads an open
+ * tab. This hook is the ONLY thing that registers the service worker now,
+ * and needRefresh only flips true once a new version has finished
+ * installing in the background; the user decides when (if ever) to apply
+ * it. Deliberately no UI for offlineReady — that's not an interruption
+ * risk and the checkpoint doesn't ask for that toast.
+ */
+function AppUpdateBanner() {
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({});
+
+  if (!needRefresh) return null;
+
+  return (
+    <div
+      className="card card--action fade-in"
+      style={{
+        position: "fixed",
+        left: "var(--gutter)",
+        right: "var(--gutter)",
+        bottom: 76,
+        zIndex: 50,
+        marginBottom: 0,
+        maxWidth: 480 - 24,
+        marginInline: "auto",
+      }}
+    >
+      <p className="eyebrow" style={{ marginBottom: 4 }}>SYSTEM UPDATE READY</p>
+      <p className="card-body" style={{ marginBottom: 12 }}>
+        A newer version of BEYOND is available. Nothing in progress is lost — your data stays exactly as it is.
+      </p>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button className="btn-primary" style={{ flex: 1 }} onClick={() => void updateServiceWorker(true)}>
+          UPDATE NOW
+        </button>
+        <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setNeedRefresh(false)}>
+          LATER
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function App() {
   const [tab, setTab] = useState<Tab>("TODAY");
 
@@ -34,6 +82,8 @@ export function App() {
       {tab === "TRAIN" && <TrainScreen />}
       {tab === "BODY" && <BodyScreen />}
       {tab === "MORE" && <MoreScreen />}
+
+      <AppUpdateBanner />
 
       <nav
         style={{
