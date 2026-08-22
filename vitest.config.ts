@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 
@@ -36,6 +37,18 @@ export default defineConfig({
       },
       {
         extends: true,
+        // Harvest Checkpoint 7: "virtual:pwa-register/react" only exists
+        // via vite-plugin-pwa's build-time plugin, which this test config
+        // deliberately does not load (adding real SW/PWA generation to a
+        // test run would be architecture distortion for marginal value —
+        // Checkpoint 0's actual update-prompt behavior is already verified
+        // against the real built dist/sw.js). Aliased to a static, no-op
+        // stub so App.tsx can render unmodified in the browser project.
+        resolve: {
+          alias: {
+            "virtual:pwa-register/react": fileURLToPath(new URL("./tests/browser/mocks/pwaRegisterStub.ts", import.meta.url)),
+          },
+        },
         test: {
           name: "browser",
           include: ["tests/browser/**/*.test.tsx"],
