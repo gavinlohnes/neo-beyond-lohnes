@@ -175,7 +175,13 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
 
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByRole("button", { name: "Open Someday maybe" })).toBeVisible();
+    // FIELD ALPHA Gate A correction: the collapsed row's accessible
+    // name is the fixed role "COMMITMENT" (it used to be the
+    // obligation's own title, which could visually collide with
+    // TODAY's "Now" section header) — the title itself still shows, in
+    // the summary line.
+    await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
+    await expect.element(screen.getByText(/Someday maybe/)).toBeVisible();
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
   });
 
@@ -188,9 +194,10 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     const screen = await render(<TodayScreen onViewCommitments={onViewCommitments} />);
 
     await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "Open Renew passport" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
+    await expect.element(screen.getByText(/Renew passport/)).toBeVisible();
 
-    await screen.getByRole("button", { name: "Open Renew passport" }).click();
+    await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
     await expect.element(screen.getByText(/Overdue/)).toBeVisible();
     // Read-only: no satisfy/release/mark-waiting control on TODAY.
     expect(screen.getByRole("button", { name: "SATISFY" }).elements()).toHaveLength(0);
@@ -208,7 +215,8 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     const screen = await render(<TodayScreen />);
 
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
-    await expect.element(screen.getByRole("button", { name: "Open Blocked on someone else" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
+    await expect.element(screen.getByText(/Blocked on someone else/)).toBeVisible();
   });
 
   it("a PLANNED_TODAY obligation earns an Attention slot", async () => {
@@ -219,7 +227,8 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     const screen = await render(<TodayScreen />);
 
     await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "Open Write the report" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
+    await expect.element(screen.getByText(/Write the report/)).toBeVisible();
   });
 });
 

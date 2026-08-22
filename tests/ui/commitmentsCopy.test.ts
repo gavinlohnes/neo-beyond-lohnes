@@ -37,13 +37,19 @@ describe("describeObligationRelevance", () => {
 });
 
 describe("describeCommitmentsSummary", () => {
-  it("shows only the headline when nothing else is unresolved", () => {
-    expect(describeCommitmentsSummary("DUE_TODAY", obligation(), 0)).toBe("Due today");
+  it("leads with the obligation's own title, then its relevance, when nothing else is unresolved", () => {
+    expect(describeCommitmentsSummary("DUE_TODAY", obligation(), 0)).toBe("Renew passport · Due today");
   });
 
   it("appends a plain count when other unresolved obligations exist", () => {
     expect(describeCommitmentsSummary("OVERDUE", obligation({ dueAt: "2026-08-19" }), 2)).toBe(
-      "Overdue — was due 2026-08-19 · +2 more unresolved",
+      "Renew passport · Overdue — was due 2026-08-19 · +2 more unresolved",
+    );
+  });
+
+  it("uses a different obligation's own title when given one", () => {
+    expect(describeCommitmentsSummary("PLANNED_TODAY", obligation({ title: "Call the vet" }), 0)).toBe(
+      "Call the vet · Planned for today",
     );
   });
 });

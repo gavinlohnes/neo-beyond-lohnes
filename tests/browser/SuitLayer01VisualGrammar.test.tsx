@@ -52,7 +52,10 @@ describe("Suit Layer 01 — accent budget: ATTENTION items are signal-row, not d
     await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
     // Commitments render collapsed (CollapsibleRow) by default even
     // within ATTENTION — open it to see its actual signal-row treatment.
-    await screen.getByRole("button", { name: "Open Due today thing" }).click();
+    // FIELD ALPHA Gate A correction: the collapsed row's accessible name
+    // is now the fixed role "COMMITMENT", not the obligation's own title
+    // (which used to read as a second "NOW"-shaped label).
+    await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
 
     const signalRows = document.querySelectorAll(".signal-row");
     expect(signalRows.length).toBeGreaterThan(0);

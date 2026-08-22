@@ -60,6 +60,12 @@ describe("TODAY // Minimum Day access", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
 
+    // FIELD ALPHA Gate A correction: Minimum Day now defaults to a
+    // compact GLANCE-depth CollapsibleRow when it isn't the operator's
+    // primary concern — open it to reach the enable offer.
+    await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY" })).toBeVisible();
+    await screen.getByRole("button", { name: "Open MINIMUM DAY" }).click();
+
     await expect.element(screen.getByText("MINIMUM DAY", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "ENABLE MINIMUM DAY" })).toBeVisible();
   });
