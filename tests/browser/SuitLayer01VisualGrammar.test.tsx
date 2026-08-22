@@ -23,7 +23,7 @@ afterEach(() => {
 });
 
 describe("Suit Layer 01 — exactly one dominant decision surface", () => {
-  it("only the NOW recommendation gets .card--action.corner-flag, even with an attention-worthy item also present", async () => {
+  it("only the NOW recommendation gets the dominant command surface, even with an attention-worthy item also present", async () => {
     await createObligation({ title: "Overdue thing", dueAt: "2020-01-01" }); // deliberately far in the past -> OVERDUE, earns ATTENTION
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
@@ -33,7 +33,11 @@ describe("Suit Layer 01 — exactly one dominant decision surface", () => {
     await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
 
-    const dominant = document.querySelectorAll(".card--action.corner-flag");
+    // Suit Implementation 01B: the dominant NOW surface is now
+    // .command-surface (or, when the recommendation is NO_ACTION_REQUIRED,
+    // the deliberately quiet .all-clear) rather than the old
+    // .card--action.corner-flag pairing — either way, exactly one.
+    const dominant = document.querySelectorAll(".command-surface, .all-clear");
     expect(dominant).toHaveLength(1);
   });
 });

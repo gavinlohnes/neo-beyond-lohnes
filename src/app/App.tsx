@@ -115,7 +115,13 @@ export function App() {
           right: 0,
           display: "flex",
           borderTop: "1px solid var(--border-subtle)",
-          background: "var(--bg)",
+          // Suit Implementation 01B, directive 8 ("make Utility Belt feel
+          // integrated"): a distinct material (--surface-1, the same
+          // raised-panel token cards use) instead of the bare screen
+          // background, so the belt reads as its own fixed piece of
+          // equipment rather than a transparent tab strip floating over
+          // the void. Touch regions, labels, and IA are unchanged.
+          background: "var(--surface-1)",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
@@ -141,13 +147,13 @@ export function App() {
               letterSpacing: "0.04em",
             }}
           >
-            {/* BEYOND Suit Implementation 01 — Utility Belt (Part 11):
-                a LEVEL 1 / STRUCTURAL red cue (Part 8) for the selected
-                territory, in addition to the existing color+weight
-                change — selection must communicate through more than
-                color alone. A thin directional tick, not a pill or glow;
-                aria-hidden since aria-current on the button already
-                carries this for assistive tech. */}
+            {/* BEYOND Suit Implementation 01 — Utility Belt (Part 11),
+                widened in 01B (directive 8): a LEVEL 1 / STRUCTURAL red
+                cue for the selected territory, in addition to the
+                existing color+weight change — selection must communicate
+                through more than color alone. A thin directional tick,
+                not a pill or glow; aria-hidden since aria-current on the
+                button already carries this for assistive tech. */}
             {tab === t && (
               <span
                 aria-hidden="true"
@@ -156,8 +162,8 @@ export function App() {
                   top: 0,
                   left: "50%",
                   transform: "translateX(-50%)",
-                  width: 20,
-                  height: 2,
+                  width: 28,
+                  height: 3,
                   background: "var(--accent)",
                 }}
               />

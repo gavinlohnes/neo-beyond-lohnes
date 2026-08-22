@@ -686,15 +686,21 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
         />
       );
     }
+    // BEYOND Suit Implementation 01B: EXECUTION (a genuinely active,
+    // dominant RESET) gets the same .command-surface territory as
+    // PRIMARY DECISION — it IS the command surface while it's what NOW
+    // is showing. Everything else (ordinary tool, or active-but-demoted
+    // in the rare both-active case) is .equipment-row, not a card.
+    // .signal-row (a real Engine-suggested-but-not-started signal) is
+    // unchanged from Suit Layer 01.
+    const isCommand = active && isDominant;
     return (
       <div
         key={active ? "in-progress" : "picker"}
-        className={`card fade-in ${
-          active ? (isDominant ? "card--action corner-flag" : "") : prominent ? "signal-row" : ""
-        }`}
+        className={`fade-in ${isCommand ? "command-surface" : active ? "equipment-row" : prominent ? "card signal-row" : "equipment-row"}`}
       >
         <p
-          className="tool-label"
+          className={isCommand ? "command-title" : "tool-label"}
           style={{ marginBottom: 4, color: active ? "var(--accent-strong)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
         >
           {prominent ? <SignalIcon key="on" name="reset" size={20} /> : <Icon key="off" name="reset" size={20} />}
@@ -709,7 +715,12 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
               {openResetStartedAt ? ` Started ${new Date(openResetStartedAt).toLocaleTimeString()}.` : ""}
             </p>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteReset()}>
+              <button
+                className="btn-primary"
+                style={{ flex: 1, ...(isCommand ? { fontSize: 18, padding: "18px var(--space-4)" } : {}) }}
+                disabled={busy}
+                onClick={() => void handleCompleteReset()}
+              >
                 COMPLETE RESET
               </button>
               <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelReset()}>
@@ -766,15 +777,14 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
         />
       );
     }
+    const isCommand = active && isDominant;
     return (
       <div
         key={active ? "in-progress" : "picker"}
-        className={`card fade-in ${
-          active ? (isDominant ? "card--action corner-flag" : "") : prominent ? "signal-row" : ""
-        }`}
+        className={`fade-in ${isCommand ? "command-surface" : active ? "equipment-row" : prominent ? "card signal-row" : "equipment-row"}`}
       >
         <p
-          className="tool-label"
+          className={isCommand ? "command-title" : "tool-label"}
           style={{ marginBottom: 4, color: active ? "var(--accent-strong)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
         >
           {prominent ? <SignalIcon key="on" name="shiftDown" size={20} /> : <Icon key="off" name="shiftDown" size={20} />}
@@ -789,7 +799,12 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
               {openShiftDownStartedAt ? ` Started ${new Date(openShiftDownStartedAt).toLocaleTimeString()}.` : ""}
             </p>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteShiftDown()}>
+              <button
+                className="btn-primary"
+                style={{ flex: 1, ...(isCommand ? { fontSize: 18, padding: "18px var(--space-4)" } : {}) }}
+                disabled={busy}
+                onClick={() => void handleCompleteShiftDown()}
+              >
                 COMPLETE SHIFT DOWN
               </button>
               <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelShiftDown()}>
@@ -848,7 +863,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
   function renderMinimumDayCard(prominent: boolean) {
     if (!minimumDay) return null;
     return (
-      <div className={`card ${prominent ? "signal-row" : ""}`}>
+      <div className={prominent ? "card signal-row" : "equipment-row"}>
         <p className="tool-label" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
         {!minimumDay.enabled ? (
           <>
@@ -1003,22 +1018,27 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
         />
       );
     }
-    // BEYOND Suit Implementation 01: PRIMARY DECISION vs. a legitimate
-    // ALL CLEAR state get a real, meaningful visual distinction — not a
-    // new card variant, just the existing icon family's own two settled
-    // primitives used for what they already mean. ResolveIcon (a solid
-    // core inside the diamond) reads as "something to resolve";
-    // ConfirmIcon (diamond + checkmark, with its existing settle-in
-    // animation) already means "confirmed/nothing outstanding" — see its
-    // other uses on this same screen (a completed correction, work
-    // ended). NO_ACTION_REQUIRED's own title/rationale text is
-    // Engine-authored (evaluate.ts) and untouched; only the icon choice
-    // changes.
+    // BEYOND Suit Implementation 01B: three distinct silhouettes, not
+    // one card with modifier classes.
+    //   - ALL CLEAR: .all-clear — no surface, no red, quiet text
+    //     directly on the black field (Part 2/4).
+    //   - PRIMARY DECISION (dominant): .command-surface — a bold left
+    //     red bar + --surface-active (a flat, dark red-black wash, no
+    //     gradient) it now finally uses; big .command-title. This is
+    //     the one genuinely dominant territory on the screen.
+    //   - Demoted (some other surface — an active RESET/SHIFT DOWN —
+    //     is dominant instead): .equipment-row, same quiet TOOLS-tier
+    //     treatment every other tool gets. Still full content, one tap
+    //     away either way — nothing here changes what's reachable.
+    // ResolveIcon vs. ConfirmIcon (Suit Implementation 01) is unchanged:
+    // NO_ACTION_REQUIRED's own title/rationale stays Engine-authored,
+    // untouched.
     const isAllClear = recommendation.kind === "NO_ACTION_REQUIRED";
+    const wrapperClassName = isAllClear ? "all-clear fade-in" : isDominant ? "command-surface fade-in" : "equipment-row fade-in";
     return (
-      <div key={recommendation.id} className={`card fade-in ${isDominant ? "card--action corner-flag" : ""}`}>
-        <h2 className="recommendation-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {isAllClear ? <ConfirmIcon size={24} /> : <ResolveIcon size={24} />}
+      <div key={recommendation.id} className={wrapperClassName}>
+        <h2 className={isDominant || isAllClear ? "command-title" : "tool-label"} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
           {recommendation.title}
         </h2>
         <p className="card-body">{recommendation.rationale}</p>
@@ -1089,9 +1109,9 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
             </p>
           </div>
         </details>
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: isDominant && !isAllClear ? 20 : 12 }}>
           {decision ? (
-            <button className="btn-primary" disabled>
+            <button className="btn-primary" disabled style={isDominant && !isAllClear ? { fontSize: 18, padding: "18px var(--space-4)" } : undefined}>
               {describeRecordedDecision(decision)}
             </button>
           ) : (
@@ -1099,7 +1119,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
               <div style={{ display: "flex", gap: 8 }}>
                 <button
                   className="btn-primary"
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, ...(isDominant && !isAllClear ? { fontSize: 18, padding: "18px var(--space-4)" } : {}) }}
                   disabled={busy}
                   onClick={() => void handleRecord()}
                 >
@@ -1255,7 +1275,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
     const hasOpenItems = openCaptureItems.length > 0;
     const showListHere = hasOpenItems && !captureInAttention;
     return (
-      <div className="card">
+      <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>
           CAPTURE{hasOpenItems ? ` (${openCaptureItems.length})` : ""}
         </p>
@@ -1304,8 +1324,13 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
 
   return (
     <div className="screen fade-in">
-      <p className="eyebrow">BEYOND // TODAY</p>
-      <h1 className="title">Command</h1>
+      {/* BEYOND Suit Implementation 01B: the identity zone is
+          deliberately quiet now — a real <h1> for correct heading
+          structure (Part 15), but styled with .eyebrow (small, mono)
+          rather than the large .title display treatment. Freed
+          territory and visual weight belong to the command surface
+          below, not to screen chrome. */}
+      <h1 className="eyebrow">BEYOND // TODAY</h1>
 
       {!day && (
         <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
@@ -1424,7 +1449,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       {day && recommendation && dominant !== "RESET_ACTIVE" && renderResetCard(resetIsPrimary, false)}
       {day && recommendation && dominant !== "RECOMMENDATION" && renderRecommendationCard(false)}
 
-      <div className="card">
+      <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>
         <h2 className="card-title">State check-in</h2>
         <button
@@ -1518,7 +1543,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
             return <CollapsibleRow name="WORK CONTEXT" summary={summary} onOpen={() => setWorkContextOpen(true)} />;
           }
           return (
-            <div className="card">
+            <div className="equipment-row">
               <p className="tool-label" style={{ marginBottom: 4 }}>WORK CONTEXT</p>
               <h2 className="card-title">Are you working today?</h2>
               <div style={{ display: "flex", gap: 8, marginTop: 12, marginBottom: 12 }}>
