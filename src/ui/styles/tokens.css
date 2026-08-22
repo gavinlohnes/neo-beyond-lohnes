@@ -32,6 +32,17 @@
      respecting prefers-reduced-motion like every other transition here. */
   --tap-scale: 0.985;
 
+  /* Overdrive Phase 18 (REAL-DEVICE ACCEPTANCE CORRECTION): the outer
+     screen gutter, split out from --space-4 (which .card's own interior
+     padding still uses). Real Android screenshots showed .screen's side
+     padding stacking with every .card's own side padding — 16+16 = 32px
+     lost per side before any content starts, on a viewport that only has
+     ~360-412px to begin with. 12px keeps a real, deliberate gutter (not
+     edge-to-edge) while giving every card meaningfully more width. Only
+     the outer gutter shrinks; card interior padding is untouched so
+     in-card breathing room/readability doesn't suffer. */
+  --gutter: 12px;
+
   --radius: 4px;
   --space-1: 4px;
   --space-2: 8px;

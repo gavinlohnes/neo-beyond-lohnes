@@ -451,6 +451,15 @@ export function TrainScreen() {
     ? activeExercises.findIndex((ex) => ex.exerciseId === currentExercise.exerciseId)
     : -1;
   const currentSetNumber = currentExercise ? nextUnloggedSetNumber(currentExercise) : null;
+  // Overdrive Phase 18 (TRAIN EXECUTION UX): COMPLETE reads as the
+  // expected next action only once it actually is one — mid-session it
+  // sits at the same visual weight as PARTIAL/STOP (still equally
+  // reachable, just not falsely promoted) and only gets full btn-primary
+  // emphasis once every exercise is genuinely done. No gating: COMPLETE
+  // remains callable exactly as before at any point (Engine/PARTIAL
+  // semantics untouched) — this changes only which className it renders
+  // with.
+  const allExercisesComplete = activeExercises.length > 0 && activeExercises.every((ex) => isExerciseComplete(ex));
 
   return (
     <div className="screen fade-in">
@@ -553,7 +562,7 @@ export function TrainScreen() {
           </div>
 
           <p className="meta" style={{ marginBottom: 6 }}>Variant (override always available)</p>
-          <p className="meta" style={{ marginBottom: 6 }}>{VARIANT_MEANINGS}</p>
+          <p className="card-body" style={{ marginBottom: 6 }}>{VARIANT_MEANINGS}</p>
           <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
             {VARIANT_ORDER.map((v) => (
               <button
@@ -624,11 +633,11 @@ export function TrainScreen() {
               sharing this same card. */}
           {currentExercise && (
             <div key={currentExercise.exerciseId} className="exercise-focus fade-in">
-              <p className="meta" style={{ marginBottom: 2 }}>
+              <p className="meta-strong" style={{ marginBottom: 2 }}>
                 Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>
               <h2 className="recommendation-title" style={{ marginBottom: 2 }}>{currentExercise.name}</h2>
-              <p className="meta" style={{ marginBottom: 8 }}>
+              <p className="meta-strong" style={{ marginBottom: 8 }}>
                 {currentExercise.sets} sets x {currentExercise.repRangeLow}-{currentExercise.repRangeHigh} reps
                 {currentSetNumber !== null ? ` · Set ${currentSetNumber} of ${currentExercise.sets}` : " · All sets logged"}
               </p>
@@ -699,26 +708,36 @@ export function TrainScreen() {
                     </p>
                   );
                 }
+                // Overdrive Phase 18 (REAL-DEVICE ACCEPTANCE CORRECTION,
+                // TRAIN EXECUTION UX + PHONE WIDTH): the old single-row
+                // "# − [lb] + lb x − [reps] + " adjuster packed ~7 fixed-
+                // width controls into one line — comfortably wider than a
+                // real Android content width, forcing an unpredictable
+                // wrap. Two stacked WEIGHT/REPS rows (flex-grown input
+                // between fixed 44px −/+ buttons) fit any phone width
+                // without wrapping, and read as plainly labeled fields
+                // instead of a symbol-decoded strip. Same adjustWeight/
+                // adjustReps/handleLogSet/handleSkipSet calls — no new
+                // behavior, only clearer layout.
                 return (
-                  <div key={setNumber} style={{ marginBottom: 10 }}>
+                  <div key={setNumber} style={{ marginBottom: 14 }}>
                     {/* P4: exact repeat in one tap — the primary, fastest path. */}
                     {suggestion && (
                       <button
                         className="btn-primary"
-                        style={{ marginBottom: 6 }}
+                        style={{ marginBottom: 8 }}
                         disabled={busy}
                         onClick={() => void handleLogExactRepeat(ex.exerciseId, setNumber, suggestion)}
                       >
                         SET {setNumber}: SAME AS LAST TIME — {suggestion.weight} lb x {suggestion.reps}
                       </button>
                     )}
-                    {/* Small adjustment path: one tap on +/- to bump the pending
-                        value, one tap on LOG — approximately two taps. */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
-                      <span className="meta" style={{ width: 24 }}>#{setNumber}</span>
+                    {!suggestion && <p className="meta-strong" style={{ marginBottom: 6 }}>Set {setNumber}</p>}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <span className="meta" style={{ width: 56, flexShrink: 0 }}>WEIGHT</span>
                       <button
                         className="btn-secondary"
-                        style={{ width: "auto", minWidth: 44, padding: "8px 12px" }}
+                        style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
                         onClick={() => adjustWeight(ex.exerciseId, setNumber, -ex.incrementLbs)}
                       >
                         -
@@ -729,19 +748,21 @@ export function TrainScreen() {
                         value={display.weight}
                         onChange={(e) => patchInput(ex.exerciseId, setNumber, { weight: e.target.value })}
                         className="input"
-                        style={{ width: 64, padding: "8px 6px" }}
+                        style={{ flex: 1, textAlign: "center" }}
                       />
                       <button
                         className="btn-secondary"
-                        style={{ width: "auto", minWidth: 44, padding: "8px 12px" }}
+                        style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
                         onClick={() => adjustWeight(ex.exerciseId, setNumber, ex.incrementLbs)}
                       >
                         +
                       </button>
-                      <span className="meta">lb x</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <span className="meta" style={{ width: 56, flexShrink: 0 }}>REPS</span>
                       <button
                         className="btn-secondary"
-                        style={{ width: "auto", minWidth: 44, padding: "8px 12px" }}
+                        style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
                         onClick={() => adjustReps(ex.exerciseId, setNumber, -1)}
                       >
                         -
@@ -752,11 +773,11 @@ export function TrainScreen() {
                         value={display.reps}
                         onChange={(e) => patchInput(ex.exerciseId, setNumber, { reps: e.target.value })}
                         className="input"
-                        style={{ width: 52, padding: "8px 6px" }}
+                        style={{ flex: 1, textAlign: "center" }}
                       />
                       <button
                         className="btn-secondary"
-                        style={{ width: "auto", minWidth: 44, padding: "8px 12px" }}
+                        style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
                         onClick={() => adjustReps(ex.exerciseId, setNumber, 1)}
                       >
                         +
@@ -830,7 +851,11 @@ export function TrainScreen() {
           <div>
             <p className="meta" style={{ marginBottom: 8 }}>{describePartialAdvancement(session.sessionType as SessionType)}</p>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn-primary" disabled={busy} onClick={() => void handleCompleteWorkout("COMPLETED")}>
+              <button
+                className={allExercisesComplete ? "btn-primary" : "btn-secondary"}
+                disabled={busy}
+                onClick={() => void handleCompleteWorkout("COMPLETED")}
+              >
                 COMPLETE
               </button>
               <button className="btn-secondary" disabled={busy} onClick={() => void handleCompleteWorkout("PARTIAL")}>
