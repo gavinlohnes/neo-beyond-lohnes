@@ -1003,10 +1003,22 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
         />
       );
     }
+    // BEYOND Suit Implementation 01: PRIMARY DECISION vs. a legitimate
+    // ALL CLEAR state get a real, meaningful visual distinction — not a
+    // new card variant, just the existing icon family's own two settled
+    // primitives used for what they already mean. ResolveIcon (a solid
+    // core inside the diamond) reads as "something to resolve";
+    // ConfirmIcon (diamond + checkmark, with its existing settle-in
+    // animation) already means "confirmed/nothing outstanding" — see its
+    // other uses on this same screen (a completed correction, work
+    // ended). NO_ACTION_REQUIRED's own title/rationale text is
+    // Engine-authored (evaluate.ts) and untouched; only the icon choice
+    // changes.
+    const isAllClear = recommendation.kind === "NO_ACTION_REQUIRED";
     return (
       <div key={recommendation.id} className={`card fade-in ${isDominant ? "card--action corner-flag" : ""}`}>
         <h2 className="recommendation-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <ResolveIcon size={24} />
+          {isAllClear ? <ConfirmIcon size={24} /> : <ResolveIcon size={24} />}
           {recommendation.title}
         </h2>
         <p className="card-body">{recommendation.rationale}</p>
@@ -1347,8 +1359,17 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
 
           {commitmentInAttention && renderCommitmentsCard()}
 
+          {/* BEYOND Suit Implementation 01: relabeled from "LAST TIME" to
+              the canonical Memory grammar's "OUTCOME" (Part 12) — pure
+              presentation; the underlying pendingOutcome fact, its
+              attention-earning rule, and rateOutcome's own behavior are
+              byte-for-byte unchanged. This is the one Memory proof
+              current real data cleanly supports without inventing new
+              aggregation (USUAL/PATTERN/BASELINE would all need
+              rolling-average-style computation nothing in the repository
+              currently derives — left out and reported, not built here). */}
           {pendingOutcomeInAttention && pendingOutcome && (
-            <SignalRow label="LAST TIME">
+            <SignalRow label="OUTCOME">
               <p className="card-body" style={{ marginBottom: 8 }}>
                 Last time, BEYOND recommended "{pendingOutcome.title}" — how did that go?
               </p>
