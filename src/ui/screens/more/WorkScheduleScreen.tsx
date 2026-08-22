@@ -116,6 +116,8 @@ export function WorkScheduleScreen() {
         record of when you worked until you confirm it yourself.
       </p>
 
+      <p className="section-label">Configuration</p>
+
       <div className="card">
         <h2 className="card-title">Which week is active right now?</h2>
         <p className="meta" style={{ marginBottom: 8 }}>
