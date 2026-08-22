@@ -34,6 +34,19 @@ export function byTimeThenSeq(timeA: string, seqA: number | undefined, timeB: st
  * any prior ACTIVE day first). Sorted by startedAt rather than relying on
  * Dexie's .last() (primary-key order, not time) for defense in depth if
  * that invariant is ever violated.
+ *
+ * Leverage Implementation 001 (deterministic ordering hardening,
+ * 2026-08-22): audited and deliberately left on raw startedAt comparison.
+ * BeyondDay carries no `seq` field (unlike StateCheckIn/Recommendation/
+ * DomainEvent) — adding one would be a schema-adjacent type change this
+ * checkpoint's scope explicitly excludes. In practice this path only
+ * runs at all when the "one ACTIVE day" invariant above has already been
+ * violated (a defense-in-depth branch, not the normal path), so a
+ * same-instant collision here would require two BeyondDay.startedAt
+ * values equal to the millisecond AND ensureActiveDay's in-flight-promise
+ * guard already having failed — a compound, currently-unobserved
+ * scenario. Documented as a residual, currently-unaddressable risk, not
+ * silently fixed.
  */
 export async function getActiveDay(): Promise<BeyondDay | undefined> {
   const days = await db.beyondDays.filter((d: BeyondDay) => d.status === "ACTIVE").toArray();
@@ -433,8 +446,12 @@ export async function getMinimumDayStatus(beyondDayId: string): Promise<MinimumD
 }
 
 export async function getPendingOutcomeRating(beyondDayId: string): Promise<Recommendation | undefined> {
+  // Leverage Implementation 001 (deterministic ordering hardening,
+  // 2026-08-22): Recommendation carries `seq`, so a same-instant tie
+  // (two recommendations issued in the same millisecond) is no longer
+  // resolved by raw timestamp-string comparison alone.
   const recommendations = (await db.recommendations.where("beyondDayId").equals(beyondDayId).toArray()).sort(
-    (a, b) => a.issuedAt.localeCompare(b.issuedAt),
+    (a, b) => byTimeThenSeq(a.issuedAt, a.seq, b.issuedAt, b.seq),
   );
   if (recommendations.length < 2) return undefined; // no "last time" without a newer one on screen
 

@@ -117,6 +117,49 @@ describe("getActiveWorkoutSession — resumable across refresh", () => {
   });
 });
 
+/**
+ * Leverage Implementation 001 (deterministic ordering hardening,
+ * 2026-08-22): getActiveWorkoutSession's sort (representative of all six
+ * timestamp sorts audited in application/trainQueries.ts this checkpoint)
+ * was deliberately LEFT UNCHANGED — WorkoutSession carries no `seq` field,
+ * unlike StateCheckIn/Recommendation/DomainEvent, and adding one would be
+ * a schema-adjacent change and a TRAIN progression touch, both outside
+ * this checkpoint's explicit scope. Two simultaneously-ACTIVE sessions
+ * isn't a state the app's own commands create today; manufactured
+ * directly here purely to characterize, and put a regression tripwire
+ * on, the current known-ambiguous behavior — not to prove a fix.
+ */
+describe("getActiveWorkoutSession — residual risk with identical startedAt (documented, not fixed this checkpoint)", () => {
+  it("resolves ambiguously (order-dependent, not deterministic) when two ACTIVE-flagged sessions share an identical startedAt", async () => {
+    const day = await startDay();
+    const now = new Date().toISOString();
+    await db.workoutSessions.add({
+      id: "residual-session-a",
+      schemaVersion: 1,
+      beyondDayId: day.id,
+      templateId: "A",
+      sessionType: "STANDARD",
+      status: "ACTIVE",
+      startedAt: now,
+    });
+    await db.workoutSessions.add({
+      id: "residual-session-b",
+      schemaVersion: 1,
+      beyondDayId: day.id,
+      templateId: "B",
+      sessionType: "STANDARD",
+      status: "ACTIVE",
+      startedAt: now,
+    });
+
+    const active = await getActiveWorkoutSession(day.id);
+    expect(active).toBeDefined();
+    // Deliberately NOT asserting which one wins — that's the point being
+    // documented: WorkoutSession has no seq to make this deterministic today.
+    expect(["residual-session-a", "residual-session-b"]).toContain(active!.id);
+  });
+});
+
 describe("A -> B -> C rotation advancement", () => {
   it("suggests A when no session has ever completed", async () => {
     expect(await suggestTemplateForNextWorkout()).toBe("A");

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
 import { rateOutcome, recordRecommendation, startDay, submitCheckIn } from "../../src/application/commands";
 import { getPendingOutcomeRating } from "../../src/application/queries";
@@ -18,6 +18,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   db.close();
+  vi.useRealTimers(); // safety net in case a fake-timer test above throws before restoring them
 });
 
 async function checkIn(beyondDayId: string) {
@@ -63,6 +64,37 @@ describe("getPendingOutcomeRating", () => {
     expect((await getPendingOutcomeRating(day.id))?.id).toBe(first.recommendation.id);
     await rateOutcome(day.id, first.recommendation.id, "GOOD");
     expect(await getPendingOutcomeRating(day.id)).toBeUndefined();
+  });
+
+  /**
+   * Leverage Implementation 001 (deterministic ordering hardening,
+   * 2026-08-22): getPendingOutcomeRating's sort used to compare raw
+   * `issuedAt` strings only. Recommendation carries `seq`
+   * (application/commands.ts's nextSeq), so a genuine same-millisecond
+   * collision between two check-ins (routine under a fast CI runner) is
+   * now resolved by call order instead of leaving a tie for
+   * Array.prototype.sort's stability to resolve against whatever order
+   * Dexie's own index scan happened to return — which, for two rows with
+   * an identical secondary-index (issuedAt) value, is not guaranteed to
+   * match real call order at all.
+   */
+  it("resolves which recommendation is 'past' correctly even when both share the exact same issuedAt millisecond", async () => {
+    const day = await startDay();
+
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-22T12:00:00.000Z"));
+
+    const first = await checkIn(day.id);
+    await recordRecommendation(day.id, first.recommendation);
+    const second = await checkIn(day.id); // identical issuedAt to `first`, strictly later seq
+
+    vi.useRealTimers();
+
+    expect(first.recommendation.issuedAt).toBe(second.recommendation.issuedAt);
+    expect(second.recommendation.seq).toBeGreaterThan(first.recommendation.seq!);
+
+    const pending = await getPendingOutcomeRating(day.id);
+    expect(pending?.id).toBe(first.recommendation.id);
   });
 });
 

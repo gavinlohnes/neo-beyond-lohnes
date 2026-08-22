@@ -1,5 +1,6 @@
 import { db } from "../persistence/db";
 import type { BeyondDay, DomainEvent } from "../domain/common/types";
+import { byTimeThenSeq } from "./queries";
 
 export interface HistoryDay {
   day: BeyondDay;
@@ -16,12 +17,22 @@ export interface HistoryDay {
  */
 export async function getHistoryDays(): Promise<HistoryDay[]> {
   const days = await db.beyondDays.toArray();
+  // Leverage Implementation 001 (deterministic ordering hardening,
+  // 2026-08-22): audited and deliberately left on raw startedAt
+  // comparison — BeyondDay carries no `seq` field, unlike DomainEvent
+  // below. Adding one would be a schema-adjacent change outside this
+  // checkpoint's scope. Two BeyondDays sharing the same startedAt
+  // millisecond is not a scenario this codebase creates in practice
+  // (startDay() always closes any prior ACTIVE day first).
   const sortedDays = [...days].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
 
   const result: HistoryDay[] = [];
   for (const day of sortedDays) {
+    // DomainEvent carries `seq` — a same-instant collision (routine
+    // under fast CI/automated command sequences) is now resolved
+    // deterministically instead of by raw timestamp-string comparison.
     const events = (await db.events.where("beyondDayId").equals(day.id).toArray()).sort((a, b) =>
-      a.occurredAt.localeCompare(b.occurredAt),
+      byTimeThenSeq(a.occurredAt, a.seq, b.occurredAt, b.seq),
     );
     result.push({ day, events });
   }

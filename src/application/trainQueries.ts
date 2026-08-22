@@ -1,3 +1,19 @@
+/**
+ * Leverage Implementation 001 (deterministic ordering hardening,
+ * 2026-08-22): every timestamp sort in this file was audited against
+ * application/queries.ts's byTimeThenSeq (the shared same-instant
+ * tie-break). All were deliberately LEFT UNCHANGED: WorkoutSession
+ * (domain/common/types.ts) and PerformedSet (domain/workout/types.ts)
+ * carry no `seq` field — unlike StateCheckIn/Recommendation/DomainEvent,
+ * which do — and adding one to either type would be a schema-adjacent
+ * change outside this checkpoint's explicit scope (no schema changes,
+ * no TRAIN progression redesign). getRecentSubstitutions's sort (below)
+ * already has its own domain-correct tie-break (setNumber) for exactly
+ * this collision case, which is arguably more meaningful here than an
+ * arbitrary global insertion-order seq would be. See the Leverage
+ * Implementation 001 completion report for the full disposition of
+ * every audited site in this codebase.
+ */
 import { db } from "../persistence/db";
 import { doesSessionAdvanceRotation, suggestNextTemplate } from "../engine/trainSuggestion";
 import { evaluateProgression, type ProgressionSuggestion } from "../engine/progression";
