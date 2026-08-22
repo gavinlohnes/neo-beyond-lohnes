@@ -154,6 +154,30 @@ describe("SHIFT_DOWN_COMPLETED clears the post-shift requirement", () => {
     expect(recommendation.kind).not.toBe("POST_SHIFT_TRANSITION");
   });
 
+  it(
+    "clears the requirement even when SHIFT_DOWN_COMPLETED lands in the exact same millisecond as WORK_PERIOD_ENDED " +
+      "(CI-discovered flakiness, 2026-08-22: hasUnresolvedPostShift used a raw occurredAt string comparison with no " +
+      "tie-break, so a genuine same-millisecond collision was incorrectly counted as \"not after\" — manufactured " +
+      "directly here rather than relying on real-clock timing, since the race is inherently non-deterministic to " +
+      "reproduce via actual elapsed time)",
+    async () => {
+      const day = await activeWorkDay();
+      await markWorkEnded(day.id);
+      const startedEventId = await startShiftDown(day.id, 10);
+      await completeShiftDown(day.id, startedEventId);
+
+      const events = await db.events.where("beyondDayId").equals(day.id).toArray();
+      const ended = events.find((e) => e.type === "WORK_PERIOD_ENDED")!;
+      const completed = events.find((e) => e.type === "SHIFT_DOWN_COMPLETED")!;
+      // Force the exact collision: same occurredAt, seq still in its real,
+      // naturally-assigned order (ended was logged strictly before completed).
+      await db.events.update(completed.id, { occurredAt: ended.occurredAt });
+      expect(completed.seq).toBeGreaterThan(ended.seq!);
+
+      expect(await hasUnresolvedPostShift(day.id)).toBe(false);
+    },
+  );
+
   it("a shift-down completed BEFORE the work-ended fact does not clear it", async () => {
     const day = await activeWorkDay();
     const startedEventId = await startShiftDown(day.id, 10);
