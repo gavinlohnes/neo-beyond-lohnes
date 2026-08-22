@@ -26,6 +26,8 @@ import {
   describeRecommendationAction,
   describeRecommendationEffect,
   describeRecordedDecision,
+  describeTraceLabel,
+  describeTraceValue,
 } from "./recommendationCopy";
 import { dismissOutcome, isOutcomeDismissed } from "../../../persistence/outcomeDismissals";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
@@ -950,14 +952,69 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
         {evidenceBasis && (
           <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
         )}
+        {/*
+         * TODAY // SUIT LAYER 01 (DEC-003): "the existing WHY interaction
+         * becomes the first expression of the inside-the-suit concept...
+         * expose additional structure showing the real deterministic
+         * inputs/reasoning already available." Every value below already
+         * existed on `recommendation.trace` (engine/evaluate.ts) or
+         * `checkIn` before this Drop — nothing here is manufactured.
+         * matchedRules was the only piece previously surfaced; inputs/
+         * derived/selectionReason/engineVersion/evaluatedAt were already
+         * computed and stored on every Recommendation, just never shown.
+         */}
         <details className="why" style={{ marginTop: 12 }}>
           <summary>How BEYOND decided</summary>
-          {recommendation.trace.matchedRules.map((r) => (
-            <div key={r.ruleId} className={`why-rule ${r.result ? "why-rule--matched" : ""}`}>
-              <span>{r.ruleId}</span>
-              <span>{r.result ? r.reason : "—"}</span>
-            </div>
-          ))}
+          <div className="machinery-panel">
+            {checkIn && (
+              <>
+                <p className="why-group-label">State input</p>
+                {CHECK_IN_FIELDS.map((f) => (
+                  <div key={f.key} className="why-rule">
+                    <span>{f.label}</span>
+                    <span>{checkIn[f.key]}</span>
+                  </div>
+                ))}
+              </>
+            )}
+
+            <p className="why-group-label">Derived</p>
+            {recommendation.trace.derived.length > 0 ? (
+              recommendation.trace.derived.map((d) => (
+                <div key={d.key} className="why-rule">
+                  <span>{describeTraceLabel(d.key)}</span>
+                  <span>{describeTraceValue(d.value)}</span>
+                </div>
+              ))
+            ) : (
+              <div className="why-rule">
+                <span>Capacity</span>
+                <span>Not computed — no check-in yet</span>
+              </div>
+            )}
+
+            <p className="why-group-label">Context</p>
+            {recommendation.trace.inputs.map((i) => (
+              <div key={i.key} className="why-rule">
+                <span>{describeTraceLabel(i.key)}</span>
+                <span>{describeTraceValue(i.value)}</span>
+              </div>
+            ))}
+
+            <p className="why-group-label">Rules evaluated</p>
+            {recommendation.trace.matchedRules.map((r) => (
+              <div key={r.ruleId} className={`why-rule ${r.result ? "why-rule--matched" : ""}`}>
+                <span>{r.ruleId}</span>
+                <span>{r.result ? r.reason : "—"}</span>
+              </div>
+            ))}
+
+            <p className="why-selection">{recommendation.trace.selectionReason}</p>
+            <p className="meta" style={{ marginTop: 8 }}>
+              ENGINE {recommendation.trace.engineVersion} · EVALUATED{" "}
+              {new Date(recommendation.trace.evaluatedAt).toLocaleTimeString()}
+            </p>
+          </div>
         </details>
         <div style={{ marginTop: 12 }}>
           {decision ? (
@@ -1192,9 +1249,13 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
           one thing needing a decision. describeContextStrip is designed
           to accept a still-loading (null) scheduledContext gracefully
           (falls back to "Context not set yet"/"Working today" without a
-          phase) — gating on `day` alone matches its actual contract. */}
+          phase) — gating on `day` alone matches its actual contract.
+          TODAY // SUIT LAYER 01 (DEC-003): now rendered via .status-strip
+          — same content, given its own bordered "operational readout"
+          presence instead of floating bare text, while staying far
+          quieter than .card--action so it never competes with NOW. */}
       {day && (
-        <p className="meta-strong" style={{ marginBottom: 16, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+        <p className="status-strip">
           {describeContextStrip(day.workContext, scheduledContext, unresolvedPostShift)}
           {capacityResult && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>

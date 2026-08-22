@@ -5,6 +5,8 @@ import {
   describeRecommendationAction,
   describeRecommendationEffect,
   describeRecordedDecision,
+  describeTraceLabel,
+  describeTraceValue,
 } from "../../src/ui/screens/today/recommendationCopy";
 import type { RecommendationKind } from "../../src/domain/common/types";
 
@@ -81,5 +83,35 @@ describe("describeEvidenceBasis", () => {
     const text = describeEvidenceBasis(false);
     expect(text).not.toBeNull();
     expect(text).toContain("No check-in yet");
+  });
+});
+
+/** TODAY // SUIT LAYER 01 (DEC-003): labels/values for the WHY panel's exposed DecisionTrace fields. */
+describe("describeTraceLabel", () => {
+  it("gives a human label for every key engine/evaluate.ts actually produces", () => {
+    expect(describeTraceLabel("hasCheckIn")).toBe("Check-in recorded");
+    expect(describeTraceLabel("hasPlannedWork")).toBe("Planned work today");
+    expect(describeTraceLabel("capacity")).toBe("Capacity");
+    expect(describeTraceLabel("reasonCodes")).toBe("Reason codes");
+  });
+
+  it("falls back to the raw key for anything unrecognized, rather than hiding it", () => {
+    expect(describeTraceLabel("somethingNew")).toBe("somethingNew");
+  });
+});
+
+describe("describeTraceValue", () => {
+  it("renders booleans as Yes/No", () => {
+    expect(describeTraceValue(true)).toBe("Yes");
+    expect(describeTraceValue(false)).toBe("No");
+  });
+
+  it("renders an empty string as an explicit em dash, not a blank cell", () => {
+    expect(describeTraceValue("")).toBe("—");
+  });
+
+  it("renders any other real value verbatim", () => {
+    expect(describeTraceValue("GREEN")).toBe("GREEN");
+    expect(describeTraceValue("energy == 1, stress == 5")).toBe("energy == 1, stress == 5");
   });
 });

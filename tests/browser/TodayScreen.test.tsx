@@ -43,6 +43,57 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
   });
 });
 
+describe("TodayScreen // SUIT LAYER 01 (DEC-003) — WHY machinery panel", () => {
+  it("is calm at rest — the machinery panel's content is not visible until WHY is opened", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByText("How BEYOND decided", { exact: true })).toBeVisible();
+    // <details> content exists in the DOM but is not visible while closed.
+    await expect.element(screen.getByText("State input", { exact: true })).not.toBeVisible();
+  });
+
+  it("opening WHY reveals the real check-in values, derived capacity, a matched rule, and the selection reason", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await screen.getByText("How BEYOND decided", { exact: true }).click();
+
+    // Real deterministic inputs — the exact values just submitted, not manufactured.
+    await expect.element(screen.getByText("State input", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Energy", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("4", { exact: true }).first()).toBeVisible();
+
+    // Real derived facts already computed by engine/capacity.ts.
+    await expect.element(screen.getByText("Derived", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Capacity", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("GREEN", { exact: true })).toBeVisible();
+
+    // Real rule evaluation and the actual selection sentence — no fabricated technical content.
+    await expect.element(screen.getByText("Rules evaluated", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/No higher-priority rule matched/)).toBeVisible();
+    await expect.element(screen.getByText(/^ENGINE /)).toBeVisible();
+  });
+
+});
+
+describe("TodayScreen // SUIT LAYER 01 (DEC-003) — STATUS operational readout", () => {
+  it("renders the STATUS line as a .status-strip, with the same real context/capacity content as before", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+
+    const strip = document.querySelector(".status-strip");
+    expect(strip).not.toBeNull();
+    expect(strip!.textContent).toContain("GREEN");
+  });
+});
+
 describe("TodayScreen (real browser) — active mode dominance", () => {
   it("makes an active SHIFT DOWN the dominant NOW surface, demoting the recommendation to a collapsed Tools row", async () => {
     const day = await startDay();

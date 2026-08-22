@@ -70,4 +70,22 @@ describe("accessibility (real browser, axe-core)", () => {
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);
   });
+
+  /**
+   * TODAY // SUIT LAYER 01 (DEC-003): the WHY machinery panel is new
+   * content this Drop introduces (State input / Derived / Rules
+   * evaluated / Selection, inside .machinery-panel) — verified separately
+   * from the closed-by-default case above, since axe only sees what's
+   * actually rendered/expanded.
+   */
+  it("TodayScreen with WHY opened (machinery panel expanded) has no violations beyond the known color-contrast exception", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TodayScreen />);
+    await screen.getByText("How BEYOND decided", { exact: true }).click();
+    await expect.element(screen.getByText("State input", { exact: true })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
 });

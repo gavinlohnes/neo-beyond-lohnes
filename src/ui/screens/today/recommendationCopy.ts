@@ -60,3 +60,29 @@ export function describeEvidenceBasis(hasCheckIn: boolean): string | null {
   if (hasCheckIn) return null;
   return "No check-in yet today — this default doesn't reflect how you're actually doing. Check in below for a real read.";
 }
+
+/**
+ * TODAY // SUIT LAYER 01 (DEC-003): human labels for DecisionTrace's
+ * `inputs`/`derived` keys — every key engine/evaluate.ts currently
+ * produces (`hasCheckIn`, `hasPlannedWork`, `capacity`, `reasonCodes`).
+ * An unrecognized key falls back to itself rather than being hidden —
+ * "exposed machinery" must never silently drop a real signal just
+ * because this map hasn't been updated for it yet.
+ */
+const TRACE_KEY_LABELS: Record<string, string> = {
+  hasCheckIn: "Check-in recorded",
+  hasPlannedWork: "Planned work today",
+  capacity: "Capacity",
+  reasonCodes: "Reason codes",
+};
+
+export function describeTraceLabel(key: string): string {
+  return TRACE_KEY_LABELS[key] ?? key;
+}
+
+/** Booleans read as Yes/No (matching this panel's plain-language voice elsewhere); an empty string (e.g. no reasonCodes) reads as an explicit em dash rather than a blank cell. */
+export function describeTraceValue(value: string | number | boolean): string {
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (value === "") return "—";
+  return String(value);
+}
