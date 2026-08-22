@@ -97,6 +97,29 @@ button, input {
   letter-spacing: -0.01em;
 }
 
+/*
+ * FIELD ALPHA Phase 3 — INSTRUMENT CLUSTER: BODY's own orientation
+ * layer. Neither .status-strip (a single-line text readout — this is a
+ * grid of independent numeric readings, not one sentence) nor
+ * .command-surface (there is no decision here, no dominant surface to
+ * claim, and BODY's red budget is deliberately lower than TODAY/TRAIN's
+ * — no red accent at all). A restrained bordered surface, one step up
+ * from bare background (--surface-1 + a subtle border), so the four
+ * readings read as one coherent instrument panel instead of floating
+ * text or a generic .card. Real reuse target: any screen showing
+ * several independent at-a-glance values at once, not a one-off.
+ */
+.instrument-cluster {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
 /* Overdrive Phase 3: capacity (GREEN/YELLOW/RED) is the single most
    consequence-bearing fact on TODAY's primary card, and used to be
    communicated by color-coded text alone — easy to skim past. A small

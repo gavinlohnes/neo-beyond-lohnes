@@ -358,8 +358,10 @@ export function BodyScreen() {
 
   return (
     <div className="screen fade-in">
-      <p className="eyebrow">BODY // ESSENTIALS</p>
-      <h1 className="title">Readiness inputs</h1>
+      {/* FIELD ALPHA Phase 3: identity zone quieted, same principle
+          TODAY/TRAIN applied — freed territory belongs to the
+          instrument cluster below, not screen chrome. */}
+      <h1 className="eyebrow">BODY // ESSENTIALS</h1>
       <p className="card-body" style={{ marginBottom: 16 }}>
         Fast inputs, kept as a permanent record. Correct mistakes without erasing what happened.
       </p>
@@ -370,17 +372,17 @@ export function BodyScreen() {
           scroll through to piece together. Purely a summary of state
           already computed below (total/proteinTotal/lastSleepEntry/
           lastBodyweightEntry) — no new query, no new fact, nothing this
-          strip shows isn't already the source of truth for its own card. */}
-      {/* Overdrive Phase 13 (BODY -> PHYSICAL STATUS 2.0): "Status" / "Log"
-          section-labels give this screen the two groups it actually has
-          instead of leaving the strip unlabeled above four identical
-          cards. No corner-flag here, deliberately — BODY's four trackers
-          are peer subsystems, not one leading recommendation the way
-          TODAY/TRAIN have; marking any single one of them as "the leader"
-          would manufacture a hierarchy that doesn't exist in the product. */}
+          strip shows isn't already the source of truth for its own card.
+          FIELD ALPHA Phase 3: now .instrument-cluster (see global.css) —
+          a real orientation-layer primitive instead of a bare .card with
+          an inline CSS grid, still no corner-flag/red accent, deliberately
+          — BODY's four trackers are peer subsystems, not one leading
+          recommendation the way TODAY/TRAIN have; marking any single one
+          of them as "the leader" would manufacture a hierarchy that
+          doesn't exist in the product. */}
       <p className="section-label">Status</p>
 
-      <div className="card" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div className="instrument-cluster">
         <div>
           <p className="meta" style={{ margin: 0 }}>WATER</p>
           <p className="status-value">{total} oz</p>
@@ -401,9 +403,12 @@ export function BodyScreen() {
 
       <p className="section-label">Log</p>
 
-      {/* WATER — one consolidated card: current total, fastest actions, custom fallback, collapsed history. */}
-      <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>HYDRATION</p>
+      {/* WATER — one consolidated instrument row: current total, fastest
+          actions, custom fallback, collapsed history. FIELD ALPHA Phase
+          3: .equipment-row, not .card — a logging tool, not a floating
+          card; .tool-label, not .eyebrow — that's reserved for identity. */}
+      <div className="equipment-row">
+        <p className="tool-label" style={{ marginBottom: 4 }}>HYDRATION</p>
         <p className="recommendation-title" style={{ marginBottom: 12 }}>{total} oz today</p>
         {/* Overdrive Phase 18 (PHONE WIDTH + BODY GLANCEABILITY): quick-add
             and "repeat last" used to share one flexWrap row — at a real
@@ -438,8 +443,8 @@ export function BodyScreen() {
         {waterManualOpen && (
           <div className="fade-in" style={{ marginTop: 12 }}>
             <div className="field">
-              <label><span>Custom (oz)</span></label>
-              <input type="number" min={0} value={input} onChange={(e) => setInput(e.target.value)} className="input" />
+              <label htmlFor="water-custom-oz"><span>Custom (oz)</span></label>
+              <input id="water-custom-oz" type="number" min={0} value={input} onChange={(e) => setInput(e.target.value)} className="input" />
             </div>
             <button className="btn-primary" disabled={busy} onClick={() => void handleLog()}>
               LOG WATER
@@ -502,6 +507,7 @@ export function BodyScreen() {
                       <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
                         <input
                           type="number"
+                          aria-label="Corrected amount (oz)"
                           value={correctionInput}
                           onChange={(e) => setCorrectionInput(e.target.value)}
                           className="input"
@@ -525,12 +531,19 @@ export function BodyScreen() {
         )}
       </div>
 
-      {/* SLEEP */}
-      <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>SLEEP</p>
-        <p className="card-body" style={{ marginBottom: 12 }}>
+      {/* SLEEP — FIELD ALPHA Phase 3: .equipment-row, not .card; leads
+          with the reading itself (duration, .recommendation-title, same
+          value-forward register HYDRATION already used) with kind/
+          timestamp as .meta machine metadata underneath, instead of one
+          undifferentiated prose sentence. */}
+      <div className="equipment-row">
+        <p className="tool-label" style={{ marginBottom: 4 }}>SLEEP</p>
+        <p className="recommendation-title" style={{ marginBottom: 2 }}>
+          {lastSleepEntry ? formatDuration(lastSleepEntry.effectiveDurationMinutes) : "Not logged"}
+        </p>
+        <p className="meta" style={{ marginBottom: 12 }}>
           {lastSleepEntry
-            ? `Last: ${lastSleepEntry.kind === "PRIMARY" ? "main sleep" : "nap"}, ${formatDuration(lastSleepEntry.effectiveDurationMinutes)} at ${new Date(lastSleepEntry.recordedAt).toLocaleTimeString()}`
+            ? `${lastSleepEntry.kind === "PRIMARY" ? "Main sleep" : "Nap"} · ${new Date(lastSleepEntry.recordedAt).toLocaleTimeString()}`
             : "No sleep logged yet today."}
         </p>
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
@@ -564,8 +577,9 @@ export function BodyScreen() {
         </p>
         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
           <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-            <label><span>Hours</span></label>
+            <label htmlFor="sleep-hours"><span>Hours</span></label>
             <input
+              id="sleep-hours"
               type="number"
               min={0}
               value={sleepHoursInput}
@@ -577,8 +591,9 @@ export function BodyScreen() {
             />
           </div>
           <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-            <label><span>Minutes</span></label>
+            <label htmlFor="sleep-minutes"><span>Minutes</span></label>
             <input
+              id="sleep-minutes"
               type="number"
               min={0}
               max={59}
@@ -648,12 +663,12 @@ export function BodyScreen() {
                     {sleepCorrectingId === entry.headEventId && (
                       <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
                         <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                          <label><span>Hours</span></label>
-                          <input type="number" min={0} value={sleepCorrectionHours} onChange={(e) => setSleepCorrectionHours(e.target.value)} className="input" />
+                          <label htmlFor={`sleep-correction-hours-${entry.headEventId}`}><span>Hours</span></label>
+                          <input id={`sleep-correction-hours-${entry.headEventId}`} type="number" min={0} value={sleepCorrectionHours} onChange={(e) => setSleepCorrectionHours(e.target.value)} className="input" />
                         </div>
                         <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                          <label><span>Minutes</span></label>
-                          <input type="number" min={0} max={59} value={sleepCorrectionMinutes} onChange={(e) => setSleepCorrectionMinutes(e.target.value)} className="input" />
+                          <label htmlFor={`sleep-correction-minutes-${entry.headEventId}`}><span>Minutes</span></label>
+                          <input id={`sleep-correction-minutes-${entry.headEventId}`} type="number" min={0} max={59} value={sleepCorrectionMinutes} onChange={(e) => setSleepCorrectionMinutes(e.target.value)} className="input" />
                         </div>
                         <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveSleepCorrection()}>
                           SAVE
@@ -668,12 +683,15 @@ export function BodyScreen() {
         )}
       </div>
 
-      {/* BODYWEIGHT */}
-      <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>BODYWEIGHT</p>
-        <p className="card-body" style={{ marginBottom: 12 }}>
+      {/* BODYWEIGHT — FIELD ALPHA Phase 3: same reading-forward pattern as SLEEP. */}
+      <div className="equipment-row">
+        <p className="tool-label" style={{ marginBottom: 4 }}>BODYWEIGHT</p>
+        <p className="recommendation-title" style={{ marginBottom: 2 }}>
+          {lastBodyweightEntry ? `${lastBodyweightEntry.effectiveWeightLbs} lbs` : "Not logged"}
+        </p>
+        <p className="meta" style={{ marginBottom: 12 }}>
           {lastBodyweightEntry
-            ? `Last: ${lastBodyweightEntry.effectiveWeightLbs} lbs at ${new Date(lastBodyweightEntry.recordedAt).toLocaleTimeString()}`
+            ? `Logged ${new Date(lastBodyweightEntry.recordedAt).toLocaleTimeString()}`
             : "No bodyweight logged yet today."}
           {" "}A fact only — no goal.
         </p>
@@ -703,8 +721,9 @@ export function BodyScreen() {
         {(bodyweightManualOpen || !lastBodyweightEntry) && (
           <div className="fade-in">
             <div className="field">
-              <label><span>Weight (lbs)</span></label>
+              <label htmlFor="bodyweight-lbs"><span>Weight (lbs)</span></label>
               <input
+                id="bodyweight-lbs"
                 type="number"
                 min={0}
                 value={bodyweightInput}
@@ -769,7 +788,7 @@ export function BodyScreen() {
                     </div>
                     {bodyweightCorrectingId === entry.headEventId && (
                       <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                        <input type="number" value={bodyweightCorrectionInput} onChange={(e) => setBodyweightCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
+                        <input type="number" aria-label="Corrected weight (lbs)" value={bodyweightCorrectionInput} onChange={(e) => setBodyweightCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
                         <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
                           SAVE
                         </button>
@@ -783,11 +802,14 @@ export function BodyScreen() {
         )}
       </div>
 
-      {/* PROTEIN */}
-      <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 4 }}>PROTEIN</p>
-        <p className="card-body" style={{ marginBottom: 12 }}>
-          Today: {proteinTotal} g. No daily target — logs the amount only.
+      {/* PROTEIN — FIELD ALPHA Phase 3: same value-forward pattern as
+          HYDRATION (a cumulative daily total, not a single point-in-time
+          reading like SLEEP/BODYWEIGHT). */}
+      <div className="equipment-row">
+        <p className="tool-label" style={{ marginBottom: 4 }}>PROTEIN</p>
+        <p className="recommendation-title" style={{ marginBottom: 2 }}>{proteinTotal} g today</p>
+        <p className="meta" style={{ marginBottom: 12 }}>
+          No daily target — logs the amount only.
         </p>
         {lastProteinEntry && (
           <button
@@ -811,8 +833,9 @@ export function BodyScreen() {
         {(proteinManualOpen || !lastProteinEntry) && (
           <div className="fade-in">
             <div className="field">
-              <label><span>Protein (g)</span></label>
+              <label htmlFor="protein-grams"><span>Protein (g)</span></label>
               <input
+                id="protein-grams"
                 type="number"
                 min={0}
                 value={proteinInput}
@@ -877,7 +900,7 @@ export function BodyScreen() {
                     </div>
                     {proteinCorrectingId === entry.headEventId && (
                       <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                        <input type="number" value={proteinCorrectionInput} onChange={(e) => setProteinCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
+                        <input type="number" aria-label="Corrected amount (g)" value={proteinCorrectionInput} onChange={(e) => setProteinCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
                         <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
                           SAVE
                         </button>

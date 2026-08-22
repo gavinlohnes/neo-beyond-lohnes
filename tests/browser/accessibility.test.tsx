@@ -4,6 +4,7 @@ import axe from "axe-core";
 import { startDay, submitCheckIn, startShiftDown } from "../../src/application/commands";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
+import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
 import { CollapsibleRow } from "../../src/ui/components/CollapsibleRow";
 import { ConfirmBanner } from "../../src/ui/components/ConfirmBanner";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
@@ -124,6 +125,34 @@ describe("accessibility (real browser, axe-core)", () => {
     await screen.getByRole("button", { name: "RECOVERY", exact: true }).click();
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
     await expect.element(screen.getByText("RECOVERY — IN PROGRESS", { exact: true })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
+  /**
+   * FIELD ALPHA Phase 3: BODY's first accessibility coverage — the
+   * instrument cluster (.instrument-cluster) and the four equipment-row
+   * trackers, both empty and with an entry logged in each.
+   */
+  it("BodyScreen (empty state) has no violations beyond the known color-contrast exception", async () => {
+    const screen = await render(<BodyScreen />);
+    await expect.element(screen.getByText("HYDRATION", { exact: true })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
+  it("BodyScreen (an entry logged in each tracker) has no violations beyond the known color-contrast exception", async () => {
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "+12 oz" }).click();
+    await screen.getByRole("spinbutton", { name: "Hours" }).fill("7");
+    await screen.getByRole("button", { name: "LOG SLEEP" }).click();
+    await screen.getByRole("spinbutton", { name: "Weight (lbs)" }).fill("180");
+    await screen.getByRole("button", { name: "LOG BODYWEIGHT" }).click();
+    await screen.getByRole("spinbutton", { name: "Protein (g)" }).fill("30");
+    await screen.getByRole("button", { name: "LOG PROTEIN" }).click();
+    await expect.element(screen.getByText("30 g today", { exact: true })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);
