@@ -5,6 +5,7 @@ import { TrainScreen } from "../ui/screens/train/TrainScreen";
 import { BodyScreen } from "../ui/screens/body/BodyScreen";
 import { MoreScreen } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
+import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -84,15 +85,25 @@ export function App() {
 
   return (
     <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
-      {/* Intent & Commitment Spine, Drop 02: the only cross-screen
-          navigation TODAY needs — VIEW on a surfaced commitment switches
-          to the MORE tab (where Missions & Obligations already lives),
-          rather than deep-linking to the specific Obligation, which would
-          require lifting new state through MoreScreen/IntentScreen too. */}
-      {tab === "TODAY" && <TodayScreen onViewCommitments={() => setTab("MORE")} />}
-      {tab === "TRAIN" && <TrainScreen />}
-      {tab === "BODY" && <BodyScreen />}
-      {tab === "MORE" && <MoreScreen />}
+      {/* Leverage Implementation 002 (root error containment): wraps only
+          the per-tab screen content, not the bottom nav — a render error
+          in one screen replaces just that screen with a recovery
+          surface, while TODAY/TRAIN/BODY/MORE navigation stays live so
+          the operator can still try a different, possibly-unaffected
+          screen. `key={tab}` resets the boundary whenever the tab
+          changes, so switching tabs is itself a natural retry, not a
+          second dead end next to a working nav. */}
+      <RootErrorBoundary key={tab}>
+        {/* Intent & Commitment Spine, Drop 02: the only cross-screen
+            navigation TODAY needs — VIEW on a surfaced commitment switches
+            to the MORE tab (where Missions & Obligations already lives),
+            rather than deep-linking to the specific Obligation, which would
+            require lifting new state through MoreScreen/IntentScreen too. */}
+        {tab === "TODAY" && <TodayScreen onViewCommitments={() => setTab("MORE")} />}
+        {tab === "TRAIN" && <TrainScreen />}
+        {tab === "BODY" && <BodyScreen />}
+        {tab === "MORE" && <MoreScreen />}
+      </RootErrorBoundary>
 
       <AppUpdateBanner />
 
