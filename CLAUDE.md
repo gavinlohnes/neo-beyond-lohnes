@@ -59,6 +59,10 @@ src/ui/              screens + components. Calls application/* only, never engin
 - System reports. Advisor interprets. Silence is valid. User authority is absolute.
 - Peak efficiency is not minimum code — it is minimum code that BEYOND is uniquely responsible
   for.
+- Prefer executable/derived repository truth over duplicated manually maintained values. When a
+  diagnostic, version, schema identifier, build identifier, or similar fact can be derived from
+  its authoritative source, do not create another independent source of truth without
+  justification.
 
 ## The leverage gate
 
