@@ -3,6 +3,7 @@ import type { BeyondDay, CaptureItem, Recommendation, StateCheckIn } from "../..
 import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
+import { SignalRow } from "../../components/SignalRow";
 import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
 import { describeCommitmentsSummary, describeObligationRelevance } from "./commitmentsCopy";
 import {
@@ -104,31 +105,8 @@ import {
 } from "../../../application/queries";
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
-import type { ReactNode } from "react";
 
 const BACKUP_NUDGE_THRESHOLD_DAYS = 7;
-
-/**
- * Suit Layer 01 — Visual System Hardening (2026-08-22): the "earned but
- * not commanding" role (see global.css's .signal-row doc comment) —
- * shared by every ATTENTION-tier surface (LAST TIME, unresolved
- * Capture-in-attention) and reused by renderEndDayCard/
- * renderCommitmentsCard/renderResetCard/renderShiftDownCard/
- * renderMinimumDayCard for their own "recommended but not dominant"
- * states. Module-level (not defined inside TodayScreen) specifically so
- * it isn't re-created as a new component identity on every render — it
- * has no dependency on TodayScreen's own state/closures. File-local for
- * now; extracting to ui/components/ can wait for a second real caller
- * outside this screen.
- */
-function SignalRow({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="card signal-row">
-      <p className="tool-label">{label}</p>
-      {children}
-    </div>
-  );
-}
 
 /**
  * Quick check-in default ("all good" one-tap, Context & Safety Decisions
@@ -1176,7 +1154,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       return <SignalRow label="BEYONDDAY">{body}</SignalRow>;
     }
     return (
-      <div className="card">
+      <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>BEYONDDAY</p>
         {body}
       </div>
@@ -1252,7 +1230,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       return <SignalRow label="COMMITMENT">{body}</SignalRow>;
     }
     return (
-      <div className="card">
+      <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>COMMITMENT</p>
         {body}
       </div>
