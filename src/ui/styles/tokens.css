@@ -62,8 +62,28 @@
   --space-6: 32px;
   --space-7: 48px;
 
+  /*
+   * BEYOND Suit Implementation 01 (2026-08-22) — Part 9 typography
+   * direction: Space Grotesk for DISPLAY/TITLE, IBM Plex Sans for
+   * CONTROL/BODY/META. MATERIAL CONFLICT FOUND AND REPORTED (Part 0):
+   * this repository has never loaded any of the three named typefaces
+   * below — index.html links only tokens.css/global.css, no
+   * @font-face, no Google Fonts/self-hosted font files, no font
+   * assets anywhere in the repo. Every one of these families has
+   * therefore always fallen through to `system-ui` on every real
+   * device that has ever rendered this app, including throughout the
+   * entire Overdrive/Harvest/Suit Layer history. --font-body's leading
+   * name is corrected here to name the Bible's actual intended font
+   * (was "Inter", which nothing in the Bible specifies), but this is a
+   * documentation-accuracy fix, not a functional one — it changes
+   * nothing on any real device today. Actually loading real font files
+   * is a separate, nontrivial decision (bundle size, offline/service-
+   * worker precaching, subsetting, license file inclusion) deliberately
+   * NOT made in this checkpoint — flagged for explicit owner sign-off,
+   * not silently bundled into a TODAY visual pass.
+   */
   --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
-  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
   /* Product Experience Sprint, P2: interaction motion should explain a

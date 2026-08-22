@@ -125,6 +125,7 @@ export function App() {
             onClick={() => setTab(t)}
             aria-current={tab === t ? "page" : undefined}
             style={{
+              position: "relative",
               flex: 1,
               display: "flex",
               flexDirection: "column",
@@ -140,6 +141,27 @@ export function App() {
               letterSpacing: "0.04em",
             }}
           >
+            {/* BEYOND Suit Implementation 01 — Utility Belt (Part 11):
+                a LEVEL 1 / STRUCTURAL red cue (Part 8) for the selected
+                territory, in addition to the existing color+weight
+                change — selection must communicate through more than
+                color alone. A thin directional tick, not a pill or glow;
+                aria-hidden since aria-current on the button already
+                carries this for assistive tech. */}
+            {tab === t && (
+              <span
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: 20,
+                  height: 2,
+                  background: "var(--accent)",
+                }}
+              />
+            )}
             <Icon name={TAB_ICON[t]} size={24} />
             {t}
           </button>

@@ -596,3 +596,45 @@ button, input {
   padding: var(--space-3);
   border-left: 2px solid var(--accent);
 }
+
+/*
+ * BEYOND Suit Implementation 01 (2026-08-22) — canonical visual-role
+ * mapping. Per Part 4/6: "not every role requires a React component,"
+ * "extract only where there is actual reuse... or duplication is
+ * otherwise real." Nine of ten roles TODAY needs already had a real,
+ * correct implementation before this checkpoint (built across Drop 02
+ * and Suit Layer 01) — recorded here as the map, not rebuilt as new
+ * primitives:
+ *
+ *   PRIMARY DECISION   -> .card--action + .corner-flag (the one
+ *                         dominant NOW surface — recommendation, or an
+ *                         active RESET/SHIFT DOWN that has taken over).
+ *   EXECUTION          -> the same dominant surface while a RESET/SHIFT
+ *                         DOWN is actually in progress (its "IN
+ *                         PROGRESS" .tool-label, forced to
+ *                         --accent-strong — see TodayScreen.tsx).
+ *   INSTRUMENT         -> .status-strip (work context + capacity —
+ *                         PRIMARY TRUTH, always visible, never a card).
+ *   SIGNAL             -> .signal-row (ATTENTION-tier items and
+ *                         recommended-but-not-dominant tool states,
+ *                         Part 8 LEVEL 1/2).
+ *   CONTROL            -> .btn-primary / .btn-secondary / .chip / .input.
+ *   PASSIVE CONTEXT    -> .meta / .meta-strong (auxiliary/operational
+ *                         text, never a container).
+ *   EXPOSED MACHINERY  -> .machinery-panel + .why-group-label +
+ *                         .why-selection (TODAY's INSPECT/WHY depth).
+ *   SYSTEM STATE       -> .capacity-dot + describeCapacity/
+ *                         describeContextStrip inside .status-strip.
+ *   MEMORY             -> SignalRow labeled with a canonical Part 12
+ *                         term (OUTCOME today — see TodayScreen.tsx;
+ *                         USUAL/PATTERN/BASELINE are not yet
+ *                         supportable without new historical
+ *                         aggregation and are deliberately not built).
+ *   ADVISOR INTERVENTION -> not present. No Advisor capability exists
+ *                         in this repository yet (Part 13) — nothing
+ *                         to preserve, nothing invented for this
+ *                         checkpoint.
+ *
+ * Only .tool-label and .signal-row were genuinely new (Suit Layer 01);
+ * nothing in this checkpoint adds a further generic container.
+ */
