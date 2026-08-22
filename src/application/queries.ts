@@ -552,8 +552,18 @@ export async function hasUnresolvedPostShift(beyondDayId: string): Promise<boole
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
   const ended = events.find((e) => e.type === "WORK_PERIOD_ENDED");
   if (!ended) return false;
+  // Harvest Checkpoint 7 (CI-discovered, unrelated to this sprint's own
+  // changes — application/queries.ts's own hasUnresolvedPostShift is
+  // untouched by anything else this session built): a raw string `>`
+  // comparison of occurredAt treats a genuine same-millisecond tie as
+  // "not after," so a SHIFT_DOWN_COMPLETED that lands in the exact same
+  // millisecond as the WORK_PERIOD_ENDED fact it's meant to clear was
+  // incorrectly still counted as unresolved. Same class of flakiness
+  // this file already fixed for every other "most recent" query via the
+  // seq tie-break (byTimeThenSeq, above) — this is the one query in
+  // this file that hadn't been routed through it yet.
   const clearedAfter = events.some(
-    (e) => e.type === "SHIFT_DOWN_COMPLETED" && e.occurredAt > ended.occurredAt,
+    (e) => e.type === "SHIFT_DOWN_COMPLETED" && byTimeThenSeq(e.occurredAt, e.seq, ended.occurredAt, ended.seq) > 0,
   );
   return !clearedAfter;
 }
