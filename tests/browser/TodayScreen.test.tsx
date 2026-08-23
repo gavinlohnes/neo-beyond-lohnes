@@ -278,6 +278,42 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
     await expect.element(screen.getByText(/Write the report/)).toBeVisible();
   });
+
+  it("shows explicit Mission context only after the linked headline commitment is expanded", async () => {
+    const mission = await createMission({ title: "Build a durable career" });
+    await createObligation({ title: "Finish certification", missionId: mission.id, plannedAt: dateOffset(0) });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+
+    expect(screen.getByText("Mission: Build a durable career", { exact: true }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
+    await expect.element(screen.getByText("Mission: Build a durable career", { exact: true })).toBeVisible();
+  });
+
+  it("leaves a standalone headline commitment unchanged when expanded", async () => {
+    await createObligation({ title: "Renew passport", plannedAt: dateOffset(0) });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
+
+    expect(screen.getByText(/^Mission:/).elements()).toHaveLength(0);
+  });
+
+  it("keeps an archived Mission's linked obligation out of current TODAY context", async () => {
+    const mission = await createMission({ title: "Former direction" });
+    await createObligation({ title: "Close remaining loop", missionId: mission.id, plannedAt: dateOffset(0) });
+    await archiveMission(mission.id);
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    expect(screen.getByRole("button", { name: "Open COMMITMENT" }).elements()).toHaveLength(0);
+    expect(screen.getByText("Mission: Former direction (archived)", { exact: true }).elements()).toHaveLength(0);
+  });
 });
 
 describe("TodayScreen (real browser) — narrow phone widths", () => {

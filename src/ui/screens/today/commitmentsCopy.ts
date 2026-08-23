@@ -1,4 +1,4 @@
-import type { Obligation } from "../../../domain/intent/types";
+import type { Mission, Obligation } from "../../../domain/intent/types";
 import type { ObligationRelevanceTier } from "../../../engine/obligationRelevance";
 
 /**
@@ -44,4 +44,9 @@ export function describeObligationRelevance(tier: ObligationRelevanceTier, oblig
 export function describeCommitmentsSummary(tier: ObligationRelevanceTier, obligation: Obligation, otherUnresolvedCount: number): string {
   const headline = `${obligation.title} · ${describeObligationRelevance(tier, obligation)}`;
   return otherUnresolvedCount > 0 ? `${headline} · +${otherUnresolvedCount} more unresolved` : headline;
+}
+
+/** Explicit stored context only; archived status is named so it is not presented as current direction. */
+export function describeCommitmentMission(mission: Mission): string {
+  return `Mission: ${mission.title}${mission.status === "ARCHIVED" ? " (archived)" : ""}`;
 }

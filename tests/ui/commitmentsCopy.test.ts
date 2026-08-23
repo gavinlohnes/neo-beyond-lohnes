@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { describeCommitmentsSummary, describeObligationRelevance } from "../../src/ui/screens/today/commitmentsCopy";
+import { describeCommitmentMission, describeCommitmentsSummary, describeObligationRelevance } from "../../src/ui/screens/today/commitmentsCopy";
+import type { Mission } from "../../src/domain/intent/types";
 import type { Obligation } from "../../src/domain/intent/types";
 
 function obligation(overrides: Partial<Obligation> = {}): Obligation {
@@ -50,6 +51,27 @@ describe("describeCommitmentsSummary", () => {
   it("uses a different obligation's own title when given one", () => {
     expect(describeCommitmentsSummary("PLANNED_TODAY", obligation({ title: "Call the vet" }), 0)).toBe(
       "Call the vet · Planned for today",
+    );
+  });
+});
+
+describe("describeCommitmentMission", () => {
+  const mission: Mission = {
+    id: "mission-1",
+    title: "Build a durable career",
+    status: "ACTIVE",
+    source: "USER",
+    createdAt: "2026-08-01T00:00:00.000Z",
+    updatedAt: "2026-08-01T00:00:00.000Z",
+  };
+
+  it("states the explicit Mission title without implying inference", () => {
+    expect(describeCommitmentMission(mission)).toBe("Mission: Build a durable career");
+  });
+
+  it("labels archived Mission context truthfully", () => {
+    expect(describeCommitmentMission({ ...mission, status: "ARCHIVED" })).toBe(
+      "Mission: Build a durable career (archived)",
     );
   });
 });

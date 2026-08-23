@@ -5,15 +5,15 @@ import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { SignalRow } from "../../components/SignalRow";
 import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
-import { describeCommitmentsSummary, describeObligationRelevance } from "./commitmentsCopy";
+import { describeCommitmentMission, describeCommitmentsSummary, describeObligationRelevance } from "./commitmentsCopy";
 import {
   getMostRelevantUnresolvedObligation,
   hasObligationRequiringAttention,
   isAttentionWorthyTier,
 } from "../../../engine/obligationRelevance";
-import { getCurrentlyEligibleUnresolvedObligations } from "../../../application/intentQueries";
+import { getCurrentlyEligibleUnresolvedObligations, getMissionForObligation } from "../../../application/intentQueries";
 import { formatLocalDate } from "../../../engine/scheduledContext";
-import type { Obligation } from "../../../domain/intent/types";
+import type { Mission, Obligation } from "../../../domain/intent/types";
 import {
   CHECK_IN_FIELDS,
   describeCheckInValues,
@@ -212,6 +212,10 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
   // directly — an Obligation whose parent Mission is ARCHIVED must not
   // participate in COMMITMENT/ATTENTION (see docs/UX_DECISIONS.md).
   const [unresolvedObligations, setUnresolvedObligations] = useState<Obligation[]>([]);
+  const [headlineCommitmentMission, setHeadlineCommitmentMission] = useState<{
+    obligationId: string;
+    mission: Mission;
+  } | null>(null);
   const [commitmentsOpen, setCommitmentsOpen] = useState(false);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
@@ -230,7 +234,11 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
     setOpenCaptureItems(await getOpenCaptureItems());
     // Intent & Commitment Spine, Drop 02: same reasoning — Obligations are
     // not day-scoped either.
-    setUnresolvedObligations(await getCurrentlyEligibleUnresolvedObligations());
+    const obligations = await getCurrentlyEligibleUnresolvedObligations();
+    setUnresolvedObligations(obligations);
+    const headline = getMostRelevantUnresolvedObligation(obligations, formatLocalDate(new Date()));
+    const mission = headline ? await getMissionForObligation(headline.obligation) : undefined;
+    setHeadlineCommitmentMission(headline && mission ? { obligationId: headline.obligation.id, mission } : null);
     if (activeDay) {
       setCheckIn((await getLatestCheckIn(activeDay.id)) ?? null);
       const rec = (await getLatestRecommendation(activeDay.id)) ?? null;
@@ -1256,6 +1264,11 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       <>
         <h2 className="card-title">{obligation.title}</h2>
         {obligation.description && <p className="card-body">{obligation.description}</p>}
+        {headlineCommitmentMission?.obligationId === obligation.id && (
+          <p className="meta" style={{ marginBottom: 4 }}>
+            {describeCommitmentMission(headlineCommitmentMission.mission)}
+          </p>
+        )}
         <p className="meta" style={{ marginBottom: otherCount > 0 ? 4 : 12 }}>
           {describeObligationRelevance(tier, obligation)}
         </p>

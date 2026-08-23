@@ -45,6 +45,16 @@ export async function getMission(id: string): Promise<Mission | undefined> {
   return raw ? (parseMission(raw) ?? undefined) : undefined;
 }
 
+/**
+ * Resolve only an Obligation's explicit stored Mission relationship. An
+ * archived Mission remains truthful context because archiving deliberately
+ * preserves existing missionId links; missing or invalid rows return no
+ * context rather than turning a stale reference into UI truth.
+ */
+export async function getMissionForObligation(obligation: Obligation): Promise<Mission | undefined> {
+  return obligation.missionId ? getMission(obligation.missionId) : undefined;
+}
+
 export async function getObligations(): Promise<Obligation[]> {
   return sortByCreated(await validObligations());
 }
