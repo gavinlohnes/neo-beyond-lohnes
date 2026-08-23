@@ -7,6 +7,8 @@ import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../src/app/buildInfo";
 import { ENGINE_VERSION } from "../../src/engine/evaluate";
 import { archiveMission, createMission, createObligation } from "../../src/application/intentCommands";
+import { startDay } from "../../src/application/commands";
+import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
 
 /**
  * BEYOND FIELD ALPHA Phase 4 — first real-browser acceptance layer for
@@ -150,6 +152,34 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
     await expect.element(screen.getByText("Advisory notes", { exact: true })).toBeVisible();
     expect(screen.getByText("Do it — OVERDUE", { exact: true }).elements()).toHaveLength(0);
+  });
+
+  /**
+   * Intelligence Spine — I3 (second-producer generalization proof,
+   * 2026-08-23). Reuses the existing controlled diagnostics surface
+   * (no new card, no new screen) — proves a genuinely different domain
+   * (TRAIN) reaches the same consumption path as Obligations, still
+   * plain, non-interactive, informational-only text.
+   */
+  it("Intelligence Spine I3: a qualifying TRAIN progression suggestion surfaces in the same Advisory notes list, as plain text", async () => {
+    const day = await startDay();
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 135, 12);
+    await logSet(day.id, session.id, "machine-chest-press", 2, 135, 12);
+    await logSet(day.id, session.id, "machine-chest-press", 3, 135, 12);
+    await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
+
+    const screen = await render(<MoreScreen />);
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
+
+    await expect.element(screen.getByText("Advisory notes", { exact: true })).toBeVisible();
+    const noteEl = screen.getByText("Machine Chest Press — INCREASE", { exact: true });
+    await expect.element(noteEl).toBeVisible();
+    expect(noteEl.elements()[0]?.tagName).toBe("P");
+    expect(noteEl.elements()[0]?.closest("button")).toBeNull();
+    // Never rendered as, or inside, a command surface — same invariant as
+    // every other advisory note, regardless of which producer supplied it.
+    expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
   });
 
   it("restore's file input still has no accept filter (Android SAF compatibility, unchanged)", async () => {
