@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
 import { rateOutcome, recordRecommendation, startDay, submitCheckIn } from "../../src/application/commands";
-import { getPendingOutcomeRating } from "../../src/application/queries";
+import { getPendingOutcomeRating, getPriorOutcomeMemory } from "../../src/application/queries";
+import { dismissOutcome } from "../../src/persistence/outcomeDismissals";
 
 /**
  * Outcome rating placement (Context & Safety Decisions, 2026-08-19,
@@ -31,16 +32,16 @@ describe("getPendingOutcomeRating", () => {
     const { recommendation } = await checkIn(day.id);
     await recordRecommendation(day.id, recommendation);
 
-    expect(await getPendingOutcomeRating(day.id)).toBeUndefined();
+    expect(await getPendingOutcomeRating(recommendation)).toBeUndefined();
   });
 
   it("surfaces the prior recorded recommendation once a newer one exists", async () => {
     const day = await startDay();
     const first = await checkIn(day.id);
     await recordRecommendation(day.id, first.recommendation);
-    await checkIn(day.id); // issues a newer recommendation -> "last time" now applies
+    const current = await checkIn(day.id); // issues a newer recommendation -> "last time" now applies
 
-    const pending = await getPendingOutcomeRating(day.id);
+    const pending = await getPendingOutcomeRating(current.recommendation);
     expect(pending?.id).toBe(first.recommendation.id);
   });
 
@@ -49,9 +50,9 @@ describe("getPendingOutcomeRating", () => {
     await checkIn(day.id); // issued, never recorded
     const second = await checkIn(day.id);
     await recordRecommendation(day.id, second.recommendation);
-    await checkIn(day.id); // current
+    const current = await checkIn(day.id);
 
-    const pending = await getPendingOutcomeRating(day.id);
+    const pending = await getPendingOutcomeRating(current.recommendation);
     expect(pending?.id).toBe(second.recommendation.id);
   });
 
@@ -59,11 +60,11 @@ describe("getPendingOutcomeRating", () => {
     const day = await startDay();
     const first = await checkIn(day.id);
     await recordRecommendation(day.id, first.recommendation);
-    await checkIn(day.id);
+    const current = await checkIn(day.id);
 
-    expect((await getPendingOutcomeRating(day.id))?.id).toBe(first.recommendation.id);
+    expect((await getPendingOutcomeRating(current.recommendation))?.id).toBe(first.recommendation.id);
     await rateOutcome(day.id, first.recommendation.id, "GOOD");
-    expect(await getPendingOutcomeRating(day.id)).toBeUndefined();
+    expect(await getPendingOutcomeRating(current.recommendation)).toBeUndefined();
   });
 
   /**
@@ -93,8 +94,79 @@ describe("getPendingOutcomeRating", () => {
     expect(first.recommendation.issuedAt).toBe(second.recommendation.issuedAt);
     expect(second.recommendation.seq).toBeGreaterThan(first.recommendation.seq!);
 
-    const pending = await getPendingOutcomeRating(day.id);
+    const pending = await getPendingOutcomeRating(second.recommendation);
     expect(pending?.id).toBe(first.recommendation.id);
+  });
+
+  it("surfaces a recorded, unrated recommendation from a prior BeyondDay", async () => {
+    const priorDay = await startDay();
+    const prior = await checkIn(priorDay.id);
+    await recordRecommendation(priorDay.id, prior.recommendation);
+    const currentDay = await startDay();
+    const current = await checkIn(currentDay.id);
+
+    const pending = await getPendingOutcomeRating(current.recommendation);
+    expect(pending?.id).toBe(prior.recommendation.id);
+    expect(pending?.beyondDayId).toBe(priorDay.id);
+
+    await rateOutcome(pending!.beyondDayId, pending!.id, "GOOD");
+    const stored = await db.outcomes.where("beyondDayId").equals(priorDay.id).toArray();
+    expect(stored[0]).toMatchObject({ recommendationId: prior.recommendation.id, rating: "GOOD" });
+    expect(await getPendingOutcomeRating(current.recommendation)).toBeUndefined();
+    expect(await getPriorOutcomeMemory(current.recommendation)).toMatchObject({
+      recommendation: { id: prior.recommendation.id },
+      rating: "GOOD",
+    });
+  });
+
+  it("excludes the current recommendation even when it is recorded", async () => {
+    const day = await startDay();
+    const current = await checkIn(day.id);
+    await recordRecommendation(day.id, current.recommendation);
+
+    expect(await getPendingOutcomeRating(current.recommendation)).toBeUndefined();
+  });
+
+  it("excludes a dismissed prior recommendation across BeyondDays", async () => {
+    const priorDay = await startDay();
+    const prior = await checkIn(priorDay.id);
+    await recordRecommendation(priorDay.id, prior.recommendation);
+    dismissOutcome(prior.recommendation.id);
+    const currentDay = await startDay();
+    const current = await checkIn(currentDay.id);
+
+    expect(await getPendingOutcomeRating(current.recommendation)).toBeUndefined();
+  });
+
+  it("selects only the most recent qualifying prior recommendation across days", async () => {
+    const firstDay = await startDay();
+    const first = await checkIn(firstDay.id);
+    await recordRecommendation(firstDay.id, first.recommendation);
+    const secondDay = await startDay();
+    const second = await checkIn(secondDay.id);
+    await recordRecommendation(secondDay.id, second.recommendation);
+    const currentDay = await startDay();
+    const current = await checkIn(currentDay.id);
+
+    expect((await getPendingOutcomeRating(current.recommendation))?.id).toBe(second.recommendation.id);
+  });
+
+  it("fails quietly when issuedAt and seq cannot prove a candidate is earlier", async () => {
+    const day = await startDay();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-23T12:00:00.000Z"));
+    const prior = await checkIn(day.id);
+    await recordRecommendation(day.id, prior.recommendation);
+    const current = await checkIn(day.id);
+    const ambiguousPrior = { ...prior.recommendation };
+    const ambiguousCurrent = { ...current.recommendation };
+    delete ambiguousPrior.seq;
+    delete ambiguousCurrent.seq;
+    await db.recommendations.put(ambiguousPrior);
+    await db.recommendations.put(ambiguousCurrent);
+    vi.useRealTimers();
+
+    expect(await getPendingOutcomeRating(ambiguousCurrent)).toBeUndefined();
   });
 });
 

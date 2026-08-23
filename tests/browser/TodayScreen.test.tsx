@@ -14,6 +14,7 @@ import { archiveMission, createMission, createObligation, markObligationWaiting 
 import { formatLocalDate } from "../../src/engine/scheduledContext";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
+import { db } from "../../src/persistence/db";
 
 /**
  * Harvest Checkpoint 4: real-browser acceptance layer for TODAY —
@@ -104,6 +105,68 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — WHY machinery panel", () =>
     await expect.element(screen.getByText(/NO ACTION RECORDED · GOOD/)).toBeVisible();
   });
 
+});
+
+describe("TodayScreen (real browser) — cross-day outcome follow-up", () => {
+  async function seedCrossDayFollowUp() {
+    const priorDay = await startDay();
+    const prior = await submitCheckIn(priorDay.id, GREEN);
+    await recordRecommendation(priorDay.id, prior.recommendation);
+    const currentDay = await startDay();
+    const current = await submitCheckIn(currentDay.id, GREEN);
+    return { priorDay, prior, currentDay, current };
+  }
+
+  it("survives reload, rates against the historical day, then feeds Prior Outcome Memory", async () => {
+    const { priorDay, prior } = await seedCrossDayFollowUp();
+    let screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByText("OUTCOME", { exact: true })).toBeVisible();
+    await screen.rerender(<></>);
+    await screen.rerender(<TodayScreen />);
+    await expect.element(screen.getByText("OUTCOME", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "GOOD", exact: true }).click();
+    await expect.element(screen.getByText("OUTCOME", { exact: true })).not.toBeInTheDocument();
+    const outcomes = await db.outcomes.where("beyondDayId").equals(priorDay.id).toArray();
+    expect(outcomes).toHaveLength(1);
+    expect(outcomes[0]).toMatchObject({ recommendationId: prior.recommendation.id, rating: "GOOD" });
+
+    await screen.rerender(<></>);
+    await screen.rerender(<TodayScreen />);
+    await screen.getByText("How BEYOND decided", { exact: true }).click();
+    await expect.element(screen.getByText("Previous result", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/NO ACTION RECORDED · GOOD/)).toBeVisible();
+  });
+
+  it("respects dismissal across a remount", async () => {
+    await seedCrossDayFollowUp();
+
+    let screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("OUTCOME", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "DISMISS" }).click();
+    expect(screen.getByText("OUTCOME", { exact: true }).elements()).toHaveLength(0);
+
+    await screen.rerender(<></>);
+    await screen.rerender(<TodayScreen />);
+    expect(screen.getByText("OUTCOME", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText(/Last time, BEYOND recommended/).elements()).toHaveLength(0);
+  });
+
+  it("renders only one OUTCOME row when multiple historical recommendations qualify", async () => {
+    const firstDay = await startDay();
+    const first = await submitCheckIn(firstDay.id, GREEN);
+    await recordRecommendation(firstDay.id, first.recommendation);
+    const secondDay = await startDay();
+    const second = await submitCheckIn(secondDay.id, GREEN);
+    await recordRecommendation(secondDay.id, second.recommendation);
+    const currentDay = await startDay();
+    await submitCheckIn(currentDay.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("OUTCOME", { exact: true })).toBeVisible();
+    expect(screen.getByText("OUTCOME", { exact: true }).elements()).toHaveLength(1);
+  });
 });
 
 describe("TodayScreen // SUIT LAYER 01 (DEC-003) — STATUS operational readout", () => {

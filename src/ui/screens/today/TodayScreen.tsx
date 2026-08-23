@@ -35,7 +35,7 @@ import {
   describeTraceLabel,
   describeTraceValue,
 } from "./recommendationCopy";
-import { dismissOutcome, isOutcomeDismissed } from "../../../persistence/outcomeDismissals";
+import { dismissOutcome } from "../../../persistence/outcomeDismissals";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import {
   describeMinimumDaySummary,
@@ -246,8 +246,8 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       setDecision(rec ? await getRecommendationDecision(activeDay.id, rec.id) : undefined);
       setPriorOutcomeMemory(rec ? (await getPriorOutcomeMemory(rec)) ?? null : null);
       setSuggestEndDay(await shouldSuggestEndDay(activeDay.id));
-      const pending = (await getPendingOutcomeRating(activeDay.id)) ?? null;
-      setPendingOutcome(pending && !isOutcomeDismissed(pending.id) ? pending : null);
+      const pending = rec ? (await getPendingOutcomeRating(rec)) ?? null : null;
+      setPendingOutcome(pending);
       setMinimumDay(await getMinimumDayStatus(activeDay.id));
       setMinimumDayHydrateOz(await getEffectiveHydrationTotal(activeDay.id));
       setMinimumDayProteinG(await getTotalProteinGrams(activeDay.id));
@@ -571,7 +571,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
     if (busy || !day || !pendingOutcome) return;
     setBusy(true);
     try {
-      await rateOutcome(day.id, pendingOutcome.id, rating);
+      await rateOutcome(pendingOutcome.beyondDayId, pendingOutcome.id, rating);
       setPendingOutcome(null);
     } finally {
       setBusy(false);

@@ -13,6 +13,7 @@ import type {
 } from "../domain/common/types";
 import { DEFAULT_SCHEDULE_PATTERN, deriveScheduledContext, type ScheduledContext } from "../engine/scheduledContext";
 import { parseSchedulePattern } from "../persistence/schedulePatternValidation";
+import { isOutcomeDismissed } from "../persistence/outcomeDismissals";
 
 /**
  * Deterministic "most recent" comparator, shared by every query in this
@@ -511,24 +512,35 @@ export async function getMinimumDayStatus(beyondDayId: string): Promise<MinimumD
   };
 }
 
-export async function getPendingOutcomeRating(beyondDayId: string): Promise<Recommendation | undefined> {
-  // Leverage Implementation 001 (deterministic ordering hardening,
-  // 2026-08-22): Recommendation carries `seq`, so a same-instant tie
-  // (two recommendations issued in the same millisecond) is no longer
-  // resolved by raw timestamp-string comparison alone.
-  const recommendations = (await db.recommendations.where("beyondDayId").equals(beyondDayId).toArray()).sort(
-    (a, b) => byTimeThenSeq(a.issuedAt, a.seq, b.issuedAt, b.seq),
+/**
+ * Most recent recorded-but-unrated Recommendation provably earlier than
+ * the Recommendation currently on TODAY. Searches across BeyondDays; a
+ * rating still belongs to the candidate's original day. Strict `< 0`
+ * deliberately excludes an indistinguishable issuedAt/seq tie because
+ * that row cannot truthfully be called prior.
+ */
+export async function getPendingOutcomeRating(current: Recommendation): Promise<Recommendation | undefined> {
+  const candidates = (await db.recommendations.toArray())
+    .filter(
+      (candidate) =>
+        candidate.id !== current.id &&
+        byTimeThenSeq(candidate.issuedAt, candidate.seq, current.issuedAt, current.seq) < 0 &&
+        !isOutcomeDismissed(candidate.id),
+    )
+    .sort((a, b) => {
+      const byRecency = byTimeThenSeq(b.issuedAt, b.seq, a.issuedAt, a.seq);
+      return byRecency !== 0 ? byRecency : a.id.localeCompare(b.id);
+    });
+
+  const rated = new Set(
+    (await db.outcomes.toArray())
+      .filter((outcome) => outcome.rating !== undefined && outcome.recommendationId !== undefined)
+      .map((outcome) => outcome.recommendationId!),
   );
-  if (recommendations.length < 2) return undefined; // no "last time" without a newer one on screen
 
-  const past = recommendations.slice(0, -1);
-  const outcomes = await db.outcomes.where("beyondDayId").equals(beyondDayId).toArray();
-  const rated = new Set(outcomes.filter((o) => o.rating).map((o) => o.recommendationId));
-
-  for (let i = past.length - 1; i >= 0; i--) {
-    const candidate = past[i]!;
+  for (const candidate of candidates) {
     if (rated.has(candidate.id)) continue;
-    if (await wasRecommendationRecorded(beyondDayId, candidate.id)) return candidate;
+    if (await wasRecommendationRecorded(candidate.beyondDayId, candidate.id)) return candidate;
   }
   return undefined;
 }
