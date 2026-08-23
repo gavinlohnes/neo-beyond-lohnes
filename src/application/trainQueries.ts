@@ -17,8 +17,14 @@
 import { db } from "../persistence/db";
 import { doesSessionAdvanceRotation, suggestNextTemplate } from "../engine/trainSuggestion";
 import { evaluateProgression, type ProgressionSuggestion } from "../engine/progression";
-import { getPrescription } from "../domain/workout/types";
-import type { PerformedSet, SessionType, WorkoutSessionStatus, WorkoutTemplateId } from "../domain/workout/types";
+import { getPrescription, WORKOUT_TEMPLATE_ORDER, WORKOUT_TEMPLATES } from "../domain/workout/types";
+import type {
+  ExercisePrescription,
+  PerformedSet,
+  SessionType,
+  WorkoutSessionStatus,
+  WorkoutTemplateId,
+} from "../domain/workout/types";
 import type { WorkoutSession } from "../domain/common/types";
 
 /**
@@ -139,6 +145,39 @@ export async function getProgressionSuggestion(
     }
   }
   return { recommendation: "NO_HISTORY", reason: "No prior performance recorded for this exercise in this context yet." };
+}
+
+/**
+ * Intelligence Spine — I3 (second-producer generalization proof,
+ * 2026-08-23). TRAIN-domain-owned current-state fetch: the progression
+ * suggestion for every exercise in the static, already-locked STANDARD
+ * catalog (WORKOUT_TEMPLATES) — unfiltered (INCREASE/HOLD/REDUCE/
+ * NO_HISTORY all included; deciding which are advisory-worthy is
+ * engine/advisory.ts's job, not this domain's). Mirrors
+ * intentQueries.ts's getCurrentlyEligibleUnresolvedObligations: the
+ * consuming Intelligence layer receives already-correct current-state
+ * input from the domain that owns it, rather than re-deriving "which
+ * session counts as current" itself — getProgressionSuggestion already
+ * excludes ACTIVE (in-progress) sessions when picking the most recent
+ * evidence, reused here unchanged.
+ *
+ * Deliberately scoped to STANDARD only for this first slice — REDUCED
+ * reuses the same first-two exerciseIds per template with a different set
+ * count, and would only produce near-duplicate signal for the same
+ * exercise; a genuinely separate REDUCED-context sweep is a future
+ * extension, not required to prove the architecture generalizes.
+ */
+export async function getCurrentProgressionSuggestions(): Promise<
+  { prescription: ExercisePrescription; suggestion: ProgressionSuggestion }[]
+> {
+  const results: { prescription: ExercisePrescription; suggestion: ProgressionSuggestion }[] = [];
+  for (const templateId of WORKOUT_TEMPLATE_ORDER) {
+    for (const prescription of WORKOUT_TEMPLATES[templateId].exercises) {
+      const suggestion = await getProgressionSuggestion(templateId, "STANDARD", prescription.exerciseId);
+      results.push({ prescription, suggestion });
+    }
+  }
+  return results;
 }
 
 export interface LastSetInfo {

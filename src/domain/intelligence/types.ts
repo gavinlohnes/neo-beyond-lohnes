@@ -30,8 +30,16 @@ export interface AdvisoryNoteBasisEntry {
  * Which pure interpretation module produced this note — provenance is
  * mandatory, matching Mission/Obligation's own `source` field doctrine
  * (BEYOND never surfaces unattributed interpretation).
+ *
+ * I3 (generalization proof, 2026-08-23): "progression" is the second
+ * independent producer (engine/progression.ts's TRAIN advisory, composed
+ * in engine/advisory.ts), proving this union — and the AdvisoryNote
+ * contract itself — was never Obligation-specific. Each producer stays
+ * ignorant of the others; only this shared type and the application-layer
+ * orchestrator (advisoryQueries.ts's getAdvisoryNotes) know more than one
+ * exists.
  */
-export type AdvisorySourceModule = "obligationRelevance";
+export type AdvisorySourceModule = "obligationRelevance" | "progression";
 
 export interface AdvisoryNote {
   id: string;
