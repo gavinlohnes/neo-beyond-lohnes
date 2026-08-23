@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { BeyondDay, CaptureItem, Recommendation, StateCheckIn } from "../../../domain/common/types";
 import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
@@ -12,6 +12,7 @@ import {
   isAttentionWorthyTier,
 } from "../../../engine/obligationRelevance";
 import { getCurrentlyEligibleUnresolvedObligations, getMissionForObligation } from "../../../application/intentQueries";
+import { satisfyObligation } from "../../../application/intentCommands";
 import { formatLocalDate } from "../../../engine/scheduledContext";
 import type { Mission, Obligation } from "../../../domain/intent/types";
 import {
@@ -217,6 +218,10 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
     mission: Mission;
   } | null>(null);
   const [commitmentsOpen, setCommitmentsOpen] = useState(false);
+  const [commitmentConfirmation, setCommitmentConfirmation] = useState<{ id: string; title: string } | null>(null);
+  const [commitmentFeedback, setCommitmentFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
+  const commitmentFeedbackRef = useRef<HTMLParagraphElement>(null);
+  const commitmentSatisfactionPendingRef = useRef(false);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
@@ -224,6 +229,10 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
     setDaysSinceBackup(getDaysSinceLastBackup());
     void getScheduledContext().then(setScheduledContext);
   }, []);
+
+  useEffect(() => {
+    commitmentFeedbackRef.current?.focus();
+  }, [commitmentFeedback]);
 
   async function refresh() {
     const activeDay = (await getActiveDay()) ?? null;
@@ -491,6 +500,50 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       setJustResolvedCapture({ id: item.id, text: item.text });
       await refresh();
     } finally {
+      setBusy(false);
+    }
+  }
+
+  function requestCommitmentSatisfaction(obligation: Obligation) {
+    if (busy) return;
+    setCommitmentFeedback(null);
+    setCommitmentConfirmation({ id: obligation.id, title: obligation.title });
+  }
+
+  function cancelCommitmentSatisfaction() {
+    if (busy) return;
+    setCommitmentConfirmation(null);
+    setCommitmentFeedback(null);
+  }
+
+  async function confirmCommitmentSatisfaction() {
+    if (busy || commitmentSatisfactionPendingRef.current || !commitmentConfirmation) return;
+    const target = commitmentConfirmation;
+    commitmentSatisfactionPendingRef.current = true;
+    setBusy(true);
+    setCommitmentFeedback(null);
+    try {
+      await satisfyObligation(target.id);
+      setCommitmentConfirmation(null);
+      setCommitmentsOpen(false);
+      await refresh();
+      setCommitmentFeedback({ kind: "SUCCESS", message: `Commitment satisfied: ${target.title}.` });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Could not satisfy the commitment.";
+      const stale = detail.startsWith("OBLIGATION_NOT_FOUND");
+      if (stale) {
+        setCommitmentConfirmation(null);
+        setCommitmentsOpen(false);
+        await refresh();
+      }
+      setCommitmentFeedback({
+        kind: "ERROR",
+        message: stale
+          ? `Could not satisfy ${target.title}: the commitment no longer exists. TODAY has been refreshed.`
+          : `Could not satisfy ${target.title}: ${detail}`,
+      });
+    } finally {
+      commitmentSatisfactionPendingRef.current = false;
       setBusy(false);
     }
   }
@@ -1226,9 +1279,12 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
    * this never competes with the primary recommendation the way a real
    * task list would.
    *
-   * Read-only by design (Drop 02 product ruling): no satisfy/release/
-   * mark-waiting/edit control here. VIEW switches to the MORE tab, where
-   * canonical mutation already lives (Missions & Obligations) — it does
+   * Headline Commitment Completion supersedes Drop 02's entirely-read-only
+   * presentation ruling for one operation only: the exact displayed
+   * Obligation may be marked SATISFIED through the canonical command after
+   * an explicit confirmation. Release/waiting/edit remain management-only.
+   * VIEW switches to the MORE tab, where
+   * full canonical mutation lives (Missions & Obligations) — it does
    * not deep-link to this specific Obligation's detail, since that would
    * require lifting new "pending navigation" state through App.tsx,
    * MoreScreen.tsx, AND IntentScreen.tsx (none of which coordinate
@@ -1277,6 +1333,22 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
             +{otherCount} more unresolved.
           </p>
         )}
+        {commitmentConfirmation?.id === obligation.id && (
+          <div className="fade-in" aria-busy={busy} style={{ marginBottom: 12, padding: 12, border: "1px solid var(--border-subtle)" }}>
+            <p className="tool-label" style={{ marginBottom: 4 }}>CONFIRM SATISFACTION</p>
+            <p className="card-body" style={{ marginBottom: 12 }}>
+              Mark “{obligation.title}” satisfied? This records that the commitment was fulfilled and cannot currently be undone.
+            </p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button className="btn-primary" disabled={busy} onClick={() => void confirmCommitmentSatisfaction()}>
+                CONFIRM SATISFACTION
+              </button>
+              <button className="btn-secondary" disabled={busy} onClick={cancelCommitmentSatisfaction}>
+                CANCEL
+              </button>
+            </div>
+          </div>
+        )}
         <div style={{ display: "flex", gap: 8 }}>
           <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setCommitmentsOpen(false)}>
             CLOSE
@@ -1284,6 +1356,17 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
           {onViewCommitments && (
             <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={onViewCommitments}>
               VIEW
+            </button>
+          )}
+          {!commitmentConfirmation && (
+            <button
+              className="btn-secondary"
+              style={{ width: "auto", padding: "8px 16px" }}
+              aria-label="SATISFY COMMITMENT"
+              disabled={busy}
+              onClick={() => requestCommitmentSatisfaction(obligation)}
+            >
+              SATISFY COMMITMENT
             </button>
           )}
         </div>
@@ -1375,6 +1458,20 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
           territory and visual weight belong to the command surface
           below, not to screen chrome. */}
       <h1 className="eyebrow">BEYOND // TODAY</h1>
+
+      {commitmentFeedback && (
+        <p
+          ref={commitmentFeedbackRef}
+          role={commitmentFeedback.kind === "ERROR" ? "alert" : "status"}
+          aria-live={commitmentFeedback.kind === "ERROR" ? "assertive" : "polite"}
+          tabIndex={-1}
+          className="meta fade-in"
+          style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}
+        >
+          {commitmentFeedback.kind === "SUCCESS" && <ConfirmIcon size={20} />}
+          {commitmentFeedback.message}
+        </p>
+      )}
 
       {!day && (
         <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
