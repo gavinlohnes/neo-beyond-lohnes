@@ -279,6 +279,50 @@ describe("TodayScreen (real browser) — Capture", () => {
   });
 });
 
+describe("TodayScreen (real browser) — Capture to Obligation handoff", () => {
+  it("opens a pre-filled title panel, creates the Obligation, resolves the Capture, and shows confirmation", async () => {
+    const capture = await captureItem("renew the car registration");
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("renew the car registration")).toBeVisible();
+
+    await screen.getByRole("button", { name: "→ OBLIGATION" }).click();
+    const titleInput = screen.getByRole("textbox", { name: "New obligation title" });
+    await expect.element(titleInput).toHaveValue("renew the car registration");
+
+    await screen.getByRole("button", { name: "CREATE OBLIGATION" }).click();
+    await expect.element(screen.getByText(/Obligation created: renew the car registration/)).toBeVisible();
+    // The capture row (with its RESOLVE button) is gone — the item is
+    // resolved, not merely hidden. The same title now legitimately
+    // appears again as the new Obligation's own commitment text, so this
+    // checks row identity (RESOLVE), not the text's absence.
+    await expect.element(screen.getByRole("button", { name: "RESOLVE" })).not.toBeInTheDocument();
+
+    const obligations = await db.obligations.toArray();
+    expect(obligations).toHaveLength(1);
+    expect(obligations[0]).toMatchObject({ title: "renew the car registration", status: "OPEN" });
+    const stored = await db.captureItems.get(capture.id);
+    expect(stored?.status).toBe("RESOLVED");
+  });
+
+  it("cancels back to the plain row without creating anything", async () => {
+    await captureItem("maybe later");
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await screen.getByRole("button", { name: "→ OBLIGATION" }).click();
+    await expect.element(screen.getByRole("textbox", { name: "New obligation title" })).toBeVisible();
+
+    await screen.getByRole("button", { name: "CANCEL" }).click();
+    await expect.element(screen.getByRole("textbox", { name: "New obligation title" })).not.toBeInTheDocument();
+    await expect.element(screen.getByText("maybe later")).toBeVisible();
+    expect(await db.obligations.count()).toBe(0);
+  });
+});
+
 describe("TodayScreen (real browser) — END DAY relevance", () => {
   it("collapses to a quiet Tools row when nothing suggests ending the day", async () => {
     const day = await startDay();

@@ -1,5 +1,5 @@
 import { db } from "../persistence/db";
-import { newId, nextSeq } from "./commands";
+import { newId, nextSeq, resolveCaptureItem } from "./commands";
 import type { DomainEvent } from "../domain/common/types";
 import type { Mission, Obligation } from "../domain/intent/types";
 import {
@@ -140,8 +140,19 @@ export async function archiveMission(missionId: string): Promise<void> {
   });
 }
 
-/** Explicit operator action only — same authority doctrine as createMission. An Obligation may exist without a Mission (Drop 01 section 6). */
-export async function createObligation(input: ObligationInput): Promise<Obligation> {
+/**
+ * Explicit operator action only — same authority doctrine as createMission.
+ * An Obligation may exist without a Mission (Drop 01 section 6).
+ *
+ * `options.sourceCaptureId` (Slice 3, Capture Processing): event-level
+ * provenance only, passed through untouched into the OBLIGATION_CREATED
+ * payload — see that type's doc comment. Every other field/behavior here
+ * is unchanged; this is additive, not a new creation path.
+ */
+export async function createObligation(
+  input: ObligationInput,
+  options?: { sourceCaptureId?: string },
+): Promise<Obligation> {
   const parsed = obligationInputSchema.parse(input);
   if (parsed.missionId) {
     const mission = await db.missions.get(parsed.missionId);
@@ -172,11 +183,45 @@ export async function createObligation(input: ObligationInput): Promise<Obligati
       obligationId: obligation.id,
       title: obligation.title,
       ...(obligation.missionId ? { missionId: obligation.missionId } : {}),
+      ...(options?.sourceCaptureId ? { sourceCaptureId: options.sourceCaptureId } : {}),
     },
     "USER",
     correlationId,
     { obligationId: obligation.id },
   );
+  return obligation;
+}
+
+/**
+ * Capture Processing, Slice 3 (Post-FIELD Capability Acceleration
+ * Campaign) — the smallest explicit handoff from an existing CaptureItem
+ * into a real Obligation. "CAPTURE FIRST -> ORGANIZE LATER" stays intact:
+ * this is never automatic, never triggered by anything but the operator's
+ * own explicit choice, and never infers urgency/due date/Mission linkage
+ * — `input` carries only what the operator actually typed, same as
+ * IntentScreen's own manual create form.
+ *
+ * Ordering is the whole safety story here, matching this codebase's
+ * existing precedent for multi-write commands (submitCheckIn, RESET's
+ * start/complete pair): createObligation happens FIRST and is awaited to
+ * completion before the capture is ever touched, so a validation failure
+ * (bad title, archived Mission) or any other createObligation error
+ * leaves the CaptureItem completely untouched and still OPEN — safely
+ * recoverable, nothing lost. Only on success is the originating capture
+ * resolved, and by then the Obligation (with its sourceCaptureId
+ * provenance) already durably exists.
+ */
+export async function convertCaptureToObligation(
+  captureId: string,
+  input: ObligationInput,
+): Promise<Obligation> {
+  const capture = await db.captureItems.get(captureId);
+  if (!capture) throw new Error(`CAPTURE_NOT_FOUND: no capture item with id ${captureId}`);
+  if (capture.status !== "OPEN") {
+    throw new Error(`CAPTURE_NOT_OPEN: capture ${captureId} is already ${capture.status}.`);
+  }
+  const obligation = await createObligation(input, { sourceCaptureId: captureId });
+  await resolveCaptureItem(captureId);
   return obligation;
 }
 

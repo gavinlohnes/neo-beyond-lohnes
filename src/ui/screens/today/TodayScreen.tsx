@@ -12,7 +12,7 @@ import {
   isAttentionWorthyTier,
 } from "../../../engine/obligationRelevance";
 import { getCurrentlyEligibleUnresolvedObligations, getMissionForObligation } from "../../../application/intentQueries";
-import { satisfyObligation } from "../../../application/intentCommands";
+import { convertCaptureToObligation, satisfyObligation } from "../../../application/intentCommands";
 import { formatLocalDate } from "../../../engine/scheduledContext";
 import type { Mission, Obligation } from "../../../domain/intent/types";
 import {
@@ -179,6 +179,15 @@ export function TodayScreen({
   // replaces the last) — not a resolved-items history browser, which
   // would start pulling Capture toward task management.
   const [justResolvedCapture, setJustResolvedCapture] = useState<{ id: string; text: string } | null>(null);
+  // Capture Processing, Slice 3: the inline "-> OBLIGATION" confirm panel
+  // for a specific capture row (id null when closed), the editable title
+  // (pre-filled from the capture's own text, never auto-submitted), and a
+  // one-line result — same non-undoable SUCCESS/ERROR shape as
+  // commitmentFeedback below, since undoing would mean deleting an
+  // Obligation, which Drop 01 doctrine has no operation for.
+  const [captureConversion, setCaptureConversion] = useState<{ id: string; text: string } | null>(null);
+  const [conversionTitle, setConversionTitle] = useState("");
+  const [captureConversionFeedback, setCaptureConversionFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
   const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
   const [minimumDayHydrateOz, setMinimumDayHydrateOz] = useState(0);
   const [minimumDayProteinG, setMinimumDayProteinG] = useState(0);
@@ -588,6 +597,39 @@ export function TodayScreen({
     }
   }
 
+  function requestCaptureConversion(item: CaptureItem) {
+    if (busy) return;
+    setCaptureConversionFeedback(null);
+    setConversionTitle(item.text);
+    setCaptureConversion({ id: item.id, text: item.text });
+  }
+
+  function cancelCaptureConversion() {
+    if (busy) return;
+    setCaptureConversion(null);
+  }
+
+  async function confirmCaptureConversion() {
+    if (busy || !captureConversion || !conversionTitle.trim()) return;
+    const target = captureConversion;
+    const title = conversionTitle.trim();
+    setBusy(true);
+    setCaptureConversionFeedback(null);
+    try {
+      await convertCaptureToObligation(target.id, { title });
+      setCaptureConversion(null);
+      await refresh();
+      setCaptureConversionFeedback({ kind: "SUCCESS", message: `Obligation created: ${title}` });
+    } catch (error) {
+      setCaptureConversionFeedback({
+        kind: "ERROR",
+        message: error instanceof Error ? error.message : "Could not create the obligation.",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleEnableMinimumDay() {
     if (busy || !day) return;
     setBusy(true);
@@ -721,27 +763,51 @@ export function TodayScreen({
    * copies that could quietly drift.
    */
   function renderCaptureListRow(item: CaptureItem) {
+    const converting = captureConversion?.id === item.id;
     return (
-      <div
-        key={item.id}
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 8,
-          padding: "8px 0",
-          borderTop: "1px solid var(--border-subtle)",
-        }}
-      >
-        <span className="card-body" style={{ margin: 0 }}>{item.text}</span>
-        <button
-          className="btn-secondary"
-          style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: 0 }}
-          disabled={busy}
-          onClick={() => void handleResolveCapture(item)}
-        >
-          RESOLVE
-        </button>
+      <div key={item.id} style={{ padding: "8px 0", borderTop: "1px solid var(--border-subtle)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+          <span className="card-body" style={{ margin: 0 }}>{item.text}</span>
+          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+            <button
+              className="btn-secondary"
+              style={{ width: "auto", padding: "6px 10px", fontSize: 16 }}
+              disabled={busy}
+              onClick={() => (converting ? cancelCaptureConversion() : requestCaptureConversion(item))}
+            >
+              {converting ? "CANCEL" : "→ OBLIGATION"}
+            </button>
+            <button
+              className="btn-secondary"
+              style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
+              disabled={busy}
+              onClick={() => void handleResolveCapture(item)}
+            >
+              RESOLVE
+            </button>
+          </div>
+        </div>
+        {converting && (
+          <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--border-subtle)" }}>
+            <input
+              type="text"
+              className="input"
+              aria-label="New obligation title"
+              style={{ marginBottom: 8 }}
+              value={conversionTitle}
+              disabled={busy}
+              onChange={(e) => setConversionTitle(e.target.value)}
+            />
+            <button
+              className="btn-primary"
+              style={{ width: "100%" }}
+              disabled={busy || !conversionTitle.trim()}
+              onClick={() => void confirmCaptureConversion()}
+            >
+              CREATE OBLIGATION
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -1513,6 +1579,18 @@ export function TodayScreen({
         >
           {commitmentFeedback.kind === "SUCCESS" && <ConfirmIcon size={20} />}
           {commitmentFeedback.message}
+        </p>
+      )}
+
+      {captureConversionFeedback && (
+        <p
+          role={captureConversionFeedback.kind === "ERROR" ? "alert" : "status"}
+          aria-live={captureConversionFeedback.kind === "ERROR" ? "assertive" : "polite"}
+          className="meta fade-in"
+          style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}
+        >
+          {captureConversionFeedback.kind === "SUCCESS" && <ConfirmIcon size={20} />}
+          {captureConversionFeedback.message}
         </p>
       )}
 
