@@ -11,7 +11,7 @@ import {
   hasObligationRequiringAttention,
   isAttentionWorthyTier,
 } from "../../../engine/obligationRelevance";
-import { getUnresolvedObligations } from "../../../application/intentQueries";
+import { getCurrentlyEligibleUnresolvedObligations } from "../../../application/intentQueries";
 import { formatLocalDate } from "../../../engine/scheduledContext";
 import type { Obligation } from "../../../domain/intent/types";
 import {
@@ -200,9 +200,13 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
   // case already earns its full visible presence via existing product
   // truth and is unaffected.
   const [minimumDayOpen, setMinimumDayOpen] = useState(false);
-  // Intent & Commitment Spine, Drop 02: unresolved Obligations, fetched
-  // unconditionally like openCaptureItems above — Obligations are not
-  // day-scoped either (see application/intentQueries.ts).
+  // Intent & Commitment Spine, Drop 02: currently-eligible unresolved
+  // Obligations, fetched unconditionally like openCaptureItems above —
+  // Obligations are not day-scoped either (see application/intentQueries.ts).
+  // Intent Lifecycle Integrity (2026-08-23): sourced from
+  // getCurrentlyEligibleUnresolvedObligations, not getUnresolvedObligations
+  // directly — an Obligation whose parent Mission is ARCHIVED must not
+  // participate in COMMITMENT/ATTENTION (see docs/UX_DECISIONS.md).
   const [unresolvedObligations, setUnresolvedObligations] = useState<Obligation[]>([]);
   const [commitmentsOpen, setCommitmentsOpen] = useState(false);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
@@ -222,7 +226,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
     setOpenCaptureItems(await getOpenCaptureItems());
     // Intent & Commitment Spine, Drop 02: same reasoning — Obligations are
     // not day-scoped either.
-    setUnresolvedObligations(await getUnresolvedObligations());
+    setUnresolvedObligations(await getCurrentlyEligibleUnresolvedObligations());
     if (activeDay) {
       setCheckIn((await getLatestCheckIn(activeDay.id)) ?? null);
       const rec = (await getLatestRecommendation(activeDay.id)) ?? null;

@@ -1,7 +1,7 @@
 import { composeAdvisoryNotesFromObligations } from "../engine/advisory";
 import { formatLocalDate } from "../engine/scheduledContext";
 import type { AdvisoryNote } from "../domain/intelligence/types";
-import { getUnresolvedObligations } from "./intentQueries";
+import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 
 /**
  * Intelligence Spine — I2 (controlled consumption proof, approved
@@ -13,8 +13,15 @@ import { getUnresolvedObligations } from "./intentQueries";
  * deterministic classification remains solely engine/obligationRelevance.ts
  * and engine/advisory.ts's, matching `now`'s default-parameter/injectable
  * pattern already established by application/queries.ts's getScheduledContext.
+ *
+ * Intent Lifecycle Integrity (2026-08-23, see docs/UX_DECISIONS.md):
+ * sources from getCurrentlyEligibleUnresolvedObligations, not
+ * getUnresolvedObligations directly — advisory.ts itself carries no
+ * archived-Mission special case (and must not); Mission-lifecycle
+ * eligibility is Intent & Commitment's own already-correct current-state
+ * truth by the time it reaches this composer.
  */
 export async function getAdvisoryNotes(now: Date = new Date()): Promise<AdvisoryNote[]> {
-  const obligations = await getUnresolvedObligations();
+  const obligations = await getCurrentlyEligibleUnresolvedObligations();
   return composeAdvisoryNotesFromObligations(obligations, formatLocalDate(now));
 }

@@ -2,6 +2,7 @@ import { db } from "../persistence/db";
 import type { DomainEvent } from "../domain/common/types";
 import type { Mission, Obligation } from "../domain/intent/types";
 import { parseMission, parseObligation } from "../persistence/intentValidation";
+import { filterCurrentlyEligibleObligations } from "../engine/obligationEligibility";
 import { byTimeThenSeq } from "./queries";
 
 /**
@@ -48,9 +49,27 @@ export async function getObligations(): Promise<Obligation[]> {
   return sortByCreated(await validObligations());
 }
 
-/** OPEN or WAITING — not yet SATISFIED or RELEASED. */
+/** OPEN or WAITING — not yet SATISFIED or RELEASED. Management/audit semantics: includes Obligations whose parent Mission is ARCHIVED (see getCurrentlyEligibleUnresolvedObligations for the current-attention projection). */
 export async function getUnresolvedObligations(): Promise<Obligation[]> {
   return sortByCreated((await validObligations()).filter((o) => o.status === "OPEN" || o.status === "WAITING"));
+}
+
+/**
+ * Intent Lifecycle Integrity — owner-approved correction (2026-08-23, see
+ * docs/UX_DECISIONS.md). The one reusable Intent-owned projection every
+ * current-attention/intelligence consumer (TODAY commitment/attention,
+ * AdvisoryNotes, and any future one) should read from instead of
+ * getUnresolvedObligations() directly — getUnresolvedObligations() itself
+ * stays unchanged and keeps its literal OPEN/WAITING management meaning
+ * (the Obligations management surface in IntentScreen.tsx intentionally
+ * still uses it directly, since an operator must be able to find and act
+ * on an obligation whose parent Mission was archived, not have it
+ * silently disappear from management).
+ */
+export async function getCurrentlyEligibleUnresolvedObligations(): Promise<Obligation[]> {
+  const [obligations, missions] = await Promise.all([getUnresolvedObligations(), getMissions()]);
+  const missionsById = new Map(missions.map((m) => [m.id, m]));
+  return filterCurrentlyEligibleObligations(obligations, missionsById);
 }
 
 export async function getObligationsForMission(missionId: string): Promise<Obligation[]> {

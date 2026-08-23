@@ -60,6 +60,21 @@ function notFound(kind: "MISSION" | "OBLIGATION", id: string): Error {
   return new Error(`${kind}_NOT_FOUND: no ${kind.toLowerCase()} with id ${id}`);
 }
 
+/**
+ * Intent Lifecycle Integrity — owner-approved correction (2026-08-23, see
+ * docs/UX_DECISIONS.md). Write-side half of the fix: creating or newly
+ * linking an Obligation to an already-ARCHIVED Mission is rejected
+ * outright, rather than silently accepted and later excluded by
+ * intentQueries.ts's getCurrentlyEligibleUnresolvedObligations. Existing
+ * historical links predating this Drop are untouched by this check — it
+ * only ever runs when a caller explicitly supplies a new missionId.
+ */
+function assertMissionActive(mission: Mission): asserts mission is Mission & { status: "ACTIVE" } {
+  if (mission.status === "ARCHIVED") {
+    throw new Error(`MISSION_ARCHIVED: cannot link an obligation to archived mission ${mission.id}.`);
+  }
+}
+
 /** Explicit operator action only (locked doctrine: "the operator retains authority over their creation"). Always source USER — Drop 01 never creates one automatically. */
 export async function createMission(input: MissionInput): Promise<Mission> {
   const parsed = missionInputSchema.parse(input);
@@ -131,6 +146,7 @@ export async function createObligation(input: ObligationInput): Promise<Obligati
   if (parsed.missionId) {
     const mission = await db.missions.get(parsed.missionId);
     if (!mission) throw notFound("MISSION", parsed.missionId);
+    assertMissionActive(mission);
   }
   const now = new Date().toISOString();
   const obligation: Obligation = {
@@ -171,6 +187,7 @@ export async function modifyObligation(obligationId: string, changes: Obligation
   if (parsed.missionId) {
     const mission = await db.missions.get(parsed.missionId);
     if (!mission) throw notFound("MISSION", parsed.missionId);
+    assertMissionActive(mission);
   }
   const updated: Obligation = {
     ...existing,
