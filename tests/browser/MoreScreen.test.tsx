@@ -37,6 +37,7 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await expect.element(screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open WORK SCHEDULE" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open HISTORY" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open REVIEW" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "EXPORT BACKUP" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "SHARE / ARCHIVE" })).toBeVisible();
     await expect.element(screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true })).toBeVisible();
@@ -218,6 +219,16 @@ describe("MoreScreen (real browser) — nested navigation", () => {
     await screen.getByRole("button", { name: "Open HISTORY" }).click();
 
     await expect.element(screen.getByText("MORE // HISTORY", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
+    await expect.element(screen.getByText("Records", { exact: true })).toBeVisible();
+  });
+
+  it("opens Review and returns to MENU", async () => {
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open REVIEW" }).click();
+
+    await expect.element(screen.getByText("MORE // REVIEW", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
     await expect.element(screen.getByText("Records", { exact: true })).toBeVisible();

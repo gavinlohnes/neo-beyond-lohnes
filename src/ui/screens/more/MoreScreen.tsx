@@ -8,6 +8,7 @@ import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { ENGINE_VERSION } from "../../../engine/evaluate";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../../app/buildInfo";
 import { HistoryScreen } from "../history/HistoryScreen";
+import { ReviewScreen } from "../review/ReviewScreen";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
 import { IntentScreen } from "./IntentScreen";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
@@ -21,7 +22,7 @@ import { CollapsibleRow } from "../../components/CollapsibleRow";
 const DATA_SCHEMA = db.verno;
 
 export function MoreScreen() {
-  const [view, setView] = useState<"MENU" | "HISTORY" | "WORK_SCHEDULE" | "INTENT">("MENU");
+  const [view, setView] = useState<"MENU" | "HISTORY" | "REVIEW" | "WORK_SCHEDULE" | "INTENT">("MENU");
   const [days, setDays] = useState(0);
   const [events, setEvents] = useState(0);
   const [recommendations, setRecommendations] = useState(0);
@@ -140,6 +141,21 @@ export function MoreScreen() {
           ← BACK TO MORE
         </button>
         <HistoryScreen />
+      </div>
+    );
+  }
+
+  if (view === "REVIEW") {
+    return (
+      <div className="screen fade-in">
+        <button
+          className="btn-secondary"
+          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
+          onClick={() => setView("MENU")}
+        >
+          ← BACK TO MORE
+        </button>
+        <ReviewScreen />
       </div>
     );
   }
@@ -316,6 +332,11 @@ export function MoreScreen() {
         name="HISTORY"
         summary="Every day and every event, exactly as it happened. Read-only."
         onOpen={() => setView("HISTORY")}
+      />
+      <CollapsibleRow
+        name="REVIEW"
+        summary="What BEYOND recommended, what you decided, and how you rated it. Read-only."
+        onOpen={() => setView("REVIEW")}
       />
 
       {/* FIELD ALPHA Phase 4C: SYSTEM — BEYOND's own state, the first
