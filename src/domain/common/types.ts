@@ -371,6 +371,18 @@ export interface ObligationCreatedPayload {
   obligationId: string;
   title: string;
   missionId?: string;
+  /**
+   * Post-FIELD Capability Acceleration Campaign, Slice 3 (Capture
+   * Processing, 2026-08-23, owner-approved "provenance-tracked"): set
+   * only when this Obligation was created via the explicit CREATE
+   * OBLIGATION handoff from an existing CaptureItem
+   * (application/intentCommands.ts's convertCaptureToObligation).
+   * Event-level provenance only — never a field on the canonical
+   * Obligation record itself, which stays exactly what Drop 01 defined
+   * it as. Absent for every other creation path, including IntentScreen's
+   * own manual "ADD" form.
+   */
+  sourceCaptureId?: string;
 }
 
 export interface ObligationModifiedPayload {
