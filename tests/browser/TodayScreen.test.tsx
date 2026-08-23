@@ -53,6 +53,46 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
   });
 });
 
+describe("TodayScreen (real browser) — accepted recommendation handoff", () => {
+  it("records acceptance without execution, then focuses the existing SHIFT DOWN executor", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, RED);
+    const screen = await render(<TodayScreen />);
+
+    expect(screen.getByText("GO TO SHIFT DOWN", { exact: true }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "I'll do this" }).click();
+    await expect.element(screen.getByText("GO TO SHIFT DOWN", { exact: true })).toBeVisible();
+    expect((await db.events.where("beyondDayId").equals(day.id).toArray()).some((event) => event.type === "SHIFT_DOWN_STARTED")).toBe(false);
+
+    await screen.getByText("GO TO SHIFT DOWN", { exact: true }).click();
+    const start = screen.getByRole("button", { name: "START SHIFT DOWN" }).element();
+    expect(document.activeElement).toBe(start);
+    expect((await db.events.where("beyondDayId").equals(day.id).toArray()).some((event) => event.type === "SHIFT_DOWN_STARTED")).toBe(false);
+  });
+
+  it("reconstructs after remount but disappears permanently once matching execution starts", async () => {
+    const day = await startDay();
+    const { recommendation } = await submitCheckIn(day.id, RED);
+    await recordRecommendation(day.id, recommendation);
+    let screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("GO TO SHIFT DOWN", { exact: true })).toBeVisible();
+
+    await screen.rerender(<></>);
+    await screen.rerender(<TodayScreen />);
+    await expect.element(screen.getByText("GO TO SHIFT DOWN", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "START SHIFT DOWN" }).click();
+    await expect.element(screen.getByText("GO TO SHIFT DOWN", { exact: true })).not.toBeInTheDocument();
+
+    await screen.rerender(<></>);
+    await screen.rerender(<TodayScreen />);
+    expect(screen.getByText("GO TO SHIFT DOWN", { exact: true }).elements()).toHaveLength(0);
+    await expect.element(screen.getByText("SHIFT DOWN IN PROGRESS", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "CANCEL SHIFT DOWN" }).click();
+    await expect.element(screen.getByText("SHIFT DOWN IN PROGRESS", { exact: true })).not.toBeInTheDocument();
+    expect(screen.getByText("GO TO SHIFT DOWN", { exact: true }).elements()).toHaveLength(0);
+  });
+});
+
 describe("TodayScreen // SUIT LAYER 01 (DEC-003) — WHY machinery panel", () => {
   it("is calm at rest — the machinery panel's content is not visible until WHY is opened", async () => {
     const day = await startDay();
@@ -335,7 +375,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     await screen.getByRole("button", { name: "SATISFY COMMITMENT" }).click();
     await screen.getByRole("button", { name: "CONFIRM SATISFACTION" }).click();
     expect((await getObligation(obligation.id))!.status).toBe("SATISFIED");
-    expect(screen.getByRole("button", { name: "Open COMMITMENT" }).elements()).toHaveLength(0);
+    await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).not.toBeInTheDocument();
 
     await screen.rerender(<></>);
     await screen.rerender(<TodayScreen />);

@@ -32,6 +32,7 @@ import {
   describeRecommendationAction,
   describeRecommendationEffect,
   describePriorOutcomeMemory,
+  describeRecommendationHandoff,
   describeRecordedDecision,
   describeTraceLabel,
   describeTraceValue,
@@ -92,6 +93,7 @@ import {
   getLatestCheckIn,
   getLatestRecommendation,
   getRecommendationDecision,
+  getRecommendationHandoff,
   shouldSuggestEndDay,
   getPendingOutcomeRating,
   getPriorOutcomeMemory,
@@ -107,6 +109,7 @@ import {
   type MinimumDayStatus,
   type PriorOutcomeMemory,
   type RecommendationDecision,
+  type RecommendationHandoffTarget,
 } from "../../../application/queries";
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
@@ -136,11 +139,18 @@ export const quickCheckInValues: CheckInValues = {
  * VIEW stops at "switch tabs" rather than deep-linking to the specific
  * Obligation).
  */
-export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => void } = {}) {
+export function TodayScreen({
+  onViewCommitments,
+  onOpenTrain,
+}: {
+  onViewCommitments?: () => void;
+  onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
+} = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [decision, setDecision] = useState<RecommendationDecision | undefined>(undefined);
+  const [recommendationHandoff, setRecommendationHandoff] = useState<RecommendationHandoffTarget | null>(null);
   const [priorOutcomeMemory, setPriorOutcomeMemory] = useState<PriorOutcomeMemory | null>(null);
   const [values, setValues] = useState<PartialCheckInValues>({});
   const [busy, setBusy] = useState(false);
@@ -222,6 +232,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
   const [commitmentFeedback, setCommitmentFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
   const commitmentFeedbackRef = useRef<HTMLParagraphElement>(null);
   const commitmentSatisfactionPendingRef = useRef(false);
+  const shiftDownStartRef = useRef<HTMLButtonElement>(null);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
@@ -253,6 +264,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       const rec = (await getLatestRecommendation(activeDay.id)) ?? null;
       setRecommendation(rec);
       setDecision(rec ? await getRecommendationDecision(activeDay.id, rec.id) : undefined);
+      setRecommendationHandoff(rec ? (await getRecommendationHandoff(rec)) ?? null : null);
       setPriorOutcomeMemory(rec ? (await getPriorOutcomeMemory(rec)) ?? null : null);
       setSuggestEndDay(await shouldSuggestEndDay(activeDay.id));
       const pending = rec ? (await getPendingOutcomeRating(rec)) ?? null : null;
@@ -284,7 +296,23 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
       setWorkPeriodEndedAt(workPeriodEnded ? workPeriodEnded.occurredAt : null);
       setUnresolvedPostShift(await hasUnresolvedPostShift(activeDay.id));
+    } else {
+      setRecommendation(null);
+      setDecision(undefined);
+      setRecommendationHandoff(null);
     }
+  }
+
+  function handleRecommendationHandoff(target: RecommendationHandoffTarget) {
+    if (target === "SHIFT_DOWN") {
+      setShiftDownOpen(true);
+      requestAnimationFrame(() => {
+        shiftDownStartRef.current?.scrollIntoView({ block: "center" });
+        shiftDownStartRef.current?.focus();
+      });
+      return;
+    }
+    onOpenTrain?.(target);
   }
 
   async function handleStartDay() {
@@ -909,7 +937,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
               />
               <span className="meta">min</span>
             </div>
-            <button className="btn-primary" disabled={busy} onClick={() => void handleStartShiftDown()}>
+            <button ref={shiftDownStartRef} className="btn-primary" disabled={busy} onClick={() => void handleStartShiftDown()}>
               START SHIFT DOWN
             </button>
           </>
@@ -1197,9 +1225,24 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
         </details>
         <div style={{ marginTop: isDominant && !isAllClear ? 20 : 12 }}>
           {decision ? (
-            <button className="btn-primary" disabled style={isDominant && !isAllClear ? { fontSize: 18, padding: "18px var(--space-4)" } : undefined}>
-              {describeRecordedDecision(decision)}
-            </button>
+            <>
+              <button className="btn-primary" disabled style={isDominant && !isAllClear ? { fontSize: 18, padding: "18px var(--space-4)" } : undefined}>
+                {describeRecordedDecision(decision)}
+              </button>
+              {recommendationHandoff &&
+                !(recommendationHandoff === "SHIFT_DOWN" && activeShiftDownId !== null) &&
+                (recommendationHandoff === "SHIFT_DOWN" || onOpenTrain) && (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ marginTop: 8 }}
+                    onClick={() => handleRecommendationHandoff(recommendationHandoff)}
+                    aria-label={`${describeRecommendationHandoff(recommendationHandoff)} — does not start the action`}
+                  >
+                    {describeRecommendationHandoff(recommendationHandoff)}
+                  </button>
+                )}
+            </>
           ) : (
             <>
               <div style={{ display: "flex", gap: 8 }}>

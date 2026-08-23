@@ -8,10 +8,19 @@ import {
   describeTraceLabel,
   describeTraceValue,
   describePriorOutcomeMemory,
+  describeRecommendationHandoff,
 } from "../../src/ui/screens/today/recommendationCopy";
 import type { RecommendationKind } from "../../src/domain/common/types";
 
-const actionKinds: RecommendationKind[] = ["STABILIZE", "RECOVER", "EXECUTE_PLANNED_WORK"];
+const actionKinds: RecommendationKind[] = ["STABILIZE", "POST_SHIFT_TRANSITION", "RECOVER", "EXECUTE_PLANNED_WORK"];
+
+describe("describeRecommendationHandoff", () => {
+  it("uses open/go-to language that remains distinct from execution", () => {
+    expect(describeRecommendationHandoff("SHIFT_DOWN")).toBe("GO TO SHIFT DOWN");
+    expect(describeRecommendationHandoff("RECOVERY")).toBe("OPEN RECOVERY ON TRAIN");
+    expect(describeRecommendationHandoff("WORKOUT")).toBe("OPEN WORKOUT ON TRAIN");
+  });
+});
 
 describe("describeRecommendationAction", () => {
   it("uses the same label for every action-kind recommendation — there is only one real accept state", () => {
