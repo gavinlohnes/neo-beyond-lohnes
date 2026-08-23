@@ -222,7 +222,9 @@ GitHub UI without recording the change here.
 
 ## 8. Multi-Agent V1 addendum
 
-Pilot V1 (Claude + Codex) layers onto this same Drop procedure — it does not replace it.
+Pilot V1 (Claude + Codex) layers onto this same Drop procedure — it does not replace it. See
+`docs/agent/BEYOND_ENGINEERING_CONTRACT.md` for the full shared, tool-neutral invariants this
+addendum operationalizes for the Drop workflow specifically.
 
 - **Roles are locked for V1**: Claude = default Builder; Codex = read-only Pre-mortem +
   Independent Reviewer. Codex does not implement during V1; role reversal is out of scope for V1.
