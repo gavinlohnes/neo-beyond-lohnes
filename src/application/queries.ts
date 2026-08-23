@@ -110,6 +110,78 @@ export async function wasRecommendationRecorded(
   return (await getRecommendationDecision(beyondDayId, recommendationId)) !== undefined;
 }
 
+export type RecommendationHandoffTarget = "SHIFT_DOWN" | "RECOVERY" | "WORKOUT";
+
+function handoffTargetForRecommendation(recommendation: Recommendation): RecommendationHandoffTarget | undefined {
+  if (
+    (recommendation.kind === "STABILIZE" || recommendation.kind === "POST_SHIFT_TRANSITION") &&
+    recommendation.suggestedCommand === "START_SHIFT_DOWN"
+  ) return "SHIFT_DOWN";
+  if (recommendation.kind === "RECOVER" && recommendation.suggestedCommand === "RECOVERY_SESSION") return "RECOVERY";
+  if (recommendation.kind === "EXECUTE_PLANNED_WORK" && recommendation.suggestedCommand === "START_WORKOUT") return "WORKOUT";
+  return undefined;
+}
+
+/**
+ * Proves whether the current recommendation's already-recorded ACCEPTED
+ * decision still has an unstarted, existing executor to hand off to.
+ * This reconstructs UI eligibility from persisted truth only; it neither
+ * records navigation intent nor executes the suggested command.
+ *
+ * Same-instant records need distinct seq values to establish an order.
+ * If another recommendation or a matching execution event cannot be
+ * proven earlier/later, the handoff fails closed rather than guessing.
+ */
+export async function getRecommendationHandoff(
+  recommendation: Recommendation,
+): Promise<RecommendationHandoffTarget | undefined> {
+  const target = handoffTargetForRecommendation(recommendation);
+  if (!target) return undefined;
+
+  const recommendations = await db.recommendations
+    .where("beyondDayId")
+    .equals(recommendation.beyondDayId)
+    .toArray();
+  for (const other of recommendations) {
+    if (other.id === recommendation.id) continue;
+    const byTime = other.issuedAt.localeCompare(recommendation.issuedAt);
+    if (byTime > 0) return undefined;
+    if (byTime === 0) {
+      if (other.seq === undefined || recommendation.seq === undefined || other.seq === recommendation.seq) {
+        return undefined;
+      }
+      if (other.seq > recommendation.seq) return undefined;
+    }
+  }
+
+  if ((await getRecommendationDecision(recommendation.beyondDayId, recommendation.id)) !== "ACCEPTED") {
+    return undefined;
+  }
+
+  const events = await db.events.where("beyondDayId").equals(recommendation.beyondDayId).toArray();
+  const matchingStarts = events.filter((event) => {
+    if (target === "SHIFT_DOWN") return event.type === "SHIFT_DOWN_STARTED";
+    if (event.type !== "WORKOUT_STARTED") return false;
+    const sessionType = (event.payload as { sessionType?: string }).sessionType;
+    return target === "RECOVERY"
+      ? sessionType === "RECOVERY"
+      : sessionType === "STANDARD" || sessionType === "REDUCED";
+  });
+
+  for (const event of matchingStarts) {
+    const byTime = event.occurredAt.localeCompare(recommendation.issuedAt);
+    if (byTime > 0) return undefined;
+    if (byTime === 0) {
+      if (event.seq === undefined || recommendation.seq === undefined || event.seq === recommendation.seq) {
+        return undefined;
+      }
+      if (event.seq > recommendation.seq) return undefined;
+    }
+  }
+
+  return target;
+}
+
 export interface PriorOutcomeMemory {
   recommendation: Recommendation;
   decision: RecommendationDecision;

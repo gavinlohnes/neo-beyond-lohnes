@@ -1,5 +1,5 @@
 import type { Outcome, RecommendationKind } from "../../../domain/common/types";
-import type { RecommendationDecision } from "../../../application/queries";
+import type { RecommendationDecision, RecommendationHandoffTarget } from "../../../application/queries";
 
 /**
  * Phase 2 (TODAY as daily command surface): plain-language wording for the
@@ -16,6 +16,12 @@ export function describeRecommendationAction(kind: RecommendationKind): string {
 }
 
 export const DECLINE_LABEL = "Not doing this";
+
+export function describeRecommendationHandoff(target: RecommendationHandoffTarget): string {
+  if (target === "SHIFT_DOWN") return "GO TO SHIFT DOWN";
+  if (target === "RECOVERY") return "OPEN RECOVERY ON TRAIN";
+  return "OPEN WORKOUT ON TRAIN";
+}
 
 /**
  * Clarifies that tapping either button only records a decision — it never

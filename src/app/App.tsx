@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
-import { TrainScreen } from "../ui/screens/train/TrainScreen";
+import { TrainScreen, type TrainDestination } from "../ui/screens/train/TrainScreen";
 import { BodyScreen } from "../ui/screens/body/BodyScreen";
 import { MoreScreen } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
@@ -82,6 +82,12 @@ function AppUpdateBanner() {
 
 export function App() {
   const [tab, setTab] = useState<Tab>("TODAY");
+  const [trainDestination, setTrainDestination] = useState<TrainDestination | null>(null);
+
+  function openTrain(destination: TrainDestination) {
+    setTrainDestination(destination);
+    setTab("TRAIN");
+  }
 
   return (
     <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
@@ -99,8 +105,18 @@ export function App() {
             to the MORE tab (where Missions & Obligations already lives),
             rather than deep-linking to the specific Obligation, which would
             require lifting new state through MoreScreen/IntentScreen too. */}
-        {tab === "TODAY" && <TodayScreen onViewCommitments={() => setTab("MORE")} />}
-        {tab === "TRAIN" && <TrainScreen />}
+        {tab === "TODAY" && (
+          <TodayScreen
+            onViewCommitments={() => setTab("MORE")}
+            onOpenTrain={openTrain}
+          />
+        )}
+        {tab === "TRAIN" && (
+          <TrainScreen
+            destination={trainDestination}
+            onDestinationConsumed={() => setTrainDestination(null)}
+          />
+        )}
         {tab === "BODY" && <BodyScreen />}
         {tab === "MORE" && <MoreScreen />}
       </RootErrorBoundary>
@@ -128,7 +144,10 @@ export function App() {
         {(["TODAY", "TRAIN", "BODY", "MORE"] as Tab[]).map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => {
+              setTrainDestination(null);
+              setTab(t);
+            }}
             aria-current={tab === t ? "page" : undefined}
             style={{
               position: "relative",

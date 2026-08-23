@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ConfirmIcon } from "../../icons/Icon";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
 import type { PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
@@ -76,7 +76,15 @@ interface CompletionSummary {
   advisoryChanges: { name: string; before: string; after: string }[];
 }
 
-export function TrainScreen() {
+export type TrainDestination = "RECOVERY" | "WORKOUT";
+
+export function TrainScreen({
+  destination,
+  onDestinationConsumed,
+}: {
+  destination?: TrainDestination | null;
+  onDestinationConsumed?: () => void;
+} = {}) {
   const [capacity, setCapacity] = useState<Capacity | null>(null);
   const [suggestedTemplate, setSuggestedTemplate] = useState<WorkoutTemplateId>("A");
   const [lastAdvancingTemplate, setLastAdvancingTemplate] = useState<WorkoutTemplateId | null>(null);
@@ -99,11 +107,25 @@ export function TrainScreen() {
   // different exercise out of order via the compact list below.
   const [focusedExerciseId, setFocusedExerciseId] = useState<string | null>(null);
   const [completionSummary, setCompletionSummary] = useState<CompletionSummary | null>(null);
+  const [destinationReady, setDestinationReady] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const recoveryChoiceRef = useRef<HTMLButtonElement>(null);
+  const destinationConsumedRef = useRef(false);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
     void refresh();
   }, []);
+
+  useEffect(() => {
+    if (!destination || !destinationReady || destinationConsumedRef.current) return;
+    destinationConsumedRef.current = true;
+    onDestinationConsumed?.();
+    requestAnimationFrame(() => {
+      if (session || destination === "WORKOUT") headingRef.current?.focus();
+      else recoveryChoiceRef.current?.focus();
+    });
+  }, [destination, destinationReady, session, onDestinationConsumed]);
 
   async function refresh() {
     // Template/variant suggestion don't require a day to already exist —
@@ -117,7 +139,6 @@ export function TrainScreen() {
     setCapacity(cap);
 
     const suggestion = suggestSessionVariant(cap);
-    setChosenVariant(suggestion.variant === "RESET" ? "STANDARD" : suggestion.variant);
     setNoCheckIn(suggestion.noCheckIn);
 
     const nextTemplate = await suggestTemplateForNextWorkout();
@@ -129,6 +150,13 @@ export function TrainScreen() {
 
     const active = activeDay ? ((await getActiveWorkoutSession(activeDay.id)) ?? null) : null;
     setSession(active);
+    setChosenVariant(
+      !active && destination === "RECOVERY"
+        ? "RECOVERY"
+        : suggestion.variant === "RESET"
+          ? "STANDARD"
+          : suggestion.variant,
+    );
     if (active) {
       setSets(await getPerformedSets(active.id));
       await loadExerciseAdvisory(active);
@@ -139,6 +167,8 @@ export function TrainScreen() {
       setRecentSubstitutions({});
       setInputs({});
     }
+
+    setDestinationReady(true);
   }
 
   /**
@@ -468,7 +498,7 @@ export function TrainScreen() {
           reason — freed territory belongs to whatever's actually being
           executed below, not to screen chrome. A real <h1> for correct
           heading structure. */}
-      <h1 className="eyebrow">BEYOND // TRAIN</h1>
+      <h1 ref={headingRef} tabIndex={-1} className="eyebrow">BEYOND // TRAIN</h1>
 
       <ConfirmPanel />
 
@@ -573,6 +603,7 @@ export function TrainScreen() {
             {VARIANT_ORDER.map((v) => (
               <button
                 key={v}
+                ref={v === "RECOVERY" ? recoveryChoiceRef : undefined}
                 type="button"
                 className={`chip ${chosenVariant === v ? "chip--selected" : ""}`}
                 style={{ flex: "none", padding: "8px 14px" }}
