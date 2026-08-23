@@ -102,6 +102,36 @@ signal this register needs updating, not that the code is wrong.
   event-by-event detail is opt-in per day via SHOW/HIDE, so the screen
   stays scannable as history grows.
 
+## Intent & Commitment — Mission archival and Obligation current-attention eligibility
+
+Locked 2026-08-23 (Intent Lifecycle Integrity — Audit + Correction Drop), owner decision, following
+real-device evidence: archived Missions' still-unresolved Obligations were surfacing as live/overdue
+in TODAY's COMMITMENT card and in Intelligence Spine AdvisoryNotes.
+
+- **Option B, approved.** Archiving a Mission (`archiveMission`) stays non-destructive and does not
+  automatically SATISFY or RELEASE its linked Obligations — their `status` is never touched. They
+  remain historically unresolved and remain visible/manageable in the Intent/Obligations management
+  surface (`getUnresolvedObligations`, `IntentScreen`'s UNRESOLVED view, unchanged).
+- However, an OPEN or WAITING Obligation whose linked Mission is `ARCHIVED` is **not currently
+  attention-eligible**: it must not participate in TODAY commitment/attention, AdvisoryNotes, or any
+  future current-intelligence consumer while its parent Mission stays archived. A standalone
+  Obligation (no `missionId`) is never affected by any Mission's lifecycle. An Obligation whose
+  `missionId` cannot be resolved to a live Mission (an unresolved/invalid reference) is treated the
+  same as archived — conservatively excluded, never a confident current-attention signal merely
+  because its own `status` is `OPEN`.
+- This is a pure read-time projection (`engine/obligationEligibility.ts`'s
+  `isObligationCurrentlyEligible`/`filterCurrentlyEligibleObligations`, consumed via
+  `application/intentQueries.ts`'s `getCurrentlyEligibleUnresolvedObligations`) — no schema change,
+  no mutation, no migration of existing records. `getUnresolvedObligations` itself is unchanged and
+  keeps its literal OPEN/WAITING meaning for management purposes.
+- Write-side companion invariant: `createObligation` and `modifyObligation` reject creating or newly
+  linking an Obligation to an already-`ARCHIVED` Mission (`MISSION_ARCHIVED` error). Existing
+  historical links predating this rule are untouched and remain valid/readable — the check only runs
+  when a caller supplies a new `missionId`.
+- Deferred, not implemented now: an explicit disposition flow at archive time (retain / move / satisfy
+  / release each unresolved child) — a future UX enhancement if real use proves it valuable, not
+  required by this Drop.
+
 ## Backup / restore / archival
 
 - **Replace-only restore, preview-before-write, always.** Nothing is

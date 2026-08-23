@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/persistence/db";
-import { createObligation, markObligationWaiting } from "../../src/application/intentCommands";
+import { archiveMission, createMission, createObligation, markObligationWaiting } from "../../src/application/intentCommands";
 import { getAdvisoryNotes } from "../../src/application/advisoryQueries";
 
 /**
@@ -53,5 +53,27 @@ describe("getAdvisoryNotes", () => {
 
     const notes = await getAdvisoryNotes(TODAY);
     expect(notes.map((n) => n.message).sort()).toEqual(["Due today thing — DUE_TODAY", "Overdue thing — OVERDUE"].sort());
+  });
+
+  /**
+   * Intent Lifecycle Integrity — owner-approved correction (2026-08-23,
+   * see docs/UX_DECISIONS.md). This is the exact FIELD-reported defect:
+   * an OVERDUE obligation whose parent Mission has been archived must not
+   * produce an AdvisoryNote, even though it is still status OPEN.
+   */
+  it("an OVERDUE obligation linked to an ARCHIVED Mission produces no AdvisoryNote", async () => {
+    const mission = await createMission({ title: "Old direction" });
+    await createObligation({ title: "Do it", missionId: mission.id, dueAt: "2026-08-01" });
+    await archiveMission(mission.id);
+
+    expect(await getAdvisoryNotes(TODAY)).toEqual([]);
+  });
+
+  it("an OVERDUE obligation linked to a still-ACTIVE Mission is unaffected", async () => {
+    const mission = await createMission({ title: "Live direction" });
+    await createObligation({ title: "Do it", missionId: mission.id, dueAt: "2026-08-01" });
+
+    const notes = await getAdvisoryNotes(TODAY);
+    expect(notes.map((n) => n.message)).toEqual(["Do it — OVERDUE"]);
   });
 });

@@ -6,7 +6,7 @@ import { db } from "../../src/persistence/db";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../src/app/buildInfo";
 import { ENGINE_VERSION } from "../../src/engine/evaluate";
-import { createObligation } from "../../src/application/intentCommands";
+import { archiveMission, createMission, createObligation } from "../../src/application/intentCommands";
 
 /**
  * BEYOND FIELD ALPHA Phase 4 — first real-browser acceptance layer for
@@ -138,6 +138,18 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     expect(screen.container.querySelector(".instrument-cluster")?.textContent).not.toContain("Renew passport");
     // Never rendered as, or inside, a command surface.
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
+  });
+
+  it("Intent Lifecycle Integrity: an OVERDUE obligation linked to an ARCHIVED Mission produces no advisory note", async () => {
+    const mission = await createMission({ title: "Old direction" });
+    await createObligation({ title: "Do it", missionId: mission.id, dueAt: "2020-01-01" });
+    await archiveMission(mission.id);
+
+    const screen = await render(<MoreScreen />);
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
+
+    await expect.element(screen.getByText("Advisory notes", { exact: true })).toBeVisible();
+    expect(screen.getByText("Do it — OVERDUE", { exact: true }).elements()).toHaveLength(0);
   });
 
   it("restore's file input still has no accept filter (Android SAF compatibility, unchanged)", async () => {

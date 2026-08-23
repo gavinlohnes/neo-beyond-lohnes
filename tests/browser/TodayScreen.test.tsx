@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import { startDay, submitCheckIn, startShiftDown, captureItem, logSleep } from "../../src/application/commands";
-import { createObligation, markObligationWaiting } from "../../src/application/intentCommands";
+import { archiveMission, createMission, createObligation, markObligationWaiting } from "../../src/application/intentCommands";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
@@ -204,6 +204,28 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
 
     await screen.getByRole("button", { name: "VIEW" }).click();
     expect(onViewCommitments).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Intent Lifecycle Integrity — owner-approved correction (2026-08-23,
+   * see docs/UX_DECISIONS.md). The exact FIELD-reported defect, on the
+   * primary screen it actually affected: an OVERDUE obligation whose
+   * parent Mission is ARCHIVED must produce no COMMITMENT card and no
+   * Attention slot at all, even though it remains status OPEN.
+   */
+  it("an OVERDUE obligation linked to an ARCHIVED Mission earns no COMMITMENT card and no Attention slot", async () => {
+    const mission = await createMission({ title: "Old direction" });
+    await createObligation({ title: "Renew passport", missionId: mission.id, dueAt: dateOffset(-1) });
+    await archiveMission(mission.id);
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("COMMITMENT", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText(/Renew passport/).elements()).toHaveLength(0);
   });
 
   it("a WAITING obligation never earns Attention, even with a past dueAt", async () => {
