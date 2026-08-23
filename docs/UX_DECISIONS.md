@@ -132,6 +132,24 @@ in TODAY's COMMITMENT card and in Intelligence Spine AdvisoryNotes.
   / release each unresolved child) — a future UX enhancement if real use proves it valuable, not
   required by this Drop.
 
+## Intent & Commitment — TODAY headline completion
+
+Locked 2026-08-23 (TODAY Headline Commitment Completion), owner decision. This supersedes Drop 02's
+presentation ruling that the expanded TODAY commitment is entirely read-only, but only for one
+canonical operation:
+
+- The collapsed headline commitment is unchanged. Its expanded detail offers `SATISFY COMMITMENT`,
+  which uses the exact displayed Obligation's ID and the existing `satisfyObligation` command.
+- Satisfaction means the Obligation was fulfilled and remains distinct from `RELEASE`. TODAY does
+  not expose release, waiting, editing, re-linking, or reopening.
+- Because satisfaction currently has no reopen operation, mutation requires an explicit inline
+  confirmation. Cancellation never mutates.
+- Successful satisfaction refreshes the existing eligible-obligation query and lets the existing
+  deterministic relevance ordering select any next headline. It does not promote an Obligation
+  manually or change Recommendation/DecisionTrace or Attention policy.
+- Archived-Mission and invalid-parent Obligations remain excluded by the current-attention
+  eligibility rule above; this completion action does not weaken Mission lifecycle semantics.
+
 ## Backup / restore / archival
 
 - **Replace-only restore, preview-before-write, always.** Nothing is

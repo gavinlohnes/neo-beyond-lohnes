@@ -11,6 +11,7 @@ import {
   recordRecommendation,
 } from "../../src/application/commands";
 import { archiveMission, createMission, createObligation, markObligationWaiting } from "../../src/application/intentCommands";
+import { getObligation } from "../../src/application/intentQueries";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
@@ -274,7 +275,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
   });
 
-  it("an OVERDUE obligation earns an Attention slot and is inspectable read-only via VIEW", async () => {
+  it("an OVERDUE obligation earns an Attention slot and remains inspectable via VIEW", async () => {
     await createObligation({ title: "Renew passport", dueAt: dateOffset(-1) });
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
@@ -288,11 +289,93 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
 
     await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
     await expect.element(screen.getByText(/Overdue/)).toBeVisible();
-    // Read-only: no satisfy/release/mark-waiting control on TODAY.
-    expect(screen.getByRole("button", { name: "SATISFY" }).elements()).toHaveLength(0);
+    await expect.element(screen.getByRole("button", { name: "SATISFY COMMITMENT" })).toBeVisible();
 
     await screen.getByRole("button", { name: "VIEW" }).click();
     expect(onViewCommitments).toHaveBeenCalledTimes(1);
+  });
+
+  it("requires confirmation, cancellation does not mutate, and confirmation satisfies the exact displayed commitment", async () => {
+    const headline = await createObligation({ title: "Renew passport", dueAt: dateOffset(-2) });
+    const other = await createObligation({ title: "Write the report", dueAt: dateOffset(0) });
+    const day = await startDay();
+    const { recommendation } = await submitCheckIn(day.id, GREEN);
+    const originalTrace = structuredClone(recommendation.trace);
+
+    const screen = await render(<TodayScreen />);
+    expect(screen.getByRole("button", { name: "SATISFY COMMITMENT" }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
+    await screen.getByRole("button", { name: "SATISFY COMMITMENT" }).click();
+
+    await expect.element(screen.getByText(/Mark “Renew passport” satisfied/)).toBeVisible();
+    expect((await getObligation(headline.id))!.status).toBe("OPEN");
+    await screen.getByRole("button", { name: "CANCEL" }).click();
+    expect((await getObligation(headline.id))!.status).toBe("OPEN");
+
+    await screen.getByRole("button", { name: "SATISFY COMMITMENT" }).click();
+    await screen.getByRole("button", { name: "CONFIRM SATISFACTION" }).click();
+    await expect.element(screen.getByRole("status")).toHaveTextContent("Commitment satisfied: Renew passport.");
+    expect(document.activeElement).toBe(screen.getByRole("status").element());
+    expect((await getObligation(headline.id))!.status).toBe("SATISFIED");
+    expect((await getObligation(other.id))!.status).toBe("OPEN");
+    await expect.element(screen.getByText(/Write the report/)).toBeVisible();
+
+    const storedRecommendation = await db.recommendations.get(recommendation.id);
+    expect(storedRecommendation).toMatchObject(recommendation);
+    expect(storedRecommendation!.trace).toEqual(originalTrace);
+  });
+
+  it("persists across remount and removes the commitment when no eligible obligation remains", async () => {
+    const obligation = await createObligation({ title: "Renew passport", dueAt: dateOffset(-1) });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    let screen = await render(<TodayScreen />);
+    await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
+    await screen.getByRole("button", { name: "SATISFY COMMITMENT" }).click();
+    await screen.getByRole("button", { name: "CONFIRM SATISFACTION" }).click();
+    expect((await getObligation(obligation.id))!.status).toBe("SATISFIED");
+    expect(screen.getByRole("button", { name: "Open COMMITMENT" }).elements()).toHaveLength(0);
+
+    await screen.rerender(<></>);
+    await screen.rerender(<TodayScreen />);
+    expect(screen.getByRole("button", { name: "Open COMMITMENT" }).elements()).toHaveLength(0);
+  });
+
+  it("coalesces duplicate confirmation activation into one canonical satisfaction event", async () => {
+    const obligation = await createObligation({ title: "Renew passport", dueAt: dateOffset(-1) });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
+    await screen.getByRole("button", { name: "SATISFY COMMITMENT" }).click();
+    const confirm = screen.getByRole("button", { name: "CONFIRM SATISFACTION" });
+    await Promise.allSettled([confirm.click(), confirm.click()]);
+
+    await expect.element(screen.getByRole("status")).toHaveTextContent("Commitment satisfied: Renew passport.");
+    expect(screen.getByRole("alert").elements()).toHaveLength(0);
+    const satisfactionEvents = (await db.events.where("obligationId").equals(obligation.id).toArray()).filter(
+      (event) => event.type === "OBLIGATION_SATISFIED",
+    );
+    expect(satisfactionEvents).toHaveLength(1);
+  });
+
+  it("reports a stale missing record truthfully, refreshes it away, and does not indicate success", async () => {
+    const obligation = await createObligation({ title: "Renew passport", dueAt: dateOffset(-1) });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
+    await screen.getByRole("button", { name: "SATISFY COMMITMENT" }).click();
+    await db.obligations.delete(obligation.id);
+    await screen.getByRole("button", { name: "CONFIRM SATISFACTION" }).click();
+
+    await expect.element(screen.getByRole("alert")).toHaveTextContent("the commitment no longer exists");
+    expect(document.activeElement).toBe(screen.getByRole("alert").element());
+    expect(screen.getByText(/Commitment satisfied:/).elements()).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "Open COMMITMENT" }).elements()).toHaveLength(0);
   });
 
   /**
