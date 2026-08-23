@@ -219,3 +219,41 @@ to go through PR review); it does not turn every Drop into a mandatory-PR workfl
 To change what's required (e.g. add a second check, or start enforcing for admins too once the
 team grows), re-run the same PUT with an updated payload — don't hand-edit protection in the
 GitHub UI without recording the change here.
+
+## 8. Multi-Agent V1 addendum
+
+Pilot V1 (Claude + Codex) layers onto this same Drop procedure — it does not replace it. See
+`docs/agent/BEYOND_ENGINEERING_CONTRACT.md` for the full shared, tool-neutral invariants this
+addendum operationalizes for the Drop workflow specifically.
+
+- **Roles are locked for V1**: Claude = default Builder; Codex = read-only Pre-mortem +
+  Independent Reviewer. Codex does not implement during V1; role reversal is out of scope for V1.
+- **Baseline**: every task contract records the exact `origin/master` SHA (fetched fresh, never
+  assumed), branch owner, worktree path, and declared expected footprint.
+- **Worktrees**: `git fetch origin master && git worktree add
+  ../beyond-worktrees/<agent>-<slug> -b <branch> origin/master`. One task, one owner, one
+  branch, one worktree.
+- **SERIAL-ONLY seams** (`src/engine/**`, `domain/common/types.ts`, `persistence/**`,
+  `src/ui/screens/today/**`, `src/ui/styles/global.css`): only one implementation owner may
+  modify these concurrently — this does not exclude them from Claude-builder/Codex-reviewer
+  operation, only from two simultaneous builders. Pilot V1's first feature deliberately avoids
+  these seams so the collaboration workflow itself can be validated under controlled conditions
+  — this is a first-pilot choice, not a permanent prohibition.
+- **Review handoff**: Codex reviews from a separate, read-only worktree at the PR's exact commit,
+  working from the task contract + diff only. Targeted adversarial verification by default; full
+  `npm run verify` only when warranted, never concurrently with the builder's own verification
+  run.
+- **No self-merge** — applies to the dual-agent setup transition and to every Pilot V1 Drop:
+  the agent that builds a Drop never merges its own PR. Integration is a distinct, explicitly
+  authorized step, after builder verification + independent review (when applicable) +
+  dispositioned findings + green CI. No admin-bypass of required checks, under any circumstance
+  — §7's admin-bypass path above is explicitly not used during this phase.
+- **Post-merge verification is smoke/deployment-focused** (confirm the merge commit's deploy run
+  succeeds) unless the Drop's risk tier requires more.
+- **Historical-branch disposition**: check `git merge-base <branch> origin/master` before
+  concluding a branch is unmerged from ahead/behind counts alone — no merge-base means a
+  disconnected lineage, requiring capability comparison against the current tree, not a numeric
+  count, before any delete/archive ruling.
+
+This addendum does not itself authorize parallel building — see the locked dual-agent operating
+model for the admission test that will gate that, once Pilot V1 evidence justifies revisiting it.
