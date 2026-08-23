@@ -109,6 +109,41 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
   });
 
+  it("supports direct mobile numeric entry and keyboard progression through a set", async () => {
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    const weightInput = screen.getByRole("textbox", { name: "Set 1 weight in pounds" });
+    const repsInput = screen.getByRole("textbox", { name: "Set 1 reps" });
+
+    expect(weightInput.element().getAttribute("inputmode")).toBe("decimal");
+    expect(repsInput.element().getAttribute("inputmode")).toBe("numeric");
+
+    await weightInput.fill("135");
+    weightInput.element().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    await expect.poll(() => document.activeElement).toBe(repsInput.element());
+
+    await repsInput.fill("10");
+    repsInput.element().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+    await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Set 2 weight in pounds");
+  });
+
+  it("selects a suggested value on focus so direct typing replaces it immediately", async () => {
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    const weightInput = screen.getByRole("textbox", { name: "Set 1 weight in pounds" });
+    await weightInput.fill("135");
+    await screen.getByRole("textbox", { name: "Set 1 reps" }).fill("10");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+
+    const nextWeightInput = screen.getByRole("textbox", { name: "Set 2 weight in pounds" });
+    const nextWeightElement = nextWeightInput.element() as HTMLInputElement;
+    await expect.poll(() => nextWeightElement.value).toBe("135");
+    await expect.poll(() => nextWeightElement.selectionStart).toBe(0);
+    await expect.poll(() => nextWeightElement.selectionEnd).toBe(3);
+  });
+
   it("skipping a set records it as SKIPPED, not as a logged weight", async () => {
     const screen = await startStandardWorkout();
     await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
