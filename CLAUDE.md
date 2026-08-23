@@ -5,6 +5,10 @@ decisions, see `docs/UX_DECISIONS.md`. For the current Drop's own brief, if one 
 use whatever it names as authoritative for its own scope — no single named campaign is
 permanently authoritative here.
 
+For the engineering invariants shared with Codex on this repo (BEYOND's second engineering
+agent), see `docs/agent/BEYOND_ENGINEERING_CONTRACT.md` — this file stays Claude-specific and
+does not duplicate that content.
+
 ## Authority order (use when sources disagree)
 
 1. Direct owner decision.
