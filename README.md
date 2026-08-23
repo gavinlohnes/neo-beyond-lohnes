@@ -22,8 +22,7 @@ Then open the printed local URL. Other scripts:
 ```
 npm run build       # typecheck (tsc -b) + production build (vite build)
 npm run preview      # serve the production build locally, for a real
-                      # cold-start measurement (see .claude/launch.json's
-                      # "beyond-preview" config, port 4174)
+                      # cold-start measurement on port 5173
 npm run typecheck    # tsc -b only
 npm test             # vitest run — full suite, single pass
 npm run test:watch   # vitest, watch mode
@@ -31,13 +30,15 @@ npm run test:watch   # vitest, watch mode
 
 ## Architecture
 
-Strict layering, enforced by convention (no framework-level boundary
-yet, e.g. a lint rule forbidding cross-layer imports — nothing has
-required one so far):
+Strict layering, documented as convention and mechanically checked by
+`npm run check:architecture`. The checker enforces the critical import
+directions described below; two pre-existing UI-to-persistence imports
+(`TodayScreen.tsx` and `MoreScreen.tsx`) are explicitly grandfathered,
+not treated as the preferred pattern for new code:
 
-- **`src/domain`** — pure types only (`BeyondDay`, `StateCheckIn`,
-  `Recommendation`, `DomainEvent`, workout types). No React, no Dexie,
-  no application logic.
+- **`src/domain`** — pure domain types and workout definitions/helpers
+  (`BeyondDay`, `StateCheckIn`, `Recommendation`, `DomainEvent`, workout
+  templates). No React, no Dexie, no application or persistence I/O.
 - **`src/engine`** — deterministic, side-effect-free rule evaluation.
   Same inputs always produce the same output, with a full
   `DecisionTrace` on every recommendation. UI and persistence never
@@ -65,8 +66,9 @@ required one so far):
   (`backup.ts`), restore with format detection (`restore.ts`), and the
   historical-format compatibility importer (`compat/legacyBackup.ts`).
 - **`src/application`** — commands (writes, one per user action) and
-  queries (reads). The UI layer never touches Dexie directly, only
-  `application/*`.
+  queries (reads). New UI data access routes through `application/*`;
+  the two grandfathered direct persistence imports are documented and
+  constrained by the architecture checker.
 - **`src/ui/screens`** — TODAY, TRAIN, BODY, MORE (primary navigation)
   plus HISTORY, nested under MORE (see below).
 
@@ -191,9 +193,10 @@ in the imported payload, since its own write path always produces both.
 npm test
 ```
 
-62 files / 630 tests as of this writing (Vitest, two projects — see
-`vitest.config.ts`). The "node" project (everything below except
-`tests/browser`) runs in a plain Node environment — no jsdom,
+68 files / 706 tests at the verified baseline commit `6a6391e`
+(50 files / 559 tests in the Node project; 18 files / 147 tests in the
+browser project). See `vitest.config.ts`. The "node" project (everything
+below except `tests/browser`) runs in a plain Node environment — no jsdom,
 `fake-indexeddb` standing in for IndexedDB; see `tests/setup.ts` for the
 polyfills this requires, notably that `vi.useFakeTimers()` must be
 scoped to `{ toFake: ["Date"] }` or it deadlocks `fake-indexeddb`'s

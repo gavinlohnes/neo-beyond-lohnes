@@ -6,7 +6,26 @@ the codebase. Every claim below is backed by direct repository inspection,
 test output, or schema evidence gathered on the date of writing — not
 assumption, and not aspiration described elsewhere in chat history.
 
-**Current HEAD:** `95a9670fce6ddae7e2067da4863a5a0923f8630e` (`master`,
+> **Superseded/current-status note (2026-08-22):** This is a historical
+> point-in-time report prepared at HEAD `95a9670`; its present-tense findings,
+> counts, maturity ratings, and recommendations describe that snapshot and
+> must not be read as current repository truth. At the later verified baseline
+> HEAD `6a6391eeb81a358538ad1c3649740ab1e87a3a6e`, `npm run verify` passes:
+> the architecture checker scans 53 source files successfully, Vitest passes
+> 68 files / 706 tests (50 files / 559 tests in Node and 18 files / 147 tests
+> in real Chromium), TypeScript passes, and the production/PWA build succeeds.
+> The current Dexie schema is version 6. Real-browser component rendering and
+> automated accessibility coverage now exist under `tests/browser`; critical
+> layer directions are mechanically enforced by
+> `scripts/check-architecture-boundaries.mjs` (with two documented,
+> grandfathered UI-to-persistence exceptions). PWA configuration is also more
+> deliberate than this snapshot records: explicit update prompting and font
+> precaching are configured. Consult `README.md`, `CLAUDE.md`, the code, and
+> current test/configuration files for present repository truth. The original
+> text below is intentionally preserved as the Harvest Sprint's historical
+> evidence and reasoning rather than silently rewritten after the fact.
+
+**Report snapshot HEAD:** `95a9670fce6ddae7e2067da4863a5a0923f8630e` (`master`,
 up to date with `origin/master`, working tree clean).
 **Deployed:** GitHub Pages, auto-deployed on every push to `master`
 (`.github/workflows/deploy-pages.yml`), base path `/neo-beyond-lohnes/`.
