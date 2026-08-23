@@ -3,6 +3,8 @@ import { db } from "../../../persistence/db";
 import { exportBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
 import { getActiveDay, getDayCount, getEventCount, getRecommendationCount } from "../../../application/queries";
+import { getAdvisoryNotes } from "../../../application/advisoryQueries";
+import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { ENGINE_VERSION } from "../../../engine/evaluate";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../../app/buildInfo";
 import { HistoryScreen } from "../history/HistoryScreen";
@@ -24,6 +26,12 @@ export function MoreScreen() {
   const [events, setEvents] = useState(0);
   const [recommendations, setRecommendations] = useState(0);
   const [activeDayYes, setActiveDayYes] = useState(false);
+  // Intelligence Spine — I2: informational only, DIAGNOSTIC-tier (same
+  // TECHNICAL DETAIL treatment as days/events/recommendations below) —
+  // never a claim, never actionable here. See advisoryQueries.ts and
+  // .claude/rules/engine.md's advisory.ts entry for the one-way boundary
+  // this stays behind.
+  const [advisoryNotes, setAdvisoryNotes] = useState<AdvisoryNote[]>([]);
   const [preview, setPreview] = useState<RestorePreview | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -40,6 +48,7 @@ export function MoreScreen() {
     setEvents(await getEventCount());
     setRecommendations(await getRecommendationCount());
     setActiveDayYes((await getActiveDay()) !== undefined);
+    setAdvisoryNotes(await getAdvisoryNotes());
   }
 
   async function handleExportBackup() {
@@ -368,6 +377,22 @@ export function MoreScreen() {
           <DiagRow label="Days" value={String(days)} />
           <DiagRow label="Events" value={String(events)} />
           <DiagRow label="Recommendations" value={String(recommendations)} />
+          {/* Intelligence Spine — I2 (controlled consumption proof,
+              approved 2026-08-22): same TECHNICAL DETAIL tier as the raw
+              counts above — a real, already-computed derived count, never
+              fabricated telemetry (see this section's own doc comment
+              above on that doctrine). Purely informational: no button, no
+              accept/decline, nothing resembling a Recommendation. Safe
+              when zero — indistinguishable in weight from every other
+              reading here. */}
+          <DiagRow label="Advisory notes" value={String(advisoryNotes.length)} />
+          {advisoryNotes.length > 0 && (
+            <div style={{ marginTop: 4 }}>
+              {advisoryNotes.map((note) => (
+                <p key={note.id} className="meta" style={{ margin: "2px 0" }}>{note.message}</p>
+              ))}
+            </div>
+          )}
         </div>
       </details>
     </div>

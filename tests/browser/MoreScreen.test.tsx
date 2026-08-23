@@ -6,6 +6,7 @@ import { db } from "../../src/persistence/db";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../src/app/buildInfo";
 import { ENGINE_VERSION } from "../../src/engine/evaluate";
+import { createObligation } from "../../src/application/intentCommands";
 
 /**
  * BEYOND FIELD ALPHA Phase 4 — first real-browser acceptance layer for
@@ -102,6 +103,41 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await expect.element(screen.getByText("Days", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Events", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Recommendations", { exact: true })).toBeVisible();
+  });
+
+  it("Intelligence Spine I2: no unresolved obligations -> Advisory notes reads 0, no note text rendered", async () => {
+    const screen = await render(<MoreScreen />);
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
+
+    await expect.element(screen.getByText("Advisory notes", { exact: true })).toBeVisible();
+    expect(screen.getByText(/—\sOVERDUE|—\sDUE_TODAY|—\sDUE_SOON|—\sPLANNED_TODAY/).elements()).toHaveLength(0);
+  });
+
+  it("Intelligence Spine I2: an overdue obligation surfaces a note that is plain text, not a button/command", async () => {
+    await createObligation({ title: "Renew passport", dueAt: "2020-01-01" });
+    const screen = await render(<MoreScreen />);
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
+
+    await expect.element(screen.getByText("Advisory notes", { exact: true })).toBeVisible();
+    const noteEl = screen.getByText("Renew passport — OVERDUE", { exact: true });
+    await expect.element(noteEl).toBeVisible();
+    // Non-commanding, non-interactive: the note itself is a <p>, not a
+    // <button>/<a> — nothing to accept/decline/act on here (it must never
+    // be reachable as a command surface, only ever informational text).
+    expect(noteEl.elements()[0]?.tagName).toBe("P");
+    expect(noteEl.elements()[0]?.closest("button")).toBeNull();
+  });
+
+  it("Intelligence Spine I2: advisory notes are TECHNICAL DETAIL — tucked behind disclosure, not permanently visible, never in .instrument-cluster or dominant", async () => {
+    await createObligation({ title: "Renew passport", dueAt: "2020-01-01" });
+    const screen = await render(<MoreScreen />);
+
+    // Collapsed by default, same as every other diagnostic-tier reading.
+    await expect.element(screen.getByText("Renew passport — OVERDUE", { exact: true })).not.toBeVisible();
+    // Never promoted into the always-visible glance-tier instrument cluster.
+    expect(screen.container.querySelector(".instrument-cluster")?.textContent).not.toContain("Renew passport");
+    // Never rendered as, or inside, a command surface.
+    expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
   });
 
   it("restore's file input still has no accept filter (Android SAF compatibility, unchanged)", async () => {
