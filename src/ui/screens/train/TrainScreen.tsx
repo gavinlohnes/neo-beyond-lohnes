@@ -828,7 +828,10 @@ export function TrainScreen({
                 // dominant-surface primary-action treatment — the single
                 // most important control on the whole screen.
                 return (
-                  <div key={setNumber} style={{ marginBottom: 14 }}>
+                  <div
+                    key={setNumber}
+                    className={`train-set-editor${setNumber === currentSetNumber ? " train-set-editor--current" : ""}`}
+                  >
                     {/* P4: exact repeat in one tap — the primary, fastest path. */}
                     {suggestion && (
                       <button
@@ -840,72 +843,81 @@ export function TrainScreen({
                         SET {setNumber}: SAME AS LAST TIME — {suggestion.weight} lb x {suggestion.reps}
                       </button>
                     )}
-                    {!suggestion && <p className="meta-strong" style={{ marginBottom: 6 }}>Set {setNumber}</p>}
-                    <div className="train-set-entry-row">
-                      <span className="meta train-set-entry-label">WEIGHT</span>
-                      <button
-                        className="btn-secondary train-set-adjust"
-                        aria-label={`Decrease set ${setNumber} weight by ${ex.incrementLbs} pounds`}
-                        onClick={() => adjustWeight(ex.exerciseId, setNumber, -ex.incrementLbs)}
-                      >
-                        -
-                      </button>
-                      <input
-                        ref={(node) => { setInputRefs.current[setInputRefKey(ex.exerciseId, setNumber, "weight")] = node; }}
-                        type="text"
-                        inputMode="decimal"
-                        aria-label={`Set ${setNumber} weight in pounds`}
-                        placeholder="lb"
-                        value={display.weight}
-                        onChange={(e) => patchInput(ex.exerciseId, setNumber, { weight: e.target.value })}
-                        onFocus={(e) => e.currentTarget.select()}
-                        onKeyDown={(e) => {
-                          if (e.key !== "Enter") return;
-                          e.preventDefault();
-                          focusSetInput(ex.exerciseId, setNumber, "reps");
-                        }}
-                        className="input train-set-number-input"
-                      />
-                      <button
-                        className="btn-secondary train-set-adjust"
-                        aria-label={`Increase set ${setNumber} weight by ${ex.incrementLbs} pounds`}
-                        onClick={() => adjustWeight(ex.exerciseId, setNumber, ex.incrementLbs)}
-                      >
-                        +
-                      </button>
-                    </div>
-                    <div className="train-set-entry-row">
-                      <span className="meta train-set-entry-label">REPS</span>
-                      <button
-                        className="btn-secondary train-set-adjust"
-                        aria-label={`Decrease set ${setNumber} reps`}
-                        onClick={() => adjustReps(ex.exerciseId, setNumber, -1)}
-                      >
-                        -
-                      </button>
-                      <input
-                        ref={(node) => { setInputRefs.current[setInputRefKey(ex.exerciseId, setNumber, "reps")] = node; }}
-                        type="text"
-                        inputMode="numeric"
-                        aria-label={`Set ${setNumber} reps`}
-                        placeholder="reps"
-                        value={display.reps}
-                        onChange={(e) => patchInput(ex.exerciseId, setNumber, { reps: e.target.value })}
-                        onFocus={(e) => e.currentTarget.select()}
-                        onKeyDown={(e) => {
-                          if (e.key !== "Enter") return;
-                          e.preventDefault();
-                          void handleLogSet(ex.exerciseId, setNumber);
-                        }}
-                        className="input train-set-number-input"
-                      />
-                      <button
-                        className="btn-secondary train-set-adjust"
-                        aria-label={`Increase set ${setNumber} reps`}
-                        onClick={() => adjustReps(ex.exerciseId, setNumber, 1)}
-                      >
-                        +
-                      </button>
+                    <p className="train-set-heading">
+                      {setNumber === currentSetNumber && <span className="train-current-set-marker">CURRENT</span>}
+                      <span className="meta-strong">Set {setNumber}</span>
+                    </p>
+                    <div className="train-set-fields">
+                      <div className="train-set-field">
+                        <span className="meta train-set-entry-label">WEIGHT <span aria-hidden="true">· LB</span></span>
+                        <input
+                          ref={(node) => { setInputRefs.current[setInputRefKey(ex.exerciseId, setNumber, "weight")] = node; }}
+                          type="text"
+                          inputMode="decimal"
+                          aria-label={`Set ${setNumber} weight in pounds`}
+                          placeholder="lb"
+                          value={display.weight}
+                          onChange={(e) => patchInput(ex.exerciseId, setNumber, { weight: e.target.value })}
+                          onFocus={(e) => e.currentTarget.select()}
+                          onKeyDown={(e) => {
+                            if (e.key !== "Enter") return;
+                            e.preventDefault();
+                            focusSetInput(ex.exerciseId, setNumber, "reps");
+                          }}
+                          className="input train-set-number-input"
+                        />
+                        <div className="train-set-adjustments">
+                          <button
+                            className="btn-secondary train-set-adjust"
+                            aria-label={`Decrease set ${setNumber} weight by ${ex.incrementLbs} pounds`}
+                            onClick={() => adjustWeight(ex.exerciseId, setNumber, -ex.incrementLbs)}
+                          >
+                            −
+                          </button>
+                          <button
+                            className="btn-secondary train-set-adjust"
+                            aria-label={`Increase set ${setNumber} weight by ${ex.incrementLbs} pounds`}
+                            onClick={() => adjustWeight(ex.exerciseId, setNumber, ex.incrementLbs)}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                      <div className="train-set-field">
+                        <span className="meta train-set-entry-label">REPS</span>
+                        <input
+                          ref={(node) => { setInputRefs.current[setInputRefKey(ex.exerciseId, setNumber, "reps")] = node; }}
+                          type="text"
+                          inputMode="numeric"
+                          aria-label={`Set ${setNumber} reps`}
+                          placeholder="reps"
+                          value={display.reps}
+                          onChange={(e) => patchInput(ex.exerciseId, setNumber, { reps: e.target.value })}
+                          onFocus={(e) => e.currentTarget.select()}
+                          onKeyDown={(e) => {
+                            if (e.key !== "Enter") return;
+                            e.preventDefault();
+                            void handleLogSet(ex.exerciseId, setNumber);
+                          }}
+                          className="input train-set-number-input"
+                        />
+                        <div className="train-set-adjustments">
+                          <button
+                            className="btn-secondary train-set-adjust"
+                            aria-label={`Decrease set ${setNumber} reps`}
+                            onClick={() => adjustReps(ex.exerciseId, setNumber, -1)}
+                          >
+                            −
+                          </button>
+                          <button
+                            className="btn-secondary train-set-adjust"
+                            aria-label={`Increase set ${setNumber} reps`}
+                            onClick={() => adjustReps(ex.exerciseId, setNumber, 1)}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <button

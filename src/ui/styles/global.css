@@ -241,34 +241,77 @@ button, input {
   outline-offset: 1px;
 }
 
-/* TRAIN execution: direct numeric entry is the dominant manual path;
-   adjustment buttons remain full touch targets without competing with it. */
-.train-set-entry-row {
+/* TRAIN execution: direct entry owns the visual hierarchy. Each metric
+   reads as one instrument; its two adjustment controls remain full-sized
+   but sit below the value instead of squeezing it from both sides. */
+.train-set-editor {
+  margin-bottom: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.train-set-editor--current {
+  margin-inline: -8px;
+  padding: 14px 8px 10px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-top-color: color-mix(in srgb, var(--accent) 45%, var(--border-subtle));
+}
+
+.train-set-heading {
   display: grid;
-  grid-template-columns: 56px 44px minmax(0, 1fr) 44px;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
 }
 
-.train-set-entry-label {
+.train-current-set-marker {
+  color: var(--text-1);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.train-set-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.train-set-field {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 6px;
   min-width: 0;
 }
 
-.train-set-adjust {
-  width: 44px;
-  min-width: 44px;
-  padding: 0;
-  color: var(--text-2);
+.train-set-entry-label {
+  min-width: 0;
+  text-align: center;
 }
 
 .train-set-number-input {
   min-width: 0;
-  min-height: 52px;
+  min-height: 58px;
   padding-inline: 6px;
   text-align: center;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
+}
+
+.train-set-adjustments {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(44px, 1fr));
+  gap: 6px;
+}
+
+.train-set-adjust {
+  width: 100%;
+  min-width: 44px;
+  padding: 0;
+  color: var(--text-2);
 }
 
 /* Selectable chip — the "pick one of N" pattern used by check-in

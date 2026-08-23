@@ -144,6 +144,22 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     await expect.poll(() => nextWeightElement.selectionEnd).toBe(3);
   });
 
+  it("gives exactly one current set visual dominance and advances that marker after logging", async () => {
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+
+    const currentEditor = () => document.querySelector(".train-set-editor--current");
+    expect(document.querySelectorAll(".train-set-editor--current")).toHaveLength(1);
+    expect(currentEditor()?.textContent).toContain("CURRENTSet 1");
+
+    await screen.getByRole("textbox", { name: "Set 1 weight in pounds" }).fill("135");
+    await screen.getByRole("textbox", { name: "Set 1 reps" }).fill("10");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+
+    await expect.poll(() => currentEditor()?.textContent).toContain("CURRENTSet 2");
+    expect(document.querySelectorAll(".train-set-editor--current")).toHaveLength(1);
+  });
+
   it("skipping a set records it as SKIPPED, not as a logged weight", async () => {
     const screen = await startStandardWorkout();
     await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
