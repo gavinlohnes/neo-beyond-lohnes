@@ -1,7 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
-import { startDay, submitCheckIn, startShiftDown, captureItem, logSleep } from "../../src/application/commands";
+import {
+  startDay,
+  submitCheckIn,
+  startShiftDown,
+  captureItem,
+  logSleep,
+  rateOutcome,
+  recordRecommendation,
+} from "../../src/application/commands";
 import { archiveMission, createMission, createObligation, markObligationWaiting } from "../../src/application/intentCommands";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
@@ -76,6 +84,24 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — WHY machinery panel", () =>
     await expect.element(screen.getByText("Rules evaluated", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/No higher-priority rule matched/)).toBeVisible();
     await expect.element(screen.getByText(/^ENGINE /)).toBeVisible();
+  });
+
+  it("keeps prior outcome memory hidden while WHY is collapsed and reveals it only after WHY is opened", async () => {
+    const day = await startDay();
+    const prior = await submitCheckIn(day.id, GREEN);
+    await recordRecommendation(day.id, prior.recommendation);
+    await rateOutcome(day.id, prior.recommendation.id, "GOOD");
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByText("Previous result", { exact: true })).not.toBeVisible();
+    await expect.element(screen.getByText(/Last time this recommendation was recorded/)).not.toBeVisible();
+
+    await screen.getByText("How BEYOND decided", { exact: true }).click();
+
+    await expect.element(screen.getByText("Previous result", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/NO ACTION RECORDED · GOOD/)).toBeVisible();
   });
 
 });

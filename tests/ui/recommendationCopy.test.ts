@@ -7,6 +7,7 @@ import {
   describeRecordedDecision,
   describeTraceLabel,
   describeTraceValue,
+  describePriorOutcomeMemory,
 } from "../../src/ui/screens/today/recommendationCopy";
 import type { RecommendationKind } from "../../src/domain/common/types";
 
@@ -113,5 +114,20 @@ describe("describeTraceValue", () => {
   it("renders any other real value verbatim", () => {
     expect(describeTraceValue("GREEN")).toBe("GREEN");
     expect(describeTraceValue("energy == 1, stress == 5")).toBe("energy == 1, stress == 5");
+  });
+});
+
+describe("describePriorOutcomeMemory", () => {
+  it.each(["GOOD", "NEUTRAL", "BAD"] as const)("renders an explicit %s rating faithfully", (rating) => {
+    const issuedAt = "2026-08-20T14:30:00.000Z";
+    expect(describePriorOutcomeMemory("ACCEPTED", rating, issuedAt)).toBe(
+      `Last time this recommendation was recorded (${new Date(issuedAt).toLocaleDateString()}): ACCEPTED · ${rating}`,
+    );
+  });
+
+  it("preserves a no-action decision as observational history", () => {
+    expect(describePriorOutcomeMemory("NO_ACTION_RECORDED", "GOOD", "2026-08-19T00:00:00.000Z")).toContain(
+      "NO ACTION RECORDED · GOOD",
+    );
   });
 });

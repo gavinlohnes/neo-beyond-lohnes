@@ -4,6 +4,7 @@ import type {
   CaptureItem,
   DomainEvent,
   HydrationEntry,
+  Outcome,
   Recommendation,
   SchedulePattern,
   StateCheckIn,
@@ -106,6 +107,71 @@ export async function wasRecommendationRecorded(
   recommendationId: string,
 ): Promise<boolean> {
   return (await getRecommendationDecision(beyondDayId, recommendationId)) !== undefined;
+}
+
+export interface PriorOutcomeMemory {
+  recommendation: Recommendation;
+  decision: RecommendationDecision;
+  rating: NonNullable<Outcome["rating"]>;
+  ratedAt: string;
+}
+
+/**
+ * The most recent strictly-earlier recommendation with the exact same
+ * kind that has both an explicit recorded decision and an explicit
+ * GOOD/NEUTRAL/BAD rating. This is read-only history for TODAY's existing
+ * WHY surface — never an Engine input or a prediction.
+ *
+ * Recommendation recency uses the established issuedAt + seq ordering.
+ * A row indistinguishable from current on both fields is excluded because
+ * the data cannot truthfully prove it came first. Multiple ratings are not
+ * expected through the UI; if they exist, the latest recorded rating wins,
+ * with id as a stable final tie-break.
+ */
+export async function getPriorOutcomeMemory(
+  current: Recommendation,
+): Promise<PriorOutcomeMemory | undefined> {
+  const candidates = (await db.recommendations.toArray())
+    .filter(
+      (candidate) =>
+        candidate.id !== current.id &&
+        candidate.kind === current.kind &&
+        byTimeThenSeq(candidate.issuedAt, candidate.seq, current.issuedAt, current.seq) < 0,
+    )
+    .sort((a, b) => {
+      const byRecency = byTimeThenSeq(b.issuedAt, b.seq, a.issuedAt, a.seq);
+      return byRecency !== 0 ? byRecency : a.id.localeCompare(b.id);
+    });
+
+  const ratedOutcomes = (await db.outcomes.toArray())
+    .filter((outcome): outcome is Outcome & { recommendationId: string; rating: NonNullable<Outcome["rating"]> } =>
+      outcome.recommendationId !== undefined && outcome.rating !== undefined,
+    )
+    .sort((a, b) => {
+      const byRecordedAt = b.recordedAt.localeCompare(a.recordedAt);
+      return byRecordedAt !== 0 ? byRecordedAt : a.id.localeCompare(b.id);
+    });
+  const latestRatingByRecommendation = new Map<string, (typeof ratedOutcomes)[number]>();
+  for (const outcome of ratedOutcomes) {
+    if (!latestRatingByRecommendation.has(outcome.recommendationId)) {
+      latestRatingByRecommendation.set(outcome.recommendationId, outcome);
+    }
+  }
+
+  for (const recommendation of candidates) {
+    const outcome = latestRatingByRecommendation.get(recommendation.id);
+    if (!outcome) continue;
+    const decision = await getRecommendationDecision(recommendation.beyondDayId, recommendation.id);
+    if (!decision) continue;
+    return {
+      recommendation,
+      decision,
+      rating: outcome.rating,
+      ratedAt: outcome.recordedAt,
+    };
+  }
+
+  return undefined;
 }
 
 /**

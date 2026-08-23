@@ -1,4 +1,4 @@
-import type { RecommendationKind } from "../../../domain/common/types";
+import type { Outcome, RecommendationKind } from "../../../domain/common/types";
 import type { RecommendationDecision } from "../../../application/queries";
 
 /**
@@ -85,4 +85,14 @@ export function describeTraceValue(value: string | number | boolean): string {
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (value === "") return "—";
   return String(value);
+}
+
+/** Observational history only: names the recorded fact without implying that it predicts the current result. */
+export function describePriorOutcomeMemory(
+  decision: RecommendationDecision,
+  rating: NonNullable<Outcome["rating"]>,
+  issuedAt: string,
+): string {
+  const recordedDate = new Date(issuedAt).toLocaleDateString();
+  return `Last time this recommendation was recorded (${recordedDate}): ${decision.replaceAll("_", " ")} · ${rating}`;
 }

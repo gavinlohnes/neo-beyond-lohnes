@@ -30,6 +30,7 @@ import {
   describeEvidenceBasis,
   describeRecommendationAction,
   describeRecommendationEffect,
+  describePriorOutcomeMemory,
   describeRecordedDecision,
   describeTraceLabel,
   describeTraceValue,
@@ -92,6 +93,7 @@ import {
   getRecommendationDecision,
   shouldSuggestEndDay,
   getPendingOutcomeRating,
+  getPriorOutcomeMemory,
   getScheduledContext,
   getMinimumDayStatus,
   getEffectiveHydrationTotal,
@@ -102,6 +104,7 @@ import {
   hasUnresolvedPostShift,
   getOpenCaptureItems,
   type MinimumDayStatus,
+  type PriorOutcomeMemory,
   type RecommendationDecision,
 } from "../../../application/queries";
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
@@ -137,6 +140,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [decision, setDecision] = useState<RecommendationDecision | undefined>(undefined);
+  const [priorOutcomeMemory, setPriorOutcomeMemory] = useState<PriorOutcomeMemory | null>(null);
   const [values, setValues] = useState<PartialCheckInValues>({});
   const [busy, setBusy] = useState(false);
   const [activeResetId, setActiveResetId] = useState<string | null>(null);
@@ -232,6 +236,7 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
       const rec = (await getLatestRecommendation(activeDay.id)) ?? null;
       setRecommendation(rec);
       setDecision(rec ? await getRecommendationDecision(activeDay.id, rec.id) : undefined);
+      setPriorOutcomeMemory(rec ? (await getPriorOutcomeMemory(rec)) ?? null : null);
       setSuggestEndDay(await shouldSuggestEndDay(activeDay.id));
       const pending = (await getPendingOutcomeRating(activeDay.id)) ?? null;
       setPendingOutcome(pending && !isOutcomeDismissed(pending.id) ? pending : null);
@@ -1111,6 +1116,18 @@ export function TodayScreen({ onViewCommitments }: { onViewCommitments?: () => v
             ))}
 
             <p className="why-selection">{recommendation.trace.selectionReason}</p>
+            {priorOutcomeMemory && (
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
+                <p className="why-group-label">Previous result</p>
+                <p className="card-body">
+                  {describePriorOutcomeMemory(
+                    priorOutcomeMemory.decision,
+                    priorOutcomeMemory.rating,
+                    priorOutcomeMemory.recommendation.issuedAt,
+                  )}
+                </p>
+              </div>
+            )}
             <p className="meta" style={{ marginTop: 8 }}>
               ENGINE {recommendation.trace.engineVersion} · EVALUATED{" "}
               {new Date(recommendation.trace.evaluatedAt).toLocaleTimeString()}
