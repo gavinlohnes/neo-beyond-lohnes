@@ -180,6 +180,26 @@ describe("TodayScreen (real browser) — cross-day outcome follow-up", () => {
     await expect.element(screen.getByText(/NO ACTION RECORDED · GOOD/)).toBeVisible();
   });
 
+  it.each(["GOOD", "NEUTRAL", "BAD"] as const)(
+    "records %s after END DAY while no BeyondDay is active",
+    async (rating) => {
+      const { priorDay, prior, currentDay } = await seedCrossDayFollowUp();
+      await logSleep(currentDay.id, 480);
+      const screen = await render(<TodayScreen />);
+
+      await expect.element(screen.getByText("OUTCOME", { exact: true })).toBeVisible();
+      await screen.getByRole("button", { name: "END DAY" }).click();
+      await expect.element(screen.getByText("No day started yet.", { exact: true })).toBeVisible();
+      await expect.element(screen.getByText("OUTCOME", { exact: true })).toBeVisible();
+
+      await screen.getByRole("button", { name: rating, exact: true }).click();
+      await expect.element(screen.getByText("OUTCOME", { exact: true })).not.toBeInTheDocument();
+      const outcomes = await db.outcomes.where("beyondDayId").equals(priorDay.id).toArray();
+      expect(outcomes).toHaveLength(1);
+      expect(outcomes[0]).toMatchObject({ recommendationId: prior.recommendation.id, rating });
+    },
+  );
+
   it("respects dismissal across a remount", async () => {
     await seedCrossDayFollowUp();
 

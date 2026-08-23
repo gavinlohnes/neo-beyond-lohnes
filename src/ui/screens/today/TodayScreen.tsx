@@ -649,7 +649,7 @@ export function TodayScreen({
   }
 
   async function handleRateOutcome(rating: "GOOD" | "NEUTRAL" | "BAD") {
-    if (busy || !day || !pendingOutcome) return;
+    if (busy || !pendingOutcome) return;
     setBusy(true);
     try {
       await rateOutcome(pendingOutcome.beyondDayId, pendingOutcome.id, rating);
