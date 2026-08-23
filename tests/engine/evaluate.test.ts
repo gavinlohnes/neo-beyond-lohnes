@@ -89,6 +89,27 @@ describe("evaluate — WHY trace", () => {
     const result = evaluate(input({ checkIn: null }));
     expect(result.trace.derived).toEqual([]);
   });
+
+  it("records unresolved post-shift context as an explicit decision input", () => {
+    const result = evaluate(input({ hasUnresolvedPostShift: true }));
+    expect(result.trace.inputs).toContainEqual({ key: "hasUnresolvedPostShift", value: true });
+  });
+
+  it("truthfully explains whether EXECUTE_PLANNED_WORK matched", () => {
+    const matched = evaluate(input({ hasPlannedWork: true }));
+    const matchedRule = matched.trace.matchedRules.find((r) => r.ruleId === "EXECUTE_PLANNED_WORK");
+    expect(matchedRule).toMatchObject({
+      result: true,
+      reason: "GREEN capacity with planned work",
+    });
+
+    const notMatched = evaluate(input({ hasPlannedWork: false }));
+    const notMatchedRule = notMatched.trace.matchedRules.find((r) => r.ruleId === "EXECUTE_PLANNED_WORK");
+    expect(notMatchedRule).toMatchObject({
+      result: false,
+      reason: "GREEN capacity with no planned work",
+    });
+  });
 });
 
 /**

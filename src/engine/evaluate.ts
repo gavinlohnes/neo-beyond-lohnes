@@ -67,9 +67,13 @@ export function evaluate(input: EvaluateInput): Recommendation {
       ruleId: "EXECUTE_PLANNED_WORK",
       result: capacity === "GREEN" && input.hasPlannedWork && !postShiftApplies,
       reason:
-        capacity === "GREEN" && input.hasPlannedWork
+        capacity === "GREEN" && input.hasPlannedWork && !postShiftApplies
           ? "GREEN capacity with planned work"
-          : "GREEN capacity with planned work",
+          : postShiftApplies
+            ? "unresolved post-shift transition outranks planned work"
+            : capacity !== "GREEN"
+              ? `${capacity ?? "unknown"} capacity, not GREEN`
+              : "GREEN capacity with no planned work",
     },
   ];
 
@@ -82,6 +86,7 @@ export function evaluate(input: EvaluateInput): Recommendation {
     inputs: [
       { key: "hasCheckIn", value: hasCheckIn },
       { key: "hasPlannedWork", value: input.hasPlannedWork },
+      { key: "hasUnresolvedPostShift", value: input.hasUnresolvedPostShift },
     ],
     derived: capacity
       ? [
