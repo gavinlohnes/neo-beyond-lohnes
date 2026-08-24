@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/persistence/db";
 import { startDay, submitCheckIn } from "../../src/application/commands";
+import { getLatestCheckIn } from "../../src/application/queries";
+import { deriveCapacity } from "../../src/engine/capacity";
 import {
   abandonWorkout,
   completeRecoverySession,
@@ -71,6 +73,130 @@ describe("startWorkout — RED-capacity override enforcement", () => {
     const day = await startDay();
     await checkIn(day.id, { energy: 1 }); // RED
     await expect(startWorkout(day.id, null, "RECOVERY")).resolves.toBeDefined();
+  });
+});
+
+/**
+ * TRAIN command-layer current-capacity correctness fix: currentCapacity()
+ * in trainCommands.ts previously used `db.checkIns.where("beyondDayId")
+ * .equals(beyondDayId).last()`, which — for a non-unique index — orders by
+ * primary key (a random UUID) among same-day rows, not recorded
+ * chronology. It now reuses application/queries.ts's getLatestCheckIn
+ * (recordedAt + seq ordering), the same canonical query TRAIN's displayed
+ * capacity already reads. Every check-in below is inserted directly via
+ * db.checkIns.add with an id deliberately adversarial to its intended
+ * recordedAt/seq order — alphabetically opposite of chronological order —
+ * so a primary-key-ordering bug would silently pick the wrong row while
+ * the canonical recordedAt/seq ordering picks correctly regardless of id.
+ */
+describe("startWorkout — current-capacity selection uses canonical recorded chronology, not row id order", () => {
+  it("selects the chronologically latest check-in for RED-override enforcement, not primary-key/insertion order", async () => {
+    const day = await startDay();
+    // Alphabetically first id, but the true latest by recordedAt — RED.
+    await db.checkIns.add({
+      id: "aaa-newer-red",
+      beyondDayId: day.id,
+      recordedAt: "2026-08-24T12:00:00.000Z",
+      seq: 2,
+      energy: 1,
+      stress: 3,
+      mood: 3,
+      soreness: 0,
+      alcoholUrge: 0,
+    });
+    // Alphabetically last id, but chronologically earlier — GREEN. A
+    // primary-key-ordered .last() would incorrectly pick this one.
+    await db.checkIns.add({
+      id: "zzz-older-green",
+      beyondDayId: day.id,
+      recordedAt: "2026-08-24T10:00:00.000Z",
+      seq: 1,
+      energy: 3,
+      stress: 3,
+      mood: 3,
+      soreness: 0,
+      alcoholUrge: 0,
+    });
+
+    await expect(startWorkout(day.id, "A", "STANDARD")).rejects.toThrow(/RED_OVERRIDE_NOT_CONFIRMED/);
+  });
+
+  it("does not require RED override when the canonical latest check-in is non-RED, even though an older one was RED", async () => {
+    const day = await startDay();
+    // Alphabetically first id, but the true latest by recordedAt — GREEN.
+    await db.checkIns.add({
+      id: "aaa-newer-green",
+      beyondDayId: day.id,
+      recordedAt: "2026-08-24T12:00:00.000Z",
+      seq: 2,
+      energy: 3,
+      stress: 3,
+      mood: 3,
+      soreness: 0,
+      alcoholUrge: 0,
+    });
+    // Alphabetically last id, but chronologically earlier — RED. A
+    // primary-key-ordered .last() would incorrectly pick this one and
+    // wrongly demand an override.
+    await db.checkIns.add({
+      id: "zzz-older-red",
+      beyondDayId: day.id,
+      recordedAt: "2026-08-24T10:00:00.000Z",
+      seq: 1,
+      energy: 1,
+      stress: 3,
+      mood: 3,
+      soreness: 0,
+      alcoholUrge: 0,
+    });
+
+    await expect(startWorkout(day.id, "A", "STANDARD")).resolves.toBeDefined();
+  });
+
+  it("uses seq as a deterministic tie-break when two check-ins share an identical recordedAt", async () => {
+    const day = await startDay();
+    const sameInstant = "2026-08-24T12:00:00.000Z";
+    // Alphabetically first id, higher seq — the true latest on a genuine tie — RED.
+    await db.checkIns.add({
+      id: "aaa-seq2-red",
+      beyondDayId: day.id,
+      recordedAt: sameInstant,
+      seq: 2,
+      energy: 1,
+      stress: 3,
+      mood: 3,
+      soreness: 0,
+      alcoholUrge: 0,
+    });
+    // Alphabetically last id, lower seq — GREEN. A primary-key-ordered
+    // .last() would incorrectly pick this one on the recordedAt tie.
+    await db.checkIns.add({
+      id: "zzz-seq1-green",
+      beyondDayId: day.id,
+      recordedAt: sameInstant,
+      seq: 1,
+      energy: 3,
+      stress: 3,
+      mood: 3,
+      soreness: 0,
+      alcoholUrge: 0,
+    });
+
+    await expect(startWorkout(day.id, "A", "STANDARD")).rejects.toThrow(/RED_OVERRIDE_NOT_CONFIRMED/);
+  });
+
+  it("command-layer enforcement agrees with the exact same canonical check-in TRAIN's displayed capacity reads", async () => {
+    const day = await startDay();
+    await checkIn(day.id, { energy: 1 }); // RED
+
+    const latest = await getLatestCheckIn(day.id);
+    const displayedCapacity = latest ? deriveCapacity(latest).capacity : null;
+    expect(displayedCapacity).toBe("RED");
+
+    // Command layer must agree with the same canonical latest check-in.
+    await expect(startWorkout(day.id, "A", "STANDARD")).rejects.toThrow(/RED_OVERRIDE_NOT_CONFIRMED/);
+    const session = await startWorkout(day.id, "A", "STANDARD", { overrideConfirmed: true });
+    expect(session.status).toBe("ACTIVE");
   });
 });
 

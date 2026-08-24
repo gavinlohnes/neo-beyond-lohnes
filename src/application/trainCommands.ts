@@ -3,6 +3,7 @@ import { deriveCapacity } from "../engine/capacity";
 import { assertRedOverrideConfirmed } from "../engine/redOverride";
 import { deriveRecoverySessionStatus } from "../engine/trainSuggestion";
 import { logEvent } from "./commands";
+import { getLatestCheckIn } from "./queries";
 import type { Capacity, PerformedSetRaw } from "../domain/common/types";
 import type {
   PerformedSet,
@@ -16,9 +17,18 @@ function newId(): string {
   return crypto.randomUUID();
 }
 
-/** Single source of truth for "what is current capacity" — never trust a caller-supplied value. */
+/**
+ * Single source of truth for "what is current capacity" — never trust a
+ * caller-supplied value. Reuses application/queries.ts's getLatestCheckIn
+ * (recordedAt + seq ordering) rather than Dexie's .last() on a non-unique
+ * beyondDayId index, which orders by primary key (a random UUID) among
+ * same-day rows, not recorded chronology — see getLatestCheckIn's own doc
+ * comment. Using a different ordering here than TRAIN's displayed capacity
+ * (which already reads getLatestCheckIn) let command-layer RED-override
+ * enforcement disagree with what the operator was shown.
+ */
 async function currentCapacity(beyondDayId: string): Promise<Capacity | null> {
-  const checkIn = await db.checkIns.where("beyondDayId").equals(beyondDayId).last();
+  const checkIn = await getLatestCheckIn(beyondDayId);
   return checkIn ? deriveCapacity(checkIn).capacity : null;
 }
 
