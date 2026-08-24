@@ -9,6 +9,8 @@ import {
   logSleep,
   rateOutcome,
   recordRecommendation,
+  setWorkContext,
+  markWorkEnded,
 } from "../../src/application/commands";
 import { archiveMission, createMission, createObligation, markObligationWaiting } from "../../src/application/intentCommands";
 import { getObligation } from "../../src/application/intentQueries";
@@ -241,6 +243,43 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — STATUS operational readout"
     const strip = document.querySelector(".status-strip");
     expect(strip).not.toBeNull();
     expect(strip!.textContent).toContain("GREEN");
+  });
+});
+
+/**
+ * Current Operational Context V1 (bounded proof): the STATUS context
+ * strip's workContext/schedule/post-shift arguments now come from
+ * getCurrentOperationalContext() instead of three separately-assembled
+ * pieces of state. These cases use an explicit WORK/OFF fact and an
+ * explicit unresolved-post-shift fact specifically because
+ * describeContextStrip branches on those before ever consulting the
+ * schedule prediction — so the expected wording is exact and
+ * clock-independent, not dependent on real "now" at test-run time.
+ */
+describe("TodayScreen // Current Operational Context V1 — context-strip wording preserved exactly", () => {
+  it("renders 'Off today' for an explicit OFF work context", async () => {
+    const day = await startDay();
+    await setWorkContext(day.id, "OFF", "MANUAL");
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("No day started yet.")).not.toBeInTheDocument();
+    await vi.waitFor(() => {
+      const strip = document.querySelector(".status-strip");
+      expect(strip?.textContent).toContain("Off today");
+    });
+  });
+
+  it("renders the unresolved-post-shift wording, preempting the schedule phase, for an explicit unresolved WORK_PERIOD_ENDED fact", async () => {
+    const day = await startDay();
+    await setWorkContext(day.id, "WORK", "MANUAL");
+    await markWorkEnded(day.id);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("No day started yet.")).not.toBeInTheDocument();
+    await vi.waitFor(() => {
+      const strip = document.querySelector(".status-strip");
+      expect(strip?.textContent).toContain("Working today — shift ended, not yet shifted down");
+    });
   });
 });
 

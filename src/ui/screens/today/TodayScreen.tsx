@@ -113,6 +113,7 @@ import {
 } from "../../../application/queries";
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
+import { getCurrentOperationalContext, type CurrentOperationalContext } from "../../../application/currentContextQueries";
 
 const BACKUP_NUDGE_THRESHOLD_DAYS = 7;
 
@@ -168,6 +169,13 @@ export function TodayScreen({
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
+  // Current Operational Context V1 (bounded proof): feeds the STATUS
+  // context strip only — every other read above (day, scheduledContext,
+  // unresolvedPostShift) stays exactly as-is for its own other uses
+  // (work-context confirmation source attribution, the schedule
+  // prediction card). Falls back to those existing values while still
+  // loading, so the strip's rendered wording never changes.
+  const [currentContext, setCurrentContext] = useState<CurrentOperationalContext | null>(null);
   const [openCaptureItems, setOpenCaptureItems] = useState<CaptureItem[]>([]);
   const [captureText, setCaptureText] = useState("");
   // Overdrive Phase 17 (Capture 1.1): reopenCaptureItem already existed
@@ -257,6 +265,9 @@ export function TodayScreen({
   async function refresh() {
     const activeDay = (await getActiveDay()) ?? null;
     setDay(activeDay);
+    // A fresh, independently-composed view each refresh — never memoized
+    // across calls, matching every other piece of state in this function.
+    void getCurrentOperationalContext().then(setCurrentContext);
     // Overdrive Phase 10: capture is deliberately not day-scoped ("inbox
     // age is not urgency," and jotting something down shouldn't require a
     // BeyondDay to already exist), so this refreshes unconditionally.
@@ -1617,7 +1628,11 @@ export function TodayScreen({
           quieter than .card--action so it never competes with NOW. */}
       {day && (
         <p className="status-strip">
-          {describeContextStrip(day.workContext, scheduledContext, unresolvedPostShift)}
+          {describeContextStrip(
+            currentContext ? (currentContext.activeDay?.workContext ?? day.workContext) : day.workContext,
+            currentContext ? currentContext.schedulePrediction : scheduledContext,
+            currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
+          )}
           {capacityResult && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
