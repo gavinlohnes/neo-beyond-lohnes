@@ -174,8 +174,23 @@ export function TodayScreen({
   // unresolvedPostShift) stays exactly as-is for its own other uses
   // (work-context confirmation source attribution, the schedule
   // prediction card). Falls back to those existing values while still
-  // loading, so the strip's rendered wording never changes.
+  // loading or on a failed read, so the strip's rendered wording never
+  // changes and a read failure never masquerades as successful context.
   const [currentContext, setCurrentContext] = useState<CurrentOperationalContext | null>(null);
+  // Monotonic request ownership for the currentContext fetch specifically
+  // (same pattern as SearchScreen.tsx's request-id guard): refresh() can
+  // overlap itself (e.g. two rapid actions each ending in `await refresh()`),
+  // so only the result of the LATEST currentContext request may ever be
+  // installed — an older one arriving late is discarded, never allowed to
+  // overwrite a newer result or silently reapply a previous day's context.
+  const currentContextRequestIdRef = useRef(0);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
   const [openCaptureItems, setOpenCaptureItems] = useState<CaptureItem[]>([]);
   const [captureText, setCaptureText] = useState("");
   // Overdrive Phase 17 (Capture 1.1): reopenCaptureItem already existed
@@ -267,7 +282,25 @@ export function TodayScreen({
     setDay(activeDay);
     // A fresh, independently-composed view each refresh — never memoized
     // across calls, matching every other piece of state in this function.
-    void getCurrentOperationalContext().then(setCurrentContext);
+    // Composed from THIS refresh's own already-resolved `activeDay` (not
+    // re-fetched independently), so it can never disagree with `day` about
+    // which day is current. Still request-id guarded: two overlapping
+    // refresh() calls (e.g. two rapid actions) can have their
+    // currentContext reads settle out of order, so only the result whose
+    // id still matches the ref when it settles is installed. A rejected
+    // read is handled explicitly — cleared to null (never left stale, never
+    // presented as if it succeeded) so the render falls back to the
+    // pre-V1 day/scheduledContext/unresolvedPostShift state deliberately.
+    const contextRequestId = ++currentContextRequestIdRef.current;
+    getCurrentOperationalContext(activeDay ? { id: activeDay.id, workContext: activeDay.workContext } : null)
+      .then((result) => {
+        if (!mountedRef.current || contextRequestId !== currentContextRequestIdRef.current) return;
+        setCurrentContext(result);
+      })
+      .catch(() => {
+        if (!mountedRef.current || contextRequestId !== currentContextRequestIdRef.current) return;
+        setCurrentContext(null);
+      });
     // Overdrive Phase 10: capture is deliberately not day-scoped ("inbox
     // age is not urgency," and jotting something down shouldn't require a
     // BeyondDay to already exist), so this refreshes unconditionally.
@@ -1629,7 +1662,7 @@ export function TodayScreen({
       {day && (
         <p className="status-strip">
           {describeContextStrip(
-            currentContext ? (currentContext.activeDay?.workContext ?? day.workContext) : day.workContext,
+            currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
             currentContext ? currentContext.schedulePrediction : scheduledContext,
             currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
           )}

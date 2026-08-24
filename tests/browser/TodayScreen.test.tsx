@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import {
   startDay,
+  endDay,
   submitCheckIn,
   startShiftDown,
   captureItem,
@@ -15,9 +16,77 @@ import {
 import { archiveMission, createMission, createObligation, markObligationWaiting } from "../../src/application/intentCommands";
 import { getObligation } from "../../src/application/intentQueries";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
+import type { ScheduledContext } from "../../src/engine/scheduledContext";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 import { db } from "../../src/persistence/db";
+import {
+  getCurrentOperationalContext,
+  type CurrentOperationalContext,
+} from "../../src/application/currentContextQueries";
+
+/**
+ * Current Operational Context V1: getCurrentOperationalContext is
+ * module-mocked so the async-ownership tests below can control retrieval
+ * timing with deferred promises rather than racing real Dexie I/O. Every
+ * other describe block in this file needs the real composed behavior, so
+ * a per-test beforeEach resets the mock to delegate straight through to
+ * it — only the async-ownership tests override that default per-test.
+ * Same pattern as tests/browser/SearchScreen.test.tsx's searchAll mock.
+ */
+vi.mock("../../src/application/currentContextQueries", () => ({ getCurrentOperationalContext: vi.fn() }));
+
+const currentContextMock = vi.mocked(getCurrentOperationalContext);
+let realGetCurrentOperationalContext: typeof getCurrentOperationalContext;
+
+beforeAll(async () => {
+  const actual = await vi.importActual<typeof import("../../src/application/currentContextQueries")>(
+    "../../src/application/currentContextQueries",
+  );
+  realGetCurrentOperationalContext = actual.getCurrentOperationalContext;
+});
+
+beforeEach(() => {
+  // mockClear() resets call history (so a later test's "has it been called
+  // yet" checks aren't spuriously satisfied by a prior test's residual
+  // calls) without disturbing per-test mockReturnValueOnce/
+  // mockImplementationOnce queuing done later in each test body.
+  currentContextMock.mockClear();
+  currentContextMock.mockImplementation((activeDay, now) => realGetCurrentOperationalContext(activeDay, now));
+});
+
+/** A promise whose settlement a test controls, standing in for real Dexie retrieval timing. */
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
+function trackUnhandledRejections() {
+  const reasons: unknown[] = [];
+  const onUnhandledRejection = (event: PromiseRejectionEvent) => reasons.push(event.reason);
+  window.addEventListener("unhandledrejection", onUnhandledRejection);
+  return {
+    reasons,
+    async settle() {
+      await new Promise((r) => setTimeout(r, 50));
+    },
+    stop() {
+      window.removeEventListener("unhandledrejection", onUnhandledRejection);
+    },
+  };
+}
+
+const FIXED_PREDICTION: ScheduledContext = { week: "A", todayIsScheduledWorkDay: true, phase: "SCHEDULED_SHIFT" };
+
+async function submitCapture(screen: Awaited<ReturnType<typeof render>>, text: string) {
+  await screen.getByPlaceholder("Capture a thought...").fill(text);
+  await screen.getByRole("button", { name: "CAPTURE" }).click();
+}
 
 /**
  * Harvest Checkpoint 4: real-browser acceptance layer for TODAY —
@@ -280,6 +349,124 @@ describe("TodayScreen // Current Operational Context V1 — context-strip wordin
       const strip = document.querySelector(".status-strip");
       expect(strip?.textContent).toContain("Working today — shift ended, not yet shifted down");
     });
+  });
+});
+
+describe("TodayScreen // Current Operational Context V1 — async request ownership", () => {
+  it("ignores an older context request that resolves after a newer one from the same refresh cycle, across three overlapping requests in any resolution order", async () => {
+    const day = await startDay();
+    const first = createDeferred<CurrentOperationalContext>();
+    const second = createDeferred<CurrentOperationalContext>();
+    const third = createDeferred<CurrentOperationalContext>();
+    currentContextMock
+      .mockImplementationOnce(() => first.promise) // mount refresh
+      .mockImplementationOnce(() => second.promise) // 1st capture's refresh
+      .mockImplementationOnce(() => third.promise); // 2nd capture's refresh
+
+    const screen = await render(<TodayScreen />);
+    await submitCapture(screen, "first capture");
+    await submitCapture(screen, "second capture");
+
+    // Resolve out of request order: second (middle) first, then first
+    // (oldest), then third (truly latest) last — only third's value may
+    // ever be reflected, regardless of arrival order.
+    second.resolve({ workContext: "WORK", hasUnresolvedPostShift: false, schedulePrediction: FIXED_PREDICTION });
+    await new Promise((r) => setTimeout(r, 20));
+    first.resolve({ workContext: "OFF", hasUnresolvedPostShift: false, schedulePrediction: FIXED_PREDICTION });
+    await new Promise((r) => setTimeout(r, 20));
+    third.resolve({ workContext: "WORK", hasUnresolvedPostShift: true, schedulePrediction: FIXED_PREDICTION });
+
+    await vi.waitFor(() => {
+      const strip = document.querySelector(".status-strip");
+      expect(strip?.textContent).toContain("Working today — shift ended, not yet shifted down");
+    });
+  });
+
+  it("never lets context assembled for a prior BeyondDay render once a later day is current", async () => {
+    const dayA = await startDay();
+    const first = createDeferred<CurrentOperationalContext>(); // belongs to day A
+    const second = createDeferred<CurrentOperationalContext>(); // belongs to day B
+    currentContextMock.mockImplementationOnce(() => first.promise).mockImplementationOnce(() => second.promise);
+
+    const screen = await render(<TodayScreen />);
+
+    // Day transitions entirely outside the component — refresh() will
+    // independently discover day B is now active via its own real
+    // getActiveDay() read (unmocked) the next time it runs.
+    await endDay(dayA.id, "EXPLICIT_END_DAY");
+    await startDay();
+    await submitCapture(screen, "after day transition");
+
+    second.resolve({ workContext: "OFF", hasUnresolvedPostShift: false, schedulePrediction: FIXED_PREDICTION });
+    await vi.waitFor(() => {
+      expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
+    });
+
+    // Day A's stale context arrives late — must not overwrite day B's.
+    first.resolve({ workContext: "WORK", hasUnresolvedPostShift: true, schedulePrediction: FIXED_PREDICTION });
+    await new Promise((r) => setTimeout(r, 50));
+    const strip = document.querySelector(".status-strip");
+    expect(strip?.textContent).toContain("Off today");
+    expect(strip?.textContent).not.toContain("shift ended, not yet shifted down");
+  });
+
+  it("produces no unhandled rejection when a context request fails, and clears a stale successful context rather than continuing to show it", async () => {
+    const day = await startDay();
+    const tracker = trackUnhandledRejections();
+    currentContextMock
+      .mockResolvedValueOnce({ workContext: "OFF", hasUnresolvedPostShift: false, schedulePrediction: FIXED_PREDICTION })
+      .mockRejectedValueOnce(new Error("boom"));
+
+    const screen = await render(<TodayScreen />);
+    await vi.waitFor(() => {
+      expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
+    });
+
+    await submitCapture(screen, "triggers the failing refresh");
+    await tracker.settle();
+
+    expect(tracker.reasons).toEqual([]);
+    // The prior successful ("Off today") context must not keep being shown
+    // as if it were still current once the request that would refresh it
+    // has failed — it falls back to the pre-V1 state path instead (day
+    // started with the default UNKNOWN work context, so never "Off today").
+    expect(document.querySelector(".status-strip")?.textContent).not.toContain("Off today");
+    tracker.stop();
+  });
+
+  it("does not update state or leak an unhandled rejection when unmounted while a context request is pending (success arrives late)", async () => {
+    await startDay();
+    const deferred = createDeferred<CurrentOperationalContext>();
+    currentContextMock.mockReturnValueOnce(deferred.promise);
+    const tracker = trackUnhandledRejections();
+
+    const screen = await render(<TodayScreen />);
+    // Wait for the request to actually be in flight (mock called, .then/.catch
+    // attached) before unmounting — otherwise unmount could race ahead of
+    // refresh()'s own earlier real getActiveDay() await.
+    await vi.waitFor(() => expect(currentContextMock).toHaveBeenCalled());
+    await screen.unmount();
+
+    deferred.resolve({ workContext: "OFF", hasUnresolvedPostShift: false, schedulePrediction: FIXED_PREDICTION });
+    await tracker.settle();
+    expect(tracker.reasons).toEqual([]);
+    tracker.stop();
+  });
+
+  it("does not update state or leak an unhandled rejection when unmounted while a context request is pending (rejection arrives late)", async () => {
+    await startDay();
+    const deferred = createDeferred<CurrentOperationalContext>();
+    currentContextMock.mockReturnValueOnce(deferred.promise);
+    const tracker = trackUnhandledRejections();
+
+    const screen = await render(<TodayScreen />);
+    await vi.waitFor(() => expect(currentContextMock).toHaveBeenCalled());
+    await screen.unmount();
+
+    deferred.reject(new Error("stale failure after unmount"));
+    await tracker.settle();
+    expect(tracker.reasons).toEqual([]);
+    tracker.stop();
   });
 });
 
