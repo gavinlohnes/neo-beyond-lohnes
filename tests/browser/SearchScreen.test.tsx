@@ -129,6 +129,50 @@ describe("SearchScreen (real browser) — accessibility", () => {
     results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
   });
+
+  it("exposes each search status message as a polite ARIA status region, without moving focus or alarming assistive tech", async () => {
+    const deferred = createDeferred<SearchResult[]>();
+    const spy = searchAllMock.mockReturnValue(deferred.promise);
+
+    const screen = await render(<SearchScreen />);
+    const input = screen.getByRole(SEARCH_INPUT.role, { name: SEARCH_INPUT.name });
+
+    // Initial prompt.
+    await expect
+      .element(screen.getByRole("status"))
+      .toHaveTextContent("Type to search Missions, Obligations, and Capture.");
+    let results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
+    expect(results.violations).toEqual([]);
+
+    // Pending — polite status, not an alert; focus stays on the input.
+    await input.fill("deck");
+    await expect.element(screen.getByRole("status")).toHaveTextContent("Searching…");
+    await expect.element(screen.getByRole("alert")).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(input.element());
+    results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
+    expect(results.violations).toEqual([]);
+
+    // Failure — still a polite status, never an assertive alert.
+    deferred.reject(new Error("boom"));
+    await expect.element(screen.getByRole("status")).toHaveTextContent("Search failed. Try again.");
+    await expect.element(screen.getByRole("alert")).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(input.element());
+    results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
+    expect(results.violations).toEqual([]);
+
+    // Genuine no-match — polite status.
+    spy.mockResolvedValueOnce([]);
+    await input.fill("nothing-matches-this");
+    await expect.element(screen.getByRole("status")).toHaveTextContent('No matches for "nothing-matches-this".');
+    expect(document.activeElement).toBe(input.element());
+
+    // Cleared — back to the initial polite status.
+    await input.fill("");
+    await expect
+      .element(screen.getByRole("status"))
+      .toHaveTextContent("Type to search Missions, Obligations, and Capture.");
+    expect(document.activeElement).toBe(input.element());
+  });
 });
 
 describe("SearchScreen (real browser) — request lifecycle", () => {

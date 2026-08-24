@@ -77,11 +77,25 @@ export function SearchScreen() {
         style={{ marginBottom: 16 }}
       />
 
-      {!searched && !loading && !error && <p className="empty-state">Type to search Missions, Obligations, and Capture.</p>}
-      {loading && <p className="empty-state">Searching…</p>}
-      {error && <p className="empty-state">Search failed. Try again.</p>}
+      {!searched && !loading && !error && (
+        <p className="empty-state" role="status" aria-live="polite">
+          Type to search Missions, Obligations, and Capture.
+        </p>
+      )}
+      {loading && (
+        <p className="empty-state" role="status" aria-live="polite">
+          Searching…
+        </p>
+      )}
+      {error && (
+        <p className="empty-state" role="status" aria-live="polite">
+          Search failed. Try again.
+        </p>
+      )}
       {!loading && !error && searched && results.length === 0 && (
-        <p className="empty-state">No matches for "{query.trim()}".</p>
+        <p className="empty-state" role="status" aria-live="polite">
+          No matches for "{query.trim()}".
+        </p>
       )}
 
       {!loading &&
