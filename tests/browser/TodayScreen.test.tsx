@@ -24,6 +24,8 @@ import {
   getCurrentOperationalContext,
   type CurrentOperationalContext,
 } from "../../src/application/currentContextQueries";
+import { getActiveDay } from "../../src/application/queries";
+import type { BeyondDay } from "../../src/domain/common/types";
 
 /**
  * Current Operational Context V1: getCurrentOperationalContext is
@@ -36,14 +38,36 @@ import {
  */
 vi.mock("../../src/application/currentContextQueries", () => ({ getCurrentOperationalContext: vi.fn() }));
 
+/**
+ * refresh() lifecycle correction: getActiveDay() is also module-mocked
+ * (partially — every other export of application/queries stays real) so
+ * the async-ownership tests can control ITS resolution order directly,
+ * not just getCurrentOperationalContext()'s. The root defect this guards
+ * against was refresh() only capturing request ownership after its
+ * getActiveDay() await, letting an older refresh whose read simply
+ * resolves later regress `day`/`currentContext` — so these tests need to
+ * be able to make an older refresh's getActiveDay() settle after a newer
+ * refresh's, deterministically.
+ */
+vi.mock("../../src/application/queries", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/application/queries")>();
+  return { ...actual, getActiveDay: vi.fn() };
+});
+
 const currentContextMock = vi.mocked(getCurrentOperationalContext);
 let realGetCurrentOperationalContext: typeof getCurrentOperationalContext;
+const getActiveDayMock = vi.mocked(getActiveDay);
+let realGetActiveDay: typeof getActiveDay;
 
 beforeAll(async () => {
   const actual = await vi.importActual<typeof import("../../src/application/currentContextQueries")>(
     "../../src/application/currentContextQueries",
   );
   realGetCurrentOperationalContext = actual.getCurrentOperationalContext;
+  const actualQueries = await vi.importActual<typeof import("../../src/application/queries")>(
+    "../../src/application/queries",
+  );
+  realGetActiveDay = actualQueries.getActiveDay;
 });
 
 beforeEach(() => {
@@ -53,6 +77,8 @@ beforeEach(() => {
   // mockImplementationOnce queuing done later in each test body.
   currentContextMock.mockClear();
   currentContextMock.mockImplementation((activeDay, now) => realGetCurrentOperationalContext(activeDay, now));
+  getActiveDayMock.mockClear();
+  getActiveDayMock.mockImplementation(() => realGetActiveDay());
 });
 
 /** A promise whose settlement a test controls, standing in for real Dexie retrieval timing. */
@@ -353,6 +379,89 @@ describe("TodayScreen // Current Operational Context V1 — context-strip wordin
 });
 
 describe("TodayScreen // Current Operational Context V1 — async request ownership", () => {
+  it("decides ownership by refresh invocation order, not by which refresh's getActiveDay() settles first — an older refresh must never regain ownership of day or currentContext", async () => {
+    const dayA = await startDay();
+    await setWorkContext(dayA.id, "WORK", "MANUAL");
+
+    // Mount refresh (A) begins first — hold its getActiveDay() pending so
+    // it settles LAST, after the second refresh's own getActiveDay().
+    const dayADeferred = createDeferred<BeyondDay | undefined>();
+    getActiveDayMock.mockImplementationOnce(() => dayADeferred.promise);
+
+    const screen = await render(<TodayScreen />);
+    await vi.waitFor(() => expect(getActiveDayMock).toHaveBeenCalledTimes(1));
+
+    // Day transitions entirely outside the still-pending mount refresh.
+    await endDay(dayA.id, "EXPLICIT_END_DAY");
+    const dayBBeforeWorkContext = await startDay();
+    await setWorkContext(dayBBeforeWorkContext.id, "OFF", "MANUAL");
+    // Re-read from the real query (bypassing the mock) so the object handed
+    // to getActiveDayMock below reflects the just-applied "OFF" write —
+    // startDay()'s own return value is a pre-write snapshot.
+    const dayB = (await realGetActiveDay())!;
+
+    // Capture refresh (B) begins second but its getActiveDay() resolves
+    // FIRST — the exact out-of-order shape the root defect mishandled.
+    getActiveDayMock.mockImplementationOnce(async () => dayB);
+    // workContext: null makes the status strip fall back to reading
+    // `day.workContext` directly (see TodayScreen.tsx's status-strip
+    // render), isolating the `day` state assertion below from
+    // `currentContext` state.
+    currentContextMock.mockImplementationOnce(() =>
+      Promise.resolve({ workContext: null, hasUnresolvedPostShift: false, schedulePrediction: FIXED_PREDICTION }),
+    );
+
+    await submitCapture(screen, "second refresh begins and resolves first");
+
+    await vi.waitFor(() => {
+      expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
+    });
+    expect(currentContextMock).toHaveBeenCalledTimes(1);
+    expect(currentContextMock).toHaveBeenCalledWith({ id: dayB.id, workContext: "OFF" });
+
+    // Day A's stale getActiveDay() finally resolves, arriving last, with
+    // the older day.
+    dayADeferred.resolve(dayA);
+    await new Promise((r) => setTimeout(r, 50));
+
+    // A must never regain ownership: both `day` and `currentContext` stay
+    // on B — A's context composition must never even have started.
+    expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
+    expect(currentContextMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the newer day/context installed and produces no unhandled rejection when an older, superseded refresh's getActiveDay() rejects after a newer refresh already succeeded", async () => {
+    const dayA = await startDay();
+    const tracker = trackUnhandledRejections();
+
+    const dayADeferred = createDeferred<BeyondDay | undefined>();
+    getActiveDayMock.mockImplementationOnce(() => dayADeferred.promise); // mount refresh (A) — pending
+
+    const screen = await render(<TodayScreen />);
+    await vi.waitFor(() => expect(getActiveDayMock).toHaveBeenCalledTimes(1));
+
+    await endDay(dayA.id, "EXPLICIT_END_DAY");
+    const dayB = await startDay();
+    getActiveDayMock.mockImplementationOnce(async () => dayB); // capture refresh (B) — succeeds first
+    currentContextMock.mockImplementationOnce(() =>
+      Promise.resolve({ workContext: "OFF", hasUnresolvedPostShift: false, schedulePrediction: FIXED_PREDICTION }),
+    );
+
+    await submitCapture(screen, "newer refresh installs day/context successfully");
+    await vi.waitFor(() => {
+      expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
+    });
+
+    // The older refresh's getActiveDay() finally rejects, well after the
+    // newer refresh already installed day B and its context.
+    dayADeferred.reject(new Error("stale active-day read failed"));
+    await tracker.settle();
+
+    expect(tracker.reasons).toEqual([]);
+    expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
+    tracker.stop();
+  });
+
   it("ignores an older context request that resolves after a newer one from the same refresh cycle, across three overlapping requests in any resolution order", async () => {
     const day = await startDay();
     const first = createDeferred<CurrentOperationalContext>();

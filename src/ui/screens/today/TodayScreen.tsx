@@ -177,13 +177,17 @@ export function TodayScreen({
   // loading or on a failed read, so the strip's rendered wording never
   // changes and a read failure never masquerades as successful context.
   const [currentContext, setCurrentContext] = useState<CurrentOperationalContext | null>(null);
-  // Monotonic request ownership for the currentContext fetch specifically
-  // (same pattern as SearchScreen.tsx's request-id guard): refresh() can
-  // overlap itself (e.g. two rapid actions each ending in `await refresh()`),
-  // so only the result of the LATEST currentContext request may ever be
-  // installed — an older one arriving late is discarded, never allowed to
-  // overwrite a newer result or silently reapply a previous day's context.
-  const currentContextRequestIdRef = useRef(0);
+  // Monotonic request ownership for refresh() as a whole (same pattern as
+  // SearchScreen.tsx's request-id guard): refresh() can overlap itself
+  // (e.g. two rapid actions each ending in `await refresh()`). Ownership is
+  // captured at the very start of refresh(), before its first await, so a
+  // refresh's place in line is decided by invocation order — never by which
+  // refresh's getActiveDay() happens to resolve first. Everything on the
+  // active-day/context path (installing `day`, starting or installing
+  // `currentContext`) checks this ref before touching state; a refresh that
+  // has been superseded by the time it gets there is discarded, whatever
+  // order its own reads settle in.
+  const refreshRequestIdRef = useRef(0);
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -278,29 +282,52 @@ export function TodayScreen({
   }, [commitmentFeedback]);
 
   async function refresh() {
-    const activeDay = (await getActiveDay()) ?? null;
-    setDay(activeDay);
-    // A fresh, independently-composed view each refresh — never memoized
-    // across calls, matching every other piece of state in this function.
-    // Composed from THIS refresh's own already-resolved `activeDay` (not
-    // re-fetched independently), so it can never disagree with `day` about
-    // which day is current. Still request-id guarded: two overlapping
-    // refresh() calls (e.g. two rapid actions) can have their
-    // currentContext reads settle out of order, so only the result whose
-    // id still matches the ref when it settles is installed. A rejected
-    // read is handled explicitly — cleared to null (never left stale, never
-    // presented as if it succeeded) so the render falls back to the
-    // pre-V1 day/scheduledContext/unresolvedPostShift state deliberately.
-    const contextRequestId = ++currentContextRequestIdRef.current;
-    getCurrentOperationalContext(activeDay ? { id: activeDay.id, workContext: activeDay.workContext } : null)
-      .then((result) => {
-        if (!mountedRef.current || contextRequestId !== currentContextRequestIdRef.current) return;
-        setCurrentContext(result);
-      })
-      .catch(() => {
-        if (!mountedRef.current || contextRequestId !== currentContextRequestIdRef.current) return;
-        setCurrentContext(null);
-      });
+    // Ownership is captured HERE — before getActiveDay() or any other
+    // await — so it reflects refresh invocation order, not the completion
+    // order of whichever read happens to settle first. Without this, an
+    // older refresh whose getActiveDay() simply takes longer could resolve
+    // after a newer refresh's and be mistaken for the latest, regressing
+    // `day`/`currentContext` back to stale values.
+    const myRequestId = ++refreshRequestIdRef.current;
+    let activeDay: BeyondDay | null;
+    try {
+      activeDay = (await getActiveDay()) ?? null;
+    } catch (err) {
+      // A superseded refresh's failed read must vanish silently — it may
+      // never regress `day`, and it must never surface as an unhandled
+      // rejection. A still-current refresh's failure is unchanged from
+      // prior behavior (out of this correction's scope) and is rethrown.
+      if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
+      throw err;
+    }
+    // Everything on the active-day/context path is gated on this single
+    // ownership check: a refresh superseded by the time its getActiveDay()
+    // resolves must not install `day`, and must not even start context
+    // composition — starting it would let that work later become
+    // authoritative if left unguarded downstream.
+    if (mountedRef.current && myRequestId === refreshRequestIdRef.current) {
+      setDay(activeDay);
+      // A fresh, independently-composed view each refresh — never memoized
+      // across calls, matching every other piece of state in this function.
+      // Composed from THIS refresh's own already-resolved `activeDay` (not
+      // re-fetched independently), so it can never disagree with `day` about
+      // which day is current. Still request-id guarded: two overlapping
+      // refresh() calls (e.g. two rapid actions) can have their
+      // currentContext reads settle out of order, so only the result whose
+      // id still matches the ref when it settles is installed. A rejected
+      // read is handled explicitly — cleared to null (never left stale, never
+      // presented as if it succeeded) so the render falls back to the
+      // pre-V1 day/scheduledContext/unresolvedPostShift state deliberately.
+      getCurrentOperationalContext(activeDay ? { id: activeDay.id, workContext: activeDay.workContext } : null)
+        .then((result) => {
+          if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
+          setCurrentContext(result);
+        })
+        .catch(() => {
+          if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
+          setCurrentContext(null);
+        });
+    }
     // Overdrive Phase 10: capture is deliberately not day-scoped ("inbox
     // age is not urgency," and jotting something down shouldn't require a
     // BeyondDay to already exist), so this refreshes unconditionally.
