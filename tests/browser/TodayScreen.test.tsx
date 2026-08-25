@@ -379,6 +379,59 @@ describe("TodayScreen // Current Operational Context V1 — context-strip wordin
 });
 
 describe("TodayScreen // Current Operational Context V1 — async request ownership", () => {
+  it("clears an already-installed context A the moment an accepted refresh adopts day B, instead of rendering it merged with day B while day B's own context is still pending", async () => {
+    // 1. Establish active day A.
+    const dayA = await startDay();
+    await setWorkContext(dayA.id, "WORK", "MANUAL");
+    currentContextMock.mockImplementationOnce(() =>
+      Promise.resolve({ workContext: "WORK", hasUnresolvedPostShift: false, schedulePrediction: FIXED_PREDICTION }),
+    );
+
+    // 2. Allow context A to resolve successfully and verify it is visibly
+    // installed — the prior out-of-order test never got this far (its
+    // "older" request never actually won), which was the gap here: this
+    // one must actually install day A's context before moving on.
+    const screen = await render(<TodayScreen />);
+    await vi.waitFor(() => {
+      expect(document.querySelector(".status-strip")?.textContent).toContain("Working today");
+    });
+    expect(document.querySelector(".status-strip")?.textContent).not.toContain("Off today");
+
+    // 3. Transition to active day B.
+    await endDay(dayA.id, "EXPLICIT_END_DAY");
+    const dayBBeforeWorkContext = await startDay();
+    await setWorkContext(dayBBeforeWorkContext.id, "OFF", "MANUAL");
+    // Re-read from the real query (bypassing the mock) so the object handed
+    // to getActiveDayMock below reflects the just-applied "OFF" write.
+    const dayB = (await realGetActiveDay())!;
+
+    // 4/5. Trigger the next refresh and let getActiveDay() for B resolve
+    // right away, so TODAY adopts day B...
+    getActiveDayMock.mockImplementationOnce(async () => dayB);
+    // 6. ...while day B's own context composition is held pending.
+    const contextBDeferred = createDeferred<CurrentOperationalContext>();
+    currentContextMock.mockImplementationOnce(() => contextBDeferred.promise);
+
+    await submitCapture(screen, "trigger the refresh that adopts day B");
+
+    // 7. While context B is still pending, day A's "Working today" context
+    // must NOT still be rendered for day B — the truthful fallback for the
+    // newly-adopted day (day.workContext, same path used for a still-
+    // loading or failed read) must show instead.
+    await vi.waitFor(() => {
+      expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
+    });
+    expect(document.querySelector(".status-strip")?.textContent).not.toContain("Working today");
+
+    // 8/9. Resolve context B — the correct, now-current context renders.
+    contextBDeferred.resolve({ workContext: "OFF", hasUnresolvedPostShift: false, schedulePrediction: FIXED_PREDICTION });
+    await vi.waitFor(() => {
+      expect(currentContextMock).toHaveBeenCalledWith({ id: dayB.id, workContext: "OFF" });
+    });
+    expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
+    expect(document.querySelector(".status-strip")?.textContent).not.toContain("Working today");
+  });
+
   it("decides ownership by refresh invocation order, not by which refresh's getActiveDay() settles first — an older refresh must never regain ownership of day or currentContext", async () => {
     const dayA = await startDay();
     await setWorkContext(dayA.id, "WORK", "MANUAL");

@@ -188,6 +188,17 @@ export function TodayScreen({
   // has been superseded by the time it gets there is discarded, whatever
   // order its own reads settle in.
   const refreshRequestIdRef = useRef(0);
+  // Which day `currentContext` was installed for — private to this
+  // component, never exposed (CurrentOperationalContext carries no day
+  // identity). Request-ownership alone stops a stale request from
+  // *installing* the wrong context, but it doesn't stop an already-
+  // installed context from surviving a same-refresh day change: an
+  // accepted refresh can call setDay(dayB) while `currentContext` still
+  // holds day A's already-resolved value, and day B's own context read is
+  // still pending. Comparing the newly-adopted day's id against this ref
+  // is how that day change is detected so the stale value can be cleared
+  // at that exact moment, rather than left to render merged with day B.
+  const currentContextDayIdRef = useRef<string | null>(null);
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -306,6 +317,23 @@ export function TodayScreen({
     // composition — starting it would let that work later become
     // authoritative if left unguarded downstream.
     if (mountedRef.current && myRequestId === refreshRequestIdRef.current) {
+      const newDayId = activeDay ? activeDay.id : null;
+      if (newDayId !== currentContextDayIdRef.current) {
+        // This accepted refresh is adopting a different day (including a
+        // transition to/from no active day) than whatever `currentContext`
+        // currently belongs to. That old context is not truthful for the
+        // newly-adopted day — clear it now, synchronously with setDay
+        // below, rather than let it keep rendering merged with the new
+        // day's identity until its own read resolves. The status strip's
+        // existing `currentContext ? ... : day.*` fallback then reads
+        // day/scheduledContext/unresolvedPostShift directly while the new
+        // day's context is in flight — the same truthful pre-V1 path
+        // already used for a failed or still-loading read. Guarded to only
+        // fire on an actual day change so a same-day refresh (the common
+        // case) never flashes away context it doesn't need to.
+        setCurrentContext(null);
+      }
+      currentContextDayIdRef.current = newDayId;
       setDay(activeDay);
       // A fresh, independently-composed view each refresh — never memoized
       // across calls, matching every other piece of state in this function.
