@@ -113,6 +113,7 @@ import {
 } from "../../../application/queries";
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
+import { getCurrentOperationalContext, type CurrentOperationalContext } from "../../../application/currentContextQueries";
 
 const BACKUP_NUDGE_THRESHOLD_DAYS = 7;
 
@@ -168,6 +169,43 @@ export function TodayScreen({
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
+  // Current Operational Context V1 (bounded proof): feeds the STATUS
+  // context strip only — every other read above (day, scheduledContext,
+  // unresolvedPostShift) stays exactly as-is for its own other uses
+  // (work-context confirmation source attribution, the schedule
+  // prediction card). Falls back to those existing values while still
+  // loading or on a failed read, so the strip's rendered wording never
+  // changes and a read failure never masquerades as successful context.
+  const [currentContext, setCurrentContext] = useState<CurrentOperationalContext | null>(null);
+  // Monotonic request ownership for refresh() as a whole (same pattern as
+  // SearchScreen.tsx's request-id guard): refresh() can overlap itself
+  // (e.g. two rapid actions each ending in `await refresh()`). Ownership is
+  // captured at the very start of refresh(), before its first await, so a
+  // refresh's place in line is decided by invocation order — never by which
+  // refresh's getActiveDay() happens to resolve first. Everything on the
+  // active-day/context path (installing `day`, starting or installing
+  // `currentContext`) checks this ref before touching state; a refresh that
+  // has been superseded by the time it gets there is discarded, whatever
+  // order its own reads settle in.
+  const refreshRequestIdRef = useRef(0);
+  // Which day `currentContext` was installed for — private to this
+  // component, never exposed (CurrentOperationalContext carries no day
+  // identity). Request-ownership alone stops a stale request from
+  // *installing* the wrong context, but it doesn't stop an already-
+  // installed context from surviving a same-refresh day change: an
+  // accepted refresh can call setDay(dayB) while `currentContext` still
+  // holds day A's already-resolved value, and day B's own context read is
+  // still pending. Comparing the newly-adopted day's id against this ref
+  // is how that day change is detected so the stale value can be cleared
+  // at that exact moment, rather than left to render merged with day B.
+  const currentContextDayIdRef = useRef<string | null>(null);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
   const [openCaptureItems, setOpenCaptureItems] = useState<CaptureItem[]>([]);
   const [captureText, setCaptureText] = useState("");
   // Overdrive Phase 17 (Capture 1.1): reopenCaptureItem already existed
@@ -255,8 +293,69 @@ export function TodayScreen({
   }, [commitmentFeedback]);
 
   async function refresh() {
-    const activeDay = (await getActiveDay()) ?? null;
-    setDay(activeDay);
+    // Ownership is captured HERE — before getActiveDay() or any other
+    // await — so it reflects refresh invocation order, not the completion
+    // order of whichever read happens to settle first. Without this, an
+    // older refresh whose getActiveDay() simply takes longer could resolve
+    // after a newer refresh's and be mistaken for the latest, regressing
+    // `day`/`currentContext` back to stale values.
+    const myRequestId = ++refreshRequestIdRef.current;
+    let activeDay: BeyondDay | null;
+    try {
+      activeDay = (await getActiveDay()) ?? null;
+    } catch (err) {
+      // A superseded refresh's failed read must vanish silently — it may
+      // never regress `day`, and it must never surface as an unhandled
+      // rejection. A still-current refresh's failure is unchanged from
+      // prior behavior (out of this correction's scope) and is rethrown.
+      if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
+      throw err;
+    }
+    // Everything on the active-day/context path is gated on this single
+    // ownership check: a refresh superseded by the time its getActiveDay()
+    // resolves must not install `day`, and must not even start context
+    // composition — starting it would let that work later become
+    // authoritative if left unguarded downstream.
+    if (mountedRef.current && myRequestId === refreshRequestIdRef.current) {
+      const newDayId = activeDay ? activeDay.id : null;
+      if (newDayId !== currentContextDayIdRef.current) {
+        // This accepted refresh is adopting a different day (including a
+        // transition to/from no active day) than whatever `currentContext`
+        // currently belongs to. That old context is not truthful for the
+        // newly-adopted day — clear it now, synchronously with setDay
+        // below, rather than let it keep rendering merged with the new
+        // day's identity until its own read resolves. The status strip's
+        // existing `currentContext ? ... : day.*` fallback then reads
+        // day/scheduledContext/unresolvedPostShift directly while the new
+        // day's context is in flight — the same truthful pre-V1 path
+        // already used for a failed or still-loading read. Guarded to only
+        // fire on an actual day change so a same-day refresh (the common
+        // case) never flashes away context it doesn't need to.
+        setCurrentContext(null);
+      }
+      currentContextDayIdRef.current = newDayId;
+      setDay(activeDay);
+      // A fresh, independently-composed view each refresh — never memoized
+      // across calls, matching every other piece of state in this function.
+      // Composed from THIS refresh's own already-resolved `activeDay` (not
+      // re-fetched independently), so it can never disagree with `day` about
+      // which day is current. Still request-id guarded: two overlapping
+      // refresh() calls (e.g. two rapid actions) can have their
+      // currentContext reads settle out of order, so only the result whose
+      // id still matches the ref when it settles is installed. A rejected
+      // read is handled explicitly — cleared to null (never left stale, never
+      // presented as if it succeeded) so the render falls back to the
+      // pre-V1 day/scheduledContext/unresolvedPostShift state deliberately.
+      getCurrentOperationalContext(activeDay ? { id: activeDay.id, workContext: activeDay.workContext } : null)
+        .then((result) => {
+          if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
+          setCurrentContext(result);
+        })
+        .catch(() => {
+          if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
+          setCurrentContext(null);
+        });
+    }
     // Overdrive Phase 10: capture is deliberately not day-scoped ("inbox
     // age is not urgency," and jotting something down shouldn't require a
     // BeyondDay to already exist), so this refreshes unconditionally.
@@ -1617,7 +1716,11 @@ export function TodayScreen({
           quieter than .card--action so it never competes with NOW. */}
       {day && (
         <p className="status-strip">
-          {describeContextStrip(day.workContext, scheduledContext, unresolvedPostShift)}
+          {describeContextStrip(
+            currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
+            currentContext ? currentContext.schedulePrediction : scheduledContext,
+            currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
+          )}
           {capacityResult && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
