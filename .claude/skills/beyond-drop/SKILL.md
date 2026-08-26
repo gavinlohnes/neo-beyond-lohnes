@@ -220,14 +220,26 @@ To change what's required (e.g. add a second check, or start enforcing for admin
 team grows), re-run the same PUT with an updated payload — don't hand-edit protection in the
 GitHub UI without recording the change here.
 
-## 8. Multi-Agent V1 addendum
+## 8. Multi-agent operating model
 
-Pilot V1 (Claude + Codex) layers onto this same Drop procedure — it does not replace it. See
+Claude and Codex share this same Drop procedure — it does not replace it. See
 `docs/agent/BEYOND_ENGINEERING_CONTRACT.md` for the full shared, tool-neutral invariants this
-addendum operationalizes for the Drop workflow specifically.
+section operationalizes for the Drop workflow specifically.
 
-- **Roles are locked for V1**: Claude = default Builder; Codex = read-only Pre-mortem +
-  Independent Reviewer. Codex does not implement during V1; role reversal is out of scope for V1.
+**FACTORY // CODEX BUILDER CUTOVER** — direct owner ruling, verified baseline
+`ba6e47b79977ce1ddc19ee9ebddbff31c023b60d` (2026-08-26), superseding the former Pilot V1 role
+lock recorded under HISTORY below. Codex is now authorized to act as BEYOND's primary Builder
+when explicitly assigned to a Drop. Builder, Reviewer, and Integrator remain three distinct
+responsibilities and must run as three separate sessions on any one Drop — no session may review
+or merge its own work, regardless of which agent holds which role. Every other safeguard already
+in force (baseline/branch/worktree discipline, CI, independent review for Architectural/
+High-Risk Drops, no-self-merge) carries forward unchanged, below.
+
+- **Roles are assigned per Drop, not fixed by agent identity**: either Claude or Codex may be
+  named Builder for a given Drop; the other serves as Reviewer for that same Drop. A Drop whose
+  tier requires a distinct Integrator uses a third session for that step (see
+  `docs/agent/BEYOND_ENGINEERING_CONTRACT.md`'s Integration discipline) — the Builder never
+  integrates its own work, regardless of agent.
 - **Baseline**: every task contract records the exact `origin/master` SHA (fetched fresh, never
   assumed), branch owner, worktree path, and declared expected footprint.
 - **Worktrees**: `git fetch origin master && git worktree add
@@ -235,19 +247,18 @@ addendum operationalizes for the Drop workflow specifically.
   branch, one worktree.
 - **SERIAL-ONLY seams** (`src/engine/**`, `domain/common/types.ts`, `persistence/**`,
   `src/ui/screens/today/**`, `src/ui/styles/global.css`): only one implementation owner may
-  modify these concurrently — this does not exclude them from Claude-builder/Codex-reviewer
-  operation, only from two simultaneous builders. Pilot V1's first feature deliberately avoids
-  these seams so the collaboration workflow itself can be validated under controlled conditions
-  — this is a first-pilot choice, not a permanent prohibition.
-- **Review handoff**: Codex reviews from a separate, read-only worktree at the PR's exact commit,
-  working from the task contract + diff only. Targeted adversarial verification by default; full
-  `npm run verify` only when warranted, never concurrently with the builder's own verification
-  run.
-- **No self-merge** — applies to the dual-agent setup transition and to every Pilot V1 Drop:
-  the agent that builds a Drop never merges its own PR. Integration is a distinct, explicitly
-  authorized step, after builder verification + independent review (when applicable) +
-  dispositioned findings + green CI. No admin-bypass of required checks, under any circumstance
-  — §7's admin-bypass path above is explicitly not used during this phase.
+  modify these concurrently, regardless of which agent that owner is — this forbids two
+  simultaneous builders on the same seam, not a builder/reviewer pair working together, and not
+  any particular agent from building there.
+- **Review handoff**: the Reviewer session reviews from a separate, read-only worktree at the
+  PR's exact commit, working from the task contract + diff only — never the Builder's own
+  session reasoning. Targeted adversarial verification by default; full `npm run verify` only
+  when warranted, never concurrently with the Builder's own verification run.
+- **No self-merge** — applies to every Drop under this model, regardless of which agent is
+  Builder: the agent that builds a Drop never merges its own PR. Integration is a distinct,
+  explicitly authorized step, after builder verification + independent review (when applicable)
+  + dispositioned findings + green CI. No admin-bypass of required checks, under any
+  circumstance — §7's admin-bypass path above is not used for agent-driven integration.
 - **Post-merge verification is smoke/deployment-focused** (confirm the merge commit's deploy run
   succeeds) unless the Drop's risk tier requires more.
 - **Historical-branch disposition**: check `git merge-base <branch> origin/master` before
@@ -255,5 +266,10 @@ addendum operationalizes for the Drop workflow specifically.
   disconnected lineage, requiring capability comparison against the current tree, not a numeric
   count, before any delete/archive ruling.
 
-This addendum does not itself authorize parallel building — see the locked dual-agent operating
-model for the admission test that will gate that, once Pilot V1 evidence justifies revisiting it.
+### HISTORY — superseded Pilot V1 role lock
+
+Pilot V1 (through the FACTORY // CODEX BUILDER CUTOVER above) ran with roles locked: Claude =
+default Builder; Codex = read-only Pre-mortem + Independent Reviewer only, with role reversal
+explicitly out of scope for that phase, pending an admission test once Pilot V1 evidence
+justified revisiting it. That lock is superseded, in full, by the direct owner ruling above —
+kept here for provenance, not as current operating guidance.

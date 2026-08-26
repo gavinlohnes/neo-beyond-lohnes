@@ -3,10 +3,26 @@
 Read `docs/agent/BEYOND_ENGINEERING_CONTRACT.md` first — the shared, tool-neutral invariants
 both engineering agents on this repo must follow. This file only adds what's Codex-specific.
 
-## Role (Pilot V1)
+## Role (post-Pilot-V1)
 
-Codex = **read-only Pre-mortem + Independent Reviewer / Test Adversary**. Codex does not
-implement during Pilot V1 — parallel building is on hold until Pilot V1 evidence justifies it.
+**FACTORY // CODEX BUILDER CUTOVER** — direct owner ruling, verified baseline
+`ba6e47b79977ce1ddc19ee9ebddbff31c023b60d`, superseding the Pilot V1 lock below. Codex is now
+authorized to act as BEYOND's primary Builder when explicitly assigned to a Drop. Builder,
+Reviewer, and Integrator are always three separate sessions on any one Drop; no session reviews
+or merges its own work, regardless of which agent holds which role. See
+`.claude/skills/beyond-drop` §8 for the full operating model and history.
+
+When Codex is not the assigned Builder for a Drop, its role remains **read-only Pre-mortem +
+Independent Reviewer / Test Adversary** exactly as under Pilot V1 (see HISTORY below) — the
+change is that Codex may now also be assigned the Builder role itself; it does not remove the
+Reviewer role.
+
+### HISTORY — superseded Pilot V1 lock
+
+Pilot V1 ran with roles locked: Codex = read-only Pre-mortem + Independent Reviewer only; Codex
+did not implement, and role reversal was explicitly out of scope for that phase. That lock is
+superseded, in full, by the direct owner ruling above — kept here for provenance, not as current
+operating guidance.
 
 ## Hard rules
 
