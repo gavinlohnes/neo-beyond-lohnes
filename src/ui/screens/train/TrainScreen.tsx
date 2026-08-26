@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ConfirmIcon } from "../../icons/Icon";
+import { CommandSurface } from "../../components/CommandSurface";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
 import type { PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
 import { WORKOUT_TEMPLATES, getReducedExercises } from "../../../domain/workout/types";
@@ -593,7 +594,7 @@ export function TrainScreen({
           visible, since that's the actual decision surface, not the
           explanation of it. */}
       {!session && !completionSummary && (
-        <div className="command-surface fade-in">
+        <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>
             {noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
           </p>
@@ -661,11 +662,11 @@ export function TrainScreen({
           >
             START WORKOUT
           </button>
-        </div>
+        </CommandSurface>
       )}
 
       {session && session.sessionType === "RECOVERY" && !completionSummary && (
-        <div className="command-surface fade-in">
+        <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>RECOVERY — IN PROGRESS</p>
           <h2 className="command-title" style={{ fontSize: 24, marginBottom: 8 }}>Light movement</h2>
           <p className="card-body" style={{ marginBottom: 12 }}>
@@ -702,7 +703,7 @@ export function TrainScreen({
           >
             END RECOVERY
           </button>
-        </div>
+        </CommandSurface>
       )}
 
       {session && session.sessionType !== "RECOVERY" && !completionSummary && (
@@ -730,7 +731,7 @@ export function TrainScreen({
               Everything the lifter needs for the set they're on right
               now, and nothing else competing for attention. */}
           {currentExercise && (
-            <div key={currentExercise.exerciseId} className="command-surface fade-in">
+            <CommandSurface key={currentExercise.exerciseId}>
               <p className="meta" style={{ marginBottom: 2 }}>
                 Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>
@@ -939,7 +940,7 @@ export function TrainScreen({
                   </div>
                 );
               })}
-            </div>
+            </CommandSurface>
           )}
 
           {/* Overdrive Phase 12, FIELD ALPHA Phase 2B (NEXT): compact

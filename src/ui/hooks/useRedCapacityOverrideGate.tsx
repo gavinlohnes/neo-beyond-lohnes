@@ -33,7 +33,7 @@ export function useRedCapacityOverrideGate(): {
   function ConfirmPanel(): React.ReactElement | null {
     if (!pendingAction) return null;
     return (
-      <div className="card" style={{ borderColor: "var(--danger)" }}>
+      <div className="card card--warning">
         <p className="eyebrow" style={{ marginBottom: 4 }}>
           CONFIRM OVERRIDE
         </p>
@@ -42,7 +42,7 @@ export function useRedCapacityOverrideGate(): {
         </p>
         <div style={{ display: "flex", gap: 8 }}>
           <button
-            className="btn-primary"
+            className="btn-danger"
             onClick={() => {
               const action = pendingAction;
               setPendingAction(null);
@@ -51,11 +51,7 @@ export function useRedCapacityOverrideGate(): {
           >
             PROCEED ANYWAY
           </button>
-          <button
-            className="btn-primary"
-            style={{ background: "var(--surface-2)" }}
-            onClick={() => setPendingAction(null)}
-          >
+          <button className="btn-secondary" onClick={() => setPendingAction(null)}>
             CANCEL
           </button>
         </div>

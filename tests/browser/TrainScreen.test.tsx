@@ -20,6 +20,7 @@ import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
  */
 
 const GREEN: CheckInValues = { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 };
+const RED: CheckInValues = { energy: 1, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 };
 
 afterEach(() => {
   cleanup();
@@ -51,6 +52,32 @@ describe("TrainScreen (real browser) — no active session", () => {
     await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
     expect(document.querySelectorAll(".command-surface")).toHaveLength(1);
     expect(document.querySelectorAll(".card--action, .corner-flag")).toHaveLength(0);
+  });
+
+  // VISUAL-002: useRedCapacityOverrideGate is shared by TODAY and TRAIN —
+  // proving the real-panel/danger-action/secondary-cancel fix on TRAIN's
+  // own STANDARD-under-RED call site (handleStart -> guard), the same
+  // shared hook TodayScreen's decline-under-RED test proves it on.
+  it("starting a STANDARD workout under RED capacity shows the real warning panel and gates START WORKOUT until PROCEED ANYWAY", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, RED);
+    const screen = await render(<TrainScreen />);
+
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+
+    const panel = document.querySelector(".card--warning");
+    expect(panel).not.toBeNull();
+    await expect.element(screen.getByText("CONFIRM OVERRIDE", { exact: true })).toBeVisible();
+    // Not started yet — still showing the pre-session picker underneath.
+    await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
+
+    const proceed = screen.getByRole("button", { name: "PROCEED ANYWAY" }).element();
+    expect(proceed.className).toContain("btn-danger");
+    const cancel = screen.getByRole("button", { name: "CANCEL" }).element();
+    expect(cancel.className).toContain("btn-secondary");
+
+    await screen.getByRole("button", { name: "PROCEED ANYWAY" }).click();
+    await expect.element(screen.getByText("Exercise 1 of", { exact: false })).toBeVisible();
   });
 
   it("the suggestion rationale is reachable behind disclosure, not permanently occupying GLANCE depth", async () => {
