@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn } from "../../src/application/commands";
@@ -167,6 +167,113 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     await screen.getByRole("button", { name: "DONE" }).click();
     expect(screen.getByText("WORKOUT SAVED — PARTIAL", { exact: true }).elements()).toHaveLength(0);
     await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
+  });
+
+  /**
+   * SUIT-002 (TRAIN INPUT VELOCITY): direct weight/reps entry made a
+   * first-class interaction. Each test below exercises one required
+   * behavior from the Drop's test plan against the real rendered DOM —
+   * never a hand-constructed fixture — so a regression here means a real
+   * device would show it too.
+   */
+  it("weight and reps inputs expose accessible names identifying set number, weight, and reps, with mobile keyboard hints", async () => {
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+
+    const weightInput = screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" });
+    const repsInput = screen.getByRole("spinbutton", { name: "Set 1 repetitions" });
+    await expect.element(weightInput).toBeVisible();
+    await expect.element(repsInput).toBeVisible();
+
+    expect(weightInput.element().getAttribute("inputmode")).toBe("decimal");
+    expect(repsInput.element().getAttribute("inputmode")).toBe("numeric");
+  });
+
+  it("a prefilled weight value can be replaced directly after focus, without deleting it first", async () => {
+    const screen = await startStandardWorkout();
+    await screen.getByPlaceholder("lb").first().fill("135");
+    await screen.getByPlaceholder("reps").first().fill("10");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+    await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
+
+    // Set 2 prefills from the just-logged Set 1 (same exercise, this
+    // session) — a populated field, not an empty one.
+    const weightInput = screen.getByRole("spinbutton", { name: "Set 2 weight in pounds" });
+    await expect.element(weightInput).toHaveValue(135);
+
+    // Real keystrokes via userEvent.type (not .fill, which sets the value
+    // directly and would pass even without any select-on-focus behavior):
+    // this focuses the field for real, so onFocus fires, then types over
+    // whatever is selected. Without the select-on-focus behavior this Drop
+    // adds, the new digits would land after "135" instead of replacing it.
+    await userEvent.type(weightInput, "77");
+    await expect.element(weightInput).toHaveValue(77);
+  });
+
+  it("typing into weight/reps does not log a set automatically", async () => {
+    const screen = await startStandardWorkout();
+    const weightInput = screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" });
+    const repsInput = screen.getByRole("spinbutton", { name: "Set 1 repetitions" });
+
+    await userEvent.type(weightInput, "185");
+    await userEvent.type(repsInput, "8");
+
+    expect(screen.getByText(/^#1 —/).elements()).toHaveLength(0);
+    await expect.element(screen.getByText(/Set 1 of 3/)).toBeVisible();
+  });
+
+  it("LOG records the entered weight and reps exactly once", async () => {
+    const screen = await startStandardWorkout();
+    const weightInput = screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" });
+    const repsInput = screen.getByRole("spinbutton", { name: "Set 1 repetitions" });
+
+    await userEvent.type(weightInput, "185");
+    await userEvent.type(repsInput, "8");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+
+    await expect.element(screen.getByText("#1 — 185 lb x 8", { exact: true })).toBeVisible();
+    expect(screen.getByText("#1 — 185 lb x 8", { exact: true }).elements()).toHaveLength(1);
+  });
+
+  it("the -/+ steppers still adjust weight and reps (secondary precision controls preserved)", async () => {
+    const screen = await startStandardWorkout();
+    const repsInput = screen.getByRole("spinbutton", { name: "Set 1 repetitions" });
+
+    await screen.getByRole("button", { name: "Increase set 1 repetitions" }).click();
+    await expect.element(repsInput).toHaveValue(1);
+    await screen.getByRole("button", { name: "Increase set 1 repetitions" }).click();
+    await expect.element(repsInput).toHaveValue(2);
+    await screen.getByRole("button", { name: "Decrease set 1 repetitions" }).click();
+    await expect.element(repsInput).toHaveValue(1);
+  });
+
+  it("SAME AS LAST TIME remains the fastest one-tap exact-repeat path, unchanged", async () => {
+    const screen = await startStandardWorkout();
+    await screen.getByPlaceholder("lb").first().fill("135");
+    await screen.getByPlaceholder("reps").first().fill("10");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+    await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
+
+    const sameAsLast = screen.getByRole("button", { name: "SET 2: SAME AS LAST TIME — 135 lb x 10" });
+    await expect.element(sameAsLast).toBeVisible();
+    await sameAsLast.click();
+
+    await expect.element(screen.getByText("#2 — 135 lb x 10", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/Set 3 of 3/)).toBeVisible();
+  });
+
+  it("clearing a field to empty mid-entry does not create a false set", async () => {
+    const screen = await startStandardWorkout();
+    const weightInput = screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" });
+
+    await userEvent.type(weightInput, "185");
+    await expect.element(weightInput).toHaveValue(185);
+
+    await userEvent.clear(weightInput);
+    await expect.element(weightInput).not.toHaveValue();
+
+    expect(screen.getByText(/^#1 —/).elements()).toHaveLength(0);
+    await expect.element(screen.getByText(/Set 1 of 3/)).toBeVisible();
   });
 });
 

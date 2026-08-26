@@ -812,26 +812,44 @@ export function TrainScreen({
                       </button>
                     )}
                     {!suggestion && <p className="meta-strong" style={{ marginBottom: 6 }}>Set {setNumber}</p>}
+                    {/* SUIT-002 (TRAIN INPUT VELOCITY): direct entry is the
+                        primary interaction within each row — inputMode gives
+                        the correct mobile keyboard (decimal for weight,
+                        numeric for reps), the aria-label carries set number +
+                        unit so a screen reader user gets all three required
+                        facts from the field itself, and onFocus selects the
+                        prefilled value so typing replaces it immediately
+                        instead of appending after it. Larger font/weight
+                        than the 44px −/+ steppers beside it makes direct
+                        entry the visually obvious way in, not just the
+                        technically-available one. No behavioral change to
+                        adjustWeight/patchInput/handleLogSet — same calls,
+                        same empty-string passthrough. */}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                       <span className="meta" style={{ width: 56, flexShrink: 0 }}>WEIGHT</span>
                       <button
                         className="btn-secondary"
                         style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
+                        aria-label={`Decrease set ${setNumber} weight`}
                         onClick={() => adjustWeight(ex.exerciseId, setNumber, -ex.incrementLbs)}
                       >
                         -
                       </button>
                       <input
                         type="number"
+                        inputMode="decimal"
                         placeholder="lb"
+                        aria-label={`Set ${setNumber} weight in pounds`}
                         value={display.weight}
+                        onFocus={(e) => e.currentTarget.select()}
                         onChange={(e) => patchInput(ex.exerciseId, setNumber, { weight: e.target.value })}
                         className="input"
-                        style={{ flex: 1, textAlign: "center" }}
+                        style={{ flex: 1, textAlign: "center", fontSize: 20, fontWeight: 700 }}
                       />
                       <button
                         className="btn-secondary"
                         style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
+                        aria-label={`Increase set ${setNumber} weight`}
                         onClick={() => adjustWeight(ex.exerciseId, setNumber, ex.incrementLbs)}
                       >
                         +
@@ -842,21 +860,26 @@ export function TrainScreen({
                       <button
                         className="btn-secondary"
                         style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
+                        aria-label={`Decrease set ${setNumber} repetitions`}
                         onClick={() => adjustReps(ex.exerciseId, setNumber, -1)}
                       >
                         -
                       </button>
                       <input
                         type="number"
+                        inputMode="numeric"
                         placeholder="reps"
+                        aria-label={`Set ${setNumber} repetitions`}
                         value={display.reps}
+                        onFocus={(e) => e.currentTarget.select()}
                         onChange={(e) => patchInput(ex.exerciseId, setNumber, { reps: e.target.value })}
                         className="input"
-                        style={{ flex: 1, textAlign: "center" }}
+                        style={{ flex: 1, textAlign: "center", fontSize: 20, fontWeight: 700 }}
                       />
                       <button
                         className="btn-secondary"
                         style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
+                        aria-label={`Increase set ${setNumber} repetitions`}
                         onClick={() => adjustReps(ex.exerciseId, setNumber, 1)}
                       >
                         +
