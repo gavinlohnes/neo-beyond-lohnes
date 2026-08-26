@@ -123,6 +123,7 @@ async function submitCapture(screen: Awaited<ReturnType<typeof render>>, text: s
  */
 
 const GREEN: CheckInValues = { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 };
+const YELLOW: CheckInValues = { energy: 2, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 };
 const RED: CheckInValues = { energy: 1, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 };
 
 // No manual db.open()/close() here (unlike the Node suite's pattern) —
@@ -338,6 +339,49 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — STATUS operational readout"
     const strip = document.querySelector(".status-strip");
     expect(strip).not.toBeNull();
     expect(strip!.textContent).toContain("GREEN");
+  });
+});
+
+describe("TodayScreen // SUIT-001 (Drop 3, COMMAND PRESENCE) — STATUS severity", () => {
+  it("adds no severity modifier for GREEN capacity", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+
+    const strip = document.querySelector(".status-strip");
+    expect(strip).not.toBeNull();
+    expect(strip!.className).toBe("status-strip");
+    expect(document.querySelector(".status-strip__capacity")).toBeNull();
+  });
+
+  it("adds the yellow severity modifier and colors the capacity segment for YELLOW capacity", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, YELLOW);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+
+    const strip = document.querySelector(".status-strip");
+    expect(strip!.className).toBe("status-strip status-strip--yellow");
+    const capacitySegment = document.querySelector(".status-strip__capacity");
+    expect(capacitySegment).not.toBeNull();
+    expect(capacitySegment!.textContent).toContain("YELLOW");
+  });
+
+  it("adds the red severity modifier and colors the capacity segment for RED capacity", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, RED);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+
+    const strip = document.querySelector(".status-strip");
+    expect(strip!.className).toBe("status-strip status-strip--red");
+    const capacitySegment = document.querySelector(".status-strip__capacity");
+    expect(capacitySegment).not.toBeNull();
+    expect(capacitySegment!.textContent).toContain("RED");
   });
 });
 

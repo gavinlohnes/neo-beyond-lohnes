@@ -1713,16 +1713,31 @@ export function TodayScreen({
           TODAY // SUIT LAYER 01 (DEC-003): now rendered via .status-strip
           — same content, given its own bordered "operational readout"
           presence instead of floating bare text, while staying far
-          quieter than .card--action so it never competes with NOW. */}
+          quieter than .card--action so it never competes with NOW.
+          SUIT-001 (Drop 3, COMMAND PRESENCE): the strip's own left tick
+          and the capacity segment now track severity (YELLOW/RED) using
+          the same tokens .capacity-dot already uses — GREEN is left
+          exactly as before. Still a glance-level tint, not a second red
+          wash: only the tick and the capacity words shift, never the
+          background or the schedule prose. */}
       {day && (
-        <p className="status-strip">
+        <p
+          className={
+            capacityResult && capacityResult.capacity !== "GREEN"
+              ? `status-strip status-strip--${capacityResult.capacity.toLowerCase()}`
+              : "status-strip"
+          }
+        >
           {describeContextStrip(
             currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
             currentContext ? currentContext.schedulePrediction : scheduledContext,
             currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
           )}
           {capacityResult && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span
+              className={capacityResult.capacity !== "GREEN" ? "status-strip__capacity" : undefined}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
               <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
               {`· ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}`}
             </span>
