@@ -77,8 +77,9 @@ unilaterally.
 ## SERIAL-ONLY seams
 
 A seam marked SERIAL ONLY means **only one implementation owner may modify it concurrently** —
-it does not forbid a Claude-builder/Codex-reviewer pair from working on it; it forbids two
-simultaneous *builders*. `src/engine/**`, `domain/common/types.ts`, `persistence/**`,
+it does not forbid a builder/reviewer pair (whichever two agents hold those roles on a given
+Drop, per `.claude/skills/beyond-drop` §8) from working on it; it forbids two simultaneous
+*builders*. `src/engine/**`, `domain/common/types.ts`, `persistence/**`,
 `src/ui/screens/today/**`, and `src/ui/styles/global.css` are the current SERIAL-ONLY seams.
 
 ## Historical-branch disposition rule
