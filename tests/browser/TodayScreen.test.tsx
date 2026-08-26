@@ -123,6 +123,7 @@ async function submitCapture(screen: Awaited<ReturnType<typeof render>>, text: s
  */
 
 const GREEN: CheckInValues = { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 };
+const YELLOW: CheckInValues = { energy: 2, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 };
 const RED: CheckInValues = { energy: 1, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 };
 
 // No manual db.open()/close() here (unlike the Node suite's pattern) —
@@ -286,7 +287,7 @@ describe("TodayScreen (real browser) — cross-day outcome follow-up", () => {
 
       await expect.element(screen.getByText("OUTCOME", { exact: true })).toBeVisible();
       await screen.getByRole("button", { name: "END DAY" }).click();
-      await expect.element(screen.getByText("No day started yet.", { exact: true })).toBeVisible();
+      await expect.element(screen.getByText("Day not started", { exact: true })).toBeVisible();
       await expect.element(screen.getByText("OUTCOME", { exact: true })).toBeVisible();
 
       await screen.getByRole("button", { name: rating, exact: true }).click();
@@ -341,6 +342,91 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — STATUS operational readout"
   });
 });
 
+describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNKNOWN capacity", () => {
+  it("adds no severity modifier for GREEN capacity", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+
+    const strip = document.querySelector(".status-strip");
+    expect(strip!.className).toBe("status-strip");
+    expect(document.querySelector(".status-strip__capacity")).toBeNull();
+  });
+
+  it("adds the yellow severity modifier and colors the capacity segment for YELLOW capacity", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, YELLOW);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+
+    const strip = document.querySelector(".status-strip");
+    expect(strip!.className).toBe("status-strip status-strip--yellow");
+    const capacitySegment = document.querySelector(".status-strip__capacity");
+    expect(capacitySegment).not.toBeNull();
+    expect(capacitySegment!.textContent).toContain("YELLOW");
+  });
+
+  it("adds the red severity modifier and colors the capacity segment for RED capacity", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, RED);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+
+    const strip = document.querySelector(".status-strip");
+    expect(strip!.className).toBe("status-strip status-strip--red");
+    const capacitySegment = document.querySelector(".status-strip__capacity");
+    expect(capacitySegment).not.toBeNull();
+    expect(capacitySegment!.textContent).toContain("RED");
+  });
+
+  it("states capacity as UNKNOWN, with a neutral dot, before any check-in exists today", async () => {
+    await startDay();
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("Capacity", { exact: false })).toBeVisible();
+
+    const strip = document.querySelector(".status-strip");
+    expect(strip!.className).toBe("status-strip");
+    expect(strip!.textContent).toContain("Capacity is UNKNOWN");
+    expect(document.querySelector(".capacity-dot--unknown")).not.toBeNull();
+    // UNKNOWN is not a severity — no warning/red modifier, no bolded segment.
+    expect(document.querySelector(".status-strip__capacity")).toBeNull();
+  });
+});
+
+describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — section headings and pre-day state", () => {
+  it("renders NOW and TOOLS as real level-2 headings, not decorative paragraphs", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Now", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Tools", exact: true })).toBeVisible();
+  });
+
+  it("renders ATTENTION as a real level-2 heading once an item has earned it", async () => {
+    const priorDay = await startDay();
+    const prior = await submitCheckIn(priorDay.id, GREEN);
+    await recordRecommendation(priorDay.id, prior.recommendation);
+    const currentDay = await startDay();
+    await submitCheckIn(currentDay.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Attention", exact: true })).toBeVisible();
+  });
+
+  it("presents the pre-day state as a heading + primary action, not an unlabeled card", async () => {
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Day not started", exact: true })).toBeVisible();
+    const startButton = screen.getByRole("button", { name: "START DAY", exact: true }).element();
+    expect(startButton.className).toContain("btn-primary");
+  });
+});
+
 /**
  * Current Operational Context V1 (bounded proof): the STATUS context
  * strip's workContext/schedule/post-shift arguments now come from
@@ -357,7 +443,7 @@ describe("TodayScreen // Current Operational Context V1 — context-strip wordin
     await setWorkContext(day.id, "OFF", "MANUAL");
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("No day started yet.")).not.toBeInTheDocument();
+    await expect.element(screen.getByText("Day not started", { exact: true })).not.toBeInTheDocument();
     await vi.waitFor(() => {
       const strip = document.querySelector(".status-strip");
       expect(strip?.textContent).toContain("Off today");
@@ -370,7 +456,7 @@ describe("TodayScreen // Current Operational Context V1 — context-strip wordin
     await markWorkEnded(day.id);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("No day started yet.")).not.toBeInTheDocument();
+    await expect.element(screen.getByText("Day not started", { exact: true })).not.toBeInTheDocument();
     await vi.waitFor(() => {
       const strip = document.querySelector(".status-strip");
       expect(strip?.textContent).toContain("Working today — shift ended, not yet shifted down");
@@ -651,7 +737,7 @@ describe("TodayScreen (real browser) — Capture", () => {
   it("is available even with no BeyondDay started at all", async () => {
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByPlaceholder("Capture a thought...")).toBeVisible();
-    await expect.element(screen.getByText("No day started yet.")).toBeVisible();
+    await expect.element(screen.getByText("Day not started", { exact: true })).toBeVisible();
   });
 
   it("earns an Attention slot once an item is unresolved", async () => {

@@ -42,3 +42,13 @@ export function describeCapacity(capacity: Capacity, reasonCodes: string[]): str
   }
   return `Capacity is ${capacity} because ${reasons}.`;
 }
+
+/**
+ * SUIT-001 (COMMAND PRESENCE): the STATUS strip previously said nothing at
+ * all about capacity before the first check-in — an absence, not a stated
+ * "unknown." Matches describeCapacity's own sentence shape so UNKNOWN reads
+ * as one more state in the same family, not a different kind of message.
+ */
+export function describeCapacityUnknown(): string {
+  return "Capacity is UNKNOWN — no check-in yet today.";
+}

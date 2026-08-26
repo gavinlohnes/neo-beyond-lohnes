@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
-import { startDay, submitCheckIn, startShiftDown } from "../../src/application/commands";
+import { startDay, submitCheckIn, startShiftDown, recordRecommendation } from "../../src/application/commands";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
@@ -58,6 +58,67 @@ describe("accessibility (real browser, axe-core)", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
+  /**
+   * SUIT-001 (COMMAND PRESENCE): pre-day state now has a real heading and
+   * .btn-primary (previously an unlabeled .card) — first fresh coverage
+   * of this state.
+   */
+  it("TodayScreen (pre-day, no BeyondDay started) has no violations beyond the known color-contrast exception", async () => {
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Day not started" })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
+  /**
+   * SUIT-001 (COMMAND PRESENCE): the STATUS strip's new UNKNOWN-capacity
+   * segment (a day exists, no check-in yet) — distinct DOM from both the
+   * pre-day state above and the GREEN/RED cases below.
+   */
+  it("TodayScreen (capacity UNKNOWN, day started but no check-in yet) has no violations beyond the known color-contrast exception", async () => {
+    await startDay();
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("Capacity is UNKNOWN", { exact: false })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
+  /**
+   * SUIT-001 (COMMAND PRESENCE): the dominant RED recommendation itself
+   * (.command-surface, "I'll do this"/"Not doing this" decision buttons)
+   * — distinct from the "active SHIFT DOWN dominance" case below, which
+   * only exercises the command-surface AFTER SHIFT DOWN has been started.
+   */
+  it("TodayScreen (RED recommendation, not yet accepted) has no violations beyond the known color-contrast exception", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, RED);
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("button", { name: "I'll do this" })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
+  /**
+   * SUIT-001 (COMMAND PRESENCE): the ATTENTION section, now a real
+   * heading, with real earned content underneath it (OUTCOME) — the
+   * existing "ordinary/quiet state" case never has anything in Attention.
+   */
+  it("TodayScreen (Attention section populated) has no violations beyond the known color-contrast exception", async () => {
+    const priorDay = await startDay();
+    const prior = await submitCheckIn(priorDay.id, GREEN);
+    await recordRecommendation(priorDay.id, prior.recommendation);
+    const currentDay = await startDay();
+    await submitCheckIn(currentDay.id, GREEN);
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Attention" })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);

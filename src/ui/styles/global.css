@@ -144,6 +144,13 @@ button, input {
 .capacity-dot--red {
   background: var(--accent-strong);
 }
+/* SUIT-001 (COMMAND PRESENCE): UNKNOWN (no check-in yet) is a real fourth
+   state, not a warning — --text-3 (the same quiet tone .section-label
+   already uses) keeps it visually distinct from GREEN/YELLOW/RED without
+   implying anything is wrong. */
+.capacity-dot--unknown {
+  background: var(--text-3);
+}
 
 .field {
   margin-bottom: var(--space-4);
@@ -499,6 +506,30 @@ button, input {
   font-family: var(--font-mono);
   font-size: 16px;
   color: var(--text-2);
+}
+
+/* SUIT-001 (COMMAND PRESENCE): capacity severity on the STATUS instrument
+ * itself, not just the 10px .capacity-dot — reuses the exact
+ * --warning/--accent-strong tokens .capacity-dot already uses for
+ * YELLOW/RED, so a degraded day announces itself before the prose is
+ * read. GREEN gets no modifier — the strip's existing quiet default IS
+ * the nominal state. Only the left tick and the capacity words move;
+ * background/border/base text stay exactly as DEC-003 locked them, so
+ * this still reads as "far quieter than .command-surface" per that
+ * decision, never a second red wash. */
+.status-strip--yellow {
+  border-left-color: var(--warning);
+}
+.status-strip--yellow .status-strip__capacity {
+  color: var(--warning);
+  font-weight: 700;
+}
+.status-strip--red {
+  border-left-color: var(--accent-strong);
+}
+.status-strip--red .status-strip__capacity {
+  color: var(--accent-strong);
+  font-weight: 700;
 }
 
 /* Overdrive Phase 11 (TODAY -> COMMAND 2.0): groups multiple cards under
