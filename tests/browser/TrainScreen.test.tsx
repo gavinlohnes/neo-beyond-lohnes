@@ -301,6 +301,37 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     expect(set2Row.className).toContain("set-earned");
   });
 
+  /**
+   * VISUAL-001 review correction: the jump rail unmounts the previous
+   * exercise's set rows entirely and remounts whichever exercise is
+   * selected. Before the fix, justLoggedKey stayed set indefinitely, so
+   * navigating away from and back to the just-logged exercise remounted
+   * its already-logged row with .set-earned still applied, replaying the
+   * one-shot flash for a set that wasn't actually just logged.
+   */
+  it("navigating away and back to an exercise does not replay the flash on an already-logged set", async () => {
+    const screen = await startStandardWorkout();
+    await screen.getByPlaceholder("lb").first().fill("135");
+    await screen.getByPlaceholder("reps").first().fill("10");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+    expect(screen.getByText("#1 — 135 lb x 10", { exact: true }).element().className).toContain("set-earned");
+
+    // Navigate away via the jump rail — Machine Chest Press's rows,
+    // including the just-logged one, unmount entirely while Pec Deck is
+    // focused.
+    await screen.getByRole("button", { name: /Pec Deck — 0 of 3 sets/ }).click();
+    await expect.element(screen.getByText("Pec Deck", { exact: true })).toBeVisible();
+
+    // Navigate back — the logged row remounts fresh.
+    await screen.getByRole("button", { name: /Machine Chest Press — 1 of 3 sets/ }).click();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+
+    const revisitedRow = screen.getByText("#1 — 135 lb x 10", { exact: true }).element();
+    expect(revisitedRow.className).not.toContain("set-earned");
+  });
+
   it("a SKIPPED set never earns the salience flash", async () => {
     const screen = await startStandardWorkout();
     await screen.getByRole("button", { name: "SKIP" }).first().click();

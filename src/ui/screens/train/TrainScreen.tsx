@@ -490,6 +490,22 @@ export function TrainScreen({
     ? activeExercises.findIndex((ex) => ex.exerciseId === currentExercise.exerciseId)
     : -1;
   const currentSetNumber = currentExercise ? nextUnloggedSetNumber(currentExercise) : null;
+  // VISUAL-001 review correction: only one exercise's set rows are ever
+  // mounted at a time (currentExercise, above) — the jump rail unmounts
+  // the previous exercise's rows entirely and remounts whichever one is
+  // selected. A justLoggedKey belonging to an exercise the lifter has
+  // since navigated away from would otherwise sit there until they
+  // navigate back, at which point that exercise's logged row remounts
+  // fresh and replays the one-shot flash for a set that wasn't actually
+  // just logged. Clearing it the moment focus leaves its owning exercise
+  // — not on a timer, and independent of whether the animation itself
+  // got to finish — closes that path without touching the LOG/SAME AS
+  // LAST TIME/SKIP/resume guarantees, which never depended on this.
+  useEffect(() => {
+    if (justLoggedKey && currentExercise && !justLoggedKey.startsWith(`${currentExercise.exerciseId}#`)) {
+      setJustLoggedKey(null);
+    }
+  }, [currentExercise, justLoggedKey]);
   // Overdrive Phase 18 (TRAIN EXECUTION UX): COMPLETE reads as the
   // expected next action only once it actually is one — mid-session it
   // sits at the same visual weight as PARTIAL/STOP (still equally
