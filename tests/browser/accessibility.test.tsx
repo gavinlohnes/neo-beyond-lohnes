@@ -180,6 +180,34 @@ describe("accessibility (real browser, axe-core)", () => {
     expect(results.violations).toEqual([]);
   });
 
+  /**
+   * SUIT-002 (TRAIN INPUT VELOCITY): three unlogged sets for the current
+   * exercise all render their own WEIGHT/REPS rows simultaneously — this
+   * proves the per-set accessible names (Set number + WEIGHT/REPS) stay
+   * distinct across all three rows at once, and that the fuller axe
+   * ruleset (button-name, label, aria-* — not just color-contrast) is
+   * still clean with the new aria-label/inputMode attributes present.
+   */
+  it("TrainScreen (active STANDARD execution, direct weight/reps entry) exposes distinct per-set accessible names and has no violations beyond the known color-contrast exception", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+
+    for (const setNumber of [1, 2, 3]) {
+      await expect
+        .element(screen.getByRole("spinbutton", { name: `Set ${setNumber} weight in pounds` }))
+        .toBeVisible();
+      await expect
+        .element(screen.getByRole("spinbutton", { name: `Set ${setNumber} repetitions` }))
+        .toBeVisible();
+    }
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
   it("TrainScreen (RECOVERY in progress) has no violations beyond the known color-contrast exception", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
