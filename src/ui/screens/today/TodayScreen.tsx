@@ -24,7 +24,7 @@ import {
   type PartialCheckInValues,
 } from "./checkInFields";
 import { describeContextStrip, describeSchedulePrediction, resolveWorkContextSource } from "./workContextCopy";
-import { describeCapacity } from "./capacityCopy";
+import { describeCapacity, describeCapacityUnknown } from "./capacityCopy";
 import { deriveCapacity } from "../../../engine/capacity";
 import {
   DECLINE_LABEL,
@@ -1088,7 +1088,7 @@ export function TodayScreen({
               ))}
             </div>
             <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 12 }}>
-              <span className="meta">Custom:</span>
+              <span className="meta" id="shift-down-custom-minutes-label">Custom:</span>
               <input
                 type="number"
                 min={1}
@@ -1099,6 +1099,8 @@ export function TodayScreen({
                 }}
                 className="input"
                 style={{ flex: 1 }}
+                aria-label="Custom minutes"
+                aria-describedby="shift-down-custom-minutes-label"
               />
               <span className="meta">min</span>
             </div>
@@ -1693,10 +1695,17 @@ export function TodayScreen({
         </p>
       )}
 
+      {/* SUIT-001 (COMMAND PRESENCE): before a day exists, START DAY is
+          the one available action — nothing else on this screen can
+          compete for it yet. Previously an ad hoc .card with no heading,
+          the one surviving pre-Suit block on this screen; now a real
+          heading plus .btn-primary (not .btn-secondary) so its weight
+          matches what it actually is, using only existing primitives. */}
       {!day && (
-        <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-          <p className="card-body" style={{ margin: 0 }}>No day started yet.</p>
-          <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleStartDay()}>
+        <div className="card">
+          <h2 className="card-title">Day not started</h2>
+          <p className="card-body" style={{ marginBottom: 12 }}>Start your BEYOND Day to check in and get today's guidance.</p>
+          <button className="btn-primary" disabled={busy} onClick={() => void handleStartDay()}>
             START DAY
           </button>
         </div>
@@ -1713,18 +1722,41 @@ export function TodayScreen({
           TODAY // SUIT LAYER 01 (DEC-003): now rendered via .status-strip
           — same content, given its own bordered "operational readout"
           presence instead of floating bare text, while staying far
-          quieter than .card--action so it never competes with NOW. */}
+          quieter than .card--action so it never competes with NOW.
+          SUIT-001 (COMMAND PRESENCE): the strip now distinguishes all four
+          capacity states the Suit needs to communicate — GREEN (unchanged
+          default), YELLOW/RED (the left tick and capacity words shift to
+          the same --warning/--accent-strong tokens .capacity-dot already
+          uses — still just a glance-level tint, never a second red wash),
+          and UNKNOWN (no check-in yet — previously said nothing about
+          capacity at all, which reads as calm rather than as genuinely
+          unknown). Still a single line, still color-independent: every
+          state pairs its dot with an explicit word, never color alone. */}
       {day && (
-        <p className="status-strip">
+        <p
+          className={
+            capacityResult && capacityResult.capacity !== "GREEN"
+              ? `status-strip status-strip--${capacityResult.capacity.toLowerCase()}`
+              : "status-strip"
+          }
+        >
           {describeContextStrip(
             currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
             currentContext ? currentContext.schedulePrediction : scheduledContext,
             currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
           )}
-          {capacityResult && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          {capacityResult ? (
+            <span
+              className={capacityResult.capacity !== "GREEN" ? "status-strip__capacity" : undefined}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
               <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
               {`· ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}`}
+            </span>
+          ) : (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span aria-hidden="true" className="capacity-dot capacity-dot--unknown" />
+              {`· ${describeCapacityUnknown()}`}
             </span>
           )}
         </p>
@@ -1732,7 +1764,7 @@ export function TodayScreen({
 
       {/* NOW — exactly one dominant operating surface: the recommendation,
           unless a genuinely active RESET or SHIFT DOWN has taken over. */}
-      {day && recommendation && <p className="section-label">Now</p>}
+      {day && recommendation && <h2 className="section-label">Now</h2>}
       {day && recommendation && dominant === "SHIFT_DOWN_ACTIVE" && renderShiftDownCard(shiftDownIsPrimary, true)}
       {day && recommendation && dominant === "RESET_ACTIVE" && renderResetCard(resetIsPrimary, true)}
       {day && recommendation && dominant === "RECOMMENDATION" && renderRecommendationCard(true)}
@@ -1743,7 +1775,7 @@ export function TodayScreen({
           entirely when nothing currently qualifies (attentionPolicy.ts). */}
       {attentionPlan.attention.length > 0 && (
         <>
-          <p className="section-label">Attention</p>
+          <h2 className="section-label">Attention</h2>
 
           {endDayInAttention && renderEndDayCard()}
 
@@ -1808,7 +1840,7 @@ export function TodayScreen({
       {/* TOOLS — quiet, always-reachable capabilities that aren't
           currently competing with NOW. No capability is deleted; every
           item below is one tap from full content. */}
-      <p className="section-label">Tools</p>
+      <h2 className="section-label">Tools</h2>
 
       {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && renderShiftDownCard(shiftDownIsPrimary, false)}
       {day && recommendation && dominant !== "RESET_ACTIVE" && renderResetCard(resetIsPrimary, false)}
