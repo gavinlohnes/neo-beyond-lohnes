@@ -101,6 +101,13 @@ export function TrainScreen({
   const [lastPerformedSets, setLastPerformedSets] = useState<Record<string, LastSetInfo>>({});
   const [recentSubstitutions, setRecentSubstitutions] = useState<Record<string, string[]>>({});
   const [showStopConfirm, setShowStopConfirm] = useState(false);
+  // VISUAL-001 (Hybrid Foundation): the one earned-salience moment on
+  // active TRAIN — which set was *just* logged this session, if any.
+  // Starts null on every mount (including a resumed session), so a
+  // reload never replays the flash on sets that were already logged
+  // before this component existed — only a live LOG/SAME AS LAST TIME
+  // tap during this session sets it.
+  const [justLoggedKey, setJustLoggedKey] = useState<string | null>(null);
   // P4 (one-handed execution mode): which exercise is the focused
   // "current" one. null means "let the derived first-incomplete-exercise
   // logic decide" — set explicitly only when the lifter taps into a
@@ -301,6 +308,7 @@ export function TrainScreen({
     try {
       await logSet(session.beyondDayId, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined);
       setSets(await getPerformedSets(session.id));
+      setJustLoggedKey(inputKey(exerciseId, setNumber));
     } finally {
       setBusy(false);
     }
@@ -327,6 +335,7 @@ export function TrainScreen({
         subs[exerciseId] || undefined,
       );
       setSets(await getPerformedSets(session.id));
+      setJustLoggedKey(inputKey(exerciseId, setNumber));
     } finally {
       setBusy(false);
     }
@@ -481,6 +490,22 @@ export function TrainScreen({
     ? activeExercises.findIndex((ex) => ex.exerciseId === currentExercise.exerciseId)
     : -1;
   const currentSetNumber = currentExercise ? nextUnloggedSetNumber(currentExercise) : null;
+  // VISUAL-001 review correction: only one exercise's set rows are ever
+  // mounted at a time (currentExercise, above) — the jump rail unmounts
+  // the previous exercise's rows entirely and remounts whichever one is
+  // selected. A justLoggedKey belonging to an exercise the lifter has
+  // since navigated away from would otherwise sit there until they
+  // navigate back, at which point that exercise's logged row remounts
+  // fresh and replays the one-shot flash for a set that wasn't actually
+  // just logged. Clearing it the moment focus leaves its owning exercise
+  // — not on a timer, and independent of whether the animation itself
+  // got to finish — closes that path without touching the LOG/SAME AS
+  // LAST TIME/SKIP/resume guarantees, which never depended on this.
+  useEffect(() => {
+    if (justLoggedKey && currentExercise && !justLoggedKey.startsWith(`${currentExercise.exerciseId}#`)) {
+      setJustLoggedKey(null);
+    }
+  }, [currentExercise, justLoggedKey]);
   // Overdrive Phase 18 (TRAIN EXECUTION UX): COMPLETE reads as the
   // expected next action only once it actually is one — mid-session it
   // sits at the same visual weight as PARTIAL/STOP (still equally
@@ -773,10 +798,18 @@ export function TrainScreen({
                   // ConfirmIcon only for a real logged set, never for
                   // SKIPPED — skip stays neutral, per the established
                   // "neutral wording, not fail" rule for skip/partial.
+                  //
+                  // VISUAL-001: the earned-salience flash (.set-earned) is
+                  // additionally gated on this being the exact set this
+                  // session just logged — a SKIP never earns it (matches
+                  // ConfirmIcon's own skip exclusion above), and no set
+                  // from a resumed session earns it either (justLoggedKey
+                  // starts null on mount).
+                  const isEarned = !loggedSet.skipped && justLoggedKey === inputKey(ex.exerciseId, setNumber);
                   return (
                     <p
                       key={setNumber}
-                      className="meta fade-in"
+                      className={`meta fade-in${isEarned ? " set-earned" : ""}`}
                       style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}
                     >
                       {!loggedSet.skipped && <ConfirmIcon size={20} />}
