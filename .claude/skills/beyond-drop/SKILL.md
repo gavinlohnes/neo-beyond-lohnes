@@ -228,16 +228,18 @@ section operationalizes for the Drop workflow specifically.
 
 **FACTORY // CODEX BUILDER CUTOVER** — direct owner ruling, verified baseline
 `ba6e47b79977ce1ddc19ee9ebddbff31c023b60d` (2026-08-26), superseding the former Pilot V1 role
-lock recorded under HISTORY below. Codex is now authorized to act as BEYOND's primary Builder
-when explicitly assigned to a Drop. Builder, Reviewer, and Integrator remain three distinct
-responsibilities and must run as three separate sessions on any one Drop — no session may review
-or merge its own work, regardless of which agent holds which role. Every other safeguard already
-in force (baseline/branch/worktree discipline, CI, independent review for Architectural/
-High-Risk Drops, no-self-merge) carries forward unchanged, below.
+lock recorded under HISTORY below. Codex is now authorized to act as **a** Builder when
+explicitly assigned to a Drop. This authorizes Codex as a Builder — it does not retire Claude,
+and does not make Codex the exclusive or default Builder. Builder, Reviewer, and Integrator
+remain three distinct responsibilities and must run as three separate sessions on any one Drop —
+no session may review or merge its own work, regardless of which agent holds which role. Every
+other safeguard already in force (baseline/branch/worktree discipline, CI, independent review
+for Architectural/High-Risk Drops, no-self-merge) carries forward unchanged, below.
 
-- **Roles are assigned per Drop, not fixed by agent identity**: either Claude or Codex may be
-  named Builder for a given Drop; the other serves as Reviewer for that same Drop. A Drop whose
-  tier requires a distinct Integrator uses a third session for that step (see
+- **Roles are assigned per Drop, not fixed by agent identity**: Gavin assigns either Claude or
+  Codex as Builder for a given Drop, based on availability and suitability; only one agent owns
+  Builder for that Drop, and the other serves as Reviewer for that same Drop. A Drop whose tier
+  requires a distinct Integrator uses a third session for that step (see
   `docs/agent/BEYOND_ENGINEERING_CONTRACT.md`'s Integration discipline) — the Builder never
   integrates its own work, regardless of agent.
 - **Baseline**: every task contract records the exact `origin/master` SHA (fetched fresh, never

@@ -7,10 +7,13 @@ both engineering agents on this repo must follow. This file only adds what's Cod
 
 **FACTORY // CODEX BUILDER CUTOVER** — direct owner ruling, verified baseline
 `ba6e47b79977ce1ddc19ee9ebddbff31c023b60d`, superseding the Pilot V1 lock below. Codex is now
-authorized to act as BEYOND's primary Builder when explicitly assigned to a Drop. Builder,
-Reviewer, and Integrator are always three separate sessions on any one Drop; no session reviews
-or merges its own work, regardless of which agent holds which role. See
-`.claude/skills/beyond-drop` §8 for the full operating model and history.
+authorized to act as a Builder when explicitly assigned to a Drop. This authorizes Codex as
+**a** Builder — it does not retire Claude, and does not make Codex the exclusive or default
+Builder. Gavin assigns either Claude or Codex as Builder per Drop, based on availability and
+suitability; only one agent owns Builder for a given Drop. Builder, Reviewer, and Integrator are
+always three separate sessions on any one Drop; no session reviews or merges its own work,
+regardless of which agent holds which role. See `.claude/skills/beyond-drop` §8 for the full
+operating model and history.
 
 When Codex is not the assigned Builder for a Drop, its role remains **read-only Pre-mortem +
 Independent Reviewer / Test Adversary** exactly as under Pilot V1 (see HISTORY below) — the
