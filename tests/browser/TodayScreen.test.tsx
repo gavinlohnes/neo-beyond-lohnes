@@ -1100,4 +1100,32 @@ describe("TodayScreen (real browser) — VISUAL-001 Red Budget & structural geom
     expect(ordinaryRow).not.toBeNull();
     expect(getComputedStyle(ordinaryRow!).clipPath).toBe("none");
   });
+
+  // VISUAL-002: useRedCapacityOverrideGate is shared by TODAY (declining
+  // a RED-capacity STABILIZE recommendation) and TRAIN (starting a
+  // STANDARD workout under RED) — exercised here via TODAY's real call
+  // site, per the mission's "prove semantic-truth fixes on a real
+  // rendered call site" requirement.
+  it("declining a RED-capacity STABILIZE recommendation shows a real warning panel with a real danger action and a real secondary CANCEL", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, RED);
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("button", { name: "Not doing this" })).toBeVisible();
+    await screen.getByRole("button", { name: "Not doing this" }).click();
+
+    const panel = document.querySelector(".card--warning");
+    expect(panel).not.toBeNull();
+    expect(getComputedStyle(panel!).borderColor).toBe("rgb(200, 48, 46)"); // --danger: #c8302e
+
+    const proceed = screen.getByRole("button", { name: "PROCEED ANYWAY" }).element();
+    expect(proceed.className).toContain("btn-danger");
+    expect(proceed.className).not.toContain("btn-primary");
+
+    const cancel = screen.getByRole("button", { name: "CANCEL" }).element();
+    expect(cancel.className).toContain("btn-secondary");
+    expect(cancel.className).not.toContain("btn-primary");
+    // No inline background override left over from the pre-VISUAL-002
+    // btn-primary-plus-inline-style pattern.
+    expect((cancel as HTMLElement).style.background).toBe("");
+  });
 });

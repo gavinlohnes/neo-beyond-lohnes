@@ -4,6 +4,7 @@ import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { SignalRow } from "../../components/SignalRow";
+import { CommandSurface } from "../../components/CommandSurface";
 import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
 import { describeCommitmentMission, describeCommitmentsSummary, describeObligationRelevance } from "./commitmentsCopy";
 import {
@@ -1303,9 +1304,14 @@ export function TodayScreen({
     // NO_ACTION_REQUIRED's own title/rationale stays Engine-authored,
     // untouched.
     const isAllClear = recommendation.kind === "NO_ACTION_REQUIRED";
-    const wrapperClassName = isAllClear ? "all-clear fade-in" : isDominant ? "command-surface fade-in" : "equipment-row fade-in";
-    return (
-      <div key={recommendation.id} className={wrapperClassName}>
+    // VISUAL-002: the dominant, non-all-clear branch is the same PRIMARY
+    // DECISION/EXECUTION territory formalized as <CommandSurface> — the
+    // all-clear and demoted (.equipment-row) branches keep their own
+    // wrapper className exactly as before, since only this one branch is
+    // the shared command-surface pattern.
+    const wrapperClassName = isAllClear ? "all-clear fade-in" : "equipment-row fade-in";
+    const cardContent = (
+      <>
         <h2 className={isDominant || isAllClear ? "command-title" : "tool-label"} style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
           {recommendation.title}
@@ -1434,6 +1440,18 @@ export function TodayScreen({
           )}
           <ConfirmPanel />
         </div>
+      </>
+    );
+    if (isDominant && !isAllClear) {
+      return (
+        <CommandSurface key={recommendation.id}>
+          {cardContent}
+        </CommandSurface>
+      );
+    }
+    return (
+      <div key={recommendation.id} className={wrapperClassName}>
+        {cardContent}
       </div>
     );
   }
