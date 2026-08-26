@@ -275,6 +275,77 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     expect(screen.getByText(/^#1 —/).elements()).toHaveLength(0);
     await expect.element(screen.getByText(/Set 1 of 3/)).toBeVisible();
   });
+
+  /**
+   * VISUAL-001 (Hybrid Foundation): the one earned-salience moment this
+   * Drop adds to active TRAIN. Ordinary repeated logging (every set here
+   * except the one just logged) must stay exactly as quiet as before.
+   */
+  it("the set just logged this session earns a one-shot salience flash — earlier logged sets do not", async () => {
+    const screen = await startStandardWorkout();
+    await screen.getByPlaceholder("lb").first().fill("135");
+    await screen.getByPlaceholder("reps").first().fill("10");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+
+    const set1Row = screen.getByText("#1 — 135 lb x 10", { exact: true }).element();
+    expect(set1Row.className).toContain("set-earned");
+
+    // Logging set 2 moves the earned flash — set 1 is no longer "just logged."
+    const sameAsLast = screen.getByRole("button", { name: "SET 2: SAME AS LAST TIME — 135 lb x 10" });
+    await sameAsLast.click();
+    await expect.element(screen.getByText("#2 — 135 lb x 10", { exact: true })).toBeVisible();
+
+    expect(set1Row.className).not.toContain("set-earned");
+    const set2Row = screen.getByText("#2 — 135 lb x 10", { exact: true }).element();
+    expect(set2Row.className).toContain("set-earned");
+  });
+
+  it("a SKIPPED set never earns the salience flash", async () => {
+    const screen = await startStandardWorkout();
+    await screen.getByRole("button", { name: "SKIP" }).first().click();
+    await expect.element(screen.getByText("#1 — SKIPPED", { exact: true })).toBeVisible();
+
+    const skippedRow = screen.getByText("#1 — SKIPPED", { exact: true }).element();
+    expect(skippedRow.className).not.toContain("set-earned");
+  });
+
+  it("the dominant execution surface (.command-surface) carries the one earned structural cut, not the jump-rail chips", async () => {
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+
+    const surface = document.querySelector(".command-surface");
+    expect(surface).not.toBeNull();
+    expect(getComputedStyle(surface!).clipPath).not.toBe("none");
+
+    const chip = document.querySelector(".chip");
+    expect(chip).not.toBeNull();
+    expect(getComputedStyle(chip!).clipPath).toBe("none");
+  });
+
+  it("LOG is no longer filled with identity red — it uses the neutral action tokens, and stays the most visually prominent control in its row", async () => {
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    const logLocator = screen.getByRole("button", { name: "LOG" }).first();
+    // loadExerciseAdvisory() is still in flight for a moment after
+    // "Machine Chest Press" first becomes visible (session state and the
+    // busy flag settle in separate renders) — wait for LOG to actually be
+    // enabled, not just present, so this reads the real enabled-state
+    // fill rather than a transient :disabled one under load.
+    await expect.element(logLocator).toBeEnabled();
+    const logButton = logLocator.element();
+    const skipButton = screen.getByRole("button", { name: "SKIP" }).first().element();
+
+    const logBg = getComputedStyle(logButton).backgroundColor;
+    expect(logBg).not.toBe("rgb(200, 30, 44)"); // was var(--accent)
+    expect(logBg).toBe("rgb(242, 242, 242)"); // --action-primary-bg
+
+    // LOG (.btn-primary) must still read as more prominent than SKIP
+    // (.btn-secondary) purely from contrast against the dark surface —
+    // SKIP's fill stays dark/quiet.
+    const skipBg = getComputedStyle(skipButton).backgroundColor;
+    expect(skipBg).not.toBe(logBg);
+  });
 });
 
 describe("TrainScreen (real browser) — RECOVERY session", () => {

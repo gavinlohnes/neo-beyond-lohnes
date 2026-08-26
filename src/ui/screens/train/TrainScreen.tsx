@@ -101,6 +101,13 @@ export function TrainScreen({
   const [lastPerformedSets, setLastPerformedSets] = useState<Record<string, LastSetInfo>>({});
   const [recentSubstitutions, setRecentSubstitutions] = useState<Record<string, string[]>>({});
   const [showStopConfirm, setShowStopConfirm] = useState(false);
+  // VISUAL-001 (Hybrid Foundation): the one earned-salience moment on
+  // active TRAIN — which set was *just* logged this session, if any.
+  // Starts null on every mount (including a resumed session), so a
+  // reload never replays the flash on sets that were already logged
+  // before this component existed — only a live LOG/SAME AS LAST TIME
+  // tap during this session sets it.
+  const [justLoggedKey, setJustLoggedKey] = useState<string | null>(null);
   // P4 (one-handed execution mode): which exercise is the focused
   // "current" one. null means "let the derived first-incomplete-exercise
   // logic decide" — set explicitly only when the lifter taps into a
@@ -301,6 +308,7 @@ export function TrainScreen({
     try {
       await logSet(session.beyondDayId, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined);
       setSets(await getPerformedSets(session.id));
+      setJustLoggedKey(inputKey(exerciseId, setNumber));
     } finally {
       setBusy(false);
     }
@@ -327,6 +335,7 @@ export function TrainScreen({
         subs[exerciseId] || undefined,
       );
       setSets(await getPerformedSets(session.id));
+      setJustLoggedKey(inputKey(exerciseId, setNumber));
     } finally {
       setBusy(false);
     }
@@ -773,10 +782,18 @@ export function TrainScreen({
                   // ConfirmIcon only for a real logged set, never for
                   // SKIPPED — skip stays neutral, per the established
                   // "neutral wording, not fail" rule for skip/partial.
+                  //
+                  // VISUAL-001: the earned-salience flash (.set-earned) is
+                  // additionally gated on this being the exact set this
+                  // session just logged — a SKIP never earns it (matches
+                  // ConfirmIcon's own skip exclusion above), and no set
+                  // from a resumed session earns it either (justLoggedKey
+                  // starts null on mount).
+                  const isEarned = !loggedSet.skipped && justLoggedKey === inputKey(ex.exerciseId, setNumber);
                   return (
                     <p
                       key={setNumber}
-                      className="meta fade-in"
+                      className={`meta fade-in${isEarned ? " set-earned" : ""}`}
                       style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}
                     >
                       {!loggedSet.skipped && <ConfirmIcon size={20} />}

@@ -169,10 +169,22 @@ button, input {
   accent-color: var(--accent);
 }
 
+/* VISUAL-001 (Hybrid Foundation): background/color changed from
+   var(--accent) to the neutral --action-primary-bg/--action-primary-text
+   pair (see tokens.css's own doc comment) — this was the app-wide, every-
+   screen default that filled every primary action solid identity-red
+   regardless of semantic meaning, the exact pattern DEC-004's Red Budget
+   forbids and Visual Synthesis Round 1.0 explicitly rejected. The
+   near-white-on-near-black reversal keeps the primary action at least as
+   discoverable (higher contrast against --surface-active's dark-red wash
+   than red-on-dark-red ever was) while leaving red free to mean
+   recommendation/active/earned/warning/critical/selection elsewhere.
+   :active/:disabled below are unchanged — both already worked on any fill
+   color. */
 .btn-primary {
   width: 100%;
-  background: var(--accent);
-  color: var(--text-1);
+  background: var(--action-primary-bg);
+  color: var(--action-primary-text);
   border: none;
   border-radius: var(--radius);
   padding: 14px var(--space-4);
@@ -368,6 +380,24 @@ button, input {
   stroke-dashoffset: 16;
   animation: beyond-confirm-draw var(--motion-base) var(--motion-easing) forwards;
   animation-delay: var(--motion-fast);
+}
+
+/* VISUAL-001 (Hybrid Foundation): the one earned high-salience moment
+   this Drop adds to active TRAIN — a brief, one-shot background flash on
+   the specific set row that was *just* logged this session (never on a
+   resumed session's already-logged sets, since the triggering React state
+   starts null on mount — see TrainScreen.tsx). Ordinary repeated logging
+   stays exactly as quiet as before; only the instant of a genuine LOG
+   gets stronger salience, and only stronger salience, never a new
+   surface/geometry — same one-shot-on-fresh-mount pattern .fade-in
+   already uses, so it plays exactly once and never loops. */
+@keyframes beyond-earned-flash {
+  from { background: rgba(226, 69, 79, 0.22); }
+  to { background: transparent; }
+}
+.set-earned {
+  animation: beyond-earned-flash var(--motion-base) var(--motion-easing);
+  border-radius: var(--radius);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -683,11 +713,23 @@ button, input {
  * all use this exact primitive, same as TODAY's dominant recommendation
  * surface. Genuinely shared Suit Grammar, not a TODAY-specific pattern
  * forced onto a different screen. */
+/* VISUAL-001 (Hybrid Foundation): the one structural-geometry addition
+   this Drop makes — a single small corner cut on the top-right, the only
+   place in the entire stylesheet a clip-path now exists. Applied here and
+   nowhere else because .command-surface is, by definition, the currently
+   dominant/earned territory (TODAY's primary recommendation/active RESET-
+   SHIFT DOWN, TRAIN's pre-session picker/active exercise/RECOVERY) — never
+   applied to an ordinary .card/.equipment-row/.signal-row. The cut sits
+   well inside the surface's own padding (--space-5/--space-4 = 24/16px vs
+   a 14px cut) so it never intersects text content, including at 320px
+   width or under large-text settings. border-left (the left edge, where
+   the cut does not reach) is unaffected. */
 .command-surface {
   background: var(--surface-active);
   border-left: 6px solid var(--accent);
   padding: var(--space-5) var(--space-4);
   margin-bottom: var(--space-5);
+  clip-path: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%);
 }
 
 /* COMMAND TITLE — genuinely large display type for the one dominant

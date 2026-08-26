@@ -31,6 +31,24 @@
   --danger: #c8302e;
   --focus: #e2454f;
 
+  /* VISUAL-001 (Hybrid Foundation) — Red Budget correction. DEC-004 locks
+     "Red is not the generic CTA color"; the Visual Synthesis Round 1.0
+     evidence explicitly rejected a solid-red default primary action. A
+     high-contrast neutral reversal (near-white fill, near-black text)
+     replaces --accent as .btn-primary's default fill so red stays scarce
+     enough to keep meaning recommendation/active/earned/warning/critical/
+     selection — never merely "the main button." Mirrors --text-1/--bg
+     rather than a new hue, keeping the palette closed. */
+  --action-primary-bg: #f2f2f2;
+  --action-primary-text: #0a0a0a;
+
+  /* VISUAL-001: the one reusable structural-geometry primitive this Drop
+     introduces — a single small corner cut, applied only to the currently
+     dominant/earned surface (.command-surface — see its own doc comment
+     in global.css), never universally. "Only one chamfer may identify an
+     active region" (Visual Synthesis Round 1.0's own design invariant). */
+  --chamfer: 14px;
+
   /* Overdrive Phase 1: restrained elevation for the one card per screen
      that's meant to visually lead (the primary recommendation card,
      an active/prominent RESET or SHIFT DOWN state) — not a global

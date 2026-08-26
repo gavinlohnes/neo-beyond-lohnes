@@ -1041,7 +1041,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
 });
 
 describe("TodayScreen (real browser) — narrow phone widths", () => {
-  it.each([320, 360, 375])("has no horizontal overflow at %ipx", async (width) => {
+  it.each([320, 360, 375, 412])("has no horizontal overflow at %ipx", async (width) => {
     const day = await startDay();
     await submitCheckIn(day.id, RED);
     await startShiftDown(day.id, 10);
@@ -1051,5 +1051,53 @@ describe("TodayScreen (real browser) — narrow phone widths", () => {
     await render(<TodayScreen />);
 
     await expect.poll(() => document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+  });
+});
+
+/**
+ * VISUAL-001 (Hybrid Foundation): the Red Budget correction and the one
+ * structural-geometry primitive it introduces, verified against the real
+ * rendered DOM/computed styles — not just source inspection. Every
+ * previous TodayScreen test above (including the RED/SHIFT-DOWN/CAPTURE
+ * narrow-width case just above, which already exercises .command-surface)
+ * still passes unmodified, so this only adds coverage for what's new.
+ */
+describe("TodayScreen (real browser) — VISUAL-001 Red Budget & structural geometry", () => {
+  it("a primary action is no longer filled with identity red — it uses the neutral action tokens", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+
+    // The GREEN/NO_ACTION_REQUIRED primary action — .btn-primary, per
+    // describeRecommendationAction — is the one guaranteed .btn-primary
+    // present in this exact state (ALL GOOD is .btn-secondary, not the
+    // one under test here).
+    const el = screen.getByRole("button", { name: "No action needed" }).element();
+    const bg = getComputedStyle(el).backgroundColor;
+    // var(--accent) = #c81e2c = rgb(200, 30, 44). The corrected token,
+    // --action-primary-bg, is #f2f2f2 = rgb(242, 242, 242).
+    expect(bg).not.toBe("rgb(200, 30, 44)");
+    expect(bg).toBe("rgb(242, 242, 242)");
+  });
+
+  it("the dominant recommendation surface (.command-surface) carries the one earned structural cut", async () => {
+    // RED capacity's STABILIZE recommendation is genuinely dominant
+    // (isDominant && !isAllClear) — unlike GREEN/NO_ACTION_REQUIRED above,
+    // which renders the deliberately different .all-clear silhouette.
+    const day = await startDay();
+    await submitCheckIn(day.id, RED);
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("button", { name: "I'll do this" })).toBeVisible();
+
+    const surface = document.querySelector(".command-surface");
+    expect(surface).not.toBeNull();
+    expect(getComputedStyle(surface!).clipPath).not.toBe("none");
+    // The cut is restricted to .command-surface — an ordinary
+    // .equipment-row tool (e.g. ALL GOOD / State check-in, both present
+    // in this exact GREEN state) must not have picked it up.
+    const ordinaryRow = document.querySelector(".equipment-row");
+    expect(ordinaryRow).not.toBeNull();
+    expect(getComputedStyle(ordinaryRow!).clipPath).toBe("none");
   });
 });
