@@ -235,11 +235,14 @@ or merge its own work, regardless of which agent holds which role. Every other s
 in force (baseline/branch/worktree discipline, CI, independent review for Architectural/
 High-Risk Drops, no-self-merge) carries forward unchanged, below.
 
-- **Roles are assigned per Drop, not fixed by agent identity**: either Claude or Codex may be
-  named Builder for a given Drop; the other serves as Reviewer for that same Drop. A Drop whose
-  tier requires a distinct Integrator uses a third session for that step (see
-  `docs/agent/BEYOND_ENGINEERING_CONTRACT.md`'s Integration discipline) — the Builder never
-  integrates its own work, regardless of agent.
+- **Roles are assigned per Drop, not fixed by agent identity**: Gavin assigns either Claude or
+  Codex as Builder for a given Drop, based on availability and suitability; only one agent owns
+  Builder for that Drop. Every Drop receives a separately assigned Reviewer session when
+  independent review is required — Claude or Codex may serve as Reviewer, whichever agent is not
+  the Builder for that Drop. The Builder session may never review or integrate its own work;
+  separate session/worktree responsibility — not agent identity — is the controlling safeguard.
+  A Drop whose tier requires a distinct Integrator uses a third session for that step (see
+  `docs/agent/BEYOND_ENGINEERING_CONTRACT.md`'s Integration discipline).
 - **Baseline**: every task contract records the exact `origin/master` SHA (fetched fresh, never
   assumed), branch owner, worktree path, and declared expected footprint.
 - **Worktrees**: `git fetch origin master && git worktree add
