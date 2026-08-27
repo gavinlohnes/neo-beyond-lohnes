@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: bc28f2093cf3f006df1306020bf9c9fd04e6f9fc
 branch: factory-002-development-factory-v1
 contract: docs/agent/drops/FACTORY-002.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/34
 builder: Claude (assigned by Gavin, this Drop only)
 reviewer: (unassigned)
 integrator: (unassigned)
