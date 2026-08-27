@@ -259,23 +259,30 @@ export function renderActiveDropFile(fields) {
     "Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations",
     `for this Drop live in \`${fields.contract}\` — this file is a pointer, not a copy.`,
     "",
-    "At most one Drop may be `status: ACTIVE` here at a time —",
-    "`node scripts/factory-drop.mjs validate|init` refuses to launch a different Drop while one",
-    "is already ACTIVE. Closing (`node scripts/factory-drop.mjs close`) flips this file's status",
-    "to CLOSED; it never deletes or rewrites the historical Drop Contract file itself.",
+    "At most one Drop may be recorded `status: ACTIVE` in origin/master's own copy of this file",
+    "at a time — `node scripts/factory-drop.mjs validate|init` refuses to launch a different Drop",
+    "while one is already ACTIVE here. This does NOT mechanically block a second, unrelated Drop",
+    "branched from master while this one is still an open, unmerged PR (its own activation isn't",
+    "visible on origin/master until it merges) — see SKILL.md §9's known-limitation note. Closing",
+    "(`node scripts/factory-drop.mjs close`) flips this file's status to CLOSED; it never deletes",
+    "or rewrites the historical Drop Contract file itself.",
     "",
   );
   return lines.join("\n");
 }
 
 /**
- * Confirms `sha` is a real commit AND actually reachable from a freshly-
- * fetched `origin/master` — i.e. genuinely integrated, not merely a
- * well-formed-looking but unreachable/fabricated value. Never trusts a
- * caller-supplied SHA at face value, matching this repository's own
- * "don't trust caller-supplied provenance" discipline elsewhere.
+ * Confirms `sha` is a real commit that (a) is reachable from a freshly-
+ * fetched `origin/master`, AND (b) actually contains this Drop's own
+ * branch tip — i.e. genuinely represents THIS Drop's integration, not
+ * merely some other, unrelated commit that happens to be an ancestor of
+ * master (every commit already on master is trivially "an ancestor of
+ * master", including this Drop's own pre-implementation baseline — that
+ * is not proof of integration and must not be accepted as such). Never
+ * trusts a caller-supplied SHA at face value, matching this repository's
+ * own "don't trust caller-supplied provenance" discipline elsewhere.
  */
-function checkIntegrationSha(root, sha) {
+function checkIntegrationSha(root, sha, branch) {
   try {
     git(["fetch", "-q", "origin", "master"], root);
   } catch (e) {
@@ -291,6 +298,29 @@ function checkIntegrationSha(root, sha) {
     git(["merge-base", "--is-ancestor", resolved, "origin/master"], root);
   } catch {
     return { ok: false, error: `INVALID_INTEGRATION_SHA: "${sha}" is not reachable from origin/master — it was not actually integrated.` };
+  }
+
+  let branchTip;
+  try {
+    git(["fetch", "-q", "origin", branch], root);
+    branchTip = git(["rev-parse", "FETCH_HEAD"], root);
+  } catch (e) {
+    return {
+      ok: false,
+      error:
+        `INVALID_INTEGRATION_SHA: could not fetch this Drop's own branch "${branch}" from origin to confirm ` +
+        `"${sha}" actually contains it (${e.message}). Being reachable from origin/master alone is not proof of ` +
+        `integration — every pre-existing commit on master trivially satisfies that. Verify the branch still ` +
+        `exists on origin before closing.`,
+    };
+  }
+  try {
+    git(["merge-base", "--is-ancestor", branchTip, resolved], root);
+  } catch {
+    return {
+      ok: false,
+      error: `INVALID_INTEGRATION_SHA: "${sha}" does not contain this Drop's own branch "${branch}" (tip ${branchTip}) — it cannot represent this Drop's actual integration.`,
+    };
   }
   return { ok: true, sha: resolved };
 }
@@ -343,7 +373,7 @@ export function closeActiveDrop(id, integrationSha, root = getRoot()) {
   }
   if (!integrationSha) return { ok: false, code: "MISSING_FLAG", message: "close requires --integration-sha <sha>" };
 
-  const shaCheck = checkIntegrationSha(root, integrationSha);
+  const shaCheck = checkIntegrationSha(root, integrationSha, active.branch);
   if (!shaCheck.ok) return { ok: false, code: "INVALID_INTEGRATION_SHA", message: shaCheck.error };
 
   const content = renderActiveDropFile({

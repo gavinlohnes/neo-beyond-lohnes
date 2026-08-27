@@ -304,7 +304,12 @@ actually authorized for that Drop, independent of what any single conversation r
 `docs/agent/ACTIVE_DROP.md` is the single canonical pointer to whichever Drop is currently
 authorized — its `id`, `status` (`ACTIVE` or `CLOSED`), declared `baseline`, `branch`, the
 `contract` file it points to, and the `pr`/`builder`/`reviewer`/`integrator` routing fields as
-they become known. At most one Drop may be `ACTIVE` at a time.
+they become known. **The mechanically-enforced guarantee is precisely this: at most one Drop may
+be recorded `ACTIVE` in `origin/master`'s own copy of this file at a time** —
+`validate`/`init` refuse to launch a second Drop against whatever `origin/master` currently
+records. This is narrower than "at most one Drop may ever be in flight" (see the known
+limitation immediately below) — state it exactly this way, not as an unqualified single-active-
+Drop claim, anywhere this mechanism is described.
 
 **Activation is committed as part of the Builder's own branch, not as a separate direct commit
 to `master` ahead of it.** The Drop Contract and the `init`-generated `ACTIVE_DROP.md` are both
@@ -320,13 +325,18 @@ direct, out-of-band commit to `master` before the Builder's worktree existed), e
 declares. `tests/factory/factoryDrop.test.ts`'s "activation must not itself move `origin/master`
 out from under its own Drop" test locks this in as a regression test, not just a documented rule.
 
-Known limitation, accepted rather than engineered around: because activation only becomes
-visible on `origin/master` once this Drop's PR actually merges, a *second*, unrelated Drop
-launched from `master` while this one is still an open, unmerged PR will not be mechanically
-blocked by `CONFLICTING_ACTIVE_DROP` — only a human/process check (or this Drop's own open-PR
-list) catches that case pre-merge. This is the smallest-sufficient tradeoff: solving it
-mechanically would require duplicating GitHub's own open-PR state into this file, which is
-exactly the kind of live-fact duplication this mechanism exists to avoid.
+**Known limitation, accepted rather than engineered around, and material — not a footnote:**
+because activation only becomes visible on `origin/master` once this Drop's PR actually merges,
+a *second*, unrelated Drop launched from `master` while this one is still an open, unmerged PR
+is **not mechanically blocked** by `CONFLICTING_ACTIVE_DROP` — only a human/process check (e.g.
+scanning open PRs before launching) catches that case pre-merge. Consulting GitHub's live
+open-PR state from `scripts/factory-drop.mjs` to close this gap was considered and rejected: it
+would require a GitHub API client and a token inside what is otherwise a zero-dependency,
+fully-offline-capable deterministic check, turning a deterministic gate into a network-dependent
+one and building exactly the "custom GitHub client" FACTORY-002's own contract excludes. The
+mechanism's actual, honest scope is: *at most one Drop may be the recorded `ACTIVE` Drop on
+`master` at a time* — coordination of concurrently open, not-yet-merged Drop branches remains a
+human/process responsibility this mechanism does not automate.
 
 ### Bootstrap / validation script
 
