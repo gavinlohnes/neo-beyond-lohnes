@@ -6,6 +6,7 @@ import type {
   Outcome,
   PerformedSetRaw,
   Recommendation,
+  SavedMeal,
   SchedulePattern,
   StateCheckIn,
   WorkoutSession,
@@ -25,6 +26,7 @@ export class BeyondDB extends Dexie {
   captureItems!: Table<CaptureItem, string>;
   missions!: Table<Mission, string>;
   obligations!: Table<Obligation, string>;
+  savedMeals!: Table<SavedMeal, string>;
 
   constructor() {
     super("beyond");
@@ -125,6 +127,29 @@ export class BeyondDB extends Dexie {
       captureItems: "id, status, capturedAt",
       missions: "id, status, createdAt",
       obligations: "id, status, missionId, dueAt, createdAt",
+    });
+    // v7 (NUTRITION-001, Meal Memory, High-Risk Drop): adds savedMeals — a
+    // small, directly-mutable reusable meal preset (see SavedMeal's own
+    // doc comment in domain/common/types.ts). Purely additive, same
+    // treatment v5/v6 already gave captureItems/missions/obligations: no
+    // upgrade() callback, since there is no equivalent prior data to seed
+    // or migrate. Meal history itself is NOT a new table — it's
+    // MEAL_LOGGED/MEAL_LOG_CORRECTED DomainEvents in the existing `events`
+    // table, same hydration-style correction-chain pattern as every other
+    // BODY log. v1-v6 tables/data untouched.
+    this.version(7).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
     });
   }
 }

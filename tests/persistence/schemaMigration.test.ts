@@ -14,7 +14,7 @@ import { DEFAULT_SCHEDULE_PATTERN, deriveScheduledContext } from "../../src/engi
  */
 
 const DB_NAME = "beyond";
-const CURRENT_SCHEMA_VERSION = 6;
+const CURRENT_SCHEMA_VERSION = 7;
 
 afterEach(async () => {
   await Dexie.delete(DB_NAME);
@@ -69,6 +69,7 @@ describe("Dexie v1 -> current schema migration", () => {
     expect(await upgraded.captureItems.count()).toBe(0);
     expect(await upgraded.missions.count()).toBe(0);
     expect(await upgraded.obligations.count()).toBe(0);
+    expect(await upgraded.savedMeals.count()).toBe(0);
 
     upgraded.close();
   });
@@ -165,6 +166,119 @@ describe("Dexie v5 -> v6 migration (Drop 01: missions/obligations)", () => {
     expect(preExistingEvent).toBeDefined();
     expect(preExistingEvent!.missionId).toBeUndefined();
     expect(preExistingEvent!.obligationId).toBeUndefined();
+    expect(await upgraded.savedMeals.count()).toBe(0);
+
+    upgraded.close();
+  });
+});
+
+/**
+ * NUTRITION-001 (Meal Memory, High-Risk Drop): a real v6 install (the
+ * schema immediately before this Drop) has protein/hydration event
+ * history but no savedMeals table at all. Proves the v7 upgrade adds it
+ * empty and preserves every v1-v6 table/row untouched, including a real
+ * PROTEIN_LOGGED event — the exact kind of history this Drop's own
+ * "effective meal protein counts toward Minimum Day alongside
+ * protein-only logs" change reads alongside meal history.
+ */
+describe("Dexie v6 -> v7 migration (NUTRITION-001: savedMeals)", () => {
+  it("adds an empty savedMeals table and preserves existing v6 data", async () => {
+    const v6 = new Dexie(DB_NAME);
+    v6.version(1).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+    });
+    v6.version(2).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId",
+    });
+    v6.version(3).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+    });
+    v6.version(4)
+      .stores({
+        beyondDays: "id, status, startedAt",
+        events: "id, beyondDayId, type, occurredAt",
+        checkIns: "id, beyondDayId, recordedAt",
+        recommendations: "id, beyondDayId, issuedAt",
+        outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+        workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+        performedSets: "id, beyondDayId, sessionId, exerciseId",
+        schedulePatterns: "id",
+      })
+      .upgrade(async (tx) => {
+        await tx.table("schedulePatterns").put(DEFAULT_SCHEDULE_PATTERN);
+      });
+    v6.version(5).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+    });
+    v6.version(6).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+    });
+    await v6.open();
+    await v6.table("beyondDays").add({
+      id: "day-pre-v7",
+      startedAt: "2026-08-26T12:00:00.000Z",
+      timezoneId: "America/Chicago",
+      workContext: "UNKNOWN",
+      status: "ACTIVE",
+      createdAt: "2026-08-26T12:00:00.000Z",
+      updatedAt: "2026-08-26T12:00:00.000Z",
+    });
+    await v6.table("events").add({
+      id: "protein-event-pre-v7",
+      type: "PROTEIN_LOGGED",
+      beyondDayId: "day-pre-v7",
+      occurredAt: "2026-08-26T12:00:00.000Z",
+      recordedAt: "2026-08-26T12:00:00.000Z",
+      payload: { commandId: "cmd-1", grams: 30 },
+      source: "USER",
+      correlationId: "corr-1",
+    });
+    v6.close();
+
+    const upgraded = new BeyondDB();
+    await upgraded.open();
+
+    expect(upgraded.verno).toBe(CURRENT_SCHEMA_VERSION);
+    expect(await upgraded.savedMeals.count()).toBe(0);
+    const day = await upgraded.beyondDays.get("day-pre-v7");
+    expect(day).toBeDefined();
+    expect(day!.status).toBe("ACTIVE");
+    const proteinEvent = await upgraded.events.get("protein-event-pre-v7");
+    expect(proteinEvent).toBeDefined();
+    expect((proteinEvent!.payload as { grams: number }).grams).toBe(30);
 
     upgraded.close();
   });

@@ -168,6 +168,8 @@ export type DomainEventType =
   | "SET_SKIPPED"
   | "WATER_LOGGED"
   | "WATER_LOG_CORRECTED"
+  | "MEAL_LOGGED"
+  | "MEAL_LOG_CORRECTED"
   | "WORK_PERIOD_ENDED"
   | "MISSION_CREATED"
   | "MISSION_MODIFIED"
@@ -295,6 +297,67 @@ export interface ProteinLogCorrectedPayload {
   originalEventId: string;
   supersedesEventId: string;
   grams: number;
+}
+
+/**
+ * NUTRITION-001 (Meal Memory, High-Risk Drop): a SavedMeal (below) is a
+ * small, directly-mutable reusable preset — same treatment as
+ * CaptureItem/SchedulePattern, not itself event-sourced. Logging one
+ * snapshots its CURRENT calories/proteinG/carbsG/fatG into this
+ * immutable event at the moment of logging — editing or archiving the
+ * SavedMeal afterward never rewrites this or any other past MEAL_LOGGED
+ * fact. savedMealId is provenance only (which preset this came from);
+ * the snapshot fields are what's authoritative for history, exactly the
+ * property that makes "SavedMeal edits/archives never rewrite past logs"
+ * true by construction rather than by a rule someone has to remember.
+ */
+export interface MealLoggedPayload {
+  commandId: string;
+  savedMealId: string;
+  name: string;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+}
+
+/**
+ * Same correction-chain shape as WaterLogCorrectedPayload/
+ * ProteinLogCorrectedPayload. `name` is NOT correctable here, matching
+ * SleepLogCorrectedPayload's precedent (kind isn't correctable either) —
+ * a correction fixes a macro-value mistake, not what meal was logged;
+ * re-logging under the right SavedMeal is the way to fix a wrong-meal
+ * mistake.
+ */
+export interface MealLogCorrectedPayload {
+  commandId: string;
+  originalEventId: string;
+  supersedesEventId: string;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+}
+
+/**
+ * NUTRITION-001 (Meal Memory): a reusable saved preset — "the sandwich I
+ * always make," not a food-database entry. No barcode, no serving
+ * ontology, no recipe, no goal/target field (matching Protein/Bodyweight's
+ * own "facts only, no goal" precedent). Directly mutable: `name`/
+ * `calories`/`proteinG`/`carbsG`/`fatG` change in place when edited, and
+ * `archivedAt` hides it from the active picker without deleting it or
+ * anything it already produced — MEAL_LOGGED events reference this
+ * record's id for provenance only and never re-read its current fields.
+ */
+export interface SavedMeal {
+  id: string;
+  name: string;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  createdAt: string;
+  archivedAt?: string;
 }
 
 /**

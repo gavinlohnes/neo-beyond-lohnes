@@ -170,6 +170,94 @@ describe("BodyScreen (real browser) — PROTEIN", () => {
   });
 });
 
+/**
+ * NUTRITION-001 (Meal Memory, High-Risk Drop): exercised through the
+ * real rendered screen (never hand-constructed events), matching every
+ * other BODY station's own test convention above.
+ */
+describe("BodyScreen (real browser) — MEAL MEMORY", () => {
+  async function addSavedMeal(
+    screen: Awaited<ReturnType<typeof render>>,
+    { name = "Chicken & Rice Bowl", calories = "600", protein = "45", carbs = "60", fat = "15" } = {},
+  ) {
+    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+    await screen.getByRole("textbox", { name: "New meal name" }).fill(name);
+    await screen.getByRole("spinbutton", { name: "New meal calories" }).fill(calories);
+    await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill(protein);
+    await screen.getByRole("spinbutton", { name: "New meal carbs (g)" }).fill(carbs);
+    await screen.getByRole("spinbutton", { name: "New meal fat (g)" }).fill(fat);
+    await screen.getByRole("button", { name: "SAVE MEAL" }).click();
+  }
+
+  it("empty state is calm and distinguishes no-presets from no-meals-today", async () => {
+    const screen = await render(<BodyScreen />);
+    await expect.element(screen.getByText("0 meals logged today", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/No saved meals yet/)).toBeVisible();
+  });
+
+  it("creates a saved meal via the add-meal form and shows its macro summary", async () => {
+    const screen = await render(<BodyScreen />);
+    await addSavedMeal(screen);
+
+    await expect.element(screen.getByText("Chicken & Rice Bowl", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("600 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
+  });
+
+  it("LOG snapshots the current macros, shows a confirmation, and updates today's count", async () => {
+    const screen = await render(<BodyScreen />);
+    await addSavedMeal(screen);
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+
+    await expect.element(screen.getByText("Chicken & Rice Bowl logged.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
+  });
+
+  it("editing the preset after logging does not change the already-logged entry (past logs never rewritten)", async () => {
+    const screen = await render(<BodyScreen />);
+    await addSavedMeal(screen);
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "EDIT" }).click();
+    await screen.getByRole("spinbutton", { name: "Edit meal calories" }).fill("900");
+    await screen.getByRole("button", { name: "SAVE MEAL" }).click();
+    await expect.element(screen.getByText("900 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
+    await expect.element(screen.getByText("600 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
+  });
+
+  it("archiving the preset removes it from the active list but keeps its past log", async () => {
+    const screen = await render(<BodyScreen />);
+    await addSavedMeal(screen);
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await screen.getByRole("button", { name: "ARCHIVE" }).click();
+
+    // ARCHIVE/EDIT/LOG only ever render for an active SavedMeal list item —
+    // their absence proves the preset left the active list (the meal's
+    // own name text isn't a safe check here: it's also present, by
+    // design, inside the still-DOM-resident closed TODAY'S MEALS entry).
+    // Polled, not a synchronous check: archiveSavedMeal + refresh() settle
+    // asynchronously after the click.
+    await expect.poll(() => screen.getByRole("button", { name: "ARCHIVE" }).elements().length).toBe(0);
+    await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
+    await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
+  });
+
+  it("CORRECT preserves history rather than deleting the original entry", async () => {
+    const screen = await render(<BodyScreen />);
+    await addSavedMeal(screen);
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+
+    await screen.getByRole("button", { name: "CORRECT" }).click();
+    await screen.getByRole("spinbutton", { name: "Corrected calories" }).fill("620");
+    await screen.getByRole("button", { name: "SAVE" }).click();
+
+    await expect.element(screen.getByText("620 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/corrected 1x/)).toBeVisible();
+  });
+});
+
 describe("BodyScreen (real browser) — cross-cutting", () => {
   it("LOG WATER logs exactly once per tap and reflects a single entry in today's list", async () => {
     const screen = await render(<BodyScreen />);
@@ -199,6 +287,7 @@ describe("BodyScreen (real browser) — accessibility", () => {
   it("every text input has a real accessible name (the RECOVERY-Minutes-style gap, checked across all of BODY)", async () => {
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "SHOW MANUAL ENTRY" }).click(); // reveals water's custom-oz input too
+    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click(); // reveals the meal form's five inputs
 
     const results = await axe.run(screen.container, { runOnly: ["label"] });
     expect(results.violations).toEqual([]);
