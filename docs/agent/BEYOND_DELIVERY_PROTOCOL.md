@@ -59,6 +59,11 @@ surfaced rather than silently resolved.
   a PR — see `.claude/skills/beyond-drop` §3.
 - **Independent adversarial review for meaningful/high-risk changes.** An Architectural or
   High-Risk Drop gets a review pass that is not the same pass that wrote the change.
+- **Drop authorization and active-Drop state are recorded durably, not relayed by hand.** A
+  Drop's approved contract and whether it is the currently active one are repository-native
+  facts — see `.claude/skills/beyond-drop` §9 (Development Factory V1) for the Drop Contract
+  format, the `ACTIVE_DROP` pointer, the `scripts/factory-drop.mjs` bootstrap gate, and the
+  Reviewer Evidence Contract requiring durable, exact-head-bound review evidence on the PR.
 - **Repository facts must be recorded precisely using commit SHAs rather than assumptions.**
   "Current master" is not a fact until it is a specific SHA, fetched and verified directly —
   never assumed from memory or from a prior session's notes.

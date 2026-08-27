@@ -13,6 +13,7 @@
     "test:browser": "vitest run --project browser",
     "check:architecture": "node scripts/check-architecture-boundaries.mjs",
     "check:risk": "node scripts/classify-risk.mjs",
+    "factory:drop": "node scripts/factory-drop.mjs",
     "verify": "npm run check:architecture && vitest run && npm run build"
   },
   "dependencies": {

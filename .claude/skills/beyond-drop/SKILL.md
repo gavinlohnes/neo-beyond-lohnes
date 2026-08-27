@@ -276,3 +276,142 @@ default Builder; Codex = read-only Pre-mortem + Independent Reviewer only, with 
 explicitly out of scope for that phase, pending an admission test once Pilot V1 evidence
 justified revisiting it. That lock is superseded, in full, by the direct owner ruling above —
 kept here for provenance, not as current operating guidance.
+
+## 9. Development Factory V1 (FACTORY-002)
+
+Repository-native mechanism so a Drop can be launched, recovered, handed between agents,
+reviewed, and closed without the owner acting as the information courier and without relying on
+any one AI conversation for project state. This section operationalizes §§1-8 above — it does
+not replace the risk classification, verification, ship procedure, or multi-agent model already
+stated there. Persist authorization; derive observation: the files below hold only durable
+authorization/routing facts a person or a fresh agent would otherwise have to be told by hand —
+never a live fact Git/GitHub/CI can already prove (current HEAD, CI status, mergeability, PR
+review state), which is always re-derived at the moment it's needed instead.
+
+### Drop Contract
+
+`docs/agent/drops/TEMPLATE.md` is the canonical Drop Contract format. Every Drop that uses this
+mechanism gets its own `docs/agent/drops/<DROP-ID>.md`, copied from the template and filled in —
+Drop ID, mission, approved baseline, risk classification, authorized scope, explicit exclusions,
+relevant authority/references, required invariants, acceptance criteria, required verification,
+and Builder/Reviewer/Integrator expectations. `docs/agent/drops/FACTORY-002.md` is this Drop's
+own contract, recorded as the first real instance of the format. A Drop Contract file, once
+recorded, is never deleted or overwritten — it is this repository's permanent record of what was
+actually authorized for that Drop, independent of what any single conversation remembers.
+
+### ACTIVE_DROP
+
+`docs/agent/ACTIVE_DROP.md` is the single canonical pointer to whichever Drop is currently
+authorized — its `id`, `status` (`ACTIVE` or `CLOSED`), declared `baseline`, `branch`, the
+`contract` file it points to, and the `pr`/`builder`/`reviewer`/`integrator` routing fields as
+they become known. **At most one Drop may be `ACTIVE` at a time, mechanically enforced across
+every branch on `origin`, not merely `origin/master`'s own copy of this file.** `validate`/`init`
+fetch every branch on `origin` and check each still-unmerged branch's own `ACTIVE_DROP.md`
+snapshot (skipping any branch already merged into `origin/master`, whose snapshot is stale and
+superseded by master's own current copy) — a second Drop whose branch is pushed but whose PR
+hasn't merged yet is still detected and blocked with `CONFLICTING_ACTIVE_DROP`, naming the
+conflicting Drop and the branch it's on. This is pure git plumbing (`fetch` + `for-each-ref` +
+`show`) — no GitHub API, no token beyond what `git fetch` already needs, no custom GitHub
+client. `tests/factory/factoryDrop.test.ts` proves both directions: a genuinely conflicting,
+still-open branch is blocked, and an old, already-merged branch's stale snapshot never becomes a
+permanent false-positive conflict for unrelated future Drops.
+
+**Residual, honest limitation** (not a gap in the guarantee, the same expectation ordinary git
+hygiene already implies): a Drop's branch that is abandoned without ever being closed or deleted
+continues to read as a live conflict until its branch is deleted or the Drop is explicitly
+closed — the same reason abandoned branches should be cleaned up regardless of this mechanism.
+
+**Activation is committed as part of the Builder's own branch, not as a separate direct commit
+to `master` ahead of it.** The Drop Contract and the `init`-generated `ACTIVE_DROP.md` are both
+committed early in the Builder's worktree (see FACTORY-002's own PR for the pattern: contract
+first, `init` immediately after), verified there, and merge into `master` together with the rest
+of the Drop's diff. This is a deliberate, necessary property of `scripts/factory-drop.mjs`'s
+baseline check, not just a convenience: `validate`/`init` always re-fetch and compare against
+the *declared* baseline exactly, so a Drop's own `ACTIVE_DROP` activation must never itself
+change what `origin/master` resolves to ahead of that Drop's own merge — if it did (e.g. a
+direct, out-of-band commit to `master` before the Builder's worktree existed), every subsequent
+`validate`/`init`/`status` call for that same Drop would immediately and correctly fail with
+`WRONG_BASELINE`, because `origin/master` would no longer equal the baseline the contract
+declares. `tests/factory/factoryDrop.test.ts`'s "activation must not itself move `origin/master`
+out from under its own Drop" test locks this in as a regression test, not just a documented rule.
+
+### Bootstrap / validation script
+
+`scripts/factory-drop.mjs` (zero new dependencies, same plain-Node style as
+`scripts/check-architecture-boundaries.mjs` and `scripts/classify-risk.mjs`) is the deterministic
+gate:
+
+```
+node scripts/factory-drop.mjs validate <id> --baseline <sha> [--allow-dirty]
+node scripts/factory-drop.mjs init     <id> --baseline <sha> --branch <name> [--builder <note>]
+node scripts/factory-drop.mjs status
+node scripts/factory-drop.mjs close    <id> --integration-sha <sha>
+```
+
+`validate`/`init` re-derive and check, every time, never trusting memory: the `origin` remote is
+the expected repository; `origin/master` (freshly fetched) matches the declared baseline; the
+working tree is clean (refuse to launch over unknown/uncommitted work, unless `--allow-dirty` is
+passed deliberately); no *other* Drop is already `ACTIVE` anywhere on `origin` (every still-open
+branch's own `ACTIVE_DROP.md` snapshot is checked, not just master's); and the target Drop Contract exists,
+parses, declares a valid risk tier, and contains every required section. Every failure is
+reported with a specific code (`WRONG_REPOSITORY`, `WRONG_BASELINE`, `UNSAFE_LOCAL_STATE`,
+`CONFLICTING_ACTIVE_DROP`, `MALFORMED_CONTRACT`, `CONTRACT_BASELINE_MISMATCH`, …) and an
+actionable message — never a silent fallback, never a destructive action. Re-running `init` for
+the Drop that's already `ACTIVE` is genuinely idempotent: already-recorded `pr`/`reviewer`/
+`integrator` routing facts survive untouched (only an explicitly-passed `--builder` overrides
+the recorded builder) — re-running `init` is never a way to accidentally erase routing evidence
+that was already captured. `status` is read-only and safe to run at any time; it is the
+fresh-agent recovery entry point (see below). `close` verifies the given `--integration-sha` is a
+real commit reachable from a freshly-fetched `origin/master` (never trusted at face value) before
+retiring `ACTIVE_DROP` (flips `status` to `CLOSED`, records the resolved integration SHA) —
+without ever touching the Drop Contract file. `tests/factory/factoryDrop.test.ts` proves all of
+this against a hermetic, fully-local fixture repository (a real `git init --bare` origin, no
+network required) — recovery and failure paths, not only the happy path.
+
+### Role-based handoffs
+
+BUILDER / REVIEWER / INTEGRATOR are roles, never vendor identities — §8 above already states
+this for the multi-agent model generally; this mechanism carries it into the Drop Contract
+itself. `ACTIVE_DROP.md`'s `builder`/`reviewer`/`integrator` fields record who currently holds
+each role for routing purposes only; the actual expectations for whoever holds a role live in the
+Drop Contract's own Builder/Reviewer/Integrator sections (see `TEMPLATE.md`), stated in terms of
+the role, never the agent.
+
+### Reviewer Evidence Contract
+
+Field evidence from NUTRITION-001 (PR #33, this same operating period): the first independent
+review of that PR stayed trapped inside a private Reviewer conversation and required the owner
+to copy it out by hand before anyone else could act on it. The second review instead posted its
+verdict as a PR comment bound to the exact reviewed head SHA — and was later recovered
+independently, from GitHub, with no relay from the owner at all. That is the bar every Drop under
+this mechanism now requires explicitly (see `TEMPLATE.md`'s Reviewer expectations section):
+**Reviewer completion must leave durable, exact-head-bound review evidence on the Drop's PR** —
+at minimum, the reviewed head SHA, a verdict, substantive findings (or an explicit "none"), and a
+merge-readiness statement — using GitHub's own PR review/comment mechanisms. Finishing only
+inside a private Reviewer conversation does not satisfy this requirement; no bespoke review
+database or GitHub client is built or needed to satisfy it.
+
+### Fresh-chat recovery
+
+A fresh agent with repository access, given no more than this repository, should be able to
+determine: whether a Drop is active (`node scripts/factory-drop.mjs status`, or read
+`docs/agent/ACTIVE_DROP.md` directly); what Drop it is and what was authorized (follow `contract`
+to `docs/agent/drops/<id>.md`); the approved baseline and relevant authority (both recorded in
+that same contract); its own role's expectations (that contract's Builder/Reviewer/Integrator
+sections); what must be verified (that contract's Required verification section plus §3 above);
+and where review evidence lives (the recorded `pr` field, checked live on GitHub — never assumed
+from `ACTIVE_DROP.md` itself, which never carries live PR/CI state). None of this requires the
+owner to reconstruct the project from conversation history.
+
+### Closure
+
+After a Drop's PR merges, whoever performs closure (typically the Integrator) runs
+`node scripts/factory-drop.mjs close <id> --integration-sha <merge-commit-sha>` directly against
+`master` and commits the result — this is the one step in the mechanism that genuinely is a
+small, direct commit to `master` (unlike activation, above), since it happens strictly after the
+Drop's own merge and never needs to satisfy that Drop's own baseline check again. `close`
+verifies the given SHA is a real commit reachable from a freshly-fetched `origin/master` before
+accepting it — a caller-supplied integration SHA is never trusted at face value. This flips
+`ACTIVE_DROP.md`'s `status` to `CLOSED` and records the integration SHA; it never deletes or
+rewrites the Drop Contract file, which remains this repository's permanent record of what that
+Drop was authorized to do.
