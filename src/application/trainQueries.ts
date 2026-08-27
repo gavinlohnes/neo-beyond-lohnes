@@ -166,18 +166,114 @@ export async function getProgressionSuggestion(
  * count, and would only produce near-duplicate signal for the same
  * exercise; a genuinely separate REDUCED-context sweep is a future
  * extension, not required to prove the architecture generalizes.
+ *
+ * TRAIN-003 (Performance Brief) addition: each entry now also carries the
+ * templateId it was evaluated under — purely additive (existing consumer
+ * advisoryQueries.ts destructures only {prescription, suggestion} and is
+ * unaffected). The same exerciseId can appear under more than one
+ * template (e.g. Triceps Pressdown in both A and C) with a different
+ * prescription/history each time; without templateId a caller aggregating
+ * these entries (e.g. TRAIN-003's own PROGRESSION disclosure) could not
+ * tell those two contexts apart, which is exactly the "collapsing
+ * progression contexts across templates" this codebase's own doctrine
+ * forbids.
  */
 export async function getCurrentProgressionSuggestions(): Promise<
-  { prescription: ExercisePrescription; suggestion: ProgressionSuggestion }[]
+  { templateId: WorkoutTemplateId; prescription: ExercisePrescription; suggestion: ProgressionSuggestion }[]
 > {
-  const results: { prescription: ExercisePrescription; suggestion: ProgressionSuggestion }[] = [];
+  const results: { templateId: WorkoutTemplateId; prescription: ExercisePrescription; suggestion: ProgressionSuggestion }[] = [];
   for (const templateId of WORKOUT_TEMPLATE_ORDER) {
     for (const prescription of WORKOUT_TEMPLATES[templateId].exercises) {
       const suggestion = await getProgressionSuggestion(templateId, "STANDARD", prescription.exerciseId);
-      results.push({ prescription, suggestion });
+      results.push({ templateId, prescription, suggestion });
     }
   }
   return results;
+}
+
+export interface LastStrengthSessionSummary {
+  templateId: WorkoutTemplateId;
+  sessionType: "STANDARD" | "REDUCED";
+  status: "COMPLETED" | "PARTIAL";
+  workingSetCount: number;
+  durationMinutes: number | null;
+}
+
+/**
+ * TRAIN-003 (Performance Brief): the most recent strength session with a
+ * genuinely known outcome — STANDARD/REDUCED only (RECOVERY carries no
+ * strength-performance meaning and must not contaminate this summary),
+ * and only COMPLETED/PARTIAL (an ACTIVE session isn't finished history
+ * yet, and ABANDONED has no honest COMPLETED/PARTIAL state to report —
+ * it is deliberately excluded here rather than reworded to look like
+ * one; see getRecentStrengthSessions for where it's still shown, always
+ * under its own real status). workingSetCount counts only non-skipped
+ * sets, matching every other "sets logged" count in this codebase (e.g.
+ * TrainScreen's own handleCompleteWorkout setsLogged). durationMinutes
+ * is null whenever endedAt is missing rather than derived from "now" —
+ * an ended session's duration is a fixed historical fact, not something
+ * that should visibly grow the way an ACTIVE session's would.
+ */
+export async function getLastStrengthSession(): Promise<LastStrengthSessionSummary | null> {
+  const sessions = (await db.workoutSessions.toArray())
+    .filter(
+      (
+        s,
+      ): s is WorkoutSession & { sessionType: "STANDARD" | "REDUCED"; status: "COMPLETED" | "PARTIAL" } =>
+        (s.sessionType === "STANDARD" || s.sessionType === "REDUCED") &&
+        (s.status === "COMPLETED" || s.status === "PARTIAL"),
+    )
+    .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
+  const last = sessions.at(-1);
+  if (!last) return null;
+
+  const sets = await getPerformedSets(last.id);
+  const workingSetCount = sets.filter((s) => !s.skipped).length;
+  const durationMinutes = last.endedAt
+    ? Math.max(0, Math.round((new Date(last.endedAt).getTime() - new Date(last.startedAt).getTime()) / 60000))
+    : null;
+
+  return {
+    templateId: last.templateId as WorkoutTemplateId,
+    sessionType: last.sessionType,
+    status: last.status,
+    workingSetCount,
+    durationMinutes,
+  };
+}
+
+export interface RecentStrengthSessionEntry {
+  id: string;
+  templateId: WorkoutTemplateId;
+  sessionType: "STANDARD" | "REDUCED";
+  status: "COMPLETED" | "PARTIAL" | "ABANDONED";
+}
+
+/**
+ * TRAIN-003 (Performance Brief): a small, factual recent strength-training
+ * sequence — STANDARD/REDUCED only (RECOVERY excluded, same reasoning as
+ * getLastStrengthSession), ACTIVE excluded (an in-progress session is not
+ * completed history), most-recent-first. Unlike getLastStrengthSession,
+ * ABANDONED sessions ARE included here — but always carry their real
+ * status, never reworded to look like a completed one.
+ */
+export async function getRecentStrengthSessions(limit = 5): Promise<RecentStrengthSessionEntry[]> {
+  const sessions = (await db.workoutSessions.toArray())
+    .filter(
+      (
+        s,
+      ): s is WorkoutSession & {
+        sessionType: "STANDARD" | "REDUCED";
+        status: "COMPLETED" | "PARTIAL" | "ABANDONED";
+      } => (s.sessionType === "STANDARD" || s.sessionType === "REDUCED") && s.status !== "ACTIVE",
+    )
+    .sort((a, b) => (b.endedAt ?? b.startedAt).localeCompare(a.endedAt ?? a.startedAt));
+  return sessions.slice(0, limit).map((s) => ({
+    id: s.id,
+    templateId: s.templateId as WorkoutTemplateId,
+    sessionType: s.sessionType,
+    status: s.status,
+  }));
 }
 
 export interface LastSetInfo {

@@ -3,6 +3,13 @@ import { page, userEvent } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn } from "../../src/application/commands";
+import {
+  abandonWorkout,
+  completeRecoverySession,
+  completeWorkout,
+  logSet,
+  startWorkout,
+} from "../../src/application/trainCommands";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 
@@ -91,6 +98,93 @@ describe("TrainScreen (real browser) — no active session", () => {
     await expect.element(screen.getByText(/STANDARD: the full session/)).not.toBeVisible();
     await screen.getByText("Why this suggestion", { exact: true }).click();
     await expect.element(screen.getByText(/STANDARD: the full session/)).toBeVisible();
+  });
+});
+
+/**
+ * TRAIN-003 (Performance Brief): read-only derived intelligence shown
+ * only pre-workout, subordinate to the pre-session .command-surface
+ * picker above it (never a second dominant surface — see the "at most
+ * one .command-surface" assertions below and in the active-session
+ * describe block further down, which is unchanged by this Drop).
+ */
+describe("TrainScreen (real browser) — Performance Brief", () => {
+  it("is calm and present with no strength history yet, and does not compete with the dominant picker", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+
+    await expect.element(screen.getByText("Performance Brief", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/Training history will appear here/)).toBeVisible();
+    await expect.element(screen.getByText(/Recent training will appear here/)).toBeVisible();
+    await expect.element(screen.getByText(/No exercise history yet/)).toBeVisible();
+    // Still exactly one dominant surface — the picker, not the brief.
+    expect(document.querySelectorAll(".command-surface")).toHaveLength(1);
+  });
+
+  it("reports LAST from a real COMPLETED STANDARD session — template, status, working-set count, duration", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 135, 10);
+    await logSet(day.id, session.id, "machine-chest-press", 2, 135, 10);
+    await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
+
+    const screen = await render(<TrainScreen />);
+    await expect.element(screen.getByText(/Template A — Completed · 2 working sets/)).toBeVisible();
+  });
+
+  it("a RECOVERY session never appears as LAST or in RECENT", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const recovery = await startWorkout(day.id, null, "RECOVERY");
+    await completeRecoverySession(day.id, recovery.id, 15);
+
+    const screen = await render(<TrainScreen />);
+    await expect.element(screen.getByText(/Training history will appear here/)).toBeVisible();
+    await expect.element(screen.getByText(/Recent training will appear here/)).toBeVisible();
+  });
+
+  it("an ABANDONED session appears in RECENT under its own real status, but never as LAST", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await abandonWorkout(day.id, session.id, "STANDARD");
+
+    const screen = await render(<TrainScreen />);
+    // Not eligible as LAST — still the calm empty-history copy.
+    await expect.element(screen.getByText(/Training history will appear here/)).toBeVisible();
+    // But visible, honestly, in RECENT.
+    await expect.element(screen.getByText(/Template A — Abandoned/)).toBeVisible();
+  });
+
+  it("PROGRESSION exercise detail is reachable behind disclosure and does not collapse Template A and C's shared exercise", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "triceps-pressdown", 1, 50, 12);
+    await logSet(day.id, session.id, "triceps-pressdown", 2, 50, 12);
+    await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
+
+    const screen = await render(<TrainScreen />);
+    await expect.element(screen.getByText("Template A", { exact: true })).not.toBeVisible();
+    await screen.getByText("Exercise detail", { exact: true }).click();
+
+    await expect.element(screen.getByText("Template A", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Template C", { exact: true })).toBeVisible();
+    // Same exercise, two separate per-template lines — never merged into one.
+    const tricepsLines = screen.getByText(/Triceps Pressdown —/).elements();
+    expect(tricepsLines.length).toBe(2);
+  });
+
+  it("the Performance Brief is not shown once a workout is active", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+
+    expect(screen.getByText("Performance Brief", { exact: true }).elements()).toHaveLength(0);
   });
 });
 
@@ -435,7 +529,7 @@ describe("TrainScreen (real browser) — narrow phone widths", () => {
   // overflow on a real device at this margin.
   const OVERFLOW_TOLERANCE_PX = 5;
 
-  it.each([320, 360, 375])("has no horizontal overflow at %ipx (pre-session picker)", async (width) => {
+  it.each([320, 360, 375, 412])("has no horizontal overflow at %ipx (pre-session picker)", async (width) => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
 

@@ -2,16 +2,22 @@ import { describe, expect, it } from "vitest";
 import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
 import { doesSessionAdvanceRotation, deriveRecoverySessionStatus } from "../../src/engine/trainSuggestion";
 import {
+  describeLastStrengthSession,
   describePartialAdvancement,
   describePartialAdvancementResult,
   describeProgressionAdvisory,
+  describeProgressionSummary,
+  describeRecentStrengthEntry,
   describeRecommendationLabel,
   describeRecoveryPreview,
+  describeSessionStatusLabel,
   describeStopAction,
   describeStopConfirm,
   describeTemplateSuggestion,
   describeTemplateSummary,
   describeVariantSuggestion,
+  RECENT_STRENGTH_EMPTY,
+  summarizeProgressionSuggestions,
   VARIANT_MEANINGS,
 } from "../../src/ui/screens/train/trainCopy";
 import { evaluateProgression } from "../../src/engine/progression";
@@ -274,5 +280,109 @@ describe("describeProgressionAdvisory — reflects evaluateProgression's real ou
     const text = describeProgressionAdvisory(suggestion);
     expect(text).not.toContain("undefined");
     expect(text).toBe(suggestion.reason);
+  });
+});
+
+describe("TRAIN-003 (Performance Brief) — describeLastStrengthSession", () => {
+  it("is calm, not alarming, when there is no eligible session yet", () => {
+    const text = describeLastStrengthSession(null);
+    expect(text.toLowerCase()).not.toMatch(/error|missing|fail|warning/);
+    expect(text.length).toBeGreaterThan(0);
+  });
+
+  it("states template, variant, honest status, working-set count, and duration when present", () => {
+    const text = describeLastStrengthSession({
+      templateId: "B",
+      sessionType: "REDUCED",
+      status: "PARTIAL",
+      workingSetCount: 4,
+      durationMinutes: 22,
+    });
+    expect(text).toContain("Template B");
+    expect(text).toContain("REDUCED");
+    expect(text).toContain("Partial");
+    expect(text).toContain("4 working sets");
+    expect(text).toContain("22 min");
+  });
+
+  it("omits duration entirely when durationMinutes is null (no endedAt)", () => {
+    const text = describeLastStrengthSession({
+      templateId: "A",
+      sessionType: "STANDARD",
+      status: "COMPLETED",
+      workingSetCount: 12,
+      durationMinutes: null,
+    });
+    expect(text).not.toContain("min");
+  });
+
+  it("singularizes 'set' for exactly one working set", () => {
+    const text = describeLastStrengthSession({
+      templateId: "A",
+      sessionType: "STANDARD",
+      status: "COMPLETED",
+      workingSetCount: 1,
+      durationMinutes: 5,
+    });
+    expect(text).toContain("1 working set");
+    expect(text).not.toContain("1 working sets");
+  });
+});
+
+describe("TRAIN-003 — describeSessionStatusLabel / describeRecentStrengthEntry", () => {
+  it("never softens ABANDONED into something that reads as completed", () => {
+    expect(describeSessionStatusLabel("ABANDONED")).toBe("Abandoned");
+    const line = describeRecentStrengthEntry({ id: "s1", templateId: "C", sessionType: "STANDARD", status: "ABANDONED" });
+    expect(line).toContain("Abandoned");
+    expect(line).not.toMatch(/completed/i);
+  });
+
+  it("names the REDUCED variant explicitly but says nothing extra for STANDARD", () => {
+    const reduced = describeRecentStrengthEntry({ id: "s2", templateId: "A", sessionType: "REDUCED", status: "COMPLETED" });
+    expect(reduced).toContain("REDUCED");
+    const standard = describeRecentStrengthEntry({ id: "s3", templateId: "A", sessionType: "STANDARD", status: "COMPLETED" });
+    expect(standard).not.toContain("STANDARD");
+  });
+
+  it("RECENT_STRENGTH_EMPTY reads as calm anticipation, not an error", () => {
+    expect(RECENT_STRENGTH_EMPTY.toLowerCase()).not.toMatch(/error|missing|fail|nothing/);
+  });
+});
+
+describe("TRAIN-003 — summarizeProgressionSuggestions / describeProgressionSummary", () => {
+  it("counts each recommendation independently and never miscounts NO_HISTORY as a failure", () => {
+    const suggestions = [
+      { suggestion: { recommendation: "INCREASE" as const, reason: "x" } },
+      { suggestion: { recommendation: "INCREASE" as const, reason: "x" } },
+      { suggestion: { recommendation: "HOLD" as const, reason: "x" } },
+      { suggestion: { recommendation: "REDUCE" as const, reason: "x" } },
+      { suggestion: { recommendation: "NO_HISTORY" as const, reason: "x" } },
+    ];
+    const counts = summarizeProgressionSuggestions(suggestions);
+    expect(counts).toEqual({ increase: 2, hold: 1, reduce: 1, noHistory: 1, total: 5 });
+  });
+
+  it("describeProgressionSummary never uses negative language for NO_HISTORY, even when it's everything", () => {
+    const counts = summarizeProgressionSuggestions([
+      { suggestion: { recommendation: "NO_HISTORY" as const, reason: "x" } },
+      { suggestion: { recommendation: "NO_HISTORY" as const, reason: "x" } },
+    ]);
+    const text = describeProgressionSummary(counts);
+    expect(text.toLowerCase()).not.toMatch(/error|missing|fail|bad|warning/);
+    expect(text).toContain("history");
+  });
+
+  it("mentions every non-zero bucket when suggestions are mixed", () => {
+    const counts = summarizeProgressionSuggestions([
+      { suggestion: { recommendation: "INCREASE" as const, reason: "x" } },
+      { suggestion: { recommendation: "HOLD" as const, reason: "x" } },
+      { suggestion: { recommendation: "REDUCE" as const, reason: "x" } },
+      { suggestion: { recommendation: "NO_HISTORY" as const, reason: "x" } },
+    ]);
+    const text = describeProgressionSummary(counts);
+    expect(text).toContain("increase");
+    expect(text).toContain("holding");
+    expect(text).toContain("reducing");
+    expect(text).toContain("without history");
   });
 });
