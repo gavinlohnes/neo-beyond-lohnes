@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
+import { FieldDisclosure } from "../../components/FieldDisclosure";
 import type { BeyondDay, HydrationEntry } from "../../../domain/common/types";
 import {
   logWater,
@@ -85,8 +86,8 @@ export function BodyScreen() {
   const [bodyweightConfirmation, setBodyweightConfirmation] = useState<Confirmation>(null);
   const [bodyweightHistoryOpen, setBodyweightHistoryOpen] = useState(false);
   // Manual entry only has a real "fast path" alternative (SAME AS LAST)
-  // once a prior entry exists — see the `bodyweightManualOpen ||
-  // !lastBodyweightEntry` condition further down.
+  // once a prior entry exists — see the `lastBodyweightEntry ? ... : ...`
+  // branch further down (FieldDisclosure vs. always-open).
   const [bodyweightManualOpen, setBodyweightManualOpen] = useState(false);
 
   // Protein
@@ -356,6 +357,79 @@ export function BodyScreen() {
     }
   }
 
+  // VISUAL-003: the manual-entry form's own markup is identical whether
+  // it's reached through FieldDisclosure (a prior entry exists, so it's
+  // a subordinate fallback) or shown unconditionally (no prior entry, no
+  // faster path exists yet) — extracted once so that real duplication
+  // isn't repeated across the two branches below.
+  const bodyweightManualEntryForm = (
+    <>
+      <div className="field">
+        <label htmlFor="bodyweight-lbs"><span>Weight (lbs)</span></label>
+        <input
+          id="bodyweight-lbs"
+          type="number"
+          min={0}
+          value={bodyweightInput}
+          onChange={(e) => {
+            setBodyweightInput(e.target.value);
+            setBodyweightPendingConfirm(false);
+          }}
+          className="input"
+        />
+      </div>
+      {bodyweightPendingConfirm && (
+        <div style={{ marginBottom: 12 }}>
+          <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
+            {describeImplausibleBodyweight(Number(bodyweightInput) || 0)}
+          </p>
+          <button className="btn-secondary" disabled={busy} onClick={() => void handleLogBodyweight(true)}>
+            LOG ANYWAY
+          </button>
+        </div>
+      )}
+      {!bodyweightPendingConfirm && (
+        <button className="btn-primary" disabled={busy} onClick={() => void handleLogBodyweight()}>
+          LOG BODYWEIGHT
+        </button>
+      )}
+    </>
+  );
+
+  const proteinManualEntryForm = (
+    <>
+      <div className="field">
+        <label htmlFor="protein-grams"><span>Protein (g)</span></label>
+        <input
+          id="protein-grams"
+          type="number"
+          min={0}
+          value={proteinInput}
+          onChange={(e) => {
+            setProteinInput(e.target.value);
+            setProteinPendingConfirm(false);
+          }}
+          className="input"
+        />
+      </div>
+      {proteinPendingConfirm && (
+        <div style={{ marginBottom: 12 }}>
+          <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
+            {describeImplausibleProtein(Number(proteinInput) || 0)}
+          </p>
+          <button className="btn-secondary" disabled={busy} onClick={() => void handleLogProtein(true)}>
+            LOG ANYWAY
+          </button>
+        </div>
+      )}
+      {!proteinPendingConfirm && (
+        <button className="btn-primary" disabled={busy} onClick={() => void handleLogProtein()}>
+          LOG PROTEIN
+        </button>
+      )}
+    </>
+  );
+
   return (
     <div className="screen fade-in">
       {/* FIELD ALPHA Phase 3: identity zone quieted, same principle
@@ -382,14 +456,16 @@ export function BodyScreen() {
           doesn't exist in the product. */}
       <p className="section-label">Status</p>
 
+      {/* VISUAL-003: reordered to match the LOG section's own station
+          order (Water, Sleep, Weight, Protein) below — Status previously
+          listed Protein before Sleep/Weight, a mismatch that cost a
+          re-scan when moving from "what's recorded" to "where do I log
+          it." Same four facts, same instrument-cluster primitive, no new
+          value. */}
       <div className="instrument-cluster">
         <div>
           <p className="meta" style={{ margin: 0 }}>WATER</p>
           <p className="status-value">{total} oz</p>
-        </div>
-        <div>
-          <p className="meta" style={{ margin: 0 }}>PROTEIN</p>
-          <p className="status-value">{proteinTotal} g</p>
         </div>
         <div>
           <p className="meta" style={{ margin: 0 }}>SLEEP</p>
@@ -398,6 +474,10 @@ export function BodyScreen() {
         <div>
           <p className="meta" style={{ margin: 0 }}>WEIGHT</p>
           <p className="status-value">{lastBodyweightEntry ? `${lastBodyweightEntry.effectiveWeightLbs} lbs` : "Not logged"}</p>
+        </div>
+        <div>
+          <p className="meta" style={{ margin: 0 }}>PROTEIN</p>
+          <p className="status-value">{proteinTotal} g</p>
         </div>
       </div>
 
@@ -437,20 +517,19 @@ export function BodyScreen() {
         >
           {lastWaterAmount !== null ? `Repeat last (${lastWaterAmount} oz)` : "Repeat last"}
         </button>
-        <button className="btn-secondary" onClick={() => setWaterManualOpen((v) => !v)}>
-          {waterManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY
-        </button>
-        {waterManualOpen && (
-          <div className="fade-in" style={{ marginTop: 12 }}>
-            <div className="field">
-              <label htmlFor="water-custom-oz"><span>Custom (oz)</span></label>
-              <input id="water-custom-oz" type="number" min={0} value={input} onChange={(e) => setInput(e.target.value)} className="input" />
-            </div>
-            <button className="btn-primary" disabled={busy} onClick={() => void handleLog()}>
-              LOG WATER
-            </button>
+        <FieldDisclosure
+          summary={`${waterManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
+          open={waterManualOpen}
+          onToggle={setWaterManualOpen}
+        >
+          <div className="field">
+            <label htmlFor="water-custom-oz"><span>Custom (oz)</span></label>
+            <input id="water-custom-oz" type="number" min={0} value={input} onChange={(e) => setInput(e.target.value)} className="input" />
           </div>
-        )}
+          <button className="btn-primary" disabled={busy} onClick={() => void handleLog()}>
+            LOG WATER
+          </button>
+        </FieldDisclosure>
         {waterConfirmation && (
           <ConfirmBanner
             message={waterConfirmation.message}
@@ -470,11 +549,11 @@ export function BodyScreen() {
 
         {entries.length > 0 && (
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <button className="btn-secondary" onClick={() => setWaterHistoryOpen((v) => !v)}>
-              {waterHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES ({entries.length})
-            </button>
-            {waterHistoryOpen && (
-              <div className="fade-in" style={{ marginTop: 12 }}>
+            <FieldDisclosure
+              summary={`${waterHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${entries.length})`}
+              open={waterHistoryOpen}
+              onToggle={setWaterHistoryOpen}
+            >
                 <p className="card-body" style={{ marginBottom: 12 }}>
                   Correcting an entry keeps the original and shows the corrected number — nothing is deleted.
                 </p>
@@ -525,8 +604,7 @@ export function BodyScreen() {
                     )}
                   </div>
                 ))}
-              </div>
-            )}
+            </FieldDisclosure>
           </div>
         )}
       </div>
@@ -636,11 +714,11 @@ export function BodyScreen() {
 
         {sleepEntries.length > 0 && (
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <button className="btn-secondary" onClick={() => setSleepHistoryOpen((v) => !v)}>
-              {sleepHistoryOpen ? "HIDE" : "SHOW"} TODAY'S SLEEP ({sleepEntries.length})
-            </button>
-            {sleepHistoryOpen && (
-              <div className="fade-in" style={{ marginTop: 12 }}>
+            <FieldDisclosure
+              summary={`${sleepHistoryOpen ? "HIDE" : "SHOW"} TODAY'S SLEEP (${sleepEntries.length})`}
+              open={sleepHistoryOpen}
+              onToggle={setSleepHistoryOpen}
+            >
                 {sleepEntries.map((entry) => (
                   <div
                     key={entry.rootEventId}
@@ -677,8 +755,7 @@ export function BodyScreen() {
                     )}
                   </div>
                 ))}
-              </div>
-            )}
+            </FieldDisclosure>
           </div>
         )}
       </div>
@@ -709,47 +786,16 @@ export function BodyScreen() {
             SAME AS LAST ({lastBodyweightEntry.effectiveWeightLbs} lbs)
           </button>
         )}
-        {lastBodyweightEntry && (
-          <button
-            className="btn-secondary"
-            style={{ marginBottom: bodyweightManualOpen ? 12 : 0 }}
-            onClick={() => setBodyweightManualOpen((v) => !v)}
+        {lastBodyweightEntry ? (
+          <FieldDisclosure
+            summary={`${bodyweightManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
+            open={bodyweightManualOpen}
+            onToggle={setBodyweightManualOpen}
           >
-            {bodyweightManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY
-          </button>
-        )}
-        {(bodyweightManualOpen || !lastBodyweightEntry) && (
-          <div className="fade-in">
-            <div className="field">
-              <label htmlFor="bodyweight-lbs"><span>Weight (lbs)</span></label>
-              <input
-                id="bodyweight-lbs"
-                type="number"
-                min={0}
-                value={bodyweightInput}
-                onChange={(e) => {
-                  setBodyweightInput(e.target.value);
-                  setBodyweightPendingConfirm(false);
-                }}
-                className="input"
-              />
-            </div>
-            {bodyweightPendingConfirm && (
-              <div style={{ marginBottom: 12 }}>
-                <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
-                  {describeImplausibleBodyweight(Number(bodyweightInput) || 0)}
-                </p>
-                <button className="btn-secondary" disabled={busy} onClick={() => void handleLogBodyweight(true)}>
-                  LOG ANYWAY
-                </button>
-              </div>
-            )}
-            {!bodyweightPendingConfirm && (
-              <button className="btn-primary" disabled={busy} onClick={() => void handleLogBodyweight()}>
-                LOG BODYWEIGHT
-              </button>
-            )}
-          </div>
+            {bodyweightManualEntryForm}
+          </FieldDisclosure>
+        ) : (
+          <div className="fade-in">{bodyweightManualEntryForm}</div>
         )}
         {bodyweightConfirmation && (
           <ConfirmBanner
@@ -764,11 +810,11 @@ export function BodyScreen() {
 
         {bodyweightEntries.length > 0 && (
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <button className="btn-secondary" onClick={() => setBodyweightHistoryOpen((v) => !v)}>
-              {bodyweightHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES ({bodyweightEntries.length})
-            </button>
-            {bodyweightHistoryOpen && (
-              <div className="fade-in" style={{ marginTop: 12 }}>
+            <FieldDisclosure
+              summary={`${bodyweightHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${bodyweightEntries.length})`}
+              open={bodyweightHistoryOpen}
+              onToggle={setBodyweightHistoryOpen}
+            >
                 {bodyweightEntries.map((entry) => (
                   <div
                     key={entry.rootEventId}
@@ -796,8 +842,7 @@ export function BodyScreen() {
                     )}
                   </div>
                 ))}
-              </div>
-            )}
+            </FieldDisclosure>
           </div>
         )}
       </div>
@@ -821,47 +866,16 @@ export function BodyScreen() {
             REPEAT LAST ({lastProteinEntry.effectiveGrams} g)
           </button>
         )}
-        {lastProteinEntry && (
-          <button
-            className="btn-secondary"
-            style={{ marginBottom: proteinManualOpen ? 12 : 0 }}
-            onClick={() => setProteinManualOpen((v) => !v)}
+        {lastProteinEntry ? (
+          <FieldDisclosure
+            summary={`${proteinManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
+            open={proteinManualOpen}
+            onToggle={setProteinManualOpen}
           >
-            {proteinManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY
-          </button>
-        )}
-        {(proteinManualOpen || !lastProteinEntry) && (
-          <div className="fade-in">
-            <div className="field">
-              <label htmlFor="protein-grams"><span>Protein (g)</span></label>
-              <input
-                id="protein-grams"
-                type="number"
-                min={0}
-                value={proteinInput}
-                onChange={(e) => {
-                  setProteinInput(e.target.value);
-                  setProteinPendingConfirm(false);
-                }}
-                className="input"
-              />
-            </div>
-            {proteinPendingConfirm && (
-              <div style={{ marginBottom: 12 }}>
-                <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
-                  {describeImplausibleProtein(Number(proteinInput) || 0)}
-                </p>
-                <button className="btn-secondary" disabled={busy} onClick={() => void handleLogProtein(true)}>
-                  LOG ANYWAY
-                </button>
-              </div>
-            )}
-            {!proteinPendingConfirm && (
-              <button className="btn-primary" disabled={busy} onClick={() => void handleLogProtein()}>
-                LOG PROTEIN
-              </button>
-            )}
-          </div>
+            {proteinManualEntryForm}
+          </FieldDisclosure>
+        ) : (
+          <div className="fade-in">{proteinManualEntryForm}</div>
         )}
         {proteinConfirmation && (
           <ConfirmBanner
@@ -876,11 +890,11 @@ export function BodyScreen() {
 
         {proteinEntries.length > 0 && (
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <button className="btn-secondary" onClick={() => setProteinHistoryOpen((v) => !v)}>
-              {proteinHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES ({proteinEntries.length})
-            </button>
-            {proteinHistoryOpen && (
-              <div className="fade-in" style={{ marginTop: 12 }}>
+            <FieldDisclosure
+              summary={`${proteinHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${proteinEntries.length})`}
+              open={proteinHistoryOpen}
+              onToggle={setProteinHistoryOpen}
+            >
                 {proteinEntries.map((entry) => (
                   <div
                     key={entry.rootEventId}
@@ -908,8 +922,7 @@ export function BodyScreen() {
                     )}
                   </div>
                 ))}
-              </div>
-            )}
+            </FieldDisclosure>
           </div>
         )}
       </div>

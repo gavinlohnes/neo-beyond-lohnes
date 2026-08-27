@@ -45,6 +45,16 @@ describe("BodyScreen (real browser) — empty state", () => {
     await render(<BodyScreen />);
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
   });
+
+  // VISUAL-003: Status previously listed WATER/PROTEIN/SLEEP/WEIGHT, out
+  // of step with the LOG section's own WATER/SLEEP/WEIGHT/PROTEIN order —
+  // a real re-scan cost fixed by reordering Status to match.
+  it("the instrument cluster lists stations in the same order as the LOG section below (Water, Sleep, Weight, Protein)", async () => {
+    await render(<BodyScreen />);
+    const cluster = document.querySelector(".instrument-cluster")!;
+    const labels = Array.from(cluster.querySelectorAll(".meta")).map((el) => el.textContent);
+    expect(labels).toEqual(["WATER", "SLEEP", "WEIGHT", "PROTEIN"]);
+  });
 });
 
 describe("BodyScreen (real browser) — WATER", () => {
@@ -80,6 +90,21 @@ describe("BodyScreen (real browser) — WATER", () => {
 
     await expect.element(screen.getByText("10 oz today", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/corrected 1x/)).toBeVisible();
+  });
+
+  // VISUAL-003: manual entry and today's-entries now render as a real
+  // <details>/<summary> (FieldDisclosure) rather than a button toggling a
+  // conditionally-rendered div — confirms the native element is actually
+  // there, not just that the content happens to be reachable.
+  it("manual entry and today's entries are real native <details> disclosures", async () => {
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "+8 oz" }).click();
+    await expect.element(screen.getByText("8 oz added.", { exact: true })).toBeVisible();
+
+    const waterRow = screen.getByText("HYDRATION", { exact: true }).element().closest(".equipment-row")!;
+    const disclosures = waterRow.querySelectorAll("details");
+    expect(disclosures.length).toBe(2); // manual entry + today's entries
+    for (const d of disclosures) expect(d.open).toBe(false);
   });
 });
 
@@ -145,8 +170,23 @@ describe("BodyScreen (real browser) — PROTEIN", () => {
   });
 });
 
+describe("BodyScreen (real browser) — cross-cutting", () => {
+  it("LOG WATER logs exactly once per tap and reflects a single entry in today's list", async () => {
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW MANUAL ENTRY" }).click();
+    await screen.getByRole("spinbutton", { name: "Custom (oz)" }).fill("20");
+    await screen.getByRole("button", { name: "LOG WATER" }).click();
+    await expect.element(screen.getByText("20 oz added.", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: /SHOW TODAY'S ENTRIES/ }).click();
+    const waterRow = screen.getByText("HYDRATION", { exact: true }).element().closest(".equipment-row")!;
+    const entryTitles = Array.from(waterRow.querySelectorAll(".card-title")).filter((el) => el.textContent === "20 oz");
+    expect(entryTitles.length).toBe(1);
+  });
+});
+
 describe("BodyScreen (real browser) — narrow phone widths", () => {
-  it.each([320, 360, 375])("has no horizontal overflow at %ipx", async (width) => {
+  it.each([320, 360, 375, 412])("has no horizontal overflow at %ipx", async (width) => {
     await page.viewport(width, 800);
     const screen = await render(<BodyScreen />);
     await expect.element(screen.getByText("WATER", { exact: true })).toBeVisible();
