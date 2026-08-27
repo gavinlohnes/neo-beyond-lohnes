@@ -384,7 +384,7 @@ describe("activation and closure evidence cannot be fabricated or misapplied", (
   // over — a second, unrelated Drop launched from master's own current
   // state DOES succeed while a first Drop's own activation still lives
   // only inside its own unmerged branch (never pushed to origin/master).
-  it("a second Drop is not mechanically blocked while a first Drop's activation is still only on its own unmerged branch", () => {
+  it("a second Drop IS blocked while a first Drop's activation still only lives on its own unmerged, pushed branch", () => {
     writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
     writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline: fixture.headSha }));
     beginDropBranch(fixture, "test-001-branch");
@@ -395,6 +395,33 @@ describe("activation and closure evidence cannot be fabricated or misapplied", (
 
     const result = runFactoryDrop(
       ["init", "TEST-002", "--baseline", fixture.headSha, "--branch", "test-002-branch"],
+      fixture,
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+    expect(result.stderr).toContain("TEST-001");
+    expect(result.stderr).toContain("test-001-branch");
+  });
+
+  it("an old, already-merged branch's stale ACTIVE snapshot never blocks an unrelated later Drop", () => {
+    // TEST-001 merges and is properly closed on master, but its own topic
+    // branch is left lying around undeleted (its frozen snapshot still
+    // says status: ACTIVE, since close only ever updates master). A
+    // second, unrelated Drop must not be blocked by that stale snapshot.
+    writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+    beginDropBranch(fixture, "test-001-branch");
+    runFactoryDrop(["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"], fixture);
+    commitActiveDrop(fixture, "activate TEST-001");
+    const mergeSha = mergeDropBranchToOrigin(fixture, "test-001-branch"); // merges + pushes master; branch ref stays on origin
+
+    runFactoryDrop(["close", "TEST-001", "--integration-sha", mergeSha], fixture);
+    commitActiveDrop(fixture, "close TEST-001");
+    git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/master"]);
+    const newBaseline = git(fixture.workDir, ["rev-parse", "HEAD"]);
+
+    writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline: newBaseline }));
+    const result = runFactoryDrop(
+      ["init", "TEST-002", "--baseline", newBaseline, "--branch", "test-002-branch"],
       fixture,
     );
     expect(result.status).toBe(0);

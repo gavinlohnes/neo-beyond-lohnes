@@ -304,12 +304,22 @@ actually authorized for that Drop, independent of what any single conversation r
 `docs/agent/ACTIVE_DROP.md` is the single canonical pointer to whichever Drop is currently
 authorized — its `id`, `status` (`ACTIVE` or `CLOSED`), declared `baseline`, `branch`, the
 `contract` file it points to, and the `pr`/`builder`/`reviewer`/`integrator` routing fields as
-they become known. **The mechanically-enforced guarantee is precisely this: at most one Drop may
-be recorded `ACTIVE` in `origin/master`'s own copy of this file at a time** —
-`validate`/`init` refuse to launch a second Drop against whatever `origin/master` currently
-records. This is narrower than "at most one Drop may ever be in flight" (see the known
-limitation immediately below) — state it exactly this way, not as an unqualified single-active-
-Drop claim, anywhere this mechanism is described.
+they become known. **At most one Drop may be `ACTIVE` at a time, mechanically enforced across
+every branch on `origin`, not merely `origin/master`'s own copy of this file.** `validate`/`init`
+fetch every branch on `origin` and check each still-unmerged branch's own `ACTIVE_DROP.md`
+snapshot (skipping any branch already merged into `origin/master`, whose snapshot is stale and
+superseded by master's own current copy) — a second Drop whose branch is pushed but whose PR
+hasn't merged yet is still detected and blocked with `CONFLICTING_ACTIVE_DROP`, naming the
+conflicting Drop and the branch it's on. This is pure git plumbing (`fetch` + `for-each-ref` +
+`show`) — no GitHub API, no token beyond what `git fetch` already needs, no custom GitHub
+client. `tests/factory/factoryDrop.test.ts` proves both directions: a genuinely conflicting,
+still-open branch is blocked, and an old, already-merged branch's stale snapshot never becomes a
+permanent false-positive conflict for unrelated future Drops.
+
+**Residual, honest limitation** (not a gap in the guarantee, the same expectation ordinary git
+hygiene already implies): a Drop's branch that is abandoned without ever being closed or deleted
+continues to read as a live conflict until its branch is deleted or the Drop is explicitly
+closed — the same reason abandoned branches should be cleaned up regardless of this mechanism.
 
 **Activation is committed as part of the Builder's own branch, not as a separate direct commit
 to `master` ahead of it.** The Drop Contract and the `init`-generated `ACTIVE_DROP.md` are both
@@ -324,19 +334,6 @@ direct, out-of-band commit to `master` before the Builder's worktree existed), e
 `WRONG_BASELINE`, because `origin/master` would no longer equal the baseline the contract
 declares. `tests/factory/factoryDrop.test.ts`'s "activation must not itself move `origin/master`
 out from under its own Drop" test locks this in as a regression test, not just a documented rule.
-
-**Known limitation, accepted rather than engineered around, and material — not a footnote:**
-because activation only becomes visible on `origin/master` once this Drop's PR actually merges,
-a *second*, unrelated Drop launched from `master` while this one is still an open, unmerged PR
-is **not mechanically blocked** by `CONFLICTING_ACTIVE_DROP` — only a human/process check (e.g.
-scanning open PRs before launching) catches that case pre-merge. Consulting GitHub's live
-open-PR state from `scripts/factory-drop.mjs` to close this gap was considered and rejected: it
-would require a GitHub API client and a token inside what is otherwise a zero-dependency,
-fully-offline-capable deterministic check, turning a deterministic gate into a network-dependent
-one and building exactly the "custom GitHub client" FACTORY-002's own contract excludes. The
-mechanism's actual, honest scope is: *at most one Drop may be the recorded `ACTIVE` Drop on
-`master` at a time* — coordination of concurrently open, not-yet-merged Drop branches remains a
-human/process responsibility this mechanism does not automate.
 
 ### Bootstrap / validation script
 
@@ -354,7 +351,8 @@ node scripts/factory-drop.mjs close    <id> --integration-sha <sha>
 `validate`/`init` re-derive and check, every time, never trusting memory: the `origin` remote is
 the expected repository; `origin/master` (freshly fetched) matches the declared baseline; the
 working tree is clean (refuse to launch over unknown/uncommitted work, unless `--allow-dirty` is
-passed deliberately); no *other* Drop is already `ACTIVE`; and the target Drop Contract exists,
+passed deliberately); no *other* Drop is already `ACTIVE` anywhere on `origin` (every still-open
+branch's own `ACTIVE_DROP.md` snapshot is checked, not just master's); and the target Drop Contract exists,
 parses, declares a valid risk tier, and contains every required section. Every failure is
 reported with a specific code (`WRONG_REPOSITORY`, `WRONG_BASELINE`, `UNSAFE_LOCAL_STATE`,
 `CONFLICTING_ACTIVE_DROP`, `MALFORMED_CONTRACT`, `CONTRACT_BASELINE_MISMATCH`, …) and an

@@ -151,6 +151,68 @@ export function checkConflictingActiveDrop(activeDropFrontmatter, requestedId) {
   };
 }
 
+/**
+ * Enumerates every branch on `origin` (not just whatever this checkout
+ * happens to have locally) for a conflicting ACTIVE Drop — the actual
+ * "at most one active Drop" guarantee FACTORY-002's own contract
+ * requires, not merely "at most one recorded on master." Pure git
+ * plumbing (fetch + for-each-ref + show) — no GitHub API, no token
+ * beyond what `git fetch` already needs, no custom GitHub client.
+ *
+ * A branch already fully merged into `origin/master` is skipped: its own
+ * frozen ACTIVE_DROP.md snapshot predates that merge and is superseded
+ * by master's own current copy (which reflects any later `close`) — so
+ * an old, un-deleted branch can never become a permanent false-positive
+ * conflict for unrelated future Drops. Only a branch that still has
+ * commits not on master (a genuinely open, unmerged Drop) is checked.
+ *
+ * Residual, honest limitation: a Drop's branch that is abandoned without
+ * ever being closed or deleted continues to read as a live conflict —
+ * exactly the same git-hygiene expectation "delete stale branches"
+ * already implies, not a new kind of gap.
+ */
+export function findConflictingActiveDropAcrossBranches(root, requestedId) {
+  try {
+    git(["fetch", "-q", "origin", "+refs/heads/*:refs/remotes/origin/*", "--prune"], root);
+  } catch (e) {
+    return { ok: false, error: `Could not enumerate origin's branches to check for a conflicting active Drop (${e.message}).` };
+  }
+  let refs;
+  try {
+    refs = git(["for-each-ref", "--format=%(refname:short)", "refs/remotes/origin"], root)
+      .split("\n")
+      .filter(Boolean)
+      .filter((r) => r !== "origin/HEAD");
+  } catch (e) {
+    return { ok: false, error: `Could not list origin's branches (${e.message}).` };
+  }
+
+  for (const ref of refs) {
+    try {
+      git(["merge-base", "--is-ancestor", ref, "origin/master"], root);
+      continue; // already merged into master — its snapshot is stale/superseded, not a live conflict
+    } catch {
+      /* not an ancestor of master — a genuinely still-open branch, worth checking */
+    }
+    let text;
+    try {
+      text = git(["show", `${ref}:docs/agent/ACTIVE_DROP.md`], root);
+    } catch {
+      continue; // this branch has no ACTIVE_DROP.md at all
+    }
+    let frontmatter;
+    try {
+      ({ frontmatter } = parseFrontmatter(text));
+    } catch {
+      continue; // malformed on some other branch is that branch's own problem, not this launch's
+    }
+    if (frontmatter.status === "ACTIVE" && frontmatter.id !== requestedId) {
+      return { ok: false, conflict: { id: frontmatter.id, branch: ref } };
+    }
+  }
+  return { ok: true };
+}
+
 export function normalizeRemoteUrl(url) {
   const stripped = url.trim().replace(/\.git$/, "");
   const m = stripped.match(/[/:]([^/:]+\/[^/]+)$/);
@@ -225,6 +287,18 @@ export function preflight(id, flags, root = getRoot()) {
   const conflict = checkConflictingActiveDrop(active, id);
   if (!conflict.ok) return { ok: false, code: "CONFLICTING_ACTIVE_DROP", message: conflict.error };
 
+  const crossBranchConflict = findConflictingActiveDropAcrossBranches(root, id);
+  if (!crossBranchConflict.ok) {
+    if (crossBranchConflict.conflict) {
+      return {
+        ok: false,
+        code: "CONFLICTING_ACTIVE_DROP",
+        message: `"${crossBranchConflict.conflict.id}" is already ACTIVE on branch "${crossBranchConflict.conflict.branch}" (not yet merged to master) — close it before launching "${id}".`,
+      };
+    }
+    return { ok: false, code: "CONFLICT_CHECK_FAILED", message: crossBranchConflict.error };
+  }
+
   const contract = readContract(id, root);
   if (!contract.ok) return { ok: false, code: "MALFORMED_CONTRACT", message: contract.errors.join("\n") };
   if (contract.frontmatter.baseline !== flags.baseline) {
@@ -259,11 +333,12 @@ export function renderActiveDropFile(fields) {
     "Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations",
     `for this Drop live in \`${fields.contract}\` — this file is a pointer, not a copy.`,
     "",
-    "At most one Drop may be recorded `status: ACTIVE` in origin/master's own copy of this file",
-    "at a time — `node scripts/factory-drop.mjs validate|init` refuses to launch a different Drop",
-    "while one is already ACTIVE here. This does NOT mechanically block a second, unrelated Drop",
-    "branched from master while this one is still an open, unmerged PR (its own activation isn't",
-    "visible on origin/master until it merges) — see SKILL.md §9's known-limitation note. Closing",
+    "At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin",
+    "(not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and",
+    "checks each still-unmerged branch's own copy of this file, so a second Drop whose PR hasn't",
+    "merged yet is still detected and blocked. See SKILL.md §9 for the full mechanism, including",
+    "the one residual limitation (an abandoned, never-closed, never-deleted branch keeps reading",
+    "as a live conflict — ordinary git hygiene already implies deleting it). Closing",
     "(`node scripts/factory-drop.mjs close`) flips this file's status to CLOSED; it never deletes",
     "or rewrites the historical Drop Contract file itself.",
     "",
