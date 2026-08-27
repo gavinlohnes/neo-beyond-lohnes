@@ -517,22 +517,17 @@ export function BodyScreen() {
     }
   }
 
-  async function handleLogMeal(meal: SavedMeal) {
+  async function handleLogMeal(mealId: string) {
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
       const activeDay = await ensureActiveDay();
-      const eventId = await logMeal(activeDay.id, {
-        savedMealId: meal.id,
-        name: meal.name,
-        calories: meal.calories,
-        proteinG: meal.proteinG,
-        carbsG: meal.carbsG,
-        fatG: meal.fatG,
-      });
-      setMealConfirmation({ message: describeMealLogged(meal.name), headEventId: eventId });
+      const result = await logMeal(activeDay.id, mealId);
+      setMealConfirmation({ message: describeMealLogged(result.name), headEventId: result.eventId });
       await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not log meal.");
     } finally {
       setBusy(false);
     }
@@ -1222,7 +1217,7 @@ export function BodyScreen() {
                 {describeMacros(meal.calories, meal.proteinG, meal.carbsG, meal.fatG)}
               </p>
               <div style={{ display: "flex", gap: 8 }}>
-                <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleLogMeal(meal)}>
+                <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleLogMeal(meal.id)}>
                   LOG
                 </button>
                 <button

@@ -86,14 +86,7 @@ describe("logMeal — snapshots current macros into immutable history", () => {
   it("a fresh log has no correction and effective == original snapshot", async () => {
     const day = await startDay();
     const meal = await makeMeal();
-    await logMeal(day.id, {
-      savedMealId: meal.id,
-      name: meal.name,
-      calories: meal.calories,
-      proteinG: meal.proteinG,
-      carbsG: meal.carbsG,
-      fatG: meal.fatG,
-    });
+    await logMeal(day.id, meal.id);
 
     const entries = await getMealEntries(day.id);
     expect(entries).toHaveLength(1);
@@ -114,14 +107,7 @@ describe("logMeal — snapshots current macros into immutable history", () => {
   it("editing the SavedMeal after logging does not change the already-logged entry", async () => {
     const day = await startDay();
     const meal = await makeMeal();
-    await logMeal(day.id, {
-      savedMealId: meal.id,
-      name: meal.name,
-      calories: meal.calories,
-      proteinG: meal.proteinG,
-      carbsG: meal.carbsG,
-      fatG: meal.fatG,
-    });
+    await logMeal(day.id, meal.id);
 
     await updateSavedMeal(meal.id, { calories: 900, proteinG: 5, carbsG: 5, fatG: 5, name: "Renamed Meal" });
 
@@ -135,14 +121,7 @@ describe("logMeal — snapshots current macros into immutable history", () => {
   it("archiving the SavedMeal after logging does not remove or alter its past entry", async () => {
     const day = await startDay();
     const meal = await makeMeal();
-    await logMeal(day.id, {
-      savedMealId: meal.id,
-      name: meal.name,
-      calories: meal.calories,
-      proteinG: meal.proteinG,
-      carbsG: meal.carbsG,
-      fatG: meal.fatG,
-    });
+    await logMeal(day.id, meal.id);
     await archiveSavedMeal(meal.id);
 
     const entries = await getMealEntries(day.id);
@@ -153,23 +132,9 @@ describe("logMeal — snapshots current macros into immutable history", () => {
   it("logging the same SavedMeal twice, after an edit, snapshots each log's own values independently", async () => {
     const day = await startDay();
     const meal = await makeMeal();
-    await logMeal(day.id, {
-      savedMealId: meal.id,
-      name: meal.name,
-      calories: meal.calories,
-      proteinG: meal.proteinG,
-      carbsG: meal.carbsG,
-      fatG: meal.fatG,
-    });
-    const updated = await updateSavedMeal(meal.id, { calories: 700, proteinG: 50 });
-    await logMeal(day.id, {
-      savedMealId: updated.id,
-      name: updated.name,
-      calories: updated.calories,
-      proteinG: updated.proteinG,
-      carbsG: updated.carbsG,
-      fatG: updated.fatG,
-    });
+    await logMeal(day.id, meal.id);
+    await updateSavedMeal(meal.id, { calories: 700, proteinG: 50 });
+    await logMeal(day.id, meal.id);
 
     const entries = await getMealEntries(day.id);
     expect(entries).toHaveLength(2);
@@ -177,18 +142,101 @@ describe("logMeal — snapshots current macros into immutable history", () => {
   });
 });
 
+/**
+ * Review finding (post-548ec00): logMeal previously accepted a full
+ * caller-supplied snapshot (name/calories/protein/carbs/fat) instead of
+ * fetching the canonical SavedMeal record itself — a UI/caller with a
+ * stale or fabricated object could dictate what MEAL_LOGGED history says.
+ * logMeal now takes only a SavedMeal id and reads current truth from
+ * persistence; this block is the adversarial evidence that boundary
+ * actually holds. "SavedMeal edits/archives never rewrite past logs" is
+ * proven by the pre-existing tests directly above (editing/archiving
+ * AFTER logging leaves the past entry untouched) — this block instead
+ * proves the write side: a caller cannot make logMeal record something
+ * that isn't the SavedMeal's own current, valid, active state.
+ */
+describe("logMeal — command-boundary integrity (write truth is not caller-supplied)", () => {
+  it("a stale caller-held reference cannot cause stale macros to be logged after the SavedMeal has changed", async () => {
+    const day = await startDay();
+    const meal = await makeMeal({ calories: 600, proteinG: 45, carbsG: 60, fatG: 15 });
+    // The only thing a caller can hold onto across this edit is the id —
+    // logMeal's signature makes it structurally impossible to carry a
+    // stale macro value forward, unlike the old snapshot-argument shape.
+    await updateSavedMeal(meal.id, { calories: 900, proteinG: 5, carbsG: 5, fatG: 5, name: "Renamed Meal" });
+    await logMeal(day.id, meal.id);
+
+    const [entry] = await getMealEntries(day.id);
+    expect(entry!.name).toBe("Renamed Meal");
+    expect(entry!.originalCalories).toBe(900);
+    expect(entry!.originalProteinG).toBe(5);
+  });
+
+  it("a runtime-injected snapshot object (bypassing the type system) cannot fabricate the logged snapshot", async () => {
+    const day = await startDay();
+    await makeMeal({ calories: 600, proteinG: 45, carbsG: 60, fatG: 15 });
+    const forged = { savedMealId: "irrelevant", name: "Fake", calories: 99999, proteinG: 999, carbsG: 999, fatG: 999 };
+    // Simulates a caller that bypasses TypeScript entirely (a plain-JS
+    // call site, a deserialized message-boundary payload, or a
+    // deliberately malicious script). logMeal only ever uses its second
+    // argument as a Dexie primary-key lookup, so an object can never
+    // match a real string id — it must fail closed, never accept the
+    // forged macros as a substitute snapshot.
+    await expect(logMeal(day.id, forged as unknown as string)).rejects.toThrow();
+    expect(await getMealEntries(day.id)).toHaveLength(0);
+  });
+
+  it("a nonexistent SavedMeal id cannot produce a valid MEAL_LOGGED event", async () => {
+    const day = await startDay();
+    await expect(logMeal(day.id, "does-not-exist")).rejects.toThrow(/SAVED_MEAL_NOT_FOUND/);
+    expect(await getMealEntries(day.id)).toHaveLength(0);
+  });
+
+  it("an archived SavedMeal cannot be logged — same not-offered eligibility getSavedMeals already uses", async () => {
+    const day = await startDay();
+    const meal = await makeMeal();
+    await archiveSavedMeal(meal.id);
+    await expect(logMeal(day.id, meal.id)).rejects.toThrow(/SAVED_MEAL_ARCHIVED/);
+    expect(await getMealEntries(day.id)).toHaveLength(0);
+  });
+
+  it("a malformed persisted SavedMeal record cannot be logged, reusing parseSavedMeal's existing validity semantics", async () => {
+    const day = await startDay();
+    // Bypasses createSavedMeal's own zod validation to simulate a
+    // corrupted/invalid persisted row directly, the same failure mode
+    // getSavedMeals already defends against via parseSavedMeal (invalid
+    // rows are excluded, never crash or get silently coerced).
+    await db.savedMeals.put({
+      id: "malformed-1",
+      name: "",
+      calories: -5,
+      proteinG: 0,
+      carbsG: 0,
+      fatG: 0,
+      createdAt: new Date().toISOString(),
+    } as unknown as Parameters<typeof db.savedMeals.put>[0]);
+
+    await expect(logMeal(day.id, "malformed-1")).rejects.toThrow(/SAVED_MEAL_INVALID/);
+    expect(await getMealEntries(day.id)).toHaveLength(0);
+  });
+
+  // Compile-time guard, checked by `tsc -b` (npm run typecheck / build):
+  // logMeal's signature accepts only a SavedMeal id (a string), so a
+  // caller cannot even construct a call that supplies fabricated name/
+  // calorie/protein/carb/fat fields — proving the write boundary at the
+  // type level, not just at runtime. it.skip: this exists to be
+  // type-checked, never executed.
+  it.skip("compile-time guard: logMeal's signature refuses a caller-supplied macro snapshot", () => {
+    // @ts-expect-error logMeal(beyondDayId, savedMealId: string) does not
+    // accept an object — this call must fail to type-check.
+    void logMeal("day-1", { savedMealId: "x", name: "Fake", calories: 99999, proteinG: 999, carbsG: 999, fatG: 999 });
+  });
+});
+
 describe("correctMealLog — hydration-style correction chain, multi-value", () => {
   it("corrects all four macro fields without touching the original fact", async () => {
     const day = await startDay();
     const meal = await makeMeal();
-    await logMeal(day.id, {
-      savedMealId: meal.id,
-      name: meal.name,
-      calories: meal.calories,
-      proteinG: meal.proteinG,
-      carbsG: meal.carbsG,
-      fatG: meal.fatG,
-    });
+    await logMeal(day.id, meal.id);
     const [logged] = await getMealEntries(day.id);
     await correctMealLog(day.id, logged!.headEventId, { calories: 620, proteinG: 48, carbsG: 58, fatG: 16 });
 
@@ -205,14 +253,7 @@ describe("correctMealLog — hydration-style correction chain, multi-value", () 
   it("rejects correcting an already-superseded (stale) entry", async () => {
     const day = await startDay();
     const meal = await makeMeal();
-    await logMeal(day.id, {
-      savedMealId: meal.id,
-      name: meal.name,
-      calories: meal.calories,
-      proteinG: meal.proteinG,
-      carbsG: meal.carbsG,
-      fatG: meal.fatG,
-    });
+    await logMeal(day.id, meal.id);
     const [logged] = await getMealEntries(day.id);
     await correctMealLog(day.id, logged!.headEventId, { calories: 620, proteinG: 48, carbsG: 58, fatG: 16 });
 
@@ -224,14 +265,7 @@ describe("correctMealLog — hydration-style correction chain, multi-value", () 
   it("rejects a no-op correction (all four values identical)", async () => {
     const day = await startDay();
     const meal = await makeMeal();
-    await logMeal(day.id, {
-      savedMealId: meal.id,
-      name: meal.name,
-      calories: meal.calories,
-      proteinG: meal.proteinG,
-      carbsG: meal.carbsG,
-      fatG: meal.fatG,
-    });
+    await logMeal(day.id, meal.id);
     const [logged] = await getMealEntries(day.id);
     await expect(
       correctMealLog(day.id, logged!.headEventId, { calories: 600, proteinG: 45, carbsG: 60, fatG: 15 }),
@@ -250,7 +284,7 @@ describe("getTotalMealProteinGrams", () => {
   it("sums each entry's effective (corrected) protein, not the original", async () => {
     const day = await startDay();
     const meal = await makeMeal({ proteinG: 30 });
-    await logMeal(day.id, { savedMealId: meal.id, name: meal.name, calories: meal.calories, proteinG: 30, carbsG: meal.carbsG, fatG: meal.fatG });
+    await logMeal(day.id, meal.id);
     const [logged] = await getMealEntries(day.id);
     await correctMealLog(day.id, logged!.headEventId, { calories: 600, proteinG: 40, carbsG: 60, fatG: 15 });
 
@@ -273,14 +307,7 @@ describe("Backup/restore round-trip — SavedMeal + meal history survive", () =>
   it("a SavedMeal and its logged/corrected history survive a real export -> clear -> import cycle", async () => {
     const day = await startDay();
     const meal = await makeMeal();
-    await logMeal(day.id, {
-      savedMealId: meal.id,
-      name: meal.name,
-      calories: meal.calories,
-      proteinG: meal.proteinG,
-      carbsG: meal.carbsG,
-      fatG: meal.fatG,
-    });
+    await logMeal(day.id, meal.id);
     const [logged] = await getMealEntries(day.id);
     await correctMealLog(day.id, logged!.headEventId, { calories: 620, proteinG: 48, carbsG: 58, fatG: 16 });
 
@@ -312,7 +339,7 @@ describe("Minimum Day protein — meal protein counts alongside protein-only log
     expect(status.protein).toBe(false);
 
     const meal = await makeMeal({ proteinG: 15 });
-    await logMeal(day.id, { savedMealId: meal.id, name: meal.name, calories: meal.calories, proteinG: 15, carbsG: meal.carbsG, fatG: meal.fatG });
+    await logMeal(day.id, meal.id);
     status = await getMinimumDayStatus(day.id);
     expect(status.protein).toBe(true);
   });
@@ -320,7 +347,7 @@ describe("Minimum Day protein — meal protein counts alongside protein-only log
   it("meal protein alone can satisfy the requirement with zero protein-only logs", async () => {
     const day = await startDay();
     const meal = await makeMeal({ proteinG: 30 });
-    await logMeal(day.id, { savedMealId: meal.id, name: meal.name, calories: meal.calories, proteinG: 30, carbsG: meal.carbsG, fatG: meal.fatG });
+    await logMeal(day.id, meal.id);
 
     const status = await getMinimumDayStatus(day.id);
     expect(status.protein).toBe(true);

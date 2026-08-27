@@ -2,6 +2,7 @@ import { db } from "../persistence/db";
 import { logEvent, newId } from "./commands";
 import type { DomainEvent, MealLogCorrectedPayload, MealLoggedPayload, SavedMeal } from "../domain/common/types";
 import {
+  parseSavedMeal,
   savedMealInputSchema,
   savedMealModifyInputSchema,
   type SavedMealInput,
@@ -76,26 +77,59 @@ export async function archiveSavedMeal(id: string): Promise<void> {
   await db.savedMeals.update(id, { archivedAt: new Date().toISOString() });
 }
 
+export interface MealLogResult {
+  eventId: string;
+  name: string;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+}
+
 /**
  * The one real historical fact this Drop adds: logging a SavedMeal
- * snapshots its CURRENT macros (passed in by the caller, who already has
- * the just-fetched SavedMeal in hand — same convention as logWater/
- * logProtein taking an already-known value directly rather than
- * re-deriving it) into an immutable MEAL_LOGGED event. Nothing about a
- * later SavedMeal edit/archive can change what this event says.
+ * snapshots its CURRENT macros into an immutable MEAL_LOGGED event.
+ * Nothing about a later SavedMeal edit/archive can change what this
+ * event says.
+ *
+ * The command receives only the SavedMeal's identity and fetches the
+ * canonical record itself — it never trusts caller-supplied name/
+ * calorie/protein/carb/fat values as SavedMeal truth. Application
+ * command boundaries own write truth; a stale or fabricated snapshot
+ * handed in by a caller (e.g. UI state that hasn't refreshed since the
+ * preset was edited elsewhere) must not be able to reach history.
+ * Malformed/archived SavedMeals are rejected using the same validity
+ * (parseSavedMeal) and eligibility (archivedAt) semantics getSavedMeals
+ * already uses, rather than a second, parallel definition of "valid."
  */
-export async function logMeal(
-  beyondDayId: string,
-  snapshot: { savedMealId: string; name: string; calories: number; proteinG: number; carbsG: number; fatG: number },
-): Promise<string> {
+export async function logMeal(beyondDayId: string, savedMealId: string): Promise<MealLogResult> {
+  const raw = await db.savedMeals.get(savedMealId);
+  if (!raw) throw notFound(savedMealId);
+  const meal = parseSavedMeal(raw);
+  if (!meal) {
+    throw new Error(`SAVED_MEAL_INVALID: saved meal ${savedMealId} failed validation and cannot be logged.`);
+  }
+  if (meal.archivedAt) {
+    throw new Error(`SAVED_MEAL_ARCHIVED: saved meal ${savedMealId} has been archived and can no longer be logged.`);
+  }
+
   const correlationId = newId();
-  return logEvent(
+  const snapshot = {
+    savedMealId: meal.id,
+    name: meal.name,
+    calories: meal.calories,
+    proteinG: meal.proteinG,
+    carbsG: meal.carbsG,
+    fatG: meal.fatG,
+  };
+  const eventId = await logEvent(
     beyondDayId,
     "MEAL_LOGGED",
     { commandId: correlationId, ...snapshot },
     "USER",
     correlationId,
   );
+  return { eventId, name: meal.name, calories: meal.calories, proteinG: meal.proteinG, carbsG: meal.carbsG, fatG: meal.fatG };
 }
 
 /**
