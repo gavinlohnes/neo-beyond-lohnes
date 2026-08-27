@@ -3,6 +3,7 @@ import { WORKOUT_TEMPLATE_ORDER } from "../../../domain/workout/types";
 import type { SessionVariantSuggestion } from "../../../engine/trainSuggestion";
 import { doesSessionAdvanceRotation, deriveRecoverySessionStatus } from "../../../engine/trainSuggestion";
 import type { ProgressionSuggestion } from "../../../engine/progression";
+import type { LastStrengthSessionSummary, RecentStrengthSessionEntry } from "../../../application/trainQueries";
 
 /**
  * Phase 6 (TRAIN redesign): pure copy/derivation helpers, kept separate
@@ -181,4 +182,88 @@ export function describeProgressionAdvisory(suggestion: ProgressionSuggestion): 
   // already the correct plain explanation for those cases, so use it
   // directly rather than fabricating a weight that isn't there.
   return suggestion.reason;
+}
+
+/**
+ * TRAIN-003 (Performance Brief): the honest, human-facing sentence for
+ * getLastStrengthSession's result. null (no eligible session yet) is a
+ * calm, expected state — never phrased as if something's missing or
+ * wrong, matching the same "no false completeness/negative framing" rule
+ * PROGRESSION's copy below follows.
+ */
+export function describeLastStrengthSession(summary: LastStrengthSessionSummary | null): string {
+  if (!summary) return "Training history will appear here once you complete or partially complete a strength session.";
+  const variant = summary.sessionType === "REDUCED" ? " (REDUCED)" : "";
+  const statusWord = summary.status === "COMPLETED" ? "Completed" : "Partial";
+  const sets = `${summary.workingSetCount} working ${summary.workingSetCount === 1 ? "set" : "sets"}`;
+  const duration = summary.durationMinutes !== null ? ` · ${summary.durationMinutes} min` : "";
+  return `Template ${summary.templateId}${variant} — ${statusWord} · ${sets}${duration}`;
+}
+
+/** TRAIN-003: the real WorkoutSessionStatus word, never softened or reworded to look like a different outcome. */
+export function describeSessionStatusLabel(status: "COMPLETED" | "PARTIAL" | "ABANDONED"): string {
+  switch (status) {
+    case "COMPLETED":
+      return "Completed";
+    case "PARTIAL":
+      return "Partial";
+    case "ABANDONED":
+      return "Abandoned";
+  }
+}
+
+/** TRAIN-003: one compact line per getRecentStrengthSessions entry — template, variant (only when REDUCED), and real status. */
+export function describeRecentStrengthEntry(entry: RecentStrengthSessionEntry): string {
+  const variant = entry.sessionType === "REDUCED" ? " REDUCED" : "";
+  return `Template ${entry.templateId}${variant} — ${describeSessionStatusLabel(entry.status)}`;
+}
+
+/** TRAIN-003: calm empty-history copy for RECENT, distinct from LAST's own empty copy so neither reads as an error. */
+export const RECENT_STRENGTH_EMPTY = "Recent training will appear here as sessions are recorded.";
+
+export interface ProgressionSummaryCounts {
+  increase: number;
+  hold: number;
+  reduce: number;
+  noHistory: number;
+  total: number;
+}
+
+/**
+ * TRAIN-003 (Performance Brief): pure aggregation over
+ * getCurrentProgressionSuggestions()'s already-fetched result — counts
+ * only, no new progression logic (engine/progression.ts remains the sole
+ * source of the recommendation itself).
+ */
+export function summarizeProgressionSuggestions(
+  suggestions: { suggestion: ProgressionSuggestion }[],
+): ProgressionSummaryCounts {
+  const counts: ProgressionSummaryCounts = { increase: 0, hold: 0, reduce: 0, noHistory: 0, total: suggestions.length };
+  for (const { suggestion } of suggestions) {
+    if (suggestion.recommendation === "INCREASE") counts.increase++;
+    else if (suggestion.recommendation === "HOLD") counts.hold++;
+    else if (suggestion.recommendation === "REDUCE") counts.reduce++;
+    else counts.noHistory++;
+  }
+  return counts;
+}
+
+/**
+ * TRAIN-003: NO_HISTORY must never read as a negative/failure state — an
+ * exercise with no history yet is an expected, calm fact (nothing has
+ * been logged for it in this context), not a gap or a problem. When
+ * every exercise is NO_HISTORY (a fresh install, or a rotation context
+ * never yet trained), the whole sentence stays purely informational.
+ */
+export function describeProgressionSummary(counts: ProgressionSummaryCounts): string {
+  if (counts.total === 0) return "No exercises tracked yet.";
+  if (counts.noHistory === counts.total) {
+    return "No exercise history yet — advisories will appear once you log sets.";
+  }
+  const parts: string[] = [];
+  if (counts.increase > 0) parts.push(`${counts.increase} ready to increase`);
+  if (counts.hold > 0) parts.push(`${counts.hold} holding steady`);
+  if (counts.reduce > 0) parts.push(`${counts.reduce} suggest reducing`);
+  if (counts.noHistory > 0) parts.push(`${counts.noHistory} without history yet`);
+  return `${joinWithAnd(parts)}.`;
 }

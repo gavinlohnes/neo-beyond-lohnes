@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConfirmIcon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
-import type { PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
+import type { ExercisePrescription, PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
 import { WORKOUT_TEMPLATES, getReducedExercises } from "../../../domain/workout/types";
 import { deriveCapacity } from "../../../engine/capacity";
 import { suggestSessionVariant } from "../../../engine/trainSuggestion";
@@ -13,13 +13,18 @@ import { ensureActiveDay, submitCheckIn } from "../../../application/commands";
 import { quickCheckInValues } from "../today/TodayScreen";
 import {
   getActiveWorkoutSession,
+  getCurrentProgressionSuggestions,
   getLastAdvancingTemplate,
   getLastPerformedSetForExercise,
+  getLastStrengthSession,
   getPerformedSets,
   getProgressionSuggestion,
+  getRecentStrengthSessions,
   getRecentSubstitutions,
   suggestTemplateForNextWorkout,
   type LastSetInfo,
+  type LastStrengthSessionSummary,
+  type RecentStrengthSessionEntry,
 } from "../../../application/trainQueries";
 import {
   abandonWorkout,
@@ -30,9 +35,12 @@ import {
   startWorkout,
 } from "../../../application/trainCommands";
 import {
+  describeLastStrengthSession,
   describePartialAdvancement,
   describePartialAdvancementResult,
   describeProgressionAdvisory,
+  describeProgressionSummary,
+  describeRecentStrengthEntry,
   describeRecommendationLabel,
   describeRecoveryPreview,
   describeStopAction,
@@ -40,6 +48,8 @@ import {
   describeTemplateSuggestion,
   describeTemplateSummary,
   describeVariantSuggestion,
+  RECENT_STRENGTH_EMPTY,
+  summarizeProgressionSuggestions,
   VARIANT_MEANINGS,
 } from "./trainCopy";
 
@@ -116,6 +126,14 @@ export function TrainScreen({
   const [focusedExerciseId, setFocusedExerciseId] = useState<string | null>(null);
   const [completionSummary, setCompletionSummary] = useState<CompletionSummary | null>(null);
   const [destinationReady, setDestinationReady] = useState(false);
+  // TRAIN-003 (Performance Brief): only ever loaded/shown pre-workout
+  // (see refresh() below) — read-only derived intelligence, never
+  // consulted by handleStart/actuallyStart or any other command path.
+  const [lastStrengthSession, setLastStrengthSession] = useState<LastStrengthSessionSummary | null>(null);
+  const [recentStrengthSessions, setRecentStrengthSessions] = useState<RecentStrengthSessionEntry[]>([]);
+  const [currentProgressionSuggestions, setCurrentProgressionSuggestions] = useState<
+    { templateId: WorkoutTemplateId; prescription: ExercisePrescription; suggestion: ProgressionSuggestion }[]
+  >([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const recoveryChoiceRef = useRef<HTMLButtonElement>(null);
   const destinationConsumedRef = useRef(false);
@@ -174,6 +192,11 @@ export function TrainScreen({
       setLastPerformedSets({});
       setRecentSubstitutions({});
       setInputs({});
+      // TRAIN-003 (Performance Brief): loaded only pre-workout — read-only
+      // derived intelligence, never consulted by any command path above.
+      setLastStrengthSession(await getLastStrengthSession());
+      setRecentStrengthSessions(await getRecentStrengthSessions());
+      setCurrentProgressionSuggestions(await getCurrentProgressionSuggestions());
     }
 
     setDestinationReady(true);
@@ -462,6 +485,9 @@ export function TrainScreen({
   const variantSuggestion = suggestSessionVariant(capacity);
   const suggestedExercises = exercisesFor(chosenTemplate, chosenVariant === "RECOVERY" ? "STANDARD" : chosenVariant);
   const suggestedSummary = describeTemplateSummary(suggestedExercises);
+  // TRAIN-003 (Performance Brief): pure aggregation of already-fetched
+  // state, recomputed on every render — no separate query/state needed.
+  const progressionCounts = summarizeProgressionSuggestions(currentProgressionSuggestions);
 
   // P4 (one-handed execution mode): "current" is whichever exercise still
   // has an unlogged set, unless the lifter explicitly focused a different
@@ -663,6 +689,59 @@ export function TrainScreen({
             START WORKOUT
           </button>
         </CommandSurface>
+      )}
+
+      {/* TRAIN-003 (Performance Brief): read-only derived intelligence,
+          subordinate to the CommandSurface picker above — same
+          .equipment-row/.section-label grammar BODY's own logging
+          stations use, deliberately NOT a second .command-surface (no
+          dominant decision lives here, the picker above already claims
+          that territory). Renders only pre-workout, matching exactly
+          when refresh() loads its data (see refresh() above) — never
+          shown, and never queried, while a session is ACTIVE. */}
+      {!session && !completionSummary && (
+        <>
+          <p className="section-label">Performance Brief</p>
+          <div className="equipment-row">
+            <p className="tool-label" style={{ marginBottom: 4 }}>LAST</p>
+            <p className="card-body" style={{ marginBottom: 12 }}>{describeLastStrengthSession(lastStrengthSession)}</p>
+
+            <p className="tool-label" style={{ marginBottom: 4 }}>PROGRESSION</p>
+            <p className="card-body" style={{ marginBottom: recentStrengthSessions.length > 0 || progressionCounts.total > 0 ? 8 : 0 }}>
+              {describeProgressionSummary(progressionCounts)}
+            </p>
+            {progressionCounts.total > 0 && (
+              <details className="why" style={{ marginBottom: 12 }}>
+                <summary>Exercise detail</summary>
+                <div style={{ marginTop: 8 }}>
+                  {TEMPLATE_ORDER.map((templateId) => (
+                    <div key={templateId} style={{ marginBottom: 8 }}>
+                      <p className="meta" style={{ marginBottom: 2 }}>Template {templateId}</p>
+                      {currentProgressionSuggestions
+                        .filter((entry) => entry.templateId === templateId)
+                        .map((entry) => (
+                          <p key={entry.prescription.exerciseId} className="card-body" style={{ marginBottom: 2 }}>
+                            {entry.prescription.name} — {describeRecommendationLabel(entry.suggestion.recommendation)}
+                          </p>
+                        ))}
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+
+            <p className="tool-label" style={{ marginBottom: 4 }}>RECENT</p>
+            {recentStrengthSessions.length === 0 ? (
+              <p className="card-body">{RECENT_STRENGTH_EMPTY}</p>
+            ) : (
+              recentStrengthSessions.map((entry) => (
+                <p key={entry.id} className="meta" style={{ marginBottom: 2 }}>
+                  {describeRecentStrengthEntry(entry)}
+                </p>
+              ))
+            )}
+          </div>
+        </>
       )}
 
       {session && session.sessionType === "RECOVERY" && !completionSummary && (
