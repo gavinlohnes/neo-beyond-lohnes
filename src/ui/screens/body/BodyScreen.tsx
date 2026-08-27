@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
-import type { BeyondDay, HydrationEntry } from "../../../domain/common/types";
+import type { BeyondDay, HydrationEntry, SavedMeal } from "../../../domain/common/types";
 import {
   logWater,
   correctWater,
@@ -25,6 +25,14 @@ import {
   type ProteinEntry,
 } from "../../../application/queries";
 import {
+  archiveSavedMeal,
+  correctMealLog,
+  createSavedMeal,
+  logMeal,
+  updateSavedMeal,
+} from "../../../application/nutritionCommands";
+import { getMealEntries, getSavedMeals, type NutritionEntry } from "../../../application/nutritionQueries";
+import {
   BODYWEIGHT_PLAUSIBLE_RANGE,
   describeBodyweightLogged,
   describeImplausibleBodyweight,
@@ -42,8 +50,111 @@ import {
   totalMinutesToHoursAndMinutes,
   WATER_QUICK_ADD_OZ,
 } from "./bodyScreenCopy";
+import { describeMacros, describeMealLogged, MEALS_TODAY_EMPTY, SAVED_MEALS_EMPTY } from "./nutritionCopy";
 
 type Confirmation = { message: string; headEventId: string } | null;
+
+interface MealFormState {
+  name: string;
+  calories: string;
+  proteinG: string;
+  carbsG: string;
+  fatG: string;
+}
+const EMPTY_MEAL_FORM: MealFormState = { name: "", calories: "", proteinG: "", carbsG: "", fatG: "" };
+
+interface MealMacroFormState {
+  calories: string;
+  proteinG: string;
+  carbsG: string;
+  fatG: string;
+}
+const EMPTY_MEAL_MACRO_FORM: MealMacroFormState = { calories: "", proteinG: "", carbsG: "", fatG: "" };
+
+/**
+ * NUTRITION-001: the same four-numeric-field group is needed by the add-
+ * meal form, the edit-meal form, and the correct-a-logged-meal form —
+ * extracted once (a module-level function, not a component: pure JSX
+ * from props, no state of its own) rather than repeated three times.
+ */
+/**
+ * `labelPrefix` (e.g. "New meal" / "Edit meal" / "Corrected") makes each
+ * field's accessible NAME unique, not just its DOM id — the add-meal
+ * form, an in-progress edit, and a correction can all be open on screen
+ * at once (independent disclosure/edit/correction state), and a bare
+ * "Protein (g)" would also collide with BODY's own PROTEIN station
+ * field of the same name. idPrefix only needs to be unique for the
+ * id/htmlFor pairing; labelPrefix is what a screen reader user actually
+ * hears, so it has to disambiguate on its own.
+ */
+function renderMealMacroInputs(
+  form: MealMacroFormState,
+  onChange: (patch: Partial<MealMacroFormState>) => void,
+  idPrefix: string,
+  labelPrefix: string,
+) {
+  return (
+    <>
+      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+          <label htmlFor={`${idPrefix}-calories`}><span>{labelPrefix} calories</span></label>
+          <input
+            id={`${idPrefix}-calories`}
+            type="number"
+            min={0}
+            value={form.calories}
+            onChange={(e) => onChange({ calories: e.target.value })}
+            className="input"
+          />
+        </div>
+        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+          <label htmlFor={`${idPrefix}-protein`}><span>{labelPrefix} protein (g)</span></label>
+          <input
+            id={`${idPrefix}-protein`}
+            type="number"
+            min={0}
+            value={form.proteinG}
+            onChange={(e) => onChange({ proteinG: e.target.value })}
+            className="input"
+          />
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+          <label htmlFor={`${idPrefix}-carbs`}><span>{labelPrefix} carbs (g)</span></label>
+          <input
+            id={`${idPrefix}-carbs`}
+            type="number"
+            min={0}
+            value={form.carbsG}
+            onChange={(e) => onChange({ carbsG: e.target.value })}
+            className="input"
+          />
+        </div>
+        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+          <label htmlFor={`${idPrefix}-fat`}><span>{labelPrefix} fat (g)</span></label>
+          <input
+            id={`${idPrefix}-fat`}
+            type="number"
+            min={0}
+            value={form.fatG}
+            onChange={(e) => onChange({ fatG: e.target.value })}
+            className="input"
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
+function parseMealMacros(form: MealMacroFormState): { calories: number; proteinG: number; carbsG: number; fatG: number } | null {
+  const calories = Number(form.calories);
+  const proteinG = Number(form.proteinG);
+  const carbsG = Number(form.carbsG);
+  const fatG = Number(form.fatG);
+  if (![calories, proteinG, carbsG, fatG].every((n) => Number.isFinite(n) && n >= 0)) return null;
+  return { calories, proteinG, carbsG, fatG };
+}
 
 export function BodyScreen() {
   const [day, setDay] = useState<BeyondDay | null>(null);
@@ -100,6 +211,18 @@ export function BodyScreen() {
   const [proteinHistoryOpen, setProteinHistoryOpen] = useState(false);
   const [proteinManualOpen, setProteinManualOpen] = useState(false);
 
+  // Meal Memory (NUTRITION-001)
+  const [savedMeals, setSavedMeals] = useState<SavedMeal[]>([]);
+  const [mealEntries, setMealEntries] = useState<NutritionEntry[]>([]);
+  const [mealConfirmation, setMealConfirmation] = useState<Confirmation>(null);
+  const [mealHistoryOpen, setMealHistoryOpen] = useState(false);
+  const [addMealOpen, setAddMealOpen] = useState(false);
+  const [newMealForm, setNewMealForm] = useState<MealFormState>(EMPTY_MEAL_FORM);
+  const [editingMealId, setEditingMealId] = useState<string | null>(null);
+  const [editMealForm, setEditMealForm] = useState<MealFormState>(EMPTY_MEAL_FORM);
+  const [correctingMealEventId, setCorrectingMealEventId] = useState<string | null>(null);
+  const [mealCorrectionForm, setMealCorrectionForm] = useState<MealMacroFormState>(EMPTY_MEAL_MACRO_FORM);
+
   useEffect(() => {
     void refresh();
   }, []);
@@ -107,12 +230,19 @@ export function BodyScreen() {
   async function refresh() {
     const activeDay = (await getActiveDay()) ?? null;
     setDay(activeDay);
+    // SavedMeal presets are not day-scoped (same as SchedulePattern) —
+    // loaded regardless of whether a day exists yet, since creating one
+    // doesn't require ensureActiveDay (only logMeal does).
+    setSavedMeals(await getSavedMeals());
     if (activeDay) {
       setEntries(await getHydrationEntries(activeDay.id));
       setTotal(await getEffectiveHydrationTotal(activeDay.id));
       setSleepEntries(await getSleepEntries(activeDay.id));
       setBodyweightEntries(await getBodyweightEntries(activeDay.id));
       setProteinEntries(await getProteinEntries(activeDay.id));
+      setMealEntries(await getMealEntries(activeDay.id));
+    } else {
+      setMealEntries([]);
     }
   }
 
@@ -301,6 +431,133 @@ export function BodyScreen() {
       await correctProtein(day.id, proteinCorrectingId, grams);
       setProteinCorrectingId(null);
       if (proteinConfirmation?.headEventId === proteinCorrectingId) setProteinConfirmation(null);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Correction failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // ---- MEAL MEMORY (NUTRITION-001) ----
+
+  async function handleCreateSavedMeal() {
+    if (busy) return;
+    const name = newMealForm.name.trim();
+    const macros = parseMealMacros(newMealForm);
+    if (!name) {
+      setError("Enter a meal name.");
+      return;
+    }
+    if (!macros) {
+      setError("Enter calories/protein/carbs/fat as numbers 0 or more.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await createSavedMeal({ name, ...macros });
+      setNewMealForm(EMPTY_MEAL_FORM);
+      setAddMealOpen(false);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save meal.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function beginEditSavedMeal(meal: SavedMeal) {
+    setEditingMealId(meal.id);
+    setEditMealForm({
+      name: meal.name,
+      calories: String(meal.calories),
+      proteinG: String(meal.proteinG),
+      carbsG: String(meal.carbsG),
+      fatG: String(meal.fatG),
+    });
+    setError(null);
+  }
+
+  async function handleSaveMealEdit() {
+    if (busy || !editingMealId) return;
+    const name = editMealForm.name.trim();
+    const macros = parseMealMacros(editMealForm);
+    if (!name) {
+      setError("Enter a meal name.");
+      return;
+    }
+    if (!macros) {
+      setError("Enter calories/protein/carbs/fat as numbers 0 or more.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await updateSavedMeal(editingMealId, { name, ...macros });
+      setEditingMealId(null);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not update meal.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleArchiveSavedMeal(id: string) {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await archiveSavedMeal(id);
+      if (editingMealId === id) setEditingMealId(null);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleLogMeal(mealId: string) {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const activeDay = await ensureActiveDay();
+      const result = await logMeal(activeDay.id, mealId);
+      setMealConfirmation({ message: describeMealLogged(result.name), headEventId: result.eventId });
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not log meal.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function beginCorrectMeal(entry: NutritionEntry) {
+    setCorrectingMealEventId(entry.headEventId);
+    setMealCorrectionForm({
+      calories: String(entry.effectiveCalories),
+      proteinG: String(entry.effectiveProteinG),
+      carbsG: String(entry.effectiveCarbsG),
+      fatG: String(entry.effectiveFatG),
+    });
+    setError(null);
+    setMealHistoryOpen(true);
+  }
+
+  async function handleSaveMealCorrection() {
+    if (busy || !day || !correctingMealEventId) return;
+    const macros = parseMealMacros(mealCorrectionForm);
+    if (!macros) {
+      setError("Enter calories/protein/carbs/fat as numbers 0 or more.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await correctMealLog(day.id, correctingMealEventId, macros);
+      setCorrectingMealEventId(null);
+      if (mealConfirmation?.headEventId === correctingMealEventId) setMealConfirmation(null);
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Correction failed.");
@@ -916,6 +1173,166 @@ export function BodyScreen() {
                       <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
                         <input type="number" aria-label="Corrected amount (g)" value={proteinCorrectionInput} onChange={(e) => setProteinCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
                         <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
+                          SAVE
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+            </FieldDisclosure>
+          </div>
+        )}
+      </div>
+
+      {/* MEAL MEMORY — NUTRITION-001 (High-Risk Drop): a small reusable
+          preset library ("the sandwich I always make"), not a food
+          database — no barcode, no recipe, no serving ontology, no goal.
+          Logging a SavedMeal snapshots its current macros into immutable
+          MEAL_LOGGED history (hydration-style correction chain); editing
+          or archiving the preset afterward never touches a past log.
+          Effective meal protein also counts toward Minimum Day, alongside
+          protein-only logs (application/queries.ts's getMinimumDayStatus) —
+          this station's own reading stays a meal COUNT, distinct from the
+          PROTEIN station's own gram total above, so the two are never
+          visually conflated. */}
+      <div className="equipment-row">
+        <p className="tool-label" style={{ marginBottom: 4 }}>MEAL MEMORY</p>
+        <p className="recommendation-title" style={{ marginBottom: 2 }}>
+          {mealEntries.length} {mealEntries.length === 1 ? "meal" : "meals"} logged today
+        </p>
+        <p className="meta" style={{ marginBottom: 12 }}>
+          Protein from meals counts toward Minimum Day, alongside protein-only logs.
+        </p>
+
+        {savedMeals.length === 0 ? (
+          <p className="card-body" style={{ marginBottom: 12 }}>{SAVED_MEALS_EMPTY}</p>
+        ) : (
+          savedMeals.map((meal) => (
+            <div
+              key={meal.id}
+              style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+            >
+              <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{meal.name}</p>
+              <p className="meta" style={{ marginBottom: 8 }}>
+                {describeMacros(meal.calories, meal.proteinG, meal.carbsG, meal.fatG)}
+              </p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleLogMeal(meal.id)}>
+                  LOG
+                </button>
+                <button
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                  disabled={busy}
+                  onClick={() => (editingMealId === meal.id ? setEditingMealId(null) : beginEditSavedMeal(meal))}
+                >
+                  {editingMealId === meal.id ? "CANCEL" : "EDIT"}
+                </button>
+                <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleArchiveSavedMeal(meal.id)}>
+                  ARCHIVE
+                </button>
+              </div>
+              {editingMealId === meal.id && (
+                <div className="fade-in" style={{ marginTop: 12 }}>
+                  <div className="field">
+                    <label htmlFor={`edit-meal-name-${meal.id}`}><span>Edit meal name</span></label>
+                    <input
+                      id={`edit-meal-name-${meal.id}`}
+                      type="text"
+                      value={editMealForm.name}
+                      onChange={(e) => setEditMealForm((prev) => ({ ...prev, name: e.target.value }))}
+                      className="input"
+                    />
+                  </div>
+                  {renderMealMacroInputs(
+                    editMealForm,
+                    (patch) => setEditMealForm((prev) => ({ ...prev, ...patch })),
+                    `edit-meal-${meal.id}`,
+                    "Edit meal",
+                  )}
+                  <button className="btn-primary" disabled={busy} onClick={() => void handleSaveMealEdit()}>
+                    SAVE MEAL
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+
+        <FieldDisclosure
+          summary={`${addMealOpen ? "HIDE" : "SHOW"} ADD MEAL`}
+          open={addMealOpen}
+          onToggle={setAddMealOpen}
+        >
+          <div className="field">
+            <label htmlFor="new-meal-name"><span>New meal name</span></label>
+            <input
+              id="new-meal-name"
+              type="text"
+              value={newMealForm.name}
+              onChange={(e) => setNewMealForm((prev) => ({ ...prev, name: e.target.value }))}
+              className="input"
+            />
+          </div>
+          {renderMealMacroInputs(
+            newMealForm,
+            (patch) => setNewMealForm((prev) => ({ ...prev, ...patch })),
+            "new-meal",
+            "New meal",
+          )}
+          <button className="btn-primary" disabled={busy} onClick={() => void handleCreateSavedMeal()}>
+            SAVE MEAL
+          </button>
+        </FieldDisclosure>
+
+        {mealConfirmation && (
+          <ConfirmBanner
+            message={mealConfirmation.message}
+            actionLabel="CORRECT"
+            onAction={() => {
+              const entry = mealEntries.find((e) => e.headEventId === mealConfirmation.headEventId);
+              if (entry) beginCorrectMeal(entry);
+            }}
+          />
+        )}
+
+        {mealEntries.length > 0 && (
+          <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+            <FieldDisclosure
+              summary={`${mealHistoryOpen ? "HIDE" : "SHOW"} TODAY'S MEALS (${mealEntries.length})`}
+              open={mealHistoryOpen}
+              onToggle={setMealHistoryOpen}
+            >
+                {mealEntries.length === 0 && <p className="card-body">{MEALS_TODAY_EMPTY}</p>}
+                {mealEntries.map((entry) => (
+                  <div
+                    key={entry.rootEventId}
+                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.name}</p>
+                        <p className="meta">
+                          {describeMacros(entry.effectiveCalories, entry.effectiveProteinG, entry.effectiveCarbsG, entry.effectiveFatG)}
+                        </p>
+                        <p className="meta">
+                          {new Date(entry.recordedAt).toLocaleTimeString()}
+                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                        </p>
+                      </div>
+                      <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectMeal(entry)}>
+                        CORRECT
+                      </button>
+                    </div>
+                    {correctingMealEventId === entry.headEventId && (
+                      <div className="fade-in" style={{ marginTop: 12 }}>
+                        {renderMealMacroInputs(
+                          mealCorrectionForm,
+                          (patch) => setMealCorrectionForm((prev) => ({ ...prev, ...patch })),
+                          `correct-meal-${entry.headEventId}`,
+                          "Corrected",
+                        )}
+                        <button className="btn-primary" disabled={busy} onClick={() => void handleSaveMealCorrection()}>
                           SAVE
                         </button>
                       </div>

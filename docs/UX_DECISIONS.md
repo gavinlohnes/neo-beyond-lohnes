@@ -93,6 +93,26 @@ signal this register needs updating, not that the code is wrong.
   raw minutes; a quick-add control for common water amounts), not raw
   numeric fields.
 
+## NUTRITION (Meal Memory — NUTRITION-001, locked)
+
+- **SavedMeal is a preset, not history.** A SavedMeal (name + calories/
+  protein/carbs/fat) is a small, directly-mutable reusable record — same
+  treatment as CaptureItem/SchedulePattern, not itself event-sourced.
+  Editing or archiving it changes the preset going forward only.
+- **Logging snapshots.** Logging a SavedMeal writes an immutable
+  `MEAL_LOGGED` event carrying a copy of its macros AT THAT MOMENT.
+  Meal history is DomainEvent truth with the same hydration-style
+  correction chain (`MEAL_LOG_CORRECTED` supersedes without erasing the
+  original) as water/sleep/protein/bodyweight. A later SavedMeal edit or
+  archive can never rewrite a past log — the log doesn't re-read the
+  preset, it already has its own values.
+- **Effective meal protein counts toward Minimum Day**, summed alongside
+  protein-only BODY logs (one combined total, not two competing ones) —
+  see `application/queries.ts`'s `getMinimumDayStatus`.
+- No food provider, barcode, recipe, serving ontology, calorie/macro
+  goal, or nutrition scoring — a SavedMeal is "the sandwich I always
+  make," not a food database entry.
+
 ## HISTORY
 
 - Read-only, complete: every `BeyondDay` and every event that occurred

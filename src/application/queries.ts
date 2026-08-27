@@ -14,6 +14,7 @@ import type {
 import { DEFAULT_SCHEDULE_PATTERN, deriveScheduledContext, type ScheduledContext } from "../engine/scheduledContext";
 import { parseSchedulePattern } from "../persistence/schedulePatternValidation";
 import { isOutcomeDismissed } from "../persistence/outcomeDismissals";
+import { getTotalMealProteinGrams } from "./nutritionQueries";
 
 /**
  * Deterministic "most recent" comparator, shared by every query in this
@@ -548,7 +549,13 @@ export async function getMinimumDayStatus(beyondDayId: string): Promise<MinimumD
   const enabled = events.some((e) => e.type === "MINIMUM_DAY_ENABLED");
 
   const hydrateTotal = await getEffectiveHydrationTotal(beyondDayId);
-  const proteinTotal = await getTotalProteinGrams(beyondDayId);
+  // NUTRITION-001 (Meal Memory): effective meal protein counts toward this
+  // same requirement alongside protein-only logs — one combined total,
+  // never two competing ones. getTotalProteinGrams itself is unchanged
+  // (it still means exactly "protein-only BODY logs," used as such by
+  // BODY's own PROTEIN station) — only this call site's combined total
+  // changes.
+  const proteinTotal = (await getTotalProteinGrams(beyondDayId)) + (await getTotalMealProteinGrams(beyondDayId));
 
   const meds = events.some((e) => e.type === "MEDS_COMPLETED");
   const hygiene = events.some((e) => e.type === "HYGIENE_COMPLETED");

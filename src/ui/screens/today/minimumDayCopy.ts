@@ -78,7 +78,10 @@ export const MINIMUM_DAY_ITEMS: MinimumDayItemConfig[] = [
   {
     key: "protein",
     label: "Protein ≥25g",
-    updateNote: "Updates automatically from BODY protein logs, or log it right here.",
+    // NUTRITION-001: effective meal protein counts toward this total too
+    // (application/queries.ts's getMinimumDayStatus), alongside
+    // protein-only logs — this note stays accurate by naming both.
+    updateNote: "Updates automatically from BODY protein or meal logs, or log it right here.",
   },
   {
     key: "meds",
