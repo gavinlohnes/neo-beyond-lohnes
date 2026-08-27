@@ -103,16 +103,20 @@ describe("BodyScreen (real browser) — WATER", () => {
 
     const waterRow = screen.getByText("HYDRATION", { exact: true }).element().closest(".equipment-row")!;
     // NUTRITION-001: waterConfirmation (checked above) is set BEFORE
-    // handleLogWaterAmount's own `await refresh()` — the today's-entries
-    // disclosure only renders once refresh()'s setEntries has actually
-    // landed, a moment that can genuinely fall after the confirmation
-    // banner's own render. refresh() now also fetches SavedMeal/meal-
+    // handleLogWaterAmount's own `await refresh()` — BodyScreen only
+    // renders the TODAY'S ENTRIES disclosure once `entries.length > 0`
+    // (see BodyScreen.tsx's `{entries.length > 0 && (...)}` gate), so it
+    // can genuinely still be absent the instant the confirmation banner
+    // itself becomes visible. refresh() now also fetches SavedMeal/meal-
     // entry state, widening that real (pre-existing) gap enough to flake
-    // under CI's more contended timing than it did before. Poll for the
-    // disclosure count directly rather than assuming it's already settled
-    // the instant the confirmation text appears.
-    await expect.poll(() => waterRow.querySelectorAll("details").length).toBe(2); // manual entry + today's entries
-    for (const d of waterRow.querySelectorAll("details")) expect(d.open).toBe(false);
+    // under CI's more contended timing than it did before. Wait for the
+    // actual precondition the assertion below depends on — the TODAY'S
+    // ENTRIES disclosure's own summary control existing — rather than
+    // polling the raw <details> count blindly.
+    await expect.element(screen.getByRole("button", { name: /TODAY'S ENTRIES/ })).toBeVisible();
+    const disclosures = waterRow.querySelectorAll("details");
+    expect(disclosures.length).toBe(2); // manual entry + today's entries
+    for (const d of disclosures) expect(d.open).toBe(false);
   });
 });
 
