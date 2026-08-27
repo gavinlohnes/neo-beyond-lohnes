@@ -102,9 +102,17 @@ describe("BodyScreen (real browser) — WATER", () => {
     await expect.element(screen.getByText("8 oz added.", { exact: true })).toBeVisible();
 
     const waterRow = screen.getByText("HYDRATION", { exact: true }).element().closest(".equipment-row")!;
-    const disclosures = waterRow.querySelectorAll("details");
-    expect(disclosures.length).toBe(2); // manual entry + today's entries
-    for (const d of disclosures) expect(d.open).toBe(false);
+    // NUTRITION-001: waterConfirmation (checked above) is set BEFORE
+    // handleLogWaterAmount's own `await refresh()` — the today's-entries
+    // disclosure only renders once refresh()'s setEntries has actually
+    // landed, a moment that can genuinely fall after the confirmation
+    // banner's own render. refresh() now also fetches SavedMeal/meal-
+    // entry state, widening that real (pre-existing) gap enough to flake
+    // under CI's more contended timing than it did before. Poll for the
+    // disclosure count directly rather than assuming it's already settled
+    // the instant the confirmation text appears.
+    await expect.poll(() => waterRow.querySelectorAll("details").length).toBe(2); // manual entry + today's entries
+    for (const d of waterRow.querySelectorAll("details")) expect(d.open).toBe(false);
   });
 });
 
