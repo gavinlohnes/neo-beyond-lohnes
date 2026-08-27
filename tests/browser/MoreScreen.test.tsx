@@ -30,8 +30,9 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
   it("renders the three functional sections with every capability reachable", async () => {
     const screen = await render(<MoreScreen />);
 
-    await expect.element(screen.getByText("Operations", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Records", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Direction", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Data safety", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Evidence", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("System", { exact: true })).toBeVisible();
 
     await expect.element(screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" })).toBeVisible();
@@ -56,6 +57,33 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
   it("no dominant .command-surface exists — MORE has no single primary decision, only system access", async () => {
     await render(<MoreScreen />);
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
+  });
+
+  it("uses semantic operational zones and keeps restore subordinate until explicitly opened", async () => {
+    const screen = await render(<MoreScreen />);
+
+    for (const name of ["Direction", "Data safety", "Evidence", "System"]) {
+      await expect.element(screen.getByRole("heading", { name, exact: true })).toBeVisible();
+    }
+
+    const restoreSummary = screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true });
+    await expect.element(restoreSummary).toBeVisible();
+    const restoreDetails = restoreSummary.elements()[0]?.closest("details");
+    expect(restoreDetails).not.toBeNull();
+    expect(restoreDetails!.open).toBe(false);
+    await expect.element(screen.getByLabelText("Choose a backup file to restore")).not.toBeVisible();
+
+    await restoreSummary.click();
+    expect(restoreDetails!.open).toBe(true);
+    await expect.element(screen.getByLabelText("Choose a backup file to restore")).toBeVisible();
+  });
+
+  it("keeps routine backup neutral and reserves danger semantics for confirmed replacement", async () => {
+    const screen = await render(<MoreScreen />);
+    expect(screen.getByRole("button", { name: "EXPORT BACKUP" }).elements()[0]?.className).toBe("btn-primary");
+    const restoreLabel = screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).elements()[0];
+    expect(restoreLabel?.closest(".restore-disclosure")).not.toBeNull();
+    expect(document.querySelectorAll(".btn-danger")).toHaveLength(0);
   });
 
   it("the SYSTEM instrument cluster reflects live truth, not a fabricated or duplicated reading", async () => {
@@ -198,10 +226,10 @@ describe("MoreScreen (real browser) — nested navigation", () => {
     await screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" }).click();
 
     await expect.element(screen.getByText("MORE // MISSIONS & OBLIGATIONS", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Missions", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "Missions · durable direction" })).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
-    await expect.element(screen.getByText("Operations", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Direction", { exact: true })).toBeVisible();
   });
 
   it("opens Work Schedule and returns to MENU", async () => {
@@ -212,7 +240,7 @@ describe("MoreScreen (real browser) — nested navigation", () => {
     await expect.element(screen.getByText(/working days/i).first()).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
-    await expect.element(screen.getByText("Operations", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Direction", { exact: true })).toBeVisible();
   });
 
   it("opens History and returns to MENU", async () => {
@@ -222,7 +250,7 @@ describe("MoreScreen (real browser) — nested navigation", () => {
     await expect.element(screen.getByText("MORE // HISTORY", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
-    await expect.element(screen.getByText("Records", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Evidence", { exact: true })).toBeVisible();
   });
 
   it("opens Review and returns to MENU", async () => {
@@ -232,7 +260,7 @@ describe("MoreScreen (real browser) — nested navigation", () => {
     await expect.element(screen.getByText("MORE // REVIEW", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
-    await expect.element(screen.getByText("Records", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Evidence", { exact: true })).toBeVisible();
   });
 
   it("opens Search and returns to MENU", async () => {
@@ -242,12 +270,12 @@ describe("MoreScreen (real browser) — nested navigation", () => {
     await expect.element(screen.getByText("MORE // SEARCH", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
-    await expect.element(screen.getByText("Records", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Evidence", { exact: true })).toBeVisible();
   });
 });
 
 describe("MoreScreen (real browser) — narrow phone widths", () => {
-  it.each([320, 360, 375])("has no horizontal overflow at %ipx", async (width) => {
+  it.each([320, 360, 375, 412])("has no horizontal overflow at %ipx", async (width) => {
     await page.viewport(width, 800);
     const screen = await render(<MoreScreen />);
     await expect.element(screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" })).toBeVisible();
@@ -259,6 +287,14 @@ describe("MoreScreen (real browser) — narrow phone widths", () => {
 describe("MoreScreen (real browser) — accessibility", () => {
   it("passes real WCAG AA color-contrast beyond the known app-wide exception", async () => {
     const screen = await render(<MoreScreen />);
+    const results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
+    expect(results.violations).toEqual([]);
+  });
+
+  it("passes axe with restore and diagnostic native disclosures expanded", async () => {
+    const screen = await render(<MoreScreen />);
+    await screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).click();
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
     const results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
   });

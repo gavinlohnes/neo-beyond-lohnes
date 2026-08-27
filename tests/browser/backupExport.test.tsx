@@ -91,5 +91,7 @@ describe("MoreScreen restore picker — no accept filter (Drop 01 acceptance ret
     expect(fileInput).not.toBeNull();
     expect(fileInput!.accept).toBe("");
     expect(fileInput!.hasAttribute("accept")).toBe(false);
+    expect(Number.parseFloat(getComputedStyle(fileInput!).fontSize)).toBeGreaterThanOrEqual(16);
+    expect(fileInput!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
   });
 });

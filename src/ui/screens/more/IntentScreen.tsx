@@ -21,7 +21,7 @@ import {
   releaseObligation,
   satisfyObligation,
 } from "../../../application/intentCommands";
-import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { FieldDisclosure } from "../../components/FieldDisclosure";
 
 /**
  * Intent & Commitment Spine — Drop 01 (approved 2026-08-22). The one
@@ -55,14 +55,54 @@ function HistoryList({ events }: { events: DomainEvent[] }) {
   );
 }
 
+function IntentItemRow({
+  kind,
+  status,
+  title,
+  description,
+  summary,
+  onOpen,
+}: {
+  kind: "MISSION" | "OBLIGATION";
+  status: Mission["status"] | ObligationStatus;
+  title: string;
+  description?: string;
+  summary: string;
+  onOpen: () => void;
+}) {
+  const historical = status === "ARCHIVED" || status === "SATISFIED" || status === "RELEASED";
+  return (
+    <button
+      type="button"
+      className={`intent-item intent-item--${kind.toLowerCase()}${historical ? " intent-item--historical" : ""}`}
+      aria-label={`Open ${title}`}
+      onClick={onOpen}
+    >
+      <span className="intent-item__body">
+        <span className="intent-item__identity">
+          <span>{kind}</span>
+          <span className="intent-state" data-status={status}>{status}</span>
+        </span>
+        <span className="intent-item__title">{title}</span>
+        {description && <span className="intent-item__description">{description}</span>}
+        <span className="meta intent-item__summary">{summary}</span>
+      </span>
+      <span aria-hidden="true" className="disclosure-chevron">›</span>
+    </button>
+  );
+}
+
 export function IntentScreen() {
   const [view, setView] = useState<View>({ kind: "LIST" });
   const [missions, setMissions] = useState<Mission[]>([]);
+  const [allMissions, setAllMissions] = useState<Mission[]>([]);
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [showAllMissions, setShowAllMissions] = useState(false);
   const [showAllObligations, setShowAllObligations] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [missionCreateOpen, setMissionCreateOpen] = useState(false);
+  const [obligationCreateOpen, setObligationCreateOpen] = useState(false);
 
   const [newMissionTitle, setNewMissionTitle] = useState("");
   const [newObligationTitle, setNewObligationTitle] = useState("");
@@ -84,7 +124,9 @@ export function IntentScreen() {
    * presentation fix only.
    */
   async function refreshList() {
-    setMissions(showAllMissions ? await getMissions() : await getActiveMissions());
+    const everyMission = await getMissions();
+    setAllMissions(everyMission);
+    setMissions(showAllMissions ? everyMission : await getActiveMissions());
     setObligations(showAllObligations ? await getObligations() : await getUnresolvedObligations());
   }
 
@@ -106,6 +148,7 @@ export function IntentScreen() {
     await withBusy(async () => {
       await createMission({ title: newMissionTitle.trim() });
       setNewMissionTitle("");
+      setMissionCreateOpen(false);
       await refreshList();
     });
   }
@@ -123,6 +166,7 @@ export function IntentScreen() {
       setNewObligationMissionId("");
       setNewObligationDueAt("");
       setNewObligationPlannedAt("");
+      setObligationCreateOpen(false);
       await refreshList();
     });
   }
@@ -143,7 +187,7 @@ export function IntentScreen() {
     return (
       <ObligationDetail
         obligationId={view.obligationId}
-        missions={missions}
+        missions={allMissions}
         onBack={() => {
           setView({ kind: "LIST" });
           void refreshList();
@@ -153,27 +197,38 @@ export function IntentScreen() {
   }
 
   return (
-    <div>
-      <p className="section-label">Missions</p>
-      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-        <button className={`chip ${!showAllMissions ? "chip--selected" : ""}`} onClick={() => setShowAllMissions(false)}>
+    <div className="intent-field">
+      <header className="intent-field__intro">
+        <p className="tool-label">INTENT FIELD</p>
+        <p className="card-body">Missions hold durable direction. Obligations hold commitments that require deliberate resolution.</p>
+      </header>
+
+      <section aria-labelledby="missions-heading">
+      <h2 id="missions-heading" className="section-label">Missions · durable direction</h2>
+      <p className="section-intro">Active Missions describe where you are deliberately headed. Archived Missions remain historical truth.</p>
+      <div className="intent-filter" role="group" aria-label="Mission visibility">
+        <button aria-pressed={!showAllMissions} className={`chip ${!showAllMissions ? "chip--selected" : ""}`} onClick={() => setShowAllMissions(false)}>
           ACTIVE
         </button>
-        <button className={`chip ${showAllMissions ? "chip--selected" : ""}`} onClick={() => setShowAllMissions(true)}>
-          ALL
+        <button aria-pressed={showAllMissions} className={`chip ${showAllMissions ? "chip--selected" : ""}`} onClick={() => setShowAllMissions(true)}>
+          ALL / ARCHIVED
         </button>
       </div>
       {missions.length === 0 && <p className="empty-state">{showAllMissions ? "No missions yet." : "No active missions."}</p>}
       {missions.map((m) => (
-        <CollapsibleRow
+        <IntentItemRow
           key={m.id}
-          name={m.title}
-          summary={m.status === "ARCHIVED" ? "ARCHIVED" : "Active"}
+          kind="MISSION"
+          status={m.status}
+          title={m.title}
+          {...(m.description ? { description: m.description } : {})}
+          summary={m.status === "ARCHIVED" ? "Historical direction · no longer active" : "Current direction"}
           onOpen={() => setView({ kind: "MISSION_DETAIL", missionId: m.id })}
         />
       ))}
-      <div className="card">
-        <p className="card-title">New mission</p>
+      <div className="intent-create">
+      <FieldDisclosure summary="CREATE MISSION" open={missionCreateOpen} onToggle={setMissionCreateOpen}>
+        <p className="card-body" style={{ marginBottom: 12 }}>Create durable direction—not a task or recommendation.</p>
         <div style={{ display: "flex", gap: 8 }}>
           <input
             type="text"
@@ -188,32 +243,40 @@ export function IntentScreen() {
               if (e.key === "Enter") void handleCreateMission();
             }}
           />
-          <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy || !newMissionTitle.trim()} onClick={() => void handleCreateMission()}>
-            ADD
+          <button className="btn-primary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy || !newMissionTitle.trim()} onClick={() => void handleCreateMission()}>
+            CREATE
           </button>
         </div>
+      </FieldDisclosure>
       </div>
+      </section>
 
-      <p className="section-label">Obligations</p>
-      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-        <button className={`chip ${!showAllObligations ? "chip--selected" : ""}`} onClick={() => setShowAllObligations(false)}>
+      <section aria-labelledby="obligations-heading">
+      <h2 id="obligations-heading" className="section-label">Obligations · commitments</h2>
+      <p className="section-intro">Open and waiting Obligations still require resolution. Satisfied and released records remain evidence.</p>
+      <div className="intent-filter" role="group" aria-label="Obligation visibility">
+        <button aria-pressed={!showAllObligations} className={`chip ${!showAllObligations ? "chip--selected" : ""}`} onClick={() => setShowAllObligations(false)}>
           UNRESOLVED
         </button>
-        <button className={`chip ${showAllObligations ? "chip--selected" : ""}`} onClick={() => setShowAllObligations(true)}>
-          ALL
+        <button aria-pressed={showAllObligations} className={`chip ${showAllObligations ? "chip--selected" : ""}`} onClick={() => setShowAllObligations(true)}>
+          ALL / RESOLVED
         </button>
       </div>
       {obligations.length === 0 && <p className="empty-state">Nothing here.</p>}
       {obligations.map((o) => (
-        <CollapsibleRow
+        <IntentItemRow
           key={o.id}
-          name={o.title}
-          summary={describeObligationSummary(o, missions)}
+          kind="OBLIGATION"
+          status={o.status}
+          title={o.title}
+          {...(o.description ? { description: o.description } : {})}
+          summary={describeObligationSummary(o, allMissions)}
           onOpen={() => setView({ kind: "OBLIGATION_DETAIL", obligationId: o.id })}
         />
       ))}
-      <div className="card">
-        <p className="card-title">New obligation</p>
+      <div className="intent-create">
+      <FieldDisclosure summary="CREATE OBLIGATION" open={obligationCreateOpen} onToggle={setObligationCreateOpen}>
+        <p className="card-body" style={{ marginBottom: 12 }}>Create a commitment requiring deliberate resolution. Linking to a Mission is optional.</p>
         <input
           type="text"
           className="input"
@@ -233,7 +296,7 @@ export function IntentScreen() {
           onChange={(e) => setNewObligationMissionId(e.target.value)}
         >
           <option value="">No mission</option>
-          {missions.filter((m) => m.status === "ACTIVE").map((m) => (
+          {allMissions.filter((m) => m.status === "ACTIVE").map((m) => (
             <option key={m.id} value={m.id}>{m.title}</option>
           ))}
         </select>
@@ -247,10 +310,12 @@ export function IntentScreen() {
             <input id="new-obligation-planned" type="date" className="input" value={newObligationPlannedAt} disabled={busy} onChange={(e) => setNewObligationPlannedAt(e.target.value)} />
           </div>
         </div>
-        <button className="btn-secondary" disabled={busy || !newObligationTitle.trim()} onClick={() => void handleCreateObligation()}>
-          ADD
+        <button className="btn-primary" disabled={busy || !newObligationTitle.trim()} onClick={() => void handleCreateObligation()}>
+          CREATE OBLIGATION
         </button>
+      </FieldDisclosure>
       </div>
+      </section>
       {error && <p className="meta" style={{ color: "var(--danger)" }}>{error}</p>}
     </div>
   );
@@ -276,6 +341,8 @@ function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () =>
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [archiveConfirming, setArchiveConfirming] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     void load();
@@ -317,6 +384,7 @@ function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () =>
     setError(null);
     try {
       await archiveMission(missionId);
+      setArchiveConfirming(false);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not archive.");
@@ -333,25 +401,37 @@ function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () =>
       {!mission && <p className="empty-state">Mission not found.</p>}
       {mission && (
         <>
-          <div className="card">
+          <article className={`intent-detail intent-detail--mission${mission.status === "ARCHIVED" ? " intent-detail--historical" : ""}`}>
             {!editing ? (
               <>
-                <p className="eyebrow">{mission.status}</p>
+                <p className="intent-detail__identity"><span>MISSION</span><span className="intent-state" data-status={mission.status}>{mission.status}</span></p>
                 <h2 className="card-title">{mission.title}</h2>
                 {mission.description && <p className="card-body">{mission.description}</p>}
-                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                {mission.status === "ARCHIVED" && <p className="meta intent-detail__truth">Historical direction · no longer active.</p>}
+                <div className="intent-actions">
                   <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setEditing(true)}>
                     EDIT
                   </button>
                   {mission.status === "ACTIVE" && (
-                    <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleArchive()}>
-                      ARCHIVE
+                    <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => setArchiveConfirming(true)}>
+                      ARCHIVE MISSION
                     </button>
                   )}
                 </div>
+                {archiveConfirming && (
+                  <div className="card card--warning intent-confirm" role="alert">
+                    <p className="card-title">Archive this Mission?</p>
+                    <p className="card-body">It becomes historical and stops contributing current attention. Linked Obligations keep their recorded status and remain manageable.</p>
+                    <div className="intent-actions">
+                      <button className="btn-primary" disabled={busy} onClick={() => void handleArchive()}>CONFIRM ARCHIVE</button>
+                      <button className="btn-secondary" disabled={busy} onClick={() => setArchiveConfirming(false)}>CANCEL</button>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <>
+                <p className="tool-label">EDIT MISSION</p>
                 <input type="text" className="input" style={{ marginBottom: 8 }} aria-label="Mission title" value={title} onChange={(e) => setTitle(e.target.value)} />
                 <textarea className="input" style={{ marginBottom: 8, minHeight: 80 }} aria-label="Mission description" value={description} onChange={(e) => setDescription(e.target.value)} />
                 <div style={{ display: "flex", gap: 8 }}>
@@ -365,41 +445,27 @@ function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () =>
               </>
             )}
             {error && <p className="meta" style={{ color: "var(--danger)", marginTop: 8 }}>{error}</p>}
-          </div>
+          </article>
 
           <p className="section-label">Obligations</p>
           {linkedObligations.length === 0 && <p className="empty-state">None linked to this mission.</p>}
           {linkedObligations.map((o) => (
-            <div key={o.id} className="card">
+            <div key={o.id} className="intent-linked-row">
+              <p className="tool-label">OBLIGATION · {o.status}</p>
               <p className="card-body" style={{ margin: 0 }}>{o.title}</p>
-              <p className="meta">{o.status}</p>
             </div>
           ))}
 
-          <p className="section-label">History</p>
-          <div className="card">
+          <div className="intent-history">
+          <FieldDisclosure summary={`HISTORY · ${history.length} ${history.length === 1 ? "EVENT" : "EVENTS"}`} open={historyOpen} onToggle={setHistoryOpen}>
             <HistoryList events={history} />
+          </FieldDisclosure>
           </div>
         </>
       )}
     </div>
   );
 }
-
-const NEXT_STATUS_ACTIONS: Record<ObligationStatus, { label: string; action: (id: string) => Promise<void> }[]> = {
-  OPEN: [
-    { label: "MARK WAITING", action: markObligationWaiting },
-    { label: "SATISFY", action: (id) => satisfyObligation(id) },
-    { label: "RELEASE", action: (id) => releaseObligation(id) },
-  ],
-  WAITING: [
-    { label: "MARK OPEN", action: markObligationOpen },
-    { label: "SATISFY", action: (id) => satisfyObligation(id) },
-    { label: "RELEASE", action: (id) => releaseObligation(id) },
-  ],
-  SATISFIED: [],
-  RELEASED: [],
-};
 
 function ObligationDetail({
   obligationId,
@@ -419,6 +485,8 @@ function ObligationDetail({
   const [plannedAt, setPlannedAt] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingResolution, setPendingResolution] = useState<"SATISFY" | "RELEASE" | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     void load();
@@ -463,6 +531,7 @@ function ObligationDetail({
     setError(null);
     try {
       await action(obligationId);
+      setPendingResolution(null);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not update.");
@@ -481,10 +550,10 @@ function ObligationDetail({
       {!obligation && <p className="empty-state">Obligation not found.</p>}
       {obligation && (
         <>
-          <div className="card">
+          <article className={`intent-detail intent-detail--obligation${obligation.status === "SATISFIED" || obligation.status === "RELEASED" ? " intent-detail--historical" : ""}`}>
             {!editing ? (
               <>
-                <p className="eyebrow">{obligation.status}</p>
+                <p className="intent-detail__identity"><span>OBLIGATION</span><span className="intent-state" data-status={obligation.status}>{obligation.status}</span></p>
                 <h2 className="card-title">{obligation.title}</h2>
                 {obligation.description && <p className="card-body">{obligation.description}</p>}
                 {mission && <p className="meta">Mission: {mission.title}</p>}
@@ -496,27 +565,47 @@ function ObligationDetail({
                     {obligation.resolutionNote ? ` — ${obligation.resolutionNote}` : ""}
                   </p>
                 )}
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+                {(obligation.status === "SATISFIED" || obligation.status === "RELEASED") && (
+                  <p className="meta intent-detail__truth">Historical commitment · resolution already recorded.</p>
+                )}
+                <div className="intent-actions">
                   {obligation.status !== "SATISFIED" && obligation.status !== "RELEASED" && (
-                    <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setEditing(true)}>
-                      EDIT
-                    </button>
+                    <>
+                      <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setEditing(true)}>EDIT</button>
+                      {obligation.status === "OPEN" ? (
+                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleAction(markObligationWaiting)}>MARK WAITING</button>
+                      ) : (
+                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void handleAction(markObligationOpen)}>MARK OPEN</button>
+                      )}
+                      <button className="btn-primary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => setPendingResolution("SATISFY")}>SATISFY</button>
+                      <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => setPendingResolution("RELEASE")}>RELEASE</button>
+                    </>
                   )}
-                  {NEXT_STATUS_ACTIONS[obligation.status].map((a) => (
-                    <button
-                      key={a.label}
-                      className="btn-secondary"
-                      style={{ width: "auto", padding: "8px 16px" }}
-                      disabled={busy}
-                      onClick={() => void handleAction(a.action)}
-                    >
-                      {a.label}
-                    </button>
-                  ))}
                 </div>
+                {pendingResolution && (
+                  <div className="card card--warning intent-confirm" role="alert">
+                    <p className="card-title">{pendingResolution === "SATISFY" ? "Record this as satisfied?" : "Release this Obligation?"}</p>
+                    <p className="card-body">
+                      {pendingResolution === "SATISFY"
+                        ? "This records the commitment as fulfilled. There is no reopen action."
+                        : "This records that the commitment is no longer required. It is not the same as completion, and there is no reopen action."}
+                    </p>
+                    <div className="intent-actions">
+                      <button
+                        className={pendingResolution === "RELEASE" ? "btn-danger" : "btn-primary"}
+                        disabled={busy}
+                        onClick={() => void handleAction(pendingResolution === "SATISFY" ? satisfyObligation : releaseObligation)}
+                      >
+                        {pendingResolution === "SATISFY" ? "CONFIRM SATISFIED" : "CONFIRM RELEASE"}
+                      </button>
+                      <button className="btn-secondary" disabled={busy} onClick={() => setPendingResolution(null)}>CANCEL</button>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <>
+                <p className="tool-label">EDIT OBLIGATION</p>
                 <input type="text" className="input" style={{ marginBottom: 8 }} aria-label="Obligation title" value={title} onChange={(e) => setTitle(e.target.value)} />
                 <textarea className="input" style={{ marginBottom: 8, minHeight: 80 }} aria-label="Obligation description" value={description} onChange={(e) => setDescription(e.target.value)} />
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
@@ -540,11 +629,12 @@ function ObligationDetail({
               </>
             )}
             {error && <p className="meta" style={{ color: "var(--danger)", marginTop: 8 }}>{error}</p>}
-          </div>
+          </article>
 
-          <p className="section-label">History</p>
-          <div className="card">
+          <div className="intent-history">
+          <FieldDisclosure summary={`HISTORY · ${history.length} ${history.length === 1 ? "EVENT" : "EVENTS"}`} open={historyOpen} onToggle={setHistoryOpen}>
             <HistoryList events={history} />
+          </FieldDisclosure>
           </div>
         </>
       )}
