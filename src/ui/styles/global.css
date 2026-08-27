@@ -254,6 +254,19 @@ button, input {
   cursor: default;
 }
 
+/* VISUAL-003 (BODY Field Instrument): FieldDisclosure's <summary> carries
+   .btn-secondary for its look — this only strips the browser's default
+   disclosure-triangle marker so it reads as a plain button, not a new
+   visual treatment. */
+.disclosure-summary {
+  list-style: none;
+  cursor: pointer;
+}
+.disclosure-summary::-webkit-details-marker,
+.disclosure-summary::marker {
+  display: none;
+}
+
 /* VISUAL-002: a real warning/critical action class, distinct from the
    neutral .btn-primary — the RED-capacity override gate's "PROCEED
    ANYWAY" (useRedCapacityOverrideGate, shared by TODAY and TRAIN) is
