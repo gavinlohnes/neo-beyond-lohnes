@@ -268,6 +268,65 @@ export function renderActiveDropFile(fields) {
   return lines.join("\n");
 }
 
+/**
+ * Confirms `sha` is a real commit AND actually reachable from a freshly-
+ * fetched `origin/master` — i.e. genuinely integrated, not merely a
+ * well-formed-looking but unreachable/fabricated value. Never trusts a
+ * caller-supplied SHA at face value, matching this repository's own
+ * "don't trust caller-supplied provenance" discipline elsewhere.
+ */
+function checkIntegrationSha(root, sha) {
+  try {
+    git(["fetch", "-q", "origin", "master"], root);
+  } catch (e) {
+    return { ok: false, error: `INVALID_INTEGRATION_SHA: could not fetch origin/master to verify "${sha}" (${e.message})` };
+  }
+  let resolved;
+  try {
+    resolved = git(["rev-parse", "--verify", `${sha}^{commit}`], root);
+  } catch {
+    return { ok: false, error: `INVALID_INTEGRATION_SHA: "${sha}" does not resolve to a known commit.` };
+  }
+  try {
+    git(["merge-base", "--is-ancestor", resolved, "origin/master"], root);
+  } catch {
+    return { ok: false, error: `INVALID_INTEGRATION_SHA: "${sha}" is not reachable from origin/master — it was not actually integrated.` };
+  }
+  return { ok: true, sha: resolved };
+}
+
+/**
+ * Writes ACTIVE_DROP.md for `id`. Genuinely idempotent when `id` is
+ * already the ACTIVE Drop: re-running `init` (e.g. to correct `branch`,
+ * or simply run again out of caution) must never reset `pr`/`reviewer`/
+ * `integrator` routing facts that were already recorded — those are
+ * exactly the durable evidence this mechanism exists to protect. Only an
+ * explicitly-passed `--builder` overrides the recorded builder; every
+ * other already-recorded routing field survives a same-id re-init
+ * untouched.
+ */
+export function initActiveDrop(id, flags, root = getRoot()) {
+  const preflightResult = preflight(id, flags, root);
+  if (!preflightResult.ok) return preflightResult;
+
+  const existing = preflightResult.active;
+  const reactivatingSame = !!(existing && existing.status === "ACTIVE" && existing.id === id);
+
+  const content = renderActiveDropFile({
+    id,
+    status: "ACTIVE",
+    baseline: flags.baseline,
+    branch: flags.branch,
+    contract: `docs/agent/drops/${id}.md`,
+    pr: reactivatingSame ? existing.pr : "(pending — set by Builder immediately after opening the PR)",
+    builder: flags.builder || (reactivatingSame ? existing.builder : "(unassigned — role, not a permanent identity)"),
+    reviewer: reactivatingSame ? existing.reviewer : "(unassigned)",
+    integrator: reactivatingSame ? existing.integrator : "(unassigned)",
+  });
+  writeFileSync(activeDropPath(root), content);
+  return { ok: true, reactivated: reactivatingSame };
+}
+
 export function closeActiveDrop(id, integrationSha, root = getRoot()) {
   let active;
   try {
@@ -284,10 +343,13 @@ export function closeActiveDrop(id, integrationSha, root = getRoot()) {
   }
   if (!integrationSha) return { ok: false, code: "MISSING_FLAG", message: "close requires --integration-sha <sha>" };
 
+  const shaCheck = checkIntegrationSha(root, integrationSha);
+  if (!shaCheck.ok) return { ok: false, code: "INVALID_INTEGRATION_SHA", message: shaCheck.error };
+
   const content = renderActiveDropFile({
     ...active,
     status: "CLOSED",
-    integration_sha: integrationSha,
+    integration_sha: shaCheck.sha, // resolved to the full SHA, never the caller's raw (possibly short) input
     closed_at: new Date().toISOString(),
   });
   writeFileSync(activeDropPath(root), content);
@@ -378,25 +440,21 @@ function main() {
       usage();
       process.exit(2);
     }
-    const result = preflight(id, { baseline: flags.baseline, allowDirty: !!flags["allow-dirty"] }, root);
+    const result = initActiveDrop(
+      id,
+      { baseline: flags.baseline, allowDirty: !!flags["allow-dirty"], branch: flags.branch, builder: flags.builder },
+      root,
+    );
     if (!result.ok) {
       console.error(`FAIL: ${result.code}`);
       console.error(result.message);
       process.exit(1);
     }
-    const content = renderActiveDropFile({
-      id,
-      status: "ACTIVE",
-      baseline: flags.baseline,
-      branch: flags.branch,
-      contract: `docs/agent/drops/${id}.md`,
-      pr: "(pending — set by Builder immediately after opening the PR)",
-      builder: flags.builder || "(unassigned — role, not a permanent identity)",
-      reviewer: "(unassigned)",
-      integrator: "(unassigned)",
-    });
-    writeFileSync(activeDropPath(root), content);
-    console.log(`ACTIVE_DROP set to "${id}" (${flags.branch} @ ${flags.baseline}).`);
+    console.log(
+      result.reactivated
+        ? `ACTIVE_DROP "${id}" re-initialized (${flags.branch} @ ${flags.baseline}) — existing pr/reviewer/integrator routing preserved.`
+        : `ACTIVE_DROP set to "${id}" (${flags.branch} @ ${flags.baseline}).`,
+    );
     process.exit(0);
   }
 

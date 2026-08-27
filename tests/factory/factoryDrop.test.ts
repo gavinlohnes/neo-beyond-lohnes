@@ -285,6 +285,32 @@ describe("active-Drop semantics — at most one active Drop", () => {
     expect(result.status).toBe(0);
   });
 
+  it("re-running init for the already-active Drop preserves recorded pr/reviewer/integrator routing facts", () => {
+    writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+    runFactoryDrop(["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"], fixture);
+    commitActiveDrop(fixture, "activate TEST-001");
+
+    // Simulate routing facts recorded after the initial activation (a PR
+    // number becoming known, a reviewer/integrator being assigned) —
+    // exactly what a same-id re-init must never silently erase.
+    const beforeReinit = readFileSync(join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"), "utf8").replace(
+      "pr: (pending — set by Builder immediately after opening the PR)",
+      "pr: https://github.com/acme/widget/pull/7",
+    );
+    writeFileSync(join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"), beforeReinit);
+    commitActiveDrop(fixture, "record PR #7");
+
+    const result = runFactoryDrop(
+      ["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"],
+      fixture,
+    );
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("re-initialized");
+
+    const activeDropAfter = readFileSync(join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"), "utf8");
+    expect(activeDropAfter).toContain("pr: https://github.com/acme/widget/pull/7"); // preserved, not reset
+  });
+
   it("a second Drop can launch once the first is closed", () => {
     writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
     writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline: fixture.headSha }));
@@ -299,6 +325,32 @@ describe("active-Drop semantics — at most one active Drop", () => {
       fixture,
     );
     expect(result.status).toBe(0);
+  });
+});
+
+describe("activation must not itself move origin/master out from under its own Drop", () => {
+  // Regression coverage for an independent-review finding: a Drop's own
+  // ACTIVE_DROP activation commit must never land directly on
+  // `origin/master` ahead of that Drop's own merge — if it did, the
+  // Drop's declared baseline (fixed at authorization time) would
+  // immediately stop matching a freshly-fetched origin/master, and every
+  // subsequent validate/init/status call for that same Drop would
+  // legitimately fail with WRONG_BASELINE. This proves that failure mode
+  // is real (confirming why SKILL.md §9 requires activation to be part
+  // of the Builder's own branch/PR instead), not merely documented.
+  it("pushing ACTIVE_DROP activation directly to origin/master breaks the Drop's own baseline check", () => {
+    writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+    runFactoryDrop(["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"], fixture);
+    commitActiveDrop(fixture, "activate TEST-001");
+
+    // The rejected pattern: push this Drop's own activation commits
+    // straight to the shared origin/master, as if a "steady-state"
+    // process had landed them there ahead of the Builder's branch.
+    git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/master"]);
+
+    const result = runFactoryDrop(["validate", "TEST-001", "--baseline", fixture.headSha], fixture);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("WRONG_BASELINE");
   });
 });
 
@@ -317,6 +369,38 @@ describe("closure preserves historical Drop authority", () => {
     const activeDropAfter = readFileSync(join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"), "utf8");
     expect(activeDropAfter).toContain("status: CLOSED");
     expect(activeDropAfter).toContain(`integration_sha: ${fixture.headSha}`);
+  });
+
+  it("refuses to close with an integration SHA that doesn't resolve to any known commit", () => {
+    writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+    runFactoryDrop(["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"], fixture);
+
+    const fabricatedSha = "1".repeat(40);
+    const result = runFactoryDrop(["close", "TEST-001", "--integration-sha", fabricatedSha], fixture);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("INVALID_INTEGRATION_SHA");
+
+    const activeDropAfter = readFileSync(join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"), "utf8");
+    expect(activeDropAfter).toContain("status: ACTIVE"); // never closed on a fabricated SHA
+  });
+
+  it("refuses to close with a real commit that isn't reachable from origin/master", () => {
+    writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+    runFactoryDrop(["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"], fixture);
+
+    // A real commit that exists locally but was never merged/pushed to
+    // origin/master — e.g. an abandoned branch, or a PR that never
+    // actually landed.
+    git(fixture.workDir, ["checkout", "-q", "-b", "unmerged-side-branch"]);
+    writeFileSync(join(fixture.workDir, "unmerged.txt"), "never merged\n");
+    git(fixture.workDir, ["add", "unmerged.txt"]);
+    git(fixture.workDir, ["commit", "-q", "-m", "unmerged work"]);
+    const unmergedSha = git(fixture.workDir, ["rev-parse", "HEAD"]);
+    git(fixture.workDir, ["checkout", "-q", "master"]);
+
+    const result = runFactoryDrop(["close", "TEST-001", "--integration-sha", unmergedSha], fixture);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("INVALID_INTEGRATION_SHA");
   });
 
   it("refuses to close a Drop that isn't the currently-active one", () => {
