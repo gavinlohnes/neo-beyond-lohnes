@@ -830,6 +830,259 @@ button, input {
   padding-top: 0;
 }
 
+/* VISUAL-004 // OPERATIONAL INDEX: structural grouping for MORE's four
+ * actual zones. These are not cards: the section owns whitespace and a
+ * quiet intro while its rows keep the existing equipment silhouette. */
+.operational-index-zone {
+  min-width: 0;
+}
+
+.section-intro {
+  margin: calc(var(--space-3) * -1) 0 var(--space-3);
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.restore-disclosure {
+  border-left: 2px solid var(--danger);
+  padding-left: var(--space-3);
+}
+
+.restore-disclosure__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  list-style: none;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.restore-disclosure__summary::-webkit-details-marker,
+.restore-disclosure__summary::marker {
+  display: none;
+}
+
+.restore-disclosure__label,
+.restore-disclosure__description {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.restore-disclosure__label {
+  color: var(--danger);
+  margin-bottom: var(--space-1);
+}
+
+.restore-disclosure__body {
+  padding-top: var(--space-3);
+}
+
+.restore-file-input {
+  display: block;
+  width: 100%;
+  min-height: 45px;
+  color: var(--text-2);
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.restore-file-input::file-selector-button {
+  min-height: 45px;
+  margin-right: var(--space-2);
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text-1);
+  font: inherit;
+  cursor: pointer;
+}
+
+.restore-preview {
+  margin: var(--space-3) 0 0;
+}
+
+/* VISUAL-004 // INTENT FIELD: Missions and Obligations share a stable
+ * operational row contract while remaining explicitly named in text.
+ * Geometry—not red—separates durable direction from commitments: a
+ * Mission has a stronger left rail; an Obligation uses an inset rule. */
+.intent-field__intro {
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.intent-filter {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.intent-filter .chip--selected {
+  background: var(--surface-2);
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.intent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-3);
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  text-align: left;
+  cursor: pointer;
+}
+
+.intent-item--mission {
+  border-left: 3px solid var(--border-strong);
+}
+
+.intent-item--obligation {
+  border-left: 1px solid var(--border-subtle);
+  padding-left: var(--space-4);
+}
+
+.intent-item--historical {
+  opacity: 0.82;
+}
+
+.intent-item__body {
+  display: block;
+  min-width: 0;
+}
+
+.intent-item__identity,
+.intent-detail__identity {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.intent-state {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--text-2);
+  letter-spacing: 0.04em;
+}
+
+.intent-state[data-status="WAITING"] {
+  border-style: dashed;
+}
+
+.intent-state[data-status="SATISFIED"]::before {
+  content: "✓ ";
+}
+
+.intent-state[data-status="RELEASED"]::before,
+.intent-state[data-status="ARCHIVED"]::before {
+  content: "— ";
+}
+
+.intent-item__title {
+  display: block;
+  color: var(--text-1);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.intent-item__description,
+.intent-item__summary {
+  display: block;
+  margin-top: var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+.intent-item__description {
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.intent-create,
+.intent-history {
+  margin-top: var(--space-3);
+}
+
+.intent-detail {
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-1);
+  overflow-wrap: anywhere;
+}
+
+.intent-detail--obligation {
+  border-left-width: 1px;
+  box-shadow: inset 3px 0 0 var(--border-subtle);
+}
+
+.intent-detail--historical {
+  background: transparent;
+}
+
+.intent-detail__truth {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.intent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.intent-actions > button {
+  flex: 1 1 132px;
+}
+
+.intent-confirm {
+  margin: var(--space-4) 0 0;
+}
+
+.intent-linked-row {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border-subtle);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 340px) {
+  .intent-actions {
+    flex-direction: column;
+  }
+
+  .intent-actions > button {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+}
+
 /*
  * FIELD ALPHA Phase 1 (2026-08-22): the collapsed-row disclosure control.
  * CollapsibleRow used to be a static row with a small rectangular "OPEN"

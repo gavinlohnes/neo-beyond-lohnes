@@ -225,20 +225,25 @@ export function MoreScreen() {
           view-swap, so this is genuine reuse, not a forced fit. Backup/
           Archive/Restore are immediate actions, not navigation, so they
           use .equipment-row instead. */}
-      <p className="section-label">Operations</p>
+      <section className="operational-index-zone" aria-labelledby="operations-heading">
+        <h2 id="operations-heading" className="section-label">Direction</h2>
+        <p className="section-intro">Set durable direction and the work pattern BEYOND uses as predicted context.</p>
+        <CollapsibleRow
+          name="MISSIONS & OBLIGATIONS"
+          summary="Manage durable direction and commitments requiring deliberate resolution."
+          onOpen={() => setView("INTENT")}
+        />
+        <CollapsibleRow
+          name="WORK SCHEDULE"
+          summary="Review the rotation BEYOND uses to predict work days and shift phase."
+          onOpen={() => setView("WORK_SCHEDULE")}
+        />
+      </section>
 
-      <CollapsibleRow
-        name="MISSIONS & OBLIGATIONS"
-        summary="Durable direction and commitments requiring deliberate resolution."
-        onOpen={() => setView("INTENT")}
-      />
-      <CollapsibleRow
-        name="WORK SCHEDULE"
-        summary="The rotation BEYOND predicts a work day and shift phase from."
-        onOpen={() => setView("WORK_SCHEDULE")}
-      />
-
-      <div className="equipment-row">
+      <section className="operational-index-zone" aria-labelledby="safety-heading">
+        <h2 id="safety-heading" className="section-label">Data safety</h2>
+        <p className="section-intro">Keep a recoverable copy on your terms. Nothing leaves this device unless you export or share it.</p>
+        <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>BACKUP</p>
         <p className="card-body" style={{ marginBottom: 8 }}>
           A file with everything on this device. Nothing leaves unless you share it.
@@ -246,9 +251,9 @@ export function MoreScreen() {
         <button className="btn-primary" disabled={busy} onClick={() => void handleExportBackup()}>
           EXPORT BACKUP
         </button>
-      </div>
+        </div>
 
-      <div className="equipment-row">
+        <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>ARCHIVE</p>
         <p className="card-body" style={{ marginBottom: 8 }}>
           Quarterly archival via the device's native share sheet — you pick the destination (e.g. Drive).
@@ -258,7 +263,7 @@ export function MoreScreen() {
           SHARE / ARCHIVE
         </button>
         {archiveStatus && <p className="meta" style={{ marginTop: 8 }}>{archiveStatus}</p>}
-      </div>
+        </div>
 
       {/* Restore is the one genuinely dangerous, rare action on this
           screen — replaces everything on the device. Kept functionally
@@ -268,17 +273,24 @@ export function MoreScreen() {
           for screen identity/red-authority) instead of a red-bordered
           card, matching the "danger stays distinct from identity red"
           rule at a lower, less card-stack-like weight. */}
-      <div className="equipment-row" style={{ borderLeft: "2px solid var(--danger)", paddingLeft: "var(--space-3)" }}>
-        <p className="tool-label" style={{ color: "var(--danger)", marginBottom: 4 }}>RESTORE — REPLACES ALL DATA</p>
-        <p className="card-body" style={{ marginBottom: 12 }}>
-          Replace-only restoration. Your current data is automatically backed up right before anything is
-          replaced, so a mistaken restore is always recoverable. BEYOND validates the file and shows a preview
-          before any data can be replaced. Accepts either this app's own backup export or a real historical
-          BEYOND_BACKUP export (app 0.1.0/0.2.0).
-        </p>
+        <details className="equipment-row restore-disclosure">
+          <summary className="restore-disclosure__summary">
+            <span>
+              <span className="tool-label restore-disclosure__label">RESTORE — REPLACES ALL DATA</span>
+              <span className="meta restore-disclosure__description">Validate and preview a backup before replacing this device's current data.</span>
+            </span>
+            <span aria-hidden="true" className="disclosure-chevron">›</span>
+          </summary>
+          <div className="fade-in restore-disclosure__body">
+            <p className="card-body" style={{ marginBottom: 12 }}>
+              Replace-only restoration. Your current data is automatically backed up right before anything is
+              replaced, so a mistaken restore is recoverable. BEYOND validates the file and shows a preview
+              before any data can be replaced. Accepts this app's backup export or a historical BEYOND_BACKUP export.
+            </p>
         <input
           ref={fileInputRef}
           type="file"
+          className="restore-file-input"
           aria-label="Choose a backup file to restore"
           // Drop 01 acceptance correction (real-device retest, 2026-08-22):
           // no `accept` filter at all, deliberately. A prior attempt
@@ -300,7 +312,7 @@ export function MoreScreen() {
           onChange={(e) => void handleFileChosen(e.target.files?.[0])}
         />
         {preview && (
-          <div style={{ marginTop: 12, border: "1px solid var(--border-strong)", borderRadius: "var(--radius)", padding: 12 }}>
+            <div className="card card--warning restore-preview">
             <p className="card-title" style={{ fontSize: 16 }}>
               This will permanently replace everything currently on this device.
             </p>
@@ -322,7 +334,7 @@ export function MoreScreen() {
               A backup of what's currently here will be downloaded automatically before this replaces it.
             </p>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleConfirmRestore()}>
+              <button className="btn-danger" style={{ flex: 1 }} disabled={busy} onClick={() => void handleConfirmRestore()}>
                 CONFIRM REPLACE
               </button>
               <button
@@ -337,13 +349,17 @@ export function MoreScreen() {
           </div>
         )}
         {status && <p className="meta" style={{ marginTop: 8 }}>{status}</p>}
-      </div>
+          </div>
+        </details>
+      </section>
 
       {/* FIELD ALPHA Phase 4B/4H: RECORDS — historical/review-oriented,
           distinct from OPERATIONS above. History stays a clean single
           entry point per Phase 4H — no charts/trends/summaries added,
           none existed to preserve. */}
-      <p className="section-label">Records</p>
+      <section className="operational-index-zone" aria-labelledby="records-heading">
+      <h2 id="records-heading" className="section-label">Evidence</h2>
+      <p className="section-intro">Trace what happened, review decisions and outcomes, or retrieve a known record.</p>
       <CollapsibleRow
         name="HISTORY"
         summary="Every day and every event, exactly as it happened. Read-only."
@@ -359,6 +375,7 @@ export function MoreScreen() {
         summary="Find a Mission, Obligation, or Capture by text. Read-only."
         onOpen={() => setView("SEARCH")}
       />
+      </section>
 
       {/* FIELD ALPHA Phase 4C: SYSTEM — BEYOND's own state, the first
           real proof of the SYSTEM STATE grammar outside TODAY/TRAIN's
@@ -389,7 +406,9 @@ export function MoreScreen() {
           untouched — Engine architecture, out of scope this Drop, and
           already single-sourced from evaluate.ts's own exported
           constant. */}
-      <p className="section-label">System</p>
+      <section className="operational-index-zone" aria-labelledby="system-heading">
+      <h2 id="system-heading" className="section-label">System</h2>
+      <p className="section-intro">Current local build and data identity. Technical detail stays closed until requested.</p>
       <div className="instrument-cluster">
         <div>
           <p className="meta" style={{ margin: 0 }}>APP</p>
@@ -437,6 +456,7 @@ export function MoreScreen() {
           )}
         </div>
       </details>
+      </section>
     </div>
   );
 }
