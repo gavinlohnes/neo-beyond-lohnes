@@ -1,6 +1,6 @@
 ---
 id: TODAY-003
-status: ACTIVE
+status: CLOSED
 baseline: b72ab9a6914e1409b6b5c0ec28aad24974f01ff3
 branch: today-003-continuity-reconciliation
 contract: docs/agent/drops/TODAY-003.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/38
 builder: Codex (assigned by Gavin, TODAY-003)
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 6812b3a7dd4b45f0d217d95e46d10f7892b56489
+closed_at: 2026-08-28T19:38:18.194Z
 ---
 
 # ACTIVE_DROP
