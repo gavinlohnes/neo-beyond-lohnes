@@ -1,6 +1,6 @@
 ---
 id: CONTINUITY-001
-status: ACTIVE
+status: CLOSED
 baseline: 4445fbcd8a62b95e5aa0c40fd249d65e800bebfa
 branch: continuity-001-stay-with-operator
 contract: docs/agent/drops/CONTINUITY-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/35
 builder: Codex (assigned by Gavin, CONTINUITY-001 only)
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: ff03f50f4bb8b20d4e56e3010de91e5e065c99c9
+closed_at: 2026-08-28T10:06:20.493Z
 ---
 
 # ACTIVE_DROP
