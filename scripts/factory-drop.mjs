@@ -33,7 +33,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const SCRIPT_REPO_ROOT = resolve(SCRIPT_DIR, "..");
@@ -91,10 +91,10 @@ function git(args, cwd) {
  * would fail this Drop's own "smallest sufficient implementation" rule.
  */
 export function parseFrontmatter(text) {
-  const m = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
   if (!m) throw new Error("NO_FRONTMATTER: expected a leading '---' ... '---' block");
   const frontmatter = {};
-  for (const line of m[1].split("\n")) {
+  for (const line of m[1].split(/\r?\n/)) {
     if (!line.trim()) continue;
     const idx = line.indexOf(":");
     if (idx === -1) throw new Error(`MALFORMED_FRONTMATTER_LINE: "${line}"`);
@@ -214,7 +214,7 @@ export function findConflictingActiveDropAcrossBranches(root, requestedId) {
 }
 
 export function normalizeRemoteUrl(url) {
-  const stripped = url.trim().replace(/\.git$/, "");
+  const stripped = url.trim().replace(/\\/g, "/").replace(/\.git$/, "");
   const m = stripped.match(/[/:]([^/:]+\/[^/]+)$/);
   return m ? m[1] : stripped;
 }
@@ -607,6 +607,7 @@ function main() {
   process.exit(2);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const invokedAsScript = process.argv[1] ? pathToFileURL(resolve(process.argv[1])).href === import.meta.url : false;
+if (invokedAsScript) {
   main();
 }
