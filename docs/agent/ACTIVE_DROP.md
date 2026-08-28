@@ -1,15 +1,13 @@
 ---
-id: FACTORY-002
-status: CLOSED
-baseline: bc28f2093cf3f006df1306020bf9c9fd04e6f9fc
-branch: factory-002-development-factory-v1
-contract: docs/agent/drops/FACTORY-002.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/34
-builder: Claude (assigned by Gavin, this Drop only)
+id: CONTINUITY-001
+status: ACTIVE
+baseline: 4445fbcd8a62b95e5aa0c40fd249d65e800bebfa
+branch: continuity-001-stay-with-operator
+contract: docs/agent/drops/CONTINUITY-001.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Codex (assigned by Gavin, CONTINUITY-001 only)
 reviewer: (unassigned)
-integrator: Codex (assigned by Gavin, FACTORY-002 closure only)
-integration_sha: 6a21da419c03b67773452cf2bd602e0212d7a3ac
-closed_at: 2026-08-27T08:51:04.574Z
+integrator: (unassigned)
 ---
 
 # ACTIVE_DROP
