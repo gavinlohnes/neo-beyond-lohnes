@@ -7,6 +7,8 @@ import {
 } from "../../src/ui/screens/today/attentionPolicy";
 
 const QUIET: Parameters<typeof deriveAttentionPlan>[0] = {
+  activeWorkoutId: null,
+  activeWorkoutType: null,
   activeResetId: null,
   activeShiftDownId: null,
   recommendationKind: "EXECUTE_PLANNED_WORK",
@@ -22,27 +24,56 @@ const QUIET: Parameters<typeof deriveAttentionPlan>[0] = {
 
 describe("deriveDominantSurface", () => {
   it("defaults to RECOMMENDATION when nothing is active", () => {
-    expect(deriveDominantSurface({ activeResetId: null, activeShiftDownId: null, recommendationKind: "RECOVER" })).toBe("RECOMMENDATION");
+    expect(deriveDominantSurface({ activeWorkoutId: null, activeResetId: null, activeShiftDownId: null, recommendationKind: "RECOVER" })).toBe("RECOMMENDATION");
   });
 
   it("RESET active takes dominance over the recommendation", () => {
-    expect(deriveDominantSurface({ activeResetId: "r1", activeShiftDownId: null, recommendationKind: "RECOVER" })).toBe("RESET_ACTIVE");
+    expect(deriveDominantSurface({ activeWorkoutId: null, activeResetId: "r1", activeShiftDownId: null, recommendationKind: "RECOVER" })).toBe("RESET_ACTIVE");
   });
 
   it("SHIFT DOWN active takes dominance over the recommendation", () => {
-    expect(deriveDominantSurface({ activeResetId: null, activeShiftDownId: "s1", recommendationKind: "RECOVER" })).toBe("SHIFT_DOWN_ACTIVE");
+    expect(deriveDominantSurface({ activeWorkoutId: null, activeResetId: null, activeShiftDownId: "s1", recommendationKind: "RECOVER" })).toBe("SHIFT_DOWN_ACTIVE");
   });
 
   it("surfaces a degraded conflict if RESET and SHIFT DOWN are both active", () => {
-    expect(deriveDominantSurface({ activeResetId: "r1", activeShiftDownId: "s1", recommendationKind: "RECOVER" })).toBe("OPERATION_CONFLICT");
+    expect(deriveDominantSurface({ activeWorkoutId: null, activeResetId: "r1", activeShiftDownId: "s1", recommendationKind: "RECOVER" })).toBe("OPERATION_CONFLICT");
   });
 
   it("is intentionally quiet for NO ACTION REQUIRED", () => {
-    expect(deriveDominantSurface({ activeResetId: null, activeShiftDownId: null, recommendationKind: "NO_ACTION_REQUIRED" })).toBe("NONE");
+    expect(deriveDominantSurface({ activeWorkoutId: null, activeResetId: null, activeShiftDownId: null, recommendationKind: "NO_ACTION_REQUIRED" })).toBe("NONE");
   });
 });
 
 describe("deriveAttentionPlan", () => {
+  it("gives a canonical active workout the field and subordinates matching guidance", () => {
+    const plan = deriveAttentionPlan({
+      ...QUIET,
+      activeWorkoutId: "workout-1",
+      activeWorkoutType: "STANDARD",
+      recommendationSuggestedCommand: "START_WORKOUT",
+    });
+    expect(plan.dominant).toBe("WORKOUT_ACTIVE");
+    expect(plan.recommendationPlacement).toBe("SUPPORT");
+  });
+
+  it("keeps unrelated guidance visible while a workout owns the field", () => {
+    const plan = deriveAttentionPlan({
+      ...QUIET,
+      activeWorkoutId: "workout-1",
+      activeWorkoutType: "STANDARD",
+      recommendationKind: "RECOVER",
+      recommendationSuggestedCommand: "RECOVERY_SESSION",
+    });
+    expect(plan.dominant).toBe("WORKOUT_ACTIVE");
+    expect(plan.recommendationPlacement).toBe("ATTENTION");
+    expect(plan.attention).toContain("RECOMMENDATION_UNRESOLVED");
+  });
+
+  it("reports a conflict when a workout overlaps another foreground operation", () => {
+    const plan = deriveAttentionPlan({ ...QUIET, activeWorkoutId: "workout-1", activeWorkoutType: "STANDARD", activeResetId: "reset-1" });
+    expect(plan.dominant).toBe("OPERATION_CONFLICT");
+  });
+
   it("an ordinary quiet day earns zero attention items", () => {
     const plan = deriveAttentionPlan(QUIET);
     expect(plan.dominant).toBe("RECOMMENDATION");

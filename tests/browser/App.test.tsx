@@ -61,6 +61,31 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     expect((await db.workoutSessions.get(active.id))?.status).toBe("ACTIVE");
   });
 
+  it("keeps an active workout visible and resumable when the operator navigates to TODAY", async () => {
+    await page.viewport(320, 800);
+    const day = await startDay();
+    const active = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, active.id, "machine-chest-press", 1, 135, 10);
+    const screen = await render(<App />);
+    await expect.element(screen.getByText("BEYOND // TRAIN", { exact: true })).toBeVisible();
+
+    await screen.getByText("TODAY", { exact: true }).click();
+    await expect.element(screen.getByText("Resume your active workout", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "RESUME WORKOUT" })).toBeVisible();
+    expect(screen.getByText("No action required", { exact: true }).elements()).toHaveLength(0);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+
+    await screen.getByRole("button", { name: "RESUME WORKOUT" }).click();
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
+    expect(await db.workoutSessions.filter((row) => row.status === "ACTIVE").count()).toBe(1);
+
+    await screen.getByText("TODAY", { exact: true }).click();
+    await screen.getByRole("button", { name: "RESUME WORKOUT" }).click();
+    await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
+    expect(await db.workoutSessions.filter((row) => row.status === "ACTIVE").count()).toBe(1);
+  });
+
   it("shows all four stable territories, TODAY selected by default", async () => {
     const screen = await render(<App />);
     for (const label of ["TODAY", "TRAIN", "BODY", "MORE"]) {

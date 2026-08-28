@@ -28,6 +28,7 @@
 
 export type DominantSurface =
   | "RECOMMENDATION"
+  | "WORKOUT_ACTIVE"
   | "RESET_ACTIVE"
   | "SHIFT_DOWN_ACTIVE"
   | "OPERATION_CONFLICT"
@@ -61,6 +62,10 @@ export type AttentionItem =
 export type RecommendationPlacement = "DOMINANT" | "ATTENTION" | "SUPPORT";
 
 export interface AttentionInput {
+  /** Non-null exactly when getActiveWorkoutSession finds a canonical ACTIVE session. */
+  activeWorkoutId: string | null;
+  /** Session kind only identifies whether the workout already fulfills Engine guidance. */
+  activeWorkoutType: string | null;
   /** Non-null exactly when a RESET is genuinely in progress (getOpenReset). */
   activeResetId: string | null;
   /** Non-null exactly when a SHIFT DOWN is genuinely in progress (getOpenShiftDown). */
@@ -101,9 +106,12 @@ export const ATTENTION_MAX = 2;
  * so the operator can resolve canonical state explicitly.
  */
 export function deriveDominantSurface(
-  input: Pick<AttentionInput, "activeResetId" | "activeShiftDownId" | "recommendationKind">,
+  input: Pick<AttentionInput, "activeWorkoutId" | "activeResetId" | "activeShiftDownId" | "recommendationKind">,
 ): DominantSurface {
-  if (input.activeShiftDownId !== null && input.activeResetId !== null) return "OPERATION_CONFLICT";
+  const activeOperationCount = [input.activeWorkoutId, input.activeResetId, input.activeShiftDownId]
+    .filter((id) => id !== null).length;
+  if (activeOperationCount > 1) return "OPERATION_CONFLICT";
+  if (input.activeWorkoutId !== null) return "WORKOUT_ACTIVE";
   if (input.activeShiftDownId !== null) return "SHIFT_DOWN_ACTIVE";
   if (input.activeResetId !== null) return "RESET_ACTIVE";
   if (input.recommendationKind && input.recommendationKind !== "NO_ACTION_REQUIRED") return "RECOMMENDATION";
@@ -111,6 +119,11 @@ export function deriveDominantSurface(
 }
 
 function activeOperationFulfillsRecommendation(input: AttentionInput): boolean {
+  if (
+    input.activeWorkoutId !== null &&
+    ((input.activeWorkoutType === "RECOVERY" && input.recommendationSuggestedCommand === "RECOVERY_SESSION") ||
+      (input.activeWorkoutType !== "RECOVERY" && input.recommendationSuggestedCommand === "START_WORKOUT"))
+  ) return true;
   if (input.activeShiftDownId !== null && input.recommendationSuggestedCommand === "START_SHIFT_DOWN") return true;
   if (input.activeResetId !== null && input.recommendationSuggestedCommand === "START_RESET") return true;
   return false;
@@ -136,7 +149,7 @@ function activeOperationFulfillsRecommendation(input: AttentionInput): boolean {
  */
 export function deriveAttentionPlan(input: AttentionInput): AttentionPlan {
   const dominant = deriveDominantSurface(input);
-  const hasActiveOperation = input.activeResetId !== null || input.activeShiftDownId !== null;
+  const hasActiveOperation = input.activeWorkoutId !== null || input.activeResetId !== null || input.activeShiftDownId !== null;
   const actionableRecommendation = input.recommendationKind !== null && input.recommendationKind !== "NO_ACTION_REQUIRED";
   const recommendationPlacement: RecommendationPlacement =
     dominant === "RECOMMENDATION"
