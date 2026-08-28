@@ -58,7 +58,7 @@ describe("accessibility (real browser, axe-core)", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);

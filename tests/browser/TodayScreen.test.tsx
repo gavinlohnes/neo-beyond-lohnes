@@ -5,6 +5,7 @@ import {
   startDay,
   endDay,
   submitCheckIn,
+  startReset,
   startShiftDown,
   captureItem,
   logSleep,
@@ -140,15 +141,26 @@ afterEach(() => {
 });
 
 describe("TodayScreen (real browser) — ordinary/quiet state", () => {
-  it("shows the recommendation as NOW and no Attention section on a GREEN day with nothing outstanding", async () => {
+  it("shows the NO ACTION REQUIRED as quiet support and no Attention section on a GREEN day with nothing outstanding", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Tools", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Support", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
+    expect(screen.getByText("Operate", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
+  });
+
+  it("promotes missing state input without manufacturing an Engine action", async () => {
+    await startDay();
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByText("Check in when you can", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/no current state input/i)).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
   });
 });
 
@@ -335,7 +347,7 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — STATUS operational readout"
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect(strip).not.toBeNull();
@@ -349,7 +361,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect(strip!.className).toBe("status-strip");
@@ -361,7 +373,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await submitCheckIn(day.id, YELLOW);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect(strip!.className).toBe("status-strip status-strip--yellow");
@@ -375,7 +387,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await submitCheckIn(day.id, RED);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect(strip!.className).toBe("status-strip status-strip--red");
@@ -400,13 +412,13 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
 });
 
 describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — section headings and pre-day state", () => {
-  it("renders NOW and TOOLS as real level-2 headings, not decorative paragraphs", async () => {
+  it("renders ORIENT and SUPPORT as real level-2 headings, not decorative paragraphs", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("heading", { level: 2, name: "Now", exact: true })).toBeVisible();
-    await expect.element(screen.getByRole("heading", { level: 2, name: "Tools", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Orient", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Support", exact: true })).toBeVisible();
   });
 
   it("renders ATTENTION as a real level-2 heading once an item has earned it", async () => {
@@ -733,6 +745,33 @@ describe("TodayScreen (real browser) — active mode dominance", () => {
     await expect.element(screen.getByRole("button", { name: "Open RECOMMENDATION" })).toBeVisible();
   });
 
+  it("keeps unrelated Engine guidance in Attention while RESET owns Operate", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, RED); // recommends SHIFT DOWN
+    await startReset(day.id, 3); // a different foreground operation
+
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByText("RESET IN PROGRESS", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("ENGINE GUIDANCE", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Stabilize first", { exact: true })).toBeVisible();
+  });
+
+  it("names a RESET + SHIFT DOWN conflict and keeps both recovery controls available", async () => {
+    await page.viewport(320, 800);
+    const day = await startDay();
+    await submitCheckIn(day.id, RED);
+    await startReset(day.id, 3);
+    await startShiftDown(day.id, 10);
+
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByText("OPERATION CONFLICT", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "COMPLETE RESET" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "COMPLETE SHIFT DOWN" })).toBeVisible();
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+  });
+
   it("lets an unstarted SHIFT DOWN picker collapse and reopen without writing session events", async () => {
     await page.viewport(320, 800);
     const day = await startDay();
@@ -902,7 +941,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
 
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
     expect(screen.getByText("COMMITMENT", { exact: true }).elements()).toHaveLength(0);
   });
 
@@ -916,7 +955,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     // FIELD ALPHA Gate A correction: the collapsed row's accessible
     // name is the fixed role "COMMITMENT" (it used to be the
     // obligation's own title, which could visually collide with
-    // TODAY's "Now" section header) — the title itself still shows, in
+    // TODAY's "Orient" section header) — the title itself still shows, in
     // the summary line.
     await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
     await expect.element(screen.getByText(/Someday maybe/)).toBeVisible();
@@ -1042,7 +1081,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
 
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByText("COMMITMENT", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByText(/Renew passport/).elements()).toHaveLength(0);
@@ -1137,7 +1176,7 @@ describe("TodayScreen (real browser) — VISUAL-001 Red Budget & structural geom
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
 
     // The GREEN/NO_ACTION_REQUIRED primary action — .btn-primary, per
     // describeRecommendationAction — is the one guaranteed .btn-primary

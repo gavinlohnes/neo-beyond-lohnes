@@ -38,7 +38,8 @@ describe("Suit Implementation 01B — dominant surface grammar", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
 
     expect(document.querySelectorAll(".all-clear")).toHaveLength(1);
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);

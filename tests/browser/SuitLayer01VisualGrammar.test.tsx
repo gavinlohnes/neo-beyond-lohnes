@@ -22,8 +22,8 @@ afterEach(() => {
   cleanup();
 });
 
-describe("Suit Layer 01 — exactly one dominant decision surface", () => {
-  it("only the NOW recommendation gets the dominant command surface, even with an attention-worthy item also present", async () => {
+describe("Suit Layer 01 — at most one dominant decision surface", () => {
+  it("keeps NO ACTION REQUIRED quiet even with attention-worthy items present", async () => {
     await createObligation({ title: "Overdue thing", dueAt: "2020-01-01" }); // deliberately far in the past -> OVERDUE, earns ATTENTION
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
@@ -31,14 +31,12 @@ describe("Suit Layer 01 — exactly one dominant decision surface", () => {
 
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
 
-    // Suit Implementation 01B: the dominant NOW surface is now
-    // .command-surface (or, when the recommendation is NO_ACTION_REQUIRED,
-    // the deliberately quiet .all-clear) rather than the old
-    // .card--action.corner-flag pairing — either way, exactly one.
-    const dominant = document.querySelectorAll(".command-surface, .all-clear");
-    expect(dominant).toHaveLength(1);
+    // TODAY-002: NO ACTION REQUIRED is truthful support, not a fake
+    // command surface created merely to fill the field.
+    expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
+    expect(document.querySelectorAll(".all-clear").length).toBeLessThanOrEqual(1);
   });
 });
 
