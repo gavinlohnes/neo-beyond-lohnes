@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: dba4ba649066d49231c72244a4d8c1e33d7760d3
 branch: codex/today-004-status-strip-deployment-repair
 contract: docs/agent/drops/TODAY-004.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/39
 builder: Codex (assigned by Gavin, TODAY-004)
 reviewer: (unassigned)
 integrator: (unassigned)
