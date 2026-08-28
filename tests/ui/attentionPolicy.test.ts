@@ -9,27 +9,36 @@ import {
 const QUIET: Parameters<typeof deriveAttentionPlan>[0] = {
   activeResetId: null,
   activeShiftDownId: null,
+  recommendationKind: "EXECUTE_PLANNED_WORK",
+  recommendationSuggestedCommand: null,
   suggestEndDay: false,
   hasPendingOutcome: false,
   hasUnresolvedCapture: false,
   hasCommitmentDue: false,
+  hasWorkEndAvailable: false,
+  isCheckInMissing: false,
+  isMinimumDayProminent: false,
 };
 
 describe("deriveDominantSurface", () => {
   it("defaults to RECOMMENDATION when nothing is active", () => {
-    expect(deriveDominantSurface({ activeResetId: null, activeShiftDownId: null })).toBe("RECOMMENDATION");
+    expect(deriveDominantSurface({ activeResetId: null, activeShiftDownId: null, recommendationKind: "RECOVER" })).toBe("RECOMMENDATION");
   });
 
   it("RESET active takes dominance over the recommendation", () => {
-    expect(deriveDominantSurface({ activeResetId: "r1", activeShiftDownId: null })).toBe("RESET_ACTIVE");
+    expect(deriveDominantSurface({ activeResetId: "r1", activeShiftDownId: null, recommendationKind: "RECOVER" })).toBe("RESET_ACTIVE");
   });
 
   it("SHIFT DOWN active takes dominance over the recommendation", () => {
-    expect(deriveDominantSurface({ activeResetId: null, activeShiftDownId: "s1" })).toBe("SHIFT_DOWN_ACTIVE");
+    expect(deriveDominantSurface({ activeResetId: null, activeShiftDownId: "s1", recommendationKind: "RECOVER" })).toBe("SHIFT_DOWN_ACTIVE");
   });
 
-  it("SHIFT DOWN wins if both are somehow simultaneously active", () => {
-    expect(deriveDominantSurface({ activeResetId: "r1", activeShiftDownId: "s1" })).toBe("SHIFT_DOWN_ACTIVE");
+  it("surfaces a degraded conflict if RESET and SHIFT DOWN are both active", () => {
+    expect(deriveDominantSurface({ activeResetId: "r1", activeShiftDownId: "s1", recommendationKind: "RECOVER" })).toBe("OPERATION_CONFLICT");
+  });
+
+  it("is intentionally quiet for NO ACTION REQUIRED", () => {
+    expect(deriveDominantSurface({ activeResetId: null, activeShiftDownId: null, recommendationKind: "NO_ACTION_REQUIRED" })).toBe("NONE");
   });
 });
 
@@ -37,6 +46,7 @@ describe("deriveAttentionPlan", () => {
   it("an ordinary quiet day earns zero attention items", () => {
     const plan = deriveAttentionPlan(QUIET);
     expect(plan.dominant).toBe("RECOMMENDATION");
+    expect(plan.recommendationPlacement).toBe("DOMINANT");
     expect(plan.attention).toEqual([]);
   });
 
@@ -99,9 +109,111 @@ describe("deriveAttentionPlan", () => {
   });
 
   it("dominance is independent of attention — an active RESET with a pending outcome still surfaces both", () => {
-    const plan = deriveAttentionPlan({ ...QUIET, activeResetId: "r1", hasPendingOutcome: true });
+    const plan = deriveAttentionPlan({
+      ...QUIET,
+      activeResetId: "r1",
+      recommendationSuggestedCommand: "START_RESET",
+      hasPendingOutcome: true,
+    });
+    expect(plan.dominant).toBe("RESET_ACTIVE");
+    expect(plan.recommendationPlacement).toBe("SUPPORT");
+    expect(plan.attention).toEqual(["PENDING_OUTCOME"]);
+  });
+
+  it("subordinates a recommendation already being fulfilled by the active operation", () => {
+    const plan = deriveAttentionPlan({
+      ...QUIET,
+      activeShiftDownId: "s1",
+      recommendationSuggestedCommand: "START_SHIFT_DOWN",
+      hasCommitmentDue: true,
+    });
+    expect(plan.dominant).toBe("SHIFT_DOWN_ACTIVE");
+    expect(plan.recommendationPlacement).toBe("SUPPORT");
+    expect(plan.attention).toEqual(["COMMITMENT_DUE"]);
+  });
+
+  it("keeps END DAY guidance visible while an active SHIFT DOWN owns the field", () => {
+    const plan = deriveAttentionPlan({
+      ...QUIET,
+      activeShiftDownId: "s1",
+      recommendationSuggestedCommand: "START_SHIFT_DOWN",
+      suggestEndDay: true,
+    });
+    expect(plan.dominant).toBe("SHIFT_DOWN_ACTIVE");
+    expect(plan.attention).toEqual(["END_DAY_SUGGESTED"]);
+  });
+
+  it("keeps a pending outcome visible while an active RESET owns the field", () => {
+    const plan = deriveAttentionPlan({
+      ...QUIET,
+      activeResetId: "r1",
+      recommendationSuggestedCommand: "START_RESET",
+      hasPendingOutcome: true,
+    });
     expect(plan.dominant).toBe("RESET_ACTIVE");
     expect(plan.attention).toEqual(["PENDING_OUTCOME"]);
+  });
+
+  it("keeps unrelated Engine guidance visible in scarce attention behind an active operation", () => {
+    const plan = deriveAttentionPlan({ ...QUIET, activeResetId: "r1", hasCommitmentDue: true });
+    expect(plan.dominant).toBe("RESET_ACTIVE");
+    expect(plan.recommendationPlacement).toBe("ATTENTION");
+    expect(plan.attention).toEqual(["RECOMMENDATION_UNRESOLVED", "COMMITMENT_DUE"]);
+  });
+
+  it("reports incompatible foreground operations instead of choosing silently", () => {
+    const plan = deriveAttentionPlan({
+      ...QUIET,
+      activeResetId: "r1",
+      activeShiftDownId: "s1",
+      recommendationSuggestedCommand: "START_SHIFT_DOWN",
+    });
+    expect(plan.dominant).toBe("OPERATION_CONFLICT");
+    expect(plan.recommendationPlacement).toBe("SUPPORT");
+  });
+
+  it("makes NO ACTION REQUIRED quiet while preserving unresolved support signals", () => {
+    const plan = deriveAttentionPlan({
+      ...QUIET,
+      recommendationKind: "NO_ACTION_REQUIRED",
+      isCheckInMissing: true,
+      hasUnresolvedCapture: true,
+    });
+    expect(plan.dominant).toBe("NONE");
+    expect(plan.recommendationPlacement).toBe("SUPPORT");
+    expect(plan.attention).toEqual(["CHECK_IN_MISSING", "CAPTURE_UNRESOLVED"]);
+  });
+
+  it("orders work transition and constrained Minimum Day within the two-signal budget", () => {
+    const plan = deriveAttentionPlan({
+      ...QUIET,
+      hasWorkEndAvailable: true,
+      isMinimumDayProminent: true,
+      hasPendingOutcome: true,
+    });
+    expect(plan.attention).toEqual(["WORK_END_AVAILABLE", "MINIMUM_DAY_PROMINENT"]);
+  });
+
+  it("gets progressively quieter as unresolved state resolves", () => {
+    const busy = deriveAttentionPlan({
+      ...QUIET,
+      hasCommitmentDue: true,
+      hasPendingOutcome: true,
+      hasUnresolvedCapture: true,
+    });
+    const quieter = deriveAttentionPlan({
+      ...QUIET,
+      hasPendingOutcome: true,
+      hasUnresolvedCapture: true,
+    });
+    const quiet = deriveAttentionPlan({
+      ...QUIET,
+      recommendationKind: "NO_ACTION_REQUIRED",
+      hasUnresolvedCapture: false,
+    });
+    expect(busy.attention).toEqual(["COMMITMENT_DUE", "PENDING_OUTCOME"]);
+    expect(quieter.attention).toEqual(["PENDING_OUTCOME", "CAPTURE_UNRESOLVED"]);
+    expect(quiet).toMatchObject({ dominant: "NONE", attention: [] });
   });
 });
 

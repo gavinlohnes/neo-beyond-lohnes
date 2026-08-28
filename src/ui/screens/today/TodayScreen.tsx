@@ -856,16 +856,25 @@ export function TodayScreen({
   const attentionPlan = deriveAttentionPlan({
     activeResetId,
     activeShiftDownId,
+    recommendationKind: recommendation?.kind ?? null,
+    recommendationSuggestedCommand: recommendation?.suggestedCommand ?? null,
     suggestEndDay,
     hasPendingOutcome: !!pendingOutcome,
     hasUnresolvedCapture: openCaptureItems.length > 0,
     hasCommitmentDue,
+    hasWorkEndAvailable: day?.workContext === "WORK" && workPeriodEndedAt === null,
+    isCheckInMissing: day !== null && checkIn === null,
+    isMinimumDayProminent: showProminentMinimumDay,
   });
   const dominant = attentionPlan.dominant;
   const endDayInAttention = isInAttention(attentionPlan, "END_DAY_SUGGESTED");
   const pendingOutcomeInAttention = isInAttention(attentionPlan, "PENDING_OUTCOME");
   const captureInAttention = isInAttention(attentionPlan, "CAPTURE_UNRESOLVED");
   const commitmentInAttention = isInAttention(attentionPlan, "COMMITMENT_DUE");
+  const recommendationInAttention = isInAttention(attentionPlan, "RECOMMENDATION_UNRESOLVED");
+  const workEndInAttention = isInAttention(attentionPlan, "WORK_END_AVAILABLE");
+  const checkInInAttention = isInAttention(attentionPlan, "CHECK_IN_MISSING");
+  const minimumDayInAttention = isInAttention(attentionPlan, "MINIMUM_DAY_PROMINENT");
 
   /**
    * Suit Layer 01: the Capture list-row markup was hand-copied verbatim
@@ -959,7 +968,7 @@ export function TodayScreen({
     const isCommand = active && isDominant;
     return (
       <div
-        key={active ? "in-progress" : "picker"}
+        key={active ? "reset-in-progress" : "reset-picker"}
         className={`fade-in ${isCommand ? "command-surface" : active ? "equipment-row" : prominent ? "card signal-row" : "equipment-row"}`}
       >
         <p
@@ -1043,7 +1052,7 @@ export function TodayScreen({
     const isCommand = active && isDominant;
     return (
       <div
-        key={active ? "in-progress" : "picker"}
+        key={active ? "shift-down-in-progress" : "shift-down-picker"}
         className={`fade-in ${isCommand ? "command-surface" : active ? "equipment-row" : prominent ? "card signal-row" : "equipment-row"}`}
       >
         <p
@@ -1300,9 +1309,10 @@ export function TodayScreen({
    * a check-in exists, and so this card is purely about the one
    * decision it's asking for.
    */
-  function renderRecommendationCard(isDominant: boolean) {
+  function renderRecommendationCard(isDominant: boolean, isAttention = false) {
     if (!day || !recommendation) return null;
-    const open = isDominant || recommendationOpen;
+    const isAllClear = recommendation.kind === "NO_ACTION_REQUIRED";
+    const open = isDominant || isAttention || isAllClear || recommendationOpen;
     if (!open) {
       return (
         <CollapsibleRow
@@ -1327,16 +1337,20 @@ export function TodayScreen({
     // ResolveIcon vs. ConfirmIcon (Suit Implementation 01) is unchanged:
     // NO_ACTION_REQUIRED's own title/rationale stays Engine-authored,
     // untouched.
-    const isAllClear = recommendation.kind === "NO_ACTION_REQUIRED";
     // VISUAL-002: the dominant, non-all-clear branch is the same PRIMARY
     // DECISION/EXECUTION territory formalized as <CommandSurface> — the
     // all-clear and demoted (.equipment-row) branches keep their own
     // wrapper className exactly as before, since only this one branch is
     // the shared command-surface pattern.
-    const wrapperClassName = isAllClear ? "all-clear fade-in" : "equipment-row fade-in";
+    const wrapperClassName = isAllClear
+      ? "all-clear fade-in"
+      : isAttention
+        ? "card signal-row fade-in"
+        : "equipment-row fade-in";
     const cardContent = (
       <>
-        <h2 className={isDominant || isAllClear ? "command-title" : "tool-label"} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {isAttention && <p className="tool-label">ENGINE GUIDANCE</p>}
+        <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
           {recommendation.title}
         </h2>
@@ -1784,6 +1798,7 @@ export function TodayScreen({
           capacity at all, which reads as calm rather than as genuinely
           unknown). Still a single line, still color-independent: every
           state pairs its dot with an explicit word, never color alone. */}
+      {day && <h2 className="section-label">Orient</h2>}
       {day && (
         <p
           className={
@@ -1814,14 +1829,24 @@ export function TodayScreen({
         </p>
       )}
 
-      {/* NOW — exactly one dominant operating surface: the recommendation,
-          unless a genuinely active RESET or SHIFT DOWN has taken over. */}
-      {day && recommendation && <h2 className="section-label">Now</h2>}
-      {day && recommendation && dominant === "SHIFT_DOWN_ACTIVE" && renderShiftDownCard(shiftDownIsPrimary, true)}
-      {day && recommendation && dominant === "RESET_ACTIVE" && renderResetCard(resetIsPrimary, true)}
+      {/* OPERATE — exactly one dominant operating surface. A corrupted/
+          legacy double-active state is named explicitly rather than
+          silently allowing JSX order to choose a winner. */}
+      {day && dominant !== "NONE" && <h2 className="section-label">Operate</h2>}
+      {day && dominant === "OPERATION_CONFLICT" && (
+        <div className="card card--warning" role="alert">
+          <p className="tool-label">OPERATION CONFLICT</p>
+          <h2 className="card-title">Two foreground operations are active</h2>
+          <p className="card-body">
+            RESET and SHIFT DOWN are both unresolved. Complete or cancel one before continuing with the other.
+          </p>
+        </div>
+      )}
+      {day && dominant === "OPERATION_CONFLICT" && renderResetCard(false, false)}
+      {day && dominant === "OPERATION_CONFLICT" && renderShiftDownCard(false, false)}
+      {day && dominant === "SHIFT_DOWN_ACTIVE" && renderShiftDownCard(shiftDownIsPrimary, true)}
+      {day && dominant === "RESET_ACTIVE" && renderResetCard(resetIsPrimary, true)}
       {day && recommendation && dominant === "RECOMMENDATION" && renderRecommendationCard(true)}
-
-      {showProminentMinimumDay && renderMinimumDayCard(true)}
 
       {/* ATTENTION — earned, capped at ATTENTION_MAX, and disappears
           entirely when nothing currently qualifies (attentionPolicy.ts). */}
@@ -1829,9 +1854,43 @@ export function TodayScreen({
         <>
           <h2 className="section-label">Attention</h2>
 
+          {recommendationInAttention && renderRecommendationCard(false, true)}
+
           {endDayInAttention && renderEndDayCard()}
 
+          {workEndInAttention && !workContextOpen && (
+            <SignalRow label="WORK STATE">
+              <h2 className="card-title">Working today</h2>
+              <p className="card-body" style={{ marginBottom: 12 }}>
+                Setup is recorded. When your shift is actually over, mark it — BEYOND never guesses this from the clock.
+              </p>
+              <button className="btn-primary" disabled={busy} onClick={() => void handleMarkWorkEnded()}>
+                MARK WORK ENDED
+              </button>
+              <button className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} onClick={() => setWorkContextOpen(true)}>
+                CHANGE WORK CONTEXT
+              </button>
+            </SignalRow>
+          )}
+
           {commitmentInAttention && renderCommitmentsCard()}
+
+          {checkInInAttention && (
+            <SignalRow label="STATE INPUT">
+              <h2 className="card-title">Check in when you can</h2>
+              <p className="card-body" style={{ marginBottom: 12 }}>
+                BEYOND has no current state input for this BeyondDay. Guidance remains deterministic, but less informed.
+              </p>
+              <button className="btn-primary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
+                ALL GOOD
+              </button>
+              <button className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setCheckInFormOpen(true)}>
+                MANUAL CHECK-IN
+              </button>
+            </SignalRow>
+          )}
+
+          {minimumDayInAttention && renderMinimumDayCard(true)}
 
           {/* BEYOND Suit Implementation 01: relabeled from "LAST TIME" to
               the canonical Memory grammar's "OUTCOME" (Part 12) — pure
@@ -1889,16 +1948,16 @@ export function TodayScreen({
         </>
       )}
 
-      {/* TOOLS — quiet, always-reachable capabilities that aren't
+      {/* SUPPORT — quiet, always-reachable capabilities that aren't
           currently competing with NOW. No capability is deleted; every
           item below is one tap from full content. */}
-      <h2 className="section-label">Tools</h2>
+      <h2 className="section-label">Support</h2>
 
-      {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && renderShiftDownCard(shiftDownIsPrimary, false)}
-      {day && recommendation && dominant !== "RESET_ACTIVE" && renderResetCard(resetIsPrimary, false)}
-      {day && recommendation && dominant !== "RECOMMENDATION" && renderRecommendationCard(false)}
+      {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && renderShiftDownCard(shiftDownIsPrimary, false)}
+      {day && recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT" && renderResetCard(resetIsPrimary, false)}
+      {day && recommendation && attentionPlan.recommendationPlacement === "SUPPORT" && renderRecommendationCard(false)}
 
-      <div className="equipment-row">
+      {(!checkInInAttention || checkInFormOpen) && <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>
         <h2 className="card-title">State check-in</h2>
         {/* FIELD ALPHA Gate A correction: ALL GOOD is a routine, always-
@@ -1981,7 +2040,7 @@ export function TodayScreen({
             )}
           </div>
         )}
-      </div>
+      </div>}
 
       {/* Overdrive Phase 18 (TODAY PRIORITY COMPRESSION): once work
           context is settled for the day — OFF, or WORK with the shift
@@ -1990,7 +2049,7 @@ export function TodayScreen({
           SHIFT DOWN already use rather than staying a permanently
           full-weight card. Still WORK and not yet ended keeps the full
           card open, since MARK WORK ENDED is a real pending action. */}
-      {day &&
+      {(!workEndInAttention || workContextOpen) && day &&
         scheduledContext &&
         (() => {
           const settled = day.workContext === "OFF" || (day.workContext === "WORK" && workPeriodEndedAt !== null);
@@ -2087,7 +2146,7 @@ export function TodayScreen({
           );
         })()}
 
-      {day && minimumDay && !showProminentMinimumDay && renderMinimumDayCard(false)}
+      {day && minimumDay && !minimumDayInAttention && renderMinimumDayCard(false)}
 
       {renderCaptureToolsCard()}
 

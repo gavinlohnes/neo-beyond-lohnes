@@ -16,7 +16,7 @@ import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
  * covers the three corrections that followed: Minimum Day's GLANCE-
  * depth compaction, State Input's red-authority reduction, and the
  * commitment row's label clarity (no longer duplicating TODAY's own
- * "Now" section label). Behavioral coverage for the underlying
+ * "Orient" section label). Behavioral coverage for the underlying
  * capabilities (Minimum Day semantics, check-in semantics, Obligation
  * relevance/ranking) is unchanged and already exists elsewhere
  * (tests/integration/minimumDay.test.ts, tests/ui/checkInFields.test.ts,
@@ -113,11 +113,11 @@ describe("Gate A correction — commitment label clarity", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
-    // Exactly one "Now" on the whole screen — the section header, not
+    // Exactly one "Orient" on the whole screen — the section header, not
     // also the commitment row underneath it.
-    expect(screen.getByText("Now", { exact: true }).elements()).toHaveLength(1);
+    expect(screen.getByText("Orient", { exact: true }).elements()).toHaveLength(1);
   });
 
   it("the obligation's own title still appears, in the row's summary line, once role-labeled as COMMITMENT", async () => {

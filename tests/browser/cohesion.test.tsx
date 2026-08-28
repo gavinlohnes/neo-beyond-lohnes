@@ -55,7 +55,7 @@ describe("console cleanliness (real browser)", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Now", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
     expect(consoleErrors).toEqual([]);
   });
 
