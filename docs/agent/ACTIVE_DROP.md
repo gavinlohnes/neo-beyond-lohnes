@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: b72ab9a6914e1409b6b5c0ec28aad24974f01ff3
 branch: today-003-continuity-reconciliation
 contract: docs/agent/drops/TODAY-003.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/38
 builder: Codex (assigned by Gavin, TODAY-003)
 reviewer: (unassigned)
 integrator: (unassigned)
