@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { BeyondDay, CaptureItem, Recommendation, StateCheckIn } from "../../../domain/common/types";
+import type { BeyondDay, CaptureItem, Recommendation, StateCheckIn, WorkoutSession } from "../../../domain/common/types";
 import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
@@ -116,6 +116,7 @@ import {
 import { getDaysSinceLastBackup } from "../../../persistence/backup";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
 import { getCurrentOperationalContext, type CurrentOperationalContext } from "../../../application/currentContextQueries";
+import { getActiveWorkoutSession } from "../../../application/trainQueries";
 
 const BACKUP_NUDGE_THRESHOLD_DAYS = 7;
 
@@ -157,6 +158,7 @@ export function TodayScreen({
   const [priorOutcomeMemory, setPriorOutcomeMemory] = useState<PriorOutcomeMemory | null>(null);
   const [values, setValues] = useState<PartialCheckInValues>({});
   const [busy, setBusy] = useState(false);
+  const [activeWorkout, setActiveWorkout] = useState<WorkoutSession | null>(null);
   const [activeResetId, setActiveResetId] = useState<string | null>(null);
   const [resetIntensity, setResetIntensity] = useState<1 | 2 | 3 | 4 | 5>(3);
   const [openResetStartedAt, setOpenResetStartedAt] = useState<string | null>(null);
@@ -304,8 +306,12 @@ export function TodayScreen({
     // `day`/`currentContext` back to stale values.
     const myRequestId = ++refreshRequestIdRef.current;
     let activeDay: BeyondDay | null;
+    let activeWorkoutSession: WorkoutSession | null;
     try {
-      activeDay = (await getActiveDay()) ?? null;
+      [activeDay, activeWorkoutSession] = await Promise.all([
+        getActiveDay().then((result) => result ?? null),
+        getActiveWorkoutSession().then((result) => result ?? null),
+      ]);
     } catch (err) {
       // A superseded refresh's failed read must vanish silently — it may
       // never regress `day`, and it must never surface as an unhandled
@@ -338,6 +344,7 @@ export function TodayScreen({
       }
       currentContextDayIdRef.current = newDayId;
       setDay(activeDay);
+      setActiveWorkout(activeWorkoutSession);
       // A fresh, independently-composed view each refresh — never memoized
       // across calls, matching every other piece of state in this function.
       // Composed from THIS refresh's own already-resolved `activeDay` (not
@@ -467,6 +474,8 @@ export function TodayScreen({
       const activeDay = await ensureActiveDay();
       await submitCheckIn(activeDay.id, quickCheckInValues);
       await refresh();
+      setValues({});
+      setCheckInFormOpen(false);
     } finally {
       setBusy(false);
     }
@@ -854,6 +863,8 @@ export function TodayScreen({
   // booleans with one tested module; no Engine policy, capacity, or
   // domain fact is touched by it.
   const attentionPlan = deriveAttentionPlan({
+    activeWorkoutId: activeWorkout?.id ?? null,
+    activeWorkoutType: activeWorkout?.sessionType ?? null,
     activeResetId,
     activeShiftDownId,
     recommendationKind: recommendation?.kind ?? null,
@@ -875,6 +886,26 @@ export function TodayScreen({
   const workEndInAttention = isInAttention(attentionPlan, "WORK_END_AVAILABLE");
   const checkInInAttention = isInAttention(attentionPlan, "CHECK_IN_MISSING");
   const minimumDayInAttention = isInAttention(attentionPlan, "MINIMUM_DAY_PROMINENT");
+
+  function renderActiveWorkout(isDominant: boolean) {
+    if (!activeWorkout) return null;
+    const sessionLabel = activeWorkout.sessionType === "RECOVERY"
+      ? "Recovery session"
+      : `${activeWorkout.templateId} · ${activeWorkout.sessionType.toLowerCase()}`;
+    const content = (
+      <>
+        <p className="tool-label">WORKOUT IN PROGRESS</p>
+        <h2 className="card-title">Resume your active workout</h2>
+        <p className="card-body" style={{ marginBottom: 12 }}>
+          {sessionLabel} · started {new Date(activeWorkout.startedAt).toLocaleTimeString()}. Your logged sets and exact position remain in TRAIN.
+        </p>
+        <button className="btn-primary" onClick={() => onOpenTrain?.("WORKOUT")}>
+          RESUME WORKOUT
+        </button>
+      </>
+    );
+    return isDominant ? <CommandSurface>{content}</CommandSurface> : <div className="equipment-row">{content}</div>;
+  }
 
   /**
    * Suit Layer 01: the Capture list-row markup was hand-copied verbatim
@@ -1829,23 +1860,29 @@ export function TodayScreen({
         </p>
       )}
 
-      {/* OPERATE — exactly one dominant operating surface. A corrupted/
-          legacy double-active state is named explicitly rather than
+      {/* OPERATE — exactly one dominant operating surface. Multiple active
+          operation state is named explicitly rather than
           silently allowing JSX order to choose a winner. */}
       {day && dominant !== "NONE" && <h2 className="section-label">Operate</h2>}
       {day && dominant === "OPERATION_CONFLICT" && (
         <div className="card card--warning" role="alert">
           <p className="tool-label">OPERATION CONFLICT</p>
-          <h2 className="card-title">Two foreground operations are active</h2>
+          <h2 className="card-title">Multiple foreground operations are active</h2>
           <p className="card-body">
-            RESET and SHIFT DOWN are both unresolved. Complete or cancel one before continuing with the other.
+            {[
+              activeWorkout ? "WORKOUT" : null,
+              activeResetId ? "RESET" : null,
+              activeShiftDownId ? "SHIFT DOWN" : null,
+            ].filter(Boolean).join(" and ")} are unresolved. Return to or resolve one operation before continuing with another.
           </p>
         </div>
       )}
+      {day && dominant === "OPERATION_CONFLICT" && renderActiveWorkout(false)}
       {day && dominant === "OPERATION_CONFLICT" && renderResetCard(false, false)}
       {day && dominant === "OPERATION_CONFLICT" && renderShiftDownCard(false, false)}
       {day && dominant === "SHIFT_DOWN_ACTIVE" && renderShiftDownCard(shiftDownIsPrimary, true)}
       {day && dominant === "RESET_ACTIVE" && renderResetCard(resetIsPrimary, true)}
+      {day && dominant === "WORKOUT_ACTIVE" && renderActiveWorkout(true)}
       {day && recommendation && dominant === "RECOMMENDATION" && renderRecommendationCard(true)}
 
       {/* ATTENTION — earned, capped at ATTENTION_MAX, and disappears
@@ -1875,7 +1912,7 @@ export function TodayScreen({
 
           {commitmentInAttention && renderCommitmentsCard()}
 
-          {checkInInAttention && (
+          {checkInInAttention && !checkInFormOpen && (
             <SignalRow label="STATE INPUT">
               <h2 className="card-title">Check in when you can</h2>
               <p className="card-body" style={{ marginBottom: 12 }}>
@@ -1955,7 +1992,8 @@ export function TodayScreen({
 
       {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && renderShiftDownCard(shiftDownIsPrimary, false)}
       {day && recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT" && renderResetCard(resetIsPrimary, false)}
-      {day && recommendation && attentionPlan.recommendationPlacement === "SUPPORT" && renderRecommendationCard(false)}
+      {day && recommendation && attentionPlan.recommendationPlacement === "SUPPORT" &&
+        (recommendation.kind !== "NO_ACTION_REQUIRED" || dominant === "NONE") && renderRecommendationCard(false)}
 
       {(!checkInInAttention || checkInFormOpen) && <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>

@@ -162,6 +162,20 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     await expect.element(screen.getByText(/no current state input/i)).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
   });
+
+  it("expands one manual check-in surface and recedes it after quick resolution", async () => {
+    await startDay();
+    const screen = await render(<TodayScreen />);
+
+    await screen.getByRole("button", { name: "MANUAL CHECK-IN" }).click();
+    expect(screen.getByRole("button", { name: "ALL GOOD" }).elements()).toHaveLength(1);
+    await expect.element(screen.getByText(/nothing here is filled in for you/i)).toBeVisible();
+
+    await screen.getByRole("button", { name: "ALL GOOD" }).click();
+    await expect.element(screen.getByText(/Last check-in: Energy 4/i)).toBeVisible();
+    expect(screen.getByText(/nothing here is filled in for you/i).elements()).toHaveLength(0);
+    expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
+  });
 });
 
 describe("TodayScreen (real browser) — accepted recommendation handoff", () => {
@@ -769,6 +783,24 @@ describe("TodayScreen (real browser) — active mode dominance", () => {
     await expect.element(screen.getByText("OPERATION CONFLICT", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "COMPLETE RESET" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "COMPLETE SHIFT DOWN" })).toBeVisible();
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+  });
+
+  it("names an active workout + RESET conflict without concealing either recovery path", async () => {
+    await page.viewport(320, 800);
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    await startWorkout(day.id, "A", "STANDARD");
+    await startReset(day.id, 3);
+
+    const onOpenTrain = vi.fn();
+    const screen = await render(<TodayScreen onOpenTrain={onOpenTrain} />);
+
+    await expect.element(screen.getByText("OPERATION CONFLICT", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "RESUME WORKOUT" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "COMPLETE RESET" })).toBeVisible();
+    await screen.getByRole("button", { name: "RESUME WORKOUT" }).click();
+    expect(onOpenTrain).toHaveBeenCalledWith("WORKOUT");
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
   });
 
