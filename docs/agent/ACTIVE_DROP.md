@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 4445fbcd8a62b95e5aa0c40fd249d65e800bebfa
 branch: continuity-001-stay-with-operator
 contract: docs/agent/drops/CONTINUITY-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/35
 builder: Codex (assigned by Gavin, CONTINUITY-001 only)
 reviewer: (unassigned)
 integrator: (unassigned)
@@ -21,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/FACTORY-002.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/CONTINUITY-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
