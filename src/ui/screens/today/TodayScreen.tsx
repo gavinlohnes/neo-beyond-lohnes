@@ -75,6 +75,7 @@ import {
   completeShiftDown,
   cancelShiftDown,
   endDay,
+  ActiveWorkoutBlocksDayEndError,
   rateOutcome,
   setWorkContext,
   markWorkEnded,
@@ -165,6 +166,7 @@ export function TodayScreen({
   const [openShiftDownStartedAt, setOpenShiftDownStartedAt] = useState<string | null>(null);
   const [lastShiftDownOutcome, setLastShiftDownOutcome] = useState<SessionOutcome | null>(null);
   const [suggestEndDay, setSuggestEndDay] = useState(false);
+  const [endDayBlockedByWorkout, setEndDayBlockedByWorkout] = useState(false);
   const [daysSinceBackup, setDaysSinceBackup] = useState<number | null>(null);
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
@@ -588,7 +590,15 @@ export function TodayScreen({
     setBusy(true);
     try {
       await endDay(day.id, "EXPLICIT_END_DAY");
+      setEndDayBlockedByWorkout(false);
       await refresh();
+    } catch (error) {
+      if (error instanceof ActiveWorkoutBlocksDayEndError) {
+        setEndDayBlockedByWorkout(true);
+        setEndDayOpen(true);
+        return;
+      }
+      throw error;
     } finally {
       setBusy(false);
     }
@@ -611,6 +621,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       await markWorkEnded(day.id);
+      setWorkContextOpen(false);
       await refresh();
     } finally {
       setBusy(false);
@@ -1108,6 +1119,16 @@ export function TodayScreen({
             <button ref={shiftDownStartRef} className="btn-primary" disabled={busy} onClick={() => void handleStartShiftDown()}>
               START SHIFT DOWN
             </button>
+            {!prominent && (
+              <button
+                className="btn-secondary"
+                style={{ marginTop: 8 }}
+                disabled={busy}
+                onClick={() => setShiftDownOpen(false)}
+              >
+                COLLAPSE
+              </button>
+            )}
           </>
         )}
       </div>
@@ -1135,6 +1156,9 @@ export function TodayScreen({
     return (
       <div className={prominent ? "card signal-row" : "equipment-row"}>
         <p className="tool-label" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
+        <p className="meta" style={{ marginBottom: 12 }}>
+          Progress stays with this active BeyondDay until you end it — a calendar date change does not reset it.
+        </p>
         {!minimumDay.enabled ? (
           <>
             <h2 className="card-title">{prominent ? MINIMUM_DAY_PROMINENT_TITLE : "Reduced baseline"}</h2>
@@ -1480,6 +1504,16 @@ export function TodayScreen({
           <p className="card-body" style={{ marginBottom: 12 }}>
             Primary sleep logged — this BeyondDay looks done. End it whenever you're ready.
           </p>
+        )}
+        {endDayBlockedByWorkout && (
+          <div role="alert" className="card card--warning" style={{ marginBottom: 12 }}>
+            <p className="card-body" style={{ marginBottom: 8 }}>
+              Workout in progress. Finish it, save it as partial, or stop it on TRAIN before ending this BeyondDay.
+            </p>
+            <button className="btn-primary" disabled={busy} onClick={() => onOpenTrain?.("WORKOUT")}>
+              RETURN TO WORKOUT
+            </button>
+          </div>
         )}
         <button className="btn-secondary" disabled={busy} onClick={() => void handleEndDay()}>
           END DAY
@@ -1960,8 +1994,31 @@ export function TodayScreen({
         scheduledContext &&
         (() => {
           const settled = day.workContext === "OFF" || (day.workContext === "WORK" && workPeriodEndedAt !== null);
-          const open = workContextOpen || !settled;
+          const awaitingWorkEnd = day.workContext === "WORK" && workPeriodEndedAt === null;
+          const open = workContextOpen || day.workContext === "UNKNOWN";
           if (!open) {
+            if (awaitingWorkEnd) {
+              return (
+                <div className="equipment-row">
+                  <p className="tool-label" style={{ marginBottom: 4 }}>WORK CONTEXT</p>
+                  <h2 className="card-title">Working today</h2>
+                  <p className="meta" style={{ marginBottom: 12 }}>
+                    Setup recorded. When your shift is actually over, mark it — BEYOND never guesses this from the clock.
+                  </p>
+                  <button className="btn-primary" disabled={busy} onClick={() => void handleMarkWorkEnded()}>
+                    MARK WORK ENDED
+                  </button>
+                  <button
+                    className="btn-secondary"
+                    style={{ marginTop: 8 }}
+                    disabled={busy}
+                    onClick={() => setWorkContextOpen(true)}
+                  >
+                    CHANGE WORK CONTEXT
+                  </button>
+                </div>
+              );
+            }
             const summary =
               day.workContext === "OFF"
                 ? "Off today."

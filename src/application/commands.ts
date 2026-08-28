@@ -150,11 +150,36 @@ export async function endDay(
   beyondDayId: string,
   reason: "EXPLICIT_END_DAY" | "AUTO_CLOSED_ON_NEW_DAY_START" = "EXPLICIT_END_DAY",
 ): Promise<void> {
+  const activeWorkout = await db.workoutSessions
+    .where("beyondDayId")
+    .equals(beyondDayId)
+    .filter((session) => session.status === "ACTIVE")
+    .first();
+  if (activeWorkout) {
+    throw new ActiveWorkoutBlocksDayEndError(activeWorkout.id);
+  }
   await db.beyondDays.update(beyondDayId, {
     status: "ENDED",
     updatedAt: new Date().toISOString(),
   });
   await logEvent(beyondDayId, "DAY_ENDED", { reason }, reason === "EXPLICIT_END_DAY" ? "USER" : "SYSTEM", newId());
+}
+
+/**
+ * CONTINUITY-001: an unresolved workout belongs to its original
+ * BeyondDay. Ending that day first would make the session inaccessible
+ * to the normal TRAIN resume path and allow a conflicting workout on a
+ * later day. The command boundary therefore fails before either the day
+ * row or event history is changed. The operator retains all existing
+ * choices on TRAIN: complete, save partial, or stop.
+ */
+export class ActiveWorkoutBlocksDayEndError extends Error {
+  readonly code = "ACTIVE_WORKOUT_UNRESOLVED";
+
+  constructor(readonly sessionId: string) {
+    super("ACTIVE_WORKOUT_UNRESOLVED: resolve the active workout on TRAIN before ending this BeyondDay.");
+    this.name = "ActiveWorkoutBlocksDayEndError";
+  }
 }
 
 /**

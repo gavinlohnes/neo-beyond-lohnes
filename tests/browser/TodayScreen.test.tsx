@@ -26,6 +26,7 @@ import {
 } from "../../src/application/currentContextQueries";
 import { getActiveDay } from "../../src/application/queries";
 import type { BeyondDay } from "../../src/domain/common/types";
+import { startWorkout } from "../../src/application/trainCommands";
 
 /**
  * Current Operational Context V1: getCurrentOperationalContext is
@@ -731,6 +732,56 @@ describe("TodayScreen (real browser) — active mode dominance", () => {
     // The recommendation stepped back to a quiet, reopenable Tools row.
     await expect.element(screen.getByRole("button", { name: "Open RECOMMENDATION" })).toBeVisible();
   });
+
+  it("lets an unstarted SHIFT DOWN picker collapse and reopen without writing session events", async () => {
+    await page.viewport(320, 800);
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TodayScreen />);
+
+    await screen.getByRole("button", { name: "Open SHIFT DOWN" }).click();
+    await expect.element(screen.getByRole("button", { name: "START SHIFT DOWN" })).toBeVisible();
+    await screen.getByRole("button", { name: "COLLAPSE" }).click();
+    await expect.element(screen.getByRole("button", { name: "Open SHIFT DOWN" })).toBeVisible();
+    await screen.getByRole("button", { name: "Open SHIFT DOWN" }).click();
+    await expect.element(screen.getByRole("button", { name: "START SHIFT DOWN" })).toBeVisible();
+
+    const shiftEvents = (await db.events.where("beyondDayId").equals(day.id).toArray()).filter((event) =>
+      event.type.startsWith("SHIFT_DOWN_"),
+    );
+    expect(shiftEvents).toHaveLength(0);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+  });
+});
+
+describe("TodayScreen (real browser) — Work Context progressive resolution", () => {
+  it("subordinates the answered YES setup and promotes MARK WORK ENDED as the next valid operation", async () => {
+    await page.viewport(320, 800);
+    const day = await startDay();
+    await setWorkContext(day.id, "WORK", "MANUAL");
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByRole("heading", { name: "Working today", exact: true })).toBeVisible();
+    const markEnded = screen.getByRole("button", { name: "MARK WORK ENDED" }).element();
+    expect(markEnded.className).toContain("btn-primary");
+    expect(screen.getByRole("heading", { name: "Are you working today?" }).elements()).toHaveLength(0);
+
+    await screen.getByRole("button", { name: "CHANGE WORK CONTEXT" }).click();
+    await expect.element(screen.getByRole("heading", { name: "Are you working today?" })).toBeVisible();
+    await screen.getByRole("button", { name: "MARK WORK ENDED" }).click();
+    await expect.element(screen.getByRole("button", { name: "Open WORK CONTEXT" })).toBeVisible();
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+  });
+
+  it("keeps the NO path compact and truthful", async () => {
+    const day = await startDay();
+    await setWorkContext(day.id, "OFF", "MANUAL");
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByRole("button", { name: "Open WORK CONTEXT" })).toBeVisible();
+    await expect.element(screen.getByText("Off today.", { exact: true })).toBeVisible();
+    expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(0);
+  });
 });
 
 describe("TodayScreen (real browser) — Capture", () => {
@@ -816,6 +867,25 @@ describe("TodayScreen (real browser) — END DAY relevance", () => {
     await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/BeyondDay looks done/)).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "END DAY" })).toBeVisible();
+  });
+
+  it("keeps an ACTIVE workout accessible and returns the operator to TRAIN instead of ending the day", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const workout = await startWorkout(day.id, "A", "STANDARD");
+    const openTrain = vi.fn();
+    const screen = await render(<TodayScreen onOpenTrain={openTrain} />);
+
+    await screen.getByRole("button", { name: "Open BEYONDDAY" }).click();
+    await screen.getByRole("button", { name: "END DAY" }).click();
+
+    await expect.element(screen.getByText(/Workout in progress/)).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "RETURN TO WORKOUT" })).toBeVisible();
+    expect((await db.beyondDays.get(day.id))?.status).toBe("ACTIVE");
+    expect((await db.workoutSessions.get(workout.id))?.status).toBe("ACTIVE");
+
+    await screen.getByRole("button", { name: "RETURN TO WORKOUT" }).click();
+    expect(openTrain).toHaveBeenCalledWith("WORKOUT");
   });
 });
 

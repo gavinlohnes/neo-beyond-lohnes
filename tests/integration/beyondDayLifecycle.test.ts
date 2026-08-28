@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/persistence/db";
-import { endDay, logSleep, startDay } from "../../src/application/commands";
+import { ActiveWorkoutBlocksDayEndError, endDay, logSleep, startDay } from "../../src/application/commands";
+import { completeWorkout, startWorkout } from "../../src/application/trainCommands";
 import { getActiveDay, shouldSuggestEndDay, getLatestSleepMinutes } from "../../src/application/queries";
 
 /**
@@ -21,6 +22,20 @@ afterEach(async () => {
 });
 
 describe("explicit END DAY", () => {
+  it("fails before changing day or history while a workout remains ACTIVE, then succeeds after operator resolution", async () => {
+    const day = await startDay();
+    const workout = await startWorkout(day.id, "A", "STANDARD");
+    const eventsBefore = await db.events.where("beyondDayId").equals(day.id).count();
+
+    await expect(endDay(day.id)).rejects.toBeInstanceOf(ActiveWorkoutBlocksDayEndError);
+    expect((await db.beyondDays.get(day.id))?.status).toBe("ACTIVE");
+    expect((await db.workoutSessions.get(workout.id))?.status).toBe("ACTIVE");
+    expect(await db.events.where("beyondDayId").equals(day.id).count()).toBe(eventsBefore);
+
+    await completeWorkout(day.id, workout.id, "STANDARD", "PARTIAL");
+    await endDay(day.id);
+    expect((await db.beyondDays.get(day.id))?.status).toBe("ENDED");
+  });
   it("marks the day ENDED and logs a DAY_ENDED fact with an explicit reason", async () => {
     const day = await startDay();
     await endDay(day.id);
@@ -119,6 +134,16 @@ describe("sleep-triggered END DAY suggestion", () => {
 });
 
 describe("auto-close as fallback when a new day starts while one is active", () => {
+  it("does not auto-close or create a new day while the prior day owns an ACTIVE workout", async () => {
+    const first = await startDay();
+    const workout = await startWorkout(first.id, "A", "STANDARD");
+
+    await expect(startDay()).rejects.toBeInstanceOf(ActiveWorkoutBlocksDayEndError);
+
+    expect((await db.beyondDays.get(first.id))?.status).toBe("ACTIVE");
+    expect((await db.workoutSessions.get(workout.id))?.status).toBe("ACTIVE");
+    expect(await db.beyondDays.filter((day) => day.status === "ACTIVE").count()).toBe(1);
+  });
   it("auto-closes the prior ACTIVE day with a distinct reason when startDay is called again", async () => {
     const first = await startDay();
     const second = await startDay();

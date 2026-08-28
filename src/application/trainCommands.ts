@@ -54,7 +54,7 @@ async function currentCapacity(beyondDayId: string): Promise<Capacity | null> {
  * promise (keyed by day, same pattern as ensureActiveDay) closes the
  * remaining read-then-write race for calls landing in the same tick.
  */
-const startWorkoutInFlight = new Map<string, Promise<WorkoutSession>>();
+let startWorkoutInFlight: Promise<WorkoutSession> | null = null;
 
 export async function startWorkout(
   beyondDayId: string,
@@ -62,13 +62,10 @@ export async function startWorkout(
   sessionType: SessionType,
   options: { overrideConfirmed?: boolean } = {},
 ): Promise<WorkoutSession> {
-  const inFlight = startWorkoutInFlight.get(beyondDayId);
-  if (inFlight) return inFlight;
+  if (startWorkoutInFlight) return startWorkoutInFlight;
 
   const attempt = (async () => {
     const existingActive = await db.workoutSessions
-      .where("beyondDayId")
-      .equals(beyondDayId)
       .filter((s) => s.status === "ACTIVE")
       .first();
     if (existingActive) return existingActive;
@@ -101,11 +98,11 @@ export async function startWorkout(
     return session;
   })();
 
-  startWorkoutInFlight.set(beyondDayId, attempt);
+  startWorkoutInFlight = attempt;
   try {
     return await attempt;
   } finally {
-    startWorkoutInFlight.delete(beyondDayId);
+    startWorkoutInFlight = null;
   }
 }
 
