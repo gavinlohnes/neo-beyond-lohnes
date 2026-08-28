@@ -1,6 +1,6 @@
 ---
 id: TODAY-002
-status: ACTIVE
+status: CLOSED
 baseline: 7985c83f5b79fd1753d4fc5d1c1d2d9b5b9e953d
 branch: today-002-operational-attention-activation
 contract: docs/agent/drops/TODAY-002.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/37
 builder: Codex (assigned by Gavin, TODAY-002)
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 67f311dfc36a336cdd33cb87ba37e4399f405b87
+closed_at: 2026-08-28T12:10:01.378Z
 ---
 
 # ACTIVE_DROP
