@@ -174,7 +174,13 @@ export function TrainScreen({
 
     setShowStopConfirm(false);
 
-    const active = activeDay ? ((await getActiveWorkoutSession(activeDay.id)) ?? null) : null;
+    // CONTINUITY-001: resume the one canonical ACTIVE session even if an
+    // older build already allowed its BeyondDay to end. New day closure
+    // is now blocked while a workout is active, but this global lookup is
+    // the recovery path for already-stranded local state. Every mutation
+    // below already uses session.beyondDayId, so history stays on the
+    // original day; nothing is migrated or rewritten.
+    const active = (await getActiveWorkoutSession()) ?? null;
     setSession(active);
     setChosenVariant(
       !active && destination === "RECOVERY"
@@ -248,7 +254,11 @@ export function TrainScreen({
         { overrideConfirmed: true },
       );
       setSession(started);
-      setSets([]);
+      // startWorkout is deliberately idempotent across the whole app: a
+      // repeated/stale START can return the canonical existing session.
+      // Re-read its sets instead of assuming every successful return is
+      // brand new, so that defensive resume path never blanks progress.
+      setSets(await getPerformedSets(started.id));
       setFocusedExerciseId(null);
       setCompletionSummary(null);
       await loadExerciseAdvisory(started);

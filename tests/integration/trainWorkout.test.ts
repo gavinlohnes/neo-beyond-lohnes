@@ -241,6 +241,21 @@ describe("getActiveWorkoutSession — resumable across refresh", () => {
     await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
     expect(await getActiveWorkoutSession(day.id)).toBeUndefined();
   });
+
+  it("finds an already-stranded ACTIVE session across BeyondDays without moving its history", async () => {
+    const originalDay = await startDay();
+    const session = await startWorkout(originalDay.id, "A", "STANDARD");
+    await db.beyondDays.update(originalDay.id, { status: "ENDED" });
+    const currentDay = await startDay();
+
+    const resumed = await getActiveWorkoutSession();
+    expect(resumed?.id).toBe(session.id);
+    expect(resumed?.beyondDayId).toBe(originalDay.id);
+
+    const repeatedStart = await startWorkout(currentDay.id, "B", "REDUCED");
+    expect(repeatedStart.id).toBe(session.id);
+    expect(await db.workoutSessions.filter((row) => row.status === "ACTIVE").count()).toBe(1);
+  });
 });
 
 /**

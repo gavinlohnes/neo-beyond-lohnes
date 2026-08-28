@@ -3,7 +3,7 @@ import { render, cleanup } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import { App } from "../../src/app/App";
 import { recordRecommendation, startDay, submitCheckIn } from "../../src/application/commands";
-import { startWorkout } from "../../src/application/trainCommands";
+import { logSet, startWorkout } from "../../src/application/trainCommands";
 import { db } from "../../src/persistence/db";
 import { evaluate } from "../../src/engine/evaluate";
 import type { StateCheckIn } from "../../src/domain/common/types";
@@ -22,6 +22,42 @@ afterEach(() => {
 });
 
 describe("Utility Belt (App shell bottom navigation)", () => {
+  it("re-entry returns directly to a canonical ACTIVE workout at its exact next set without creating a duplicate", async () => {
+    await page.viewport(320, 800);
+    const day = await startDay();
+    const active = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, active.id, "machine-chest-press", 1, 135, 10);
+
+    const screen = await render(<App />);
+
+    await expect.element(screen.getByText("BEYOND // TRAIN", { exact: true })).toBeVisible();
+    expect(screen.getByText("TRAIN", { exact: true }).element().closest("button")?.getAttribute("aria-current")).toBe("page");
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
+    expect(await db.workoutSessions.filter((row) => row.status === "ACTIVE").count()).toBe(1);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+
+    await screen.getByRole("button", { name: "PARTIAL" }).click();
+    await expect.element(screen.getByText("WORKOUT SAVED — PARTIAL", { exact: true })).toBeVisible();
+    expect((await db.workoutSessions.get(active.id))?.status).toBe("PARTIAL");
+  });
+
+  it("navigation away and return preserves the ACTIVE workout and completed-set state", async () => {
+    const day = await startDay();
+    const active = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, active.id, "machine-chest-press", 1, 135, 10);
+    const screen = await render(<App />);
+    await expect.element(screen.getByText("BEYOND // TRAIN", { exact: true })).toBeVisible();
+
+    await screen.getByText("BODY", { exact: true }).click();
+    await expect.poll(() => screen.getByText("BODY", { exact: true }).element().closest("button")?.getAttribute("aria-current")).toBe("page");
+    await screen.getByText("TRAIN", { exact: true }).click();
+
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
+    expect((await db.workoutSessions.get(active.id))?.status).toBe("ACTIVE");
+  });
+
   it("shows all four stable territories, TODAY selected by default", async () => {
     const screen = await render(<App />);
     for (const label of ["TODAY", "TRAIN", "BODY", "MORE"]) {
@@ -48,6 +84,7 @@ describe("Utility Belt (App shell bottom navigation)", () => {
   it("every nav button meets the 44px minimum touch-target height", async () => {
     const screen = await render(<App />);
     for (const label of ["TODAY", "TRAIN", "BODY", "MORE"]) {
+      await expect.element(screen.getByText(label, { exact: true })).toBeVisible();
       const button = screen.getByText(label, { exact: true }).element().closest("button")!;
       expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     }
@@ -80,15 +117,15 @@ describe("Recommendation-to-Action Handoff (App shell)", () => {
     expect(sessions[0]!.sessionType).toBe("RECOVERY");
   });
 
-  it("keeps an existing active workout authoritative over the one-use RECOVERY hint", async () => {
+  it("returns directly to an existing active workout instead of showing the stale one-use RECOVERY handoff", async () => {
     const day = await startDay();
     const { recommendation } = await submitCheckIn(day.id, YELLOW);
     await recordRecommendation(day.id, recommendation);
     const active = await startWorkout(day.id, "A", "REDUCED");
     const screen = await render(<App />);
 
-    await screen.getByText("OPEN RECOVERY ON TRAIN", { exact: true }).click();
     await expect.element(screen.getByText(/REDUCED — in progress/)).toBeVisible();
+    expect(screen.getByText("OPEN RECOVERY ON TRAIN", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByRole("button", { name: "RECOVERY", exact: true }).elements()).toHaveLength(0);
     expect((await db.workoutSessions.get(active.id))?.status).toBe("ACTIVE");
     await expect.poll(() => document.activeElement).toBe(screen.getByText("BEYOND // TRAIN", { exact: true }).element());
@@ -103,6 +140,7 @@ describe("Recommendation-to-Action Handoff (App shell)", () => {
 
     await screen.rerender(<></>);
     await screen.rerender(<App />);
+    await expect.element(screen.getByText("TODAY", { exact: true })).toBeVisible();
     expect(screen.getByText("TODAY", { exact: true }).element().closest("button")!.getAttribute("aria-current")).toBe("page");
     await expect.element(screen.getByText("OPEN RECOVERY ON TRAIN", { exact: true })).toBeVisible();
     expect(await db.workoutSessions.where("beyondDayId").equals(day.id).count()).toBe(0);

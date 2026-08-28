@@ -60,7 +60,7 @@ describe("Gate A correction — Minimum Day GLANCE-depth compaction", () => {
     const screen = await render(<TodayScreen />);
 
     await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY" })).toBeVisible();
-    await expect.element(screen.getByText("Reduced baseline · 2 / 6", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("This active BeyondDay · 2 / 6", { exact: true })).toBeVisible();
   });
 
   it("expanding an enabled, in-progress Minimum Day reveals all six canonical requirements", async () => {
@@ -70,7 +70,7 @@ describe("Gate A correction — Minimum Day GLANCE-depth compaction", () => {
     await markMedsCompleted(day.id);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Reduced baseline · 1 / 6", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("This active BeyondDay · 1 / 6", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "Open MINIMUM DAY" }).click();
 
     // Hydrate/Protein always append a live "— Noz logged" suffix

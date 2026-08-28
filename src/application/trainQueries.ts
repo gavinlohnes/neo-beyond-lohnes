@@ -34,8 +34,10 @@ import type { WorkoutSession } from "../domain/common/types";
  * primary key, not time) for defense in depth if that invariant is ever
  * violated.
  */
-export async function getActiveWorkoutSession(beyondDayId: string): Promise<WorkoutSession | undefined> {
-  const sessions = await db.workoutSessions.where("beyondDayId").equals(beyondDayId).toArray();
+export async function getActiveWorkoutSession(beyondDayId?: string): Promise<WorkoutSession | undefined> {
+  const sessions = beyondDayId
+    ? await db.workoutSessions.where("beyondDayId").equals(beyondDayId).toArray()
+    : await db.workoutSessions.toArray();
   return sessions
     .filter((s) => s.status === "ACTIVE")
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt))

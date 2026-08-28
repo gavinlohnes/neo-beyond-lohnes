@@ -6,6 +6,7 @@ import {
   MINIMUM_DAY_ITEMS,
   MINIMUM_DAY_PROMINENT_BODY,
   MINIMUM_DAY_PROMINENT_TITLE,
+  describeMinimumDaySummary,
 } from "../../src/ui/screens/today/minimumDayCopy";
 import type { StateCheckIn } from "../../src/domain/common/types";
 
@@ -131,6 +132,20 @@ describe("tone audit — no shame, failure, or pressure language anywhere in Min
 });
 
 describe("MINIMUM_DAY_ITEMS — auto vs manual is explained per item, matching getMinimumDayStatus's real derivation", () => {
+  it("describes persisted completion as belonging to the active BeyondDay, not the calendar date", () => {
+    expect(
+      describeMinimumDaySummary({
+        enabled: true,
+        hydrate: true,
+        protein: true,
+        meds: true,
+        hygiene: true,
+        move: false,
+        recoverConnect: false,
+      }),
+    ).toBe("This active BeyondDay · 4 / 6");
+  });
+
   it("hydrate and protein note they can be logged directly, not just described as automatic", () => {
     const hydrate = MINIMUM_DAY_ITEMS.find((i) => i.key === "hydrate")!;
     const protein = MINIMUM_DAY_ITEMS.find((i) => i.key === "protein")!;

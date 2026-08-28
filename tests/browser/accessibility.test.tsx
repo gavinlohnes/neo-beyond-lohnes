@@ -9,6 +9,7 @@ import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { CollapsibleRow } from "../../src/ui/components/CollapsibleRow";
 import { ConfirmBanner } from "../../src/ui/components/ConfirmBanner";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
+import { startWorkout } from "../../src/application/trainCommands";
 
 /**
  * Harvest Checkpoint 5 (accessibility spike). Integration confirmed clean
@@ -130,6 +131,19 @@ describe("accessibility (real browser, axe-core)", () => {
     await startShiftDown(day.id, 10);
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByText("SHIFT DOWN IN PROGRESS", { exact: true })).toBeVisible();
+
+    const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
+    expect(results.violations).toEqual([]);
+  });
+
+  it("TodayScreen (END DAY blocked by active workout) has no violations beyond the known color-contrast exception", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    await startWorkout(day.id, "A", "STANDARD");
+    const screen = await render(<TodayScreen onOpenTrain={() => {}} />);
+    await screen.getByRole("button", { name: "Open BEYONDDAY" }).click();
+    await screen.getByRole("button", { name: "END DAY" }).click();
+    await expect.element(screen.getByRole("button", { name: "RETURN TO WORKOUT" })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);

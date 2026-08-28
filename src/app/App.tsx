@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import { TrainScreen, type TrainDestination } from "../ui/screens/train/TrainScreen";
@@ -6,6 +6,7 @@ import { BodyScreen } from "../ui/screens/body/BodyScreen";
 import { MoreScreen } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
+import { getActiveWorkoutSession } from "../application/trainQueries";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -83,10 +84,42 @@ function AppUpdateBanner() {
 export function App() {
   const [tab, setTab] = useState<Tab>("TODAY");
   const [trainDestination, setTrainDestination] = useState<TrainDestination | null>(null);
+  const [continuityResolved, setContinuityResolved] = useState(false);
+
+  useEffect(() => {
+    let current = true;
+    void getActiveWorkoutSession()
+      .then((activeWorkout) => {
+        if (!current) return;
+        if (activeWorkout) {
+          setTrainDestination("WORKOUT");
+          setTab("TRAIN");
+        }
+      })
+      .catch(() => {
+        // Continuity restoration is defensive. A failed local read must
+        // not trap the operator on the loading surface; the existing root
+        // error/recovery paths remain available from the normal app shell.
+      })
+      .finally(() => {
+        if (current) setContinuityResolved(true);
+      });
+    return () => {
+      current = false;
+    };
+  }, []);
 
   function openTrain(destination: TrainDestination) {
     setTrainDestination(destination);
     setTab("TRAIN");
+  }
+
+  if (!continuityResolved) {
+    return (
+      <main className="screen" aria-busy="true">
+        <p className="meta" role="status">Restoring active operation…</p>
+      </main>
+    );
   }
 
   return (
