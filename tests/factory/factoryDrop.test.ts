@@ -171,8 +171,9 @@ afterEach(() => {
 });
 
 describe("launch/bootstrap safety", () => {
-  it("validates a correctly-authorized Drop at the exact fetched baseline", () => {
-    writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+  it("validates CRLF repository authority at the exact fetched baseline", () => {
+    const contract = validContractText({ id: "TEST-001", baseline: fixture.headSha }).replace(/\n/g, "\r\n");
+    writeContract(fixture, "TEST-001", contract);
     const result = runFactoryDrop(["validate", "TEST-001", "--baseline", fixture.headSha], fixture);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("VALID");
