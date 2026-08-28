@@ -1,15 +1,13 @@
 ---
-id: TODAY-003
-status: CLOSED
-baseline: b72ab9a6914e1409b6b5c0ec28aad24974f01ff3
-branch: today-003-continuity-reconciliation
-contract: docs/agent/drops/TODAY-003.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/38
-builder: Codex (assigned by Gavin, TODAY-003)
+id: TODAY-004
+status: ACTIVE
+baseline: dba4ba649066d49231c72244a4d8c1e33d7760d3
+branch: codex/today-004-status-strip-deployment-repair
+contract: docs/agent/drops/TODAY-004.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Codex (assigned by Gavin, TODAY-004)
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: 6812b3a7dd4b45f0d217d95e46d10f7892b56489
-closed_at: 2026-08-28T19:38:18.194Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/TODAY-003.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/TODAY-004.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
