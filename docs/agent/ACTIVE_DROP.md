@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 7985c83f5b79fd1753d4fc5d1c1d2d9b5b9e953d
 branch: today-002-operational-attention-activation
 contract: docs/agent/drops/TODAY-002.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/37
 builder: Codex (assigned by Gavin, TODAY-002)
 reviewer: (unassigned)
 integrator: (unassigned)
