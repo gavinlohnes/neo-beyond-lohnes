@@ -31,6 +31,7 @@ export type DominantSurface =
   | "WORKOUT_ACTIVE"
   | "RESET_ACTIVE"
   | "SHIFT_DOWN_ACTIVE"
+  | "HYDRATION_ACTIVE"
   | "OPERATION_CONFLICT"
   | "NONE";
 
@@ -87,6 +88,8 @@ export interface AttentionInput {
   isCheckInMissing: boolean;
   /** Existing Minimum Day copy policy says the constrained offer should be prominent. */
   isMinimumDayProminent: boolean;
+  /** Operator explicitly opened the existing Minimum Day hydration control. */
+  isHydrationOperationOpen?: boolean;
 }
 
 export interface AttentionPlan {
@@ -100,13 +103,18 @@ export interface AttentionPlan {
 export const ATTENTION_MAX = 2;
 
 /**
- * Active mode dominates passive suggestion: a genuinely in-progress
- * SHIFT DOWN or RESET owns the execution field. If both are somehow
- * active, neither silently wins: the policy reports a degraded conflict
- * so the operator can resolve canonical state explicitly.
+ * Canonical active work dominates every passive suggestion and any
+ * explicitly opened hydration control. If canonical operations overlap,
+ * none silently wins: the policy reports a degraded conflict so the
+ * operator can resolve canonical state explicitly. With no canonical
+ * operation active, the operator-opened hydration control owns the field
+ * ahead of passive Engine guidance without changing that guidance.
  */
 export function deriveDominantSurface(
-  input: Pick<AttentionInput, "activeWorkoutId" | "activeResetId" | "activeShiftDownId" | "recommendationKind">,
+  input: Pick<
+    AttentionInput,
+    "activeWorkoutId" | "activeResetId" | "activeShiftDownId" | "recommendationKind" | "isHydrationOperationOpen"
+  >,
 ): DominantSurface {
   const activeOperationCount = [input.activeWorkoutId, input.activeResetId, input.activeShiftDownId]
     .filter((id) => id !== null).length;
@@ -114,6 +122,7 @@ export function deriveDominantSurface(
   if (input.activeWorkoutId !== null) return "WORKOUT_ACTIVE";
   if (input.activeShiftDownId !== null) return "SHIFT_DOWN_ACTIVE";
   if (input.activeResetId !== null) return "RESET_ACTIVE";
+  if (input.isHydrationOperationOpen) return "HYDRATION_ACTIVE";
   if (input.recommendationKind && input.recommendationKind !== "NO_ACTION_REQUIRED") return "RECOMMENDATION";
   return "NONE";
 }
@@ -149,7 +158,11 @@ function activeOperationFulfillsRecommendation(input: AttentionInput): boolean {
  */
 export function deriveAttentionPlan(input: AttentionInput): AttentionPlan {
   const dominant = deriveDominantSurface(input);
-  const hasActiveOperation = input.activeWorkoutId !== null || input.activeResetId !== null || input.activeShiftDownId !== null;
+  const hasActiveOperation =
+    input.activeWorkoutId !== null ||
+    input.activeResetId !== null ||
+    input.activeShiftDownId !== null ||
+    input.isHydrationOperationOpen;
   const actionableRecommendation = input.recommendationKind !== null && input.recommendationKind !== "NO_ACTION_REQUIRED";
   const recommendationPlacement: RecommendationPlacement =
     dominant === "RECOMMENDATION"

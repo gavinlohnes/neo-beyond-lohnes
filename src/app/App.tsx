@@ -142,6 +142,7 @@ export function App() {
           <TodayScreen
             onViewCommitments={() => setTab("MORE")}
             onOpenTrain={openTrain}
+            onOpenBody={() => setTab("BODY")}
           />
         )}
         {tab === "TRAIN" && (
