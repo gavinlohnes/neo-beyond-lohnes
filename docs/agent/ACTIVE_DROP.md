@@ -1,6 +1,6 @@
 ---
 id: DOCTRINE-001
-status: ACTIVE
+status: CLOSED
 baseline: 5e2684842c85d2e8ce5fadb50077d6d209abf0ab
 branch: codex/doctrine-001-operator-interface-doctrine
 contract: docs/agent/drops/DOCTRINE-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/40
 builder: Codex (assigned by Gavin, DOCTRINE-001)
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 97b823793110e0b11fe1ad3beea65942be55926f
+closed_at: 2026-08-29T17:41:38.940Z
 ---
 
 # ACTIVE_DROP
