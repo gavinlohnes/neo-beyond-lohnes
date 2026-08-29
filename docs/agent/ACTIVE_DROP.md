@@ -1,6 +1,6 @@
 ---
 id: TODAY-005
-status: ACTIVE
+status: CLOSED
 baseline: 9b644d6a12257ab4cfed38b80d8cd6579afbd4d6
 branch: codex/today-005-field-quiet-loop
 contract: docs/agent/drops/TODAY-005.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/41
 builder: Codex (implementation) + Claude Code (review/fix), assigned by Gavin, TODAY-005
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 085a606cef6265bef522cf767c5b71517ae5e61a
+closed_at: 2026-08-29T21:51:52.543Z
 ---
 
 # ACTIVE_DROP
