@@ -16,6 +16,7 @@ import {
   enableMinimumDay,
   logWater,
 } from "../../src/application/commands";
+import { byTimeThenSeq } from "../../src/application/queries";
 import { archiveMission, createMission, createObligation, markObligationWaiting } from "../../src/application/intentCommands";
 import { getObligation } from "../../src/application/intentQueries";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
@@ -182,7 +183,8 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
     expect(document.querySelector(".today-field")?.getAttribute("data-field-state")).toBe("quiet");
     const waterEvents = (await db.events.where("beyondDayId").equals(day.id).toArray())
-      .filter((event) => event.type === "WATER_LOGGED");
+      .filter((event) => event.type === "WATER_LOGGED")
+      .sort((a, b) => byTimeThenSeq(a.occurredAt, a.seq, b.occurredAt, b.seq));
     expect(waterEvents).toHaveLength(2);
     expect(waterEvents.at(-1)?.payload).toMatchObject({ amountOz: 12 });
 

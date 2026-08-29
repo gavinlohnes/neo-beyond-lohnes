@@ -888,7 +888,10 @@ export function TodayScreen({
     isCheckInMissing: day !== null && checkIn === null,
     isMinimumDayProminent: showProminentMinimumDay,
     isHydrationOperationOpen:
-      hydrationOperationOpen && minimumDay?.enabled === true && minimumDay.hydrate === false,
+      hydrationOperationOpen &&
+      minimumDay?.enabled === true &&
+      minimumDay.hydrate === false &&
+      minimumDayHydrateOz > 0,
   });
   const dominant = attentionPlan.dominant;
   const endDayInAttention = isInAttention(attentionPlan, "END_DAY_SUGGESTED");
@@ -1267,7 +1270,7 @@ export function TodayScreen({
           name="MINIMUM DAY"
           summary={describeMinimumDaySummary(minimumDay)}
           onOpen={() => {
-            if (minimumDay.enabled && !minimumDay.hydrate) {
+            if (minimumDay.enabled && !minimumDay.hydrate && minimumDayHydrateOz > 0) {
               setHydrationConfirmation(null);
               setHydrationOperationOpen(true);
             } else {
@@ -2292,7 +2295,7 @@ export function TodayScreen({
           );
         })()}
 
-      {day && minimumDay && !minimumDayInAttention && renderMinimumDayCard(false)}
+      {day && minimumDay && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE" && renderMinimumDayCard(false)}
 
       {renderCaptureToolsCard()}
 
