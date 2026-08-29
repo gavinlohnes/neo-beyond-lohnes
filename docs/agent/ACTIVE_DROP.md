@@ -4,8 +4,8 @@ status: ACTIVE
 baseline: 9b644d6a12257ab4cfed38b80d8cd6579afbd4d6
 branch: codex/today-005-field-quiet-loop
 contract: docs/agent/drops/TODAY-005.md
-pr: (pending — set by Builder immediately after opening the PR)
-builder: Codex (assigned by Gavin, TODAY-005)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/41
+builder: Codex (implementation) + Claude Code (review/fix), assigned by Gavin, TODAY-005
 reviewer: (unassigned)
 integrator: (unassigned)
 ---
