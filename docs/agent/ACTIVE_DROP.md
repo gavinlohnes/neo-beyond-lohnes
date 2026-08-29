@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 5e2684842c85d2e8ce5fadb50077d6d209abf0ab
 branch: codex/doctrine-001-operator-interface-doctrine
 contract: docs/agent/drops/DOCTRINE-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/40
 builder: Codex (assigned by Gavin, DOCTRINE-001)
 reviewer: (unassigned)
 integrator: (unassigned)
