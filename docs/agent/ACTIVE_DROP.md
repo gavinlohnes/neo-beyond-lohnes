@@ -1,15 +1,13 @@
 ---
-id: TODAY-004
-status: CLOSED
-baseline: dba4ba649066d49231c72244a4d8c1e33d7760d3
-branch: codex/today-004-status-strip-deployment-repair
-contract: docs/agent/drops/TODAY-004.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/39
-builder: Codex (assigned by Gavin, TODAY-004)
+id: DOCTRINE-001
+status: ACTIVE
+baseline: 5e2684842c85d2e8ce5fadb50077d6d209abf0ab
+branch: codex/doctrine-001-operator-interface-doctrine
+contract: docs/agent/drops/DOCTRINE-001.md
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/40
+builder: Codex (assigned by Gavin, DOCTRINE-001)
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: 65e8aea536ae4dd60c8e272ee0aff9c168002a11
-closed_at: 2026-08-29T16:38:32.540Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/TODAY-004.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/DOCTRINE-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and

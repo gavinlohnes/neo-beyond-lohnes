@@ -7,9 +7,20 @@ Written for future sessions (human or Claude) so a decision doesn't need
 to be re-derived from git archaeology or re-litigated by accident.
 
 Each entry is the *decision*, not the implementation — see the linked
-file for the current code. If code and this register ever disagree, the
-code's own comments/tests are more likely to be current; treat that as a
-signal this register needs updating, not that the code is wrong.
+file for the current code. If code and this register disagree, treat it
+as an authority conflict to adjudicate; do not silently assume either
+that implementation overrides a locked decision or that stale prose
+accurately describes current behavior.
+
+## Constitutional adjudication
+
+Locked 2026-08-29: [`OPERATOR_INTERFACE_DOCTRINE.md`](OPERATOR_INTERFACE_DOCTRINE.md) is the
+durable constitutional authority for what BEYOND's operator interfaces are allowed to mean.
+This register records narrower locked product/UX adjudications under that doctrine; code and
+tests record current implementation truth. Neither doctrine nor this register independently
+authorizes implementation: future changes require a direct owner decision and an explicitly
+authorized, bounded Drop. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical evidence, not
+standing implementation authority.
 
 ## Day model
 

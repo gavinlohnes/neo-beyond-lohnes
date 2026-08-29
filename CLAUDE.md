@@ -1,9 +1,10 @@
 # CLAUDE.md — BEYOND Navigation & Guardrails
 
-This is a navigation/guardrail document, not a product spec. For product doctrine and locked
-decisions, see `docs/UX_DECISIONS.md`. For the current Drop's own brief, if one is in flight,
-use whatever it names as authoritative for its own scope — no single named campaign is
-permanently authoritative here.
+This is a navigation/guardrail document, not a product spec. The durable constitutional authority
+for product/interface doctrine is `docs/OPERATOR_INTERFACE_DOCTRINE.md`; specific locked product
+and UX adjudications live in `docs/UX_DECISIONS.md`. For the current Drop's authorized scope, if
+one is in flight, follow its repository-native contract. Doctrine constrains implementation but
+does not itself authorize a feature, campaign, or code change.
 
 For the engineering invariants shared with Codex on this repo (BEYOND's second engineering
 agent), see `docs/agent/BEYOND_ENGINEERING_CONTRACT.md` — this file stays Claude-specific and
@@ -12,7 +13,7 @@ does not duplicate that content.
 ## Authority order (use when sources disagree)
 
 1. Direct owner decision.
-2. BEYOND Product Constitution / Operator Doctrine.
+2. BEYOND Operator Interface Doctrine (`docs/OPERATOR_INTERFACE_DOCTRINE.md`).
 3. Canonical Spec + later explicitly locked Decision Register entries (`docs/UX_DECISIONS.md`).
 4. The current Drop's own brief, if one is in flight.
 5. Current repository implementation truth (the code itself).
@@ -53,20 +54,11 @@ src/ui/              screens + components. Calls application/* only, never engin
 
 ## Immutable doctrine
 
-- INFORM → INTERPRET → RECOMMEND → USER DECIDES.
-- Deterministic Engine authority; one primary recommendation; NO ACTION REQUIRED is valid.
-- Prediction is not fact (see `scheduledContext.ts`'s doctrine comment).
-- History/event truth is preserved. Corrections supersede; they never silently erase history.
-- Provenance matters. Manual operation remains available.
-- Capability depth / surface calm. GLANCE → ACT → INSPECT → TRACE.
-- FIELD compresses. COMMAND (future, out of scope) exposes.
-- System reports. Advisor interprets. Silence is valid. User authority is absolute.
-- Peak efficiency is not minimum code — it is minimum code that BEYOND is uniquely responsible
-  for.
-- Prefer executable/derived repository truth over duplicated manually maintained values. When a
-  diagnostic, version, schema identifier, build identifier, or similar fact can be derived from
-  its authoritative source, do not create another independent source of truth without
-  justification.
+Read and preserve `docs/OPERATOR_INTERFACE_DOCTRINE.md`; it is the constitutional source rather
+than this navigation file. Prefer executable/derived repository truth over duplicated manually
+maintained values. When a diagnostic, version, schema identifier, build identifier, or similar
+fact can be derived from its authoritative source, do not create another independent source of
+truth without justification.
 
 ## The leverage gate
 
@@ -106,6 +98,8 @@ user choice is experienced; or a genuine conflict between current code and highe
 
 ## Pointers
 
+- `docs/OPERATOR_INTERFACE_DOCTRINE.md` — constitutional product/interface doctrine; constrains
+  future work but never authorizes implementation by itself.
 - `docs/UX_DECISIONS.md` — BEYOND UX Decision Register, the canonical locked-decision log.
 - `.claude/rules/` — path-scoped detail for Engine, persistence, and protected fixtures.
 - `.claude/skills/beyond-drop/` — Drop task-contract templates, completion-report templates,
