@@ -27,19 +27,21 @@ Optional depth has four stable levels: **Surface** (what matters now), **Operate
 control), **Inspect** (supporting evidence and alternatives), and **System** (configuration,
 history, trace, and machinery). Capability depth must coexist with surface calm.
 
-Attention has four states: **AVAILABLE**, **SUGGESTED**, **ATTENTION**, and **CRITICAL**. Escalate
-only to the lowest state justified by five tests:
+Attention has four states: **AVAILABLE**, **SUGGESTED**, **ATTENTION**, and **CRITICAL**. Before
+escalating, test:
 
-1. **Consequence:** what real harm or material loss follows if this waits?
-2. **Time:** does the useful response window actually narrow now?
-3. **Action:** is there a clear operator decision or operation available now?
-4. **Confidence:** is the evidence strong and current enough to justify interruption?
-5. **Burden:** is the interruption proportionate to the consequence and cheaper than silence?
+1. Does this materially change a decision?
+2. Is uncertainty/staleness significant enough to matter?
+3. Can BEYOND infer safely from existing evidence?
+4. Is now an appropriate time?
+5. What happens if the operator ignores it?
 
 Availability is not urgency. Color, motion, sound, haptics, position, and repetition must not
 manufacture escalation that these tests do not earn. Fast controls make frequent, reversible,
 well-understood actions immediate; they never bypass confirmation for destructive,
 high-consequence, ambiguous, or low-confidence actions.
+
+> “The most common truthful action should usually require one deliberate interaction.”
 
 ## Operator Model and reality
 
@@ -65,12 +67,27 @@ honestly, and yield immediately to better evidence or operator correction.
 - Interruption preserves state and intent. Resume the same canonical operation at the point of
   interruption, distinguish resumption from restart, and never duplicate or silently abandon it.
 
+> “BEYOND learns around muscle memory. It doesn't constantly rewrite itself.”
+
+> “Unknown does not automatically mean input required.”
+
+> “Put the phone away at any moment. Come back without paying a re-entry tax.”
+
 ## Language, identity, and sensory semantics
 
 Vocabulary and glyphs are stable contracts: one meaning per term or symbol, the same meaning
-across surfaces, and explicit migration when meaning changes. Semantic haptics may confirm a
-small, stable set of meanings—success, warning, critical, or boundary—but never decorate,
-gamify, carry meaning alone, or vary arbitrarily by screen.
+across surfaces, and explicit migration when meaning changes.
+
+> “Vocabulary is earned through reuse.”
+
+> “BEYOND may require familiarity. It should never require deciphering.”
+
+Semantic haptics may confirm a small, stable set of meanings—success, warning, critical, or
+boundary—but never decorate, gamify, carry meaning alone, or vary arbitrarily by screen.
+
+> “A haptic must fit BEYOND and make semantic sense.”
+
+> “Haptics confirm meaningful state change, not screen touch.”
 
 > “The Bat identifies the machine. BEYOND's language operates it.”
 
@@ -93,6 +110,8 @@ and sparse enough to use while reality is happening. COMMAND is deliberate deep 
 context, comparison, configuration, interrogation, and trace. FIELD compresses; COMMAND exposes.
 They share truth and vocabulary, but neither is a scaled copy of the other.
 
+> “FIELD is designed for GLANCE → ACT → RESUME LIFE.”
+
 TODAY is the smallest useful representation of the operator's situation right now—not a
 dashboard, backlog, or demand for interaction. Surface only what changes understanding or the
 next decision; **NO ACTION REQUIRED** means the system succeeded without taking attention.
@@ -102,6 +121,8 @@ uncertainty. They must not fabricate missing facts, imply that absence was searc
 not, or convert prediction into history. Configuration is restrained: expose only choices with
 durable operator value; prefer learned, reversible defaults over settings sprawl, but never hide
 control behind learning.
+
+> “Don't turn design failures into settings.”
 
 ## Evidence, experiments, and field learning
 
