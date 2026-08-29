@@ -388,6 +388,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
 
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Capacity is YELLOW", { exact: false })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect(strip!.className).toBe("status-strip status-strip--yellow");
