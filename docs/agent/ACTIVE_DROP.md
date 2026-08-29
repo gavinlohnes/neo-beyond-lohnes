@@ -1,6 +1,6 @@
 ---
 id: TODAY-004
-status: ACTIVE
+status: CLOSED
 baseline: dba4ba649066d49231c72244a4d8c1e33d7760d3
 branch: codex/today-004-status-strip-deployment-repair
 contract: docs/agent/drops/TODAY-004.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/39
 builder: Codex (assigned by Gavin, TODAY-004)
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 65e8aea536ae4dd60c8e272ee0aff9c168002a11
+closed_at: 2026-08-29T16:38:32.540Z
 ---
 
 # ACTIVE_DROP
