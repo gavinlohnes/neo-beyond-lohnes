@@ -5,6 +5,7 @@ import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { SignalRow } from "../../components/SignalRow";
 import { CommandSurface } from "../../components/CommandSurface";
+import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
 import { describeCommitmentMission, describeCommitmentsSummary, describeObligationRelevance } from "./commitmentsCopy";
 import {
@@ -48,6 +49,7 @@ import {
   MINIMUM_DAY_PROMINENT_BODY,
   MINIMUM_DAY_PROMINENT_TITLE,
 } from "./minimumDayCopy";
+import { WATER_QUICK_ADD_OZ } from "../body/bodyScreenCopy";
 import {
   describeResetInProgress,
   describeResetResult,
@@ -146,9 +148,11 @@ export const quickCheckInValues: CheckInValues = {
 export function TodayScreen({
   onViewCommitments,
   onOpenTrain,
+  onOpenBody,
 }: {
   onViewCommitments?: () => void;
   onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
+  onOpenBody?: () => void;
 } = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
@@ -267,6 +271,9 @@ export function TodayScreen({
   // case already earns its full visible presence via existing product
   // truth and is unaffected.
   const [minimumDayOpen, setMinimumDayOpen] = useState(false);
+  const [hydrationOperationOpen, setHydrationOperationOpen] = useState(false);
+  const [hydrationManualOpen, setHydrationManualOpen] = useState(false);
+  const [hydrationConfirmation, setHydrationConfirmation] = useState<number | null>(null);
   // Intent & Commitment Spine, Drop 02: currently-eligible unresolved
   // Obligations, fetched unconditionally like openCaptureItems above —
   // Obligations are not day-scoped either (see application/intentQueries.ts).
@@ -756,6 +763,7 @@ export function TodayScreen({
     try {
       await enableMinimumDay(day.id);
       await refresh();
+      setMinimumDayOpen(false);
     } finally {
       setBusy(false);
     }
@@ -780,9 +788,9 @@ export function TodayScreen({
    * uses (logWater/logProtein) — no separate record-keeping path, so
    * there's no way for this to create a duplicate of a BODY-side log.
    */
-  async function handleMinimumDayLogWater() {
+  async function handleMinimumDayLogWater(amountOverride?: number) {
     if (busy) return;
-    const amount = Number(mdWaterInput);
+    const amount = amountOverride ?? Number(mdWaterInput);
     if (!Number.isFinite(amount) || amount <= 0) return;
     setBusy(true);
     try {
@@ -790,6 +798,9 @@ export function TodayScreen({
       await logWater(activeDay.id, amount);
       setMdWaterInput("");
       await refresh();
+      setHydrationConfirmation(amount);
+      setHydrationOperationOpen(false);
+      setHydrationManualOpen(false);
     } finally {
       setBusy(false);
     }
@@ -876,6 +887,8 @@ export function TodayScreen({
     hasWorkEndAvailable: day?.workContext === "WORK" && workPeriodEndedAt === null,
     isCheckInMissing: day !== null && checkIn === null,
     isMinimumDayProminent: showProminentMinimumDay,
+    isHydrationOperationOpen:
+      hydrationOperationOpen && minimumDay?.enabled === true && minimumDay.hydrate === false,
   });
   const dominant = attentionPlan.dominant;
   const endDayInAttention = isInAttention(attentionPlan, "END_DAY_SUGGESTED");
@@ -886,6 +899,70 @@ export function TodayScreen({
   const workEndInAttention = isInAttention(attentionPlan, "WORK_END_AVAILABLE");
   const checkInInAttention = isInAttention(attentionPlan, "CHECK_IN_MISSING");
   const minimumDayInAttention = isInAttention(attentionPlan, "MINIMUM_DAY_PROMINENT");
+
+  function renderHydrationOperation() {
+    if (!minimumDay || !minimumDay.enabled || minimumDay.hydrate) return null;
+    return (
+      <CommandSurface>
+        <p className="tool-label">MINIMUM DAY // HYDRATION</p>
+        <h2 className="command-title">Record what you drank</h2>
+        <p className="card-body" style={{ marginBottom: 4 }}>
+          {minimumDayHydrateOz}oz recorded for this active BeyondDay.
+        </p>
+        <p className="meta" style={{ marginBottom: 16 }}>
+          Choose the amount that is already true. Nothing is logged until you act.
+        </p>
+        <div className="field-quick-actions">
+          {WATER_QUICK_ADD_OZ.map((amount) => (
+            <button
+              key={amount}
+              className="btn-primary"
+              disabled={busy}
+              onClick={() => void handleMinimumDayLogWater(amount)}
+            >
+              +{amount} OZ
+            </button>
+          ))}
+        </div>
+        <FieldDisclosure
+          summary={hydrationManualOpen ? "HIDE DIFFERENT AMOUNT" : "DIFFERENT AMOUNT"}
+          open={hydrationManualOpen}
+          onToggle={setHydrationManualOpen}
+        >
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="number"
+              min={0}
+              aria-label="Hydration amount in ounces"
+              placeholder="oz"
+              value={mdWaterInput}
+              onChange={(e) => setMdWaterInput(e.target.value)}
+              className="input"
+              style={{ flex: 1 }}
+            />
+            <button
+              className="btn-primary"
+              style={{ width: "auto" }}
+              disabled={busy || !(Number(mdWaterInput) > 0)}
+              onClick={() => void handleMinimumDayLogWater()}
+            >
+              LOG
+            </button>
+          </div>
+        </FieldDisclosure>
+        <button
+          className="btn-secondary"
+          style={{ marginTop: 12 }}
+          onClick={() => {
+            setHydrationOperationOpen(false);
+            setMinimumDayOpen(true);
+          }}
+        >
+          VIEW FULL MINIMUM DAY
+        </button>
+      </CommandSurface>
+    );
+  }
 
   function renderActiveWorkout(isDominant: boolean) {
     if (!activeWorkout) return null;
@@ -1189,7 +1266,14 @@ export function TodayScreen({
         <CollapsibleRow
           name="MINIMUM DAY"
           summary={describeMinimumDaySummary(minimumDay)}
-          onOpen={() => setMinimumDayOpen(true)}
+          onOpen={() => {
+            if (minimumDay.enabled && !minimumDay.hydrate) {
+              setHydrationConfirmation(null);
+              setHydrationOperationOpen(true);
+            } else {
+              setMinimumDayOpen(true);
+            }
+          }}
         />
       );
     }
@@ -1757,7 +1841,14 @@ export function TodayScreen({
   }
 
   return (
-    <div className="screen fade-in">
+    <div
+      className={`screen fade-in today-field${
+        day && dominant === "NONE" && attentionPlan.attention.length === 0 ? " today-field--quiet" : ""
+      }`}
+      data-field-state={
+        dominant !== "NONE" ? "earned" : attentionPlan.attention.length > 0 ? "attention" : "quiet"
+      }
+    >
       {/* BEYOND Suit Implementation 01B: the identity zone is
           deliberately quiet now — a real <h1> for correct heading
           structure (Part 15), but styled with .eyebrow (small, mono)
@@ -1790,6 +1881,20 @@ export function TodayScreen({
           {captureConversionFeedback.kind === "SUCCESS" && <ConfirmIcon size={20} />}
           {captureConversionFeedback.message}
         </p>
+      )}
+
+      {hydrationConfirmation !== null && (
+        onOpenBody ? (
+          <ConfirmBanner
+            message={`${hydrationConfirmation} oz recorded.`}
+            actionLabel="CORRECT IN BODY"
+            onAction={onOpenBody}
+          />
+        ) : (
+          <p role="status" aria-live="polite" className="meta fade-in">
+            <ConfirmIcon size={20} /> {hydrationConfirmation} oz recorded. Corrections remain available in BODY.
+          </p>
+        )
       )}
 
       {/* SUIT-001 (COMMAND PRESENCE): before a day exists, START DAY is
@@ -1883,7 +1988,9 @@ export function TodayScreen({
       {day && dominant === "SHIFT_DOWN_ACTIVE" && renderShiftDownCard(shiftDownIsPrimary, true)}
       {day && dominant === "RESET_ACTIVE" && renderResetCard(resetIsPrimary, true)}
       {day && dominant === "WORKOUT_ACTIVE" && renderActiveWorkout(true)}
+      {day && dominant === "HYDRATION_ACTIVE" && renderHydrationOperation()}
       {day && recommendation && dominant === "RECOMMENDATION" && renderRecommendationCard(true)}
+      {day && recommendation && dominant === "NONE" && recommendation.kind === "NO_ACTION_REQUIRED" && renderRecommendationCard(false)}
 
       {/* ATTENTION — earned, capped at ATTENTION_MAX, and disappears
           entirely when nothing currently qualifies (attentionPolicy.ts). */}
@@ -1988,12 +2095,13 @@ export function TodayScreen({
       {/* SUPPORT — quiet, always-reachable capabilities that aren't
           currently competing with NOW. No capability is deleted; every
           item below is one tap from full content. */}
-      <h2 className="section-label">Support</h2>
+      <div className={`today-support${dominant !== "NONE" ? " today-support--subordinate" : ""}`}>
+        <h2 className="section-label">Support</h2>
 
       {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && renderShiftDownCard(shiftDownIsPrimary, false)}
       {day && recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT" && renderResetCard(resetIsPrimary, false)}
       {day && recommendation && attentionPlan.recommendationPlacement === "SUPPORT" &&
-        (recommendation.kind !== "NO_ACTION_REQUIRED" || dominant === "NONE") && renderRecommendationCard(false)}
+        recommendation.kind !== "NO_ACTION_REQUIRED" && renderRecommendationCard(false)}
 
       {(!checkInInAttention || checkInFormOpen) && <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>
@@ -2199,6 +2307,7 @@ export function TodayScreen({
             : `It's been ${daysSinceBackup} days since your last backup — export one from MORE.`}
         </p>
       )}
+      </div>
     </div>
   );
 }

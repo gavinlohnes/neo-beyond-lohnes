@@ -815,6 +815,31 @@ button, input {
   color: var(--text-2);
 }
 
+/* TODAY-005: when the policy resolves to quiet, the all-clear truth gets
+ * enough physical field to stand on its own before tools begin. Support
+ * remains fully present and operable below it; no capability is hidden. */
+.today-field--quiet .all-clear {
+  min-height: min(42vh, 360px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* An earned operation owns the field; supporting equipment moves behind
+ * a stronger structural rail without losing contrast or interaction. */
+.today-support--subordinate {
+  border-top: 1px solid var(--border-strong);
+  margin-top: var(--space-7);
+  padding-top: var(--space-3);
+}
+
+.field-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
 /* EQUIPMENT ROW — TOOLS-tier controls presented as one continuous
  * instrument panel (a shared top rule per row) instead of N separate
  * floating cards with gaps between them — the literal "break the card

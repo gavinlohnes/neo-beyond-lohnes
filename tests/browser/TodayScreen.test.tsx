@@ -13,6 +13,8 @@ import {
   recordRecommendation,
   setWorkContext,
   markWorkEnded,
+  enableMinimumDay,
+  logWater,
 } from "../../src/application/commands";
 import { archiveMission, createMission, createObligation, markObligationWaiting } from "../../src/application/intentCommands";
 import { getObligation } from "../../src/application/intentQueries";
@@ -141,7 +143,7 @@ afterEach(() => {
 });
 
 describe("TodayScreen (real browser) — ordinary/quiet state", () => {
-  it("shows the NO ACTION REQUIRED as quiet support and no Attention section on a GREEN day with nothing outstanding", async () => {
+  it("gives NO ACTION REQUIRED a quiet field before Support with no Attention section", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
 
@@ -152,6 +154,40 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
     expect(screen.getByText("Operate", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
+    expect(document.querySelector(".today-field")?.getAttribute("data-field-state")).toBe("quiet");
+    const allClear = document.querySelector(".all-clear");
+    const support = screen.getByText("Support", { exact: true }).element();
+    expect(allClear).not.toBeNull();
+    expect(allClear!.compareDocumentPosition(support) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(parseFloat(getComputedStyle(allClear!).minHeight)).toBeGreaterThan(200);
+  });
+
+  it("runs the truthful hydration loop, confirms mechanically, then recedes to quiet", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    await enableMinimumDay(day.id);
+    await logWater(day.id, 28);
+    const onOpenBody = vi.fn();
+    const screen = await render(<TodayScreen onOpenBody={onOpenBody} />);
+
+    await screen.getByRole("button", { name: "Open MINIMUM DAY" }).click();
+    await expect.element(screen.getByRole("heading", { name: "Record what you drank" })).toBeVisible();
+    expect(document.querySelector(".today-field")?.getAttribute("data-field-state")).toBe("earned");
+    expect((await db.events.where("beyondDayId").equals(day.id).toArray()).filter((event) => event.type === "WATER_LOGGED")).toHaveLength(1);
+
+    await screen.getByRole("button", { name: "+12 OZ" }).click();
+
+    await expect.element(screen.getByText("12 oz recorded.", { exact: true })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Record what you drank" }).elements()).toHaveLength(0);
+    await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
+    expect(document.querySelector(".today-field")?.getAttribute("data-field-state")).toBe("quiet");
+    const waterEvents = (await db.events.where("beyondDayId").equals(day.id).toArray())
+      .filter((event) => event.type === "WATER_LOGGED");
+    expect(waterEvents).toHaveLength(2);
+    expect(waterEvents.at(-1)?.payload).toMatchObject({ amountOz: 12 });
+
+    await screen.getByRole("button", { name: "CORRECT IN BODY" }).click();
+    expect(onOpenBody).toHaveBeenCalledOnce();
   });
 
   it("promotes missing state input without manufacturing an Engine action", async () => {

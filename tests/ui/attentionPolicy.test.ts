@@ -35,6 +35,24 @@ describe("deriveDominantSurface", () => {
     expect(deriveDominantSurface({ activeWorkoutId: null, activeResetId: null, activeShiftDownId: "s1", recommendationKind: "RECOVER" })).toBe("SHIFT_DOWN_ACTIVE");
   });
 
+  it("lets an explicitly opened hydration operation own the field without outranking canonical active work", () => {
+    expect(deriveDominantSurface({
+      activeWorkoutId: null,
+      activeResetId: null,
+      activeShiftDownId: null,
+      recommendationKind: "RECOVER",
+      isHydrationOperationOpen: true,
+    })).toBe("HYDRATION_ACTIVE");
+
+    expect(deriveDominantSurface({
+      activeWorkoutId: null,
+      activeResetId: "r1",
+      activeShiftDownId: null,
+      recommendationKind: "RECOVER",
+      isHydrationOperationOpen: true,
+    })).toBe("RESET_ACTIVE");
+  });
+
   it("surfaces a degraded conflict if RESET and SHIFT DOWN are both active", () => {
     expect(deriveDominantSurface({ activeWorkoutId: null, activeResetId: "r1", activeShiftDownId: "s1", recommendationKind: "RECOVER" })).toBe("OPERATION_CONFLICT");
   });
