@@ -819,7 +819,7 @@ button, input {
  * enough physical field to stand on its own before tools begin. Support
  * remains fully present and operable below it; no capability is hidden. */
 .today-field--quiet .all-clear {
-  min-height: min(42vh, 360px);
+  min-height: min(46vh, 400px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -829,8 +829,28 @@ button, input {
  * a stronger structural rail without losing contrast or interaction. */
 .today-support--subordinate {
   border-top: 1px solid var(--border-strong);
-  margin-top: var(--space-7);
+  margin-top: calc(var(--space-7) + var(--space-5));
   padding-top: var(--space-3);
+  opacity: 0.82;
+}
+
+/* TODAY-006 (Review Correction): a genuinely dominant surface needs real
+ * spatial authority, not just a bigger label — reuses the exact
+ * min-height/flex pattern .all-clear already establishes for QUIET, plus
+ * a title scale big enough to establish the screen before any supporting
+ * prose does. Scoped to .today-field specifically so TRAIN's own shared
+ * .command-surface/.command-title (pre-session picker, active exercise,
+ * RECOVERY) are completely unaffected by this TODAY-only change. */
+.today-field .command-surface {
+  min-height: min(52vh, 440px);
+  padding: var(--space-6) var(--space-5);
+}
+.today-field .command-surface .command-title {
+  font-size: 44px;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-5);
 }
 
 .field-quick-actions {

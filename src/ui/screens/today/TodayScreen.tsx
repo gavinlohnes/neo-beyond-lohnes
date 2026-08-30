@@ -1101,19 +1101,35 @@ export function TodayScreen({
               {describeResetInProgress(resetIntensity)}
               {openResetStartedAt ? ` Started ${new Date(openResetStartedAt).toLocaleTimeString()}.` : ""}
             </p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1, ...(isCommand ? { fontSize: 18, padding: "18px var(--space-4)" } : {}) }}
-                disabled={busy}
-                onClick={() => void handleCompleteReset()}
-              >
-                COMPLETE RESET
-              </button>
-              <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelReset()}>
-                CANCEL RESET
-              </button>
-            </div>
+            {/* TODAY-006 (Review Correction): the same stacked-with-divider
+                pattern the dominant recommendation card uses, applied
+                uniformly here — every genuinely dominant surface reads
+                the same way, not just the recommendation's own. */}
+            {isCommand ? (
+              <>
+                <button
+                  className="btn-primary"
+                  style={{ fontSize: 18, padding: "18px var(--space-4)" }}
+                  disabled={busy}
+                  onClick={() => void handleCompleteReset()}
+                >
+                  COMPLETE RESET
+                </button>
+                <p className="field-divider">OR</p>
+                <button className="btn-secondary" disabled={busy} onClick={() => void handleCancelReset()}>
+                  CANCEL RESET
+                </button>
+              </>
+            ) : (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteReset()}>
+                  COMPLETE RESET
+                </button>
+                <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelReset()}>
+                  CANCEL RESET
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -1185,19 +1201,31 @@ export function TodayScreen({
               {describeShiftDownInProgress(shiftDownDuration)}
               {openShiftDownStartedAt ? ` Started ${new Date(openShiftDownStartedAt).toLocaleTimeString()}.` : ""}
             </p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1, ...(isCommand ? { fontSize: 18, padding: "18px var(--space-4)" } : {}) }}
-                disabled={busy}
-                onClick={() => void handleCompleteShiftDown()}
-              >
-                COMPLETE SHIFT DOWN
-              </button>
-              <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelShiftDown()}>
-                CANCEL SHIFT DOWN
-              </button>
-            </div>
+            {isCommand ? (
+              <>
+                <button
+                  className="btn-primary"
+                  style={{ fontSize: 18, padding: "18px var(--space-4)" }}
+                  disabled={busy}
+                  onClick={() => void handleCompleteShiftDown()}
+                >
+                  COMPLETE SHIFT DOWN
+                </button>
+                <p className="field-divider">OR</p>
+                <button className="btn-secondary" disabled={busy} onClick={() => void handleCancelShiftDown()}>
+                  CANCEL SHIFT DOWN
+                </button>
+              </>
+            ) : (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteShiftDown()}>
+                  COMPLETE SHIFT DOWN
+                </button>
+                <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelShiftDown()}>
+                  CANCEL SHIFT DOWN
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -1476,7 +1504,14 @@ export function TodayScreen({
             prototype's "PRIMARY GUIDANCE"-style header above its big
             title. ALL CLEAR keeps its own quiet, label-free framing. */}
         {(isAttention || isDominant) && !isAllClear && <p className="tool-label">ENGINE GUIDANCE</p>}
-        <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* TODAY-006 (Review Correction): "baseline" rather than "center" —
+            at the new 44px dominant scale, a longer title genuinely wraps
+            to two lines at narrow widths, and center-alignment then
+            floats the icon at the block's vertical midpoint instead of
+            next to the first line. Baseline alignment keys off the first
+            line box regardless of wrap count, so the icon stays attached
+            to the title's opening word either way. */}
+        <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
           {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
           {recommendation.title}
         </h2>
