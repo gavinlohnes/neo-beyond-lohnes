@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 591c1b5be3dfad3b5a52500ac48b5c4b4aa6c6d0
 branch: claude/shell-001-suit-system-consolidation
 contract: docs/agent/drops/SHELL-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/44
 builder: Claude Code, assigned by Gavin, SHELL-001
 reviewer: (unassigned)
 integrator: (unassigned)
