@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { Icon } from "../../icons/Icon";
 import type { BeyondDay, HydrationEntry, SavedMeal } from "../../../domain/common/types";
 import {
   logWater,
@@ -688,14 +689,23 @@ export function BodyScreen() {
   );
 
   return (
-    <div className="screen fade-in">
+    <div className="screen fade-in body-field">
       {/* FIELD ALPHA Phase 3: identity zone quieted, same principle
           TODAY/TRAIN applied — freed territory belongs to the
-          instrument cluster below, not screen chrome. */}
-      <h1 className="eyebrow">BODY // ESSENTIALS</h1>
-      <p className="card-body" style={{ marginBottom: 16 }}>
-        Fast inputs, kept as a permanent record. Correct mistakes without erasing what happened.
-      </p>
+          instrument cluster below, not screen chrome.
+          FIELD-001: wrapped in .field-header, matching TODAY/TRAIN's own
+          identity treatment. The existing descriptive sentence becomes
+          the tagline's sub-line verbatim (reused, not duplicated) under
+          a new truthful headline stating what BODY actually is —
+          evidence, not a second recommendation authority. */}
+      <div className="field-header">
+        <Icon name="body" size={22} />
+        <h1 className="eyebrow">BODY // ESSENTIALS</h1>
+      </div>
+      <div className="field-tagline">
+        <h2 className="field-tagline__headline">Evidence, not noise.</h2>
+        <p className="field-tagline__sub">Fast inputs, kept as a permanent record. Correct mistakes without erasing what happened.</p>
+      </div>
 
       {/* Overdrive Phase 5: a single glanceable status strip before the
           four separate logging cards, so BODY reads as one physical-status
@@ -711,7 +721,7 @@ export function BodyScreen() {
           recommendation the way TODAY/TRAIN have; marking any single one
           of them as "the leader" would manufacture a hierarchy that
           doesn't exist in the product. */}
-      <p className="section-label">Status</p>
+      <p className="section-label section-label--field">Status</p>
 
       {/* VISUAL-003: reordered to match the LOG section's own station
           order (Water, Sleep, Weight, Protein) below — Status previously

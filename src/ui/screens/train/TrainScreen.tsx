@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ConfirmIcon } from "../../icons/Icon";
+import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
 import type { ExercisePrescription, PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
@@ -554,13 +554,27 @@ export function TrainScreen({
   const allExercisesComplete = activeExercises.length > 0 && activeExercises.every((ex) => isExerciseComplete(ex));
 
   return (
-    <div className="screen fade-in">
+    <div className="screen fade-in train-field">
       {/* FIELD ALPHA Phase 2: the identity zone is deliberately quiet, same
           principle TODAY applied (Suit Implementation 01B) for the same
           reason — freed territory belongs to whatever's actually being
           executed below, not to screen chrome. A real <h1> for correct
-          heading structure. */}
-      <h1 ref={headingRef} tabIndex={-1} className="eyebrow">BEYOND // TRAIN</h1>
+          heading structure.
+          FIELD-001: wrapped in .field-header — the same locked pilot
+          "train" glyph TRAIN's own nav tab already uses, plus the
+          closing structural rule TODAY-006 established, so TRAIN opens
+          on the same instrument header TODAY does. A stable, truthful
+          tagline follows — TRAIN's identity is stable across sessions
+          (unlike TODAY's own moment-to-moment Engine truth), so a fixed
+          statement of what TRAIN is fits here without inventing data. */}
+      <div className="field-header">
+        <Icon name="train" size={22} />
+        <h1 ref={headingRef} tabIndex={-1} className="eyebrow">BEYOND // TRAIN</h1>
+      </div>
+      <div className="field-tagline">
+        <h2 className="field-tagline__headline">Training without guesswork.</h2>
+        <p className="field-tagline__sub">The plan adapts to capacity. Progress stays visible.</p>
+      </div>
 
       <ConfirmPanel />
 
@@ -811,7 +825,7 @@ export function TrainScreen({
             );
           })()}
 
-          <p className="section-label">Exercise</p>
+          <p className="section-label section-label--field">Exercise</p>
 
           {/* P4/Overdrive Phase 12, FIELD ALPHA Phase 2B: the focused
               exercise IS TRAIN's PRIMARY EXECUTION surface — the same
