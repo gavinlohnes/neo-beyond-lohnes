@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: f4251cf0ef9763343a7da845c2ebec3072910244
 branch: claude/field-001-train-body-migration
 contract: docs/agent/drops/FIELD-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/43
 builder: Claude Code, assigned by Gavin, FIELD-001
 reviewer: (unassigned)
 integrator: (unassigned)
