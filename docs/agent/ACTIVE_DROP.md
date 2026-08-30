@@ -1,6 +1,6 @@
 ---
 id: TODAY-006
-status: ACTIVE
+status: CLOSED
 baseline: 4fd9c2412df473ace7d2953de0d1970fa6fb40f9
 branch: claude/today-006-suit-field-consolidation
 contract: docs/agent/drops/TODAY-006.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/42
 builder: Claude Code, assigned by Gavin, TODAY-006
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 6b49633528399d54555268045d485b782e72277e
+closed_at: 2026-08-30T03:57:11.747Z
 ---
 
 # ACTIVE_DROP
