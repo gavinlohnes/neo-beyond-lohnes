@@ -975,7 +975,11 @@ export function TodayScreen({
     const content = (
       <>
         <p className="tool-label">WORKOUT IN PROGRESS</p>
-        <h2 className="card-title">Resume your active workout</h2>
+        {/* TODAY-006: matches RESET/SHIFT DOWN's existing isDominant ->
+            command-title upsizing — a genuinely dominant active workout
+            was the one operation still capped at the ordinary 18px
+            .card-title, undermining "one obvious field owner." */}
+        <h2 className={isDominant ? "command-title" : "card-title"}>Resume your active workout</h2>
         <p className="card-body" style={{ marginBottom: 12 }}>
           {sessionLabel} · started {new Date(activeWorkout.startedAt).toLocaleTimeString()}. Your logged sets and exact position remain in TRAIN.
         </p>
@@ -1097,19 +1101,35 @@ export function TodayScreen({
               {describeResetInProgress(resetIntensity)}
               {openResetStartedAt ? ` Started ${new Date(openResetStartedAt).toLocaleTimeString()}.` : ""}
             </p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1, ...(isCommand ? { fontSize: 18, padding: "18px var(--space-4)" } : {}) }}
-                disabled={busy}
-                onClick={() => void handleCompleteReset()}
-              >
-                COMPLETE RESET
-              </button>
-              <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelReset()}>
-                CANCEL RESET
-              </button>
-            </div>
+            {/* TODAY-006 (Review Correction): the same stacked-with-divider
+                pattern the dominant recommendation card uses, applied
+                uniformly here — every genuinely dominant surface reads
+                the same way, not just the recommendation's own. */}
+            {isCommand ? (
+              <>
+                <button
+                  className="btn-primary"
+                  style={{ fontSize: 18, padding: "18px var(--space-4)" }}
+                  disabled={busy}
+                  onClick={() => void handleCompleteReset()}
+                >
+                  COMPLETE RESET
+                </button>
+                <p className="field-divider">OR</p>
+                <button className="btn-secondary" disabled={busy} onClick={() => void handleCancelReset()}>
+                  CANCEL RESET
+                </button>
+              </>
+            ) : (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteReset()}>
+                  COMPLETE RESET
+                </button>
+                <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelReset()}>
+                  CANCEL RESET
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -1181,19 +1201,31 @@ export function TodayScreen({
               {describeShiftDownInProgress(shiftDownDuration)}
               {openShiftDownStartedAt ? ` Started ${new Date(openShiftDownStartedAt).toLocaleTimeString()}.` : ""}
             </p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                className="btn-primary"
-                style={{ flex: 1, ...(isCommand ? { fontSize: 18, padding: "18px var(--space-4)" } : {}) }}
-                disabled={busy}
-                onClick={() => void handleCompleteShiftDown()}
-              >
-                COMPLETE SHIFT DOWN
-              </button>
-              <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelShiftDown()}>
-                CANCEL SHIFT DOWN
-              </button>
-            </div>
+            {isCommand ? (
+              <>
+                <button
+                  className="btn-primary"
+                  style={{ fontSize: 18, padding: "18px var(--space-4)" }}
+                  disabled={busy}
+                  onClick={() => void handleCompleteShiftDown()}
+                >
+                  COMPLETE SHIFT DOWN
+                </button>
+                <p className="field-divider">OR</p>
+                <button className="btn-secondary" disabled={busy} onClick={() => void handleCancelShiftDown()}>
+                  CANCEL SHIFT DOWN
+                </button>
+              </>
+            ) : (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteShiftDown()}>
+                  COMPLETE SHIFT DOWN
+                </button>
+                <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelShiftDown()}>
+                  CANCEL SHIFT DOWN
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -1467,8 +1499,19 @@ export function TodayScreen({
         : "equipment-row fade-in";
     const cardContent = (
       <>
-        {isAttention && <p className="tool-label">ENGINE GUIDANCE</p>}
-        <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* TODAY-006: the dominant surface earns the same small mono
+            role label the ATTENTION tier already carries — matching the
+            prototype's "PRIMARY GUIDANCE"-style header above its big
+            title. ALL CLEAR keeps its own quiet, label-free framing. */}
+        {(isAttention || isDominant) && !isAllClear && <p className="tool-label">ENGINE GUIDANCE</p>}
+        {/* TODAY-006 (Review Correction): "baseline" rather than "center" —
+            at the new 44px dominant scale, a longer title genuinely wraps
+            to two lines at narrow widths, and center-alignment then
+            floats the icon at the block's vertical midpoint instead of
+            next to the first line. Baseline alignment keys off the first
+            line box regardless of wrap count, so the icon stays attached
+            to the title's opening word either way. */}
+        <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
           {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
           {recommendation.title}
         </h2>
@@ -1574,22 +1617,51 @@ export function TodayScreen({
             </>
           ) : (
             <>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button
-                  className="btn-primary"
-                  style={{ flex: 1, ...(isDominant && !isAllClear ? { fontSize: 18, padding: "18px var(--space-4)" } : {}) }}
-                  disabled={busy}
-                  onClick={() => void handleRecord()}
-                >
-                  {describeRecommendationAction(recommendation.kind)}
-                </button>
-                {recommendation.kind !== "NO_ACTION_REQUIRED" && (
-                  <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={handleDecline}>
+              {/* TODAY-006: the dominant surface's genuine two-way
+                  choice (accept vs. decline) stacks full-width with a
+                  structural "OR" separator, matching the prototype's
+                  instrument-panel divider rather than a generic
+                  side-by-side app button row. ATTENTION/SUPPORT tiers,
+                  and ALL CLEAR's single accept-only action, keep the
+                  existing compact side-by-side layout unchanged. */}
+              {isDominant && !isAllClear && recommendation.kind !== "NO_ACTION_REQUIRED" ? (
+                <>
+                  <button
+                    className="btn-primary"
+                    style={{ fontSize: 18, padding: "18px var(--space-4)" }}
+                    disabled={busy}
+                    onClick={() => void handleRecord()}
+                  >
+                    {describeRecommendationAction(recommendation.kind)}
+                  </button>
+                  <p className="field-divider">OR</p>
+                  <button className="btn-secondary" disabled={busy} onClick={handleDecline}>
                     {DECLINE_LABEL}
                   </button>
-                )}
-              </div>
-              <p className="meta" style={{ marginTop: 8 }}>
+                </>
+              ) : (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    className="btn-primary"
+                    style={{ flex: 1, ...(isDominant && !isAllClear ? { fontSize: 18, padding: "18px var(--space-4)" } : {}) }}
+                    disabled={busy}
+                    onClick={() => void handleRecord()}
+                  >
+                    {describeRecommendationAction(recommendation.kind)}
+                  </button>
+                  {recommendation.kind !== "NO_ACTION_REQUIRED" && (
+                    <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={handleDecline}>
+                      {DECLINE_LABEL}
+                    </button>
+                  )}
+                </div>
+              )}
+              {/* TODAY-006: ALL CLEAR's own caption gets the quiet
+                  corner-bracket "field note" treatment — a mechanical
+                  system aside, not prose — since this is the one message
+                  that's on screen most of the time. Every other tier's
+                  identical caption is untouched. */}
+              <p className={isAllClear ? "meta field-note" : "meta"} style={{ marginTop: 8 }}>
                 {describeRecommendationEffect(recommendation.kind)}
               </p>
             </>
@@ -1857,8 +1929,17 @@ export function TodayScreen({
           structure (Part 15), but styled with .eyebrow (small, mono)
           rather than the large .title display treatment. Freed
           territory and visual weight belong to the command surface
-          below, not to screen chrome. */}
-      <h1 className="eyebrow">BEYOND // TODAY</h1>
+          below, not to screen chrome.
+          TODAY-006: wrapped in .field-header — the exact locked
+          "BEYOND // TODAY" .eyebrow text/class is unchanged (Suit Layer
+          01's own identity assertion), now paired with the same locked
+          pilot "mission" glyph TODAY's nav tab already uses and a
+          closing structural rule, so the screen opens on a real
+          instrument header instead of one quiet line of text. */}
+      <div className="field-header">
+        <Icon name="mission" size={22} />
+        <h1 className="eyebrow">BEYOND // TODAY</h1>
+      </div>
 
       {commitmentFeedback && (
         <p
@@ -1937,7 +2018,7 @@ export function TodayScreen({
           capacity at all, which reads as calm rather than as genuinely
           unknown). Still a single line, still color-independent: every
           state pairs its dot with an explicit word, never color alone. */}
-      {day && <h2 className="section-label">Orient</h2>}
+      {day && <h2 className="section-label section-label--field">Orient</h2>}
       {day && (
         <p
           className={
@@ -1971,7 +2052,7 @@ export function TodayScreen({
       {/* OPERATE — exactly one dominant operating surface. Multiple active
           operation state is named explicitly rather than
           silently allowing JSX order to choose a winner. */}
-      {day && dominant !== "NONE" && <h2 className="section-label">Operate</h2>}
+      {day && dominant !== "NONE" && <h2 className="section-label section-label--field">Operate</h2>}
       {day && dominant === "OPERATION_CONFLICT" && (
         <div className="card card--warning" role="alert">
           <p className="tool-label">OPERATION CONFLICT</p>
@@ -1999,7 +2080,7 @@ export function TodayScreen({
           entirely when nothing currently qualifies (attentionPolicy.ts). */}
       {attentionPlan.attention.length > 0 && (
         <>
-          <h2 className="section-label">Attention</h2>
+          <h2 className="section-label section-label--field">Attention</h2>
 
           {recommendationInAttention && renderRecommendationCard(false, true)}
 

@@ -819,7 +819,7 @@ button, input {
  * enough physical field to stand on its own before tools begin. Support
  * remains fully present and operable below it; no capability is hidden. */
 .today-field--quiet .all-clear {
-  min-height: min(42vh, 360px);
+  min-height: min(46vh, 400px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -829,8 +829,27 @@ button, input {
  * a stronger structural rail without losing contrast or interaction. */
 .today-support--subordinate {
   border-top: 1px solid var(--border-strong);
-  margin-top: var(--space-7);
+  margin-top: calc(var(--space-7) + var(--space-5));
   padding-top: var(--space-3);
+}
+
+/* TODAY-006 (Review Correction): a genuinely dominant surface needs real
+ * spatial authority, not just a bigger label — reuses the exact
+ * min-height/flex pattern .all-clear already establishes for QUIET, plus
+ * a title scale big enough to establish the screen before any supporting
+ * prose does. Scoped to .today-field specifically so TRAIN's own shared
+ * .command-surface/.command-title (pre-session picker, active exercise,
+ * RECOVERY) are completely unaffected by this TODAY-only change. */
+.today-field .command-surface {
+  min-height: min(52vh, 440px);
+  padding: var(--space-6) var(--space-5);
+}
+.today-field .command-surface .command-title {
+  font-size: 44px;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-5);
 }
 
 .field-quick-actions {
@@ -1137,4 +1156,94 @@ button, input {
 .disclosure-chevron {
   flex-shrink: 0;
   color: var(--text-3-strong);
+}
+
+/*
+ * TODAY-006 (SUIT FIELD CONSOLIDATION): visual convergence toward the
+ * approved BEYOND FIELD prototype reference. No new domain truth, no
+ * attentionPolicy.ts change — these are additive presentation primitives
+ * only, reused/composed by TodayScreen.tsx at the exact same decision
+ * points the existing attention policy already resolves.
+ */
+
+/* Section-label's commanding variant — ORIENT/OPERATE/ATTENTION are the
+ * zones actively describing "what situation, what owns the field, what's
+ * escalated right now," and earn the same identity-red tier as .eyebrow.
+ * SUPPORT stays the plain quiet .section-label so the asymmetry between
+ * "the field" and "everything else" reads as more than spacing alone.
+ * Same underlying primitive (still a real <h2>, still gets the trailing
+ * rule) — only color changes, so every existing plain .section-label
+ * assertion is untouched. */
+.section-label--field {
+  color: var(--accent-strong);
+}
+
+/* Identity header — the existing exact "BEYOND // TODAY" .eyebrow text
+ * is unchanged (a locked Suit Layer 01 assertion: identity, not a
+ * utility card) — this only wraps it with the same locked pilot "mission"
+ * glyph TODAY's own nav tab already uses, plus a thin structural rule
+ * closing the identity zone off from content below it, so the screen
+ * opens on a real instrument header instead of one quiet line of text. */
+.field-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--accent-strong);
+}
+.field-header .eyebrow {
+  margin: 0;
+}
+
+/* A quiet mechanical aside — a system note, not a decision. Corner
+ * brackets mark it as an instrument reading rather than prose (the
+ * doctrine's own "geometry that implies motion," applied once, restrained
+ * — never per-row, never decorative wallpaper). */
+.field-note {
+  position: relative;
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+.field-note::before,
+.field-note::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--accent);
+}
+.field-note::before {
+  top: 0;
+  left: 0;
+  border-width: 1px 0 0 1px;
+}
+.field-note::after {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1px 1px 0;
+}
+
+/* A structural "OR" separator between two genuinely alternative truthful
+ * actions, stacked full-width — used on the one currently-dominant
+ * decision surface (.command-surface) only; ATTENTION/SUPPORT tiers keep
+ * their existing compact side-by-side layout untouched. Reads as an
+ * instrument-panel divider, not a generic app button row. */
+.field-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  color: var(--text-3-strong);
+}
+.field-divider::before,
+.field-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
 }
