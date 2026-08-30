@@ -852,6 +852,99 @@ button, input {
   margin-bottom: var(--space-5);
 }
 
+/*
+ * FIELD-001 (TRAIN + BODY FIELD MIGRATION): the same scale/footprint
+ * correction TODAY-006 applied to its own dominant surface, scoped per
+ * screen exactly the same way — `.today-field .command-surface` above
+ * never leaked into TRAIN, and this never leaks into TODAY. Shared
+ * grammar, not shared layout: each screen keeps its own scale, its own
+ * dominant primitive, and its own identity.
+ */
+
+/* TRAIN — execution. The pre-session picker and the active-exercise
+ * surface are both `.command-surface`; this is the one true dominant
+ * territory on the screen either way, so both get the same authority
+ * TODAY's dominant recommendation has. Slightly smaller than TODAY's
+ * 44px (40px) — TRAIN's dominant surface routinely carries real input
+ * controls (weight/rep steppers, LOG/SKIP) beneath the title, not just
+ * a decision; the fast one-handed execution path stays reachable
+ * without excess scroll. */
+.train-field .command-surface {
+  min-height: min(52vh, 440px);
+  padding: var(--space-6) var(--space-5);
+}
+.train-field .command-surface .command-title {
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+/* BODY — evidence. BODY's own doctrine deliberately treats its four
+ * trackers as peer subsystems, never manufacturing a single "leader"
+ * among them (see .instrument-cluster's own doc comment) — so the scale
+ * correction here lifts the whole cluster's collective presence instead
+ * of picking a winner: real physical weight for "the evidence," clearly
+ * outranking the logging stations below it, without ranking any one
+ * reading above the other three. Untouched: MORE also uses
+ * .instrument-cluster/.status-value — scoping under `.body-field`
+ * (BodyScreen's own root only) keeps this a BODY-only change. */
+.body-field .instrument-cluster {
+  min-height: min(38vh, 320px);
+  align-content: center;
+  padding: var(--space-6) var(--space-5);
+  margin-bottom: var(--space-6);
+}
+.body-field .instrument-cluster .status-value {
+  font-size: 32px;
+  margin-top: 4px;
+}
+
+/*
+ * FIELD-001 (Review Correction): the independent owner review found the
+ * first pass too incremental — a bigger status cluster sitting atop
+ * essentially the same station stack still read as one continuous
+ * scroll, not two distinct planes. This is the direct fix: a reusable
+ * "this recedes because something else earned the field" structural
+ * cut — the exact rail+gap TODAY-006 already established for its own
+ * Support zone (`.today-support--subordinate`), generalized as an
+ * additive primitive so TRAIN/BODY can apply it directly rather than
+ * each re-deriving the same three declarations under a new per-screen
+ * class. Deliberately no opacity — TODAY-006's own review already found
+ * that regresses WCAG AA text contrast; recession here is purely
+ * spatial, never at the cost of legibility. `.today-support--subordinate`
+ * itself is untouched (TODAY receives no further visual change in this
+ * Drop) — this is a new, parallel class, not a rename/refactor of it. */
+.field-recede {
+  border-top: 1px solid var(--border-strong);
+  margin-top: calc(var(--space-7) + var(--space-5));
+  padding-top: var(--space-3);
+}
+
+/* Identity subtitle — a stable, truthful one-line statement of what the
+ * screen actually is, styled with real display weight rather than
+ * .card-body prose. Reused verbatim on TRAIN/BODY; TODAY keeps its own
+ * existing pattern unchanged (out of scope for this Drop). */
+.field-tagline {
+  margin: 0 0 var(--space-6);
+}
+.field-tagline__headline {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  text-transform: uppercase;
+  margin: 0 0 var(--space-2);
+}
+.field-tagline__sub {
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+}
+
 .field-quick-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
