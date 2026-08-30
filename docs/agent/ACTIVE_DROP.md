@@ -1,6 +1,6 @@
 ---
 id: FIELD-001
-status: ACTIVE
+status: CLOSED
 baseline: f4251cf0ef9763343a7da845c2ebec3072910244
 branch: claude/field-001-train-body-migration
 contract: docs/agent/drops/FIELD-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/43
 builder: Claude Code, assigned by Gavin, FIELD-001
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: ffbd04f93aeef26dbe0e0a270857ad4a4303b7fa
+closed_at: 2026-08-30T16:16:53.443Z
 ---
 
 # ACTIVE_DROP
