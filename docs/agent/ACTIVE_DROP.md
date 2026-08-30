@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 4fd9c2412df473ace7d2953de0d1970fa6fb40f9
 branch: claude/today-006-suit-field-consolidation
 contract: docs/agent/drops/TODAY-006.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/42
 builder: Claude Code, assigned by Gavin, TODAY-006
 reviewer: (unassigned)
 integrator: (unassigned)
