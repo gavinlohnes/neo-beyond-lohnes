@@ -10,6 +10,24 @@
  * monochrome via var(--text-1)/var(--text-2), never hardcoded here).
  * Purely reinforcing — the adjacent text label is always the
  * accessible name, so every icon renders aria-hidden.
+ *
+ * SHELL-001 (SUIT SYSTEM CONSOLIDATION) — resolved Bat/system-identity
+ * meaning: the diamond is BEYOND's one stable system-identity glyph, not
+ * a literal bat-wing mark — the Decision Register already locked "core
+ * diamond glyph, no bat-wing mark" (see .diamond in global.css) before
+ * this Drop, and OPERATOR_INTERFACE_DOCTRINE.md's "the Bat identifies
+ * the machine" is satisfied by formalizing what this family already
+ * does, not by adding new bat artwork. Every destination glyph
+ * (`mission`/`body`/`success` directly; `train`/`more` as arrow/cluster
+ * variants of the same unit) already builds outward from this one
+ * shared diamond core — the outer silhouette is what tells four
+ * destinations apart; the inner diamond is the one constant identifying
+ * the machine itself underneath all of them. This Drop makes that role
+ * explicit and applies it consistently: every screen's own `.field-header`
+ * (TodayScreen/TrainScreen/BodyScreen/MoreScreen) leads with exactly its
+ * own nav tab's icon — "this glyph identifies which instrument you're
+ * in," the one coherent, stable meaning assigned here, never a second,
+ * unrelated one, and never decorative repetition.
  */
 import type { ReactElement } from "react";
 

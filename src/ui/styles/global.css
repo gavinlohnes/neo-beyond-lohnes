@@ -1340,3 +1340,59 @@ button, input {
   height: 1px;
   background: var(--border-subtle);
 }
+
+/*
+ * SHELL-001 (SUIT SYSTEM CONSOLIDATION): the bottom navigation is the one
+ * piece of chrome every screen shares, and it was the last surface still
+ * styled entirely with per-render inline style objects in App.tsx — the
+ * generic-app residue this Drop exists to remove. Extracted verbatim
+ * (same fixed position, same --surface-1 "Utility Belt" material, same
+ * 44px/700-weight/red-tick selection cues App.test.tsx already locks in)
+ * so it reads as a deliberate, named system primitive like every other
+ * FIELD/shell class, not ad hoc styling. Label typography moves to
+ * --font-mono — every other label/section/tool text in the app already
+ * uses it; the nav was the one remaining piece of primary chrome still
+ * in the body sans face.
+ */
+.shell-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.shell-nav__item {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 12px 0;
+  min-height: 44px;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+}
+.shell-nav__item--active {
+  color: var(--accent);
+  font-weight: 700;
+}
+/* LEVEL 1/STRUCTURAL selected-territory cue (Suit Implementation 01B) —
+ * unchanged geometry, now a named class instead of an inline object. */
+.shell-nav__indicator {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 3px;
+  background: var(--accent);
+}
