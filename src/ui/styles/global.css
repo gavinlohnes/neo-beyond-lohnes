@@ -831,7 +831,6 @@ button, input {
   border-top: 1px solid var(--border-strong);
   margin-top: calc(var(--space-7) + var(--space-5));
   padding-top: var(--space-3);
-  opacity: 0.82;
 }
 
 /* TODAY-006 (Review Correction): a genuinely dominant surface needs real
