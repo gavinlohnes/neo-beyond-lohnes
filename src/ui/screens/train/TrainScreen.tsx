@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
+import { CollapsibleRow } from "../../components/CollapsibleRow";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
 import type { ExercisePrescription, PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
 import { WORKOUT_TEMPLATES, getReducedExercises } from "../../../domain/workout/types";
@@ -112,6 +113,13 @@ export function TrainScreen({
   const [lastPerformedSets, setLastPerformedSets] = useState<Record<string, LastSetInfo>>({});
   const [recentSubstitutions, setRecentSubstitutions] = useState<Record<string, string[]>>({});
   const [showStopConfirm, setShowStopConfirm] = useState(false);
+  // FIELD-001 (Review Correction): Performance Brief is real, truthful,
+  // read-only intelligence, but it is Inspect-tier depth relative to the
+  // one pre-workout decision (which template/variant) — collapsed by
+  // default, same CollapsibleRow primitive RESET/SHIFT DOWN already use
+  // when they aren't the prominent tool, so it structurally recedes
+  // instead of consuming full footprint before any decision is made.
+  const [performanceBriefOpen, setPerformanceBriefOpen] = useState(false);
   // VISUAL-001 (Hybrid Foundation): the one earned-salience moment on
   // active TRAIN — which set was *just* logged this session, if any.
   // Starts null on every mount (including a resumed session), so a
@@ -716,14 +724,25 @@ export function TrainScreen({
       )}
 
       {/* TRAIN-003 (Performance Brief): read-only derived intelligence,
-          subordinate to the CommandSurface picker above — same
-          .equipment-row/.section-label grammar BODY's own logging
-          stations use, deliberately NOT a second .command-surface (no
-          dominant decision lives here, the picker above already claims
-          that territory). Renders only pre-workout, matching exactly
-          when refresh() loads its data (see refresh() above) — never
-          shown, and never queried, while a session is ACTIVE. */}
-      {!session && !completionSummary && (
+          subordinate to the CommandSurface picker above — deliberately
+          NOT a second .command-surface (no dominant decision lives
+          here, the picker above already claims that territory).
+          Renders only pre-workout, matching exactly when refresh()
+          loads its data (see refresh() above) — never shown, and never
+          queried, while a session is ACTIVE.
+          FIELD-001 (Review Correction): collapsed by default behind the
+          same CollapsibleRow primitive RESET/SHIFT DOWN already use for
+          their own non-prominent state — real Inspect-tier depth, not
+          something that should consume full footprint before the one
+          actual pre-workout decision is made. */}
+      {!session && !completionSummary && !performanceBriefOpen && (
+        <CollapsibleRow
+          name="PERFORMANCE BRIEF"
+          summary={describeLastStrengthSession(lastStrengthSession)}
+          onOpen={() => setPerformanceBriefOpen(true)}
+        />
+      )}
+      {!session && !completionSummary && performanceBriefOpen && (
         <>
           <p className="section-label">Performance Brief</p>
           <div className="equipment-row">
@@ -764,6 +783,13 @@ export function TrainScreen({
                 </p>
               ))
             )}
+            <button
+              className="btn-secondary"
+              style={{ marginTop: 12 }}
+              onClick={() => setPerformanceBriefOpen(false)}
+            >
+              COLLAPSE
+            </button>
           </div>
         </>
       )}
@@ -1046,6 +1072,16 @@ export function TrainScreen({
             </CommandSurface>
           )}
 
+          {/* FIELD-001 (Review Correction): jump rail + Finish share one
+              .field-recede cut — the execution surface above is the one
+              thing that owns the field; navigation and wrap-up are both
+              real, frequently-needed capability (never hidden behind
+              disclosure — this is a spatial cut, not reduced access),
+              but neither should visually compete with the exercise
+              actually in progress. One shared gap, not one per item,
+              matches the exact grammar TODAY-006's own Support zone
+              already established. */}
+          <div className="field-recede">
           {/* Overdrive Phase 12, FIELD ALPHA Phase 2B (NEXT): compact
               horizontal jump rail — subordinate to the execution surface
               above, a shared top rule (.equipment-row) rather than a
@@ -1128,6 +1164,7 @@ export function TrainScreen({
                 </div>
               </div>
             )}
+          </div>
           </div>
         </>
       )}

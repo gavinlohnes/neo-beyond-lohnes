@@ -748,6 +748,16 @@ export function BodyScreen() {
         </div>
       </div>
 
+      {/* FIELD-001 (Review Correction): the owner review found the first
+          pass too incremental — a bigger STATUS plane sitting atop
+          essentially the same station stack still read as one
+          continuous scroll. .field-recede (the same structural cut
+          TODAY-006's own Support zone established, generalized —
+          see global.css) marks LOG as genuinely subordinate equipment,
+          not a second peer plane. Every station's own capability,
+          correction flow, and history disclosure is unchanged —
+          this is spatial hierarchy only, nothing hidden or removed. */}
+      <div className="field-recede">
       <p className="section-label">Log</p>
 
       {/* WATER — one consolidated instrument row: current total, fastest
@@ -1352,6 +1362,7 @@ export function BodyScreen() {
             </FieldDisclosure>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

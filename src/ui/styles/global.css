@@ -891,12 +891,35 @@ button, input {
  * .instrument-cluster/.status-value — scoping under `.body-field`
  * (BodyScreen's own root only) keeps this a BODY-only change. */
 .body-field .instrument-cluster {
+  min-height: min(38vh, 320px);
+  align-content: center;
   padding: var(--space-6) var(--space-5);
   margin-bottom: var(--space-6);
 }
 .body-field .instrument-cluster .status-value {
   font-size: 32px;
   margin-top: 4px;
+}
+
+/*
+ * FIELD-001 (Review Correction): the independent owner review found the
+ * first pass too incremental — a bigger status cluster sitting atop
+ * essentially the same station stack still read as one continuous
+ * scroll, not two distinct planes. This is the direct fix: a reusable
+ * "this recedes because something else earned the field" structural
+ * cut — the exact rail+gap TODAY-006 already established for its own
+ * Support zone (`.today-support--subordinate`), generalized as an
+ * additive primitive so TRAIN/BODY can apply it directly rather than
+ * each re-deriving the same three declarations under a new per-screen
+ * class. Deliberately no opacity — TODAY-006's own review already found
+ * that regresses WCAG AA text contrast; recession here is purely
+ * spatial, never at the cost of legibility. `.today-support--subordinate`
+ * itself is untouched (TODAY receives no further visual change in this
+ * Drop) — this is a new, parallel class, not a rename/refactor of it. */
+.field-recede {
+  border-top: 1px solid var(--border-strong);
+  margin-top: calc(var(--space-7) + var(--space-5));
+  padding-top: var(--space-3);
 }
 
 /* Identity subtitle — a stable, truthful one-line statement of what the
