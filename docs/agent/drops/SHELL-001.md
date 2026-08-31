@@ -58,16 +58,55 @@ information layers.
 - No new haptics.
 - No merge, integration, Factory closure, or activation of another Drop by the Builder.
 
-## Bat/system-identity resolution
+## Emblem/glyph system-identity resolution (owner ruling, 2026-08-31 — supersedes original framing)
 
-The Batman Beyond bat symbol is not introduced as new artwork in this Drop. The Decision Register
-already locked "core diamond glyph, no bat-wing mark" before this Drop existed. This Drop instead
-formalizes what the existing locked pilot icon family (`src/ui/icons/Icon.tsx`) already does: the
-diamond is BEYOND's one stable system-identity glyph, embedded as the shared structural core of
-every destination icon; each icon's own outer silhouette is what "the glyph system operates"
-through — one coherent meaning, applied consistently via every screen's own `.field-header` (each
-leading with exactly its own nav tab's icon), never a second unrelated meaning, never decorative
-repetition.
+**Correction:** this section originally claimed the diamond motif shared by the locked pilot icon
+family was itself "BEYOND's one stable system-identity glyph." Direct owner ruling, 2026-08-31,
+retires that framing. It is corrected here rather than silently rewritten to a new claim with no
+trace of the change, per this repo's own "corrections supersede, they never overwrite" discipline
+(`docs/agent/BEYOND_ENGINEERING_CONTRACT.md`).
+
+The Batman Beyond bat symbol / a future dedicated machine emblem is not introduced as new artwork
+in this Drop, and never was. What changes is what the diamond is understood to be. The governing
+split, going forward, tracks the constitutional doctrine's own framing
+(`docs/OPERATOR_INTERFACE_DOCTRINE.md`, "The Bat identifies the machine. BEYOND's language
+operates it."):
+
+- **EMBLEM = THE MACHINE.** A single dedicated machine-identity mark is BEYOND's system identity.
+  It does not exist yet. It is explicitly out of scope for this Drop and must not be invented,
+  traced, approximated, or introduced as placeholder artwork here — no `Emblem.tsx`, no
+  substitute diamond standing in for it, no new PWA emblem artwork.
+- **GLYPHS = THE INSTRUMENTS.** The universal/core diamond is retired as BEYOND's system identity.
+  TODAY/TRAIN/BODY/MORE's existing locked pilot icon family (`src/ui/icons/Icon.tsx`) remains
+  exactly what it already is and stays the existing locked instrument family: destination
+  glyphs, geometry frozen, not redesigned or reinterpreted by this correction. Each icon's own
+  outer silhouette is what "the glyph system operates" through, applied consistently via every
+  screen's own `.field-header` (each leading with exactly its own nav tab's icon) — one coherent
+  instrument meaning, never a claim of machine identity, never decorative repetition.
+
+This Drop leaves a clean, explicit future integration seam for the machine emblem — see "Deferred
+to future machine-emblem integration" below — but adds no placeholder emblem and no substitute
+diamond in its place. See `docs/UX_DECISIONS.md` ("System identity — EMBLEM vs. GLYPHS split")
+for the durable Decision Register entry.
+
+## Deferred to future machine-emblem integration
+
+Not part of this Drop; recorded here so a future emblem Drop has an exact, minimal seam instead
+of having to re-derive one:
+
+- `src/ui/icons/Icon.tsx` and the `TAB_ICON` map in `src/app/App.tsx` are destination-glyph-only
+  and are not where a machine emblem belongs — do not repurpose them.
+- A future emblem Drop's own task contract must name its exact placement (e.g. a splash/identity
+  surface distinct from the four destination tabs) as a locked product decision before
+  implementation — this Drop does not pre-select one.
+- `vite.config.ts`'s `VitePWA` manifest `icons` array and `public/icons/icon-192.png` /
+  `icon-512.png` are the current placeholder PWA install icons; regenerating them from the
+  approved emblem source (once one exists) is that future Drop's first mechanical step.
+- `index.html`'s `<link rel="icon">` only needs updating if the favicon itself (not just PWA
+  install icons) is meant to carry the emblem.
+- No shell/global.css class in this Drop reserves visual space for an emblem — none should be
+  added until the emblem and its placement are both approved, so this correction introduces no
+  placeholder geometry a real emblem would later have to fight or replace.
 
 ## Relevant authority / references
 
