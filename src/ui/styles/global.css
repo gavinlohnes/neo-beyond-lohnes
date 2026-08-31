@@ -1355,23 +1355,38 @@ button, input {
  * in the body sans face.
  */
 /*
- * SHELL-001 structural correction: the flat, undivided flex row above read
- * as a generic mobile tab bar precisely because it had no internal
- * structure — every real BEYOND instrument surface in this codebase marks
- * where one functional zone ends and another begins with an explicit rule
- * (.field-recede's border-strong "something else earned the field" cut,
- * .equipment-row's shared top rule). The belt gets the same treatment:
- * border-strong on its top edge (this is where system chrome and the
- * active FIELD meet — not a --border-subtle) and a --border-subtle rail
- * between each destination, so the four items read as four distinct
- * instrument segments on one shared belt, not four buttons floating in
- * one undifferentiated strip. Geometry callers already lock (44px min
- * height, 700-weight selected cue, the red structural tick, aria-current)
- * is untouched. Top edge is 2px, not the app's usual 1px hairline — this
- * is the one seam where system chrome physically ends and the FIELD
- * begins, and it is the belt's own edge, so it earns slightly more
- * structural weight than an internal content rule; still a flat neutral
- * line, no color, no glow.
+ * SHELL-001 Gate 1 correction (independent review, 2026-08-31): the prior
+ * pass (border-strong top seam + border-subtle dividers on the same
+ * --surface-1 background every card already uses) was directionally
+ * correct but too close in value to read as transformed at normal
+ * viewing size — a real finding, not a taste disagreement. The fix is
+ * containment and territory, not thicker hairlines:
+ *
+ * 1. The belt now sits on --surface-2, not --surface-1 — a background
+ *    every other surface in the app (cards, .instrument-cluster,
+ *    .field-note) deliberately does NOT use, so the rail reads as its
+ *    own distinct physical object the FIELD sits on top of, not the same
+ *    card material repeated below the fold.
+ * 2. Segment dividers move to border-strong (from border-subtle) — now
+ *    genuinely visible against --surface-2, not two adjacent near-black
+ *    tones.
+ * 3. The currently active destination's own cell — not the whole belt —
+ *    fills with --surface-active, the existing dark red-black wash
+ *    .command-surface already uses for "the currently dominant/earned
+ *    territory" (global.css, VISUAL-001). Reused, not reinvented: the
+ *    active tab is this shell's own currently-operative territory, the
+ *    same relationship .command-surface has to TODAY's primary
+ *    recommendation. This is still "red as active-tab indication only"
+ *    (the already-locked SHELL-001 invariant) — one of four cells, only
+ *    while active, never the whole rail. No chamfer: that clip-path stays
+ *    .command-surface's alone (VISUAL-001's own "only one chamfer may
+ *    identify an active region" is a hard exclusivity rule, unlike this
+ *    background token, which was never marked exclusive).
+ *
+ * Geometry every test already locks — 44px min-height, 700-weight
+ * selected cue, the red structural tick, aria-current — is unchanged;
+ * every addition below is a background/border-color change layered
+ * behind it, never a resize or reposition.
  */
 .shell-nav {
   position: fixed;
@@ -1380,7 +1395,7 @@ button, input {
   right: 0;
   display: flex;
   border-top: 2px solid var(--border-strong);
-  background: var(--surface-1);
+  background: var(--surface-2);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .shell-nav__item {
@@ -1392,7 +1407,7 @@ button, input {
   gap: 4px;
   background: none;
   border: none;
-  border-left: 1px solid var(--border-subtle);
+  border-left: 1px solid var(--border-strong);
   padding: 12px 0;
   min-height: 44px;
   color: var(--text-2);
@@ -1405,6 +1420,7 @@ button, input {
   border-left: none;
 }
 .shell-nav__item--active {
+  background: var(--surface-active);
   color: var(--accent);
   font-weight: 700;
 }
