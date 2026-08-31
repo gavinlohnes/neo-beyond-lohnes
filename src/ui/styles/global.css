@@ -1354,13 +1354,32 @@ button, input {
  * uses it; the nav was the one remaining piece of primary chrome still
  * in the body sans face.
  */
+/*
+ * SHELL-001 structural correction: the flat, undivided flex row above read
+ * as a generic mobile tab bar precisely because it had no internal
+ * structure — every real BEYOND instrument surface in this codebase marks
+ * where one functional zone ends and another begins with an explicit rule
+ * (.field-recede's border-strong "something else earned the field" cut,
+ * .equipment-row's shared top rule). The belt gets the same treatment:
+ * border-strong on its top edge (this is where system chrome and the
+ * active FIELD meet — not a --border-subtle) and a --border-subtle rail
+ * between each destination, so the four items read as four distinct
+ * instrument segments on one shared belt, not four buttons floating in
+ * one undifferentiated strip. Geometry callers already lock (44px min
+ * height, 700-weight selected cue, the red structural tick, aria-current)
+ * is untouched. Top edge is 2px, not the app's usual 1px hairline — this
+ * is the one seam where system chrome physically ends and the FIELD
+ * begins, and it is the belt's own edge, so it earns slightly more
+ * structural weight than an internal content rule; still a flat neutral
+ * line, no color, no glow.
+ */
 .shell-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   display: flex;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 2px solid var(--border-strong);
   background: var(--surface-1);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -1373,6 +1392,7 @@ button, input {
   gap: 4px;
   background: none;
   border: none;
+  border-left: 1px solid var(--border-subtle);
   padding: 12px 0;
   min-height: 44px;
   color: var(--text-2);
@@ -1380,6 +1400,9 @@ button, input {
   font-weight: 400;
   font-size: 16px;
   letter-spacing: 0.04em;
+}
+.shell-nav__item:first-child {
+  border-left: none;
 }
 .shell-nav__item--active {
   color: var(--accent);
