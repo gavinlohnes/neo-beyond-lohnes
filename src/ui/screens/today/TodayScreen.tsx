@@ -43,6 +43,7 @@ import { dismissOutcome } from "../../../persistence/outcomeDismissals";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import {
   describeMinimumDaySummary,
+  getHydrationProgressPercent,
   isSeriouslyConstrained,
   MINIMUM_DAY_ENABLE_BODY,
   MINIMUM_DAY_ITEMS,
@@ -104,6 +105,7 @@ import {
   getScheduledContext,
   getMinimumDayStatus,
   getEffectiveHydrationTotal,
+  MINIMUM_DAY_HYDRATE_OZ,
   getTotalProteinGrams,
   getOpenReset,
   getOpenShiftDown,
@@ -912,6 +914,20 @@ export function TodayScreen({
         <p className="card-body" style={{ marginBottom: 4 }}>
           {minimumDayHydrateOz}oz recorded for this active BeyondDay.
         </p>
+        <div
+          className="field-progress"
+          style={{ marginBottom: 16 }}
+          role="progressbar"
+          aria-label="Hydration progress toward Minimum Day target"
+          aria-valuenow={Math.min(minimumDayHydrateOz, MINIMUM_DAY_HYDRATE_OZ)}
+          aria-valuemin={0}
+          aria-valuemax={MINIMUM_DAY_HYDRATE_OZ}
+        >
+          <div
+            className="field-progress__fill"
+            style={{ width: `${getHydrationProgressPercent(minimumDayHydrateOz, MINIMUM_DAY_HYDRATE_OZ)}%` }}
+          />
+        </div>
         <p className="meta" style={{ marginBottom: 16 }}>
           Choose the amount that is already true. Nothing is logged until you act.
         </p>
@@ -1373,6 +1389,22 @@ export function TodayScreen({
                     )}
                   </div>
                   <p className="meta" style={{ marginTop: 4 }}>{item.updateNote}</p>
+                  {item.key === "hydrate" && (
+                    <div
+                      className="field-progress"
+                      style={{ marginTop: 8 }}
+                      role="progressbar"
+                      aria-label="Hydration progress toward Minimum Day target"
+                      aria-valuenow={Math.min(minimumDayHydrateOz, MINIMUM_DAY_HYDRATE_OZ)}
+                      aria-valuemin={0}
+                      aria-valuemax={MINIMUM_DAY_HYDRATE_OZ}
+                    >
+                      <div
+                        className="field-progress__fill"
+                        style={{ width: `${getHydrationProgressPercent(minimumDayHydrateOz, MINIMUM_DAY_HYDRATE_OZ)}%` }}
+                      />
+                    </div>
+                  )}
                   {!done && item.key === "hydrate" && (
                     <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
                       <input

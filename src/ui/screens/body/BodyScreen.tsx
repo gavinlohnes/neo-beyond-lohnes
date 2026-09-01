@@ -736,11 +736,15 @@ export function BodyScreen() {
         </div>
         <div>
           <p className="meta" style={{ margin: 0 }}>SLEEP</p>
-          <p className="status-value">{lastSleepEntry ? formatDuration(lastSleepEntry.effectiveDurationMinutes) : "Not logged"}</p>
+          <p className={lastSleepEntry ? "status-value" : "status-value status-value--empty"}>
+            {lastSleepEntry ? formatDuration(lastSleepEntry.effectiveDurationMinutes) : "Not logged"}
+          </p>
         </div>
         <div>
           <p className="meta" style={{ margin: 0 }}>WEIGHT</p>
-          <p className="status-value">{lastBodyweightEntry ? `${lastBodyweightEntry.effectiveWeightLbs} lbs` : "Not logged"}</p>
+          <p className={lastBodyweightEntry ? "status-value" : "status-value status-value--empty"}>
+            {lastBodyweightEntry ? `${lastBodyweightEntry.effectiveWeightLbs} lbs` : "Not logged"}
+          </p>
         </div>
         <div>
           <p className="meta" style={{ margin: 0 }}>PROTEIN</p>

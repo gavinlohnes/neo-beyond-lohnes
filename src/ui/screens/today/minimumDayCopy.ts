@@ -42,6 +42,21 @@ export const MINIMUM_DAY_PROMINENT_TITLE = "Minimum Day is here if it helps";
 export const MINIMUM_DAY_PROMINENT_BODY =
   "The same six basics, with lower expectations and nothing extra added: hydrate, protein, meds, hygiene, a few minutes of movement, and a few minutes of recovery or connection. Turning it on is entirely up to you.";
 
+/**
+ * FIELD-PROTOTYPE-001 review correction: Math.round let a truthful
+ * in-progress total (e.g. 39.9 / 40oz, 99.75%) visually report as a
+ * full 100% bar before getMinimumDayStatus's own `hydrate` requirement
+ * (>= MINIMUM_DAY_HYDRATE_OZ) is actually satisfied — the fill must
+ * never claim completion the canonical state hasn't reached. Floored
+ * and explicitly capped at 99 while incomplete; only reports 100 once
+ * `total` truly meets or exceeds `target`.
+ */
+export function getHydrationProgressPercent(total: number, target: number): number {
+  if (target <= 0) return 0;
+  if (total >= target) return 100;
+  return Math.min(99, Math.max(0, Math.floor((total / target) * 100)));
+}
+
 export type MinimumDayItemKey = keyof Omit<MinimumDayStatus, "enabled" | "allSatisfied">;
 
 export interface MinimumDayItemConfig {

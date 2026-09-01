@@ -1,15 +1,13 @@
 ---
-id: SHELL-001
-status: CLOSED
-baseline: 591c1b5be3dfad3b5a52500ac48b5c4b4aa6c6d0
-branch: claude/shell-001-suit-system-consolidation
-contract: docs/agent/drops/SHELL-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/44
-builder: Claude Code, assigned by Gavin, SHELL-001
+id: FIELD-PROTOTYPE-001
+status: ACTIVE
+baseline: bdcf07cf0ed70cf3f0bd7f31c67cb2b30e470986
+branch: claude/field-prototype-convergence
+contract: docs/agent/drops/FIELD-PROTOTYPE-001.md
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/45
+builder: Claude Code, assigned by Gavin, FIELD-PROTOTYPE-001
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: d4dd78e14bdacf164fc7b1ce3f95c0caa6518878
-closed_at: 2026-09-01T01:33:44.738Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/SHELL-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/FIELD-PROTOTYPE-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
