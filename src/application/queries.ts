@@ -528,7 +528,11 @@ export interface MinimumDayStatus {
   allSatisfied: boolean;
 }
 
-const MINIMUM_DAY_HYDRATE_OZ = 40;
+// Exported so the UI can render a truthful progress-toward-target
+// instrument (FIELD-PROTOTYPE-001) against the one real threshold this
+// module already computes against, rather than duplicating the literal
+// value as a second, independent source of truth.
+export const MINIMUM_DAY_HYDRATE_OZ = 40;
 const MINIMUM_DAY_PROTEIN_G = 25;
 const MINIMUM_DAY_MOVE_MINUTES = 5;
 const MINIMUM_DAY_RECOVER_CONNECT_MINUTES = 10;

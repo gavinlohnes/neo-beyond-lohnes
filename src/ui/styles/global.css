@@ -900,6 +900,17 @@ button, input {
   font-size: 32px;
   margin-top: 4px;
 }
+/* FIELD-PROTOTYPE-001: the truthful "no data yet" fallback ("Not
+ * logged") is longer than any real reading this cluster shows and
+ * wrapped to two lines at the 32px scale above — a layout defect, not
+ * a considered design; the reference's compact stat tiles are always
+ * one line. The explicit no-data copy itself is unchanged (still not a
+ * fake "0"), only its type scale steps down enough to stay single-line
+ * at 320px and 390px. Applies uniformly to whichever of the four peer
+ * tiles currently lacks data — never a per-tile treatment. */
+.body-field .instrument-cluster .status-value--empty {
+  font-size: 20px;
+}
 
 /*
  * FIELD-001 (Review Correction): the independent owner review found the
@@ -1339,6 +1350,30 @@ button, input {
   flex: 1;
   height: 1px;
   background: var(--border-subtle);
+}
+
+/* FIELD-PROTOTYPE-001: a truthful mechanical progress-toward-target
+ * instrument — a thin filled rail, not a consumer-app loading bar. Used
+ * only where a real numeric target already exists (currently: TODAY's
+ * Minimum Day hydration surfaces, against the real MINIMUM_DAY_HYDRATE_OZ
+ * threshold) — never a decorative meter, never fabricated data. One
+ * existing accent color, no gradient, no glow, no animation. The track
+ * uses --surface-2 (the same "distinct object" background SHELL-001
+ * already reserves for instrument material) so the fill reads as a
+ * measurement against a fixed rail, not a color wash. */
+.field-progress {
+  height: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+.field-progress__fill {
+  height: 100%;
+  background: var(--accent);
+  /* Never wider than the track, even if a correction/edit ever pushes a
+     logged total past its target — a truthful reading beyond 100% is
+     still capped at a full rail, not an overflowing bar. */
+  max-width: 100%;
 }
 
 /*
