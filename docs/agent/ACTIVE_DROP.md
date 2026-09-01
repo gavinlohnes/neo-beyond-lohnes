@@ -1,6 +1,6 @@
 ---
 id: FIELD-ARCH-001
-status: ACTIVE
+status: CLOSED
 baseline: ccff019d7a911acdbdc80b95f4a097da1e06913a
 branch: claude/field-arch-001
 contract: docs/agent/drops/FIELD-ARCH-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/46
 builder: Claude Code, assigned by Gavin, FIELD-ARCH-001
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 48075c973486a9574df8c2de88651b1e229b3a38
+closed_at: 2026-09-01T06:12:04.481Z
 ---
 
 # ACTIVE_DROP
