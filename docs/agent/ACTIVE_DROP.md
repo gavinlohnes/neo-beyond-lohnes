@@ -1,6 +1,6 @@
 ---
 id: SHELL-001
-status: ACTIVE
+status: CLOSED
 baseline: 591c1b5be3dfad3b5a52500ac48b5c4b4aa6c6d0
 branch: claude/shell-001-suit-system-consolidation
 contract: docs/agent/drops/SHELL-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/44
 builder: Claude Code, assigned by Gavin, SHELL-001
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: d4dd78e14bdacf164fc7b1ce3f95c0caa6518878
+closed_at: 2026-09-01T01:33:44.738Z
 ---
 
 # ACTIVE_DROP
