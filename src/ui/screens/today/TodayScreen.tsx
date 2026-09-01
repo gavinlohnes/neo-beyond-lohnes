@@ -2013,20 +2013,25 @@ export function TodayScreen({
         )
       )}
 
-      {/* SUIT-001 (COMMAND PRESENCE): before a day exists, START DAY is
-          the one available action — nothing else on this screen can
-          compete for it yet. Previously an ad hoc .card with no heading,
-          the one surviving pre-Suit block on this screen; now a real
-          heading plus .btn-primary (not .btn-secondary) so its weight
-          matches what it actually is, using only existing primitives. */}
+      {/* FIELD-ARCH-001: before a day exists, START DAY is the one
+          available action — nothing else on this screen can compete for
+          it yet, the same "exactly one dominant surface" condition every
+          other CommandSurface call site on TODAY already renders under.
+          SUIT-001 had already moved this off a bare unheaded .card onto
+          a real heading + .btn-primary, but left it the one surviving
+          plain .card on this screen (its own comment said so); this
+          finishes that move onto the actual dominant-decision-surface
+          primitive, using only existing primitives/copy — no new claim,
+          same action. */}
       {!day && (
-        <div className="card">
-          <h2 className="card-title">Day not started</h2>
-          <p className="card-body" style={{ marginBottom: 12 }}>Start your BEYOND Day to check in and get today's guidance.</p>
+        <CommandSurface>
+          <p className="tool-label">BEGIN</p>
+          <h2 className="command-title">Start your BEYOND Day</h2>
+          <p className="card-body" style={{ marginBottom: 12 }}>Check in and get today's guidance.</p>
           <button className="btn-primary" disabled={busy} onClick={() => void handleStartDay()}>
             START DAY
           </button>
-        </div>
+        </CommandSurface>
       )}
 
       {/* STATUS — Harvest Checkpoint 3: compact, glanceable context, never
@@ -2051,34 +2056,48 @@ export function TodayScreen({
           unknown). Still a single line, still color-independent: every
           state pairs its dot with an explicit word, never color alone. */}
       {day && <h2 className="section-label section-label--field">Orient</h2>}
+      {/* FIELD-ARCH-001: same two facts (describeContextStrip's sentence,
+          the capacity dot+clause) this strip has always shown — restacked
+          into a real label-free instrument reading (a bold headline line,
+          then a quieter detail line) instead of one flat, uniform-scale
+          sentence, so ORIENT stops being the one place on TODAY still
+          rendered as plain prose next to OPERATE's own bold .command-title
+          two inches below. .status-strip--stacked/__headline/__detail are
+          additive: the base .status-strip class TRAIN's own single-line
+          active-execution status reuses is untouched, so that usage is
+          unaffected by this change. */}
       {day && (
-        <p
+        <div
           className={
             capacityResult && capacityResult.capacity !== "GREEN"
-              ? `status-strip status-strip--${capacityResult.capacity.toLowerCase()}`
-              : "status-strip"
+              ? `status-strip status-strip--stacked status-strip--${capacityResult.capacity.toLowerCase()}`
+              : "status-strip status-strip--stacked"
           }
         >
-          {describeContextStrip(
-            currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
-            currentContext ? currentContext.schedulePrediction : scheduledContext,
-            currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
-          )}
-          {capacityResult ? (
-            <span
-              className={capacityResult.capacity !== "GREEN" ? "status-strip__capacity" : undefined}
-              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-            >
-              <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
-              {`· ${describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}`}
-            </span>
-          ) : (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <span aria-hidden="true" className="capacity-dot capacity-dot--unknown" />
-              {`· ${describeCapacityUnknown()}`}
-            </span>
-          )}
-        </p>
+          <p className="status-strip__headline">
+            {describeContextStrip(
+              currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
+              currentContext ? currentContext.schedulePrediction : scheduledContext,
+              currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
+            )}
+          </p>
+          <p className="status-strip__detail">
+            {capacityResult ? (
+              <span
+                className={capacityResult.capacity !== "GREEN" ? "status-strip__capacity" : undefined}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
+                {describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}
+              </span>
+            ) : (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span aria-hidden="true" className="capacity-dot capacity-dot--unknown" />
+                {describeCapacityUnknown()}
+              </span>
+            )}
+          </p>
+        </div>
       )}
 
       {/* OPERATE — exactly one dominant operating surface. Multiple active

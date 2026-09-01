@@ -352,7 +352,7 @@ describe("TodayScreen (real browser) — cross-day outcome follow-up", () => {
 
       await expect.element(screen.getByText("OUTCOME", { exact: true })).toBeVisible();
       await screen.getByRole("button", { name: "END DAY" }).click();
-      await expect.element(screen.getByText("Day not started", { exact: true })).toBeVisible();
+      await expect.element(screen.getByText("Start your BEYOND Day", { exact: true })).toBeVisible();
       await expect.element(screen.getByText("OUTCOME", { exact: true })).toBeVisible();
 
       await screen.getByRole("button", { name: rating, exact: true }).click();
@@ -416,7 +416,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
-    expect(strip!.className).toBe("status-strip");
+    expect(strip!.className).toBe("status-strip status-strip--stacked");
     expect(document.querySelector(".status-strip__capacity")).toBeNull();
   });
 
@@ -429,7 +429,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await expect.element(screen.getByText("Capacity is YELLOW", { exact: false })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
-    expect(strip!.className).toBe("status-strip status-strip--yellow");
+    expect(strip!.className).toBe("status-strip status-strip--stacked status-strip--yellow");
     const capacitySegment = document.querySelector(".status-strip__capacity");
     expect(capacitySegment).not.toBeNull();
     expect(capacitySegment!.textContent).toContain("YELLOW");
@@ -443,7 +443,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
-    expect(strip!.className).toBe("status-strip status-strip--red");
+    expect(strip!.className).toBe("status-strip status-strip--stacked status-strip--red");
     const capacitySegment = document.querySelector(".status-strip__capacity");
     expect(capacitySegment).not.toBeNull();
     expect(capacitySegment!.textContent).toContain("RED");
@@ -456,7 +456,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await expect.element(screen.getByText("Capacity", { exact: false })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
-    expect(strip!.className).toBe("status-strip");
+    expect(strip!.className).toBe("status-strip status-strip--stacked");
     expect(strip!.textContent).toContain("Capacity is UNKNOWN");
     expect(document.querySelector(".capacity-dot--unknown")).not.toBeNull();
     // UNKNOWN is not a severity — no warning/red modifier, no bolded segment.
@@ -487,7 +487,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — section headings and pr
 
   it("presents the pre-day state as a heading + primary action, not an unlabeled card", async () => {
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("heading", { level: 2, name: "Day not started", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Start your BEYOND Day", exact: true })).toBeVisible();
     const startButton = screen.getByRole("button", { name: "START DAY", exact: true }).element();
     expect(startButton.className).toContain("btn-primary");
   });
@@ -509,7 +509,7 @@ describe("TodayScreen // Current Operational Context V1 — context-strip wordin
     await setWorkContext(day.id, "OFF", "MANUAL");
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Day not started", { exact: true })).not.toBeInTheDocument();
+    await expect.element(screen.getByText("Start your BEYOND Day", { exact: true })).not.toBeInTheDocument();
     await vi.waitFor(() => {
       const strip = document.querySelector(".status-strip");
       expect(strip?.textContent).toContain("Off today");
@@ -522,7 +522,7 @@ describe("TodayScreen // Current Operational Context V1 — context-strip wordin
     await markWorkEnded(day.id);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Day not started", { exact: true })).not.toBeInTheDocument();
+    await expect.element(screen.getByText("Start your BEYOND Day", { exact: true })).not.toBeInTheDocument();
     await vi.waitFor(() => {
       const strip = document.querySelector(".status-strip");
       expect(strip?.textContent).toContain("Working today — shift ended, not yet shifted down");
@@ -898,7 +898,7 @@ describe("TodayScreen (real browser) — Capture", () => {
   it("is available even with no BeyondDay started at all", async () => {
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByPlaceholder("Capture a thought...")).toBeVisible();
-    await expect.element(screen.getByText("Day not started", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Start your BEYOND Day", { exact: true })).toBeVisible();
   });
 
   it("earns an Attention slot once an item is unresolved", async () => {

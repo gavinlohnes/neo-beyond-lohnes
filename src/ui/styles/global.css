@@ -71,6 +71,16 @@ button, input {
   border-color: var(--danger);
 }
 
+/* FIELD-ARCH-001: the same gap VISUAL-002 found and fixed for the
+ * danger/red tier above, still open one tier down — TRAIN's own
+ * "NO CHECK-IN YET" nudge reached for `.card` plus an inline
+ * `style={{ borderColor: "var(--warning)" }}` instead of a real class
+ * that says what the surface is. Border only, same reasoning as
+ * .card--warning: this is a nudge, not a dominant decision. */
+.card--caution {
+  border-color: var(--warning);
+}
+
 .card-title {
   font-family: var(--font-display);
   font-size: 18px;
@@ -620,6 +630,36 @@ button, input {
   font-weight: 700;
 }
 
+/* FIELD-ARCH-001: an additive stacked variant for TODAY's own ORIENT
+ * reading only — the base .status-strip flex-row above is untouched, so
+ * TRAIN's own single-line active-execution reuse of .status-strip is
+ * completely unaffected (it never applies this modifier). Same content
+ * as always (describeContextStrip's sentence, the capacity dot+clause);
+ * this only gives it a real instrument-reading shape — label-free
+ * headline, then a quieter detail line — instead of one flat sentence,
+ * matching the reference's clearest structural idea for this section
+ * and TODAY's own OPERATE .command-title two inches below it. */
+.status-strip--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.status-strip__headline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--text-1);
+}
+.status-strip__detail {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--text-2);
+}
+
 /* Overdrive Phase 11 (TODAY -> COMMAND 2.0): groups multiple cards under
    one quiet typographic label instead of wrapping them in yet another
    card — the "no dashboard wall" constraint means hierarchy has to come
@@ -879,6 +919,24 @@ button, input {
   letter-spacing: -0.02em;
   margin-top: var(--space-2);
   margin-bottom: var(--space-4);
+}
+
+/* FIELD-ARCH-001: TRAIN's own .field-tagline__headline rendered at
+ * .command-title's own base 32px — typographically indistinguishable
+ * from the actual dominant session instrument at 40px directly below it
+ * (immediately above). A marketing-style strapline ("Training without
+ * guesswork.") shouldn't compete in scale with the real operative
+ * content; demoted here, scoped to TRAIN only, so BODY's own shared use
+ * of .field-tagline/.field-tagline__headline ("Evidence, not noise.")
+ * is completely unaffected — this overrides nothing in the base rule,
+ * it only narrows scope the same way .train-field .command-surface
+ * above already does for this exact primitive-sharing pattern. */
+.train-field .field-tagline {
+  margin-bottom: var(--space-4);
+}
+.train-field .field-tagline__headline {
+  font-size: 20px;
+  line-height: 1.3;
 }
 
 /* BODY — evidence. BODY's own doctrine deliberately treats its four

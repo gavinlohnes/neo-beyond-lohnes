@@ -630,8 +630,14 @@ export function TrainScreen({
         </div>
       )}
 
+      {/* FIELD-ARCH-001: was a plain .card plus an inline
+          style={{ borderColor: "var(--warning)" }} override — the same
+          "ad hoc card with a color hack" gap VISUAL-002 already found and
+          fixed for the danger/red tier (.card--warning); .card--caution
+          is that same fix for the warning/yellow tier this call site
+          actually needs. Same visible color/box, a real semantic class. */}
       {!session && !completionSummary && noCheckIn && (
-        <div className="card" style={{ borderColor: "var(--warning)" }}>
+        <div className="card card--caution">
           <p className="eyebrow" style={{ color: "var(--warning)", marginBottom: 4 }}>NO CHECK-IN YET</p>
           <p className="card-body" style={{ marginBottom: 12 }}>
             There's no check-in yet today, so TRAIN has nothing real to base a suggestion on below.
