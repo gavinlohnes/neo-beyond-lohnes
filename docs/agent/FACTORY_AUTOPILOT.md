@@ -67,9 +67,10 @@ only Contents and Pull requests write access, disables checkout credential persi
 the action revoke the short-lived installation token at job completion. The private key and token
 are never repository files or command output.
 
-Before mutation, the bootstrap verifies the live installation ID, App ID, App slug, bot account
-type/login, source PR author, and exact source head. It creates a replacement candidate at that
-exact commit and does not merge, approve, close, or delete either PR. A fresh formal exact-head
+Before mutation, the bootstrap verifies the token action's installation ID, configured App ID,
+App slug, source PR author, and exact source head. After PR creation it verifies the observed bot
+account type/login. It creates a replacement candidate at that exact commit and does not merge,
+approve, close, or delete either PR. A fresh formal exact-head
 review is still mandatory. The source-specific push trigger is intentionally not a general agent
 credential service or an autonomous integration path.
 

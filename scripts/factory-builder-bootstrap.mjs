@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { replacementBranchName, verifyBuilderBot, verifyBuilderInstallation } from "./factory-builder-bootstrap-core.mjs";
 
-const required = ["GITHUB_TOKEN", "GITHUB_REPOSITORY", "GITHUB_SHA", "EXPECTED_APP_ID", "EXPECTED_INSTALLATION_ID", "APP_SLUG"];
+const required = ["GITHUB_TOKEN", "GITHUB_REPOSITORY", "GITHUB_SHA", "EXPECTED_APP_ID", "EXPECTED_INSTALLATION_ID", "ACTUAL_INSTALLATION_ID", "APP_SLUG"];
 for (const name of required) if (!process.env[name]) throw new Error(`MISSING_${name}`);
 if (process.env.GITHUB_REPOSITORY !== "gavinlohnes/neo-beyond-lohnes") throw new Error("WRONG_REPOSITORY");
 
@@ -16,12 +16,9 @@ const api = async (path, options = {}) => {
   return response.status === 204 ? null : response.json();
 };
 
-const [installation, sourcePr] = await Promise.all([
-  api("/installation"),
-  api(`/repos/${repo}/pulls/47`),
-]);
+const sourcePr = await api(`/repos/${repo}/pulls/47`);
 const identity = verifyBuilderInstallation({
-  installation,
+  installation: { id: process.env.ACTUAL_INSTALLATION_ID, app_id: process.env.EXPECTED_APP_ID, app_slug: process.env.APP_SLUG },
   expectedAppId: process.env.EXPECTED_APP_ID,
   expectedInstallationId: process.env.EXPECTED_INSTALLATION_ID,
   expectedSlug: process.env.APP_SLUG,

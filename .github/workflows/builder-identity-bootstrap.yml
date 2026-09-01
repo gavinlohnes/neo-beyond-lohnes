@@ -33,5 +33,6 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           EXPECTED_APP_ID: ${{ vars.BEYOND_BUILDER_APP_ID }}
           EXPECTED_INSTALLATION_ID: ${{ vars.BEYOND_BUILDER_INSTALLATION_ID }}
+          ACTUAL_INSTALLATION_ID: ${{ steps.app-token.outputs.installation-id }}
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
         run: node scripts/factory-builder-bootstrap.mjs
