@@ -71,6 +71,16 @@ button, input {
   border-color: var(--danger);
 }
 
+/* FIELD-ARCH-001: the same gap VISUAL-002 found and fixed for the
+ * danger/red tier above, still open one tier down — TRAIN's own
+ * "NO CHECK-IN YET" nudge reached for `.card` plus an inline
+ * `style={{ borderColor: "var(--warning)" }}` instead of a real class
+ * that says what the surface is. Border only, same reasoning as
+ * .card--warning: this is a nudge, not a dominant decision. */
+.card--caution {
+  border-color: var(--warning);
+}
+
 .card-title {
   font-family: var(--font-display);
   font-size: 18px;
@@ -620,6 +630,36 @@ button, input {
   font-weight: 700;
 }
 
+/* FIELD-ARCH-001: an additive stacked variant for TODAY's own ORIENT
+ * reading only — the base .status-strip flex-row above is untouched, so
+ * TRAIN's own single-line active-execution reuse of .status-strip is
+ * completely unaffected (it never applies this modifier). Same content
+ * as always (describeContextStrip's sentence, the capacity dot+clause);
+ * this only gives it a real instrument-reading shape — label-free
+ * headline, then a quieter detail line — instead of one flat sentence,
+ * matching the reference's clearest structural idea for this section
+ * and TODAY's own OPERATE .command-title two inches below it. */
+.status-strip--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.status-strip__headline {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--text-1);
+}
+.status-strip__detail {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--text-2);
+}
+
 /* Overdrive Phase 11 (TODAY -> COMMAND 2.0): groups multiple cards under
    one quiet typographic label instead of wrapping them in yet another
    card — the "no dashboard wall" constraint means hierarchy has to come
@@ -833,6 +873,37 @@ button, input {
   padding-top: var(--space-3);
 }
 
+/* FIELD-ARCH-001 (visual acceptance loop, round 2): the full-page blur
+ * test found the actual defect the Drop was chartered for wasn't in
+ * ORIENT/OPERATE/pre-day (already corrected) but in the bottom ~60% of
+ * TODAY's real page — .btn-secondary (ALL GOOD / MANUAL CHECK-IN / YES /
+ * NO / CAPTURE) and unselected .chip rating buttons, repeated many times
+ * down the SUPPORT-tier stack, each carrying a solid --surface-2 fill.
+ * Under blur this reads as a long run of same-weight app-button
+ * rectangles — a conventional settings-list silhouette, not
+ * instrumentation — regardless of how the top of the screen reads.
+ * Scoped strictly to .today-support (never OPERATE/ATTENTION-tier
+ * content, never TRAIN/BODY/MORE, where .chip's own red-selected fill
+ * inside a dominant CommandSurface already reads well and is untouched):
+ * same buttons, same labels, same size (still >=44px, still full-width),
+ * same click behavior and disabled/focus states — outline only, no
+ * fill, so each reads as a tools-tier instrument control rather than an
+ * app button. --border-strong replaces --border-subtle since these no
+ * longer sit on a --surface-2 fill to read against; contrast for
+ * --text-1 improves (moving from --surface-2 to the true-black field),
+ * never regresses. .chip--selected's existing red fill is explicitly
+ * preserved — red-as-selected-authority still applies in SUPPORT tier,
+ * only the unselected/default chip fill is removed. */
+.today-support .btn-secondary,
+.today-support .chip {
+  background: transparent;
+  border-color: var(--border-strong);
+}
+.today-support .chip--selected {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
 /* TODAY-006 (Review Correction): a genuinely dominant surface needs real
  * spatial authority, not just a bigger label — reuses the exact
  * min-height/flex pattern .all-clear already establishes for QUIET, plus
@@ -879,6 +950,24 @@ button, input {
   letter-spacing: -0.02em;
   margin-top: var(--space-2);
   margin-bottom: var(--space-4);
+}
+
+/* FIELD-ARCH-001: TRAIN's own .field-tagline__headline rendered at
+ * .command-title's own base 32px — typographically indistinguishable
+ * from the actual dominant session instrument at 40px directly below it
+ * (immediately above). A marketing-style strapline ("Training without
+ * guesswork.") shouldn't compete in scale with the real operative
+ * content; demoted here, scoped to TRAIN only, so BODY's own shared use
+ * of .field-tagline/.field-tagline__headline ("Evidence, not noise.")
+ * is completely unaffected — this overrides nothing in the base rule,
+ * it only narrows scope the same way .train-field .command-surface
+ * above already does for this exact primitive-sharing pattern. */
+.train-field .field-tagline {
+  margin-bottom: var(--space-4);
+}
+.train-field .field-tagline__headline {
+  font-size: 20px;
+  line-height: 1.3;
 }
 
 /* BODY — evidence. BODY's own doctrine deliberately treats its four

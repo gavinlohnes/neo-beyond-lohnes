@@ -71,7 +71,7 @@ describe("accessibility (real browser, axe-core)", () => {
    */
   it("TodayScreen (pre-day, no BeyondDay started) has no violations beyond the known color-contrast exception", async () => {
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("heading", { level: 2, name: "Day not started" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Start your BEYOND Day" })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);
