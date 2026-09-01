@@ -43,6 +43,7 @@ import { dismissOutcome } from "../../../persistence/outcomeDismissals";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import {
   describeMinimumDaySummary,
+  getHydrationProgressPercent,
   isSeriouslyConstrained,
   MINIMUM_DAY_ENABLE_BODY,
   MINIMUM_DAY_ITEMS,
@@ -924,7 +925,7 @@ export function TodayScreen({
         >
           <div
             className="field-progress__fill"
-            style={{ width: `${Math.min(100, Math.round((minimumDayHydrateOz / MINIMUM_DAY_HYDRATE_OZ) * 100))}%` }}
+            style={{ width: `${getHydrationProgressPercent(minimumDayHydrateOz, MINIMUM_DAY_HYDRATE_OZ)}%` }}
           />
         </div>
         <p className="meta" style={{ marginBottom: 16 }}>
@@ -1400,7 +1401,7 @@ export function TodayScreen({
                     >
                       <div
                         className="field-progress__fill"
-                        style={{ width: `${Math.min(100, Math.round((minimumDayHydrateOz / MINIMUM_DAY_HYDRATE_OZ) * 100))}%` }}
+                        style={{ width: `${getHydrationProgressPercent(minimumDayHydrateOz, MINIMUM_DAY_HYDRATE_OZ)}%` }}
                       />
                     </div>
                   )}

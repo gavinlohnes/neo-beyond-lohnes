@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: bdcf07cf0ed70cf3f0bd7f31c67cb2b30e470986
 branch: claude/field-prototype-convergence
 contract: docs/agent/drops/FIELD-PROTOTYPE-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/45
 builder: Claude Code, assigned by Gavin, FIELD-PROTOTYPE-001
 reviewer: (unassigned)
 integrator: (unassigned)

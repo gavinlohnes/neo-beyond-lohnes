@@ -7,6 +7,7 @@ import {
   MINIMUM_DAY_PROMINENT_BODY,
   MINIMUM_DAY_PROMINENT_TITLE,
   describeMinimumDaySummary,
+  getHydrationProgressPercent,
 } from "../../src/ui/screens/today/minimumDayCopy";
 import type { StateCheckIn } from "../../src/domain/common/types";
 
@@ -175,5 +176,35 @@ describe("MINIMUM_DAY_ITEMS — auto vs manual is explained per item, matching g
     expect(MINIMUM_DAY_ITEMS.map((i) => i.key).sort()).toEqual(
       ["hydrate", "protein", "meds", "hygiene", "move", "recoverConnect"].sort(),
     );
+  });
+});
+
+/**
+ * FIELD-PROTOTYPE-001 independent review (PR #45): CONFIRMED — the
+ * original Math.round((total / target) * 100) let 39.9 / 40oz (99.75%)
+ * visually report as a full 100% bar while getMinimumDayStatus's real
+ * `hydrate` requirement (total >= MINIMUM_DAY_HYDRATE_OZ) was still
+ * false. The fill must never claim completion before the canonical
+ * state actually reaches it.
+ */
+describe("getHydrationProgressPercent — visual fill never claims completion before the canonical target is met", () => {
+  it("never rounds up to 100 while truthfully incomplete, even at 99.75%", () => {
+    expect(getHydrationProgressPercent(39.9, 40)).toBe(99);
+  });
+
+  it("reports exactly 100 once the total truly meets the target", () => {
+    expect(getHydrationProgressPercent(40, 40)).toBe(100);
+  });
+
+  it("reports 100 when the total exceeds the target, never more than 100", () => {
+    expect(getHydrationProgressPercent(52, 40)).toBe(100);
+  });
+
+  it("reports 0 for no progress yet", () => {
+    expect(getHydrationProgressPercent(0, 40)).toBe(0);
+  });
+
+  it("never returns a negative percentage for a malformed non-positive target", () => {
+    expect(getHydrationProgressPercent(20, 0)).toBe(0);
   });
 });
