@@ -1,6 +1,6 @@
 ---
 id: FACTORY-AUTOPILOT-001
-status: ACTIVE
+status: CLOSED
 baseline: 6ddc3c895492274564afe8b4d094c5ccd7778e88
 branch: beyond-builder/factory-autopilot-001-e11dd39432f3
 contract: docs/agent/drops/FACTORY-AUTOPILOT-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/50
 builder: Codex, explicitly assigned by Gavin for FACTORY-AUTOPILOT-001
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 124e8bf8cea38411f19f221dcf0a67d18f7bc61e
+closed_at: 2026-09-01T10:41:07.729Z
 ---
 
 # ACTIVE_DROP
