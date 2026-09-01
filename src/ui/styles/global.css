@@ -1419,9 +1419,26 @@ button, input {
 .shell-nav__item:first-child {
   border-left: none;
 }
+/*
+ * SHELL-001 contrast correction: --accent text on the new --surface-active
+ * cell fill computes to ~3.12:1 (16px/700-weight doesn't meet WCAG's
+ * ~18.66px bold "large text" threshold, so 4.5:1 is the applicable AA
+ * minimum) — a measurable regression from this same label's ~3.25:1 on
+ * the prior --surface-1 background, and neither passed. --text-1 on
+ * --surface-active computes to ~15.9:1, independently verified;
+ * --accent-strong was checked too and rejected — ~4.41:1, still under
+ * 4.5:1. This is exactly Icon.tsx's own documented color contract
+ * ("color is entirely CSS-driven... monochrome via var(--text-1)/
+ * var(--text-2)") — currentColor from this one property already drives
+ * both the label text and the icon (Icon.tsx has no color of its own),
+ * so this single change is the correction, not a partial one. The red
+ * cell fill above and the red structural tick below are untouched —
+ * "which destination is active" is still told through fill + tick +
+ * bold weight + aria-current, not through this text/icon color alone.
+ */
 .shell-nav__item--active {
   background: var(--surface-active);
-  color: var(--accent);
+  color: var(--text-1);
   font-weight: 700;
 }
 /* LEVEL 1/STRUCTURAL selected-territory cue (Suit Implementation 01B) —
