@@ -69,7 +69,8 @@ are never repository files or command output.
 
 Before mutation, the bootstrap verifies the token action's installation ID, configured App ID,
 App slug, source PR author, and exact source head. After PR creation it verifies the observed bot
-account type/login. It creates a replacement candidate at that exact commit and does not merge,
+account type/login. It creates a replacement candidate from that exact commit, then adds one
+App-authored routing commit so `ACTIVE_DROP.md` points to the replacement PR. It does not merge,
 approve, close, or delete either PR. A fresh formal exact-head
 review is still mandatory. The source-specific push trigger is intentionally not a general agent
 credential service or an autonomous integration path.

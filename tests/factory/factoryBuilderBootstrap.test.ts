@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { replacementBranchName, verifyBuilderBot, verifyBuilderInstallation } from "../../scripts/factory-builder-bootstrap-core.mjs";
+import { replacePrPointer, replacementBranchName, verifyBuilderBot, verifyBuilderInstallation } from "../../scripts/factory-builder-bootstrap-core.mjs";
 
 const valid = {
   installation: { id: 158170874, app_id: 4790533, app_slug: "beyond-builder" },
@@ -30,5 +30,11 @@ describe("Builder identity bootstrap", () => {
   it("derives a deterministic candidate branch only from a full SHA", () => {
     expect(replacementBranchName("a".repeat(40))).toBe("beyond-builder/factory-autopilot-001-aaaaaaaaaaaa");
     expect(() => replacementBranchName("main")).toThrow("INVALID_SOURCE_SHA");
+  });
+
+  it("updates only the exact source PR routing pointer", () => {
+    const source = "---\nid: FACTORY-AUTOPILOT-001\npr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/47\n---\n";
+    expect(replacePrPointer(source, "https://github.com/gavinlohnes/neo-beyond-lohnes/pull/49")).toContain("pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/49");
+    expect(() => replacePrPointer(source.replace("47", "48"), "https://github.com/gavinlohnes/neo-beyond-lohnes/pull/49")).toThrow("SOURCE_PR_POINTER_MISMATCH");
   });
 });

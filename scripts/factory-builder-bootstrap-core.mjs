@@ -19,3 +19,10 @@ export function replacementBranchName(sourceSha) {
   if (!/^[0-9a-f]{40}$/.test(sourceSha)) throw new Error("INVALID_SOURCE_SHA");
   return `beyond-builder/factory-autopilot-001-${sourceSha.slice(0, 12)}`;
 }
+
+export function replacePrPointer(text, replacementUrl) {
+  if (!/^pr:\s+https:\/\/github\.com\/gavinlohnes\/neo-beyond-lohnes\/pull\/47$/m.test(text)) {
+    throw new Error("SOURCE_PR_POINTER_MISMATCH");
+  }
+  return text.replace(/^pr:\s+.+$/m, `pr: ${replacementUrl}`);
+}

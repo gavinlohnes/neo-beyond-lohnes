@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { replacementBranchName, verifyBuilderBot, verifyBuilderInstallation } from "./factory-builder-bootstrap-core.mjs";
+import { readFileSync } from "node:fs";
+import { replacePrPointer, replacementBranchName, verifyBuilderBot, verifyBuilderInstallation } from "./factory-builder-bootstrap-core.mjs";
 
 const required = ["GITHUB_TOKEN", "GITHUB_REPOSITORY", "GITHUB_SHA", "EXPECTED_APP_ID", "EXPECTED_INSTALLATION_ID", "ACTUAL_INSTALLATION_ID", "APP_SLUG"];
 for (const name of required) if (!process.env[name]) throw new Error(`MISSING_${name}`);
@@ -48,4 +49,27 @@ if (replacement.head.sha !== process.env.GITHUB_SHA) {
   throw new Error("REPLACEMENT_IDENTITY_OR_HEAD_MISMATCH");
 }
 
-console.log(JSON.stringify({ ok: true, authenticated_builder: botLogin, app_slug: identity.app_slug, installation_id: String(identity.installation_id), replacement_pr: replacement.html_url, replacement_head: replacement.head.sha }));
+const activeDrop = replacePrPointer(readFileSync("docs/agent/ACTIVE_DROP.md", "utf8"), replacement.html_url);
+const sourceCommit = await api(`/repos/${repo}/git/commits/${process.env.GITHUB_SHA}`);
+const blob = await api(`/repos/${repo}/git/blobs`, {
+  method: "POST",
+  body: JSON.stringify({ content: activeDrop, encoding: "utf-8" }),
+  headers: { "Content-Type": "application/json" },
+});
+const tree = await api(`/repos/${repo}/git/trees`, {
+  method: "POST",
+  body: JSON.stringify({ base_tree: sourceCommit.tree.sha, tree: [{ path: "docs/agent/ACTIVE_DROP.md", mode: "100644", type: "blob", sha: blob.sha }] }),
+  headers: { "Content-Type": "application/json" },
+});
+const routingCommit = await api(`/repos/${repo}/git/commits`, {
+  method: "POST",
+  body: JSON.stringify({ message: `chore(factory): route active Drop to PR #${replacement.number}`, tree: tree.sha, parents: [process.env.GITHUB_SHA] }),
+  headers: { "Content-Type": "application/json" },
+});
+await api(`/repos/${repo}/git/refs/heads/${branch}`, {
+  method: "PATCH",
+  body: JSON.stringify({ sha: routingCommit.sha, force: false }),
+  headers: { "Content-Type": "application/json" },
+});
+
+console.log(JSON.stringify({ ok: true, authenticated_builder: botLogin, app_slug: identity.app_slug, installation_id: String(identity.installation_id), replacement_pr: replacement.html_url, replacement_head: routingCommit.sha }));

@@ -12,3 +12,4 @@ export function verifyBuilderInstallation(input: BuilderIdentityInput): {
 export function verifyBuilderBot(user: { login?: string; type?: string }, expectedSlug: string): string;
 
 export function replacementBranchName(sourceSha: string): string;
+export function replacePrPointer(text: string, replacementUrl: string): string;
