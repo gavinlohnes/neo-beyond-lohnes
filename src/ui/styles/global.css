@@ -873,6 +873,37 @@ button, input {
   padding-top: var(--space-3);
 }
 
+/* FIELD-ARCH-001 (visual acceptance loop, round 2): the full-page blur
+ * test found the actual defect the Drop was chartered for wasn't in
+ * ORIENT/OPERATE/pre-day (already corrected) but in the bottom ~60% of
+ * TODAY's real page — .btn-secondary (ALL GOOD / MANUAL CHECK-IN / YES /
+ * NO / CAPTURE) and unselected .chip rating buttons, repeated many times
+ * down the SUPPORT-tier stack, each carrying a solid --surface-2 fill.
+ * Under blur this reads as a long run of same-weight app-button
+ * rectangles — a conventional settings-list silhouette, not
+ * instrumentation — regardless of how the top of the screen reads.
+ * Scoped strictly to .today-support (never OPERATE/ATTENTION-tier
+ * content, never TRAIN/BODY/MORE, where .chip's own red-selected fill
+ * inside a dominant CommandSurface already reads well and is untouched):
+ * same buttons, same labels, same size (still >=44px, still full-width),
+ * same click behavior and disabled/focus states — outline only, no
+ * fill, so each reads as a tools-tier instrument control rather than an
+ * app button. --border-strong replaces --border-subtle since these no
+ * longer sit on a --surface-2 fill to read against; contrast for
+ * --text-1 improves (moving from --surface-2 to the true-black field),
+ * never regresses. .chip--selected's existing red fill is explicitly
+ * preserved — red-as-selected-authority still applies in SUPPORT tier,
+ * only the unselected/default chip fill is removed. */
+.today-support .btn-secondary,
+.today-support .chip {
+  background: transparent;
+  border-color: var(--border-strong);
+}
+.today-support .chip--selected {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
 /* TODAY-006 (Review Correction): a genuinely dominant surface needs real
  * spatial authority, not just a bigger label — reuses the exact
  * min-height/flex pattern .all-clear already establishes for QUIET, plus
