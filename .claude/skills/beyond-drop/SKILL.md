@@ -415,3 +415,13 @@ accepting it — a caller-supplied integration SHA is never trusted at face valu
 `ACTIVE_DROP.md`'s `status` to `CLOSED` and records the integration SHA; it never deletes or
 rewrites the Drop Contract file, which remains this repository's permanent record of what that
 Drop was authorized to do.
+
+## 10. Campaign recovery and deterministic next action
+
+`docs/agent/FACTORY_AUTOPILOT.md` defines the optional campaign layer. `npm run factory:status`
+returns compact JSON derived from Git, the active campaign/Drop, and live GitHub PR/check/review
+state. It fails closed on missing or stale evidence, including approval that does not match the
+current PR head. A campaign may make its next bounded Drop mechanically `DROP_READY`; it never
+assigns a Builder, supplies independent judgment, authorizes implementation by itself, merges,
+or resolves an owner escalation. Existing single-Drop operation remains valid when no campaign
+pointer exists.

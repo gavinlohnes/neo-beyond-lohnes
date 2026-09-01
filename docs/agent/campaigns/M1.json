@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "id": "M1",
+  "title": "DECISION & OUTCOME MEMORY + OPERATIONAL REVIEW",
+  "status": "DRAFT",
+  "risk_ceiling": "ARCHITECTURAL",
+  "authorization": { "owner_approved": false, "approved_by": "(pending owner approval of decomposed campaign)" },
+  "invariants": [
+    "Deterministic Engine authority remains unchanged unless a separately authorized Drop says otherwise.",
+    "Every Drop remains bounded and independently reviewed at its exact head when required.",
+    "No campaign manifest itself grants implementation authority."
+  ],
+  "non_goals": ["M1 product implementation inside FACTORY-AUTOPILOT-001", "Automatic Builder assignment", "Automatic product or doctrine decisions"],
+  "escalation_conditions": ["PRODUCT_CHOICE_FORK", "DOCTRINE_CONFLICT", "DESTRUCTIVE_MIGRATION", "PRIVACY_OR_SECURITY_BOUNDARY", "RECURRING_EXTERNAL_COST", "MATERIAL_SCOPE_EXPANSION", "NEW_AUTOMATION_PROVIDER_OR_AI_AUTHORITY"],
+  "completion_criteria": ["The campaign is decomposed into bounded Drops and explicitly approved by the owner."],
+  "drops": []
+}

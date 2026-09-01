@@ -14,6 +14,7 @@
     "check:architecture": "node scripts/check-architecture-boundaries.mjs",
     "check:risk": "node scripts/classify-risk.mjs",
     "factory:drop": "node scripts/factory-drop.mjs",
+    "factory:status": "node scripts/factory-autopilot.mjs",
     "verify": "npm run check:architecture && vitest run && npm run build"
   },
   "dependencies": {
