@@ -211,6 +211,26 @@ canonical operation:
   `getComputedStyle` sweep, not just source inspection, since Vitest
   alone can't verify rendered pixel sizes. 2026-08-20.
 
+## System identity — EMBLEM vs. GLYPHS split
+
+Locked 2026-08-31 (SHELL-001, direct owner ruling), correcting SHELL-001's original contract
+framing, which had claimed the universal/core diamond motif was itself "BEYOND's one stable
+system-identity glyph."
+
+- **The universal/core diamond is retired as BEYOND system identity.** It is not, and is not
+  meant to become, the machine's own signature mark.
+- **EMBLEM = THE MACHINE.** A single dedicated machine-identity mark (a future Bat-style emblem)
+  is BEYOND's system identity. It does not exist yet and is not required to finish SHELL-001 or
+  any Drop that doesn't explicitly own building it. It must never be invented, traced,
+  approximated, or introduced as placeholder artwork by a Drop not explicitly chartered to
+  deliver it.
+- **GLYPHS = THE INSTRUMENTS.** TODAY/TRAIN/BODY/MORE's existing locked pilot icon family
+  ([Icon.tsx](../src/ui/icons/Icon.tsx)) remains the existing locked destination/instrument
+  glyph set — unchanged geometry, unrelated to machine identity.
+- A future machine-emblem Drop must name its own exact placement as a locked decision before
+  implementation; see `docs/agent/drops/SHELL-001.md` ("Deferred to future machine-emblem
+  integration") for the minimal integration seam it inherits.
+
 ## Explicitly out of scope (do not build without direct sign-off)
 
 - BATCAVE

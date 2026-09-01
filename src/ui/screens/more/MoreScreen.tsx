@@ -13,6 +13,7 @@ import { SearchScreen } from "../search/SearchScreen";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
 import { IntentScreen } from "./IntentScreen";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { Icon } from "../../icons/Icon";
 
 // FIELD ALPHA Phase 0 truth-hygiene fix: this was hardcoded at 4 (stale
 // since the Drop 02a/schedulePatterns migration) while the live Dexie
@@ -212,8 +213,17 @@ export function MoreScreen() {
     <div className="screen fade-in">
       {/* FIELD ALPHA Phase 4: identity zone quieted, same principle
           applied to TODAY/TRAIN/BODY — MORE is the SYSTEM surface, not a
-          fifth destination competing for its own display title. */}
-      <h1 className="eyebrow">MORE // SYSTEM</h1>
+          fifth destination competing for its own display title.
+          SHELL-001: wrapped in .field-header, matching the identity
+          treatment TODAY/TRAIN/BODY already carry — the same locked
+          pilot "more" glyph MORE's own nav tab already uses, plus the
+          closing structural rule, so all four destinations open the
+          same way. No IA change: still the exact same MENU view, same
+          heading text/class. */}
+      <div className="field-header">
+        <Icon name="more" size={22} />
+        <h1 className="eyebrow">MORE // SYSTEM</h1>
+      </div>
 
       {/* FIELD ALPHA Phase 4B: reorganized by functional meaning
           (OPERATIONS / RECORDS / SYSTEM) rather than historical screen

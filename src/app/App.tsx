@@ -65,7 +65,11 @@ function AppUpdateBanner() {
         marginInline: "auto",
       }}
     >
-      <p className="eyebrow" style={{ marginBottom: 4 }}>SYSTEM UPDATE READY</p>
+      {/* SHELL-001: .eyebrow is reserved for a screen's own IDENTITY
+          (locked, Suit Layer 01) — this is a system notification, not an
+          identity label, so it uses the same neutral .tool-label every
+          other utility surface's own header does. */}
+      <p className="tool-label" style={{ marginBottom: 4 }}>SYSTEM UPDATE READY</p>
       <p className="card-body" style={{ marginBottom: 12 }}>
         A newer version of BEYOND is available. Nothing in progress is lost — your data stays exactly as it is.
       </p>
@@ -157,24 +161,16 @@ export function App() {
 
       <AppUpdateBanner />
 
-      <nav
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          display: "flex",
-          borderTop: "1px solid var(--border-subtle)",
-          // Suit Implementation 01B, directive 8 ("make Utility Belt feel
-          // integrated"): a distinct material (--surface-1, the same
-          // raised-panel token cards use) instead of the bare screen
-          // background, so the belt reads as its own fixed piece of
-          // equipment rather than a transparent tab strip floating over
-          // the void. Touch regions, labels, and IA are unchanged.
-          background: "var(--surface-1)",
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
-        }}
-      >
+      {/* SHELL-001: extracted from per-render inline style objects into
+          named .shell-nav* classes (global.css) — same fixed position,
+          same --surface-1 "Utility Belt" material (Suit Implementation
+          01B, directive 8: a distinct material so the belt reads as its
+          own fixed piece of equipment, not a transparent tab strip),
+          same touch regions/labels/IA. Nothing about what App.test.tsx
+          already locks in (44px touch targets, 700-weight selected
+          cue, the red structural tick, aria-current) changed — only
+          how it's expressed. */}
+      <nav className="shell-nav">
         {(["TODAY", "TRAIN", "BODY", "MORE"] as Tab[]).map((t) => (
           <button
             key={t}
@@ -183,22 +179,7 @@ export function App() {
               setTab(t);
             }}
             aria-current={tab === t ? "page" : undefined}
-            style={{
-              position: "relative",
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 4,
-              background: "none",
-              border: "none",
-              padding: "12px 0",
-              minHeight: 44,
-              color: tab === t ? "var(--accent)" : "var(--text-2)",
-              fontWeight: tab === t ? 700 : 400,
-              fontSize: 16,
-              letterSpacing: "0.04em",
-            }}
+            className={`shell-nav__item${tab === t ? " shell-nav__item--active" : ""}`}
           >
             {/* BEYOND Suit Implementation 01 — Utility Belt (Part 11),
                 widened in 01B (directive 8): a LEVEL 1 / STRUCTURAL red
@@ -207,20 +188,7 @@ export function App() {
                 through more than color alone. A thin directional tick,
                 not a pill or glow; aria-hidden since aria-current on the
                 button already carries this for assistive tech. */}
-            {tab === t && (
-              <span
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  width: 28,
-                  height: 3,
-                  background: "var(--accent)",
-                }}
-              />
-            )}
+            {tab === t && <span aria-hidden="true" className="shell-nav__indicator" />}
             <Icon name={TAB_ICON[t]} size={24} />
             {t}
           </button>
