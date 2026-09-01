@@ -69,6 +69,10 @@ surfaced rather than silently resolved.
   never assumed from memory or from a prior session's notes.
 - **Stop when the authorized Drop is complete.** Do not continue into the next Drop, the next
   campaign, or adjacent cleanup once the stated objective is met and verified.
+- **Derive campaign mechanics; preserve judgment boundaries.** When an approved campaign pointer
+  exists, `npm run factory:status` derives the active Drop and next legal mechanical action from
+  repository/GitHub truth. `DROP_READY` is discovery, never implicit Builder assignment or product
+  authorization. See `docs/agent/FACTORY_AUTOPILOT.md`.
 
 ## The Drop contract
 

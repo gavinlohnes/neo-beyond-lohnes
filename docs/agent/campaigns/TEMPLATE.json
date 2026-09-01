@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "CAMPAIGN-ID",
+  "title": "CAMPAIGN TITLE",
+  "status": "DRAFT",
+  "risk_ceiling": "ARCHITECTURAL",
+  "authorization": { "owner_approved": false, "approved_by": "REPLACE_WITH_OWNER_IDENTITY" },
+  "invariants": [],
+  "non_goals": [],
+  "escalation_conditions": [],
+  "completion_criteria": [],
+  "drops": [
+    {
+      "id": "DROP-ID",
+      "title": "DROP TITLE",
+      "risk_tier": "ROUTINE",
+      "depends_on": []
+    }
+  ]
+}
