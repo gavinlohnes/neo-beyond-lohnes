@@ -58,6 +58,21 @@ but never authorize. A moved head invalidates approval. GitHub proves account/st
 not stronger separate-session provenance; Builder/Reviewer session separation remains a
 procedural trust boundary and insufficient identity evidence fails closed.
 
+## Builder App identity bootstrap
+
+The one-shot `Builder Identity Bootstrap` workflow migrates the in-flight
+FACTORY-AUTOPILOT-001 candidate from an owner-authored PR to a PR authored by the repository-only
+BEYOND Builder GitHub App. It uses the official token action pinned to an exact commit, requests
+only Contents and Pull requests write access, disables checkout credential persistence, and lets
+the action revoke the short-lived installation token at job completion. The private key and token
+are never repository files or command output.
+
+Before mutation, the bootstrap verifies the live installation ID, App ID, App slug, bot account
+type/login, source PR author, and exact source head. It creates a replacement candidate at that
+exact commit and does not merge, approve, close, or delete either PR. A fresh formal exact-head
+review is still mandatory. The source-specific push trigger is intentionally not a general agent
+credential service or an autonomous integration path.
+
 ## Owner-work metric
 
 Before this Drop the owner routinely relayed baseline/head SHAs, active Drop and PR pointers, CI
