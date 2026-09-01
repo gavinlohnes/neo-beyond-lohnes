@@ -17,14 +17,26 @@ It removes owner relay work; it does not replace Builder, Reviewer, Integrator, 
 
 ## Campaign authorization
 
-Campaigns are versioned JSON manifests under `docs/agent/campaigns/`. An approved manifest contains
+Campaigns are versioned JSON manifests under `docs/agent/campaigns/`. Schema v1 and manifest
+booleans are legacy, non-authorizing inputs. A schema-v2 manifest contains
 an ordered list of bounded Drops, shared invariants/non-goals, a risk ceiling, dependencies,
 escalation conditions, and completion criteria. `DRAFT` is deliberately non-operational.
 Any `HIGH-RISK` Drop also requires `owner_ruling: { "obtained": true, "reference": "..." }` in
 the approved manifest; a campaign-level risk ceiling never substitutes for that ruling.
 
-To activate an owner-approved campaign, commit its manifest with `status: APPROVED`,
-`authorization.owner_approved: true`, and `authorization.approved_by`; then add
+Campaign authority requires a domain-separated `CAMPAIGN_AUTHORIZATION` declaration containing
+the monotonic campaign revision, deterministic manifest digest, Owner login, authorization PR,
+expiry, work classes, risk ceiling, and prohibited boundaries. Live GitHub evidence must be a
+formal Owner `APPROVED` review on that exact revision whose body is exactly typed JSON:
+`{"type":"CAMPAIGN_AUTHORIZATION","revision":"<revision>","digest":"<digest>"}`. The formal
+review's GitHub `commit_id` must equal the manifest commit derived from trusted master. Ordinary PR approval, comments,
+labels, prose, Builder identity, and synthetic fixtures never authorize a campaign.
+
+PAUSE, RESUME, REVOKE, and ESCALATE are typed Owner lifecycle events bound to the same revision
+and digest. PAUSE is resumable only while authority is unchanged and valid; REVOKE is terminal
+for that revision. High-Risk Drops still require their own explicit Owner ruling.
+
+To activate an authorized campaign, commit its exact reviewed manifest and then add
 `docs/agent/ACTIVE_CAMPAIGN.json` pointing to the manifest. The command derives and verifies the
 manifest's actual commit from `origin/master` and refuses a working copy that differs from remote
 truth. The pointer makes the campaign discoverable. It does not assign a Builder or implement a

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveNextAction, reconcileActiveDrops } from "../../scripts/factory-autopilot-core.mjs";
+import { campaignDigest, deriveNextAction, reconcileActiveDrops, validateCampaignAuthorization } from "../../scripts/factory-autopilot-core.mjs";
 
 const SHA = {
   auth: "a".repeat(40),
@@ -10,22 +10,25 @@ const SHA = {
 };
 
 function campaign(overrides: Record<string, unknown> = {}) {
-  return {
-    schema_version: 1,
+  const value = {
+    schema_version: 2,
     id: "C-001",
     title: "Test campaign",
     status: "APPROVED",
     risk_ceiling: "ARCHITECTURAL",
-    authorization: { owner_approved: true, approved_by: "Owner" },
+    authorization: { type: "CAMPAIGN_AUTHORIZATION", revision: SHA.auth, digest: "digest-1", owner_login: "gavinlohnes", allowed_work_classes: ["FACTORY"], risk_ceiling: "ARCHITECTURAL", prohibited_boundaries: ["PERSISTENCE"] },
     invariants: ["no weakened gates"],
     non_goals: [],
     escalation_conditions: ["PRIVACY_BOUNDARY_CHANGE"],
     drops: [
-      { id: "DROP-001", title: "First", risk_tier: "ROUTINE", depends_on: [] },
-      { id: "DROP-002", title: "Second", risk_tier: "ARCHITECTURAL", depends_on: ["DROP-001"] },
+      { id: "DROP-001", title: "First", work_class: "FACTORY", risk_tier: "ROUTINE", boundaries: [], depends_on: [] },
+      { id: "DROP-002", title: "Second", work_class: "FACTORY", risk_tier: "ARCHITECTURAL", boundaries: [], depends_on: ["DROP-001"] },
     ],
     ...overrides,
   };
+  if (overrides.authorization) value.authorization = { type: "CAMPAIGN_AUTHORIZATION", revision: SHA.auth, digest: "", owner_login: "gavinlohnes", allowed_work_classes: ["FACTORY"], risk_ceiling: "ARCHITECTURAL", prohibited_boundaries: ["PERSISTENCE"], ...(overrides.authorization as Record<string, unknown>) };
+  value.authorization.digest = campaignDigest(value);
+  return value;
 }
 
 function active(overrides: Record<string, unknown> = {}) {
@@ -53,9 +56,11 @@ function review(overrides: Record<string, unknown> = {}) {
 }
 
 function input(overrides: Record<string, unknown> = {}) {
+  const manifest = campaign();
   return {
-    campaign: campaign(),
-    master: { sha: SHA.base, authorization_commit_is_ancestor: true },
+    campaign: manifest,
+    master: { sha: SHA.base, authorization_commit_is_ancestor: true, authorization_commit: SHA.auth },
+    campaign_authorization: { source: "LIVE_GITHUB_CAMPAIGN_AUTHORIZATION", domain: "CAMPAIGN_AUTHORIZATION", state: "APPROVED", commit_sha: SHA.auth, revision: SHA.auth, author_login: "gavinlohnes", author_association: "OWNER", digest: manifest.authorization.digest, active_digest: manifest.authorization.digest, lifecycle: [] },
     active_drop: active(),
     completed_drops: [],
     pr: pr(),
@@ -111,13 +116,13 @@ describe("Factory Autopilot next-action derivation", () => {
   });
 
   it.each([
-    ["unsupported schema", campaign({ schema_version: 99 }), "UNSUPPORTED_CAMPAIGN_SCHEMA"],
-    ["stale authorization", campaign(), "STALE_CAMPAIGN_AUTHORIZATION"],
+    ["unsupported schema", campaign({ schema_version: 99 }), "INVALID_AUTHORIZATION"],
+    ["stale authorization", campaign(), "STALE_AUTHORIZATION"],
     ["risk ceiling", campaign({ risk_ceiling: "ROUTINE" }), "RISK_CEILING_EXCEEDED"],
-    ["later dependency", campaign({ drops: [{ id: "DROP-002", title: "Second", risk_tier: "ROUTINE", depends_on: ["DROP-001"] }] }), "MALFORMED_CAMPAIGN"],
-    ["high-risk without owner ruling", campaign({ risk_ceiling: "HIGH-RISK", drops: [{ id: "DROP-HIGH", title: "High", risk_tier: "HIGH-RISK", depends_on: [] }] }), "HIGH_RISK_OWNER_RULING_REQUIRED"],
+    ["later dependency", campaign({ drops: [{ id: "DROP-002", title: "Second", work_class: "FACTORY", risk_tier: "ROUTINE", boundaries: [], depends_on: ["DROP-001"] }] }), "MALFORMED_CAMPAIGN"],
+    ["high-risk without owner ruling", campaign({ risk_ceiling: "HIGH-RISK", authorization: { ...campaign().authorization, risk_ceiling: "HIGH-RISK" }, drops: [{ id: "DROP-HIGH", title: "High", work_class: "FACTORY", risk_tier: "HIGH-RISK", boundaries: [], depends_on: [] }] }), "HIGH_RISK_OWNER_RULING_REQUIRED"],
   ])("fails closed for %s", (_name, candidate, code) => {
-    const overrides = code === "STALE_CAMPAIGN_AUTHORIZATION"
+    const overrides = code === "STALE_AUTHORIZATION"
       ? { campaign: candidate, master: { sha: SHA.base, authorization_commit_is_ancestor: false } }
       : { campaign: candidate };
     expect(deriveNextAction(input(overrides))).toMatchObject({ ok: false, escalation: { code } });
@@ -173,5 +178,58 @@ describe("Factory Autopilot next-action derivation", () => {
   it("keeps the existing single-Drop workflow compatible when no campaign is active", () => {
     expect(deriveNextAction({ campaign: null, active_drop: active() })).toMatchObject({ ok: true, action: "LEGACY_DROP_ACTIVE", drop_id: "DROP-001" });
     expect(deriveNextAction({ campaign: null, active_drop: null })).toMatchObject({ ok: true, action: "NO_CAMPAIGN" });
+  });
+
+  it.each([
+    ["synthetic", { synthetic: true }, "INVALID_AUTHORIZATION"],
+    ["stale revision", { commit_sha: SHA.stale }, "INVALID_AUTHORIZATION"],
+    ["wrong owner", { author_login: "builder" }, "INVALID_AUTHORIZATION"],
+    ["digest drift", { active_digest: "changed" }, "SCOPE_MISMATCH"],
+    ["paused", { lifecycle: [{ type: "PAUSE", revision: SHA.auth, digest: "digest-1", author_login: "gavinlohnes" }] }, "PAUSED"],
+    ["revoked", { lifecycle: [{ type: "REVOKE", revision: SHA.auth, digest: "digest-1", author_login: "gavinlohnes" }] }, "REVOKED"],
+  ])("fails closed for campaign authority: %s", (_name, override, state) => {
+    const manifest: any = campaign();
+    const evidence: any = { ...input().campaign_authorization as Record<string, unknown>, digest: manifest.authorization.digest, active_digest: manifest.authorization.digest, ...override };
+    if (Array.isArray(evidence.lifecycle)) evidence.lifecycle = evidence.lifecycle.map((event: Record<string, unknown>) => ({ ...event, digest: manifest.authorization.digest }));
+    expect(validateCampaignAuthorization({ campaign: manifest, evidence, master: input().master, candidate_drop: manifest.drops[0] })).toMatchObject({ state });
+  });
+
+  it("allows unchanged pause/resume but never resumes a revoked revision", () => {
+    const baseEvent = { revision: SHA.auth, digest: "digest-1", author_login: "gavinlohnes" };
+    const manifest = campaign();
+    baseEvent.digest = manifest.authorization.digest;
+    const evidence = { ...input().campaign_authorization as Record<string, unknown>, digest: manifest.authorization.digest, active_digest: manifest.authorization.digest, lifecycle: [{ ...baseEvent, type: "PAUSE" }, { ...baseEvent, type: "RESUME" }] };
+    expect(validateCampaignAuthorization({ campaign: manifest, evidence, master: input().master, candidate_drop: manifest.drops[0] })).toMatchObject({ state: "AUTHORIZED" });
+    evidence.lifecycle.push({ ...baseEvent, type: "REVOKE" }, { ...baseEvent, type: "RESUME" });
+    expect(validateCampaignAuthorization({ campaign: manifest, evidence, master: input().master, candidate_drop: manifest.drops[0] })).toMatchObject({ state: "REVOKED" });
+  });
+
+  it.each([
+    ["work class", { work_class: "PRODUCT" }, {}, "SCOPE_MISMATCH"],
+    ["risk ceiling", { risk_tier: "HIGH-RISK", owner_ruling: { obtained: true, reference: "owner" } }, {}, "RISK_CEILING_EXCEEDED"],
+    ["prohibited boundary", { boundaries: ["PERSISTENCE"] }, {}, "PROHIBITED_BOUNDARY"],
+    ["high-risk ruling", { risk_tier: "HIGH-RISK" }, { authorization: { risk_ceiling: "HIGH-RISK" } }, "ESCALATION_REQUIRED"],
+  ])("enforces candidate authority boundary: %s", (_name, dropOverride, campaignOverride, state) => {
+    const manifest = campaign(campaignOverride);
+    const evidence = { ...input().campaign_authorization as Record<string, unknown>, digest: manifest.authorization.digest, active_digest: manifest.authorization.digest };
+    expect(validateCampaignAuthorization({ campaign: manifest, evidence, master: input().master, candidate_drop: { ...manifest.drops[0], ...dropOverride } })).toMatchObject({ state });
+  });
+
+  it("expires and escalates explicitly", () => {
+    const manifest: any = campaign({ authorization: { ...campaign().authorization, expires_at: "2026-01-01T00:00:00Z" } });
+    const evidence: any = { ...input().campaign_authorization as Record<string, unknown>, digest: manifest.authorization.digest, active_digest: manifest.authorization.digest };
+    expect(validateCampaignAuthorization({ campaign: manifest, evidence, master: input().master, candidate_drop: manifest.drops[0], now: "2026-09-01T00:00:00Z" })).toMatchObject({ state: "EXPIRED" });
+    delete manifest.authorization.expires_at;
+    manifest.authorization.digest = campaignDigest(manifest);
+    evidence.digest = manifest.authorization.digest;
+    evidence.active_digest = manifest.authorization.digest;
+    evidence.escalations = ["DOCTRINE_CONFLICT"];
+    expect(validateCampaignAuthorization({ campaign: manifest, evidence, master: input().master, candidate_drop: manifest.drops[0] })).toMatchObject({ state: "OWNER_DECISION_REQUIRED" });
+  });
+
+  it("rejects malformed authorization timestamps", () => {
+    const manifest: any = campaign({ authorization: { ...campaign().authorization, expires_at: "not-a-timestamp" } });
+    const evidence: any = { ...input().campaign_authorization as Record<string, unknown>, digest: manifest.authorization.digest, active_digest: manifest.authorization.digest };
+    expect(validateCampaignAuthorization({ campaign: manifest, evidence, master: input().master, candidate_drop: manifest.drops[0] })).toMatchObject({ state: "INVALID_AUTHORIZATION", reason: "MALFORMED_EXPIRY" });
   });
 });

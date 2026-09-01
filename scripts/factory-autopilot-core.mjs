@@ -1,5 +1,8 @@
+import { createHash } from "node:crypto";
+
 const RISK_ORDER = Object.freeze({ ROUTINE: 0, ARCHITECTURAL: 1, "HIGH-RISK": 2 });
 const CAMPAIGN_STATUSES = new Set(["DRAFT", "APPROVED", "COMPLETE"]);
+const AUTH_LIFECYCLE = new Set(["PAUSE", "RESUME", "REVOKE", "ESCALATE"]);
 
 export const NEXT_ACTION = Object.freeze({
   NO_CAMPAIGN: "NO_CAMPAIGN",
@@ -40,12 +43,80 @@ export function reconcileActiveDrops(candidates) {
   return { active: unique[0] ?? null };
 }
 
-function validateCampaign(campaign) {
+export function canonicalCampaignPayload(campaign) {
+  const copy = structuredClone(campaign);
+  if (copy.authorization) copy.authorization.digest = "";
+  const stable = (value) => Array.isArray(value)
+    ? value.map(stable)
+    : value && typeof value === "object"
+      ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, stable(value[key])]))
+      : value;
+  return JSON.stringify(stable(copy));
+}
+
+export function campaignDigest(campaign) {
+  return createHash("sha256").update(canonicalCampaignPayload(campaign)).digest("hex");
+}
+
+export function validateCampaignAuthorization({ campaign, evidence, master, candidate_drop: candidate, now = new Date().toISOString() }) {
+  if (campaign?.schema_version !== 2) return { state: "INVALID_AUTHORIZATION", reason: "LEGACY_OR_UNSUPPORTED_SCHEMA" };
+  const declaration = campaign.authorization;
+  if (declaration?.type !== "CAMPAIGN_AUTHORIZATION" || !declaration.revision || !declaration.digest || !declaration.owner_login) {
+    return { state: "INVALID_AUTHORIZATION", reason: "MALFORMED_DECLARATION" };
+  }
+  if (!evidence || evidence.source !== "LIVE_GITHUB_CAMPAIGN_AUTHORIZATION" || evidence.synthetic === true) {
+    return { state: "INVALID_AUTHORIZATION", reason: "LIVE_FORMAL_EVIDENCE_REQUIRED" };
+  }
+  if (master?.authorization_commit_is_ancestor !== true || !master.authorization_commit) {
+    return { state: "STALE_AUTHORIZATION", reason: "REVISION_NOT_TRUSTED_MASTER" };
+  }
+  if (evidence.domain !== "CAMPAIGN_AUTHORIZATION" || evidence.state !== "APPROVED" || evidence.commit_sha !== master.authorization_commit || evidence.revision !== declaration.revision) {
+    return { state: "INVALID_AUTHORIZATION", reason: "FORMAL_EXACT_REVISION_APPROVAL_REQUIRED" };
+  }
+  if (evidence.author_login !== declaration.owner_login || evidence.author_association !== "OWNER") {
+    return { state: "INVALID_AUTHORIZATION", reason: "OWNER_IDENTITY_REQUIRED" };
+  }
+  if (campaignDigest(campaign) !== declaration.digest) return { state: "SCOPE_MISMATCH", reason: "MANIFEST_DIGEST_MISMATCH" };
+  if (evidence.digest !== declaration.digest || evidence.active_digest !== declaration.digest) {
+    return { state: "SCOPE_MISMATCH", reason: "AUTHORIZED_DIGEST_MISMATCH" };
+  }
+  if (declaration.expires_at) {
+    const expiry = Date.parse(declaration.expires_at);
+    const observedAt = Date.parse(now);
+    if (!Number.isFinite(expiry) || !Number.isFinite(observedAt)) return { state: "INVALID_AUTHORIZATION", reason: "MALFORMED_EXPIRY" };
+    if (observedAt >= expiry) return { state: "EXPIRED" };
+  }
+
+  let lifecycle = "AUTHORIZED";
+  for (const event of evidence.lifecycle ?? []) {
+    if (!AUTH_LIFECYCLE.has(event.type) || event.revision !== declaration.revision || event.digest !== declaration.digest || event.author_login !== declaration.owner_login) {
+      return { state: "INVALID_AUTHORIZATION", reason: "MALFORMED_LIFECYCLE_EVENT" };
+    }
+    if (lifecycle === "REVOKED") continue;
+    if (event.type === "REVOKE") lifecycle = "REVOKED";
+    else if (event.type === "PAUSE") lifecycle = "PAUSED";
+    else if (event.type === "RESUME") lifecycle = "AUTHORIZED";
+  }
+  if (lifecycle !== "AUTHORIZED") return { state: lifecycle };
+  if (evidence.escalations?.length) return { state: "OWNER_DECISION_REQUIRED", reasons: evidence.escalations };
+
+  if (candidate) {
+    if (!declaration.allowed_work_classes?.includes(candidate.work_class)) return { state: "SCOPE_MISMATCH", reason: "WORK_CLASS_NOT_AUTHORIZED" };
+    if (RISK_ORDER[candidate.risk_tier] > RISK_ORDER[declaration.risk_ceiling]) return { state: "RISK_CEILING_EXCEEDED" };
+    if ((candidate.boundaries ?? []).some((boundary) => declaration.prohibited_boundaries?.includes(boundary))) return { state: "PROHIBITED_BOUNDARY" };
+    if (candidate.risk_tier === "HIGH-RISK" && (!candidate.owner_ruling?.obtained || !candidate.owner_ruling?.reference)) {
+      return { state: "ESCALATION_REQUIRED", reason: "HIGH_RISK_OWNER_RULING_REQUIRED" };
+    }
+  }
+  return { state: "AUTHORIZED", revision: declaration.revision, digest: declaration.digest };
+}
+
+function validateCampaign(campaign, input) {
   if (!campaign || typeof campaign !== "object" || Array.isArray(campaign)) {
     return escalation("MALFORMED_CAMPAIGN", "Campaign must be a JSON object.");
   }
-  if (campaign.schema_version !== 1) {
-    return escalation("UNSUPPORTED_CAMPAIGN_SCHEMA", "campaign.schema_version must equal 1.");
+  if (campaign.schema_version !== 2) {
+    return escalation("INVALID_AUTHORIZATION", "Legacy/self-asserted campaign authority is non-authorizing; schema_version 2 is required.");
   }
   if (!campaign.id || !campaign.title || !CAMPAIGN_STATUSES.has(campaign.status)) {
     return escalation("MALFORMED_CAMPAIGN", "Campaign requires id, title, and DRAFT/APPROVED/COMPLETE status.");
@@ -53,16 +124,13 @@ function validateCampaign(campaign) {
   if (!Object.hasOwn(RISK_ORDER, campaign.risk_ceiling)) {
     return escalation("MALFORMED_CAMPAIGN", "Campaign risk_ceiling must be ROUTINE, ARCHITECTURAL, or HIGH-RISK.");
   }
-  if (!campaign.authorization || !campaign.authorization.owner_approved || !campaign.authorization.approved_by) {
-    return escalation("CAMPAIGN_NOT_APPROVED", "Campaign lacks durable owner approval and approver identity.");
-  }
   if (!Array.isArray(campaign.drops)) {
     return escalation("MALFORMED_CAMPAIGN", "Campaign drops must be an ordered array.");
   }
   const seen = new Set();
   for (const drop of campaign.drops) {
-    if (!drop || !drop.id || !drop.title || !Object.hasOwn(RISK_ORDER, drop.risk_tier) || !Array.isArray(drop.depends_on)) {
-      return escalation("MALFORMED_CAMPAIGN", "Each Drop requires id, title, risk_tier, and depends_on[].");
+    if (!drop || !drop.id || !drop.title || !Object.hasOwn(RISK_ORDER, drop.risk_tier) || !Array.isArray(drop.depends_on) || !drop.work_class || !Array.isArray(drop.boundaries)) {
+      return escalation("MALFORMED_CAMPAIGN", "Each Drop requires id, title, work_class, risk_tier, boundaries[], and depends_on[].");
     }
     if (seen.has(drop.id)) return escalation("MALFORMED_CAMPAIGN", `Duplicate Drop id: ${drop.id}.`);
     if (RISK_ORDER[drop.risk_tier] > RISK_ORDER[campaign.risk_ceiling]) {
@@ -78,6 +146,9 @@ function validateCampaign(campaign) {
     }
     seen.add(drop.id);
   }
+  const nextCandidate = campaign.drops.find((drop) => !(input.completed_drops ?? []).includes(drop.id));
+  const authority = validateCampaignAuthorization({ campaign, evidence: input.campaign_authorization, master: input.master, candidate_drop: nextCandidate, now: input.now });
+  if (authority.state !== "AUTHORIZED") return escalation(authority.state, authority.reason ?? authority.reasons?.join(", ") ?? authority.state);
   return null;
 }
 
@@ -144,7 +215,7 @@ export function deriveNextAction(input) {
     return result(NEXT_ACTION.NO_CAMPAIGN);
   }
 
-  const validation = validateCampaign(campaign);
+  const validation = validateCampaign(campaign, input);
   if (validation) return validation;
   if (campaign.status === "DRAFT") return escalation("CAMPAIGN_NOT_APPROVED", `${campaign.id} is DRAFT.`);
   if (campaign.status === "COMPLETE") return result(NEXT_ACTION.CAMPAIGN_COMPLETE, { campaign_id: campaign.id });

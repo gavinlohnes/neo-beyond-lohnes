@@ -1,10 +1,20 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "id": "CAMPAIGN-ID",
   "title": "CAMPAIGN TITLE",
   "status": "DRAFT",
   "risk_ceiling": "ARCHITECTURAL",
-  "authorization": { "owner_approved": false, "approved_by": "REPLACE_WITH_OWNER_IDENTITY" },
+  "authorization": {
+    "type": "CAMPAIGN_AUTHORIZATION",
+    "revision": "REPLACE_WITH_MONOTONIC_CAMPAIGN_REVISION",
+    "digest": "REPLACE_WITH_EXACT_CAMPAIGN_DIGEST",
+    "owner_login": "gavinlohnes",
+    "pr": "https://github.com/gavinlohnes/neo-beyond-lohnes/pull/REPLACE",
+    "expires_at": null,
+    "allowed_work_classes": ["PRODUCT", "FACTORY", "DOCUMENTATION"],
+    "risk_ceiling": "ARCHITECTURAL",
+    "prohibited_boundaries": ["PERSISTENCE", "PRIVACY", "SECURITY", "RECURRING_COST", "NEW_PROVIDER_AUTHORITY"]
+  },
   "invariants": [],
   "non_goals": [],
   "escalation_conditions": [],
@@ -13,7 +23,9 @@
     {
       "id": "DROP-ID",
       "title": "DROP TITLE",
+      "work_class": "PRODUCT",
       "risk_tier": "ROUTINE",
+      "boundaries": [],
       "depends_on": []
     }
   ]

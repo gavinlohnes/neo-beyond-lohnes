@@ -1,15 +1,13 @@
 ---
-id: FACTORY-AUTOPILOT-001
-status: CLOSED
-baseline: 6ddc3c895492274564afe8b4d094c5ccd7778e88
-branch: beyond-builder/factory-autopilot-001-e11dd39432f3
-contract: docs/agent/drops/FACTORY-AUTOPILOT-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/50
-builder: Codex, explicitly assigned by Gavin for FACTORY-AUTOPILOT-001
+id: AUTOPILOT-AUTH-002
+status: ACTIVE
+baseline: fcd2a23b4e2190819ae9db6255b58a3f18e8542e
+branch: codex/autopilot-auth-002
+contract: docs/agent/drops/AUTOPILOT-AUTH-002.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Codex, explicitly assigned by Gavin for AUTOPILOT-AUTH-002
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: 124e8bf8cea38411f19f221dcf0a67d18f7bc61e
-closed_at: 2026-09-01T10:41:07.729Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/FACTORY-AUTOPILOT-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/AUTOPILOT-AUTH-002.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and

@@ -427,3 +427,11 @@ current PR head. A campaign may make its next bounded Drop mechanically `DROP_RE
 assigns a Builder, supplies independent judgment, authorizes implementation by itself, merges,
 or resolves an owner escalation. Existing single-Drop operation remains valid when no campaign
 pointer exists.
+
+Campaign schema v2 replaces self-asserted approval fields with typed, domain-separated GitHub
+Owner evidence. The formal `APPROVED` review must bind `CAMPAIGN_AUTHORIZATION`, the exact
+trusted-master authorization revision, and the manifest digest. Typed PAUSE/RESUME/REVOKE events
+bind the same revision/digest; REVOKE is terminal. Schema v1, prose, comments used as grants,
+synthetic evidence, stale revisions, digest drift, Builder identity, and ordinary product review
+all fail closed. This campaign authority never substitutes for Drop assignment, exact-head
+independent review, protected integration, or a Drop-specific High-Risk Owner ruling.

@@ -13,3 +13,6 @@ export interface FactoryAutopilotResult {
 
 export function deriveNextAction(input: Record<string, unknown>): FactoryAutopilotResult;
 export function reconcileActiveDrops(candidates: Array<Record<string, unknown>>): { active?: Record<string, unknown> | null; error?: string; ids?: string[] };
+export function validateCampaignAuthorization(input: Record<string, unknown>): Record<string, unknown>;
+export function canonicalCampaignPayload(campaign: Record<string, unknown>): string;
+export function campaignDigest(campaign: Record<string, unknown>): string;
