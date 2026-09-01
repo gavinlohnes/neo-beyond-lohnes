@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: ccff019d7a911acdbdc80b95f4a097da1e06913a
 branch: claude/field-arch-001
 contract: docs/agent/drops/FIELD-ARCH-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/46
 builder: Claude Code, assigned by Gavin, FIELD-ARCH-001
 reviewer: (unassigned)
 integrator: (unassigned)

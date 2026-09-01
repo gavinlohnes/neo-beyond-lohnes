@@ -78,6 +78,32 @@ alert (`.card--warning`, already correctly semantic), `.today-support--subordina
 "consumer-app softness"), and BODY's own shared use of `.field-tagline`/`.instrument-cluster`
 (out of scope; any TRAIN-specific change is scoped so BODY is provably unaffected).
 
+### Round 2 amendment (owner-directed, 2026-09-01 — recorded here before merge, per Factory §9's
+### "activation/scope changes commit as part of the Builder's own branch" discipline)
+
+The owner directed a second visual-acceptance pass after finding round 1's own handoff description
+("more modest" outside the pre-day state) insufficient to carry the whole Drop's acceptance, and
+required the blur test be re-run against the **whole visible composition** of representative
+normal-operational states, not just the top of the screen. That re-run — on the actual full-page
+screenshot, correcting a round-1 script bug that had silently capped rendered height at 1400px and
+cropped out the bottom ~60% of TODAY's real (2037px-tall) earned/no-action page — found a fifth,
+real, code-verified finding round 1 missed entirely:
+
+5. **TODAY's SUPPORT tier (`.today-support`) is a long run of solid-filled controls.**
+   `.btn-secondary` (ALL GOOD / MANUAL CHECK-IN / YES / NO / CAPTURE) and unselected `.chip` rating
+   buttons, repeated many times down the stack, each carry a solid `--surface-2` fill. Under a
+   full-page blur test this reads as a conventional settings-list silhouette — a wall of
+   same-weight grey rectangles — regardless of how well ORIENT/OPERATE/pre-day now read. Neither
+   class's own base rule is the problem (both are correctly used with real fill elsewhere —
+   `.chip` inside TRAIN's dominant `CommandSurface` reads well, `.btn-secondary` is used
+   app-wide); the defect is specifically SUPPORT-tier TODAY using an app-button-weight treatment
+   for tools-tier controls with no dominant surface around them to justify it.
+
+This amendment adds the following to **Authorized scope**, **Required invariants**, and
+**Acceptance criteria** below, and is the durable authorization for the `.today-support
+.btn-secondary`/`.chip` rules already present in the exact head under review
+(`6462496bd010ab62942c7b843e0f2f36e1c643f6`) at the time this amendment is recorded.
+
 ## Authorized scope
 
 - `src/ui/screens/today/TodayScreen.tsx`: convert the pre-day-start (`!day`) block from `.card` to
@@ -100,12 +126,18 @@ alert (`.card--warning`, already correctly semantic), `.today-support--subordina
   .instrument-cluster` per-screen-scoping convention) so the tagline reads as a quiet strapline,
   not a hero headline competing with the real session instrument below it. BODY's own shared use
   of `.field-tagline__headline` is provably unaffected (different screen-root scope).
-- `src/ui/styles/global.css`: the four additive classes above only (`.status-strip--stacked`,
+- `src/ui/styles/global.css`: the four additive classes above (`.status-strip--stacked`,
   `.status-strip__headline`, `.status-strip__detail`, `.card--caution`, and the `.train-field
   .field-tagline__headline` scoped override) — no change to any existing class's own base rule.
+- **(Round 2 amendment)** `src/ui/styles/global.css`: `.today-support .btn-secondary` and
+  `.today-support .chip` (removing fill, strengthening border to `--border-strong`), plus
+  `.today-support .chip--selected` (re-asserting the existing red-selected fill at the same scope,
+  since it shares specificity with the de-emphasis rule) — scoped strictly to `.today-support`,
+  never touching either class's own base rule, never touching OPERATE/ATTENTION-tier content, and
+  never touching TRAIN/BODY/MORE.
 - Directly associated test updates (`tests/browser/TodayScreen.test.tsx`,
-  `tests/browser/TrainScreen.test.tsx` or equivalent) needed to keep existing coverage accurate for
-  these four changes.
+  `tests/browser/TrainScreen.test.tsx`, `tests/browser/accessibility.test.tsx`, or equivalent)
+  needed to keep existing coverage accurate for these changes.
 - Factory Drop artifacts required by repository procedure.
 
 ## Explicit exclusions
@@ -152,6 +184,9 @@ alert (`.card--warning`, already correctly semantic), `.today-support--subordina
 - No numeric target, derived statement, or copy is ever displayed without a real, already-computed
   source — the ORIENT restructuring may not invent new derived text.
 - BODY's shared use of `.field-tagline`/`.field-tagline__headline` is provably unaffected.
+- **(Round 2 amendment)** `.btn-secondary`'s and `.chip`'s own base rules are unchanged everywhere
+  outside `.today-support`; `.chip--selected`'s red-selected fill is preserved inside
+  `.today-support` exactly as before.
 
 ## Acceptance criteria
 
@@ -174,6 +209,10 @@ alert (`.card--warning`, already correctly semantic), `.today-support--subordina
    primitives — not one-off inline styles.
 7. BODY's own `.field-tagline__headline` rendering is byte-identical before/after (screenshot
    spot-check).
+8. **(Round 2 amendment)** A full-page (uncropped) blur test of TODAY's earned/no-action state
+   shows the SUPPORT tier receding into quiet outlined controls rather than a wall of filled
+   grey rectangles, with the OPERATE section remaining the visual anchor; `.chip--selected` still
+   shows its red fill inside `.today-support`.
 
 ## Required verification
 
