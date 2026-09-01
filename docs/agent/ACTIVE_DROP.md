@@ -1,6 +1,6 @@
 ---
 id: FIELD-PROTOTYPE-001
-status: ACTIVE
+status: CLOSED
 baseline: bdcf07cf0ed70cf3f0bd7f31c67cb2b30e470986
 branch: claude/field-prototype-convergence
 contract: docs/agent/drops/FIELD-PROTOTYPE-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/45
 builder: Claude Code, assigned by Gavin, FIELD-PROTOTYPE-001
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: f3a294cc8587b04002381eef32ae3b2f8b8ac921
+closed_at: 2026-09-01T03:38:34.255Z
 ---
 
 # ACTIVE_DROP
