@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 6ddc3c895492274564afe8b4d094c5ccd7778e88
 branch: codex/factory-autopilot-001-owner-work-reduction
 contract: docs/agent/drops/FACTORY-AUTOPILOT-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/47
 builder: Codex, explicitly assigned by Gavin for FACTORY-AUTOPILOT-001
 reviewer: (unassigned)
 integrator: (unassigned)
