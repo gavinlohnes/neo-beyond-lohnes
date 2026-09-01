@@ -25,6 +25,21 @@ function escalation(code, detail) {
   return result(NEXT_ACTION.ESCALATION_REQUIRED, { escalation: { code, detail } });
 }
 
+export function reconcileActiveDrops(candidates) {
+  const active = (candidates ?? []).filter((item) => item?.status === "ACTIVE");
+  const byId = new Map();
+  for (const item of active) {
+    const current = byId.get(item.id);
+    if (current && (current.baseline !== item.baseline || current.contract !== item.contract || current.pr !== item.pr)) {
+      return { error: "MULTIPLE_ACTIVE_DROPS", ids: active.map((candidate) => candidate.id) };
+    }
+    byId.set(item.id, item);
+  }
+  const unique = [...byId.values()];
+  if (unique.length > 1) return { error: "MULTIPLE_ACTIVE_DROPS", ids: unique.map((item) => item.id) };
+  return { active: unique[0] ?? null };
+}
+
 function validateCampaign(campaign) {
   if (!campaign || typeof campaign !== "object" || Array.isArray(campaign)) {
     return escalation("MALFORMED_CAMPAIGN", "Campaign must be a JSON object.");
@@ -67,7 +82,14 @@ function validateCampaign(campaign) {
 }
 
 function successfulRequiredCheck(pr, requiredCheck) {
-  const check = (pr.checks ?? []).find((candidate) => candidate.name === requiredCheck);
+  const matching = (pr.checks ?? [])
+    .filter((candidate) => candidate.name === requiredCheck)
+    .sort((a, b) => {
+      const aTime = Date.parse(a.completed_at ?? a.started_at ?? "") || 0;
+      const bTime = Date.parse(b.completed_at ?? b.started_at ?? "") || 0;
+      return bTime - aTime || Number(b.id ?? 0) - Number(a.id ?? 0);
+    });
+  const check = matching[0];
   if (!check) return { state: "MISSING" };
   if (check.head_sha && check.head_sha !== pr.head_sha) return { state: "HEAD_MISMATCH", check };
   if (check.status !== "COMPLETED") return { state: "PENDING", check };
@@ -75,11 +97,42 @@ function successfulRequiredCheck(pr, requiredCheck) {
 }
 
 function exactHeadApproval(pr) {
-  const approvals = (pr.reviews ?? []).filter(
-    (review) => review.verdict === "APPROVED" && review.findings === "none" && review.merge_readiness === "READY",
+  const eligibleAssociations = new Set(["OWNER", "MEMBER", "COLLABORATOR"]);
+  const knownStates = new Set(["APPROVED", "CHANGES_REQUESTED", "COMMENTED", "DISMISSED", "PENDING"]);
+  const formal = (pr.reviews ?? []).filter((review) => review.source === "FORMAL_GITHUB_REVIEW");
+  const malformed = formal.some((review) =>
+    !review.author_login || !review.commit_sha || !knownStates.has(review.state) || !review.submitted_at,
   );
-  if (approvals.some((review) => review.reviewed_sha === pr.head_sha)) return { state: "EXACT" };
-  if (approvals.length > 0) return { state: "STALE", reviewed_shas: approvals.map((review) => review.reviewed_sha) };
+  if (malformed) return { state: "UNPROVEN", reason: "MALFORMED_FORMAL_REVIEW" };
+
+  const latestByAuthor = new Map();
+  for (const review of formal) {
+    const current = latestByAuthor.get(review.author_login);
+    const currentTime = current ? Date.parse(current.submitted_at) : -1;
+    const candidateTime = Date.parse(review.submitted_at);
+    if (!current || candidateTime > currentTime || (candidateTime === currentTime && Number(review.id) > Number(current.id))) {
+      latestByAuthor.set(review.author_login, review);
+    }
+  }
+  const latest = [...latestByAuthor.values()];
+  if (latest.some((review) => review.commit_sha === pr.head_sha && review.state === "CHANGES_REQUESTED")) {
+    return { state: "CHANGES_REQUESTED" };
+  }
+  const authorApprovals = latest.filter(
+    (review) => review.commit_sha === pr.head_sha && review.state === "APPROVED" && review.author_login === pr.author_login,
+  );
+  if (authorApprovals.length > 0) return { state: "UNPROVEN", reason: "PR_AUTHOR_REVIEW" };
+  const exact = latest.filter((review) =>
+    review.commit_sha === pr.head_sha &&
+    review.state === "APPROVED" &&
+    review.author_login !== pr.author_login &&
+    eligibleAssociations.has(review.author_association),
+  );
+  if (exact.length > 0) return { state: "EXACT", reviewer_logins: exact.map((review) => review.author_login) };
+  const ineligibleExact = latest.some((review) => review.commit_sha === pr.head_sha && review.state === "APPROVED");
+  if (ineligibleExact) return { state: "UNPROVEN", reason: "REVIEWER_IDENTITY_INELIGIBLE" };
+  const staleApprovals = latest.filter((review) => review.state === "APPROVED" && review.commit_sha !== pr.head_sha);
+  if (staleApprovals.length > 0) return { state: "STALE", reviewed_shas: staleApprovals.map((review) => review.commit_sha) };
   return { state: "MISSING" };
 }
 
@@ -98,8 +151,14 @@ export function deriveNextAction(input) {
   if (!master?.sha || master.authorization_commit_is_ancestor !== true) {
     return escalation("STALE_CAMPAIGN_AUTHORIZATION", "Campaign authorization commit is not verified in current master history.");
   }
-  if ((input.escalations ?? []).length > 0) {
-    return escalation("OWNER_DECISION_REQUIRED", input.escalations.join(", "));
+  const suppliedEscalations = input.escalations ?? [];
+  const declaredEscalations = new Set(campaign.escalation_conditions ?? []);
+  const undeclared = suppliedEscalations.filter((code) => !declaredEscalations.has(code));
+  if (undeclared.length > 0) {
+    return escalation("UNDECLARED_ESCALATION", undeclared.join(", "));
+  }
+  if (suppliedEscalations.length > 0) {
+    return escalation("OWNER_DECISION_REQUIRED", suppliedEscalations.join(", "));
   }
 
   const completed = new Set(completedDrops);
@@ -141,18 +200,16 @@ export function deriveNextAction(input) {
   const approval = exactHeadApproval(pr);
   if (approval.state === "MISSING") return result(NEXT_ACTION.WAITING_FOR_REVIEW, { drop_id: nextDrop.id });
   if (approval.state === "STALE") return result(NEXT_ACTION.STALE_APPROVAL, { drop_id: nextDrop.id, reviewed_shas: approval.reviewed_shas });
+  if (approval.state === "CHANGES_REQUESTED") return result(NEXT_ACTION.WAITING_FOR_REVIEW, { drop_id: nextDrop.id, review_state: "CHANGES_REQUESTED" });
+  if (approval.state === "UNPROVEN") {
+    return escalation("REVIEW_INDEPENDENCE_UNPROVEN", approval.reason);
+  }
   if (pr.mergeable !== "MERGEABLE" || pr.merge_state !== "CLEAN") {
     return escalation("PR_NOT_CLEAN", `PR mergeability is ${pr.mergeable}/${pr.merge_state}.`);
   }
-  return result(NEXT_ACTION.READY_FOR_INTEGRATION, { drop_id: nextDrop.id, head_sha: pr.head_sha });
-}
-
-export function normalizeReviewEvidence(text) {
-  if (typeof text !== "string") return null;
-  const reviewedSha = text.match(/Reviewed SHA:\s*([0-9a-f]{40})/i)?.[1];
-  const verdict = text.match(/Verdict:\s*(APPROVED|CHANGES REQUESTED)/i)?.[1]?.toUpperCase();
-  const findings = text.match(/Findings:\s*([^\r\n]+)/i)?.[1]?.trim().toLowerCase();
-  const mergeReadiness = text.match(/Merge readiness:\s*(READY|NOT READY)/i)?.[1]?.toUpperCase();
-  if (!reviewedSha || !verdict || !findings || !mergeReadiness) return null;
-  return { reviewed_sha: reviewedSha, verdict, findings, merge_readiness: mergeReadiness };
+  return result(NEXT_ACTION.READY_FOR_INTEGRATION, {
+    drop_id: nextDrop.id,
+    head_sha: pr.head_sha,
+    reviewer_logins: approval.reviewer_logins,
+  });
 }

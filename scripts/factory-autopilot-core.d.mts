@@ -12,10 +12,4 @@ export interface FactoryAutopilotResult {
 }
 
 export function deriveNextAction(input: Record<string, unknown>): FactoryAutopilotResult;
-
-export function normalizeReviewEvidence(text: unknown): {
-  reviewed_sha: string;
-  verdict: string;
-  findings: string;
-  merge_readiness: string;
-} | null;
+export function reconcileActiveDrops(candidates: Array<Record<string, unknown>>): { active?: Record<string, unknown> | null; error?: string; ids?: string[] };

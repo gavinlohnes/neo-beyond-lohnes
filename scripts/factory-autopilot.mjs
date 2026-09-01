@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { deriveNextAction, normalizeReviewEvidence } from "./factory-autopilot-core.mjs";
+import { deriveNextAction, reconcileActiveDrops } from "./factory-autopilot-core.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -34,7 +34,9 @@ function parseArgs(argv) {
     if (!argv[i].startsWith("--")) continue;
     const key = argv[i].slice(2);
     const value = argv[i + 1];
-    flags[key] = value && !value.startsWith("--") ? argv[++i] : true;
+    const parsed = value && !value.startsWith("--") ? argv[++i] : true;
+    if (key === "escalation") flags[key] = [...(flags[key] ?? []), parsed];
+    else flags[key] = parsed;
   }
   return flags;
 }
@@ -65,8 +67,7 @@ function repoRelative(path) {
 
 function discoverActiveDrop() {
   const local = parseFrontmatter(join(root, "docs/agent/ACTIVE_DROP.md"));
-  if (local?.status === "ACTIVE") return local;
-  const found = [];
+  const found = local?.status === "ACTIVE" ? [local] : [];
   const refs = git(["for-each-ref", "--format=%(refname:short)", "refs/remotes/origin"])
     .split("\n").filter((ref) => ref && ref !== "origin/HEAD");
   for (const ref of refs) {
@@ -76,9 +77,9 @@ function discoverActiveDrop() {
     const active = parseFrontmatterText(text, `${ref}:docs/agent/ACTIVE_DROP.md`);
     if (active.status === "ACTIVE") found.push(active);
   }
-  const unique = [...new Map(found.map((item) => [item.id, item])).values()];
-  if (unique.length > 1) throw new Error(`MULTIPLE_ACTIVE_DROPS: ${unique.map((item) => item.id).join(", ")}`);
-  return unique[0] ?? local;
+  const reconciled = reconcileActiveDrops(found);
+  if (reconciled.error) throw new Error(`${reconciled.error}: ${reconciled.ids.join(", ")}`);
+  return reconciled.active ?? local;
 }
 
 function parsePrNumber(url) {
@@ -116,44 +117,74 @@ async function apiAll(path, token) {
   }
 }
 
+async function apiAllCheckRuns(path, token) {
+  const all = [];
+  for (let page = 1; ; page++) {
+    const separator = path.includes("?") ? "&" : "?";
+    const response = await api(`${path}${separator}per_page=100&page=${page}`, token);
+    if (!Array.isArray(response.check_runs)) throw new Error(`GITHUB_API_SHAPE: expected check_runs from ${path}`);
+    all.push(...response.check_runs);
+    if (response.check_runs.length < 100 || all.length >= response.total_count) return all;
+  }
+}
+
 async function livePrState(active) {
+  if (!active?.pr) return null;
   const number = parsePrNumber(active.pr);
   if (!number) return null;
   const token = githubToken();
   if (!token) throw new Error("GITHUB_AUTH_UNAVAILABLE: set GH_TOKEN or configure git credentials.");
   const repo = "gavinlohnes/neo-beyond-lohnes";
   const pr = await api(`/repos/${repo}/pulls/${number}`, token);
-  const [checks, comments, reviews] = await Promise.all([
-    api(`/repos/${repo}/commits/${pr.head.sha}/check-runs?per_page=100`, token),
-    apiAll(`/repos/${repo}/issues/${number}/comments`, token),
+  const [checks, reviews] = await Promise.all([
+    apiAllCheckRuns(`/repos/${repo}/commits/${pr.head.sha}/check-runs`, token),
     apiAll(`/repos/${repo}/pulls/${number}/reviews`, token),
   ]);
   const confirmedPr = await api(`/repos/${repo}/pulls/${number}`, token);
   if (confirmedPr.head.sha !== pr.head.sha || confirmedPr.base.sha !== pr.base.sha || confirmedPr.state !== pr.state) {
     throw new Error("GITHUB_STATE_CHANGED: PR base/head/state changed while status was being derived; retry from fresh truth.");
   }
-  const evidence = [
-    ...comments.map((item) => normalizeReviewEvidence(item.body)),
-    ...reviews.map((item) => normalizeReviewEvidence(item.body)),
-  ].filter(Boolean);
   return {
     url: pr.html_url,
     state: pr.merged ? "MERGED" : pr.state.toUpperCase(),
     is_draft: pr.draft,
     base_sha: pr.base.sha,
     head_sha: pr.head.sha,
+    author_login: pr.user?.login,
     merge_sha: pr.merge_commit_sha,
     mergeable: pr.mergeable === true ? "MERGEABLE" : pr.mergeable === false ? "CONFLICTING" : "UNKNOWN",
     merge_state: String(pr.mergeable_state ?? "UNKNOWN").toUpperCase(),
-    checks: checks.check_runs.map((check) => ({
+    checks: checks.map((check) => ({
+      id: check.id,
       name: check.name,
       status: check.status.toUpperCase(),
       conclusion: String(check.conclusion ?? "").toUpperCase(),
       head_sha: check.head_sha,
       url: check.html_url,
+      started_at: check.started_at,
+      completed_at: check.completed_at,
     })),
-    reviews: evidence,
+    reviews: reviews.map((review) => ({
+      source: "FORMAL_GITHUB_REVIEW",
+      id: review.id,
+      state: review.state,
+      commit_sha: review.commit_id,
+      author_login: review.user?.login,
+      author_association: review.author_association,
+      submitted_at: review.submitted_at,
+      body: review.body,
+    })),
   };
+}
+
+function syntheticFixturePath(path) {
+  const fixtureRoot = resolve(root, "tests/fixtures/factory-autopilot");
+  const resolved = resolve(root, path);
+  const within = relative(fixtureRoot, resolved);
+  if (!within || within.startsWith("..") || isAbsolute(within) || !resolved.endsWith(".json")) {
+    throw new Error("SYNTHETIC_FIXTURE_PATH_INVALID: fixture must be JSON under tests/fixtures/factory-autopilot/.");
+  }
+  return resolved;
 }
 
 function completedDrops(campaign) {
@@ -176,6 +207,12 @@ function completedDrops(campaign) {
 
 async function main() {
   const flags = parseArgs(process.argv.slice(2));
+  if (flags["github-state"] && !flags["diagnostic-synthetic"]) {
+    throw new Error("SYNTHETIC_MODE_REQUIRED: --github-state is permitted only with --diagnostic-synthetic.");
+  }
+  if (flags["diagnostic-synthetic"] && !flags["github-state"]) {
+    throw new Error("SYNTHETIC_FIXTURE_REQUIRED: diagnostic synthetic mode requires --github-state.");
+  }
   const remote = git(["remote", "get-url", "origin"]);
   if (!/(^|[/:])gavinlohnes\/neo-beyond-lohnes(?:\.git)?$/i.test(remote.replaceAll("\\", "/"))) {
     throw new Error(`WRONG_REPOSITORY: origin is ${remote}`);
@@ -203,16 +240,21 @@ async function main() {
     } catch { /* fail closed in resolver */ }
   }
   const pr = flags["github-state"]
-    ? JSON.parse(readFileSync(resolve(root, flags["github-state"]), "utf8"))
+    ? JSON.parse(readFileSync(syntheticFixturePath(flags["github-state"]), "utf8"))
     : await livePrState(active);
-  const output = deriveNextAction({
+  let output = deriveNextAction({
     campaign,
     master: { sha: masterSha, authorization_commit_is_ancestor: authorizationCommitIsAncestor, authorization_commit: authorizationCommit },
     active_drop: active,
     completed_drops: completedDrops(campaign),
     pr,
     required_check: "PR Verification",
+    escalations: flags.escalation ?? [],
   });
+  const evidenceSource = flags["diagnostic-synthetic"] ? "SYNTHETIC_FIXTURE" : pr ? "LIVE_GITHUB" : "REPOSITORY_ONLY";
+  if (evidenceSource === "SYNTHETIC_FIXTURE" && ["READY_FOR_INTEGRATION", "READY_FOR_CLOSURE"].includes(output.action)) {
+    output = { ok: false, action: "ESCALATION_REQUIRED", escalation: { code: "SYNTHETIC_EVIDENCE_NOT_AUTHORIZING", detail: "Synthetic fixtures cannot authorize integration or closure." } };
+  }
   console.log(JSON.stringify({
     schema_version: 1,
     generated_at: new Date().toISOString(),
@@ -221,6 +263,8 @@ async function main() {
     local_head: git(["rev-parse", "HEAD"]),
     local_branch: git(["rev-parse", "--abbrev-ref", "HEAD"]),
     worktree_clean: git(["status", "--porcelain"]) === "",
+    evidence_source: evidenceSource,
+    diagnostic_mode: evidenceSource === "SYNTHETIC_FIXTURE",
     campaign: campaign?.id ?? null,
     active_drop: active?.id ?? null,
     ...output,

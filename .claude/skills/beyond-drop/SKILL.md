@@ -379,17 +379,19 @@ the role, never the agent.
 
 ### Reviewer Evidence Contract
 
-Field evidence from NUTRITION-001 (PR #33, this same operating period): the first independent
-review of that PR stayed trapped inside a private Reviewer conversation and required the owner
-to copy it out by hand before anyone else could act on it. The second review instead posted its
-verdict as a PR comment bound to the exact reviewed head SHA — and was later recovered
-independently, from GitHub, with no relay from the owner at all. That is the bar every Drop under
-this mechanism now requires explicitly (see `TEMPLATE.md`'s Reviewer expectations section):
-**Reviewer completion must leave durable, exact-head-bound review evidence on the Drop's PR** —
-at minimum, the reviewed head SHA, a verdict, substantive findings (or an explicit "none"), and a
-merge-readiness statement — using GitHub's own PR review/comment mechanisms. Finishing only
-inside a private Reviewer conversation does not satisfy this requirement; no bespoke review
-database or GitHub client is built or needed to satisfy it.
+**Reviewer completion must leave a formal GitHub PR review on the exact reviewed head.** Only a
+formal `APPROVED` review qualifies mechanically. The review's GitHub `commit_id` must equal the
+current PR head, and its author must be an eligible repository collaborator distinct from the PR
+author. Head movement makes the approval stale. `CHANGES_REQUESTED`, `COMMENTED`, `DISMISSED`,
+`PENDING`, missing, malformed, or unknown states do not authorize integration. Detailed findings
+belong in the formal review body or an accompanying PR comment, but arbitrary issue comments and
+magic prose never establish approval.
+
+GitHub can prove account identity, repository association, formal review state, and exact-head
+binding. It cannot prove that two actions by an account came from separate Builder and Reviewer
+sessions. Separate-session role assignment remains a procedural trust boundary that the Reviewer
+and Integrator must independently verify; if the available identity evidence cannot establish
+the mechanically provable independence requirements, Factory status fails closed.
 
 ### Fresh-chat recovery
 

@@ -41,8 +41,22 @@ Legal outcomes include `NO_CAMPAIGN`, `LEGACY_DROP_ACTIVE`, `DROP_READY`, `WAITI
 `READY_FOR_INTEGRATION`, `READY_FOR_CLOSURE`, `CAMPAIGN_COMPLETE`, and `ESCALATION_REQUIRED`.
 Unknown or contradictory evidence always fails closed.
 
-`--campaign <path>` inspects a non-active manifest. `--github-state <path>` replaces only the live
-GitHub boundary for hermetic diagnostics/tests; it never changes repository state.
+`--campaign <path>` inspects a non-active manifest. Synthetic GitHub state is accepted only with
+`--diagnostic-synthetic --github-state <path>` and only from JSON fixtures under
+`tests/fixtures/factory-autopilot/`. Output labels evidence as `LIVE_GITHUB`,
+`SYNTHETIC_FIXTURE`, or `REPOSITORY_ONLY`; synthetic evidence can never yield integration or
+closure readiness.
+
+`escalation_conditions` is an approved allowlist, not subjective auto-detection. A human or AI
+that identifies one supplies `--escalation <CODE>`; a declared code yields
+`OWNER_DECISION_REQUIRED`, while undeclared codes fail closed. Mechanical conditions remain
+detected directly from repository/GitHub state.
+
+Integration readiness requires a formal GitHub `APPROVED` review whose `commit_id` is the current
+PR head, from an eligible collaborator other than the PR author. Comments may preserve findings
+but never authorize. A moved head invalidates approval. GitHub proves account/state/head binding,
+not stronger separate-session provenance; Builder/Reviewer session separation remains a
+procedural trust boundary and insufficient identity evidence fails closed.
 
 ## Owner-work metric
 
