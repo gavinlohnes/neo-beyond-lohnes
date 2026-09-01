@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { replacePrPointer, replacementBranchName, verifyBuilderBot, verifyBuilderInstallation } from "../../scripts/factory-builder-bootstrap-core.mjs";
+import { replaceCandidateRouting, replacementBranchName, verifyBuilderBot, verifyBuilderInstallation } from "../../scripts/factory-builder-bootstrap-core.mjs";
 
 const valid = {
   installation: { id: 158170874, app_id: 4790533, app_slug: "beyond-builder" },
@@ -33,8 +33,10 @@ describe("Builder identity bootstrap", () => {
   });
 
   it("updates only the exact source PR routing pointer", () => {
-    const source = "---\nid: FACTORY-AUTOPILOT-001\npr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/47\n---\n";
-    expect(replacePrPointer(source, "https://github.com/gavinlohnes/neo-beyond-lohnes/pull/49")).toContain("pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/49");
-    expect(() => replacePrPointer(source.replace("47", "48"), "https://github.com/gavinlohnes/neo-beyond-lohnes/pull/49")).toThrow("SOURCE_PR_POINTER_MISMATCH");
+    const source = "---\nid: FACTORY-AUTOPILOT-001\nbranch: codex/factory-autopilot-001-owner-work-reduction\npr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/47\n---\n";
+    const routed = replaceCandidateRouting(source, "https://github.com/gavinlohnes/neo-beyond-lohnes/pull/50", "beyond-builder/factory-autopilot-001-test");
+    expect(routed).toContain("pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/50");
+    expect(routed).toContain("branch: beyond-builder/factory-autopilot-001-test");
+    expect(() => replaceCandidateRouting(source.replace("47", "48"), "https://github.com/gavinlohnes/neo-beyond-lohnes/pull/50", "branch")).toThrow("SOURCE_PR_POINTER_MISMATCH");
   });
 });

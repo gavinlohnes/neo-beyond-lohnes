@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
-import { replacePrPointer, replacementBranchName, verifyBuilderBot, verifyBuilderInstallation } from "./factory-builder-bootstrap-core.mjs";
+import { replaceCandidateRouting, replacementBranchName, verifyBuilderBot, verifyBuilderInstallation } from "./factory-builder-bootstrap-core.mjs";
 
 const required = ["GITHUB_TOKEN", "GITHUB_REPOSITORY", "GITHUB_SHA", "EXPECTED_APP_ID", "EXPECTED_INSTALLATION_ID", "ACTUAL_INSTALLATION_ID", "APP_SLUG"];
 for (const name of required) if (!process.env[name]) throw new Error(`MISSING_${name}`);
@@ -49,7 +49,7 @@ if (replacement.head.sha !== process.env.GITHUB_SHA) {
   throw new Error("REPLACEMENT_IDENTITY_OR_HEAD_MISMATCH");
 }
 
-const activeDrop = replacePrPointer(readFileSync("docs/agent/ACTIVE_DROP.md", "utf8"), replacement.html_url);
+const activeDrop = replaceCandidateRouting(readFileSync("docs/agent/ACTIVE_DROP.md", "utf8"), replacement.html_url, branch);
 const sourceCommit = await api(`/repos/${repo}/git/commits/${process.env.GITHUB_SHA}`);
 const blob = await api(`/repos/${repo}/git/blobs`, {
   method: "POST",

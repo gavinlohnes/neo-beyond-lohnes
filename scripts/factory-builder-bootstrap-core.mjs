@@ -20,9 +20,14 @@ export function replacementBranchName(sourceSha) {
   return `beyond-builder/factory-autopilot-001-${sourceSha.slice(0, 12)}`;
 }
 
-export function replacePrPointer(text, replacementUrl) {
+export function replaceCandidateRouting(text, replacementUrl, replacementBranch) {
   if (!/^pr:\s+https:\/\/github\.com\/gavinlohnes\/neo-beyond-lohnes\/pull\/47$/m.test(text)) {
     throw new Error("SOURCE_PR_POINTER_MISMATCH");
   }
-  return text.replace(/^pr:\s+.+$/m, `pr: ${replacementUrl}`);
+  if (!/^branch:\s+codex\/factory-autopilot-001-owner-work-reduction$/m.test(text)) {
+    throw new Error("SOURCE_BRANCH_POINTER_MISMATCH");
+  }
+  return text
+    .replace(/^pr:\s+.+$/m, `pr: ${replacementUrl}`)
+    .replace(/^branch:\s+.+$/m, `branch: ${replacementBranch}`);
 }
