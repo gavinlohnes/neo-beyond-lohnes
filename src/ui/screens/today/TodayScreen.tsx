@@ -2160,7 +2160,12 @@ export function TodayScreen({
               <p className="card-body" style={{ marginBottom: 12 }}>
                 BEYOND has no current state input for this BeyondDay. Guidance remains deterministic, but less informed.
               </p>
-              <button className="btn-primary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
+              {/* Same Gate A correction as SUPPORT's own ALL GOOD further below —
+                  this ATTENTION-tier instance of the identical routine shortcut
+                  was missed when that correction was made, so it was still
+                  reading as a stronger visual object than a "not a decision"
+                  action should. */}
+              <button className="btn-secondary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
                 ALL GOOD
               </button>
               <button className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setCheckInFormOpen(true)}>
