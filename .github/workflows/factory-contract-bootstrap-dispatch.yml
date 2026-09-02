@@ -28,11 +28,12 @@ jobs:
           BASELINE: 1fffd0344c24d22c71425d7cb6f971ee39fbc4b6
           SOURCE_SHA: ef47e300ab8427d2c1973265bc36255335e82fb6
           TARGET_BRANCH: beyond-builder/factory-contract-bootstrap-001
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
         shell: bash
         run: |
           set -euo pipefail
-          login="$(gh api /user --jq .login)"
-          test "$login" = 'beyond-builder[bot]'
+          test "$APP_SLUG" = 'beyond-builder'
+          login='beyond-builder[bot]'
           test "$(gh api "repos/$REPO/git/ref/heads/master" --jq .object.sha)" = "$BASELINE"
           source_tree="$(gh api "repos/$REPO/git/commits/$SOURCE_SHA" --jq .tree.sha)"
           gh api "repos/$REPO/git/refs" --method POST -f ref="refs/heads/$TARGET_BRANCH" -f sha="$SOURCE_SHA" >/dev/null
@@ -40,6 +41,7 @@ jobs:
           gh api "repos/$REPO/git/refs/heads/$TARGET_BRANCH" --method PATCH -f sha="$bot_sha" -F force=false >/dev/null
           test "$(gh api "repos/$REPO/commits/$bot_sha" --jq .author.login)" = "$login"
           pr_url="$(gh api "repos/$REPO/pulls" --method POST -f title='FACTORY // TRUSTED CONTRACT PREREGISTRATION BOOTSTRAP' -f head="$TARGET_BRANCH" -f base=master -f body='Owner-authorized one-time Factory governance bootstrap. Preregisters AUTOPILOT-CANDIDATE-DISPATCH-002 on protected master and makes campaign contract identity derive only from freshly fetched trusted master. PR #54 is unchanged and no prior review carries forward.' --jq .html_url)"
+          test "$(gh api "repos/$REPO/pulls/$(basename "$pr_url")" --jq .user.login)" = "$login"
           echo "builder=$login"
           echo "head=$bot_sha"
           echo "pr=$pr_url"
