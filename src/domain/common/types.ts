@@ -115,6 +115,19 @@ export interface WorkoutSession {
   status: string;
   startedAt: string;
   endedAt?: string;
+  /**
+   * TRAIN-WAVE-A (Persistent Rest, 2026-09-02): absolute end time of the
+   * current rest period, or absent when not resting. Absolute rather than
+   * a remaining-duration counter so a reload/backgrounding recovers the
+   * correct remaining time from `Date.now()` comparison rather than a
+   * counter that would need its own pause/resume bookkeeping — same
+   * reasoning UX_DECISIONS.md's TRAIN section already requires for an
+   * in-progress workout session itself ("must survive a page reload...
+   * not a best effort"), extended to rest state. Non-indexed: nothing
+   * queries workoutSessions by this field, so it needed no Dexie schema
+   * version bump — see db.ts, unchanged at v8.
+   */
+  activeRestEndsAt?: string;
 }
 
 /**
@@ -166,6 +179,7 @@ export type DomainEventType =
   | "WORKOUT_COMPLETED"
   | "SET_LOGGED"
   | "SET_SKIPPED"
+  | "SET_UNDONE"
   | "WATER_LOGGED"
   | "WATER_LOG_CORRECTED"
   | "MEAL_LOGGED"
@@ -599,6 +613,24 @@ export interface SetSkippedPayload {
   sessionId: string;
   exerciseId: string;
   setNumber: number;
+}
+
+/**
+ * TRAIN-WAVE-A (Set Commit Choreography, 2026-09-02): records that a
+ * previously-logged-or-skipped set was retracted, without mutating or
+ * deleting the original `performedSets` row — same append-only doctrine
+ * BODY's `*_CORRECTED` correction-chain events already follow.
+ * `performedSetId` identifies the exact row to exclude; queries resolve
+ * "what's currently true" by filtering out any set with a later
+ * SET_UNDONE event referencing it (see trainQueries.ts's
+ * getPerformedSets).
+ */
+export interface SetUndonePayload {
+  commandId: string;
+  sessionId: string;
+  exerciseId: string;
+  setNumber: number;
+  performedSetId: string;
 }
 
 /** SHIFT DOWN mirrors RESET's shape: duration input, then a two-step START/COMPLETE flow. */

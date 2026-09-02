@@ -512,6 +512,158 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
   });
 });
 
+describe("TrainScreen (real browser) — TRAIN-WAVE-A: Persistent Rest + Set Commit Choreography", () => {
+  async function startStandardWorkout() {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    return screen;
+  }
+
+  async function logFirstSet(screen: Awaited<ReturnType<typeof startStandardWorkout>>) {
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    await screen.getByPlaceholder("lb").first().fill("135");
+    await screen.getByPlaceholder("reps").first().fill("10");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+  }
+
+  it("committing a set automatically starts a real, counting-down rest timer", async () => {
+    const screen = await startStandardWorkout();
+    await logFirstSet(screen);
+
+    await expect.element(screen.getByText("RESTING", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "SKIP REST" })).toBeVisible();
+  });
+
+  it("skipping a set does not start rest", async () => {
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "SKIP" }).first().click();
+    await expect.element(screen.getByText("#1 — SKIPPED", { exact: true })).toBeVisible();
+
+    expect(screen.getByText("RESTING", { exact: true }).elements()).toHaveLength(0);
+  });
+
+  /** Reads the rest widget's current "M:SS" readout as a total-seconds number. */
+  function readRestSeconds(screen: Awaited<ReturnType<typeof startStandardWorkout>>): number {
+    const text = screen.getByText(/^\d+:\d{2}$/).element().textContent ?? "";
+    const [minutes, seconds] = text.split(":").map(Number);
+    return minutes! * 60 + seconds!;
+  }
+
+  it("± adjusts the remaining rest time", async () => {
+    const screen = await startStandardWorkout();
+    await logFirstSet(screen);
+    await expect.element(screen.getByText(/^\d+:\d{2}$/)).toBeVisible();
+    // Deltas, not absolute values — wall-clock time elapsed since the
+    // rest timer started (real seconds pass between each step in a real
+    // browser) makes an exact absolute "M:SS" assertion timing-sensitive
+    // in exactly the way this Drop's own CI-flake investigation warns
+    // against. A tolerance of 1s absorbs a render landing right on a
+    // seconds-boundary without weakening what's actually being proven.
+    const beforeAdd = readRestSeconds(screen);
+
+    await screen.getByRole("button", { name: "Add 15 seconds to rest" }).click();
+    await expect.poll(() => readRestSeconds(screen)).toBeGreaterThanOrEqual(beforeAdd + 14);
+    const afterAdd = readRestSeconds(screen);
+    expect(afterAdd).toBeLessThanOrEqual(beforeAdd + 16);
+
+    await screen.getByRole("button", { name: "Subtract 15 seconds from rest" }).click();
+    await screen.getByRole("button", { name: "Subtract 15 seconds from rest" }).click();
+    await expect.poll(() => readRestSeconds(screen)).toBeLessThanOrEqual(afterAdd - 28);
+    expect(readRestSeconds(screen)).toBeGreaterThanOrEqual(afterAdd - 32);
+  });
+
+  it("SKIP REST ends rest immediately", async () => {
+    const screen = await startStandardWorkout();
+    await logFirstSet(screen);
+    await expect.element(screen.getByText("RESTING", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "SKIP REST" }).click();
+    await expect.element(screen.getByText("RESTING", { exact: true })).not.toBeInTheDocument();
+    await expect.element(screen.getByRole("button", { name: "SKIP REST" })).not.toBeInTheDocument();
+  });
+
+  it("UNDO removes the just-logged set, clears its rest, and the input is ready for re-entry", async () => {
+    const screen = await startStandardWorkout();
+    await logFirstSet(screen);
+    await expect.element(screen.getByText("RESTING", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "UNDO" }).click();
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).not.toBeInTheDocument();
+    await expect.element(screen.getByText("RESTING", { exact: true })).not.toBeInTheDocument();
+    await expect.element(screen.getByText(/Set 1 of 3/)).toBeVisible();
+
+    // Re-entry works exactly as it would for a set never logged.
+    await screen.getByPlaceholder("lb").first().fill("140");
+    await screen.getByPlaceholder("reps").first().fill("8");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+    await expect.element(screen.getByText("#1 — 140 lb x 8", { exact: true })).toBeVisible();
+  });
+
+  it("UNDO is offered only for the exact set just committed, never for an earlier one", async () => {
+    const screen = await startStandardWorkout();
+    await logFirstSet(screen);
+    expect(screen.getByRole("button", { name: "UNDO" }).elements()).toHaveLength(1);
+
+    // Logging set 2 supersedes set 1's UNDO offer with its own. Set 1's
+    // input row is gone now that it's logged, so set 2's is .first().
+    await screen.getByPlaceholder("lb").first().fill("135");
+    await screen.getByPlaceholder("reps").first().fill("10");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+    await expect.element(screen.getByText("#2 — 135 lb x 10", { exact: true })).toBeVisible();
+
+    expect(screen.getByRole("button", { name: "UNDO" }).elements()).toHaveLength(1);
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+  });
+
+  it("the rest widget compresses to a single ambient line after inactivity, and touch restores full controls", async () => {
+    const screen = await startStandardWorkout();
+    await logFirstSet(screen);
+    await expect.element(screen.getByRole("button", { name: "SKIP REST" })).toBeVisible();
+
+    await expect
+      .poll(() => screen.getByRole("button", { name: "Expand rest timer controls" }).elements().length, { timeout: 10000, interval: 250 })
+      .toBe(1);
+    expect(screen.getByRole("button", { name: "SKIP REST" }).elements()).toHaveLength(0);
+    await expect.element(screen.getByText(/RESTING ·/)).toBeVisible();
+
+    await screen.getByRole("button", { name: "Expand rest timer controls" }).click();
+    await expect.element(screen.getByRole("button", { name: "SKIP REST" })).toBeVisible();
+  });
+
+  it("the expanded rest widget passes real WCAG AA color-contrast (rule enabled, not exempted)", async () => {
+    const screen = await startStandardWorkout();
+    await logFirstSet(screen);
+    await expect.element(screen.getByRole("button", { name: "SKIP REST" })).toBeVisible();
+
+    const el = document.querySelector(".equipment-row");
+    expect(el).not.toBeNull();
+    const results = await axe.run(el!, { runOnly: ["color-contrast"] });
+    expect(results.violations).toEqual([]);
+  });
+
+  it("a COMPLETED closure gets the distinguished Workout Secured treatment", async () => {
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "SKIP" }).first().click();
+    await screen.getByRole("button", { name: "COMPLETE" }).click();
+    await expect.element(screen.getByText("WORKOUT COMPLETE", { exact: true })).toBeVisible();
+    expect(document.querySelector(".workout-secured")).not.toBeNull();
+  });
+
+  it("a PARTIAL closure does not get the distinguished Workout Secured treatment", async () => {
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "SKIP" }).first().click();
+    await screen.getByRole("button", { name: "PARTIAL" }).click();
+    await expect.element(screen.getByText("WORKOUT SAVED — PARTIAL", { exact: true })).toBeVisible();
+    expect(document.querySelector(".workout-secured")).toBeNull();
+  });
+});
+
 describe("TrainScreen (real browser) — RECOVERY session", () => {
   it("starting RECOVERY shows the duration control, and ending it returns to the picker", async () => {
     const day = await startDay();
