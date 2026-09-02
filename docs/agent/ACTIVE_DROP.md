@@ -1,6 +1,6 @@
 ---
 id: AUTOPILOT-AUTH-002
-status: ACTIVE
+status: CLOSED
 baseline: fcd2a23b4e2190819ae9db6255b58a3f18e8542e
 branch: beyond-builder/autopilot-auth-002-0693b6dce325
 contract: docs/agent/drops/AUTOPILOT-AUTH-002.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/52
 builder: Codex, explicitly assigned by Gavin for AUTOPILOT-AUTH-002
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 407fcb68a6c3abcc6104a570f5d2bd9666673b5f
+closed_at: 2026-09-02T01:12:29.348Z
 ---
 
 # ACTIVE_DROP
