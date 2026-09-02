@@ -1380,6 +1380,7 @@ button, input {
 .field-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-2);
   padding-bottom: var(--space-4);
   margin-bottom: var(--space-5);
@@ -1388,6 +1389,21 @@ button, input {
 }
 .field-header .eyebrow {
   margin: 0;
+}
+.field-header__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* FIELD PROTOTYPE v1.0 — SUIT OS: the Emblem is identity, not an earned/
+   active-state instrument (see Emblem.tsx's own doc comment) — pinned to
+   a quiet fixed tone rather than inheriting .field-header's red, so it
+   reads as a constant, sparing watermark, not a second red object
+   competing with the destination glyph next to it. */
+.field-header__emblem {
+  color: var(--text-3-strong);
 }
 
 /* A quiet mechanical aside — a system note, not a decision. Corner

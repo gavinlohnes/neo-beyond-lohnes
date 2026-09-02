@@ -17,10 +17,8 @@ import { getActiveWorkoutSession } from "../application/trainQueries";
  */
 type Tab = "TODAY" | "TRAIN" | "BODY" | "MORE";
 
-// Overdrive Phase 14: MORE now has its own icon ("more" — three small
-// diamonds, additive to the six locked pilot icons, not a redesign of
-// any of them) — see Icon.tsx. All four primary destinations have a
-// real glyph now, so this is a complete Record, not Partial.
+// All four primary destinations have their own glyph (Icon.tsx) — a
+// complete Record, not Partial.
 const TAB_ICON: Record<Tab, IconName> = {
   TODAY: "mission",
   TRAIN: "train",

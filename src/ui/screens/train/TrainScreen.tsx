@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
+import { Emblem } from "../../icons/Emblem";
 import { CommandSurface } from "../../components/CommandSurface";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
@@ -576,8 +577,13 @@ export function TrainScreen({
           (unlike TODAY's own moment-to-moment Engine truth), so a fixed
           statement of what TRAIN is fits here without inventing data. */}
       <div className="field-header">
-        <Icon name="train" size={22} />
-        <h1 ref={headingRef} tabIndex={-1} className="eyebrow">BEYOND // TRAIN</h1>
+        <div className="field-header__identity">
+          <Icon name="train" size={22} />
+          <h1 ref={headingRef} tabIndex={-1} className="eyebrow">BEYOND // TRAIN</h1>
+        </div>
+        <span className="field-header__emblem">
+          <Emblem size={18} />
+        </span>
       </div>
       <div className="field-tagline">
         <h2 className="field-tagline__headline">Training without guesswork.</h2>

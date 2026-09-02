@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { BeyondDay, CaptureItem, Recommendation, StateCheckIn, WorkoutSession } from "../../../domain/common/types";
 import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
+import { Emblem } from "../../icons/Emblem";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { SignalRow } from "../../components/SignalRow";
@@ -1969,8 +1970,13 @@ export function TodayScreen({
           closing structural rule, so the screen opens on a real
           instrument header instead of one quiet line of text. */}
       <div className="field-header">
-        <Icon name="mission" size={22} />
-        <h1 className="eyebrow">BEYOND // TODAY</h1>
+        <div className="field-header__identity">
+          <Icon name="mission" size={22} />
+          <h1 className="eyebrow">BEYOND // TODAY</h1>
+        </div>
+        <span className="field-header__emblem">
+          <Emblem size={18} />
+        </span>
       </div>
 
       {commitmentFeedback && (

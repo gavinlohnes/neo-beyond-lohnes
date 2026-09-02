@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { Icon } from "../../icons/Icon";
+import { Emblem } from "../../icons/Emblem";
 import type { BeyondDay, HydrationEntry, SavedMeal } from "../../../domain/common/types";
 import {
   logWater,
@@ -699,8 +700,13 @@ export function BodyScreen() {
           a new truthful headline stating what BODY actually is —
           evidence, not a second recommendation authority. */}
       <div className="field-header">
-        <Icon name="body" size={22} />
-        <h1 className="eyebrow">BODY // ESSENTIALS</h1>
+        <div className="field-header__identity">
+          <Icon name="body" size={22} />
+          <h1 className="eyebrow">BODY // ESSENTIALS</h1>
+        </div>
+        <span className="field-header__emblem">
+          <Emblem size={18} />
+        </span>
       </div>
       <div className="field-tagline">
         <h2 className="field-tagline__headline">Evidence, not noise.</h2>

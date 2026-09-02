@@ -14,6 +14,7 @@ import { WorkScheduleScreen } from "./WorkScheduleScreen";
 import { IntentScreen } from "./IntentScreen";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { Icon } from "../../icons/Icon";
+import { Emblem } from "../../icons/Emblem";
 
 // FIELD ALPHA Phase 0 truth-hygiene fix: this was hardcoded at 4 (stale
 // since the Drop 02a/schedulePatterns migration) while the live Dexie
@@ -221,8 +222,13 @@ export function MoreScreen() {
           same way. No IA change: still the exact same MENU view, same
           heading text/class. */}
       <div className="field-header">
-        <Icon name="more" size={22} />
-        <h1 className="eyebrow">MORE // SYSTEM</h1>
+        <div className="field-header__identity">
+          <Icon name="more" size={22} />
+          <h1 className="eyebrow">MORE // SYSTEM</h1>
+        </div>
+        <span className="field-header__emblem">
+          <Emblem size={18} />
+        </span>
       </div>
 
       {/* FIELD ALPHA Phase 4B: reorganized by functional meaning

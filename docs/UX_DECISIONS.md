@@ -231,6 +231,20 @@ system-identity glyph."
   implementation; see `docs/agent/drops/SHELL-001.md` ("Deferred to future machine-emblem
   integration") for the minimal integration seam it inherits.
 
+**Update, locked 2026-09-02 (FIELD PROTOTYPE v1.0 — SUIT OS, direct owner ruling, reference
+boards supplied in-session):** the EMBLEM now exists — `src/ui/icons/Emblem.tsx`, an original
+abstract wing-mark (not a traced reproduction of the licensed logo artwork). Placement: one small,
+fixed-tone corner mark in every screen's `.field-header` (`.field-header__emblem`), present
+regardless of which destination is active — a quiet, constant identity presence, distinct from
+the red, state-driven destination glyph beside it. This is the first Drop explicitly chartered to
+deliver it; the "must never be invented... by a Drop not explicitly chartered to deliver it"
+constraint above is satisfied by this direct ruling, not overridden by it. The same ruling also
+redraws the mission/train/body/more destination glyphs (Icon.tsx) to a new open hex-bracket
+"suit instrumentation" language — see Icon.tsx's own file header for the construction rules. This
+is a scoped first slice of a larger owner-supplied visual direction ("FIELD PROTOTYPE v1.0");
+further pieces (an OPERATE full-screen mode, a copy/voice pass, additional support glyphs) remain
+unbuilt and are not authorized by this entry alone.
+
 ## Explicitly out of scope (do not build without direct sign-off)
 
 - BATCAVE
