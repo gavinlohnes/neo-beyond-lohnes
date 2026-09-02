@@ -1,0 +1,101 @@
+{
+  "schema_version": 2,
+  "id": "FACTORY-PHASE-2",
+  "title": "FACTORY AUTOPILOT PHASE 2",
+  "status": "APPROVED",
+  "risk_ceiling": "ARCHITECTURAL",
+  "authorization": {
+    "type": "CAMPAIGN_AUTHORIZATION",
+    "revision": "FACTORY-PHASE-2-R1",
+    "digest": "989dab17dca4544d52f3d9d70f04ad27ff5ef9175ea3cba30d8ecbedf524db8c",
+    "owner_login": "gavinlohnes",
+    "pr": "https://github.com/gavinlohnes/neo-beyond-lohnes/pull/53",
+    "expires_at": null,
+    "allowed_work_classes": [
+      "FACTORY"
+    ],
+    "risk_ceiling": "ARCHITECTURAL",
+    "prohibited_boundaries": [
+      "PRODUCT",
+      "ENGINE",
+      "DOMAIN",
+      "PERSISTENCE",
+      "USER_DATA",
+      "UI",
+      "EXTERNAL_PROVIDER",
+      "AI_AUTHORITY",
+      "PAID_SERVICE",
+      "PRIVACY",
+      "SECURITY",
+      "DESTRUCTIVE_MIGRATION",
+      "UNRELATED_REPOSITORY_WORK"
+    ]
+  },
+  "invariants": [
+    "Builder identity remains distinct from formal Reviewer and Owner evidence.",
+    "Exact-head CI and independent semantic review remain mandatory wherever Factory doctrine requires them.",
+    "PAUSE is resumable only while authorization revision, digest, and scope remain unchanged and valid.",
+    "REVOKE is terminal for this authorization revision.",
+    "Unresolved escalation blocks mutation and integration.",
+    "Direct-to-protected-master Factory closure is deprecated and must not be used to weaken protection.",
+    "AUTOPILOT-LIFECYCLE-002 must establish integration -> mechanically generated closure candidate/PR -> exact expected closure diff verification -> protected integration -> canonical CLOSED verification -> next Drop."
+  ],
+  "non_goals": [
+    "Any product, Engine, domain, persistence, user-data, UI, external-provider, AI-authority, paid-service, privacy, security-boundary, destructive-migration, or unrelated repository change.",
+    "Implementation of any campaign Drop in this authorization candidate.",
+    "Weakening protected master, exact-head binding, CI, review independence, or High-Risk Owner rulings."
+  ],
+  "escalation_conditions": [
+    "HIGH_RISK_WORK",
+    "SCOPE_EXPANSION",
+    "CAMPAIGN_DEFINITION_MUTATION",
+    "PROHIBITED_BOUNDARY",
+    "UNRESOLVED_ESCALATION",
+    "DOCTRINE_CONFLICT"
+  ],
+  "completion_criteria": [
+    "All four ordered Drops are canonically CLOSED under protected integration.",
+    "AUTOPILOT-LIFECYCLE-002 proves the protected closure-candidate model before direct closure pushes are retired operationally.",
+    "DOGFOOD-AUTOPILOT-002 proves the bounded Phase 2 loop without prohibited boundary expansion."
+  ],
+  "drops": [
+    {
+      "id": "AUTOPILOT-CANDIDATE-DISPATCH-002",
+      "title": "CANDIDATE DISPATCH",
+      "work_class": "FACTORY",
+      "risk_tier": "ARCHITECTURAL",
+      "boundaries": [],
+      "depends_on": []
+    },
+    {
+      "id": "AUTOPILOT-LIFECYCLE-002",
+      "title": "PROTECTED FACTORY LIFECYCLE",
+      "work_class": "FACTORY",
+      "risk_tier": "ARCHITECTURAL",
+      "boundaries": [],
+      "depends_on": [
+        "AUTOPILOT-CANDIDATE-DISPATCH-002"
+      ]
+    },
+    {
+      "id": "AUTOPILOT-PROTECTION-002",
+      "title": "PROTECTION ENFORCEMENT",
+      "work_class": "FACTORY",
+      "risk_tier": "ARCHITECTURAL",
+      "boundaries": [],
+      "depends_on": [
+        "AUTOPILOT-LIFECYCLE-002"
+      ]
+    },
+    {
+      "id": "DOGFOOD-AUTOPILOT-002",
+      "title": "PHASE 2 DOGFOOD",
+      "work_class": "FACTORY",
+      "risk_tier": "ARCHITECTURAL",
+      "boundaries": [],
+      "depends_on": [
+        "AUTOPILOT-PROTECTION-002"
+      ]
+    }
+  ]
+}
