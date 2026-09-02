@@ -2,9 +2,9 @@
 id: AUTOPILOT-AUTH-002
 status: ACTIVE
 baseline: fcd2a23b4e2190819ae9db6255b58a3f18e8542e
-branch: codex/autopilot-auth-002
+branch: beyond-builder/autopilot-auth-002-0693b6dce325
 contract: docs/agent/drops/AUTOPILOT-AUTH-002.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/51
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/52
 builder: Codex, explicitly assigned by Gavin for AUTOPILOT-AUTH-002
 reviewer: (unassigned)
 integrator: (unassigned)
