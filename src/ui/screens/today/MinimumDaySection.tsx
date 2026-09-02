@@ -1,6 +1,7 @@
 import { CommandSurface } from "../../components/CommandSurface";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { SignalRow } from "../../components/SignalRow";
 import {
   describeMinimumDaySummary,
   getHydrationProgressPercent,
@@ -153,9 +154,8 @@ export function MinimumDayCard({
       />
     );
   }
-  return (
-    <div className={prominent ? "card signal-row" : "equipment-row"}>
-      <p className="tool-label" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
+  const content = (
+    <>
       <p className="meta" style={{ marginBottom: 12 }}>
         Progress stays with this active BeyondDay until you end it — a calendar date change does not reset it.
       </p>
@@ -297,6 +297,15 @@ export function MinimumDayCard({
           })}
         </>
       )}
+    </>
+  );
+  if (prominent) {
+    return <SignalRow label="MINIMUM DAY">{content}</SignalRow>;
+  }
+  return (
+    <div className="equipment-row">
+      <p className="tool-label" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
+      {content}
     </div>
   );
 }
