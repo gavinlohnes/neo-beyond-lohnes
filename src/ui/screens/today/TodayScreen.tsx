@@ -345,10 +345,6 @@ export function TodayScreen({
     // age is not urgency," and jotting something down shouldn't require a
     // BeyondDay to already exist), so this refreshes unconditionally.
     setOpenCaptureItems(await getOpenCaptureItems());
-    // Intelligence Spine consumption (2026-09-02): same day-independence
-    // reasoning as Capture/Obligations above — advisory notes summarize
-    // current-state evidence, not anything scoped to a particular day.
-    setAdvisoryNotes(await getAdvisoryNotes());
     // Intent & Commitment Spine, Drop 02: same reasoning — Obligations are
     // not day-scoped either.
     const obligations = await getCurrentlyEligibleUnresolvedObligations();
@@ -398,6 +394,18 @@ export function TodayScreen({
       setDecision(undefined);
       setRecommendationHandoff(null);
     }
+    // Intelligence Spine consumption (2026-09-02): deliberately fetched last,
+    // after every check-in/recommendation-dependent state above is already
+    // set — advisory notes are pure SUPPORT-tier background context with no
+    // ordering dependency on anything else refresh() loads, so there is no
+    // correctness reason for this to sit on the critical path between
+    // `setDay` and `setCheckIn` above. (It briefly did, during development,
+    // and measurably widened the real gap between "day" rendering and
+    // "checkIn" rendering — enough to occasionally flip already-time-
+    // sensitive tests like the STATUS strip's capacity assertions under a
+    // slower CI runner. Moving it here removes it from the render-affecting
+    // fetches instead of trying to out-race that gap.)
+    setAdvisoryNotes(await getAdvisoryNotes());
   }
 
   function handleRecommendationHandoff(target: RecommendationHandoffTarget) {
