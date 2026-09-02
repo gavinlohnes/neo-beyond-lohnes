@@ -33,6 +33,7 @@ import {
   updateSavedMeal,
 } from "../../../application/nutritionCommands";
 import { getMealEntries, getSavedMeals, type NutritionEntry } from "../../../application/nutritionQueries";
+import { searchFoods, type FoodSearchResult } from "../../../application/foodLookupQueries";
 import {
   BODYWEIGHT_PLAUSIBLE_RANGE,
   describeBodyweightLogged,
@@ -223,6 +224,13 @@ export function BodyScreen() {
   const [editMealForm, setEditMealForm] = useState<MealFormState>(EMPTY_MEAL_FORM);
   const [correctingMealEventId, setCorrectingMealEventId] = useState<string | null>(null);
   const [mealCorrectionForm, setMealCorrectionForm] = useState<MealMacroFormState>(EMPTY_MEAL_MACRO_FORM);
+  // NUTRITION-002 (2026-09-02): USDA FoodData Central search, scoped to the
+  // "ADD MEAL" form only — see application/foodLookupQueries.ts's own doc
+  // comment. A selected result only ever pre-fills newMealForm below; the
+  // operator still reviews/edits and clicks SAVE MEAL themselves.
+  const [foodQuery, setFoodQuery] = useState("");
+  const [foodSearchBusy, setFoodSearchBusy] = useState(false);
+  const [foodResults, setFoodResults] = useState<FoodSearchResult[] | null>(null);
 
   useEffect(() => {
     void refresh();
@@ -442,6 +450,32 @@ export function BodyScreen() {
 
   // ---- MEAL MEMORY (NUTRITION-001) ----
 
+  async function handleSearchFoods() {
+    if (foodSearchBusy || !foodQuery.trim()) return;
+    setFoodSearchBusy(true);
+    try {
+      setFoodResults(await searchFoods(foodQuery));
+    } finally {
+      setFoodSearchBusy(false);
+    }
+  }
+
+  // A selection only ever pre-fills the form below — it is not saved until
+  // the operator reviews it and clicks SAVE MEAL themselves (same "always a
+  // proposal, never silently committed" treatment as Capture Intelligence's
+  // due-date suggestions).
+  function handleSelectFoodResult(result: FoodSearchResult) {
+    setNewMealForm({
+      name: result.description,
+      calories: String(result.calories),
+      proteinG: String(result.proteinG),
+      carbsG: String(result.carbsG),
+      fatG: String(result.fatG),
+    });
+    setFoodResults(null);
+    setFoodQuery("");
+  }
+
   async function handleCreateSavedMeal() {
     if (busy) return;
     const name = newMealForm.name.trim();
@@ -460,6 +494,8 @@ export function BodyScreen() {
       await createSavedMeal({ name, ...macros });
       setNewMealForm(EMPTY_MEAL_FORM);
       setAddMealOpen(false);
+      setFoodQuery("");
+      setFoodResults(null);
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save meal.");
@@ -1288,6 +1324,54 @@ export function BodyScreen() {
           open={addMealOpen}
           onToggle={setAddMealOpen}
         >
+          <div className="field">
+            <label htmlFor="food-search"><span>Search USDA food database</span></label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                id="food-search"
+                type="text"
+                value={foodQuery}
+                disabled={foodSearchBusy}
+                onChange={(e) => setFoodQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void handleSearchFoods();
+                }}
+                className="input"
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{ width: "auto", padding: "8px 16px" }}
+                disabled={foodSearchBusy || !foodQuery.trim()}
+                onClick={() => void handleSearchFoods()}
+              >
+                {foodSearchBusy ? "SEARCHING..." : "SEARCH"}
+              </button>
+            </div>
+          </div>
+          {foodResults !== null && (
+            <div style={{ marginBottom: 8 }}>
+              {foodResults.length === 0 ? (
+                <p className="meta">No results — enter macros manually below.</p>
+              ) : (
+                foodResults.map((result) => (
+                  <button
+                    key={result.fdcId}
+                    type="button"
+                    className="btn-secondary"
+                    style={{ width: "100%", textAlign: "left", marginBottom: 4 }}
+                    onClick={() => handleSelectFoodResult(result)}
+                  >
+                    {result.description}
+                    {result.brandOwner ? ` (${result.brandOwner})` : ""} —{" "}
+                    {describeMacros(result.calories, result.proteinG, result.carbsG, result.fatG)} per{" "}
+                    {result.servingDescription}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
           <div className="field">
             <label htmlFor="new-meal-name"><span>New meal name</span></label>
             <input
