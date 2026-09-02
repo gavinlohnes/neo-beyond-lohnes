@@ -1,0 +1,45 @@
+name: Factory Contract Bootstrap Dispatch
+
+on:
+  push:
+    branches: [codex/factory-contract-bootstrap-dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    if: github.repository == 'gavinlohnes/neo-beyond-lohnes' && github.actor == 'gavinlohnes'
+    runs-on: ubuntu-latest
+    steps:
+      - id: app-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349
+        with:
+          app-id: ${{ vars.BEYOND_BUILDER_APP_ID }}
+          private-key: ${{ secrets.BEYOND_BUILDER_PRIVATE_KEY }}
+          owner: gavinlohnes
+          repositories: neo-beyond-lohnes
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Create bot-authored bootstrap candidate
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: gavinlohnes/neo-beyond-lohnes
+          BASELINE: 1fffd0344c24d22c71425d7cb6f971ee39fbc4b6
+          SOURCE_SHA: ef47e300ab8427d2c1973265bc36255335e82fb6
+          TARGET_BRANCH: beyond-builder/factory-contract-bootstrap-001
+        shell: bash
+        run: |
+          set -euo pipefail
+          login="$(gh api /user --jq .login)"
+          test "$login" = 'beyond-builder[bot]'
+          test "$(gh api "repos/$REPO/git/ref/heads/master" --jq .object.sha)" = "$BASELINE"
+          source_tree="$(gh api "repos/$REPO/git/commits/$SOURCE_SHA" --jq .tree.sha)"
+          gh api "repos/$REPO/git/refs" --method POST -f ref="refs/heads/$TARGET_BRANCH" -f sha="$SOURCE_SHA" >/dev/null
+          bot_sha="$(gh api "repos/$REPO/git/commits" --method POST -f message='chore(factory): attest protected-contract bootstrap candidate' -f tree="$source_tree" -f parents[]="$SOURCE_SHA" --jq .sha)"
+          gh api "repos/$REPO/git/refs/heads/$TARGET_BRANCH" --method PATCH -f sha="$bot_sha" -F force=false >/dev/null
+          test "$(gh api "repos/$REPO/commits/$bot_sha" --jq .author.login)" = "$login"
+          pr_url="$(gh api "repos/$REPO/pulls" --method POST -f title='FACTORY // TRUSTED CONTRACT PREREGISTRATION BOOTSTRAP' -f head="$TARGET_BRANCH" -f base=master -f body='Owner-authorized one-time Factory governance bootstrap. Preregisters AUTOPILOT-CANDIDATE-DISPATCH-002 on protected master and makes campaign contract identity derive only from freshly fetched trusted master. PR #54 is unchanged and no prior review carries forward.' --jq .html_url)"
+          echo "builder=$login"
+          echo "head=$bot_sha"
+          echo "pr=$pr_url"
