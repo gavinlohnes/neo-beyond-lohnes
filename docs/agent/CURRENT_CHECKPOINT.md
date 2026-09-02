@@ -6,122 +6,138 @@ of the Drop that wrote it; it is not itself a source of product doctrine (see `C
 `docs/UX_DECISIONS.md` for that) or of factory/process doctrine (see `AGENTS.md` and
 `.claude/skills/beyond-drop/SKILL.md` §8 for that).
 
+**Supersedes** the prior checkpoint (written at `origin/master` `1003518`, PR #26), which had
+drifted 29 merged PRs stale — it described Nutrition, the FIELD/SHELL visual consolidation, and
+the entire Factory-Autopilot arc as not yet existing, when all of it had since merged.
+
 ## REMOTE VERIFIED (origin/master)
 
 - Repository: `gavinlohnes/neo-beyond-lohnes`, default branch `master`.
-- `origin/master` HEAD: `10035186d8969487a79597a47a30606c1d951924` — merge of PR #26, verified
-  directly via `git fetch origin master` + `git rev-parse`.
-- PR #24 / **SUIT-001 // COMMAND PRESENCE** merged at `d4ce068171fe32cc94fba5928885af2ba694bc8a`
-  — strengthened TODAY command presence.
-- PR #25 / **SUIT-002 // TRAIN INPUT VELOCITY** merged at
-  `ba6e47b79977ce1ddc19ee9ebddbff31c023b60d` — direct weight/rep entry in active TRAIN execution
-  made first-class (accessible names, mobile keyboard hints, select-on-focus replace), existing
-  SAME AS LAST TIME / −/+ / LOG / SKIP behavior preserved.
-- PR #26 / **FACTORY // CODEX BUILDER CUTOVER** merged at
-  `10035186d8969487a79597a47a30606c1d951924` — direct owner ruling ending the Pilot V1 role lock
-  (see FACTORY / OPERATING MODEL below).
+- `origin/master` HEAD: `e78a73a9b054d7cee5734176580e8a0e5b330839` — merge of PR #55
+  (`factory-contract-bootstrap-001`), verified directly via `git fetch origin master` +
+  `git rev-parse` on 2026-09-02.
+- Fresh-clone verification run this same session: `npm ci` clean; `npx tsc -b` clean (0 errors);
+  `npm run check:architecture` — PASS, 70 files scanned, 0 violations; `vitest run --project
+  node` — 67 test files passed, 824 tests passed, 1 skipped. (Browser/Playwright project not
+  re-run in that session; its 22 test files are confirmed present by listing, not by execution.)
+- PRs #28–33 (Visual-001–004, TRAIN-003, NUTRITION-001) and #34–46 (FACTORY-002,
+  CONTINUITY-001, TODAY-002–006, DOCTRINE-001, FIELD-001, FIELD-ARCH-001,
+  FIELD-PROTOTYPE-001, SHELL-001) are real, merged product/visual/doctrine work.
+- PRs #47–55 (FACTORY-AUTOPILOT-001, AUTOPILOT-AUTH-002, the Phase-2 campaign-authorization
+  revision, and the Builder GitHub App identity bootstrap) are Factory-process work — no
+  product-facing change landed in that span. See FACTORY / OPERATING MODEL below for the owner
+  ruling this produced.
+- `ACTIVE_DROP.md`: `AUTOPILOT-AUTH-002`, status `CLOSED`, integration SHA
+  `407fcb68a6c3abcc6104a570f5d2bd9666673b5f`. No Drop is currently `ACTIVE`.
+- PR #54 (`AUTOPILOT-CANDIDATE-DISPATCH-002`) is **closed, not merged** (verified live via
+  GitHub on 2026-09-02) — per `FACTORY_AUTOPILOT.md`'s own instruction that it is "permanently
+  superseded... must never be merged." No further action needed on it.
 
 ## PRODUCT STATE
 
-Confirmed present in `src/` as of `origin/master` (`1003518`) — unchanged in shape since the
-last checkpoint, with TODAY and TRAIN each carrying their SUIT-001/SUIT-002 ergonomics work:
+Confirmed present in `src/` as of `e78a73a` by direct file inspection (not by re-reading a prior
+checkpoint's claims):
 
-- **TODAY** (`src/ui/screens/today/TodayScreen.tsx`) — start/end day, state check-in, current
-  recommendation, Current Operational Context V1, now also SUIT-001's strengthened command
-  presence.
-- **TRAIN** (`src/ui/screens/train/TrainScreen.tsx`) — A/B/C rotation workouts; per-exercise
-  prior-result memory (`src/engine/progression.ts`'s `evaluateProgression`, reads
-  `lastSessionSets`, returns `NO_HISTORY` when none exists — scoped to TRAIN progression, not a
-  general memory subsystem); now also SUIT-002's direct weight/rep entry ergonomics.
-- **BODY** (`src/ui/screens/body/BodyScreen.tsx`) — sleep (PRIMARY/SUPPLEMENTAL), water,
-  protein.
-- **HISTORY**, nested under MORE (`src/ui/screens/history/HistoryScreen.tsx`) — read-only
-  complete history.
-- **REVIEW** (`src/ui/screens/review/ReviewScreen.tsx`).
-- **SEARCH** (`src/ui/screens/search/SearchScreen.tsx`).
-- **Missions & Obligations** — domain types `Mission`/`Obligation`
-  (`src/domain/intent/types.ts`), interpreted by `src/engine/obligationRelevance.ts` and
-  `src/engine/obligationEligibility.ts`; UI nested under MORE (`IntentScreen.tsx`).
-- **Capture** — `captureItem`/`resolveCaptureItem`/`reopenCaptureItem` in
-  `src/application/commands.ts`, domain type `CaptureItem`.
-- **Recommendation outcomes** — `rateOutcome(beyondDayId, recommendationId, rating)` in
-  `src/application/commands.ts`, writes to `db.outcomes`.
-- **AdvisoryNotes** — domain type `AdvisoryNote` (`src/domain/intelligence/types.ts`), composed
-  in `src/engine/advisory.ts`, queried via `src/application/advisoryQueries.ts`. Explicitly
-  informational-only — never surfaced as a `Recommendation`.
-- **Deterministic application commands** — `src/application/commands.ts`: individually exported
-  async command functions, one per user action (e.g. `startDay`, `submitCheckIn`, `rateOutcome`,
-  `captureItem`). Not split into a `commands/` directory — one flat file.
-- **Current Operational Context V1** — `src/application/currentContextQueries.ts`, consumed by
-  `TodayScreen.tsx`.
+- **TODAY** (`src/ui/screens/today/TodayScreen.tsx`, 2,448 lines, 52 `useState` hooks) —
+  start/end day, state check-in, current recommendation + WHY trace, RESET/SHIFT DOWN, work
+  context, Commitments (Missions/Obligations) card, minimum-day summary.
+- **TRAIN** (`TrainScreen.tsx`, 1,179 lines) — A/B/C rotation, per-exercise progression advisory
+  (`engine/progression.ts`), direct weight/rep entry.
+- **BODY** (`BodyScreen.tsx`, 1,373 lines) — sleep (PRIMARY/SUPPLEMENTAL), water, protein,
+  bodyweight, nutrition/meal logging (`SavedMeal`, fully manual — no food-data source yet).
+- **MORE** — backup/restore, diagnostics, and nested **HISTORY**, **REVIEW**
+  (`getRecommendationLedger`), **SEARCH** (`searchQueries.ts`, read-only, no ranking library,
+  no tap-to-navigate as of this checkpoint), **Missions & Obligations**
+  (`IntentScreen.tsx`), **Work Schedule**.
+- **Capture** — `captureItem`/`convertCaptureToObligation`, fully manual triage, no derived
+  fields from capture text as of this checkpoint.
+- **Recommendation outcomes** — `rateOutcome` writes a rating; `getPriorOutcomeMemory` displays
+  it once as history; explicitly documented as never an Engine input as of this checkpoint.
+- **AdvisoryNotes** (`engine/advisory.ts`) — composes `obligationRelevance` + `progression`
+  output into informational-only notes; never a `Recommendation`.
+- **Engine** (`src/engine/`, 904 lines total) — `evaluate.ts` selects one of 5 recommendation
+  kinds from `Capacity` (locked threshold rule) + 2 booleans only. Obligations do not
+  participate in arbitration as of this checkpoint (see NEXT OPERATION — this is now
+  owner-authorized to change).
 
-No capability beyond this list is claimed. There is no `Nutrition`, `MIND`, or `COMMAND` screen
-in `src/` as of this checkpoint — those names below refer to the *scope of an approved
-next operation*, not to existing product surfaces.
-
-## ACTIVE CAMPAIGN
-
-**C1 — SUIT // DAILY DRIVER**: SUIT-001 (COMMAND PRESENCE, TODAY) and SUIT-002 (TRAIN INPUT
-VELOCITY) are both merged, per REMOTE VERIFIED above. No further SUIT Drop is in flight as of
-this checkpoint.
+No `MIND`, `COMMAND`, or `LINK` capability exists in `src/` as of this checkpoint — those remain
+correctly out of scope (see KNOWN EXCLUSIONS).
 
 ## FACTORY / OPERATING MODEL
 
-**FACTORY // CODEX BUILDER CUTOVER** (PR #26, merged `1003518`): direct owner ruling ending and
-superseding the former Pilot V1 role lock. Codex is now authorized to act as a Builder when
-explicitly assigned to a Drop — this does not retire Claude and does not make Codex the
-exclusive or default Builder. Gavin assigns either Claude or Codex as Builder per Drop, based on
-availability and suitability; only one agent owns Builder for a given Drop. Builder, Reviewer,
-and Integrator remain three separate sessions on any one Drop; no session reviews or merges its
-own work. This checkpoint records the operational fact only — the full operating model lives in
-`AGENTS.md` and `.claude/skills/beyond-drop/SKILL.md` §8; do not duplicate that detail here.
+**Factory-automation investment paused — direct owner ruling, 2026-09-02.** No further
+campaign-authorization schema version, Autopilot capability, or Builder-identity mechanism
+beyond what already exists in `scripts/factory-*.mjs` is authorized until the current mechanism
+has actually carried several real product Drops through it. This does not retire the existing
+Drop contract / `ACTIVE_DROP` / risk-classification mechanism, which remains in force — it stops
+*further elaboration* of the automation layer itself. `FACTORY_PHASE_2.md`'s remaining sequence
+(`AUTOPILOT-CANDIDATE-DISPATCH-002` onward) is not activated under this ruling.
+
+Builder/Reviewer/Integrator role separation, no-self-merge, and exact-head review remain
+unchanged and in force for the product work below — see `AGENTS.md` /
+`docs/agent/BEYOND_ENGINEERING_CONTRACT.md`.
 
 ## NEXT OPERATION
 
-Next approved product-design operation: the **Visual Synthesis Round** across TODAY, TRAIN,
-Nutrition, MIND, and COMMAND/Review.
+Direct owner ruling, 2026-09-02: a specific product/architecture backlog was reviewed and
+explicitly authorized item-by-item (see `docs/agent/CAPABILITY_MAP.md` for the researched basis
+of each). Recorded here so a fresh session does not have to reconstruct authorization from chat
+history:
 
-**No visual implementation is authorized until owner review selects the grammar.** This
-checkpoint does not begin that round — it only records that it is the next approved operation.
+**Authorized, no gate needed (Routine, in progress via this Drop/foundation work):**
+- This Capability Map + checkpoint refresh.
+- Decompose `TodayScreen.tsx` into sub-components (behavior-preserving).
+- Search-to-navigate wiring.
+- Verify GitHub CodeQL/Dependabot/secret-scanning enablement.
+
+**Authorized, dependency additions (each still runs as its own High-Risk Drop with real
+verification — authorization removes the "should we ask the owner" step, not the Drop itself):**
+- MiniSearch (Search ranking/retrieval).
+- chrono-node + Compromise (Capture date/entity extraction).
+- fast-check, dev-only (property-based tests).
+- Lucide React (icon grammar) — re-evaluate now, per its own stated re-evaluation trigger.
+
+**Authorized, schema additions (each still runs as its own High-Risk Drop):**
+- Decision Journal (Context→Options→Decision→Reasoning→Expectation→Outcome→Lesson).
+- Nutrition food lookup via USDA FoodData Central.
+- Obligation recurrence via rrule.js.
+- TRAIN Wave-A prototype slate (Prepared Set Row, Set Commit Choreography, Persistent Rest,
+  Workout Secured).
+
+**Authorized, Engine/recommendation-priority change (Architectural, explicit escalation
+category — authorization obtained, still requires its own careful Drop contract given RED
+capacity's priority must not be weakened):**
+- Obligations (OVERDUE/DUE_TODAY) participate in recommendation arbitration as a new kind.
+- Rated Outcome history biases/tie-breaks recommendation selection.
+
+No sequencing/priority order among these was fixed by the authorization itself — a fresh session
+should confirm current sequencing with the owner rather than assume the order listed above.
 
 ## KNOWN EXCLUSIONS / DO NOT BUILD
 
-Until an owner ruling or Drop brief says otherwise, still not authorized:
-
-- Engine/recommendation-policy changes
-- Context architecture expansion
-- Provider integration
-- AI
-- New top-level navigation
-- Generic dashboard work
-- Universal Entity/World State architecture
-- Broad OVERWATCH work
-- Any visual implementation for the Visual Synthesis Round, ahead of owner grammar selection
-  (see NEXT OPERATION above)
+Unchanged, still not authorized: COMMAND desktop implementation, LINK/AI conversational channel,
+cloud/provider backend or account system, universal Entity/World State architecture, generic
+dashboard work, broad OVERWATCH work. Added by this checkpoint: further Factory-automation
+capability beyond what exists today (see FACTORY / OPERATING MODEL above).
 
 ## VERIFICATION STATE
 
-This checkpoint correction (FACTORY // CODEX BUILDER CUTOVER — OPERATIONAL CLARITY) is
-documentation-only: it replaces this file wholesale, generalizes one Reviewer-assignment phrase
-in `.claude/skills/beyond-drop/SKILL.md`, and splits `AGENTS.md`'s role guidance into explicit
-BUILDER MODE / REVIEWER MODE / DEFAULT MODE / INTEGRATOR sections — nothing else. Verification
-performed for this Drop:
+This checkpoint Drop is documentation-only (this file, `CLAUDE.md`'s Pointers section, and the
+new `docs/agent/CAPABILITY_MAP.md`) plus, in the same Drop, a behavior-preserving `TodayScreen`
+decomposition if bundled — check the actual diff of the Drop that carries this checkpoint rather
+than assume from this paragraph alone. Verification performed:
 
-- `git fetch origin master` + `git rev-parse` confirmed `origin/master` at `1003518` directly,
-  not assumed.
-- `npm run check:architecture` — PASS (no source files touched).
-- `npm run check:risk origin/master` — reports process/docs-only diff, Routine tier.
-- `git status` / `git diff --stat` confirmed only the three intended files are part of this
-  Drop's change.
-- Full suite (`npx vitest run`, browser project, production build) was not re-run locally for
-  this docs-only Drop, consistent with this repo's own risk-classification guidance and prior
-  checkpoint precedent; `pr-verify.yml` runs the full chain automatically on the PR before any
-  merge decision.
+- `git fetch origin master` + `git rev-parse` confirmed `origin/master` at `e78a73a` directly.
+- `npm ci` + `npx tsc -b` + `npm run check:architecture` + `vitest run --project node` all green,
+  captured above under REMOTE VERIFIED.
+- PR #54's closed (not merged) state confirmed live via GitHub, not assumed from
+  `FACTORY_AUTOPILOT.md`'s prose alone.
 
 ## HANDOFF NOTES
 
-- Treat this file as replaceable in full at the next checkpoint Drop, not as an append log.
-- Verify `origin/master`'s actual HEAD directly before relying on the SHA above — this is a
-  snapshot, not a live status.
-- The Visual Synthesis Round (NEXT OPERATION above) is scope-naming only; it does not itself
-  authorize any implementation, visual or otherwise.
+- Treat this file as replaceable in full at the next checkpoint Drop, not an append log — the
+  prior checkpoint's failure to be refreshed for 29 PRs is exactly the failure mode to avoid
+  repeating.
+- Verify `origin/master`'s actual HEAD directly before relying on the SHA above.
+- Before starting any of the NEXT OPERATION items, re-confirm with the owner that the
+  authorization above still stands and ask for current sequencing preference — it was not fixed.
