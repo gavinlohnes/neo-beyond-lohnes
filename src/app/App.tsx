@@ -156,7 +156,7 @@ export function App() {
           />
         )}
         {tab === "BODY" && <BodyScreen />}
-        {tab === "MORE" && <MoreScreen />}
+        {tab === "MORE" && <MoreScreen onOpenCapture={() => setTab("TODAY")} />}
       </RootErrorBoundary>
 
       <AppUpdateBanner />

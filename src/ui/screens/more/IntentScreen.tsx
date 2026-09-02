@@ -37,6 +37,22 @@ type View =
   | { kind: "MISSION_DETAIL"; missionId: string }
   | { kind: "OBLIGATION_DETAIL"; obligationId: string };
 
+/** Search-to-navigate (2026-09-02): lets a caller (MoreScreen, from a Search result) open
+ * straight to a specific Mission/Obligation's detail view instead of always starting at LIST.
+ * Consumed once, at mount, via the `view` state's lazy initializer below — this is deliberately
+ * not a controlled prop IntentScreen keeps re-syncing to, so normal in-screen navigation (e.g.
+ * BACK to LIST) behaves exactly as it always has once the initial focus has been applied. */
+export type IntentFocus =
+  | { kind: "MISSION"; missionId: string }
+  | { kind: "OBLIGATION"; obligationId: string };
+
+function initialViewFor(focus: IntentFocus | undefined): View {
+  if (!focus) return { kind: "LIST" };
+  return focus.kind === "MISSION"
+    ? { kind: "MISSION_DETAIL", missionId: focus.missionId }
+    : { kind: "OBLIGATION_DETAIL", obligationId: focus.obligationId };
+}
+
 function formatEventType(type: string): string {
   return type.replace(/_/g, " ");
 }
@@ -92,8 +108,8 @@ function IntentItemRow({
   );
 }
 
-export function IntentScreen() {
-  const [view, setView] = useState<View>({ kind: "LIST" });
+export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = {}) {
+  const [view, setView] = useState<View>(() => initialViewFor(initialFocus));
   const [missions, setMissions] = useState<Mission[]>([]);
   const [allMissions, setAllMissions] = useState<Mission[]>([]);
   const [obligations, setObligations] = useState<Obligation[]>([]);
