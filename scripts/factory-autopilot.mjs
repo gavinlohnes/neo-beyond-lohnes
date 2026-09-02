@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { deriveNextAction, reconcileActiveDrops } from "./factory-autopilot-core.mjs";
+import { campaignDigest, deriveNextAction, reconcileActiveDrops } from "./factory-autopilot-core.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -177,6 +177,47 @@ async function livePrState(active) {
   };
 }
 
+function typedJson(text) {
+  try { return JSON.parse(text); } catch { return null; }
+}
+
+async function liveCampaignAuthorization(campaign, authorizationCommit) {
+  if (campaign?.schema_version !== 2) return null;
+  const number = parsePrNumber(campaign.authorization?.pr);
+  if (!number) throw new Error("CAMPAIGN_AUTHORIZATION_PR_REQUIRED: schema-v2 authorization requires a GitHub PR URL.");
+  const token = githubToken();
+  if (!token) throw new Error("GITHUB_AUTH_UNAVAILABLE: campaign authorization requires live GitHub evidence.");
+  const repo = "gavinlohnes/neo-beyond-lohnes";
+  const [reviews, comments] = await Promise.all([
+    apiAll(`/repos/${repo}/pulls/${number}/reviews`, token),
+    apiAll(`/repos/${repo}/issues/${number}/comments`, token),
+  ]);
+  const owner = campaign.authorization.owner_login;
+  const approval = reviews
+    .filter((review) => review.state === "APPROVED" && review.commit_id === authorizationCommit && review.user?.login === owner && review.author_association === "OWNER")
+    .map((review) => ({ review, body: typedJson(review.body) }))
+    .find(({ body }) => body?.type === "CAMPAIGN_AUTHORIZATION" && body.revision === campaign.authorization.revision && body.digest === campaign.authorization.digest);
+  const lifecycle = comments
+    .filter((comment) => comment.user?.login === owner && comment.author_association === "OWNER")
+    .map((comment) => typedJson(comment.body))
+    .filter((body) => body?.domain === "CAMPAIGN_AUTHORIZATION_EVENT")
+    .map((body) => ({ type: body.type, revision: body.revision, digest: body.digest, author_login: owner, created_at: body.created_at, code: body.code }));
+  if (!approval) return { source: "LIVE_GITHUB_CAMPAIGN_AUTHORIZATION", state: "MISSING", active_digest: campaignDigest(campaign), lifecycle };
+  return {
+    source: "LIVE_GITHUB_CAMPAIGN_AUTHORIZATION",
+    domain: approval.body.type,
+    state: approval.review.state,
+    commit_sha: approval.review.commit_id,
+    author_login: approval.review.user.login,
+    author_association: approval.review.author_association,
+    digest: approval.body.digest,
+    revision: approval.body.revision,
+    active_digest: campaignDigest(campaign),
+    lifecycle,
+    escalations: lifecycle.filter((event) => event.type === "ESCALATE").map((event) => event.code),
+  };
+}
+
 function syntheticFixturePath(path) {
   const fixtureRoot = resolve(root, "tests/fixtures/factory-autopilot");
   const resolved = resolve(root, path);
@@ -242,6 +283,7 @@ async function main() {
   const pr = flags["github-state"]
     ? JSON.parse(readFileSync(syntheticFixturePath(flags["github-state"]), "utf8"))
     : await livePrState(active);
+  const campaignAuthorization = flags["github-state"] ? null : await liveCampaignAuthorization(campaign, authorizationCommit);
   let output = deriveNextAction({
     campaign,
     master: { sha: masterSha, authorization_commit_is_ancestor: authorizationCommitIsAncestor, authorization_commit: authorizationCommit },
@@ -250,6 +292,7 @@ async function main() {
     pr,
     required_check: "PR Verification",
     escalations: flags.escalation ?? [],
+    campaign_authorization: campaignAuthorization,
   });
   const evidenceSource = flags["diagnostic-synthetic"] ? "SYNTHETIC_FIXTURE" : pr ? "LIVE_GITHUB" : "REPOSITORY_ONLY";
   if (evidenceSource === "SYNTHETIC_FIXTURE" && ["READY_FOR_INTEGRATION", "READY_FOR_CLOSURE"].includes(output.action)) {
