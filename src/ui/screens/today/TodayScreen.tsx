@@ -7,6 +7,9 @@ import { CommandSurface } from "../../components/CommandSurface";
 import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
 import { getMostRelevantUnresolvedObligation, hasObligationRequiringAttention } from "../../../engine/obligationRelevance";
 import { getCurrentlyEligibleUnresolvedObligations, getMissionForObligation } from "../../../application/intentQueries";
+import { getAdvisoryNotes } from "../../../application/advisoryQueries";
+import type { AdvisoryNote } from "../../../domain/intelligence/types";
+import { AdvisorySection } from "./AdvisorySection";
 import { convertCaptureToObligation, satisfyObligation } from "../../../application/intentCommands";
 import { formatLocalDate } from "../../../engine/scheduledContext";
 import type { Mission, Obligation } from "../../../domain/intent/types";
@@ -180,6 +183,7 @@ export function TodayScreen({
     };
   }, []);
   const [openCaptureItems, setOpenCaptureItems] = useState<CaptureItem[]>([]);
+  const [advisoryNotes, setAdvisoryNotes] = useState<AdvisoryNote[]>([]);
   const [captureText, setCaptureText] = useState("");
   // Overdrive Phase 17 (Capture 1.1): reopenCaptureItem already existed
   // (application/commands.ts) and was already tested
@@ -390,6 +394,18 @@ export function TodayScreen({
       setDecision(undefined);
       setRecommendationHandoff(null);
     }
+    // Intelligence Spine consumption (2026-09-02): deliberately fetched last,
+    // after every check-in/recommendation-dependent state above is already
+    // set — advisory notes are pure SUPPORT-tier background context with no
+    // ordering dependency on anything else refresh() loads, so there is no
+    // correctness reason for this to sit on the critical path between
+    // `setDay` and `setCheckIn` above. (It briefly did, during development,
+    // and measurably widened the real gap between "day" rendering and
+    // "checkIn" rendering — enough to occasionally flip already-time-
+    // sensitive tests like the STATUS strip's capacity assertions under a
+    // slower CI runner. Moving it here removes it from the render-affecting
+    // fetches instead of trying to out-race that gap.)
+    setAdvisoryNotes(await getAdvisoryNotes());
   }
 
   function handleRecommendationHandoff(target: RecommendationHandoffTarget) {
@@ -1520,6 +1536,8 @@ export function TodayScreen({
           onEndDay={() => void handleEndDay()}
         />
       )}
+
+      <AdvisorySection notes={advisoryNotes} excludeObligationId={headlineCommitment?.obligation.id} />
 
       {(daysSinceBackup === null || daysSinceBackup >= BACKUP_NUDGE_THRESHOLD_DAYS) && (
         <p className="meta" style={{ marginTop: 4 }}>
