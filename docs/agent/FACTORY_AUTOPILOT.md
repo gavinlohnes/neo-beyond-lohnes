@@ -53,6 +53,20 @@ Legal outcomes include `NO_CAMPAIGN`, `LEGACY_DROP_ACTIVE`, `DROP_READY`, `WAITI
 `READY_FOR_INTEGRATION`, `READY_FOR_CLOSURE`, `CAMPAIGN_COMPLETE`, and `ESCALATION_REQUIRED`.
 Unknown or contradictory evidence always fails closed.
 
+## Candidate reconciliation and dispatch
+
+`npm run factory:candidate` derives the active campaign/Drop/baseline/contract identity and
+reconciles it against typed `BEYOND_FACTORY_CANDIDATE` metadata on GitHub PRs. Identity is a
+deterministic digest of campaign id/revision/digest, Drop id, exact baseline, and contract path/
+content digest; PR number and title are never identity. One valid candidate is reused. Open
+divergence, duplicate valid candidates, malformed metadata, baseline/scope/contract drift, and
+ambiguous evidence fail closed. Closed/merged candidates remain GitHub evidence and are reported
+as obsolete rather than deleted; a replacement carries no review or approval.
+
+The versioned JSON dispatch envelope names the next legal role/action and exact candidate head.
+`repository_launch_supported` is always false: the repository can describe work for an external
+role-capable session, but cannot claim it launched Codex, Claude, or any other agent.
+
 `--campaign <path>` inspects a non-active manifest. Synthetic GitHub state is accepted only with
 `--diagnostic-synthetic --github-state <path>` and only from JSON fixtures under
 `tests/fixtures/factory-autopilot/`. Output labels evidence as `LIVE_GITHUB`,
