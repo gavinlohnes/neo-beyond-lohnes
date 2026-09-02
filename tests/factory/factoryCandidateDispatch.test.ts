@@ -55,11 +55,12 @@ describe("Factory candidate identity", () => {
   it("is deterministic and changes for every trusted identity dimension", () => {
     const base = identity();
     expect(identity()).toEqual(base);
-    for (const [field, value] of [
+    const dimensions: Array<[string, string]> = [
       ["campaign_id", "OTHER"], ["campaign_revision", "R2"], ["campaign_digest", "6".repeat(64)],
       ["drop_id", "OTHER-DROP"], ["activation_baseline", "7".repeat(40)],
       ["contract_path", "docs/agent/drops/OTHER.md"], ["contract_digest", "8".repeat(64)],
-    ]) {
+    ];
+    for (const [field, value] of dimensions) {
       expect(identity({ [field]: value }).candidate_key).not.toBe(base.candidate_key);
     }
   });
@@ -89,9 +90,9 @@ describe("Factory candidate reconciliation", () => {
       .toMatchObject({ ok: false, state: CANDIDATE_STATE.DIVERGENT, reason: "SAME_KEY_DIFFERENT_HEADS" });
   });
 
-  it("fails closed when a new publication request moves beyond the candidate's source head", () => {
+  it("preserves an older source head as obsolete and permits a fresh replacement", () => {
     expect(reconcileCandidates({ expected: identity(), candidates: [candidate()], builder_login: "beyond-builder[bot]", source_head_sha: SHA.head }))
-      .toMatchObject({ ok: false, state: CANDIDATE_STATE.DIVERGENT, reason: "SOURCE_HEAD_CONFLICT" });
+      .toMatchObject({ ok: true, state: CANDIDATE_STATE.OBSOLETE, obsolete: [{ pr_number: 70 }] });
   });
 
   it.each([

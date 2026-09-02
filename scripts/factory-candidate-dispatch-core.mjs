@@ -75,17 +75,16 @@ export function reconcileCandidates({ expected, candidates = [], builder_login: 
   }
 
   const sameDrop = candidates.filter((candidate) => candidate.drop_id === expected.drop_id);
-  const current = sameDrop.filter((candidate) => sameIdentity(candidate, expected));
+  const sameRevision = sameDrop.filter((candidate) => sameIdentity(candidate, expected));
+  const current = sourceHeadSha ? sameRevision.filter((candidate) => candidate.source_head_sha === sourceHeadSha) : sameRevision;
+  const priorSources = sourceHeadSha ? sameRevision.filter((candidate) => candidate.source_head_sha !== sourceHeadSha) : [];
   const conflictingIdentity = sameDrop.filter((candidate) =>
     !sameIdentity(candidate, expected) && (candidate.candidate_key === expected.candidate_key || sameIdentityFields(candidate, expected)),
   );
   if (conflictingIdentity.length) {
     return { ok: false, state: CANDIDATE_STATE.DIVERGENT, reason: "CANONICAL_IDENTITY_CONFLICT", pr_numbers: conflictingIdentity.map((item) => item.pr_number).sort((a, b) => a - b) };
   }
-  if (sourceHeadSha && current.some((candidate) => candidate.source_head_sha !== sourceHeadSha)) {
-    return { ok: false, state: CANDIDATE_STATE.DIVERGENT, reason: "SOURCE_HEAD_CONFLICT", pr_numbers: current.map((item) => item.pr_number).sort((a, b) => a - b) };
-  }
-  const obsolete = sameDrop.filter((candidate) => !sameIdentity(candidate, expected));
+  const obsolete = [...sameDrop.filter((candidate) => !sameIdentity(candidate, expected)), ...priorSources];
   const invalidCurrent = current.filter((candidate) =>
     candidate.author_login !== builderLogin || candidate.base_sha !== expected.activation_baseline || candidate.marker_head_sha !== candidate.head_sha,
   );

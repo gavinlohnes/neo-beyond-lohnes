@@ -176,7 +176,7 @@ async function publish() {
     return;
   }
 
-  const branch = `beyond-builder/candidate-${context.identity.candidate_key.slice(0, 16)}`;
+  const branch = `beyond-builder/candidate-${context.identity.candidate_key.slice(0, 10)}-${context.sourceHead.slice(0, 10)}`;
   await api(`/repos/${REPO}/git/refs`, token, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: context.sourceHead }),
