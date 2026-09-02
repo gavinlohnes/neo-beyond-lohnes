@@ -7,6 +7,9 @@ import { CommandSurface } from "../../components/CommandSurface";
 import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
 import { getMostRelevantUnresolvedObligation, hasObligationRequiringAttention } from "../../../engine/obligationRelevance";
 import { getCurrentlyEligibleUnresolvedObligations, getMissionForObligation } from "../../../application/intentQueries";
+import { getAdvisoryNotes } from "../../../application/advisoryQueries";
+import type { AdvisoryNote } from "../../../domain/intelligence/types";
+import { AdvisorySection } from "./AdvisorySection";
 import { convertCaptureToObligation, satisfyObligation } from "../../../application/intentCommands";
 import { formatLocalDate } from "../../../engine/scheduledContext";
 import type { Mission, Obligation } from "../../../domain/intent/types";
@@ -180,6 +183,7 @@ export function TodayScreen({
     };
   }, []);
   const [openCaptureItems, setOpenCaptureItems] = useState<CaptureItem[]>([]);
+  const [advisoryNotes, setAdvisoryNotes] = useState<AdvisoryNote[]>([]);
   const [captureText, setCaptureText] = useState("");
   // Overdrive Phase 17 (Capture 1.1): reopenCaptureItem already existed
   // (application/commands.ts) and was already tested
@@ -341,6 +345,10 @@ export function TodayScreen({
     // age is not urgency," and jotting something down shouldn't require a
     // BeyondDay to already exist), so this refreshes unconditionally.
     setOpenCaptureItems(await getOpenCaptureItems());
+    // Intelligence Spine consumption (2026-09-02): same day-independence
+    // reasoning as Capture/Obligations above — advisory notes summarize
+    // current-state evidence, not anything scoped to a particular day.
+    setAdvisoryNotes(await getAdvisoryNotes());
     // Intent & Commitment Spine, Drop 02: same reasoning — Obligations are
     // not day-scoped either.
     const obligations = await getCurrentlyEligibleUnresolvedObligations();
@@ -1520,6 +1528,8 @@ export function TodayScreen({
           onEndDay={() => void handleEndDay()}
         />
       )}
+
+      <AdvisorySection notes={advisoryNotes} excludeObligationId={headlineCommitment?.obligation.id} />
 
       {(daysSinceBackup === null || daysSinceBackup >= BACKUP_NUDGE_THRESHOLD_DAYS) && (
         <p className="meta" style={{ marginTop: 4 }}>

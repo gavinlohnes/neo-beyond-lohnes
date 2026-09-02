@@ -1220,6 +1220,41 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
   });
 });
 
+describe("TodayScreen (real browser) — ADVISORY (Intelligence Spine consumption)", () => {
+  function dateOffset(days: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return formatLocalDate(d);
+  }
+
+  it("does not duplicate the headline Commitment's own obligation as a second ADVISORY note", async () => {
+    await createObligation({ title: "Write the report", plannedAt: dateOffset(0) });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
+    // Exactly one occurrence of this obligation's text anywhere on the page — the
+    // Commitments card's own summary, not a second copy from ADVISORY.
+    expect(screen.getByText(/Write the report/).elements().length).toBe(1);
+    expect(screen.getByText("ADVISORY", { exact: true }).elements().length).toBe(0);
+  });
+
+  it("still surfaces a second, non-headline attention-worthy obligation in ADVISORY", async () => {
+    // Commitments only ever names the single headline obligation, plus a plain
+    // count of anything else unresolved (see CommitmentsCard.tsx) — the second
+    // obligation's own identity is real information that lives only in ADVISORY.
+    await createObligation({ title: "Renew passport", dueAt: dateOffset(0) });
+    await createObligation({ title: "File expense report", dueAt: dateOffset(0) });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("ADVISORY", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("File expense report — DUE_TODAY", { exact: true })).toBeVisible();
+  });
+});
+
 describe("TodayScreen (real browser) — narrow phone widths", () => {
   it.each([320, 360, 375, 412])("has no horizontal overflow at %ipx", async (width) => {
     const day = await startDay();
