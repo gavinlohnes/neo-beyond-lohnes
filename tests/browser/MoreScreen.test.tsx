@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
@@ -7,7 +7,7 @@ import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../src/app/buildInfo";
 import { ENGINE_VERSION } from "../../src/engine/evaluate";
 import { archiveMission, createMission, createObligation } from "../../src/application/intentCommands";
-import { startDay } from "../../src/application/commands";
+import { captureItem, startDay } from "../../src/application/commands";
 import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
 
 /**
@@ -271,6 +271,70 @@ describe("MoreScreen (real browser) — nested navigation", () => {
 
     await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
     await expect.element(screen.getByText("Evidence", { exact: true })).toBeVisible();
+  });
+});
+
+describe("MoreScreen (real browser) — search-to-navigate", () => {
+  it("tapping a MISSION search result opens IntentScreen straight to that Mission's detail", async () => {
+    await createMission({ title: "Rebuild the deck", description: "Replace the rotted boards" });
+
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open SEARCH" }).click();
+    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("deck");
+    await screen.getByRole("button", { name: "Open MISSION: Rebuild the deck" }).click();
+
+    await expect.element(screen.getByText("MORE // MISSIONS & OBLIGATIONS", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "Rebuild the deck", exact: true })).toBeVisible();
+    // The LIST view's own section headings are gone — this is the detail view, not a scroll target.
+    expect(screen.getByRole("heading", { name: "Missions · durable direction" }).elements()).toHaveLength(0);
+
+    // IntentScreen's own "← BACK" returns to the Mission/Obligation LIST, not back to Search.
+    await screen.getByRole("button", { name: "← BACK", exact: true }).click();
+    await expect.element(screen.getByRole("heading", { name: "Missions · durable direction" })).toBeVisible();
+    expect(screen.getByText("Rebuild the deck", { exact: true }).elements().length).toBeGreaterThan(0);
+  });
+
+  it("tapping an OBLIGATION search result opens IntentScreen straight to that Obligation's detail", async () => {
+    await createObligation({ title: "Call the electrician" });
+
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open SEARCH" }).click();
+    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("electrician");
+    await screen.getByRole("button", { name: "Open OBLIGATION: Call the electrician" }).click();
+
+    await expect.element(screen.getByText("MORE // MISSIONS & OBLIGATIONS", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "Call the electrician", exact: true })).toBeVisible();
+    await expect.element(screen.getByText("OBLIGATION", { exact: true })).toBeVisible();
+  });
+
+  it("tapping a CAPTURE search result hands off to onOpenCapture instead of opening a fake scroll target", async () => {
+    await captureItem("Renew the car registration");
+    const onOpenCapture = vi.fn();
+
+    const screen = await render(<MoreScreen onOpenCapture={onOpenCapture} />);
+    await screen.getByRole("button", { name: "Open SEARCH" }).click();
+    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("registration");
+    await screen.getByRole("button", { name: "Open CAPTURE: Renew the car registration" }).click();
+
+    expect(onOpenCapture).toHaveBeenCalledTimes(1);
+    // MoreScreen itself has no TODAY surface to render — the tab switch is the caller's job (see App.tsx).
+    await expect.element(screen.getByText("MORE // SEARCH", { exact: true })).toBeVisible();
+  });
+
+  it("a search-driven focus never silently reopens on an ordinary visit to MISSIONS & OBLIGATIONS from the menu", async () => {
+    await createMission({ title: "Rebuild the deck" });
+
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open SEARCH" }).click();
+    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("deck");
+    await screen.getByRole("button", { name: "Open MISSION: Rebuild the deck" }).click();
+    await expect.element(screen.getByRole("heading", { name: "Rebuild the deck", exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
+    await screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" }).click();
+
+    await expect.element(screen.getByRole("heading", { name: "Missions · durable direction" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "← BACK", exact: true }).elements()).toHaveLength(0);
   });
 });
 
