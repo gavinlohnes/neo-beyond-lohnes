@@ -4,6 +4,7 @@ import { assertRedOverrideConfirmed } from "../engine/redOverride";
 import { deriveRecoverySessionStatus } from "../engine/trainSuggestion";
 import { logEvent } from "./commands";
 import { getLatestCheckIn } from "./queries";
+import { getPerformedSets } from "./trainQueries";
 import type { Capacity, PerformedSetRaw } from "../domain/common/types";
 import type {
   PerformedSet,
@@ -180,6 +181,76 @@ export async function skipSet(
 }
 
 /**
+ * TRAIN-WAVE-A (Set Commit Choreography, 2026-09-02): undoes only the
+ * single most-recently-logged-or-skipped action in this session (LIFO,
+ * not arbitrary history editing — "easy commit requires easy recovery,"
+ * TRAIN Experience Law #3, without turning this into a full edit-history
+ * UI). Never mutates or deletes the raw performedSets row — see
+ * SetUndonePayload's doc comment for why. A no-op (not an error) when
+ * there is nothing left to undo, since this is offered as a UI
+ * affordance only when something exists to undo, never called
+ * defensively "just in case."
+ */
+export async function undoLastSet(beyondDayId: string, sessionId: string): Promise<void> {
+  const visible = await getPerformedSets(sessionId);
+  const last = visible.reduce<PerformedSet | null>((latest, s) => {
+    if (!latest) return s;
+    if (s.recordedAt !== latest.recordedAt) return s.recordedAt > latest.recordedAt ? s : latest;
+    return s.setNumber > latest.setNumber ? s : latest;
+  }, null);
+  if (!last) return;
+
+  const correlationId = newId();
+  await logEvent(
+    beyondDayId,
+    "SET_UNDONE",
+    { commandId: correlationId, sessionId, exerciseId: last.exerciseId, setNumber: last.setNumber, performedSetId: last.id },
+    "USER",
+    correlationId,
+  );
+}
+
+/**
+ * TRAIN-WAVE-A (Persistent Rest, 2026-09-02): starts (or restarts) rest
+ * as an absolute end time, persisted on the session so it survives a
+ * reload/backgrounding — see WorkoutSession.activeRestEndsAt's doc
+ * comment. No DomainEvent: rest timing is ephemeral session-support
+ * state, not a fact worth its own audit trail (same treatment
+ * focusedExerciseId/UI-only state already gets — DONOR-001 explicitly
+ * rejects "timer clutter" as its own capability, not the underlying
+ * timing itself becoming history).
+ */
+export async function startRest(sessionId: string, durationSeconds: number): Promise<void> {
+  const activeRestEndsAt = new Date(Date.now() + durationSeconds * 1000).toISOString();
+  await db.workoutSessions.update(sessionId, { activeRestEndsAt });
+}
+
+/**
+ * ± adjustment: extends or shortens the remaining rest by deltaSeconds
+ * (negative to shorten). Clamped so the new end time never falls before
+ * "now" — a negative remaining time is meaningless and would just read as
+ * a confusing already-elapsed countdown. A no-op if there is no active
+ * rest to adjust.
+ */
+export async function adjustRest(sessionId: string, deltaSeconds: number): Promise<void> {
+  const session = await db.workoutSessions.get(sessionId);
+  if (!session?.activeRestEndsAt) return;
+  const adjustedMs = new Date(session.activeRestEndsAt).getTime() + deltaSeconds * 1000;
+  const activeRestEndsAt = new Date(Math.max(Date.now(), adjustedMs)).toISOString();
+  await db.workoutSessions.update(sessionId, { activeRestEndsAt });
+}
+
+/** Ends rest immediately, whether by explicit skip or because it naturally completed. */
+export async function skipRest(sessionId: string): Promise<void> {
+  await db.workoutSessions
+    .where(":id")
+    .equals(sessionId)
+    .modify((session) => {
+      delete session.activeRestEndsAt;
+    });
+}
+
+/**
  * Ends a STANDARD/REDUCED session as COMPLETED or PARTIAL. Only
  * WORKOUT_COMPLETED (status COMPLETED for STANDARD; COMPLETED or PARTIAL
  * for REDUCED) advances the A/B/C rotation — evaluated by
@@ -193,7 +264,14 @@ export async function completeWorkout(
   status: "COMPLETED" | "PARTIAL",
   durationMinutes?: number,
 ): Promise<void> {
-  await db.workoutSessions.update(sessionId, { status, endedAt: new Date().toISOString() });
+  await db.workoutSessions
+    .where(":id")
+    .equals(sessionId)
+    .modify((session) => {
+      session.status = status;
+      session.endedAt = new Date().toISOString();
+      delete session.activeRestEndsAt;
+    });
   const correlationId = newId();
   await logEvent(
     beyondDayId,
@@ -221,10 +299,14 @@ export async function abandonWorkout(
   sessionType: SessionType,
   durationMinutes?: number,
 ): Promise<void> {
-  await db.workoutSessions.update(sessionId, {
-    status: "ABANDONED" as WorkoutSessionStatus,
-    endedAt: new Date().toISOString(),
-  });
+  await db.workoutSessions
+    .where(":id")
+    .equals(sessionId)
+    .modify((session) => {
+      session.status = "ABANDONED" as WorkoutSessionStatus;
+      session.endedAt = new Date().toISOString();
+      delete session.activeRestEndsAt;
+    });
   const correlationId = newId();
   await logEvent(
     beyondDayId,

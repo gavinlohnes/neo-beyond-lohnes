@@ -468,6 +468,26 @@ button, input {
   border-radius: var(--radius);
 }
 
+/* TRAIN-WAVE-A (Workout Secured, 2026-09-02): the one moment DONOR-001's
+   feedback grammar names as earning more than the routine per-set flash
+   above ("Workout secured: strongest routine TRAIN closure") — a genuine
+   COMPLETED closure only, never PARTIAL/ABANDONED (see TrainScreen.tsx's
+   own gating). Same one-shot-on-mount pattern as .set-earned/.fade-in;
+   still fully neutralized by the prefers-reduced-motion rule below.
+   Duration is deliberately longer than --motion-base (this is meant to
+   read as more significant, not just a bigger version of the same
+   twitch) rather than reusing a shared token for one intentionally
+   one-off moment. */
+@keyframes beyond-workout-secured {
+  0% { background: rgba(226, 69, 79, 0.32); }
+  70% { background: rgba(226, 69, 79, 0.32); }
+  100% { background: transparent; }
+}
+.workout-secured {
+  animation: beyond-workout-secured 600ms var(--motion-easing);
+  border-radius: var(--radius);
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

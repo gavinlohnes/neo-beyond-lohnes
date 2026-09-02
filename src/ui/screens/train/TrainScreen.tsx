@@ -29,11 +29,15 @@ import {
 } from "../../../application/trainQueries";
 import {
   abandonWorkout,
+  adjustRest,
   completeRecoverySession,
   completeWorkout,
   logSet,
+  skipRest,
   skipSet,
+  startRest,
   startWorkout,
+  undoLastSet,
 } from "../../../application/trainCommands";
 import {
   describeLastStrengthSession,
@@ -56,6 +60,24 @@ import {
 
 const TEMPLATE_ORDER: WorkoutTemplateId[] = ["A", "B", "C"];
 const VARIANT_ORDER: SessionType[] = ["STANDARD", "REDUCED", "RECOVERY"];
+
+/**
+ * TRAIN-WAVE-A (Persistent Rest, 2026-09-02): default rest duration for
+ * an automatically-started rest, matching the STATUS strip's existing
+ * "Rest ~60-90s" copy (the upper end of that range). Adjustable in the
+ * moment via ± only — no settings surface for this, per this Drop's
+ * exclusions.
+ */
+const REST_DURATION_SECONDS = 90;
+/** How long the rest widget stays fully expanded after the lifter last touched it before compressing to the ambient timer + next-action line. */
+const REST_COMPRESS_AFTER_MS = 8000;
+
+function formatRestRemaining(ms: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
 
 function exercisesFor(templateId: WorkoutTemplateId, sessionType: SessionType) {
   if (sessionType === "RECOVERY") return [];
@@ -142,10 +164,27 @@ export function TrainScreen({
   const [currentProgressionSuggestions, setCurrentProgressionSuggestions] = useState<
     { templateId: WorkoutTemplateId; prescription: ExercisePrescription; suggestion: ProgressionSuggestion }[]
   >([]);
+  // TRAIN-WAVE-A (Persistent Rest, 2026-09-02): `nowTick` exists only to
+  // force a re-render each second while resting so the countdown reads
+  // live — the actual remaining time is always recomputed from
+  // `session.activeRestEndsAt` (an absolute timestamp), never from a
+  // counter this state would need to pause/resume itself. `restTouchedAt`
+  // drives the ambient-compression window: reset on every rest-widget
+  // interaction (including a fresh rest just starting), read against
+  // `nowTick` to decide whether the widget has been idle long enough to
+  // compress.
+  const [nowTick, setNowTick] = useState(Date.now());
+  const [restTouchedAt, setRestTouchedAt] = useState(Date.now());
   const headingRef = useRef<HTMLHeadingElement>(null);
   const recoveryChoiceRef = useRef<HTMLButtonElement>(null);
   const destinationConsumedRef = useRef(false);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
+
+  useEffect(() => {
+    if (!session?.activeRestEndsAt) return;
+    const interval = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [session?.activeRestEndsAt]);
 
   useEffect(() => {
     void refresh();
@@ -341,6 +380,33 @@ export function TrainScreen({
     patchInput(exerciseId, setNumber, { reps: String(next) });
   }
 
+  async function refreshSession() {
+    setSession((await getActiveWorkoutSession()) ?? null);
+  }
+
+  /**
+   * TRAIN-WAVE-A (Set Commit Choreography, 2026-09-02): committing a set
+   * automatically starts rest — shared by handleLogSet and
+   * handleLogExactRepeat below, the two paths that actually commit a set
+   * (handleSkipSet does not: skipping isn't "doing a set," nothing to
+   * rest from). Resets restTouchedAt so the freshly-started rest opens
+   * expanded, not immediately compressed from whatever idle window a
+   * prior rest left behind.
+   */
+  async function startRestAfterCommit() {
+    if (!session) return;
+    await startRest(session.id, REST_DURATION_SECONDS);
+    const now = Date.now();
+    setRestTouchedAt(now);
+    // The ticking effect below only advances `nowTick` once its 1s
+    // interval fires, which would leave the very first render of a fresh
+    // rest reading against a stale `nowTick` (however old it was before
+    // this rest started) for up to a second — set it fresh here too so
+    // the initial countdown is correct immediately, not after a beat.
+    setNowTick(now);
+    await refreshSession();
+  }
+
   async function handleLogSet(exerciseId: string, setNumber: number) {
     if (busy || !session) return;
     const display = getInputDisplay(exerciseId, setNumber);
@@ -351,6 +417,7 @@ export function TrainScreen({
       await logSet(session.beyondDayId, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined);
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(inputKey(exerciseId, setNumber));
+      await startRestAfterCommit();
     } finally {
       setBusy(false);
     }
@@ -378,9 +445,52 @@ export function TrainScreen({
       );
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(inputKey(exerciseId, setNumber));
+      await startRestAfterCommit();
     } finally {
       setBusy(false);
     }
+  }
+
+  /**
+   * TRAIN-WAVE-A (Set Commit Choreography, 2026-09-02): undoes only the
+   * set this session most recently committed — offered only while
+   * justLoggedKey still points at it (cleared here, and naturally
+   * superseded the moment any other set is logged), so this can never
+   * reach back into an arbitrary earlier set. The rest that commit
+   * started is no longer valid for a set that didn't happen, so it's
+   * cleared too, and the input reverts to its normal suggested default
+   * (getInputDisplay/suggestedInputFor already handle that once the set
+   * no longer appears in `sets`) — ready for the lifter to re-enter.
+   */
+  async function handleUndoLastSet() {
+    if (busy || !session) return;
+    setBusy(true);
+    try {
+      await undoLastSet(session.beyondDayId, session.id);
+      await skipRest(session.id);
+      setSets(await getPerformedSets(session.id));
+      setJustLoggedKey(null);
+      await refreshSession();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function handleTouchRest() {
+    setRestTouchedAt(Date.now());
+  }
+
+  async function handleAdjustRest(deltaSeconds: number) {
+    if (!session) return;
+    setRestTouchedAt(Date.now());
+    await adjustRest(session.id, deltaSeconds);
+    await refreshSession();
+  }
+
+  async function handleSkipRest() {
+    if (!session) return;
+    await skipRest(session.id);
+    await refreshSession();
   }
 
   async function handleSkipSet(exerciseId: string, setNumber: number) {
@@ -561,6 +671,14 @@ export function TrainScreen({
   // with.
   const allExercisesComplete = activeExercises.length > 0 && activeExercises.every((ex) => isExerciseComplete(ex));
 
+  // TRAIN-WAVE-A (Persistent Rest, 2026-09-02): remaining time always
+  // recomputed from the absolute `activeRestEndsAt` against `nowTick`,
+  // never stored as its own counter — see the state declarations above.
+  const restRemainingMs = session?.activeRestEndsAt ? new Date(session.activeRestEndsAt).getTime() - nowTick : null;
+  const isResting = restRemainingMs !== null;
+  const restComplete = isResting && restRemainingMs <= 0;
+  const restCompressed = isResting && nowTick - restTouchedAt > REST_COMPRESS_AFTER_MS;
+
   return (
     <div className="screen fade-in train-field">
       {/* FIELD ALPHA Phase 2: the identity zone is deliberately quiet, same
@@ -587,7 +705,17 @@ export function TrainScreen({
       <ConfirmPanel />
 
       {completionSummary && (
-        <div className="fade-in" style={{ padding: "var(--space-6) 0", marginBottom: "var(--space-5)" }}>
+        <div
+          // TRAIN-WAVE-A (Workout Secured, 2026-09-02): the distinguished
+          // closure treatment is a genuine COMPLETED outcome only — a
+          // PARTIAL save is real, honest history (Decision Register:
+          // "neutral wording, not fail"), but it isn't the thing DONOR-001's
+          // feedback grammar calls "the strongest routine TRAIN closure";
+          // giving it the same earned spectacle would cheapen what
+          // COMPLETED actually means.
+          className={`fade-in${completionSummary.status === "COMPLETED" ? " workout-secured" : ""}`}
+          style={{ padding: "var(--space-6) 0", marginBottom: "var(--space-5)" }}
+        >
           <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {completionSummary.status === "COMPLETED" ? (
               <ConfirmIcon size={20} />
@@ -943,14 +1071,30 @@ export function TrainScreen({
                   // starts null on mount).
                   const isEarned = !loggedSet.skipped && justLoggedKey === inputKey(ex.exerciseId, setNumber);
                   return (
-                    <p
-                      key={setNumber}
-                      className={`meta fade-in${isEarned ? " set-earned" : ""}`}
-                      style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}
-                    >
-                      {!loggedSet.skipped && <ConfirmIcon size={20} />}
-                      #{setNumber} — {loggedSet.skipped ? "SKIPPED" : `${loggedSet.weight} lb x ${loggedSet.reps}`}
-                    </p>
+                    <div key={setNumber} style={{ marginBottom: 4 }}>
+                      <p
+                        className={`meta fade-in${isEarned ? " set-earned" : ""}`}
+                        style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}
+                      >
+                        {!loggedSet.skipped && <ConfirmIcon size={20} />}
+                        #{setNumber} — {loggedSet.skipped ? "SKIPPED" : `${loggedSet.weight} lb x ${loggedSet.reps}`}
+                      </p>
+                      {/* TRAIN-WAVE-A (Set Commit Choreography): undo is only ever
+                          offered for the exact set this session just committed —
+                          `isEarned` already carries that same restriction, so this
+                          can never reach back into an arbitrary earlier set. */}
+                      {isEarned && (
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          style={{ width: "auto", padding: "2px 10px", fontSize: 14, marginTop: 2 }}
+                          disabled={busy}
+                          onClick={() => void handleUndoLastSet()}
+                        >
+                          UNDO
+                        </button>
+                      )}
+                    </div>
                   );
                 }
                 // Overdrive Phase 18 (REAL-DEVICE ACCEPTANCE CORRECTION,
@@ -1076,6 +1220,67 @@ export function TrainScreen({
                 );
               })}
             </CommandSurface>
+          )}
+
+          {/* TRAIN-WAVE-A (Persistent Rest + Ambient timer, 2026-09-02):
+              a real absolute-timestamp rest timer — replaces the STATUS
+              strip's old static "Rest ~60-90s" claim with an actual,
+              reload-surviving countdown. Compresses to a single-line
+              ambient row (a real button, matching CollapsibleRow's own
+              "the whole row is the control" precedent) after
+              REST_COMPRESS_AFTER_MS of no interaction; any touch —
+              including the compressed row itself — restores full ±/SKIP
+              controls. Deliberately its own small block rather than
+              CollapsibleRow: that component models a one-way "tap to
+              open a different view," not a timer-driven two-way
+              expand/compress the widget drives itself. */}
+          {isResting && restRemainingMs !== null && (
+            <div className="equipment-row" style={{ marginBottom: 16 }}>
+              {restCompressed ? (
+                <button
+                  type="button"
+                  className="equipment-row equipment-row--control"
+                  style={{ padding: 0, border: "none" }}
+                  aria-label="Expand rest timer controls"
+                  onClick={handleTouchRest}
+                >
+                  <p className="meta" style={{ margin: 0 }}>
+                    {restComplete ? "REST COMPLETE" : `RESTING · ${formatRestRemaining(restRemainingMs)}`}
+                    {currentExercise && currentSetNumber !== null
+                      ? ` — Next: ${currentExercise.name} Set ${currentSetNumber}`
+                      : ""}
+                  </p>
+                </button>
+              ) : (
+                <>
+                  <p className="tool-label" style={{ marginBottom: 4 }}>{restComplete ? "REST COMPLETE" : "RESTING"}</p>
+                  <p className="meta-strong" style={{ marginBottom: 8 }}>{formatRestRemaining(restRemainingMs)}</p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
+                      aria-label="Subtract 15 seconds from rest"
+                      onClick={() => void handleAdjustRest(-15)}
+                    >
+                      −15
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
+                      aria-label="Add 15 seconds to rest"
+                      onClick={() => void handleAdjustRest(15)}
+                    >
+                      +15
+                    </button>
+                    <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => void handleSkipRest()}>
+                      SKIP REST
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           )}
 
           {/* FIELD-001 (Review Correction): jump rail + Finish share one

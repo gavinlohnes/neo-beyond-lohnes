@@ -25,7 +25,7 @@ import type {
   WorkoutSessionStatus,
   WorkoutTemplateId,
 } from "../domain/workout/types";
-import type { WorkoutSession } from "../domain/common/types";
+import type { DomainEvent, SetUndonePayload, WorkoutSession } from "../domain/common/types";
 
 /**
  * For resuming an in-progress session across refresh/reopen. Only one
@@ -106,9 +106,26 @@ export async function getRecentSubstitutions(exerciseId: string, limit = 3): Pro
   return result;
 }
 
+/**
+ * TRAIN-WAVE-A (Set Commit Choreography, 2026-09-02): the performedSetIds
+ * a SET_UNDONE event has retracted, across the whole events table —
+ * `events` carries no sessionId index (undo is a rare, session-scoped
+ * action, not worth a new index for this corpus size), so this is an
+ * indexed-by-type scan rather than the beyondDayId-scoped scan most other
+ * queries in this codebase use. See SetUndonePayload's doc comment for
+ * why the raw performedSets row itself is never touched.
+ */
+async function getUndoneSetIds(): Promise<Set<string>> {
+  const events = (await db.events.where("type").equals("SET_UNDONE").toArray()) as DomainEvent<SetUndonePayload>[];
+  return new Set(events.map((e) => e.payload.performedSetId));
+}
+
 export async function getPerformedSets(sessionId: string): Promise<PerformedSet[]> {
-  const sets = await db.performedSets.where("sessionId").equals(sessionId).toArray();
-  return sets as unknown as PerformedSet[];
+  const [sets, undoneIds] = await Promise.all([
+    db.performedSets.where("sessionId").equals(sessionId).toArray(),
+    getUndoneSetIds(),
+  ]);
+  return (sets as unknown as PerformedSet[]).filter((s) => !undoneIds.has(s.id));
 }
 
 export async function hasLoggedAnySet(sessionId: string): Promise<boolean> {
