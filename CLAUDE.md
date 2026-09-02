@@ -101,6 +101,11 @@ user choice is experienced; or a genuine conflict between current code and highe
 - `docs/OPERATOR_INTERFACE_DOCTRINE.md` — constitutional product/interface doctrine; constrains
   future work but never authorizes implementation by itself.
 - `docs/UX_DECISIONS.md` — BEYOND UX Decision Register, the canonical locked-decision log.
+- `docs/agent/CAPABILITY_MAP.md` — repo-native index into Google Drive's owner-approved
+  Research & Reuse Register / Donor & Experience Program: per-domain existing primitives,
+  already-adjudicated BUILD/BORROW/ADAPT/INTEGRATE/REJECT rulings, and rejected patterns not to
+  re-litigate. Check this before researching a commodity subsystem from scratch — a Build/Borrow
+  question ("should BEYOND build this or reuse something") has very often already been answered.
 - `.claude/rules/` — path-scoped detail for Engine, persistence, and protected fixtures.
 - `.claude/skills/beyond-drop/` — Drop task-contract templates, completion-report templates,
   risk classification, verification, and the git/CI ship procedure.
