@@ -7,10 +7,10 @@
 // Persist authorization, derive observation: this script never trusts
 // memory or a prior conversation for repository/CI facts — it re-derives
 // remote identity, baseline, and working-tree cleanliness from git itself
-// every time, and reads authorization/routing facts (which Drop is
-// active, its contract, its declared baseline/branch) only from the two
-// durable files it manages: docs/agent/ACTIVE_DROP.md and
-// docs/agent/drops/<id>.md. It never duplicates live Git/GitHub/CI state
+// every time. Campaign authorization and preregistered Drop contracts are
+// read from freshly fetched protected origin/master; ACTIVE_DROP.md records
+// routing and activation state but is never contract authority. It never
+// duplicates live Git/GitHub/CI state
 // (current HEAD, CI status, mergeability, PR review state) into those
 // files — see .claude/skills/beyond-drop/SKILL.md §9 for the full
 // mechanism this operationalizes.
@@ -31,6 +31,7 @@
 //   FACTORY_DROP_EXPECTED_REPO  comma-separated list of accepted "owner/repo" origin slugs
 
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -41,6 +42,12 @@ const SCRIPT_REPO_ROOT = resolve(SCRIPT_DIR, "..");
 export const DEFAULT_EXPECTED_REPO_SLUGS = ["gavinlohnes/neo-beyond-lohnes"];
 
 export const VALID_RISK_TIERS = ["ROUTINE", "ARCHITECTURAL", "HIGH-RISK"];
+export const ACTIVATION_BASELINE = "AT_ACTIVATION";
+export const DROP_ID_PATTERN = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
+
+export function isValidDropId(id) {
+  return typeof id === "string" && DROP_ID_PATTERN.test(id);
+}
 
 // Exact heading text required in every Drop Contract body — kept in sync
 // with docs/agent/drops/TEMPLATE.md by inspection; a template edit that
@@ -125,6 +132,7 @@ export function validateContractText(text) {
 }
 
 export function readContract(id, root = getRoot()) {
+  if (!isValidDropId(id)) return { ok: false, errors: [`INVALID_DROP_ID: "${id}"`] };
   const p = dropContractPath(id, root);
   if (!existsSync(p)) return { ok: false, errors: [`CONTRACT_NOT_FOUND: ${p}`] };
   const result = validateContractText(readFileSync(p, "utf8"));
@@ -132,6 +140,65 @@ export function readContract(id, root = getRoot()) {
     return { ok: false, errors: [`CONTRACT_ID_MISMATCH: ${p} declares id "${result.frontmatter.id}", filename implies "${id}"`] };
   }
   return result;
+}
+
+function readGitFile(root, ref, path) {
+  try {
+    return { ok: true, text: git(["show", `${ref}:${path}`], root) };
+  } catch {
+    return { ok: false, error: `TRUSTED_FILE_NOT_FOUND: ${ref}:${path}` };
+  }
+}
+
+/**
+ * Resolves campaign membership only from freshly fetched protected master.
+ * The working tree's pointer, manifest, ACTIVE_DROP, and contract are never
+ * authorization inputs for a campaign Drop.
+ */
+export function readTrustedCampaignDrop(id, root = getRoot()) {
+  const pointerFile = readGitFile(root, "origin/master", "docs/agent/ACTIVE_CAMPAIGN.json");
+  if (!pointerFile.ok) return { ok: true, campaignDrop: null };
+  let pointer;
+  try {
+    pointer = JSON.parse(pointerFile.text);
+  } catch (e) {
+    return { ok: false, error: `MALFORMED_TRUSTED_CAMPAIGN_POINTER: ${e.message}` };
+  }
+  if (pointer.schema_version !== 1 || !/^docs\/agent\/campaigns\/[A-Za-z0-9._-]+\.json$/.test(pointer.manifest ?? "")) {
+    return { ok: false, error: "MALFORMED_TRUSTED_CAMPAIGN_POINTER: manifest path/schema is invalid" };
+  }
+  const manifestFile = readGitFile(root, "origin/master", pointer.manifest);
+  if (!manifestFile.ok) return { ok: false, error: manifestFile.error };
+  let manifest;
+  try {
+    manifest = JSON.parse(manifestFile.text);
+  } catch (e) {
+    return { ok: false, error: `MALFORMED_TRUSTED_CAMPAIGN: ${e.message}` };
+  }
+  if (manifest.schema_version !== 2 || !Array.isArray(manifest.drops)) {
+    return { ok: false, error: "MALFORMED_TRUSTED_CAMPAIGN: expected schema_version 2 with drops[]" };
+  }
+  const matches = manifest.drops.filter((drop) => drop?.id === id);
+  if (matches.length > 1) return { ok: false, error: `DUPLICATE_TRUSTED_CAMPAIGN_DROP: ${id}` };
+  return { ok: true, campaignDrop: matches[0] ?? null, manifest };
+}
+
+export function readTrustedCampaignContract(id, root = getRoot()) {
+  if (!isValidDropId(id)) return { ok: false, errors: [`INVALID_DROP_ID: "${id}"`] };
+  const relativePath = `docs/agent/drops/${id}.md`;
+  const trustedFile = readGitFile(root, "origin/master", relativePath);
+  if (!trustedFile.ok) return { ok: false, errors: [`TRUSTED_CONTRACT_NOT_FOUND: origin/master:${relativePath}`] };
+  const result = validateContractText(trustedFile.text);
+  if (!result.ok) return result;
+  if (result.frontmatter.id !== id) {
+    return { ok: false, errors: [`CONTRACT_ID_MISMATCH: trusted contract declares "${result.frontmatter.id}", expected "${id}"`] };
+  }
+  return {
+    ...result,
+    relativePath,
+    text: trustedFile.text,
+    digest: createHash("sha256").update(trustedFile.text).digest("hex"),
+  };
 }
 
 /** Returns the ACTIVE_DROP frontmatter, or null if no file exists yet. Throws on a malformed file — callers decide how to surface that. */
@@ -266,6 +333,9 @@ export function checkCleanWorktree(root) {
  * other check is unconditional.
  */
 export function preflight(id, flags, root = getRoot()) {
+  if (!isValidDropId(id)) {
+    return { ok: false, code: "INVALID_DROP_ID", message: `Drop ID "${id}" must match the uppercase alphanumeric/hyphen convention.` };
+  }
   const remote = checkRemote(root, flags.expectedRepoSlugs ?? getExpectedRepoSlugs());
   if (!remote.ok) return { ok: false, code: "WRONG_REPOSITORY", message: remote.error };
 
@@ -299,9 +369,40 @@ export function preflight(id, flags, root = getRoot()) {
     return { ok: false, code: "CONFLICT_CHECK_FAILED", message: crossBranchConflict.error };
   }
 
-  const contract = readContract(id, root);
-  if (!contract.ok) return { ok: false, code: "MALFORMED_CONTRACT", message: contract.errors.join("\n") };
-  if (contract.frontmatter.baseline !== flags.baseline) {
+  const trustedCampaign = readTrustedCampaignDrop(id, root);
+  if (!trustedCampaign.ok) return { ok: false, code: "MALFORMED_TRUSTED_CAMPAIGN", message: trustedCampaign.error };
+
+  let contract;
+  if (trustedCampaign.campaignDrop) {
+    contract = readTrustedCampaignContract(id, root);
+    if (!contract.ok) return { ok: false, code: "TRUSTED_CONTRACT_REQUIRED", message: contract.errors.join("\n") };
+    if (contract.frontmatter.baseline !== ACTIVATION_BASELINE) {
+      return {
+        ok: false,
+        code: "TRUSTED_CONTRACT_BASELINE_INVALID",
+        message: `Protected campaign contract for "${id}" must declare baseline "${ACTIVATION_BASELINE}"; actual build baseline is bound to origin/master at activation.`,
+      };
+    }
+    if (contract.frontmatter.risk_tier !== trustedCampaign.campaignDrop.risk_tier) {
+      return {
+        ok: false,
+        code: "TRUSTED_CONTRACT_RISK_MISMATCH",
+        message: `Protected contract risk "${contract.frontmatter.risk_tier}" disagrees with campaign risk "${trustedCampaign.campaignDrop.risk_tier}".`,
+      };
+    }
+    const headContract = readGitFile(root, "HEAD", contract.relativePath);
+    if (!headContract.ok || headContract.text !== contract.text) {
+      return {
+        ok: false,
+        code: "BUILDER_CONTRACT_MUTATION",
+        message: `Campaign contract identity is protected by origin/master:${contract.relativePath}; the Builder checkout must contain that exact trusted contract.`,
+      };
+    }
+  } else {
+    contract = readContract(id, root);
+    if (!contract.ok) return { ok: false, code: "MALFORMED_CONTRACT", message: contract.errors.join("\n") };
+  }
+  if (!trustedCampaign.campaignDrop && contract.frontmatter.baseline !== flags.baseline) {
     return {
       ok: false,
       code: "CONTRACT_BASELINE_MISMATCH",

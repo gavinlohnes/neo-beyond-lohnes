@@ -29,6 +29,26 @@ interface Fixture {
   expectedRepoSlug: string;
 }
 
+function preregisterCampaignDrop(fixture: Fixture, id: string, riskTier = "ARCHITECTURAL"): void {
+  mkdirSync(join(fixture.workDir, "docs/agent/campaigns"), { recursive: true });
+  writeFileSync(
+    join(fixture.workDir, "docs/agent/ACTIVE_CAMPAIGN.json"),
+    `${JSON.stringify({ schema_version: 1, manifest: "docs/agent/campaigns/TEST.json" }, null, 2)}\n`,
+  );
+  writeFileSync(
+    join(fixture.workDir, "docs/agent/campaigns/TEST.json"),
+    `${JSON.stringify({ schema_version: 2, id: "TEST", drops: [{ id, risk_tier: riskTier }] }, null, 2)}\n`,
+  );
+  writeFileSync(
+    join(fixture.workDir, "docs/agent/drops", `${id}.md`),
+    validContractText({ id, baseline: "AT_ACTIVATION", riskTier }),
+  );
+  git(fixture.workDir, ["add", "docs/agent/ACTIVE_CAMPAIGN.json", "docs/agent/campaigns/TEST.json", `docs/agent/drops/${id}.md`]);
+  git(fixture.workDir, ["commit", "-m", `preregister ${id}`]);
+  git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/master"]);
+  fixture.headSha = git(fixture.workDir, ["rev-parse", "HEAD"]);
+}
+
 function makeFixtureRepo(): Fixture {
   const tmp = mkdtempSync(join(tmpdir(), "factory-drop-"));
   const workDir = join(tmp, "work");
@@ -171,6 +191,15 @@ afterEach(() => {
 });
 
 describe("launch/bootstrap safety", () => {
+  it.each(["../EVIL", "CAMPAIGN/EVIL", "campaign-001", "CAMPAIGN--001", "CAMPAIGN_001"])(
+    "rejects malformed or traversal-capable Drop ID %s before path resolution",
+    (id) => {
+      const result = runFactoryDrop(["validate", id, "--baseline", fixture.headSha], fixture);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("INVALID_DROP_ID");
+    },
+  );
+
   it("validates CRLF repository authority at the exact fetched baseline", () => {
     const contract = validContractText({ id: "TEST-001", baseline: fixture.headSha }).replace(/\n/g, "\r\n");
     writeContract(fixture, "TEST-001", contract);
@@ -203,6 +232,65 @@ describe("launch/bootstrap safety", () => {
     const result = runFactoryDrop(["validate", "TEST-001", "--baseline", fixture.headSha], fixture);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("CONTRACT_BASELINE_MISMATCH");
+  });
+});
+
+describe("protected campaign contract preregistration", () => {
+  it("binds the build baseline at activation while reading authorization from protected master", () => {
+    preregisterCampaignDrop(fixture, "CAMPAIGN-001");
+    beginDropBranch(fixture, "builder/campaign-001");
+    const result = runFactoryDrop(
+      ["init", "CAMPAIGN-001", "--baseline", fixture.headSha, "--branch", "builder/campaign-001"],
+      fixture,
+    );
+    expect(result.status).toBe(0);
+    const active = readFileSync(join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"), "utf8");
+    expect(active).toContain(`baseline: ${fixture.headSha}`);
+    expect(active).toContain("contract: docs/agent/drops/CAMPAIGN-001.md");
+  });
+
+  it("rejects a Builder commit that changes the protected contract content or baseline", () => {
+    preregisterCampaignDrop(fixture, "CAMPAIGN-001");
+    beginDropBranch(fixture, "builder/campaign-001");
+    writeFileSync(
+      join(fixture.workDir, "docs/agent/drops/CAMPAIGN-001.md"),
+      validContractText({ id: "CAMPAIGN-001", baseline: fixture.headSha, riskTier: "ARCHITECTURAL" }),
+    );
+    git(fixture.workDir, ["add", "docs/agent/drops/CAMPAIGN-001.md"]);
+    git(fixture.workDir, ["commit", "-m", "attempt to redefine authorization"]);
+    const result = runFactoryDrop(["validate", "CAMPAIGN-001", "--baseline", fixture.headSha], fixture);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("BUILDER_CONTRACT_MUTATION");
+  });
+
+  it("rejects a campaign Drop whose contract exists only in Builder-controlled HEAD", () => {
+    mkdirSync(join(fixture.workDir, "docs/agent/campaigns"), { recursive: true });
+    writeFileSync(join(fixture.workDir, "docs/agent/ACTIVE_CAMPAIGN.json"), '{"schema_version":1,"manifest":"docs/agent/campaigns/TEST.json"}\n');
+    writeFileSync(join(fixture.workDir, "docs/agent/campaigns/TEST.json"), '{"schema_version":2,"id":"TEST","drops":[{"id":"CAMPAIGN-001","risk_tier":"ARCHITECTURAL"}]}\n');
+    git(fixture.workDir, ["add", "docs/agent/ACTIVE_CAMPAIGN.json", "docs/agent/campaigns/TEST.json"]);
+    git(fixture.workDir, ["commit", "-m", "register campaign without contract"]);
+    git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/master"]);
+    fixture.headSha = git(fixture.workDir, ["rev-parse", "HEAD"]);
+    beginDropBranch(fixture, "builder/campaign-001");
+    writeContract(fixture, "CAMPAIGN-001", validContractText({ id: "CAMPAIGN-001", baseline: "AT_ACTIVATION" }));
+    const result = runFactoryDrop(["validate", "CAMPAIGN-001", "--baseline", fixture.headSha], fixture);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("TRUSTED_CONTRACT_REQUIRED");
+  });
+
+  it("ignores Builder-controlled ACTIVE_DROP routing as contract authority", () => {
+    preregisterCampaignDrop(fixture, "CAMPAIGN-001");
+    beginDropBranch(fixture, "builder/campaign-001");
+    mkdirSync(join(fixture.workDir, "docs/agent"), { recursive: true });
+    writeFileSync(
+      join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"),
+      `---\nid: CAMPAIGN-001\nstatus: CLOSED\nbaseline: ${"f".repeat(40)}\ncontract: docs/agent/drops/EVIL.md\n---\n`,
+    );
+    git(fixture.workDir, ["add", "docs/agent/ACTIVE_DROP.md"]);
+    git(fixture.workDir, ["commit", "-m", "tamper with routing state"]);
+    const result = runFactoryDrop(["validate", "CAMPAIGN-001", "--baseline", fixture.headSha], fixture);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("VALID");
   });
 });
 

@@ -9,6 +9,17 @@ One cohesive procedure for running a BEYOND Drop end to end: state the contract,
 semantically, implement, verify, report, ship, confirm CI. This is process scaffolding — it
 does not add product doctrine beyond what `CLAUDE.md` and `docs/UX_DECISIONS.md` already state.
 
+### Campaign contract trust boundary
+
+Before an authorized campaign Drop enters `BUILDING`, its Drop contract must already be merged to
+protected trusted master. Such contracts use `baseline: AT_ACTIVATION`; Factory binds the real
+build baseline to freshly fetched `origin/master` during activation. Campaign membership,
+contract path/content, and risk authority come from protected master, never `ACTIVE_DROP.md`, the
+working tree, or a PR checkout. `ACTIVE_DROP.md` remains routing/state only. Any Builder-side
+contract change fails closed and requires a separately reviewed protected-master amendment.
+This rule is mandatory for campaign Drops and does not alter legacy/non-campaign single-Drop
+contract authority or exact-baseline semantics.
+
 ## 1. Risk classification — semantic, not path-based
 
 Path detection is only a **prompt to inspect** what changed — it is never the final risk

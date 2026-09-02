@@ -3,6 +3,34 @@
 Factory Autopilot is a deterministic status and next-action layer over the existing Drop Factory.
 It removes owner relay work; it does not replace Builder, Reviewer, Integrator, or owner judgment.
 
+## Protected campaign contract preregistration
+
+Every authorized campaign Drop may enter `BUILDING` only when its complete Drop contract already
+exists on protected `origin/master`. The contract declares `baseline: AT_ACTIVATION`; Factory then
+binds the exact build baseline to the freshly fetched protected-master SHA at activation. This
+avoids predicting the preregistration merge SHA while ensuring a Builder branch cannot establish
+or redefine its own authority.
+
+For campaign Drops, Factory resolves campaign membership, risk, contract path, contract content,
+and contract digest from protected `origin/master`. The checkout must contain the identical
+contract or activation fails closed. `ACTIVE_DROP.md` records routing and the actual activation
+baseline only; neither it nor working-tree/PR-controlled files are authorization inputs. Campaign
+revision/digest validation, risk ceilings, escalation rules, protected integration, exact-head CI,
+and independent review remain unchanged.
+
+This requirement is specific to campaign Drops. It does not redefine the existing authority or
+exact-SHA contract semantics for legacy/non-campaign single Drops.
+
+### One-time AUTOPILOT-CANDIDATE-DISPATCH-002 transition
+
+PR #54 predates the Owner's protected-contract ruling and is permanently superseded as an
+integration candidate. It must never be merged, rebased into, cherry-picked into, or used to
+resolve a contract conflict with this bootstrap. After this bootstrap is independently approved
+and protected-merged, preserve #54's GitHub evidence and close it as superseded. Only after that
+closure may the Drop be activated from the new trusted master and rebuilt as a fresh candidate.
+No code, contract, review, approval, or CI evidence transfers from #54. The protected-master
+`AT_ACTIVATION` contract is authoritative.
+
 ## Authority boundary
 
 - **Deterministic mechanics:** repository identity, current master, campaign/Drop ordering,
