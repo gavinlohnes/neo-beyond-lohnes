@@ -43,6 +43,11 @@ export const DEFAULT_EXPECTED_REPO_SLUGS = ["gavinlohnes/neo-beyond-lohnes"];
 
 export const VALID_RISK_TIERS = ["ROUTINE", "ARCHITECTURAL", "HIGH-RISK"];
 export const ACTIVATION_BASELINE = "AT_ACTIVATION";
+export const DROP_ID_PATTERN = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
+
+export function isValidDropId(id) {
+  return typeof id === "string" && DROP_ID_PATTERN.test(id);
+}
 
 // Exact heading text required in every Drop Contract body — kept in sync
 // with docs/agent/drops/TEMPLATE.md by inspection; a template edit that
@@ -127,6 +132,7 @@ export function validateContractText(text) {
 }
 
 export function readContract(id, root = getRoot()) {
+  if (!isValidDropId(id)) return { ok: false, errors: [`INVALID_DROP_ID: "${id}"`] };
   const p = dropContractPath(id, root);
   if (!existsSync(p)) return { ok: false, errors: [`CONTRACT_NOT_FOUND: ${p}`] };
   const result = validateContractText(readFileSync(p, "utf8"));
@@ -178,6 +184,7 @@ export function readTrustedCampaignDrop(id, root = getRoot()) {
 }
 
 export function readTrustedCampaignContract(id, root = getRoot()) {
+  if (!isValidDropId(id)) return { ok: false, errors: [`INVALID_DROP_ID: "${id}"`] };
   const relativePath = `docs/agent/drops/${id}.md`;
   const trustedFile = readGitFile(root, "origin/master", relativePath);
   if (!trustedFile.ok) return { ok: false, errors: [`TRUSTED_CONTRACT_NOT_FOUND: origin/master:${relativePath}`] };
@@ -326,6 +333,9 @@ export function checkCleanWorktree(root) {
  * other check is unconditional.
  */
 export function preflight(id, flags, root = getRoot()) {
+  if (!isValidDropId(id)) {
+    return { ok: false, code: "INVALID_DROP_ID", message: `Drop ID "${id}" must match the uppercase alphanumeric/hyphen convention.` };
+  }
   const remote = checkRemote(root, flags.expectedRepoSlugs ?? getExpectedRepoSlugs());
   if (!remote.ok) return { ok: false, code: "WRONG_REPOSITORY", message: remote.error };
 

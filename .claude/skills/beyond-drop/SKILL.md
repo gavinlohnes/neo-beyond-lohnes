@@ -17,6 +17,8 @@ build baseline to freshly fetched `origin/master` during activation. Campaign me
 contract path/content, and risk authority come from protected master, never `ACTIVE_DROP.md`, the
 working tree, or a PR checkout. `ACTIVE_DROP.md` remains routing/state only. Any Builder-side
 contract change fails closed and requires a separately reviewed protected-master amendment.
+This rule is mandatory for campaign Drops and does not alter legacy/non-campaign single-Drop
+contract authority or exact-baseline semantics.
 
 ## 1. Risk classification — semantic, not path-based
 

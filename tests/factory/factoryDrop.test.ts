@@ -191,6 +191,15 @@ afterEach(() => {
 });
 
 describe("launch/bootstrap safety", () => {
+  it.each(["../EVIL", "CAMPAIGN/EVIL", "campaign-001", "CAMPAIGN--001", "CAMPAIGN_001"])(
+    "rejects malformed or traversal-capable Drop ID %s before path resolution",
+    (id) => {
+      const result = runFactoryDrop(["validate", id, "--baseline", fixture.headSha], fixture);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("INVALID_DROP_ID");
+    },
+  );
+
   it("validates CRLF repository authority at the exact fetched baseline", () => {
     const contract = validContractText({ id: "TEST-001", baseline: fixture.headSha }).replace(/\n/g, "\r\n");
     writeContract(fixture, "TEST-001", contract);
