@@ -84,10 +84,14 @@ Reuse System) — not on every Drop, only when it validates or changes something
   Agent/Rego were each explicitly evaluated and **REJECTED/DEFERRED** for exactly this seam,
   because arbitration semantics are BEYOND's core doctrine and a generic framework would add
   indirection before complexity earns it.
-- **Approved destination for outcome history**: the **Decision Journal** (Context → Options →
-  Decision → Reasoning → Expectation → Outcome → Lesson), approved under the Whole-Life
-  Capability North Star (`DEC-007`) — this is BEYOND's own answer to "where does learning go,"
-  not a library integration.
+- **Built (2026-09-02)**: the **Decision Journal** (Context → Options → Decision → Reasoning →
+  Expectation, recorded now; Outcome → Lesson, recorded later), approved under the Whole-Life
+  Capability North Star (`DEC-007`) — BEYOND's own answer to "where does learning go," not a
+  library integration. General-purpose, not limited to Engine recommendations (owner ruling,
+  2026-09-02). `src/domain/journal/types.ts`, `src/application/journalCommands.ts`/
+  `journalQueries.ts`, `src/ui/screens/more/JournalScreen.tsx` (reachable from MORE), db.ts v8.
+  Still open: nothing yet reads a Decision Journal entry back into Engine arbitration or
+  advisory composition — this Drop only builds the journal itself.
 - **Ruling on file**: Obligations entering recommendation arbitration, and outcome history
   biasing recommendation selection, are both recommendation-priority changes — owner sign-off
   obtained 2026-09-02.

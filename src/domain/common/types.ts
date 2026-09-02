@@ -179,7 +179,10 @@ export type DomainEventType =
   | "OBLIGATION_MARKED_WAITING"
   | "OBLIGATION_MARKED_OPEN"
   | "OBLIGATION_SATISFIED"
-  | "OBLIGATION_RELEASED";
+  | "OBLIGATION_RELEASED"
+  | "DECISION_JOURNAL_CREATED"
+  | "DECISION_JOURNAL_MODIFIED"
+  | "DECISION_JOURNAL_REVIEWED";
 
 /**
  * DERIVED, not stored. Computed by walking a WATER_LOGGED event and any
@@ -630,6 +633,8 @@ export interface DomainEvent<TPayload = unknown> {
   missionId?: string;
   /** Intent & Commitment Spine (Drop 01): set on OBLIGATION_* events instead of beyondDayId. */
   obligationId?: string;
+  /** Decision Journal: set on DECISION_JOURNAL_* events instead of beyondDayId — same day-independence reasoning as missionId/obligationId above. */
+  decisionJournalEntryId?: string;
   occurredAt: string;
   recordedAt: string;
   payload: TPayload;

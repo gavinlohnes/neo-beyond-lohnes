@@ -12,6 +12,7 @@ import type {
   WorkoutSession,
 } from "../domain/common/types";
 import type { Mission, Obligation } from "../domain/intent/types";
+import type { DecisionJournalEntry } from "../domain/journal/types";
 import { DEFAULT_SCHEDULE_PATTERN } from "../engine/scheduledContext";
 
 export class BeyondDB extends Dexie {
@@ -27,6 +28,7 @@ export class BeyondDB extends Dexie {
   missions!: Table<Mission, string>;
   obligations!: Table<Obligation, string>;
   savedMeals!: Table<SavedMeal, string>;
+  decisionJournalEntries!: Table<DecisionJournalEntry, string>;
 
   constructor() {
     super("beyond");
@@ -150,6 +152,30 @@ export class BeyondDB extends Dexie {
       missions: "id, status, createdAt",
       obligations: "id, status, missionId, dueAt, createdAt",
       savedMeals: "id, archivedAt, createdAt",
+    });
+    // v8 (Decision Journal, approved under the Whole-Life Capability North
+    // Star / DEC-007): adds decisionJournalEntries — a general-purpose
+    // reflective journal, directly-mutable current-state records (same
+    // treatment as missions/obligations), plus a decisionJournalEntryId
+    // index on `events` for its historical DomainEvent trail, mirroring
+    // the missionId/obligationId indexes v6 added. Purely additive; no
+    // upgrade() callback, since there is no equivalent prior data to seed
+    // or migrate (same reasoning v5/v6/v7 already gave). v1-v7 tables/
+    // data untouched.
+    this.version(8).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId, decisionJournalEntryId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
+      decisionJournalEntries: "id, status, createdAt",
     });
   }
 }
