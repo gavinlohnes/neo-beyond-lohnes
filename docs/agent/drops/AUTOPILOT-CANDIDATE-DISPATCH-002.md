@@ -38,12 +38,15 @@ no product, persistence, dependency, security, privacy, provider, or user-data b
 - No product, Engine, domain, persistence, user-data, UI, provider, AI authority, paid service,
   privacy/security boundary, destructive migration, dependency, or unrelated repository change.
 - No implementation of AUTOPILOT-LIFECYCLE-002 or any later campaign Drop.
+- PR #54 is a superseded pre-ruling candidate: never merge, rebase, cherry-pick, or transfer its
+  contract, code, review, approval, or CI evidence into the rebuilt candidate.
 
 ## Relevant authority / references
 
 - Active `FACTORY-PHASE-2-R1` manifest and digest
   `989dab17dca4544d52f3d9d70f04ad27ff5ef9175ea3cba30d8ecbedf524db8c`.
 - Owner architectural ruling requiring protected-master contract preregistration, 2026-09-01.
+- Owner ruling that pre-ruling PR #54 is superseded and must never be integrated, 2026-09-02.
 - `docs/agent/FACTORY_AUTOPILOT.md`, `docs/agent/BEYOND_ENGINEERING_CONTRACT.md`, and
   `.claude/skills/beyond-drop/SKILL.md`.
 
@@ -93,3 +96,5 @@ no product, persistence, dependency, security, privacy, provider, or user-data b
 
 - Stop on campaign pause/revoke/escalation, activation-baseline or digest drift, conflicting active Drop,
   protected-contract mismatch, inability to preserve evidence, need for broader App permissions, or any excluded boundary.
+- Stop if any integration or rebuild path would allow PR #54's self-authored contract or evidence
+  to override the protected-master `AT_ACTIVATION` contract.
