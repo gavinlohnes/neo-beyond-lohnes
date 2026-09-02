@@ -13,6 +13,7 @@ import { SearchScreen } from "../search/SearchScreen";
 import type { SearchResult } from "../../../application/searchQueries";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
 import { IntentScreen, type IntentFocus } from "./IntentScreen";
+import { JournalScreen } from "./JournalScreen";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { Icon } from "../../icons/Icon";
 
@@ -25,7 +26,7 @@ import { Icon } from "../../icons/Icon";
 const DATA_SCHEMA = db.verno;
 
 export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {}) {
-  const [view, setView] = useState<"MENU" | "HISTORY" | "REVIEW" | "SEARCH" | "WORK_SCHEDULE" | "INTENT">("MENU");
+  const [view, setView] = useState<"MENU" | "HISTORY" | "REVIEW" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL">("MENU");
   // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by
   // the ordinary "MISSIONS & OBLIGATIONS" menu entry point — see its onOpen below. This is what
   // lets IntentScreen open straight to a specific record from Search without a normal visit to
@@ -233,6 +234,22 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
     );
   }
 
+  if (view === "JOURNAL") {
+    return (
+      <div className="screen fade-in">
+        <button
+          className="btn-secondary"
+          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
+          onClick={() => setView("MENU")}
+        >
+          ← BACK TO MORE
+        </button>
+        <h1 className="eyebrow">MORE // DECISION JOURNAL</h1>
+        <JournalScreen />
+      </div>
+    );
+  }
+
   return (
     <div className="screen fade-in">
       {/* FIELD ALPHA Phase 4: identity zone quieted, same principle
@@ -274,6 +291,11 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           name="WORK SCHEDULE"
           summary="Review the rotation BEYOND uses to predict work days and shift phase."
           onOpen={() => setView("WORK_SCHEDULE")}
+        />
+        <CollapsibleRow
+          name="DECISION JOURNAL"
+          summary="Think a decision through, then record what actually happened."
+          onOpen={() => setView("JOURNAL")}
         />
       </section>
 
