@@ -2,9 +2,9 @@
 id: AUTOPILOT-CANDIDATE-DISPATCH-002
 status: ACTIVE
 baseline: e78a73a9b054d7cee5734176580e8a0e5b330839
-branch: codex/autopilot-candidate-dispatch-002-rebuild
+branch: beyond-builder/candidate-7f58bd4f44-2325b569b7
 contract: docs/agent/drops/AUTOPILOT-CANDIDATE-DISPATCH-002.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/57
 builder: Codex, explicitly assigned by Gavin for AUTOPILOT-CANDIDATE-DISPATCH-002
 reviewer: (unassigned)
 integrator: (unassigned)
