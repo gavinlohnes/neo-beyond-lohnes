@@ -21,6 +21,8 @@
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/ibm-plex-sans": "^5.3.0",
     "@fontsource/space-grotesk": "^5.3.0",
+    "chrono-node": "^2.10.1",
+    "compromise": "^14.16.0",
     "dexie": "^4.0.8",
     "dexie-export-import": "^4.4.0",
     "react": "^19.2.0",
