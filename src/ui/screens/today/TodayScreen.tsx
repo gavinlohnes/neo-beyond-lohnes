@@ -1,70 +1,33 @@
 import { useEffect, useRef, useState } from "react";
 import type { BeyondDay, CaptureItem, Recommendation, StateCheckIn, WorkoutSession } from "../../../domain/common/types";
-import { ConfirmIcon, Icon, ResolveIcon, SignalIcon } from "../../icons/Icon";
-import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { SignalRow } from "../../components/SignalRow";
 import { CommandSurface } from "../../components/CommandSurface";
-import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
-import { describeCommitmentMission, describeCommitmentsSummary, describeObligationRelevance } from "./commitmentsCopy";
-import {
-  getMostRelevantUnresolvedObligation,
-  hasObligationRequiringAttention,
-  isAttentionWorthyTier,
-} from "../../../engine/obligationRelevance";
+import { getMostRelevantUnresolvedObligation, hasObligationRequiringAttention } from "../../../engine/obligationRelevance";
 import { getCurrentlyEligibleUnresolvedObligations, getMissionForObligation } from "../../../application/intentQueries";
 import { convertCaptureToObligation, satisfyObligation } from "../../../application/intentCommands";
 import { formatLocalDate } from "../../../engine/scheduledContext";
 import type { Mission, Obligation } from "../../../domain/intent/types";
-import {
-  CHECK_IN_FIELDS,
-  describeCheckInValues,
-  isCheckInComplete,
-  rangeForField,
-  type CheckInValues,
-  type PartialCheckInValues,
-} from "./checkInFields";
-import { describeContextStrip, describeSchedulePrediction, resolveWorkContextSource } from "./workContextCopy";
+import { isCheckInComplete, type CheckInValues, type PartialCheckInValues } from "./checkInFields";
+import { describeContextStrip, resolveWorkContextSource } from "./workContextCopy";
 import { describeCapacity, describeCapacityUnknown } from "./capacityCopy";
 import { deriveCapacity } from "../../../engine/capacity";
-import {
-  DECLINE_LABEL,
-  describeEvidenceBasis,
-  describeRecommendationAction,
-  describeRecommendationEffect,
-  describePriorOutcomeMemory,
-  describeRecommendationHandoff,
-  describeRecordedDecision,
-  describeTraceLabel,
-  describeTraceValue,
-} from "./recommendationCopy";
 import { dismissOutcome } from "../../../persistence/outcomeDismissals";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
-import {
-  describeMinimumDaySummary,
-  getHydrationProgressPercent,
-  isSeriouslyConstrained,
-  MINIMUM_DAY_ENABLE_BODY,
-  MINIMUM_DAY_ITEMS,
-  MINIMUM_DAY_PROMINENT_BODY,
-  MINIMUM_DAY_PROMINENT_TITLE,
-} from "./minimumDayCopy";
-import { WATER_QUICK_ADD_OZ } from "../body/bodyScreenCopy";
-import {
-  describeResetInProgress,
-  describeResetResult,
-  describeShiftDownInProgress,
-  describeShiftDownResult,
-  isPrimaryReset,
-  isPrimaryShiftDown,
-  RESET_EXPLANATION,
-  RESET_EXPLANATION_SHORT,
-  SHIFT_DOWN_DURATION_PRESETS,
-  SHIFT_DOWN_EXPLANATION,
-  SHIFT_DOWN_EXPLANATION_SHORT,
-  type SessionOutcome,
-} from "./resetShiftDownCopy";
+import { isSeriouslyConstrained } from "./minimumDayCopy";
+import { isPrimaryReset, isPrimaryShiftDown, type SessionOutcome } from "./resetShiftDownCopy";
+import { ActiveWorkoutCard } from "./ActiveWorkoutCard";
+import { ResetCard } from "./ResetCard";
+import { ShiftDownCard } from "./ShiftDownCard";
+import { EndDayCard } from "./EndDayCard";
+import { CommitmentsCard } from "./CommitmentsCard";
+import { CaptureListRow, CaptureToolsCard } from "./CaptureSection";
+import { HydrationOperationCard, MinimumDayCard } from "./MinimumDaySection";
+import { CheckInCard } from "./CheckInCard";
+import { WorkContextCard } from "./WorkContextCard";
+import { RecommendationCard } from "./RecommendationCard";
 import {
   startDay,
   ensureActiveDay,
@@ -105,7 +68,6 @@ import {
   getScheduledContext,
   getMinimumDayStatus,
   getEffectiveHydrationTotal,
-  MINIMUM_DAY_HYDRATE_OZ,
   getTotalProteinGrams,
   getOpenReset,
   getOpenShiftDown,
@@ -143,7 +105,7 @@ export const quickCheckInValues: CheckInValues = {
  * Intent & Commitment Spine — Drop 02: onViewCommitments is optional and
  * unused unless a caller wires it up — App.tsx passes a callback that
  * switches to the MORE tab. TodayScreen itself has no navigation
- * mechanism of its own (see renderCommitmentsCard's doc comment on why
+ * mechanism of its own (see CommitmentsCard.tsx's doc comment on why
  * VIEW stops at "switch tabs" rather than deep-linking to the specific
  * Obligation).
  */
@@ -244,7 +206,7 @@ export function TodayScreen({
   const [mdProteinInput, setMdProteinInput] = useState("");
   // Product Experience Sprint, P3: RESET/SHIFT DOWN/check-in each default
   // to a compact row once they're not the thing TODAY needs you looking
-  // at (see renderResetCard/renderShiftDownCard and the check-in section
+  // at (see ResetCard.tsx/ShiftDownCard.tsx and the check-in section
   // below) — these track whether the user has explicitly opened the full
   // form anyway. Never gates the tools themselves, only their default
   // visual weight.
@@ -905,1047 +867,6 @@ export function TodayScreen({
   const checkInInAttention = isInAttention(attentionPlan, "CHECK_IN_MISSING");
   const minimumDayInAttention = isInAttention(attentionPlan, "MINIMUM_DAY_PROMINENT");
 
-  function renderHydrationOperation() {
-    if (!minimumDay || !minimumDay.enabled || minimumDay.hydrate) return null;
-    return (
-      <CommandSurface>
-        <p className="tool-label">MINIMUM DAY // HYDRATION</p>
-        <h2 className="command-title">Record what you drank</h2>
-        <p className="card-body" style={{ marginBottom: 4 }}>
-          {minimumDayHydrateOz}oz recorded for this active BeyondDay.
-        </p>
-        <div
-          className="field-progress"
-          style={{ marginBottom: 16 }}
-          role="progressbar"
-          aria-label="Hydration progress toward Minimum Day target"
-          aria-valuenow={Math.min(minimumDayHydrateOz, MINIMUM_DAY_HYDRATE_OZ)}
-          aria-valuemin={0}
-          aria-valuemax={MINIMUM_DAY_HYDRATE_OZ}
-        >
-          <div
-            className="field-progress__fill"
-            style={{ width: `${getHydrationProgressPercent(minimumDayHydrateOz, MINIMUM_DAY_HYDRATE_OZ)}%` }}
-          />
-        </div>
-        <p className="meta" style={{ marginBottom: 16 }}>
-          Choose the amount that is already true. Nothing is logged until you act.
-        </p>
-        <div className="field-quick-actions">
-          {WATER_QUICK_ADD_OZ.map((amount) => (
-            <button
-              key={amount}
-              className="btn-primary"
-              disabled={busy}
-              onClick={() => void handleMinimumDayLogWater(amount)}
-            >
-              +{amount} OZ
-            </button>
-          ))}
-        </div>
-        <FieldDisclosure
-          summary={hydrationManualOpen ? "HIDE DIFFERENT AMOUNT" : "DIFFERENT AMOUNT"}
-          open={hydrationManualOpen}
-          onToggle={setHydrationManualOpen}
-        >
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              type="number"
-              min={0}
-              aria-label="Hydration amount in ounces"
-              placeholder="oz"
-              value={mdWaterInput}
-              onChange={(e) => setMdWaterInput(e.target.value)}
-              className="input"
-              style={{ flex: 1 }}
-            />
-            <button
-              className="btn-primary"
-              style={{ width: "auto" }}
-              disabled={busy || !(Number(mdWaterInput) > 0)}
-              onClick={() => void handleMinimumDayLogWater()}
-            >
-              LOG
-            </button>
-          </div>
-        </FieldDisclosure>
-        <button
-          className="btn-secondary"
-          style={{ marginTop: 12 }}
-          onClick={() => {
-            setHydrationOperationOpen(false);
-            setMinimumDayOpen(true);
-          }}
-        >
-          VIEW FULL MINIMUM DAY
-        </button>
-      </CommandSurface>
-    );
-  }
-
-  function renderActiveWorkout(isDominant: boolean) {
-    if (!activeWorkout) return null;
-    const sessionLabel = activeWorkout.sessionType === "RECOVERY"
-      ? "Recovery session"
-      : `${activeWorkout.templateId} · ${activeWorkout.sessionType.toLowerCase()}`;
-    const content = (
-      <>
-        <p className="tool-label">WORKOUT IN PROGRESS</p>
-        {/* TODAY-006: matches RESET/SHIFT DOWN's existing isDominant ->
-            command-title upsizing — a genuinely dominant active workout
-            was the one operation still capped at the ordinary 18px
-            .card-title, undermining "one obvious field owner." */}
-        <h2 className={isDominant ? "command-title" : "card-title"}>Resume your active workout</h2>
-        <p className="card-body" style={{ marginBottom: 12 }}>
-          {sessionLabel} · started {new Date(activeWorkout.startedAt).toLocaleTimeString()}. Your logged sets and exact position remain in TRAIN.
-        </p>
-        <button className="btn-primary" onClick={() => onOpenTrain?.("WORKOUT")}>
-          RESUME WORKOUT
-        </button>
-      </>
-    );
-    return isDominant ? <CommandSurface>{content}</CommandSurface> : <div className="equipment-row">{content}</div>;
-  }
-
-  /**
-   * Suit Layer 01: the Capture list-row markup was hand-copied verbatim
-   * between the ATTENTION-tier list and the TOOLS-tier list (renderCaptureToolsCard) —
-   * a real, current duplication, extracted here rather than left as two
-   * copies that could quietly drift.
-   */
-  function renderCaptureListRow(item: CaptureItem) {
-    const converting = captureConversion?.id === item.id;
-    return (
-      <div key={item.id} style={{ padding: "8px 0", borderTop: "1px solid var(--border-subtle)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-          <span className="card-body" style={{ margin: 0 }}>{item.text}</span>
-          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-            <button
-              className="btn-secondary"
-              style={{ width: "auto", padding: "6px 10px", fontSize: 16 }}
-              disabled={busy}
-              onClick={() => (converting ? cancelCaptureConversion() : requestCaptureConversion(item))}
-            >
-              {converting ? "CANCEL" : "→ OBLIGATION"}
-            </button>
-            <button
-              className="btn-secondary"
-              style={{ width: "auto", padding: "6px 12px", fontSize: 16 }}
-              disabled={busy}
-              onClick={() => void handleResolveCapture(item)}
-            >
-              RESOLVE
-            </button>
-          </div>
-        </div>
-        {converting && (
-          <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--border-subtle)" }}>
-            <input
-              type="text"
-              className="input"
-              aria-label="New obligation title"
-              style={{ marginBottom: 8 }}
-              value={conversionTitle}
-              disabled={busy}
-              onChange={(e) => setConversionTitle(e.target.value)}
-            />
-            <button
-              className="btn-primary"
-              style={{ width: "100%" }}
-              disabled={busy || !conversionTitle.trim()}
-              onClick={() => void confirmCaptureConversion()}
-            >
-              CREATE OBLIGATION
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  /**
-   * Harvest Checkpoint 3: `isDominant` is separate from `active` — both
-   * RESET and SHIFT DOWN could in principle be simultaneously active
-   * (independent state machines, no mutual exclusion enforced), but
-   * "exactly one operating surface receives primary visual attention"
-   * (COMMAND 3.0's NOW tier) must hold even then. `active` still decides
-   * WHAT renders (in-progress content, COMPLETE/CANCEL); `isDominant`
-   * only decides whether THIS card gets the corner-flag/card--action
-   * leadership treatment — an active-but-not-dominant session (the rare
-   * both-active case) still shows full, usable content, just without
-   * competing visually with whichever one actually owns NOW.
-   */
-  function renderResetCard(prominent: boolean, isDominant: boolean) {
-    if (!day) return null;
-    const active = activeResetId !== null;
-    const open = prominent || active || resetOpen;
-    if (!open) {
-      return (
-        <CollapsibleRow
-          name="RESET"
-          icon={<Icon name="reset" size={20} />}
-          summary={RESET_EXPLANATION_SHORT}
-          onOpen={() => setResetOpen(true)}
-        />
-      );
-    }
-    // BEYOND Suit Implementation 01B: EXECUTION (a genuinely active,
-    // dominant RESET) gets the same .command-surface territory as
-    // PRIMARY DECISION — it IS the command surface while it's what NOW
-    // is showing. Everything else (ordinary tool, or active-but-demoted
-    // in the rare both-active case) is .equipment-row, not a card.
-    // .signal-row (a real Engine-suggested-but-not-started signal) is
-    // unchanged from Suit Layer 01.
-    const isCommand = active && isDominant;
-    return (
-      <div
-        key={active ? "reset-in-progress" : "reset-picker"}
-        className={`fade-in ${isCommand ? "command-surface" : active ? "equipment-row" : prominent ? "card signal-row" : "equipment-row"}`}
-      >
-        <p
-          className={isCommand ? "command-title" : "tool-label"}
-          style={{ marginBottom: 4, color: active ? "var(--accent-strong)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
-        >
-          {prominent ? <SignalIcon key="on" name="reset" size={20} /> : <Icon key="off" name="reset" size={20} />}
-          {active && <span aria-hidden="true" className="diamond" />}
-          {active ? "RESET IN PROGRESS" : prominent ? "RECOMMENDED — RESET" : "RESET"}
-        </p>
-        <p className="card-body" style={{ marginBottom: 12 }}>{RESET_EXPLANATION}</p>
-        {active ? (
-          <>
-            <p className="card-body" style={{ marginBottom: 12 }}>
-              {describeResetInProgress(resetIntensity)}
-              {openResetStartedAt ? ` Started ${new Date(openResetStartedAt).toLocaleTimeString()}.` : ""}
-            </p>
-            {/* TODAY-006 (Review Correction): the same stacked-with-divider
-                pattern the dominant recommendation card uses, applied
-                uniformly here — every genuinely dominant surface reads
-                the same way, not just the recommendation's own. */}
-            {isCommand ? (
-              <>
-                <button
-                  className="btn-primary"
-                  style={{ fontSize: 18, padding: "18px var(--space-4)" }}
-                  disabled={busy}
-                  onClick={() => void handleCompleteReset()}
-                >
-                  COMPLETE RESET
-                </button>
-                <p className="field-divider">OR</p>
-                <button className="btn-secondary" disabled={busy} onClick={() => void handleCancelReset()}>
-                  CANCEL RESET
-                </button>
-              </>
-            ) : (
-              <div style={{ display: "flex", gap: 8 }}>
-                <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteReset()}>
-                  COMPLETE RESET
-                </button>
-                <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelReset()}>
-                  CANCEL RESET
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            {lastResetOutcome && (
-              <p className="meta" style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-                <ConfirmIcon size={20} />
-                {describeResetResult(lastResetOutcome)}
-              </p>
-            )}
-            <p className="card-body" style={{ marginBottom: 8 }}>
-              BODY BEFORE STORY — how much do you need? 1 is a light touch, 5 is fully immersive.
-            </p>
-            <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-              {([1, 2, 3, 4, 5] as const).map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={`chip ${resetIntensity === n ? "chip--selected" : ""}`}
-                  aria-pressed={resetIntensity === n}
-                  disabled={busy}
-                  onClick={() => setResetIntensity(n)}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-            <button className="btn-primary" disabled={busy} onClick={() => void handleStartReset()}>
-              START RESET
-            </button>
-          </>
-        )}
-      </div>
-    );
-  }
-
-  /** Harvest Checkpoint 3: see renderResetCard's doc comment for `isDominant`. */
-  function renderShiftDownCard(prominent: boolean, isDominant: boolean) {
-    if (!day) return null;
-    const active = activeShiftDownId !== null;
-    const open = prominent || active || shiftDownOpen;
-    if (!open) {
-      return (
-        <CollapsibleRow
-          name="SHIFT DOWN"
-          icon={<Icon name="shiftDown" size={20} />}
-          summary={SHIFT_DOWN_EXPLANATION_SHORT}
-          onOpen={() => setShiftDownOpen(true)}
-        />
-      );
-    }
-    const isCommand = active && isDominant;
-    return (
-      <div
-        key={active ? "shift-down-in-progress" : "shift-down-picker"}
-        className={`fade-in ${isCommand ? "command-surface" : active ? "equipment-row" : prominent ? "card signal-row" : "equipment-row"}`}
-      >
-        <p
-          className={isCommand ? "command-title" : "tool-label"}
-          style={{ marginBottom: 4, color: active ? "var(--accent-strong)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
-        >
-          {prominent ? <SignalIcon key="on" name="shiftDown" size={20} /> : <Icon key="off" name="shiftDown" size={20} />}
-          {active && <span aria-hidden="true" className="diamond" />}
-          {active ? "SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
-        </p>
-        <p className="card-body" style={{ marginBottom: 12 }}>{SHIFT_DOWN_EXPLANATION}</p>
-        {active ? (
-          <>
-            <p className="card-body" style={{ marginBottom: 12 }}>
-              {describeShiftDownInProgress(shiftDownDuration)}
-              {openShiftDownStartedAt ? ` Started ${new Date(openShiftDownStartedAt).toLocaleTimeString()}.` : ""}
-            </p>
-            {isCommand ? (
-              <>
-                <button
-                  className="btn-primary"
-                  style={{ fontSize: 18, padding: "18px var(--space-4)" }}
-                  disabled={busy}
-                  onClick={() => void handleCompleteShiftDown()}
-                >
-                  COMPLETE SHIFT DOWN
-                </button>
-                <p className="field-divider">OR</p>
-                <button className="btn-secondary" disabled={busy} onClick={() => void handleCancelShiftDown()}>
-                  CANCEL SHIFT DOWN
-                </button>
-              </>
-            ) : (
-              <div style={{ display: "flex", gap: 8 }}>
-                <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCompleteShiftDown()}>
-                  COMPLETE SHIFT DOWN
-                </button>
-                <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleCancelShiftDown()}>
-                  CANCEL SHIFT DOWN
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            {lastShiftDownOutcome && (
-              <p className="meta" style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-                <ConfirmIcon size={20} />
-                {describeShiftDownResult(lastShiftDownOutcome)}
-              </p>
-            )}
-            <p className="meta" style={{ marginBottom: 8 }}>How many minutes?</p>
-            <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
-              {SHIFT_DOWN_DURATION_PRESETS.map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={`chip ${shiftDownDuration === n ? "chip--selected" : ""}`}
-                  style={{ minWidth: 50 }}
-                  aria-pressed={shiftDownDuration === n}
-                  disabled={busy}
-                  onClick={() => setShiftDownDuration(n)}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 12 }}>
-              <span className="meta" id="shift-down-custom-minutes-label">Custom:</span>
-              <input
-                type="number"
-                min={1}
-                value={shiftDownDuration}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  setShiftDownDuration(Number.isNaN(v) || v < 1 ? 1 : v);
-                }}
-                className="input"
-                style={{ flex: 1 }}
-                aria-label="Custom minutes"
-                aria-describedby="shift-down-custom-minutes-label"
-              />
-              <span className="meta">min</span>
-            </div>
-            <button ref={shiftDownStartRef} className="btn-primary" disabled={busy} onClick={() => void handleStartShiftDown()}>
-              START SHIFT DOWN
-            </button>
-            {!prominent && (
-              <button
-                className="btn-secondary"
-                style={{ marginTop: 8 }}
-                disabled={busy}
-                onClick={() => setShiftDownOpen(false)}
-              >
-                COLLAPSE
-              </button>
-            )}
-          </>
-        )}
-      </div>
-    );
-  }
-
-  function renderMinimumDayCard(prominent: boolean) {
-    if (!minimumDay) return null;
-    // FIELD ALPHA Gate A correction: the prominent (seriously
-    // constrained, not yet enabled) case already earns its full visible
-    // presence via existing product truth (isSeriouslyConstrained) and
-    // is unchanged. Everywhere else, Minimum Day defaults to a compact
-    // GLANCE-depth CollapsibleRow — its full six-item contents (once
-    // enabled) or its enable offer (once not) were consuming substantial
-    // vertical space even when it wasn't the operator's primary concern.
-    if (!prominent && !minimumDayOpen) {
-      return (
-        <CollapsibleRow
-          name="MINIMUM DAY"
-          summary={describeMinimumDaySummary(minimumDay)}
-          onOpen={() => {
-            if (minimumDay.enabled && !minimumDay.hydrate && minimumDayHydrateOz > 0) {
-              setHydrationConfirmation(null);
-              setHydrationOperationOpen(true);
-            } else {
-              setMinimumDayOpen(true);
-            }
-          }}
-        />
-      );
-    }
-    return (
-      <div className={prominent ? "card signal-row" : "equipment-row"}>
-        <p className="tool-label" style={{ marginBottom: 4 }}>MINIMUM DAY</p>
-        <p className="meta" style={{ marginBottom: 12 }}>
-          Progress stays with this active BeyondDay until you end it — a calendar date change does not reset it.
-        </p>
-        {!minimumDay.enabled ? (
-          <>
-            <h2 className="card-title">{prominent ? MINIMUM_DAY_PROMINENT_TITLE : "Reduced baseline"}</h2>
-            <p className="card-body" style={{ marginBottom: 12 }}>
-              {prominent ? MINIMUM_DAY_PROMINENT_BODY : MINIMUM_DAY_ENABLE_BODY}
-            </p>
-            <button className="btn-primary" disabled={busy} onClick={() => void handleEnableMinimumDay()}>
-              ENABLE MINIMUM DAY
-            </button>
-          </>
-        ) : (
-          <>
-            {MINIMUM_DAY_ITEMS.map((item) => {
-              const done = minimumDay[item.key];
-              return (
-                <div key={item.key} style={{ padding: "10px 0", borderBottom: "1px solid var(--border-subtle)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span className="card-body" style={{ margin: 0 }}>
-                      {done && <span aria-hidden="true" className="diamond" style={{ marginRight: 6, verticalAlign: 1 }} />}
-                      {item.label}
-                      {item.key === "hydrate" ? ` — ${minimumDayHydrateOz}oz logged` : ""}
-                      {item.key === "protein" ? ` — ${minimumDayProteinG}g logged` : ""}
-                    </span>
-                    {!done && item.key === "meds" && (
-                      <button
-                        className="btn-secondary"
-                        style={{ width: "auto", padding: "4px 12px", fontSize: 16 }}
-                        disabled={busy}
-                        onClick={() => void handleMarkMinimum("MEDS")}
-                      >
-                        MARK DONE
-                      </button>
-                    )}
-                    {!done && item.key === "hygiene" && (
-                      <button
-                        className="btn-secondary"
-                        style={{ width: "auto", padding: "4px 12px", fontSize: 16 }}
-                        disabled={busy}
-                        onClick={() => void handleMarkMinimum("HYGIENE")}
-                      >
-                        MARK DONE
-                      </button>
-                    )}
-                    {!done && item.key === "move" && (
-                      <button
-                        className="btn-secondary"
-                        style={{ width: "auto", padding: "4px 12px", fontSize: 16 }}
-                        disabled={busy}
-                        onClick={() => void handleMarkMinimum("MOVE")}
-                      >
-                        MARK DONE
-                      </button>
-                    )}
-                  </div>
-                  <p className="meta" style={{ marginTop: 4 }}>{item.updateNote}</p>
-                  {item.key === "hydrate" && (
-                    <div
-                      className="field-progress"
-                      style={{ marginTop: 8 }}
-                      role="progressbar"
-                      aria-label="Hydration progress toward Minimum Day target"
-                      aria-valuenow={Math.min(minimumDayHydrateOz, MINIMUM_DAY_HYDRATE_OZ)}
-                      aria-valuemin={0}
-                      aria-valuemax={MINIMUM_DAY_HYDRATE_OZ}
-                    >
-                      <div
-                        className="field-progress__fill"
-                        style={{ width: `${getHydrationProgressPercent(minimumDayHydrateOz, MINIMUM_DAY_HYDRATE_OZ)}%` }}
-                      />
-                    </div>
-                  )}
-                  {!done && item.key === "hydrate" && (
-                    <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                      <input
-                        type="number"
-                        min={0}
-                        placeholder="oz"
-                        value={mdWaterInput}
-                        onChange={(e) => setMdWaterInput(e.target.value)}
-                        className="input"
-                        style={{ flex: 1 }}
-                      />
-                      <button
-                        className="btn-primary"
-                        style={{ width: "auto", padding: "8px 14px", fontSize: 16 }}
-                        disabled={busy || !(Number(mdWaterInput) > 0)}
-                        onClick={() => void handleMinimumDayLogWater()}
-                      >
-                        LOG WATER
-                      </button>
-                    </div>
-                  )}
-                  {!done && item.key === "protein" && (
-                    <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                      <input
-                        type="number"
-                        min={0}
-                        placeholder="g"
-                        value={mdProteinInput}
-                        onChange={(e) => setMdProteinInput(e.target.value)}
-                        className="input"
-                        style={{ flex: 1 }}
-                      />
-                      <button
-                        className="btn-primary"
-                        style={{ width: "auto", padding: "8px 14px", fontSize: 16 }}
-                        disabled={busy || !(Number(mdProteinInput) > 0)}
-                        onClick={() => void handleMinimumDayLogProtein()}
-                      >
-                        LOG PROTEIN
-                      </button>
-                    </div>
-                  )}
-                  {!done && item.key === "recoverConnect" && (
-                    <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-                      <button
-                        className="btn-secondary"
-                        style={{ flex: 1, padding: "6px 12px", fontSize: 16 }}
-                        disabled={busy}
-                        onClick={() => void handleMarkMinimum("RECOVER")}
-                      >
-                        MARK RECOVER
-                      </button>
-                      <button
-                        className="btn-secondary"
-                        style={{ flex: 1, padding: "6px 12px", fontSize: 16 }}
-                        disabled={busy}
-                        onClick={() => void handleMarkMinimum("CONNECT")}
-                      >
-                        MARK CONNECT
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </>
-        )}
-      </div>
-    );
-  }
-
-  const evidenceBasis = describeEvidenceBasis(checkIn !== null);
-
-  /**
-   * Harvest Checkpoint 3 (NOW): the recommendation card, extracted into
-   * its own function so it can render either as the dominant NOW surface
-   * (full card--action + corner-flag) or — once an active RESET/SHIFT
-   * DOWN takes over dominance — as a quiet TOOLS-tier CollapsibleRow,
-   * still one tap from the full WHY trace and accept/decline. Recording
-   * a decision remains available either way; only its visual weight
-   * changes. STATUS's own context-strip line used to live inside this
-   * card's header — moved out to its own compact, always-visible line
-   * (see the STATUS block in the return below) so it reads even before
-   * a check-in exists, and so this card is purely about the one
-   * decision it's asking for.
-   */
-  function renderRecommendationCard(isDominant: boolean, isAttention = false) {
-    if (!day || !recommendation) return null;
-    const isAllClear = recommendation.kind === "NO_ACTION_REQUIRED";
-    const open = isDominant || isAttention || isAllClear || recommendationOpen;
-    if (!open) {
-      return (
-        <CollapsibleRow
-          name="RECOMMENDATION"
-          summary={decision ? `${recommendation.title} — ${describeRecordedDecision(decision)}` : recommendation.title}
-          onOpen={() => setRecommendationOpen(true)}
-        />
-      );
-    }
-    // BEYOND Suit Implementation 01B: three distinct silhouettes, not
-    // one card with modifier classes.
-    //   - ALL CLEAR: .all-clear — no surface, no red, quiet text
-    //     directly on the black field (Part 2/4).
-    //   - PRIMARY DECISION (dominant): .command-surface — a bold left
-    //     red bar + --surface-active (a flat, dark red-black wash, no
-    //     gradient) it now finally uses; big .command-title. This is
-    //     the one genuinely dominant territory on the screen.
-    //   - Demoted (some other surface — an active RESET/SHIFT DOWN —
-    //     is dominant instead): .equipment-row, same quiet TOOLS-tier
-    //     treatment every other tool gets. Still full content, one tap
-    //     away either way — nothing here changes what's reachable.
-    // ResolveIcon vs. ConfirmIcon (Suit Implementation 01) is unchanged:
-    // NO_ACTION_REQUIRED's own title/rationale stays Engine-authored,
-    // untouched.
-    // VISUAL-002: the dominant, non-all-clear branch is the same PRIMARY
-    // DECISION/EXECUTION territory formalized as <CommandSurface> — the
-    // all-clear and demoted (.equipment-row) branches keep their own
-    // wrapper className exactly as before, since only this one branch is
-    // the shared command-surface pattern.
-    const wrapperClassName = isAllClear
-      ? "all-clear fade-in"
-      : isAttention
-        ? "card signal-row fade-in"
-        : "equipment-row fade-in";
-    const cardContent = (
-      <>
-        {/* TODAY-006: the dominant surface earns the same small mono
-            role label the ATTENTION tier already carries — matching the
-            prototype's "PRIMARY GUIDANCE"-style header above its big
-            title. ALL CLEAR keeps its own quiet, label-free framing. */}
-        {(isAttention || isDominant) && !isAllClear && <p className="tool-label">ENGINE GUIDANCE</p>}
-        {/* TODAY-006 (Review Correction): "baseline" rather than "center" —
-            at the new 44px dominant scale, a longer title genuinely wraps
-            to two lines at narrow widths, and center-alignment then
-            floats the icon at the block's vertical midpoint instead of
-            next to the first line. Baseline alignment keys off the first
-            line box regardless of wrap count, so the icon stays attached
-            to the title's opening word either way. */}
-        <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
-          {recommendation.title}
-        </h2>
-        <p className="card-body">{recommendation.rationale}</p>
-        {evidenceBasis && (
-          <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
-        )}
-        {/*
-         * TODAY // SUIT LAYER 01 (DEC-003): "the existing WHY interaction
-         * becomes the first expression of the inside-the-suit concept...
-         * expose additional structure showing the real deterministic
-         * inputs/reasoning already available." Every value below already
-         * existed on `recommendation.trace` (engine/evaluate.ts) or
-         * `checkIn` before this Drop — nothing here is manufactured.
-         * matchedRules was the only piece previously surfaced; inputs/
-         * derived/selectionReason/engineVersion/evaluatedAt were already
-         * computed and stored on every Recommendation, just never shown.
-         */}
-        <details className="why" style={{ marginTop: 12 }}>
-          <summary>How BEYOND decided</summary>
-          <div className="machinery-panel">
-            {checkIn && (
-              <>
-                <p className="why-group-label">State input</p>
-                {CHECK_IN_FIELDS.map((f) => (
-                  <div key={f.key} className="why-rule">
-                    <span>{f.label}</span>
-                    <span>{checkIn[f.key]}</span>
-                  </div>
-                ))}
-              </>
-            )}
-
-            <p className="why-group-label">Derived</p>
-            {recommendation.trace.derived.length > 0 ? (
-              recommendation.trace.derived.map((d) => (
-                <div key={d.key} className="why-rule">
-                  <span>{describeTraceLabel(d.key)}</span>
-                  <span>{describeTraceValue(d.value)}</span>
-                </div>
-              ))
-            ) : (
-              <div className="why-rule">
-                <span>Capacity</span>
-                <span>Not computed — no check-in yet</span>
-              </div>
-            )}
-
-            <p className="why-group-label">Context</p>
-            {recommendation.trace.inputs.map((i) => (
-              <div key={i.key} className="why-rule">
-                <span>{describeTraceLabel(i.key)}</span>
-                <span>{describeTraceValue(i.value)}</span>
-              </div>
-            ))}
-
-            <p className="why-group-label">Rules evaluated</p>
-            {recommendation.trace.matchedRules.map((r) => (
-              <div key={r.ruleId} className={`why-rule ${r.result ? "why-rule--matched" : ""}`}>
-                <span>{r.ruleId}</span>
-                <span>{r.result ? r.reason : "—"}</span>
-              </div>
-            ))}
-
-            <p className="why-selection">{recommendation.trace.selectionReason}</p>
-            {priorOutcomeMemory && (
-              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
-                <p className="why-group-label">Previous result</p>
-                <p className="card-body">
-                  {describePriorOutcomeMemory(
-                    priorOutcomeMemory.decision,
-                    priorOutcomeMemory.rating,
-                    priorOutcomeMemory.recommendation.issuedAt,
-                  )}
-                </p>
-              </div>
-            )}
-            <p className="meta" style={{ marginTop: 8 }}>
-              ENGINE {recommendation.trace.engineVersion} · EVALUATED{" "}
-              {new Date(recommendation.trace.evaluatedAt).toLocaleTimeString()}
-            </p>
-          </div>
-        </details>
-        <div style={{ marginTop: isDominant && !isAllClear ? 20 : 12 }}>
-          {decision ? (
-            <>
-              <button className="btn-primary" disabled style={isDominant && !isAllClear ? { fontSize: 18, padding: "18px var(--space-4)" } : undefined}>
-                {describeRecordedDecision(decision)}
-              </button>
-              {recommendationHandoff &&
-                !(recommendationHandoff === "SHIFT_DOWN" && activeShiftDownId !== null) &&
-                (recommendationHandoff === "SHIFT_DOWN" || onOpenTrain) && (
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    style={{ marginTop: 8 }}
-                    onClick={() => handleRecommendationHandoff(recommendationHandoff)}
-                    aria-label={`${describeRecommendationHandoff(recommendationHandoff)} — does not start the action`}
-                  >
-                    {describeRecommendationHandoff(recommendationHandoff)}
-                  </button>
-                )}
-            </>
-          ) : (
-            <>
-              {/* TODAY-006: the dominant surface's genuine two-way
-                  choice (accept vs. decline) stacks full-width with a
-                  structural "OR" separator, matching the prototype's
-                  instrument-panel divider rather than a generic
-                  side-by-side app button row. ATTENTION/SUPPORT tiers,
-                  and ALL CLEAR's single accept-only action, keep the
-                  existing compact side-by-side layout unchanged. */}
-              {isDominant && !isAllClear && recommendation.kind !== "NO_ACTION_REQUIRED" ? (
-                <>
-                  <button
-                    className="btn-primary"
-                    style={{ fontSize: 18, padding: "18px var(--space-4)" }}
-                    disabled={busy}
-                    onClick={() => void handleRecord()}
-                  >
-                    {describeRecommendationAction(recommendation.kind)}
-                  </button>
-                  <p className="field-divider">OR</p>
-                  <button className="btn-secondary" disabled={busy} onClick={handleDecline}>
-                    {DECLINE_LABEL}
-                  </button>
-                </>
-              ) : (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button
-                    className="btn-primary"
-                    style={{ flex: 1, ...(isDominant && !isAllClear ? { fontSize: 18, padding: "18px var(--space-4)" } : {}) }}
-                    disabled={busy}
-                    onClick={() => void handleRecord()}
-                  >
-                    {describeRecommendationAction(recommendation.kind)}
-                  </button>
-                  {recommendation.kind !== "NO_ACTION_REQUIRED" && (
-                    <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={handleDecline}>
-                      {DECLINE_LABEL}
-                    </button>
-                  )}
-                </div>
-              )}
-              {/* TODAY-006: ALL CLEAR's own caption gets the quiet
-                  corner-bracket "field note" treatment — a mechanical
-                  system aside, not prose — since this is the one message
-                  that's on screen most of the time. Every other tier's
-                  identical caption is untouched. */}
-              <p className={isAllClear ? "meta field-note" : "meta"} style={{ marginTop: 8 }}>
-                {describeRecommendationEffect(recommendation.kind)}
-              </p>
-            </>
-          )}
-          <ConfirmPanel />
-        </div>
-      </>
-    );
-    if (isDominant && !isAllClear) {
-      return (
-        <CommandSurface key={recommendation.id}>
-          {cardContent}
-        </CommandSurface>
-      );
-    }
-    return (
-      <div key={recommendation.id} className={wrapperClassName}>
-        {cardContent}
-      </div>
-    );
-  }
-
-  /**
-   * Harvest Checkpoint 3 (ATTENTION/TOOLS): called once; placed in
-   * ATTENTION when suggestEndDay earned it, otherwise in TOOLS as a
-   * quiet, always-reachable CollapsibleRow — ending the day is always
-   * possible, not only when the Engine-adjacent signal suggests it.
-   */
-  function renderEndDayCard() {
-    if (!day) return null;
-    const open = suggestEndDay || endDayOpen;
-    if (!open) {
-      return (
-        <CollapsibleRow name="BEYONDDAY" summary="End your day whenever you're ready." onOpen={() => setEndDayOpen(true)} />
-      );
-    }
-    // Suit Layer 01: styled by real urgency (suggestEndDay), not merely
-    // by whether it won the scarce ATTENTION slot — the same underlying
-    // fact should look the same whether or not it's currently displayed
-    // in ATTENTION or (capped out) still in TOOLS.
-    const body = (
-      <>
-        {suggestEndDay && (
-          <p className="card-body" style={{ marginBottom: 12 }}>
-            Primary sleep logged — this BeyondDay looks done. End it whenever you're ready.
-          </p>
-        )}
-        {endDayBlockedByWorkout && (
-          <div role="alert" className="card card--warning" style={{ marginBottom: 12 }}>
-            <p className="card-body" style={{ marginBottom: 8 }}>
-              Workout in progress. Finish it, save it as partial, or stop it on TRAIN before ending this BeyondDay.
-            </p>
-            <button className="btn-primary" disabled={busy} onClick={() => onOpenTrain?.("WORKOUT")}>
-              RETURN TO WORKOUT
-            </button>
-          </div>
-        )}
-        <button className="btn-secondary" disabled={busy} onClick={() => void handleEndDay()}>
-          END DAY
-        </button>
-      </>
-    );
-    if (suggestEndDay) {
-      return <SignalRow label="BEYONDDAY">{body}</SignalRow>;
-    }
-    return (
-      <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>BEYONDDAY</p>
-        {body}
-      </div>
-    );
-  }
-
-  /**
-   * Intent & Commitment Spine — Drop 02 (temporal corrections binding,
-   * 2026-08-22). Called once; placed in ATTENTION when
-   * commitmentInAttention earned it, otherwise TOOLS — same shape as
-   * renderEndDayCard. Shows only the single most relevant unresolved
-   * Obligation (engine/obligationRelevance.ts's fixed ranking), plus a
-   * plain count of anything else unresolved — never a per-item list, so
-   * this never competes with the primary recommendation the way a real
-   * task list would.
-   *
-   * Headline Commitment Completion supersedes Drop 02's entirely-read-only
-   * presentation ruling for one operation only: the exact displayed
-   * Obligation may be marked SATISFIED through the canonical command after
-   * an explicit confirmation. Release/waiting/edit remain management-only.
-   * VIEW switches to the MORE tab, where
-   * full canonical mutation lives (Missions & Obligations) — it does
-   * not deep-link to this specific Obligation's detail, since that would
-   * require lifting new "pending navigation" state through App.tsx,
-   * MoreScreen.tsx, AND IntentScreen.tsx (none of which coordinate
-   * navigation with each other today, and Drop 02's own approved plan
-   * listed both of the latter two files as unchanged) — disproportionate
-   * plumbing for one button, per this Drop's own instruction not to build
-   * a routing subsystem for it. onViewCommitments is optional; if TODAY
-   * is ever rendered without it (e.g. a future embedding), VIEW simply
-   * doesn't render rather than doing nothing silently.
-   */
-  function renderCommitmentsCard() {
-    if (!headlineCommitment) return null;
-    const otherCount = unresolvedObligations.length - 1;
-    const { obligation, tier } = headlineCommitment;
-
-    if (!commitmentsOpen) {
-      // FIELD ALPHA Gate A correction: the header is the object's fixed
-      // role ("COMMITMENT" — matching what's shown once expanded below),
-      // not the obligation's own title, which used to sit here
-      // unlabeled and could visually collide with TODAY's "Now" section
-      // header above it. The title itself still appears, in the summary
-      // line, via describeCommitmentsSummary.
-      return (
-        <CollapsibleRow
-          name="COMMITMENT"
-          summary={describeCommitmentsSummary(tier, obligation, otherCount)}
-          onOpen={() => setCommitmentsOpen(true)}
-        />
-      );
-    }
-
-    const body = (
-      <>
-        <h2 className="card-title">{obligation.title}</h2>
-        {obligation.description && <p className="card-body">{obligation.description}</p>}
-        {headlineCommitmentMission?.obligationId === obligation.id && (
-          <p className="meta" style={{ marginBottom: 4 }}>
-            {describeCommitmentMission(headlineCommitmentMission.mission)}
-          </p>
-        )}
-        <p className="meta" style={{ marginBottom: otherCount > 0 ? 4 : 12 }}>
-          {describeObligationRelevance(tier, obligation)}
-        </p>
-        {otherCount > 0 && (
-          <p className="meta" style={{ marginBottom: 12 }}>
-            +{otherCount} more unresolved.
-          </p>
-        )}
-        {commitmentConfirmation?.id === obligation.id && (
-          <div className="fade-in" aria-busy={busy} style={{ marginBottom: 12, padding: 12, border: "1px solid var(--border-subtle)" }}>
-            <p className="tool-label" style={{ marginBottom: 4 }}>CONFIRM SATISFACTION</p>
-            <p className="card-body" style={{ marginBottom: 12 }}>
-              Mark “{obligation.title}” satisfied? This records that the commitment was fulfilled and cannot currently be undone.
-            </p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button className="btn-primary" disabled={busy} onClick={() => void confirmCommitmentSatisfaction()}>
-                CONFIRM SATISFACTION
-              </button>
-              <button className="btn-secondary" disabled={busy} onClick={cancelCommitmentSatisfaction}>
-                CANCEL
-              </button>
-            </div>
-          </div>
-        )}
-        <div style={{ display: "flex", gap: 8 }}>
-          <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={() => setCommitmentsOpen(false)}>
-            CLOSE
-          </button>
-          {onViewCommitments && (
-            <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} onClick={onViewCommitments}>
-              VIEW
-            </button>
-          )}
-          {!commitmentConfirmation && (
-            <button
-              className="btn-secondary"
-              style={{ width: "auto", padding: "8px 16px" }}
-              aria-label="SATISFY COMMITMENT"
-              disabled={busy}
-              onClick={() => requestCommitmentSatisfaction(obligation)}
-            >
-              SATISFY COMMITMENT
-            </button>
-          )}
-        </div>
-      </>
-    );
-    // Suit Layer 01: styled by the headline's own real tier, not by
-    // whether it happened to win the scarce ATTENTION slot — same
-    // reasoning as renderEndDayCard above.
-    if (isAttentionWorthyTier(tier)) {
-      return <SignalRow label="COMMITMENT">{body}</SignalRow>;
-    }
-    return (
-      <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>COMMITMENT</p>
-        {body}
-      </div>
-    );
-  }
-
-  /**
-   * Harvest Checkpoint 3 (TOOLS): the quick-capture input itself is NEVER
-   * collapsed — Capture's own doctrine (Overdrive Phase 10) is "always a
-   * single-line input, never a bigger form to open... less friction than
-   * RESET/SHIFT DOWN's progressive disclosure, not the same amount." Only
-   * the open-items LIST is tiered: when it already earned a compact slot
-   * in ATTENTION, it isn't repeated here (no second dashboard hiding
-   * underneath the first) — otherwise (zero items, or the rare case it
-   * lost the 2-slot cap to END DAY + a pending outcome both being true)
-   * it renders right here instead, so nothing captured is ever more than
-   * one section away.
-   */
-  function renderCaptureToolsCard() {
-    const hasOpenItems = openCaptureItems.length > 0;
-    const showListHere = hasOpenItems && !captureInAttention;
-    return (
-      <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>
-          CAPTURE{hasOpenItems ? ` (${openCaptureItems.length})` : ""}
-        </p>
-        <p className="meta" style={{ marginBottom: 8 }}>
-          Jot something down now. Where it belongs is a decision for later, not now.
-        </p>
-        <div style={{ display: "flex", gap: 8, marginBottom: showListHere ? 12 : 0 }}>
-          <input
-            type="text"
-            className="input"
-            style={{ flex: 1 }}
-            placeholder="Capture a thought..."
-            value={captureText}
-            disabled={busy}
-            onChange={(e) => setCaptureText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void handleCapture();
-            }}
-          />
-          <button
-            className="btn-secondary"
-            style={{ width: "auto", padding: "8px 16px" }}
-            disabled={busy || !captureText.trim()}
-            onClick={() => void handleCapture()}
-          >
-            CAPTURE
-          </button>
-        </div>
-        {showListHere && (
-          <>
-            {openCaptureItems.map((item) => renderCaptureListRow(item))}
-            {justResolvedCapture && (
-              <ConfirmBanner
-                message={`Resolved "${justResolvedCapture.text}"`}
-                actionLabel="UNDO"
-                onAction={() => void handleUndoResolveCapture()}
-                disabled={busy}
-                divider
-              />
-            )}
-          </>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div
@@ -2117,15 +1038,134 @@ export function TodayScreen({
           </p>
         </div>
       )}
-      {day && dominant === "OPERATION_CONFLICT" && renderActiveWorkout(false)}
-      {day && dominant === "OPERATION_CONFLICT" && renderResetCard(false, false)}
-      {day && dominant === "OPERATION_CONFLICT" && renderShiftDownCard(false, false)}
-      {day && dominant === "SHIFT_DOWN_ACTIVE" && renderShiftDownCard(shiftDownIsPrimary, true)}
-      {day && dominant === "RESET_ACTIVE" && renderResetCard(resetIsPrimary, true)}
-      {day && dominant === "WORKOUT_ACTIVE" && renderActiveWorkout(true)}
-      {day && dominant === "HYDRATION_ACTIVE" && renderHydrationOperation()}
-      {day && recommendation && dominant === "RECOMMENDATION" && renderRecommendationCard(true)}
-      {day && recommendation && dominant === "NONE" && recommendation.kind === "NO_ACTION_REQUIRED" && renderRecommendationCard(false)}
+      {day && dominant === "OPERATION_CONFLICT" && <ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} onOpenTrain={onOpenTrain} />}
+      {day && dominant === "OPERATION_CONFLICT" && (
+        <ResetCard
+          prominent={false}
+          isDominant={false}
+          activeResetId={activeResetId}
+          resetIntensity={resetIntensity}
+          setResetIntensity={setResetIntensity}
+          openResetStartedAt={openResetStartedAt}
+          lastResetOutcome={lastResetOutcome}
+          resetOpen={resetOpen}
+          setResetOpen={setResetOpen}
+          busy={busy}
+          onStartReset={() => void handleStartReset()}
+          onCompleteReset={() => void handleCompleteReset()}
+          onCancelReset={() => void handleCancelReset()}
+        />
+      )}
+      {day && dominant === "OPERATION_CONFLICT" && (
+        <ShiftDownCard
+          prominent={false}
+          isDominant={false}
+          activeShiftDownId={activeShiftDownId}
+          shiftDownDuration={shiftDownDuration}
+          setShiftDownDuration={setShiftDownDuration}
+          openShiftDownStartedAt={openShiftDownStartedAt}
+          lastShiftDownOutcome={lastShiftDownOutcome}
+          shiftDownOpen={shiftDownOpen}
+          setShiftDownOpen={setShiftDownOpen}
+          busy={busy}
+          onStartShiftDown={() => void handleStartShiftDown()}
+          onCompleteShiftDown={() => void handleCompleteShiftDown()}
+          onCancelShiftDown={() => void handleCancelShiftDown()}
+          startButtonRef={shiftDownStartRef}
+        />
+      )}
+      {day && dominant === "SHIFT_DOWN_ACTIVE" && (
+        <ShiftDownCard
+          prominent={shiftDownIsPrimary}
+          isDominant={true}
+          activeShiftDownId={activeShiftDownId}
+          shiftDownDuration={shiftDownDuration}
+          setShiftDownDuration={setShiftDownDuration}
+          openShiftDownStartedAt={openShiftDownStartedAt}
+          lastShiftDownOutcome={lastShiftDownOutcome}
+          shiftDownOpen={shiftDownOpen}
+          setShiftDownOpen={setShiftDownOpen}
+          busy={busy}
+          onStartShiftDown={() => void handleStartShiftDown()}
+          onCompleteShiftDown={() => void handleCompleteShiftDown()}
+          onCancelShiftDown={() => void handleCancelShiftDown()}
+          startButtonRef={shiftDownStartRef}
+        />
+      )}
+      {day && dominant === "RESET_ACTIVE" && (
+        <ResetCard
+          prominent={resetIsPrimary}
+          isDominant={true}
+          activeResetId={activeResetId}
+          resetIntensity={resetIntensity}
+          setResetIntensity={setResetIntensity}
+          openResetStartedAt={openResetStartedAt}
+          lastResetOutcome={lastResetOutcome}
+          resetOpen={resetOpen}
+          setResetOpen={setResetOpen}
+          busy={busy}
+          onStartReset={() => void handleStartReset()}
+          onCompleteReset={() => void handleCompleteReset()}
+          onCancelReset={() => void handleCancelReset()}
+        />
+      )}
+      {day && dominant === "WORKOUT_ACTIVE" && <ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={true} onOpenTrain={onOpenTrain} />}
+      {day && dominant === "HYDRATION_ACTIVE" && (
+        <HydrationOperationCard
+          minimumDay={minimumDay}
+          minimumDayHydrateOz={minimumDayHydrateOz}
+          busy={busy}
+          mdWaterInput={mdWaterInput}
+          setMdWaterInput={setMdWaterInput}
+          hydrationManualOpen={hydrationManualOpen}
+          setHydrationManualOpen={setHydrationManualOpen}
+          onLogWater={(amountOverride) => void handleMinimumDayLogWater(amountOverride)}
+          onViewFull={() => {
+            setHydrationOperationOpen(false);
+            setMinimumDayOpen(true);
+          }}
+        />
+      )}
+      {day && recommendation && dominant === "RECOMMENDATION" && (
+        <RecommendationCard
+          day={day}
+          recommendation={recommendation}
+          isDominant={true}
+          decision={decision}
+          checkIn={checkIn}
+          recommendationOpen={recommendationOpen}
+          setRecommendationOpen={setRecommendationOpen}
+          recommendationHandoff={recommendationHandoff}
+          activeShiftDownId={activeShiftDownId}
+          priorOutcomeMemory={priorOutcomeMemory}
+          busy={busy}
+          onOpenTrain={onOpenTrain}
+          onRecord={() => void handleRecord()}
+          onDecline={handleDecline}
+          onHandoff={handleRecommendationHandoff}
+          confirmPanel={<ConfirmPanel />}
+        />
+      )}
+      {day && recommendation && dominant === "NONE" && recommendation.kind === "NO_ACTION_REQUIRED" && (
+        <RecommendationCard
+          day={day}
+          recommendation={recommendation}
+          isDominant={false}
+          decision={decision}
+          checkIn={checkIn}
+          recommendationOpen={recommendationOpen}
+          setRecommendationOpen={setRecommendationOpen}
+          recommendationHandoff={recommendationHandoff}
+          activeShiftDownId={activeShiftDownId}
+          priorOutcomeMemory={priorOutcomeMemory}
+          busy={busy}
+          onOpenTrain={onOpenTrain}
+          onRecord={() => void handleRecord()}
+          onDecline={handleDecline}
+          onHandoff={handleRecommendationHandoff}
+          confirmPanel={<ConfirmPanel />}
+        />
+      )}
 
       {/* ATTENTION — earned, capped at ATTENTION_MAX, and disappears
           entirely when nothing currently qualifies (attentionPolicy.ts). */}
@@ -2133,9 +1173,40 @@ export function TodayScreen({
         <>
           <h2 className="section-label section-label--field">Attention</h2>
 
-          {recommendationInAttention && renderRecommendationCard(false, true)}
+          {recommendationInAttention && (
+            <RecommendationCard
+              day={day}
+              recommendation={recommendation}
+              isDominant={false}
+              isAttention={true}
+              decision={decision}
+              checkIn={checkIn}
+              recommendationOpen={recommendationOpen}
+              setRecommendationOpen={setRecommendationOpen}
+              recommendationHandoff={recommendationHandoff}
+              activeShiftDownId={activeShiftDownId}
+              priorOutcomeMemory={priorOutcomeMemory}
+              busy={busy}
+              onOpenTrain={onOpenTrain}
+              onRecord={() => void handleRecord()}
+              onDecline={handleDecline}
+              onHandoff={handleRecommendationHandoff}
+              confirmPanel={<ConfirmPanel />}
+            />
+          )}
 
-          {endDayInAttention && renderEndDayCard()}
+          {endDayInAttention && (
+            <EndDayCard
+              hasDay={!!day}
+              suggestEndDay={suggestEndDay}
+              endDayOpen={endDayOpen}
+              setEndDayOpen={setEndDayOpen}
+              endDayBlockedByWorkout={endDayBlockedByWorkout}
+              busy={busy}
+              onOpenTrain={onOpenTrain}
+              onEndDay={() => void handleEndDay()}
+            />
+          )}
 
           {workEndInAttention && !workContextOpen && (
             <SignalRow label="WORK STATE">
@@ -2152,7 +1223,21 @@ export function TodayScreen({
             </SignalRow>
           )}
 
-          {commitmentInAttention && renderCommitmentsCard()}
+          {commitmentInAttention && (
+            <CommitmentsCard
+              headlineCommitment={headlineCommitment}
+              unresolvedObligationsCount={unresolvedObligations.length}
+              commitmentsOpen={commitmentsOpen}
+              setCommitmentsOpen={setCommitmentsOpen}
+              headlineCommitmentMission={headlineCommitmentMission}
+              commitmentConfirmation={commitmentConfirmation}
+              busy={busy}
+              onViewCommitments={onViewCommitments}
+              onRequestSatisfaction={requestCommitmentSatisfaction}
+              onCancelSatisfaction={cancelCommitmentSatisfaction}
+              onConfirmSatisfaction={() => void confirmCommitmentSatisfaction()}
+            />
+          )}
 
           {checkInInAttention && !checkInFormOpen && (
             <SignalRow label="STATE INPUT">
@@ -2169,7 +1254,32 @@ export function TodayScreen({
             </SignalRow>
           )}
 
-          {minimumDayInAttention && renderMinimumDayCard(true)}
+          {minimumDayInAttention && (
+            <MinimumDayCard
+              prominent={true}
+              minimumDay={minimumDay}
+              minimumDayOpen={minimumDayOpen}
+              onOpenCollapsed={() => {
+                if (minimumDay?.enabled && !minimumDay.hydrate && minimumDayHydrateOz > 0) {
+                  setHydrationConfirmation(null);
+                  setHydrationOperationOpen(true);
+                } else {
+                  setMinimumDayOpen(true);
+                }
+              }}
+              minimumDayHydrateOz={minimumDayHydrateOz}
+              minimumDayProteinG={minimumDayProteinG}
+              mdWaterInput={mdWaterInput}
+              setMdWaterInput={setMdWaterInput}
+              mdProteinInput={mdProteinInput}
+              setMdProteinInput={setMdProteinInput}
+              busy={busy}
+              onEnable={() => void handleEnableMinimumDay()}
+              onMarkMinimum={(kind) => void handleMarkMinimum(kind)}
+              onLogWater={() => void handleMinimumDayLogWater()}
+              onLogProtein={() => void handleMinimumDayLogProtein()}
+            />
+          )}
 
           {/* BEYOND Suit Implementation 01: relabeled from "LAST TIME" to
               the canonical Memory grammar's "OUTCOME" (Part 12) — pure
@@ -2212,7 +1322,20 @@ export function TodayScreen({
 
           {captureInAttention && (
             <SignalRow label={`CAPTURE (${openCaptureItems.length})`}>
-              {openCaptureItems.map((item) => renderCaptureListRow(item))}
+              {openCaptureItems.map((item) => (
+                <CaptureListRow
+                  key={item.id}
+                  item={item}
+                  busy={busy}
+                  captureConversion={captureConversion}
+                  conversionTitle={conversionTitle}
+                  setConversionTitle={setConversionTitle}
+                  onRequestConversion={requestCaptureConversion}
+                  onCancelConversion={cancelCaptureConversion}
+                  onConfirmConversion={() => void confirmCaptureConversion()}
+                  onResolve={(item) => void handleResolveCapture(item)}
+                />
+              ))}
               {justResolvedCapture && (
                 <ConfirmBanner
                   message={`Resolved "${justResolvedCapture.text}"`}
@@ -2233,95 +1356,76 @@ export function TodayScreen({
       <div className={`today-support${dominant !== "NONE" ? " today-support--subordinate" : ""}`}>
         <h2 className="section-label">Support</h2>
 
-      {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && renderShiftDownCard(shiftDownIsPrimary, false)}
-      {day && recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT" && renderResetCard(resetIsPrimary, false)}
+      {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
+        <ShiftDownCard
+          prominent={shiftDownIsPrimary}
+          isDominant={false}
+          activeShiftDownId={activeShiftDownId}
+          shiftDownDuration={shiftDownDuration}
+          setShiftDownDuration={setShiftDownDuration}
+          openShiftDownStartedAt={openShiftDownStartedAt}
+          lastShiftDownOutcome={lastShiftDownOutcome}
+          shiftDownOpen={shiftDownOpen}
+          setShiftDownOpen={setShiftDownOpen}
+          busy={busy}
+          onStartShiftDown={() => void handleStartShiftDown()}
+          onCompleteShiftDown={() => void handleCompleteShiftDown()}
+          onCancelShiftDown={() => void handleCancelShiftDown()}
+          startButtonRef={shiftDownStartRef}
+        />
+      )}
+      {day && recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
+        <ResetCard
+          prominent={resetIsPrimary}
+          isDominant={false}
+          activeResetId={activeResetId}
+          resetIntensity={resetIntensity}
+          setResetIntensity={setResetIntensity}
+          openResetStartedAt={openResetStartedAt}
+          lastResetOutcome={lastResetOutcome}
+          resetOpen={resetOpen}
+          setResetOpen={setResetOpen}
+          busy={busy}
+          onStartReset={() => void handleStartReset()}
+          onCompleteReset={() => void handleCompleteReset()}
+          onCancelReset={() => void handleCancelReset()}
+        />
+      )}
       {day && recommendation && attentionPlan.recommendationPlacement === "SUPPORT" &&
-        recommendation.kind !== "NO_ACTION_REQUIRED" && renderRecommendationCard(false)}
-
-      {(!checkInInAttention || checkInFormOpen) && <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>
-        <h2 className="card-title">State check-in</h2>
-        {/* FIELD ALPHA Gate A correction: ALL GOOD is a routine, always-
-            available shortcut, not a decision — as .btn-primary (solid
-            --accent red, full width) it was reading as one of the
-            strongest visual objects on the whole screen even when the
-            actual primary recommendation was NO ACTION REQUIRED,
-            conflicting with the Red Budget doctrine (significance earns
-            intensity). .btn-secondary is the existing quieter primitive
-            with identical sizing/tap target/disabled treatment — reused
-            rather than inventing a new one. Functionality, defaults, and
-            Engine inputs are unchanged; only the button's own visual
-            weight moved. */}
-        <button
-          className="btn-secondary"
-          style={{ marginBottom: 4 }}
-          disabled={busy}
-          onClick={() => void handleQuickCheckIn()}
-        >
-          ALL GOOD
-        </button>
-        <p className="meta" style={{ marginBottom: checkIn && !checkInFormOpen ? 12 : 16 }}>
-          Sets {describeCheckInValues(quickCheckInValues)} — submits immediately.
-        </p>
-
-        {checkIn && !checkInFormOpen ? (
-          <div key="summary" className="fade-in">
-            <p className="card-body" style={{ marginBottom: 8 }}>
-              Last check-in: {describeCheckInValues(checkIn)}
-            </p>
-            <p className="meta" style={{ marginBottom: 12 }}>
-              recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
-            </p>
-            <button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>
-              MANUAL CHECK-IN
-            </button>
-          </div>
-        ) : (
-          <div key="form" className="fade-in">
-            <p className="card-body" style={{ marginBottom: 12 }}>
-              How are you doing right now? Tap a number for each — nothing here is filled in for you.
-            </p>
-            {CHECK_IN_FIELDS.map((field) => (
-              <div key={field.key} style={{ marginBottom: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-                  <span className="card-body" style={{ margin: 0, fontWeight: 600, color: "var(--text-1)" }}>
-                    {field.label}
-                  </span>
-                  <span className="meta">{field.directionLabel}</span>
-                </div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  {rangeForField(field).map((n) => {
-                    const selected = values[field.key] === n;
-                    return (
-                      <button
-                        key={n}
-                        type="button"
-                        className={`chip ${selected ? "chip--selected" : ""}`}
-                        aria-pressed={selected}
-                        disabled={busy}
-                        onClick={() => setValues((s) => ({ ...s, [field.key]: n }))}
-                      >
-                        {n}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-            <button className="btn-primary" disabled={busy || !isCheckInComplete(values)} onClick={() => void handleCheckIn()}>
-              SUBMIT CHECK-IN
-            </button>
-            {!isCheckInComplete(values) && (
-              <p className="meta" style={{ marginTop: 8 }}>Select all five to submit.</p>
-            )}
-            {checkIn && (
-              <p className="meta" style={{ marginTop: 8 }}>
-                last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
-              </p>
-            )}
-          </div>
+        recommendation.kind !== "NO_ACTION_REQUIRED" && (
+          <RecommendationCard
+            day={day}
+            recommendation={recommendation}
+            isDominant={false}
+            decision={decision}
+            checkIn={checkIn}
+            recommendationOpen={recommendationOpen}
+            setRecommendationOpen={setRecommendationOpen}
+            recommendationHandoff={recommendationHandoff}
+            activeShiftDownId={activeShiftDownId}
+            priorOutcomeMemory={priorOutcomeMemory}
+            busy={busy}
+            onOpenTrain={onOpenTrain}
+            onRecord={() => void handleRecord()}
+            onDecline={handleDecline}
+            onHandoff={handleRecommendationHandoff}
+            confirmPanel={<ConfirmPanel />}
+          />
         )}
-      </div>}
+
+      {(!checkInInAttention || checkInFormOpen) && (
+        <CheckInCard
+          busy={busy}
+          checkIn={checkIn}
+          checkInFormOpen={checkInFormOpen}
+          setCheckInFormOpen={setCheckInFormOpen}
+          values={values}
+          setValues={setValues}
+          quickCheckInValues={quickCheckInValues}
+          onQuickCheckIn={() => void handleQuickCheckIn()}
+          onSubmitCheckIn={() => void handleCheckIn()}
+        />
+      )}
 
       {/* Overdrive Phase 18 (TODAY PRIORITY COMPRESSION): once work
           context is settled for the day — OFF, or WORK with the shift
@@ -2330,110 +1434,92 @@ export function TodayScreen({
           SHIFT DOWN already use rather than staying a permanently
           full-weight card. Still WORK and not yet ended keeps the full
           card open, since MARK WORK ENDED is a real pending action. */}
-      {(!workEndInAttention || workContextOpen) && day &&
-        scheduledContext &&
-        (() => {
-          const settled = day.workContext === "OFF" || (day.workContext === "WORK" && workPeriodEndedAt !== null);
-          const awaitingWorkEnd = day.workContext === "WORK" && workPeriodEndedAt === null;
-          const open = workContextOpen || day.workContext === "UNKNOWN";
-          if (!open) {
-            if (awaitingWorkEnd) {
-              return (
-                <div className="equipment-row">
-                  <p className="tool-label" style={{ marginBottom: 4 }}>WORK CONTEXT</p>
-                  <h2 className="card-title">Working today</h2>
-                  <p className="meta" style={{ marginBottom: 12 }}>
-                    Setup recorded. When your shift is actually over, mark it — BEYOND never guesses this from the clock.
-                  </p>
-                  <button className="btn-primary" disabled={busy} onClick={() => void handleMarkWorkEnded()}>
-                    MARK WORK ENDED
-                  </button>
-                  <button
-                    className="btn-secondary"
-                    style={{ marginTop: 8 }}
-                    disabled={busy}
-                    onClick={() => setWorkContextOpen(true)}
-                  >
-                    CHANGE WORK CONTEXT
-                  </button>
-                </div>
-              );
+      {(!workEndInAttention || workContextOpen) && day && scheduledContext && (
+        <WorkContextCard
+          day={day}
+          scheduledContext={scheduledContext}
+          workContextOpen={workContextOpen}
+          setWorkContextOpen={setWorkContextOpen}
+          workPeriodEndedAt={workPeriodEndedAt}
+          busy={busy}
+          onSetWorkContext={(value) => void handleSetWorkContext(value)}
+          onMarkWorkEnded={() => void handleMarkWorkEnded()}
+        />
+      )}
+
+      {day && minimumDay && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE" && (
+        <MinimumDayCard
+          prominent={false}
+          minimumDay={minimumDay}
+          minimumDayOpen={minimumDayOpen}
+          onOpenCollapsed={() => {
+            if (minimumDay.enabled && !minimumDay.hydrate && minimumDayHydrateOz > 0) {
+              setHydrationConfirmation(null);
+              setHydrationOperationOpen(true);
+            } else {
+              setMinimumDayOpen(true);
             }
-            const summary =
-              day.workContext === "OFF"
-                ? "Off today."
-                : `Working today — ended ${new Date(workPeriodEndedAt!).toLocaleTimeString()}.`;
-            return <CollapsibleRow name="WORK CONTEXT" summary={summary} onOpen={() => setWorkContextOpen(true)} />;
-          }
-          return (
-            <div className="equipment-row">
-              <p className="tool-label" style={{ marginBottom: 4 }}>WORK CONTEXT</p>
-              <h2 className="card-title">Are you working today?</h2>
-              <div style={{ display: "flex", gap: 8, marginTop: 12, marginBottom: 12 }}>
-                <button
-                  type="button"
-                  className={`chip ${day.workContext === "WORK" ? "chip--selected" : ""}`}
-                  aria-pressed={day.workContext === "WORK"}
-                  disabled={busy}
-                  onClick={() => void handleSetWorkContext("WORK")}
-                >
-                  YES
-                </button>
-                <button
-                  type="button"
-                  className={`chip ${day.workContext === "OFF" ? "chip--selected" : ""}`}
-                  aria-pressed={day.workContext === "OFF"}
-                  disabled={busy}
-                  onClick={() => void handleSetWorkContext("OFF")}
-                >
-                  NO
-                </button>
-              </div>
-              <p className="card-body" style={{ fontSize: 16 }}>{describeSchedulePrediction(scheduledContext)}</p>
-              {day.workContext !== "UNKNOWN" && (
-                <p className="meta" style={{ marginTop: 8 }}>
-                  Currently set: {day.workContext === "WORK" ? "working today" : "off today"}.
-                </p>
-              )}
-              {day.workContext === "WORK" && (
-                <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
-                  {workPeriodEndedAt ? (
-                    <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <ConfirmIcon size={20} />
-                      Work ended at {new Date(workPeriodEndedAt).toLocaleTimeString()}.
-                    </p>
-                  ) : (
-                    <>
-                      <p className="meta" style={{ marginBottom: 8 }}>
-                        When your shift is actually over, mark it — BEYOND never guesses this from the clock.
-                      </p>
-                      <button className="btn-secondary" disabled={busy} onClick={() => void handleMarkWorkEnded()}>
-                        MARK WORK ENDED
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-              {settled && (
-                <button
-                  className="btn-secondary"
-                  style={{ marginTop: 12 }}
-                  onClick={() => setWorkContextOpen(false)}
-                >
-                  COLLAPSE
-                </button>
-              )}
-            </div>
-          );
-        })()}
+          }}
+          minimumDayHydrateOz={minimumDayHydrateOz}
+          minimumDayProteinG={minimumDayProteinG}
+          mdWaterInput={mdWaterInput}
+          setMdWaterInput={setMdWaterInput}
+          mdProteinInput={mdProteinInput}
+          setMdProteinInput={setMdProteinInput}
+          busy={busy}
+          onEnable={() => void handleEnableMinimumDay()}
+          onMarkMinimum={(kind) => void handleMarkMinimum(kind)}
+          onLogWater={() => void handleMinimumDayLogWater()}
+          onLogProtein={() => void handleMinimumDayLogProtein()}
+        />
+      )}
 
-      {day && minimumDay && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE" && renderMinimumDayCard(false)}
+      <CaptureToolsCard
+        openCaptureItems={openCaptureItems}
+        captureInAttention={captureInAttention}
+        captureText={captureText}
+        setCaptureText={setCaptureText}
+        busy={busy}
+        onCapture={() => void handleCapture()}
+        justResolvedCapture={justResolvedCapture}
+        onUndoResolve={() => void handleUndoResolveCapture()}
+        captureConversion={captureConversion}
+        conversionTitle={conversionTitle}
+        setConversionTitle={setConversionTitle}
+        onRequestConversion={requestCaptureConversion}
+        onCancelConversion={cancelCaptureConversion}
+        onConfirmConversion={() => void confirmCaptureConversion()}
+        onResolve={(item) => void handleResolveCapture(item)}
+      />
 
-      {renderCaptureToolsCard()}
+      {!commitmentInAttention && (
+        <CommitmentsCard
+          headlineCommitment={headlineCommitment}
+          unresolvedObligationsCount={unresolvedObligations.length}
+          commitmentsOpen={commitmentsOpen}
+          setCommitmentsOpen={setCommitmentsOpen}
+          headlineCommitmentMission={headlineCommitmentMission}
+          commitmentConfirmation={commitmentConfirmation}
+          busy={busy}
+          onViewCommitments={onViewCommitments}
+          onRequestSatisfaction={requestCommitmentSatisfaction}
+          onCancelSatisfaction={cancelCommitmentSatisfaction}
+          onConfirmSatisfaction={() => void confirmCommitmentSatisfaction()}
+        />
+      )}
 
-      {!commitmentInAttention && renderCommitmentsCard()}
-
-      {!endDayInAttention && renderEndDayCard()}
+      {!endDayInAttention && (
+        <EndDayCard
+          hasDay={!!day}
+          suggestEndDay={suggestEndDay}
+          endDayOpen={endDayOpen}
+          setEndDayOpen={setEndDayOpen}
+          endDayBlockedByWorkout={endDayBlockedByWorkout}
+          busy={busy}
+          onOpenTrain={onOpenTrain}
+          onEndDay={() => void handleEndDay()}
+        />
+      )}
 
       {(daysSinceBackup === null || daysSinceBackup >= BACKUP_NUDGE_THRESHOLD_DAYS) && (
         <p className="meta" style={{ marginTop: 4 }}>
