@@ -26,7 +26,8 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           REPO: gavinlohnes/neo-beyond-lohnes
           BASELINE: 1fffd0344c24d22c71425d7cb6f971ee39fbc4b6
-          SOURCE_SHA: ef47e300ab8427d2c1973265bc36255335e82fb6
+          SOURCE_SHA: 45339c8b5aa920fdd1521c58aba359d6715605a9
+          EXPECTED_CURRENT_HEAD: 61aa4169e2c9aa2253bebc839d58089370b1924b
           TARGET_BRANCH: beyond-builder/factory-contract-bootstrap-001
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
         shell: bash
@@ -36,12 +37,12 @@ jobs:
           login='beyond-builder[bot]'
           test "$(gh api "repos/$REPO/git/ref/heads/master" --jq .object.sha)" = "$BASELINE"
           source_tree="$(gh api "repos/$REPO/git/commits/$SOURCE_SHA" --jq .tree.sha)"
-          gh api "repos/$REPO/git/refs" --method POST -f ref="refs/heads/$TARGET_BRANCH" -f sha="$SOURCE_SHA" >/dev/null
-          bot_sha="$(gh api "repos/$REPO/git/commits" --method POST -f message='chore(factory): attest protected-contract bootstrap candidate' -f tree="$source_tree" -f parents[]="$SOURCE_SHA" --jq .sha)"
+          test "$(gh api "repos/$REPO/git/ref/heads/$TARGET_BRANCH" --jq .object.sha)" = "$EXPECTED_CURRENT_HEAD"
+          bot_sha="$(gh api "repos/$REPO/git/commits" --method POST -f message='fix(factory): attest bootstrap review correction' -f tree="$source_tree" -f parents[]="$EXPECTED_CURRENT_HEAD" --jq .sha)"
           gh api "repos/$REPO/git/refs/heads/$TARGET_BRANCH" --method PATCH -f sha="$bot_sha" -F force=false >/dev/null
           test "$(gh api "repos/$REPO/commits/$bot_sha" --jq .author.login)" = "$login"
-          pr_url="$(gh api "repos/$REPO/pulls" --method POST -f title='FACTORY // TRUSTED CONTRACT PREREGISTRATION BOOTSTRAP' -f head="$TARGET_BRANCH" -f base=master -f body='Owner-authorized one-time Factory governance bootstrap. Preregisters AUTOPILOT-CANDIDATE-DISPATCH-002 on protected master and makes campaign contract identity derive only from freshly fetched trusted master. PR #54 is unchanged and no prior review carries forward.' --jq .html_url)"
-          test "$(gh api "repos/$REPO/pulls/$(basename "$pr_url")" --jq .user.login)" = "$login"
+          pr_url="$(gh api "repos/$REPO/pulls/55" --jq .html_url)"
+          test "$(gh api "repos/$REPO/pulls/55" --jq .user.login)" = "$login"
           echo "builder=$login"
           echo "head=$bot_sha"
           echo "pr=$pr_url"
