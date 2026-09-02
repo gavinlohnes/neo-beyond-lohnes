@@ -115,6 +115,28 @@ approve, close, or delete either PR. A fresh formal exact-head
 review is still mandatory. The source-specific push trigger is intentionally not a general agent
 credential service or an autonomous integration path.
 
+## Canonical candidate dispatch
+
+`npm run factory:candidate` is the narrow Builder-App publication boundary for the active Phase 2
+Factory Drop. Candidate identity is the SHA-256 digest of seven trusted fields: campaign id,
+campaign revision, authorized campaign digest, Drop id, activation baseline, protected contract
+path, and protected contract digest. The campaign manifest and preregistered contract are read
+from freshly fetched `origin/master`; live typed Owner authorization is revalidated before any
+mutation. `ACTIVE_DROP.md`, PR titles, pasted PR numbers, branch names, and Builder prose are never
+candidate-identity authority.
+
+Open PR evidence is reconciled by the pure `factory-candidate-dispatch-core.mjs` seam. One exact
+Builder-App candidate is reusable; equivalent candidates are deterministic only when their key
+and head are identical; same-key divergent heads or conflicting identity evidence fail closed.
+Obsolete revisions remain evidence and never transfer reviews, CI, or approval to a replacement.
+The GitHub adapter creates a canonical branch and PR only when reconciliation permits it, using
+the existing repository-scoped Builder App permissions without workflow-write access.
+
+Every dispatch envelope is versioned JSON and explicitly names the role, action, trusted identity,
+evidence source, and required inputs. It always states `external_session.required: true`,
+`launcher_available: false`, and `launch_performed: false`: repository automation can describe the
+next legal task, but cannot launch or commandeer an existing Codex or Claude session.
+
 ## Owner-work metric
 
 Before this Drop the owner routinely relayed baseline/head SHAs, active Drop and PR pointers, CI

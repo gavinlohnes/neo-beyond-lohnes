@@ -1,14 +1,14 @@
-name: Builder Identity Bootstrap
+name: Builder Candidate Dispatch
 
 on:
   push:
-    branches: [codex/factory-autopilot-001-owner-work-reduction]
+    branches: [codex/autopilot-candidate-dispatch-002-rebuild]
 
 permissions:
   contents: read
 
 concurrency:
-  group: builder-identity-bootstrap
+  group: builder-candidate-dispatch
   cancel-in-progress: false
 
 jobs:
@@ -28,11 +28,11 @@ jobs:
           repositories: neo-beyond-lohnes
           permission-contents: write
           permission-pull-requests: write
-      - name: Create Builder-App replacement candidate
+      - name: Reconcile or create canonical Builder-App candidate
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           EXPECTED_APP_ID: ${{ vars.BEYOND_BUILDER_APP_ID }}
           EXPECTED_INSTALLATION_ID: ${{ vars.BEYOND_BUILDER_INSTALLATION_ID }}
           ACTUAL_INSTALLATION_ID: ${{ steps.app-token.outputs.installation-id }}
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
-        run: node scripts/factory-builder-bootstrap.mjs
+        run: node scripts/factory-candidate-dispatch.mjs
