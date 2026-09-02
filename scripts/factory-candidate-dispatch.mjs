@@ -60,6 +60,15 @@ async function apiAll(path, token) {
   }
 }
 
+async function waitForCandidatePr(number, token, expectedHead) {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const pr = await api(`/repos/${REPO}/pulls/${number}`, token);
+    if (pr.head.sha === expectedHead) return pr;
+    if (attempt < 5) await new Promise((resolveWait) => setTimeout(resolveWait, 1000));
+  }
+  throw new Error("FINAL_CANDIDATE_HEAD_NOT_OBSERVED");
+}
+
 function trustedJson(path) {
   return parseJson(git(["show", `origin/master:${path}`]), `MALFORMED_TRUSTED_JSON:${path}`);
 }
@@ -213,7 +222,7 @@ async function publish() {
     method: "PATCH", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ body: `Canonical Builder-App candidate for ${DROP_ID}. No review, approval, CI, or evidence transfers from superseded candidates.\n\n${markerText(finalMarker)}` }),
   });
-  const finalPr = await api(`/repos/${REPO}/pulls/${replacement.number}`, token);
+  const finalPr = await waitForCandidatePr(replacement.number, token, routingCommit.sha);
   if (verifyBuilderBot(finalPr.user, installation.app_slug) !== botLogin || finalPr.head.sha !== routingCommit.sha || finalPr.base.sha !== context.baseline) {
     throw new Error("FINAL_CANDIDATE_IDENTITY_MISMATCH");
   }
