@@ -1,6 +1,6 @@
 ---
 id: <DROP-ID>
-baseline: <exact origin/master SHA — fetched fresh via `git fetch origin master`, never assumed>
+baseline: <exact origin/master SHA for a single Drop; AT_ACTIVATION for a preregistered campaign Drop>
 risk_tier: ROUTINE | ARCHITECTURAL | HIGH-RISK
 ---
 
@@ -24,6 +24,11 @@ your own words — do not invent scope beyond it.>
 
 `origin/master` at `<sha>`, verified via `git fetch origin master && git rev-parse origin/master`
 — a fact re-derived at launch time, never assumed from a prior session or local branch state.
+
+For an authorized campaign Drop, use `AT_ACTIVATION` in frontmatter and state that the exact build
+baseline is the freshly fetched protected `origin/master` SHA when the Drop is activated. The
+protected preregistration commit necessarily precedes that activation SHA; do not predict its
+own merge commit.
 
 ## Risk classification
 

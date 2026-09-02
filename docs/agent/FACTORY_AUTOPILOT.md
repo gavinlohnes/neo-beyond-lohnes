@@ -3,6 +3,21 @@
 Factory Autopilot is a deterministic status and next-action layer over the existing Drop Factory.
 It removes owner relay work; it does not replace Builder, Reviewer, Integrator, or owner judgment.
 
+## Protected campaign contract preregistration
+
+An authorized campaign Drop may enter `BUILDING` only when its complete Drop contract already
+exists on protected `origin/master`. The contract declares `baseline: AT_ACTIVATION`; Factory then
+binds the exact build baseline to the freshly fetched protected-master SHA at activation. This
+avoids predicting the preregistration merge SHA while ensuring a Builder branch cannot establish
+or redefine its own authority.
+
+For campaign Drops, Factory resolves campaign membership, risk, contract path, contract content,
+and contract digest from protected `origin/master`. The checkout must contain the identical
+contract or activation fails closed. `ACTIVE_DROP.md` records routing and the actual activation
+baseline only; neither it nor working-tree/PR-controlled files are authorization inputs. Campaign
+revision/digest validation, risk ceilings, escalation rules, protected integration, exact-head CI,
+and independent review remain unchanged.
+
 ## Authority boundary
 
 - **Deterministic mechanics:** repository identity, current master, campaign/Drop ordering,
