@@ -958,6 +958,69 @@ describe("TodayScreen (real browser) — Capture to Obligation handoff", () => {
   });
 });
 
+describe("TodayScreen (real browser) — Capture Intelligence (chrono-node + Compromise date proposals)", () => {
+  function dateOffset(days: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return formatLocalDate(d);
+  }
+
+  it("pre-fills a detected due date, which is still editable, and carries it into the created Obligation", async () => {
+    await captureItem("call the dentist tomorrow");
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await screen.getByRole("button", { name: "→ OBLIGATION" }).click();
+
+    const dueInput = screen.getByLabelText("Due date");
+    await expect.element(dueInput).toHaveValue(dateOffset(1));
+    await expect.element(screen.getByText(/Detected from/)).toBeVisible();
+
+    await screen.getByRole("button", { name: "CREATE OBLIGATION" }).click();
+    await expect.element(screen.getByText(/Obligation created:/)).toBeVisible();
+
+    const obligations = await db.obligations.toArray();
+    expect(obligations).toHaveLength(1);
+    expect(obligations[0]).toMatchObject({ title: "call the dentist tomorrow", dueAt: dateOffset(1) });
+  });
+
+  it("does not suggest a date for text with none, and leaves the due field blank/optional", async () => {
+    await captureItem("buy milk");
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await screen.getByRole("button", { name: "→ OBLIGATION" }).click();
+
+    const dueInput = screen.getByLabelText("Due date");
+    await expect.element(dueInput).toHaveValue("");
+    await expect.element(screen.getByText(/Detected from/)).not.toBeInTheDocument();
+
+    await screen.getByRole("button", { name: "CREATE OBLIGATION" }).click();
+    const obligations = await db.obligations.toArray();
+    expect(obligations[0]?.dueAt).toBeUndefined();
+  });
+
+  it("lets the operator clear a detected date so it is never silently committed", async () => {
+    await captureItem("call the dentist tomorrow");
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await screen.getByRole("button", { name: "→ OBLIGATION" }).click();
+
+    const dueInput = screen.getByLabelText("Due date");
+    await expect.element(dueInput).toHaveValue(dateOffset(1));
+    await dueInput.fill("");
+    await expect.element(screen.getByText(/Detected from/)).not.toBeInTheDocument();
+
+    await screen.getByRole("button", { name: "CREATE OBLIGATION" }).click();
+    const obligations = await db.obligations.toArray();
+    expect(obligations[0]?.dueAt).toBeUndefined();
+  });
+});
+
 describe("TodayScreen (real browser) — END DAY relevance", () => {
   it("collapses to a quiet Tools row when nothing suggests ending the day", async () => {
     const day = await startDay();

@@ -27,6 +27,8 @@ import { ShiftDownCard } from "./ShiftDownCard";
 import { EndDayCard } from "./EndDayCard";
 import { CommitmentsCard } from "./CommitmentsCard";
 import { CaptureListRow, CaptureToolsCard } from "./CaptureSection";
+import { suggestCaptureDueDate } from "../../../engine/captureIntelligence";
+import type { CaptureDateSuggestion } from "../../../domain/capture/types";
 import { HydrationOperationCard, MinimumDayCard } from "./MinimumDaySection";
 import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
@@ -202,6 +204,14 @@ export function TodayScreen({
   // Obligation, which Drop 01 doctrine has no operation for.
   const [captureConversion, setCaptureConversion] = useState<{ id: string; text: string } | null>(null);
   const [conversionTitle, setConversionTitle] = useState("");
+  // Capture Intelligence layer (2026-09-02): a chrono-node/Compromise-derived
+  // due-date proposal (see engine/captureIntelligence.ts), pre-filled into
+  // this same editable field the moment the conversion panel opens — never
+  // applied on its own. conversionDateSuggestion is kept only to show the
+  // evidence line ("Detected from ..."); conversionDueAt is the actual,
+  // freely editable/clearable form value that gets submitted.
+  const [conversionDueAt, setConversionDueAt] = useState("");
+  const [conversionDateSuggestion, setConversionDateSuggestion] = useState<CaptureDateSuggestion | null>(null);
   const [captureConversionFeedback, setCaptureConversionFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
   const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
   const [minimumDayHydrateOz, setMinimumDayHydrateOz] = useState(0);
@@ -708,23 +718,31 @@ export function TodayScreen({
     if (busy) return;
     setCaptureConversionFeedback(null);
     setConversionTitle(item.text);
+    const suggestion = suggestCaptureDueDate(item.text, new Date());
+    setConversionDateSuggestion(suggestion);
+    setConversionDueAt(suggestion?.dueAt ?? "");
     setCaptureConversion({ id: item.id, text: item.text });
   }
 
   function cancelCaptureConversion() {
     if (busy) return;
     setCaptureConversion(null);
+    setConversionDueAt("");
+    setConversionDateSuggestion(null);
   }
 
   async function confirmCaptureConversion() {
     if (busy || !captureConversion || !conversionTitle.trim()) return;
     const target = captureConversion;
     const title = conversionTitle.trim();
+    const dueAt = conversionDueAt.trim();
     setBusy(true);
     setCaptureConversionFeedback(null);
     try {
-      await convertCaptureToObligation(target.id, { title });
+      await convertCaptureToObligation(target.id, { title, ...(dueAt ? { dueAt } : {}) });
       setCaptureConversion(null);
+      setConversionDueAt("");
+      setConversionDateSuggestion(null);
       await refresh();
       setCaptureConversionFeedback({ kind: "SUCCESS", message: `Obligation created: ${title}` });
     } catch (error) {
@@ -1346,6 +1364,9 @@ export function TodayScreen({
                   captureConversion={captureConversion}
                   conversionTitle={conversionTitle}
                   setConversionTitle={setConversionTitle}
+                  conversionDueAt={conversionDueAt}
+                  setConversionDueAt={setConversionDueAt}
+                  conversionDateSuggestion={conversionDateSuggestion}
                   onRequestConversion={requestCaptureConversion}
                   onCancelConversion={cancelCaptureConversion}
                   onConfirmConversion={() => void confirmCaptureConversion()}
@@ -1502,6 +1523,9 @@ export function TodayScreen({
         captureConversion={captureConversion}
         conversionTitle={conversionTitle}
         setConversionTitle={setConversionTitle}
+        conversionDueAt={conversionDueAt}
+        setConversionDueAt={setConversionDueAt}
+        conversionDateSuggestion={conversionDateSuggestion}
         onRequestConversion={requestCaptureConversion}
         onCancelConversion={cancelCaptureConversion}
         onConfirmConversion={() => void confirmCaptureConversion()}

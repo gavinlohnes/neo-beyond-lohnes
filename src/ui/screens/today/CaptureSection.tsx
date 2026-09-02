@@ -1,4 +1,5 @@
 import type { CaptureItem } from "../../../domain/common/types";
+import type { CaptureDateSuggestion } from "../../../domain/capture/types";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 
 /**
@@ -16,6 +17,9 @@ export function CaptureListRow({
   captureConversion,
   conversionTitle,
   setConversionTitle,
+  conversionDueAt,
+  setConversionDueAt,
+  conversionDateSuggestion,
   onRequestConversion,
   onCancelConversion,
   onConfirmConversion,
@@ -26,6 +30,9 @@ export function CaptureListRow({
   captureConversion: { id: string; text: string } | null;
   conversionTitle: string;
   setConversionTitle: (title: string) => void;
+  conversionDueAt: string;
+  setConversionDueAt: (dueAt: string) => void;
+  conversionDateSuggestion: CaptureDateSuggestion | null;
   onRequestConversion: (item: CaptureItem) => void;
   onCancelConversion: () => void;
   onConfirmConversion: () => void;
@@ -66,6 +73,25 @@ export function CaptureListRow({
             disabled={busy}
             onChange={(e) => setConversionTitle(e.target.value)}
           />
+          <label className="meta" style={{ display: "block", marginBottom: 4 }} htmlFor={`capture-due-${item.id}`}>
+            DUE (OPTIONAL)
+          </label>
+          <input
+            id={`capture-due-${item.id}`}
+            type="date"
+            className="input"
+            aria-label="Due date"
+            style={{ marginBottom: 4 }}
+            value={conversionDueAt}
+            disabled={busy}
+            onChange={(e) => setConversionDueAt(e.target.value)}
+          />
+          {conversionDateSuggestion && conversionDateSuggestion.dueAt === conversionDueAt && (
+            <p className="meta" style={{ marginBottom: 8 }}>
+              {conversionDateSuggestion.confidence === "STRONG" ? "Detected" : "Possibly detected"} from “
+              {conversionDateSuggestion.matchedText}” — clear the date above if this isn't right.
+            </p>
+          )}
           <button
             className="btn-primary"
             style={{ width: "100%" }}
@@ -92,6 +118,9 @@ export function CaptureToolsCard({
   captureConversion,
   conversionTitle,
   setConversionTitle,
+  conversionDueAt,
+  setConversionDueAt,
+  conversionDateSuggestion,
   onRequestConversion,
   onCancelConversion,
   onConfirmConversion,
@@ -108,6 +137,9 @@ export function CaptureToolsCard({
   captureConversion: { id: string; text: string } | null;
   conversionTitle: string;
   setConversionTitle: (title: string) => void;
+  conversionDueAt: string;
+  setConversionDueAt: (dueAt: string) => void;
+  conversionDateSuggestion: CaptureDateSuggestion | null;
   onRequestConversion: (item: CaptureItem) => void;
   onCancelConversion: () => void;
   onConfirmConversion: () => void;
@@ -155,6 +187,9 @@ export function CaptureToolsCard({
               captureConversion={captureConversion}
               conversionTitle={conversionTitle}
               setConversionTitle={setConversionTitle}
+              conversionDueAt={conversionDueAt}
+              setConversionDueAt={setConversionDueAt}
+              conversionDateSuggestion={conversionDateSuggestion}
               onRequestConversion={onRequestConversion}
               onCancelConversion={onCancelConversion}
               onConfirmConversion={onConfirmConversion}

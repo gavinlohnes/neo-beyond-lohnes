@@ -60,6 +60,17 @@ Reuse System) — not on every Drop, only when it validates or changes something
   YET** authorized pending this chrono-node + Compromise/winkNLP stack actually being built and
   surviving held-out evaluation. Building it is what clears that gate — do not treat the
   interaction layer alone as sufficient.
+- **Built (2026-09-02)**: `src/engine/captureIntelligence.ts`'s `suggestCaptureDueDate` — the
+  BEYOND-owned confidence/abstention gate this entry called for. chrono-node supplies a candidate
+  date; Compromise supplies a negation signal; the gate abstains (returns no suggestion) on no
+  match, multiple conflicting date candidates, or negation, and otherwise labels the result
+  STRONG or WEAK by chrono-node's own day/weekday certainty. Wired into the existing
+  Capture-to-Obligation conversion form (`TodayScreen.tsx`/`CaptureSection.tsx`) as a pre-filled,
+  freely editable/clearable `dueAt` field — never auto-applied, matching this entry's own "always
+  proposals" constraint. Scope is deliberately narrow: date/due-date extraction only, not the
+  broader triage/classification surface DONOR-001 explored. Real cost incurred: production bundle
+  grew from 178.78 kB to 330.74 kB gzip (chrono-node + Compromise are both runtime, not dev,
+  dependencies) — worth knowing before extending this further.
 - **Ruling on file**: dependency addition — High-Risk trigger, owner sign-off obtained
   2026-09-02.
 
