@@ -4,13 +4,21 @@ import { describeSearchDomain } from "./searchCopy";
 
 /**
  * Personal Search 1.0 (Post-FIELD Capability Acceleration Campaign,
- * Slice 2). Retrieval only — "can I find something BEYOND already
- * knows without remembering where it lives." Read-only: results are
- * plain rows, no tap-to-navigate, no mutation, no relevance scoring.
- * See src/application/searchQueries.ts for what's searched and why no
- * search library was added for this corpus size.
+ * Slice 2; tap-to-navigate added 2026-09-02). Retrieval, not command
+ * execution — no mutation, no relevance scoring. See
+ * src/application/searchQueries.ts for what's searched and why no
+ * search library was added for this corpus size (still true: real
+ * corpus size hasn't grown past what a linear substring scan handles
+ * fine, so this stays independent of the Search Capability Map entry's
+ * MiniSearch note, which is about ranking, not navigation).
+ *
+ * A result is a plain row when `onSelectResult` is omitted (e.g. a
+ * future standalone/embedded use), and a real button — same visual
+ * shape, real focus/keyboard support — when the caller wants tap-to-
+ * navigate. This screen never decides what "navigate" means for a
+ * given domain; that's the caller's job (see MoreScreen.tsx).
  */
-export function SearchScreen() {
+export function SearchScreen({ onSelectResult }: { onSelectResult?: (result: SearchResult) => void } = {}) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searched, setSearched] = useState(false);
@@ -100,15 +108,37 @@ export function SearchScreen() {
 
       {!loading &&
         !error &&
-        results.map((result) => (
-          <div className="card" key={`${result.domain}-${result.id}`}>
-            <p className="meta" style={{ marginBottom: 2 }}>
-              {describeSearchDomain(result.domain)} · {result.status}
-            </p>
-            <p className="card-body" style={{ margin: 0 }}>{result.title}</p>
-            {result.context && <p className="meta" style={{ marginTop: 4 }}>{result.context}</p>}
-          </div>
-        ))}
+        results.map((result) => {
+          const key = `${result.domain}-${result.id}`;
+          const body = (
+            <>
+              <p className="meta" style={{ marginBottom: 2 }}>
+                {describeSearchDomain(result.domain)} · {result.status}
+              </p>
+              <p className="card-body" style={{ margin: 0 }}>{result.title}</p>
+              {result.context && <p className="meta" style={{ marginTop: 4 }}>{result.context}</p>}
+            </>
+          );
+          if (!onSelectResult) {
+            return (
+              <div className="card" key={key}>
+                {body}
+              </div>
+            );
+          }
+          return (
+            <button
+              type="button"
+              className="card"
+              key={key}
+              style={{ display: "block", width: "100%", textAlign: "left" }}
+              aria-label={`Open ${describeSearchDomain(result.domain)}: ${result.title}`}
+              onClick={() => onSelectResult(result)}
+            >
+              {body}
+            </button>
+          );
+        })}
     </div>
   );
 }

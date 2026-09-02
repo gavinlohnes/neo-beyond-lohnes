@@ -10,8 +10,9 @@ import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../../app/buildInfo";
 import { HistoryScreen } from "../history/HistoryScreen";
 import { ReviewScreen } from "../review/ReviewScreen";
 import { SearchScreen } from "../search/SearchScreen";
+import type { SearchResult } from "../../../application/searchQueries";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
-import { IntentScreen } from "./IntentScreen";
+import { IntentScreen, type IntentFocus } from "./IntentScreen";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { Icon } from "../../icons/Icon";
 
@@ -23,8 +24,28 @@ import { Icon } from "../../icons/Icon";
 // it can't drift again.
 const DATA_SCHEMA = db.verno;
 
-export function MoreScreen() {
+export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {}) {
   const [view, setView] = useState<"MENU" | "HISTORY" | "REVIEW" | "SEARCH" | "WORK_SCHEDULE" | "INTENT">("MENU");
+  // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by
+  // the ordinary "MISSIONS & OBLIGATIONS" menu entry point — see its onOpen below. This is what
+  // lets IntentScreen open straight to a specific record from Search without a normal visit to
+  // MORE's own menu ever reopening that same stale focus later.
+  const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(null);
+
+  function handleSelectSearchResult(result: SearchResult) {
+    if (result.domain === "CAPTURE") {
+      // Capture has no dedicated browsing surface of its own — TODAY's inbox is the only place
+      // it's triaged. Switching tabs is the honest amount of "navigate" available here; scrolling
+      // to this exact item would be a false precision claim for a resolved/historical capture
+      // that may not even be rendered in TODAY's current inbox.
+      onOpenCapture?.();
+      return;
+    }
+    setIntentFocus(
+      result.domain === "MISSION" ? { kind: "MISSION", missionId: result.id } : { kind: "OBLIGATION", obligationId: result.id },
+    );
+    setView("INTENT");
+  }
   const [days, setDays] = useState(0);
   const [events, setEvents] = useState(0);
   const [recommendations, setRecommendations] = useState(0);
@@ -172,7 +193,7 @@ export function MoreScreen() {
         >
           ← BACK TO MORE
         </button>
-        <SearchScreen />
+        <SearchScreen onSelectResult={handleSelectSearchResult} />
       </div>
     );
   }
@@ -204,7 +225,10 @@ export function MoreScreen() {
           ← BACK TO MORE
         </button>
         <h1 className="eyebrow">MORE // MISSIONS &amp; OBLIGATIONS</h1>
-        <IntentScreen />
+        <IntentScreen
+          key={intentFocus ? `${intentFocus.kind}-${intentFocus.kind === "MISSION" ? intentFocus.missionId : intentFocus.obligationId}` : "list"}
+          {...(intentFocus ? { initialFocus: intentFocus } : {})}
+        />
       </div>
     );
   }
@@ -241,7 +265,10 @@ export function MoreScreen() {
         <CollapsibleRow
           name="MISSIONS & OBLIGATIONS"
           summary="Manage durable direction and commitments requiring deliberate resolution."
-          onOpen={() => setView("INTENT")}
+          onOpen={() => {
+            setIntentFocus(null);
+            setView("INTENT");
+          }}
         />
         <CollapsibleRow
           name="WORK SCHEDULE"
