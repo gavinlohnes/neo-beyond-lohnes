@@ -116,6 +116,20 @@ Reuse System) — not on every Drop, only when it validates or changes something
   Own the UX/logs/intelligence; do not build a proprietary food database.
 - **Rejected**: importing another tracker's food database/architecture wholesale; a
   calorie-dashboard-first assumption.
+- **Built (2026-09-02)**: `src/application/foodLookupQueries.ts`'s `searchFoods` — a thin,
+  uncached passthrough to USDA's public FDC Search API (no local copy of USDA's food database is
+  ever stored, matching this entry's own ruling). Wired into BODY's existing "ADD MEAL" form: a
+  search box above the manual macro fields, selecting a result only pre-fills that form (name +
+  four macros) — nothing is saved until the operator reviews it and clicks SAVE MEAL themselves,
+  same "always a proposal" treatment as Capture Intelligence's due-date suggestions. A failed or
+  empty search degrades to the plain manual-entry form, never an error state. No schema change:
+  this is a live lookup into the pre-existing SavedMeal creation flow, not a new stored shape.
+  API key handling: `VITE_USDA_FDC_API_KEY` is an optional build-time Vite env var, wired in
+  `.github/workflows/deploy-pages.yml` from an optional `USDA_FDC_API_KEY` repo secret; absent
+  that secret, production falls back to USDA's public rate-limited `DEMO_KEY` rather than
+  breaking — this repo is a static client-side PWA with no backend to hide a real secret behind,
+  and FDC keys are free/low-stakes/regenerable, so this is judged an acceptable trade-off rather
+  than one requiring its own product decision.
 - **Ruling on file**: schema addition — owner sign-off obtained 2026-09-02.
 
 ## TRAIN experience

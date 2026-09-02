@@ -33,7 +33,12 @@ jobs:
       # only here, not in package.json).
       - run: npx playwright install --with-deps chromium
       - run: npx vitest run
+      # NUTRITION-002: optional — falls back to USDA's public rate-limited
+      # DEMO_KEY when this secret isn't set. See
+      # application/foodLookupQueries.ts's doc comment.
       - run: npm run build
+        env:
+          VITE_USDA_FDC_API_KEY: ${{ secrets.USDA_FDC_API_KEY }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

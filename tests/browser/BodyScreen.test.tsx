@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
+import { db } from "../../src/persistence/db";
 
 /**
  * BEYOND FIELD ALPHA Phase 3 — first real-browser acceptance layer for
@@ -21,6 +22,7 @@ import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
 });
 
 describe("BodyScreen (real browser) — empty state", () => {
@@ -267,6 +269,72 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
 
     await expect.element(screen.getByText("620 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/corrected 1x/)).toBeVisible();
+  });
+});
+
+describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodData Central)", () => {
+  function mockFetchOnce(body: unknown, ok = true) {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({ ok, json: async () => body } as Response);
+  }
+
+  const BANANA_FOOD = {
+    fdcId: 1105073,
+    description: "Bananas, raw",
+    servingSize: 100,
+    servingSizeUnit: "g",
+    foodNutrients: [
+      { nutrientId: 1008, nutrientName: "Energy", unitName: "KCAL", value: 89 },
+      { nutrientId: 1003, nutrientName: "Protein", unitName: "G", value: 1.09 },
+      { nutrientId: 1005, nutrientName: "Carbohydrate, by difference", unitName: "G", value: 22.8 },
+      { nutrientId: 1004, nutrientName: "Total lipid (fat)", unitName: "G", value: 0.33 },
+    ],
+  };
+
+  it("selecting a result pre-fills the ADD MEAL form without saving anything", async () => {
+    mockFetchOnce({ foods: [BANANA_FOOD] });
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+
+    await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("banana");
+    await screen.getByRole("button", { name: "SEARCH" }).click();
+
+    await expect.element(screen.getByText(/Bananas, raw/)).toBeVisible();
+    await screen.getByRole("button", { name: /Bananas, raw/ }).click();
+
+    await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Bananas, raw");
+    await expect.element(screen.getByRole("spinbutton", { name: "New meal calories" })).toHaveValue(89);
+    // Nothing is saved until the operator explicitly clicks SAVE MEAL.
+    expect(await db.savedMeals.count()).toBe(0);
+  });
+
+  it("shows a plain no-results message rather than an error for a search with no matches", async () => {
+    mockFetchOnce({ foods: [] });
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+
+    await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("zzzznotafood");
+    await screen.getByRole("button", { name: "SEARCH" }).click();
+
+    await expect.element(screen.getByText(/No results — enter macros manually below/)).toBeVisible();
+  });
+
+  it("degrades gracefully to manual entry when the search request fails", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("network down"));
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+
+    await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("banana");
+    await screen.getByRole("button", { name: "SEARCH" }).click();
+
+    await expect.element(screen.getByText(/No results — enter macros manually below/)).toBeVisible();
+    // Manual entry remains fully available.
+    await screen.getByRole("textbox", { name: "New meal name" }).fill("Manual Meal");
+    await screen.getByRole("spinbutton", { name: "New meal calories" }).fill("500");
+    await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill("30");
+    await screen.getByRole("spinbutton", { name: "New meal carbs (g)" }).fill("50");
+    await screen.getByRole("spinbutton", { name: "New meal fat (g)" }).fill("10");
+    await screen.getByRole("button", { name: "SAVE MEAL" }).click();
+    await expect.element(screen.getByText("Manual Meal", { exact: true })).toBeVisible();
   });
 });
 
