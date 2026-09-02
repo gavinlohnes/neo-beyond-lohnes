@@ -305,18 +305,113 @@ export function TodayScreen({
       if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
       throw err;
     }
+    // Ownership decided HERE, immediately after the read above resolves —
+    // same timing as before this fix — and reused as-is below rather than
+    // re-derived after the many further awaits this function makes. A
+    // refresh that owns the render at this instant must apply everything
+    // it composes even if a newer refresh starts partway through; deciding
+    // ownership again later, after those further awaits, could reach a
+    // different (stricter) answer than this one and silently drop an
+    // update this refresh was always entitled to make.
+    const isOwner = mountedRef.current && myRequestId === refreshRequestIdRef.current;
+    // CI-timing-flake fix (2026-09-02): every read this function needs —
+    // starting with `activeDay`/`activeWorkoutSession` above, through every
+    // read below — is gathered into a local BEFORE any of it is committed
+    // via setState. Every setter for all of it then fires together at the
+    // very end, in one synchronous run with no `await` between them, so
+    // React batches the whole thing into a single render.
+    //
+    // The previous shape here was a long run of individual
+    // `await X(); setY(...)` pairs (plus one early, separately-committed
+    // `setDay`/`setActiveWorkout` block), each committing its own render.
+    // A test polling for one early piece of this state (e.g. the "Orient"
+    // heading, gated on `day`, or the Attention section, gated on
+    // `unresolvedObligations`/`pendingOutcome`) could observe a DOM
+    // snapshot where that one piece had landed but a later piece in the
+    // same chain (e.g. `checkIn`, which drives the STATUS strip's capacity
+    // modifier) had not — a real, reproducible CI-only race (never
+    // reproduced locally) since it depends on exactly how the scheduler
+    // interleaves each render commit with the polling test's own retries.
+    // A prior fix ("Fix CI-only timing flake in AdvisoryNotes refresh()
+    // ordering") narrowly reordered one field to dodge one instance of
+    // this; two different fields in the same chain hit the identical race
+    // days later (PR #67's CI), which is exactly the whack-a-mole outcome
+    // a per-field reorder was always going to produce. Batching the whole
+    // function removes the gap instead of relocating it.
+    //
+    // The one deliberate exception is `currentContext`: its fetch is
+    // kicked off here (so its latency overlaps with everything else this
+    // function awaits below) but its *result* is still consumed via its
+    // own request-id-guarded `.then()/.catch()`, landing whenever it
+    // resolves — unchanged from before, and still correct, since nothing
+    // in this component treats `currentContext` as available synchronously
+    // with `day`; every consumer already falls back to
+    // `day`/`scheduledContext`/`unresolvedPostShift` while it's in flight.
+    const contextPromise = isOwner
+      ? getCurrentOperationalContext(activeDay ? { id: activeDay.id, workContext: activeDay.workContext } : null)
+      : null;
+
+    // Overdrive Phase 10: capture is deliberately not day-scoped ("inbox
+    // age is not urgency," and jotting something down shouldn't require a
+    // BeyondDay to already exist), so this refreshes unconditionally.
+    const openCaptureItems = await getOpenCaptureItems();
+    // Intent & Commitment Spine, Drop 02: same reasoning — Obligations are
+    // not day-scoped either.
+    const obligations = await getCurrentlyEligibleUnresolvedObligations();
+    const headline = getMostRelevantUnresolvedObligation(obligations, formatLocalDate(new Date()));
+    const mission = headline ? await getMissionForObligation(headline.obligation) : undefined;
+    const headlineCommitmentMission = headline && mission ? { obligationId: headline.obligation.id, mission } : null;
+
+    let checkIn: StateCheckIn | null = null;
+    let rec: Recommendation | null = null;
+    let decision: RecommendationDecision | undefined;
+    let recommendationHandoff: RecommendationHandoffTarget | null = null;
+    let priorOutcomeMemory: PriorOutcomeMemory | null = null;
+    let suggestEndDay = false;
+    let pendingOutcome: Awaited<ReturnType<typeof getPendingOutcomeRating>> | null = null;
+    let minimumDay: MinimumDayStatus | null = null;
+    let minimumDayHydrateOz = 0;
+    let minimumDayProteinG = 0;
+    let openReset: Awaited<ReturnType<typeof getOpenReset>> | undefined;
+    let openShiftDown: Awaited<ReturnType<typeof getOpenShiftDown>> | undefined;
+    let workPeriodEndedAt: string | null = null;
+    let unresolvedPostShift = false;
+
+    if (activeDay) {
+      checkIn = (await getLatestCheckIn(activeDay.id)) ?? null;
+      rec = (await getLatestRecommendation(activeDay.id)) ?? null;
+      decision = rec ? await getRecommendationDecision(activeDay.id, rec.id) : undefined;
+      recommendationHandoff = rec ? (await getRecommendationHandoff(rec)) ?? null : null;
+      priorOutcomeMemory = rec ? (await getPriorOutcomeMemory(rec)) ?? null : null;
+      suggestEndDay = await shouldSuggestEndDay(activeDay.id);
+      pendingOutcome = rec ? (await getPendingOutcomeRating(rec)) ?? null : null;
+      minimumDay = await getMinimumDayStatus(activeDay.id);
+      minimumDayHydrateOz = await getEffectiveHydrationTotal(activeDay.id);
+      minimumDayProteinG = await getTotalProteinGrams(activeDay.id);
+      openReset = await getOpenReset(activeDay.id);
+      openShiftDown = await getOpenShiftDown(activeDay.id);
+      const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
+      workPeriodEndedAt = workPeriodEnded ? workPeriodEnded.occurredAt : null;
+      unresolvedPostShift = await hasUnresolvedPostShift(activeDay.id);
+    }
+    // Intelligence Spine consumption (2026-09-02): advisory notes are pure
+    // SUPPORT-tier background context with no ordering dependency on
+    // anything else refresh() loads — gathered here alongside everything
+    // above rather than separately, now that everything commits together
+    // anyway.
+    const advisoryNotes = await getAdvisoryNotes();
+
     // Everything on the active-day/context path is gated on this single
     // ownership check: a refresh superseded by the time its getActiveDay()
-    // resolves must not install `day`, and must not even start context
-    // composition — starting it would let that work later become
-    // authoritative if left unguarded downstream.
-    if (mountedRef.current && myRequestId === refreshRequestIdRef.current) {
+    // resolves must not install `day`, and must not let its own composed
+    // state become authoritative.
+    if (isOwner) {
       const newDayId = activeDay ? activeDay.id : null;
       if (newDayId !== currentContextDayIdRef.current) {
         // This accepted refresh is adopting a different day (including a
         // transition to/from no active day) than whatever `currentContext`
         // currently belongs to. That old context is not truthful for the
-        // newly-adopted day — clear it now, synchronously with setDay
+        // newly-adopted day — clear it now, in the same batch as `day`
         // below, rather than let it keep rendering merged with the new
         // day's identity until its own read resolves. The status strip's
         // existing `currentContext ? ... : day.*` fallback then reads
@@ -330,53 +425,21 @@ export function TodayScreen({
       currentContextDayIdRef.current = newDayId;
       setDay(activeDay);
       setActiveWorkout(activeWorkoutSession);
-      // A fresh, independently-composed view each refresh — never memoized
-      // across calls, matching every other piece of state in this function.
-      // Composed from THIS refresh's own already-resolved `activeDay` (not
-      // re-fetched independently), so it can never disagree with `day` about
-      // which day is current. Still request-id guarded: two overlapping
-      // refresh() calls (e.g. two rapid actions) can have their
-      // currentContext reads settle out of order, so only the result whose
-      // id still matches the ref when it settles is installed. A rejected
-      // read is handled explicitly — cleared to null (never left stale, never
-      // presented as if it succeeded) so the render falls back to the
-      // pre-V1 day/scheduledContext/unresolvedPostShift state deliberately.
-      getCurrentOperationalContext(activeDay ? { id: activeDay.id, workContext: activeDay.workContext } : null)
-        .then((result) => {
-          if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
-          setCurrentContext(result);
-        })
-        .catch(() => {
-          if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
-          setCurrentContext(null);
-        });
     }
-    // Overdrive Phase 10: capture is deliberately not day-scoped ("inbox
-    // age is not urgency," and jotting something down shouldn't require a
-    // BeyondDay to already exist), so this refreshes unconditionally.
-    setOpenCaptureItems(await getOpenCaptureItems());
-    // Intent & Commitment Spine, Drop 02: same reasoning — Obligations are
-    // not day-scoped either.
-    const obligations = await getCurrentlyEligibleUnresolvedObligations();
+    setOpenCaptureItems(openCaptureItems);
     setUnresolvedObligations(obligations);
-    const headline = getMostRelevantUnresolvedObligation(obligations, formatLocalDate(new Date()));
-    const mission = headline ? await getMissionForObligation(headline.obligation) : undefined;
-    setHeadlineCommitmentMission(headline && mission ? { obligationId: headline.obligation.id, mission } : null);
+    setHeadlineCommitmentMission(headlineCommitmentMission);
     if (activeDay) {
-      setCheckIn((await getLatestCheckIn(activeDay.id)) ?? null);
-      const rec = (await getLatestRecommendation(activeDay.id)) ?? null;
+      setCheckIn(checkIn);
       setRecommendation(rec);
-      setDecision(rec ? await getRecommendationDecision(activeDay.id, rec.id) : undefined);
-      setRecommendationHandoff(rec ? (await getRecommendationHandoff(rec)) ?? null : null);
-      setPriorOutcomeMemory(rec ? (await getPriorOutcomeMemory(rec)) ?? null : null);
-      setSuggestEndDay(await shouldSuggestEndDay(activeDay.id));
-      const pending = rec ? (await getPendingOutcomeRating(rec)) ?? null : null;
-      setPendingOutcome(pending);
-      setMinimumDay(await getMinimumDayStatus(activeDay.id));
-      setMinimumDayHydrateOz(await getEffectiveHydrationTotal(activeDay.id));
-      setMinimumDayProteinG(await getTotalProteinGrams(activeDay.id));
-
-      const openReset = await getOpenReset(activeDay.id);
+      setDecision(decision);
+      setRecommendationHandoff(recommendationHandoff);
+      setPriorOutcomeMemory(priorOutcomeMemory);
+      setSuggestEndDay(suggestEndDay);
+      setPendingOutcome(pendingOutcome);
+      setMinimumDay(minimumDay);
+      setMinimumDayHydrateOz(minimumDayHydrateOz);
+      setMinimumDayProteinG(minimumDayProteinG);
       if (openReset) {
         setActiveResetId(openReset.eventId);
         setResetIntensity(openReset.intensity);
@@ -385,8 +448,6 @@ export function TodayScreen({
         setActiveResetId(null);
         setOpenResetStartedAt(null);
       }
-
-      const openShiftDown = await getOpenShiftDown(activeDay.id);
       if (openShiftDown) {
         setActiveShiftDownId(openShiftDown.eventId);
         setShiftDownDuration(openShiftDown.durationMinutes);
@@ -395,27 +456,35 @@ export function TodayScreen({
         setActiveShiftDownId(null);
         setOpenShiftDownStartedAt(null);
       }
-
-      const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
-      setWorkPeriodEndedAt(workPeriodEnded ? workPeriodEnded.occurredAt : null);
-      setUnresolvedPostShift(await hasUnresolvedPostShift(activeDay.id));
+      setWorkPeriodEndedAt(workPeriodEndedAt);
+      setUnresolvedPostShift(unresolvedPostShift);
     } else {
       setRecommendation(null);
       setDecision(undefined);
       setRecommendationHandoff(null);
     }
-    // Intelligence Spine consumption (2026-09-02): deliberately fetched last,
-    // after every check-in/recommendation-dependent state above is already
-    // set — advisory notes are pure SUPPORT-tier background context with no
-    // ordering dependency on anything else refresh() loads, so there is no
-    // correctness reason for this to sit on the critical path between
-    // `setDay` and `setCheckIn` above. (It briefly did, during development,
-    // and measurably widened the real gap between "day" rendering and
-    // "checkIn" rendering — enough to occasionally flip already-time-
-    // sensitive tests like the STATUS strip's capacity assertions under a
-    // slower CI runner. Moving it here removes it from the render-affecting
-    // fetches instead of trying to out-race that gap.)
-    setAdvisoryNotes(await getAdvisoryNotes());
+    setAdvisoryNotes(advisoryNotes);
+
+    // A fresh, independently-composed view each refresh — never memoized
+    // across calls, matching every other piece of state in this function.
+    // Composed from THIS refresh's own already-resolved `activeDay` (not
+    // re-fetched independently), so it can never disagree with `day` about
+    // which day is current. Still request-id guarded: two overlapping
+    // refresh() calls (e.g. two rapid actions) can have their
+    // currentContext reads settle out of order, so only the result whose
+    // id still matches the ref when it settles is installed. A rejected
+    // read is handled explicitly — cleared to null (never left stale, never
+    // presented as if it succeeded) so the render falls back to the
+    // pre-V1 day/scheduledContext/unresolvedPostShift state deliberately.
+    contextPromise
+      ?.then((result) => {
+        if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
+        setCurrentContext(result);
+      })
+      .catch(() => {
+        if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
+        setCurrentContext(null);
+      });
   }
 
   function handleRecommendationHandoff(target: RecommendationHandoffTarget) {

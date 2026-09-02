@@ -105,6 +105,43 @@ describe("SearchScreen (real browser)", () => {
   });
 });
 
+describe("SearchScreen (real browser) — tap-to-navigate", () => {
+  it("renders every result as a plain, non-interactive row when onSelectResult is omitted", async () => {
+    await createMission({ title: "Rebuild the deck" });
+    await createObligation({ title: "Call the electrician" });
+    await captureItem("Renew the car registration");
+
+    const screen = await render(<SearchScreen />);
+    await screen.getByRole(SEARCH_INPUT.role, { name: SEARCH_INPUT.name }).fill("e");
+    await expect.element(screen.getByText("Rebuild the deck", { exact: true })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Open/ }).elements()).toHaveLength(0);
+  });
+
+  it("renders each result as a real button and invokes onSelectResult with the exact result on click, per domain", async () => {
+    await createMission({ title: "Rebuild the deck" });
+    await createObligation({ title: "Call the electrician" });
+    await captureItem("Renew the car registration");
+
+    const onSelectResult = vi.fn();
+    const screen = await render(<SearchScreen onSelectResult={onSelectResult} />);
+
+    await screen.getByRole(SEARCH_INPUT.role, { name: SEARCH_INPUT.name }).fill("deck");
+    await screen.getByRole("button", { name: "Open MISSION: Rebuild the deck" }).click();
+    expect(onSelectResult).toHaveBeenCalledTimes(1);
+    expect(onSelectResult.mock.calls[0]![0]).toMatchObject({ domain: "MISSION", title: "Rebuild the deck" });
+
+    await screen.getByRole(SEARCH_INPUT.role, { name: SEARCH_INPUT.name }).fill("electrician");
+    await screen.getByRole("button", { name: "Open OBLIGATION: Call the electrician" }).click();
+    expect(onSelectResult).toHaveBeenCalledTimes(2);
+    expect(onSelectResult.mock.calls[1]![0]).toMatchObject({ domain: "OBLIGATION", title: "Call the electrician" });
+
+    await screen.getByRole(SEARCH_INPUT.role, { name: SEARCH_INPUT.name }).fill("registration");
+    await screen.getByRole("button", { name: "Open CAPTURE: Renew the car registration" }).click();
+    expect(onSelectResult).toHaveBeenCalledTimes(3);
+    expect(onSelectResult.mock.calls[2]![0]).toMatchObject({ domain: "CAPTURE", title: "Renew the car registration" });
+  });
+});
+
 describe("SearchScreen (real browser) — narrow phone widths", () => {
   it.each([320, 360, 375])("has no horizontal overflow at %ipx", async (width) => {
     await createMission({ title: "Rebuild the deck" });
