@@ -191,18 +191,14 @@ button, input {
   accent-color: var(--accent);
 }
 
-/* VISUAL-001 (Hybrid Foundation): background/color changed from
-   var(--accent) to the neutral --action-primary-bg/--action-primary-text
-   pair (see tokens.css's own doc comment) — this was the app-wide, every-
-   screen default that filled every primary action solid identity-red
-   regardless of semantic meaning, the exact pattern DEC-004's Red Budget
-   forbids and Visual Synthesis Round 1.0 explicitly rejected. The
-   near-white-on-near-black reversal keeps the primary action at least as
-   discoverable (higher contrast against --surface-active's dark-red wash
-   than red-on-dark-red ever was) while leaving red free to mean
-   recommendation/active/earned/warning/critical/selection elsewhere.
-   :active/:disabled below are unchanged — both already worked on any fill
-   color. */
+/* LAUNCH-VISION-001 (2026-09-03, direct owner ruling): .btn-primary's
+   fill is red again, reversing VISUAL-001's neutral near-white/near-black
+   correction (see tokens.css's own --action-primary-bg/--action-primary-
+   text doc comment for the full provenance and the recorded Decision
+   Register entry). The class itself is unchanged — only the two token
+   values it reads changed — so this stays a two-token diff, not a new
+   selector or structural change. :active/:disabled below are unchanged;
+   both already worked on any fill color. */
 .btn-primary {
   width: 100%;
   background: var(--action-primary-bg);

@@ -1333,15 +1333,20 @@ describe("TodayScreen (real browser) — narrow phone widths", () => {
 });
 
 /**
- * VISUAL-001 (Hybrid Foundation): the Red Budget correction and the one
- * structural-geometry primitive it introduces, verified against the real
- * rendered DOM/computed styles — not just source inspection. Every
- * previous TodayScreen test above (including the RED/SHIFT-DOWN/CAPTURE
- * narrow-width case just above, which already exercises .command-surface)
- * still passes unmodified, so this only adds coverage for what's new.
+ * VISUAL-001 (Hybrid Foundation) introduced the structural-geometry
+ * primitive below, verified against the real rendered DOM/computed
+ * styles — not just source inspection. Every previous TodayScreen test
+ * above (including the RED/SHIFT-DOWN/CAPTURE narrow-width case just
+ * above, which already exercises .command-surface) still passes
+ * unmodified, so this only adds coverage for what's new.
+ *
+ * VISUAL-001's own Red Budget correction (primary actions neutral, not
+ * red) is reversed by LAUNCH-VISION-001 (2026-09-03, direct owner
+ * ruling) — see docs/UX_DECISIONS.md's "Visual system — red budget"
+ * entry. The first test below now asserts the current, opposite truth.
  */
-describe("TodayScreen (real browser) — VISUAL-001 Red Budget & structural geometry", () => {
-  it("a primary action is no longer filled with identity red — it uses the neutral action tokens", async () => {
+describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural geometry", () => {
+  it("a primary action is filled with the red accent token, not the old neutral action tokens", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
@@ -1353,10 +1358,11 @@ describe("TodayScreen (real browser) — VISUAL-001 Red Budget & structural geom
     // one under test here).
     const el = screen.getByRole("button", { name: "No action needed" }).element();
     const bg = getComputedStyle(el).backgroundColor;
-    // var(--accent) = #c81e2c = rgb(200, 30, 44). The corrected token,
-    // --action-primary-bg, is #f2f2f2 = rgb(242, 242, 242).
-    expect(bg).not.toBe("rgb(200, 30, 44)");
-    expect(bg).toBe("rgb(242, 242, 242)");
+    // --action-primary-bg is var(--accent) again as of LAUNCH-VISION-001
+    // = #c81e2c = rgb(200, 30, 44). The old neutral value it replaced,
+    // #f2f2f2 = rgb(242, 242, 242), is what VISUAL-001 had set.
+    expect(bg).not.toBe("rgb(242, 242, 242)");
+    expect(bg).toBe("rgb(200, 30, 44)");
   });
 
   it("the dominant recommendation surface (.command-surface) carries the one earned structural cut", async () => {

@@ -31,16 +31,24 @@
   --danger: #c8302e;
   --focus: #e2454f;
 
-  /* VISUAL-001 (Hybrid Foundation) — Red Budget correction. DEC-004 locks
-     "Red is not the generic CTA color"; the Visual Synthesis Round 1.0
-     evidence explicitly rejected a solid-red default primary action. A
-     high-contrast neutral reversal (near-white fill, near-black text)
-     replaces --accent as .btn-primary's default fill so red stays scarce
-     enough to keep meaning recommendation/active/earned/warning/critical/
-     selection — never merely "the main button." Mirrors --text-1/--bg
-     rather than a new hue, keeping the palette closed. */
-  --action-primary-bg: #f2f2f2;
-  --action-primary-text: #0a0a0a;
+  /* LAUNCH-VISION-001 (2026-09-03, direct owner ruling) — reverses
+     VISUAL-001's neutral-CTA correction below, kept here as provenance,
+     not current behavior. VISUAL-001 had made .btn-primary near-white on
+     near-black specifically so red stayed reserved for recommendation/
+     active/earned/warning/critical/selection, never "the main button."
+     The owner explicitly overturned that rule for this direction while
+     comparing the BEYOND Launch Vision prototype's "Terry's Suit"
+     direction (prototype/launch-vision/) against the running app — see
+     docs/UX_DECISIONS.md's "Visual system — red budget" entry for the
+     recorded decision. Reuses --accent/--text-1 rather than introducing
+     a new hex literal, keeping the palette closed. Every other red usage
+     in the app (RED-tier, .btn-danger, .command-surface's edge/chamfer,
+     .capacity-dot--red) is unaffected — this is scoped to .btn-primary's
+     fill only, not a general loosening of red-scarcity doctrine.
+     Contrast: --text-1 (#f2f2f2) on --accent (#c81e2c) computes to
+     ~5.11:1, passing WCAG AA (4.5:1) for normal text. */
+  --action-primary-bg: var(--accent);
+  --action-primary-text: var(--text-1);
 
   /* VISUAL-001: the one reusable structural-geometry primitive this Drop
      introduces — a single small corner cut, applied only to the currently

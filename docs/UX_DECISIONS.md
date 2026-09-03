@@ -211,6 +211,27 @@ canonical operation:
   `getComputedStyle` sweep, not just source inspection, since Vitest
   alone can't verify rendered pixel sizes. 2026-08-20.
 
+## Visual system — red budget
+
+- **Primary CTA color, reversed (locked 2026-09-03, direct owner ruling, LAUNCH-VISION-001).**
+  VISUAL-001 (Hybrid Foundation) had made `.btn-primary`'s default fill neutral (near-white on
+  near-black) specifically so red stayed reserved for recommendation/active/earned/warning/
+  critical/selection — never merely "the main button." That rule is now overturned:
+  `.btn-primary`'s default fill is red again (`--action-primary-bg: var(--accent)`,
+  `--action-primary-text: var(--text-1)` in [tokens.css](../src/ui/styles/tokens.css)), following
+  a direct owner decision made while comparing the BEYOND Launch Vision prototype's "Terry's
+  Suit" direction (`prototype/launch-vision/`) against the running app.
+- **Scoped narrowly — not a general loosening of red-scarcity doctrine.** This changes
+  `.btn-primary`'s fill only. `.btn-danger`'s distinct `--danger` fill, `.command-surface`'s red
+  edge/chamfer treatment, `.capacity-dot--red`, and every other existing red usage are unchanged.
+  `OPERATOR_INTERFACE_DOCTRINE.md`'s "red authority must be earned; significance earns intensity"
+  still governs every red usage this decision doesn't touch — red is simply no longer scarce
+  specifically at the primary-action layer, where it is now the default rather than an exception.
+- The broader "Terry's Suit" direction this reversal is drawn from (chamfered/angular surface
+  geometry beyond the existing single-surface `--chamfer` primitive, ambient motion, an abstract
+  glyph family, typography) remains prototype-only pending its own separate, explicitly
+  authorized Drop(s) — this entry locks only the one piece actually authorized so far.
+
 ## System identity — EMBLEM vs. GLYPHS split
 
 Locked 2026-08-31 (SHELL-001, direct owner ruling), correcting SHELL-001's original contract
