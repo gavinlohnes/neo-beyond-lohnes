@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 9b1103942271b12deca045479da10a500cc9f5df
 branch: claude/launch-vision-002-body-neutral
 contract: docs/agent/drops/LAUNCH-VISION-002.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/72
 builder: Claude, direct owner assignment in this session
 reviewer: (unassigned)
 integrator: (unassigned)
