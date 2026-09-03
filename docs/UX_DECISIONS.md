@@ -227,6 +227,20 @@ canonical operation:
   `OPERATOR_INTERFACE_DOCTRINE.md`'s "red authority must be earned; significance earns intensity"
   still governs every red usage this decision doesn't touch — red is simply no longer scarce
   specifically at the primary-action layer, where it is now the default rather than an exception.
+- **BODY carve-out (locked 2026-09-03, direct owner ruling, LAUNCH-VISION-002).** Running the
+  real app surfaced a genuine second-order consequence the reversal above didn't anticipate: BODY
+  renders one primary log action per tracker (WATER/SLEEP/BODYWEIGHT/PROTEIN, plus meal logging)
+  on a single long-scrolling screen, so an app-wide red `.btn-primary` showed up several times at
+  once there — unlike TODAY/TRAIN, which only ever surface one dominant action at a time. Rather
+  than invent a new "pick one tracker to stay red" rule — which would manufacture a hierarchy
+  among the four peer trackers that BODY's own STATUS instrument-cluster doctrine (below, and
+  [global.css](../src/ui/styles/global.css)'s own `.instrument-cluster` comment: "BODY's red
+  budget is deliberately lower than TODAY/TRAIN's — no red accent at all") already forbids — BODY's
+  `.btn-primary` reverts to the neutral fill (`.body-field .btn-primary` in global.css, reusing
+  `--text-1`/`--bg`), consistent with that same pre-existing, lower-red-budget identity. TODAY,
+  TRAIN, and MORE are unaffected and keep the red default above. The quiet/successful "No action
+  needed" state on TODAY was considered for a similar carve-out and explicitly rejected by direct
+  owner ruling — it stays red, no per-state exception beyond the BODY-wide one here.
 - The broader "Terry's Suit" direction this reversal is drawn from (chamfered/angular surface
   geometry beyond the existing single-surface `--chamfer` primitive, ambient motion, an abstract
   glyph family, typography) remains prototype-only pending its own separate, explicitly

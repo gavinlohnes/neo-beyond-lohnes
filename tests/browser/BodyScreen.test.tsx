@@ -379,3 +379,24 @@ describe("BodyScreen (real browser) — accessibility", () => {
     expect(results.violations).toEqual([]);
   });
 });
+
+/**
+ * LAUNCH-VISION-002: LAUNCH-VISION-001 made .btn-primary red app-wide.
+ * BODY renders one primary log action per tracker on a single
+ * long-scrolling screen, so that read as several solid red buttons at
+ * once — a real second-order consequence a live visual pass caught that
+ * source-only review didn't. BODY already carries a deliberately lower
+ * red budget than TODAY/TRAIN (see the STATUS instrument-cluster tests
+ * above); this carve-out extends that same rule to BODY's LOG buttons.
+ */
+describe("BodyScreen (real browser) — LAUNCH-VISION-002 BODY red-budget carve-out", () => {
+  it("a BODY primary action (LOG WATER) is filled with the neutral tokens, not the app-wide red accent", async () => {
+    const screen = await render(<BodyScreen />);
+    const el = screen.getByRole("button", { name: "LOG WATER" }).element();
+    const bg = getComputedStyle(el).backgroundColor;
+    // --text-1 = #f2f2f2 = rgb(242, 242, 242). var(--accent), the
+    // app-wide default since LAUNCH-VISION-001, is rgb(200, 30, 44).
+    expect(bg).not.toBe("rgb(200, 30, 44)");
+    expect(bg).toBe("rgb(242, 242, 242)");
+  });
+});
