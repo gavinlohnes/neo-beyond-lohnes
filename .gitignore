@@ -12,3 +12,10 @@ tests/browser/__screenshots__
 .vitest-attachments
 test-results
 playwright-report
+
+# DONOR-001 R&D campaigns (research/donor-001-campaign*): isolated,
+# research-only harnesses per their own REPORT.md — "no imports from or
+# writes to src/**... nothing was committed or merged." Includes GGUF
+# model weights and llama.cpp binaries (hundreds of MB); never belongs
+# in repo history.
+research/
