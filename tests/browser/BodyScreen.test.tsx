@@ -392,6 +392,10 @@ describe("BodyScreen (real browser) — accessibility", () => {
 describe("BodyScreen (real browser) — LAUNCH-VISION-002 BODY red-budget carve-out", () => {
   it("a BODY primary action (LOG WATER) is filled with the neutral tokens, not the app-wide red accent", async () => {
     const screen = await render(<BodyScreen />);
+    // LOG WATER only renders once manual entry is revealed — same
+    // disclosure the accessibility test above already opens.
+    await screen.getByRole("button", { name: "SHOW MANUAL ENTRY" }).click();
+    await expect.element(screen.getByRole("button", { name: "LOG WATER" })).toBeVisible();
     const el = screen.getByRole("button", { name: "LOG WATER" }).element();
     const bg = getComputedStyle(el).backgroundColor;
     // --text-1 = #f2f2f2 = rgb(242, 242, 242). var(--accent), the
