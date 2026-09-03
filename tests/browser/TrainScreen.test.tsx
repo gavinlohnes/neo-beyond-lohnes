@@ -487,7 +487,7 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     expect(getComputedStyle(chip!).clipPath).toBe("none");
   });
 
-  it("LOG is no longer filled with identity red — it uses the neutral action tokens, and stays the most visually prominent control in its row", async () => {
+  it("LOG is filled with the red accent token again (LAUNCH-VISION-001), and stays the most visually prominent control in its row", async () => {
     const screen = await startStandardWorkout();
     await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
     const logLocator = screen.getByRole("button", { name: "LOG" }).first();
@@ -501,8 +501,9 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     const skipButton = screen.getByRole("button", { name: "SKIP" }).first().element();
 
     const logBg = getComputedStyle(logButton).backgroundColor;
-    expect(logBg).not.toBe("rgb(200, 30, 44)"); // was var(--accent)
-    expect(logBg).toBe("rgb(242, 242, 242)"); // --action-primary-bg
+    // --action-primary-bg is var(--accent) again as of LAUNCH-VISION-001.
+    expect(logBg).not.toBe("rgb(242, 242, 242)"); // was the VISUAL-001 neutral fill
+    expect(logBg).toBe("rgb(200, 30, 44)"); // var(--accent)
 
     // LOG (.btn-primary) must still read as more prominent than SKIP
     // (.btn-secondary) purely from contrast against the dark surface —
