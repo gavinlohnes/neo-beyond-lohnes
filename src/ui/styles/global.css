@@ -224,6 +224,25 @@ button, input {
   cursor: default;
 }
 
+/* LAUNCH-VISION-002 (direct owner ruling): BODY already carries a
+   deliberately lower red budget than TODAY/TRAIN — the STATUS instrument-
+   cluster's own "no tracker is instrumented as the leader" rule (see its
+   doc comment above). LAUNCH-VISION-001's app-wide .btn-primary reversal
+   didn't anticipate that BODY renders one primary action per tracker on
+   a single long-scrolling screen (LOG WATER/SLEEP/BODYWEIGHT/PROTEIN,
+   meal logging) — so what's scarce and earned everywhere else showed up
+   several times at once here. This restores BODY's own pre-existing
+   lower-red-budget identity rather than inventing a new "pick one"
+   mechanism, which would manufacture a hierarchy among four peer
+   trackers doctrine already forbids. Scoped to .body-field (BodyScreen's
+   root) so TODAY/TRAIN/MORE are unaffected; reuses --text-1/--bg,
+   introducing no new color. .btn-danger is a separate class, untouched
+   either way. */
+.body-field .btn-primary {
+  background: var(--text-1);
+  color: var(--bg);
+}
+
 /*
  * P2 (Product Experience Sprint) design-system additions below. Each
  * primitive here replaces a pattern that was already duplicated ad hoc
