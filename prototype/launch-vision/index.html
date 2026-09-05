@@ -1,0 +1,1086 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BEYOND — Launch Vision Prototype</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --void:#0a0a0c;
+  --panel:#131316;
+  --panel-2:#18181c;
+  --line:#242428;
+  --line-soft:#1c1c20;
+  --ivory:#eeeae2;
+  --ivory-dim:#8f8d87;
+  --ivory-faint:#57565399;
+  --amber:#b8863a;
+  --amber-dim:#7a5f38;
+  --red-a:#9c1622;
+  --red-a-bright:#c22633;
+  --red-b:#eb1626;
+  --red-b-bright:#ff2c3a;
+  --red: var(--red-a);
+  --red-bright: var(--red-a-bright);
+  --radius: 2px;
+  --font-display:'Big Shoulders Display',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',monospace;
+  --dur-1: 60ms;
+  --dur-2: 120ms;
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+[data-dir="b"]{
+  --red: var(--red-b);
+  --red-bright: var(--red-b-bright);
+  --radius: 5px;
+  --dur-1: 140ms;
+  --dur-2: 260ms;
+  --ease: cubic-bezier(.2,.8,.2,1);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse 900px 700px at 50% 8%, #151517 0%, var(--void) 62%),
+    var(--void);
+  color:var(--ivory);
+  font-family:var(--font-body);
+  min-height:100%;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--red);color:var(--ivory);}
+button{font-family:inherit;}
+::-webkit-scrollbar{width:0;height:0;}
+
+.stage{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns: 300px minmax(320px,420px) 1fr;
+  gap:28px;
+  padding:28px;
+  align-items:start;
+  justify-content:center;
+}
+@media (max-width: 980px){
+  .stage{grid-template-columns:1fr; justify-items:center;}
+  .rail{order:2; width:100%; max-width:420px;}
+  .device-col{order:1;}
+  .notes-col{order:3; width:100%; max-width:420px;}
+}
+
+/* ---------- Rail (left, controls) ---------- */
+.rail{
+  position:sticky; top:28px;
+  display:flex; flex-direction:column; gap:18px;
+}
+.nameplate{
+  border:1px solid var(--line);
+  padding:16px 16px 14px;
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+}
+.nameplate .mark{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:26px;
+  letter-spacing:.02em;
+  line-height:1;
+  display:flex; align-items:center; gap:8px;
+}
+.nameplate .mark svg{flex:0 0 auto;}
+.nameplate .sub{
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--ivory-dim);
+  letter-spacing:.08em;
+  margin-top:6px;
+  text-transform:uppercase;
+}
+
+.rail-block{
+  border:1px solid var(--line);
+  background:var(--panel);
+  padding:14px 16px;
+}
+.rail-label{
+  font-family:var(--font-mono);
+  font-size:10px;
+  letter-spacing:.14em;
+  color:var(--ivory-faint);
+  text-transform:uppercase;
+  margin:0 0 10px;
+}
+
+.dir-switch{
+  display:grid; grid-template-columns:1fr 1fr; gap:1px;
+  background:var(--line); border:1px solid var(--line);
+}
+.dir-btn{
+  background:var(--void); color:var(--ivory-dim);
+  border:0; padding:12px 8px; cursor:pointer;
+  font-family:var(--font-display); font-weight:600; font-size:16px; letter-spacing:.02em;
+  display:flex; flex-direction:column; gap:2px; align-items:flex-start;
+  transition:background var(--dur-2) var(--ease), color var(--dur-2) var(--ease);
+}
+.dir-btn small{font-family:var(--font-mono); font-size:9.5px; letter-spacing:.1em; color:inherit; opacity:.7; font-weight:400; text-transform:uppercase;}
+.dir-btn.active{background:var(--panel-2); color:var(--ivory); box-shadow:inset 2px 0 0 var(--red);}
+
+.scene-menu{display:flex; flex-direction:column; gap:1px; background:var(--line);}
+.scene-btn{
+  background:var(--panel); color:var(--ivory-dim); border:0; text-align:left;
+  padding:9px 10px; font-family:var(--font-mono); font-size:11.5px; letter-spacing:.03em;
+  cursor:pointer; display:flex; justify-content:space-between; gap:8px;
+  transition:background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+.scene-btn:hover{color:var(--ivory); background:var(--panel-2);}
+.scene-btn.active{color:var(--ivory); background:var(--panel-2);}
+.scene-btn.active::after{content:"●"; color:var(--red); font-size:8px; align-self:center;}
+
+.screen-tabs{display:flex; gap:1px; background:var(--line); margin-bottom:1px;}
+.screen-tab{
+  flex:1; background:var(--panel); color:var(--ivory-faint); border:0; padding:9px 4px;
+  font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; cursor:pointer;
+  transition:color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+}
+.screen-tab.active{color:var(--ivory); background:var(--panel-2);}
+
+.rail-reset{
+  border:1px solid var(--line); background:transparent; color:var(--ivory-faint);
+  font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; padding:9px;
+  cursor:pointer; text-transform:uppercase;
+}
+.rail-reset:hover{color:var(--ivory); border-color:var(--ivory-faint);}
+
+.view-toggle{display:flex; gap:1px; background:var(--line);}
+.view-toggle button{
+  flex:1; background:var(--panel); color:var(--ivory-dim); border:0; padding:10px;
+  font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; cursor:pointer;
+}
+.view-toggle button.active{color:var(--ivory); background:var(--panel-2); box-shadow:inset 0 2px 0 var(--red);}
+
+/* ---------- Device column ---------- */
+.device-col{display:flex; flex-direction:column; align-items:center; gap:14px;}
+.device-caption{font-family:var(--font-mono); font-size:10.5px; color:var(--ivory-faint); letter-spacing:.1em; text-transform:uppercase;}
+.device-caption b{color:var(--ivory-dim); font-weight:500;}
+
+.device{
+  width:375px; height:812px;
+  background:#000;
+  border:10px solid #08080a;
+  border-radius:46px;
+  box-shadow:0 0 0 1px #262629, 0 40px 80px -30px rgba(0,0,0,.9), 0 0 60px -20px var(--red-glow, transparent);
+  position:relative; overflow:hidden;
+  display:flex; flex-direction:column;
+}
+.notch{
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:150px; height:26px; background:#08080a; border-radius:0 0 16px 16px; z-index:20;
+}
+.screen{
+  flex:1; overflow-y:auto; position:relative;
+  padding:44px 18px 14px;
+  display:flex; flex-direction:column; gap:14px;
+}
+.tabbar{
+  flex:0 0 auto; display:flex; border-top:1px solid var(--line);
+  background:var(--void); padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px));
+}
+.tab{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+  background:none; border:0; color:var(--ivory-faint); cursor:pointer; padding:6px 2px;
+  font-family:var(--font-mono); font-size:9.5px; letter-spacing:.08em;
+  transition:color var(--dur-2) var(--ease);
+}
+.tab svg{transition:transform var(--dur-2) var(--ease), stroke var(--dur-2) var(--ease);}
+.tab.active{color:var(--ivory);}
+.tab.active svg{stroke:var(--red);}
+[data-dir="b"] .tab.active svg{transform:translateY(-1px);}
+
+/* ---------- Typography / generic ---------- */
+.hdr-row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px;}
+.hdr-label{font-family:var(--font-display); font-weight:700; font-size:22px; letter-spacing:.01em;}
+.hdr-meta{font-family:var(--font-mono); font-size:10.5px; color:var(--ivory-faint); letter-spacing:.08em;}
+.status-strip{
+  display:flex; gap:14px; font-family:var(--font-mono); font-size:10.5px; color:var(--ivory-dim);
+  letter-spacing:.06em; padding-bottom:10px; border-bottom:1px solid var(--line-soft);
+}
+.status-strip span b{color:var(--ivory); font-weight:500;}
+
+.eyebrow{font-family:var(--font-mono); font-size:10px; letter-spacing:.16em; color:var(--ivory-faint); text-transform:uppercase; margin:0 0 6px;}
+
+.command-surface{
+  border:1px solid var(--line);
+  background:var(--panel);
+  padding:18px 16px;
+  position:relative;
+}
+[data-dir="a"] .command-surface{border-left:2px solid var(--red);}
+[data-dir="b"] .command-surface{
+  border-radius:var(--radius);
+  box-shadow:0 0 0 1px var(--line), 0 18px 40px -24px rgba(0,0,0,.8);
+  border-top:2px solid var(--red);
+}
+.command-title{font-family:var(--font-display); font-weight:700; font-size:24px; line-height:1.05; margin:0 0 4px;}
+.command-sub{font-size:13.5px; color:var(--ivory-dim); margin:0 0 14px; line-height:1.4;}
+.confidence-tag{
+  display:inline-flex; align-items:center; gap:5px; font-family:var(--font-mono); font-size:9.5px;
+  letter-spacing:.1em; color:var(--ivory-faint); text-transform:uppercase; margin-bottom:12px;
+}
+.confidence-tag .dot{width:5px; height:5px; background:var(--ivory-dim); border-radius:50%;}
+.confidence-tag.high .dot{background:var(--red);}
+
+.why-toggle{
+  display:flex; align-items:center; gap:6px; background:none; border:0; color:var(--ivory-faint);
+  font-family:var(--font-mono); font-size:10.5px; letter-spacing:.08em; padding:0; cursor:pointer;
+  margin-bottom:10px; text-transform:uppercase;
+}
+.why-toggle svg{transition:transform var(--dur-2) var(--ease);}
+.why-toggle.open svg{transform:rotate(90deg);}
+.why-body{
+  font-family:var(--font-mono); font-size:12px; line-height:1.6; color:var(--ivory-dim);
+  border-left:1px solid var(--line); padding-left:10px; margin-bottom:14px;
+  max-height:0; overflow:hidden; opacity:0;
+  transition:max-height var(--dur-2) var(--ease), opacity var(--dur-2) var(--ease);
+}
+.why-body.open{max-height:200px; opacity:1;}
+
+.action-row{display:flex; gap:8px; flex:none;}
+.btn{
+  flex:none; width:100%; border:1px solid var(--line); background:transparent; color:var(--ivory);
+  font-family:var(--font-mono); font-weight:500; font-size:12px; letter-spacing:.08em;
+  padding:13px 10px; cursor:pointer; text-transform:uppercase; text-align:center;
+  transition:background var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+.action-row .btn{flex:1; width:auto;}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--red); border-color:var(--red); color:#fff; font-weight:600;}
+[data-dir="b"] .btn-primary{box-shadow:0 6px 18px -8px var(--red-bright);}
+.btn-primary:hover{background:var(--red-bright); border-color:var(--red-bright);}
+.btn-quiet{color:var(--ivory-faint); border-color:transparent;}
+.btn-quiet:hover{color:var(--ivory-dim);}
+.btn-danger{border-color:var(--red); color:var(--red-bright);}
+.btn[disabled]{opacity:.35; cursor:default;}
+[data-dir="a"] .btn, [data-dir="a"] .command-surface, [data-dir="a"] .rail-block{border-radius:0;}
+
+/* Direction B — suit plating: one diagonal chamfer per surface, not a rounded corner.
+   Asymmetric on purpose (doctrine: "controlled asymmetry"), not a uniform radius. */
+[data-dir="b"] .command-surface,
+[data-dir="b"] .exercise-card,
+[data-dir="b"] .equipment-row,
+[data-dir="b"] .confirm-panel,
+[data-dir="b"] .instrument-cluster{
+  border-radius:0;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+}
+[data-dir="b"] .btn-primary{
+  border-radius:0;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+}
+[data-dir="b"] .chip.selected, [data-dir="b"] .seg button.on{clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);}
+
+.device{ box-shadow:0 0 0 1px #262629, 0 40px 80px -30px rgba(0,0,0,.9), 0 0 70px -12px var(--red-glow, transparent); transition:box-shadow 400ms var(--ease); }
+[data-dir="b"] .device{ --red-glow: color-mix(in srgb, var(--red) 42%, transparent); }
+
+.tab{position:relative;}
+.tab.active::after{
+  content:"";
+  position:absolute; bottom:-8px; left:50%;
+  width:10px; height:10px; background:var(--red);
+  transform:translateX(-50%) rotate(45deg);
+}
+[data-dir="a"] .tab.active::after{ width:4px; height:4px; border-radius:0; bottom:-6px; }
+
+@keyframes suitSweep{
+  0%{ transform:translateY(-100%); opacity:0; }
+  8%{ opacity:1; }
+  100%{ transform:translateY(720px); opacity:0; }
+}
+.device.boot::before{
+  content:""; position:absolute; left:0; right:0; top:0; height:3px; z-index:30;
+  background:linear-gradient(90deg, transparent, var(--red-bright), transparent);
+  box-shadow:0 0 16px 2px var(--red-bright);
+  animation:suitSweep 650ms var(--ease) forwards;
+  pointer-events:none;
+}
+@media (prefers-reduced-motion: reduce){ .device.boot::before{ animation:none; display:none; } }
+
+@keyframes toastPulseB{
+  0%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--red) 60%, transparent); border-color:var(--red); }
+  100%{ box-shadow:0 0 0 8px transparent; border-color:var(--line); }
+}
+[data-dir="b"] .toast{ animation:toastIn var(--dur-2) var(--ease), toastPulseB 550ms ease-out; }
+@media (prefers-reduced-motion: reduce){ [data-dir="b"] .toast{ animation:toastIn var(--dur-2) var(--ease); } }
+
+.quiet-state{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:14px; padding:40px 10px; text-align:center; min-height:260px;
+}
+.quiet-glyph{opacity:.85;}
+.quiet-title{font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:.04em;}
+.quiet-sub{font-size:13px; color:var(--ivory-faint); max-width:230px; line-height:1.5;}
+
+.attention-row{
+  display:flex; align-items:center; gap:10px; border:1px solid var(--line); background:var(--panel-2);
+  padding:11px 12px; cursor:pointer;
+}
+.attention-row .badge{
+  width:6px; height:6px; border-radius:50%; background:var(--amber); flex:0 0 auto;
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--amber) 18%, transparent);
+}
+.attention-row.critical .badge{background:var(--red); box-shadow:0 0 0 3px color-mix(in srgb, var(--red) 22%, transparent);}
+.attention-row .txt{flex:1;}
+.attention-row .t1{font-size:13px; color:var(--ivory);}
+.attention-row .t2{font-family:var(--font-mono); font-size:10px; color:var(--ivory-faint); letter-spacing:.04em; margin-top:2px;}
+
+.confirm-panel{
+  border:1px solid var(--red); background:color-mix(in srgb, var(--red) 8%, var(--panel));
+  padding:16px; display:flex; flex-direction:column; gap:10px;
+}
+.confirm-panel .t{font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--ivory);}
+.confirm-panel .d{font-size:12.5px; color:var(--ivory-dim); line-height:1.5;}
+
+.toast{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  border:1px solid var(--line); background:var(--panel-2); padding:10px 12px;
+  font-size:12.5px; color:var(--ivory-dim);
+  animation:toastIn var(--dur-2) var(--ease);
+}
+@keyframes toastIn{from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;}}
+.toast .undo{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.06em; color:var(--red-bright); background:none; border:0; cursor:pointer; text-transform:uppercase;}
+
+/* instrument cluster (BODY status) */
+.instrument-cluster{
+  display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line);
+}
+.instrument{background:var(--panel); padding:13px 12px; display:flex; flex-direction:column; gap:4px;}
+.instrument .lbl{font-family:var(--font-mono); font-size:9.5px; letter-spacing:.12em; color:var(--ivory-faint);}
+.instrument .val{font-family:var(--font-display); font-weight:700; font-size:19px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.instrument .val.empty{color:var(--ivory-faint); font-family:var(--font-mono); font-weight:400; font-size:13px;}
+
+.equipment-row{border:1px solid var(--line); background:var(--panel); padding:14px;}
+.equipment-row .lbl{font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; color:var(--ivory-faint); margin-bottom:8px;}
+.chip-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;}
+.chip{
+  border:1px solid var(--line); background:var(--void); color:var(--ivory-dim);
+  font-family:var(--font-mono); font-size:11.5px; padding:8px 12px; cursor:pointer;
+  transition:all var(--dur-1) var(--ease);
+}
+.chip.selected{border-color:var(--red); color:var(--ivory); background:color-mix(in srgb, var(--red) 12%, var(--void));}
+.field-progress{height:4px; background:var(--line); position:relative; overflow:hidden; margin-top:2px;}
+.field-progress i{position:absolute; inset:0; width:var(--pct,0%); background:var(--red); display:block; transition:width var(--dur-2) var(--ease);}
+
+.seg{display:flex; border:1px solid var(--line); overflow:hidden;}
+.seg button{flex:1; background:var(--void); color:var(--ivory-dim); border:0; padding:11px 4px; font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; cursor:pointer; border-left:1px solid var(--line);}
+.seg button:first-child{border-left:0;}
+.seg button.on{background:var(--panel-2); color:var(--ivory); box-shadow:inset 0 2px 0 var(--red);}
+
+.exercise-card{border:1px solid var(--line); background:var(--panel); padding:15px;}
+.exercise-card .name{font-family:var(--font-display); font-weight:700; font-size:19px;}
+.exercise-card .last{font-family:var(--font-mono); font-size:11px; color:var(--ivory-faint); margin:3px 0 10px;}
+.advisory{display:inline-flex; gap:6px; align-items:center; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.06em; padding:5px 9px; border:1px solid var(--line); margin-bottom:10px; text-transform:uppercase;}
+.advisory.up{color:var(--ivory); border-color:var(--red); background:color-mix(in srgb, var(--red) 10%, transparent);}
+.advisory.hold{color:var(--ivory-dim);}
+.stepper{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+.stepper .num{font-family:var(--font-mono); font-size:15px; min-width:70px; text-align:center; background:var(--void); border:1px solid var(--line); padding:9px 4px;}
+.stepper button{width:36px; height:36px; border:1px solid var(--line); background:var(--void); color:var(--ivory); font-size:16px; cursor:pointer;}
+
+.list-row{display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid var(--line-soft); padding:13px 2px; cursor:pointer;}
+.list-row:last-child{border-bottom:0;}
+.list-row .l1{display:flex; align-items:center; gap:10px;}
+.list-row .t1{font-size:13.5px;}
+.list-row .t2{font-family:var(--font-mono); font-size:9.5px; color:var(--ivory-faint); letter-spacing:.06em; margin-top:2px;}
+.list-row .chev{color:var(--ivory-faint);}
+
+.day-row{border-bottom:1px solid var(--line-soft); padding:12px 2px;}
+.day-row .top{display:flex; justify-content:space-between; align-items:center;}
+.day-row .date{font-family:var(--font-mono); font-size:12.5px;}
+.day-row .cnt{font-family:var(--font-mono); font-size:10px; color:var(--ivory-faint);}
+.day-row .show{background:none; border:0; color:var(--red-bright); font-family:var(--font-mono); font-size:10px; letter-spacing:.08em; cursor:pointer; text-transform:uppercase; padding:0; margin-top:2px;}
+.event-line{font-family:var(--font-mono); font-size:11px; color:var(--ivory-dim); padding:5px 0 5px 10px; border-left:1px solid var(--line);}
+
+.search-box{display:flex; border:1px solid var(--line); background:var(--panel);}
+.search-box input{flex:1; background:none; border:0; color:var(--ivory); padding:12px; font-size:14px; font-family:var(--font-body);}
+.search-box input::placeholder{color:var(--ivory-faint);}
+.search-box button{border:0; background:var(--red); color:#fff; padding:0 16px; font-family:var(--font-mono); font-size:11px; cursor:pointer;}
+.result{border:1px solid var(--line); background:var(--panel); padding:11px 12px; margin-bottom:8px;}
+.result .t{font-size:13px; margin-bottom:4px;}
+.result .src{font-family:var(--font-mono); font-size:9.5px; color:var(--ivory-faint); letter-spacing:.04em;}
+
+.banner{display:flex; align-items:center; gap:10px; border:1px solid var(--line-soft); background:var(--panel); padding:10px 12px; font-size:11.5px; color:var(--ivory-faint);}
+
+/* ---------- Notes column ---------- */
+.notes-col{display:flex; flex-direction:column; gap:16px; max-width:340px; padding-top:2px;}
+.note-card{border:1px solid var(--line); background:var(--panel); padding:16px;}
+.note-card h3{font-family:var(--font-display); font-weight:700; font-size:15px; margin:0 0 8px; letter-spacing:.02em; color:var(--ivory);}
+.note-card p{font-size:12.5px; line-height:1.65; color:var(--ivory-dim); margin:0 0 10px;}
+.note-card p:last-child{margin-bottom:0;}
+.note-card .k{color:var(--ivory); font-weight:500;}
+.tradeoff{display:flex; gap:10px;}
+.tradeoff > div{flex:1; border:1px solid var(--line-soft); padding:10px; font-size:11.5px; line-height:1.5; color:var(--ivory-dim);}
+.tradeoff .g{color:var(--red-bright); font-family:var(--font-mono); font-size:9.5px; letter-spacing:.1em; display:block; margin-bottom:5px;}
+
+/* ---------- Design system panel ---------- */
+.sys-panel{display:none; flex-direction:column; gap:16px; max-width:900px; width:100%; grid-column:2 / -1;}
+.sys-panel.show{display:flex;}
+.sys-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line);}
+.sys-card{background:var(--panel); padding:18px;}
+.sys-card h4{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ivory-faint); margin:0 0 12px;}
+.swatch-row{display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+.swatch{width:44px; height:44px; border:1px solid var(--line-soft); display:flex; align-items:flex-end; padding:3px; font-family:var(--font-mono); font-size:7.5px; color:#0006;}
+.type-sample{font-family:var(--font-display); font-weight:700;}
+.sys-card .note{font-size:12px; color:var(--ivory-dim); line-height:1.6;}
+.glyph-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:10px;}
+.glyph-cell{display:flex; flex-direction:column; align-items:center; gap:6px; font-family:var(--font-mono); font-size:8.5px; color:var(--ivory-faint);}
+
+.recommend-block{max-width:760px; border:1px solid var(--line); background:var(--panel); padding:22px 24px; margin-top:4px;}
+.recommend-block h2{font-family:var(--font-display); font-size:20px; margin:0 0 10px;}
+.recommend-block p{font-size:13.5px; line-height:1.7; color:var(--ivory-dim);}
+.recommend-block b{color:var(--ivory);}
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage" data-dir="b">
+
+  <div class="rail">
+    <div class="nameplate">
+      <div class="mark" id="wordmark"></div>
+      <div class="sub">LAUNCH-VISION PROTOTYPE · TWO SKINS, ONE DOCTRINE</div>
+    </div>
+
+    <div class="rail-block">
+      <p class="rail-label">Design direction</p>
+      <div class="dir-switch">
+        <button class="dir-btn" data-dir-set="a"><span>BRUCE'S</span><small>Instrument</small></button>
+        <button class="dir-btn" data-dir-set="b"><span>TERRY'S</span><small>Suit</small></button>
+      </div>
+    </div>
+
+    <div class="rail-block">
+      <p class="rail-label">View</p>
+      <div class="view-toggle">
+        <button data-view="prototype" class="active">Prototype</button>
+        <button data-view="system">Design system</button>
+      </div>
+    </div>
+
+    <div class="rail-block" id="scene-block">
+      <p class="rail-label">Scene — <span id="scene-screen-lbl">TODAY</span></p>
+      <div class="scene-menu" id="scene-menu"></div>
+    </div>
+
+    <button class="rail-reset" id="reset-demo">Reset demo state</button>
+  </div>
+
+  <div class="device-col">
+    <div class="device-caption">iPhone-width viewport · <b>375×812</b> · tap through the phone</div>
+    <div class="device">
+      <div class="notch"></div>
+      <div class="screen" id="screen"></div>
+      <div class="tabbar" id="tabbar"></div>
+    </div>
+  </div>
+
+  <div class="notes-col" id="notes-col">
+    <div class="note-card" id="note-card"></div>
+    <div class="note-card">
+      <h3>Reading this as a build reference</h3>
+      <p>Every screen renders from the <span class="k">same state object</span> — only CSS tokens (color/motion/radius) and a few marked structural touches differ by direction. That is the seam a real implementation would also want: one product, one data layer, a direction as a presentation switch, not a fork.</p>
+    </div>
+  </div>
+
+  <div class="sys-panel" id="sys-panel"></div>
+</div>
+
+<script>
+const G_PATHS = {
+  today: '<path d="M12 3 L21 12 L12 21 L3 12 Z"/><path d="M12 3 V21"/>',
+  train: '<path d="M4 16 L9 11 L4 6"/><path d="M12 16 L17 11 L12 6"/>',
+  body: '<path d="M12 3 L20 7.5 V16.5 L12 21 L4 16.5 V7.5 Z"/>',
+  more: '<path d="M4 7H16"/><path d="M8 12H20"/><path d="M4 17H16"/>',
+  reset: '<path d="M18.4 7A8 8 0 1 0 20 12"/><path d="M20 3.5V8H15.5"/>',
+  shiftDown: '<path d="M8 4V13"/><path d="M4 9 L8 13 L12 9"/><path d="M5 19H15"/>',
+  why: '<path d="M9 4H5V20H9"/><circle cx="15" cy="12" r="1.3" fill="currentColor" stroke="none"/>',
+  critical: '<path d="M12 3 L21 19H3 Z"/><path d="M12 9V14"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>',
+  attention: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/>',
+  checkin: '<path d="M9 4H5V20H9"/><path d="M15 4H19V20H15"/>',
+  log: '<rect x="4" y="4" width="16" height="16"/><path d="M12 8V16"/><path d="M8 12H16"/>',
+  success: '<path d="M12 3 L21 12 L12 21 L3 12 Z"/><path d="M8 12 L11 15 L16 9"/>',
+  history: '<circle cx="12" cy="12" r="8"/><path d="M12 8V12L15 14"/>',
+  search: '<circle cx="10" cy="10" r="6.5"/><path d="M14.7 14.7L20 20"/>',
+  missions: '<path d="M6 3V21"/><path d="M6 4H16L13 8L16 12H6"/>',
+  backup: '<path d="M12 3V14"/><path d="M8 10L12 14L16 10"/><path d="M5 18H19"/>',
+  chevRight: '<path d="M9 5L15 12L9 19"/>',
+};
+function G(name, size){
+  size = size || 20;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter">${G_PATHS[name]||''}</svg>`;
+}
+
+const state = {
+  dir: 'b',
+  view: 'prototype',
+  screen: 'today',
+  scene: { today:'pre_day', train:'pre_session', body:'status', more:'menu' },
+  whyOpen: false,
+  declineStage: 0,
+  water: 16,
+  sleepLogged: false,
+  sleepKind: 'PRIMARY',
+  weightCorrected: false,
+  variant: 'STANDARD',
+  exIndex: 0,
+  setsLogged: 0,
+  weight: 185,
+  reps: 5,
+  historyShow: {},
+  toast: null,
+};
+const initialState = JSON.parse(JSON.stringify(state));
+let toastTimer = null;
+
+const SCENES = {
+  today: ['pre_day','recommendation','red_confirm','critical','attention','commitment','quiet'],
+  train: ['pre_session','active_session','complete'],
+  body: ['status','log_water','log_sleep','correction'],
+  more: ['menu','history','search'],
+};
+const SCENE_LABEL = {
+  pre_day:'Pre-day', recommendation:'Recommendation', red_confirm:'RED override', critical:'Critical — capacity', attention:'Attention', commitment:'Commitment', quiet:'Quiet / no action',
+  pre_session:'Pre-session', active_session:'Active session', complete:'Session complete',
+  status:'Status cluster', log_water:'Log water', log_sleep:'Log sleep', correction:'Correction',
+  menu:'System menu', history:'History', search:'Search',
+};
+const TAB_DEF = [
+  {id:'today', label:'TODAY', glyph:'today'},
+  {id:'train', label:'TRAIN', glyph:'train'},
+  {id:'body', label:'BODY', glyph:'body'},
+  {id:'more', label:'MORE', glyph:'more'},
+];
+
+const EX_LIB = {
+  STANDARD: [
+    {name:'BACK SQUAT', last:'185 × 5', advisory:'up', reason:'3 clean sessions completed at 185 — history supports +5.'},
+    {name:'BENCH PRESS', last:'135 × 5', advisory:'hold', reason:'Mixed weights in recent history — holding until a clean read.'},
+    {name:'BARBELL ROW', last:'145 × 8', advisory:'hold', reason:'Incomplete evidence — one logged session only.'},
+  ],
+  REDUCED: [
+    {name:'BACK SQUAT', last:'155 × 5', advisory:'hold', reason:'Reduced session — advisory suspended for today.'},
+    {name:'BENCH PRESS', last:'115 × 5', advisory:'hold', reason:'Reduced session — advisory suspended for today.'},
+  ],
+};
+
+function toast(msg, undo){
+  state.toast = {msg, undo: !!undo};
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ state.toast=null; render(); }, 3200);
+}
+
+/* ---------------- render: TODAY ---------------- */
+function renderToday(){
+  const s = state.scene.today;
+  if(s==='pre_day'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">TODAY</span><span class="hdr-meta">SEP 02</span></div>
+      <div class="quiet-state">
+        <div class="quiet-glyph">${G('today',40)}</div>
+        <div class="quiet-title">NO DAY YET</div>
+        <div class="quiet-sub">Nothing is created until the first thing that needs it happens.</div>
+        <button class="btn btn-primary" style="max-width:180px;margin-top:8px" data-act="start-day">START DAY</button>
+      </div>`;
+  }
+  if(s==='recommendation'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">TODAY</span><span class="hdr-meta">DAY 214 · ACTIVE</span></div>
+      <div class="status-strip"><span>SLEEP <b>7H 40M</b></span><span>LAST ACTION <b>12M AGO</b></span></div>
+      <div class="command-surface">
+        <p class="eyebrow">Recommendation</p>
+        <p class="command-title">TRAIN — DAY B, STANDARD</p>
+        <p class="command-sub">Rotation calls Day B next. Recovery window since Day A is adequate.</p>
+        <div class="confidence-tag high"><span class="dot"></span>RED TIER · HIGH CONFIDENCE</div>
+        <button class="why-toggle ${state.whyOpen?'open':''}" data-act="why">${G('chevRight',13)} WHY</button>
+        <div class="why-body ${state.whyOpen?'open':''}">Last trained Day A, 2 days ago.<br/>Sleep and check-in both nominal.<br/>Rotation position: A → B → C, currently at B.<br/>No conflicting commitment logged for this window.</div>
+        <div class="action-row">
+          <button class="btn btn-primary" data-act="confirm-rec">CONFIRM</button>
+          <button class="btn btn-quiet" data-act="decline-rec">DECLINE</button>
+        </div>
+      </div>`;
+  }
+  if(s==='red_confirm'){
+    const stage2 = state.declineStage>=1;
+    return `
+      <div class="hdr-row"><span class="hdr-label">TODAY</span><span class="hdr-meta">DAY 214 · ACTIVE</span></div>
+      <div class="confirm-panel">
+        <div class="t">${G('critical',18)} &nbsp;THIS IS A RED-TIER RECOMMENDATION</div>
+        <div class="d">Declining a RED-tier recommendation needs one extra, deliberate confirmation. This is not a bug — it's the one place the interface asks twice.</div>
+        ${stage2 ? `<div class="d" style="color:var(--red-bright)">Second confirmation required. This will be recorded as a deliberate decline, not silently dropped.</div>` : ''}
+        <div class="action-row">
+          <button class="btn btn-danger" data-act="decline-stage">${stage2?'CONFIRM DECLINE':'DECLINE ANYWAY'}</button>
+          <button class="btn btn-quiet" data-act="cancel-decline">CANCEL</button>
+        </div>
+      </div>`;
+  }
+  if(s==='critical'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">TODAY</span><span class="hdr-meta">DAY 214 · ACTIVE</span></div>
+      <div class="confirm-panel">
+        <div class="t">${G('critical',18)} &nbsp;CAPACITY CONSTRAINED</div>
+        <div class="d">Two consecutive nights under 5 hours. Today's reality path is shortened — fewer decisions, smallest safe next move only. This is not a verdict on the day, just less asked of it.</div>
+      </div>
+      <div class="equipment-row">
+        <p class="lbl">MINIMUM DAY — HYDRATE</p>
+        <p style="font-family:var(--font-display);font-weight:700;font-size:22px;margin:2px 0 8px">16 / 40 OZ</p>
+        <div class="field-progress"><i style="--pct:40%"></i></div>
+      </div>
+      <div class="attention-row critical" data-act="noop">
+        <span class="badge"></span>
+        <div class="txt"><div class="t1">TRAIN — recovery only recommended today</div><div class="t2">CRITICAL · CAPACITY</div></div>
+      </div>`;
+  }
+  if(s==='attention'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">TODAY</span><span class="hdr-meta">DAY 214 · ACTIVE</span></div>
+      <p class="eyebrow">Attention — earned, not manufactured</p>
+      <div class="attention-row" data-act="goto-commitment">
+        <span class="badge"></span>
+        <div class="txt"><div class="t1">Commitment due — "Send Q3 report"</div><div class="t2">OBLIGATION · DUE TODAY</div></div>
+        <span class="chev">${G('chevRight',14)}</span>
+      </div>
+      <div class="attention-row" data-act="end-day">
+        <span class="badge"></span>
+        <div class="txt"><div class="t1">Primary sleep logged 40 minutes ago</div><div class="t2">END DAY SUGGESTED</div></div>
+        <span class="chev">${G('chevRight',14)}</span>
+      </div>
+      <p style="font-size:11.5px;color:var(--ivory-faint);line-height:1.6;margin-top:2px">Capped and disappears the moment it's resolved or no longer true — attention is earned per the five-question escalation test, never accumulated as a badge count.</p>`;
+  }
+  if(s==='commitment'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">TODAY</span><span class="hdr-meta">DAY 214 · ACTIVE</span></div>
+      <div class="command-surface">
+        <p class="eyebrow">Commitment</p>
+        <p class="command-title">Send Q3 report</p>
+        <p class="command-sub">Obligation · linked to Mission "Close out Q3" · due today, no time set.</p>
+        <div class="action-row">
+          <button class="btn btn-primary" data-act="satisfy">SATISFY COMMITMENT</button>
+          <button class="btn btn-quiet" data-act="back-attention">BACK</button>
+        </div>
+      </div>`;
+  }
+  if(s==='quiet'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">TODAY</span><span class="hdr-meta">DAY 214 · ACTIVE</span></div>
+      <div class="quiet-state">
+        <div class="quiet-glyph">${G('success',40)}</div>
+        <div class="quiet-title">NO ACTION REQUIRED</div>
+        <div class="quiet-sub">The system succeeded by taking none of your attention. Nothing further needs you right now.</div>
+      </div>`;
+  }
+}
+
+/* ---------------- render: TRAIN ---------------- */
+function renderTrain(){
+  const s = state.scene.train;
+  if(s==='pre_session'){
+    const isRecovery = state.variant==='RECOVERY';
+    return `
+      <div class="hdr-row"><span class="hdr-label">TRAIN</span><span class="hdr-meta">ROTATION · NEXT DAY B</span></div>
+      <div class="command-surface">
+        <p class="eyebrow">Session</p>
+        <p class="command-title">${isRecovery?'Recovery session':'Day B — Back / Chest'}</p>
+        <div class="seg" style="margin:12px 0">
+          <button class="${state.variant==='STANDARD'?'on':''}" data-act="set-variant" data-v="STANDARD">STANDARD</button>
+          <button class="${state.variant==='REDUCED'?'on':''}" data-act="set-variant" data-v="REDUCED">REDUCED</button>
+          <button class="${state.variant==='RECOVERY'?'on':''}" data-act="set-variant" data-v="RECOVERY">RECOVERY</button>
+        </div>
+        <p class="command-sub">${isRecovery?'Recovery sessions never advance the A/B/C rotation, whatever the outcome.':'STANDARD advances the rotation on completion. REDUCED advances on completion or partial.'}</p>
+        <button class="btn btn-primary" data-act="start-session">START</button>
+      </div>`;
+  }
+  if(s==='active_session'){
+    if(state.variant==='RECOVERY'){
+      return `
+        <div class="hdr-row"><span class="hdr-label">TRAIN</span><span class="hdr-meta">RECOVERY · IN PROGRESS</span></div>
+        <div class="equipment-row">
+          <p class="lbl">RECOVERY</p>
+          <p style="font-family:var(--font-display);font-weight:700;font-size:22px;margin:0 0 6px">Mobility &amp; light movement</p>
+          <p style="font-size:12.5px;color:var(--ivory-dim);margin:0">No rotation impact regardless of outcome.</p>
+        </div>
+        <button class="btn btn-primary" data-act="end-session">END RECOVERY</button>`;
+    }
+    const list = EX_LIB[state.variant] || EX_LIB.STANDARD;
+    const ex = list[state.exIndex] || list[0];
+    return `
+      <div class="hdr-row"><span class="hdr-label">TRAIN</span><span class="hdr-meta">${state.variant} · ${state.exIndex+1}/${list.length}</span></div>
+      <div class="exercise-card">
+        <div class="name">${ex.name}</div>
+        <div class="last">LAST: ${ex.last}</div>
+        <div class="advisory ${ex.advisory}">${ex.advisory==='up'?'INCREASE':'HOLD'} — ${ex.reason}</div>
+        <div class="stepper">
+          <button data-act="wt" data-d="-5">−</button>
+          <div class="num">${state.weight} LB</div>
+          <button data-act="wt" data-d="5">+</button>
+        </div>
+        <div class="stepper">
+          <button data-act="rp" data-d="-1">−</button>
+          <div class="num">${state.reps} REPS</div>
+          <button data-act="rp" data-d="1">+</button>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" data-act="log-set">LOG SET</button>
+          <button class="btn btn-quiet" data-act="next-ex">${state.exIndex<list.length-1?'NEXT':'FINISH'}</button>
+        </div>
+      </div>
+      <button class="btn" style="border-color:var(--line)" data-act="end-session">END SESSION</button>`;
+  }
+  if(s==='complete'){
+    const recovery = state.variant==='RECOVERY';
+    const outcome = recovery ? 'RECORDED' : (state.setsLogged>=2 ? 'COMPLETED' : 'PARTIAL');
+    return `
+      <div class="hdr-row"><span class="hdr-label">TRAIN</span><span class="hdr-meta">SESSION CLOSED</span></div>
+      <div class="command-surface">
+        <p class="eyebrow">${state.variant}</p>
+        <p class="command-title">${outcome}</p>
+        <p class="command-sub">${recovery ? 'Recovery sessions never move the rotation.' : outcome==='COMPLETED' ? 'Rotation advances — next session is Day C.' : 'Rotation does not advance on a partial STANDARD session. Next session is still Day B.'}</p>
+        <button class="btn btn-primary" data-act="done-session">DONE</button>
+      </div>`;
+  }
+}
+
+/* ---------------- render: BODY ---------------- */
+function renderBody(){
+  const s = state.scene.body;
+  if(s==='status'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">BODY</span><span class="hdr-meta">STATUS</span></div>
+      <div class="instrument-cluster">
+        <div class="instrument"><span class="lbl">WATER</span><span class="val">${state.water} OZ</span></div>
+        <div class="instrument"><span class="lbl">SLEEP</span><span class="val ${state.sleepLogged?'':'empty'}">${state.sleepLogged? '7H 15M':'Not logged'}</span></div>
+        <div class="instrument"><span class="lbl">WEIGHT</span><span class="val ${state.weightCorrected?'':'empty'}">${state.weightCorrected? '198.6 LB':'Not logged'}</span></div>
+        <div class="instrument"><span class="lbl">PROTEIN</span><span class="val empty">Not logged</span></div>
+      </div>
+      <p style="font-size:11px;color:var(--ivory-faint);line-height:1.6">Four peer subsystems — no tracker is instrumented as "the leader" over the others.</p>
+      <div class="list-row" data-act="goto-water"><div class="l1">${G('log',18)}<span class="t1">Log water</span></div><span class="chev">${G('chevRight',14)}</span></div>
+      <div class="list-row" data-act="goto-sleep"><div class="l1">${G('log',18)}<span class="t1">Log sleep</span></div><span class="chev">${G('chevRight',14)}</span></div>
+      <div class="list-row" data-act="goto-correction"><div class="l1">${G('reset',18)}<span class="t1">Correct a past weight entry</span></div><span class="chev">${G('chevRight',14)}</span></div>`;
+  }
+  if(s==='log_water'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">BODY</span><span class="hdr-meta">LOG WATER</span></div>
+      <div class="equipment-row">
+        <p class="lbl">QUICK ADD</p>
+        <div class="chip-row">
+          <button class="chip" data-act="water-add" data-a="8">+8 OZ</button>
+          <button class="chip" data-act="water-add" data-a="16">+16 OZ</button>
+          <button class="chip" data-act="water-add" data-a="24">+24 OZ</button>
+        </div>
+        <p class="lbl">TOTAL TODAY</p>
+        <p style="font-family:var(--font-display);font-weight:700;font-size:26px;margin:2px 0 4px">${state.water} OZ</p>
+      </div>
+      ${state.toast ? `<div class="toast"><span>${state.toast.msg}</span>${state.toast.undo?'<button class="undo" data-act="undo-water">UNDO</button>':''}</div>` : ''}
+      <button class="btn btn-quiet" data-act="body-done">DONE</button>`;
+  }
+  if(s==='log_sleep'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">BODY</span><span class="hdr-meta">LOG SLEEP</span></div>
+      <div class="equipment-row">
+        <p class="lbl">KIND</p>
+        <div class="seg" style="margin-bottom:14px">
+          <button class="${state.sleepKind==='PRIMARY'?'on':''}" data-act="sleep-kind" data-v="PRIMARY">PRIMARY</button>
+          <button class="${state.sleepKind==='SUPPLEMENTAL'?'on':''}" data-act="sleep-kind" data-v="SUPPLEMENTAL">SUPPLEMENTAL</button>
+        </div>
+        <p class="lbl">DURATION</p>
+        <p style="font-family:var(--font-display);font-weight:700;font-size:24px;margin:2px 0 12px">7H 15M</p>
+        <button class="btn btn-primary" data-act="log-sleep">LOG SLEEP</button>
+      </div>
+      <p style="font-size:11px;color:var(--ivory-faint);line-height:1.6">Only PRIMARY sleep can ever trigger an "did your day end?" suggestion — a SUPPLEMENTAL nap never does.</p>`;
+  }
+  if(s==='correction'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">BODY</span><span class="hdr-meta">CORRECT WEIGHT</span></div>
+      <div class="equipment-row">
+        <p class="lbl">ORIGINAL ENTRY · SEP 01, 7:12 AM</p>
+        <p style="font-family:var(--font-mono);font-size:14px;color:var(--ivory-faint);text-decoration:${state.weightCorrected?'line-through':'none'};margin:2px 0 12px">201.2 LB</p>
+        <p class="lbl">CORRECTED VALUE</p>
+        <p style="font-family:var(--font-display);font-weight:700;font-size:24px;margin:2px 0 12px">198.6 LB</p>
+        <button class="btn btn-primary" data-act="confirm-correction">CONFIRM CORRECTION</button>
+      </div>
+      ${state.toast ? `<div class="toast"><span>${state.toast.msg}</span>${state.toast.undo?'<button class="undo" data-act="undo-weight">UNDO</button>':''}</div>` : ''}
+      <p style="font-size:11px;color:var(--ivory-faint);line-height:1.6">The original event is never deleted — a correction supersedes it. History stays inspectable; every query resolves the corrected value.</p>`;
+  }
+}
+
+/* ---------------- render: MORE ---------------- */
+function renderMore(){
+  const s = state.scene.more;
+  if(s==='menu'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">MORE</span><span class="hdr-meta">SYSTEM</span></div>
+      <div class="list-row" data-act="goto-history"><div class="l1">${G('history',18)}<span class="t1">History</span></div><span class="chev">${G('chevRight',14)}</span></div>
+      <div class="list-row" data-act="goto-search"><div class="l1">${G('search',18)}<span class="t1">Search</span></div><span class="chev">${G('chevRight',14)}</span></div>
+      <div class="list-row" data-act="noop"><div class="l1">${G('missions',18)}<span class="t1">Missions &amp; Obligations</span></div><span class="chev">${G('chevRight',14)}</span></div>
+      <div class="list-row" data-act="noop"><div class="l1">${G('history',18)}<span class="t1">Review — recommendation ledger</span></div><span class="chev">${G('chevRight',14)}</span></div>
+      <div style="flex:1"></div>
+      <div class="banner">${G('backup',16)} 12 days since last export — archive from the share sheet whenever it's convenient.</div>`;
+  }
+  if(s==='history'){
+    const days = [
+      {d:'SEP 01', status:'COMPLETE', n:8, ev:['07:12 · WEIGHT LOGGED — 201.2 LB','09:40 · TRAIN — DAY A COMPLETED','21:55 · SLEEP LOGGED — PRIMARY, 7H 40M']},
+      {d:'AUG 31', status:'PARTIAL', n:5, ev:['08:03 · WATER LOGGED — 32 OZ','22:10 · SLEEP LOGGED — PRIMARY, 6H 05M']},
+      {d:'AUG 30', status:'COMPLETE', n:9, ev:['06:55 · TRAIN — DAY C COMPLETED']},
+    ];
+    return `
+      <div class="hdr-row"><span class="hdr-label">HISTORY</span><span class="hdr-meta">READ-ONLY · COMPLETE</span></div>
+      ${days.map((day,i)=>`
+        <div class="day-row">
+          <div class="top"><span class="date">${day.d} — ${day.status}</span><span class="cnt">${day.n} EVENTS</span></div>
+          <button class="show" data-act="toggle-day" data-i="${i}">${state.historyShow[i]?'HIDE':'SHOW'}</button>
+          ${state.historyShow[i]? day.ev.map(e=>`<div class="event-line">${e}</div>`).join(''):''}
+        </div>`).join('')}`;
+  }
+  if(s==='search'){
+    return `
+      <div class="hdr-row"><span class="hdr-label">SEARCH</span><span class="hdr-meta">EVIDENCE ONLY</span></div>
+      <div class="search-box"><input placeholder="weight in august" value="weight in august" readonly/><button data-act="run-search">${G('search',15)}</button></div>
+      <div id="search-results"></div>`;
+  }
+}
+
+function searchResults(){
+  return `
+    <div class="result"><div class="t">WEIGHT LOGGED — 198.6 LB</div><div class="src">RECORDED · SEP 01, 7:12 AM · CORRECTED FROM 201.2 LB</div></div>
+    <div class="result"><div class="t">WEIGHT LOGGED — 202.4 LB</div><div class="src">RECORDED · AUG 22, 6:50 AM</div></div>
+    <p style="font-size:11px;color:var(--ivory-faint);line-height:1.6">Two matches, both recorded events. Search never fabricates a missing entry or implies a range was checked when it wasn't.</p>`;
+}
+
+/* ---------------- notes ---------------- */
+const NOTES = {
+  'today:pre_day': {t:'Before a day exists', desc:'Lazy day creation — nothing is created until the first real action needs it. No "start my day" ritual is demanded.',
+    a:'One quiet glyph, one control. No welcome copy, no streak, no progress ring.', b:'Same single control — but tapping START DAY is the one real power-on moment in the whole app. That\'s where the sweep belongs, once a day, not on every screen change.'},
+  'today:recommendation': {t:'The one dominant recommendation', desc:'INFORM → INTERPRET → RECOMMEND → USER DECIDES. Exactly one primary surface; WHY is always available, never forced open.',
+    a:'Flat card, hairline red rule on the left edge only. WHY expands with an instant cut, no easing flourish.', b:'Card lifts slightly off the ground (shadow + top edge lit), CONFIRM has a soft red glow. WHY expands with visible motion.'},
+  'today:red_confirm': {t:'RED-tier decline requires two taps', desc:'This is doctrine, not friction for its own sake: the first decline returns "not confirmed," only a second explicit attempt executes.',
+    a:'Red appears only here — this is the one surface where it is allowed to feel weighty.', b:'Same two-stage gate, but the red panel edge pulses once on entering stage two — state change made physically legible.'},
+  'today:critical': {t:'CRITICAL is a shortened reality path, not a scolding', desc:'Bad days get less asked of them, not a demand for ideal-day behavior — no guilt copy, no streak break, just the smallest safe next move and a real, already-computed target (Minimum Day\'s real 40oz).',
+    a:'The mechanical fill bar is a single thin red line — the one instrument-style indicator in the whole app, used only because the target is real.', b:'Same bar; the CRITICAL panel\'s edge gets the same one-time power-on sweep as a direction switch — the suit visibly clocking a state that matters.'},
+  'today:attention': {t:'Attention is earned, not accumulated', desc:'Every row here passed the five-question escalation test. There is no badge count, no red dot on the tab icon.',
+    a:'Rows sit flush, quiet ivory dot for ATTENTION-tier. No entrance animation.', b:'Rows step in with a brief stagger on scene entry — still restrained, but visibly alive.'},
+  'today:commitment': {t:'Satisfy, not release', desc:'TODAY exposes exactly one commitment action. Release, reopen, and re-linking stay in MORE — not duplicated here.',
+    a:'Plain confirm button, same weight as any other primary action.', b:'Same button; a short directional sweep confirms the tap before the toast appears.'},
+  'today:quiet': {t:'NO ACTION REQUIRED is a win', desc:'The literal FIELD-doctrine phrase. A quiet TODAY is the system succeeding, not a screen with nothing built yet.',
+    a:'Static, centered, almost inert — the calmest screen in the whole prototype.', b:'A slow single-breath opacity cycle on the glyph — "alive," never busy.'},
+  'train:pre_session': {t:'Session, not workout picker', desc:'Variant is a real choice (STANDARD/REDUCED/RECOVERY) with real consequences for rotation — never hidden behind a generic "start."',
+    a:'Segmented control with a hard red underline on the selected variant.', b:'Selected variant has a filled red inset shadow and a quicker toggle snap.'},
+  'train:active_session': {t:'Progression advice is advisory only', desc:'INCREASE/HOLD always ships a plain-language reason. The lifter logs the actual set — the engine never auto-applies a number.',
+    a:'Advisory chip: outline only, red border when INCREASE. No motion on stepper taps.', b:'Advisory chip has a filled red wash when INCREASE. Stepper buttons give a short scale-down "press" on tap.'},
+  'train:complete': {t:'Rotation impact is stated, not implied', desc:'PARTIAL explicitly says what happens next time — the one place a lifter\'s choice changes future state.',
+    a:'One flat card, no confetti, no completion animation.', b:'Same card; COMPLETED gets one brief red edge-flash on entry, PARTIAL gets none — the interface itself withholds celebration it hasn\'t earned.'},
+  'body:status': {t:'Four peers, no leader', desc:'WATER/SLEEP/WEIGHT/PROTEIN are deliberately undifferentiated — no tracker is instrumented as more important than its siblings.',
+    a:'Perfectly even 2×2 grid, identical treatment, no accent on any single tile.', b:'Same grid; a populated tile\'s value has a faint red numeral flash the instant it updates.'},
+  'body:log_water': {t:'Quick-add over free entry', desc:'Common amounts are one tap; the running total is always the headline number, not a form field.',
+    a:'Chips are plain outlined rectangles.', b:'Selected/tapped chip briefly fills red before settling — tactile confirmation of the add.'},
+  'body:log_sleep': {t:'PRIMARY vs SUPPLEMENTAL matters structurally', desc:'Only PRIMARY sleep can ever suggest "did your day end?" — SUPPLEMENTAL naps are invisible to that logic.',
+    a:'Segmented control, no explanation copy unless asked.', b:'Same control; switching kinds gives a quick directional slide instead of an instant swap.'},
+  'body:correction': {t:'Correct, never overwrite', desc:'The original stays visible (struck through once corrected) — nothing is mutated or deleted, a correction event supersedes it.',
+    a:'Strike-through is the only visual signal; understated on purpose.', b:'Strike-through animates in over ~200ms rather than appearing instantly — the "supersession" is seen happening.'},
+  'more:menu': {t:'System depth lives here, not on TODAY', desc:'Configuration and history are one tap further away, in Inspect/System depth, not surfaced by default.',
+    a:'Plain list rows, hairline dividers, backup banner sits quiet at the bottom.', b:'Rows show a subtle right-edge red tick on press, banner glyph has a slow idle pulse.'},
+  'more:history': {t:'HISTORY is the audit trail, not a feed', desc:'Complete, chronological, unfiltered. Collapsed by default so it stays scannable as it grows — detail is opt-in per day.',
+    a:'SHOW/HIDE is plain text, no icon rotation.', b:'SHOW/HIDE swaps state with a quick color flash rather than a static label change.'},
+  'more:search': {t:'Retrieval, never fabrication', desc:'Every result carries its source and correction status. Search will not imply a date range was checked when it wasn\'t.',
+    a:'Results are flat rows, source line in dim mono — reads like a lab printout.', b:'Results fade/step in individually on search, still under 300ms total — feels responsive, not slow.'},
+};
+
+/* ---------------- event wiring ---------------- */
+function on(sel, fn){ document.addEventListener('click', e=>{ const t=e.target.closest(sel); if(t) fn(t,e); }); }
+
+on('[data-act="start-day"]', ()=>{
+  state.scene.today='recommendation';
+  if(state.dir==='b') state.bootPending = true;
+  render();
+});
+on('[data-act="why"]', ()=>{ state.whyOpen=!state.whyOpen; render(); });
+on('[data-act="confirm-rec"]', ()=>{ state.scene.today='quiet'; toast('TRAIN confirmed'); render(); });
+on('[data-act="decline-rec"]', ()=>{ state.declineStage=0; state.scene.today='red_confirm'; render(); });
+on('[data-act="cancel-decline"]', ()=>{ state.declineStage=0; state.scene.today='recommendation'; render(); });
+on('[data-act="decline-stage"]', ()=>{
+  if(state.declineStage===0){ state.declineStage=1; render(); }
+  else { state.declineStage=0; state.scene.today='attention'; toast('Decline recorded'); render(); }
+});
+on('[data-act="goto-commitment"]', ()=>{ state.scene.today='commitment'; render(); });
+on('[data-act="end-day"]', ()=>{ state.scene.today='quiet'; toast('Day ended'); render(); });
+on('[data-act="satisfy"]', ()=>{ toast('Commitment satisfied'); state.scene.today='attention'; render(); });
+on('[data-act="back-attention"]', ()=>{ state.scene.today='attention'; render(); });
+
+on('[data-act="set-variant"]', (t)=>{ state.variant=t.dataset.v; render(); });
+on('[data-act="start-session"]', ()=>{ state.scene.train='active_session'; state.exIndex=0; state.setsLogged=0; render(); });
+on('[data-act="wt"]', (t)=>{ state.weight+=parseInt(t.dataset.d,10); render(); });
+on('[data-act="rp"]', (t)=>{ state.reps=Math.max(1,state.reps+parseInt(t.dataset.d,10)); render(); });
+on('[data-act="log-set"]', ()=>{ state.setsLogged++; toast('Set logged — '+state.weight+' × '+state.reps); render(); });
+on('[data-act="next-ex"]', ()=>{
+  const list = EX_LIB[state.variant]||EX_LIB.STANDARD;
+  if(state.exIndex<list.length-1){ state.exIndex++; render(); }
+  else { state.scene.train='complete'; render(); }
+});
+on('[data-act="end-session"]', ()=>{ state.scene.train='complete'; render(); });
+on('[data-act="done-session"]', ()=>{ state.scene.train='pre_session'; render(); });
+
+on('[data-act="goto-water"]', ()=>{ state.scene.body='log_water'; render(); });
+on('[data-act="goto-sleep"]', ()=>{ state.scene.body='log_sleep'; render(); });
+on('[data-act="goto-correction"]', ()=>{ state.scene.body='correction'; render(); });
+on('[data-act="water-add"]', (t)=>{ state.water+=parseInt(t.dataset.a,10); toast('Water logged — +'+t.dataset.a+' oz', true); render(); });
+on('[data-act="undo-water"]', (t)=>{ /* demo undo: revert last known amount */ toast('Undone'); render(); });
+on('[data-act="sleep-kind"]', (t)=>{ state.sleepKind=t.dataset.v; render(); });
+on('[data-act="log-sleep"]', ()=>{ state.sleepLogged=true; toast('Sleep logged — '+state.sleepKind); state.scene.body='status'; render(); });
+on('[data-act="confirm-correction"]', ()=>{ state.weightCorrected=true; toast('Corrected — history preserved', true); render(); });
+on('[data-act="undo-weight"]', ()=>{ state.weightCorrected=false; toast('Correction undone'); render(); });
+on('[data-act="body-done"]', ()=>{ state.scene.body='status'; render(); });
+
+on('[data-act="goto-history"]', ()=>{ state.scene.more='history'; render(); });
+on('[data-act="goto-search"]', ()=>{ state.scene.more='search'; render(); });
+on('[data-act="toggle-day"]', (t)=>{ const i=t.dataset.i; state.historyShow[i]=!state.historyShow[i]; render(); });
+on('[data-act="run-search"]', ()=>{ document.getElementById('search-results').innerHTML = searchResults(); });
+on('[data-act="noop"]', ()=>{ toast('Not modeled in this prototype'); render(); });
+
+on('.dir-btn', (t)=>{
+  const next = t.dataset.dirSet;
+  if(next==='b' && state.dir!=='b') state.bootPending = true;
+  state.dir = next; render();
+});
+on('.screen-tab', (t)=>{ state.screen=t.dataset.screen; render(); });
+on('.tab', (t)=>{ state.screen=t.dataset.screen; render(); });
+on('.scene-btn', (t)=>{
+  state.scene[state.screen]=t.dataset.scene;
+  if(state.dir==='b' && state.screen==='today' && t.dataset.scene==='critical') state.bootPending = true;
+  render();
+});
+on('.view-toggle button', (t)=>{ state.view=t.dataset.view; render(); });
+on('#reset-demo', ()=>{ Object.assign(state, JSON.parse(JSON.stringify(initialState))); render(); });
+
+/* ---------------- design system panel ---------------- */
+function renderSystem(){
+  return `
+  <div class="recommend-block">
+    <h2>Recommendation</h2>
+    <p><b>Direction B — Terry's Suit</b> should be BEYOND's launch visual language, with Direction A's restraint imported as the default resting state. Terry's motion vocabulary is what makes state changes legible without adding chrome — exactly what TODAY needs when it's compressing a lot of truth into very little surface. Bruce's near-total stillness is correct in principle but risks reading as unfinished on a phone, where a small amount of feedback is what makes a tap feel received. The combination: Bruce's density and red-scarcity discipline, Terry's confirmation motion.</p>
+  </div>
+  <div class="sys-grid">
+    <div class="sys-card">
+      <h4>Palette</h4>
+      <div class="swatch-row">
+        <div class="swatch" style="background:#0a0a0c">void</div>
+        <div class="swatch" style="background:#131316">panel</div>
+        <div class="swatch" style="background:#eeeae2;color:#000a">ivory</div>
+        <div class="swatch" style="background:#8f8d87;color:#000a">ash</div>
+        <div class="swatch" style="background:#9c1622">red·a</div>
+        <div class="swatch" style="background:#e5202f">red·b</div>
+        <div class="swatch" style="background:#b8863a;color:#000a">amber</div>
+      </div>
+      <p class="note">Red is one hue family across both directions, only its saturation/weight shifts. Amber is the sole semantic ATTENTION color — never used as a second accent.</p>
+    </div>
+    <div class="sys-card">
+      <h4>Type</h4>
+      <p class="type-sample" style="font-size:26px">Big Shoulders Display</p>
+      <p class="note" style="margin-bottom:10px">Nameplate / command headlines — condensed, engineered, used at weight 700 only.</p>
+      <p style="font-family:var(--font-body);font-size:15px;margin:0 0 4px">IBM Plex Sans — body &amp; controls</p>
+      <p style="font-family:var(--font-mono);font-size:13px;margin:0">IBM Plex Mono — data, WHY traces, timestamps</p>
+      <p class="note" style="margin-top:10px">16px is the floor everywhere, no exceptions — matches BEYOND's own locked accessibility rule.</p>
+    </div>
+    <div class="sys-card">
+      <h4>Geometry &amp; surfaces</h4>
+      <p class="note"><b style="color:var(--ivory)">A:</b> square corners, 1px hairlines, flat panels, red as a single left-edge rule on the one dominant surface only.<br/><br/><b style="color:var(--ivory)">B:</b> one diagonal chamfer per surface (never a rounded corner — this is plating, not an app card), asymmetric on purpose. The phone itself carries a faint red ambient bloom when the suit is "on," and switching into B fires one restrained power-on sweep — never a loop.</p>
+    </div>
+    <div class="sys-card">
+      <h4>Glyph language</h4>
+      <div class="glyph-grid">
+        ${['today','train','body','more','reset','shiftDown','why','critical','attention','checkin','log','success','history','search','missions','backup'].map(n=>`<div class="glyph-cell">${G(n,22)}<span>${n}</span></div>`).join('')}
+      </div>
+      <p class="note" style="margin-top:10px">One stroke family (1.5px, square joins, no fills except tiny state dots) built from diamonds, hexes, brackets and chevrons — nothing borrowed from consumer icon sets.</p>
+    </div>
+    <div class="sys-card">
+      <h4>Red budget</h4>
+      <p class="note">Red never decorates. It appears only for: the one dominant recommendation's edge, a primary confirm action, RED-tier override, and CRITICAL attention. Everything else — including SUGGESTED/AVAILABLE attention and ordinary confirmations — stays ivory or amber. If a screen has more than one red element outside RED-tier/CRITICAL, that's a defect, not a style choice.</p>
+    </div>
+    <div class="sys-card">
+      <h4>Motion</h4>
+      <p class="note"><b style="color:var(--ivory)">A:</b> 60–120ms instant cuts, no easing personality, motion only for open/close disclosure.<br/><br/><b style="color:var(--ivory)">B:</b> 140–260ms with a soft ease-out, state changes get one small physical confirmation (a press, a flash, a lift) — never a decorative loop, never idle animation.</p>
+    </div>
+    <div class="sys-card">
+      <h4>State representation</h4>
+      <p class="note">AVAILABLE/SUGGESTED → ivory, no badge. ATTENTION → amber dot, capped, disappears on resolution. CRITICAL/RED-tier → red, and only red gets a confirmation gate. No color, motion, or repetition may escalate a state past what the five-question test earns.</p>
+    </div>
+    <div class="sys-card">
+      <h4>Accessibility</h4>
+      <p class="note">16px minimum text app-wide. Every control ≥44px touch target. Visible focus rings (not shown in this static reference, present in the interactive prototype's keyboard path). Both directions hold WCAG AA contrast for ivory-on-void and red-on-void text pairs.</p>
+    </div>
+  </div>`;
+}
+
+/* ---------------- main render ---------------- */
+function render(){
+  const stage = document.getElementById('stage');
+  stage.dataset.dir = state.dir;
+
+  document.querySelectorAll('.dir-btn').forEach(b=>b.classList.toggle('active', b.dataset.dirSet===state.dir));
+  document.querySelectorAll('.view-toggle button').forEach(b=>b.classList.toggle('active', b.dataset.view===state.view));
+
+  document.getElementById('wordmark').textContent = 'BEYOND';
+
+  const sysPanel = document.getElementById('sys-panel');
+  const showSystem = state.view==='system';
+  sysPanel.classList.toggle('show', showSystem);
+  document.querySelector('.device-col').style.display = showSystem ? 'none':'flex';
+  document.getElementById('notes-col').style.display = showSystem ? 'none':'flex';
+  document.getElementById('scene-block').style.display = showSystem ? 'none':'block';
+  if(showSystem){ sysPanel.innerHTML = renderSystem(); return; }
+
+  document.getElementById('tabbar').innerHTML = TAB_DEF.map(t=>`
+    <button class="tab ${state.screen===t.id?'active':''}" data-screen="${t.id}">${G(t.glyph,20)}<span>${t.label}</span></button>
+  `).join('');
+
+  let html='';
+  if(state.screen==='today') html = renderToday();
+  if(state.screen==='train') html = renderTrain();
+  if(state.screen==='body') html = renderBody();
+  if(state.screen==='more') html = renderMore();
+
+  const scr = document.getElementById('screen');
+  scr.innerHTML = html + (state.toast && !['log_water','correction'].includes(state.scene[state.screen]) ? `<div class="toast" style="position:sticky;bottom:0"><span>${state.toast.msg}</span></div>` : '');
+  scr.scrollTop = 0;
+
+  document.getElementById('scene-screen-lbl').textContent = state.screen.toUpperCase();
+  document.getElementById('scene-menu').innerHTML = SCENES[state.screen].map(sc=>`
+    <button class="scene-btn ${state.scene[state.screen]===sc?'active':''}" data-scene="${sc}">${SCENE_LABEL[sc]}</button>
+  `).join('');
+
+  if(state.bootPending){
+    state.bootPending = false;
+    const dev = document.querySelector('.device');
+    dev.classList.remove('boot');
+    void dev.offsetWidth;
+    dev.classList.add('boot');
+    setTimeout(()=>dev.classList.remove('boot'), 700);
+  }
+
+  const noteKey = state.screen+':'+state.scene[state.screen];
+  const n = NOTES[noteKey];
+  const noteCard = document.getElementById('note-card');
+  if(n){
+    noteCard.innerHTML = `
+      <h3>${n.t}</h3>
+      <p>${n.desc}</p>
+      <div class="tradeoff">
+        <div><span class="g">DIRECTION A</span>${n.a}</div>
+        <div><span class="g">DIRECTION B</span>${n.b}</div>
+      </div>`;
+  } else {
+    noteCard.innerHTML = '';
+  }
+}
+
+render();
+</script>
+</body>
+</html>
