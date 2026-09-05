@@ -1,6 +1,6 @@
 ---
 id: LAUNCH-VISION-002
-status: ACTIVE
+status: CLOSED
 baseline: 9b1103942271b12deca045479da10a500cc9f5df
 branch: claude/launch-vision-002-body-neutral
 contract: docs/agent/drops/LAUNCH-VISION-002.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/72
 builder: Claude, direct owner assignment in this session
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: ffedd75dd304b55121f2f46d34b5fe6221c7d21d
+closed_at: 2026-09-05T13:04:38.748Z
 ---
 
 # ACTIVE_DROP
