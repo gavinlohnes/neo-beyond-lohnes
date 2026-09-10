@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: f54a6e373442af4f189b6e982f67ba9142bac949
 branch: claude/motion-001-suit-easing
 contract: docs/agent/drops/MOTION-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/74
 builder: Claude, direct owner assignment in this session
 reviewer: (unassigned)
 integrator: (unassigned)
