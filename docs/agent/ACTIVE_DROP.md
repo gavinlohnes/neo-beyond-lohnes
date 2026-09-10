@@ -1,6 +1,6 @@
 ---
 id: MOTION-001
-status: ACTIVE
+status: CLOSED
 baseline: f54a6e373442af4f189b6e982f67ba9142bac949
 branch: claude/motion-001-suit-easing
 contract: docs/agent/drops/MOTION-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/74
 builder: Claude, direct owner assignment in this session
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 972a237dbd031faf534a3e35d81fd551f237d770
+closed_at: 2026-09-10T11:56:00.000Z
 ---
 
 # ACTIVE_DROP
