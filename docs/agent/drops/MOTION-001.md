@@ -51,7 +51,7 @@ Architectural or High-Risk triggers in `.claude/skills/beyond-drop/SKILL.md` §1
   100-250ms target range the Product Experience Sprint P2 comment documents, and are already
   close to the prototype's `--dur-1`/`--dur-2` (140ms/260ms); only the curve shape is a real,
   worth-fixing gap. Changing durations is not in scope for this Drop.
-- No change to any of the 12 existing `global.css` call sites that consume `--motion-easing` —
+- No change to any of the 11 existing `global.css` call sites that consume `--motion-easing` —
   they inherit the new curve automatically through the token; none should be edited directly.
 - No new animation, transition, or component. This Drop changes one existing token's value only.
 - No change to `--radius`, `--chamfer`, glyph system, or any other still-deferred "Terry's Suit"
@@ -74,7 +74,7 @@ Architectural or High-Risk triggers in `.claude/skills/beyond-drop/SKILL.md` §1
 - `src/engine/**` untouched (pure CSS-token change only).
 - Motion still "explains a state change, never decorates" — no new decorative animation is
   introduced; this Drop only reshapes the timing curve of motion that already exists.
-- All 12 existing `var(--motion-easing)` call sites in `global.css` continue to resolve
+- All 11 existing `var(--motion-easing)` call sites in `global.css` continue to resolve
   correctly (no orphaned reference, no typo in the new value).
 
 ## Acceptance criteria
