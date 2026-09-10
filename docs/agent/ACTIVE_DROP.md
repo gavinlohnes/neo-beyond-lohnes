@@ -1,15 +1,13 @@
 ---
-id: TYPOGRAPHY-001
-status: CLOSED
-baseline: 8d81bdcbc0771e36cd9f0fbb92ac68a02607275e
-branch: claude/typography-001-suit-headline
-contract: docs/agent/drops/TYPOGRAPHY-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/73
+id: MOTION-001
+status: ACTIVE
+baseline: f54a6e373442af4f189b6e982f67ba9142bac949
+branch: claude/motion-001-suit-easing
+contract: docs/agent/drops/MOTION-001.md
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/74
 builder: Claude, direct owner assignment in this session
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: ca0c1bb1e161a9623d1d3d96dd39d8f119858fea
-closed_at: 2026-09-10T10:45:23.333Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/TYPOGRAPHY-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/MOTION-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
