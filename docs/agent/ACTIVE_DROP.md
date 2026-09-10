@@ -1,6 +1,6 @@
 ---
 id: TYPOGRAPHY-001
-status: ACTIVE
+status: CLOSED
 baseline: 8d81bdcbc0771e36cd9f0fbb92ac68a02607275e
 branch: claude/typography-001-suit-headline
 contract: docs/agent/drops/TYPOGRAPHY-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/73
 builder: Claude, direct owner assignment in this session
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: ca0c1bb1e161a9623d1d3d96dd39d8f119858fea
+closed_at: 2026-09-10T10:45:23.333Z
 ---
 
 # ACTIVE_DROP
