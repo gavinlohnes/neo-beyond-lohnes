@@ -90,25 +90,20 @@
 
   /*
    * BEYOND Suit Implementation 01 (2026-08-22) — Part 9 typography
-   * direction: Space Grotesk for DISPLAY/TITLE, IBM Plex Sans for
-   * CONTROL/BODY/META. MATERIAL CONFLICT FOUND AND REPORTED (Part 0):
-   * this repository has never loaded any of the three named typefaces
-   * below — index.html links only tokens.css/global.css, no
-   * @font-face, no Google Fonts/self-hosted font files, no font
-   * assets anywhere in the repo. Every one of these families has
-   * therefore always fallen through to `system-ui` on every real
-   * device that has ever rendered this app, including throughout the
-   * entire Overdrive/Harvest/Suit Layer history. --font-body's leading
-   * name is corrected here to name the Bible's actual intended font
-   * (was "Inter", which nothing in the Bible specifies), but this is a
-   * documentation-accuracy fix, not a functional one — it changes
-   * nothing on any real device today. Actually loading real font files
-   * is a separate, nontrivial decision (bundle size, offline/service-
-   * worker precaching, subsetting, license file inclusion) deliberately
-   * NOT made in this checkpoint — flagged for explicit owner sign-off,
-   * not silently bundled into a TODAY visual pass.
+   * direction: DISPLAY/TITLE typeface, IBM Plex Sans for CONTROL/BODY/
+   * META. At this checkpoint the repo named these families in tokens
+   * only — no @font-face/Google Fonts/self-hosted files existed yet, so
+   * every family fell through to `system-ui`. That gap was resolved in
+   * Suit Implementation 01B (see src/ui/styles/fonts.ts): all three
+   * families are now genuinely self-hosted via @fontsource and actually
+   * render on real devices, not just named here.
+   *
+   * TYPOGRAPHY-001 (2026-09-10): --font-display's family swapped from
+   * Space Grotesk to Big Shoulders Display, matching the BEYOND Launch
+   * Vision prototype's "Terry's Suit" direction (direct owner decision;
+   * see docs/UX_DECISIONS.md). --font-body/--font-mono unchanged.
    */
-  --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --font-display: "Big Shoulders Display", "IBM Plex Sans", system-ui, sans-serif;
   --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
