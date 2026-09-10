@@ -243,8 +243,21 @@ canonical operation:
   owner ruling — it stays red, no per-state exception beyond the BODY-wide one here.
 - The broader "Terry's Suit" direction this reversal is drawn from (chamfered/angular surface
   geometry beyond the existing single-surface `--chamfer` primitive, ambient motion, an abstract
-  glyph family, typography) remains prototype-only pending its own separate, explicitly
-  authorized Drop(s) — this entry locks only the one piece actually authorized so far.
+  glyph family) remains prototype-only pending its own separate, explicitly authorized Drop(s).
+  Typography is no longer in that deferred set — see "Visual system — typography" below
+  (TYPOGRAPHY-001).
+
+## Visual system — typography
+
+- **Display font, swapped (locked 2026-09-10, direct owner ruling, TYPOGRAPHY-001).**
+  `--font-display` (headlines: `.title`, `.command-title`, `.recommendation-title`, and every
+  other consumer of the token in [global.css](../src/ui/styles/global.css)) changes from Space
+  Grotesk to Big Shoulders Display, matching the BEYOND Launch Vision prototype's "Terry's Suit"
+  direction. Same self-hosted-via-`@fontsource` pattern and the same weights (600/700) as before
+  — see [fonts.ts](../src/ui/styles/fonts.ts) — only the family named changed.
+- **Scoped narrowly.** `--font-body` (IBM Plex Sans) and `--font-mono` (IBM Plex Mono) are
+  unchanged. Font sizes, per-element weights, and letter-spacing are unchanged — this is a
+  typeface swap, not a type-scale redesign.
 
 ## System identity — EMBLEM vs. GLYPHS split
 

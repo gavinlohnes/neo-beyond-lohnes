@@ -15,9 +15,18 @@
  * asset pipeline resolves and hashes the referenced .woff2 files (copied
  * into dist/assets/, then precached — see vite.config.ts's explicit
  * workbox.globPatterns woff2 entry).
+ *
+ * TYPOGRAPHY-001 (2026-09-10): --font-display's family swapped from Space
+ * Grotesk to Big Shoulders Display, matching the BEYOND Launch Vision
+ * prototype's "Terry's Suit" direction (direct owner decision). Same
+ * weights (600/700), same self-hosting pattern — only the family changed.
  */
-import "@fontsource/space-grotesk/latin-600.css"; // .title
-import "@fontsource/space-grotesk/latin-700.css"; // .command-title, .recommendation-title (BODY/TRAIN)
+// big-shoulders-display's package.json exports map, unlike the other @fontsource packages
+// below, has no explicit "./*.css" entry — only "./*" -> "./*.css". Importing with ".css"
+// already in the specifier resolves to a nonexistent "*.css.css" and fails the production
+// build; the extensionless form below is what this package's exports map actually supports.
+import "@fontsource/big-shoulders-display/latin-600"; // .title
+import "@fontsource/big-shoulders-display/latin-700"; // .command-title, .recommendation-title (BODY/TRAIN)
 import "@fontsource/ibm-plex-sans/latin-400.css"; // body default, .card-body
 import "@fontsource/ibm-plex-sans/latin-600.css"; // .card-body's existing inline font-weight:600 use
 import "@fontsource/ibm-plex-mono/latin-400.css"; // .meta, .why-rule, .status-strip
