@@ -114,8 +114,15 @@
      sit inside the 100-250ms target range. Actual `transition`
      declarations are added per-component as each screen's phase wires
      up real motion (P8) — these are just the shared numbers so every
-     component that does agrees on the same feel. */
+     component that does agrees on the same feel.
+
+     MOTION-001 (2026-09-10): --motion-easing's curve swapped from the
+     generic `ease-out` to the BEYOND Launch Vision prototype's "Terry's
+     Suit" curve (direct owner decision; see docs/UX_DECISIONS.md).
+     --motion-fast/--motion-base durations unchanged — both already sit
+     inside the target range above and are close to the prototype's own
+     numbers; only the curve shape was a real gap. */
   --motion-fast: 150ms;
   --motion-base: 220ms;
-  --motion-easing: ease-out;
+  --motion-easing: cubic-bezier(.2, .8, .2, 1);
 }

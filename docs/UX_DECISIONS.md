@@ -242,10 +242,10 @@ canonical operation:
   needed" state on TODAY was considered for a similar carve-out and explicitly rejected by direct
   owner ruling — it stays red, no per-state exception beyond the BODY-wide one here.
 - The broader "Terry's Suit" direction this reversal is drawn from (chamfered/angular surface
-  geometry beyond the existing single-surface `--chamfer` primitive, ambient motion, an abstract
-  glyph family) remains prototype-only pending its own separate, explicitly authorized Drop(s).
-  Typography is no longer in that deferred set — see "Visual system — typography" below
-  (TYPOGRAPHY-001).
+  geometry beyond the existing single-surface `--chamfer` primitive, an abstract glyph family)
+  remains prototype-only pending its own separate, explicitly authorized Drop(s). Typography
+  and motion easing are no longer in that deferred set — see "Visual system — typography" and
+  "Visual system — motion" below (TYPOGRAPHY-001, MOTION-001).
 
 ## Visual system — typography
 
@@ -258,6 +258,18 @@ canonical operation:
 - **Scoped narrowly.** `--font-body` (IBM Plex Sans) and `--font-mono` (IBM Plex Mono) are
   unchanged. Font sizes, per-element weights, and letter-spacing are unchanged — this is a
   typeface swap, not a type-scale redesign.
+
+## Visual system — motion
+
+- **Easing curve, swapped (locked 2026-09-10, direct owner ruling, MOTION-001).**
+  `--motion-easing` changes from the generic `ease-out` to `cubic-bezier(.2, .8, .2, 1)`,
+  matching the BEYOND Launch Vision prototype's "Terry's Suit" direction. All 12 existing
+  `var(--motion-easing)` consumers in [global.css](../src/ui/styles/global.css) inherit the new
+  curve automatically — no per-component change.
+- **Scoped narrowly.** `--motion-fast` (150ms) and `--motion-base` (220ms) are unchanged — both
+  already sit inside the Product Experience Sprint P2's documented 100-250ms target range and
+  are already close to the prototype's own numbers. Only the curve shape changed, not the
+  durations, and no new animation/transition was added.
 
 ## System identity — EMBLEM vs. GLYPHS split
 
