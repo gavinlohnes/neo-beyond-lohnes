@@ -18,17 +18,25 @@
  * corrected here rather than left standing — see
  * docs/agent/drops/SHELL-001.md and docs/UX_DECISIONS.md, "System
  * identity — EMBLEM vs. GLYPHS split"). The governing split now:
- * EMBLEM = THE MACHINE (a future dedicated mark, not this family, not
- * built by this Drop) and GLYPHS = THE INSTRUMENTS — this file. The
- * universal/core diamond each destination glyph builds outward from is
- * a shared structural *motif*, not a claim of machine identity; each
- * icon's own outer silhouette is what "the glyph system operates"
- * through — one coherent instrument meaning (which destination you're
- * in), applied consistently via every screen's own `.field-header`
- * (TodayScreen/TrainScreen/BodyScreen/MoreScreen leads with exactly its
- * own nav tab's icon), never decorative repetition, never a machine-
- * identity claim. Geometry is unaffected by this correction — see the
- * frozen-geometry note above, still in force, unchanged since Phase B.1.
+ * EMBLEM = THE MACHINE (a dedicated mark, not this family — now built,
+ * see EMBLEM-001 and docs/brand/beyond-mark/) and GLYPHS = THE
+ * INSTRUMENTS — this file. The universal/core diamond each destination
+ * glyph builds outward from is a shared structural *motif*, not a claim
+ * of machine identity; each icon's own outer silhouette is what "the
+ * glyph system operates" through — one coherent instrument meaning
+ * (which destination you're in), applied consistently via every
+ * screen's own `.field-header` (TodayScreen/TrainScreen/BodyScreen/
+ * MoreScreen leads with exactly its own nav tab's icon), never
+ * decorative repetition, never a machine-identity claim. Geometry is
+ * unaffected by this correction — see the frozen-geometry note above,
+ * still in force, unchanged since Phase B.1.
+ *
+ * GLYPH-001 (2026-09-11): one scoped, direct-owner-approved exception to
+ * the frozen-geometry rule above — `shiftDown` only. The prior
+ * triple-chevron read ambiguously (scroll / signal / "more below");
+ * replaced with a down-arrow-into-a-baseline, matching the BEYOND
+ * Launch Vision prototype's simpler equivalent. The other five glyphs
+ * remain frozen and untouched.
  */
 import type { ReactElement } from "react";
 
@@ -63,9 +71,9 @@ const PATHS: Record<IconName, ReactElement> = {
   ),
   shiftDown: (
     <g fill="none" stroke="currentColor" strokeLinejoin="miter" strokeLinecap="square">
-      <path d="M5 4.8 L12 8.2 L19 4.8" strokeWidth={1.7} />
-      <path d="M6 10.9 L12 13.7 L18 10.9" strokeWidth={1.45} />
-      <path d="M7 16.5 L12 18.7 L17 16.5" strokeWidth={1.2} />
+      <path d="M12 4.5 V13.5" strokeWidth={1.8} />
+      <path d="M8 9.5 L12 13.5 L16 9.5" strokeWidth={1.8} />
+      <path d="M7 19.5 H17" strokeWidth={1.8} />
     </g>
   ),
   success: (
