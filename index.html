@@ -4,7 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0a0a" />
-    <link rel="icon" type="image/png" href="icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+    <!--
+      EMBLEM-001: iOS Safari's "Add to Home Screen" does not read the web
+      manifest's icons array — it looks for this tag specifically, falling
+      back to its own heuristic (often a stale or generic icon) without it.
+      Most plausible root cause of the mismatched home-screen icon reported
+      before this Drop.
+    -->
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
     <title>BEYOND</title>
     <link rel="stylesheet" href="/src/ui/styles/tokens.css" />
     <link rel="stylesheet" href="/src/ui/styles/global.css" />

@@ -282,17 +282,28 @@ system-identity glyph."
 
 - **The universal/core diamond is retired as BEYOND system identity.** It is not, and is not
   meant to become, the machine's own signature mark.
-- **EMBLEM = THE MACHINE.** A single dedicated machine-identity mark (a future Bat-style emblem)
-  is BEYOND's system identity. It does not exist yet and is not required to finish SHELL-001 or
-  any Drop that doesn't explicitly own building it. It must never be invented, traced,
-  approximated, or introduced as placeholder artwork by a Drop not explicitly chartered to
-  deliver it.
+- **EMBLEM = THE MACHINE.** A single dedicated machine-identity mark is BEYOND's system
+  identity, distinct from GLYPHS below.
+- **The emblem now exists (locked 2026-09-11, direct owner ruling, EMBLEM-001).** A bat-form
+  primary mark, `#D6202B` on `#000000` — silhouette, proportions, and color are owner design
+  authority, supplied as final production artwork, not to be redesigned/reinterpreted/
+  substituted by any Drop. Source SVGs (master/foreground/folded/micro) live in
+  `docs/brand/beyond-mark/`, per that directory's own README: update the master geometry there
+  first, then regenerate derivatives — never redraw from concept imagery. EMBLEM-001 wired it in
+  as the app icon / home-screen mark (`public/icons/icon-*.png`, `index.html`'s favicon and
+  `apple-touch-icon` links) only; it is not used anywhere inside the running app's own UI.
+- **Emblem color is independent of the in-app UI's red.** `#D6202B` is the emblem's own locked
+  brand color — it does not change, and was not derived from, `--accent`/`--red-b` in
+  [tokens.css](../src/ui/styles/tokens.css). Unifying the two is a separate, larger decision
+  nobody has made; don't infer it from this entry.
+- **Not maskable-safe as delivered.** The master/foreground geometry's wingtips sit ~20% past
+  the standard maskable safe zone (radius ~495 of a safe 409.6, in the 0–1024 viewBox) — a
+  circular/squircle OS mask would clip them. BEYOND's manifest deliberately leaves icon
+  `purpose` unset (`"any"`, the spec default) rather than mis-declare this art `"maskable"`. See
+  `docs/brand/beyond-mark/README.txt`'s integration note for the numbers.
 - **GLYPHS = THE INSTRUMENTS.** TODAY/TRAIN/BODY/MORE's existing locked pilot icon family
   ([Icon.tsx](../src/ui/icons/Icon.tsx)) remains the existing locked destination/instrument
   glyph set — unchanged geometry, unrelated to machine identity.
-- A future machine-emblem Drop must name its own exact placement as a locked decision before
-  implementation; see `docs/agent/drops/SHELL-001.md` ("Deferred to future machine-emblem
-  integration") for the minimal integration seam it inherits.
 
 ## Explicitly out of scope (do not build without direct sign-off)
 
