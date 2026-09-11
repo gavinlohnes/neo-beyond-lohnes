@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 103fa6778475f850192fb28bb7bf1aa75fc66de8
 branch: claude/glyph-001-shift-down-arrow
 contract: docs/agent/drops/GLYPH-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/76
 builder: Claude, direct owner assignment in this session
 reviewer: (unassigned)
 integrator: (unassigned)
