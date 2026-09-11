@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="BEYOND emblem">
+  <rect width="1024" height="1024" fill="#000000"/>
+  <polygon points="92,250 286,350 340,430 378,448 404,360 462,394 480,250 512,306 544,250 562,394 620,360 646,448 684,430 738,350 932,250 774,458 676,508 630,592 558,548 512,790 466,548 394,592 348,508 250,458" fill="#D6202B"/>
+  <path d="M 404 360 L 438 455 L 466 548" fill="none" stroke="#000000" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="M 620 360 L 586 455 L 558 548" fill="none" stroke="#000000" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter"/>
+</svg>
