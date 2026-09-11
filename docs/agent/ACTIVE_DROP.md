@@ -1,6 +1,6 @@
 ---
 id: EMBLEM-001
-status: ACTIVE
+status: CLOSED
 baseline: 8dbebfb4b6aeae0d3b8297a00451a76dd77905de
 branch: claude/emblem-001-primary-mark
 contract: docs/agent/drops/EMBLEM-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/75
 builder: Claude, direct owner assignment in this session
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: e0f8be9cbeda0430dc984a94ccdb42664973e521
+closed_at: 2026-09-11T03:56:00.000Z
 ---
 
 # ACTIVE_DROP
