@@ -43,7 +43,12 @@ describe("ExerciseLibraryScreen (real browser)", () => {
     const myExercises = screen.getByRole("group", { name: "My exercises" });
     await screen.getByRole("button", { name: "ADD EXERCISE" }).first().click();
     await screen.getByPlaceholder("Search by name, muscle group, or equipment").fill("Barbell Bench Press");
-    await screen.getByRole("button", { name: "ADD" }).first().click();
+    // exact: true matters here — getByRole's name match is substring by
+    // default, and "ADD" is itself a substring of "ADD EXERCISE" (the
+    // disclosure's own toggle/submit buttons), so an unqualified match
+    // would resolve .first() back to the toggle and re-close the panel
+    // instead of hitting this library row's own ADD button.
+    await screen.getByRole("button", { name: "ADD", exact: true }).first().click();
     // Scoped to the saved list specifically — "Barbell Bench Press" also
     // legitimately appears in the reference-list picker below (the entry
     // just added from), so an unscoped page-wide text match is ambiguous.
