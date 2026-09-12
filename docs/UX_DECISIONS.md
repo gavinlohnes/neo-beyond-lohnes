@@ -124,6 +124,32 @@ standing implementation authority.
   goal, or nutrition scoring — a SavedMeal is "the sandwich I always
   make," not a food database entry.
 
+## WORKOUT LIBRARY (Personal Exercise Library — TRAIN-CREATE-001, locked)
+
+Direct owner ruling, 2026-09-12 (in chat): general authorization to build toward workout
+"guider and creator" capability, starting with this foundation Drop.
+
+- **CustomExercise is a preset, not history.** Same treatment as SavedMeal: a small,
+  directly-mutable record (name/muscle group/equipment/rep range/notes) that changes in place
+  when edited, and `archivedAt` hides it from the active list without deleting it. No event
+  trail for "what exercises exist" — this Drop introduces no new historical fact type.
+- **A bundled reference list is inert, hand-authored data, never a bulk-imported third-party
+  database.** `EXERCISE_LIBRARY` (`src/domain/workout/exerciseLibrary.ts`) is informed by the
+  shape of open, permissively-licensed datasets (free-exercise-db, Unlicense; wger, exercise data
+  CC-licensed separately from its AGPL code) but every entry is a hand-authored generic exercise
+  fact — never a verbatim copy of a specific dataset's file or content.
+- **Does not touch the fixed A/B/C `WORKOUT_TEMPLATES` system or Engine progression.** The
+  domain-layer comment "No broad exercise database" on `WorkoutTemplateId`
+  (`src/domain/workout/types.ts`) constrains *that* fixed template system specifically — why its
+  own exercise IDs stay a small closed set for progression-history continuity. It is not a
+  blanket rule against a personal exercise library existing elsewhere in the app. This entry
+  makes that boundary explicit rather than leaving the two facts to read as a silent
+  contradiction.
+- **Not yet consumed by TRAIN.** `CustomExercise` is a standalone personal list only — not wired
+  into TRAIN's substitution field, set logging, or any execution surface, and there is no way yet
+  to assemble saved exercises into a new selectable workout template. Both are explicit exclusions
+  of this Drop, left to a distinct, larger future Drop that this one is designed to feed.
+
 ## HISTORY
 
 - Read-only, complete: every `BeyondDay` and every event that occurred

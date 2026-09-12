@@ -1,15 +1,13 @@
 ---
-id: GLYPH-001
-status: CLOSED
-baseline: 103fa6778475f850192fb28bb7bf1aa75fc66de8
-branch: claude/glyph-001-shift-down-arrow
-contract: docs/agent/drops/GLYPH-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/76
-builder: Claude, direct owner assignment in this session
+id: TRAIN-CREATE-001
+status: ACTIVE
+baseline: f2e7d9b6c2abb7d08d6ec429c26c8188c8347712
+branch: claude/train-create-001
+contract: docs/agent/drops/TRAIN-CREATE-001.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Claude, this session, assigned by Gavin in chat 2026-09-12
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: 4f6faaa5f42504464028bdea962ae8ac988f62ce
-closed_at: 2026-09-11T11:48:00.000Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/GLYPH-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/TRAIN-CREATE-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
