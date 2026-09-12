@@ -141,10 +141,22 @@ export function ExerciseLibraryScreen() {
 
       <section aria-labelledby="exercise-library-heading">
         <h2 id="exercise-library-heading" className="section-label">My exercises</h2>
-        {exercises.length === 0 && <p className="empty-state">No exercises saved yet.</p>}
-        {exercises.map((ex) => (
-          <ExerciseRow key={ex.id} exercise={ex} onArchive={() => void handleArchive(ex.id)} />
-        ))}
+        {/*
+         * Explicit role="group"/aria-label rather than relying on the
+         * <section>'s own aria-labelledby, so this list can be targeted
+         * unambiguously — a saved exercise's name can also legitimately
+         * appear in the reference-list picker below (e.g. immediately
+         * after adding it from the library, or any time its source entry
+         * is still visible in a search), and this is the one grouping
+         * that always means "what's actually saved," not "what's
+         * browsable."
+         */}
+        <div role="group" aria-label="My exercises">
+          {exercises.length === 0 && <p className="empty-state">No exercises saved yet.</p>}
+          {exercises.map((ex) => (
+            <ExerciseRow key={ex.id} exercise={ex} onArchive={() => void handleArchive(ex.id)} />
+          ))}
+        </div>
 
         <div className="intent-create">
           <FieldDisclosure summary="ADD EXERCISE" open={addOpen} onToggle={setAddOpen}>
