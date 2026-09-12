@@ -1,6 +1,6 @@
 ---
 id: TRAIN-CREATE-001
-status: ACTIVE
+status: CLOSED
 baseline: f2e7d9b6c2abb7d08d6ec429c26c8188c8347712
 branch: claude/train-create-001
 contract: docs/agent/drops/TRAIN-CREATE-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/77
 builder: Claude, this session, assigned by Gavin in chat 2026-09-12
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: ec4459452e456a32d77f7d79a63eeba82df6e2da
+closed_at: 2026-09-12T23:26:34.584Z
 ---
 
 # ACTIVE_DROP
