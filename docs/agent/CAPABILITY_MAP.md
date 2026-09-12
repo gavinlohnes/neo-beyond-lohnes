@@ -132,6 +132,33 @@ Reuse System) — not on every Drop, only when it validates or changes something
   than one requiring its own product decision.
 - **Ruling on file**: schema addition — owner sign-off obtained 2026-09-02.
 
+## WORKOUT CREATION / EXERCISE LIBRARY
+
+- **Existing primitive**: none before TRAIN-CREATE-001 — `WORKOUT_TEMPLATES` is a fixed,
+  hand-authored A/B/C set (`src/domain/workout/types.ts`), no personal exercise concept existed.
+- **Approved donor direction**: **free-exercise-db** (Unlicense/public domain, ~800 exercises,
+  name/primary+secondary muscles/equipment/instructions) as the preferred shape reference; wger
+  (AGPL code, but its bundled exercise/ingredient data is separately CC-licensed) as prior-art for
+  program-builder UX (custom routines, progression rules) — not a dependency or code source.
+  Own the UX/creation flow/progression logic; do not bulk-import a third-party dataset's actual
+  file/content, and never depend on wger's AGPL codebase directly.
+- **Rejected**: importing wger's application code (AGPL is a real license concern for anything
+  bundled into this repo); a bulk verbatim import of free-exercise-db's or any other dataset's
+  file (kept the same "own the UX, don't build/import a proprietary database" line NUTRITION
+  already drew, applied to a second domain).
+- **Built (2026-09-12)**: `src/domain/workout/exerciseLibrary.ts`'s `EXERCISE_LIBRARY` — a small
+  (~60 entry), hand-authored reference list (generic exercise facts: name/muscle group/equipment/
+  rep range), and `src/domain/workout/customExercise.ts`'s `CustomExercise` — a directly-mutable
+  personal preset, same treatment as `SavedMeal`. Wired into a new standalone MORE sub-screen
+  (`src/ui/screens/more/ExerciseLibraryScreen.tsx`): search the reference list or hand-type a
+  fully custom entry, list/edit/archive the personal library. Deliberately not wired into TRAIN's
+  execution surface and does not touch `WorkoutTemplateId`/`WORKOUT_TEMPLATES` — see
+  `docs/agent/drops/TRAIN-CREATE-001.md`'s exclusions. Still open: nothing yet lets the operator
+  assemble saved exercises into a new selectable workout template/program — that is the next,
+  larger, separately-scoped Drop this one is designed to feed.
+- **Ruling on file**: schema addition — owner sign-off obtained 2026-09-12 (direct chat ruling,
+  see `docs/UX_DECISIONS.md`'s WORKOUT LIBRARY entry).
+
 ## TRAIN experience
 
 - **Existing primitive**: `src/engine/progression.ts` (per-exercise INCREASE/HOLD/REDUCE,
@@ -142,6 +169,14 @@ Reuse System) — not on every Drop, only when it validates or changes something
   Laws and a NOW/TREND/JOURNEY information model are recorded as the governing synthesis.
 - **Rejected from this research**: dashboard-for-dashboard's-sake, timer clutter, confirmation
   dialogs on routine set commits, vibration on every tap, streak/engagement mechanics.
+- **Built (2026-09-02, PR #68)**: the full Wave-A slate is shipped. Prepared Set Row was found
+  already implemented before this PR (pre-filled input via `getLastPerformedSetForExercise`/
+  `suggestedInputFor`, plus "SAME AS LAST TIME"); this PR added Set Commit Choreography
+  (auto-rest-start + LIFO undo), Persistent Rest + Ambient timer (absolute-timestamp countdown,
+  ±15s, ambient compression after 8s idle), and Workout Secured closure — all live in
+  `TrainScreen.tsx` today. Confirmed independently 2026-09-12 (a fresh session re-checked this
+  entry against the actual code and PR history before starting new TRAIN work, rather than
+  assuming this ruling meant the work was still pending).
 - **Ruling on file**: build the Wave-A prototype slate — owner sign-off obtained 2026-09-02.
 
 ## GENERAL DEPENDENCY/TEST TOOLING

@@ -13,6 +13,7 @@ import type {
 } from "../domain/common/types";
 import type { Mission, Obligation } from "../domain/intent/types";
 import type { DecisionJournalEntry } from "../domain/journal/types";
+import type { CustomExercise } from "../domain/workout/customExercise";
 import { DEFAULT_SCHEDULE_PATTERN } from "../engine/scheduledContext";
 
 export class BeyondDB extends Dexie {
@@ -29,6 +30,7 @@ export class BeyondDB extends Dexie {
   obligations!: Table<Obligation, string>;
   savedMeals!: Table<SavedMeal, string>;
   decisionJournalEntries!: Table<DecisionJournalEntry, string>;
+  customExercises!: Table<CustomExercise, string>;
 
   constructor() {
     super("beyond");
@@ -176,6 +178,31 @@ export class BeyondDB extends Dexie {
       obligations: "id, status, missionId, dueAt, createdAt",
       savedMeals: "id, archivedAt, createdAt",
       decisionJournalEntries: "id, status, createdAt",
+    });
+    // v9 (TRAIN-CREATE-001, Personal Exercise Library, High-Risk Drop):
+    // adds customExercises — a small, directly-mutable personal exercise
+    // definition (see CustomExercise's own doc comment in
+    // domain/workout/customExercise.ts), same treatment as savedMeals at
+    // v7. Purely additive; no upgrade() callback, since there is no prior
+    // equivalent data to seed or migrate. Deliberately independent of the
+    // fixed A/B/C workoutSessions/performedSets tables and Engine
+    // progression — this table is not read by any Engine file. v1-v8
+    // tables/data untouched.
+    this.version(9).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId, decisionJournalEntryId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
+      decisionJournalEntries: "id, status, createdAt",
+      customExercises: "id, archivedAt, createdAt",
     });
   }
 }

@@ -14,7 +14,7 @@ import { DEFAULT_SCHEDULE_PATTERN, deriveScheduledContext } from "../../src/engi
  */
 
 const DB_NAME = "beyond";
-const CURRENT_SCHEMA_VERSION = 8;
+const CURRENT_SCHEMA_VERSION = 9;
 
 afterEach(async () => {
   await Dexie.delete(DB_NAME);
@@ -395,6 +395,137 @@ describe("Dexie v7 -> v8 migration (Decision Journal: decisionJournalEntries)", 
     const mission = await upgraded.missions.get("mission-pre-v8");
     expect(mission).toBeDefined();
     expect(mission!.title).toBe("Pre-existing mission");
+
+    upgraded.close();
+  });
+});
+
+describe("Dexie v8 -> v9 migration (TRAIN-CREATE-001: customExercises)", () => {
+  it("adds an empty customExercises table and preserves existing v8 data", async () => {
+    const v8 = new Dexie(DB_NAME);
+    v8.version(1).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+    });
+    v8.version(2).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId",
+    });
+    v8.version(3).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+    });
+    v8.version(4)
+      .stores({
+        beyondDays: "id, status, startedAt",
+        events: "id, beyondDayId, type, occurredAt",
+        checkIns: "id, beyondDayId, recordedAt",
+        recommendations: "id, beyondDayId, issuedAt",
+        outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+        workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+        performedSets: "id, beyondDayId, sessionId, exerciseId",
+        schedulePatterns: "id",
+      })
+      .upgrade(async (tx) => {
+        await tx.table("schedulePatterns").put(DEFAULT_SCHEDULE_PATTERN);
+      });
+    v8.version(5).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+    });
+    v8.version(6).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+    });
+    v8.version(7).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
+    });
+    v8.version(8).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId, decisionJournalEntryId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
+      decisionJournalEntries: "id, status, createdAt",
+    });
+    await v8.open();
+    await v8.table("beyondDays").add({
+      id: "day-pre-v9",
+      startedAt: "2026-09-01T12:00:00.000Z",
+      timezoneId: "America/Chicago",
+      workContext: "UNKNOWN",
+      status: "ACTIVE",
+      createdAt: "2026-09-01T12:00:00.000Z",
+      updatedAt: "2026-09-01T12:00:00.000Z",
+    });
+    await v8.table("savedMeals").add({
+      id: "meal-pre-v9",
+      name: "Pre-existing meal",
+      calories: 500,
+      proteinG: 30,
+      carbsG: 50,
+      fatG: 10,
+      createdAt: "2026-09-01T12:00:00.000Z",
+    });
+    v8.close();
+
+    const upgraded = new BeyondDB();
+    await upgraded.open();
+
+    expect(upgraded.verno).toBe(CURRENT_SCHEMA_VERSION);
+    expect(await upgraded.customExercises.count()).toBe(0);
+    const day = await upgraded.beyondDays.get("day-pre-v9");
+    expect(day).toBeDefined();
+    expect(day!.status).toBe("ACTIVE");
+    const meal = await upgraded.savedMeals.get("meal-pre-v9");
+    expect(meal).toBeDefined();
+    expect(meal!.name).toBe("Pre-existing meal");
 
     upgraded.close();
   });

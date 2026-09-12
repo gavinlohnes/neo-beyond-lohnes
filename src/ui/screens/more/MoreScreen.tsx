@@ -14,6 +14,7 @@ import type { SearchResult } from "../../../application/searchQueries";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
 import { IntentScreen, type IntentFocus } from "./IntentScreen";
 import { JournalScreen } from "./JournalScreen";
+import { ExerciseLibraryScreen } from "./ExerciseLibraryScreen";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { Icon } from "../../icons/Icon";
 
@@ -26,7 +27,7 @@ import { Icon } from "../../icons/Icon";
 const DATA_SCHEMA = db.verno;
 
 export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {}) {
-  const [view, setView] = useState<"MENU" | "HISTORY" | "REVIEW" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL">("MENU");
+  const [view, setView] = useState<"MENU" | "HISTORY" | "REVIEW" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY">("MENU");
   // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by
   // the ordinary "MISSIONS & OBLIGATIONS" menu entry point — see its onOpen below. This is what
   // lets IntentScreen open straight to a specific record from Search without a normal visit to
@@ -250,6 +251,22 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
     );
   }
 
+  if (view === "EXERCISE_LIBRARY") {
+    return (
+      <div className="screen fade-in">
+        <button
+          className="btn-secondary"
+          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
+          onClick={() => setView("MENU")}
+        >
+          ← BACK TO MORE
+        </button>
+        <h1 className="eyebrow">MORE // EXERCISE LIBRARY</h1>
+        <ExerciseLibraryScreen />
+      </div>
+    );
+  }
+
   return (
     <div className="screen fade-in">
       {/* FIELD ALPHA Phase 4: identity zone quieted, same principle
@@ -296,6 +313,11 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           name="DECISION JOURNAL"
           summary="Think a decision through, then record what actually happened."
           onOpen={() => setView("JOURNAL")}
+        />
+        <CollapsibleRow
+          name="EXERCISE LIBRARY"
+          summary="Save exercises of your own — from a reference list or fully custom."
+          onOpen={() => setView("EXERCISE_LIBRARY")}
         />
       </section>
 
