@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: f2e7d9b6c2abb7d08d6ec429c26c8188c8347712
 branch: claude/train-create-001
 contract: docs/agent/drops/TRAIN-CREATE-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/77
 builder: Claude, this session, assigned by Gavin in chat 2026-09-12
 reviewer: (unassigned)
 integrator: (unassigned)
