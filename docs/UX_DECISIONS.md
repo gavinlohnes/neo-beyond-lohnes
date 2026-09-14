@@ -310,23 +310,26 @@ system-identity glyph."
   meant to become, the machine's own signature mark.
 - **EMBLEM = THE MACHINE.** A single dedicated machine-identity mark is BEYOND's system
   identity, distinct from GLYPHS below.
-- **The emblem now exists (locked 2026-09-11, direct owner ruling, EMBLEM-001).** A bat-form
-  primary mark, `#D6202B` on `#000000` — silhouette, proportions, and color are owner design
-  authority, supplied as final production artwork, not to be redesigned/reinterpreted/
-  substituted by any Drop. Source SVGs (master/foreground/folded/micro) live in
-  `docs/brand/beyond-mark/`, per that directory's own README: update the master geometry there
-  first, then regenerate derivatives — never redraw from concept imagery. EMBLEM-001 wired it in
+- **The emblem exists, silhouette and color replaced once already (locked 2026-09-13/14, direct
+  owner ruling, EMBLEM-002 — supersedes EMBLEM-001's geometry/color, not the EMBLEM/GLYPHS split
+  itself).** A bat-form primary mark, `#EA131C` on `#000000` — silhouette, proportions, and color
+  are owner design authority. EMBLEM-001's original mark (`#D6202B`) didn't read well at real
+  device size and was replaced after the owner viewed it live on a phone home screen; the
+  replacement was traced from an owner-supplied reference image (no vector source existed) and
+  independently verified maskable-safe before shipping. Source SVGs (master/foreground/folded/
+  micro) live in `docs/brand/beyond-mark/`, per that directory's own README: update the master
+  geometry there first, then regenerate derivatives — never redraw from concept imagery. Wired in
   as the app icon / home-screen mark (`public/icons/icon-*.png`, `index.html`'s favicon and
   `apple-touch-icon` links) only; it is not used anywhere inside the running app's own UI.
-- **Emblem color is independent of the in-app UI's red.** `#D6202B` is the emblem's own locked
+- **Emblem color is independent of the in-app UI's red.** `#EA131C` is the emblem's own locked
   brand color — it does not change, and was not derived from, `--accent`/`--red-b` in
   [tokens.css](../src/ui/styles/tokens.css). Unifying the two is a separate, larger decision
   nobody has made; don't infer it from this entry.
-- **Not maskable-safe as delivered.** The master/foreground geometry's wingtips sit ~20% past
-  the standard maskable safe zone (radius ~495 of a safe 409.6, in the 0–1024 viewBox) — a
-  circular/squircle OS mask would clip them. BEYOND's manifest deliberately leaves icon
-  `purpose` unset (`"any"`, the spec default) rather than mis-declare this art `"maskable"`. See
-  `docs/brand/beyond-mark/README.txt`'s integration note for the numbers.
+- **Maskable-safe as of EMBLEM-002.** Unlike EMBLEM-001's geometry (wingtips ~20% past the safe
+  radius), EMBLEM-002's silhouette was sized to fit the standard maskable safe zone from the
+  start (farthest vertex ~395.5 of a safe 409.6, in the 0–1024 viewBox, with margin). The
+  manifest's icon entries now declare `purpose: "any maskable"` accordingly. See
+  `docs/brand/beyond-mark/README.txt`'s EMBLEM-002 note for the numbers.
 - **GLYPHS = THE INSTRUMENTS.** TODAY/TRAIN/BODY/MORE's existing locked pilot icon family
   ([Icon.tsx](../src/ui/icons/Icon.tsx)) remains the existing locked destination/instrument
   glyph set — unchanged geometry, unrelated to machine identity.
