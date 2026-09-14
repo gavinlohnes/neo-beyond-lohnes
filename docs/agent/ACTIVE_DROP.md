@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 62a13547fb811d7c88e1511777d666ca1992e10d
 branch: claude/emblem-002-mark-refresh
 contract: docs/agent/drops/EMBLEM-002.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/78
 builder: Claude, this session, assigned by Gavin in chat 2026-09-13/14
 reviewer: (unassigned)
 integrator: (unassigned)
