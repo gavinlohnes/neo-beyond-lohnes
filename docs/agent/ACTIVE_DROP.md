@@ -1,15 +1,13 @@
 ---
-id: REMIND-001
-status: CLOSED
-baseline: 4edb35f902d4d408b5fb4a2f981e19f34d8f9301
-branch: claude/remind-001-checkin-notification
-contract: docs/agent/drops/REMIND-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/93
+id: JOURNAL-002
+status: ACTIVE
+baseline: 7b59fdd3b9d27ede40639460e96794ff95502495
+branch: claude/journal-002-widen-relevance-matching
+contract: docs/agent/drops/JOURNAL-002.md
+pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude, this session, autonomous per direct owner approval of a 4-item execution list, 2026-09-15
-reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
+reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: 2ab77ad38aaa930d4d5ba7d95da9701e639d1abd
-closed_at: 2026-09-15T14:09:21.639Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/REMIND-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/JOURNAL-002.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
