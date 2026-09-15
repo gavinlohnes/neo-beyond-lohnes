@@ -1,6 +1,6 @@
 ---
 id: JOURNAL-001
-status: ACTIVE
+status: CLOSED
 baseline: e3e03d6f27d42df3369e35ff58f3e65e4ee299d0
 branch: claude/journal-001-advisory-integration
 contract: docs/agent/drops/JOURNAL-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/91
 builder: Claude, this session, autonomous per direct owner delegation ('keep going') 2026-09-15, scope authorized via AskUserQuestion 'Journal integration (Recommended)'
 reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
+integration_sha: 9e2656bee5db2cb3a7382fca8f89b853ea15a08f
+closed_at: 2026-09-15T12:57:27.670Z
 ---
 
 # ACTIVE_DROP
