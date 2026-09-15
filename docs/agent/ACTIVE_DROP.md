@@ -1,15 +1,13 @@
 ---
-id: NUTRITION-003
-status: CLOSED
-baseline: 68b5e4d0f9a068bc00be4454b833289c0bd81919
-branch: claude/nutrition-001-deficit-protein-targets
-contract: docs/agent/drops/NUTRITION-003.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/80
+id: BODY-UX-001
+status: ACTIVE
+baseline: 0c560f888ffe83c1377d413b9b518499d9198656
+branch: claude/body-ux-001-add-meal-disclosure
+contract: docs/agent/drops/BODY-UX-001.md
+pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude, this session, assigned by Gavin in chat 2026-09-15
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: fe0730be86539de5043fbd8089cbf137b672639f
-closed_at: 2026-09-15T01:31:35.173Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/NUTRITION-003.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/BODY-UX-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and

@@ -233,6 +233,10 @@ export function BodyScreen() {
   const [mealConfirmation, setMealConfirmation] = useState<Confirmation>(null);
   const [mealHistoryOpen, setMealHistoryOpen] = useState(false);
   const [addMealOpen, setAddMealOpen] = useState(false);
+  // BODY-UX-001: manual macro entry starts collapsed — search stays the one
+  // visible action until a search comes up empty, a result is picked for
+  // review, or the operator explicitly asks for it.
+  const [manualMealEntryOpen, setManualMealEntryOpen] = useState(false);
   const [newMealForm, setNewMealForm] = useState<MealFormState>(EMPTY_MEAL_FORM);
   const [editingMealId, setEditingMealId] = useState<string | null>(null);
   const [editMealForm, setEditMealForm] = useState<MealFormState>(EMPTY_MEAL_FORM);
@@ -509,7 +513,11 @@ export function BodyScreen() {
     if (foodSearchBusy || !foodQuery.trim()) return;
     setFoodSearchBusy(true);
     try {
-      setFoodResults(await searchFoods(foodQuery));
+      const results = await searchFoods(foodQuery);
+      setFoodResults(results);
+      // BODY-UX-001: a genuine miss is exactly when manual entry becomes the
+      // operator's only path forward, so reveal it automatically here.
+      if (results.length === 0) setManualMealEntryOpen(true);
     } finally {
       setFoodSearchBusy(false);
     }
@@ -529,6 +537,9 @@ export function BodyScreen() {
     });
     setFoodResults(null);
     setFoodQuery("");
+    // BODY-UX-001: reveal the pre-filled fields so the operator can review/
+    // edit them before SAVE MEAL — a selection is a proposal, not a save.
+    setManualMealEntryOpen(true);
   }
 
   async function handleCreateSavedMeal() {
@@ -549,6 +560,7 @@ export function BodyScreen() {
       await createSavedMeal({ name, ...macros });
       setNewMealForm(EMPTY_MEAL_FORM);
       setAddMealOpen(false);
+      setManualMealEntryOpen(false);
       setFoodQuery("");
       setFoodResults(null);
       await refresh();
@@ -1486,25 +1498,31 @@ export function BodyScreen() {
               )}
             </div>
           )}
-          <div className="field">
-            <label htmlFor="new-meal-name"><span>New meal name</span></label>
-            <input
-              id="new-meal-name"
-              type="text"
-              value={newMealForm.name}
-              onChange={(e) => setNewMealForm((prev) => ({ ...prev, name: e.target.value }))}
-              className="input"
-            />
-          </div>
-          {renderMealMacroInputs(
-            newMealForm,
-            (patch) => setNewMealForm((prev) => ({ ...prev, ...patch })),
-            "new-meal",
-            "New meal",
-          )}
-          <button className="btn-primary" disabled={busy} onClick={() => void handleCreateSavedMeal()}>
-            SAVE MEAL
-          </button>
+          <FieldDisclosure
+            summary={`${manualMealEntryOpen ? "HIDE" : "SHOW"} MANUAL MACROS`}
+            open={manualMealEntryOpen}
+            onToggle={setManualMealEntryOpen}
+          >
+            <div className="field">
+              <label htmlFor="new-meal-name"><span>New meal name</span></label>
+              <input
+                id="new-meal-name"
+                type="text"
+                value={newMealForm.name}
+                onChange={(e) => setNewMealForm((prev) => ({ ...prev, name: e.target.value }))}
+                className="input"
+              />
+            </div>
+            {renderMealMacroInputs(
+              newMealForm,
+              (patch) => setNewMealForm((prev) => ({ ...prev, ...patch })),
+              "new-meal",
+              "New meal",
+            )}
+            <button className="btn-primary" disabled={busy} onClick={() => void handleCreateSavedMeal()}>
+              SAVE MEAL
+            </button>
+          </FieldDisclosure>
         </FieldDisclosure>
 
         {mealConfirmation && (
