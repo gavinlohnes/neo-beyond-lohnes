@@ -31,6 +31,11 @@ export async function getOpenDecisionJournalEntries(): Promise<DecisionJournalEn
   return sortByCreated((await validEntries()).filter((e) => e.status === "OPEN")).reverse();
 }
 
+/** Reviewed — carries a real outcome/lesson. The pool JOURNAL-001's advisory relevance match draws from. */
+export async function getReviewedDecisionJournalEntries(): Promise<DecisionJournalEntry[]> {
+  return sortByCreated((await validEntries()).filter((e) => e.status === "REVIEWED")).reverse();
+}
+
 export async function getDecisionJournalEntry(id: string): Promise<DecisionJournalEntry | undefined> {
   const raw = await db.decisionJournalEntries.get(id);
   return raw ? (parseDecisionJournalEntry(raw) ?? undefined) : undefined;

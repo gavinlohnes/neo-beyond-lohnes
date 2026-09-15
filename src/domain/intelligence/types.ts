@@ -38,8 +38,13 @@ export interface AdvisoryNoteBasisEntry {
  * ignorant of the others; only this shared type and the application-layer
  * orchestrator (advisoryQueries.ts's getAdvisoryNotes) know more than one
  * exists.
+ *
+ * JOURNAL-001 (2026-09-15): "decisionJournal" is the third producer
+ * (engine/journalRelevance.ts's keyword-relevance match over reviewed
+ * Decision Journal entries, composed in engine/advisory.ts) — same
+ * pattern, still ignorant of the other two.
  */
-export type AdvisorySourceModule = "obligationRelevance" | "progression";
+export type AdvisorySourceModule = "obligationRelevance" | "progression" | "decisionJournal";
 
 export interface AdvisoryNote {
   id: string;
