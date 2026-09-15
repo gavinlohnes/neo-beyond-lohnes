@@ -12,9 +12,11 @@ import {
 import {
   getObligation,
   getObligationHistory,
+  getObligations,
   getObligationsForMission,
   getUnresolvedObligations,
 } from "../../src/application/intentQueries";
+import { buildRecurrenceRule } from "../../src/engine/recurrence";
 
 /**
  * Intent & Commitment Spine — Drop 01 (2026-08-22, approved). Obligation
@@ -173,6 +175,83 @@ describe("satisfyObligation", () => {
     const obligation = await createObligation({ title: "Taxes" });
     await satisfyObligation(obligation.id);
     expect((await getUnresolvedObligations()).map((o) => o.id)).not.toContain(obligation.id);
+  });
+});
+
+/**
+ * INTENT-002 (2026-09-15, direct owner ruling): satisfying a recurring
+ * Obligation materializes the next occurrence as its own new Obligation
+ * — the satisfied instance itself is never reopened (Drop 01: "there is
+ * no reopen action"), matching every other Obligation's one-way
+ * resolution.
+ */
+describe("satisfyObligation — recurrence (INTENT-002)", () => {
+  it("materializes the next occurrence with the same title, mission, and recurrence rule", async () => {
+    const mission = await createMission({ title: "Household" });
+    const rrule = buildRecurrenceRule({ freq: "WEEKLY", interval: 1, byDay: ["MO"], anchor: "2026-09-14" });
+    const obligation = await createObligation({
+      title: "Take out the trash",
+      missionId: mission.id,
+      dueAt: "2026-09-14",
+      recurrence: { rrule },
+    });
+
+    await satisfyObligation(obligation.id);
+
+    const all = await getObligations();
+    const next = all.find((o) => o.id !== obligation.id && o.title === "Take out the trash");
+    expect(next).toBeDefined();
+    expect(next!.status).toBe("OPEN");
+    expect(next!.missionId).toBe(mission.id);
+    expect(next!.dueAt).toBe("2026-09-21");
+    expect(next!.recurrence).toEqual({ rrule });
+  });
+
+  it("does not materialize anything for a non-recurring obligation", async () => {
+    const obligation = await createObligation({ title: "One-time thing", dueAt: "2026-09-14" });
+    await satisfyObligation(obligation.id);
+    const all = await getObligations();
+    expect(all).toHaveLength(1);
+  });
+
+  it("carries the description forward to the next occurrence", async () => {
+    const rrule = buildRecurrenceRule({ freq: "DAILY", interval: 1, anchor: "2026-09-14" });
+    const obligation = await createObligation({
+      title: "Take medication",
+      description: "Twice daily with food",
+      dueAt: "2026-09-14",
+      recurrence: { rrule },
+    });
+    await satisfyObligation(obligation.id);
+    const all = await getObligations();
+    const next = all.find((o) => o.id !== obligation.id);
+    expect(next!.description).toBe("Twice daily with food");
+  });
+
+  it("falls back to today as the anchor when the satisfied instance has no dueAt", async () => {
+    const rrule = buildRecurrenceRule({ freq: "DAILY", interval: 1, anchor: "2026-09-14" });
+    const obligation = await createObligation({ title: "No due date", recurrence: { rrule } });
+    await satisfyObligation(obligation.id);
+    const all = await getObligations();
+    const next = all.find((o) => o.id !== obligation.id);
+    expect(next).toBeDefined();
+    expect(next!.dueAt).toBeTypeOf("string");
+  });
+
+  it("creates nothing once the recurrence rule has no further occurrences", async () => {
+    const bounded = "DTSTART:20260914T000000Z\nRRULE:FREQ=WEEKLY;BYDAY=MO;UNTIL=20260914T000000Z";
+    const obligation = await createObligation({ title: "Last one", dueAt: "2026-09-14", recurrence: { rrule: bounded } });
+    await satisfyObligation(obligation.id);
+    const all = await getObligations();
+    expect(all).toHaveLength(1);
+  });
+
+  it("releaseObligation does not materialize a next occurrence — release means the standing commitment stops, not just this instance", async () => {
+    const rrule = buildRecurrenceRule({ freq: "WEEKLY", interval: 1, byDay: ["MO"], anchor: "2026-09-14" });
+    const obligation = await createObligation({ title: "Take out the trash", dueAt: "2026-09-14", recurrence: { rrule } });
+    await releaseObligation(obligation.id);
+    const all = await getObligations();
+    expect(all).toHaveLength(1);
   });
 });
 

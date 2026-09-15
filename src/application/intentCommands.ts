@@ -2,6 +2,8 @@ import { db } from "../persistence/db";
 import { newId, nextSeq, resolveCaptureItem } from "./commands";
 import type { DomainEvent } from "../domain/common/types";
 import type { Mission, Obligation } from "../domain/intent/types";
+import { deriveNextOccurrenceDate } from "../engine/recurrence";
+import { formatLocalDate } from "../engine/scheduledContext";
 import {
   missionInputSchema,
   missionModifyInputSchema,
@@ -290,6 +292,34 @@ export async function markObligationOpen(obligationId: string): Promise<void> {
   });
 }
 
+/**
+ * INTENT-002: a recurring Obligation (one with a `recurrence` rule) does
+ * not reopen itself — satisfying it is permanent, same as any other
+ * Obligation (Drop 01: "there is no reopen action"). Instead, the next
+ * occurrence is created as its own new Obligation, carrying the same
+ * title/description/missionId/recurrence forward. This is not a new
+ * creation-authority event requiring its own separate confirmation: the
+ * operator already authorized the standing schedule the moment they set
+ * the recurrence rule, and satisfying an instance is simply carrying out
+ * what they already asked for — the same reasoning `source: "USER"`
+ * already applies to non-recurring creates. If the rule has no further
+ * occurrences (a bounded rule that has run its course), nothing is
+ * created — never invented, never a guess.
+ */
+async function materializeNextOccurrence(existing: Obligation): Promise<void> {
+  if (!existing.recurrence) return;
+  const after = existing.dueAt ?? formatLocalDate(new Date());
+  const nextDueAt = deriveNextOccurrenceDate(existing.recurrence.rrule, after);
+  if (!nextDueAt) return;
+  await createObligation({
+    title: existing.title,
+    ...(existing.description ? { description: existing.description } : {}),
+    ...(existing.missionId ? { missionId: existing.missionId } : {}),
+    dueAt: nextDueAt,
+    recurrence: existing.recurrence,
+  });
+}
+
 /** Valid from OPEN or WAITING only — an already-resolved (SATISFIED/RELEASED) obligation cannot be satisfied again; re-open is not a Drop 01 operation. */
 export async function satisfyObligation(obligationId: string, resolutionNote?: string): Promise<void> {
   const existing = await db.obligations.get(obligationId);
@@ -312,6 +342,7 @@ export async function satisfyObligation(obligationId: string, resolutionNote?: s
     correlationId,
     { obligationId },
   );
+  await materializeNextOccurrence(existing);
 }
 
 /** Valid from OPEN or WAITING only — "no longer required," distinct from SATISFIED. Same one-way-from-unresolved rule as satisfyObligation. */

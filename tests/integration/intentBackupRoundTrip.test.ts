@@ -9,6 +9,7 @@ import {
   satisfyObligation,
 } from "../../src/application/intentCommands";
 import { getMission, getMissionHistory, getObligation, getObligationHistory } from "../../src/application/intentQueries";
+import { buildRecurrenceRule } from "../../src/engine/recurrence";
 
 /**
  * Intent & Commitment Spine — Drop 01 (2026-08-22, approved), section 9:
@@ -74,5 +75,19 @@ describe("Mission/Obligation state round-trips through native export/import", ()
 
     const obligationHistory = await getObligationHistory(standalone.id);
     expect(obligationHistory.map((e) => e.type)).toEqual(["OBLIGATION_CREATED", "OBLIGATION_SATISFIED"]);
+  });
+
+  it("INTENT-002: a recurring Obligation's rrule string survives export/import exactly", async () => {
+    const rrule = buildRecurrenceRule({ freq: "WEEKLY", interval: 1, byDay: ["MO"], anchor: "2026-09-14" });
+    const recurring = await createObligation({ title: "Take out the trash", dueAt: "2026-09-14", recurrence: { rrule } });
+
+    const blob = await db.export({ prettyJson: true });
+    const nativeFile = new File([blob], "native-backup.json", { type: "application/json" });
+
+    await createMission({ title: "A different mission entirely" });
+    await applyAnyRestore(nativeFile);
+
+    const restored = await getObligation(recurring.id);
+    expect(restored!.recurrence).toEqual({ rrule });
   });
 });

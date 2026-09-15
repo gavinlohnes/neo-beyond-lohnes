@@ -19,9 +19,9 @@ const missionStatusSchema = z.enum(["ACTIVE", "ARCHIVED"]);
 const obligationStatusSchema = z.enum(["OPEN", "WAITING", "SATISFIED", "RELEASED"]);
 const sourceSchema = z.enum(["USER", "ENGINE", "SYSTEM"]);
 
+/** INTENT-002: `rrule` is always the full two-line `DTSTART:...\nRRULE:...` string produced by engine/recurrence.ts's buildRecurrenceRule — never hand-formatted or accepted as caller-supplied free text beyond this shape check. */
 const recurrenceRuleSchema = z.object({
-  freq: z.enum(["DAILY", "WEEKLY", "MONTHLY"]),
-  interval: z.number().int().min(1),
+  rrule: z.string().min(1),
 });
 
 const missionInputFields = {

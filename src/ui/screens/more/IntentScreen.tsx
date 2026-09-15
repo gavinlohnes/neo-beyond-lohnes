@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { DomainEvent } from "../../../domain/common/types";
-import type { Mission, Obligation, ObligationStatus } from "../../../domain/intent/types";
+import type { Mission, Obligation, ObligationStatus, RecurrenceRule } from "../../../domain/intent/types";
 import {
   getActiveMissions,
   getMissionHistory,
@@ -22,6 +22,127 @@ import {
   satisfyObligation,
 } from "../../../application/intentCommands";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import {
+  buildRecurrenceRule,
+  describeRecurrence,
+  parseRecurrencePreset,
+  type RecurrenceFreq,
+} from "../../../engine/recurrence";
+import { formatLocalDate } from "../../../engine/scheduledContext";
+
+/** INTENT-002: shared create/edit picker state — "" means "does not repeat". */
+interface RecurrenceFormState {
+  freq: "" | RecurrenceFreq;
+  interval: string;
+  byDay: string[];
+}
+
+const EMPTY_RECURRENCE: RecurrenceFormState = { freq: "", interval: "1", byDay: [] };
+
+function recurrenceFormFor(recurrence: RecurrenceRule | undefined): RecurrenceFormState {
+  if (!recurrence) return EMPTY_RECURRENCE;
+  const preset = parseRecurrencePreset(recurrence.rrule);
+  if (!preset) return EMPTY_RECURRENCE;
+  return { freq: preset.freq, interval: String(preset.interval), byDay: preset.byDay ?? [] };
+}
+
+/** Builds the stored RecurrenceRule from picker state, or undefined for "does not repeat". `anchor` should be the obligation's own dueAt, falling back to today when none is set. */
+function recurrenceInputFor(form: RecurrenceFormState, anchor: string): RecurrenceRule | undefined {
+  if (!form.freq) return undefined;
+  const interval = Math.max(1, parseInt(form.interval, 10) || 1);
+  const rrule = buildRecurrenceRule({
+    freq: form.freq,
+    interval,
+    ...(form.freq === "WEEKLY" && form.byDay.length > 0 ? { byDay: form.byDay } : {}),
+    anchor,
+  });
+  return { rrule };
+}
+
+const WEEKDAY_OPTIONS: { code: string; label: string }[] = [
+  { code: "MO", label: "Mon" },
+  { code: "TU", label: "Tue" },
+  { code: "WE", label: "Wed" },
+  { code: "TH", label: "Thu" },
+  { code: "FR", label: "Fri" },
+  { code: "SA", label: "Sat" },
+  { code: "SU", label: "Sun" },
+];
+
+function RecurrencePicker({
+  form,
+  onChange,
+  idPrefix,
+  disabled,
+}: {
+  form: RecurrenceFormState;
+  onChange: (next: RecurrenceFormState) => void;
+  idPrefix: string;
+  disabled?: boolean;
+}) {
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <label htmlFor={`${idPrefix}-freq`} className="meta" style={{ display: "block", marginBottom: 4 }}>Repeats</label>
+      <select
+        id={`${idPrefix}-freq`}
+        className="input"
+        style={{ marginBottom: 8 }}
+        value={form.freq}
+        disabled={disabled}
+        onChange={(e) => onChange({ ...form, freq: e.target.value as RecurrenceFormState["freq"] })}
+      >
+        <option value="">Does not repeat</option>
+        <option value="DAILY">Daily</option>
+        <option value="WEEKLY">Weekly</option>
+        <option value="MONTHLY">Monthly</option>
+      </select>
+      {form.freq && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <span className="meta">Every</span>
+            <input
+              type="number"
+              min={1}
+              className="input"
+              style={{ width: 64 }}
+              aria-label="Recurrence interval"
+              value={form.interval}
+              disabled={disabled}
+              onChange={(e) => onChange({ ...form, interval: e.target.value })}
+            />
+            <span className="meta">
+              {form.freq === "DAILY" ? "day(s)" : form.freq === "WEEKLY" ? "week(s)" : "month(s)"}
+            </span>
+          </div>
+          {form.freq === "WEEKLY" && (
+            <div role="group" aria-label="Repeat on these days" style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+              {WEEKDAY_OPTIONS.map((day) => {
+                const selected = form.byDay.includes(day.code);
+                return (
+                  <button
+                    key={day.code}
+                    type="button"
+                    aria-pressed={selected}
+                    className={`chip ${selected ? "chip--selected" : ""}`}
+                    disabled={disabled}
+                    onClick={() =>
+                      onChange({
+                        ...form,
+                        byDay: selected ? form.byDay.filter((c) => c !== day.code) : [...form.byDay, day.code],
+                      })
+                    }
+                  >
+                    {day.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
 /**
  * Intent & Commitment Spine — Drop 01 (approved 2026-08-22). The one
@@ -125,6 +246,7 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
   const [newObligationMissionId, setNewObligationMissionId] = useState("");
   const [newObligationDueAt, setNewObligationDueAt] = useState("");
   const [newObligationPlannedAt, setNewObligationPlannedAt] = useState("");
+  const [newObligationRecurrence, setNewObligationRecurrence] = useState<RecurrenceFormState>(EMPTY_RECURRENCE);
 
   useEffect(() => {
     void refreshList();
@@ -172,16 +294,20 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
   async function handleCreateObligation() {
     if (!newObligationTitle.trim()) return;
     await withBusy(async () => {
+      const anchor = newObligationDueAt || formatLocalDate(new Date());
+      const recurrence = recurrenceInputFor(newObligationRecurrence, anchor);
       await createObligation({
         title: newObligationTitle.trim(),
         ...(newObligationMissionId ? { missionId: newObligationMissionId } : {}),
         ...(newObligationDueAt ? { dueAt: newObligationDueAt } : {}),
         ...(newObligationPlannedAt ? { plannedAt: newObligationPlannedAt } : {}),
+        ...(recurrence ? { recurrence } : {}),
       });
       setNewObligationTitle("");
       setNewObligationMissionId("");
       setNewObligationDueAt("");
       setNewObligationPlannedAt("");
+      setNewObligationRecurrence(EMPTY_RECURRENCE);
       setObligationCreateOpen(false);
       await refreshList();
     });
@@ -326,6 +452,7 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
             <input id="new-obligation-planned" type="date" className="input" value={newObligationPlannedAt} disabled={busy} onChange={(e) => setNewObligationPlannedAt(e.target.value)} />
           </div>
         </div>
+        <RecurrencePicker form={newObligationRecurrence} onChange={setNewObligationRecurrence} idPrefix="new-obligation-recurrence" disabled={busy} />
         <button className="btn-primary" disabled={busy || !newObligationTitle.trim()} onClick={() => void handleCreateObligation()}>
           CREATE OBLIGATION
         </button>
@@ -499,6 +626,7 @@ function ObligationDetail({
   const [description, setDescription] = useState("");
   const [dueAt, setDueAt] = useState("");
   const [plannedAt, setPlannedAt] = useState("");
+  const [recurrenceForm, setRecurrenceForm] = useState<RecurrenceFormState>(EMPTY_RECURRENCE);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingResolution, setPendingResolution] = useState<"SATISFY" | "RELEASE" | null>(null);
@@ -517,6 +645,7 @@ function ObligationDetail({
       setDescription(found.description ?? "");
       setDueAt(found.dueAt ?? "");
       setPlannedAt(found.plannedAt ?? "");
+      setRecurrenceForm(recurrenceFormFor(found.recurrence));
     }
     setHistory(await getObligationHistory(obligationId));
   }
@@ -526,11 +655,18 @@ function ObligationDetail({
     setBusy(true);
     setError(null);
     try {
+      // INTENT-002: a picker still on "Does not repeat" leaves recurrence
+      // unchanged (modifyObligation's own `undefined` = "leave unchanged"
+      // convention, same limitation dueAt/plannedAt/description already
+      // have here — no clear-to-unset path yet for any of these fields).
+      const anchor = dueAt || formatLocalDate(new Date());
+      const recurrence = recurrenceInputFor(recurrenceForm, anchor);
       await modifyObligation(obligationId, {
         title: title.trim() || undefined,
         description: description.trim() || undefined,
         dueAt: dueAt || undefined,
         plannedAt: plannedAt || undefined,
+        ...(recurrence ? { recurrence } : {}),
       });
       setEditing(false);
       await load();
@@ -575,6 +711,7 @@ function ObligationDetail({
                 {mission && <p className="meta">Mission: {mission.title}</p>}
                 {obligation.dueAt && <p className="meta">Due: {obligation.dueAt}</p>}
                 {obligation.plannedAt && <p className="meta">Planned: {obligation.plannedAt}</p>}
+                {obligation.recurrence && <p className="meta">Repeats: {describeRecurrence(obligation.recurrence.rrule)}</p>}
                 {obligation.resolvedAt && (
                   <p className="meta">
                     Resolved {new Date(obligation.resolvedAt).toLocaleString()}
@@ -634,6 +771,7 @@ function ObligationDetail({
                     <input id="obligation-planned" type="date" className="input" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} />
                   </div>
                 </div>
+                <RecurrencePicker form={recurrenceForm} onChange={setRecurrenceForm} idPrefix="obligation-recurrence" disabled={busy} />
                 <div style={{ display: "flex", gap: 8 }}>
                   <button className="btn-primary" disabled={busy} onClick={() => void handleSave()}>
                     SAVE

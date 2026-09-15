@@ -15,6 +15,7 @@
  * - Recurrence-compatible shape only (RecurrenceRule): stored so a future
  *   recurrence-EXECUTION Drop doesn't need a data migration, but nothing
  *   in this Drop reads it to generate anything. No rrule/RRULE dependency.
+ *   **Reversed 2026-09-15, direct owner ruling — see INTENT-002 below.**
  * - Mission/Obligation canonical records are directly mutated (current
  *   state), matching BeyondDay's own treatment — NOT a correction chain
  *   like water/sleep/protein/bodyweight logs. Meaningful lifecycle
@@ -29,15 +30,30 @@ export type MissionStatus = "ACTIVE" | "ARCHIVED";
 export type ObligationStatus = "OPEN" | "WAITING" | "SATISFIED" | "RELEASED";
 
 /**
- * Deliberately BEYOND's own minimal vocabulary, not a standard-conformant
- * recurrence engine (Drop 01 section 5/15: "do not implement a custom
- * recurrence engine," "do not introduce RRULE/rrule.js"). Dormant in V1 —
- * nothing reads this to create a future Obligation; it only prevents a
- * later migration if/when recurrence execution is ever approved.
+ * INTENT-002 (2026-09-15, direct owner ruling): Drop 01's original
+ * restriction here ("do not implement a custom recurrence engine," "do
+ * not introduce RRULE/rrule.js") is reversed — this repo's own
+ * `docs/agent/CAPABILITY_MAP.md` had separately pre-approved rrule.js as
+ * the standard for exactly this, once recurrence execution was ever
+ * actually wanted. The genuine conflict between the two was surfaced to
+ * the owner directly rather than silently resolved either way; the owner
+ * chose rrule.js. Kept here, not deleted, for history — the prior
+ * shape (`{ freq, interval }`) was dormant and never written by any real
+ * UI, so this is a safe in-place replacement, not a data migration.
+ *
+ * `rrule` is a full two-line RFC 5545 string — `DTSTART:...\nRRULE:...`
+ * — produced only by `engine/recurrence.ts`'s `buildRecurrenceRule`
+ * (never hand-formatted). The DTSTART anchor matters: rrule.js computes
+ * occurrences relative to it, not to whenever the rule happens to be
+ * evaluated, so it must always be present and explicit — see that
+ * module's own tests for why (confirmed empirically before writing any
+ * real code: an RRule constructed with no dtstart silently defaults to
+ * the object's own construction time, which would make BEYOND's
+ * recurrence dates depend on exactly when the app happens to compute
+ * them, not on the actual schedule the operator set up).
  */
 export interface RecurrenceRule {
-  freq: "DAILY" | "WEEKLY" | "MONTHLY";
-  interval: number;
+  rrule: string;
 }
 
 /**
