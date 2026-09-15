@@ -14,7 +14,7 @@ import { DEFAULT_SCHEDULE_PATTERN, deriveScheduledContext } from "../../src/engi
  */
 
 const DB_NAME = "beyond";
-const CURRENT_SCHEMA_VERSION = 9;
+const CURRENT_SCHEMA_VERSION = 10;
 
 afterEach(async () => {
   await Dexie.delete(DB_NAME);
@@ -526,6 +526,153 @@ describe("Dexie v8 -> v9 migration (TRAIN-CREATE-001: customExercises)", () => {
     const meal = await upgraded.savedMeals.get("meal-pre-v9");
     expect(meal).toBeDefined();
     expect(meal!.name).toBe("Pre-existing meal");
+
+    upgraded.close();
+  });
+});
+
+describe("Dexie v9 -> v10 migration (TRAIN-CREATE-002: customWorkoutTemplates)", () => {
+  it("adds an empty customWorkoutTemplates table and preserves existing v9 data", async () => {
+    const v9 = new Dexie(DB_NAME);
+    v9.version(1).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+    });
+    v9.version(2).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId",
+    });
+    v9.version(3).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+    });
+    v9.version(4)
+      .stores({
+        beyondDays: "id, status, startedAt",
+        events: "id, beyondDayId, type, occurredAt",
+        checkIns: "id, beyondDayId, recordedAt",
+        recommendations: "id, beyondDayId, issuedAt",
+        outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+        workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+        performedSets: "id, beyondDayId, sessionId, exerciseId",
+        schedulePatterns: "id",
+      })
+      .upgrade(async (tx) => {
+        await tx.table("schedulePatterns").put(DEFAULT_SCHEDULE_PATTERN);
+      });
+    v9.version(5).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+    });
+    v9.version(6).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+    });
+    v9.version(7).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
+    });
+    v9.version(8).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId, decisionJournalEntryId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
+      decisionJournalEntries: "id, status, createdAt",
+    });
+    v9.version(9).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId, decisionJournalEntryId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
+      decisionJournalEntries: "id, status, createdAt",
+      customExercises: "id, archivedAt, createdAt",
+    });
+    await v9.open();
+    await v9.table("beyondDays").add({
+      id: "day-pre-v10",
+      startedAt: "2026-09-01T12:00:00.000Z",
+      timezoneId: "America/Chicago",
+      workContext: "UNKNOWN",
+      status: "ACTIVE",
+      createdAt: "2026-09-01T12:00:00.000Z",
+      updatedAt: "2026-09-01T12:00:00.000Z",
+    });
+    await v9.table("customExercises").add({
+      id: "exercise-pre-v10",
+      name: "Pre-existing exercise",
+      muscleGroup: "Chest",
+      equipment: "Barbell",
+      repRangeLow: 8,
+      repRangeHigh: 12,
+      createdAt: "2026-09-01T12:00:00.000Z",
+    });
+    v9.close();
+
+    const upgraded = new BeyondDB();
+    await upgraded.open();
+
+    expect(upgraded.verno).toBe(CURRENT_SCHEMA_VERSION);
+    expect(await upgraded.customWorkoutTemplates.count()).toBe(0);
+    const day = await upgraded.beyondDays.get("day-pre-v10");
+    expect(day).toBeDefined();
+    expect(day!.status).toBe("ACTIVE");
+    const exercise = await upgraded.customExercises.get("exercise-pre-v10");
+    expect(exercise).toBeDefined();
+    expect(exercise!.name).toBe("Pre-existing exercise");
 
     upgraded.close();
   });

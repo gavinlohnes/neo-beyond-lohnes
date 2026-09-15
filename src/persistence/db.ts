@@ -14,6 +14,7 @@ import type {
 import type { Mission, Obligation } from "../domain/intent/types";
 import type { DecisionJournalEntry } from "../domain/journal/types";
 import type { CustomExercise } from "../domain/workout/customExercise";
+import type { CustomWorkoutTemplate } from "../domain/workout/customTemplate";
 import { DEFAULT_SCHEDULE_PATTERN } from "../engine/scheduledContext";
 
 export class BeyondDB extends Dexie {
@@ -31,6 +32,7 @@ export class BeyondDB extends Dexie {
   savedMeals!: Table<SavedMeal, string>;
   decisionJournalEntries!: Table<DecisionJournalEntry, string>;
   customExercises!: Table<CustomExercise, string>;
+  customWorkoutTemplates!: Table<CustomWorkoutTemplate, string>;
 
   constructor() {
     super("beyond");
@@ -203,6 +205,33 @@ export class BeyondDB extends Dexie {
       savedMeals: "id, archivedAt, createdAt",
       decisionJournalEntries: "id, status, createdAt",
       customExercises: "id, archivedAt, createdAt",
+    });
+    // v10 (TRAIN-CREATE-002, Custom Workout Templates, High-Risk Drop):
+    // adds customWorkoutTemplates — a small, directly-mutable user-created
+    // workout template (see CustomWorkoutTemplate's own doc comment in
+    // domain/workout/customTemplate.ts), same treatment as customExercises
+    // at v9. Purely additive; no upgrade() callback, since there is no
+    // prior equivalent data to seed or migrate. Does not touch
+    // workoutSessions' existing templateId index — a custom template's id
+    // is stored there exactly like a built-in "A"/"B"/"C" id always has
+    // been (that field was already a plain string, never schema-
+    // constrained to the fixed three). v1-v9 tables/data untouched.
+    this.version(10).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId, decisionJournalEntryId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
+      decisionJournalEntries: "id, status, createdAt",
+      customExercises: "id, archivedAt, createdAt",
+      customWorkoutTemplates: "id, archivedAt, createdAt",
     });
   }
 }

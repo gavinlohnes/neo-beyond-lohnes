@@ -17,7 +17,7 @@
 import { db } from "../persistence/db";
 import { doesSessionAdvanceRotation, suggestNextTemplate } from "../engine/trainSuggestion";
 import { evaluateProgression, type ProgressionSuggestion } from "../engine/progression";
-import { getPrescription, WORKOUT_TEMPLATE_ORDER, WORKOUT_TEMPLATES } from "../domain/workout/types";
+import { WORKOUT_TEMPLATE_ORDER } from "../domain/workout/types";
 import type {
   ExercisePrescription,
   PerformedSet,
@@ -26,6 +26,7 @@ import type {
   WorkoutTemplateId,
 } from "../domain/workout/types";
 import type { DomainEvent, SetUndonePayload, WorkoutSession } from "../domain/common/types";
+import { getCustomTemplates, resolvePrescription, resolveTemplateExercises } from "./customTemplateQueries";
 
 /**
  * For resuming an in-progress session across refresh/reopen. Only one
@@ -148,7 +149,7 @@ export async function getProgressionSuggestion(
   sessionType: "STANDARD" | "REDUCED",
   exerciseId: string,
 ): Promise<ProgressionSuggestion> {
-  const prescription = getPrescription(templateId, sessionType, exerciseId);
+  const prescription = await resolvePrescription(templateId, sessionType, exerciseId);
   if (!prescription) {
     return { recommendation: "NO_HISTORY", reason: "Unknown exercise for this template/variant." };
   }
@@ -196,13 +197,24 @@ export async function getProgressionSuggestion(
  * tell those two contexts apart, which is exactly the "collapsing
  * progression contexts across templates" this codebase's own doctrine
  * forbids.
+ *
+ * TRAIN-CREATE-002: extended to also cover the operator's own active
+ * custom templates, alongside the fixed built-in three — purely an
+ * informational display extension (same unfiltered/all-recommendations
+ * shape as before), not a rotation or priority change. Each custom
+ * template's exercises are resolved via resolveTemplateExercises rather
+ * than indexing WORKOUT_TEMPLATES directly, so this loop never touches
+ * the locked built-in dictionary any differently than before.
  */
 export async function getCurrentProgressionSuggestions(): Promise<
   { templateId: WorkoutTemplateId; prescription: ExercisePrescription; suggestion: ProgressionSuggestion }[]
 > {
   const results: { templateId: WorkoutTemplateId; prescription: ExercisePrescription; suggestion: ProgressionSuggestion }[] = [];
-  for (const templateId of WORKOUT_TEMPLATE_ORDER) {
-    for (const prescription of WORKOUT_TEMPLATES[templateId].exercises) {
+  const customTemplates = await getCustomTemplates();
+  const templateIds: WorkoutTemplateId[] = [...WORKOUT_TEMPLATE_ORDER, ...customTemplates.map((t) => t.id)];
+  for (const templateId of templateIds) {
+    const exercises = await resolveTemplateExercises(templateId, "STANDARD");
+    for (const prescription of exercises) {
       const suggestion = await getProgressionSuggestion(templateId, "STANDARD", prescription.exerciseId);
       results.push({ templateId, prescription, suggestion });
     }

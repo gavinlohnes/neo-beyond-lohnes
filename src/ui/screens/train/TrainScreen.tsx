@@ -4,7 +4,9 @@ import { CommandSurface } from "../../components/CommandSurface";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
 import type { ExercisePrescription, PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
-import { WORKOUT_TEMPLATES, getReducedExercises } from "../../../domain/workout/types";
+import { WORKOUT_TEMPLATES, WORKOUT_TEMPLATE_ORDER, getReducedExercises } from "../../../domain/workout/types";
+import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
+import { getCustomTemplates } from "../../../application/customTemplateQueries";
 import { deriveCapacity } from "../../../engine/capacity";
 import { suggestSessionVariant } from "../../../engine/trainSuggestion";
 import type { ProgressionSuggestion } from "../../../engine/progression";
@@ -58,7 +60,6 @@ import {
   VARIANT_MEANINGS,
 } from "./trainCopy";
 
-const TEMPLATE_ORDER: WorkoutTemplateId[] = ["A", "B", "C"];
 const VARIANT_ORDER: SessionType[] = ["STANDARD", "REDUCED", "RECOVERY"];
 
 /**
@@ -79,11 +80,31 @@ function formatRestRemaining(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-function exercisesFor(templateId: WorkoutTemplateId, sessionType: SessionType) {
+/**
+ * TRAIN-CREATE-002: checks the locked built-in dictionary first (exact
+ * same domain functions as before, unchanged behavior) and falls back to
+ * the operator's own custom templates — passed in explicitly rather than
+ * read from component state, so this stays a pure, easily-reasoned-about
+ * function. A custom template's REDUCED slicing reuses the identical
+ * "first two exercises, two working sets each" rule as the built-in one.
+ */
+function exercisesFor(
+  templateId: WorkoutTemplateId,
+  sessionType: SessionType,
+  customTemplates: CustomWorkoutTemplate[],
+): ExercisePrescription[] {
   if (sessionType === "RECOVERY") return [];
-  return sessionType === "REDUCED"
-    ? getReducedExercises(templateId)
-    : WORKOUT_TEMPLATES[templateId].exercises;
+  if (WORKOUT_TEMPLATES[templateId]) {
+    return sessionType === "REDUCED" ? getReducedExercises(templateId) : WORKOUT_TEMPLATES[templateId]!.exercises;
+  }
+  const exercises = customTemplates.find((t) => t.id === templateId)?.exercises ?? [];
+  return sessionType === "REDUCED" ? exercises.slice(0, 2).map((ex) => ({ ...ex, sets: 2 })) : exercises;
+}
+
+/** Bare id for a built-in template ("A"/"B"/"C"); the template's own name for a custom one. */
+function templateLabel(templateId: WorkoutTemplateId, customTemplates: CustomWorkoutTemplate[]): string {
+  if (WORKOUT_TEMPLATES[templateId]) return templateId;
+  return customTemplates.find((t) => t.id === templateId)?.name ?? templateId;
 }
 
 interface SetInputState {
@@ -175,6 +196,11 @@ export function TrainScreen({
   // compress.
   const [nowTick, setNowTick] = useState(Date.now());
   const [restTouchedAt, setRestTouchedAt] = useState(Date.now());
+  // TRAIN-CREATE-002: the operator's own custom templates, loaded once per
+  // refresh() cycle (same pattern as lastStrengthSession/etc. above) —
+  // exercisesFor/templateLabel take this as an explicit argument rather
+  // than reading component state themselves, so they stay pure functions.
+  const [customTemplates, setCustomTemplates] = useState<CustomWorkoutTemplate[]>([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const recoveryChoiceRef = useRef<HTMLButtonElement>(null);
   const destinationConsumedRef = useRef(false);
@@ -211,6 +237,9 @@ export function TrainScreen({
     const cap = checkIn ? deriveCapacity(checkIn).capacity : null;
     setCapacity(cap);
 
+    const loadedCustomTemplates = await getCustomTemplates();
+    setCustomTemplates(loadedCustomTemplates);
+
     const suggestion = suggestSessionVariant(cap);
     setNoCheckIn(suggestion.noCheckIn);
 
@@ -238,7 +267,7 @@ export function TrainScreen({
     );
     if (active) {
       setSets(await getPerformedSets(active.id));
-      await loadExerciseAdvisory(active);
+      await loadExerciseAdvisory(active, loadedCustomTemplates);
     } else {
       setSets([]);
       setProgressionSuggestions({});
@@ -263,7 +292,7 @@ export function TrainScreen({
    * below) is a separate, explicit, always-editable display default, not
    * a submission.
    */
-  async function loadExerciseAdvisory(activeSession: WorkoutSession) {
+  async function loadExerciseAdvisory(activeSession: WorkoutSession, customTemplatesForResolution: CustomWorkoutTemplate[] = customTemplates) {
     if (activeSession.sessionType === "RECOVERY") {
       setProgressionSuggestions({});
       setLastPerformedSets({});
@@ -272,7 +301,7 @@ export function TrainScreen({
     }
     const templateId = activeSession.templateId as WorkoutTemplateId;
     const sessionType = activeSession.sessionType as "STANDARD" | "REDUCED";
-    const exercises = exercisesFor(templateId, activeSession.sessionType as SessionType);
+    const exercises = exercisesFor(templateId, activeSession.sessionType as SessionType, customTemplatesForResolution);
     const progressionEntries = await Promise.all(
       exercises.map(async (ex) => [ex.exerciseId, await getProgressionSuggestion(templateId, sessionType, ex.exerciseId)] as const),
     );
@@ -607,11 +636,21 @@ export function TrainScreen({
   }
 
   const hasLoggedAnySet = sets.length > 0;
+  // TRAIN-CREATE-002: the operator's active custom templates appended
+  // after the fixed built-in order — additional manually-selectable
+  // options, never part of the Engine's own auto-suggested rotation
+  // (suggestedTemplate/describeTemplateSuggestion below still describe
+  // only the locked A -> B -> C -> A suggestion, unchanged).
+  const templateOptions: WorkoutTemplateId[] = [...WORKOUT_TEMPLATE_ORDER, ...customTemplates.map((t) => t.id)];
   const activeExercises = session
-    ? exercisesFor(session.templateId as WorkoutTemplateId, session.sessionType as SessionType)
+    ? exercisesFor(session.templateId as WorkoutTemplateId, session.sessionType as SessionType, customTemplates)
     : [];
   const variantSuggestion = suggestSessionVariant(capacity);
-  const suggestedExercises = exercisesFor(chosenTemplate, chosenVariant === "RECOVERY" ? "STANDARD" : chosenVariant);
+  const suggestedExercises = exercisesFor(
+    chosenTemplate,
+    chosenVariant === "RECOVERY" ? "STANDARD" : chosenVariant,
+    customTemplates,
+  );
   const suggestedSummary = describeTemplateSummary(suggestedExercises);
   // TRAIN-003 (Performance Brief): pure aggregation of already-fetched
   // state, recomputed on every render — no separate query/state needed.
@@ -801,7 +840,7 @@ export function TrainScreen({
 
           <p className="meta" style={{ marginBottom: 6 }}>Template (override always available)</p>
           <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-            {TEMPLATE_ORDER.map((t) => (
+            {templateOptions.map((t) => (
               <button
                 key={t}
                 type="button"
@@ -811,7 +850,7 @@ export function TrainScreen({
                 disabled={chosenVariant === "RECOVERY"}
                 onClick={() => setChosenTemplate(t)}
               >
-                {t}
+                {templateLabel(t, customTemplates)}
               </button>
             ))}
           </div>
@@ -891,9 +930,9 @@ export function TrainScreen({
               <details className="why" style={{ marginBottom: 12 }}>
                 <summary>Exercise detail</summary>
                 <div style={{ marginTop: 8 }}>
-                  {TEMPLATE_ORDER.map((templateId) => (
+                  {templateOptions.map((templateId) => (
                     <div key={templateId} style={{ marginBottom: 8 }}>
-                      <p className="meta" style={{ marginBottom: 2 }}>Template {templateId}</p>
+                      <p className="meta" style={{ marginBottom: 2 }}>Template {templateLabel(templateId, customTemplates)}</p>
                       {currentProgressionSuggestions
                         .filter((entry) => entry.templateId === templateId)
                         .map((entry) => (

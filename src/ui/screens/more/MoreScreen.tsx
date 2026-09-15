@@ -15,6 +15,7 @@ import { WorkScheduleScreen } from "./WorkScheduleScreen";
 import { IntentScreen, type IntentFocus } from "./IntentScreen";
 import { JournalScreen } from "./JournalScreen";
 import { ExerciseLibraryScreen } from "./ExerciseLibraryScreen";
+import { CustomTemplateScreen } from "./CustomTemplateScreen";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { Icon } from "../../icons/Icon";
 
@@ -27,7 +28,9 @@ import { Icon } from "../../icons/Icon";
 const DATA_SCHEMA = db.verno;
 
 export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {}) {
-  const [view, setView] = useState<"MENU" | "HISTORY" | "REVIEW" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY">("MENU");
+  const [view, setView] = useState<
+    "MENU" | "HISTORY" | "REVIEW" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES"
+  >("MENU");
   // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by
   // the ordinary "MISSIONS & OBLIGATIONS" menu entry point — see its onOpen below. This is what
   // lets IntentScreen open straight to a specific record from Search without a normal visit to
@@ -267,6 +270,22 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
     );
   }
 
+  if (view === "CUSTOM_TEMPLATES") {
+    return (
+      <div className="screen fade-in">
+        <button
+          className="btn-secondary"
+          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
+          onClick={() => setView("MENU")}
+        >
+          ← BACK TO MORE
+        </button>
+        <h1 className="eyebrow">MORE // CUSTOM PROGRAMS</h1>
+        <CustomTemplateScreen />
+      </div>
+    );
+  }
+
   return (
     <div className="screen fade-in">
       {/* FIELD ALPHA Phase 4: identity zone quieted, same principle
@@ -318,6 +337,11 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           name="EXERCISE LIBRARY"
           summary="Save exercises of your own — from a reference list or fully custom."
           onOpen={() => setView("EXERCISE_LIBRARY")}
+        />
+        <CollapsibleRow
+          name="CUSTOM PROGRAMS"
+          summary="Build your own workout template from your saved exercises."
+          onOpen={() => setView("CUSTOM_TEMPLATES")}
         />
       </section>
 
