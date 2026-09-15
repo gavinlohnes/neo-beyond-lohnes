@@ -744,7 +744,15 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
     // as if it were still current once the request that would refresh it
     // has failed — it falls back to the pre-V1 state path instead (day
     // started with the default UNKNOWN work context, so never "Off today").
-    expect(document.querySelector(".status-strip")?.textContent).not.toContain("Off today");
+    // The rejection's `.catch()` -> setCurrentContext(null) -> re-render is
+    // its own async step after tracker.settle()'s fixed 50ms wait — under
+    // CI contention that render can still be pending when this assertion
+    // runs, which is the actual root cause of this test's known CI-only
+    // flake (never reproduced locally). vi.waitFor polls for the commit
+    // instead of assuming a fixed wall-clock delay is always enough.
+    await vi.waitFor(() => {
+      expect(document.querySelector(".status-strip")?.textContent).not.toContain("Off today");
+    });
     tracker.stop();
   });
 
