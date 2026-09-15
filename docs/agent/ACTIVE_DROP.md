@@ -1,13 +1,15 @@
 ---
 id: CHECKPOINT-003
-status: ACTIVE
+status: CLOSED
 baseline: e066a24214a41eb49a84e18af52247527fbc171c
 branch: codex/checkpoint-003-refresh
 contract: docs/agent/drops/CHECKPOINT-003.md
 pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/95
 builder: Codex Builder, explicitly assigned by Gavin, 2026-09-15
-reviewer: (unassigned)
-integrator: (unassigned)
+reviewer: Claude (this session), 2026-09-15
+integrator: Claude (this session), 2026-09-15
+integration_sha: a036bcdfed610ac0098f5dabde802bfb13c36134
+closed_at: 2026-09-15T18:30:52.900Z
 ---
 
 # ACTIVE_DROP
