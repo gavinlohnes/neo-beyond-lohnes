@@ -1458,3 +1458,29 @@ describe("TodayScreen (real browser) — TODAY-008 day-transition refresh (resid
     await expect.element(screen.getByText("Check in when you can", { exact: true })).toBeVisible();
   });
 });
+
+describe("TodayScreen (real browser) — TODAY-009 busy-guard race (residual TODAY-R02)", () => {
+  it("two synchronous clicks before any re-render only submit the mutation once", async () => {
+    await startDay();
+    const screen = await render(<TodayScreen />);
+    await screen.getByPlaceholder("Capture a thought...").fill("race condition test");
+
+    // A real double-click always leaves time for at least one render
+    // between the two dispatches, so it can't reproduce the sub-frame
+    // gap TODAY-R02 describes. Two native, synchronous .click() calls
+    // with no await between them dispatch both click events — and both
+    // onClick handler invocations, since React batches the resulting
+    // setBusy(true) update rather than committing it before the second
+    // dispatch — inside the same task, which is exactly the gap where a
+    // stale `busy === false` closure could let a handler run twice
+    // before this Drop's busyRef guard closed it.
+    const button = screen.getByRole("button", { name: "CAPTURE" }).element() as HTMLElement;
+    button.click();
+    button.click();
+
+    await vi.waitFor(async () => {
+      const items = await db.captureItems.toArray();
+      expect(items.filter((item) => item.text === "race condition test")).toHaveLength(1);
+    });
+  });
+});

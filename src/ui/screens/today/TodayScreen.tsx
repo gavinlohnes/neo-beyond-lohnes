@@ -131,6 +131,17 @@ export function TodayScreen({
   const [priorOutcomeMemory, setPriorOutcomeMemory] = useState<PriorOutcomeMemory | null>(null);
   const [values, setValues] = useState<PartialCheckInValues>({});
   const [busy, setBusy] = useState(false);
+  // TODAY-009 (residual TODAY-R02, flagged in TODAY-006): `busy` is React
+  // state, so setBusy(true) doesn't take effect (and re-render the
+  // disabled buttons that normally prevent this) until the next render —
+  // a theoretical, not human-triggerable, sub-frame gap where a handler
+  // could be invoked twice before that render lands, since both
+  // invocations would still read the stale `busy === false` closure
+  // value. busyRef mirrors `busy` but updates synchronously, so the
+  // guard check at the top of every handler below is genuinely race-free
+  // regardless of render timing. `busy` state itself is unchanged and
+  // still drives all UI disabling — this only closes the guard's own gap.
+  const busyRef = useRef(false);
   // LAUNCH-VISION-003 (2026-09-15, direct owner ruling): fires the
   // power-on sweep exactly once per START DAY — "the one real power-on
   // moment in the whole app," never replayed by a later refresh() or
@@ -507,7 +518,8 @@ export function TodayScreen({
   }
 
   async function handleStartDay() {
-    if (busy) return;
+    if (busy || busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await startDay();
@@ -523,12 +535,14 @@ export function TodayScreen({
       await refresh();
       setJustStartedDay(true);
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleCheckIn() {
-    if (busy || !isCheckInComplete(values)) return;
+    if (busy || busyRef.current || !isCheckInComplete(values)) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
@@ -547,12 +561,14 @@ export function TodayScreen({
       // the screen.
       setCheckInFormOpen(false);
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleQuickCheckIn() {
-    if (busy) return;
+    if (busy || busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
@@ -561,28 +577,33 @@ export function TodayScreen({
       setValues({});
       setCheckInFormOpen(false);
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleRecord() {
-    if (busy || !day || !recommendation) return;
+    if (busy || busyRef.current || !day || !recommendation) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await recordRecommendation(day.id, recommendation);
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function actuallyDecline() {
     if (!day || !recommendation) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await declineRecommendation(day.id, recommendation, { overrideConfirmed: true });
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
@@ -597,7 +618,7 @@ export function TodayScreen({
    * the same gate for startWorkout.
    */
   function handleDecline() {
-    if (busy || !day || !recommendation) return;
+    if (busy || busyRef.current || !day || !recommendation) return;
     if (recommendation.kind === "STABILIZE") {
       guard("RED", () => actuallyDecline());
     } else {
@@ -606,80 +627,93 @@ export function TodayScreen({
   }
 
   async function handleStartReset() {
-    if (busy || !day) return;
+    if (busy || busyRef.current || !day) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await startReset(day.id, resetIntensity);
       setLastResetOutcome(null);
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleCompleteReset() {
-    if (busy || !day || !activeResetId) return;
+    if (busy || busyRef.current || !day || !activeResetId) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await completeReset(day.id, activeResetId);
       setLastResetOutcome("COMPLETED");
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   /** Distinct from completing — "started this but didn't go through with it," never recorded as done. */
   async function handleCancelReset() {
-    if (busy || !day || !activeResetId) return;
+    if (busy || busyRef.current || !day || !activeResetId) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await cancelReset(day.id, activeResetId);
       setLastResetOutcome("CANCELLED");
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleStartShiftDown() {
-    if (busy || !day) return;
+    if (busy || busyRef.current || !day) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await startShiftDown(day.id, shiftDownDuration);
       setLastShiftDownOutcome(null);
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleCompleteShiftDown() {
-    if (busy || !day || !activeShiftDownId) return;
+    if (busy || busyRef.current || !day || !activeShiftDownId) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await completeShiftDown(day.id, activeShiftDownId);
       setLastShiftDownOutcome("COMPLETED");
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleCancelShiftDown() {
-    if (busy || !day || !activeShiftDownId) return;
+    if (busy || busyRef.current || !day || !activeShiftDownId) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await cancelShiftDown(day.id, activeShiftDownId);
       setLastShiftDownOutcome("CANCELLED");
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleEndDay() {
-    if (busy || !day) return;
+    if (busy || busyRef.current || !day) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await endDay(day.id, "EXPLICIT_END_DAY");
@@ -693,74 +727,84 @@ export function TodayScreen({
       }
       throw error;
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleSetWorkContext(value: "WORK" | "OFF") {
-    if (busy || !day || !scheduledContext) return;
+    if (busy || busyRef.current || !day || !scheduledContext) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       const source = resolveWorkContextSource(scheduledContext.todayIsScheduledWorkDay, value);
       await setWorkContext(day.id, value, source);
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleMarkWorkEnded() {
-    if (busy || !day) return;
+    if (busy || busyRef.current || !day) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await markWorkEnded(day.id);
       setWorkContextOpen(false);
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleCapture() {
-    if (busy || !captureText.trim()) return;
+    if (busy || busyRef.current || !captureText.trim()) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await captureItem(captureText);
       setCaptureText("");
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleResolveCapture(item: CaptureItem) {
-    if (busy) return;
+    if (busy || busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await resolveCaptureItem(item.id);
       setJustResolvedCapture({ id: item.id, text: item.text });
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   function requestCommitmentSatisfaction(obligation: Obligation) {
-    if (busy) return;
+    if (busy || busyRef.current) return;
     setCommitmentFeedback(null);
     setCommitmentConfirmation({ id: obligation.id, title: obligation.title });
   }
 
   function cancelCommitmentSatisfaction() {
-    if (busy) return;
+    if (busy || busyRef.current) return;
     setCommitmentConfirmation(null);
     setCommitmentFeedback(null);
   }
 
   async function confirmCommitmentSatisfaction() {
-    if (busy || commitmentSatisfactionPendingRef.current || !commitmentConfirmation) return;
+    if (busy || busyRef.current || commitmentSatisfactionPendingRef.current || !commitmentConfirmation) return;
     const target = commitmentConfirmation;
     commitmentSatisfactionPendingRef.current = true;
+    busyRef.current = true;
     setBusy(true);
     setCommitmentFeedback(null);
     try {
@@ -785,24 +829,27 @@ export function TodayScreen({
       });
     } finally {
       commitmentSatisfactionPendingRef.current = false;
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleUndoResolveCapture() {
-    if (busy || !justResolvedCapture) return;
+    if (busy || busyRef.current || !justResolvedCapture) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await reopenCaptureItem(justResolvedCapture.id);
       setJustResolvedCapture(null);
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   function requestCaptureConversion(item: CaptureItem) {
-    if (busy) return;
+    if (busy || busyRef.current) return;
     setCaptureConversionFeedback(null);
     setConversionTitle(item.text);
     const suggestion = suggestCaptureDueDate(item.text, new Date());
@@ -812,17 +859,18 @@ export function TodayScreen({
   }
 
   function cancelCaptureConversion() {
-    if (busy) return;
+    if (busy || busyRef.current) return;
     setCaptureConversion(null);
     setConversionDueAt("");
     setConversionDateSuggestion(null);
   }
 
   async function confirmCaptureConversion() {
-    if (busy || !captureConversion || !conversionTitle.trim()) return;
+    if (busy || busyRef.current || !captureConversion || !conversionTitle.trim()) return;
     const target = captureConversion;
     const title = conversionTitle.trim();
     const dueAt = conversionDueAt.trim();
+    busyRef.current = true;
     setBusy(true);
     setCaptureConversionFeedback(null);
     try {
@@ -838,24 +886,28 @@ export function TodayScreen({
         message: error instanceof Error ? error.message : "Could not create the obligation.",
       });
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleEnableMinimumDay() {
-    if (busy || !day) return;
+    if (busy || busyRef.current || !day) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await enableMinimumDay(day.id);
       await refresh();
       setMinimumDayOpen(false);
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleMarkMinimum(kind: "MEDS" | "HYGIENE" | "MOVE" | "RECOVER" | "CONNECT") {
-    if (busy || !day) return;
+    if (busy || busyRef.current || !day) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       if (kind === "MEDS") await markMedsCompleted(day.id);
@@ -864,6 +916,7 @@ export function TodayScreen({
       else await markRecoverConnectCompleted(day.id, kind);
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
@@ -874,9 +927,10 @@ export function TodayScreen({
    * there's no way for this to create a duplicate of a BODY-side log.
    */
   async function handleMinimumDayLogWater(amountOverride?: number) {
-    if (busy) return;
+    if (busy || busyRef.current) return;
     const amount = amountOverride ?? Number(mdWaterInput);
     if (!Number.isFinite(amount) || amount <= 0) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
@@ -887,14 +941,16 @@ export function TodayScreen({
       setHydrationOperationOpen(false);
       setHydrationManualOpen(false);
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleMinimumDayLogProtein() {
-    if (busy) return;
+    if (busy || busyRef.current) return;
     const grams = Number(mdProteinInput);
     if (!Number.isFinite(grams) || grams <= 0) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
@@ -902,17 +958,20 @@ export function TodayScreen({
       setMdProteinInput("");
       await refresh();
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   async function handleRateOutcome(rating: "GOOD" | "NEUTRAL" | "BAD") {
-    if (busy || !pendingOutcome) return;
+    if (busy || busyRef.current || !pendingOutcome) return;
+    busyRef.current = true;
     setBusy(true);
     try {
       await rateOutcome(pendingOutcome.beyondDayId, pendingOutcome.id, rating);
       setPendingOutcome(null);
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
