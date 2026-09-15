@@ -1,13 +1,15 @@
 ---
 id: README-001
-status: ACTIVE
+status: CLOSED
 baseline: 71d2e714e9aa18682c657c014d1f65ffeeb7bac7
 branch: claude/readme-001-repository-truth-refresh
 contract: docs/agent/drops/README-001.md
 pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/96
 builder: Claude, this session, autonomous per direct owner delegation ('run a campaign') 2026-09-15, following CHECKPOINT-003's own flagged docs task
 reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
-integrator: (unassigned)
+integrator: Claude (this session), 2026-09-15
+integration_sha: 9546d3199245b45a2c3b3d365addc3702c923184
+closed_at: 2026-09-15T18:43:21.905Z
 ---
 
 # ACTIVE_DROP
