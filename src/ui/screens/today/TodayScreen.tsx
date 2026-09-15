@@ -131,6 +131,13 @@ export function TodayScreen({
   const [priorOutcomeMemory, setPriorOutcomeMemory] = useState<PriorOutcomeMemory | null>(null);
   const [values, setValues] = useState<PartialCheckInValues>({});
   const [busy, setBusy] = useState(false);
+  // LAUNCH-VISION-003 (2026-09-15, direct owner ruling): fires the
+  // power-on sweep exactly once per START DAY — "the one real power-on
+  // moment in the whole app," never replayed by a later refresh() or
+  // remount within the same START DAY, since nothing ever resets this
+  // back to false. Same one-shot-on-mount convention as .fade-in/
+  // .set-earned elsewhere in this codebase.
+  const [justStartedDay, setJustStartedDay] = useState(false);
   const [activeWorkout, setActiveWorkout] = useState<WorkoutSession | null>(null);
   const [activeResetId, setActiveResetId] = useState<string | null>(null);
   const [resetIntensity, setResetIntensity] = useState<1 | 2 | 3 | 4 | 5>(3);
@@ -504,6 +511,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       setDay(await startDay());
+      setJustStartedDay(true);
     } finally {
       setBusy(false);
     }
@@ -975,7 +983,7 @@ export function TodayScreen({
     <div
       className={`screen fade-in today-field${
         day && dominant === "NONE" && attentionPlan.attention.length === 0 ? " today-field--quiet" : ""
-      }`}
+      }${justStartedDay ? " today-field--boot" : ""}`}
       data-field-state={
         dominant !== "NONE" ? "earned" : attentionPlan.attention.length > 0 ? "attention" : "quiet"
       }
