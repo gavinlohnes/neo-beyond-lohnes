@@ -1,6 +1,6 @@
 ---
 id: REMIND-001
-baseline: 916f3a9d9cf701d1e184c03ae5ae0607af4fe473
+baseline: 4edb35f902d4d408b5fb4a2f981e19f34d8f9301
 risk_tier: ARCHITECTURAL
 ---
 
@@ -21,10 +21,13 @@ premise."
 
 ## Approved baseline
 
-`origin/master` at `916f3a9d9cf701d1e184c03ae5ae0607af4fe473`, verified via
-`git fetch origin master && git rev-parse origin/master` (JOURNAL-001's own closure commit —
-the current master HEAD at Drop launch; TRAIN-PROGRESSION-001, opened earlier the same night,
-had not yet merged when this Drop was cut).
+`origin/master` at `4edb35f902d4d408b5fb4a2f981e19f34d8f9301`, verified via
+`git fetch origin master && git rev-parse origin/master` — TRAIN-PROGRESSION-001's own closure
+commit. This Drop's branch was originally cut from JOURNAL-001's closure commit
+(`916f3a9d9cf701d1e184c03ae5ae0607af4fe473`) before TRAIN-PROGRESSION-001 merged/closed the same
+night; `origin/master` was merged into this branch (a clean, non-conflicting merge — disjoint
+files) and this baseline updated to match before activation, rather than assuming the original
+SHA still held.
 
 ## Risk classification
 
