@@ -1,6 +1,6 @@
 ---
 id: DEPS-001
-status: ACTIVE
+status: CLOSED
 baseline: 9d6c364f242383626c6f34a94f5401894d2dd3eb
 branch: claude/deps-001-audit-fix
 contract: docs/agent/drops/DEPS-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/90
 builder: Claude, this session, autonomous per direct owner delegation ('keep going') 2026-09-15
 reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
+integration_sha: 15421e6cf977f860fe76a3f84067b8ed21c4f71c
+closed_at: 2026-09-15T12:27:17.844Z
 ---
 
 # ACTIVE_DROP
