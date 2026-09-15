@@ -1,6 +1,6 @@
 ---
 id: JOURNAL-002
-status: ACTIVE
+status: CLOSED
 baseline: 7b59fdd3b9d27ede40639460e96794ff95502495
 branch: claude/journal-002-widen-relevance-matching
 contract: docs/agent/drops/JOURNAL-002.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/94
 builder: Claude, this session, autonomous per direct owner approval of a 4-item execution list, 2026-09-15
 reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
+integration_sha: a65f5ccfcbc56e75c7cc07f9ce6c9cd17291663a
+closed_at: 2026-09-15T14:16:03.681Z
 ---
 
 # ACTIVE_DROP
