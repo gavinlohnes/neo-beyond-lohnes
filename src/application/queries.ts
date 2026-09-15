@@ -441,6 +441,26 @@ export async function getLatestBodyweight(beyondDayId: string): Promise<number |
   return entries.at(-1)?.effectiveWeightLbs;
 }
 
+/**
+ * NUTRITION-003: the most recent bodyweight logged across ALL days, not
+ * scoped to one BeyondDay like getLatestBodyweight above — a protein
+ * target derived from bodyweight must stay current even on a day with no
+ * fresh weigh-in. Same correction-chain resolution as getBodyweightEntries,
+ * applied to the single most-recently-logged root event regardless of
+ * which day it occurred on (a correction's own supersedesEventId linkage
+ * is never day-scoped, so walking it against the full cross-day
+ * corrections list is exactly as correct as the day-scoped version).
+ */
+export async function getMostRecentBodyweight(): Promise<number | undefined> {
+  const logged = await db.events.where("type").equals("BODYWEIGHT_LOGGED").toArray();
+  if (logged.length === 0) return undefined;
+  const mostRecentRoot = logged.sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq)).at(-1)!;
+  const corrections = await db.events.where("type").equals("BODYWEIGHT_LOG_CORRECTED").toArray();
+  const payload = mostRecentRoot.payload as { weightLbs: number };
+  const chain = walkCorrectionChain(corrections, mostRecentRoot.id, payload.weightLbs, "weightLbs");
+  return chain.effectiveValue;
+}
+
 export interface ProteinEntry {
   rootEventId: string;
   headEventId: string;

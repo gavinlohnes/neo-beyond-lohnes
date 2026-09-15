@@ -122,7 +122,40 @@ standing implementation authority.
   see `application/queries.ts`'s `getMinimumDayStatus`.
 - No food provider, barcode, recipe, serving ontology, calorie/macro
   goal, or nutrition scoring — a SavedMeal is "the sandwich I always
-  make," not a food database entry.
+  make," not a food database entry. **Partially reversed 2026-09-15,
+  direct owner ruling — see "NUTRITION TARGETS" below**: a calorie
+  target and a bodyweight-derived protein target now exist. The rest of
+  this bullet still holds — no food provider/barcode/recipe/serving
+  ontology, and no nutrition *scoring* (a single pass/fail or point
+  value judging a day) — only two plain numeric targets with honest
+  progress-toward-target display.
+
+## NUTRITION TARGETS (Calorie + Protein Targets — NUTRITION-003, locked)
+
+Direct owner ruling, 2026-09-15 (in chat): reverses NUTRITION-001's "no calorie/macro goal"
+restriction specifically for calories and protein, in order to support eating at a deficit while
+hitting a protein floor.
+
+- **Calorie target is set directly by the operator — no formula.** No BMR/TDEE estimate
+  (Mifflin-St Jeor or otherwise) and no adaptive/trend-derived calorie estimate (a Hacker's
+  Diet/MacroFactor-style weight-trend-correlated TDEE was considered and deliberately deferred
+  as a possible future direction, not built here). `NutritionTargets.calorieTargetKcal` is an
+  optional plain number; omitted means "no target set," not zero.
+- **Protein target is derived, not set directly.** `getEffectiveProteinTargetG()`
+  (`application/nutritionTargetQueries.ts`) = `proteinMultiplierGPerLb` × the most recently
+  logged bodyweight (`getMostRecentBodyweight()`, cross-day — unlike the day-scoped
+  `getLatestBodyweight` HYDRATION/SLEEP/etc. use). Default multiplier is 1.0 g/lb; the operator
+  can adjust it. This is the standard cutting-lifter heuristic (RP, Cronometer, most coaches: 0.8
+  – 1.0 g/lb), not a BEYOND-invented number.
+- **Never a guessed number.** With no bodyweight ever logged, `getEffectiveProteinTargetG()`
+  returns `undefined` — the UI shows "log a bodyweight to see your target," never a fabricated
+  default bodyweight or a target computed from zero.
+- **`NutritionTargets` is a single mutable settings row** (`id: "current"`), same treatment as
+  `SchedulePattern` — not event-sourced, since "what target the operator is currently aiming for"
+  isn't itself a historical fact the way a logged meal or bodyweight is.
+- **Still no nutrition scoring.** Progress is shown as a plain "logged / target" readout
+  (`describeCalorieProgress`/`describeProteinProgress` in `ui/screens/body/nutritionCopy.ts`) —
+  remaining or over-by-X, never a score, grade, streak, or judgment.
 
 ## WORKOUT LIBRARY (Personal Exercise Library — TRAIN-CREATE-001, locked)
 

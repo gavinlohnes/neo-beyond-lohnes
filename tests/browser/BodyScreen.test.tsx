@@ -185,6 +185,58 @@ describe("BodyScreen (real browser) — PROTEIN", () => {
 });
 
 /**
+ * NUTRITION-003 (Calorie + Protein Targets, High-Risk Drop): calorie
+ * target is set directly (no formula); protein target is derived from
+ * the most recently logged bodyweight × an adjustable multiplier and
+ * must read as "no target"/"log a bodyweight" rather than a guessed
+ * number until a bodyweight actually exists.
+ */
+describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
+  it("shows the honest no-target/no-bodyweight defaults before any settings or bodyweight are logged", async () => {
+    const screen = await render(<BodyScreen />);
+    await expect.element(screen.getByText(/no target set/)).toBeVisible();
+    await expect.element(screen.getByText(/log a bodyweight to see your target/)).toBeVisible();
+  });
+
+  it("saving targets updates calorie progress immediately, but protein stays unresolved until a bodyweight is logged", async () => {
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW TARGET SETTINGS" }).click();
+    await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2200");
+    await screen.getByRole("spinbutton", { name: "Protein multiplier (g per lb bodyweight)" }).fill("0.9");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+
+    await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
+    await expect.element(screen.getByText(/log a bodyweight to see your target/)).toBeVisible();
+
+    await screen.getByRole("spinbutton", { name: "Weight (lbs)" }).fill("180");
+    await screen.getByRole("button", { name: "LOG BODYWEIGHT" }).click();
+    await expect.element(screen.getByText("180 lbs logged.", { exact: true })).toBeVisible();
+
+    await expect.element(screen.getByText(/0 \/ 162g protein · 162g to go/)).toBeVisible();
+  });
+
+  it("logging a meal counts toward calorie progress against the set target", async () => {
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW TARGET SETTINGS" }).click();
+    await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2200");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText(/0 \/ 2200 kcal/)).toBeVisible();
+
+    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+    await screen.getByRole("textbox", { name: "New meal name" }).fill("Chicken & Rice Bowl");
+    await screen.getByRole("spinbutton", { name: "New meal calories" }).fill("600");
+    await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill("45");
+    await screen.getByRole("spinbutton", { name: "New meal carbs (g)" }).fill("60");
+    await screen.getByRole("spinbutton", { name: "New meal fat (g)" }).fill("15");
+    await screen.getByRole("button", { name: "SAVE MEAL" }).click();
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByText("Chicken & Rice Bowl logged.", { exact: true })).toBeVisible();
+
+    await expect.element(screen.getByText(/600 \/ 2200 kcal · 1600 remaining/)).toBeVisible();
+  });
+});
+
+/**
  * NUTRITION-001 (Meal Memory, High-Risk Drop): exercised through the
  * real rendered screen (never hand-constructed events), matching every
  * other BODY station's own test convention above.

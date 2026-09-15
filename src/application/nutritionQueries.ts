@@ -114,3 +114,9 @@ export async function getTotalMealProteinGrams(beyondDayId: string): Promise<num
   const entries = await getMealEntries(beyondDayId);
   return entries.reduce((sum, e) => sum + e.effectiveProteinG, 0);
 }
+
+/** NUTRITION-003: total effective calories logged for this BeyondDay — sum of every meal entry's corrected value. */
+export async function getTotalMealCalories(beyondDayId: string): Promise<number> {
+  const entries = await getMealEntries(beyondDayId);
+  return entries.reduce((sum, e) => sum + e.effectiveCalories, 0);
+}
