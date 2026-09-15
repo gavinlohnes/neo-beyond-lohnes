@@ -1,143 +1,138 @@
 # Current Checkpoint
 
 Compact, replaceable operational handoff snapshot. This document is superseded wholesale at the
-next checkpoint Drop — do not accrete edits onto it indefinitely. It records repository state as
-of the Drop that wrote it; it is not itself a source of product doctrine (see `CLAUDE.md` and
-`docs/UX_DECISIONS.md` for that) or of factory/process doctrine (see `AGENTS.md` and
-`.claude/skills/beyond-drop/SKILL.md` §8 for that).
+next checkpoint Drop—do not accrete edits onto it indefinitely. It reports repository state; it
+does not authorize product work or replace `CLAUDE.md`, `docs/UX_DECISIONS.md`, `AGENTS.md`, or
+the current Drop Contract.
 
-**Supersedes** the prior checkpoint (written at `origin/master` `1003518`, PR #26), which had
-drifted 29 merged PRs stale — it described Nutrition, the FIELD/SHELL visual consolidation, and
-the entire Factory-Autopilot arc as not yet existing, when all of it had since merged.
+**Supersedes** the checkpoint written at PR #55 (`origin/master` `e78a73a`), before the PR number
+advanced to #94. That snapshot now misstates shipped capabilities, dependencies, schema, tests,
+and next work.
 
-## REMOTE VERIFIED (origin/master)
+## REMOTE VERIFIED
 
-- Repository: `gavinlohnes/neo-beyond-lohnes`, default branch `master`.
-- `origin/master` HEAD: `e78a73a9b054d7cee5734176580e8a0e5b330839` — merge of PR #55
-  (`factory-contract-bootstrap-001`), verified directly via `git fetch origin master` +
-  `git rev-parse` on 2026-09-02.
-- Fresh-clone verification run this same session: `npm ci` clean; `npx tsc -b` clean (0 errors);
-  `npm run check:architecture` — PASS, 70 files scanned, 0 violations; `vitest run --project
-  node` — 67 test files passed, 824 tests passed, 1 skipped. (Browser/Playwright project not
-  re-run in that session; its 22 test files are confirmed present by listing, not by execution.)
-- PRs #28–33 (Visual-001–004, TRAIN-003, NUTRITION-001) and #34–46 (FACTORY-002,
-  CONTINUITY-001, TODAY-002–006, DOCTRINE-001, FIELD-001, FIELD-ARCH-001,
-  FIELD-PROTOTYPE-001, SHELL-001) are real, merged product/visual/doctrine work.
-- PRs #47–55 (FACTORY-AUTOPILOT-001, AUTOPILOT-AUTH-002, the Phase-2 campaign-authorization
-  revision, and the Builder GitHub App identity bootstrap) are Factory-process work — no
-  product-facing change landed in that span. See FACTORY / OPERATING MODEL below for the owner
-  ruling this produced.
-- `ACTIVE_DROP.md`: `AUTOPILOT-AUTH-002`, status `CLOSED`, integration SHA
-  `407fcb68a6c3abcc6104a570f5d2bd9666673b5f`. No Drop is currently `ACTIVE`.
-- PR #54 (`AUTOPILOT-CANDIDATE-DISPATCH-002`) is **closed, not merged** (verified live via
-  GitHub on 2026-09-02) — per `FACTORY_AUTOPILOT.md`'s own instruction that it is "permanently
-  superseded... must never be merged." No further action needed on it.
+- Repository: `gavinlohnes/neo-beyond-lohnes`; default branch: `master`.
+- Verified baseline: `origin/master` at
+  `e066a24214a41eb49a84e18af52247527fbc171c` on 2026-09-15, fetched directly before this Drop.
+- That commit is the JOURNAL-002 closure commit. Before CHECKPOINT-003 activation,
+  `docs/agent/ACTIVE_DROP.md` directly read `id: JOURNAL-002`, `status: CLOSED`, integration SHA
+  `a65f5ccfcbc56e75c7cc07f9ce6c9cd17291663a`.
+- The baseline commit's GitHub `build` and `deploy` checks both completed successfully.
+- From the prior checkpoint baseline through this baseline, first-parent history contains 32
+  merged PRs: product capability, reliability, visual-system, dependency, and process work—not
+  merely documentation churn.
 
-## PRODUCT STATE
+## CURRENT PRODUCT
 
-Confirmed present in `src/` as of `e78a73a` by direct file inspection (not by re-reading a prior
-checkpoint's claims):
+Confirmed by direct source inspection at the verified baseline:
 
-- **TODAY** (`src/ui/screens/today/TodayScreen.tsx`, 2,448 lines, 52 `useState` hooks) —
-  start/end day, state check-in, current recommendation + WHY trace, RESET/SHIFT DOWN, work
-  context, Commitments (Missions/Obligations) card, minimum-day summary.
-- **TRAIN** (`TrainScreen.tsx`, 1,179 lines) — A/B/C rotation, per-exercise progression advisory
-  (`engine/progression.ts`), direct weight/rep entry.
-- **BODY** (`BodyScreen.tsx`, 1,373 lines) — sleep (PRIMARY/SUPPLEMENTAL), water, protein,
-  bodyweight, nutrition/meal logging (`SavedMeal`, fully manual — no food-data source yet).
-- **MORE** — backup/restore, diagnostics, and nested **HISTORY**, **REVIEW**
-  (`getRecommendationLedger`), **SEARCH** (`searchQueries.ts`, read-only, no ranking library,
-  no tap-to-navigate as of this checkpoint), **Missions & Obligations**
-  (`IntentScreen.tsx`), **Work Schedule**.
-- **Capture** — `captureItem`/`convertCaptureToObligation`, fully manual triage, no derived
-  fields from capture text as of this checkpoint.
-- **Recommendation outcomes** — `rateOutcome` writes a rating; `getPriorOutcomeMemory` displays
-  it once as history; explicitly documented as never an Engine input as of this checkpoint.
-- **AdvisoryNotes** (`engine/advisory.ts`) — composes `obligationRelevance` + `progression`
-  output into informational-only notes; never a `Recommendation`.
-- **Engine** (`src/engine/`, 904 lines total) — `evaluate.ts` selects one of 5 recommendation
-  kinds from `Capacity` (locked threshold rule) + 2 booleans only. Obligations do not
-  participate in arbitration as of this checkpoint (see NEXT OPERATION — this is now
-  owner-authorized to change).
+- **Shell:** four primary territories remain TODAY / TRAIN / BODY / MORE. An active workout is
+  restored into TRAIN on app launch. The app is still local-first/offline-capable with no account
+  or backend; backup export and replace-only restore remain the portability boundary.
+- **TODAY:** start/end day, state check-in, one primary Recommendation with WHY trace, RESET and
+  SHIFT DOWN, work context, Commitments, active-workout continuity, Capture, minimum-day summary,
+  and read-only Support-tier advisory notes. `TodayScreen.tsx` was decomposed into focused cards
+  and sections (PR #61), although the orchestrator remains large (1,722 physical lines and 56
+  `useState` references at this checkpoint).
+- **Intelligence Spine:** advisory producers now cover eligible Obligations, TRAIN progression,
+  and reviewed Decision Journal Lessons. Journal relevance matches current eligible Obligation
+  titles plus active Mission titles (JOURNAL-001/002); these notes remain informational and never
+  participate in Recommendation arbitration.
+- **TRAIN:** built-in A/B/C and operator-created templates are selectable; personal exercises can
+  be created/archived and substituted into a live workout. Prepared inputs, commit/undo flow,
+  persistent rest timing, secured completion, recent history, and per-exercise progression are
+  shipped. Progression increments now derive from equipment/muscle group rather than one flat
+  5 lb placeholder (TRAIN-PROGRESSION-001).
+- **BODY:** correctable sleep, water, protein, bodyweight, and meal logging; saved meal presets;
+  configurable calorie/protein targets; and optional USDA FoodData Central search that only
+  pre-fills the operator-reviewed meal form. Failed/absent lookup falls back to manual entry.
+- **MORE:** History, Review, ranked fuzzy/prefix Personal Search, Missions & Obligations, Work
+  Schedule, Decision Journal, Exercise Library, Custom Workout Templates, backup/restore, and
+  System diagnostics. Search results navigate to the relevant Mission/Obligation management
+  context or back to TODAY for Capture; the search index is disposable and rebuilt from Dexie.
+- **Obligations:** Mission lifecycle filtering, relevance tiers, and RFC-5545-style recurring
+  instances via `rrule.js` are shipped. Obligations still do not enter primary Engine arbitration.
+- **Decision Journal:** Context → Options → Decision → Reasoning → Expectation → Outcome → Lesson
+  records are shipped, including reviewed-Lesson advisory resurfacing described above.
+- **Reminder:** an opt-in Web Notification check runs on app open/reload after the configured
+  local hour when today's check-in is absent, at most once per day. It is on-device only, defaults
+  off, and is not true background push (REMIND-001).
 
-No `MIND`, `COMMAND`, or `LINK` capability exists in `src/` as of this checkpoint — those remain
-correctly out of scope (see KNOWN EXCLUSIONS).
+## ENGINE, DATA, AND DEPENDENCIES
 
-## FACTORY / OPERATING MODEL
+- `src/engine/evaluate.ts` remains the sole primary recommendation arbiter with five kinds, in
+  this order: STABILIZE → POST_SHIFT_TRANSITION → RECOVER → EXECUTE_PLANNED_WORK →
+  NO_ACTION_REQUIRED. Its inputs remain check-in-derived Capacity plus `hasPlannedWork` and
+  `hasUnresolvedPostShift`; RED still wins.
+- `AdvisoryNote` is a separate INTERPRET-stage contract with no recommendation priority or
+  command. Rated Outcome history is stored/read but is not an Engine input.
+- Dexie schema is v11 with 16 declared tables. Since the stale v6 checkpoint it added saved
+  meals (v7), Decision Journal entries (v8), personal exercises (v9), custom workout templates
+  (v10), and nutrition targets (v11); migrations remain additive.
+- Runtime dependencies now include MiniSearch, chrono-node, Compromise, and rrule.js. `fast-check`
+  is present as a dev dependency. Lucide React is not installed.
+- There are 112 source files and 106 test files, including 25 real-Chromium browser test files.
+  The authoritative pass counts are the next successful `npm run verify`/CI run, not an old
+  hand-maintained total.
+- The root `README.md` is itself stale: it still reports schema v6 and an old 68-file/706-test
+  baseline and omits several shipped screens/capabilities. Repairing README is not part of this
+  checkpoint Drop and should be a separately authorized docs task.
 
-**Factory-automation investment paused — direct owner ruling, 2026-09-02.** No further
-campaign-authorization schema version, Autopilot capability, or Builder-identity mechanism
-beyond what already exists in `scripts/factory-*.mjs` is authorized until the current mechanism
-has actually carried several real product Drops through it. This does not retire the existing
-Drop contract / `ACTIVE_DROP` / risk-classification mechanism, which remains in force — it stops
-*further elaboration* of the automation layer itself. `FACTORY_PHASE_2.md`'s remaining sequence
-(`AUTOPILOT-CANDIDATE-DISPATCH-002` onward) is not activated under this ruling.
+## FACTORY / DELIVERY STATE
 
-Builder/Reviewer/Integrator role separation, no-self-merge, and exact-head review remain
-unchanged and in force for the product work below — see `AGENTS.md` /
-`docs/agent/BEYOND_ENGINEERING_CONTRACT.md`.
+- Drop Contract + `ACTIVE_DROP.md` routing, exact-baseline worktrees, semantic risk tiers,
+  required verification, exact-head independent review, separate integration, no self-merge,
+  and post-merge closure remain the active delivery model.
+- Further Factory-automation investment remains paused under the 2026-09-02 owner ruling;
+  `FACTORY_PHASE_2.md` is not an active campaign.
+- Live GitHub inspection on 2026-09-15 found zero open Dependabot alerts. Dependabot security
+  updates and secret scanning are disabled; CodeQL returns “no analysis found.” No repository
+  workflow/config currently enables CodeQL or Dependabot version updates.
 
-## NEXT OPERATION
+## NEXT OPERATION — OWNER INPUT REQUIRED
 
-Direct owner ruling, 2026-09-02: a specific product/architecture backlog was reviewed and
-explicitly authorized item-by-item (see `docs/agent/CAPABILITY_MAP.md` for the researched basis
-of each). Recorded here so a fresh session does not have to reconstruct authorization from chat
-history:
+No product Drop is sequenced by this checkpoint. Before starting any item below, re-confirm both
+authorization and order with Gavin; older authorization records did not establish a durable
+sequence, and this snapshot is not a substitute for a new Drop assignment.
 
-**Authorized, no gate needed (Routine, in progress via this Drop/foundation work):**
-- This Capability Map + checkpoint refresh.
-- Decompose `TodayScreen.tsx` into sub-components (behavior-preserving).
-- Search-to-navigate wiring.
-- Verify GitHub CodeQL/Dependabot/secret-scanning enablement.
+**Open recommendation-priority decision—route to Gavin, do not infer:** Should currently eligible
+OVERDUE/DUE_TODAY Obligations join `evaluate.ts` arbitration as a new Recommendation kind while
+preserving RED/STABILIZE precedence, or should the deterministic five-kind Engine remain final
+for now? This checkpoint records the fork without choosing either branch.
 
-**Authorized, dependency additions (each still runs as its own High-Risk Drop with real
-verification — authorization removes the "should we ask the owner" step, not the Drop itself):**
-- MiniSearch (Search ranking/retrieval).
-- chrono-node + Compromise (Capture date/entity extraction).
-- fast-check, dev-only (property-based tests).
-- Lucide React (icon grammar) — re-evaluate now, per its own stated re-evaluation trigger.
+Other recorded but unbuilt or externally incomplete candidates requiring reconfirmation before
+work begins:
 
-**Authorized, schema additions (each still runs as its own High-Risk Drop):**
-- Decision Journal (Context→Options→Decision→Reasoning→Expectation→Outcome→Lesson).
-- Nutrition food lookup via USDA FoodData Central.
-- Obligation recurrence via rrule.js.
-- TRAIN Wave-A prototype slate (Prepared Set Row, Set Commit Choreography, Persistent Rest,
-  Workout Secured).
-
-**Authorized, Engine/recommendation-priority change (Architectural, explicit escalation
-category — authorization obtained, still requires its own careful Drop contract given RED
-capacity's priority must not be weakened):**
-- Obligations (OVERDUE/DUE_TODAY) participate in recommendation arbitration as a new kind.
-- Rated Outcome history biases/tie-breaks recommendation selection.
-
-No sequencing/priority order among these was fixed by the authorization itself — a fresh session
-should confirm current sequencing with the owner rather than assume the order listed above.
+- Rated Outcome history bias/tie-breaking in Recommendation selection (Architectural; prior
+  authorization is recorded, implementation is absent, and Engine-priority semantics still
+  require a fresh bounded contract).
+- Lucide React adoption for a restrained shared icon grammar (dependency addition; the existing
+  record says to re-evaluate against a concrete need, not install preemptively).
+- GitHub security enablement: decide whether to enable Dependabot security updates, secret
+  scanning/push protection, and CodeQL now that their live state is known. This checkpoint only
+  verified state; it changed no repository setting.
+- Any further TODAY decomposition or README/capability-document reconciliation should be scoped
+  as explicit maintenance work rather than presumed as unfinished scope from the old checkpoint.
 
 ## KNOWN EXCLUSIONS / DO NOT BUILD
 
-Unchanged, still not authorized: COMMAND desktop implementation, LINK/AI conversational channel,
-cloud/provider backend or account system, universal Entity/World State architecture, generic
-dashboard work, broad OVERWATCH work. Added by this checkpoint: further Factory-automation
-capability beyond what exists today (see FACTORY / OPERATING MODEL above).
+Still not authorized by this checkpoint: COMMAND desktop implementation; LINK/AI conversational
+channel; a cloud/provider backend or account system; universal Entity/World State/knowledge-graph
+architecture; generic dashboard work; broad OVERWATCH work; a proprietary food database; a
+generic rules framework replacing BEYOND's Engine; or further Factory automation beyond the
+current mechanism.
 
-## VERIFICATION STATE
+## CHECKPOINT VERIFICATION
 
-This checkpoint Drop is documentation-only (this file, `CLAUDE.md`'s Pointers section, and the
-new `docs/agent/CAPABILITY_MAP.md`) plus, in the same Drop, a behavior-preserving `TodayScreen`
-decomposition if bundled — check the actual diff of the Drop that carries this checkpoint rather
-than assume from this paragraph alone. Verification performed:
+CHECKPOINT-003 is documentation-only: this replacement, its permanent Drop Contract, and the
+Factory-generated `ACTIVE_DROP.md` routing update. Its Builder verification and PR/CI evidence
+belong to CHECKPOINT-003's final commit and PR; do not project the baseline's successful deploy
+onto this Drop's still-unmerged documentation.
 
-- `git fetch origin master` + `git rev-parse` confirmed `origin/master` at `e78a73a` directly.
-- `npm ci` + `npx tsc -b` + `npm run check:architecture` + `vitest run --project node` all green,
-  captured above under REMOTE VERIFIED.
-- PR #54's closed (not merged) state confirmed live via GitHub, not assumed from
-  `FACTORY_AUTOPILOT.md`'s prose alone.
+## RECOVERY NOTES
 
-## HANDOFF NOTES
-
-- Treat this file as replaceable in full at the next checkpoint Drop, not an append log — the
-  prior checkpoint's failure to be refreshed for 29 PRs is exactly the failure mode to avoid
-  repeating.
-- Verify `origin/master`'s actual HEAD directly before relying on the SHA above.
-- Before starting any of the NEXT OPERATION items, re-confirm with the owner that the
-  authorization above still stands and ask for current sequencing preference — it was not fixed.
+- Always fetch and verify `origin/master` before relying on the SHA or counts above.
+- Treat this file as replaceable in full at the next checkpoint—not an append-only history.
+- Follow `docs/agent/ACTIVE_DROP.md` to the current Drop Contract before doing work.
+- Current code and Git/GitHub evidence outrank stale narrative summaries. If repository truth
+  conflicts with higher product authority, stop and escalate rather than silently reconcile it.
