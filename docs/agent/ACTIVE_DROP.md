@@ -4,9 +4,9 @@ status: ACTIVE
 baseline: 4edb35f902d4d408b5fb4a2f981e19f34d8f9301
 branch: claude/remind-001-checkin-notification
 contract: docs/agent/drops/REMIND-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/93
 builder: Claude, this session, autonomous per direct owner approval of a 4-item execution list, 2026-09-15
-reviewer: (unassigned)
+reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
 ---
 
