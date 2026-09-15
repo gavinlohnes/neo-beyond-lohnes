@@ -1,15 +1,13 @@
 ---
-id: README-001
-status: CLOSED
-baseline: 71d2e714e9aa18682c657c014d1f65ffeeb7bac7
-branch: claude/readme-001-repository-truth-refresh
-contract: docs/agent/drops/README-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/96
-builder: Claude, this session, autonomous per direct owner delegation ('run a campaign') 2026-09-15, following CHECKPOINT-003's own flagged docs task
-reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
-integrator: Claude (this session), 2026-09-15
-integration_sha: 9546d3199245b45a2c3b3d365addc3702c923184
-closed_at: 2026-09-15T18:43:21.905Z
+id: INTENT-ARBITRATION-001
+status: ACTIVE
+baseline: 8dc0cd03ebc0f9704da984a5e0cb765704aecbf0
+branch: claude/intent-arbitration-001-obligation-recommendation
+contract: docs/agent/drops/INTENT-ARBITRATION-001.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Claude, this session, per direct owner AskUserQuestion ruling 2026-09-15
+reviewer: (unassigned)
+integrator: (unassigned)
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/README-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/INTENT-ARBITRATION-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
