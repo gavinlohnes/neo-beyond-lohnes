@@ -336,6 +336,29 @@ comment for history, not deleted.
   "Visual system — motion" below (MOTION-001) — but that Drop only reshaped the timing curve
   of transitions/animations that already existed; it did not add, and does not authorize, any
   new ambient/decorative motion. "Ambient motion" as a category stays deferred.
+  **Partially reversed 2026-09-15, direct owner ruling, LAUNCH-VISION-003** — four specific,
+  named elements are now authorized (below); everything else in this deferred set (an abstract
+  glyph family, and any chamfer/motion/bloom beyond the four named elements) stays
+  prototype-only.
+- **Four elements authorized (locked 2026-09-15, direct owner ruling, LAUNCH-VISION-003).**
+  Chamfered plating extends beyond `.command-surface` alone to two more filled, bordered
+  surfaces where the production DOM genuinely supports it without changing an established
+  identity: `.instrument-cluster` and `.card--warning` (the RED-tier override confirm panel —
+  the real analog of the prototype's `.confirm-panel`). A third prototype-listed target,
+  `.equipment-row`, was deliberately excluded — it has no background/border by design (a
+  different silhouette entirely, not a card with styling removed — see its own doc comment in
+  [global.css](../src/ui/styles/global.css)), so a corner cut there would be invisible at best
+  and would clip real content at worst; adding a background/padding to make it visible would
+  itself be new geometry beyond the four authorized elements, not truthful adaptation of them.
+  An ambient red bloom now surrounds `.command-surface` (the one dominant/earned surface, not
+  an app-shell-wide glow — the prototype's "device frame" has no real production equivalent);
+  since BODY never renders `.command-surface`, its lower red budget holds without a separate
+  carve-out. TODAY's START DAY fires a one-time power-on sweep (`.today-field--boot`), never
+  replayed within the same day. `ConfirmBanner.tsx`'s shared root (BODY's water/sleep/
+  bodyweight/protein/meal confirmations, TODAY's capture-undo and check-in confirmations) gets
+  a one-time confirmation pulse on mount; TRAIN's own pre-existing per-set flash (`.set-earned`,
+  VISUAL-001) already serves the identical purpose for set logging and is left untouched rather
+  than duplicated. All four are pure presentation — no command/query/engine/domain change.
 
 ## Visual system — typography
 

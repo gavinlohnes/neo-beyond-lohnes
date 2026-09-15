@@ -15,6 +15,12 @@ import { ConfirmIcon } from "../icons/Icon";
  * of that. Every prop below reproduces the ORIGINAL per-site styling
  * exactly — this is not a new, "cleaner" unified layout, it's the same
  * two variants that already existed, just written once.
+ *
+ * LAUNCH-VISION-003 (2026-09-15): the `confirm-banner` class (see
+ * global.css) is the shared logged-action confirmation pulse — this is
+ * the one real primitive every named "confirmation moment" (water/
+ * sleep/bodyweight/protein/meal, capture undo, check-in) already routes
+ * through, so it's the truthful place to add it once.
  */
 export interface ConfirmBannerProps {
   message: ReactNode;
@@ -27,7 +33,7 @@ export interface ConfirmBannerProps {
 export function ConfirmBanner({ message, actionLabel, onAction, disabled, divider }: ConfirmBannerProps) {
   return (
     <div
-      className="fade-in"
+      className="fade-in confirm-banner"
       style={{
         display: "flex",
         justifyContent: "space-between",

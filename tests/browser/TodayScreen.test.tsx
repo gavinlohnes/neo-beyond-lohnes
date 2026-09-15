@@ -491,6 +491,16 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — section headings and pr
     const startButton = screen.getByRole("button", { name: "START DAY", exact: true }).element();
     expect(startButton.className).toContain("btn-primary");
   });
+
+  it("LAUNCH-VISION-003: START DAY adds the one-time power-on sweep hook, never on a screen that already has an active day", async () => {
+    const screen = await render(<TodayScreen />);
+    expect(document.querySelector(".today-field--boot")).toBeNull();
+
+    await screen.getByRole("button", { name: "START DAY", exact: true }).click();
+    await vi.waitFor(() => {
+      expect(document.querySelector(".today-field--boot")).not.toBeNull();
+    });
+  });
 });
 
 /**

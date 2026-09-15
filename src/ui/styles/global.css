@@ -70,6 +70,15 @@ button, input {
 .card--warning {
   border-color: var(--danger);
 }
+/* LAUNCH-VISION-003 (2026-09-15, direct owner ruling): .card--warning is
+   the RED-tier override confirm panel (useRedCapacityOverrideGate.tsx) —
+   the real production analog of the launch-vision prototype's red-
+   bordered .confirm-panel. Same chamfer VISUAL-001 reserved for
+   .command-surface alone; .card's own 16px padding gives the same
+   safety margin. */
+.card--warning {
+  clip-path: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%);
+}
 
 /* FIELD-ARCH-001: the same gap VISUAL-002 found and fixed for the
  * danger/red tier above, still open one tier down — TRAIN's own
@@ -140,6 +149,16 @@ button, input {
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
+}
+/* LAUNCH-VISION-003 (2026-09-15, direct owner ruling): the same chamfer
+   VISUAL-001 reserved for .command-surface alone now also identifies
+   .instrument-cluster — a real, filled, bordered panel with the same
+   16px padding VISUAL-001's own safety margin relied on, so the cut
+   never intersects rendered content. Geometry only: this does not add
+   any red accent, so BODY's own "no red accent at all" instrument-
+   cluster doctrine (docs/UX_DECISIONS.md) is untouched. */
+.instrument-cluster {
+  clip-path: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%);
 }
 
 /* Overdrive Phase 3: capacity (GREEN/YELLOW/RED) is the single most
@@ -503,6 +522,54 @@ button, input {
   border-radius: var(--radius);
 }
 
+/* LAUNCH-VISION-003 (2026-09-15, direct owner ruling): the prototype's
+   power-on sweep — a one-time bar sweeping the field top to bottom,
+   never a loop. Scoped to TODAY only, fired once per START DAY (see
+   TodayScreen.tsx's justStartedDay state), matching the prototype's "the
+   one real power-on moment in the whole app." Same one-shot-on-mount
+   pattern as .fade-in/.set-earned; neutralized by the reduced-motion
+   rule below like every other animation here. position:relative is
+   scoped to this one modifier class, not .today-field generally, so it
+   never affects layout outside this one-shot moment. */
+@keyframes beyond-power-on-sweep {
+  0% { transform: translateY(-100%); opacity: 0; }
+  8% { opacity: 1; }
+  100% { transform: translateY(150vh); opacity: 0; }
+}
+.today-field--boot {
+  position: relative;
+}
+.today-field--boot::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  z-index: 1;
+  background: linear-gradient(90deg, transparent, rgba(226, 69, 79, 0.9), transparent);
+  box-shadow: 0 0 16px 2px rgba(226, 69, 79, 0.9);
+  animation: beyond-power-on-sweep 650ms var(--motion-easing) forwards;
+  pointer-events: none;
+}
+
+/* LAUNCH-VISION-003 (2026-09-15, direct owner ruling): the prototype's
+   confirmation pulse for logged-action confirmation moments. Applied to
+   ConfirmBanner.tsx's shared root (BODY water/sleep/bodyweight/protein/
+   meal, TODAY capture undo, TODAY check-in) — the one real, already-
+   shared confirmation primitive named by BODY/TODAY. TRAIN's own set-
+   logging confirmation moment already has its own one-shot flash
+   (.set-earned, VISUAL-001) — this does not duplicate or replace it,
+   matching "no invented new motion vocabulary beyond the four
+   authorized elements." */
+@keyframes beyond-confirm-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(226, 69, 79, 0.5); }
+  100% { box-shadow: 0 0 0 8px transparent; }
+}
+.confirm-banner {
+  animation: beyond-confirm-pulse 550ms ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -863,6 +930,15 @@ button, input {
   padding: var(--space-5) var(--space-4);
   margin-bottom: var(--space-5);
   clip-path: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%);
+  /* LAUNCH-VISION-003 (2026-09-15, direct owner ruling): the prototype's
+     ambient red bloom, scoped to the one dominant/earned surface rather
+     than the whole app shell (the prototype's "device frame" has no real
+     production equivalent) — "red is scarce and earned" holds exactly
+     because .command-surface itself already only ever renders once per
+     screen for the currently-dominant operation. BODY never renders
+     .command-surface at all, so its lower red budget is respected
+     without a separate carve-out rule. */
+  box-shadow: 0 0 48px -14px rgba(226, 69, 79, 0.4);
 }
 
 /* COMMAND TITLE — genuinely large display type for the one dominant

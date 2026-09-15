@@ -54,7 +54,19 @@
      introduces — a single small corner cut, applied only to the currently
      dominant/earned surface (.command-surface — see its own doc comment
      in global.css), never universally. "Only one chamfer may identify an
-     active region" (Visual Synthesis Round 1.0's own design invariant). */
+     active region" (Visual Synthesis Round 1.0's own design invariant).
+     Reversed 2026-09-15, direct owner ruling — see LAUNCH-VISION-003 below.
+     kept here as provenance, not current behavior. */
+  /* LAUNCH-VISION-003 (2026-09-15, direct owner ruling): the token itself
+     is unchanged (still 14px) — what changes is how many selectors use
+     it. Two more genuinely truthful surfaces adopt the same cut:
+     .instrument-cluster and .card--warning (both filled, bordered panels
+     with >=16px padding, same safety margin VISUAL-001 itself relied on).
+     A third prototype-listed target, .equipment-row, is deliberately NOT
+     included — see its own doc comment in global.css for why applying a
+     corner clip-path there would be either invisible or destructive
+     rather than truthful. See docs/UX_DECISIONS.md's "Visual system —
+     red budget" entry for the full reversal record. */
   --chamfer: 14px;
 
   /* Overdrive Phase 1: restrained elevation for the one card per screen

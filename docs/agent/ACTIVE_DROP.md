@@ -1,15 +1,13 @@
 ---
-id: TODAY-007
-status: CLOSED
-baseline: 925b826c07812a9fea5b42822be6a92449019f06
-branch: claude/today-screen-flake-fix-wip
-contract: docs/agent/drops/TODAY-007.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/85
+id: LAUNCH-VISION-003
+status: ACTIVE
+baseline: 36d98aa0182aaaa49415fcd059436a85454998c9
+branch: claude/launch-vision-003-terrys-suit-port
+contract: docs/agent/drops/LAUNCH-VISION-003.md
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/86
 builder: Claude, this session, per direct owner instruction 2026-09-15
 reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
-integration_sha: affd0bdc08def9e338958cf9a32591f0b161dee2
-closed_at: 2026-09-15T08:20:22.918Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/TODAY-007.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/LAUNCH-VISION-003.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and

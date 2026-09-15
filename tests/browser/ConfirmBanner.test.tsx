@@ -34,4 +34,12 @@ describe("ConfirmBanner (real browser)", () => {
     const rect = button.element().getBoundingClientRect();
     expect(rect.height).toBeGreaterThanOrEqual(44);
   });
+
+  it("LAUNCH-VISION-003: carries the confirm-banner structural hook for the confirmation pulse", async () => {
+    const screen = await render(
+      <ConfirmBanner message="17 oz added." actionLabel="CORRECT" onAction={() => {}} />,
+    );
+    await expect.element(screen.getByText("17 oz added.")).toBeVisible();
+    expect(document.querySelector(".confirm-banner")).not.toBeNull();
+  });
 });
