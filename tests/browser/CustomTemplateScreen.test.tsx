@@ -3,6 +3,7 @@ import { render, cleanup } from "vitest-browser-react";
 import { CustomTemplateScreen } from "../../src/ui/screens/more/CustomTemplateScreen";
 import { createCustomExercise } from "../../src/application/exerciseLibraryCommands";
 import { createCustomTemplate } from "../../src/application/customTemplateCommands";
+import { getCustomTemplates } from "../../src/application/customTemplateQueries";
 
 /**
  * TRAIN-CREATE-002 (Custom Workout Templates). Real-browser smoke
@@ -59,6 +60,23 @@ describe("CustomTemplateScreen (real browser)", () => {
     await screen.getByRole("button", { name: "SAVE TEMPLATE" }).click();
 
     await expect.element(myTemplates.getByText("Pull Day", { exact: true })).toBeVisible();
+    expect(consoleErrors).toEqual([]);
+  });
+
+  it("TRAIN-PROGRESSION-001: derives a real equipment-based increment through the actual screen, not the old flat placeholder", async () => {
+    await createCustomExercise({ name: "Leg Press Machine", muscleGroup: "Legs", equipment: "Machine", repRangeLow: 8, repRangeHigh: 12 });
+    const screen = await render(<CustomTemplateScreen />);
+
+    await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
+    await screen.getByPlaceholder("Template name").fill("Leg Day");
+    await screen.getByRole("button", { name: "Leg Press Machine (Legs)" }).click();
+    await screen.getByRole("button", { name: "SAVE TEMPLATE" }).click();
+
+    const [template] = await getCustomTemplates();
+    expect(template!.exercises).toHaveLength(1);
+    // Machine equipment -> 10lb (deriveIncrementLbs), not the old flat 5lb
+    // placeholder every equipment type used to get regardless of what it was.
+    expect(template!.exercises[0]!.incrementLbs).toBe(10);
     expect(consoleErrors).toEqual([]);
   });
 

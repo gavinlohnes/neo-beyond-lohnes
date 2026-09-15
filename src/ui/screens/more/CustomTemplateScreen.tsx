@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
 import type { CustomExercise } from "../../../domain/workout/customExercise";
-import type { ExercisePrescription } from "../../../domain/workout/types";
+import { deriveIncrementLbs, type ExercisePrescription } from "../../../domain/workout/types";
 import { getCustomExercises } from "../../../application/exerciseLibraryQueries";
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
 import { archiveCustomTemplate, createCustomTemplate } from "../../../application/customTemplateCommands";
@@ -18,13 +18,14 @@ import { FieldDisclosure } from "../../components/FieldDisclosure";
  * equipment/rep range) itself, only which exercises belong to a template
  * and how many sets each gets here.
  *
- * DEFAULT_SETS/DEFAULT_INCREMENT_LBS below mirror the same "no real
- * per-machine data exists yet, so use one explicit placeholder" precedent
- * domain/workout/types.ts's own DEFAULT_INCREMENT_LBS already sets for
- * the built-in A/B/C templates — not a new, separately-invented default.
+ * DEFAULT_SETS below has no real per-exercise signal to derive from (how
+ * many sets someone wants is a personal choice, not an equipment fact),
+ * so it stays an explicit placeholder. incrementLbs (TRAIN-PROGRESSION-001,
+ * 2026-09-15) no longer does — it's derived from each CustomExercise's own
+ * `equipment`/`muscleGroup` fields via `deriveIncrementLbs`, the same
+ * convention now used for the built-in A/B/C templates.
  */
 const DEFAULT_SETS = 3;
-const DEFAULT_INCREMENT_LBS = 5;
 
 function TemplateRow({ template, onArchive }: { template: CustomWorkoutTemplate; onArchive: () => void }) {
   return (
@@ -108,7 +109,7 @@ export function CustomTemplateScreen() {
           sets: selectedSets[exerciseId]!,
           repRangeLow: source.repRangeLow,
           repRangeHigh: source.repRangeHigh,
-          incrementLbs: DEFAULT_INCREMENT_LBS,
+          incrementLbs: deriveIncrementLbs(source.equipment, source.muscleGroup),
         };
       });
       await createCustomTemplate({ name: name.trim(), exercises });
