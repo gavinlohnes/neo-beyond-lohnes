@@ -1,15 +1,13 @@
 ---
-id: TRAIN-CREATE-003
-status: CLOSED
-baseline: da314fe3b7e230830da19a21552e155b92f5a1af
-branch: claude/train-create-003-custom-exercise-substitution
-contract: docs/agent/drops/TRAIN-CREATE-003.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/83
+id: INTENT-002
+status: ACTIVE
+baseline: 58e60656065c4017c8e0d586897c947cd98c6761
+branch: claude/intent-002-recurring-obligations
+contract: docs/agent/drops/INTENT-002.md
+pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude, this session, assigned by Gavin in chat 2026-09-15
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: b7e2b40bb3ca01f22a89fbbde90da6b514de7591
-closed_at: 2026-09-15T07:21:08.194Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/TRAIN-CREATE-003.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/INTENT-002.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
