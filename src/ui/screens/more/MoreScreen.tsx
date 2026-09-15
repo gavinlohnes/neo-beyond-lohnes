@@ -18,6 +18,15 @@ import { ExerciseLibraryScreen } from "./ExerciseLibraryScreen";
 import { CustomTemplateScreen } from "./CustomTemplateScreen";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { Icon } from "../../icons/Icon";
+import {
+  getCheckInReminderPreference,
+  requestCheckInNotificationPermission,
+  setCheckInReminderPreference,
+  type CheckInReminderPreference,
+} from "../../../application/checkInReminderQueries";
+import { formatReminderHour } from "./moreCopy";
+
+const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 
 // FIELD ALPHA Phase 0 truth-hygiene fix: this was hardcoded at 4 (stale
 // since the Drop 02a/schedulePatterns migration) while the live Dexie
@@ -67,6 +76,14 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
   const [archiveStatus, setArchiveStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // REMIND-001: loaded once from localStorage on mount (getCheckInReminderPreference
+  // never throws, so no loading state is needed) — every change writes through
+  // setCheckInReminderPreference immediately, matching this screen's other
+  // immediate-action controls rather than a separate SAVE step.
+  const [reminderPreference, setReminderPreference] = useState<CheckInReminderPreference>(() =>
+    getCheckInReminderPreference(),
+  );
+  const [reminderPermissionDenied, setReminderPermissionDenied] = useState(false);
 
   useEffect(() => {
     void refresh();
@@ -88,6 +105,35 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
     } finally {
       setBusy(false);
     }
+  }
+
+  // REMIND-001: writes through immediately, matching this screen's other
+  // immediate-action controls — no separate SAVE step for a preference
+  // this small. Turning on requests permission first (a real, user-
+  // initiated gesture, never automatic) — if denied, the preference
+  // stays off and reminderPermissionDenied surfaces the plain reason.
+  async function handleToggleReminder() {
+    if (reminderPreference.enabled) {
+      const next: CheckInReminderPreference = { ...reminderPreference, enabled: false };
+      setCheckInReminderPreference(next);
+      setReminderPreference(next);
+      return;
+    }
+    const permission = await requestCheckInNotificationPermission();
+    if (permission !== "granted") {
+      setReminderPermissionDenied(true);
+      return;
+    }
+    setReminderPermissionDenied(false);
+    const next: CheckInReminderPreference = { ...reminderPreference, enabled: true };
+    setCheckInReminderPreference(next);
+    setReminderPreference(next);
+  }
+
+  function handleChangeReminderHour(hour: number) {
+    const next: CheckInReminderPreference = { ...reminderPreference, reminderHour: hour };
+    setCheckInReminderPreference(next);
+    setReminderPreference(next);
   }
 
   async function handleFileChosen(file: File | undefined) {
@@ -343,6 +389,52 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           summary="Build your own workout template from your saved exercises."
           onOpen={() => setView("CUSTOM_TEMPLATES")}
         />
+      </section>
+
+      {/* REMIND-001: on-device only — no account, no push service. Fires
+          from a live check the next time you open BEYOND after your
+          chosen hour, if you haven't checked in yet that day; it cannot
+          wake the app in the background, and says so plainly rather than
+          implying always-on delivery. */}
+      <section className="operational-index-zone" aria-labelledby="reminders-heading">
+        <h2 id="reminders-heading" className="section-label">Reminders</h2>
+        <p className="section-intro">
+          An on-device nudge only — no account, no push service. Checked the next time you open BEYOND after your
+          chosen hour, if you haven't checked in yet that day.
+        </p>
+        <div className="equipment-row">
+          <p className="tool-label" style={{ marginBottom: 4 }}>DAILY CHECK-IN REMINDER</p>
+          <p className="card-body" style={{ marginBottom: 8 }}>
+            {reminderPreference.enabled ? `On, after ${formatReminderHour(reminderPreference.reminderHour)}.` : "Off."}
+          </p>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <button
+              className={reminderPreference.enabled ? "btn-secondary" : "btn-primary"}
+              onClick={() => void handleToggleReminder()}
+            >
+              {reminderPreference.enabled ? "TURN OFF" : "TURN ON"}
+            </button>
+            {reminderPreference.enabled && (
+              <select
+                aria-label="Reminder hour"
+                value={reminderPreference.reminderHour}
+                onChange={(e) => handleChangeReminderHour(Number(e.target.value))}
+              >
+                {REMINDER_HOUR_OPTIONS.map((h) => (
+                  <option key={h} value={h}>
+                    {formatReminderHour(h)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          {reminderPermissionDenied && (
+            <p className="meta" style={{ marginTop: 8 }}>
+              Notification permission was denied. Enable notifications for BEYOND in your browser/device settings to
+              use this.
+            </p>
+          )}
+        </div>
       </section>
 
       <section className="operational-index-zone" aria-labelledby="safety-heading">

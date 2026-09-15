@@ -7,6 +7,7 @@ import { MoreScreen } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { getActiveWorkoutSession } from "../application/trainQueries";
+import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -111,6 +112,20 @@ export function App() {
     return () => {
       current = false;
     };
+  }, []);
+
+  // REMIND-001: a best-effort, fire-and-forget check on every app mount —
+  // idempotent per calendar day (maybeSendCheckInReminder's own
+  // last-sent bookkeeping) and a no-op whenever the reminder preference
+  // is disabled (the default), so this never surprises an operator who
+  // hasn't opted in. Deliberately not re-checked on an interval while
+  // the app stays open — this only ever fires on open/reload, a known,
+  // honest limitation (see persistence/checkInReminder.ts's own doc
+  // comment), not an attempt at true background delivery.
+  useEffect(() => {
+    void maybeSendCheckInReminder().catch(() => {
+      // Never let a reminder-check failure affect the rest of the app.
+    });
   }, []);
 
   function openTrain(destination: TrainDestination) {
