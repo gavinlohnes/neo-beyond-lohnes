@@ -1,6 +1,6 @@
 ---
 id: TODAY-007
-status: ACTIVE
+status: CLOSED
 baseline: 925b826c07812a9fea5b42822be6a92449019f06
 branch: claude/today-screen-flake-fix-wip
 contract: docs/agent/drops/TODAY-007.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/85
 builder: Claude, this session, per direct owner instruction 2026-09-15
 reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
+integration_sha: affd0bdc08def9e338958cf9a32591f0b161dee2
+closed_at: 2026-09-15T08:20:22.918Z
 ---
 
 # ACTIVE_DROP
