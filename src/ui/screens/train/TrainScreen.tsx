@@ -7,6 +7,7 @@ import type { ExercisePrescription, PerformedSet, SessionType, WorkoutTemplateId
 import { WORKOUT_TEMPLATES, WORKOUT_TEMPLATE_ORDER, getReducedExercises } from "../../../domain/workout/types";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
+import { getCustomExercises } from "../../../application/exerciseLibraryQueries";
 import { deriveCapacity } from "../../../engine/capacity";
 import { suggestSessionVariant } from "../../../engine/trainSuggestion";
 import type { ProgressionSuggestion } from "../../../engine/progression";
@@ -201,6 +202,10 @@ export function TrainScreen({
   // exercisesFor/templateLabel take this as an explicit argument rather
   // than reading component state themselves, so they stay pure functions.
   const [customTemplates, setCustomTemplates] = useState<CustomWorkoutTemplate[]>([]);
+  // TRAIN-CREATE-003: names only, offered as substitution quick-picks
+  // alongside recentSubstitutions — never a foreign-key reference, same
+  // free-text substitutedName field as today.
+  const [customExerciseNames, setCustomExerciseNames] = useState<string[]>([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const recoveryChoiceRef = useRef<HTMLButtonElement>(null);
   const destinationConsumedRef = useRef(false);
@@ -239,6 +244,7 @@ export function TrainScreen({
 
     const loadedCustomTemplates = await getCustomTemplates();
     setCustomTemplates(loadedCustomTemplates);
+    setCustomExerciseNames((await getCustomExercises()).map((e) => e.name));
 
     const suggestion = suggestSessionVariant(cap);
     setNoCheckIn(suggestion.noCheckIn);
@@ -1068,10 +1074,17 @@ export function TrainScreen({
                     className="input"
                     style={{ marginBottom: 8 }}
                   />
-                  {recentSubstitutions[currentExercise.exerciseId] &&
-                    recentSubstitutions[currentExercise.exerciseId]!.length > 0 && (
+                  {(() => {
+                    // TRAIN-CREATE-003: recent-usage history takes priority
+                    // order first (genuine past behavior), then any saved
+                    // CustomExercise name not already covered — a single
+                    // merged, deduplicated suggestion row.
+                    const recent = recentSubstitutions[currentExercise.exerciseId] ?? [];
+                    const suggestions = [...recent, ...customExerciseNames.filter((n) => !recent.includes(n))];
+                    if (suggestions.length === 0) return null;
+                    return (
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-                        {recentSubstitutions[currentExercise.exerciseId]!.map((name) => (
+                        {suggestions.map((name) => (
                           <button
                             key={name}
                             type="button"
@@ -1083,7 +1096,8 @@ export function TrainScreen({
                           </button>
                         ))}
                       </div>
-                    )}
+                    );
+                  })()}
                 </>
               )}
 
