@@ -223,6 +223,7 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     await expect.element(screen.getByText(/0 \/ 2200 kcal/)).toBeVisible();
 
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Chicken & Rice Bowl");
     await screen.getByRole("spinbutton", { name: "New meal calories" }).fill("600");
     await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill("45");
@@ -247,6 +248,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     { name = "Chicken & Rice Bowl", calories = "600", protein = "45", carbs = "60", fat = "15" } = {},
   ) {
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill(name);
     await screen.getByRole("spinbutton", { name: "New meal calories" }).fill(calories);
     await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill(protein);
@@ -324,6 +326,48 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
   });
 });
 
+/**
+ * BODY-UX-001: manual macro entry starts collapsed inside ADD MEAL — the
+ * owner reported the prior always-visible search + full manual form
+ * together as confusing clutter on a real phone screen. Search stays the
+ * one visible action until the operator actually needs manual entry.
+ */
+describe("BodyScreen (real browser) — ADD MEAL disclosure (BODY-UX-001)", () => {
+  it("opening ADD MEAL with no prior search shows only the search box, not the manual macro fields", async () => {
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+
+    await expect.element(screen.getByRole("textbox", { name: "Search USDA food database" })).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "New meal name" }).elements()).toHaveLength(0);
+    await expect.element(screen.getByRole("button", { name: "SHOW MANUAL MACROS" })).toBeVisible();
+  });
+
+  it("the manual macros toggle works independently of search state", async () => {
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
+
+    await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toBeVisible();
+  });
+
+  it("saving a new meal collapses the manual macros disclosure back to closed", async () => {
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
+    await screen.getByRole("textbox", { name: "New meal name" }).fill("Oatmeal");
+    await screen.getByRole("spinbutton", { name: "New meal calories" }).fill("300");
+    await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill("10");
+    await screen.getByRole("spinbutton", { name: "New meal carbs (g)" }).fill("50");
+    await screen.getByRole("spinbutton", { name: "New meal fat (g)" }).fill("5");
+    await screen.getByRole("button", { name: "SAVE MEAL" }).click();
+    await expect.element(screen.getByText("Oatmeal", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+    expect(screen.getByRole("textbox", { name: "New meal name" }).elements()).toHaveLength(0);
+    await expect.element(screen.getByRole("button", { name: "SHOW MANUAL MACROS" })).toBeVisible();
+  });
+});
+
 describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodData Central)", () => {
   function mockFetchOnce(body: unknown, ok = true) {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({ ok, json: async () => body } as Response);
@@ -368,6 +412,9 @@ describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodDat
     await screen.getByRole("button", { name: "SEARCH" }).click();
 
     await expect.element(screen.getByText(/No results — enter macros manually below/)).toBeVisible();
+    // BODY-UX-001: a genuine miss auto-reveals manual entry — the operator
+    // shouldn't have to separately find and tap a disclosure toggle too.
+    await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toBeVisible();
   });
 
   it("degrades gracefully to manual entry when the search request fails", async () => {
