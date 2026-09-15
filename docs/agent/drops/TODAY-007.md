@@ -36,11 +36,11 @@ happens inside the component's own request-id-guarded `contextPromise.catch()` h
 `src/ui/screens/today/TodayScreen.tsx`'s `refresh()`, the `contextPromise?.then()/.catch()`
 block): a rejection calls `setCurrentContext(null)`, which must re-render before
 `.status-strip`'s `textContent` reflects the fallback state. Under CI resource contention that
-re-render can still be pending when the fixed 50ms elapses; locally it reliably has time. Two
-sibling tests in the same file call `tracker.settle()` before an unrelated/unchanged-state
-assertion (safe — nothing needed to transition) or before only checking `tracker.reasons`
-(populated synchronously by the `unhandledrejection` listener, not render-dependent) — neither
-is exposed to this race, which is why only this one test flaked.
+re-render can still be pending when the fixed 50ms elapses; locally it reliably has time. Three
+other tests in the same file call `tracker.settle()`: one before an unrelated/unchanged-state
+assertion (safe — nothing needed to transition), and two before only checking `tracker.reasons`
+(populated synchronously by the `unhandledrejection` listener, not render-dependent) — none of
+the three is exposed to this race, which is why only this one test flaked.
 
 ## Authorized scope
 
