@@ -81,3 +81,42 @@ describe("searchAll", () => {
     expect(await db.events.count()).toBe(eventCountBefore);
   });
 });
+
+/**
+ * SEARCH-002: MiniSearch upgrade — fuzzy/prefix matching and relevance
+ * ranking, replacing the original plain substring scan. Same "index is
+ * disposable, Dexie stays the source of truth" guarantee, verified
+ * against real fuzzy/prefix/ranking behavior rather than asserted.
+ */
+describe("searchAll — MiniSearch fuzzy/prefix/ranking (SEARCH-002)", () => {
+  it("matches a partial word via prefix search", async () => {
+    const mission = await createMission({ title: "Rebuild the deck" });
+    const results = await searchAll("reb");
+    expect(results).toContainEqual(expect.objectContaining({ domain: "MISSION", id: mission.id }));
+  });
+
+  it("matches a single-character typo via fuzzy search", async () => {
+    const mission = await createMission({ title: "Rebuild the deck" });
+    const results = await searchAll("Rebuld");
+    expect(results).toContainEqual(expect.objectContaining({ domain: "MISSION", id: mission.id }));
+  });
+
+  it("ranks a title match above a description-only match for the same term", async () => {
+    const titleMatch = await createMission({ title: "Garage cleanup" });
+    const descriptionMatch = await createMission({
+      title: "Q3 goals",
+      description: "Also touches the garage a little",
+    });
+    const results = await searchAll("garage");
+    const titleIndex = results.findIndex((r) => r.id === titleMatch.id);
+    const descriptionIndex = results.findIndex((r) => r.id === descriptionMatch.id);
+    expect(titleIndex).toBeGreaterThanOrEqual(0);
+    expect(descriptionIndex).toBeGreaterThanOrEqual(0);
+    expect(titleIndex).toBeLessThan(descriptionIndex);
+  });
+
+  it("still returns nothing for a genuinely unrelated query", async () => {
+    await createMission({ title: "Rebuild the deck" });
+    expect(await searchAll("xyzzy-no-match")).toEqual([]);
+  });
+});

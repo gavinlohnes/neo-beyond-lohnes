@@ -25,6 +25,7 @@
     "compromise": "^14.16.0",
     "dexie": "^4.0.8",
     "dexie-export-import": "^4.4.0",
+    "minisearch": "^7.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "zod": "^4.0.0"

@@ -1,3 +1,4 @@
+import MiniSearch from "minisearch";
 import { getMissions, getObligations } from "./intentQueries";
 import { getAllCaptureItems } from "./queries";
 
@@ -13,35 +14,45 @@ export interface SearchResult {
 }
 
 /**
- * Personal Search 1.0 (Post-FIELD Capability Acceleration Campaign,
- * Slice 2). RETRIEVAL, not command execution: a plain case-insensitive
- * substring match over the durable operator-authored text this app
+ * SEARCH-002: one MiniSearch document per searchable record. `id` is a
+ * synthetic `${domain}-${entityId}` key (MiniSearch requires a single
+ * unique id field; a Mission and a Capture could otherwise collide on
+ * the same underlying id value) — `entityId` carries the real domain id
+ * back out in the result, `id` itself is never shown to the operator.
+ */
+interface IndexedDoc {
+  id: string;
+  domain: SearchResultDomain;
+  entityId: string;
+  title: string;
+  context: string;
+  status: string;
+}
+
+/**
+ * Personal Search (Post-FIELD Capability Acceleration Campaign, Slice 2;
+ * tap-to-navigate shipped 2026-09-02; MiniSearch upgrade, SEARCH-002,
+ * 2026-09-15). RETRIEVAL, not command execution: fuzzy/prefix/ranked
+ * lexical search over the durable operator-authored text this app
  * already has — Mission title/description, Obligation title/
  * description, Capture text — never a new source of truth.
  *
- * Deliberately not MiniSearch or any lexical-search library: real corpus
- * size today is tens of records (Missions/Obligations/Capture are all
- * new record types with zero production history at this checkpoint,
- * confirmed against the real historical backup fixtures, which predate
- * all three tables entirely), not the "few hundred to low-thousands"
- * docs/HARVEST_READINESS_REPORT.md speculated when it flagged MiniSearch
- * as a future candidate. A dependency earns its place on demonstrated
- * need, not a stale estimate — see the campaign report's "Open-source
- * dependencies" section. Revisit if real corpus size or relevance-
- * ranking needs actually outgrow a linear substring scan.
- *
- * Reuses getMissions/getObligations/getAllCaptureItems verbatim — the
- * exact same already-validated, already-sorted arrays their own screens
- * render. No new Dexie query, no new index, no derived interpretation of
- * what a Mission/Obligation/Capture *is*. Search results include every
- * status (including RESOLVED captures and ARCHIVED missions) — retrieval
- * answers "does this exist," not "is this currently actionable"; that
- * eligibility question belongs to TODAY/AdvisoryNotes, not here. The
- * index is fully disposable: rebuilt from canonical Dexie state on every
- * call, nothing is ever written.
+ * MiniSearch (MIT, zero runtime deps) replaces the original plain
+ * substring scan per the pre-existing owner sign-off on file in
+ * docs/agent/CAPABILITY_MAP.md's SEARCH entry — this was always the
+ * intended "revisit" once ranking actually mattered, not a new
+ * authorization. The index is fully disposable: rebuilt from scratch on
+ * every call from the exact same already-validated, already-sorted
+ * arrays their own screens render (getMissions/getObligations/
+ * getAllCaptureItems) — nothing is ever persisted or cached across
+ * calls, and Dexie/events remain the sole source of truth. Search
+ * results include every status (including RESOLVED captures and
+ * ARCHIVED missions) — retrieval answers "does this exist," not "is
+ * this currently actionable"; that eligibility question belongs to
+ * TODAY/AdvisoryNotes, not here.
  */
 export async function searchAll(query: string): Promise<SearchResult[]> {
-  const q = query.trim().toLowerCase();
+  const q = query.trim();
   if (q.length === 0) return [];
 
   const [missions, obligations, captures] = await Promise.all([
@@ -50,23 +61,50 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
     getAllCaptureItems(),
   ]);
 
-  const results: SearchResult[] = [];
+  const docs: IndexedDoc[] = [
+    ...missions.map((m): IndexedDoc => ({
+      id: `MISSION-${m.id}`,
+      domain: "MISSION",
+      entityId: m.id,
+      title: m.title,
+      context: m.description ?? "",
+      status: m.status,
+    })),
+    ...obligations.map((o): IndexedDoc => ({
+      id: `OBLIGATION-${o.id}`,
+      domain: "OBLIGATION",
+      entityId: o.id,
+      title: o.title,
+      context: o.description ?? "",
+      status: o.status,
+    })),
+    ...captures.map((c): IndexedDoc => ({
+      id: `CAPTURE-${c.id}`,
+      domain: "CAPTURE",
+      entityId: c.id,
+      title: c.text,
+      context: "",
+      status: c.status,
+    })),
+  ];
 
-  for (const mission of missions) {
-    if (mission.title.toLowerCase().includes(q) || mission.description?.toLowerCase().includes(q)) {
-      results.push({ domain: "MISSION", id: mission.id, title: mission.title, context: mission.description, status: mission.status });
-    }
-  }
-  for (const obligation of obligations) {
-    if (obligation.title.toLowerCase().includes(q) || obligation.description?.toLowerCase().includes(q)) {
-      results.push({ domain: "OBLIGATION", id: obligation.id, title: obligation.title, context: obligation.description, status: obligation.status });
-    }
-  }
-  for (const capture of captures) {
-    if (capture.text.toLowerCase().includes(q)) {
-      results.push({ domain: "CAPTURE", id: capture.id, title: capture.text, context: undefined, status: capture.status });
-    }
-  }
+  const index = new MiniSearch<IndexedDoc>({
+    fields: ["title", "context"],
+    storeFields: ["domain", "entityId", "title", "context", "status"],
+  });
+  index.addAll(docs);
 
-  return results;
+  // fuzzy: 0.2 tolerates roughly one typo per five characters — enough to
+  // survive a small slip without matching genuinely unrelated terms.
+  // boost on title outranks a match that only hit the description/
+  // context field, so the closer match surfaces first.
+  const hits = index.search(q, { fuzzy: 0.2, prefix: true, boost: { title: 2 } });
+
+  return hits.map((hit) => ({
+    domain: hit.domain as SearchResultDomain,
+    id: hit.entityId as string,
+    title: hit.title as string,
+    context: (hit.context as string) || undefined,
+    status: hit.status as string,
+  }));
 }
