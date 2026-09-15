@@ -1,6 +1,6 @@
 ---
 id: BODY-UX-001
-status: ACTIVE
+status: CLOSED
 baseline: 0c560f888ffe83c1377d413b9b518499d9198656
 branch: claude/body-ux-001-add-meal-disclosure
 contract: docs/agent/drops/BODY-UX-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/81
 builder: Claude, this session, assigned by Gavin in chat 2026-09-15
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 8a5f3ba33369ecd5c2dc9ce534a2e4407bf19d03
+closed_at: 2026-09-15T06:46:47.890Z
 ---
 
 # ACTIVE_DROP
