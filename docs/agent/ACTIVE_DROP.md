@@ -1,15 +1,15 @@
 ---
-id: JOURNAL-001
+id: TRAIN-PROGRESSION-001
 status: CLOSED
-baseline: e3e03d6f27d42df3369e35ff58f3e65e4ee299d0
-branch: claude/journal-001-advisory-integration
-contract: docs/agent/drops/JOURNAL-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/91
-builder: Claude, this session, autonomous per direct owner delegation ('keep going') 2026-09-15, scope authorized via AskUserQuestion 'Journal integration (Recommended)'
+baseline: 916f3a9d9cf701d1e184c03ae5ae0607af4fe473
+branch: claude/train-progression-001-equipment-increments
+contract: docs/agent/drops/TRAIN-PROGRESSION-001.md
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/92
+builder: Claude, this session, autonomous per direct owner approval of a 4-item execution list, 2026-09-15
 reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
-integration_sha: 9e2656bee5db2cb3a7382fca8f89b853ea15a08f
-closed_at: 2026-09-15T12:57:27.670Z
+integration_sha: 0a1c7318f4f4e24c8cdc7051d93b2239d4ad1e73
+closed_at: 2026-09-15T13:58:44.955Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +23,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/JOURNAL-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/TRAIN-PROGRESSION-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
