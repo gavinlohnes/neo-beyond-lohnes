@@ -1,15 +1,13 @@
 ---
-id: JOURNAL-002
-status: CLOSED
-baseline: 7b59fdd3b9d27ede40639460e96794ff95502495
-branch: claude/journal-002-widen-relevance-matching
-contract: docs/agent/drops/JOURNAL-002.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/94
-builder: Claude, this session, autonomous per direct owner approval of a 4-item execution list, 2026-09-15
-reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
+id: CHECKPOINT-003
+status: ACTIVE
+baseline: e066a24214a41eb49a84e18af52247527fbc171c
+branch: codex/checkpoint-003-refresh
+contract: docs/agent/drops/CHECKPOINT-003.md
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/95
+builder: Codex Builder, explicitly assigned by Gavin, 2026-09-15
+reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: a65f5ccfcbc56e75c7cc07f9ce6c9cd17291663a
-closed_at: 2026-09-15T14:16:03.681Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/JOURNAL-002.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/CHECKPOINT-003.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
