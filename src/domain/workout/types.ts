@@ -4,18 +4,22 @@
  * TRAIN-CREATE-002: widened from the original fixed `"A" | "B" | "C"`
  * union to a plain string so it can also address a user-created custom
  * template (`CustomWorkoutTemplate`, customTemplate.ts). This does NOT
- * touch WORKOUT_TEMPLATES itself, which remains exactly the locked,
- * fixed machine-oriented templates below (Decision Register, TRAIN —
- * locked word for word, unchanged content). No broad exercise database
- * for the built-in three; exercise IDs are shared across templates where
- * the same movement recurs (Preacher Curl in B/C, Triceps Pressdown in
- * A/C) so future per-exercise progression history is continuous
- * regardless of which day it was trained on. Resolving a
- * `WorkoutTemplateId` that isn't one of these three built-ins is the
- * application layer's job (see application/customTemplateQueries.ts's
- * resolveTemplateDefinition) — this domain file's own
- * getPrescription/getReducedExercises below remain scoped to the fixed
- * dictionary only, exactly as before.
+ * touch WORKOUT_TEMPLATES's exercise composition itself, which remains
+ * exactly the locked, fixed machine-oriented set below (Decision
+ * Register, TRAIN — exercise names/sets/rep ranges locked word for word,
+ * unchanged). No broad exercise database for the built-in three;
+ * exercise IDs are shared across templates where the same movement
+ * recurs (Preacher Curl in B/C, Triceps Pressdown in A/C) so future
+ * per-exercise progression history is continuous regardless of which day
+ * it was trained on. Resolving a `WorkoutTemplateId` that isn't one of
+ * these three built-ins is the application layer's job (see
+ * application/customTemplateQueries.ts's resolveTemplateDefinition) —
+ * this domain file's own getPrescription/getReducedExercises below
+ * remain scoped to the fixed dictionary only, exactly as before.
+ *
+ * TRAIN-PROGRESSION-001 (2026-09-15): each exercise's `incrementLbs`
+ * value below is NOT part of that lock — see `deriveIncrementLbs`'s own
+ * doc comment for why, and what changed.
  */
 export type WorkoutTemplateId = string;
 
@@ -35,11 +39,9 @@ export type WorkoutSessionStatus = "ACTIVE" | "COMPLETED" | "PARTIAL" | "ABANDON
  * not one universal number — the reconciliation explicitly rejected a
  * flat +2.5lb rule as a domain-wide constant, valid "only where it
  * actually represents the configured/available next increment for the
- * relevant exercise/equipment." No real per-machine increment values are
- * documented anywhere, so every exercise below uses the same 5lb default
- * for now — an explicit implementation placeholder (structured so it's
- * easy to configure per exercise once real equipment data exists), not a
- * claimed-locked value.
+ * relevant exercise/equipment." Values below are supplied by
+ * `deriveIncrementLbs` (TRAIN-PROGRESSION-001), not hand-typed per entry
+ * — see that function's own doc comment for the convention it encodes.
  */
 export interface ExercisePrescription {
   exerciseId: string;
@@ -55,25 +57,74 @@ export interface WorkoutTemplateDefinition {
   exercises: ExercisePrescription[];
 }
 
-const DEFAULT_INCREMENT_LBS = 5;
+/** Fallback only — an unrecognized/blank equipment string, or a movement (Bodyweight) this convention has no real increment convention for. Not itself a claim of precision. */
+export const DEFAULT_INCREMENT_LBS = 5;
+
+/**
+ * TRAIN-PROGRESSION-001 (2026-09-15): replaces the prior flat
+ * `DEFAULT_INCREMENT_LBS`-for-everything placeholder with a real,
+ * equipment-derived convention, since "no real per-machine increment
+ * values are documented anywhere" no longer has to mean "use one number
+ * for every exercise" — `CustomExercise`/`LibraryExercise` (see
+ * `exerciseLibrary.ts`) already carry a real `equipment` field (and, for
+ * Barbell, `muscleGroup` further distinguishes upper- vs. lower-body
+ * lifts) that was going unused for this purpose.
+ *
+ * The specific numbers are a commonly-cited general strength-training
+ * convention (the same kind of externally-sourced heuristic
+ * NUTRITION_TARGETS' protein multiplier already uses), not a
+ * BEYOND-invented number and not verified against any specific real
+ * gym's actual equipment:
+ *   - Barbell, Legs/Glutes  -> 10lb (lower-body compound lifts —
+ *     squat/deadlift/hip-thrust-style — conventionally take bigger jumps
+ *     than upper-body barbell work; e.g. StrongLifts 5x5/Starting
+ *     Strength-style novice progression).
+ *   - Barbell, other        -> 5lb (upper-body barbell press/row work).
+ *   - Machine                -> 10lb (many pin-loaded stack machines
+ *     step in 10lb increments).
+ *   - Cable                  -> 5lb (cable stacks commonly step in
+ *     smaller increments than pin-loaded machines).
+ *   - Dumbbell               -> 5lb (typical commercial dumbbell rack
+ *     per-hand spacing).
+ *   - Bodyweight/unrecognized -> `DEFAULT_INCREMENT_LBS`. Bodyweight
+ *     movements don't have a meaningful weight-based increment at all
+ *     (progression there is via reps or added resistance, a different
+ *     axis this Drop does not redesign) — this is an honest limitation,
+ *     not a real answer, for that one equipment type.
+ */
+export function deriveIncrementLbs(equipment: string, muscleGroup?: string): number {
+  const isLowerBody = muscleGroup === "Legs" || muscleGroup === "Glutes";
+  switch (equipment) {
+    case "Barbell":
+      return isLowerBody ? 10 : 5;
+    case "Machine":
+      return 10;
+    case "Cable":
+      return 5;
+    case "Dumbbell":
+      return 5;
+    default:
+      return DEFAULT_INCREMENT_LBS;
+  }
+}
 
 export const WORKOUT_TEMPLATES: Record<WorkoutTemplateId, WorkoutTemplateDefinition> = {
   A: {
     id: "A",
     exercises: [
-      { exerciseId: "machine-chest-press", name: "Machine Chest Press", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: DEFAULT_INCREMENT_LBS },
-      { exerciseId: "pec-deck", name: "Pec Deck", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
-      { exerciseId: "leg-press", name: "Leg Press", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: DEFAULT_INCREMENT_LBS },
-      { exerciseId: "triceps-pressdown", name: "Triceps Pressdown", sets: 2, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
+      { exerciseId: "machine-chest-press", name: "Machine Chest Press", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: deriveIncrementLbs("Machine") },
+      { exerciseId: "pec-deck", name: "Pec Deck", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: deriveIncrementLbs("Machine") },
+      { exerciseId: "leg-press", name: "Leg Press", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: deriveIncrementLbs("Machine") },
+      { exerciseId: "triceps-pressdown", name: "Triceps Pressdown", sets: 2, repRangeLow: 10, repRangeHigh: 15, incrementLbs: deriveIncrementLbs("Cable") },
     ],
   },
   B: {
     id: "B",
     exercises: [
-      { exerciseId: "lat-pulldown", name: "Lat Pulldown", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: DEFAULT_INCREMENT_LBS },
-      { exerciseId: "seated-cable-row", name: "Seated Cable Row", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: DEFAULT_INCREMENT_LBS },
-      { exerciseId: "leg-curl", name: "Leg Curl", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
-      { exerciseId: "preacher-curl", name: "Preacher Curl", sets: 2, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
+      { exerciseId: "lat-pulldown", name: "Lat Pulldown", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: deriveIncrementLbs("Cable") },
+      { exerciseId: "seated-cable-row", name: "Seated Cable Row", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: deriveIncrementLbs("Cable") },
+      { exerciseId: "leg-curl", name: "Leg Curl", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: deriveIncrementLbs("Machine") },
+      { exerciseId: "preacher-curl", name: "Preacher Curl", sets: 2, repRangeLow: 10, repRangeHigh: 15, incrementLbs: deriveIncrementLbs("Machine") },
     ],
   },
   C: {
@@ -85,11 +136,11 @@ export const WORKOUT_TEMPLATES: Record<WorkoutTemplateId, WorkoutTemplateDefinit
         sets: 3,
         repRangeLow: 8,
         repRangeHigh: 12,
-        incrementLbs: DEFAULT_INCREMENT_LBS,
+        incrementLbs: deriveIncrementLbs("Machine"),
       },
-      { exerciseId: "preacher-curl", name: "Preacher Curl", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
-      { exerciseId: "triceps-pressdown", name: "Triceps Pressdown", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
-      { exerciseId: "reverse-pec-deck", name: "Reverse Pec Deck", sets: 3, repRangeLow: 12, repRangeHigh: 15, incrementLbs: DEFAULT_INCREMENT_LBS },
+      { exerciseId: "preacher-curl", name: "Preacher Curl", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: deriveIncrementLbs("Machine") },
+      { exerciseId: "triceps-pressdown", name: "Triceps Pressdown", sets: 3, repRangeLow: 10, repRangeHigh: 15, incrementLbs: deriveIncrementLbs("Cable") },
+      { exerciseId: "reverse-pec-deck", name: "Reverse Pec Deck", sets: 3, repRangeLow: 12, repRangeHigh: 15, incrementLbs: deriveIncrementLbs("Machine") },
     ],
   },
 };

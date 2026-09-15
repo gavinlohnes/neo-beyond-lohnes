@@ -41,7 +41,10 @@ describe("getProgressionSuggestion — real session history", () => {
 
     const result = await getProgressionSuggestion("A", "STANDARD", "machine-chest-press");
     expect(result.recommendation).toBe("INCREASE");
-    expect(result.suggestedNextWeight).toBe(140);
+    // TRAIN-PROGRESSION-001: machine-chest-press is Machine equipment -> a
+    // real 10lb increment (deriveIncrementLbs), not the old flat 5lb
+    // placeholder — 135 + 10, not 135 + 5.
+    expect(result.suggestedNextWeight).toBe(145);
   });
 
   it("uses the MOST RECENT matching session, not an older one", async () => {
