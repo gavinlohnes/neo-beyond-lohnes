@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: da314fe3b7e230830da19a21552e155b92f5a1af
 branch: claude/train-create-003-custom-exercise-substitution
 contract: docs/agent/drops/TRAIN-CREATE-003.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/83
 builder: Claude, this session, assigned by Gavin in chat 2026-09-15
 reviewer: (unassigned)
 integrator: (unassigned)
