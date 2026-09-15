@@ -1,6 +1,6 @@
 ---
 id: JOURNAL-002
-baseline: 4edb35f902d4d408b5fb4a2f981e19f34d8f9301
+baseline: 7b59fdd3b9d27ede40639460e96794ff95502495
 risk_tier: ROUTINE
 ---
 
@@ -20,9 +20,13 @@ overlap, still zero Engine influence, still advisory-only").
 
 ## Approved baseline
 
-`origin/master` at `4edb35f902d4d408b5fb4a2f981e19f34d8f9301`, verified via
-`git fetch origin master && git rev-parse origin/master` (TRAIN-PROGRESSION-001's own closure
-commit — the current master HEAD at Drop launch).
+`origin/master` at `7b59fdd3b9d27ede40639460e96794ff95502495`, verified via
+`git fetch origin master && git rev-parse origin/master` — REMIND-001's own closure commit. This
+Drop's branch was originally cut from TRAIN-PROGRESSION-001's closure commit
+(`4edb35f902d4d408b5fb4a2f981e19f34d8f9301`) before REMIND-001 merged/closed the same night
+(single-active-Drop enforcement blocked activating this Drop until REMIND-001 closed);
+`origin/master` was merged into this branch (a clean, non-conflicting merge — disjoint files)
+and this baseline updated to match before activation.
 
 ## Risk classification
 
