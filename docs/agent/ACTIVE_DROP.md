@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 9230d6e7464a94be809e8045a5d345362a057f87
 branch: claude/search-002-minisearch-navigate
 contract: docs/agent/drops/SEARCH-002.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/82
 builder: Claude, this session, assigned by Gavin in chat 2026-09-15
 reviewer: (unassigned)
 integrator: (unassigned)
