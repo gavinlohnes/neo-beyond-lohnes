@@ -1431,3 +1431,30 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     expect((cancel as HTMLElement).style.background).toBe("");
   });
 });
+
+describe("TodayScreen (real browser) — TODAY-008 day-transition refresh (residual TODAY-R01)", () => {
+  it("does not let a prior day's recommendation/check-in state bleed into a newly started day", async () => {
+    const dayA = await startDay();
+    await submitCheckIn(dayA.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
+
+    // End day A through the real UI (handleEndDay already calls refresh()),
+    // then start day B through the real START DAY button — the exact
+    // handler (handleStartDay) this Drop fixes.
+    await screen.getByRole("button", { name: "Open BEYONDDAY" }).click();
+    await screen.getByRole("button", { name: "END DAY" }).click();
+    await expect.element(screen.getByRole("button", { name: "START DAY", exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "START DAY", exact: true }).click();
+
+    // Day B has no check-in yet, so day A's "No action required"
+    // recommendation must not still be showing, and the real check-in
+    // prompt for a fresh day must be — without a reload.
+    await vi.waitFor(() => {
+      expect(screen.getByText("No action required", { exact: true }).elements()).toHaveLength(0);
+    });
+    await expect.element(screen.getByText("Check in when you can", { exact: true })).toBeVisible();
+  });
+});
