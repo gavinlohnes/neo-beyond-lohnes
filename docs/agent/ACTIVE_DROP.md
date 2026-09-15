@@ -4,9 +4,9 @@ status: ACTIVE
 baseline: 9d6c364f242383626c6f34a94f5401894d2dd3eb
 branch: claude/deps-001-audit-fix
 contract: docs/agent/drops/DEPS-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/90
 builder: Claude, this session, autonomous per direct owner delegation ('keep going') 2026-09-15
-reviewer: (unassigned)
+reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
 ---
 
