@@ -112,7 +112,13 @@ describe("SearchScreen (real browser) — tap-to-navigate", () => {
     await captureItem("Renew the car registration");
 
     const screen = await render(<SearchScreen />);
-    await screen.getByRole(SEARCH_INPUT.role, { name: SEARCH_INPUT.name }).fill("e");
+    // SEARCH-002: a single letter is no longer a meaningful query under
+    // MiniSearch's token-level prefix matching (unlike the old plain
+    // substring scan, which incidentally matched "e" against any word
+    // containing that letter anywhere) — "deck" is a real, unambiguous
+    // match, and the DOM-structure assertion below is this test's actual
+    // point.
+    await screen.getByRole(SEARCH_INPUT.role, { name: SEARCH_INPUT.name }).fill("deck");
     await expect.element(screen.getByText("Rebuild the deck", { exact: true })).toBeVisible();
     expect(screen.getByRole("button", { name: /^Open/ }).elements()).toHaveLength(0);
   });
