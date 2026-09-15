@@ -1,6 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { composeAdvisoryNoteFromProgression, composeAdvisoryNotesFromObligations } from "../../src/engine/advisory";
+import {
+  composeAdvisoryNoteFromJournal,
+  composeAdvisoryNoteFromProgression,
+  composeAdvisoryNotesFromObligations,
+} from "../../src/engine/advisory";
+import type { DecisionJournalEntry } from "../../src/domain/journal/types";
 import type { Obligation } from "../../src/domain/intent/types";
 import type { ExercisePrescription } from "../../src/domain/workout/types";
 import type { ProgressionSuggestion } from "../../src/engine/progression";
@@ -152,6 +157,69 @@ describe("composeAdvisoryNoteFromProgression", () => {
   });
 });
 
+function journalEntry(overrides: Partial<DecisionJournalEntry> = {}): DecisionJournalEntry {
+  return {
+    id: "journal-1",
+    title: "Renew passport early",
+    decision: "Renewed six months ahead of expiry",
+    status: "REVIEWED",
+    source: "USER",
+    createdAt: "2026-09-01T00:00:00.000Z",
+    updatedAt: "2026-09-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+describe("composeAdvisoryNoteFromJournal", () => {
+  it("an entry with a lesson produces a note whose message surfaces the lesson", () => {
+    const note = composeAdvisoryNoteFromJournal(journalEntry({ lesson: "Renew passports early next time." }));
+    expect(note).not.toBeNull();
+    expect(note!.message).toBe("Renew passport early — Renew passports early next time.");
+  });
+
+  it("an entry with no lesson produces no note — nothing new to say", () => {
+    expect(composeAdvisoryNoteFromJournal(journalEntry())).toBeNull();
+  });
+
+  it("is attributed to the 'decisionJournal' source module, distinct from the other two producers", () => {
+    const note = composeAdvisoryNoteFromJournal(journalEntry({ lesson: "Lesson." }));
+    expect(note!.sourceModule).toBe("decisionJournal");
+  });
+
+  it("carries traceable basis (decisionJournalEntryId, decision, lesson) and no Recommendation-shaped field", () => {
+    const note = composeAdvisoryNoteFromJournal(
+      journalEntry({ outcome: "Went smoothly.", lesson: "Renew passports early next time." }),
+    );
+    expect(note!.basis).toEqual(
+      expect.arrayContaining([
+        { key: "decisionJournalEntryId", value: "journal-1" },
+        { key: "decision", value: "Renewed six months ahead of expiry" },
+        { key: "lesson", value: "Renew passports early next time." },
+        { key: "outcome", value: "Went smoothly." },
+      ]),
+    );
+    expect(note).not.toHaveProperty("priority");
+    expect(note).not.toHaveProperty("suggestedCommand");
+    expect(note).not.toHaveProperty("kind");
+  });
+
+  it("deterministic: same input -> same output (excluding the per-note id)", () => {
+    const input = journalEntry({ lesson: "Lesson." });
+    const stripId = (n: ReturnType<typeof composeAdvisoryNoteFromJournal>) => {
+      if (!n) return n;
+      const { id: _id, ...rest } = n;
+      return rest;
+    };
+    expect(stripId(composeAdvisoryNoteFromJournal(input))).toEqual(stripId(composeAdvisoryNoteFromJournal(input)));
+  });
+
+  it("has an identical, non-priority shape to the other two producers' notes", () => {
+    const note = composeAdvisoryNoteFromJournal(journalEntry({ lesson: "Lesson." }))!;
+    const progressionNote = composeAdvisoryNoteFromProgression(PRESCRIPTION, suggestion({ recommendation: "INCREASE" }))!;
+    expect(Object.keys(note).sort()).toEqual(Object.keys(progressionNote).sort());
+  });
+});
+
 describe("I3: both producers coexist without cross-domain knowledge", () => {
   it("AdvisoryNote from either producer has an identical, non-priority shape (proves the shared contract, not a per-domain special case)", () => {
     const obligationNote = composeAdvisoryNotesFromObligations(
@@ -183,6 +251,11 @@ describe("engine boundary: advisory.ts is a one-way dependency", () => {
 
   it("progression.ts never imports advisory.ts", () => {
     const source = readFileSync(new URL("../../src/engine/progression.ts", import.meta.url), "utf8");
+    expect(source).not.toMatch(/["']\.\/advisory["']/);
+  });
+
+  it("journalRelevance.ts never imports advisory.ts", () => {
+    const source = readFileSync(new URL("../../src/engine/journalRelevance.ts", import.meta.url), "utf8");
     expect(source).not.toMatch(/["']\.\/advisory["']/);
   });
 });
