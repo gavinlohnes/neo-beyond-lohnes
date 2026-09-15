@@ -1,6 +1,6 @@
 ---
 id: TRAIN-CREATE-003
-status: ACTIVE
+status: CLOSED
 baseline: da314fe3b7e230830da19a21552e155b92f5a1af
 branch: claude/train-create-003-custom-exercise-substitution
 contract: docs/agent/drops/TRAIN-CREATE-003.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/83
 builder: Claude, this session, assigned by Gavin in chat 2026-09-15
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: b7e2b40bb3ca01f22a89fbbde90da6b514de7591
+closed_at: 2026-09-15T07:21:08.194Z
 ---
 
 # ACTIVE_DROP
