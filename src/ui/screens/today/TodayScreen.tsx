@@ -510,7 +510,17 @@ export function TodayScreen({
     if (busy) return;
     setBusy(true);
     try {
-      setDay(await startDay());
+      await startDay();
+      // TODAY-008 (residual TODAY-R01, flagged in TODAY-006): every other
+      // mutating handler in this component calls refresh() afterward so
+      // everything derived from the active day (checkIn, recommendation,
+      // currentContext, advisoryNotes, obligations, etc.) stays in sync
+      // without a reload — this one skipped it and only set `day` itself,
+      // letting the prior day's now-stale derived state bleed into the
+      // newly started day's render until something else happened to
+      // trigger a refresh. refresh() re-derives `day` itself via its own
+      // getActiveDay() read, so the separate setDay() call above is gone.
+      await refresh();
       setJustStartedDay(true);
     } finally {
       setBusy(false);
