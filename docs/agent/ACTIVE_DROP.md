@@ -4,9 +4,9 @@ status: ACTIVE
 baseline: 7b59fdd3b9d27ede40639460e96794ff95502495
 branch: claude/journal-002-widen-relevance-matching
 contract: docs/agent/drops/JOURNAL-002.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/94
 builder: Claude, this session, autonomous per direct owner approval of a 4-item execution list, 2026-09-15
-reviewer: (unassigned)
+reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
 ---
 
