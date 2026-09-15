@@ -1,15 +1,13 @@
 ---
-id: EMBLEM-002
-status: CLOSED
-baseline: 62a13547fb811d7c88e1511777d666ca1992e10d
-branch: claude/emblem-002-mark-refresh
-contract: docs/agent/drops/EMBLEM-002.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/78
-builder: Claude, this session, assigned by Gavin in chat 2026-09-13/14
+id: TRAIN-CREATE-002
+status: ACTIVE
+baseline: f826f22aed688f9f4db67b346b0f91efbd65ca56
+branch: claude/train-create-002-custom-templates
+contract: docs/agent/drops/TRAIN-CREATE-002.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Claude, this session, assigned by Gavin in chat 2026-09-14/15
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: ec6ecf0cb577238f7628ddfae6f16130b2a0c1c2
-closed_at: 2026-09-14T23:59:55.616Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/EMBLEM-002.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/TRAIN-CREATE-002.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and

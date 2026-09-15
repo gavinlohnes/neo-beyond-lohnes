@@ -25,7 +25,7 @@ import type { ExercisePrescription } from "../../src/domain/workout/types";
 
 describe("describeTemplateSummary — descriptive, not just the bare letter", () => {
   it("names the actual exercises for template A", () => {
-    const summary = describeTemplateSummary(WORKOUT_TEMPLATES.A.exercises);
+    const summary = describeTemplateSummary(WORKOUT_TEMPLATES.A!.exercises);
     expect(summary.exerciseNames).toEqual([
       "Machine Chest Press",
       "Pec Deck",
@@ -36,7 +36,7 @@ describe("describeTemplateSummary — descriptive, not just the bare letter", ()
 
   it("derives a body-area summary without duplicates, for every real template", () => {
     for (const templateId of ["A", "B", "C"] as const) {
-      const summary = describeTemplateSummary(WORKOUT_TEMPLATES[templateId].exercises);
+      const summary = describeTemplateSummary(WORKOUT_TEMPLATES[templateId]!.exercises);
       expect(summary.bodyAreas.length).toBeGreaterThan(0);
     }
   });
