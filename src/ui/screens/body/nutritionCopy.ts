@@ -20,3 +20,25 @@ export const SAVED_MEALS_EMPTY =
 
 /** Distinct from SAVED_MEALS_EMPTY: presets can exist with nothing logged today yet. */
 export const MEALS_TODAY_EMPTY = "No meals logged today yet.";
+
+/**
+ * NUTRITION-003 (Calorie + Protein Targets): "remaining" once under
+ * target, "over by X" once past it — never a bare negative number, which
+ * reads as a bug rather than a real, honest state a deficit can actually
+ * be in on a given day.
+ */
+export function describeCalorieProgress(loggedKcal: number, targetKcal: number | undefined): string {
+  if (targetKcal === undefined) return `${loggedKcal} kcal logged today — no target set.`;
+  const remaining = targetKcal - loggedKcal;
+  return remaining >= 0
+    ? `${loggedKcal} / ${targetKcal} kcal · ${remaining} remaining`
+    : `${loggedKcal} / ${targetKcal} kcal · over by ${Math.abs(remaining)}`;
+}
+
+export function describeProteinProgress(loggedG: number, targetG: number | undefined): string {
+  if (targetG === undefined) return `${loggedG}g protein logged today — log a bodyweight to see your target.`;
+  const remaining = targetG - loggedG;
+  return remaining >= 0
+    ? `${loggedG} / ${targetG}g protein · ${remaining}g to go`
+    : `${loggedG} / ${targetG}g protein · target met, +${Math.abs(remaining)}g over`;
+}

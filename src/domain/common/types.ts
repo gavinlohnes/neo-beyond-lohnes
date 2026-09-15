@@ -378,6 +378,26 @@ export interface SavedMeal {
 }
 
 /**
+ * NUTRITION-003 (Calorie + Protein Targets, High-Risk Drop, direct owner
+ * ruling): a single, directly-mutable settings record — same treatment
+ * as SchedulePattern (one row keyed "current", not itself event-sourced).
+ * calorieTargetKcal is optional and set directly by the operator, never
+ * computed from a formula. proteinMultiplierGPerLb always has a value
+ * (seeded by migration, default 1.0 g/lb); the actual gram target is
+ * DERIVED at read time from this multiplier x the most recently logged
+ * bodyweight (engine/nutritionTargets.ts's deriveProteinTargetG), never
+ * stored as a static number, so it stays correct as bodyweight changes
+ * without needing to be re-entered.
+ */
+export interface NutritionTargets {
+  id: string;
+  calorieTargetKcal?: number;
+  proteinMultiplierGPerLb: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
  * Outcome rating (Context & Safety Decisions, 2026-08-19, locked):
  * captured via a light, explicit signal (thumbs up/down/neutral), tied to
  * the recommendation lifecycle — not folded into quick check-in, not

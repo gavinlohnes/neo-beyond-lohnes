@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { Icon } from "../../icons/Icon";
-import type { BeyondDay, HydrationEntry, SavedMeal } from "../../../domain/common/types";
+import type { BeyondDay, HydrationEntry, NutritionTargets, SavedMeal } from "../../../domain/common/types";
 import {
   logWater,
   correctWater,
@@ -32,8 +32,15 @@ import {
   logMeal,
   updateSavedMeal,
 } from "../../../application/nutritionCommands";
-import { getMealEntries, getSavedMeals, type NutritionEntry } from "../../../application/nutritionQueries";
+import {
+  getMealEntries,
+  getSavedMeals,
+  getTotalMealCalories,
+  type NutritionEntry,
+} from "../../../application/nutritionQueries";
 import { searchFoods, type FoodSearchResult } from "../../../application/foodLookupQueries";
+import { getEffectiveProteinTargetG, getNutritionTargets } from "../../../application/nutritionTargetQueries";
+import { updateNutritionTargets } from "../../../application/nutritionTargetCommands";
 import {
   BODYWEIGHT_PLAUSIBLE_RANGE,
   describeBodyweightLogged,
@@ -52,7 +59,14 @@ import {
   totalMinutesToHoursAndMinutes,
   WATER_QUICK_ADD_OZ,
 } from "./bodyScreenCopy";
-import { describeMacros, describeMealLogged, MEALS_TODAY_EMPTY, SAVED_MEALS_EMPTY } from "./nutritionCopy";
+import {
+  describeCalorieProgress,
+  describeMacros,
+  describeMealLogged,
+  describeProteinProgress,
+  MEALS_TODAY_EMPTY,
+  SAVED_MEALS_EMPTY,
+} from "./nutritionCopy";
 
 type Confirmation = { message: string; headEventId: string } | null;
 
@@ -232,6 +246,14 @@ export function BodyScreen() {
   const [foodSearchBusy, setFoodSearchBusy] = useState(false);
   const [foodResults, setFoodResults] = useState<FoodSearchResult[] | null>(null);
 
+  // Nutrition Targets (NUTRITION-003)
+  const [nutritionTargets, setNutritionTargets] = useState<NutritionTargets | null>(null);
+  const [effectiveProteinTargetG, setEffectiveProteinTargetG] = useState<number | undefined>(undefined);
+  const [totalMealCalories, setTotalMealCalories] = useState(0);
+  const [targetsEditOpen, setTargetsEditOpen] = useState(false);
+  const [calorieTargetInput, setCalorieTargetInput] = useState("");
+  const [proteinMultiplierInput, setProteinMultiplierInput] = useState("");
+
   useEffect(() => {
     void refresh();
   }, []);
@@ -243,6 +265,11 @@ export function BodyScreen() {
     // loaded regardless of whether a day exists yet, since creating one
     // doesn't require ensureActiveDay (only logMeal does).
     setSavedMeals(await getSavedMeals());
+    // Nutrition targets aren't day-scoped (same as SchedulePattern) —
+    // loaded regardless of whether a day exists yet.
+    const targets = await getNutritionTargets();
+    setNutritionTargets(targets);
+    setEffectiveProteinTargetG(await getEffectiveProteinTargetG());
     if (activeDay) {
       setEntries(await getHydrationEntries(activeDay.id));
       setTotal(await getEffectiveHydrationTotal(activeDay.id));
@@ -250,12 +277,40 @@ export function BodyScreen() {
       setBodyweightEntries(await getBodyweightEntries(activeDay.id));
       setProteinEntries(await getProteinEntries(activeDay.id));
       setMealEntries(await getMealEntries(activeDay.id));
+      setTotalMealCalories(await getTotalMealCalories(activeDay.id));
     } else {
       setMealEntries([]);
+      setTotalMealCalories(0);
+    }
+  }
+
+  async function handleSaveTargets() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const calorieValue = calorieTargetInput.trim() ? Number(calorieTargetInput) : undefined;
+      const multiplierValue = proteinMultiplierInput.trim() ? Number(proteinMultiplierInput) : undefined;
+      await updateNutritionTargets({
+        ...(calorieValue !== undefined ? { calorieTargetKcal: calorieValue } : {}),
+        ...(multiplierValue !== undefined ? { proteinMultiplierGPerLb: multiplierValue } : {}),
+      });
+      setCalorieTargetInput("");
+      setProteinMultiplierInput("");
+      setTargetsEditOpen(false);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save targets.");
+    } finally {
+      setBusy(false);
     }
   }
 
   const proteinTotal = proteinEntries.reduce((sum, e) => sum + e.effectiveGrams, 0);
+  // NUTRITION-003: the same combined total Minimum Day already treats as
+  // canonical (application/queries.ts's getMinimumDayStatus) — protein-only
+  // logs plus effective meal protein, never two competing totals.
+  const combinedProteinToday = proteinTotal + mealEntries.reduce((sum, e) => sum + e.effectiveProteinG, 0);
   const lastWaterAmount = entries.length > 0 ? entries[entries.length - 1]!.effectiveAmountOz : null;
   const lastSleepEntry = sleepEntries.length > 0 ? sleepEntries[sleepEntries.length - 1]! : null;
   const lastBodyweightEntry = bodyweightEntries.length > 0 ? bodyweightEntries[bodyweightEntries.length - 1]! : null;
@@ -1242,6 +1297,65 @@ export function BodyScreen() {
             </FieldDisclosure>
           </div>
         )}
+      </div>
+
+      {/* NUTRITION TARGETS — NUTRITION-003 (High-Risk Drop, direct owner
+          ruling reversing NUTRITION-001's "no calorie/macro goal, no
+          nutrition scoring" restriction): calorie target is set directly,
+          no formula; protein target is derived from the most recently
+          logged bodyweight × an adjustable multiplier, and stays
+          undefined — not a guessed number — until a bodyweight exists. */}
+      <div className="equipment-row">
+        <p className="tool-label" style={{ marginBottom: 4 }}>NUTRITION TARGETS</p>
+        <p className="recommendation-title" style={{ marginBottom: 2 }}>
+          {describeCalorieProgress(totalMealCalories, nutritionTargets?.calorieTargetKcal)}
+        </p>
+        <p className="meta" style={{ marginBottom: 12 }}>
+          {describeProteinProgress(combinedProteinToday, effectiveProteinTargetG)}
+        </p>
+        <FieldDisclosure
+          summary={`${targetsEditOpen ? "HIDE" : "SHOW"} TARGET SETTINGS`}
+          open={targetsEditOpen}
+          onToggle={setTargetsEditOpen}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div>
+              <label className="meta" htmlFor="calorie-target-input" style={{ display: "block", marginBottom: 4 }}>
+                Calorie target (kcal/day)
+              </label>
+              <input
+                id="calorie-target-input"
+                type="number"
+                aria-label="Calorie target (kcal/day)"
+                placeholder={nutritionTargets?.calorieTargetKcal?.toString() ?? "e.g. 2200"}
+                value={calorieTargetInput}
+                onChange={(e) => setCalorieTargetInput(e.target.value)}
+                className="input"
+              />
+            </div>
+            <div>
+              <label className="meta" htmlFor="protein-multiplier-input" style={{ display: "block", marginBottom: 4 }}>
+                Protein multiplier (g per lb bodyweight)
+              </label>
+              <input
+                id="protein-multiplier-input"
+                type="number"
+                step="0.05"
+                aria-label="Protein multiplier (g per lb bodyweight)"
+                placeholder={nutritionTargets?.proteinMultiplierGPerLb.toString() ?? "1.0"}
+                value={proteinMultiplierInput}
+                onChange={(e) => setProteinMultiplierInput(e.target.value)}
+                className="input"
+              />
+              <p className="meta" style={{ marginTop: 4 }}>
+                0.8–1.0 g/lb is the common range for a cut.
+              </p>
+            </div>
+            <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveTargets()}>
+              SAVE
+            </button>
+          </div>
+        </FieldDisclosure>
       </div>
 
       {/* MEAL MEMORY — NUTRITION-001 (High-Risk Drop): a small reusable

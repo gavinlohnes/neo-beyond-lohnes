@@ -3,6 +3,7 @@ import type {
   BeyondDay,
   CaptureItem,
   DomainEvent,
+  NutritionTargets,
   Outcome,
   PerformedSetRaw,
   Recommendation,
@@ -16,6 +17,7 @@ import type { DecisionJournalEntry } from "../domain/journal/types";
 import type { CustomExercise } from "../domain/workout/customExercise";
 import type { CustomWorkoutTemplate } from "../domain/workout/customTemplate";
 import { DEFAULT_SCHEDULE_PATTERN } from "../engine/scheduledContext";
+import { DEFAULT_NUTRITION_TARGETS } from "../engine/nutritionTargets";
 
 export class BeyondDB extends Dexie {
   beyondDays!: Table<BeyondDay, string>;
@@ -33,6 +35,7 @@ export class BeyondDB extends Dexie {
   decisionJournalEntries!: Table<DecisionJournalEntry, string>;
   customExercises!: Table<CustomExercise, string>;
   customWorkoutTemplates!: Table<CustomWorkoutTemplate, string>;
+  nutritionTargets!: Table<NutritionTargets, string>;
 
   constructor() {
     super("beyond");
@@ -233,6 +236,37 @@ export class BeyondDB extends Dexie {
       customExercises: "id, archivedAt, createdAt",
       customWorkoutTemplates: "id, archivedAt, createdAt",
     });
+    // v11 (NUTRITION-003, Calorie + Protein Targets, High-Risk Drop,
+    // direct owner ruling): adds nutritionTargets — a single mutable
+    // settings row (see NutritionTargets' own doc comment in
+    // domain/common/types.ts), same treatment as schedulePatterns at v4.
+    // Seeded with DEFAULT_NUTRITION_TARGETS on upgrade so an upgrading
+    // install always has a real row to read (no calorie target set yet,
+    // protein multiplier defaulted to 1.0 g/lb) rather than needing every
+    // read site to handle "table exists but is empty" as a separate case.
+    // v1-v10 tables/data untouched.
+    this.version(11)
+      .stores({
+        beyondDays: "id, status, startedAt",
+        events: "id, beyondDayId, type, occurredAt, missionId, obligationId, decisionJournalEntryId",
+        checkIns: "id, beyondDayId, recordedAt",
+        recommendations: "id, beyondDayId, issuedAt",
+        outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+        workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+        performedSets: "id, beyondDayId, sessionId, exerciseId",
+        schedulePatterns: "id",
+        captureItems: "id, status, capturedAt",
+        missions: "id, status, createdAt",
+        obligations: "id, status, missionId, dueAt, createdAt",
+        savedMeals: "id, archivedAt, createdAt",
+        decisionJournalEntries: "id, status, createdAt",
+        customExercises: "id, archivedAt, createdAt",
+        customWorkoutTemplates: "id, archivedAt, createdAt",
+        nutritionTargets: "id",
+      })
+      .upgrade(async (tx) => {
+        await tx.table("nutritionTargets").put(DEFAULT_NUTRITION_TARGETS);
+      });
   }
 }
 

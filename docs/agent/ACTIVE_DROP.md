@@ -1,15 +1,13 @@
 ---
-id: TRAIN-CREATE-002
-status: CLOSED
-baseline: f826f22aed688f9f4db67b346b0f91efbd65ca56
-branch: claude/train-create-002-custom-templates
-contract: docs/agent/drops/TRAIN-CREATE-002.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/79
-builder: Claude, this session, assigned by Gavin in chat 2026-09-14/15
+id: NUTRITION-003
+status: ACTIVE
+baseline: 68b5e4d0f9a068bc00be4454b833289c0bd81919
+branch: claude/nutrition-001-deficit-protein-targets
+contract: docs/agent/drops/NUTRITION-003.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Claude, this session, assigned by Gavin in chat 2026-09-15
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: e3817a98670865a57483d22e0c041f4da3a4a382
-closed_at: 2026-09-15T00:29:41.473Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/TRAIN-CREATE-002.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/NUTRITION-003.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
