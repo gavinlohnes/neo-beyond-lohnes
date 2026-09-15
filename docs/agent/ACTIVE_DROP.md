@@ -4,9 +4,9 @@ status: ACTIVE
 baseline: 36d98aa0182aaaa49415fcd059436a85454998c9
 branch: claude/launch-vision-003-terrys-suit-port
 contract: docs/agent/drops/LAUNCH-VISION-003.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/86
 builder: Claude, this session, per direct owner instruction 2026-09-15
-reviewer: (unassigned)
+reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
 ---
 
