@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: e066a24214a41eb49a84e18af52247527fbc171c
 branch: codex/checkpoint-003-refresh
 contract: docs/agent/drops/CHECKPOINT-003.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/95
 builder: Codex Builder, explicitly assigned by Gavin, 2026-09-15
 reviewer: (unassigned)
 integrator: (unassigned)
