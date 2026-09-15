@@ -1,6 +1,6 @@
 ---
 id: TODAY-008
-status: ACTIVE
+status: CLOSED
 baseline: 24dfb3c589f11e874dbea9a11a13b958404e979f
 branch: claude/today-008-start-day-refresh
 contract: docs/agent/drops/TODAY-008.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/88
 builder: Claude, this session, autonomous per direct owner delegation ('keep going') 2026-09-15
 reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
+integration_sha: 68c03e3f9854706afa81ab2d592290bd33a50fd9
+closed_at: 2026-09-15T11:23:02.029Z
 ---
 
 # ACTIVE_DROP
