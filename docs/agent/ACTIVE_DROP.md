@@ -1,6 +1,6 @@
 ---
 id: NUTRITION-003
-status: ACTIVE
+status: CLOSED
 baseline: 68b5e4d0f9a068bc00be4454b833289c0bd81919
 branch: claude/nutrition-001-deficit-protein-targets
 contract: docs/agent/drops/NUTRITION-003.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/80
 builder: Claude, this session, assigned by Gavin in chat 2026-09-15
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: fe0730be86539de5043fbd8089cbf137b672639f
+closed_at: 2026-09-15T01:31:35.173Z
 ---
 
 # ACTIVE_DROP
