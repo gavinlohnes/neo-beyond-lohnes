@@ -9,13 +9,13 @@ import type { Obligation } from "../domain/intent/types";
  * classifies, it never decides what the Engine does with that
  * classification.
  *
- * INTENT-ARBITRATION-001 (direct owner ruling, 2026-09-15): evaluate.ts
- * now imports `hasObligationRequiringArbitration` from this module (only
- * that one function, never `classifyObligation`'s full tier logic
- * duplicated elsewhere) — the narrow, explicitly authorized exception to
- * this file's original "evaluate.ts must never import from this module"
- * boundary. The classification rules themselves are unchanged and still
- * live only here.
+ * INTENT-ARBITRATION-001 (direct owner ruling, 2026-09-15):
+ * application/commands.ts now imports `hasObligationRequiringArbitration`
+ * from this module (only that one function, never `classifyObligation`'s
+ * full tier logic duplicated elsewhere) and passes only the resulting
+ * boolean into evaluate() — evaluate.ts itself still never imports from
+ * this module directly, same as before this Drop. The classification
+ * rules themselves are unchanged and still live only here.
  *
  * Deliberately duplicates a tiny local tie-break instead of importing
  * application/queries.ts's byTimeThenSeq — engine/* modules must stay

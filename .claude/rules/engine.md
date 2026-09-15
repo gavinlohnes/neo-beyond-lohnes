@@ -14,14 +14,17 @@ paths:
   replace with a weighted score or heuristic without an explicit product decision recorded in
   `docs/UX_DECISIONS.md`.
 - `obligationRelevance.ts` is a parallel interpretation layer, not part of `evaluate.ts`'s
-  general arbitration machinery. INTENT-ARBITRATION-001 (direct owner ruling, 2026-09-15) is
-  a narrow, explicit exception: `evaluate.ts` imports exactly one function from it,
-  `hasObligationRequiringArbitration`, to decide the bottom-of-stack `OBLIGATION_DUE`
-  recommendation kind (below `EXECUTE_PLANNED_WORK`, above only `NO_ACTION_REQUIRED`), gated to
-  the `OVERDUE`/`DUE_TODAY` tiers only — `DUE_SOON`/`PLANNED_TODAY` remain advisory-only via
-  `hasObligationRequiringAttention`. `evaluate.ts` must never import `classifyObligation` or any
-  full Obligation record — only that one pre-computed boolean, same pattern as
-  `hasPlannedWork`/`hasUnresolvedPostShift`.
+  general arbitration machinery. INTENT-ARBITRATION-001 (direct owner ruling, 2026-09-15) adds
+  a narrow, explicit exception to the "never import `application/*`" rule above, applied at the
+  application layer, not inside `evaluate.ts` itself: `application/commands.ts` imports exactly
+  one function from `obligationRelevance.ts`, `hasObligationRequiringArbitration`, and passes
+  only its resulting boolean (`hasEligibleObligationDueOrOverdue`) into `evaluate()` — the same
+  pattern as `hasPlannedWork`/`hasUnresolvedPostShift`. `evaluate.ts` itself still imports
+  nothing beyond `domain/common/types` and `./capacity`; it never sees `classifyObligation` or
+  any full Obligation record. This decides the bottom-of-stack `OBLIGATION_DUE` recommendation
+  kind (below `EXECUTE_PLANNED_WORK`, above only `NO_ACTION_REQUIRED`), gated to the
+  `OVERDUE`/`DUE_TODAY` tiers only — `DUE_SOON`/`PLANNED_TODAY` remain advisory-only via
+  `hasObligationRequiringAttention`.
 - `advisory.ts` (Intelligence Spine — I1, approved 2026-08-22; second producer added I3,
   approved 2026-08-23) composes already-locked interpretation output — currently
   `obligationRelevance.ts` and `progression.ts`, each via its own dedicated composer function

@@ -28,8 +28,10 @@ ruling.
 ## Risk classification
 
 ARCHITECTURAL. A new `RecommendationKind`, a changed Engine priority order, and a new narrow,
-explicitly authorized exception to `evaluate.ts`'s "never import `obligationRelevance.ts`"
-boundary — all three are named on CLAUDE.md's own escalation list ("recommendation-priority
+explicitly authorized exception letting the application layer bridge Obligation state into the
+Engine's arbitration (via one pre-computed boolean; `evaluate.ts` itself still imports nothing
+from `obligationRelevance.ts`) — all three are named on CLAUDE.md's own escalation list
+("recommendation-priority
 changes," "command/event semantic changes," "a genuine conflict between current code and higher
 authority" is avoided only because the owner ruled on it directly). Not HIGH-RISK: no schema
 change, no destructive migration, no removed user capability, no new dependency.
@@ -155,8 +157,9 @@ stop, persist a Builder handoff on the PR.
 Per `.claude/skills/beyond-drop/SKILL.md`'s standard template — a separate session reviewing from
 this contract and the final diff only. Specifically verify: the new priority order matches the
 owner's exact ruling (bottom-of-stack, not the rejected "between POST_SHIFT_TRANSITION and
-RECOVER" alternative); `evaluate.ts` never imports anything from `obligationRelevance.ts` beyond
-`hasObligationRequiringArbitration`; `DUE_SOON`/`PLANNED_TODAY` obligations genuinely cannot
+RECOVER" alternative); `evaluate.ts` itself imports nothing from `obligationRelevance.ts` (the
+one authorized import of `hasObligationRequiringArbitration` lives in `application/commands.ts`,
+which passes only the resulting boolean into `evaluate()`); `DUE_SOON`/`PLANNED_TODAY` obligations genuinely cannot
 trigger `OBLIGATION_DUE` (not just "the tests don't cover it"); the `SuitLayer01VisualGrammar.test.tsx`
 behavioral change is the correct, intended consequence of the ruling and not a masked regression.
 Tagged CONFIRMED/PLAUSIBLE, never merge or self-authorize a scope change.

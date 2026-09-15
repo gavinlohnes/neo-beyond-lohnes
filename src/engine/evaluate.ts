@@ -27,12 +27,13 @@ export interface EvaluateInput {
   /**
    * INTENT-ARBITRATION-001 (direct owner ruling, 2026-09-15): true when
    * at least one currently-eligible unresolved Obligation classifies as
-   * OVERDUE or DUE_TODAY (engine/obligationRelevance.ts's
-   * hasObligationRequiringArbitration — the Engine imports only that one
-   * boolean-producing function, never Obligation records themselves; it
-   * has no knowledge of which obligation, its title, or its mission).
-   * The application layer decides current eligibility and today's date,
-   * same pattern as hasPlannedWork/hasUnresolvedPostShift.
+   * OVERDUE or DUE_TODAY (application/commands.ts computes this via
+   * engine/obligationRelevance.ts's hasObligationRequiringArbitration).
+   * This module (evaluate.ts) never imports obligationRelevance.ts or sees
+   * an Obligation record itself — it has no knowledge of which obligation,
+   * its title, or its mission, only this one pre-computed boolean. The
+   * application layer decides current eligibility and today's date, same
+   * pattern as hasPlannedWork/hasUnresolvedPostShift.
    */
   hasEligibleObligationDueOrOverdue: boolean;
 }
