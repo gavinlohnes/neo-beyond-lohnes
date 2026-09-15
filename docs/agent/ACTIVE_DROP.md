@@ -1,6 +1,6 @@
 ---
 id: TRAIN-PROGRESSION-001
-status: ACTIVE
+status: CLOSED
 baseline: 916f3a9d9cf701d1e184c03ae5ae0607af4fe473
 branch: claude/train-progression-001-equipment-increments
 contract: docs/agent/drops/TRAIN-PROGRESSION-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/92
 builder: Claude, this session, autonomous per direct owner approval of a 4-item execution list, 2026-09-15
 reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
+integration_sha: 0a1c7318f4f4e24c8cdc7051d93b2239d4ad1e73
+closed_at: 2026-09-15T13:58:44.955Z
 ---
 
 # ACTIVE_DROP
