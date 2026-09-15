@@ -59,6 +59,13 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
   });
 
+  it("renders the Reminders section, off by default", async () => {
+    const screen = await render(<MoreScreen />);
+    await expect.element(screen.getByText("Reminders", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Off.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "TURN ON" })).toBeVisible();
+  });
+
   it("uses semantic operational zones and keeps restore subordinate until explicitly opened", async () => {
     const screen = await render(<MoreScreen />);
 
@@ -335,6 +342,41 @@ describe("MoreScreen (real browser) — search-to-navigate", () => {
 
     await expect.element(screen.getByRole("heading", { name: "Missions · durable direction" })).toBeVisible();
     expect(screen.getByRole("button", { name: "← BACK", exact: true }).elements()).toHaveLength(0);
+  });
+});
+
+describe("MoreScreen (real browser) — Reminders (REMIND-001)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("turning on requests permission, then reflects on/off and the chosen hour", async () => {
+    const NotificationMock = vi.fn();
+    vi.stubGlobal(
+      "Notification",
+      Object.assign(NotificationMock, { permission: "granted", requestPermission: vi.fn().mockResolvedValue("granted") }),
+    );
+
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "TURN ON" }).click();
+    await expect.element(screen.getByText("On, after 8:00 PM.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "TURN OFF" })).toBeVisible();
+
+    await screen.getByRole("combobox", { name: "Reminder hour" }).selectOptions("9");
+    await expect.element(screen.getByText("On, after 9:00 AM.", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "TURN OFF" }).click();
+    await expect.element(screen.getByText("Off.", { exact: true })).toBeVisible();
+  });
+
+  it("denied permission keeps the preference off and surfaces a plain explanation", async () => {
+    vi.stubGlobal("Notification", { permission: "denied", requestPermission: vi.fn().mockResolvedValue("denied") });
+
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "TURN ON" }).click();
+
+    await expect.element(screen.getByText("Notification permission was denied.", { exact: false })).toBeVisible();
+    await expect.element(screen.getByText("Off.", { exact: true })).toBeVisible();
   });
 });
 
