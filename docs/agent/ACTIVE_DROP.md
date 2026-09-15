@@ -4,9 +4,9 @@ status: ACTIVE
 baseline: 925b826c07812a9fea5b42822be6a92449019f06
 branch: claude/today-screen-flake-fix-wip
 contract: docs/agent/drops/TODAY-007.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/85
 builder: Claude, this session, per direct owner instruction 2026-09-15
-reviewer: (unassigned)
+reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
 ---
 
