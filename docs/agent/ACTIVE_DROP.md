@@ -4,9 +4,9 @@ status: ACTIVE
 baseline: 58e60656065c4017c8e0d586897c947cd98c6761
 branch: claude/intent-002-recurring-obligations
 contract: docs/agent/drops/INTENT-002.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/84
 builder: Claude, this session, assigned by Gavin in chat 2026-09-15
-reviewer: (unassigned)
+reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
 ---
 
