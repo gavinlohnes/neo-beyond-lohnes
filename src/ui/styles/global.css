@@ -530,10 +530,25 @@ button, input {
    pattern as .fade-in/.set-earned; neutralized by the reduced-motion
    rule below like every other animation here. position:relative is
    scoped to this one modifier class, not .today-field generally, so it
-   never affects layout outside this one-shot moment. */
+   never affects layout outside this one-shot moment.
+   LAUNCH-VISION-004 (2026-09-15, direct owner tuning pass — owner
+   reported seeing "a red flash" rather than a legible sweep): the
+   shared `--motion-easing` curve (cubic-bezier(.2,.8,.2,1)) front-loads
+   most of its motion into the first ~10% of the run, which is exactly
+   why the bar's *travel* read as an instantaneous flash rather than
+   something the eye could track crossing the screen — confirmed by an
+   independent reviewer scrubbing the animation with
+   Animation.currentTime before this tuning pass. Fixed by giving this
+   one animation its own `linear` timing function (never touching the
+   shared --motion-easing token other components still rely on) so the
+   bar's position advances at a constant rate for its full run, plus a
+   longer 900ms duration so there is enough time to perceive it moving.
+   Opacity still ramps in/out quickly at each end so it doesn't feel like
+   it lingers. */
 @keyframes beyond-power-on-sweep {
   0% { transform: translateY(-100%); opacity: 0; }
-  8% { opacity: 1; }
+  10% { opacity: 1; }
+  85% { opacity: 1; }
   100% { transform: translateY(150vh); opacity: 0; }
 }
 .today-field--boot {
@@ -549,7 +564,7 @@ button, input {
   z-index: 1;
   background: linear-gradient(90deg, transparent, rgba(226, 69, 79, 0.9), transparent);
   box-shadow: 0 0 16px 2px rgba(226, 69, 79, 0.9);
-  animation: beyond-power-on-sweep 650ms var(--motion-easing) forwards;
+  animation: beyond-power-on-sweep 900ms linear forwards;
   pointer-events: none;
 }
 
@@ -937,8 +952,18 @@ button, input {
      because .command-surface itself already only ever renders once per
      screen for the currently-dominant operation. BODY never renders
      .command-surface at all, so its lower red budget is respected
-     without a separate carve-out rule. */
-  box-shadow: 0 0 48px -14px rgba(226, 69, 79, 0.4);
+     without a separate carve-out rule.
+     LAUNCH-VISION-004 (2026-09-15, direct owner tuning pass): an
+     independent reviewer's own screenshot spot-check found the original
+     -14px spread / 48px blur / 0.4 opacity recipe nearly imperceptible
+     against the near-black page background at real device pixel ratios
+     — a real gap between intent (a visible ambient glow) and effect.
+     Tightened the spread (-14px -> -6px, so the visible glow starts
+     closer to the surface's own edge instead of fading out before it's
+     even noticeable) and raised blur/opacity (48px/0.4 -> 64px/0.6) so
+     it reads as a genuine glow rather than a barely-there tint, without
+     introducing a new color or turning it into a decorative halo. */
+  box-shadow: 0 0 64px -6px rgba(226, 69, 79, 0.6);
 }
 
 /* COMMAND TITLE — genuinely large display type for the one dominant
