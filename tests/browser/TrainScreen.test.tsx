@@ -10,6 +10,7 @@ import {
   logSet,
   startWorkout,
 } from "../../src/application/trainCommands";
+import { archiveCustomExercise, createCustomExercise } from "../../src/application/exerciseLibraryCommands";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 
@@ -510,6 +511,85 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     // SKIP's fill stays dark/quiet.
     const skipBg = getComputedStyle(skipButton).backgroundColor;
     expect(skipBg).not.toBe(logBg);
+  });
+});
+
+/**
+ * TRAIN-CREATE-003: the operator's saved CustomExercise library is now
+ * offered as a substitution quick-pick, alongside (never replacing) the
+ * existing recent-substitution history — substitutedName stays a plain
+ * free-text string either way.
+ */
+describe("TrainScreen (real browser) — CustomExercise substitution suggestions (TRAIN-CREATE-003)", () => {
+  async function startStandardWorkout() {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    return screen;
+  }
+
+  it("a saved CustomExercise appears as a substitution suggestion", async () => {
+    await createCustomExercise({
+      name: "Chest Supported Row",
+      muscleGroup: "Back",
+      equipment: "Machine",
+      repRangeLow: 8,
+      repRangeHigh: 12,
+    });
+
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Chest Supported Row" })).toBeVisible();
+  });
+
+  it("tapping a CustomExercise suggestion fills the substitution field", async () => {
+    await createCustomExercise({
+      name: "Chest Supported Row",
+      muscleGroup: "Back",
+      equipment: "Machine",
+      repRangeLow: 8,
+      repRangeHigh: 12,
+    });
+
+    const screen = await startStandardWorkout();
+    await screen.getByRole("button", { name: "Chest Supported Row" }).click();
+    await expect.element(screen.getByPlaceholder("Substitute exercise (optional)")).toHaveValue("Chest Supported Row");
+  });
+
+  it("an archived CustomExercise does not appear as a suggestion", async () => {
+    const exercise = await createCustomExercise({
+      name: "Chest Supported Row",
+      muscleGroup: "Back",
+      equipment: "Machine",
+      repRangeLow: 8,
+      repRangeHigh: 12,
+    });
+    await archiveCustomExercise(exercise.id);
+
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Chest Supported Row" }).elements()).toHaveLength(0);
+  });
+
+  it("a CustomExercise name already present in recent substitutions is not duplicated", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const firstSession = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, firstSession.id, "machine-chest-press", 1, 100, 10, "Chest Supported Row");
+    await completeWorkout(day.id, firstSession.id, "STANDARD", "PARTIAL");
+    await createCustomExercise({
+      name: "Chest Supported Row",
+      muscleGroup: "Back",
+      equipment: "Machine",
+      repRangeLow: 8,
+      repRangeHigh: 12,
+    });
+
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Chest Supported Row" }).elements()).toHaveLength(1);
   });
 });
 
