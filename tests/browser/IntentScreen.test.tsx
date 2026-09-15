@@ -201,3 +201,57 @@ describe("IntentScreen (real browser)", () => {
     expect((await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
   });
 });
+
+/**
+ * INTENT-002 (2026-09-15, direct owner ruling): recurring Obligations via
+ * rrule.js. Real UI coverage — creating with a recurrence, satisfying it
+ * to see the next occurrence materialize, and editing an existing one.
+ */
+describe("IntentScreen (real browser) — recurrence (INTENT-002)", () => {
+  it("creating an Obligation with a WEEKLY recurrence shows the correct plain-language summary", async () => {
+    const screen = await render(<IntentScreen />);
+    await screen.getByRole("button", { name: "CREATE OBLIGATION" }).click();
+    await screen.getByPlaceholder("What needs to be resolved?").fill("Take out the trash");
+    await screen.getByLabelText("Due").fill("2026-09-14");
+    await screen.getByRole("combobox", { name: "Repeats" }).selectOptions("WEEKLY");
+    await screen.getByRole("button", { name: "Mon", exact: true }).click();
+    await screen.getByRole("button", { name: "CREATE OBLIGATION", exact: true }).last().click();
+
+    await screen.getByRole("button", { name: "Open Take out the trash" }).click();
+    await expect.element(screen.getByText("Repeats: every week on Monday", { exact: true })).toBeVisible();
+  });
+
+  it("satisfying a recurring Obligation materializes the next occurrence in the list", async () => {
+    const screen = await render(<IntentScreen />);
+    await screen.getByRole("button", { name: "CREATE OBLIGATION" }).click();
+    await screen.getByPlaceholder("What needs to be resolved?").fill("Water the plants");
+    await screen.getByLabelText("Due").fill("2026-09-14");
+    await screen.getByRole("combobox", { name: "Repeats" }).selectOptions("DAILY");
+    await screen.getByRole("button", { name: "CREATE OBLIGATION", exact: true }).last().click();
+
+    await screen.getByRole("button", { name: "Open Water the plants" }).click();
+    await screen.getByRole("button", { name: "SATISFY", exact: true }).click();
+    await screen.getByRole("button", { name: "CONFIRM SATISFIED", exact: true }).click();
+    await screen.getByText("← BACK").click();
+
+    // Default UNRESOLVED filter — the satisfied instance is gone, but a
+    // fresh OPEN one with the same title (the materialized next
+    // occurrence) is now present.
+    await expect.element(screen.getByRole("button", { name: "Open Water the plants" })).toBeVisible();
+  });
+
+  it("editing an existing recurring Obligation's schedule pre-fills the picker from its stored rule", async () => {
+    const screen = await render(<IntentScreen />);
+    await screen.getByRole("button", { name: "CREATE OBLIGATION" }).click();
+    await screen.getByPlaceholder("What needs to be resolved?").fill("Team sync");
+    await screen.getByLabelText("Due").fill("2026-09-14");
+    await screen.getByRole("combobox", { name: "Repeats" }).selectOptions("WEEKLY");
+    await screen.getByRole("button", { name: "Mon", exact: true }).click();
+    await screen.getByRole("button", { name: "CREATE OBLIGATION", exact: true }).last().click();
+
+    await screen.getByRole("button", { name: "Open Team sync" }).click();
+    await screen.getByRole("button", { name: "EDIT", exact: true }).click();
+    await expect.element(screen.getByRole("combobox", { name: "Repeats" })).toHaveValue("WEEKLY");
+    await expect.element(screen.getByRole("button", { name: "Mon", exact: true })).toHaveAttribute("aria-pressed", "true");
+  });
+});

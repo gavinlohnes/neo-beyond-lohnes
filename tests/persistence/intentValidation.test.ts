@@ -88,4 +88,36 @@ describe("a corrupted Obligation row is excluded from query results, not thrown 
     const obligations = await getObligations();
     expect(obligations.map((o) => o.id)).toEqual([good.id]);
   });
+
+  it("rejects a recurrence with an empty rrule string", async () => {
+    const good = await createObligation({ title: "Good obligation" });
+    await db.obligations.add({
+      id: "bad-recurrence",
+      title: "Bad recurrence",
+      status: "OPEN",
+      recurrence: { rrule: "" },
+      source: "USER",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as never);
+
+    const obligations = await getObligations();
+    expect(obligations.map((o) => o.id)).toEqual([good.id]);
+  });
+
+  it("rejects the old dormant {freq, interval} recurrence shape as invalid — INTENT-002 replaced it, no silent legacy acceptance", async () => {
+    const good = await createObligation({ title: "Good obligation" });
+    await db.obligations.add({
+      id: "old-shape-recurrence",
+      title: "Old shape",
+      status: "OPEN",
+      recurrence: { freq: "WEEKLY", interval: 1 },
+      source: "USER",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as never);
+
+    const obligations = await getObligations();
+    expect(obligations.map((o) => o.id)).toEqual([good.id]);
+  });
 });

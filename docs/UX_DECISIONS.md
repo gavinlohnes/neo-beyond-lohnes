@@ -240,6 +240,34 @@ canonical operation:
 - Archived-Mission and invalid-parent Obligations remain excluded by the current-attention
   eligibility rule above; this completion action does not weaken Mission lifecycle semantics.
 
+## Intent & Commitment — Recurring Obligations (INTENT-002)
+
+**Reversed 2026-09-15, direct owner ruling.** Drop 01 (2026-08-22) had explicitly locked "do
+not implement a custom recurrence engine," "do not introduce RRULE/rrule.js" — `RecurrenceRule`
+existed only as a dormant, unused placeholder shape. Separately, `docs/agent/CAPABILITY_MAP.md`
+had pre-approved rrule.js as the standard for exactly this, once recurrence was ever actually
+wanted. The genuine conflict between the two was surfaced to the owner directly rather than
+silently resolved either way (per CLAUDE.md's authority-order doctrine); the owner chose
+rrule.js. Drop 01's original restriction is kept in `src/domain/intent/types.ts`'s own doc
+comment for history, not deleted.
+
+- **Recurrence is created and edited from the Obligation form** in `IntentScreen.tsx`: Does
+  not repeat / Daily / Weekly (with weekday selection) / Monthly, plus an interval ("every N").
+  Stored as a full RFC 5545 `DTSTART:...\nRRULE:...` string, always produced by
+  `engine/recurrence.ts`'s `buildRecurrenceRule` — never hand-formatted, never accepted as
+  free-form text from the operator.
+- **Satisfying a recurring Obligation materializes its next occurrence as a new Obligation** —
+  same title/description/mission/recurrence, due on the next computed date. The satisfied
+  instance is never reopened (Drop 01's "no reopen action" is unchanged); this also applies
+  automatically to TODAY's own `SATISFY COMMITMENT` action above, since both paths call the
+  same `satisfyObligation` command — no separate wiring was needed or added there.
+- **Releasing a recurring Obligation does not continue the schedule.** "No longer required" is
+  read as stopping the standing commitment, not skipping one instance — only `satisfyObligation`
+  continues it.
+- **Still no calendar/agenda view of upcoming occurrences**, and no RFC 5545 features beyond
+  DAILY/WEEKLY(+BYDAY)/MONTHLY are exposed in the picker — this Drop is the create/edit/execute
+  mechanism only.
+
 ## Backup / restore / archival
 
 - **Replace-only restore, preview-before-write, always.** Nothing is
