@@ -75,7 +75,7 @@ describe("getRecommendationHandoff", () => {
     expect(await getRecommendationHandoff(recover)).toBe("RECOVERY");
 
     const checkIn: StateCheckIn = { id: "planned", beyondDayId: recover.beyondDayId, recordedAt: new Date(Date.now() + 2).toISOString(), ...GREEN };
-    const workout = evaluate({ beyondDayId: recover.beyondDayId, checkIn, hasPlannedWork: true, hasUnresolvedPostShift: false });
+    const workout = evaluate({ beyondDayId: recover.beyondDayId, checkIn, hasPlannedWork: true, hasUnresolvedPostShift: false, hasEligibleObligationDueOrOverdue: false });
     workout.issuedAt = new Date(Date.now() + 3).toISOString();
     workout.seq = (recover.seq ?? 0) + 3;
     await db.recommendations.add(workout);

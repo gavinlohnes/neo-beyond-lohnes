@@ -12,7 +12,13 @@ import {
 } from "../../src/ui/screens/today/recommendationCopy";
 import type { RecommendationKind } from "../../src/domain/common/types";
 
-const actionKinds: RecommendationKind[] = ["STABILIZE", "POST_SHIFT_TRANSITION", "RECOVER", "EXECUTE_PLANNED_WORK"];
+const actionKinds: RecommendationKind[] = [
+  "STABILIZE",
+  "POST_SHIFT_TRANSITION",
+  "RECOVER",
+  "EXECUTE_PLANNED_WORK",
+  "OBLIGATION_DUE",
+];
 
 describe("describeRecommendationHandoff", () => {
   it("uses open/go-to language that remains distinct from execution", () => {
@@ -51,6 +57,11 @@ describe("describeRecommendationEffect", () => {
     const text = describeRecommendationEffect("EXECUTE_PLANNED_WORK");
     expect(text).toContain("doesn't start");
     expect(text).toContain("TRAIN");
+  });
+
+  it("tells the user recording OBLIGATION_DUE does not itself resolve the obligation", () => {
+    const text = describeRecommendationEffect("OBLIGATION_DUE");
+    expect(text).toContain("doesn't resolve the obligation");
   });
 
   it("makes clear NO_ACTION_REQUIRED has nothing to start", () => {
@@ -103,6 +114,7 @@ describe("describeTraceLabel", () => {
     expect(describeTraceLabel("hasPlannedWork")).toBe("Planned work today");
     expect(describeTraceLabel("capacity")).toBe("Capacity");
     expect(describeTraceLabel("reasonCodes")).toBe("Reason codes");
+    expect(describeTraceLabel("hasEligibleObligationDueOrOverdue")).toBe("Obligation overdue or due today");
   });
 
   it("falls back to the raw key for anything unrecognized, rather than hiding it", () => {

@@ -1,6 +1,8 @@
 import { db } from "../persistence/db";
 import { evaluate } from "../engine/evaluate";
 import { assertRedOverrideConfirmed } from "../engine/redOverride";
+import { formatLocalDate } from "../engine/scheduledContext";
+import { hasObligationRequiringArbitration } from "../engine/obligationRelevance";
 import type {
   BeyondDay,
   CaptureItem,
@@ -13,6 +15,7 @@ import type {
 } from "../domain/common/types";
 import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
 import { getWorkPeriodEnded, hasUnresolvedPostShift } from "./queries";
+import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 
 /**
  * Deterministic tie-break for "most recent X" queries — redesigned after
@@ -228,6 +231,11 @@ export async function submitCheckIn(
   // separate, explicit user step — see recordRecommendation below.
   // evaluate() stays pure (no I/O, no seq assignment) — seq is stamped
   // here, at the one place its result is actually persisted.
+  // INTENT-ARBITRATION-001: same pattern as hasUnresolvedPostShift above —
+  // the application layer decides current eligibility (today's date, which
+  // obligations are unresolved) and passes the Engine only the one derived
+  // boolean it needs to arbitrate with.
+  const eligibleObligations = await getCurrentlyEligibleUnresolvedObligations();
   const recommendation: Recommendation = {
     ...evaluate({
       beyondDayId,
@@ -237,6 +245,10 @@ export async function submitCheckIn(
       // a later SHIFT_DOWN_COMPLETED), never from clock/schedule — the
       // Engine only ever sees what queries.ts already determined is true.
       hasUnresolvedPostShift: await hasUnresolvedPostShift(beyondDayId),
+      hasEligibleObligationDueOrOverdue: hasObligationRequiringArbitration(
+        eligibleObligations,
+        formatLocalDate(new Date()),
+      ),
     }),
     seq: await nextSeq(),
   };

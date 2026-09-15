@@ -181,7 +181,7 @@ describe("Recommendation-to-Action Handoff (App shell)", () => {
       energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0,
     };
     await db.checkIns.add(checkIn);
-    const recommendation = evaluate({ beyondDayId: day.id, checkIn, hasPlannedWork: true, hasUnresolvedPostShift: false });
+    const recommendation = evaluate({ beyondDayId: day.id, checkIn, hasPlannedWork: true, hasUnresolvedPostShift: false, hasEligibleObligationDueOrOverdue: false });
     await db.recommendations.add(recommendation);
     await recordRecommendation(day.id, recommendation);
     const screen = await render(<App />);
