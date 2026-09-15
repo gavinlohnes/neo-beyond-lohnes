@@ -1,13 +1,15 @@
 ---
 id: INTENT-ARBITRATION-001
-status: ACTIVE
+status: CLOSED
 baseline: 8dc0cd03ebc0f9704da984a5e0cb765704aecbf0
 branch: claude/intent-arbitration-001-obligation-recommendation
 contract: docs/agent/drops/INTENT-ARBITRATION-001.md
 pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/97
 builder: Claude, this session, per direct owner AskUserQuestion ruling 2026-09-15
-reviewer: (unassigned)
-integrator: (unassigned)
+reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
+integrator: Claude (this session), 2026-09-15
+integration_sha: 7757988ce437a57bf8dbd3ce7f541cd84ab0211e
+closed_at: 2026-09-15T22:13:07.571Z
 ---
 
 # ACTIVE_DROP
