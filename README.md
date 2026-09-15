@@ -62,15 +62,53 @@ not treated as the preferred pattern for new code:
     parallel interpretation layer, not part of `evaluate.ts`'s
     arbitration — Obligations do not yet participate in primary
     recommendation arbitration.
+  - `obligationEligibility.ts` — a second parallel interpretation layer:
+    whether an already-unresolved Obligation is *currently* eligible to
+    surface (an Obligation under an ARCHIVED Mission stays unresolved
+    for management but drops out of TODAY/AdvisoryNotes).
+  - `advisory.ts` — the Intelligence Spine: composes already-locked
+    interpretation output (Obligation relevance, TRAIN progression,
+    reviewed Decision Journal Lessons) into a shared, informational-only
+    `AdvisoryNote` contract — never a `Recommendation`, never fed back
+    into `evaluate.ts`.
+  - `journalRelevance.ts` — pure keyword/fuzzy matching (MiniSearch)
+    between reviewed Decision Journal entries and current Obligation/
+    Mission titles, feeding `advisory.ts`'s journal producer.
+  - `captureIntelligence.ts` — a confidence/abstention gate over
+    chrono-node (date extraction) + Compromise (negation signal) for
+    Capture→Obligation due-date suggestions; abstains rather than
+    guesses on any ambiguity.
+  - `recurrence.ts` — RFC 5545 recurrence semantics for Obligations, via
+    `rrule.js`, wrapped behind BEYOND's own tests rather than trusted
+    unquestioned.
+  - `nutritionTargets.ts` — derives a daily calorie/protein target from
+    configurable settings plus the latest bodyweight; advisory only.
+  - `checkInReminder.ts` — the pure decision of whether an on-device
+    check-in reminder notification is due right now, given the
+    operator's preference and today's check-in state.
 - **`src/persistence`** — Dexie/IndexedDB (`db.ts`), backup export
-  (`backup.ts`), restore with format detection (`restore.ts`), and the
-  historical-format compatibility importer (`compat/legacyBackup.ts`).
+  (`backup.ts`), restore with format detection (`restore.ts`), the
+  historical-format compatibility importer (`compat/legacyBackup.ts`),
+  and small localStorage-only operational bookkeeping (backup-reminder
+  timestamp, outcome-rating dismissals, the check-in reminder
+  preference/last-sent date — the Notification API call itself also
+  lives here, alongside `backup.ts`'s own `navigator.share` call).
 - **`src/application`** — commands (writes, one per user action) and
-  queries (reads). New UI data access routes through `application/*`;
-  the two grandfathered direct persistence imports are documented and
+  queries (reads), one file per feature area (Intent & Commitment,
+  TRAIN, Nutrition, Journal, Search, Review, Reminder, …). New UI data
+  access routes through `application/*`; the two grandfathered direct
+  persistence imports (`TodayScreen.tsx`, `MoreScreen.tsx`) are
+  documented, may not gain further new persistence imports, and are
   constrained by the architecture checker.
+- **`src/ui/components`** — a small shared component layer
+  (`ConfirmBanner`, `FieldDisclosure`, `CollapsibleRow`, `SignalRow`,
+  `CommandSurface`, `RootErrorBoundary`) reused across TODAY/TRAIN/BODY
+  instead of each screen hand-repeating the same confirm/disclosure/
+  collapse pattern.
 - **`src/ui/screens`** — TODAY, TRAIN, BODY, MORE (primary navigation)
-  plus HISTORY, nested under MORE (see below).
+  plus HISTORY, REVIEW, SEARCH, Missions & Obligations, Work Schedule,
+  Decision Journal, Exercise Library, and Custom Programs, all nested
+  under MORE (see below).
 
 ## Screens
 
@@ -87,24 +125,56 @@ corrected. HISTORY itself, its queries, and its tests are unchanged).
   substitution from recently-used alternates, neutral stop-workout
   wording with an inline explanation of PARTIAL's rotation impact, and
   confirmed resume-after-reload for an in-progress session.
-- **BODY** — sleep (PRIMARY/SUPPLEMENTAL), water, protein, and
-  bodyweight logging, all correctable in place via a correction-chain
-  (original event untouched, a `*_CORRECTED` event supersedes it,
-  queries resolve the head of the chain) with on-screen confirmation
-  and immediate undo.
+- **BODY** — sleep (PRIMARY/SUPPLEMENTAL), water, protein, bodyweight,
+  and meal logging (saved presets, optional USDA FoodData Central
+  lookup that only pre-fills the manual form — nothing is saved until
+  reviewed), all correctable in place via a correction-chain (original
+  event untouched, a `*_CORRECTED` event supersedes it, queries resolve
+  the head of the chain) with on-screen confirmation and immediate
+  undo. Calorie/protein targets are configurable, advisory only.
 - **MORE** — backup export/share, restore (preview-before-write,
-  replace-only), backup-reminder banner, app/engine/schema diagnostics
-  (see Versions below), and access to HISTORY, Missions & Obligations
-  (Intent & Commitment Spine), and Work Schedule.
+  replace-only), backup-reminder banner, an opt-in on-device check-in
+  reminder (Web Notification, no push/backend — see Reminders below),
+  app/engine/schema diagnostics (see Versions below), and access to
+  HISTORY, REVIEW, SEARCH, Missions & Obligations (Intent & Commitment
+  Spine), Work Schedule, Decision Journal, Exercise Library, and Custom
+  Programs.
 - **HISTORY** (nested under MORE) — read-only, complete: every
   `BeyondDay` and every event on it, chronological within the day,
   most-recent-day-first, collapsed per day by default.
+- **REVIEW** (nested under MORE, `ReviewScreen.tsx`) — a read-only
+  Recommendation ledger: what BEYOND recommended, what the operator
+  decided, and how it went. Sibling to HISTORY, not a replacement —
+  never shows AdvisoryNotes or aggregates/trends anything.
+- **SEARCH** (nested under MORE, `SearchScreen.tsx`) — ranked
+  fuzzy/prefix lexical search (MiniSearch) over Mission/Obligation/
+  Capture text, disposable and rebuilt from Dexie on every call. Tap a
+  result to navigate to its management context.
 - **Missions & Obligations** (nested under MORE, `IntentScreen.tsx`) —
   dedicated deep management for the Intent & Commitment Spine, separate
   from TODAY's own lightweight "one most-relevant commitment" surfacing.
+  Obligations support RFC 5545 recurrence (`rrule.js`).
 - **Work Schedule** (nested under MORE, `WorkScheduleScreen.tsx`) —
   configures the Week A/B rotation pattern `scheduledContext.ts` derives
   its (non-authoritative) work-phase suggestion from.
+- **Decision Journal** (nested under MORE, `JournalScreen.tsx`) —
+  Context → Options → Decision → Reasoning → Expectation, recorded now;
+  Outcome → Lesson, recorded later. General-purpose, not limited to
+  BEYOND's own Recommendations. A reviewed entry's Lesson may resurface
+  as a read-only TODAY advisory note when its text overlaps a current
+  Obligation or Mission title — informational only, never an Engine
+  input.
+- **Exercise Library** (nested under MORE, `ExerciseLibraryScreen.tsx`)
+  — a personal, directly-mutable exercise list (from a hand-curated
+  reference set or fully custom), independent of the fixed A/B/C
+  templates.
+- **Custom Programs** (nested under MORE, `CustomTemplateScreen.tsx`) —
+  assembles saved exercises into a selectable workout template,
+  alongside the fixed A/B/C templates. Per-exercise progression
+  increments derive from equipment/muscle group, not one flat number.
+- **Reminders** (a section within MORE's own menu, not a separate
+  screen) — an opt-in toggle + hour picker for the on-device check-in
+  notification described above.
 
 Full behavioral rationale for all of the above — what's locked, why,
 and what NOT to change without sign-off — lives in
@@ -125,7 +195,7 @@ the whole reason a second backup format exists (see below).
 |---|---|---|
 | App version | `0.1.0` — `package.json`'s `version`, the single source (`APP_RELEASE` in [buildInfo.ts](src/app/buildInfo.ts)) | `0.1.0` → `0.2.0` (per fixture metadata) |
 | Engine version | `0.1.0` (`ENGINE_VERSION` in [evaluate.ts](src/engine/evaluate.ts); stamped onto every `Recommendation.trace`) | n/a (not preserved in fixtures) |
-| Data schema | `6` (Dexie schema — see Migration behavior) | `2` → `3` (per fixture metadata; different numbering scheme, same numbers by coincidence) |
+| Data schema | `11` (Dexie schema — see Migration behavior) | `2` → `3` (per fixture metadata; different numbering scheme, same numbers by coincidence) |
 | Backup format | `dexie-export-import` native (`format: "dexie"`) | `BEYOND_BACKUP`, `formatVersion: 1` |
 
 App/Engine version are deliberate, human-bumped identities — see the paragraph above on why the
@@ -174,6 +244,20 @@ across versions:
 - **v6** (Intent & Commitment Spine, Drop 01) — adds `missions` and
   `obligations`, plus optional `missionId`/`obligationId` indexes on the
   existing `events` table.
+- **v7** (Meal Memory) — adds `savedMeals`, a directly-mutable personal
+  preset, purely additive.
+- **v8** (Decision Journal, Whole-Life Capability North Star / DEC-007)
+  — adds `decisionJournalEntries` plus a `decisionJournalEntryId` index
+  on `events` for its historical trail, mirroring v6's pattern.
+- **v9** (Personal Exercise Library) — adds `customExercises`, a small
+  directly-mutable personal exercise definition, independent of the
+  fixed A/B/C `workoutSessions`/`performedSets` tables.
+- **v10** (Custom Workout Templates) — adds `customWorkoutTemplates`,
+  same directly-mutable treatment as `customExercises` at v9.
+- **v11** (Calorie + Protein Targets) — adds `nutritionTargets`, a
+  single mutable settings row seeded via `.upgrade()` with a default
+  (no calorie target, 1.0 g/lb protein multiplier) so every install
+  always has a real row to read.
 
 **Restore is always replace-only.** Both the native and legacy import
 paths clear existing tables before writing (`clearTablesBeforeImport`,
@@ -193,9 +277,10 @@ in the imported payload, since its own write path always produces both.
 npm test
 ```
 
-68 files / 706 tests at the verified baseline commit `6a6391e`
-(50 files / 559 tests in the Node project; 18 files / 147 tests in the
-browser project). See `vitest.config.ts`. The "node" project (everything
+106 files / 1,342 tests, 1 skipped, at the verified baseline commit
+`71d2e71` (81 files / 993 tests in the Node project; 25 files / 349
+tests in the browser project). Re-verify with a fresh `npm run verify`
+rather than trusting this count as it ages. See `vitest.config.ts`. The "node" project (everything
 below except `tests/browser`) runs in a plain Node environment — no jsdom,
 `fake-indexeddb` standing in for IndexedDB; see `tests/setup.ts` for the
 polyfills this requires, notably that `vi.useFakeTimers()` must be
@@ -233,6 +318,11 @@ Playwright, and is where UI/accessibility (`axe-core`) assertions live.
   problem (would need the Web Locks API or an IndexedDB-transaction-based
   cross-tab mutex) and isn't reachable through any normal single-tab
   usage, so it's out of scope unless it's ever actually observed.
+- **The check-in reminder is not true background push.** It's a real
+  on-device Web Notification, but the check that decides whether one is
+  due only ever runs when the app is opened/reloaded — there is no
+  Periodic Background Sync or Push subscription, so a day the app is
+  never opened gets no reminder at all. Deliberate, not a bug.
 
 ## Explicitly out of scope
 
