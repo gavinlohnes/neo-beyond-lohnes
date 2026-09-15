@@ -213,6 +213,40 @@ describe("getAdvisoryNotes — third producer (Decision Journal)", () => {
     expect(await getAdvisoryNotes(TODAY)).toEqual([]);
   });
 
+  /**
+   * JOURNAL-002 (2026-09-15): widens the query-term pool beyond just
+   * Obligation titles to also include active Missions' titles — this is
+   * the direct proof that the widening actually surfaces a Lesson that
+   * the original, Obligation-title-only pool could not have matched.
+   */
+  it("a reviewed entry whose text overlaps an active Mission's title (not any Obligation) produces one AdvisoryNote", async () => {
+    await createMission({ title: "Get back into climbing" });
+    const entry = await createDecisionJournalEntry({
+      title: "Which gym to join for climbing",
+      decision: "Joined the one with better routes",
+    });
+    await reviewDecisionJournalEntry(entry.id, {
+      outcome: "Great fit.",
+      lesson: "Route variety mattered more than price for climbing.",
+    });
+
+    const notes = await getAdvisoryNotes(TODAY);
+    const journalNotes = notes.filter((n) => n.sourceModule === "decisionJournal");
+    expect(journalNotes).toHaveLength(1);
+    expect(journalNotes[0]!.message).toBe(
+      "Which gym to join for climbing — Route variety mattered more than price for climbing.",
+    );
+  });
+
+  it("a reviewed entry whose text overlaps only an ARCHIVED Mission's title produces no note — archived is not a current situation", async () => {
+    const mission = await createMission({ title: "Learn woodworking" });
+    await archiveMission(mission.id);
+    const entry = await createDecisionJournalEntry({ title: "Woodworking class signup", decision: "Skipped it" });
+    await reviewDecisionJournalEntry(entry.id, { outcome: "No regrets.", lesson: "Woodworking wasn't the right fit." });
+
+    expect(await getAdvisoryNotes(TODAY)).toEqual([]);
+  });
+
   it("all three producers coexist through one call, neither aware of the others, each independently attributed", async () => {
     await createObligation({ title: "Renew passport", dueAt: "2026-08-01" });
 
