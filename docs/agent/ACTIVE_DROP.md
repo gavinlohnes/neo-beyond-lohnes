@@ -4,9 +4,9 @@ status: ACTIVE
 baseline: 24dfb3c589f11e874dbea9a11a13b958404e979f
 branch: claude/today-008-start-day-refresh
 contract: docs/agent/drops/TODAY-008.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/88
 builder: Claude, this session, autonomous per direct owner delegation ('keep going') 2026-09-15
-reviewer: (unassigned)
+reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
 ---
 
