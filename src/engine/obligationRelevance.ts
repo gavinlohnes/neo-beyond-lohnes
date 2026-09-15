@@ -4,12 +4,18 @@ import type { Obligation } from "../domain/intent/types";
  * Intent & Commitment Spine — Drop 02 (approved 2026-08-22, temporal
  * corrections binding). Pure, deterministic interpretation of already-true
  * Obligation facts into a TEMPORARY relevance classification — nothing
- * here is ever persisted. This is a parallel interpretation layer, not an
- * extension of engine/evaluate.ts: it has no knowledge of Recommendation,
- * capacity, or check-ins, and evaluate.ts/EvaluateInput must never import
- * from this module (see the Engine Boundary rule this Drop is bound by —
- * Obligations do not yet participate in primary recommendation
- * arbitration).
+ * here is ever persisted. A parallel interpretation layer: it has no
+ * knowledge of Recommendation, capacity, or check-ins itself — it only
+ * classifies, it never decides what the Engine does with that
+ * classification.
+ *
+ * INTENT-ARBITRATION-001 (direct owner ruling, 2026-09-15):
+ * application/commands.ts now imports `hasObligationRequiringArbitration`
+ * from this module (only that one function, never `classifyObligation`'s
+ * full tier logic duplicated elsewhere) and passes only the resulting
+ * boolean into evaluate() — evaluate.ts itself still never imports from
+ * this module directly, same as before this Drop. The classification
+ * rules themselves are unchanged and still live only here.
  *
  * Deliberately duplicates a tiny local tie-break instead of importing
  * application/queries.ts's byTimeThenSeq — engine/* modules must stay
@@ -161,6 +167,22 @@ const ATTENTION_WORTHY_TIERS: ReadonlySet<ObligationRelevanceTier> = new Set([
 
 export function hasObligationRequiringAttention(obligations: Obligation[], today: string): boolean {
   return obligations.some((obligation) => ATTENTION_WORTHY_TIERS.has(classifyObligation(obligation, today)));
+}
+
+/**
+ * INTENT-ARBITRATION-001 (direct owner ruling, 2026-09-15): the Engine-
+ * arbitration gate — deliberately narrower than ATTENTION_WORTHY_TIERS.
+ * Only OVERDUE and DUE_TODAY are eligible to become the Engine's own
+ * OBLIGATION_DUE recommendation kind (engine/evaluate.ts); DUE_SOON and
+ * PLANNED_TODAY remain advisory-only via TODAY's separate ATTENTION
+ * budget (hasObligationRequiringAttention above), unchanged by this
+ * addition. Two real, immediate-consequence tiers only — not "anything
+ * that could theoretically earn attention."
+ */
+const ARBITRATION_WORTHY_TIERS: ReadonlySet<ObligationRelevanceTier> = new Set(["OVERDUE", "DUE_TODAY"]);
+
+export function hasObligationRequiringArbitration(obligations: Obligation[], today: string): boolean {
+  return obligations.some((obligation) => ARBITRATION_WORTHY_TIERS.has(classifyObligation(obligation, today)));
 }
 
 /**

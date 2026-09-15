@@ -19,8 +19,18 @@ function checkIn(overrides: Partial<StateCheckIn> = {}): StateCheckIn {
 // hasUnresolvedPostShift defaults to false so every pre-Drop-02b test below
 // exercises exactly the same behavior it always did — POST_SHIFT_TRANSITION
 // only ever appears in the dedicated describe block further down.
+// hasEligibleObligationDueOrOverdue defaults to false so every pre-Drop
+// INTENT-ARBITRATION-001 test below exercises exactly the same behavior it
+// always did — OBLIGATION_DUE only ever appears in its own describe block.
 function input(overrides: Partial<EvaluateInput> = {}): EvaluateInput {
-  return { beyondDayId: "day-1", checkIn: checkIn(), hasPlannedWork: false, hasUnresolvedPostShift: false, ...overrides };
+  return {
+    beyondDayId: "day-1",
+    checkIn: checkIn(),
+    hasPlannedWork: false,
+    hasUnresolvedPostShift: false,
+    hasEligibleObligationDueOrOverdue: false,
+    ...overrides,
+  };
 }
 
 describe("evaluate — one primary recommendation per call", () => {
@@ -62,7 +72,7 @@ describe("evaluate — one primary recommendation per call", () => {
   it("GREEN capacity with no planned work -> NO_ACTION_REQUIRED as a first-class recommendation", () => {
     const result = evaluate(input());
     expect(result.kind).toBe("NO_ACTION_REQUIRED");
-    expect(result.priority).toBe(5);
+    expect(result.priority).toBe(6);
     expect(result.suggestedCommand).toBeNull();
     expect(result.statusAtIssue).toBe("NO_ACTION_REQUIRED");
   });
@@ -172,5 +182,70 @@ describe("evaluate — POST_SHIFT_TRANSITION (Drop 02b)", () => {
     const postShiftRule = result.trace.matchedRules.find((r) => r.ruleId === "POST_SHIFT_TRANSITION");
     expect(postShiftRule?.result).toBe(false);
     expect(postShiftRule?.reason).toContain("RED capacity outranks it");
+  });
+});
+
+/**
+ * INTENT-ARBITRATION-001 (direct owner ruling, 2026-09-15): a new
+ * OBLIGATION_DUE kind, ranked at the bottom of the stack — above only
+ * NO_ACTION_REQUIRED, below every other existing kind — triggered only by
+ * hasEligibleObligationDueOrOverdue (the application layer's pre-computed
+ * OVERDUE/DUE_TODAY eligibility gate; the Engine never sees Obligation
+ * records themselves).
+ */
+describe("evaluate — OBLIGATION_DUE (INTENT-ARBITRATION-001)", () => {
+  it("an eligible obligation with otherwise plain GREEN/no-planned-work state -> OBLIGATION_DUE", () => {
+    const result = evaluate(input({ hasEligibleObligationDueOrOverdue: true }));
+    expect(result.kind).toBe("OBLIGATION_DUE");
+    expect(result.priority).toBe(5);
+    expect(result.suggestedCommand).toBe("REVIEW_OBLIGATIONS");
+    expect(result.statusAtIssue).toBe("ACTION");
+  });
+
+  it("no eligible obligation and nothing else applies -> NO_ACTION_REQUIRED, unchanged", () => {
+    const result = evaluate(input({ hasEligibleObligationDueOrOverdue: false }));
+    expect(result.kind).toBe("NO_ACTION_REQUIRED");
+  });
+
+  it("RED capacity still outranks an eligible obligation", () => {
+    const result = evaluate(input({ checkIn: checkIn({ energy: 1 }), hasEligibleObligationDueOrOverdue: true }));
+    expect(result.kind).toBe("STABILIZE");
+  });
+
+  it("an unresolved post-shift fact still outranks an eligible obligation", () => {
+    const result = evaluate(input({ hasUnresolvedPostShift: true, hasEligibleObligationDueOrOverdue: true }));
+    expect(result.kind).toBe("POST_SHIFT_TRANSITION");
+  });
+
+  it("YELLOW capacity's RECOVER still outranks an eligible obligation", () => {
+    const result = evaluate(input({ checkIn: checkIn({ stress: 4 }), hasEligibleObligationDueOrOverdue: true }));
+    expect(result.kind).toBe("RECOVER");
+  });
+
+  it("GREEN capacity with planned work still outranks an eligible obligation", () => {
+    const result = evaluate(input({ hasPlannedWork: true, hasEligibleObligationDueOrOverdue: true }));
+    expect(result.kind).toBe("EXECUTE_PLANNED_WORK");
+  });
+
+  it("trace records hasEligibleObligationDueOrOverdue as an explicit decision input", () => {
+    const result = evaluate(input({ hasEligibleObligationDueOrOverdue: true }));
+    expect(result.trace.inputs).toContainEqual({ key: "hasEligibleObligationDueOrOverdue", value: true });
+  });
+
+  it("trace shows OBLIGATION_DUE matched only once every higher-ranked rule did not", () => {
+    const result = evaluate(input({ hasEligibleObligationDueOrOverdue: true }));
+    expect(result.trace.selectedRecommendation).toBe("OBLIGATION_DUE");
+    const obligationRule = result.trace.matchedRules.find((r) => r.ruleId === "OBLIGATION_DUE");
+    expect(obligationRule?.result).toBe(true);
+    for (const ruleId of ["STABILIZE", "POST_SHIFT_TRANSITION", "RECOVER", "EXECUTE_PLANNED_WORK"]) {
+      expect(result.trace.matchedRules.find((r) => r.ruleId === ruleId)?.result).toBe(false);
+    }
+  });
+
+  it("trace truthfully explains a higher-priority rule outranking an eligible obligation", () => {
+    const result = evaluate(input({ checkIn: checkIn({ energy: 1 }), hasEligibleObligationDueOrOverdue: true }));
+    const obligationRule = result.trace.matchedRules.find((r) => r.ruleId === "OBLIGATION_DUE");
+    expect(obligationRule?.result).toBe(false);
+    expect(obligationRule?.reason).toContain("outranks");
   });
 });

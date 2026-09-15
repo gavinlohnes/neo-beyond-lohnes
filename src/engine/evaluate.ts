@@ -24,6 +24,18 @@ export interface EvaluateInput {
    * currently true and passes it in, same as hasPlannedWork.
    */
   hasUnresolvedPostShift: boolean;
+  /**
+   * INTENT-ARBITRATION-001 (direct owner ruling, 2026-09-15): true when
+   * at least one currently-eligible unresolved Obligation classifies as
+   * OVERDUE or DUE_TODAY (application/commands.ts computes this via
+   * engine/obligationRelevance.ts's hasObligationRequiringArbitration).
+   * This module (evaluate.ts) never imports obligationRelevance.ts or sees
+   * an Obligation record itself — it has no knowledge of which obligation,
+   * its title, or its mission, only this one pre-computed boolean. The
+   * application layer decides current eligibility and today's date, same
+   * pattern as hasPlannedWork/hasUnresolvedPostShift.
+   */
+  hasEligibleObligationDueOrOverdue: boolean;
 }
 
 /**
@@ -75,6 +87,20 @@ export function evaluate(input: EvaluateInput): Recommendation {
               ? `${capacity ?? "unknown"} capacity, not GREEN`
               : "GREEN capacity with no planned work",
     },
+    {
+      ruleId: "OBLIGATION_DUE",
+      result:
+        !(capacity === "RED") &&
+        !postShiftApplies &&
+        capacity !== "YELLOW" &&
+        !(capacity === "GREEN" && input.hasPlannedWork) &&
+        input.hasEligibleObligationDueOrOverdue,
+      reason: input.hasEligibleObligationDueOrOverdue
+        ? capacity === "RED" || postShiftApplies || capacity === "YELLOW" || (capacity === "GREEN" && input.hasPlannedWork)
+          ? "a higher-priority rule outranks an OVERDUE/DUE_TODAY obligation"
+          : "an OVERDUE or DUE_TODAY obligation is eligible and nothing higher-priority matched"
+        : "no OVERDUE or DUE_TODAY obligation is eligible",
+    },
   ];
 
   const trace = (
@@ -87,6 +113,7 @@ export function evaluate(input: EvaluateInput): Recommendation {
       { key: "hasCheckIn", value: hasCheckIn },
       { key: "hasPlannedWork", value: input.hasPlannedWork },
       { key: "hasUnresolvedPostShift", value: input.hasUnresolvedPostShift },
+      { key: "hasEligibleObligationDueOrOverdue", value: input.hasEligibleObligationDueOrOverdue },
     ],
     derived: capacity
       ? [
@@ -163,10 +190,26 @@ export function evaluate(input: EvaluateInput): Recommendation {
     };
   }
 
+  if (input.hasEligibleObligationDueOrOverdue) {
+    return {
+      ...base,
+      kind: "OBLIGATION_DUE",
+      priority: 5,
+      title: "An obligation needs attention",
+      rationale: "An obligation is overdue or due today.",
+      suggestedCommand: "REVIEW_OBLIGATIONS",
+      trace: trace(
+        "OBLIGATION_DUE",
+        "OBLIGATION_DUE matched after STABILIZE, POST_SHIFT_TRANSITION, RECOVER, and EXECUTE_PLANNED_WORK did not — bottom-of-stack per direct owner ruling (2026-09-15).",
+      ),
+      statusAtIssue: "ACTION",
+    };
+  }
+
   return {
     ...base,
     kind: "NO_ACTION_REQUIRED",
-    priority: 5,
+    priority: 6,
     title: "No action required",
     rationale: "No rule requires attention right now.",
     suggestedCommand: null,

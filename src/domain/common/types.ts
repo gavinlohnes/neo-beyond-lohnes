@@ -9,12 +9,25 @@ export type Capacity = "GREEN" | "YELLOW" | "RED";
  * distinct tier from STABILIZE — STABILIZE means capacity is critically
  * low; POST_SHIFT_TRANSITION means an explicit WORK_PERIOD_ENDED fact is
  * unresolved, regardless of capacity (except RED, which still wins).
+ *
+ * OBLIGATION_DUE (INTENT-ARBITRATION-001, direct owner ruling,
+ * 2026-09-15): the first time an Obligation fact participates in primary
+ * Engine arbitration, not just advisory context. Locked rank, bottom of
+ * the stack — STABILIZE > POST_SHIFT_TRANSITION > RECOVER >
+ * EXECUTE_PLANNED_WORK > OBLIGATION_DUE > NO_ACTION_REQUIRED. The
+ * operator's own physical/temporal state (a capacity crisis, an
+ * unresolved shift, active recovery/planned-work guidance) always wins;
+ * an OVERDUE or DUE_TODAY commitment only becomes the primary
+ * recommendation once none of those apply — see engine/evaluate.ts.
+ * DUE_SOON and PLANNED_TODAY remain advisory-only (TODAY's ATTENTION
+ * budget, engine/obligationRelevance.ts) — deliberately not promoted.
  */
 export type RecommendationKind =
   | "STABILIZE"
   | "POST_SHIFT_TRANSITION"
   | "RECOVER"
   | "EXECUTE_PLANNED_WORK"
+  | "OBLIGATION_DUE"
   | "NO_ACTION_REQUIRED";
 
 export interface StateCheckIn {

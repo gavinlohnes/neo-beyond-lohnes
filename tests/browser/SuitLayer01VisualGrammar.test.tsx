@@ -23,8 +23,15 @@ afterEach(() => {
 });
 
 describe("Suit Layer 01 — at most one dominant decision surface", () => {
-  it("keeps NO ACTION REQUIRED quiet even with attention-worthy items present", async () => {
-    await createObligation({ title: "Overdue thing", dueAt: "2020-01-01" }); // deliberately far in the past -> OVERDUE, earns ATTENTION
+  it("keeps NO ACTION REQUIRED quiet even with attention-worthy (but not arbitration-worthy) items present", async () => {
+    // DUE_SOON, not OVERDUE/DUE_TODAY: earns ATTENTION (COMMITMENT_DUE) but
+    // is deliberately excluded from INTENT-ARBITRATION-001's narrower
+    // OBLIGATION_DUE gate (engine/obligationRelevance.ts's
+    // ARBITRATION_WORTHY_TIERS) — the Engine's own recommendation must stay
+    // NO_ACTION_REQUIRED here, exactly as before that Drop.
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    await createObligation({ title: "Due soon thing", dueAt: formatLocalDate(tomorrow) });
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     await logSleep(day.id, 420, "PRIMARY"); // earns END_DAY_SUGGESTED too
@@ -37,6 +44,20 @@ describe("Suit Layer 01 — at most one dominant decision surface", () => {
     // command surface created merely to fill the field.
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
     expect(document.querySelectorAll(".all-clear").length).toBeLessThanOrEqual(1);
+  });
+
+  it("INTENT-ARBITRATION-001: an OVERDUE obligation legitimately earns the one dominant command surface", async () => {
+    await createObligation({ title: "Overdue thing", dueAt: "2020-01-01" }); // far in the past -> OVERDUE, now arbitration-worthy
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+
+    const screen = await render(<TodayScreen />);
+    // Still visible in ATTENTION too — a deliberate, accepted overlap (see
+    // this Drop's Contract), same treatment as POST_SHIFT_TRANSITION.
+    await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
+
+    expect(document.querySelectorAll(".command-surface")).toHaveLength(1);
+    expect(document.querySelectorAll(".all-clear")).toHaveLength(0);
   });
 });
 

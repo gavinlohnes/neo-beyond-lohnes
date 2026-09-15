@@ -43,6 +43,8 @@ export function describeRecommendationEffect(kind: RecommendationKind): string {
       return "Records your decision — it doesn't start a session for you, and it won't change what BEYOND recommends next time. Start it on TRAIN when you're ready.";
     case "EXECUTE_PLANNED_WORK":
       return "Records your decision — it doesn't start your workout for you, and it won't change what BEYOND recommends next time. Start it on TRAIN when you're ready.";
+    case "OBLIGATION_DUE":
+      return "Records your decision — it doesn't resolve the obligation for you, and it won't change what BEYOND recommends next time. Review it on the Commitments card when you're ready.";
     case "NO_ACTION_REQUIRED":
       return "Just records that you saw this. Nothing to start.";
   }
@@ -78,6 +80,7 @@ export function describeEvidenceBasis(hasCheckIn: boolean): string | null {
 const TRACE_KEY_LABELS: Record<string, string> = {
   hasCheckIn: "Check-in recorded",
   hasPlannedWork: "Planned work today",
+  hasEligibleObligationDueOrOverdue: "Obligation overdue or due today",
   capacity: "Capacity",
   reasonCodes: "Reason codes",
 };
