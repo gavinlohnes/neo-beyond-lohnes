@@ -1,6 +1,6 @@
 ---
 id: TODAY-009
-status: ACTIVE
+status: CLOSED
 baseline: 2fe63c2d2298d2cd336f9b930afed740f4b10266
 branch: claude/today-009-busy-guard-race
 contract: docs/agent/drops/TODAY-009.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/89
 builder: Claude, this session, autonomous per direct owner delegation ('keep going') 2026-09-15
 reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
+integration_sha: 4965e73ae05179d35590fed72d2cfc55538aee80
+closed_at: 2026-09-15T11:42:01.582Z
 ---
 
 # ACTIVE_DROP
