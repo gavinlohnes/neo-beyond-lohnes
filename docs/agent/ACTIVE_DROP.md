@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 8dc0cd03ebc0f9704da984a5e0cb765704aecbf0
 branch: claude/intent-arbitration-001-obligation-recommendation
 contract: docs/agent/drops/INTENT-ARBITRATION-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/97
 builder: Claude, this session, per direct owner AskUserQuestion ruling 2026-09-15
 reviewer: (unassigned)
 integrator: (unassigned)
