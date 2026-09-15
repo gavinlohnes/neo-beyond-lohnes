@@ -1,15 +1,13 @@
 ---
-id: CHECKPOINT-003
-status: CLOSED
-baseline: e066a24214a41eb49a84e18af52247527fbc171c
-branch: codex/checkpoint-003-refresh
-contract: docs/agent/drops/CHECKPOINT-003.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/95
-builder: Codex Builder, explicitly assigned by Gavin, 2026-09-15
-reviewer: Claude (this session), 2026-09-15
-integrator: Claude (this session), 2026-09-15
-integration_sha: a036bcdfed610ac0098f5dabde802bfb13c36134
-closed_at: 2026-09-15T18:30:52.900Z
+id: README-001
+status: ACTIVE
+baseline: 71d2e714e9aa18682c657c014d1f65ffeeb7bac7
+branch: claude/readme-001-repository-truth-refresh
+contract: docs/agent/drops/README-001.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Claude, this session, autonomous per direct owner delegation ('run a campaign') 2026-09-15, following CHECKPOINT-003's own flagged docs task
+reviewer: (unassigned)
+integrator: (unassigned)
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/CHECKPOINT-003.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/README-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
