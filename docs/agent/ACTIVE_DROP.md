@@ -4,9 +4,9 @@ status: ACTIVE
 baseline: 4067c69851da5dec5df940df292baeb1ee5d5df8
 branch: claude/launch-vision-004-visual-tuning
 contract: docs/agent/drops/LAUNCH-VISION-004.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/87
 builder: Claude, this session, per direct owner instruction 2026-09-15
-reviewer: (unassigned)
+reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
 ---
 
