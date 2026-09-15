@@ -6,7 +6,7 @@ import {
 import { findRelevantReviewedEntries } from "../engine/journalRelevance";
 import { formatLocalDate } from "../engine/scheduledContext";
 import type { AdvisoryNote } from "../domain/intelligence/types";
-import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
+import { getActiveMissions, getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 import { getReviewedDecisionJournalEntries } from "./journalQueries";
 import { getCurrentProgressionSuggestions } from "./trainQueries";
 
@@ -38,15 +38,25 @@ import { getCurrentProgressionSuggestions } from "./trainQueries";
  * sessions when resolving "current" evidence — advisory.ts carries no
  * session-status special case either.
  *
- * JOURNAL-001: query terms for the relevance match are built from the
- * SAME Obligations array already fetched above for the first producer —
- * deliberately, to avoid an extra Mission fetch and keep this Drop's diff
- * minimal, per the approved scope. This is purely a source of matching
- * text, not a second read of Obligation state for any new judgment; the
- * "same Mission" half of the originally proposed matching signal turned
- * out to have no backing field on DecisionJournalEntry (checked directly
- * against domain/journal/types.ts — there is no missionId), so only the
- * keyword/text-overlap half of the approved design is implemented here.
+ * JOURNAL-001 (2026-09-15): query terms for the relevance match were
+ * originally built from only the same Obligations array already fetched
+ * above for the first producer, to keep that Drop's diff minimal. The
+ * "same Mission" half of JOURNAL-001's originally proposed matching
+ * signal turned out to have no backing field on DecisionJournalEntry
+ * (checked directly against domain/journal/types.ts — there is no
+ * missionId), so only the keyword/text-overlap half shipped.
+ *
+ * JOURNAL-002 (2026-09-15): widens the query-term pool to also include
+ * active Missions' titles (getActiveMissions — same eligibility filter
+ * already applied to Obligations, so this stays "current situation,"
+ * never a historical/archived one) — real, present text that was going
+ * unread for this purpose, addressing the reported gap that
+ * Obligation-title overlap alone caused a reviewed Lesson to surface too
+ * rarely to be useful. Still purely a source of matching text handed
+ * unchanged to the same engine relevance function; no new judgment, no
+ * Engine influence, no persisted linkage. Concatenation order below is
+ * unaffected — Missions/Obligations combine into one flat term list
+ * before reaching findRelevantReviewedEntries, not a second producer.
  */
 export async function getAdvisoryNotes(now: Date = new Date()): Promise<AdvisoryNote[]> {
   const obligations = await getCurrentlyEligibleUnresolvedObligations();
@@ -57,11 +67,12 @@ export async function getAdvisoryNotes(now: Date = new Date()): Promise<Advisory
     .map(({ prescription, suggestion }) => composeAdvisoryNoteFromProgression(prescription, suggestion))
     .filter((note): note is AdvisoryNote => note !== null);
 
+  const activeMissions = await getActiveMissions();
   const reviewedEntries = await getReviewedDecisionJournalEntries();
-  const relevantEntries = findRelevantReviewedEntries(
-    reviewedEntries,
-    obligations.map((obligation) => obligation.title),
-  );
+  const relevantEntries = findRelevantReviewedEntries(reviewedEntries, [
+    ...obligations.map((obligation) => obligation.title),
+    ...activeMissions.map((mission) => mission.title),
+  ]);
   const journalNotes = relevantEntries
     .map((entry) => composeAdvisoryNoteFromJournal(entry))
     .filter((note): note is AdvisoryNote => note !== null);
