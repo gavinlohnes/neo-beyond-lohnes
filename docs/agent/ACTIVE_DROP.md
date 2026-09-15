@@ -4,9 +4,9 @@ status: ACTIVE
 baseline: 71d2e714e9aa18682c657c014d1f65ffeeb7bac7
 branch: claude/readme-001-repository-truth-refresh
 contract: docs/agent/drops/README-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/96
 builder: Claude, this session, autonomous per direct owner delegation ('run a campaign') 2026-09-15, following CHECKPOINT-003's own flagged docs task
-reviewer: (unassigned)
+reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
 ---
 
