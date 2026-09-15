@@ -1,6 +1,6 @@
 ---
 id: INTENT-002
-status: ACTIVE
+status: CLOSED
 baseline: 58e60656065c4017c8e0d586897c947cd98c6761
 branch: claude/intent-002-recurring-obligations
 contract: docs/agent/drops/INTENT-002.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/84
 builder: Claude, this session, assigned by Gavin in chat 2026-09-15
 reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
 integrator: (unassigned)
+integration_sha: 25a9950d94b2dd0712948d16ec6a909a46a8ffb2
+closed_at: 2026-09-15T07:55:12.608Z
 ---
 
 # ACTIVE_DROP
