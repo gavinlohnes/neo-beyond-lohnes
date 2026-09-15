@@ -1,6 +1,6 @@
 ---
 id: SEARCH-002
-status: ACTIVE
+status: CLOSED
 baseline: 9230d6e7464a94be809e8045a5d345362a057f87
 branch: claude/search-002-minisearch-navigate
 contract: docs/agent/drops/SEARCH-002.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/82
 builder: Claude, this session, assigned by Gavin in chat 2026-09-15
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: c082d0e0be709b59b932c3791d023ff7656e1d36
+closed_at: 2026-09-15T07:06:40.339Z
 ---
 
 # ACTIVE_DROP
