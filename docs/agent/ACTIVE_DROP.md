@@ -1,15 +1,13 @@
 ---
-id: INTENT-ARBITRATION-001
-status: CLOSED
-baseline: 8dc0cd03ebc0f9704da984a5e0cb765704aecbf0
-branch: claude/intent-arbitration-001-obligation-recommendation
-contract: docs/agent/drops/INTENT-ARBITRATION-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/97
-builder: Claude, this session, per direct owner AskUserQuestion ruling 2026-09-15
-reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-15
-integrator: Claude (this session), 2026-09-15
-integration_sha: 7757988ce437a57bf8dbd3ce7f541cd84ab0211e
-closed_at: 2026-09-15T22:13:07.571Z
+id: GLYPH-002
+status: ACTIVE
+baseline: 54164d2a828f8e7f85cfad9c2ca740ed47804491
+branch: claude/glyph-002-more-nav-icons
+contract: docs/agent/drops/GLYPH-002.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Claude, this session, per direct owner glyph review and approval ('Search B and backup A, ship it') 2026-09-16
+reviewer: (unassigned)
+integrator: (unassigned)
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/INTENT-ARBITRATION-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/GLYPH-002.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
