@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 54164d2a828f8e7f85cfad9c2ca740ed47804491
 branch: claude/glyph-002-more-nav-icons
 contract: docs/agent/drops/GLYPH-002.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/98
 builder: Claude, this session, per direct owner glyph review and approval ('Search B and backup A, ship it') 2026-09-16
 reviewer: (unassigned)
 integrator: (unassigned)
