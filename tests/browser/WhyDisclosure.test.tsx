@@ -38,6 +38,23 @@ describe("WhyDisclosure (real browser)", () => {
     expect(overlay?.getAttribute("aria-hidden")).toBe("true");
   });
 
+  it("DEPTH-002: the reveal fades itself back to invisible while the disclosure stays open, instead of blocking the screen indefinitely", async () => {
+    const screen = await render(
+      <WhyDisclosure summary="Diagnostic detail">
+        <p>Days: 214</p>
+      </WhyDisclosure>,
+    );
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
+    const overlay = document.querySelector(".machinery-reveal-overlay") as HTMLElement;
+    expect(overlay).not.toBeNull();
+
+    await expect.poll(() => Number(getComputedStyle(overlay).opacity), { timeout: 1000 }).toBeGreaterThan(0.5);
+    await expect.poll(() => Number(getComputedStyle(overlay).opacity), { timeout: 2000 }).toBeLessThan(0.05);
+    // Still open — native <details> semantics, and the real content, are untouched by the reveal fading.
+    await expect.element(screen.getByText("Days: 214")).toBeVisible();
+    expect(document.querySelector('details[open]')).not.toBeNull();
+  });
+
   it("unmounts the reveal overlay when closed again", async () => {
     const screen = await render(
       <WhyDisclosure summary="Exercise detail">

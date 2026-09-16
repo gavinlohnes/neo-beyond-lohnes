@@ -15,6 +15,13 @@ import { PCBTraceOverlay } from "./PCBTraceOverlay";
  * `aria-hidden`, `pointer-events: none` decoration that mounts on open and
  * unmounts on close; it never controls the real content's visibility.
  *
+ * DEPTH-002: the overlay's own CSS animation (`.machinery-reveal-overlay`
+ * in global.css) fades itself back to transparent a beat after the
+ * flash, regardless of whether the disclosure is still open — it stays
+ * mounted (harmless: invisible, `pointer-events: none`) until close, but
+ * visually it never blocks the real content for longer than the reveal
+ * itself takes.
+ *
  * Two or more `WhyDisclosure`s open at once (e.g. TRAIN's two panels) each
  * render their own overlay — accepted as harmless visual doubling rather
  * than adding a shared single-overlay coordinator for a rare case (see

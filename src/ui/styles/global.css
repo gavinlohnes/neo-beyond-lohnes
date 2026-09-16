@@ -668,20 +668,28 @@ button, input {
 /* DEPTH-001 (direct owner review of four rendered mockup passes,
    2026-09-16): the "exposed machinery" reveal — a full-viewport,
    `aria-hidden`, `pointer-events: none` decoration mounted (via a portal
-   to document.body, see WhyDisclosure.tsx) for as long as a WHY/
-   diagnostic disclosure stays open. Flat, unglowing red matched to real
-   circuit-board photography, not a neon bloom — an earlier reviewed pass
-   used an SVG blur+merge glow filter and the owner corrected it. Sits
-   above ordinary content but below anything the operator still needs to
-   reach; nothing here is interactive, so it never needs to win a z-index
-   fight with a real control. */
+   to document.body, see WhyDisclosure.tsx) on open. Flat, unglowing red
+   matched to real circuit-board photography, not a neon bloom — an
+   earlier reviewed pass used an SVG blur+merge glow filter and the owner
+   corrected it. Sits above ordinary content but below anything the
+   operator still needs to reach; nothing here is interactive, so it
+   never needs to win a z-index fight with a real control.
+   DEPTH-002 (2026-09-16, real-use bug found the day after ship): the
+   original animation held at full opacity indefinitely (`forwards` on a
+   0→1 keyframe) for as long as the disclosure stayed open — every
+   mockup pass only ever screenshotted the reveal itself, never the panel
+   underneath it, so nobody had actually seen it block the real
+   diagnostic content it was supposed to be revealing until real use hit
+   it. Fixed to fade back out on its own after the flash — the reveal is
+   now a momentary "look at the machinery" beat, not a standing screen
+   the operator has to close to get their content back. */
 .machinery-reveal-overlay {
   position: fixed;
   inset: 0;
   z-index: 500;
   pointer-events: none;
   opacity: 0;
-  animation: machinery-reveal-in 200ms cubic-bezier(.2, .8, .2, 1) forwards,
+  animation: machinery-reveal-in-out 900ms cubic-bezier(.2, .8, .2, 1) forwards,
     machinery-reveal-flash 260ms ease-out;
 }
 .machinery-reveal-overlay svg {
@@ -689,9 +697,11 @@ button, input {
   height: 100%;
   display: block;
 }
-@keyframes machinery-reveal-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes machinery-reveal-in-out {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  60% { opacity: 1; }
+  100% { opacity: 0; }
 }
 /* A brief brightness pulse sells the moment as a hit, not a fade — the
    overlay's own filter, so it never touches real content's colors. */
