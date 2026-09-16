@@ -1,15 +1,13 @@
 ---
-id: DECISIONS-001
-status: CLOSED
-baseline: 8da35b29fd246d568698f816617007f6665f95b4
-branch: claude/decisions-001-body-outcome-scope
-contract: docs/agent/drops/DECISIONS-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/100
-builder: Claude, this session, per two direct owner AskUserQuestion rulings 2026-09-16
-reviewer: Claude, this session, self-reviewed (pure factual/documentation Drop, no judgment calls — README-001 precedent)
-integrator: Claude, this session
-integration_sha: 12e1d62d8dec83a624278a89216292461da16dbf
-closed_at: 2026-09-16T02:54:14.037Z
+id: GLYPH-003
+status: ACTIVE
+baseline: 71f73f7009a793fa823800181e4c1270a46fcc67
+branch: claude/glyph-003-remaining-more-icons
+contract: docs/agent/drops/GLYPH-003.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Claude, this session, per direct owner approval 2026-09-16
+reviewer: (unassigned)
+integrator: (unassigned)
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/DECISIONS-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/GLYPH-003.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
