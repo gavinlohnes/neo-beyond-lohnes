@@ -37,10 +37,36 @@
  * replaced with a down-arrow-into-a-baseline, matching the BEYOND
  * Launch Vision prototype's simpler equivalent. The other five glyphs
  * remain frozen and untouched.
+ *
+ * GLYPH-002 (2026-09-16, direct owner review of rendered candidates —
+ * not a redesign of any locked glyph): four new, purely additive
+ * destinations for MORE's own nav rows, which had no icon at all before
+ * this Drop. Same precedent as `more` itself (Overdrive Phase 14): the
+ * six-glyph pilot family plus `more` stay frozen; these four are new
+ * entries, not reinterpretations. `history` builds a clock hand inside
+ * the shared diamond frame; `search` is a smaller diamond "lens" (with
+ * the same filled-diamond core `mission`/`body` use) plus a handle —
+ * a magnifying glass built from the family's own motif instead of a
+ * circle; `schedule` is two diamonds offset side by side (week A / week
+ * B); `backup` is a small solid diamond peeling diagonally off a larger
+ * outline one — a duplication/export motif built the same repeated-
+ * diamond way `more` reads as overflow, deliberately not a real-world
+ * upload-tray or cloud glyph.
  */
 import type { ReactElement } from "react";
 
-export type IconName = "mission" | "train" | "body" | "reset" | "shiftDown" | "success" | "more";
+export type IconName =
+  | "mission"
+  | "train"
+  | "body"
+  | "reset"
+  | "shiftDown"
+  | "success"
+  | "more"
+  | "history"
+  | "search"
+  | "schedule"
+  | "backup";
 
 const PATHS: Record<IconName, ReactElement> = {
   mission: (
@@ -98,6 +124,32 @@ const PATHS: Record<IconName, ReactElement> = {
       <path d="M4.8 9 L7.8 12 L4.8 15 L1.8 12 Z" />
       <path d="M12 9 L15 12 L12 15 L9 12 Z" />
       <path d="M19.2 9 L22.2 12 L19.2 15 L16.2 12 Z" />
+    </g>
+  ),
+  history: (
+    <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
+      <path d="M12 3.5 L20.5 12 L12 20.5 L3.5 12 Z" />
+      <path d="M12 12 L12 6.8" />
+      <path d="M12 12 L16 14.2" />
+    </g>
+  ),
+  search: (
+    <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
+      <path d="M10 5 L15 10 L10 15 L5 10 Z" />
+      <path d="M10 8.5 L11.8 10 L10 11.5 L8.2 10 Z" fill="currentColor" stroke="none" />
+      <path d="M13.2 13.2 L19 19" strokeWidth={2.1} strokeLinecap="round" />
+    </g>
+  ),
+  schedule: (
+    <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
+      <path d="M6.6 15 L10.8 10.8 L6.6 6.6 L2.4 10.8 Z" />
+      <path d="M17.4 9 L13.2 13.2 L17.4 17.4 L21.6 13.2 Z" />
+    </g>
+  ),
+  backup: (
+    <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
+      <path d="M9 14 L14 9 L19 14 L14 19 Z" />
+      <path d="M4.5 4.5 L8 8 L4.5 11.5 L1 8 Z" fill="currentColor" stroke="none" />
     </g>
   ),
 };
