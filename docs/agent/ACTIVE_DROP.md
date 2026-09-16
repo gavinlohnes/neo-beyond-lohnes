@@ -1,15 +1,13 @@
 ---
-id: GLYPH-003
-status: CLOSED
-baseline: 71f73f7009a793fa823800181e4c1270a46fcc67
-branch: claude/glyph-003-remaining-more-icons
-contract: docs/agent/drops/GLYPH-003.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/101
-builder: Claude, this session, per direct owner approval 2026-09-16
-reviewer: independent Agent subagent (this session), CONFIRMED, zero blocking issues
-integrator: Claude, this session
-integration_sha: 1b1acb66d71b41db95350a19b63130753e25e4f1
-closed_at: 2026-09-16T03:30:55.064Z
+id: DEPTH-002
+status: ACTIVE
+baseline: 7e47a09ee6d51de556f040d91a09feb95288bb04
+branch: claude/depth-002-reveal-autofade
+contract: docs/agent/drops/DEPTH-002.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Claude, this session, fixing a real-use bug the owner reported 2026-09-16
+reviewer: (unassigned)
+integrator: (unassigned)
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/GLYPH-003.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/DEPTH-002.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
