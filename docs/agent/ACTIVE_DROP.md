@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 8da35b29fd246d568698f816617007f6665f95b4
 branch: claude/decisions-001-body-outcome-scope
 contract: docs/agent/drops/DECISIONS-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/100
 builder: Claude, this session, per two direct owner AskUserQuestion rulings 2026-09-16
 reviewer: (unassigned)
 integrator: (unassigned)
