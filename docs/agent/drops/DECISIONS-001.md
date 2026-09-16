@@ -13,11 +13,13 @@ by the owner in this session: (1) should the new "exposed machinery" reveal exte
 (2) should Rated Outcome history ever bias/tie-break the Engine's recommendation selection. Both
 came back "no — keep it as it already is." This Drop records both rulings in
 `docs/UX_DECISIONS.md` so a future session doesn't re-raise either as an open question. While
-writing the outcome-ratings entry, a genuine gap was found: `INTENT-ARBITRATION-001` (the
-Obligation-arbitration Engine-priority ruling from earlier this session) was never itself
-recorded in the Decision Register — only in `src/domain/common/types.ts`'s doc comment and its
-own Drop Contract. This Drop backfills that entry too, since the outcome-ratings entry's own
-cross-reference needed it to actually exist.
+writing these entries, two genuine gaps were found and backfilled in the same pass: (a)
+`INTENT-ARBITRATION-001` (the Obligation-arbitration Engine-priority ruling from earlier this
+session) was never itself recorded in the Decision Register — only in
+`src/domain/common/types.ts`'s doc comment and its own Drop Contract; (b) the BODY entry's own
+cross-reference to "DEPTH-001's PCB-trace reveal" pointed at a section that didn't actually
+document DEPTH-001 — DEPTH-001 itself had never been recorded in the register either. Both are
+now backfilled so every cross-reference in this Drop's diff resolves to something real.
 
 ## Approved baseline
 
@@ -44,6 +46,10 @@ own Drop Contract — not a new decision being made now.
     (INTENT-ARBITRATION-001)` section, backfilling the already-shipped, already-merged ruling
     from earlier this session (rank + eligible tiers), so the outcome-ratings entry's own
     cross-reference resolves to something real.
+  - New bullet at the end of the existing `## Visual system — red budget` section, backfilling
+    DEPTH-001 itself (the four-pass mockup review history, final approved look, and its
+    relationship to that section's own pre-existing "ambient motion stays deferred" framing),
+    so the BODY entry's cross-reference to it resolves to something real.
 
 ## Explicit exclusions
 

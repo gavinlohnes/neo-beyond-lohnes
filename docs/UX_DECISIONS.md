@@ -106,8 +106,9 @@ standing implementation authority.
 - **No "exposed machinery" reveal (locked 2026-09-16, direct owner ruling, DEPTH-001 scope
   question).** BODY renders neither `.command-surface` nor any WHY/diagnostic disclosure —
   by design, it has four peer trackers and no single dominant decision to expose. Asked
-  directly whether DEPTH-001's PCB-trace reveal (see "Visual system — red budget" below)
-  should extend to BODY; answer was to skip it entirely rather than invent a correction-history
+  directly whether DEPTH-001's PCB-trace reveal (see "Visual system — red budget" below, whose
+  final bullet records DEPTH-001 itself) should extend to BODY; answer was to skip it entirely
+  rather than invent a correction-history
   or per-tracker variant. Matches this section's own "four peers, no leader" doctrine. Not a
   temporary placeholder — a future BODY reveal would need its own fresh ask, not an inferred
   extension of this scope.
@@ -406,6 +407,25 @@ TODAY's separate ATTENTION budget.
   a one-time confirmation pulse on mount; TRAIN's own pre-existing per-set flash (`.set-earned`,
   VISUAL-001) already serves the identical purpose for set logging and is left untouched rather
   than duplicated. All four are pure presentation — no command/query/engine/domain change.
+- **"Exposed Machinery" reveal (locked 2026-09-16, direct owner ruling over four rendered
+  mockup passes, DEPTH-001).** A narrow, explicit authorization beyond this section's own
+  "ambient motion stays deferred" framing above — obtained through its own independent review
+  process the next day, not an automatic extension of LAUNCH-VISION-003's four named elements.
+  Opening any of TODAY's "How BEYOND decided," TRAIN's "Why this suggestion"/"Exercise detail,"
+  or MORE's "Diagnostic detail" now also shows a full-viewport, purely decorative, `aria-hidden`
+  PCB-style circuit-trace network (flat, unglowing red, matched directly to real circuit-board
+  photography — an SVG blur/glow filter was tried and explicitly rejected) behind the still-
+  legible disclosed content. Reached over four passes: thin hairline traces confined to the
+  panel (rejected as "not dramatic enough"); full-screen solid shattered plates matching a
+  Batman Beyond character render (rejected — wrong reference entirely, real PCB photos supplied
+  instead); a glowing converging trace network (right direction, but faded toward the edges);
+  finally flat, uniformly-bright, unglowing traces matched to the supplied photograph —
+  "Perfect. Ship it man." See `docs/agent/drops/DEPTH-001.md` for the full history.
+  `prefers-reduced-motion: reduce` fully suppresses it (never mounts, not just hidden). Does not
+  extend to BODY (see "BODY" above) and deliberately does not include a whole-screen shake that
+  an earlier reviewed pass had — kept only the reveal itself and a contained brightness-pulse
+  flash, consistent with this app's own existing "motion explains a state change, never
+  decorates" doctrine (see "Visual system — motion" below, MOTION-001).
 
 ## Visual system — typography
 
