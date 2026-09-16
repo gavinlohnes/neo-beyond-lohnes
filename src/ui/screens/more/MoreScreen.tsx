@@ -379,16 +379,19 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
         />
         <CollapsibleRow
           name="DECISION JOURNAL"
+          icon={<Icon name="decisionJournal" size={20} />}
           summary="Think a decision through, then record what actually happened."
           onOpen={() => setView("JOURNAL")}
         />
         <CollapsibleRow
           name="EXERCISE LIBRARY"
+          icon={<Icon name="exerciseLibrary" size={20} />}
           summary="Save exercises of your own — from a reference list or fully custom."
           onOpen={() => setView("EXERCISE_LIBRARY")}
         />
         <CollapsibleRow
           name="CUSTOM PROGRAMS"
+          icon={<Icon name="customPrograms" size={20} />}
           summary="Build your own workout template from your saved exercises."
           onOpen={() => setView("CUSTOM_TEMPLATES")}
         />
@@ -570,6 +573,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
       />
       <CollapsibleRow
         name="REVIEW"
+        icon={<Icon name="review" size={20} />}
         summary="What BEYOND recommended, what you decided, and how you rated it. Read-only."
         onOpen={() => setView("REVIEW")}
       />

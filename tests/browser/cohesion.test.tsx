@@ -110,6 +110,18 @@ describe("motion/focus CSS mechanisms are actually present (real browser)", () =
     expect(rule).toBeTruthy();
     expect((rule as CSSStyleRule).style.outlineStyle || (rule as CSSStyleRule).style.outline).toBeTruthy();
   });
+
+  it("declares GLYPH-003's press/focus red-icon rule, scoped to disclosure controls only", async () => {
+    await render(<TodayScreen />);
+    const rule = findRule(
+      (rule): rule is CSSStyleRule =>
+        rule instanceof CSSStyleRule &&
+        rule.selectorText.includes(".equipment-row--control:active .tool-icon") &&
+        rule.selectorText.includes(".equipment-row--control:focus-visible .tool-icon"),
+    );
+    expect(rule).toBeTruthy();
+    expect((rule as CSSStyleRule).style.color).toBe("var(--accent-strong)");
+  });
 });
 
 describe("narrow phone widths — App shell", () => {
