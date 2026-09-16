@@ -1,13 +1,15 @@
 ---
 id: DEPTH-002
-status: ACTIVE
+status: CLOSED
 baseline: 7e47a09ee6d51de556f040d91a09feb95288bb04
 branch: claude/depth-002-reveal-autofade
 contract: docs/agent/drops/DEPTH-002.md
 pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/103
 builder: Claude, this session, fixing a real-use bug the owner reported 2026-09-16
-reviewer: (unassigned)
-integrator: (unassigned)
+reviewer: Claude, this session, self-reviewed (narrow CSS keyframe fix, diff confirmed exactly scoped, proven by a new automated regression test)
+integrator: Claude, this session
+integration_sha: 4e97513482bafa821bcd7c28db049de6fab486b0
+closed_at: 2026-09-16T04:53:42.508Z
 ---
 
 # ACTIVE_DROP
