@@ -76,6 +76,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
   const [status, setStatus] = useState<string | null>(null);
   const [archiveStatus, setArchiveStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const disposedRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // REMIND-001: loaded once from localStorage on mount (getCheckInReminderPreference
   // never throws, so no loading state is needed) — every change writes through
@@ -87,13 +88,13 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
   const [reminderPermissionDenied, setReminderPermissionDenied] = useState(false);
 
   useEffect(() => {
-    let disposed = false;
+    disposedRef.current = false;
     void refresh().catch((error) => {
-      if (disposed && isDatabaseClosedError(error)) return;
+      if (disposedRef.current && isDatabaseClosedError(error)) return;
       console.error("MORE diagnostics refresh failed.", error);
     });
     return () => {
-      disposed = true;
+      disposedRef.current = true;
     };
   }, []);
 
@@ -105,6 +106,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
       getActiveDay(),
       getAdvisoryNotes(),
     ]);
+    if (disposedRef.current) return;
     setDays(nextDays);
     setEvents(nextEvents);
     setRecommendations(nextRecommendations);
