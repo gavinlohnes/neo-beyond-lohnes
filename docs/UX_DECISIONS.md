@@ -22,6 +22,96 @@ authorizes implementation: future changes require a direct owner decision and an
 authorized, bounded Drop. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical evidence, not
 standing implementation authority.
 
+## FOUNDATION-1A — Product-language pillars & behavioral guarantees
+
+Locked 2026-09-16, direct owner authorization (FOUNDATION-1A, a doctrine/architecture
+reconciliation Drop — see `docs/agent/drops/FOUNDATION-1A.md` for the full reconciliation
+matrix and evidence trail). These are official product-language names for guarantees
+`OPERATOR_INTERFACE_DOCTRINE.md` and this register already establish, reconciled against
+repository truth rather than pasted in as new authority, plus one newly authorized guarantee
+(ENJOYMENT_COUNTS). A pillar name here never renames or supersedes the lower-level
+architectural/doctrine term it reconciles to (e.g. STABILIZE → RECOVER → EXECUTE, INFORM →
+INTERPRET → RECOMMEND → USER DECIDES) — both names refer to the same guarantee; use whichever
+is clearer in context.
+
+### Pillars
+
+- **Quiet Intelligence** — BEYOND recedes by default and escalates attention only when evidence
+  earns it. Reconciles to doctrine's KNOW → ANTICIPATE → SURFACE → CONFIRM/CORRECT → LEARN →
+  RECEDE loop and its four-question escalation test
+  (`OPERATOR_INTERFACE_DOCTRINE.md` "Depth, attention, and control").
+- **Attention Supremacy** — the operator's attention is the scarcest resource in the system;
+  recommendation surfacing spends as little of it as truthfully possible. Reconciles to
+  doctrine's Attention states (AVAILABLE/SUGGESTED/ATTENTION/CRITICAL) and "Availability is not
+  urgency."
+- **Quick Log** — the fastest path to record something true is always available and never
+  requires organizing it first. Reconciles to Capture (`captureItem` in
+  [commands.ts](../src/application/commands.ts) — "capture first, organize second, act only
+  when clarified") and BODY's quick-add water control.
+- **Automatic Time State** — BEYOND infers day/time state from real activity rather than asking
+  the operator to declare it. Reconciles to lazy day creation (`ensureActiveDay()`, see "Day
+  model" below), the PRIMARY/SUPPLEMENTAL sleep model and overnight-shift handling, and
+  `scheduledContext.ts`'s non-authoritative work-phase suggestion.
+- **Human Control** — user authority is absolute; BEYOND recommends, the operator decides.
+  Reconciles to doctrine's "user authority is absolute" and gets its concrete, testable shape
+  from the USER_DECIDES / MANUAL_INPUT_ALWAYS_AVAILABLE / AI_CANNOT_SILENTLY_CHANGE_PLANS
+  guarantees below.
+- **No Gamification** — no shame copy, punitive streaks, failure theater, withheld capability,
+  nagging, or engagement pressure. Reconciles to doctrine's "No guilt mechanics" and "Measure
+  operator burden—not engagement" (`OPERATOR_INTERFACE_DOCTRINE.md` "Operator Model and
+  reality" / "Evidence, experiments, and field learning").
+- **Progressive Disclosure** — capability depth coexists with surface calm; deeper detail is
+  opt-in, never forced. Reconciles to doctrine's four depth levels (Surface/Operate/Inspect/
+  System), the `FieldDisclosure` component
+  ([FieldDisclosure.tsx](../src/ui/components/FieldDisclosure.tsx)), and the Exposed Machinery
+  reveal pattern (see "Visual system — red budget" below).
+- **Continuity** — an interrupted operation resumes at the point of interruption, never
+  silently restarted or abandoned. Reconciles to doctrine's "Interruption preserves state and
+  intent," CONTINUITY-001 (workout/day/navigation continuity), and RESET/SHIFT DOWN's own
+  documented resumability (see "RESET / SHIFT DOWN" below).
+
+### Behavioral guarantees
+
+- **USER_DECIDES** — every Recommendation is a proposal, never an executed action; only an
+  explicit operator action commits a plan. Already the literal decision model: INFORM →
+  INTERPRET → RECOMMEND → USER DECIDES.
+- **NO_CATCH_UP** — BEYOND never demands retroactive completion of missed days/logs as a
+  precondition for using it today. Reconciles to lazy day creation (no day exists until an
+  action needs one), doctrine's "not a dashboard, backlog, or demand for interaction," and the
+  check-in reminder's hard at-most-once-per-day cap (no accumulating reminders).
+- **REDUCE_BEFORE_SKIP** — when capacity is constrained, BEYOND's first move is to offer a
+  reduced version of the plan, not to drop it. Reconciles to `trainSuggestion.ts`'s
+  capacity-driven session variant (RED → RESET, YELLOW → REDUCED, GREEN → STANDARD) and
+  doctrine's "shorter reality path: preserve essential capability, reduce decisions and steps."
+- **ONE_PRIMARY_RECOMMENDATION** — the Engine surfaces exactly one primary Recommendation at a
+  time, never a competing list. Already literal: `evaluate.ts`'s single-recommendation
+  arbitration and doctrine's "the deterministic Engine owns one primary Recommendation."
+- **MANUAL_INPUT_ALWAYS_AVAILABLE** — every assisted/prefilled input path has a manual fallback
+  that is never blocked or degraded by the assist failing or being unavailable. Already literal:
+  doctrine's "manual operation remains available," concretely BODY's USDA lookup (a failed or
+  absent lookup falls back to manual entry, never blocks logging).
+- **AI_CANNOT_SILENTLY_CHANGE_PLANS** — a prediction or inference never becomes committed state
+  without an explicit operator action. Reconciles to doctrine's learned-shortcuts guarantee
+  ("never silently execute consequential actions") and the concrete `scheduledContext.ts`
+  boundary: prediction never writes `workContext`; only the explicit `setWorkContext` command
+  can.
+- **ENJOYMENT_COUNTS** (new canon) — subjective enjoyment/satisfaction is a legitimate signal to
+  record and surface back to the operator, not a lesser one than raw adherence; a
+  completed-but-disliked session and a skipped-but-enjoyed one are both honestly representable.
+  Scope boundary: this does not reopen or change "Recommendation Engine — outcome ratings stay
+  observational" below — enjoyment stays observational data, same as any other Outcome rating,
+  unless a future Drop is separately authorized to change that.
+- **BEYOND_MAY_DO_LESS** — a successful outcome can be BEYOND doing nothing. Already literal:
+  doctrine's "**NO ACTION REQUIRED** is a successful FIELD state."
+- **NO_FAKE_PRECISION** — BEYOND never presents a fabricated, guessed, or default-substituted
+  number as if it were real. Already this repo's existing "no fabrication" doctrine in practice
+  — e.g. `getEffectiveProteinTargetG()` returning `undefined` rather than a guessed number (see
+  "NUTRITION TARGETS" below) — and doctrine's "must not fabricate missing facts."
+
+A future implementation Drop that touches behavior one of these guarantees describes should
+cite the guarantee name above alongside its underlying mechanism — the name is a pointer to the
+mechanism, not an independent authority of its own.
+
 ## Day model
 
 - **Lazy day creation.** No day exists until the first action of the day
