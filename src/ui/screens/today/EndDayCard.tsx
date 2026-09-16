@@ -43,7 +43,7 @@ export function EndDayCard({
         </p>
       )}
       {endDayBlockedByWorkout && (
-        <div role="alert" className="card card--warning" style={{ marginBottom: 12 }}>
+        <div role="alert" className="card card--warning surface--chamfer" style={{ marginBottom: 12 }}>
           <p className="card-body" style={{ marginBottom: 8 }}>
             Workout in progress. Finish it, save it as partial, or stop it on TRAIN before ending this BeyondDay.
           </p>

@@ -1206,7 +1206,7 @@ export function TodayScreen({
           silently allowing JSX order to choose a winner. */}
       {day && dominant !== "NONE" && <h2 className="section-label section-label--field">Operate</h2>}
       {day && dominant === "OPERATION_CONFLICT" && (
-        <div className="card card--warning" role="alert">
+        <div className="card card--warning surface--chamfer" role="alert">
           <p className="tool-label">OPERATION CONFLICT</p>
           <h2 className="card-title">Multiple foreground operations are active</h2>
           <p className="card-body">
