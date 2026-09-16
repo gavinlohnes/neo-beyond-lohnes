@@ -54,6 +54,25 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await expect.element(screen.getByText("MISSIONS & OBLIGATIONS", { exact: true })).toBeVisible();
   });
 
+  it("GLYPH-002: MISSIONS & OBLIGATIONS, WORK SCHEDULE, HISTORY, SEARCH, and BACKUP each carry a glyph now", async () => {
+    const screen = await render(<MoreScreen />);
+    const rowIcon = (name: string) => screen.getByRole("button", { name: `Open ${name}` }).element().querySelector(".tool-label svg");
+    expect(rowIcon("MISSIONS & OBLIGATIONS")).not.toBeNull();
+    expect(rowIcon("WORK SCHEDULE")).not.toBeNull();
+    expect(rowIcon("HISTORY")).not.toBeNull();
+    expect(rowIcon("SEARCH")).not.toBeNull();
+    expect(screen.getByText("BACKUP", { exact: true }).element().closest(".tool-label")?.querySelector("svg")).not.toBeNull();
+  });
+
+  it("GLYPH-002: rows outside this Drop's scope stay icon-less, not silently over-applied", async () => {
+    const screen = await render(<MoreScreen />);
+    const rowIcon = (name: string) => screen.getByRole("button", { name: `Open ${name}` }).element().querySelector(".tool-label svg");
+    expect(rowIcon("DECISION JOURNAL")).toBeNull();
+    expect(rowIcon("EXERCISE LIBRARY")).toBeNull();
+    expect(rowIcon("CUSTOM PROGRAMS")).toBeNull();
+    expect(rowIcon("REVIEW")).toBeNull();
+  });
+
   it("no dominant .command-surface exists — MORE has no single primary decision, only system access", async () => {
     await render(<MoreScreen />);
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);

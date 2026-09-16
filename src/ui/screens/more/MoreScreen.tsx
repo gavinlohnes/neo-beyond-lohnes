@@ -363,6 +363,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
         <p className="section-intro">Set durable direction and the work pattern BEYOND uses as predicted context.</p>
         <CollapsibleRow
           name="MISSIONS & OBLIGATIONS"
+          icon={<Icon name="mission" size={20} />}
           summary="Manage durable direction and commitments requiring deliberate resolution."
           onOpen={() => {
             setIntentFocus(null);
@@ -371,6 +372,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
         />
         <CollapsibleRow
           name="WORK SCHEDULE"
+          icon={<Icon name="schedule" size={20} />}
           summary="Review the rotation BEYOND uses to predict work days and shift phase."
           onOpen={() => setView("WORK_SCHEDULE")}
         />
@@ -441,7 +443,9 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
         <h2 id="safety-heading" className="section-label">Data safety</h2>
         <p className="section-intro">Keep a recoverable copy on your terms. Nothing leaves this device unless you export or share it.</p>
         <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>BACKUP</p>
+        <p className="tool-label" style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+          <Icon name="backup" size={20} />BACKUP
+        </p>
         <p className="card-body" style={{ marginBottom: 8 }}>
           A file with everything on this device. Nothing leaves unless you share it.
         </p>
@@ -559,6 +563,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
       <p className="section-intro">Trace what happened, review decisions and outcomes, or retrieve a known record.</p>
       <CollapsibleRow
         name="HISTORY"
+        icon={<Icon name="history" size={20} />}
         summary="Every day and every event, exactly as it happened. Read-only."
         onOpen={() => setView("HISTORY")}
       />
@@ -569,6 +574,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
       />
       <CollapsibleRow
         name="SEARCH"
+        icon={<Icon name="search" size={20} />}
         summary="Find a Mission, Obligation, or Capture by text. Read-only."
         onOpen={() => setView("SEARCH")}
       />
