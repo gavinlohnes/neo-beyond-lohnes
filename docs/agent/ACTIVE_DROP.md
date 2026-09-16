@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: f32482a3c70eb2fddb9b17f8c306db849c444b13
 branch: claude/foundation-1a-iy32gy
 contract: docs/agent/drops/FOUNDATION-1A.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/106
 builder: Claude, this session, direct owner authorization 2026-09-16 (doctrine/architecture reconciliation)
 reviewer: (unassigned)
 integrator: (unassigned)
