@@ -30,8 +30,6 @@ authority should delete `claude/emblem-001-primary-mark` so `factory-drop.mjs` s
 
 # ACTIVE_DROP
 
-# ACTIVE_DROP
-
 This file identifies the single currently-authorized BEYOND Drop, for recovery by a fresh
 agent/session without the owner relaying state by hand. It is a routing/authorization
 pointer only — it never duplicates a fact Git/GitHub/CI can already prove (current HEAD, CI
