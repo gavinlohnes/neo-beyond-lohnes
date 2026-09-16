@@ -1,6 +1,6 @@
 ---
 id: GLYPH-003
-baseline: c9d0b2762d16ba3b223f46003b493072a40b1ad9
+baseline: 71f73f7009a793fa823800181e4c1270a46fcc67
 risk_tier: ROUTINE
 ---
 
@@ -24,8 +24,13 @@ not decoration. Approved: **"Ship it as GLYPH-003, I approve. Make it happen."**
 
 ## Approved baseline
 
-`origin/master` at `c9d0b2762d16ba3b223f46003b493072a40b1ad9`, verified via
-`git fetch origin master && git rev-parse origin/master` — DECISIONS-001's own closure commit.
+`origin/master` at `71f73f7009a793fa823800181e4c1270a46fcc67`, verified via
+`git fetch origin master && git rev-parse origin/master`. Not DECISIONS-001's own closure
+commit (`c9d0b276`) — that commit accidentally wrote `ACTIVE_DROP.md`'s content as a literal
+base64 blob instead of real text (a `create_or_update_file` mistake caught immediately when
+`factory-drop.mjs init` refused to parse it). `71f73f70` is the direct one-file fix restoring
+the real, correct `ACTIVE_DROP.md` content; this branch was rebaselined onto it via a merge
+before activation so `factory-drop.mjs` could parse the file at all.
 
 ## Risk classification
 
