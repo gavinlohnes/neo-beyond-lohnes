@@ -27,8 +27,11 @@
 //   node scripts/factory-drop.mjs close    <id> --integration-sha <sha>
 //
 // Environment overrides (test/fixture use only — see tests/factory/):
-//   FACTORY_DROP_ROOT           repository root to operate against (default: this script's own repo root)
-//   FACTORY_DROP_EXPECTED_REPO  comma-separated list of accepted "owner/repo" origin slugs
+//   FACTORY_DROP_ROOT              repository root to operate against (default: this script's own repo root)
+//   FACTORY_DROP_EXPECTED_REPO     comma-separated list of accepted "owner/repo" origin slugs
+//   FACTORY_DROP_GITHUB_API_BASE   GitHub REST API base URL (default: https://api.github.com) —
+//                                  overridden by tests to point at a hermetic local mock; never
+//                                  used to reach a real network in the test suite.
 
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -219,26 +222,159 @@ export function checkConflictingActiveDrop(activeDropFrontmatter, requestedId) {
 }
 
 /**
+ * Repo-local, zero-network pre-filter for the historical-merge fallback
+ * below (FACTORY-003). Compares `ref`'s own copy of the Drop Contract
+ * this branch claims (`docs/agent/drops/<id>.md`) against `origin/master`'s
+ * current copy of the same path, by git blob hash — an exact, deterministic,
+ * always-available check with no external dependency. A Drop Contract is
+ * written once and never rewritten (see `.claude/skills/beyond-drop/
+ * SKILL.md` §9's closure procedure), so this survives a master history
+ * rewrite intact even though `merge-base --is-ancestor` does not.
+ *
+ * This proves "a byte-identical version of this Drop's contract reached
+ * master" — necessary evidence, never sufficient on its own: it says
+ * nothing about whether `ref`'s current tip has received any commit since.
+ * Callers must never treat a match here as clearance by itself.
+ */
+function contractBlobsMatch(root, ref, id) {
+  const contractPath = `docs/agent/drops/${id}.md`;
+  let branchBlob;
+  let masterBlob;
+  try {
+    branchBlob = git(["rev-parse", `${ref}:${contractPath}`], root);
+  } catch {
+    return false; // this branch doesn't even carry the contract it claims
+  }
+  try {
+    masterBlob = git(["rev-parse", `origin/master:${contractPath}`], root);
+  } catch {
+    return false; // this Drop ID was never integrated into current master at all
+  }
+  return branchBlob === masterBlob;
+}
+
+function githubApiBase() {
+  return process.env.FACTORY_DROP_GITHUB_API_BASE || "https://api.github.com";
+}
+
+/** Same discovery order as scripts/factory-autopilot.mjs's githubToken(): explicit env first
+ *  (GITHUB_TOKEN is what GitHub Actions injects by default; GH_TOKEN is the sibling script's own
+ *  convention), then whatever credential helper `git` itself is already configured with — no new
+ *  credential surface, no `gh` CLI dependency. Never throws; returns null when nothing is found. */
+function githubToken(root) {
+  if (process.env.GH_TOKEN) return process.env.GH_TOKEN;
+  if (process.env.GITHUB_TOKEN) return process.env.GITHUB_TOKEN;
+  try {
+    const filled = execFileSync("git", ["credential", "fill"], {
+      cwd: root,
+      input: "protocol=https\nhost=github.com\n\n",
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    return filled.match(/^password=(.+)$/m)?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function repoSlug(root) {
+  try {
+    return normalizeRemoteUrl(git(["remote", "get-url", "origin"], root));
+  } catch {
+    return null;
+  }
+}
+
+function parsePrNumber(url) {
+  const match = String(url).match(/\/pull\/(\d+)$/);
+  return match ? Number(match[1]) : null;
+}
+
+const GITHUB_API_TIMEOUT_MS = 10_000;
+
+/** Minimal fetch wrapper, same shape as scripts/factory-autopilot.mjs's api(), plus a bounded
+ *  timeout — a network path that hangs rather than errors (observed against an unresponsive
+ *  address in this repo's own test suite) must not hang `validate`/`init` indefinitely; it must
+ *  degrade to "could not corroborate" within a bounded time, same as any other failure below. */
+async function githubApi(path, token) {
+  const response = await fetch(`${githubApiBase()}${path}`, {
+    headers: { Accept: "application/vnd.github+json", Authorization: `Bearer ${token}`, "User-Agent": "beyond-factory-drop" },
+    signal: AbortSignal.timeout(GITHUB_API_TIMEOUT_MS),
+  });
+  if (!response.ok) throw new Error(`GITHUB_API_${response.status}: ${path}`);
+  return response.json();
+}
+
+/**
+ * The sole sufficient condition for clearing a non-ancestor branch that
+ * still reads ACTIVE (FACTORY-003, direct owner-locked algorithm, Design
+ * C — Hybrid): GitHub's own record that the PR named in this branch's
+ * ACTIVE_DROP.md was merged, AND that its merged head SHA equals this
+ * branch's *current* tip. The head-SHA pin is what enforces the mandatory
+ * invariant — a branch merged once and later given any new commit has a
+ * different current tip, so this can never clear it, even if the PR
+ * itself still reads merged.
+ *
+ * Never throws. Every failure mode (unparseable PR reference, no remote,
+ * no token, no network, non-2xx response, PR not merged, head SHA
+ * mismatch) resolves to `{ corroborated: false, reason }` — callers must
+ * treat every one of those identically to "could not check," never as
+ * partial clearance.
+ */
+async function corroborateHistoricalMerge(root, ref, prField) {
+  const prNumber = parsePrNumber(prField);
+  if (!prNumber) return { corroborated: false, reason: "NO_PR_NUMBER" };
+  const slug = repoSlug(root);
+  if (!slug) return { corroborated: false, reason: "NO_REMOTE" };
+  const token = githubToken(root);
+  if (!token) return { corroborated: false, reason: "NO_TOKEN" };
+  let branchTip;
+  try {
+    branchTip = git(["rev-parse", ref], root);
+  } catch (e) {
+    return { corroborated: false, reason: `CANNOT_RESOLVE_TIP: ${e.message}` };
+  }
+  let pr;
+  try {
+    pr = await githubApi(`/repos/${slug}/pulls/${prNumber}`, token);
+  } catch (e) {
+    return { corroborated: false, reason: `API_ERROR: ${e.message}` };
+  }
+  if (pr?.merged !== true) return { corroborated: false, reason: "PR_NOT_MERGED" };
+  if (pr?.head?.sha !== branchTip) return { corroborated: false, reason: "HEAD_SHA_MISMATCH" };
+  return { corroborated: true };
+}
+
+/**
  * Enumerates every branch on `origin` (not just whatever this checkout
  * happens to have locally) for a conflicting ACTIVE Drop — the actual
  * "at most one active Drop" guarantee FACTORY-002's own contract
  * requires, not merely "at most one recorded on master." Pure git
- * plumbing (fetch + for-each-ref + show) — no GitHub API, no token
- * beyond what `git fetch` already needs, no custom GitHub client.
+ * plumbing (fetch + for-each-ref + show) for the primary path — no
+ * GitHub API, no token beyond what `git fetch` already needs.
  *
  * A branch already fully merged into `origin/master` is skipped: its own
  * frozen ACTIVE_DROP.md snapshot predates that merge and is superseded
  * by master's own current copy (which reflects any later `close`) — so
  * an old, un-deleted branch can never become a permanent false-positive
  * conflict for unrelated future Drops. Only a branch that still has
- * commits not on master (a genuinely open, unmerged Drop) is checked.
+ * commits not on master (a genuinely open, unmerged Drop, OR a branch
+ * whose merge predates a master history rewrite) is checked further.
+ *
+ * FACTORY-003: a branch that reaches that point is no longer assumed
+ * unmerged. It is first cheaply screened by `contractBlobsMatch` (no
+ * network); only a branch that passes that screen attempts the one
+ * sufficient clearance condition, `corroborateHistoricalMerge`. Any
+ * screen failure or corroboration failure reports the conflict exactly
+ * as this function always has — this is a strictly additive narrowing of
+ * false positives, never a new way to miss a genuine conflict.
  *
  * Residual, honest limitation: a Drop's branch that is abandoned without
  * ever being closed or deleted continues to read as a live conflict —
  * exactly the same git-hygiene expectation "delete stale branches"
  * already implies, not a new kind of gap.
  */
-export function findConflictingActiveDropAcrossBranches(root, requestedId) {
+export async function findConflictingActiveDropAcrossBranches(root, requestedId) {
   try {
     git(["fetch", "-q", "origin", "+refs/heads/*:refs/remotes/origin/*", "--prune"], root);
   } catch (e) {
@@ -259,7 +395,7 @@ export function findConflictingActiveDropAcrossBranches(root, requestedId) {
       git(["merge-base", "--is-ancestor", ref, "origin/master"], root);
       continue; // already merged into master — its snapshot is stale/superseded, not a live conflict
     } catch {
-      /* not an ancestor of master — a genuinely still-open branch, worth checking */
+      /* not an ancestor of master — could be genuinely open, or a rewrite-orphaned historical merge */
     }
     let text;
     try {
@@ -274,6 +410,14 @@ export function findConflictingActiveDropAcrossBranches(root, requestedId) {
       continue; // malformed on some other branch is that branch's own problem, not this launch's
     }
     if (frontmatter.status === "ACTIVE" && frontmatter.id !== requestedId) {
+      if (contractBlobsMatch(root, ref, frontmatter.id)) {
+        const corroboration = await corroborateHistoricalMerge(root, ref, frontmatter.pr);
+        if (corroboration.corroborated) continue; // proven: merged at exactly this tip — not a conflict
+        return {
+          ok: false,
+          conflict: { id: frontmatter.id, branch: ref, historicalMergeUnconfirmed: corroboration.reason },
+        };
+      }
       return { ok: false, conflict: { id: frontmatter.id, branch: ref } };
     }
   }
@@ -332,7 +476,7 @@ export function checkCleanWorktree(root) {
  * `flags.expectedRepoSlugs` are the only two overridable inputs; every
  * other check is unconditional.
  */
-export function preflight(id, flags, root = getRoot()) {
+export async function preflight(id, flags, root = getRoot()) {
   if (!isValidDropId(id)) {
     return { ok: false, code: "INVALID_DROP_ID", message: `Drop ID "${id}" must match the uppercase alphanumeric/hyphen convention.` };
   }
@@ -357,13 +501,22 @@ export function preflight(id, flags, root = getRoot()) {
   const conflict = checkConflictingActiveDrop(active, id);
   if (!conflict.ok) return { ok: false, code: "CONFLICTING_ACTIVE_DROP", message: conflict.error };
 
-  const crossBranchConflict = findConflictingActiveDropAcrossBranches(root, id);
+  const crossBranchConflict = await findConflictingActiveDropAcrossBranches(root, id);
   if (!crossBranchConflict.ok) {
     if (crossBranchConflict.conflict) {
+      const { id: conflictId, branch: conflictBranch, historicalMergeUnconfirmed } = crossBranchConflict.conflict;
+      const diagnostic = historicalMergeUnconfirmed
+        ? ` This branch's Drop Contract already byte-matches origin/master's current copy — it may be ` +
+          `a historical merge orphaned by a master history rewrite, but that could not be confirmed ` +
+          `against its GitHub PR (${historicalMergeUnconfirmed}). Verify manually, or ensure ` +
+          `GH_TOKEN/GITHUB_TOKEN or a git credential for github.com is available and re-run.`
+        : "";
       return {
         ok: false,
         code: "CONFLICTING_ACTIVE_DROP",
-        message: `"${crossBranchConflict.conflict.id}" is already ACTIVE on branch "${crossBranchConflict.conflict.branch}" (not yet merged to master) — close it before launching "${id}".`,
+        message:
+          `"${conflictId}" is already ACTIVE on branch "${conflictBranch}" (not yet merged to master) — ` +
+          `close it before launching "${id}".${diagnostic}`,
       };
     }
     return { ok: false, code: "CONFLICT_CHECK_FAILED", message: crossBranchConflict.error };
@@ -511,8 +664,8 @@ function checkIntegrationSha(root, sha, branch) {
  * other already-recorded routing field survives a same-id re-init
  * untouched.
  */
-export function initActiveDrop(id, flags, root = getRoot()) {
-  const preflightResult = preflight(id, flags, root);
+export async function initActiveDrop(id, flags, root = getRoot()) {
+  const preflightResult = await preflight(id, flags, root);
   if (!preflightResult.ok) return preflightResult;
 
   const existing = preflightResult.active;
@@ -619,7 +772,7 @@ function usage() {
   );
 }
 
-function main() {
+async function main() {
   const [, , command, ...rest] = process.argv;
   const { flags, positional } = parseFlags(rest);
   const root = getRoot();
@@ -630,7 +783,7 @@ function main() {
       usage();
       process.exit(2);
     }
-    const result = preflight(id, { baseline: flags.baseline, allowDirty: !!flags["allow-dirty"] }, root);
+    const result = await preflight(id, { baseline: flags.baseline, allowDirty: !!flags["allow-dirty"] }, root);
     if (!result.ok) {
       console.error(`FAIL: ${result.code}`);
       console.error(result.message);
@@ -646,7 +799,7 @@ function main() {
       usage();
       process.exit(2);
     }
-    const result = initActiveDrop(
+    const result = await initActiveDrop(
       id,
       { baseline: flags.baseline, allowDirty: !!flags["allow-dirty"], branch: flags.branch, builder: flags.builder },
       root,
@@ -710,5 +863,9 @@ function main() {
 
 const invokedAsScript = process.argv[1] ? pathToFileURL(resolve(process.argv[1])).href === import.meta.url : false;
 if (invokedAsScript) {
-  main();
+  main().catch((e) => {
+    console.error(`FAIL: UNEXPECTED_ERROR`);
+    console.error(e.stack ?? String(e));
+    process.exit(1);
+  });
 }

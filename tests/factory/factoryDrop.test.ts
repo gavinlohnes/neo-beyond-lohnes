@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -142,6 +142,109 @@ function mergeDropBranchToOrigin(fixture: Fixture, branch: string): string {
   git(fixture.workDir, ["merge", "--no-ff", "-q", "-m", `Merge branch '${branch}'`, branch]);
   git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/master"]);
   return git(fixture.workDir, ["rev-parse", "HEAD"]);
+}
+
+/**
+ * FACTORY-003: simulates this repository's own confirmed master-history
+ * discontinuity (`docs/agent/BEYOND_ENGINEERING_CONTRACT.md`'s
+ * "Historical-branch disposition rule") inside the hermetic fixture — a
+ * fresh orphan commit carrying master's exact current tree (so file
+ * content, including any already-merged Drop contract, survives), but no
+ * parent linkage to anything merged before it. Force-pushed to the
+ * fixture's bare origin, exactly like the real repo's own reset. Returns
+ * the new root commit's SHA (the fixture's new baseline).
+ */
+function simulateHistoryRewrite(fixture: Fixture): string {
+  // Also drop the stale mid-flight ACTIVE_DROP.md snapshot from the new tree — a real rewrite
+  // carries master's *current* ACTIVE_DROP.md (whatever Drop closed most recently), never some
+  // older Drop's own frozen "still ACTIVE" copy. Without this, the fixture's local checkout would
+  // trip the unrelated same-checkout conflict check before ever reaching the cross-branch logic
+  // this test suite exists to exercise.
+  rmSync(join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"), { force: true });
+  git(fixture.workDir, ["add", "-A"]);
+  const tree = git(fixture.workDir, ["write-tree"]);
+  const newRoot = git(fixture.workDir, ["commit-tree", tree, "-m", "rewritten root (simulated history reset)"]);
+  git(fixture.workDir, ["checkout", "-q", "-B", "master", newRoot]);
+  git(fixture.workDir, ["push", "-q", "--force", "origin", "HEAD:refs/heads/master"]);
+  fixture.headSha = newRoot;
+  return newRoot;
+}
+
+interface MockGitHubResponse {
+  status: number;
+  body: unknown;
+}
+
+/**
+ * Hermetic mock GitHub API — no real network access, and deliberately run as a genuinely
+ * separate sibling child process rather than an in-process `http.createServer` living inside
+ * this vitest worker. This sandbox's network policy does not let the real
+ * `scripts/factory-drop.mjs` subprocess (itself spawned via `execFileSync`, a child of this
+ * worker) reach a server bound directly inside the worker process, even over plain loopback —
+ * confirmed by isolated reproduction. A server run as its own sibling child process is reachable
+ * from another sibling child without issue, so that's the shape used here.
+ *
+ * Responds `response` for any request path starting with `pathPrefix`; 404s otherwise.
+ */
+function startMockGitHubApi(pathPrefix: string, response: MockGitHubResponse): Promise<{ url: string; close: () => void }> {
+  const serverScript = `
+    const { createServer } = require("node:http");
+    const prefix = process.env.MOCK_PATH_PREFIX;
+    const response = JSON.parse(process.env.MOCK_RESPONSE_JSON);
+    const server = createServer((req, res) => {
+      if (!req.url || !req.url.startsWith(prefix)) {
+        res.writeHead(404, { "content-type": "application/json" });
+        res.end(JSON.stringify({ message: "not found" }));
+        return;
+      }
+      res.writeHead(response.status, { "content-type": "application/json" });
+      res.end(JSON.stringify(response.body));
+    });
+    server.listen(0, "127.0.0.1", () => { console.log("PORT=" + server.address().port); });
+  `;
+  return new Promise((resolveServer, reject) => {
+    const child: ChildProcess = spawn(process.execPath, ["-e", serverScript], {
+      stdio: ["ignore", "pipe", "ignore"],
+      env: { ...process.env, MOCK_PATH_PREFIX: pathPrefix, MOCK_RESPONSE_JSON: JSON.stringify(response) },
+    });
+    let buf = "";
+    const timer = setTimeout(() => reject(new Error("mock GitHub API server did not report a port in time")), 5000);
+    child.stdout?.on("data", (d: Buffer) => {
+      buf += d.toString();
+      const m = buf.match(/PORT=(\d+)/);
+      if (m) {
+        clearTimeout(timer);
+        resolveServer({ url: `http://127.0.0.1:${m[1]}`, close: () => child.kill() });
+      }
+    });
+    child.on("error", reject);
+  });
+}
+
+/** An address nothing is listening on — proves a code path never even attempts a network call
+ *  (if it had, the request would hang/refuse rather than fail via the mocked NO_PR_NUMBER/no-match
+ *  short-circuit the test actually asserts on). */
+const UNREACHABLE_GITHUB_API_BASE = "http://127.0.0.1:1";
+
+/** Sets up a Drop whose branch was genuinely merged (its contract lands on master, matching
+ *  content) and then orphaned by a simulated history rewrite — the exact shape of the 11 known
+ *  real false positives. Records a real-looking PR URL in the branch's own frozen ACTIVE_DROP.md
+ *  before merging, exactly as a real Builder session does after opening a PR. */
+function setupOrphanedMergedDrop(fixture: Fixture, id: string, prNumber: number): { branchTip: string; branch: string; baseline: string } {
+  const branch = `${id.toLowerCase()}-branch`;
+  writeContract(fixture, id, validContractText({ id, baseline: fixture.headSha }));
+  beginDropBranch(fixture, branch);
+  runFactoryDrop(["init", id, "--baseline", fixture.headSha, "--branch", branch], fixture);
+  const withPr = readFileSync(join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"), "utf8").replace(
+    "pr: (pending — set by Builder immediately after opening the PR)",
+    `pr: https://github.com/${fixture.expectedRepoSlug}/pull/${prNumber}`,
+  );
+  writeFileSync(join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"), withPr);
+  commitActiveDrop(fixture, `record PR #${prNumber}`);
+  const branchTip = git(fixture.workDir, ["rev-parse", "HEAD"]);
+  mergeDropBranchToOrigin(fixture, branch);
+  const baseline = simulateHistoryRewrite(fixture);
+  return { branchTip, branch: `origin/${branch}`, baseline };
 }
 
 function writeContract(fixture: Fixture, id: string, text: string): void {
@@ -514,6 +617,211 @@ describe("activation and closure evidence cannot be fabricated or misapplied", (
       fixture,
     );
     expect(result.status).toBe(0);
+  });
+});
+
+describe("FACTORY-003: historical-merge fallback for rewrite-orphaned branches", () => {
+  it("[case 1] a normal ancestor-connected historical branch is skipped without any GitHub call", () => {
+    writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+    beginDropBranch(fixture, "test-001-branch");
+    runFactoryDrop(["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"], fixture);
+    commitActiveDrop(fixture, "activate TEST-001");
+    const mergeSha = mergeDropBranchToOrigin(fixture, "test-001-branch"); // ordinary merge, no rewrite — stays an ancestor
+    runFactoryDrop(["close", "TEST-001", "--integration-sha", mergeSha], fixture);
+    commitActiveDrop(fixture, "close TEST-001");
+    git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/master"]);
+    const newBaseline = git(fixture.workDir, ["rev-parse", "HEAD"]);
+
+    writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline: newBaseline }));
+    const result = runFactoryDrop(
+      ["init", "TEST-002", "--baseline", newBaseline, "--branch", "test-002-branch"],
+      fixture,
+      { FACTORY_DROP_GITHUB_API_BASE: UNREACHABLE_GITHUB_API_BASE }, // proves the ancestor fast path never dials out
+    );
+    expect(result.status).toBe(0);
+  });
+
+  it("[case 2] a genuinely unmerged ACTIVE branch is still a conflict, with no GitHub call attempted", () => {
+    writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+    writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline: fixture.headSha }));
+    beginDropBranch(fixture, "test-001-branch");
+    runFactoryDrop(["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"], fixture);
+    commitActiveDrop(fixture, "activate TEST-001");
+    git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/test-001-branch"]); // PR pushed, never merged
+    git(fixture.workDir, ["checkout", "-q", "master"]);
+
+    const result = runFactoryDrop(
+      ["init", "TEST-002", "--baseline", fixture.headSha, "--branch", "test-002-branch"],
+      fixture,
+      { FACTORY_DROP_GITHUB_API_BASE: UNREACHABLE_GITHUB_API_BASE, GH_TOKEN: "irrelevant-token" },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+    expect(result.stderr).toContain("TEST-001");
+    // TEST-001's contract never reached master (never merged), so the local pre-filter alone
+    // decides this — no GitHub call is even attempted, matching today's shipped behavior exactly.
+    expect(result.stderr).not.toContain("historical merge");
+  });
+
+  it("[case 3] rewrite-orphaned + contract match + merged PR at the exact head SHA -> safely skipped", async () => {
+    const { branchTip, baseline } = setupOrphanedMergedDrop(fixture, "TEST-001", 7);
+    const mock = await startMockGitHubApi("/repos/acme/widget/pulls/7", { status: 200, body: { merged: true, head: { sha: branchTip } } });
+    try {
+      writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline }));
+      const result = runFactoryDrop(["init", "TEST-002", "--baseline", baseline, "--branch", "test-002-branch"], fixture, {
+        GH_TOKEN: "fake-test-token",
+        FACTORY_DROP_GITHUB_API_BASE: mock.url,
+      });
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("TEST-002");
+    } finally {
+      mock.close();
+    }
+  });
+
+  it("[case 4] rewrite-orphaned + contract match + PR not merged -> conflict", async () => {
+    const { baseline } = setupOrphanedMergedDrop(fixture, "TEST-001", 7);
+    const mock = await startMockGitHubApi("/repos/acme/widget/pulls/7", { status: 200, body: { merged: false, head: { sha: "0".repeat(40) } } });
+    try {
+      writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline }));
+      const result = runFactoryDrop(["init", "TEST-002", "--baseline", baseline, "--branch", "test-002-branch"], fixture, {
+        GH_TOKEN: "fake-test-token",
+        FACTORY_DROP_GITHUB_API_BASE: mock.url,
+      });
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+      expect(result.stderr).toContain("TEST-001");
+      expect(result.stderr).toContain("historical merge");
+    } finally {
+      mock.close();
+    }
+  });
+
+  it("[case 5] rewrite-orphaned + contract match + merged PR but a DIFFERENT head SHA -> conflict (the mandatory-invariant regression)", async () => {
+    // Models a branch merged once, then given a new commit afterward: the PR still reads
+    // "merged", but its recorded head SHA no longer equals the branch's current tip.
+    const { baseline } = setupOrphanedMergedDrop(fixture, "TEST-001", 7);
+    // deliberately not this branch's real tip
+    const mock = await startMockGitHubApi("/repos/acme/widget/pulls/7", { status: 200, body: { merged: true, head: { sha: "f".repeat(40) } } });
+    try {
+      writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline }));
+      const result = runFactoryDrop(["init", "TEST-002", "--baseline", baseline, "--branch", "test-002-branch"], fixture, {
+        GH_TOKEN: "fake-test-token",
+        FACTORY_DROP_GITHUB_API_BASE: mock.url,
+      });
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+      expect(result.stderr).toContain("TEST-001");
+    } finally {
+      mock.close();
+    }
+  });
+
+  it("[case 6] matching contract but no token available -> conflict, no network attempted", () => {
+    const { baseline } = setupOrphanedMergedDrop(fixture, "TEST-001", 7);
+    writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline }));
+    const result = runFactoryDrop(["init", "TEST-002", "--baseline", baseline, "--branch", "test-002-branch"], fixture, {
+      GH_TOKEN: "", // explicitly clear — the fixture's own process.env may otherwise inherit one
+      GITHUB_TOKEN: "",
+      FACTORY_DROP_GITHUB_API_BASE: UNREACHABLE_GITHUB_API_BASE,
+    });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+    expect(result.stderr).toContain("TEST-001");
+    expect(result.stderr).toContain("historical merge");
+  });
+
+  it("[case 7] matching contract but the GitHub API call fails -> conflict, never a hard crash", () => {
+    const { baseline } = setupOrphanedMergedDrop(fixture, "TEST-001", 7);
+    writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline }));
+    const result = runFactoryDrop(["init", "TEST-002", "--baseline", baseline, "--branch", "test-002-branch"], fixture, {
+      GH_TOKEN: "fake-test-token",
+      FACTORY_DROP_GITHUB_API_BASE: UNREACHABLE_GITHUB_API_BASE, // nothing listening -> connection refused
+    });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+    expect(result.stderr).toContain("TEST-001");
+    expect(result.stderr).toContain("historical merge");
+  });
+
+  it("[case 8] a branch with no parseable PR reference yet -> conflict, no network attempted", () => {
+    // Mirrors real branches before a PR exists: `init` writes the literal pending placeholder,
+    // not a URL — never merged, so no history rewrite is even simulated here.
+    writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+    beginDropBranch(fixture, "test-001-branch");
+    runFactoryDrop(["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"], fixture);
+    commitActiveDrop(fixture, "activate TEST-001");
+    const branchTip = git(fixture.workDir, ["rev-parse", "HEAD"]);
+    mergeDropBranchToOrigin(fixture, "test-001-branch");
+    // Force a rewrite even though the branch's own ACTIVE_DROP.md still carries the placeholder
+    // pr: text (never updated) — proves contractBlobsMatch alone can't reach the network step.
+    const baseline = simulateHistoryRewrite(fixture);
+    void branchTip;
+
+    writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline }));
+    const result = runFactoryDrop(["init", "TEST-002", "--baseline", baseline, "--branch", "test-002-branch"], fixture, {
+      GH_TOKEN: "fake-test-token",
+      FACTORY_DROP_GITHUB_API_BASE: UNREACHABLE_GITHUB_API_BASE,
+    });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+    expect(result.stderr).toContain("TEST-001");
+    expect(result.stderr).toContain("historical merge");
+  });
+
+  it("[case 9] contract absent from master entirely -> conflict without any GitHub override", () => {
+    // TEST-001 is pushed but never merged at all — its contract never reaches master, so the
+    // local pre-filter alone, correctly, never even considers a historical-merge explanation.
+    writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+    beginDropBranch(fixture, "test-001-branch");
+    runFactoryDrop(["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"], fixture);
+    commitActiveDrop(fixture, "activate TEST-001");
+    git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/test-001-branch"]);
+    git(fixture.workDir, ["checkout", "-q", "master"]);
+
+    writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline: fixture.headSha }));
+    const result = runFactoryDrop(
+      ["init", "TEST-002", "--baseline", fixture.headSha, "--branch", "test-002-branch"],
+      fixture,
+      { GH_TOKEN: "fake-test-token", FACTORY_DROP_GITHUB_API_BASE: UNREACHABLE_GITHUB_API_BASE },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+    expect(result.stderr).not.toContain("historical merge");
+  });
+
+  it("[case 9b] contract present on master under the same id but with DIFFERENT content -> conflict, no GitHub override", () => {
+    const { baseline } = setupOrphanedMergedDrop(fixture, "TEST-001", 7);
+    // Simulate the (otherwise-never-happens, contracts are documented as never rewritten)
+    // defensive case: master's copy of the contract has since diverged from the branch's own.
+    const mutated = validContractText({ id: "TEST-001", baseline: fixture.headSha, riskTier: "HIGH-RISK" });
+    writeFileSync(join(fixture.workDir, "docs/agent/drops/TEST-001.md"), mutated);
+    git(fixture.workDir, ["add", "docs/agent/drops/TEST-001.md"]);
+    git(fixture.workDir, ["commit", "-q", "-m", "diverge master's copy of TEST-001's contract"]);
+    git(fixture.workDir, ["push", "-q", "--force", "origin", "HEAD:refs/heads/master"]);
+    const newBaseline = git(fixture.workDir, ["rev-parse", "HEAD"]);
+
+    writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline: newBaseline }));
+    const result = runFactoryDrop(
+      ["init", "TEST-002", "--baseline", newBaseline, "--branch", "test-002-branch"],
+      fixture,
+      { GH_TOKEN: "fake-test-token", FACTORY_DROP_GITHUB_API_BASE: UNREACHABLE_GITHUB_API_BASE },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+    expect(result.stderr).not.toContain("historical merge");
+  });
+
+  it("[case 10] existing second-active-Drop protection remains intact (regression)", () => {
+    writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+    writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline: fixture.headSha }));
+    runFactoryDrop(["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"], fixture);
+    commitActiveDrop(fixture, "activate TEST-001");
+
+    const result = runFactoryDrop(["init", "TEST-002", "--baseline", fixture.headSha, "--branch", "test-002-branch"], fixture);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+    expect(result.stderr).toContain("TEST-001");
   });
 });
 
