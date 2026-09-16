@@ -1,13 +1,15 @@
 ---
 id: GLYPH-002
-status: ACTIVE
+status: CLOSED
 baseline: 54164d2a828f8e7f85cfad9c2ca740ed47804491
 branch: claude/glyph-002-more-nav-icons
 contract: docs/agent/drops/GLYPH-002.md
 pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/98
 builder: Claude, this session, per direct owner glyph review and approval ('Search B and backup A, ship it') 2026-09-16
-reviewer: (unassigned)
-integrator: (unassigned)
+reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-16
+integrator: Claude (this session), 2026-09-16
+integration_sha: 1ac6bf2fac27cdde8c636040f556447c6719310c
+closed_at: 2026-09-16T00:09:27.419Z
 ---
 
 # ACTIVE_DROP
