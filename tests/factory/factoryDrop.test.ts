@@ -173,6 +173,9 @@ function simulateHistoryRewrite(fixture: Fixture): string {
 interface MockGitHubResponse {
   status: number;
   body: unknown;
+  /** Optional artificial delay before responding — used only to open a deterministic wall-clock
+   *  window in the race-condition regression, never needed for the other cases. */
+  delayMs?: number;
 }
 
 /**
@@ -191,21 +194,29 @@ function startMockGitHubApi(pathPrefix: string, response: MockGitHubResponse): P
     const { createServer } = require("node:http");
     const prefix = process.env.MOCK_PATH_PREFIX;
     const response = JSON.parse(process.env.MOCK_RESPONSE_JSON);
+    const delayMs = Number(process.env.MOCK_DELAY_MS || "0");
     const server = createServer((req, res) => {
       if (!req.url || !req.url.startsWith(prefix)) {
         res.writeHead(404, { "content-type": "application/json" });
         res.end(JSON.stringify({ message: "not found" }));
         return;
       }
-      res.writeHead(response.status, { "content-type": "application/json" });
-      res.end(JSON.stringify(response.body));
+      setTimeout(() => {
+        res.writeHead(response.status, { "content-type": "application/json" });
+        res.end(JSON.stringify(response.body));
+      }, delayMs);
     });
     server.listen(0, "127.0.0.1", () => { console.log("PORT=" + server.address().port); });
   `;
   return new Promise((resolveServer, reject) => {
     const child: ChildProcess = spawn(process.execPath, ["-e", serverScript], {
       stdio: ["ignore", "pipe", "ignore"],
-      env: { ...process.env, MOCK_PATH_PREFIX: pathPrefix, MOCK_RESPONSE_JSON: JSON.stringify(response) },
+      env: {
+        ...process.env,
+        MOCK_PATH_PREFIX: pathPrefix,
+        MOCK_RESPONSE_JSON: JSON.stringify(response),
+        MOCK_DELAY_MS: String(response.delayMs ?? 0),
+      },
     });
     let buf = "";
     const timer = setTimeout(() => reject(new Error("mock GitHub API server did not report a port in time")), 5000);
@@ -230,7 +241,13 @@ const UNREACHABLE_GITHUB_API_BASE = "http://127.0.0.1:1";
  *  content) and then orphaned by a simulated history rewrite — the exact shape of the 11 known
  *  real false positives. Records a real-looking PR URL in the branch's own frozen ACTIVE_DROP.md
  *  before merging, exactly as a real Builder session does after opening a PR. */
-function setupOrphanedMergedDrop(fixture: Fixture, id: string, prNumber: number): { branchTip: string; branch: string; baseline: string } {
+/**
+ * Merges a Drop into master the ordinary way (no history rewrite) — safe to call more than once
+ * in sequence in the same fixture, since each merge keeps the previous Drop's branch a normal
+ * ancestor of master (auto-skipped by the cross-branch check), rather than leaving it orphaned
+ * and therefore a live candidate that could block a *later* Drop's own setup-phase `init`.
+ */
+function mergeDropNormally(fixture: Fixture, id: string, prNumber: number): { branchTip: string; branch: string; mergeSha: string } {
   const branch = `${id.toLowerCase()}-branch`;
   writeContract(fixture, id, validContractText({ id, baseline: fixture.headSha }));
   beginDropBranch(fixture, branch);
@@ -242,9 +259,33 @@ function setupOrphanedMergedDrop(fixture: Fixture, id: string, prNumber: number)
   writeFileSync(join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"), withPr);
   commitActiveDrop(fixture, `record PR #${prNumber}`);
   const branchTip = git(fixture.workDir, ["rev-parse", "HEAD"]);
-  mergeDropBranchToOrigin(fixture, branch);
+  const mergeSha = mergeDropBranchToOrigin(fixture, branch);
+  fixture.headSha = mergeSha; // keep in sync — a second sequential mergeDropNormally/close call
+  // in the same fixture must see this merge as its own new baseline, not a stale earlier one.
+  return { branchTip, branch: `origin/${branch}`, mergeSha };
+}
+
+/** Closes a normally-merged Drop on master (flips its LOCAL ACTIVE_DROP.md to CLOSED and pushes)
+ *  — needed before a second Drop's own setup-phase `init` can run in the same fixture, since that
+ *  reads the same-checkout ACTIVE_DROP.md and would otherwise see the prior Drop still ACTIVE.
+ *  The prior Drop's own branch keeps its frozen ACTIVE snapshot regardless — closing only ever
+ *  touches master's copy, exactly matching real closure semantics. */
+function closeDropNormally(fixture: Fixture, id: string, mergeSha: string): void {
+  runFactoryDrop(["close", id, "--integration-sha", mergeSha], fixture);
+  commitActiveDrop(fixture, `close ${id}`);
+  git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/master"]);
+  fixture.headSha = git(fixture.workDir, ["rev-parse", "HEAD"]); // the close commit is the new baseline
+}
+
+/** Sets up a Drop whose branch was genuinely merged (its contract lands on master, matching
+ *  content) and then immediately orphaned by a simulated history rewrite — the exact shape of
+ *  the 11 known real false positives. For more than one simultaneously-orphaned candidate in a
+ *  single fixture, merge each normally first (mergeDropNormally) and call
+ *  simulateHistoryRewrite once at the end instead — see the [case 5b] regression. */
+function setupOrphanedMergedDrop(fixture: Fixture, id: string, prNumber: number): { branchTip: string; branch: string; baseline: string } {
+  const { branchTip, branch } = mergeDropNormally(fixture, id, prNumber);
   const baseline = simulateHistoryRewrite(fixture);
-  return { branchTip, branch: `origin/${branch}`, baseline };
+  return { branchTip, branch, baseline };
 }
 
 function writeContract(fixture: Fixture, id: string, text: string): void {
@@ -281,6 +322,45 @@ function runFactoryDrop(args: string[], fixture: Fixture, extraEnv: Record<strin
     const err = e as { status?: number; stdout?: string; stderr?: string };
     return { status: err.status ?? 1, stdout: err.stdout ?? "", stderr: err.stderr ?? "" };
   }
+}
+
+/** Async twin of runFactoryDrop, needed only so a test can race a concurrent git push against
+ *  this subprocess's own execution window — every other test uses the simpler sync form. */
+function runFactoryDropAsync(args: string[], fixture: Fixture, extraEnv: Record<string, string> = {}): Promise<RunResult> {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [FACTORY_DROP_SCRIPT, ...args], {
+      cwd: fixture.workDir,
+      env: {
+        ...process.env,
+        FACTORY_DROP_ROOT: fixture.workDir,
+        FACTORY_DROP_EXPECTED_REPO: fixture.expectedRepoSlug,
+        ...extraEnv,
+      },
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (d: Buffer) => { stdout += d.toString(); });
+    child.stderr.on("data", (d: Buffer) => { stderr += d.toString(); });
+    child.on("close", (code) => resolve({ status: code ?? 1, stdout, stderr }));
+  });
+}
+
+/**
+ * Pushes one new commit onto `branch` from a *separate* clone of the fixture's bare origin —
+ * deliberately not `fixture.workDir`, so that checkout's own cached `refs/remotes/origin/<branch>`
+ * stays exactly as stale as it was before this call. Used to prove a corroboration decision reads
+ * live remote state at decision time rather than trusting an earlier bulk fetch.
+ */
+function pushRaceCommit(fixture: Fixture, branch: string): void {
+  const scratch = mkdtempSync(join(tmpdir(), "factory-drop-race-"));
+  git(scratch, ["clone", "-q", "--branch", branch, fixture.bareDir, "."]);
+  git(scratch, ["config", "user.email", "race-commit@example.com"]);
+  git(scratch, ["config", "user.name", "Race Commit"]);
+  writeFileSync(join(scratch, "race-commit.txt"), "post-merge commit, must never be cleared\n");
+  git(scratch, ["add", "race-commit.txt"]);
+  git(scratch, ["commit", "-q", "-m", "post-merge commit pushed during corroboration"]);
+  git(scratch, ["push", "-q", "origin", `HEAD:refs/heads/${branch}`]);
+  rmSync(scratch, { recursive: true, force: true });
 }
 
 let fixture: Fixture;
@@ -620,7 +700,11 @@ describe("activation and closure evidence cannot be fabricated or misapplied", (
   });
 });
 
-describe("FACTORY-003: historical-merge fallback for rewrite-orphaned branches", () => {
+// Every test in this block spawns at least one real subprocess (the script under test) plus,
+// for several, a second subprocess mock GitHub server — measured at 8-13s per case on a Windows
+// review worktree (process-spawn overhead, not network latency). Vitest's 5000ms default would
+// flake there; 20s leaves comfortable margin cross-platform.
+describe("FACTORY-003: historical-merge fallback for rewrite-orphaned branches", { timeout: 20_000 }, () => {
   it("[case 1] a normal ancestor-connected historical branch is skipped without any GitHub call", () => {
     writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
     beginDropBranch(fixture, "test-001-branch");
@@ -714,6 +798,81 @@ describe("FACTORY-003: historical-merge fallback for rewrite-orphaned branches",
       expect(result.stderr).toContain("TEST-001");
     } finally {
       mock.close();
+    }
+  });
+
+  it("[case 5b] a post-merge commit pushed DURING corroboration must still be a conflict (TOCTOU regression)", async () => {
+    // Two candidates in one run: TEST-DECOY (branch name sorts first, so it's processed first)
+    // has a deliberately delayed mocked GitHub response, buying wall-clock time. While DECOY's
+    // corroboration is still waiting on that delay, a new commit is pushed onto TEST-RACE's own
+    // branch from a separate clone — exactly the window the confirmed review finding named: the
+    // enumeration loop's one bulk fetch happens once at the very start, so a branch processed
+    // later can receive a real new commit before its own corroboration decision runs. RACE's
+    // mocked PR reports its *original* (pre-race) head SHA, so only a fresh, per-branch fetch at
+    // decision time (not the stale bulk-fetch snapshot) can correctly still see it as a conflict.
+    const decoy = mergeDropNormally(fixture, "TEST-DECOY", 20);
+    closeDropNormally(fixture, "TEST-DECOY", decoy.mergeSha); // clears master's own copy only —
+    // DECOY's branch keeps its frozen ACTIVE snapshot, so it's still a real candidate below
+    const race = mergeDropNormally(fixture, "TEST-RACE", 21);
+    const baseline = simulateHistoryRewrite(fixture); // orphans BOTH branches in a single rewrite
+    const raceBranchName = race.branch.replace(/^origin\//, "");
+
+    const serverScript = `
+      const { createServer } = require("node:http");
+      const server = createServer((req, res) => {
+        const url = req.url || "";
+        if (url.startsWith("/repos/acme/widget/pulls/20")) {
+          setTimeout(() => {
+            res.writeHead(200, { "content-type": "application/json" });
+            res.end(JSON.stringify({ merged: true, head: { sha: process.env.DECOY_TIP } }));
+          }, 3000);
+          return;
+        }
+        if (url.startsWith("/repos/acme/widget/pulls/21")) {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(JSON.stringify({ merged: true, head: { sha: process.env.RACE_ORIGINAL_TIP } }));
+          return;
+        }
+        res.writeHead(404, { "content-type": "application/json" });
+        res.end(JSON.stringify({ message: "not found" }));
+      });
+      server.listen(0, "127.0.0.1", () => { console.log("PORT=" + server.address().port); });
+    `;
+    const mockChild = spawn(process.execPath, ["-e", serverScript], {
+      stdio: ["ignore", "pipe", "ignore"],
+      env: { ...process.env, DECOY_TIP: decoy.branchTip, RACE_ORIGINAL_TIP: race.branchTip },
+    });
+    const mockUrl = await new Promise<string>((resolve, reject) => {
+      let buf = "";
+      const timer = setTimeout(() => reject(new Error("mock server did not report a port in time")), 5000);
+      mockChild.stdout?.on("data", (d: Buffer) => {
+        buf += d.toString();
+        const m = buf.match(/PORT=(\d+)/);
+        if (m) {
+          clearTimeout(timer);
+          resolve(`http://127.0.0.1:${m[1]}`);
+        }
+      });
+    });
+
+    try {
+      writeContract(fixture, "TEST-003", validContractText({ id: "TEST-003", baseline: baseline }));
+      const runPromise = runFactoryDropAsync(
+        ["init", "TEST-003", "--baseline", baseline, "--branch", "test-003-branch"],
+        fixture,
+        { GH_TOKEN: "fake-test-token", FACTORY_DROP_GITHUB_API_BASE: mockUrl },
+      );
+      // Well before DECOY's mocked 3000ms delay elapses, but comfortably after the subprocess's
+      // own bulk fetch + reaching DECOY's corroboration attempt should have completed.
+      await new Promise((r) => setTimeout(r, 800));
+      pushRaceCommit(fixture, raceBranchName);
+
+      const result = await runPromise;
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+      expect(result.stderr).toContain("TEST-RACE");
+    } finally {
+      mockChild.kill();
     }
   });
 

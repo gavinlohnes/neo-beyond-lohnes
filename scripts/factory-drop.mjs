@@ -328,9 +328,22 @@ async function corroborateHistoricalMerge(root, ref, prField) {
   if (!slug) return { corroborated: false, reason: "NO_REMOTE" };
   const token = githubToken(root);
   if (!token) return { corroborated: false, reason: "NO_TOKEN" };
+  // `ref` (e.g. "origin/claude/foo") may be stale: the caller's own bulk
+  // `fetch --prune` ran once, at the start of enumerating every branch on
+  // origin, which can be an arbitrarily long time (and any number of other
+  // branches' own network calls) before this specific branch's turn comes
+  // up. Trusting that cached ref for the safety-critical tip comparison
+  // below would reopen exactly the mandatory invariant this function
+  // exists to enforce: a branch given a new commit after the bulk fetch,
+  // but before its own corroboration runs, must still read as a conflict.
+  // Re-fetch this one branch fresh, immediately before resolving its tip,
+  // so the comparison is against branch state as of *this* decision, not
+  // whatever it was when the enumeration loop started.
+  const branchName = ref.replace(/^origin\//, "");
   let branchTip;
   try {
-    branchTip = git(["rev-parse", ref], root);
+    git(["fetch", "-q", "origin", branchName], root);
+    branchTip = git(["rev-parse", "FETCH_HEAD"], root);
   } catch (e) {
     return { corroborated: false, reason: `CANNOT_RESOLVE_TIP: ${e.message}` };
   }
