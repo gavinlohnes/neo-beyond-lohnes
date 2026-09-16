@@ -8,6 +8,8 @@ import { CollapsibleRow } from "../../src/ui/components/CollapsibleRow";
  * plus proof that CollapsibleRow's optional `icon` slot (previously only
  * exercised by ResetCard/ShiftDownCard, never asserted at this level)
  * actually renders what's passed to it.
+ *
+ * GLYPH-003 added decisionJournal/exerciseLibrary/customPrograms/review.
  */
 const ALL_ICON_NAMES: IconName[] = [
   "mission",
@@ -21,6 +23,10 @@ const ALL_ICON_NAMES: IconName[] = [
   "search",
   "schedule",
   "backup",
+  "decisionJournal",
+  "exerciseLibrary",
+  "customPrograms",
+  "review",
 ];
 
 describe("Icon (real browser)", () => {
@@ -47,6 +53,17 @@ describe("CollapsibleRow icon slot (GLYPH-002)", () => {
     );
     const button = screen.getByRole("button", { name: "Open SEARCH" }).element();
     expect(button.querySelector(".tool-label svg")).not.toBeNull();
+  });
+
+  it("wraps the icon in its own .tool-icon span, separate from the label text (GLYPH-003)", async () => {
+    const screen = await render(
+      <CollapsibleRow name="SEARCH" icon={<Icon name="search" size={20} />} summary="Find something." onOpen={() => {}} />,
+    );
+    const button = screen.getByRole("button", { name: "Open SEARCH" }).element();
+    const toolIcon = button.querySelector(".tool-icon");
+    expect(toolIcon).not.toBeNull();
+    expect(toolIcon?.querySelector("svg")).not.toBeNull();
+    expect(button.querySelector(".tool-label")?.textContent).toBe("SEARCH");
   });
 
   it("renders no icon when none is passed", async () => {

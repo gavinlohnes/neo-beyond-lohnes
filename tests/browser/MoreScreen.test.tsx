@@ -64,13 +64,13 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     expect(screen.getByText("BACKUP", { exact: true }).element().closest(".tool-label")?.querySelector("svg")).not.toBeNull();
   });
 
-  it("GLYPH-002: rows outside this Drop's scope stay icon-less, not silently over-applied", async () => {
+  it("GLYPH-003: DECISION JOURNAL, EXERCISE LIBRARY, CUSTOM PROGRAMS, and REVIEW each carry a glyph now", async () => {
     const screen = await render(<MoreScreen />);
-    const rowIcon = (name: string) => screen.getByRole("button", { name: `Open ${name}` }).element().querySelector(".tool-label svg");
-    expect(rowIcon("DECISION JOURNAL")).toBeNull();
-    expect(rowIcon("EXERCISE LIBRARY")).toBeNull();
-    expect(rowIcon("CUSTOM PROGRAMS")).toBeNull();
-    expect(rowIcon("REVIEW")).toBeNull();
+    const rowIcon = (name: string) => screen.getByRole("button", { name: `Open ${name}` }).element().querySelector(".tool-icon svg");
+    expect(rowIcon("DECISION JOURNAL")).not.toBeNull();
+    expect(rowIcon("EXERCISE LIBRARY")).not.toBeNull();
+    expect(rowIcon("CUSTOM PROGRAMS")).not.toBeNull();
+    expect(rowIcon("REVIEW")).not.toBeNull();
   });
 
   it("no dominant .command-surface exists — MORE has no single primary decision, only system access", async () => {

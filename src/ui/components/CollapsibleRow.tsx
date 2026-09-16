@@ -26,6 +26,13 @@ import type { ReactNode } from "react";
  * unchanged from the original implementation on purpose, so existing
  * tests querying `getByRole("button", { name: "Open RESET" })` etc.
  * keep working — this is a visual/interaction change, not a semantic one.
+ *
+ * GLYPH-003: the icon is wrapped in its own `.tool-icon` span (instead of
+ * sharing `.tool-label`'s `currentColor` directly with the row's name
+ * text) so a press/keyboard-focus can turn the icon red without also
+ * reddening the label text — see `.tool-icon` in global.css. At rest it
+ * inherits `.tool-label`'s existing `--text-2`, so this is presentation
+ * plumbing only; no visual change outside the new pressed/focused state.
  */
 export interface CollapsibleRowProps {
   name: string;
@@ -43,7 +50,7 @@ export function CollapsibleRow({ name, icon, summary, onOpen }: CollapsibleRowPr
           TOOLS-tier header uses. */}
       <span style={{ display: "block", minWidth: 0 }}>
         <span className="tool-label" style={{ marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
-          {icon}
+          {icon && <span className="tool-icon">{icon}</span>}
           {name}
         </span>
         <span className="meta" style={{ display: "block" }}>

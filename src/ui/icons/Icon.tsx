@@ -52,6 +52,21 @@
  * outline one — a duplication/export motif built the same repeated-
  * diamond way `more` reads as overflow, deliberately not a real-world
  * upload-tray or cloud glyph.
+ *
+ * GLYPH-003 (2026-09-16, direct owner review over two rendered mockup
+ * passes): the last four MORE rows that had no icon — decisionJournal,
+ * exerciseLibrary, customPrograms, review. First pass tried three/four
+ * thin hairlines inside the frame for exerciseLibrary and review; at the
+ * real 18px MORE-row usage size those merged into an illegible smear, so
+ * both were rebuilt to use fewer, bolder strokes at the family's own
+ * frame weight (1.7px) rather than a thinner interior weight — the same
+ * "few bold strokes, not fine detail" discipline every other glyph in
+ * this family already follows. `decisionJournal` is an open book (a V)
+ * inside the frame; `exerciseLibrary` is two bold horizontal bars (a
+ * shelf, not a single item); `customPrograms` is a chevron rising into a
+ * vertical stem (something built up, not one of the six locked
+ * destinations); `review` is a single bold checkmark alone in the frame
+ * (no ledger lines — that version is what didn't survive the 18px test).
  */
 import type { ReactElement } from "react";
 
@@ -66,7 +81,11 @@ export type IconName =
   | "history"
   | "search"
   | "schedule"
-  | "backup";
+  | "backup"
+  | "decisionJournal"
+  | "exerciseLibrary"
+  | "customPrograms"
+  | "review";
 
 const PATHS: Record<IconName, ReactElement> = {
   mission: (
@@ -150,6 +169,32 @@ const PATHS: Record<IconName, ReactElement> = {
     <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
       <path d="M9 14 L14 9 L19 14 L14 19 Z" />
       <path d="M4.5 4.5 L8 8 L4.5 11.5 L1 8 Z" fill="currentColor" stroke="none" />
+    </g>
+  ),
+  decisionJournal: (
+    <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
+      <path d="M12 3.5 L20.5 12 L12 20.5 L3.5 12 Z" />
+      <path d="M7.5 10.5 L12 14 L16.5 10.5" />
+    </g>
+  ),
+  exerciseLibrary: (
+    <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
+      <path d="M12 3.5 L20.5 12 L12 20.5 L3.5 12 Z" />
+      <path d="M7.5 10 H16.5" />
+      <path d="M7.5 14 H16.5" />
+    </g>
+  ),
+  customPrograms: (
+    <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
+      <path d="M12 3.5 L20.5 12 L12 20.5 L3.5 12 Z" />
+      <path d="M8.5 14.5 L12 11 L15.5 14.5" />
+      <path d="M12 11 V16.5" />
+    </g>
+  ),
+  review: (
+    <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
+      <path d="M12 3.5 L20.5 12 L12 20.5 L3.5 12 Z" />
+      <path d="M7.5 12.5 L10.5 15.5 L16.5 8.5" strokeWidth={2.1} />
     </g>
   ),
 };

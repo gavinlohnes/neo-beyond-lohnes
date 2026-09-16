@@ -880,6 +880,19 @@ button, input {
   margin: 0 0 var(--space-2);
 }
 
+/* GLYPH-003: a `.tool-label`'s optional leading icon, split into its own
+ * color-inheritance scope so a disclosure control's press/keyboard-focus
+ * (see `.equipment-row--control:active`/`:focus-visible` below) can turn
+ * just the icon red without also reddening the row's name text — the
+ * accent-budget correction above stays intact for the text either way.
+ * `color: inherit` keeps the at-rest look identical to before this Drop.
+ */
+.tool-icon {
+  display: inline-flex;
+  color: inherit;
+  transition: color var(--motion-fast) var(--motion-easing);
+}
+
 /* SIGNAL ROW — an earned-but-not-commanding surface: an ATTENTION-tier
  * item (LAST TIME, an unresolved Commitment/END DAY suggestion once it
  * has genuinely earned attention, unresolved Capture), and a
@@ -1522,6 +1535,24 @@ button, input {
   color: inherit;
   cursor: pointer;
 }
+
+/* GLYPH-003 (2026-09-16, direct owner-approved mockup): a disclosure
+ * row's own leading icon reads as active red the instant it's actually
+ * pressed or keyboard-focused, easing back to `--text-2` on release —
+ * "this is a live control," not ambient decoration, so it satisfies
+ * MOTION-001's "motion/color-change explains a state change" rule rather
+ * than adding a new ambient effect. Scoped to `.equipment-row--control`
+ * specifically (CollapsibleRow's real navigation buttons) — the static
+ * `.equipment-row` sections like BACKUP/ARCHIVE aren't disclosure
+ * controls and are unaffected. Applies uniformly to every row that has
+ * an icon (MISSIONS & OBLIGATIONS, WORK SCHEDULE, HISTORY, SEARCH, and
+ * this Drop's four new rows) — not a per-icon exception.
+ */
+.equipment-row--control:active .tool-icon,
+.equipment-row--control:focus-visible .tool-icon {
+  color: var(--accent-strong);
+}
+
 .disclosure-chevron {
   flex-shrink: 0;
   color: var(--text-3-strong);
