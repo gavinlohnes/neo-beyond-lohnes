@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 1be442772460d36450831fa4b0e5124ba131d500
 branch: claude/depth-001-machinery-reveal
 contract: docs/agent/drops/DEPTH-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/99
 builder: Claude, this session, per direct owner review of four rendered mockup passes ('Perfect. Ship it man.') 2026-09-16
 reviewer: (unassigned)
 integrator: (unassigned)
