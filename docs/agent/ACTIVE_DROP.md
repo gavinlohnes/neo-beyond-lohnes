@@ -1,32 +1,16 @@
 ---
 id: FOUNDATION-1A
-status: ACTIVE
+status: CLOSED
 baseline: f32482a3c70eb2fddb9b17f8c306db849c444b13
 branch: claude/foundation-1a-iy32gy
 contract: docs/agent/drops/FOUNDATION-1A.md
 pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/106
 builder: Claude, this session, direct owner authorization 2026-09-16 (doctrine/architecture reconciliation)
-reviewer: (unassigned)
-integrator: (unassigned)
+reviewer: PR #106 review (duplicate ACTIVE_DROP heading found and corrected in commit 5b93021); approved for integration by direct owner ruling 2026-09-16
+integrator: Claude, this session, direct owner authorization to merge 2026-09-16
+integration_sha: b51df9a34c4ad617e914344065a7311c0c8c38f3
+closed_at: 2026-09-16T08:50:01.440Z
 ---
-
-<!--
-Prior entry (DEPTH-002, CLOSED, integration 4e97513482bafa821bcd7c28db049de6fab486b0, closed_at
-2026-09-16T04:53:42.508Z) is preserved in git history; this file only ever holds the current
-routing record, not an append-only log.
-
-Activation note: `node scripts/factory-drop.mjs init` correctly refused to activate this Drop
-automatically — it found `origin/claude/emblem-001-primary-mark` still reading
-`id: EMBLEM-001, status: ACTIVE` in its own `ACTIVE_DROP.md`, even though EMBLEM-001 was
-superseded by EMBLEM-002 and merged to master long ago. `git merge-base
-origin/claude/emblem-001-primary-mark origin/master` returns nothing — this is the documented
-"disconnected lineage" case (`docs/agent/BEYOND_ENGINEERING_CONTRACT.md`'s "Historical-branch
-disposition rule"), i.e. the one residual limitation named two paragraphs below: an abandoned,
-never-closed, never-deleted branch reading as a live conflict. Branch deletion is outside this
-session's authorization, so this file was updated by hand to the same content `init` would have
-written, rather than bypassing the script's safety check. A future session with branch-deletion
-authority should delete `claude/emblem-001-primary-mark` so `factory-drop.mjs` stops flagging it.
--->
 
 # ACTIVE_DROP
 
