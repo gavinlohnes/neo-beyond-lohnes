@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 2d3cad34645afed52d43a65b1a4be223cbc7bf77
 branch: claude/factory-003-stale-branch-robustness
 contract: docs/agent/drops/FACTORY-003.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/107
 builder: Claude, this session, direct owner authorization (Design C hybrid locked)
 reviewer: (unassigned)
 integrator: (unassigned)
