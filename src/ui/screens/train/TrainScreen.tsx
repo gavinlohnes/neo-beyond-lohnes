@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { WhyDisclosure } from "../../components/WhyDisclosure";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
 import type { ExercisePrescription, PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
 import { WORKOUT_TEMPLATES, WORKOUT_TEMPLATE_ORDER, getReducedExercises } from "../../../domain/workout/types";
@@ -878,8 +879,7 @@ export function TrainScreen({
             ))}
           </div>
 
-          <details className="why" style={{ marginBottom: 12 }}>
-            <summary>Why this suggestion</summary>
+          <WhyDisclosure summary="Why this suggestion" style={{ marginBottom: 12 }}>
             <div style={{ marginTop: 8 }}>
               <p className="card-body" style={{ marginBottom: 6 }}>{describeVariantSuggestion(variantSuggestion)}</p>
               {chosenVariant !== "RECOVERY" && (
@@ -889,7 +889,7 @@ export function TrainScreen({
               )}
               <p className="card-body">{VARIANT_MEANINGS}</p>
             </div>
-          </details>
+          </WhyDisclosure>
 
           <button
             className="btn-primary"
@@ -933,8 +933,7 @@ export function TrainScreen({
               {describeProgressionSummary(progressionCounts)}
             </p>
             {progressionCounts.total > 0 && (
-              <details className="why" style={{ marginBottom: 12 }}>
-                <summary>Exercise detail</summary>
+              <WhyDisclosure summary="Exercise detail" style={{ marginBottom: 12 }}>
                 <div style={{ marginTop: 8 }}>
                   {templateOptions.map((templateId) => (
                     <div key={templateId} style={{ marginBottom: 8 }}>
@@ -949,7 +948,7 @@ export function TrainScreen({
                     </div>
                   ))}
                 </div>
-              </details>
+              </WhyDisclosure>
             )}
 
             <p className="tool-label" style={{ marginBottom: 4 }}>RECENT</p>

@@ -17,6 +17,7 @@ import { JournalScreen } from "./JournalScreen";
 import { ExerciseLibraryScreen } from "./ExerciseLibraryScreen";
 import { CustomTemplateScreen } from "./CustomTemplateScreen";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { Icon } from "../../icons/Icon";
 import {
   getCheckInReminderPreference,
@@ -634,8 +635,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           <p className="status-value">{activeDayYes ? "YES" : "NO"}</p>
         </div>
       </div>
-      <details className="why">
-        <summary>Diagnostic detail</summary>
+      <WhyDisclosure summary="Diagnostic detail">
         <div style={{ marginTop: 8 }}>
           <DiagRow label="Built" value={BUILD_TIME} />
           <DiagRow label="Days" value={String(days)} />
@@ -658,7 +658,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
             </div>
           )}
         </div>
-      </details>
+      </WhyDisclosure>
       </section>
     </div>
   );

@@ -665,6 +665,46 @@ button, input {
   padding: var(--space-3);
 }
 
+/* DEPTH-001 (direct owner review of four rendered mockup passes,
+   2026-09-16): the "exposed machinery" reveal — a full-viewport,
+   `aria-hidden`, `pointer-events: none` decoration mounted (via a portal
+   to document.body, see WhyDisclosure.tsx) for as long as a WHY/
+   diagnostic disclosure stays open. Flat, unglowing red matched to real
+   circuit-board photography, not a neon bloom — an earlier reviewed pass
+   used an SVG blur+merge glow filter and the owner corrected it. Sits
+   above ordinary content but below anything the operator still needs to
+   reach; nothing here is interactive, so it never needs to win a z-index
+   fight with a real control. */
+.machinery-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  pointer-events: none;
+  opacity: 0;
+  animation: machinery-reveal-in 200ms cubic-bezier(.2, .8, .2, 1) forwards,
+    machinery-reveal-flash 260ms ease-out;
+}
+.machinery-reveal-overlay svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+@keyframes machinery-reveal-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* A brief brightness pulse sells the moment as a hit, not a fade — the
+   overlay's own filter, so it never touches real content's colors. */
+@keyframes machinery-reveal-flash {
+  0% { filter: brightness(2.2) saturate(1.4); }
+  100% { filter: brightness(1) saturate(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .machinery-reveal-overlay {
+    display: none;
+  }
+}
+
 /* Subsection label inside a .machinery-panel (STATE INPUT / DERIVED /
    RULES EVALUATED). Deliberately --text-2, not --text-3 — this is new
    surface added by this Drop, and the existing --text-3-on-background
