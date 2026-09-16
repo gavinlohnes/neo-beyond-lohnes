@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 7e47a09ee6d51de556f040d91a09feb95288bb04
 branch: claude/depth-002-reveal-autofade
 contract: docs/agent/drops/DEPTH-002.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/103
 builder: Claude, this session, fixing a real-use bug the owner reported 2026-09-16
 reviewer: (unassigned)
 integrator: (unassigned)
