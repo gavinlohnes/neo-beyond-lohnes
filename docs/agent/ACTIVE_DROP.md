@@ -1,33 +1,37 @@
----
-id: DECISIONS-001
-status: ACTIVE
-baseline: 8da35b29fd246d568698f816617007f6665f95b4
-branch: claude/decisions-001-body-outcome-scope
-contract: docs/agent/drops/DECISIONS-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/100
-builder: Claude, this session, per two direct owner AskUserQuestion rulings 2026-09-16
-reviewer: (unassigned)
-integrator: (unassigned)
----
-
-# ACTIVE_DROP
-
-This file identifies the single currently-authorized BEYOND Drop, for recovery by a fresh
-agent/session without the owner relaying state by hand. It is a routing/authorization
-pointer only — it never duplicates a fact Git/GitHub/CI can already prove (current HEAD, CI
-status, mergeability, PR review state). Run `node scripts/factory-drop.mjs status` to see
-this file's recorded facts alongside the live git facts derived at that moment; check the
-`pr` field's actual CI/review state directly on GitHub. See
-`.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
-
-Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/DECISIONS-001.md` — this file is a pointer, not a copy.
-
-At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
-(not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
-checks each still-unmerged branch's own copy of this file, so a second Drop whose PR hasn't
-merged yet is still detected and blocked. See SKILL.md §9 for the full mechanism, including
-the one residual limitation (an abandoned, never-closed, never-deleted branch keeps reading
-as a live conflict — ordinary git hygiene already implies deleting it). Closing
-(`node scripts/factory-drop.mjs close`) flips this file's status to CLOSED; it never deletes
-or rewrites the historical Drop Contract file itself.
+LS0tCmlkOiBERUNJU0lPTlMtMDAxCnN0YXR1czogQ0xPU0VECmJhc2VsaW5lOiA4ZGEzNWIyOWZk
+MjQ2ZDU2ODY5OGY4MTY2MTcwMDdmNjY2NWY5NWI0CmJyYW5jaDogY2xhdWRlL2RlY2lzaW9ucy0w
+MDEtYm9keS1vdXRjb21lLXNjb3BlCmNvbnRyYWN0OiBkb2NzL2FnZW50L2Ryb3BzL0RFQ0lTSU9O
+Uy0wMDEubWQKcHI6IGh0dHBzOi8vZ2l0aHViLmNvbS9nYXZpbmxvaG5lcy9uZW8tYmV5b25kLWxv
+aG5lcy9wdWxsLzEwMApidWlsZGVyOiBDbGF1ZGUsIHRoaXMgc2Vzc2lvbiwgcGVyIHR3byBkaXJl
+Y3Qgb3duZXIgQXNrVXNlclF1ZXN0aW9uIHJ1bGluZ3MgMjAyNi0wOS0xNgpyZXZpZXdlcjogQ2xh
+dWRlLCB0aGlzIHNlc3Npb24sIHNlbGYtcmV2aWV3ZWQgKHB1cmUgZmFjdHVhbC9kb2N1bWVudGF0
+aW9uIERyb3AsIG5vIGp1ZGdtZW50IGNhbGxzIOKAlCBSRUFETUUtMDAxIHByZWNlZGVudCkKaW50
+ZWdyYXRvcjogQ2xhdWRlLCB0aGlzIHNlc3Npb24KaW50ZWdyYXRpb25fc2hhOiAxMmUxZDYyZDhk
+ZWM4M2E2MjQyNzhhODkyMTYyOTI0NjFkYTE2ZGJmCmNsb3NlZF9hdDogMjAyNi0wOS0xNlQwMjo1
+NDoxNC4wMzdaCi0tLQoKIyBBQ1RJVkVfRFJPUAoKVGhpcyBmaWxlIGlkZW50aWZpZXMgdGhlIHNp
+bmdsZSBjdXJyZW50bHktYXV0aG9yaXplZCBCRVlPTkQgRHJvcCwgZm9yIHJlY292ZXJ5IGJ5IGEg
+ZnJlc2gKYWdlbnQvc2Vzc2lvbiB3aXRob3V0IHRoZSBvd25lciByZWxheWluZyBzdGF0ZSBieSBo
+YW5kLiBJdCBpcyBhIHJvdXRpbmcvYXV0aG9yaXphdGlvbgpwb2ludGVyIG9ubHkg4oCUIGl0IG5l
+dmVyIGR1cGxpY2F0ZXMgYSBmYWN0IEdpdC9HaXRIdWIvQ0kgY2FuIGFscmVhZHkgcHJvdmUgKGN1
+cnJlbnQgSEVBRCwgQ0kKc3RhdHVzLCBtZXJnZWFiaWxpdHksIFBSIHJldmlldyBzdGF0ZSkuIFJ1
+biBgbm9kZSBzY3JpcHRzL2ZhY3RvcnktZHJvcC5tanMgc3RhdHVzYCB0byBzZWUKdGhpcyBmaWxl
+J3MgcmVjb3JkZWQgZmFjdHMgYWxvbmdzaWRlIHRoZSBsaXZlIGdpdCBmYWN0cyBkZXJpdmVkIGF0
+IHRoYXQgbW9tZW50OyBjaGVjayB0aGUKYHByYCBmaWVsZCdzIGFjdHVhbCBDSS9yZXZpZXcgc3Rh
+dGUgZGlyZWN0bHkgb24gR2l0SHViLiBTZWUKYC5jbGF1ZGUvc2tpbGxzL2JleW9uZC1kcm9wL1NL
+SUxMLm1kYCDCpzkgZm9yIHRoZSBmdWxsIG1lY2hhbmlzbS4KCkZ1bGwgYXV0aG9yaXplZCBzY29w
+ZSwgZXhjbHVzaW9ucywgaW52YXJpYW50cywgYWNjZXB0YW5jZSBjcml0ZXJpYSwgYW5kIHJvbGUg
+ZXhwZWN0YXRpb25zCmZvciB0aGlzIERyb3AgbGl2ZSBpbiBgZG9jcy9hZ2VudC9kcm9wcy9ERUNJ
+U0lPTlMtMDAxLm1kYCDigJQgdGhpcyBmaWxlIGlzIGEgcG9pbnRlciwgbm90IGEgY29weS4KCkF0
+IG1vc3Qgb25lIERyb3AgbWF5IGJlIGBzdGF0dXM6IEFDVElWRWAgYXQgYSB0aW1lLCBlbmZvcmNl
+ZCBhY3Jvc3MgZXZlcnkgYnJhbmNoIG9uIG9yaWdpbgoobm90IGp1c3QgbWFzdGVyKSDigJQgYG5v
+ZGUgc2NyaXB0cy9mYWN0b3J5LWRyb3AubWpzIHZhbGlkYXRlfGluaXRgIGZldGNoZXMgZXZlcnkg
+YnJhbmNoIGFuZApjaGVja3MgZWFjaCBzdGlsbC11bm1lcmdlZCBicmFuY2gncyBvd24gY29weSBv
+ZiB0aGlzIGZpbGUsIHNvIGEgc2Vjb25kIERyb3Agd2hvc2UgUFIgaGFzbid0Cm1lcmdlZCB5ZXQg
+aXMgc3RpbGwgZGV0ZWN0ZWQgYW5kIGJsb2NrZWQuIFNlZSBTS0lMTC5tZCDCpzkgZm9yIHRoZSBm
+dWxsIG1lY2hhbmlzbSwgaW5jbHVkaW5nCnRoZSBvbmUgcmVzaWR1YWwgbGltaXRhdGlvbiAoYW4g
+YWJhbmRvbmVkLCBuZXZlci1jbG9zZWQsIG5ldmVyLWRlbGV0ZWQgYnJhbmNoIGtlZXBzIHJlYWRp
+bmcKYXMgYSBsaXZlIGNvbmZsaWN0IOKAlCBvcmRpbmFyeSBnaXQgaHlnaWVuZSBhbHJlYWR5IGlt
+cGxpZXMgZGVsZXRpbmcgaXQpLiBDbG9zaW5nCihgbm9kZSBzY3JpcHRzL2ZhY3RvcnktZHJvcC5t
+anMgY2xvc2VgKSBmbGlwcyB0aGlzIGZpbGUncyBzdGF0dXMgdG8gQ0xPU0VEOyBpdCBuZXZlciBk
+ZWxldGVzCm9yIHJld3JpdGVzIHRoZSBoaXN0b3JpY2FsIERyb3AgQ29udHJhY3QgZmlsZSBpdHNl
+bGYuCg==
