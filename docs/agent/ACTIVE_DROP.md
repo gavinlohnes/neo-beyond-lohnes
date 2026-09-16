@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 71f73f7009a793fa823800181e4c1270a46fcc67
 branch: claude/glyph-003-remaining-more-icons
 contract: docs/agent/drops/GLYPH-003.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/101
 builder: Claude, this session, per direct owner approval 2026-09-16
 reviewer: (unassigned)
 integrator: (unassigned)
