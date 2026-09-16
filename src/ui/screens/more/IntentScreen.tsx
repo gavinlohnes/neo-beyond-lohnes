@@ -562,7 +562,7 @@ function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () =>
                   )}
                 </div>
                 {archiveConfirming && (
-                  <div className="card card--warning intent-confirm" role="alert">
+                  <div className="card card--warning surface--chamfer intent-confirm" role="alert">
                     <p className="card-title">Archive this Mission?</p>
                     <p className="card-body">It becomes historical and stops contributing current attention. Linked Obligations keep their recorded status and remain manageable.</p>
                     <div className="intent-actions">
@@ -736,7 +736,7 @@ function ObligationDetail({
                   )}
                 </div>
                 {pendingResolution && (
-                  <div className="card card--warning intent-confirm" role="alert">
+                  <div className="card card--warning surface--chamfer intent-confirm" role="alert">
                     <p className="card-title">{pendingResolution === "SATISFY" ? "Record this as satisfied?" : "Release this Obligation?"}</p>
                     <p className="card-body">
                       {pendingResolution === "SATISFY"

@@ -4,7 +4,8 @@ import { CommandSurface } from "../../src/ui/components/CommandSurface";
 
 /**
  * VISUAL-002 (Semantic Component Grammar): CommandSurface formalizes the
- * PRIMARY DECISION/EXECUTION `className="command-surface fade-in"`
+ * PRIMARY DECISION/EXECUTION `className="command-surface surface--chamfer
+ * fade-in"`
  * convention that TodayScreen and TrainScreen previously wrote by hand at
  * every call site. Deliberately dumb — no variant/tone prop, no
  * className escape hatch — so this test only covers what the component
@@ -12,7 +13,7 @@ import { CommandSurface } from "../../src/ui/components/CommandSurface";
  * with children rendered as-is inside it.
  */
 describe("CommandSurface (real browser)", () => {
-  it("renders children inside a command-surface fade-in wrapper", async () => {
+  it("renders children inside a command-surface surface--chamfer fade-in wrapper", async () => {
     const screen = await render(
       <CommandSurface>
         <p className="command-title">Recovery session</p>
@@ -22,6 +23,6 @@ describe("CommandSurface (real browser)", () => {
     const title = screen.getByText("Recovery session").element();
     const surface = title.closest(".command-surface");
     expect(surface).not.toBeNull();
-    expect(surface!.className).toBe("command-surface fade-in");
+    expect(surface!.className).toBe("command-surface surface--chamfer fade-in");
   });
 });

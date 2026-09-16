@@ -832,7 +832,7 @@ export function BodyScreen() {
           re-scan when moving from "what's recorded" to "where do I log
           it." Same four facts, same instrument-cluster primitive, no new
           value. */}
-      <div className="instrument-cluster">
+      <div className="instrument-cluster surface--chamfer">
         <div>
           <p className="meta" style={{ margin: 0 }}>WATER</p>
           <p className="status-value">{total} oz</p>

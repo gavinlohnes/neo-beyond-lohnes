@@ -33,7 +33,7 @@ export function useRedCapacityOverrideGate(): {
   function ConfirmPanel(): React.ReactElement | null {
     if (!pendingAction) return null;
     return (
-      <div className="card card--warning">
+      <div className="card card--warning surface--chamfer">
         <p className="eyebrow" style={{ marginBottom: 4 }}>
           CONFIRM OVERRIDE
         </p>

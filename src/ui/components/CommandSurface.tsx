@@ -6,12 +6,12 @@ import type { ReactNode } from "react";
  * convention six call sites (TodayScreen's dominant recommendation, plus
  * TrainScreen's pre-session picker/active exercise/RECOVERY) already
  * shared identically — every one of them wrote `className="command-surface
- * fade-in"` by hand. This component changes nothing about what
- * `.command-surface`/`.fade-in` do (both defined in global.css, including
- * VISUAL-001's chamfer and Red Budget-governed surface wash) — it only
- * removes the risk of that exact string drifting or being retyped wrong
- * at a seventh call site, which is the actual duplication this Drop is
- * allowed to remove.
+ * surface--chamfer fade-in"` by hand. This component changes nothing
+ * about what `.command-surface`/`.surface--chamfer`/`.fade-in` do (all
+ * defined in global.css, including VISUAL-001's chamfer and Red
+ * Budget-governed surface wash) — it only removes the risk of that exact
+ * string drifting or being retyped wrong at a seventh call site, which
+ * is the actual duplication this Drop is allowed to remove.
  *
  * Deliberately dumb: no `variant`/`tone`/`mood` prop, and no `className`
  * escape hatch either — no real call site needs one, and an unrestricted
@@ -27,5 +27,5 @@ import type { ReactNode } from "react";
  * replacement for the CSS class itself).
  */
 export function CommandSurface({ children }: { children: ReactNode }) {
-  return <div className="command-surface fade-in">{children}</div>;
+  return <div className="command-surface surface--chamfer fade-in">{children}</div>;
 }

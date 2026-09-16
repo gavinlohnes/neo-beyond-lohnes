@@ -66,7 +66,7 @@ export function ShiftDownCard({
   return (
     <div
       key={active ? "shift-down-in-progress" : "shift-down-picker"}
-      className={`fade-in ${isCommand ? "command-surface" : active ? "equipment-row" : prominent ? "card signal-row" : "equipment-row"}`}
+      className={`fade-in ${isCommand ? "command-surface surface--chamfer" : active ? "equipment-row" : prominent ? "card signal-row" : "equipment-row"}`}
     >
       <p
         className={isCommand ? "command-title" : "tool-label"}

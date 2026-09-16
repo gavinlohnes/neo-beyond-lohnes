@@ -1417,6 +1417,8 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
 
     const panel = document.querySelector(".card--warning");
     expect(panel).not.toBeNull();
+    expect(panel!.className).toContain("surface--chamfer");
+    expect(getComputedStyle(panel!).clipPath).not.toBe("none");
     expect(getComputedStyle(panel!).borderColor).toBe("rgb(200, 48, 46)"); // --danger: #c8302e
 
     const proceed = screen.getByRole("button", { name: "PROCEED ANYWAY" }).element();

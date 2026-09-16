@@ -39,6 +39,9 @@ describe("BodyScreen (real browser) — empty state", () => {
 
   it("the instrument cluster is a real .instrument-cluster, not a plain .card", async () => {
     await render(<BodyScreen />);
+    const cluster = document.querySelector(".instrument-cluster");
+    expect(cluster).not.toBeNull();
+    expect(cluster!.className).toContain("surface--chamfer");
     expect(document.querySelectorAll(".instrument-cluster")).toHaveLength(1);
     expect(document.querySelectorAll(".instrument-cluster .card")).toHaveLength(0);
   });
