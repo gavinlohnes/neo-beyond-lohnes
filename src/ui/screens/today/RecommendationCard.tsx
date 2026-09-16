@@ -3,6 +3,7 @@ import type { BeyondDay, Recommendation, StateCheckIn } from "../../../domain/co
 import type { PriorOutcomeMemory, RecommendationDecision, RecommendationHandoffTarget } from "../../../application/queries";
 import { CommandSurface } from "../../components/CommandSurface";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { ConfirmIcon, ResolveIcon } from "../../icons/Icon";
 import { CHECK_IN_FIELDS } from "./checkInFields";
 import {
@@ -94,8 +95,7 @@ export function RecommendationCard({
       {evidenceBasis && (
         <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
       )}
-      <details className="why" style={{ marginTop: 12 }}>
-        <summary>How BEYOND decided</summary>
+      <WhyDisclosure summary="How BEYOND decided" style={{ marginTop: 12 }}>
         <div className="machinery-panel">
           {checkIn && (
             <>
@@ -158,7 +158,7 @@ export function RecommendationCard({
             {new Date(recommendation.trace.evaluatedAt).toLocaleTimeString()}
           </p>
         </div>
-      </details>
+      </WhyDisclosure>
       <div style={{ marginTop: isDominant && !isAllClear ? 20 : 12 }}>
         {decision ? (
           <>
