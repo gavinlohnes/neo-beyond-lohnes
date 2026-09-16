@@ -103,6 +103,33 @@ standing implementation authority.
 - Sleep and water are shown in human-readable form (e.g. "7h 15m", not
   raw minutes; a quick-add control for common water amounts), not raw
   numeric fields.
+- **No "exposed machinery" reveal (locked 2026-09-16, direct owner ruling, DEPTH-001 scope
+  question).** BODY renders neither `.command-surface` nor any WHY/diagnostic disclosure —
+  by design, it has four peer trackers and no single dominant decision to expose. Asked
+  directly whether DEPTH-001's PCB-trace reveal (see "Visual system — red budget" below, whose
+  final bullet records DEPTH-001 itself) should extend to BODY; answer was to skip it entirely
+  rather than invent a correction-history
+  or per-tracker variant. Matches this section's own "four peers, no leader" doctrine. Not a
+  temporary placeholder — a future BODY reveal would need its own fresh ask, not an inferred
+  extension of this scope.
+
+## Recommendation Engine — outcome ratings stay observational
+
+Locked 2026-09-16, direct owner ruling, asked directly alongside DEPTH-001's BODY question
+above (same session, same "no invented scope" discipline as "Intent & Commitment — Obligations
+enter Engine recommendation arbitration" further below).
+
+- **Rated Outcome history (GOOD/NEUTRAL/BAD, `rateOutcome` in
+  [commands.ts](../src/application/commands.ts)) never biases or tie-breaks which recommendation
+  `evaluate.ts` selects.** Asked explicitly: should a pattern of ratings ever influence future
+  Engine behavior, even just as a tie-break? Answer: no — it stays exactly as observational as
+  it already was. This confirms, rather than changes, the doctrine already stated at
+  `rateOutcome`'s own call sites ("rules provide consistency, outcomes provide correction," not
+  silent rule adjustment) and the pre-existing "Explicitly out of scope" entry below ("Any AI /
+  learning layer over workout data") — now extended explicitly to the Engine's primary
+  recommendation selection generally, not just workout data.
+- A future session should not re-raise this as an open question without new information — it
+  was asked and answered directly, not merely undecided.
 
 ## NUTRITION (Meal Memory — NUTRITION-001, locked)
 
@@ -268,6 +295,27 @@ comment for history, not deleted.
   DAILY/WEEKLY(+BYDAY)/MONTHLY are exposed in the picker — this Drop is the create/edit/execute
   mechanism only.
 
+## Intent & Commitment — Obligations enter Engine recommendation arbitration (INTENT-ARBITRATION-001)
+
+Locked 2026-09-15, direct owner ruling via two explicit questions (rank, then eligible tiers) —
+Obligations previously had zero influence on `evaluate.ts`'s own recommendation, only on
+TODAY's separate ATTENTION budget.
+
+- **New `OBLIGATION_DUE` recommendation kind, ranked bottom-of-stack** — above only
+  `NO_ACTION_REQUIRED`, below STABILIZE/POST_SHIFT_TRANSITION/RECOVER/EXECUTE_PLANNED_WORK. The
+  owner explicitly rejected the alternative of ranking it between POST_SHIFT_TRANSITION and
+  RECOVER.
+- **Eligible only for `OVERDUE`/`DUE_TODAY` obligations** — `DUE_SOON`/`PLANNED_TODAY` remain
+  advisory-only via the pre-existing TODAY ATTENTION budget, unchanged.
+- **Engine purity preserved.** `evaluate.ts` itself imports nothing from
+  `engine/obligationRelevance.ts` — `application/commands.ts` computes one boolean
+  (`hasEligibleObligationDueOrOverdue`) via `hasObligationRequiringArbitration` and passes only
+  that into `evaluate()`, the same pattern as `hasPlannedWork`/`hasUnresolvedPostShift`.
+- Known, accepted overlap: an `OVERDUE`/`DUE_TODAY` obligation can show both as the dominant
+  `OBLIGATION_DUE` recommendation and as a separate `COMMITMENT_DUE` attention chip — same
+  treatment `POST_SHIFT_TRANSITION` already has with its own underlying fact, not a new
+  inconsistency.
+
 ## Backup / restore / archival
 
 - **Replace-only restore, preview-before-write, always.** Nothing is
@@ -359,6 +407,25 @@ comment for history, not deleted.
   a one-time confirmation pulse on mount; TRAIN's own pre-existing per-set flash (`.set-earned`,
   VISUAL-001) already serves the identical purpose for set logging and is left untouched rather
   than duplicated. All four are pure presentation — no command/query/engine/domain change.
+- **"Exposed Machinery" reveal (locked 2026-09-16, direct owner ruling over four rendered
+  mockup passes, DEPTH-001).** A narrow, explicit authorization beyond this section's own
+  "ambient motion stays deferred" framing above — obtained through its own independent review
+  process the next day, not an automatic extension of LAUNCH-VISION-003's four named elements.
+  Opening any of TODAY's "How BEYOND decided," TRAIN's "Why this suggestion"/"Exercise detail,"
+  or MORE's "Diagnostic detail" now also shows a full-viewport, purely decorative, `aria-hidden`
+  PCB-style circuit-trace network (flat, unglowing red, matched directly to real circuit-board
+  photography — an SVG blur/glow filter was tried and explicitly rejected) behind the still-
+  legible disclosed content. Reached over four passes: thin hairline traces confined to the
+  panel (rejected as "not dramatic enough"); full-screen solid shattered plates matching a
+  Batman Beyond character render (rejected — wrong reference entirely, real PCB photos supplied
+  instead); a glowing converging trace network (right direction, but faded toward the edges);
+  finally flat, uniformly-bright, unglowing traces matched to the supplied photograph —
+  "Perfect. Ship it man." See `docs/agent/drops/DEPTH-001.md` for the full history.
+  `prefers-reduced-motion: reduce` fully suppresses it (never mounts, not just hidden). Does not
+  extend to BODY (see "BODY" above) and deliberately does not include a whole-screen shake that
+  an earlier reviewed pass had — kept only the reveal itself and a contained brightness-pulse
+  flash, consistent with this app's own existing "motion explains a state change, never
+  decorates" doctrine (see "Visual system — motion" below, MOTION-001).
 
 ## Visual system — typography
 
