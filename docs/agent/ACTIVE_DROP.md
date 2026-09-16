@@ -1,15 +1,13 @@
 ---
-id: DEPTH-001
-status: CLOSED
-baseline: 1be442772460d36450831fa4b0e5124ba131d500
-branch: claude/depth-001-machinery-reveal
-contract: docs/agent/drops/DEPTH-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/99
-builder: Claude, this session, per direct owner review of four rendered mockup passes ('Perfect. Ship it man.') 2026-09-16
-reviewer: Claude (independent subagent, background), assigned by Builder 2026-09-16
-integrator: Claude (this session), 2026-09-16
-integration_sha: 5821112c8e20b5dfd960298db0e28eaaf50b0c4b
-closed_at: 2026-09-16T02:27:09.670Z
+id: DECISIONS-001
+status: ACTIVE
+baseline: 8da35b29fd246d568698f816617007f6665f95b4
+branch: claude/decisions-001-body-outcome-scope
+contract: docs/agent/drops/DECISIONS-001.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Claude, this session, per two direct owner AskUserQuestion rulings 2026-09-16
+reviewer: (unassigned)
+integrator: (unassigned)
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/DEPTH-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/DECISIONS-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
