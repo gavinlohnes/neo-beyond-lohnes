@@ -87,15 +87,29 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
   const [reminderPermissionDenied, setReminderPermissionDenied] = useState(false);
 
   useEffect(() => {
-    void refresh();
+    let disposed = false;
+    void refresh().catch((error) => {
+      if (disposed && isDatabaseClosedError(error)) return;
+      console.error("MORE diagnostics refresh failed.", error);
+    });
+    return () => {
+      disposed = true;
+    };
   }, []);
 
   async function refresh() {
-    setDays(await getDayCount());
-    setEvents(await getEventCount());
-    setRecommendations(await getRecommendationCount());
-    setActiveDayYes((await getActiveDay()) !== undefined);
-    setAdvisoryNotes(await getAdvisoryNotes());
+    const [nextDays, nextEvents, nextRecommendations, activeDay, nextAdvisoryNotes] = await Promise.all([
+      getDayCount(),
+      getEventCount(),
+      getRecommendationCount(),
+      getActiveDay(),
+      getAdvisoryNotes(),
+    ]);
+    setDays(nextDays);
+    setEvents(nextEvents);
+    setRecommendations(nextRecommendations);
+    setActiveDayYes(activeDay !== undefined);
+    setAdvisoryNotes(nextAdvisoryNotes);
   }
 
   async function handleExportBackup() {
@@ -675,4 +689,8 @@ function DiagRow({ label, value }: { label: string; value: string }) {
       <span>{value}</span>
     </div>
   );
+}
+
+function isDatabaseClosedError(error: unknown): error is Error {
+  return error instanceof Error && error.name === "DatabaseClosedError";
 }
