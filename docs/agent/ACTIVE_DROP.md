@@ -1,15 +1,13 @@
 ---
-id: FOUNDATION-1A
-status: CLOSED
-baseline: f32482a3c70eb2fddb9b17f8c306db849c444b13
-branch: claude/foundation-1a-iy32gy
-contract: docs/agent/drops/FOUNDATION-1A.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/106
-builder: Claude, this session, direct owner authorization 2026-09-16 (doctrine/architecture reconciliation)
-reviewer: PR #106 review (duplicate ACTIVE_DROP heading found and corrected in commit 5b93021); approved for integration by direct owner ruling 2026-09-16
-integrator: Claude, this session, direct owner authorization to merge 2026-09-16
-integration_sha: b51df9a34c4ad617e914344065a7311c0c8c38f3
-closed_at: 2026-09-16T08:50:01.440Z
+id: FACTORY-003
+status: ACTIVE
+baseline: 2d3cad34645afed52d43a65b1a4be223cbc7bf77
+branch: claude/factory-003-stale-branch-robustness
+contract: docs/agent/drops/FACTORY-003.md
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/107
+builder: Claude, this session, direct owner authorization (Design C hybrid locked)
+reviewer: (unassigned)
+integrator: (unassigned)
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/FOUNDATION-1A.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/FACTORY-003.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
