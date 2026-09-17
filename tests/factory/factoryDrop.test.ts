@@ -876,6 +876,45 @@ describe("FACTORY-003: historical-merge fallback for rewrite-orphaned branches",
     }
   });
 
+  it("[case 5c] a post-merge commit pushed DURING the GitHub API wait (same candidate) must still be a conflict (TOCTOU regression, second window)", async () => {
+    // A second, narrower version of the same race, named exactly by the reviewer's confirmed
+    // finding against [case 5b]'s fix: that fix re-fetches the branch fresh right before the
+    // GitHub call, but a push landing *during* the network wait (fetch already done, API still
+    // in flight) would still be invisible to a comparison against that pre-wait tip. There is
+    // only one candidate here — no decoy needed — because the window under test is this
+    // candidate's own API round-trip, not the earlier bulk-fetch-to-per-branch-turn gap [case 5b]
+    // covers. The mocked PR response reports the branch's *original* (pre-push) head SHA; only
+    // resolving the tip *after* the API response comes back (not before it was sent) can still
+    // correctly see the pushed commit and report a conflict.
+    const { branchTip, branch } = setupOrphanedMergedDrop(fixture, "TEST-RACE", 30);
+    const branchName = branch.replace(/^origin\//, "");
+    const baseline = fixture.headSha;
+    const mock = await startMockGitHubApi("/repos/acme/widget/pulls/30", {
+      status: 200,
+      body: { merged: true, head: { sha: branchTip } }, // the pre-push tip — stale by the time this arrives
+      delayMs: 2000,
+    });
+    try {
+      writeContract(fixture, "TEST-003", validContractText({ id: "TEST-003", baseline }));
+      const runPromise = runFactoryDropAsync(
+        ["init", "TEST-003", "--baseline", baseline, "--branch", "test-003-branch"],
+        fixture,
+        { GH_TOKEN: "fake-test-token", FACTORY_DROP_GITHUB_API_BASE: mock.url },
+      );
+      // Well before the mocked 2000ms delay elapses, but comfortably after the subprocess should
+      // have already sent its GitHub request for this, its only, candidate.
+      await new Promise((r) => setTimeout(r, 400));
+      pushRaceCommit(fixture, branchName);
+
+      const result = await runPromise;
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+      expect(result.stderr).toContain("TEST-RACE");
+    } finally {
+      mock.close();
+    }
+  });
+
   it("[case 6] matching contract but no token available -> conflict, no network attempted", () => {
     const { baseline } = setupOrphanedMergedDrop(fixture, "TEST-001", 7);
     writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline }));

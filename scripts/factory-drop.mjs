@@ -336,17 +336,17 @@ async function corroborateHistoricalMerge(root, ref, prField) {
   // below would reopen exactly the mandatory invariant this function
   // exists to enforce: a branch given a new commit after the bulk fetch,
   // but before its own corroboration runs, must still read as a conflict.
-  // Re-fetch this one branch fresh, immediately before resolving its tip,
-  // so the comparison is against branch state as of *this* decision, not
-  // whatever it was when the enumeration loop started.
+  //
+  // The GitHub call itself is a second, narrower version of the same
+  // window: `fetch` (git) then `await` (network, up to
+  // GITHUB_API_TIMEOUT_MS) then compare would let a push land *during*
+  // that network wait go undetected, because the tip was captured before
+  // the wait started. So the tip must be resolved *after* the API
+  // response comes back, not before — the API call first, then the
+  // branch fetch, then the comparison, so the observed tip is the
+  // freshest one available at decision time rather than a snapshot from
+  // before the slowest step.
   const branchName = ref.replace(/^origin\//, "");
-  let branchTip;
-  try {
-    git(["fetch", "-q", "origin", branchName], root);
-    branchTip = git(["rev-parse", "FETCH_HEAD"], root);
-  } catch (e) {
-    return { corroborated: false, reason: `CANNOT_RESOLVE_TIP: ${e.message}` };
-  }
   let pr;
   try {
     pr = await githubApi(`/repos/${slug}/pulls/${prNumber}`, token);
@@ -354,6 +354,13 @@ async function corroborateHistoricalMerge(root, ref, prField) {
     return { corroborated: false, reason: `API_ERROR: ${e.message}` };
   }
   if (pr?.merged !== true) return { corroborated: false, reason: "PR_NOT_MERGED" };
+  let branchTip;
+  try {
+    git(["fetch", "-q", "origin", branchName], root);
+    branchTip = git(["rev-parse", "FETCH_HEAD"], root);
+  } catch (e) {
+    return { corroborated: false, reason: `CANNOT_RESOLVE_TIP: ${e.message}` };
+  }
   if (pr?.head?.sha !== branchTip) return { corroborated: false, reason: "HEAD_SHA_MISMATCH" };
   return { corroborated: true };
 }
