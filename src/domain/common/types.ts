@@ -209,7 +209,8 @@ export type DomainEventType =
   | "OBLIGATION_RELEASED"
   | "DECISION_JOURNAL_CREATED"
   | "DECISION_JOURNAL_MODIFIED"
-  | "DECISION_JOURNAL_REVIEWED";
+  | "DECISION_JOURNAL_REVIEWED"
+  | "PLANNED_WORK_SET";
 
 /**
  * DERIVED, not stored. Computed by walking a WATER_LOGGED event and any
@@ -450,6 +451,32 @@ export interface WorkContextSetPayload {
  */
 export interface WorkPeriodEndedPayload {
   commandId: string;
+}
+
+/**
+ * PLANNED-WORK-001 (direct owner ruling, 2026-09-20): the ONLY way
+ * `evaluate.ts`'s `hasPlannedWork` input can ever be true —
+ * application/queries.ts's `hasActivePlannedWork` reads this event, never
+ * infers planned work from capacity, schedule, or TRAIN's rotation state
+ * (`suggestTemplateForNextWorkout` always has a "next" template, so
+ * "a workout exists in rotation" is trivially true every day and cannot
+ * be the signal). Same "explicit, confirmed fact" doctrine as
+ * `WorkContextSetPayload`: `planned: false` is how the operator
+ * explicitly clears a declaration, not merely the absence of one.
+ *
+ * `kind` is a real union rather than a bare boolean specifically so a
+ * later Drop can add a second planned-activity source without changing
+ * this event's shape or any consumer's read logic — deliberately not
+ * populated with a second value now (see docs/agent/drops/
+ * PLANNED-WORK-001.md's exclusions). TRAIN is the only source for this
+ * Drop; `application/queries.ts`'s `hasActivePlannedWork` already reads
+ * this generically (any kind, not a workout-specific check), so the
+ * generalization boundary needs no further change when that day comes.
+ */
+export interface PlannedWorkSetPayload {
+  commandId: string;
+  planned: boolean;
+  kind: "WORKOUT";
 }
 
 /**

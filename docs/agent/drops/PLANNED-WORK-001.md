@@ -50,10 +50,11 @@ Engine only ever sees it.
   explicit, operator-initiated only, same "the ONLY way this changes" doctrine as
   `setWorkContext`.
 - New query: `hasActivePlannedWork(beyondDayId): Promise<boolean>` — true only when the most
-  recent `PLANNED_WORK_SET` event for the day says `planned: true` AND no rotation-advancing
-  `WORKOUT_COMPLETED`/`WORKOUT_ABANDONED` event for that day is later than it (a fulfilled or
-  abandoned plan stops being "active," reusing existing TRAIN completion facts rather than a
-  new "satisfied" event).
+  recent `PLANNED_WORK_SET` event for the day says `planned: true` AND no
+  `WORKOUT_COMPLETED`/`WORKOUT_ABANDONED` event (any session type) for that day is later than
+  it (a fulfilled or deliberately-stopped session both legitimately resolve the declaration,
+  reusing existing TRAIN completion facts rather than a new "satisfied" event — not scoped to
+  `trainSuggestion.ts`'s narrower rotation-advancement rule, a different question).
 - Replace `application/commands.ts`'s `hasPlannedWork: false` with
   `await hasActivePlannedWork(beyondDayId)` in `submitCheckIn`.
 - One explicit UI affordance (TODAY, alongside the existing `WorkContextCard` pattern) letting
