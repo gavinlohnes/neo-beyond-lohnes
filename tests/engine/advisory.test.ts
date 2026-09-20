@@ -1,8 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  composeAdvisoryNoteFromContinuity,
   composeAdvisoryNoteFromJournal,
+  composeAdvisoryNoteFromPatternProposal,
   composeAdvisoryNoteFromProgression,
+  composeAdvisoryNoteFromShiftProtection,
   composeAdvisoryNotesFromObligations,
 } from "../../src/engine/advisory";
 import type { DecisionJournalEntry } from "../../src/domain/journal/types";
@@ -238,6 +241,68 @@ describe("I3: both producers coexist without cross-domain knowledge", () => {
   });
 });
 
+describe("composeAdvisoryNoteFromShiftProtection (FOUNDATION-1B)", () => {
+  it("names every unmet item and is attributed to 'shiftProtection'", () => {
+    const note = composeAdvisoryNoteFromShiftProtection({ unmetItems: ["HYDRATE", "PROTEIN"] });
+    expect(note.sourceModule).toBe("shiftProtection");
+    expect(note.message).toContain("hydrate");
+    expect(note.message).toContain("protein");
+    expect(note.basis).toEqual([
+      { key: "unmetItem", value: "HYDRATE" },
+      { key: "unmetItem", value: "PROTEIN" },
+    ]);
+  });
+
+  it("is the one producer that ever emits INTERRUPT", () => {
+    const note = composeAdvisoryNoteFromShiftProtection({ unmetItems: ["HYDRATE"] });
+    expect(note.attentionLevel).toBe("INTERRUPT");
+  });
+
+  it("carries no Recommendation-shaped field — still only ever an AdvisoryNote", () => {
+    const note = composeAdvisoryNoteFromShiftProtection({ unmetItems: ["HYDRATE"] });
+    expect(note).not.toHaveProperty("priority");
+    expect(note).not.toHaveProperty("suggestedCommand");
+    expect(note).not.toHaveProperty("kind");
+  });
+
+  it("single unmet item uses singular verb agreement", () => {
+    const note = composeAdvisoryNoteFromShiftProtection({ unmetItems: ["PROTEIN"] });
+    expect(note.message).toContain("hasn't been logged");
+  });
+});
+
+describe("composeAdvisoryNoteFromContinuity (FOUNDATION-1B)", () => {
+  it("REINTRODUCE -> a SURFACE-tier note naming the prior recommendation", () => {
+    const note = composeAdvisoryNoteFromContinuity("EXECUTE_PLANNED_WORK", "Proceed with planned work", "REINTRODUCE");
+    expect(note).not.toBeNull();
+    expect(note!.sourceModule).toBe("continuity");
+    expect(note!.attentionLevel).toBe("SURFACE");
+    expect(note!.message).toContain("Proceed with planned work");
+  });
+
+  it("DROP and DEFER both produce no note — NO_CATCH_UP stays silent, not narrated", () => {
+    expect(composeAdvisoryNoteFromContinuity("EXECUTE_PLANNED_WORK", "x", "DROP")).toBeNull();
+    expect(composeAdvisoryNoteFromContinuity("EXECUTE_PLANNED_WORK", "x", "DEFER")).toBeNull();
+  });
+});
+
+describe("composeAdvisoryNoteFromPatternProposal (FOUNDATION-1B, Scenario F)", () => {
+  it("names the real count and rating, and never implies an automatic change", () => {
+    const note = composeAdvisoryNoteFromPatternProposal({ kind: "EXECUTE_PLANNED_WORK", rating: "BAD", count: 3 });
+    expect(note.sourceModule).toBe("patternProposal");
+    expect(note.attentionLevel).toBe("SURFACE");
+    expect(note.message).toContain("3");
+    expect(note.message).toContain("BAD");
+    expect(note.message.toLowerCase()).toContain("nothing has changed automatically");
+  });
+
+  it("carries no Recommendation-shaped field", () => {
+    const note = composeAdvisoryNoteFromPatternProposal({ kind: "RECOVER", rating: "GOOD", count: 4 });
+    expect(note).not.toHaveProperty("priority");
+    expect(note).not.toHaveProperty("suggestedCommand");
+  });
+});
+
 describe("engine boundary: advisory.ts is a one-way dependency", () => {
   it("evaluate.ts never imports advisory.ts", () => {
     const source = readFileSync(new URL("../../src/engine/evaluate.ts", import.meta.url), "utf8");
@@ -257,5 +322,27 @@ describe("engine boundary: advisory.ts is a one-way dependency", () => {
   it("journalRelevance.ts never imports advisory.ts", () => {
     const source = readFileSync(new URL("../../src/engine/journalRelevance.ts", import.meta.url), "utf8");
     expect(source).not.toMatch(/["']\.\/advisory["']/);
+  });
+
+  it("shiftProtection.ts never imports advisory.ts (FOUNDATION-1B)", () => {
+    const source = readFileSync(new URL("../../src/engine/shiftProtection.ts", import.meta.url), "utf8");
+    expect(source).not.toMatch(/["']\.\/advisory["']/);
+  });
+
+  it("continuity.ts never imports advisory.ts (FOUNDATION-1B)", () => {
+    const source = readFileSync(new URL("../../src/engine/continuity.ts", import.meta.url), "utf8");
+    expect(source).not.toMatch(/["']\.\/advisory["']/);
+  });
+
+  it("patternProposal.ts never imports advisory.ts (FOUNDATION-1B)", () => {
+    const source = readFileSync(new URL("../../src/engine/patternProposal.ts", import.meta.url), "utf8");
+    expect(source).not.toMatch(/["']\.\/advisory["']/);
+  });
+
+  it("evaluate.ts never imports continuity.ts, shiftProtection.ts, or patternProposal.ts — none of this Drop's advisory-only interpretation feeds arbitration", () => {
+    const source = readFileSync(new URL("../../src/engine/evaluate.ts", import.meta.url), "utf8");
+    expect(source).not.toMatch(/["']\.\/continuity["']/);
+    expect(source).not.toMatch(/["']\.\/shiftProtection["']/);
+    expect(source).not.toMatch(/["']\.\/patternProposal["']/);
   });
 });

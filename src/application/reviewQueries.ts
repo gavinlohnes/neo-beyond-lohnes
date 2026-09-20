@@ -1,5 +1,7 @@
 import { db } from "../persistence/db";
 import type { BeyondDay, Outcome, Recommendation } from "../domain/common/types";
+import type { RecommendationDisposition } from "../engine/continuity";
+import { getRecommendationDisposition } from "./continuityQueries";
 import { byTimeThenSeq, getRecommendationDecision, type RecommendationDecision } from "./queries";
 
 export interface LedgerEntry {
@@ -9,6 +11,8 @@ export interface LedgerEntry {
   /** undefined = no Outcome evidence exists yet. Never conflate with a BAD rating. */
   rating: NonNullable<Outcome["rating"]> | undefined;
   ratedAt: string | undefined;
+  /** FOUNDATION-1B: read-time-derived lifecycle terminal state — see engine/continuity.ts. */
+  disposition: RecommendationDisposition;
 }
 
 export interface LedgerDay {
@@ -66,11 +70,13 @@ export async function getRecommendationLedger(): Promise<LedgerDay[]> {
     // interpretation of the same event stream.
     const decision = await getRecommendationDecision(recommendation.beyondDayId, recommendation.id);
     const outcome = latestRatingByRecommendation.get(recommendation.id);
+    const disposition = await getRecommendationDisposition(recommendation);
     const entry: LedgerEntry = {
       recommendation,
       decision,
       rating: outcome?.rating,
       ratedAt: outcome?.recordedAt,
+      disposition,
     };
     const list = entriesByDay.get(recommendation.beyondDayId) ?? [];
     list.push(entry);

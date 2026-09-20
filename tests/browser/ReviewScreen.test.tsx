@@ -39,8 +39,8 @@ describe("ReviewScreen (real browser)", () => {
 
     await screen.getByRole("button", { name: "SHOW" }).click();
     await expect.element(screen.getByText(first.recommendation.title, { exact: true }).first()).toBeVisible();
-    await expect.element(screen.getByText("No action recorded · GOOD", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("No action recorded · Not yet rated", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("No action recorded · GOOD · Resolved", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("No action recorded · Not yet rated · Resolved", { exact: true })).toBeVisible();
   });
 
   it("survives a remount (reload) showing the exact same ledger content", async () => {
@@ -51,12 +51,12 @@ describe("ReviewScreen (real browser)", () => {
 
     let screen = await render(<ReviewScreen />);
     await screen.getByRole("button", { name: "SHOW" }).click();
-    await expect.element(screen.getByText("No action recorded · NEUTRAL", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("No action recorded · NEUTRAL · Resolved", { exact: true })).toBeVisible();
 
     await screen.rerender(<></>);
     await screen.rerender(<ReviewScreen />);
     await screen.getByRole("button", { name: "SHOW" }).click();
-    await expect.element(screen.getByText("No action recorded · NEUTRAL", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("No action recorded · NEUTRAL · Resolved", { exact: true })).toBeVisible();
   });
 });
 
@@ -88,7 +88,7 @@ describe("ReviewScreen (real browser) — accessibility", () => {
     expect(results.violations).toEqual([]);
 
     await screen.getByRole("button", { name: "SHOW" }).click();
-    await expect.element(screen.getByText("No action recorded · GOOD", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("No action recorded · GOOD · Resolved", { exact: true })).toBeVisible();
     results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
   });

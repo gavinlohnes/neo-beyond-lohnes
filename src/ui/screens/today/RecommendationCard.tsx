@@ -41,6 +41,7 @@ export function RecommendationCard({
   recommendationHandoff,
   activeShiftDownId,
   priorOutcomeMemory,
+  materiallyRepeated = false,
   busy,
   onOpenTrain,
   onRecord,
@@ -59,6 +60,15 @@ export function RecommendationCard({
   recommendationHandoff: RecommendationHandoffTarget | null;
   activeShiftDownId: string | null;
   priorOutcomeMemory: PriorOutcomeMemory | null;
+  /**
+   * FOUNDATION-1B (Scenario E): true when this exact recommendation is
+   * indistinguishable (same DecisionTrace) from an immediately-prior
+   * DECLINED one on the same day — application/continuityQueries.ts's
+   * wasRecommendationMateriallyRepeated. Presentation-only: it changes
+   * one line of copy, never the accept/decline behavior itself, and never
+   * suppresses issuing the real Recommendation record.
+   */
+  materiallyRepeated?: boolean;
   busy: boolean;
   onOpenTrain?: ((destination: "RECOVERY" | "WORKOUT") => void) | undefined;
   onRecord: () => void;
@@ -94,6 +104,9 @@ export function RecommendationCard({
       <p className="card-body">{recommendation.rationale}</p>
       {evidenceBasis && (
         <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
+      )}
+      {materiallyRepeated && (
+        <p className="meta" style={{ marginTop: 8 }}>Same as before — you already said not now.</p>
       )}
       <WhyDisclosure summary="How BEYOND decided" style={{ marginTop: 12 }}>
         <div className="machinery-panel">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getRecommendationLedger, type LedgerDay } from "../../../application/reviewQueries";
-import { describeLedgerDecision, describeLedgerRating } from "./reviewCopy";
+import { describeLedgerDecision, describeLedgerDisposition, describeLedgerRating } from "./reviewCopy";
 
 /**
  * REVIEW 0.1 / Recommendation Ledger (MORE // Records, sibling to
@@ -85,7 +85,7 @@ export function ReviewScreen() {
 
             {isOpen && (
               <div style={{ marginTop: 12, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-                {entries.map(({ recommendation, decision, rating }) => (
+                {entries.map(({ recommendation, decision, rating, disposition }) => (
                   <div key={recommendation.id} style={{ padding: "6px 0" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                       <span className="card-body" style={{ margin: 0 }}>{recommendation.title}</span>
@@ -97,7 +97,7 @@ export function ReviewScreen() {
                       </span>
                     </div>
                     <p className="meta" style={{ marginTop: 2 }}>
-                      {describeLedgerDecision(decision)} · {describeLedgerRating(rating)}
+                      {describeLedgerDecision(decision)} · {describeLedgerRating(rating)} · {describeLedgerDisposition(disposition)}
                     </p>
                   </div>
                 ))}
