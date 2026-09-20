@@ -112,6 +112,104 @@ A future implementation Drop that touches behavior one of these guarantees descr
 cite the guarantee name above alongside its underlying mechanism — the name is a pointer to the
 mechanism, not an independent authority of its own.
 
+## FOUNDATION-1B — Operational Continuity
+
+Locked 2026-09-20, direct owner authorization (FOUNDATION-1B — see `docs/agent/drops/
+FOUNDATION-1B.md` for the full contract). Formalizes three concepts FOUNDATION-1B's product
+objective ("what matters right now?") requires and the existing architecture already implied but
+had not yet named or completed: a bounded Attention Authority, a Continuity Engine, and a
+resolved arbitration-priority question. Terminology note: this Drop's "Continuity Engine"
+(historical DROP/DEFER/REINTRODUCE relevance resolution, `engine/continuity.ts`) is distinct from
+the existing "Continuity" pillar above (interruption/resume, `OPERATOR_INTERFACE_DOCTRINE.md`'s
+"Interruption preserves state and intent") and from CONTINUITY-001 (workout/day/navigation
+continuity) — three different concepts that happen to share the English word "continuity," not
+one renamed concept. Keep them distinct when citing this section.
+
+- **PROTECT vs EXECUTE — resolved as Advisory-only PROTECT.** FOUNDATION-1B's arbitration
+  hierarchy (`STABILIZE → PROTECT → RECOVER → EXECUTE → OPTIONAL`) and its Scenario B ("PROTECT
+  outranks EXECUTE") were found, during investigation, to conflict with the locked
+  INTENT-ARBITRATION-001 entry above, which ranks `OBLIGATION_DUE` — the closest existing
+  analogue — below `EXECUTE_PLANNED_WORK` and records that the owner "explicitly rejected"
+  ranking it higher. Presented to the owner directly rather than silently resolved either way
+  (matching this register's own stated rule and INTENT-002's precedent for reopening a locked
+  ranking). **Resolved: `evaluate.ts`'s kind set, ranking, and trace shape are unchanged —
+  INTENT-ARBITRATION-001 stands exactly as locked.** A shift-protection concern instead composes
+  into an INTERRUPT-tier `AdvisoryNote` (`engine/shiftProtection.ts`'s `evaluateShiftProtection`,
+  composed by `engine/advisory.ts`'s `composeAdvisoryNoteFromShiftProtection`) that accompanies
+  whatever `evaluate.ts` selected as primary — it never becomes a competing Engine kind. Gated on
+  `scheduledContext.ts`'s existing `PRE_WORK` phase, a real scheduled work day, capacity not
+  already RED/YELLOW (the operator's own physical state still wins first), and an unmet Minimum
+  Day hydrate/protein floor (reusing MINIMUM DAY's already-locked 40oz/25g thresholds — see
+  "Recommendation Engine" and Minimum Day's own six-item baseline — rather than inventing a new,
+  unconfigured "shift protection" number).
+- **TIME.** FOUNDATION-1B's illustrative TIME-state list (wake period/pre-shift/on-shift/
+  post-shift/wind-down/sleep window/off-day) is satisfied for this Drop by reusing
+  `scheduledContext.ts`'s existing, tested `SchedulePhase` (`PRE_WORK`/`SCHEDULED_SHIFT`/
+  `EXPECTED_POST_WORK`/`OFF`) exactly as-is — "Automatic Time State" above already names this the
+  canonical mechanism, and the brief itself asks to "use existing repo concepts where available
+  rather than creating unnecessary duplicate representations." **Deliberately not built this
+  Drop:** a finer wake/wind-down/sleep-window state distinct from the work schedule. No
+  acceptance scenario requires it, and no real-time wake/sleep-detection signal exists to ground
+  it honestly — BEYOND only ever learns about sleep after the fact, via a logged `SLEEP_LOGGED`
+  duration, never a live clock-based wake/bedtime event. Building it would mean fabricating an
+  unconfigured threshold (e.g. "wind-down starts at 9pm"), which NO_FAKE_PRECISION and this
+  Drop's own "do not create speculative abstractions" instruction both rule out. Revisit only if
+  a future Drop introduces a real evidence source for it.
+- **Continuity Engine (DROP/DEFER/REINTRODUCE).** New, `engine/continuity.ts`'s
+  `resolveContinuity`: a prior day's unresolved (never accepted/declined/acknowledged)
+  Recommendation resolves against **today's** current state, never yesterday's — enforcing
+  NO_CATCH_UP mechanically, not just by convention. `NO_ACTION_REQUIRED` and any explicitly
+  DECLINED/ACCEPTED/NO_ACTION_RECORDED prior recommendation always resolve DROP (nothing was
+  pending, or the operator already decided). An undecided prior recommendation resolves DEFER
+  when today's capacity is RED/YELLOW or an unresolved post-shift fact exists (something with
+  real, current authority already wins), otherwise REINTRODUCE. **REINTRODUCE is advisory-only
+  for this Drop** — composed into a SURFACE-tier `AdvisoryNote`
+  (`composeAdvisoryNoteFromContinuity`) via `application/continuityQueries.ts`'s
+  `resolvePriorDayContinuity`, never fed back into `evaluate.ts` and never written as a new
+  obligation-shaped fact. DROP/DEFER are deliberately silent (no note) — BEYOND does not narrate
+  every piece of history it chose not to carry forward.
+- **Attention Authority (QUIET/SURFACE/INTERRUPT).** New,
+  `domain/intelligence/types.ts`'s `AttentionLevel` — a narrower, code-level formalization of
+  `OPERATOR_INTERFACE_DOCTRINE.md`'s four-state AVAILABLE/SUGGESTED/ATTENTION/CRITICAL prose,
+  scoped to exactly one thing: how insistently an already-informational `AdvisoryNote` presents
+  itself. Every pre-FOUNDATION-1B producer (obligation relevance, TRAIN progression, Decision
+  Journal lessons) is QUIET. REINTRODUCE continuity notes and the pattern-proposal note (below)
+  are SURFACE. The shift-protection note above is the one and only INTERRUPT-tier producer —
+  "rare, reserved for meaningful conflicts or protection of important obligations" is enforced by
+  `evaluateShiftProtection`'s own narrow gate, not by convention alone. Distinct from
+  TodayScreen's own pre-existing "ATTENTION" budget (the 2-slot Commitments/Capture/
+  pending-outcome surfacing mechanism), which is unchanged by this addition. An `AdvisoryNote` at
+  any attention level remains only ever an `AdvisoryNote` — no priority, never accepted/declined/
+  executed, never an Engine input; see `.claude/rules/engine.md`.
+- **Recommendation lifecycle — materially-new-evidence gate and read-time disposition.** New,
+  `engine/continuity.ts`'s `isMateriallyNewEvidence` compares two `Recommendation.trace`s (kind
+  plus every input/derived key-value pair) structurally; `application/continuityQueries.ts`'s
+  `wasRecommendationMateriallyRepeated` uses it to detect when the current recommendation is
+  indistinguishable from an immediately-prior DECLINED one on the same day (Scenario E). This is
+  presentation-only: `submitCheckIn` still issues a real, honest `Recommendation`/
+  `RECOMMENDATION_ISSUED` fact every time (nothing about check-in evidence recording changes) —
+  only the "same as before" framing (`RecommendationCard`'s one line of copy) differs. Separately,
+  `deriveRecommendationDisposition` derives a read-time-only PENDING/COMPLETED/DISMISSED/
+  SUPERSEDED/EXPIRED label for REVIEW's ledger (`getRecommendationDisposition`) from the exact
+  same decision-reconstruction path REVIEW already used — no new stored field, no new event type.
+- **Outcome feedback (BETTER/SAME/WORSE/SKIP).** Reconciled to the existing `Outcome.rating`
+  mechanism (GOOD/NEUTRAL/BAD, "Recommendation Engine — outcome ratings stay observational"
+  below) rather than a second, parallel rating vocabulary — TODAY's existing GOOD/NEUTRAL/BAD/
+  DISMISS control (`TodayScreen.tsx`'s OUTCOME row) already is the lightweight, optional,
+  non-mandatory feedback FOUNDATION-1B describes; "SKIP" already means "leave it unrated" (the
+  existing DISMISS path). No code change; this is the same ALREADY_CANONICAL treatment
+  FOUNDATION-1A gave several of its own pillars. The locked non-biasing rule below is unchanged
+  and unreopened by this entry.
+- **Pattern proposal (Scenario F).** New, `engine/patternProposal.ts`'s
+  `detectRepeatedRatingPattern`: the most recent three rated Outcomes sharing both the same
+  Recommendation kind and the same non-NEUTRAL rating compose into one SURFACE-tier
+  `AdvisoryNote` naming the real count and rating in its own copy (never "usually"/"tends to" —
+  NO_FAKE_PRECISION). Recomputed fresh on every read; nothing is itself stored, and nothing it
+  returns can be accepted/declined/executed or silently changes any plan/threshold/doctrine —
+  PATTERN → PROPOSAL → USER DECIDES stays literal. This is the one, deliberately narrow exception
+  the FOUNDATION-1B brief itself authorizes to the "Explicitly out of scope: any AI/learning
+  layer over workout data" entry further below — not a general reopening of that exclusion.
+
 ## Day model
 
 - **Lazy day creation.** No day exists until the first action of the day

@@ -44,7 +44,42 @@ export interface AdvisoryNoteBasisEntry {
  * Decision Journal entries, composed in engine/advisory.ts) — same
  * pattern, still ignorant of the other two.
  */
-export type AdvisorySourceModule = "obligationRelevance" | "progression" | "decisionJournal";
+export type AdvisorySourceModule =
+  | "obligationRelevance"
+  | "progression"
+  | "decisionJournal"
+  | "shiftProtection"
+  | "continuity"
+  | "patternProposal";
+
+/**
+ * FOUNDATION-1B (Attention Authority, 2026-09-20): a bounded, three-level
+ * formalization of the attention-escalation concept
+ * `OPERATOR_INTERFACE_DOCTRINE.md` already states in prose (its four-state
+ * AVAILABLE/SUGGESTED/ATTENTION/CRITICAL model). QUIET/SURFACE/INTERRUPT is
+ * a narrower, code-level vocabulary for exactly one thing: how insistently
+ * an already-informational `AdvisoryNote` presents itself. It carries no
+ * authority of its own — an INTERRUPT-tier note is still only ever an
+ * `AdvisoryNote`: no priority, no suggestedCommand, never accepted/
+ * declined/executed, never an `evaluate.ts` input (see this file's doc
+ * comment above and `.claude/rules/engine.md`). Distinct from TodayScreen's
+ * own pre-existing "ATTENTION" budget (the 2-slot Commitments/Capture/
+ * pending-outcome surfacing mechanism) — that budget is unchanged by this
+ * addition; INTERRUPT-tier notes still render through the same quiet
+ * ADVISORY section, only more prominently within it.
+ *
+ * QUIET: BEYOND may know something without interrupting — the default for
+ * every producer that existed before this Drop (obligation relevance,
+ * TRAIN progression, Decision Journal lessons).
+ * SURFACE: deserves elevated visibility at the appropriate moment, but not
+ * urgent — used for a REINTRODUCE continuity resolution (still relevant,
+ * currently appropriate, but not a protection-shaped conflict).
+ * INTERRUPT: rare, reserved for a meaningful conflict or the protection of
+ * an important constraint (FOUNDATION-1B's one narrow trigger: a
+ * shift-protection concern per `engine/shiftProtection.ts`). Still
+ * advisory — it never blocks, executes, or bypasses user decision.
+ */
+export type AttentionLevel = "QUIET" | "SURFACE" | "INTERRUPT";
 
 export interface AdvisoryNote {
   id: string;
@@ -53,4 +88,6 @@ export interface AdvisoryNote {
   basis: AdvisoryNoteBasisEntry[];
   /** Optional link to the Recommendation this note accompanies — purely referential, never mutates it. */
   relatedRecommendationId?: string;
+  /** See AttentionLevel's doc comment above. Required so every producer states its tier explicitly rather than an implicit default. */
+  attentionLevel: AttentionLevel;
 }

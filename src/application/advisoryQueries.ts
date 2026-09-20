@@ -1,13 +1,20 @@
 import {
+  composeAdvisoryNoteFromContinuity,
   composeAdvisoryNoteFromJournal,
+  composeAdvisoryNoteFromPatternProposal,
   composeAdvisoryNoteFromProgression,
+  composeAdvisoryNoteFromShiftProtection,
   composeAdvisoryNotesFromObligations,
 } from "../engine/advisory";
+import { deriveCapacity } from "../engine/capacity";
 import { findRelevantReviewedEntries } from "../engine/journalRelevance";
-import { formatLocalDate } from "../engine/scheduledContext";
+import { formatLocalDate, deriveScheduledContext } from "../engine/scheduledContext";
+import { evaluateShiftProtection } from "../engine/shiftProtection";
 import type { AdvisoryNote } from "../domain/intelligence/types";
+import { getPatternProposal, resolvePriorDayContinuity } from "./continuityQueries";
 import { getActiveMissions, getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 import { getReviewedDecisionJournalEntries } from "./journalQueries";
+import { getActiveDay, getLatestCheckIn, getMinimumDayStatus, getSchedulePattern } from "./queries";
 import { getCurrentProgressionSuggestions } from "./trainQueries";
 
 /**
@@ -57,6 +64,16 @@ import { getCurrentProgressionSuggestions } from "./trainQueries";
  * Engine influence, no persisted linkage. Concatenation order below is
  * unaffected — Missions/Obligations combine into one flat term list
  * before reaching findRelevantReviewedEntries, not a second producer.
+ *
+ * FOUNDATION-1B (2026-09-20): two more producers, appended last —
+ * shiftProtection (engine/shiftProtection.ts, via
+ * continuityQueries.ts's sibling current-state gathering) and continuity
+ * (engine/continuity.ts's resolvePriorDayContinuity, via
+ * application/continuityQueries.ts, which owns "what was the most recent
+ * prior day's Recommendation" the same way intentQueries.ts owns current
+ * Obligation eligibility). Both need the active day's own current state
+ * (check-in-derived capacity, Minimum Day status, prior-day history) and
+ * are simply absent — never fabricated — when there is no active day.
  */
 export async function getAdvisoryNotes(now: Date = new Date()): Promise<AdvisoryNote[]> {
   const obligations = await getCurrentlyEligibleUnresolvedObligations();
@@ -77,5 +94,49 @@ export async function getAdvisoryNotes(now: Date = new Date()): Promise<Advisory
     .map((entry) => composeAdvisoryNoteFromJournal(entry))
     .filter((note): note is AdvisoryNote => note !== null);
 
-  return [...obligationNotes, ...progressionNotes, ...journalNotes];
+  // FOUNDATION-1B: both new producers need the active day's own current
+  // state (check-in-derived capacity, Minimum Day status, prior-day
+  // history) — neither exists without one, so both are simply absent
+  // (never fabricated/defaulted) when there is no active day, same
+  // "quiet by default" treatment every other producer already follows.
+  const activeDay = await getActiveDay();
+  let shiftProtectionNotes: AdvisoryNote[] = [];
+  let continuityNotes: AdvisoryNote[] = [];
+  if (activeDay) {
+    const [checkIn, minimumDay, schedulePattern, continuityCandidate] = await Promise.all([
+      getLatestCheckIn(activeDay.id),
+      getMinimumDayStatus(activeDay.id),
+      getSchedulePattern(),
+      resolvePriorDayContinuity(activeDay),
+    ]);
+    const scheduledContext = deriveScheduledContext(now, schedulePattern);
+    const concern = evaluateShiftProtection({
+      phase: scheduledContext.phase,
+      todayIsScheduledWorkDay: scheduledContext.todayIsScheduledWorkDay,
+      capacity: checkIn ? deriveCapacity(checkIn).capacity : null,
+      minimumDay: { hydrate: minimumDay.hydrate, protein: minimumDay.protein },
+    });
+    if (concern) shiftProtectionNotes = [composeAdvisoryNoteFromShiftProtection(concern)];
+
+    if (continuityCandidate) {
+      const note = composeAdvisoryNoteFromContinuity(
+        continuityCandidate.recommendation.kind,
+        continuityCandidate.recommendation.title,
+        continuityCandidate.resolution,
+      );
+      if (note) continuityNotes = [note];
+    }
+  }
+
+  const patternProposal = await getPatternProposal();
+  const patternProposalNotes = patternProposal ? [composeAdvisoryNoteFromPatternProposal(patternProposal)] : [];
+
+  return [
+    ...obligationNotes,
+    ...progressionNotes,
+    ...journalNotes,
+    ...shiftProtectionNotes,
+    ...continuityNotes,
+    ...patternProposalNotes,
+  ];
 }

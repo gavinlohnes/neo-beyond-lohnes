@@ -1,19 +1,25 @@
 import type { Obligation } from "../domain/intent/types";
 import type { DecisionJournalEntry } from "../domain/journal/types";
 import type { ExercisePrescription } from "../domain/workout/types";
+import type { RecommendationKind } from "../domain/common/types";
 import type { AdvisoryNote } from "../domain/intelligence/types";
 import { classifyObligation, isAttentionWorthyTier } from "./obligationRelevance";
 import type { ProgressionSuggestion } from "./progression";
+import type { ShiftProtectionConcern } from "./shiftProtection";
+import type { ContinuityResolution } from "./continuity";
+import type { PatternProposal } from "./patternProposal";
 
 /**
  * Intelligence Spine — I1 (architectural seam, first slice, approved
  * 2026-08-22) / I3 (second-producer generalization proof, approved
  * 2026-08-23) / JOURNAL-001 (third-producer, direct owner sign-off,
  * 2026-09-15). Pure, deterministic composition of already-locked
- * interpretation output — today from three independent sources
+ * interpretation output — today from five independent sources
  * (obligationRelevance.ts's tier classification; progression.ts's TRAIN
  * advisory; journalRelevance.ts's keyword-relevance match over reviewed
- * Decision Journal entries) — into the shared AdvisoryNote contract
+ * Decision Journal entries; FOUNDATION-1B's shiftProtection.ts pre-shift
+ * concern; FOUNDATION-1B's continuity.ts DROP/DEFER/REINTRODUCE
+ * resolution) — into the shared AdvisoryNote contract
  * (domain/intelligence/types.ts). Each composer function below knows
  * about exactly one domain; none is aware the others exist — this file
  * is only where their outputs share a common shape, never where
@@ -21,8 +27,9 @@ import type { ProgressionSuggestion } from "./progression";
  *
  * Directionality is one-way and must stay that way: this module may
  * import from engine/obligationRelevance.ts, engine/progression.ts,
- * engine/journalRelevance.ts's types, and engine/evaluate.ts's types, but
- * none of those may import from this module (regression-tested in
+ * engine/journalRelevance.ts's types, engine/shiftProtection.ts,
+ * engine/continuity.ts, and engine/evaluate.ts's types, but none of those
+ * may import from this module (regression-tested in
  * tests/engine/advisory.test.ts). Advisory composition sits strictly
  * downstream of RECOMMEND-stage and INTERPRET-stage output — it never
  * feeds back into Engine arbitration. See .claude/rules/engine.md.
@@ -52,6 +59,7 @@ export function composeAdvisoryNotesFromObligations(obligations: Obligation[], t
         ...(obligation.dueAt ? [{ key: "dueAt", value: obligation.dueAt }] : []),
         ...(obligation.plannedAt ? [{ key: "plannedAt", value: obligation.plannedAt }] : []),
       ],
+      attentionLevel: "QUIET",
     });
   }
 
@@ -86,6 +94,7 @@ export function composeAdvisoryNoteFromProgression(
         ? [{ key: "suggestedNextWeight", value: suggestion.suggestedNextWeight }]
         : []),
     ],
+    attentionLevel: "QUIET",
   };
 }
 
@@ -113,5 +122,81 @@ export function composeAdvisoryNoteFromJournal(entry: DecisionJournalEntry): Adv
       { key: "lesson", value: entry.lesson },
       ...(entry.outcome ? [{ key: "outcome", value: entry.outcome }] : []),
     ],
+    attentionLevel: "QUIET",
+  };
+}
+
+/**
+ * FOUNDATION-1B — the fourth producer, and the only one that ever emits at
+ * INTERRUPT tier. Reshapes an already-computed `ShiftProtectionConcern`
+ * (`engine/shiftProtection.ts`) into the shared AdvisoryNote contract — it
+ * adds no new judgment of its own, same "restate, don't decide" discipline
+ * every other composer in this file follows. Doctrine test before calling
+ * this INTERRUPT rather than SURFACE: "reserved for meaningful conflicts or
+ * protection of important obligations" — a pre-shift hydration/protein gap
+ * is exactly that (irreversible once the shift starts), and
+ * `evaluateShiftProtection` already gates this to only fire when capacity
+ * is not already RED/YELLOW (something else already has authority then).
+ */
+export function composeAdvisoryNoteFromShiftProtection(concern: ShiftProtectionConcern): AdvisoryNote {
+  const items = concern.unmetItems.map((item) => item.toLowerCase()).join(" and ");
+  return {
+    id: crypto.randomUUID(),
+    sourceModule: "shiftProtection",
+    message: `Shift is coming up and ${items} still ${concern.unmetItems.length > 1 ? "haven't" : "hasn't"} been logged today.`,
+    basis: concern.unmetItems.map((item) => ({ key: "unmetItem", value: item })),
+    attentionLevel: "INTERRUPT",
+  };
+}
+
+/**
+ * FOUNDATION-1B — the fifth producer. Only a REINTRODUCE resolution is
+ * advisory-worthy: DROP and DEFER are both deliberately silent (NO_CATCH_UP
+ * — BEYOND does not narrate every piece of history it chose not to carry
+ * forward), matching how composeAdvisoryNoteFromProgression's HOLD case and
+ * composeAdvisoryNotesFromObligations' non-attention-worthy tiers already
+ * return nothing rather than a note. SURFACE, not INTERRUPT: "still
+ * relevant and currently appropriate" is real information, not a conflict
+ * or a protected constraint.
+ */
+export function composeAdvisoryNoteFromContinuity(
+  priorKind: RecommendationKind,
+  priorTitle: string,
+  resolution: ContinuityResolution,
+): AdvisoryNote | null {
+  if (resolution !== "REINTRODUCE") return null;
+
+  return {
+    id: crypto.randomUUID(),
+    sourceModule: "continuity",
+    message: `"${priorTitle}" from last time is still relevant today.`,
+    basis: [
+      { key: "priorKind", value: priorKind },
+      { key: "resolution", value: resolution },
+    ],
+    attentionLevel: "SURFACE",
+  };
+}
+
+/**
+ * FOUNDATION-1B — the sixth producer, Scenario F. Named small-N in its own
+ * message text (never "you usually..." or any confidence claim beyond the
+ * literal count) — NO_FAKE_PRECISION and doctrine's "Small-N observations
+ * can suggest a pattern... but cannot silently become doctrine." Purely
+ * observational: naming the proposal is the entire behavior. Nothing here
+ * changes any plan, threshold, or Engine input — USER DECIDES what, if
+ * anything, to do about it.
+ */
+export function composeAdvisoryNoteFromPatternProposal(proposal: PatternProposal): AdvisoryNote {
+  return {
+    id: crypto.randomUUID(),
+    sourceModule: "patternProposal",
+    message: `Your last ${proposal.count} "${proposal.kind}" outcomes were all rated ${proposal.rating}. Worth a look — nothing has changed automatically.`,
+    basis: [
+      { key: "kind", value: proposal.kind },
+      { key: "rating", value: proposal.rating },
+      { key: "count", value: proposal.count },
+    ],
+    attentionLevel: "SURFACE",
   };
 }

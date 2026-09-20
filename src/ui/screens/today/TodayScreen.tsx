@@ -8,6 +8,7 @@ import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
 import { getMostRelevantUnresolvedObligation, hasObligationRequiringAttention } from "../../../engine/obligationRelevance";
 import { getCurrentlyEligibleUnresolvedObligations, getMissionForObligation } from "../../../application/intentQueries";
 import { getAdvisoryNotes } from "../../../application/advisoryQueries";
+import { wasRecommendationMateriallyRepeated } from "../../../application/continuityQueries";
 import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { AdvisorySection } from "./AdvisorySection";
 import { convertCaptureToObligation, satisfyObligation } from "../../../application/intentCommands";
@@ -129,6 +130,7 @@ export function TodayScreen({
   const [decision, setDecision] = useState<RecommendationDecision | undefined>(undefined);
   const [recommendationHandoff, setRecommendationHandoff] = useState<RecommendationHandoffTarget | null>(null);
   const [priorOutcomeMemory, setPriorOutcomeMemory] = useState<PriorOutcomeMemory | null>(null);
+  const [materiallyRepeated, setMateriallyRepeated] = useState(false);
   const [values, setValues] = useState<PartialCheckInValues>({});
   const [busy, setBusy] = useState(false);
   // TODAY-009 (residual TODAY-R02, flagged in TODAY-006): `busy` is React
@@ -385,6 +387,7 @@ export function TodayScreen({
     let decision: RecommendationDecision | undefined;
     let recommendationHandoff: RecommendationHandoffTarget | null = null;
     let priorOutcomeMemory: PriorOutcomeMemory | null = null;
+    let materiallyRepeated = false;
     let suggestEndDay = false;
     let pendingOutcome: Awaited<ReturnType<typeof getPendingOutcomeRating>> | null = null;
     let minimumDay: MinimumDayStatus | null = null;
@@ -401,6 +404,7 @@ export function TodayScreen({
       decision = rec ? await getRecommendationDecision(activeDay.id, rec.id) : undefined;
       recommendationHandoff = rec ? (await getRecommendationHandoff(rec)) ?? null : null;
       priorOutcomeMemory = rec ? (await getPriorOutcomeMemory(rec)) ?? null : null;
+      materiallyRepeated = rec ? await wasRecommendationMateriallyRepeated(rec) : false;
       suggestEndDay = await shouldSuggestEndDay(activeDay.id);
       pendingOutcome = rec ? (await getPendingOutcomeRating(rec)) ?? null : null;
       minimumDay = await getMinimumDayStatus(activeDay.id);
@@ -453,6 +457,7 @@ export function TodayScreen({
       setDecision(decision);
       setRecommendationHandoff(recommendationHandoff);
       setPriorOutcomeMemory(priorOutcomeMemory);
+      setMateriallyRepeated(materiallyRepeated);
       setSuggestEndDay(suggestEndDay);
       setPendingOutcome(pendingOutcome);
       setMinimumDay(minimumDay);
@@ -1318,6 +1323,7 @@ export function TodayScreen({
           recommendationHandoff={recommendationHandoff}
           activeShiftDownId={activeShiftDownId}
           priorOutcomeMemory={priorOutcomeMemory}
+          materiallyRepeated={materiallyRepeated}
           busy={busy}
           onOpenTrain={onOpenTrain}
           onRecord={() => void handleRecord()}
@@ -1338,6 +1344,7 @@ export function TodayScreen({
           recommendationHandoff={recommendationHandoff}
           activeShiftDownId={activeShiftDownId}
           priorOutcomeMemory={priorOutcomeMemory}
+          materiallyRepeated={materiallyRepeated}
           busy={busy}
           onOpenTrain={onOpenTrain}
           onRecord={() => void handleRecord()}
@@ -1366,6 +1373,7 @@ export function TodayScreen({
               recommendationHandoff={recommendationHandoff}
               activeShiftDownId={activeShiftDownId}
               priorOutcomeMemory={priorOutcomeMemory}
+              materiallyRepeated={materiallyRepeated}
               busy={busy}
               onOpenTrain={onOpenTrain}
               onRecord={() => void handleRecord()}
@@ -1587,6 +1595,7 @@ export function TodayScreen({
             recommendationHandoff={recommendationHandoff}
             activeShiftDownId={activeShiftDownId}
             priorOutcomeMemory={priorOutcomeMemory}
+            materiallyRepeated={materiallyRepeated}
             busy={busy}
             onOpenTrain={onOpenTrain}
             onRecord={() => void handleRecord()}

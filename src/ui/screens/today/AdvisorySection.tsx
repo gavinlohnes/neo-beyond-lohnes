@@ -36,6 +36,15 @@ function AdvisoryNoteRow({ note }: { note: AdvisoryNote }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ padding: "8px 0", borderTop: "1px solid var(--border-subtle)" }}>
+      {/* FOUNDATION-1B: INTERRUPT is the one rare, evidence-gated tier
+          (engine/shiftProtection.ts's pre-shift concern, resolved as
+          Advisory-only PROTECT — see docs/agent/drops/FOUNDATION-1B.md).
+          A text label, not color alone, per doctrine's accessibility
+          requirement — this note is still only ever an AdvisoryNote:
+          no priority, not accept/decline-able, never a Recommendation. */}
+      {note.attentionLevel === "INTERRUPT" && (
+        <p className="eyebrow" style={{ marginBottom: 4 }}>PROTECT</p>
+      )}
       <p className="card-body" style={{ margin: 0 }}>{note.message}</p>
       {note.basis.length > 0 && (
         <FieldDisclosure summary={open ? "HIDE WHY" : "WHY"} open={open} onToggle={setOpen}>
@@ -58,9 +67,15 @@ export function AdvisorySection({
   notes: AdvisoryNote[];
   excludeObligationId?: string | null | undefined;
 }) {
-  const visible = excludeObligationId
+  const filtered = excludeObligationId
     ? notes.filter((note) => basisObligationId(note) !== excludeObligationId)
     : notes;
+  // FOUNDATION-1B: INTERRUPT-tier notes sort first within this same quiet
+  // section — elevated prominence, not a competing primary Recommendation
+  // (see AdvisoryNoteRow's PROTECT label above). A stable sort preserves
+  // every other producer's existing relative order.
+  const attentionRank = { INTERRUPT: 0, SURFACE: 1, QUIET: 2 } as const;
+  const visible = [...filtered].sort((a, b) => attentionRank[a.attentionLevel] - attentionRank[b.attentionLevel]);
   if (visible.length === 0) return null;
   return (
     <div className="equipment-row">
