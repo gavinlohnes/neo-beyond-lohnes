@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   composeAdvisoryNoteFromContinuity,
+  composeAdvisoryNoteFromDayRolloverAmbiguity,
   composeAdvisoryNoteFromJournal,
   composeAdvisoryNoteFromPatternProposal,
   composeAdvisoryNoteFromProgression,
@@ -303,6 +304,21 @@ describe("composeAdvisoryNoteFromPatternProposal (FOUNDATION-1B, Scenario F)", (
   });
 });
 
+describe("composeAdvisoryNoteFromDayRolloverAmbiguity (DAY-ROLLOVER-001)", () => {
+  it("carries the right sourceModule, SURFACE tier, and the concern kind in its basis", () => {
+    const note = composeAdvisoryNoteFromDayRolloverAmbiguity({ kind: "PRIMARY_SLEEP_ON_ROLLOVER_DAY" });
+    expect(note.sourceModule).toBe("dayRolloverAmbiguity");
+    expect(note.attentionLevel).toBe("SURFACE");
+    expect(note.basis).toEqual([{ key: "concern", value: "PRIMARY_SLEEP_ON_ROLLOVER_DAY" }]);
+  });
+
+  it("carries no Recommendation-shaped field", () => {
+    const note = composeAdvisoryNoteFromDayRolloverAmbiguity({ kind: "PRIMARY_SLEEP_ON_ROLLOVER_DAY" });
+    expect(note).not.toHaveProperty("priority");
+    expect(note).not.toHaveProperty("suggestedCommand");
+  });
+});
+
 describe("engine boundary: advisory.ts is a one-way dependency", () => {
   it("evaluate.ts never imports advisory.ts", () => {
     const source = readFileSync(new URL("../../src/engine/evaluate.ts", import.meta.url), "utf8");
@@ -344,5 +360,15 @@ describe("engine boundary: advisory.ts is a one-way dependency", () => {
     expect(source).not.toMatch(/["']\.\/continuity["']/);
     expect(source).not.toMatch(/["']\.\/shiftProtection["']/);
     expect(source).not.toMatch(/["']\.\/patternProposal["']/);
+  });
+
+  it("dayRollover.ts never imports advisory.ts (DAY-ROLLOVER-001)", () => {
+    const source = readFileSync(new URL("../../src/engine/dayRollover.ts", import.meta.url), "utf8");
+    expect(source).not.toMatch(/["']\.\/advisory["']/);
+  });
+
+  it("evaluate.ts never imports dayRollover.ts — the automatic boundary never feeds arbitration", () => {
+    const source = readFileSync(new URL("../../src/engine/evaluate.ts", import.meta.url), "utf8");
+    expect(source).not.toMatch(/["']\.\/dayRollover["']/);
   });
 });

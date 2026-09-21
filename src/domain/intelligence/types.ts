@@ -43,6 +43,13 @@ export interface AdvisoryNoteBasisEntry {
  * (engine/journalRelevance.ts's keyword-relevance match over reviewed
  * Decision Journal entries, composed in engine/advisory.ts) — same
  * pattern, still ignorant of the other two.
+ *
+ * DAY-ROLLOVER-001 (2026-09-21): "dayRolloverAmbiguity" flags a PRIMARY
+ * sleep log landing on a BeyondDay that was itself created by an
+ * automatic 16:30 rollover rather than an explicit/lazy start — real
+ * ambiguity about which lived day that sleep actually closes, per the
+ * Sleep/Day-Ownership Model's own "lived days, not calendar days"
+ * reasoning. Never guessed/resolved automatically — only flagged.
  */
 export type AdvisorySourceModule =
   | "obligationRelevance"
@@ -50,7 +57,8 @@ export type AdvisorySourceModule =
   | "decisionJournal"
   | "shiftProtection"
   | "continuity"
-  | "patternProposal";
+  | "patternProposal"
+  | "dayRolloverAmbiguity";
 
 /**
  * FOUNDATION-1B (Attention Authority, 2026-09-20): a bounded, three-level

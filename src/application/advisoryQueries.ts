@@ -1,5 +1,6 @@
 import {
   composeAdvisoryNoteFromContinuity,
+  composeAdvisoryNoteFromDayRolloverAmbiguity,
   composeAdvisoryNoteFromJournal,
   composeAdvisoryNoteFromPatternProposal,
   composeAdvisoryNoteFromProgression,
@@ -7,6 +8,7 @@ import {
   composeAdvisoryNotesFromObligations,
 } from "../engine/advisory";
 import { deriveCapacity } from "../engine/capacity";
+import { evaluateDayRolloverAmbiguity } from "../engine/dayRollover";
 import { findRelevantReviewedEntries } from "../engine/journalRelevance";
 import { formatLocalDate, deriveScheduledContext } from "../engine/scheduledContext";
 import { evaluateShiftProtection } from "../engine/shiftProtection";
@@ -14,7 +16,13 @@ import type { AdvisoryNote } from "../domain/intelligence/types";
 import { getPatternProposal, resolvePriorDayContinuity } from "./continuityQueries";
 import { getActiveMissions, getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 import { getReviewedDecisionJournalEntries } from "./journalQueries";
-import { getActiveDay, getLatestCheckIn, getMinimumDayStatus, getSchedulePattern } from "./queries";
+import {
+  getActiveDay,
+  getDayRolloverAmbiguityInput,
+  getLatestCheckIn,
+  getMinimumDayStatus,
+  getSchedulePattern,
+} from "./queries";
 import { getCurrentProgressionSuggestions } from "./trainQueries";
 
 /**
@@ -102,12 +110,14 @@ export async function getAdvisoryNotes(now: Date = new Date()): Promise<Advisory
   const activeDay = await getActiveDay();
   let shiftProtectionNotes: AdvisoryNote[] = [];
   let continuityNotes: AdvisoryNote[] = [];
+  let dayRolloverAmbiguityNotes: AdvisoryNote[] = [];
   if (activeDay) {
-    const [checkIn, minimumDay, schedulePattern, continuityCandidate] = await Promise.all([
+    const [checkIn, minimumDay, schedulePattern, continuityCandidate, rolloverAmbiguityInput] = await Promise.all([
       getLatestCheckIn(activeDay.id),
       getMinimumDayStatus(activeDay.id),
       getSchedulePattern(),
       resolvePriorDayContinuity(activeDay),
+      getDayRolloverAmbiguityInput(activeDay.id),
     ]);
     const scheduledContext = deriveScheduledContext(now, schedulePattern);
     const concern = evaluateShiftProtection({
@@ -126,6 +136,12 @@ export async function getAdvisoryNotes(now: Date = new Date()): Promise<Advisory
       );
       if (note) continuityNotes = [note];
     }
+
+    // DAY-ROLLOVER-001: real ambiguity, only when the active day was
+    // itself created by an automatic rollover AND a PRIMARY sleep is
+    // logged on it — see engine/dayRollover.ts's own doc comment.
+    const rolloverAmbiguity = evaluateDayRolloverAmbiguity(rolloverAmbiguityInput);
+    if (rolloverAmbiguity) dayRolloverAmbiguityNotes = [composeAdvisoryNoteFromDayRolloverAmbiguity(rolloverAmbiguity)];
   }
 
   const patternProposal = await getPatternProposal();
@@ -138,5 +154,6 @@ export async function getAdvisoryNotes(now: Date = new Date()): Promise<Advisory
     ...shiftProtectionNotes,
     ...continuityNotes,
     ...patternProposalNotes,
+    ...dayRolloverAmbiguityNotes,
   ];
 }

@@ -8,6 +8,7 @@ import type { ProgressionSuggestion } from "./progression";
 import type { ShiftProtectionConcern } from "./shiftProtection";
 import type { ContinuityResolution } from "./continuity";
 import type { PatternProposal } from "./patternProposal";
+import type { DayRolloverAmbiguity } from "./dayRollover";
 
 /**
  * Intelligence Spine — I1 (architectural seam, first slice, approved
@@ -197,6 +198,24 @@ export function composeAdvisoryNoteFromPatternProposal(proposal: PatternProposal
       { key: "rating", value: proposal.rating },
       { key: "count", value: proposal.count },
     ],
+    attentionLevel: "SURFACE",
+  };
+}
+
+/**
+ * DAY-ROLLOVER-001 — the seventh producer. Reshapes an already-computed
+ * DayRolloverAmbiguity (engine/dayRollover.ts) into the shared
+ * AdvisoryNote contract, same "restate, don't decide" discipline as every
+ * other composer here. SURFACE, not INTERRUPT: real information worth a
+ * look, not a protection-shaped conflict — it never blocks, reassigns, or
+ * mutates the sleep log it flags.
+ */
+export function composeAdvisoryNoteFromDayRolloverAmbiguity(concern: DayRolloverAmbiguity): AdvisoryNote {
+  return {
+    id: crypto.randomUUID(),
+    sourceModule: "dayRolloverAmbiguity",
+    message: "A primary sleep log landed on a day that started from an automatic rollover — worth checking it's attributed to the day you meant.",
+    basis: [{ key: "concern", value: concern.kind }],
     attentionLevel: "SURFACE",
   };
 }

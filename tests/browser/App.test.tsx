@@ -8,6 +8,8 @@ import { db } from "../../src/persistence/db";
 import { evaluate } from "../../src/engine/evaluate";
 import type { StateCheckIn } from "../../src/domain/common/types";
 
+const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+
 /**
  * BEYOND Suit Implementation 01 (2026-08-22) — Utility Belt (Part 11).
  * First dedicated browser test for App.tsx's bottom navigation. Proves:
@@ -204,5 +206,85 @@ describe("Recommendation-to-Action Handoff (App shell)", () => {
     const handoff = handoffLocator.element();
     expect(handoff.getBoundingClientRect().right).toBeLessThanOrEqual(320);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+  });
+});
+
+/**
+ * ROLLOVER-ON-RESUME (direct owner mission, 2026-09-21): App.tsx's new
+ * visibilitychange/pageshow listener, proven against the real, unmocked
+ * mechanism — real events dispatched at a real, rendered <App/>, real
+ * Dexie state checked afterward. Backdating relative to `Date.now()`
+ * (rather than a fixed calendar date) keeps both cases deterministic
+ * regardless of the actual current wall-clock time: a day started
+ * moments before render can never have crossed a boundary yet (every
+ * boundary instant is always at-or-before "now," by construction — see
+ * engine/dayRollover.ts), and a day backdated two real days into the
+ * past is guaranteed to have crossed at least one.
+ */
+describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
+  it("resuming (visibilitychange) when the active day hasn't crossed its own boundary yet leaves it unchanged", async () => {
+    const day = await startDay();
+    const screen = await render(<App />);
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+
+    document.dispatchEvent(new Event("visibilitychange"));
+    // No expected state change to poll toward — settle past any async
+    // handler tick, then assert nothing moved.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const stillActive = await db.beyondDays.get(day.id);
+    expect(stillActive?.status).toBe("ACTIVE");
+    expect(await db.beyondDays.count()).toBe(1);
+  });
+
+  it("resuming (visibilitychange) after the boundary has elapsed since mount rolls the day over, even though the mount-time check found nothing due", async () => {
+    const day = await startDay();
+    const screen = await render(<App />);
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    // Confirms the mount-time check genuinely found nothing due — this
+    // rollover, once it happens below, is provably the resume listener's
+    // own doing, not a residual effect from mount.
+    expect((await db.beyondDays.get(day.id))?.status).toBe("ACTIVE");
+
+    // Simulate time having passed while the app sat backgrounded: the
+    // day's own boundary has now elapsed.
+    await db.beyondDays.update(day.id, { startedAt: new Date(Date.now() - TWO_DAYS_MS).toISOString() });
+
+    document.dispatchEvent(new Event("visibilitychange"));
+    await expect.poll(async () => (await db.beyondDays.get(day.id))?.status).toBe("ENDED");
+
+    const closed = await db.beyondDays.get(day.id);
+    expect((await db.events.where("beyondDayId").equals(day.id).toArray()).some(
+      (e) => e.type === "DAY_ENDED" && (e.payload as { reason?: string }).reason === "AUTO_CLOSED_DAY_ROLLOVER",
+    )).toBe(true);
+    const newActive = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
+    expect(newActive).toBeDefined();
+    expect(newActive!.id).not.toBe(closed!.id);
+  });
+
+  it("resuming via pageshow (not only visibilitychange) also rolls an elapsed day over", async () => {
+    const day = await startDay();
+    const screen = await render(<App />);
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await db.beyondDays.update(day.id, { startedAt: new Date(Date.now() - TWO_DAYS_MS).toISOString() });
+
+    window.dispatchEvent(new Event("pageshow"));
+    await expect.poll(async () => (await db.beyondDays.get(day.id))?.status).toBe("ENDED");
+  });
+
+  it("two resume events firing together (visibilitychange and pageshow, as a real browser can for one resume) still produce only one rollover", async () => {
+    const day = await startDay();
+    const screen = await render(<App />);
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await db.beyondDays.update(day.id, { startedAt: new Date(Date.now() - TWO_DAYS_MS).toISOString() });
+
+    document.dispatchEvent(new Event("visibilitychange"));
+    window.dispatchEvent(new Event("pageshow"));
+    await expect.poll(async () => (await db.beyondDays.get(day.id))?.status).toBe("ENDED");
+    // Give any second, redundant in-flight-guarded call a moment to also
+    // settle before counting rows.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(await db.beyondDays.count()).toBe(2); // the original + exactly one new one, never two new ones
   });
 });

@@ -57,3 +57,14 @@ future session with working branch-delete permission should delete that stale br
 then re-run `node scripts/factory-drop.mjs init TODAY-QUICKACTIONS-001 --baseline
 c91a7f710499af6e1a71e5d193bfea05aeffd7df --branch claude/today-quickactions-001-night-shift
 --allow-dirty` to confirm this file exactly matches what the tool itself would have produced.
+
+## Merge note (integrating current master, DAY-ROLLOVER-001)
+
+`origin/master` (`c667affd19823d0bafa7a5273eee1be40108cc8f` at merge time) was merged into this
+branch to bring DAY-ROLLOVER-001's now-merged, now-closed work in cleanly. `DAY-ROLLOVER-001`'s
+own `ACTIVE_DROP.md` record (`status: CLOSED`, `integration_sha:
+d3953193ee65003d6f2dba4719c584ef72a6089a`) is not carried forward here — this file tracks only
+the single currently-active Drop, and DAY-ROLLOVER-001's closure is already permanently recorded
+in git history (master commit `c667aff`, "Close DAY-ROLLOVER-001 Drop"), not lost by this
+resolution. `TODAY-QUICKACTIONS-001` remains the one Drop this branch/PR is still authorized to
+carry ACTIVE.
