@@ -107,8 +107,13 @@ function AdvisoryNoteRow({
       )}
       {note.basis.length > 0 && (
         <FieldDisclosure summary={open ? "HIDE WHY" : "WHY"} open={open} onToggle={setOpen}>
-          {note.basis.map((entry) => (
-            <div key={entry.key} className="why-rule">
+          {note.basis.map((entry, index) => (
+            // TODAY-QUICKACTIONS-001: a producer (e.g. shiftProtection with
+            // both HYDRATE and PROTEIN unmet) can legitimately repeat the
+            // same basis key across entries — index disambiguates the React
+            // key without changing what's actually rendered or touching the
+            // composer's own basis shape.
+            <div key={`${entry.key}-${index}`} className="why-rule">
               <span>{entry.key}</span>
               <span>{String(entry.value)}</span>
             </div>
