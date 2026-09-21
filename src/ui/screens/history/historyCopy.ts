@@ -14,7 +14,11 @@ export function describeEvent(event: DomainEvent): string {
     case "DAY_STARTED":
       return "Day started.";
     case "DAY_ENDED":
-      return `Day ended (${p.reason === "AUTO_CLOSED_ON_NEW_DAY_START" ? "auto-closed" : "explicit"}).`;
+      // DAY-ROLLOVER-001: inverted from a two-way ternary keyed on the one
+      // prior auto-close reason, so a new auto-close reason (this Drop
+      // added AUTO_CLOSED_DAY_ROLLOVER) is classified correctly without
+      // needing another branch here every time one is added.
+      return `Day ended (${p.reason === "EXPLICIT_END_DAY" ? "explicit" : "auto-closed"}).`;
     case "SLEEP_LOGGED":
       return `Sleep logged: ${p.durationMinutes} min (${p.kind === "SUPPLEMENTAL" ? "nap" : "main sleep"}).`;
     case "SLEEP_LOG_CORRECTED":

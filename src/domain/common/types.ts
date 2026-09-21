@@ -249,12 +249,19 @@ export interface WaterLogCorrectedPayload {
 
 /**
  * BeyondDay lifecycle (Context & Safety Decisions, 2026-08-19): ends via
- * explicit END DAY action only, or as a fallback auto-close when a new day
- * starts while one is still ACTIVE. Calendar midnight is explicitly
- * rejected as a boundary. END DAY closes silently — no recap.
+ * explicit END DAY action, a fallback auto-close when a new day starts
+ * while one is still ACTIVE, or (DAY-ROLLOVER-001, direct owner ruling,
+ * 2026-09-21) an automatic 16:30 local-time boundary — see
+ * engine/dayRollover.ts and application/commands.ts's
+ * performDueDayRollover. The 2026-08-19 decision explicitly rejected
+ * calendar midnight as a boundary; the 2026-09-21 ruling is a deliberate,
+ * recorded override of that same "no automatic clock boundary" doctrine
+ * for this specific 16:30 case (see docs/UX_DECISIONS.md's "Day model"
+ * section) — it does not reopen calendar midnight or any other automatic
+ * boundary. END DAY closes silently — no recap.
  */
 export interface DayEndedPayload {
-  reason: "EXPLICIT_END_DAY" | "AUTO_CLOSED_ON_NEW_DAY_START";
+  reason: "EXPLICIT_END_DAY" | "AUTO_CLOSED_ON_NEW_DAY_START" | "AUTO_CLOSED_DAY_ROLLOVER";
 }
 
 /**

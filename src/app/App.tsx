@@ -8,6 +8,7 @@ import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
+import { performDueDayRollover } from "../application/commands";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -93,19 +94,34 @@ export function App() {
 
   useEffect(() => {
     let current = true;
-    void getActiveWorkoutSession()
-      .then((activeWorkout) => {
-        if (!current) return;
-        if (activeWorkout) {
-          setTrainDestination("WORKOUT");
-          setTab("TRAIN");
-        }
-      })
-      .catch(() => {
-        // Continuity restoration is defensive. A failed local read must
-        // not trap the operator on the loading surface; the existing root
-        // error/recovery paths remain available from the normal app shell.
-      })
+    // DAY-ROLLOVER-001: runs before the workout-continuity read below, so
+    // any screen's own first-mount getActiveDay() call already sees a
+    // rolled-over day rather than a stale, already-closed one — same
+    // "resolve real state before first render" shape this gate already
+    // existed for. Best-effort, matching maybeSendCheckInReminder's own
+    // posture just below: a failed rollover check must never trap the
+    // operator on the loading surface, and simply leaves the day as it
+    // was until the next opportunity (next app open, or after an
+    // in-progress workout ends — see TrainScreen.tsx's own post-
+    // completion call for that case, since this mount-time check alone
+    // can't catch a boundary crossed while a workout is still running).
+    void performDueDayRollover()
+      .catch(() => {})
+      .then(() =>
+        getActiveWorkoutSession()
+          .then((activeWorkout) => {
+            if (!current) return;
+            if (activeWorkout) {
+              setTrainDestination("WORKOUT");
+              setTab("TRAIN");
+            }
+          })
+          .catch(() => {
+            // Continuity restoration is defensive. A failed local read must
+            // not trap the operator on the loading surface; the existing root
+            // error/recovery paths remain available from the normal app shell.
+          }),
+      )
       .finally(() => {
         if (current) setContinuityResolved(true);
       });
@@ -126,6 +142,38 @@ export function App() {
     void maybeSendCheckInReminder().catch(() => {
       // Never let a reminder-check failure affect the rest of the app.
     });
+  }, []);
+
+  /**
+   * ROLLOVER-ON-RESUME (direct owner mission, 2026-09-21): the mount-time
+   * gate above only ever runs once, on cold load — a PWA/tab that stays
+   * backgrounded across 16:30 and is then simply brought back to the
+   * foreground (no reload) would otherwise not see the boundary until
+   * some other action happened to trigger a fresh getActiveDay() read.
+   * Both `visibilitychange` and `pageshow` are listened for since a real
+   * browser doesn't reliably fire only one of them for every resume path
+   * (iOS/Safari's bfcache restores in particular lean on `pageshow`);
+   * either firing while the page is actually visible re-checks. No UI
+   * effect of its own — same fire-and-forget, best-effort posture as
+   * every other call site — and performDueDayRollover's own in-flight
+   * memoization (see its doc comment in application/commands.ts) makes
+   * two overlapping resume events collapse into at most one real
+   * rollover, never two.
+   */
+  useEffect(() => {
+    function handleResume() {
+      if (document.visibilityState !== "visible") return;
+      void performDueDayRollover().catch(() => {
+        // Best-effort, matching every other performDueDayRollover call
+        // site — a failed check here has no visible effect either way.
+      });
+    }
+    document.addEventListener("visibilitychange", handleResume);
+    window.addEventListener("pageshow", handleResume);
+    return () => {
+      document.removeEventListener("visibilitychange", handleResume);
+      window.removeEventListener("pageshow", handleResume);
+    };
   }, []);
 
   function openTrain(destination: TrainDestination) {

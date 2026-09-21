@@ -321,15 +321,52 @@ export async function getDayCount(): Promise<number> {
  * field at all — treated as PRIMARY, the only kind that existed then,
  * never reinterpreted as a nap.
  */
-export async function shouldSuggestEndDay(beyondDayId: string): Promise<boolean> {
+/** Shared by shouldSuggestEndDay and DAY-ROLLOVER-001's dayRolloverAmbiguity advisory query. */
+async function hasPrimarySleepLogged(beyondDayId: string): Promise<boolean> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const hasPrimarySleepLogged = events.some(
+  return events.some(
     (e) =>
       e.type === "SLEEP_LOGGED" &&
       ((e.payload as { kind?: "PRIMARY" | "SUPPLEMENTAL" }).kind ?? "PRIMARY") === "PRIMARY",
   );
+}
+
+export async function shouldSuggestEndDay(beyondDayId: string): Promise<boolean> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
   const hasEnded = events.some((e) => e.type === "DAY_ENDED");
-  return hasPrimarySleepLogged && !hasEnded;
+  return (await hasPrimarySleepLogged(beyondDayId)) && !hasEnded;
+}
+
+/**
+ * DAY-ROLLOVER-001: true only when `beyondDayId`'s own `startedAt` exactly
+ * matches a DAY_ENDED event's `occurredAt` on some OTHER day, with reason
+ * AUTO_CLOSED_DAY_ROLLOVER — the same boundary instant
+ * performDueDayRollover stamps on both the closing event and the new
+ * day's `startedAt`. An exact match only, deliberately never a fuzzy/
+ * nearby-time heuristic — "was this day created by that specific
+ * rollover" is either an exact, provable fact or not asserted at all.
+ */
+export async function wasActiveDayCreatedByRollover(beyondDayId: string): Promise<boolean> {
+  const day = await db.beyondDays.get(beyondDayId);
+  if (!day) return false;
+  const dayEndedEvents = await db.events.where("type").equals("DAY_ENDED").toArray();
+  return dayEndedEvents.some(
+    (e) =>
+      e.beyondDayId !== beyondDayId &&
+      (e.payload as { reason?: string }).reason === "AUTO_CLOSED_DAY_ROLLOVER" &&
+      e.occurredAt === day.startedAt,
+  );
+}
+
+/** DAY-ROLLOVER-001: the two facts engine/dayRollover.ts's evaluateDayRolloverAmbiguity needs, already resolved. */
+export async function getDayRolloverAmbiguityInput(
+  beyondDayId: string,
+): Promise<{ dayWasRolloverCreated: boolean; hasPrimarySleepLogged: boolean }> {
+  const [dayWasRolloverCreated, primarySleepLogged] = await Promise.all([
+    wasActiveDayCreatedByRollover(beyondDayId),
+    hasPrimarySleepLogged(beyondDayId),
+  ]);
+  return { dayWasRolloverCreated, hasPrimarySleepLogged: primarySleepLogged };
 }
 
 /**

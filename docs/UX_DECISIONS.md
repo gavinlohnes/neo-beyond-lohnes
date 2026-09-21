@@ -262,6 +262,31 @@ USER_DECIDES remaining authoritative.
   split — a shift worker's "night's sleep" after an overnight shift is
   still PRIMARY regardless of calendar clock time, so END DAY suggestion
   logic tracks lived days, not calendar days.
+- **DAY-ROLLOVER-001 (2026-09-21): automatic 16:30 boundary — a recorded
+  override, not a reversal, of the "no automatic clock boundary"
+  reasoning above.** Direct owner mission this session ("MISSION: DAY
+  ROLLOVER AT 16:30"): the BeyondDay boundary is now also 16:30 local
+  time, automatic — at 16:30, the current day auto-closes through the
+  same `endDay()` path as an explicit END DAY (reason
+  `AUTO_CLOSED_DAY_ROLLOVER`), and a fresh day starts (water/protein
+  reset; bodyweight already carries forward via
+  `getMostRecentBodyweight()`'s existing global scope). This is a
+  genuine conflict with the "Calendar midnight is explicitly rejected as
+  a boundary" reasoning immediately above — 16:30 is the same category
+  of thing (an automatic fixed-clock trigger), not merely a different
+  hour. The conflict was surfaced to the owner directly before any
+  implementation; the owner's ruling was to override it for this
+  specific case and record the override here, not to reopen calendar
+  midnight or any other automatic boundary generally. `PRIMARY`/
+  `SUPPLEMENTAL` sleep-kind rules are unchanged; the "lived days, not
+  calendar days" concern this override reintroduces (a PRIMARY sleep
+  landing on a rollover-created day instead of the day it was meant to
+  close) is never silently resolved — it is flagged via a SURFACE-tier
+  `AdvisoryNote` (`dayRolloverAmbiguity`,
+  `engine/dayRollover.ts`/`engine/advisory.ts`) and left to the operator.
+  An in-progress workout is never interrupted — rollover happens once it
+  ends. See `docs/agent/drops/DAY-ROLLOVER-001.md` for the full
+  contract.
 
 ## RED / capacity override
 

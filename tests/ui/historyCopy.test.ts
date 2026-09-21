@@ -16,6 +16,16 @@ function event(type: DomainEventType, payload: unknown): DomainEvent {
 }
 
 describe("describeEvent — human-readable summary per real event type", () => {
+  it("DAY_ENDED labels every non-explicit reason as auto-closed, including new reasons this ternary hasn't seen before (DAY-ROLLOVER-001)", () => {
+    expect(describeEvent(event("DAY_ENDED", { reason: "EXPLICIT_END_DAY" }))).toBe("Day ended (explicit).");
+    expect(describeEvent(event("DAY_ENDED", { reason: "AUTO_CLOSED_ON_NEW_DAY_START" }))).toBe(
+      "Day ended (auto-closed).",
+    );
+    expect(describeEvent(event("DAY_ENDED", { reason: "AUTO_CLOSED_DAY_ROLLOVER" }))).toBe(
+      "Day ended (auto-closed).",
+    );
+  });
+
   it("SLEEP_LOGGED names duration and kind", () => {
     expect(describeEvent(event("SLEEP_LOGGED", { commandId: "x", durationMinutes: 400, kind: "PRIMARY" }))).toBe(
       "Sleep logged: 400 min (main sleep).",
