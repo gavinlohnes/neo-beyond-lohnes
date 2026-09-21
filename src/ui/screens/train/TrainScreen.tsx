@@ -13,9 +13,10 @@ import { deriveCapacity } from "../../../engine/capacity";
 import { suggestSessionVariant } from "../../../engine/trainSuggestion";
 import type { ProgressionSuggestion } from "../../../engine/progression";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
-import { getActiveDay, getLatestCheckIn } from "../../../application/queries";
-import { ensureActiveDay, performDueDayRollover, submitCheckIn } from "../../../application/commands";
+import { getActiveDay, getLatestCheckIn, getPlannedWorkDeclaration } from "../../../application/queries";
+import { ensureActiveDay, performDueDayRollover, setPlannedWork, submitCheckIn } from "../../../application/commands";
 import { quickCheckInValues } from "../today/TodayScreen";
+import { PlannedWorkCard } from "../today/PlannedWorkCard";
 import {
   getActiveWorkoutSession,
   getCurrentProgressionSuggestions,
@@ -148,6 +149,8 @@ export function TrainScreen({
   const [chosenTemplate, setChosenTemplate] = useState<WorkoutTemplateId>("A");
   const [chosenVariant, setChosenVariant] = useState<SessionType>("STANDARD");
   const [noCheckIn, setNoCheckIn] = useState(false);
+  const [plannedWorkDeclaration, setPlannedWorkDeclaration] = useState<boolean | undefined>(undefined);
+  const [plannedWorkOpen, setPlannedWorkOpen] = useState(false);
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [sets, setSets] = useState<PerformedSet[]>([]);
   const [busy, setBusy] = useState(false);
@@ -242,6 +245,12 @@ export function TrainScreen({
     const checkIn = activeDay ? await getLatestCheckIn(activeDay.id) : undefined;
     const cap = checkIn ? deriveCapacity(checkIn).capacity : null;
     setCapacity(cap);
+    // TODAY-QUICKACTIONS-001: TRAIN is where the operator actually decides
+    // to train — offering the same explicit declaration here (not just on
+    // TODAY) means a session that starts from TRAIN directly still leaves
+    // an honest hasPlannedWork record for the day, same PLANNED_WORK_SET
+    // fact, same "explicit, never inferred" doctrine (PLANNED-WORK-001).
+    setPlannedWorkDeclaration(activeDay ? await getPlannedWorkDeclaration(activeDay.id) : undefined);
 
     const loadedCustomTemplates = await getCustomTemplates();
     setCustomTemplates(loadedCustomTemplates);
@@ -365,6 +374,18 @@ export function TrainScreen({
     try {
       const activeDay = await ensureActiveDay();
       await submitCheckIn(activeDay.id, quickCheckInValues);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleSetPlannedWork(planned: boolean) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const activeDay = await ensureActiveDay();
+      await setPlannedWork(activeDay.id, planned);
       await refresh();
     } finally {
       setBusy(false);
@@ -841,6 +862,16 @@ export function TrainScreen({
           template/variant chip and its short override hint stays directly
           visible, since that's the actual decision surface, not the
           explanation of it. */}
+      {!session && !completionSummary && (
+        <PlannedWorkCard
+          declaration={plannedWorkDeclaration}
+          open={plannedWorkOpen}
+          setOpen={setPlannedWorkOpen}
+          busy={busy}
+          onSetPlannedWork={(planned) => void handleSetPlannedWork(planned)}
+        />
+      )}
+
       {!session && !completionSummary && (
         <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { WATER_QUICK_ADD_OZ } from "../body/bodyScreenCopy";
 
 /**
  * Intelligence Spine (I1/I2/I3, approved 2026-08-22/23) had a real,
@@ -32,8 +33,37 @@ function basisObligationId(note: AdvisoryNote): string | undefined {
   const entry = note.basis.find((b) => b.key === "obligationId");
   return typeof entry?.value === "string" ? entry.value : undefined;
 }
-function AdvisoryNoteRow({ note }: { note: AdvisoryNote }) {
+
+/** engine/shiftProtection.ts's composeAdvisoryNoteFromShiftProtection always stamps one `unmetItem` basis entry per unmet item — see its own doc comment. */
+function unmetItems(note: AdvisoryNote): ("HYDRATE" | "PROTEIN")[] {
+  return note.basis
+    .filter((b) => b.key === "unmetItem")
+    .map((b) => b.value)
+    .filter((v): v is "HYDRATE" | "PROTEIN" => v === "HYDRATE" || v === "PROTEIN");
+}
+
+function AdvisoryNoteRow({
+  note,
+  busy,
+  onLogWater,
+  onOpenMinimumDay,
+}: {
+  note: AdvisoryNote;
+  busy: boolean;
+  onLogWater?: ((amountOz: number) => void) | undefined;
+  onOpenMinimumDay?: (() => void) | undefined;
+}) {
   const [open, setOpen] = useState(false);
+  // TODAY-QUICKACTIONS-001: the one action surface any AdvisoryNote gets —
+  // still not a Recommendation (no accept/decline, nothing recorded about
+  // the note itself), just a shortcut to the same real BODY-logging
+  // commands the operator would otherwise leave TODAY to reach. Water gets
+  // a genuine one-tap amount (WATER_QUICK_ADD_OZ, the same real quick-add
+  // options MinimumDaySection already offers — never a fabricated
+  // default). Protein has no equivalent real default to reuse
+  // (NO_FAKE_PRECISION), so its action opens Minimum Day's own input
+  // instead of guessing a gram amount.
+  const items = note.sourceModule === "shiftProtection" ? unmetItems(note) : [];
   return (
     <div style={{ padding: "8px 0", borderTop: "1px solid var(--border-subtle)" }}>
       {/* FOUNDATION-1B: INTERRUPT is the one rare, evidence-gated tier
@@ -46,10 +76,44 @@ function AdvisoryNoteRow({ note }: { note: AdvisoryNote }) {
         <p className="eyebrow" style={{ marginBottom: 4 }}>PROTECT</p>
       )}
       <p className="card-body" style={{ margin: 0 }}>{note.message}</p>
+      {items.length > 0 && (onLogWater || onOpenMinimumDay) && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+          {items.includes("HYDRATE") &&
+            onLogWater &&
+            WATER_QUICK_ADD_OZ.map((amount) => (
+              <button
+                key={amount}
+                type="button"
+                className="btn-secondary"
+                style={{ width: "auto", padding: "8px 14px" }}
+                disabled={busy}
+                onClick={() => onLogWater(amount)}
+              >
+                +{amount} OZ
+              </button>
+            ))}
+          {items.includes("PROTEIN") && onOpenMinimumDay && (
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: "auto", padding: "8px 14px" }}
+              disabled={busy}
+              onClick={onOpenMinimumDay}
+            >
+              LOG PROTEIN
+            </button>
+          )}
+        </div>
+      )}
       {note.basis.length > 0 && (
         <FieldDisclosure summary={open ? "HIDE WHY" : "WHY"} open={open} onToggle={setOpen}>
-          {note.basis.map((entry) => (
-            <div key={entry.key} className="why-rule">
+          {note.basis.map((entry, index) => (
+            // TODAY-QUICKACTIONS-001: a producer (e.g. shiftProtection with
+            // both HYDRATE and PROTEIN unmet) can legitimately repeat the
+            // same basis key across entries — index disambiguates the React
+            // key without changing what's actually rendered or touching the
+            // composer's own basis shape.
+            <div key={`${entry.key}-${index}`} className="why-rule">
               <span>{entry.key}</span>
               <span>{String(entry.value)}</span>
             </div>
@@ -63,9 +127,15 @@ function AdvisoryNoteRow({ note }: { note: AdvisoryNote }) {
 export function AdvisorySection({
   notes,
   excludeObligationId,
+  busy = false,
+  onLogWater,
+  onOpenMinimumDay,
 }: {
   notes: AdvisoryNote[];
   excludeObligationId?: string | null | undefined;
+  busy?: boolean;
+  onLogWater?: (amountOz: number) => void;
+  onOpenMinimumDay?: () => void;
 }) {
   const filtered = excludeObligationId
     ? notes.filter((note) => basisObligationId(note) !== excludeObligationId)
@@ -84,7 +154,7 @@ export function AdvisorySection({
         Background context, not a recommendation — nothing here requires a decision.
       </p>
       {visible.map((note) => (
-        <AdvisoryNoteRow key={note.id} note={note} />
+        <AdvisoryNoteRow key={note.id} note={note} busy={busy} onLogWater={onLogWater} onOpenMinimumDay={onOpenMinimumDay} />
       ))}
     </div>
   );

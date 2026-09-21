@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
-import { startDay, submitCheckIn } from "../../src/application/commands";
+import { startDay, submitCheckIn, setPlannedWork } from "../../src/application/commands";
 import {
   abandonWorkout,
   completeRecoverySession,
@@ -11,6 +11,7 @@ import {
   startWorkout,
 } from "../../src/application/trainCommands";
 import { archiveCustomExercise, createCustomExercise } from "../../src/application/exerciseLibraryCommands";
+import { getActiveDay } from "../../src/application/queries";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 
@@ -109,6 +110,61 @@ describe("TrainScreen (real browser) — no active session", () => {
  * one .command-surface" assertions below and in the active-session
  * describe block further down, which is unchanged by this Drop).
  */
+/**
+ * TODAY-QUICKACTIONS-001 (item 1): PLANNED-WORK-001 shipped
+ * PLANNED_WORK_SET's one real affordance on TODAY only — a real gap for
+ * the operator whose actual decision moment is opening TRAIN directly on
+ * a night shift, never visiting TODAY first. Proves TrainScreen's own
+ * PlannedWorkCard calls the exact same setPlannedWork command TODAY uses
+ * (never a parallel path), so a declaration made from TRAIN is the same
+ * fact a check-in's own evaluate() call sees, regardless of which screen
+ * the operator was on when they made it.
+ */
+describe("TrainScreen (real browser) — PLANNED WORK (TODAY-QUICKACTIONS-001)", () => {
+  it("renders the PLANNED WORK toggle pre-session, unanswered, with no day/check-in yet", async () => {
+    const screen = await render(<TrainScreen />);
+
+    await expect.element(screen.getByText("Planning to train today?", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "TRAIN TODAY" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "NOT TODAY" })).toBeVisible();
+  });
+
+  it("declaring TRAIN TODAY from TRAIN (never having visited TODAY) records the same PLANNED_WORK_SET fact TODAY's own toggle would", async () => {
+    const screen = await render(<TrainScreen />);
+
+    await screen.getByRole("button", { name: "TRAIN TODAY" }).click();
+    // Answered -> the toggle collapses to its settled-state summary row.
+    await expect.element(screen.getByText("Training today.", { exact: true })).toBeVisible();
+
+    const day = await getActiveDay();
+    expect(day).toBeDefined();
+    const { recommendation } = await submitCheckIn(day!.id, GREEN);
+    expect(recommendation.kind).toBe("EXECUTE_PLANNED_WORK");
+  });
+
+  it("declaring NOT TODAY from TRAIN means a subsequent GREEN check-in does not resolve EXECUTE_PLANNED_WORK", async () => {
+    const screen = await render(<TrainScreen />);
+
+    await screen.getByRole("button", { name: "NOT TODAY" }).click();
+    await expect.element(screen.getByText("Not training today.", { exact: true })).toBeVisible();
+
+    const day = await getActiveDay();
+    expect(day).toBeDefined();
+    const { recommendation } = await submitCheckIn(day!.id, GREEN);
+    expect(recommendation.kind).not.toBe("EXECUTE_PLANNED_WORK");
+  });
+
+  it("reflects an existing TODAY-made declaration on reload from TRAIN, already collapsed", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    await setPlannedWork(day.id, true);
+
+    const screen = await render(<TrainScreen />);
+    await expect.element(screen.getByText("Training today.", { exact: true })).toBeVisible();
+    expect(screen.getByText("Planning to train today?", { exact: true }).elements()).toHaveLength(0);
+  });
+});
+
 describe("TrainScreen (real browser) — Performance Brief", () => {
   it("is calm and present with no strength history yet, and does not compete with the dominant picker", async () => {
     const day = await startDay();
