@@ -17,6 +17,19 @@ so two resume signals firing for the same real-world resume collapse into at mos
 rollover. No UI change, no new feature, no change to the workout-in-progress guard. Authorized
 scope/acceptance criteria below are updated in place to include this.
 
+## Amendment (atomicity fix, PR #111 review finding, 2026-09-21, same session)
+
+Fixes a real reliability bug found in review, scoped to this fix only: `endDay()`'s close and
+`startDay()`'s replacement-day creation inside `performDueDayRollover()` were two independent
+Dexie writes, so a failure between them (a crash, an IndexedDB quota error) could leave BEYOND
+with no ACTIVE day at all — a later `performDueDayRollover()` call would see nothing active and
+silently no-op forever, unable to self-heal. Fixed by wrapping both calls in a single Dexie
+`db.transaction("rw", ...)` inside `performDueDayRollover()` only — they now commit or roll back
+together, so the interrupted-partway state can no longer occur at all (a stronger, smaller fix
+than detect-and-heal recovery logic). `endDay()`/`startDay()` themselves, the 16:30/DST boundary
+math, the workout-in-progress guard, and the resume in-flight-promise idempotency guard are all
+unchanged. Authorized scope/acceptance criteria below are updated in place to include this.
+
 ## Mission
 
 Direct owner mission (this session, 2026-09-21, "MISSION: DAY ROLLOVER AT 16:30"): the BeyondDay
@@ -205,6 +218,9 @@ spelled out explicitly rather than silently overriding the mechanism's default.
 - An in-progress `WorkoutSession` (`status: "ACTIVE"`) is never interrupted by a rollover.
 - Existing full test suite (FOUNDATION-1B/PLANNED-WORK-001/TODAY-QUICKACTIONS-001's own
   integration suites included) stays green.
+- The old day's close and the new day's creation inside `performDueDayRollover` commit or roll
+  back together — there is never a durable state with the old day `ENDED` and no ACTIVE day to
+  replace it.
 
 ## Acceptance criteria
 
@@ -233,6 +249,12 @@ spelled out explicitly rather than silently overriding the mechanism's default.
   boundary is left untouched by a resume event. Two resume events fired together produce exactly
   one rollover, never two, and a genuinely later call after the first fully resolves still
   performs a real one when a new boundary is due.
+- **Atomicity**: a failure injected exactly where `startDay()` performs its own write (after
+  `endDay()`'s writes have already run within the same transaction) leaves the old day untouched
+  (`ACTIVE`, not `ENDED`) and creates no new day; a later `performDueDayRollover()` call then
+  completes the rollover correctly, with exactly one `DAY_ENDED`/`AUTO_CLOSED_DAY_ROLLOVER` event
+  for the old day (never double-closed) and exactly one new day (never a duplicate/fabricated
+  extra).
 - `npm run verify` passes (architecture, full suite including browser, production build).
 
 ## Required verification

@@ -251,6 +251,27 @@ export class ActiveWorkoutBlocksDayEndError extends Error {
  * reopen. Only the first caller's `now` is actually used for a given
  * in-flight burst — callers close enough in time to overlap don't need
  * meaningfully different answers.
+ *
+ * ATOMICITY (PR #111 review finding, 2026-09-21): closing the old day and
+ * creating the replacement are two independent writes each — a plain
+ * `await endDay(...); await startDay(...)` sequence would leave BEYOND
+ * with no ACTIVE day at all if the process died, threw, or IndexedDB
+ * failed between them (e.g. a quota error on the second write), and a
+ * later performDueDayRollover() call would see no active day and silently
+ * no-op forever, unable to self-heal. Wrapping both calls in a single
+ * Dexie `db.transaction("rw", ...)` makes them commit or roll back
+ * together — the old day is never durably marked ENDED unless the new day
+ * is also durably created, so the interrupted-partway state this bug
+ * described can no longer occur at all, rather than needing to be
+ * detected and healed after the fact. endDay/startDay themselves are
+ * unchanged (still exported, still independently callable for their own
+ * existing callers) — only this one call site composes them atomically.
+ * Every Dexie table either function might touch (including
+ * ActiveWorkoutBlocksDayEndError's own pre-write read, and nextSeq's
+ * cold-start fallback read, which in practice never actually fires this
+ * late — a prior startDay() call for the day being rolled over has always
+ * already primed it) is declared so nothing implicitly escapes the
+ * transaction's scope.
  */
 let performDueDayRolloverInFlight: Promise<BeyondDay | undefined> | null = null;
 
@@ -266,12 +287,18 @@ export async function performDueDayRollover(now: Date = new Date()): Promise<Bey
 
       const boundaryIso = boundary.toISOString();
       try {
-        await endDay(activeDay.id, "AUTO_CLOSED_DAY_ROLLOVER", boundaryIso);
+        return await db.transaction(
+          "rw",
+          [db.beyondDays, db.events, db.workoutSessions, db.checkIns, db.recommendations],
+          async () => {
+            await endDay(activeDay.id, "AUTO_CLOSED_DAY_ROLLOVER", boundaryIso);
+            return await startDay(boundaryIso);
+          },
+        );
       } catch (e) {
         if (e instanceof ActiveWorkoutBlocksDayEndError) return undefined;
         throw e;
       }
-      return await startDay(boundaryIso);
     } finally {
       performDueDayRolloverInFlight = null;
     }

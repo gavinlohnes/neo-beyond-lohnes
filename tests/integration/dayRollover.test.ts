@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
 import {
   endDay,
@@ -199,6 +199,60 @@ describe("performDueDayRollover", () => {
     const second = await performDueDayRollover(nextDayBoundary);
     expect(second).toBeDefined();
     expect(second!.id).not.toBe(first!.id);
+  });
+
+  /**
+   * PR #111 review finding: closing the old day and creating the
+   * replacement were two independent writes — a failure between them
+   * (e.g. an IndexedDB quota error, a crash) could leave BEYOND with no
+   * ACTIVE day at all, and a later call would see nothing active and
+   * silently no-op forever rather than self-healing. Fixed by wrapping
+   * both calls in one Dexie transaction, so they commit or roll back
+   * together. Simulates the failure at the exact point described — the
+   * write startDay() itself performs (db.beyondDays.add) — by rejecting
+   * it once, after endDay()'s own writes would already have run within
+   * the same transaction.
+   */
+  it("a failure between the old day's close and the new day's creation leaves the old day untouched (atomic), and a later call recovers correctly", async () => {
+    const day = await startDay();
+    await backdateDayBeforeBoundary(day.id);
+
+    const addSpy = vi
+      .spyOn(db.beyondDays, "add")
+      .mockRejectedValueOnce(new Error("simulated failure creating the replacement day"));
+
+    await expect(performDueDayRollover(JUST_AFTER_BOUNDARY)).rejects.toThrow(
+      "simulated failure creating the replacement day",
+    );
+
+    // The whole transaction rolled back — the old day was never actually
+    // left closed with nothing active to replace it.
+    const stillActive = await db.beyondDays.get(day.id);
+    expect(stillActive?.status).toBe("ACTIVE");
+    expect(await db.beyondDays.count()).toBe(1);
+    const dayEndedAfterFailure = (await db.events.where("beyondDayId").equals(day.id).toArray()).filter(
+      (e) => e.type === "DAY_ENDED",
+    );
+    expect(dayEndedAfterFailure).toHaveLength(0);
+
+    addSpy.mockRestore();
+
+    // A later invocation — the same call an app-mount or resume check
+    // would naturally make next — completes the rollover correctly, with
+    // nothing left to "recover": there was no partial state to clean up.
+    const recovered = await performDueDayRollover(JUST_AFTER_BOUNDARY);
+    expect(recovered).toBeDefined();
+    expect(recovered!.id).not.toBe(day.id);
+
+    const closedAfterRecovery = await db.beyondDays.get(day.id);
+    expect(closedAfterRecovery?.status).toBe("ENDED");
+    const rolloverEvents = (await db.events.where("beyondDayId").equals(day.id).toArray()).filter(
+      (e) => e.type === "DAY_ENDED" && (e.payload as { reason?: string }).reason === "AUTO_CLOSED_DAY_ROLLOVER",
+    );
+    // Not double-closed: exactly one DAY_ENDED for the old day.
+    expect(rolloverEvents).toHaveLength(1);
+    // Not a duplicate/fabricated day: the original plus exactly one new one.
+    expect(await db.beyondDays.count()).toBe(2);
   });
 });
 
