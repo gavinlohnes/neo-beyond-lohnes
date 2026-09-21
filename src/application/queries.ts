@@ -767,6 +767,58 @@ export async function hasUnresolvedPostShift(beyondDayId: string): Promise<boole
 }
 
 /**
+ * PLANNED-WORK-001: the operator's own most recent explicit declaration
+ * for the day, exactly as they last set it — `undefined` when they've
+ * never been asked/answered (a real, distinct state per NO_FAKE_PRECISION,
+ * never defaulted to `false`). Read-only truth for the TODAY toggle
+ * (PlannedWorkCard) to render "never answered" differently from an
+ * explicit "no" — hasActivePlannedWork below additionally factors in
+ * same-day resolution, which this function deliberately does not, since
+ * the UI's own question is "what did I last say," not "is it still
+ * outstanding."
+ */
+export async function getPlannedWorkDeclaration(beyondDayId: string): Promise<boolean | undefined> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const declarations = events
+    .filter((e) => e.type === "PLANNED_WORK_SET")
+    .sort((a, b) => byTimeThenSeq(b.occurredAt, b.seq, a.occurredAt, a.seq));
+  const latest = declarations[0];
+  return latest ? (latest.payload as { planned?: boolean }).planned : undefined;
+}
+
+/**
+ * PLANNED-WORK-001 (direct owner ruling, 2026-09-20): the sole source of
+ * engine/evaluate.ts's `hasPlannedWork` input — see
+ * PlannedWorkSetPayload's doc comment (domain/common/types.ts) for the
+ * full "explicit, never inferred" doctrine. True exactly when
+ * getPlannedWorkDeclaration says `true` AND no WORKOUT_COMPLETED/
+ * WORKOUT_ABANDONED event (any session type — a fulfilled or
+ * deliberately-stopped session both legitimately resolve the declaration,
+ * matching REDUCE_BEFORE_SKIP/BEYOND_MAY_DO_LESS) has happened later than
+ * the declaration itself. Deliberately not scoped to
+ * engine/trainSuggestion.ts's rotation-advancement rule (STANDARD-
+ * COMPLETED/REDUCED-COMPLETED-or-PARTIAL only) — that rule answers "does
+ * this session change what TRAIN suggests next," a different question
+ * from "did the operator's declared plan for today get addressed."
+ */
+export async function hasActivePlannedWork(beyondDayId: string): Promise<boolean> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const declarations = events
+    .filter((e) => e.type === "PLANNED_WORK_SET")
+    .sort((a, b) => byTimeThenSeq(b.occurredAt, b.seq, a.occurredAt, a.seq));
+  const latest = declarations[0];
+  if (!latest) return false;
+  if (!(latest.payload as { planned?: boolean }).planned) return false;
+
+  const resolvedAfter = events.some(
+    (e) =>
+      (e.type === "WORKOUT_COMPLETED" || e.type === "WORKOUT_ABANDONED") &&
+      byTimeThenSeq(e.occurredAt, e.seq, latest.occurredAt, latest.seq) > 0,
+  );
+  return !resolvedAfter;
+}
+
+/**
  * Overdrive Phase 10: everything currently open in the inbox, oldest
  * first — reading order matches capture order, not urgency ("inbox age
  * is not urgency" is about not auto-promoting old items, not about how

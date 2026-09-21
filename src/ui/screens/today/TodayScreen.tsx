@@ -33,6 +33,7 @@ import type { CaptureDateSuggestion } from "../../../domain/capture/types";
 import { HydrationOperationCard, MinimumDayCard } from "./MinimumDaySection";
 import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
+import { PlannedWorkCard } from "./PlannedWorkCard";
 import { RecommendationCard } from "./RecommendationCard";
 import {
   startDay,
@@ -51,6 +52,7 @@ import {
   rateOutcome,
   setWorkContext,
   markWorkEnded,
+  setPlannedWork,
   captureItem,
   resolveCaptureItem,
   reopenCaptureItem,
@@ -79,6 +81,7 @@ import {
   getOpenShiftDown,
   getWorkPeriodEnded,
   hasUnresolvedPostShift,
+  getPlannedWorkDeclaration,
   getOpenCaptureItems,
   type MinimumDayStatus,
   type PriorOutcomeMemory,
@@ -167,6 +170,7 @@ export function TodayScreen({
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
+  const [plannedWorkDeclaration, setPlannedWorkDeclaration] = useState<boolean | undefined>(undefined);
   // Current Operational Context V1 (bounded proof): feeds the STATUS
   // context strip only — every other read above (day, scheduledContext,
   // unresolvedPostShift) stays exactly as-is for its own other uses
@@ -397,6 +401,7 @@ export function TodayScreen({
     let openShiftDown: Awaited<ReturnType<typeof getOpenShiftDown>> | undefined;
     let workPeriodEndedAt: string | null = null;
     let unresolvedPostShift = false;
+    let plannedWorkDeclaration: boolean | undefined;
 
     if (activeDay) {
       checkIn = (await getLatestCheckIn(activeDay.id)) ?? null;
@@ -415,6 +420,7 @@ export function TodayScreen({
       const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
       workPeriodEndedAt = workPeriodEnded ? workPeriodEnded.occurredAt : null;
       unresolvedPostShift = await hasUnresolvedPostShift(activeDay.id);
+      plannedWorkDeclaration = await getPlannedWorkDeclaration(activeDay.id);
     }
     // Intelligence Spine consumption (2026-09-02): advisory notes are pure
     // SUPPORT-tier background context with no ordering dependency on
@@ -481,6 +487,7 @@ export function TodayScreen({
       }
       setWorkPeriodEndedAt(workPeriodEndedAt);
       setUnresolvedPostShift(unresolvedPostShift);
+      setPlannedWorkDeclaration(plannedWorkDeclaration);
     } else {
       setRecommendation(null);
       setDecision(undefined);
@@ -744,6 +751,19 @@ export function TodayScreen({
     try {
       const source = resolveWorkContextSource(scheduledContext.todayIsScheduledWorkDay, value);
       await setWorkContext(day.id, value, source);
+      await refresh();
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function handleSetPlannedWork(planned: boolean) {
+    if (busy || busyRef.current || !day) return;
+    busyRef.current = true;
+    setBusy(true);
+    try {
+      await setPlannedWork(day.id, planned);
       await refresh();
     } finally {
       busyRef.current = false;
@@ -1636,6 +1656,14 @@ export function TodayScreen({
           busy={busy}
           onSetWorkContext={(value) => void handleSetWorkContext(value)}
           onMarkWorkEnded={() => void handleMarkWorkEnded()}
+        />
+      )}
+
+      {day && (
+        <PlannedWorkCard
+          declaration={plannedWorkDeclaration}
+          busy={busy}
+          onSetPlannedWork={(planned) => void handleSetPlannedWork(planned)}
         />
       )}
 

@@ -210,6 +210,40 @@ one renamed concept. Keep them distinct when citing this section.
   the FOUNDATION-1B brief itself authorizes to the "Explicitly out of scope: any AI/learning
   layer over workout data" entry further below — not a general reopening of that exclusion.
 
+## PLANNED-WORK-001 — Explicit Planned Work
+
+Locked 2026-09-20, direct owner ruling (following the `hasPlannedWork: false` hardcoding
+FOUNDATION-1B discovered and explicitly deferred — see `docs/agent/drops/PLANNED-WORK-001.md`).
+Two options were presented (rotation-implied vs. explicit operator intent); the owner chose
+**explicit operator intent**, with GREEN capacity never itself implying planned work and
+USER_DECIDES remaining authoritative.
+
+- **`hasPlannedWork` is now genuinely wired** — `application/commands.ts`'s `submitCheckIn`
+  passes `application/queries.ts`'s `hasActivePlannedWork(beyondDayId)` instead of a hardcoded
+  `false`. `EXECUTE_PLANNED_WORK` is reachable through the real app for the first time.
+  `evaluate.ts` itself is unchanged: same kind set, same ranking, same purity.
+- **The one true source is `PLANNED_WORK_SET`** (`domain/common/types.ts`), written only by
+  `application/commands.ts`'s `setPlannedWork(beyondDayId, planned, kind)` — an explicit,
+  operator-initiated declaration, never inferred from capacity, schedule, or TRAIN's rotation
+  state (`suggestTemplateForNextWorkout` always has a "next" template, so "a workout exists in
+  rotation" is trivially true every day and was explicitly rejected as a signal).
+- **A declaration resolves itself.** `hasActivePlannedWork` returns false again once a
+  `WORKOUT_COMPLETED`/`WORKOUT_ABANDONED` event (any session type) happens after the
+  declaration — a fulfilled or deliberately-stopped session both legitimately resolve it,
+  matching REDUCE_BEFORE_SKIP/BEYOND_MAY_DO_LESS. Re-declaring afterward is a legitimate new
+  fact, not a duplicate.
+- **`kind: "WORKOUT"` is a real union, not a bare boolean**, specifically so a later Drop can
+  add a second planned-activity source without changing this event's shape or
+  `hasActivePlannedWork`'s already-generic read logic (it checks "any active declaration," not
+  a TRAIN-specific one). No second `kind` value exists yet — this Drop's own exclusions rule
+  that out for now.
+- **TODAY's `PlannedWorkCard`** offers an explicit TRAIN TODAY / NOT TODAY toggle (same chip
+  pattern as `WorkContextCard`'s YES/NO), with a real tri-state read
+  (`getPlannedWorkDeclaration`) so "never answered" never reads as a silent "no" —
+  NO_FAKE_PRECISION. Labels are deliberately distinct from `WorkContextCard`'s "YES"/"NO" (both
+  cards can render together; identical labels for two different yes/no questions would be
+  genuinely ambiguous, not just a test-collision concern).
+
 ## Day model
 
 - **Lazy day creation.** No day exists until the first action of the day

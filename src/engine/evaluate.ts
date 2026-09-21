@@ -15,6 +15,17 @@ export const ENGINE_VERSION = "0.1.0";
 export interface EvaluateInput {
   beyondDayId: string;
   checkIn: StateCheckIn | null;
+  /**
+   * PLANNED-WORK-001 (direct owner ruling, 2026-09-20): true only when the
+   * operator explicitly declared planned work for today
+   * (application/queries.ts's hasActivePlannedWork, reading a
+   * PLANNED_WORK_SET event) — never inferred from capacity, schedule, or
+   * TRAIN's own rotation state (which always has a "next" template and so
+   * can't itself signal "planned"). This module never imports the event
+   * type or any TRAIN concept; it only ever sees this one pre-computed
+   * boolean, same pattern as hasUnresolvedPostShift/
+   * hasEligibleObligationDueOrOverdue below.
+   */
   hasPlannedWork: boolean;
   /**
    * Drop 02b: true when the active WORK BeyondDay has an unresolved

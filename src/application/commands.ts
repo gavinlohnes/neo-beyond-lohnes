@@ -14,7 +14,7 @@ import type {
   WaterLoggedPayload,
 } from "../domain/common/types";
 import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
-import { getWorkPeriodEnded, hasUnresolvedPostShift } from "./queries";
+import { getWorkPeriodEnded, hasActivePlannedWork, hasUnresolvedPostShift } from "./queries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 
 /**
@@ -240,7 +240,11 @@ export async function submitCheckIn(
     ...evaluate({
       beyondDayId,
       checkIn,
-      hasPlannedWork: false,
+      // PLANNED-WORK-001: derived from an explicit PLANNED_WORK_SET
+      // declaration (setPlannedWork), never inferred from capacity,
+      // schedule, or TRAIN's rotation state — see hasActivePlannedWork's
+      // own doc comment.
+      hasPlannedWork: await hasActivePlannedWork(beyondDayId),
       // Drop 02b: derived from event history (WORK_PERIOD_ENDED, cleared by
       // a later SHIFT_DOWN_COMPLETED), never from clock/schedule — the
       // Engine only ever sees what queries.ts already determined is true.
@@ -565,6 +569,32 @@ export async function markWorkEnded(beyondDayId: string): Promise<void> {
     beyondDayId,
     "WORK_PERIOD_ENDED",
     { commandId: correlationId },
+    "USER",
+    correlationId,
+  );
+}
+
+/**
+ * PLANNED-WORK-001 (direct owner ruling, 2026-09-20): the ONLY way
+ * `hasActivePlannedWork` (application/queries.ts) can ever resolve true —
+ * see PlannedWorkSetPayload's own doc comment (domain/common/types.ts) for
+ * the full "explicit, never inferred" doctrine this implements. No
+ * BeyondDay field is written (unlike setWorkContext) — this fact is purely
+ * event-derived, same treatment as WORK_PERIOD_ENDED. Not idempotent-
+ * guarded like markWorkEnded: re-declaring the same value, or toggling
+ * back and forth, is a legitimate real history (the operator changing
+ * their mind during the day), not a duplicate to suppress.
+ */
+export async function setPlannedWork(
+  beyondDayId: string,
+  planned: boolean,
+  kind: "WORKOUT" = "WORKOUT",
+): Promise<void> {
+  const correlationId = newId();
+  await logEvent(
+    beyondDayId,
+    "PLANNED_WORK_SET",
+    { commandId: correlationId, planned, kind },
     "USER",
     correlationId,
   );
