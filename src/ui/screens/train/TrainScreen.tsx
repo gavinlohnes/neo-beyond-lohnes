@@ -14,7 +14,7 @@ import { suggestSessionVariant } from "../../../engine/trainSuggestion";
 import type { ProgressionSuggestion } from "../../../engine/progression";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import { getActiveDay, getLatestCheckIn } from "../../../application/queries";
-import { ensureActiveDay, submitCheckIn } from "../../../application/commands";
+import { ensureActiveDay, performDueDayRollover, submitCheckIn } from "../../../application/commands";
 import { quickCheckInValues } from "../today/TodayScreen";
 import {
   getActiveWorkoutSession,
@@ -600,6 +600,11 @@ export function TrainScreen({
         advisoryChanges,
       });
 
+      // DAY-ROLLOVER-001: "don't interrupt an in-progress workout, roll
+      // over when it ends" — this is the "it ends" hook. Best-effort,
+      // never lets a rollover-check failure block reporting the workout's
+      // own real completion.
+      await performDueDayRollover().catch(() => {});
       await refresh();
     } finally {
       setBusy(false);
@@ -625,6 +630,9 @@ export function TrainScreen({
     setBusy(true);
     try {
       await abandonWorkout(session.beyondDayId, session.id, session.sessionType as SessionType);
+      // DAY-ROLLOVER-001: see the same comment on completeWorkout's own
+      // call site above — abandoning also legitimately ends the workout.
+      await performDueDayRollover().catch(() => {});
       await refresh();
     } finally {
       setBusy(false);
@@ -636,6 +644,8 @@ export function TrainScreen({
     setBusy(true);
     try {
       await completeRecoverySession(session.beyondDayId, session.id, recoveryMinutes);
+      // DAY-ROLLOVER-001: see the same comment on completeWorkout's own call site above.
+      await performDueDayRollover().catch(() => {});
       await refresh();
     } finally {
       setBusy(false);

@@ -8,6 +8,7 @@ import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
+import { performDueDayRollover } from "../application/commands";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -93,19 +94,34 @@ export function App() {
 
   useEffect(() => {
     let current = true;
-    void getActiveWorkoutSession()
-      .then((activeWorkout) => {
-        if (!current) return;
-        if (activeWorkout) {
-          setTrainDestination("WORKOUT");
-          setTab("TRAIN");
-        }
-      })
-      .catch(() => {
-        // Continuity restoration is defensive. A failed local read must
-        // not trap the operator on the loading surface; the existing root
-        // error/recovery paths remain available from the normal app shell.
-      })
+    // DAY-ROLLOVER-001: runs before the workout-continuity read below, so
+    // any screen's own first-mount getActiveDay() call already sees a
+    // rolled-over day rather than a stale, already-closed one — same
+    // "resolve real state before first render" shape this gate already
+    // existed for. Best-effort, matching maybeSendCheckInReminder's own
+    // posture just below: a failed rollover check must never trap the
+    // operator on the loading surface, and simply leaves the day as it
+    // was until the next opportunity (next app open, or after an
+    // in-progress workout ends — see TrainScreen.tsx's own post-
+    // completion call for that case, since this mount-time check alone
+    // can't catch a boundary crossed while a workout is still running).
+    void performDueDayRollover()
+      .catch(() => {})
+      .then(() =>
+        getActiveWorkoutSession()
+          .then((activeWorkout) => {
+            if (!current) return;
+            if (activeWorkout) {
+              setTrainDestination("WORKOUT");
+              setTab("TRAIN");
+            }
+          })
+          .catch(() => {
+            // Continuity restoration is defensive. A failed local read must
+            // not trap the operator on the loading surface; the existing root
+            // error/recovery paths remain available from the normal app shell.
+          }),
+      )
       .finally(() => {
         if (current) setContinuityResolved(true);
       });

@@ -1,5 +1,6 @@
 import { db } from "../persistence/db";
 import { evaluate } from "../engine/evaluate";
+import { computeDueRollover } from "../engine/dayRollover";
 import { assertRedOverrideConfirmed } from "../engine/redOverride";
 import { formatLocalDate } from "../engine/scheduledContext";
 import { hasObligationRequiringArbitration } from "../engine/obligationRelevance";
@@ -85,10 +86,21 @@ export function newId(): string {
  * Auto-close is a FALLBACK only, for when a new day starts while one is
  * still ACTIVE (Context & Safety Decisions, 2026-08-19). Calendar midnight
  * is explicitly rejected as a boundary; the primary mechanism is always
- * explicit endDay(). This never fires on the normal path where the prior
- * day was already ended before the next one starts.
+ * explicit endDay() (DAY-ROLLOVER-001, 2026-09-21, adds one more: the
+ * automatic 16:30 boundary — see performDueDayRollover below). This never
+ * fires on the normal path where the prior day was already ended before
+ * the next one starts.
+ *
+ * `startedAtOverride` (DAY-ROLLOVER-001): every existing caller omits it
+ * and gets the same real, unmodified `startedAt` as before.
+ * performDueDayRollover passes the semantic 16:30 boundary instant here so
+ * the new day's `startedAt` matches the old day's `DAY_ENDED.occurredAt`
+ * exactly (the same-instant match the dayRolloverAmbiguity advisory
+ * producer relies on) — `createdAt`/`updatedAt` always stay the real,
+ * unmodified row-write instant regardless, same "never fabricate what
+ * actually happened" doctrine as logEvent's `recordedAt`.
  */
-export async function startDay(): Promise<BeyondDay> {
+export async function startDay(startedAtOverride?: string): Promise<BeyondDay> {
   const existingActive = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
   if (existingActive) {
     await endDay(existingActive.id, "AUTO_CLOSED_ON_NEW_DAY_START");
@@ -97,10 +109,13 @@ export async function startDay(): Promise<BeyondDay> {
   const now = new Date().toISOString();
   const day: BeyondDay = {
     id: newId(),
-    startedAt: now,
+    startedAt: startedAtOverride ?? now,
     timezoneId: Intl.DateTimeFormat().resolvedOptions().timeZone,
     workContext: "UNKNOWN",
     status: "ACTIVE",
+    // createdAt/updatedAt always stay the real, unmodified row-write
+    // instant — only startedAt (the semantic "when did this lived day
+    // begin") may be stamped at a rollover's boundary instant.
     createdAt: now,
     updatedAt: now,
   };
@@ -147,11 +162,20 @@ export async function ensureActiveDay(): Promise<BeyondDay> {
  * Explicit END DAY. Closes silently — no recap (Context & Safety
  * Decisions, 2026-08-19). The Engine may SUGGEST calling this right after
  * primary sleep is logged (see queries.shouldSuggestEndDay), but ending is
- * always a distinct user (or fallback) action, never automatic on its own.
+ * always a distinct user (or fallback) action, never automatic on its own
+ * — except the one deliberate DAY-ROLLOVER-001 exception, which still
+ * closes through this exact same function/guard, never a parallel path.
+ *
+ * `occurredAtOverride` (DAY-ROLLOVER-001): every existing caller omits it
+ * and gets the same real, unmodified `DAY_ENDED.occurredAt`/`updatedAt` as
+ * before. performDueDayRollover passes the semantic 16:30 boundary instant
+ * here — `updatedAt` (the row) and `recordedAt` (the event, inside
+ * logEvent) always stay real regardless.
  */
 export async function endDay(
   beyondDayId: string,
-  reason: "EXPLICIT_END_DAY" | "AUTO_CLOSED_ON_NEW_DAY_START" = "EXPLICIT_END_DAY",
+  reason: "EXPLICIT_END_DAY" | "AUTO_CLOSED_ON_NEW_DAY_START" | "AUTO_CLOSED_DAY_ROLLOVER" = "EXPLICIT_END_DAY",
+  occurredAtOverride?: string,
 ): Promise<void> {
   const activeWorkout = await db.workoutSessions
     .where("beyondDayId")
@@ -165,7 +189,15 @@ export async function endDay(
     status: "ENDED",
     updatedAt: new Date().toISOString(),
   });
-  await logEvent(beyondDayId, "DAY_ENDED", { reason }, reason === "EXPLICIT_END_DAY" ? "USER" : "SYSTEM", newId());
+  await logEvent(
+    beyondDayId,
+    "DAY_ENDED",
+    { reason },
+    reason === "EXPLICIT_END_DAY" ? "USER" : "SYSTEM",
+    newId(),
+    undefined,
+    occurredAtOverride,
+  );
 }
 
 /**
@@ -183,6 +215,44 @@ export class ActiveWorkoutBlocksDayEndError extends Error {
     super("ACTIVE_WORKOUT_UNRESOLVED: resolve the active workout on TRAIN before ending this BeyondDay.");
     this.name = "ActiveWorkoutBlocksDayEndError";
   }
+}
+
+/**
+ * DAY-ROLLOVER-001 (direct owner mission + doctrine-override ruling,
+ * 2026-09-21): the one entry point that turns engine/dayRollover.ts's
+ * pure boundary math into a real close-and-reopen. No-ops (returns
+ * undefined) whenever there is nothing to do — no active day at all
+ * (never spontaneously creates one, preserving Lazy day creation
+ * doctrine), no boundary crossed yet, or an active workout still blocks
+ * the close (the exact same ActiveWorkoutBlocksDayEndError guard endDay()
+ * already enforces — "don't interrupt it, roll over when it ends" is
+ * satisfied by simply calling this again once the workout ends, not by a
+ * separate guard here).
+ *
+ * Both the closing DAY_ENDED event's `occurredAt` and the new day's
+ * `startedAt` are stamped at the exact same computed boundary instant
+ * (never the real call-time "now") — "stamped 16:30, not the open time,"
+ * and the exact-instant match engine/advisory.ts's
+ * composeAdvisoryNoteFromDayRolloverAmbiguity relies on to detect a
+ * rollover-created day. A stretch with the app closed across several
+ * 16:30s still only ever produces one rollover: computeDueRollover always
+ * returns the single most recent elapsed boundary, never a list.
+ */
+export async function performDueDayRollover(now: Date = new Date()): Promise<BeyondDay | undefined> {
+  const activeDay = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
+  if (!activeDay) return undefined;
+
+  const boundary = computeDueRollover(new Date(activeDay.startedAt), now);
+  if (!boundary) return undefined;
+
+  const boundaryIso = boundary.toISOString();
+  try {
+    await endDay(activeDay.id, "AUTO_CLOSED_DAY_ROLLOVER", boundaryIso);
+  } catch (e) {
+    if (e instanceof ActiveWorkoutBlocksDayEndError) return undefined;
+    throw e;
+  }
+  return startDay(boundaryIso);
 }
 
 /**
@@ -909,6 +979,16 @@ export async function correctBodyweight(
   });
 }
 
+/**
+ * `occurredAtOverride` (DAY-ROLLOVER-001): every existing caller omits it
+ * and gets the same real, unmodified `occurredAt`/`recordedAt` pair as
+ * before. The one caller that passes it (performDueDayRollover, via
+ * endDay's own override param) stamps `occurredAt` at the semantic 16:30
+ * boundary instant while `recordedAt` still stays the real, unmodified
+ * moment this event was actually written — the same split
+ * StateCheckIn.seq's doc comment already establishes as doctrine
+ * ("recordedAt stays the real, unmodified moment"), never fabricated.
+ */
 export async function logEvent(
   beyondDayId: string,
   type: DomainEvent["type"],
@@ -916,14 +996,15 @@ export async function logEvent(
   source: DomainEvent["source"],
   correlationId: string,
   causationId?: string,
+  occurredAtOverride?: string,
 ): Promise<string> {
-  const timestamp = new Date().toISOString();
+  const recordedAt = new Date().toISOString();
   const event: DomainEvent = {
     id: newId(),
     type,
     beyondDayId,
-    occurredAt: timestamp,
-    recordedAt: timestamp,
+    occurredAt: occurredAtOverride ?? recordedAt,
+    recordedAt,
     payload,
     source,
     correlationId,
