@@ -1,10 +1,12 @@
 ---
 id: PLANNED-WORK-001
-status: ACTIVE
+status: CLOSED
 baseline: ae25528de0a0622a74b802ecf63f49c6982256b4
 branch: claude/planned-work-001-explicit-intent
 contract: docs/agent/drops/PLANNED-WORK-001.md
 builder: Claude, this session, direct owner authorization 2026-09-20 (Option B explicit operator intent, TRAIN as first source, boundary shaped for later generalization)
+integration_sha: b643af556ba934c234d5e2c4506b0b74ef518a7e
+closed_at: 2026-09-21T01:52:27.497Z
 ---
 
 # ACTIVE_DROP
@@ -28,23 +30,3 @@ the one residual limitation (an abandoned, never-closed, never-deleted branch ke
 as a live conflict — ordinary git hygiene already implies deleting it). Closing
 (`node scripts/factory-drop.mjs close`) flips this file's status to CLOSED; it never deletes
 or rewrites the historical Drop Contract file itself.
-
-## Activation note (hand-authored, not via `factory-drop.mjs init`)
-
-Same blocker as FOUNDATION-1B's own activation (see git history): `node scripts/factory-drop.mjs
-init` correctly detected the stale, already-merged `claude/body-ux-001-add-meal-disclosure`
-branch (PR #81, merged 2026-09-15, capability already present in `master`) still carrying its
-own never-closed `ACTIVE_DROP.md` snapshot. Deleting that remote branch remains blocked: a
-retried `git push origin --delete claude/body-ux-001-add-meal-disclosure` failed again with an
-HTTP 403 from GitHub itself, and no GitHub MCP tool in this session's toolset offers branch
-deletion either. The owner already approved deleting this specific branch once (this
-conversation, during FOUNDATION-1B's activation); the blocker is infrastructure permission, not
-authorization. Every fact `init` would otherwise have verified was independently re-derived by
-hand before writing this file: `git fetch origin master && git rev-parse origin/master` resolves
-to this file's declared `baseline`; the working tree was clean at that point;
-`docs/agent/drops/PLANNED-WORK-001.md` exists, parses, and declares `risk_tier: ARCHITECTURAL`;
-and no other branch's `ACTIVE_DROP.md` declares `status: ACTIVE` except the one confirmed-stale,
-confirmed-merged exception above. A future session with working branch-delete permission should
-delete that stale branch and may then re-run `node scripts/factory-drop.mjs init PLANNED-WORK-001
---baseline ae25528de0a0622a74b802ecf63f49c6982256b4 --branch claude/planned-work-001-explicit-intent --allow-dirty`
-to confirm this file exactly matches what the tool itself would have produced.
