@@ -171,6 +171,7 @@ export function TodayScreen({
   const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
   const [plannedWorkDeclaration, setPlannedWorkDeclaration] = useState<boolean | undefined>(undefined);
+  const [plannedWorkOpen, setPlannedWorkOpen] = useState(false);
   // Current Operational Context V1 (bounded proof): feeds the STATUS
   // context strip only — every other read above (day, scheduledContext,
   // unresolvedPostShift) stays exactly as-is for its own other uses
@@ -1662,6 +1663,8 @@ export function TodayScreen({
       {day && (
         <PlannedWorkCard
           declaration={plannedWorkDeclaration}
+          open={plannedWorkOpen}
+          setOpen={setPlannedWorkOpen}
           busy={busy}
           onSetPlannedWork={(planned) => void handleSetPlannedWork(planned)}
         />
@@ -1744,7 +1747,13 @@ export function TodayScreen({
         />
       )}
 
-      <AdvisorySection notes={advisoryNotes} excludeObligationId={headlineCommitment?.obligation.id} />
+      <AdvisorySection
+        notes={advisoryNotes}
+        excludeObligationId={headlineCommitment?.obligation.id}
+        busy={busy}
+        onLogWater={(amountOz) => void handleMinimumDayLogWater(amountOz)}
+        onOpenMinimumDay={() => setMinimumDayOpen(true)}
+      />
 
       {(daysSinceBackup === null || daysSinceBackup >= BACKUP_NUDGE_THRESHOLD_DAYS) && (
         <p className="meta" style={{ marginTop: 4 }}>

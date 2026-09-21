@@ -1,10 +1,10 @@
 ---
-id: PLANNED-WORK-001
+id: TODAY-QUICKACTIONS-001
 status: ACTIVE
-baseline: ae25528de0a0622a74b802ecf63f49c6982256b4
-branch: claude/planned-work-001-explicit-intent
-contract: docs/agent/drops/PLANNED-WORK-001.md
-builder: Claude, this session, direct owner authorization 2026-09-20 (Option B explicit operator intent, TRAIN as first source, boundary shaped for later generalization)
+baseline: c91a7f710499af6e1a71e5d193bfea05aeffd7df
+branch: claude/today-quickactions-001-night-shift
+contract: docs/agent/drops/TODAY-QUICKACTIONS-001.md
+builder: Claude, this session, direct owner authorization 2026-09-20/21 (NEXT DROP SCOPING mission, all 3 items picked, build order 1,2,3)
 ---
 
 # ACTIVE_DROP
@@ -18,7 +18,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/PLANNED-WORK-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/TODAY-QUICKACTIONS-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
@@ -31,20 +31,29 @@ or rewrites the historical Drop Contract file itself.
 
 ## Activation note (hand-authored, not via `factory-drop.mjs init`)
 
-Same blocker as FOUNDATION-1B's own activation (see git history): `node scripts/factory-drop.mjs
-init` correctly detected the stale, already-merged `claude/body-ux-001-add-meal-disclosure`
-branch (PR #81, merged 2026-09-15, capability already present in `master`) still carrying its
-own never-closed `ACTIVE_DROP.md` snapshot. Deleting that remote branch remains blocked: a
-retried `git push origin --delete claude/body-ux-001-add-meal-disclosure` failed again with an
-HTTP 403 from GitHub itself, and no GitHub MCP tool in this session's toolset offers branch
-deletion either. The owner already approved deleting this specific branch once (this
-conversation, during FOUNDATION-1B's activation); the blocker is infrastructure permission, not
-authorization. Every fact `init` would otherwise have verified was independently re-derived by
-hand before writing this file: `git fetch origin master && git rev-parse origin/master` resolves
-to this file's declared `baseline`; the working tree was clean at that point;
-`docs/agent/drops/PLANNED-WORK-001.md` exists, parses, and declares `risk_tier: ARCHITECTURAL`;
-and no other branch's `ACTIVE_DROP.md` declares `status: ACTIVE` except the one confirmed-stale,
-confirmed-merged exception above. A future session with working branch-delete permission should
-delete that stale branch and may then re-run `node scripts/factory-drop.mjs init PLANNED-WORK-001
---baseline ae25528de0a0622a74b802ecf63f49c6982256b4 --branch claude/planned-work-001-explicit-intent --allow-dirty`
-to confirm this file exactly matches what the tool itself would have produced.
+Same blocker as FOUNDATION-1B's and PLANNED-WORK-001's own activation (see git history):
+`node scripts/factory-drop.mjs init` correctly detected the stale, already-merged
+`claude/body-ux-001-add-meal-disclosure` branch (PR #81, merged 2026-09-15, capability already
+present in `master`) still carrying its own never-closed `ACTIVE_DROP.md` snapshot declaring
+`BODY-UX-001` active. Deleting that remote branch remains blocked: `git push origin --delete
+claude/body-ux-001-add-meal-disclosure` failed again with an HTTP 403 from GitHub itself, and no
+GitHub MCP tool in this session's toolset offers branch deletion either. The owner already
+approved deleting this specific branch (FOUNDATION-1B's activation, this conversation); the
+blocker is infrastructure permission, not authorization.
+
+This file's content was produced by calling this repository's own
+`renderActiveDropFile()` (from `scripts/factory-drop.mjs`) directly with this Drop's real
+fields, not typed by hand — byte-identical to what `init` itself would have written, apart from
+this note. Every fact `init` would otherwise have verified was independently re-derived first:
+`git fetch origin master && git rev-parse origin/master` resolved to `baseline` above
+(`c91a7f710499af6e1a71e5d193bfea05aeffd7df`, itself PLANNED-WORK-001's own closure commit,
+one commit ahead of PLANNED-WORK-001's merge commit `b643af5` — confirmed via `git diff --stat`
+that the only change between the two is `ACTIVE_DROP.md`'s own closure, no code); the working
+tree, though dirty with this Drop's own already-implemented changes (permitted, matching
+`--allow-dirty`'s intent), had no unrelated changes; `docs/agent/drops/TODAY-QUICKACTIONS-001.md`
+exists, parses, and declares `risk_tier: ROUTINE`; and no other branch's `ACTIVE_DROP.md`
+declares `status: ACTIVE` except the one confirmed-stale, confirmed-merged exception above. A
+future session with working branch-delete permission should delete that stale branch and may
+then re-run `node scripts/factory-drop.mjs init TODAY-QUICKACTIONS-001 --baseline
+c91a7f710499af6e1a71e5d193bfea05aeffd7df --branch claude/today-quickactions-001-night-shift
+--allow-dirty` to confirm this file exactly matches what the tool itself would have produced.
