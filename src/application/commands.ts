@@ -237,22 +237,46 @@ export class ActiveWorkoutBlocksDayEndError extends Error {
  * rollover-created day. A stretch with the app closed across several
  * 16:30s still only ever produces one rollover: computeDueRollover always
  * returns the single most recent elapsed boundary, never a list.
+ *
+ * ROLLOVER-ON-RESUME (direct owner mission, 2026-09-21): now called from
+ * three places — App.tsx's mount-time gate, App.tsx's new visibilitychange/
+ * pageshow resume listener, and TrainScreen.tsx's post-workout-completion
+ * hooks — any of which can genuinely fire in quick succession (a real
+ * browser can dispatch both visibilitychange and pageshow for the same
+ * resume). The same in-flight-promise memoization ensureActiveDay() above
+ * already established for its own concurrent-call hazard is reused here:
+ * every call arriving while one is still pending joins that same promise
+ * rather than racing it, so two near-simultaneous resume events can never
+ * independently read "still ACTIVE" and each perform their own close+
+ * reopen. Only the first caller's `now` is actually used for a given
+ * in-flight burst — callers close enough in time to overlap don't need
+ * meaningfully different answers.
  */
+let performDueDayRolloverInFlight: Promise<BeyondDay | undefined> | null = null;
+
 export async function performDueDayRollover(now: Date = new Date()): Promise<BeyondDay | undefined> {
-  const activeDay = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
-  if (!activeDay) return undefined;
+  if (performDueDayRolloverInFlight) return performDueDayRolloverInFlight;
+  performDueDayRolloverInFlight = (async () => {
+    try {
+      const activeDay = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
+      if (!activeDay) return undefined;
 
-  const boundary = computeDueRollover(new Date(activeDay.startedAt), now);
-  if (!boundary) return undefined;
+      const boundary = computeDueRollover(new Date(activeDay.startedAt), now);
+      if (!boundary) return undefined;
 
-  const boundaryIso = boundary.toISOString();
-  try {
-    await endDay(activeDay.id, "AUTO_CLOSED_DAY_ROLLOVER", boundaryIso);
-  } catch (e) {
-    if (e instanceof ActiveWorkoutBlocksDayEndError) return undefined;
-    throw e;
-  }
-  return startDay(boundaryIso);
+      const boundaryIso = boundary.toISOString();
+      try {
+        await endDay(activeDay.id, "AUTO_CLOSED_DAY_ROLLOVER", boundaryIso);
+      } catch (e) {
+        if (e instanceof ActiveWorkoutBlocksDayEndError) return undefined;
+        throw e;
+      }
+      return await startDay(boundaryIso);
+    } finally {
+      performDueDayRolloverInFlight = null;
+    }
+  })();
+  return performDueDayRolloverInFlight;
 }
 
 /**

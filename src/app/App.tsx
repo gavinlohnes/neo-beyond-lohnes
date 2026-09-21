@@ -144,6 +144,38 @@ export function App() {
     });
   }, []);
 
+  /**
+   * ROLLOVER-ON-RESUME (direct owner mission, 2026-09-21): the mount-time
+   * gate above only ever runs once, on cold load — a PWA/tab that stays
+   * backgrounded across 16:30 and is then simply brought back to the
+   * foreground (no reload) would otherwise not see the boundary until
+   * some other action happened to trigger a fresh getActiveDay() read.
+   * Both `visibilitychange` and `pageshow` are listened for since a real
+   * browser doesn't reliably fire only one of them for every resume path
+   * (iOS/Safari's bfcache restores in particular lean on `pageshow`);
+   * either firing while the page is actually visible re-checks. No UI
+   * effect of its own — same fire-and-forget, best-effort posture as
+   * every other call site — and performDueDayRollover's own in-flight
+   * memoization (see its doc comment in application/commands.ts) makes
+   * two overlapping resume events collapse into at most one real
+   * rollover, never two.
+   */
+  useEffect(() => {
+    function handleResume() {
+      if (document.visibilityState !== "visible") return;
+      void performDueDayRollover().catch(() => {
+        // Best-effort, matching every other performDueDayRollover call
+        // site — a failed check here has no visible effect either way.
+      });
+    }
+    document.addEventListener("visibilitychange", handleResume);
+    window.addEventListener("pageshow", handleResume);
+    return () => {
+      document.removeEventListener("visibilitychange", handleResume);
+      window.removeEventListener("pageshow", handleResume);
+    };
+  }, []);
+
   function openTrain(destination: TrainDestination) {
     setTrainDestination(destination);
     setTab("TRAIN");

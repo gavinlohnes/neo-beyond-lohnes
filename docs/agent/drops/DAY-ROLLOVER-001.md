@@ -6,6 +6,17 @@ risk_tier: ARCHITECTURAL
 
 # DAY-ROLLOVER-001 // AUTOMATIC 16:30 DAY BOUNDARY
 
+## Amendment (ROLLOVER-ON-RESUME, direct owner mission, 2026-09-21, same session)
+
+Extends this same Drop (branch/PR unchanged) rather than opening a new one — a direct
+continuation of the exact mechanism this contract already authorizes, not an independent
+concern. Adds: `performDueDayRollover()` also runs on `visibilitychange`/`pageshow` (App.tsx),
+not only on cold mount; an in-flight-promise memoization guard on `performDueDayRollover()`
+itself (`application/commands.ts`, same pattern as `ensureActiveDay()`'s own established guard)
+so two resume signals firing for the same real-world resume collapse into at most one actual
+rollover. No UI change, no new feature, no change to the workout-in-progress guard. Authorized
+scope/acceptance criteria below are updated in place to include this.
+
 ## Mission
 
 Direct owner mission (this session, 2026-09-21, "MISSION: DAY ROLLOVER AT 16:30"): the BeyondDay
@@ -126,6 +137,23 @@ spelled out explicitly rather than silently overriding the mechanism's default.
   guard, no-double-close, sleep-ambiguity advisory), and an `engine/advisory.test.ts` extension
   for the new composer.
 
+**ROLLOVER-ON-RESUME amendment:**
+
+- `src/app/App.tsx`: a second `useEffect` attaches `visibilitychange`/`pageshow` listeners
+  (both, since a real browser doesn't reliably fire only one for every resume path) that call
+  `performDueDayRollover()` when `document.visibilityState === "visible"`. Fire-and-forget, no
+  render-affecting change, cleaned up on unmount.
+- `src/application/commands.ts`: `performDueDayRollover()` gains an in-flight-promise
+  memoization guard (same shape as `ensureActiveDay()`'s own) so two resume signals for one
+  real-world resume collapse into at most one actual close+reopen.
+- Tests: `tests/integration/dayRollover.test.ts` gains two concurrency tests (simultaneous calls
+  produce exactly one rollover; a genuinely later call still performs a real, separate one).
+  `tests/browser/App.test.tsx` gains a real, unmocked `<App/>`-level suite — real
+  `visibilitychange`/`pageshow` events dispatched, real Dexie state checked afterward, with
+  `startedAt` backdated relative to `Date.now()` (not a fixed calendar date) so both the
+  "not yet due" and "guaranteed due" cases are deterministic regardless of the actual current
+  wall-clock time.
+
 ## Explicit exclusions
 
 - No change to `src/ui/screens/today/**` or any of PR #110's own changed files/regions, beyond
@@ -199,6 +227,12 @@ spelled out explicitly rather than silently overriding the mechanism's default.
   does, on either kind of day.
 - `historyCopy.ts` labels an `AUTO_CLOSED_DAY_ROLLOVER`-reason day as "auto-closed," not
   "explicit."
+- **ROLLOVER-ON-RESUME**: dispatching `visibilitychange` (visible) or `pageshow` at a real,
+  rendered `<App/>` rolls over an active day whose boundary has elapsed since it started, even
+  when the mount-time check already ran and found nothing due; a day that hasn't crossed its
+  boundary is left untouched by a resume event. Two resume events fired together produce exactly
+  one rollover, never two, and a genuinely later call after the first fully resolves still
+  performs a real one when a new boundary is due.
 - `npm run verify` passes (architecture, full suite including browser, production build).
 
 ## Required verification

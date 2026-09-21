@@ -156,6 +156,50 @@ describe("performDueDayRollover", () => {
       "EXPLICIT_END_DAY",
     );
   });
+
+  /**
+   * ROLLOVER-ON-RESUME (2026-09-21): a real browser can dispatch both
+   * visibilitychange and pageshow for the same resume, each independently
+   * calling performDueDayRollover() — without the in-flight-promise
+   * memoization this would race two concurrent reads of "still ACTIVE"
+   * into two separate close+reopen sequences. Calling it twice without
+   * awaiting between (the same shape as two near-simultaneous resume
+   * events) proves that can't happen.
+   */
+  it("two concurrent calls (simulating two resume events firing together) cause at most one rollover", async () => {
+    const day = await startDay();
+    await backdateDayBeforeBoundary(day.id);
+
+    const [first, second] = await Promise.all([
+      performDueDayRollover(JUST_AFTER_BOUNDARY),
+      performDueDayRollover(JUST_AFTER_BOUNDARY),
+    ]);
+
+    expect(first).toBeDefined();
+    expect(second).toBeDefined();
+    expect(first!.id).toBe(second!.id);
+
+    const allDays = await db.beyondDays.toArray();
+    expect(allDays).toHaveLength(2); // the original + exactly one new one, not two
+    const rolloverEvents = (await db.events.where("type").equals("DAY_ENDED").toArray()).filter(
+      (e) => (e.payload as { reason?: string }).reason === "AUTO_CLOSED_DAY_ROLLOVER",
+    );
+    expect(rolloverEvents).toHaveLength(1);
+  });
+
+  it("a genuinely later call (after the in-flight one resolves) still performs a real, separate rollover when a new boundary is due", async () => {
+    const day = await startDay();
+    await backdateDayBeforeBoundary(day.id);
+
+    const first = await performDueDayRollover(JUST_AFTER_BOUNDARY);
+    expect(first).toBeDefined();
+
+    // The next day's own boundary, a day after JUST_AFTER_BOUNDARY.
+    const nextDayBoundary = new Date(2026, 8, 22, DAY_ROLLOVER_HOUR, DAY_ROLLOVER_MINUTE, 5, 0);
+    const second = await performDueDayRollover(nextDayBoundary);
+    expect(second).toBeDefined();
+    expect(second!.id).not.toBe(first!.id);
+  });
 });
 
 describe("dayRolloverAmbiguity advisory", () => {
