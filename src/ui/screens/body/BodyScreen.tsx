@@ -345,8 +345,11 @@ export function BodyScreen() {
       setSleepHoursInput("");
       setSleepMinutesInput("");
       setSleepKind("PRIMARY");
-      setSleepConfirmation({ message: describeSleepLogged(totalMinutes), headEventId: eventId });
+      // Every log handler here sets its confirmation only AFTER refresh():
+      // the banner's CORRECT looks the new entry up in the refreshed list,
+      // so showing it earlier made an immediate tap a silent no-op.
       await refresh();
+      setSleepConfirmation({ message: describeSleepLogged(totalMinutes), headEventId: eventId });
     } finally {
       setBusy(false);
     }
@@ -397,8 +400,8 @@ export function BodyScreen() {
       const activeDay = await ensureActiveDay();
       const eventId = await logBodyweight(activeDay.id, weight);
       setBodyweightInput("");
-      setBodyweightConfirmation({ message: describeBodyweightLogged(weight), headEventId: eventId });
       await refresh();
+      setBodyweightConfirmation({ message: describeBodyweightLogged(weight), headEventId: eventId });
     } finally {
       setBusy(false);
     }
@@ -457,8 +460,8 @@ export function BodyScreen() {
       const activeDay = await ensureActiveDay();
       const eventId = await logProtein(activeDay.id, grams);
       setProteinInput("");
-      setProteinConfirmation({ message: describeProteinLogged(grams), headEventId: eventId });
       await refresh();
+      setProteinConfirmation({ message: describeProteinLogged(grams), headEventId: eventId });
     } finally {
       setBusy(false);
     }
@@ -628,8 +631,8 @@ export function BodyScreen() {
     try {
       const activeDay = await ensureActiveDay();
       const result = await logMeal(activeDay.id, mealId);
-      setMealConfirmation({ message: describeMealLogged(result.name), headEventId: result.eventId });
       await refresh();
+      setMealConfirmation({ message: describeMealLogged(result.name), headEventId: result.eventId });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not log meal.");
     } finally {
@@ -680,8 +683,8 @@ export function BodyScreen() {
       const activeDay = await ensureActiveDay();
       const eventId = await logWater(activeDay.id, amount);
       setInput("");
-      setWaterConfirmation({ message: describeWaterLogged(amount), headEventId: eventId });
       await refresh();
+      setWaterConfirmation({ message: describeWaterLogged(amount), headEventId: eventId });
     } finally {
       setBusy(false);
     }
