@@ -20,9 +20,42 @@ import { db } from "../../src/persistence/db";
  * day exists."
  */
 
+/**
+ * CORRECT-banner regression guard: the entry-list reads the confirmation
+ * banner's CORRECT depends on can be slowed per test (still the real
+ * queries). With the delay on, a banner shown before refresh() finished
+ * loading the new entry would make CORRECT a silent no-op; the tests that
+ * enable it click CORRECT the instant the banner appears.
+ */
+const listReadDelay = vi.hoisted(() => ({ ms: 0 }));
+async function delayListRead() {
+  if (listReadDelay.ms > 0) await new Promise((resolve) => setTimeout(resolve, listReadDelay.ms));
+}
+vi.mock("../../src/application/queries", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/application/queries")>();
+  return {
+    ...actual,
+    getHydrationEntries: async (...args: Parameters<typeof actual.getHydrationEntries>) => {
+      await delayListRead();
+      return actual.getHydrationEntries(...args);
+    },
+  };
+});
+vi.mock("../../src/application/nutritionQueries", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/application/nutritionQueries")>();
+  return {
+    ...actual,
+    getMealEntries: async (...args: Parameters<typeof actual.getMealEntries>) => {
+      await delayListRead();
+      return actual.getMealEntries(...args);
+    },
+  };
+});
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  listReadDelay.ms = 0;
 });
 
 describe("BodyScreen (real browser) — empty state", () => {
@@ -81,12 +114,11 @@ describe("BodyScreen (real browser) — WATER", () => {
 
   it("CORRECT preserves history rather than deleting the original entry", async () => {
     const screen = await render(<BodyScreen />);
+    listReadDelay.ms = 150;
     await screen.getByRole("button", { name: "+8 oz" }).click();
+    // Clicked the moment the banner appears: the banner must only show once
+    // the new entry is loaded, or this CORRECT would silently do nothing.
     await expect.element(screen.getByText("8 oz added.", { exact: true })).toBeVisible();
-    // Same race as MEAL MEMORY's CORRECT test below: the banner appears
-    // before refresh() has loaded the new entry, so wait for the list.
-    await expect.element(screen.getByRole("button", { name: /TODAY'S ENTRIES \(1\)/ })).toBeVisible();
-
     await screen.getByRole("button", { name: "CORRECT" }).click();
     const correctionInput = screen.getByRole("spinbutton", { name: "Corrected amount (oz)" });
     await expect.element(correctionInput).toBeVisible();
@@ -318,12 +350,10 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
   it("CORRECT preserves history rather than deleting the original entry", async () => {
     const screen = await render(<BodyScreen />);
     await addSavedMeal(screen);
+    listReadDelay.ms = 150;
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
-    // The confirmation banner's CORRECT renders before refresh() has loaded
-    // the new entry into mealEntries; clicking it in that window is a
-    // silent no-op (no entry to correct yet). Wait for the list to hold it.
-    await expect.element(screen.getByRole("button", { name: /TODAY'S MEALS \(1\)/ })).toBeVisible();
-
+    // Clicked the moment the banner appears (see the water CORRECT test).
+    await expect.element(screen.getByText("Chicken & Rice Bowl logged.", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "CORRECT" }).click();
     await screen.getByRole("spinbutton", { name: "Corrected calories" }).fill("620");
     await screen.getByRole("button", { name: "SAVE" }).click();
