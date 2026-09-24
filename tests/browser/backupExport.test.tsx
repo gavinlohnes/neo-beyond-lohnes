@@ -4,6 +4,22 @@ import { db } from "../../src/persistence/db";
 import { exportBackup } from "../../src/persistence/backup";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { startDay } from "../../src/application/commands";
+import { getAdvisoryNotes } from "../../src/application/advisoryQueries";
+
+/**
+ * getAdvisoryNotes is wrapped (still the real implementation) so the
+ * restore-picker test below can await the exact promise MoreScreen's
+ * mount refresh() is still waiting on. That refresh() shows "Active day:
+ * YES" one step BEFORE its final getAdvisoryNotes() read, so waiting on
+ * "YES" alone let teardown close/delete the database mid-query — an
+ * intermittent unhandled DatabaseClosedError that failed whole CI runs
+ * even with every test passing.
+ */
+vi.mock("../../src/application/advisoryQueries", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/application/advisoryQueries")>();
+  return { ...actual, getAdvisoryNotes: vi.fn(actual.getAdvisoryNotes) };
+});
+const getAdvisoryNotesMock = vi.mocked(getAdvisoryNotes);
 
 /**
  * Drop 01 acceptance correction (real-device evidence, 2026-08-22):
@@ -83,9 +99,14 @@ describe("MoreScreen restore picker — no accept filter (Drop 01 acceptance ret
     // file's afterEach's Dexie.delete — proceed, rather than an arbitrary
     // sleep. Without it, the global teardown can close the database while
     // MoreScreen's own refresh() is still awaiting a query against it.
+    getAdvisoryNotesMock.mockClear();
     await startDay();
     const screen = await render(<MoreScreen />);
     await expect.element(screen.getByText("YES", { exact: true })).toBeVisible();
+    // "YES" lands one await before refresh()'s last read — wait for that
+    // read too, so no query is still in flight at teardown.
+    await expect.poll(() => getAdvisoryNotesMock.mock.results.length).toBe(1);
+    await getAdvisoryNotesMock.mock.results[0]!.value;
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
     expect(fileInput).not.toBeNull();

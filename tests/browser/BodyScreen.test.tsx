@@ -83,6 +83,9 @@ describe("BodyScreen (real browser) — WATER", () => {
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "+8 oz" }).click();
     await expect.element(screen.getByText("8 oz added.", { exact: true })).toBeVisible();
+    // Same race as MEAL MEMORY's CORRECT test below: the banner appears
+    // before refresh() has loaded the new entry, so wait for the list.
+    await expect.element(screen.getByRole("button", { name: /TODAY'S ENTRIES \(1\)/ })).toBeVisible();
 
     await screen.getByRole("button", { name: "CORRECT" }).click();
     const correctionInput = screen.getByRole("spinbutton", { name: "Corrected amount (oz)" });
@@ -316,6 +319,10 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     const screen = await render(<BodyScreen />);
     await addSavedMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    // The confirmation banner's CORRECT renders before refresh() has loaded
+    // the new entry into mealEntries; clicking it in that window is a
+    // silent no-op (no entry to correct yet). Wait for the list to hold it.
+    await expect.element(screen.getByRole("button", { name: /TODAY'S MEALS \(1\)/ })).toBeVisible();
 
     await screen.getByRole("button", { name: "CORRECT" }).click();
     await screen.getByRole("spinbutton", { name: "Corrected calories" }).fill("620");
