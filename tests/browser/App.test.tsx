@@ -287,4 +287,54 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
 
     expect(await db.beyondDays.count()).toBe(2); // the original + exactly one new one, never two new ones
   });
+
+  it("a later, separate resume after a rollover already happened does nothing — the same boundary never fires twice", async () => {
+    const day = await startDay();
+    const screen = await render(<App />);
+    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await db.beyondDays.update(day.id, { startedAt: new Date(Date.now() - TWO_DAYS_MS).toISOString() });
+
+    document.dispatchEvent(new Event("visibilitychange"));
+    await expect.poll(async () => (await db.beyondDays.get(day.id))?.status).toBe("ENDED");
+    const rolledInto = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
+    expect(rolledInto).toBeDefined();
+
+    // Background + reopen again, well after the first resume's call has
+    // fully resolved (not the in-flight-guard case above).
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    document.dispatchEvent(new Event("visibilitychange"));
+    window.dispatchEvent(new Event("pageshow"));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(await db.beyondDays.count()).toBe(2);
+    expect((await db.beyondDays.get(rolledInto!.id))?.status).toBe("ACTIVE");
+    const rolloverEnds = (await db.events.toArray()).filter(
+      (e) => e.type === "DAY_ENDED" && (e.payload as { reason?: string }).reason === "AUTO_CLOSED_DAY_ROLLOVER",
+    );
+    expect(rolloverEnds).toHaveLength(1);
+  });
+
+  it("resuming with a workout in progress does not roll the day over; ending the workout then does", async () => {
+    const day = await startDay();
+    const active = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, active.id, "machine-chest-press", 1, 135, 10);
+    const screen = await render(<App />);
+    await expect.element(screen.getByText("BEYOND // TRAIN", { exact: true })).toBeVisible();
+    await db.beyondDays.update(day.id, { startedAt: new Date(Date.now() - TWO_DAYS_MS).toISOString() });
+
+    document.dispatchEvent(new Event("visibilitychange"));
+    window.dispatchEvent(new Event("pageshow"));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect((await db.beyondDays.get(day.id))?.status).toBe("ACTIVE");
+    expect(await db.beyondDays.count()).toBe(1);
+    expect((await db.workoutSessions.get(active.id))?.status).toBe("ACTIVE");
+
+    // The block is only while the workout runs: finishing it performs
+    // the deferred rollover.
+    await screen.getByRole("button", { name: "PARTIAL" }).click();
+    await expect.element(screen.getByText("WORKOUT SAVED — PARTIAL", { exact: true })).toBeVisible();
+    await expect.poll(async () => (await db.beyondDays.get(day.id))?.status).toBe("ENDED");
+    expect(await db.beyondDays.count()).toBe(2);
+  });
 });
