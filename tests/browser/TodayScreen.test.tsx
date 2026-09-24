@@ -15,6 +15,7 @@ import {
   markWorkEnded,
   enableMinimumDay,
   logWater,
+  updateSchedulePattern,
 } from "../../src/application/commands";
 import { byTimeThenSeq } from "../../src/application/queries";
 import { archiveMission, createMission, createObligation, markObligationWaiting } from "../../src/application/intentCommands";
@@ -114,6 +115,23 @@ function trackUnhandledRejections() {
 
 const FIXED_PREDICTION: ScheduledContext = { week: "A", todayIsScheduledWorkDay: true, phase: "SCHEDULED_SHIFT" };
 
+/**
+ * Pins a schedule with no workdays at all, so FOUNDATION-1B's PRE_WORK
+ * shift-protection AdvisoryNote (and its own "+N OZ" quick actions from
+ * TODAY-QUICKACTIONS-001) can never appear. Without this, a test that
+ * assumes no ADVISORY / a single water button depends on the real
+ * weekday and wall-clock hour under DEFAULT_SCHEDULE_PATTERN.
+ */
+async function useScheduleWithNoWorkdays() {
+  await updateSchedulePattern({
+    anchorMonday: "2026-08-17",
+    weeks: [{ workdays: [] }],
+    shiftStartHour: 18,
+    shiftEndHour: 6,
+    postWorkTailHours: 6,
+  });
+}
+
 async function submitCapture(screen: Awaited<ReturnType<typeof render>>, text: string) {
   await screen.getByPlaceholder("Capture a thought...").fill(text);
   await screen.getByRole("button", { name: "CAPTURE" }).click();
@@ -164,6 +182,7 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
   });
 
   it("runs the truthful hydration loop, confirms mechanically, then recedes to quiet", async () => {
+    await useScheduleWithNoWorkdays();
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     await enableMinimumDay(day.id);
@@ -1309,6 +1328,7 @@ describe("TodayScreen (real browser) — ADVISORY (Intelligence Spine consumptio
   }
 
   it("does not duplicate the headline Commitment's own obligation as a second ADVISORY note", async () => {
+    await useScheduleWithNoWorkdays();
     await createObligation({ title: "Write the report", plannedAt: dateOffset(0) });
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
