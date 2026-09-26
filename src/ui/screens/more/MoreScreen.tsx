@@ -76,6 +76,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
   const [status, setStatus] = useState<string | null>(null);
   const [archiveStatus, setArchiveStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const disposedRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // REMIND-001: loaded once from localStorage on mount (getCheckInReminderPreference
   // never throws, so no loading state is needed) — every change writes through
@@ -87,15 +88,30 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
   const [reminderPermissionDenied, setReminderPermissionDenied] = useState(false);
 
   useEffect(() => {
-    void refresh();
+    disposedRef.current = false;
+    void refresh().catch((error) => {
+      if (disposedRef.current && isDatabaseClosedError(error)) return;
+      console.error("MORE diagnostics refresh failed.", error);
+    });
+    return () => {
+      disposedRef.current = true;
+    };
   }, []);
 
   async function refresh() {
-    setDays(await getDayCount());
-    setEvents(await getEventCount());
-    setRecommendations(await getRecommendationCount());
-    setActiveDayYes((await getActiveDay()) !== undefined);
-    setAdvisoryNotes(await getAdvisoryNotes());
+    const [nextDays, nextEvents, nextRecommendations, activeDay, nextAdvisoryNotes] = await Promise.all([
+      getDayCount(),
+      getEventCount(),
+      getRecommendationCount(),
+      getActiveDay(),
+      getAdvisoryNotes(),
+    ]);
+    if (disposedRef.current) return;
+    setDays(nextDays);
+    setEvents(nextEvents);
+    setRecommendations(nextRecommendations);
+    setActiveDayYes(activeDay !== undefined);
+    setAdvisoryNotes(nextAdvisoryNotes);
   }
 
   async function handleExportBackup() {
@@ -675,4 +691,8 @@ function DiagRow({ label, value }: { label: string; value: string }) {
       <span>{value}</span>
     </div>
   );
+}
+
+function isDatabaseClosedError(error: unknown): error is Error {
+  return error instanceof Error && error.name === "DatabaseClosedError";
 }
