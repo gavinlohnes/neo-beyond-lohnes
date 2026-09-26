@@ -517,7 +517,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           onChange={(e) => void handleFileChosen(e.target.files?.[0])}
         />
         {preview && (
-            <div className="card card--warning restore-preview">
+            <div className="card card--warning surface--chamfer restore-preview">
             <p className="card-title" style={{ fontSize: 16 }}>
               This will permanently replace everything currently on this device.
             </p>
@@ -617,7 +617,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
       <section className="operational-index-zone" aria-labelledby="system-heading">
       <h2 id="system-heading" className="section-label">System</h2>
       <p className="section-intro">Current local build and data identity. Technical detail stays closed until requested.</p>
-      <div className="instrument-cluster">
+      <div className="instrument-cluster surface--chamfer">
         <div>
           <p className="meta" style={{ margin: 0 }}>APP</p>
           <p className="status-value">{APP_RELEASE}</p>

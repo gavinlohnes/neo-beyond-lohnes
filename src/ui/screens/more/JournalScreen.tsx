@@ -380,7 +380,7 @@ function JournalEntryDetail({ entryId, onBack }: { entryId: string; onBack: () =
                   )}
                 </div>
                 {reviewing && (
-                  <div className="card card--warning intent-confirm" role="alert">
+                  <div className="card card--warning surface--chamfer intent-confirm" role="alert">
                     <p className="card-title">What actually happened?</p>
                     <p className="card-body" style={{ marginBottom: 8 }}>This is what the journal is for — recorded once, not revisited.</p>
                     <label htmlFor="journal-outcome" className="meta" style={{ display: "block", marginBottom: 4 }}>Outcome</label>
