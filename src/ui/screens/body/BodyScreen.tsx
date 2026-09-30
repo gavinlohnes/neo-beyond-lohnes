@@ -33,16 +33,27 @@ import {
   correctMealLog,
   createSavedMeal,
   logMeal,
+  logMealsAgain,
   updateSavedMeal,
 } from "../../../application/nutritionCommands";
 import {
   getMealEntries,
+  getPreviousDayMeals,
+  type RepeatableMeals,
   getSavedMeals,
   getTotalMealCalories,
   type NutritionEntry,
 } from "../../../application/nutritionQueries";
 import { searchFoods, type FoodSearchResult } from "../../../application/foodLookupQueries";
 import { getEffectiveProteinTargetG, getNutritionTargets } from "../../../application/nutritionTargetQueries";
+import {
+  describeBestSince,
+  formatShortDate,
+  getBodyweightHistory,
+  trendDirection,
+  type WeighIn,
+} from "../../../application/bodyTrendQueries";
+import { WeightTrend } from "./WeightTrend";
 import {
   BODYWEIGHT_PLAUSIBLE_RANGE,
   describeBodyweightLogged,
@@ -261,6 +272,10 @@ export function BodyScreen() {
   // Nutrition Targets (NUTRITION-003)
   const [nutritionTargets, setNutritionTargets] = useState<NutritionTargets | null>(null);
   const [effectiveProteinTargetG, setEffectiveProteinTargetG] = useState<number | undefined>(undefined);
+  // Drop 5: every weigh-in across all days, for the trend, best-since, milestone and goal date.
+  const [weightHistory, setWeightHistory] = useState<WeighIn[]>([]);
+  // Drop 5: the previous day's saved meals, for one-tap "same as yesterday".
+  const [repeatMeals, setRepeatMeals] = useState<RepeatableMeals | undefined>(undefined);
   const [totalMealCalories, setTotalMealCalories] = useState(0);
 
   useEffect(() => {
@@ -279,6 +294,8 @@ export function BodyScreen() {
     const targets = await getNutritionTargets();
     setNutritionTargets(targets);
     setEffectiveProteinTargetG(await getEffectiveProteinTargetG());
+    setWeightHistory(await getBodyweightHistory());
+    setRepeatMeals(await getPreviousDayMeals(activeDay?.id));
     if (activeDay) {
       setEntries(await getHydrationEntries(activeDay.id));
       setTotal(await getEffectiveHydrationTotal(activeDay.id));
@@ -618,6 +635,32 @@ export function BodyScreen() {
       setMealConfirmation({ message: describeMealLogged(result.name), headEventId: result.eventId });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not log meal.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleRepeatMeals() {
+    if (busy || !repeatMeals) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const activeDay = await ensureActiveDay();
+      const results = await logMealsAgain(
+        activeDay.id,
+        repeatMeals.meals.map((m) => m.savedMealId),
+      );
+      await refresh();
+      const last = results.at(-1);
+      if (last) {
+        setMealConfirmation({
+          message: `Logged ${results.length} ${results.length === 1 ? "meal" : "meals"} from ${formatShortDate(repeatMeals.dayStartedAt)}.`,
+          headEventId: last.eventId,
+        });
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not log meals.");
+      await refresh();
     } finally {
       setBusy(false);
     }
@@ -1218,9 +1261,15 @@ export function BodyScreen() {
               </FieldDisclosure>
             </div>
           )}
+          <WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
         </div>
       ) : (
-        <CollapsibleRow name="BODYWEIGHT" icon={<LineIcon icon={Scale} />} onOpen={() => setBodyweightOpen(true)} />
+        <CollapsibleRow
+          name="BODYWEIGHT"
+          icon={<LineIcon icon={Scale} />}
+          summary={describeBodyweightRow(weightHistory, nutritionTargets?.goalWeightLbs)}
+          onOpen={() => setBodyweightOpen(true)}
+        />
       )}
 
       {/* PROTEIN — FIELD ALPHA Phase 3: same value-forward pattern as
@@ -1345,6 +1394,19 @@ export function BodyScreen() {
         <p className="meta" style={{ marginBottom: 12 }}>
           Protein from meals counts toward Minimum Day, alongside protein-only logs.
         </p>
+
+        {/* Drop 5: one tap logs the previous day's saved meals again. Hidden
+            once today already has every one of them, so it can't double up. */}
+        {repeatMeals && !alreadyLoggedAll(repeatMeals, mealEntries) && (
+          <div style={{ marginBottom: 12 }}>
+            <button className="btn-secondary" disabled={busy} onClick={() => void handleRepeatMeals()}>
+              SAME AS YESTERDAY ({repeatMeals.meals.length} {repeatMeals.meals.length === 1 ? "meal" : "meals"})
+            </button>
+            <p className="meta" style={{ marginTop: 4 }}>
+              From {formatShortDate(repeatMeals.dayStartedAt)}: {repeatMeals.meals.map((m) => m.name).join(", ")}
+            </p>
+          </div>
+        )}
 
         {savedMeals.length === 0 ? (
           <p className="card-body" style={{ marginBottom: 12 }}>{SAVED_MEALS_EMPTY}</p>
@@ -1542,4 +1604,24 @@ export function BodyScreen() {
       </div>
     </div>
   );
+}
+
+/** Drop 5: the collapsed BODYWEIGHT row reports live state — the latest weigh-in, plus best-since when notable. */
+function describeBodyweightRow(history: readonly WeighIn[], goalWeightLbs?: number): string | undefined {
+  const latest = history.at(-1);
+  if (!latest) return undefined;
+  const bestSince = describeBestSince(history, trendDirection(history, goalWeightLbs));
+  return bestSince ? `${latest.weightLbs} lb · ${bestSince.toLowerCase()}` : `${latest.weightLbs} lb`;
+}
+
+/** Drop 5: true when today's meals already include every meal (with repeats) from the day being offered. */
+function alreadyLoggedAll(repeat: RepeatableMeals, today: readonly NutritionEntry[]): boolean {
+  const remaining = new Map<string, number>();
+  for (const e of today) remaining.set(e.savedMealId, (remaining.get(e.savedMealId) ?? 0) + 1);
+  return repeat.meals.every((m) => {
+    const left = remaining.get(m.savedMealId) ?? 0;
+    if (left === 0) return false;
+    remaining.set(m.savedMealId, left - 1);
+    return true;
+  });
 }

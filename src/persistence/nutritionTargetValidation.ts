@@ -19,10 +19,15 @@ import type { NutritionTargets } from "../domain/common/types";
  * range so a typo can't silently produce a nonsense target; the bound is
  * generous enough to include every real-world protein-per-bodyweight
  * heuristic in use, not just the owner's own chosen 0.8-1.0 g/lb range.
+ *
+ * Drop 5 (owner approval 2026-09-30): goalWeightLbs is an optional,
+ * additive field — rows and backups without it stay valid, and older
+ * readers simply drop it. Same partial-update convention as the others.
  */
 const nutritionTargetFields = {
   calorieTargetKcal: z.number().positive().optional(),
   proteinMultiplierGPerLb: z.number().min(0.1).max(3),
+  goalWeightLbs: z.number().min(50).max(1000).optional(),
 };
 
 /** Input to updateNutritionTargets — id/createdAt/updatedAt are assigned by the command, not the caller. At least one field must be present. */
@@ -30,14 +35,19 @@ export const nutritionTargetsInputSchema = z
   .object({
     calorieTargetKcal: nutritionTargetFields.calorieTargetKcal,
     proteinMultiplierGPerLb: nutritionTargetFields.proteinMultiplierGPerLb.optional(),
+    goalWeightLbs: nutritionTargetFields.goalWeightLbs,
   })
-  .refine((v) => v.calorieTargetKcal !== undefined || v.proteinMultiplierGPerLb !== undefined, "At least one field must change");
+  .refine(
+    (v) => v.calorieTargetKcal !== undefined || v.proteinMultiplierGPerLb !== undefined || v.goalWeightLbs !== undefined,
+    "At least one field must change",
+  );
 export type NutritionTargetsInput = z.infer<typeof nutritionTargetsInputSchema>;
 
 export const nutritionTargetsSchema = z.object({
   id: z.string(),
   calorieTargetKcal: nutritionTargetFields.calorieTargetKcal,
   proteinMultiplierGPerLb: nutritionTargetFields.proteinMultiplierGPerLb,
+  goalWeightLbs: nutritionTargetFields.goalWeightLbs,
   createdAt: z.string(),
   updatedAt: z.string(),
 });
