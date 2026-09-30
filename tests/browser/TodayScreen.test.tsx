@@ -1438,6 +1438,11 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     const panel = document.querySelector(".card--warning");
     expect(panel).not.toBeNull();
     expect(getComputedStyle(panel!).borderColor).toBe("rgb(200, 48, 46)"); // --danger: #c8302e
+    // Square corners (2026-09-30, direct owner ruling): chamfer kept, the
+    // three uncut corners square instead of .card's inherited --radius.
+    expect(getComputedStyle(panel!).clipPath).not.toBe("none");
+    expect(getComputedStyle(panel!).borderTopLeftRadius).toBe("0px");
+    expect(getComputedStyle(panel!).borderBottomRightRadius).toBe("0px");
 
     const proceed = screen.getByRole("button", { name: "PROCEED ANYWAY" }).element();
     expect(proceed.className).toContain("btn-danger");

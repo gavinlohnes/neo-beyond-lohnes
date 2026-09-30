@@ -76,6 +76,18 @@ describe("BodyScreen (real browser) — empty state", () => {
     expect(document.querySelectorAll(".instrument-cluster .card")).toHaveLength(0);
   });
 
+  // Square corners (2026-09-30, direct owner ruling): one chamfer, the
+  // other three corners square — no inherited --radius rounding.
+  it("the instrument cluster keeps its chamfer with square uncut corners", async () => {
+    await render(<BodyScreen />);
+    const cluster = document.querySelector(".instrument-cluster")!;
+    const style = getComputedStyle(cluster);
+    expect(style.clipPath).not.toBe("none");
+    expect(style.borderTopLeftRadius).toBe("0px");
+    expect(style.borderBottomLeftRadius).toBe("0px");
+    expect(style.borderBottomRightRadius).toBe("0px");
+  });
+
   it("no dominant .command-surface exists — BODY's four trackers are peers, not one leading recommendation", async () => {
     await render(<BodyScreen />);
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
