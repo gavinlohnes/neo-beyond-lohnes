@@ -13,8 +13,8 @@ snapshot (CHECKPOINT-003, baseline `e066a24`).
   Drops, then two weeks of field use.
 - **Builder:** Claude Code is the sole builder (see `CLAUDE.md`). On "let's work", propose the
   next Drop from the roadmap, wait for approval, build, open a PR, report.
-- **Drop 1 (Declutter I):** item 1 (START WORKOUT on TRAIN's first screen) is merged (PR #118).
-  Items 2 and 3 are not started.
+- **Drop 1 (Declutter I):** item 1 merged (PR #118); items 2 and 3 (one set at a time on TRAIN,
+  shorter TODAY) are in PR #119 alongside the roadmap. Next: Drop 2.
 - **Recently shipped:** 16:30 day rollover plus rollover on app resume (#111, #112);
   MoreScreen unmount guard (#115); square corners on chamfered panels, Diagnostic detail opens
   inline, TodayScreen test-flake fix (#116); retired stale branches so new Drops can start (#117); START WORKOUT on

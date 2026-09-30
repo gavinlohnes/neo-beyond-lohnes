@@ -19,9 +19,9 @@ At most 3 changes per Drop.
 
 - START WORKOUT on TRAIN's first screen, with template/variant overrides behind "Change".
   **Done (PR #118, merged).**
-- During a workout, show only the current set and collapse finished sets.
+- During a workout, show only the current set and collapse finished sets. **Done (stacked in PR #119).**
 - On TODAY, collapse a finished check-in to one line and cut helper text/dead space so MARK WORK
-  ENDED and SHIFT DOWN are visible without scrolling.
+  ENDED and SHIFT DOWN are visible without scrolling. **Done (stacked in PR #119).**
 
 ### Drop 2 — Declutter II
 
