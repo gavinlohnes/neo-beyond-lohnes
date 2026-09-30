@@ -61,7 +61,7 @@ export default defineConfig({
           setupFiles: ["./tests/browser/setup.ts"],
           browser: {
             enabled: true,
-            provider: playwright({ launchOptions: { executablePath: "/opt/pw-browsers/chromium" } }),
+            provider: playwright(),
             headless: true,
             instances: [{ browser: "chromium" }],
           },
