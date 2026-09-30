@@ -226,6 +226,7 @@ describe("accessibility (real browser, axe-core)", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "CHANGE", exact: true }).click();
     await screen.getByRole("button", { name: "RECOVERY", exact: true }).click();
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
     await expect.element(screen.getByText("RECOVERY — IN PROGRESS", { exact: true })).toBeVisible();

@@ -335,6 +335,15 @@ USER_DECIDES remaining authoritative.
   to do one rather than blocking or silently proceeding without one.
 - A workout session in progress must survive a page reload — resuming
   is a confirmed, tested behavior, not a "best effort."
+- **Pre-workout override picker sits behind CHANGE (locked 2026-09-30,
+  direct owner ruling, DECLUTTER-001).** The suggested workout card shows
+  the current choice as one line ("Template A · STANDARD") with a CHANGE
+  button; the template and variant chips appear only after that tap. This
+  keeps START WORKOUT on the first phone screen. Override stays one tap
+  away and the chosen template/variant is always visible, so the
+  suggests/decides/override pattern is unchanged. The TODAY → RECOVERY
+  handoff opens the picker automatically so it can focus the RECOVERY
+  choice.
 
 ## BODY
 
