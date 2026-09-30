@@ -43,6 +43,7 @@ export const DEFAULT_EXPECTED_REPO_SLUGS = ["gavinlohnes/neo-beyond-lohnes"];
 
 export const VALID_RISK_TIERS = ["ROUTINE", "ARCHITECTURAL", "HIGH-RISK"];
 export const ACTIVATION_BASELINE = "AT_ACTIVATION";
+export const RETIRED_BRANCHES_PATH = "docs/agent/RETIRED_BRANCHES.json";
 export const DROP_ID_PATTERN = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
 
 export function isValidDropId(id) {
@@ -237,6 +238,13 @@ export function checkConflictingActiveDrop(activeDropFrontmatter, requestedId) {
  * ever being closed or deleted continues to read as a live conflict —
  * exactly the same git-hygiene expectation "delete stale branches"
  * already implies, not a new kind of gap.
+ *
+ * Retired branches (OPEN-PR-CLEANUP-001): when deleting such a branch
+ * isn't possible, it can be listed in RETIRED_BRANCHES_PATH, pinned to
+ * its exact tip commit. The list is read from origin/master only (never
+ * the working tree or another branch), and a listed branch is skipped
+ * only while its current tip still equals the pinned SHA: any new commit
+ * on it makes it a live conflict again.
  */
 export function findConflictingActiveDropAcrossBranches(root, requestedId) {
   try {
@@ -254,12 +262,23 @@ export function findConflictingActiveDropAcrossBranches(root, requestedId) {
     return { ok: false, error: `Could not list origin's branches (${e.message}).` };
   }
 
+  const retired = loadRetiredBranches(root);
   for (const ref of refs) {
     try {
       git(["merge-base", "--is-ancestor", ref, "origin/master"], root);
       continue; // already merged into master — its snapshot is stale/superseded, not a live conflict
     } catch {
       /* not an ancestor of master — a genuinely still-open branch, worth checking */
+    }
+    const pinnedSha = retired.get(ref.replace(/^origin\//, ""));
+    if (pinnedSha) {
+      let tip = null;
+      try {
+        tip = git(["rev-parse", ref], root);
+      } catch {
+        /* unresolvable tip — fall through to the normal check */
+      }
+      if (tip === pinnedSha) continue; // retired on master at exactly this commit
     }
     let text;
     try {
@@ -278,6 +297,33 @@ export function findConflictingActiveDropAcrossBranches(root, requestedId) {
     }
   }
   return { ok: true };
+}
+
+/**
+ * Reads RETIRED_BRANCHES_PATH from origin/master as a Map of branch name to
+ * pinned tip SHA. Missing or malformed → empty Map, which fails closed:
+ * every unmerged ACTIVE branch is still reported as a conflict.
+ */
+export function loadRetiredBranches(root) {
+  const retired = new Map();
+  let text;
+  try {
+    text = git(["show", `origin/master:${RETIRED_BRANCHES_PATH}`], root);
+  } catch {
+    return retired;
+  }
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed?.schema_version !== 1 || !Array.isArray(parsed.branches)) return new Map();
+    for (const entry of parsed.branches) {
+      if (typeof entry?.branch === "string" && /^[0-9a-f]{40}$/.test(entry?.sha ?? "")) {
+        retired.set(entry.branch, entry.sha);
+      }
+    }
+  } catch {
+    return new Map();
+  }
+  return retired;
 }
 
 export function normalizeRemoteUrl(url) {

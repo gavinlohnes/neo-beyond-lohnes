@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "note": "Branches that still read status: ACTIVE but are finished and cannot be deleted from agent sessions. factory-drop.mjs skips a listed branch only while its tip equals the pinned sha. Read from origin/master only. Delete a branch's entry once the branch itself is deleted.",
+  "added": "2026-09-30, OPEN-PR-CLEANUP-001, direct owner approval",
+  "branches": [
+    {
+      "branch": "claude/body-ux-001-add-meal-disclosure",
+      "sha": "1f9f60e8b2a5e3585c1c71c94b90181f6f269ee1",
+      "drop": "BODY-UX-001",
+      "pr": 81,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/emblem-001-primary-mark",
+      "sha": "763d282a4c63197d3a99da2736cc33bbc76a2407",
+      "drop": "EMBLEM-001",
+      "pr": 75,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/emblem-002-mark-refresh",
+      "sha": "a54e016ba5d0c49ab12a33471baf064c6e6ad869",
+      "drop": "EMBLEM-002",
+      "pr": 78,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/glyph-001-shift-down-arrow",
+      "sha": "9f2576603ff09a5cec5a85daf063256a3ece6db7",
+      "drop": "GLYPH-001",
+      "pr": 76,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/intent-002-recurring-obligations",
+      "sha": "6825493272f5b169078f734df2940d511fc3e575",
+      "drop": "INTENT-002",
+      "pr": 84,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/launch-vision-001-suit-cta",
+      "sha": "8d665e9147a2db133c1f9e950a60d104fbdf2971",
+      "drop": "LAUNCH-VISION-001",
+      "pr": 70,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/launch-vision-002-body-neutral",
+      "sha": "db81773ec10e97e86e96e7988e777cb3de8e2389",
+      "drop": "LAUNCH-VISION-002",
+      "pr": 72,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/launch-vision-003-terrys-suit-port",
+      "sha": "a87acbfd63f9de48e0288556d00237f39b325224",
+      "drop": "LAUNCH-VISION-003",
+      "pr": 86,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/launch-vision-004-visual-tuning",
+      "sha": "22fabe6361ab135a4bbc3bffa04e8627912b7459",
+      "drop": "LAUNCH-VISION-004",
+      "pr": 87,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/motion-001-suit-easing",
+      "sha": "2477066107911ff3f2020e99cb8a0cb873b744db",
+      "drop": "MOTION-001",
+      "pr": 74,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/nutrition-001-deficit-protein-targets",
+      "sha": "ce036cd3323d90902005949eb22310037b81d292",
+      "drop": "NUTRITION-003",
+      "pr": 80,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/search-002-minisearch-navigate",
+      "sha": "4768a15f5b408a5167035a0ab56d2145704eb2ee",
+      "drop": "SEARCH-002",
+      "pr": 82,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/today-screen-flake-fix-wip",
+      "sha": "eb021d8a5ba77354e42d8427a17fcb94886837ee",
+      "drop": "TODAY-007",
+      "pr": 85,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/train-create-001",
+      "sha": "154706ab171dda8bda25f333a7f887ec2ada95a8",
+      "drop": "TRAIN-CREATE-001",
+      "pr": 77,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/train-create-002-custom-templates",
+      "sha": "cafab91d0f604eea474d2833b575908933785125",
+      "drop": "TRAIN-CREATE-002",
+      "pr": 79,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/train-create-003-custom-exercise-substitution",
+      "sha": "1cab1d344716ed6dbea51fd51965e8aa0f8dba25",
+      "drop": "TRAIN-CREATE-003",
+      "pr": 83,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/typography-001-suit-headline",
+      "sha": "9b22219e439de37af4a8ef2e4b8bffa134a0a244",
+      "drop": "TYPOGRAPHY-001",
+      "pr": 73,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/factory-003-stale-branch-robustness",
+      "sha": "00b73f2b4c8d367bd4f4689ee12fed54e52dffac",
+      "drop": "FACTORY-003",
+      "pr": 107,
+      "reason": "PR #107 closed unmerged (OPEN-PR-CLEANUP-001); its commits stay under refs/pull/107/head."
+    }
+  ]
+}
