@@ -30,6 +30,7 @@ import {
   type CurrentOperationalContext,
 } from "../../src/application/currentContextQueries";
 import { getActiveDay } from "../../src/application/queries";
+import { getAdvisoryNotes } from "../../src/application/advisoryQueries";
 import type { BeyondDay } from "../../src/domain/common/types";
 import { startWorkout } from "../../src/application/trainCommands";
 
@@ -60,10 +61,30 @@ vi.mock("../../src/application/queries", async (importOriginal) => {
   return { ...actual, getActiveDay: vi.fn() };
 });
 
+/**
+ * getAdvisoryNotes() is module-mocked too, passing straight through to the
+ * real one by default. Since FOUNDATION-1B it calls getActiveDay() itself
+ * (through the mocked module above). A refresh() left running when an
+ * async-ownership test ends (e.g. one whose held-back getActiveDay() was
+ * released on the test's last lines) still reaches getAdvisoryNotes() about
+ * 20 reads later. On a slow runner that lands in the NEXT test, after its
+ * beforeEach cleared getActiveDayMock's history: it adds a call the test
+ * never made, or takes the mockImplementationOnce the test queued for its
+ * own mount refresh. The async-ownership describe below stubs this to []
+ * (advisory notes are irrelevant to request ownership), so leftover
+ * refreshes can no longer reach getActiveDayMock through it.
+ */
+vi.mock("../../src/application/advisoryQueries", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/application/advisoryQueries")>();
+  return { ...actual, getAdvisoryNotes: vi.fn() };
+});
+
 const currentContextMock = vi.mocked(getCurrentOperationalContext);
 let realGetCurrentOperationalContext: typeof getCurrentOperationalContext;
 const getActiveDayMock = vi.mocked(getActiveDay);
 let realGetActiveDay: typeof getActiveDay;
+const getAdvisoryNotesMock = vi.mocked(getAdvisoryNotes);
+let realGetAdvisoryNotes: typeof getAdvisoryNotes;
 
 beforeAll(async () => {
   const actual = await vi.importActual<typeof import("../../src/application/currentContextQueries")>(
@@ -74,6 +95,10 @@ beforeAll(async () => {
     "../../src/application/queries",
   );
   realGetActiveDay = actualQueries.getActiveDay;
+  const actualAdvisoryQueries = await vi.importActual<typeof import("../../src/application/advisoryQueries")>(
+    "../../src/application/advisoryQueries",
+  );
+  realGetAdvisoryNotes = actualAdvisoryQueries.getAdvisoryNotes;
 });
 
 beforeEach(() => {
@@ -85,6 +110,8 @@ beforeEach(() => {
   currentContextMock.mockImplementation((activeDay, now) => realGetCurrentOperationalContext(activeDay, now));
   getActiveDayMock.mockClear();
   getActiveDayMock.mockImplementation(() => realGetActiveDay());
+  getAdvisoryNotesMock.mockReset();
+  getAdvisoryNotesMock.mockImplementation((now) => realGetAdvisoryNotes(now));
 });
 
 /** A promise whose settlement a test controls, standing in for real Dexie retrieval timing. */
@@ -560,6 +587,14 @@ describe("TodayScreen // Current Operational Context V1 — context-strip wordin
 });
 
 describe("TodayScreen // Current Operational Context V1 — async request ownership", () => {
+  // See the getAdvisoryNotes mock's comment at the top of this file: with
+  // advisory notes stubbed, only TodayScreen's own refresh() can call
+  // getActiveDayMock, so a refresh left over from the previous test can't
+  // change this test's call counts or take its queued implementations.
+  beforeEach(() => {
+    getAdvisoryNotesMock.mockResolvedValue([]);
+  });
+
   it("clears an already-installed context A the moment an accepted refresh adopts day B, instead of rendering it merged with day B while day B's own context is still pending", async () => {
     // 1. Establish active day A.
     const dayA = await startDay();
