@@ -163,6 +163,15 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await expect.element(screen.getByText("Recommendations", { exact: true })).toBeVisible();
   });
 
+  // 2026-09-30, direct owner ruling: Diagnostic detail expands inline
+  // only — no full-screen DEPTH-001 machinery reveal on SYSTEM.
+  it("opening Diagnostic detail shows no full-screen reveal overlay", async () => {
+    const screen = await render(<MoreScreen />);
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
+    await expect.element(screen.getByText("Days", { exact: true })).toBeVisible();
+    expect(document.querySelector(".machinery-reveal-overlay")).toBeNull();
+  });
+
   it("Intelligence Spine I2: no unresolved obligations -> Advisory notes reads 0, no note text rendered", async () => {
     const screen = await render(<MoreScreen />);
     await screen.getByText("Diagnostic detail", { exact: true }).click();

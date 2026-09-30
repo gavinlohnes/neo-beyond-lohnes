@@ -678,6 +678,10 @@ TODAY's separate ATTENTION budget.
   an earlier reviewed pass had — kept only the reveal itself and a contained brightness-pulse
   flash, consistent with this app's own existing "motion explains a state change, never
   decorates" doctrine (see "Visual system — motion" below, MOTION-001).
+  **Narrowed 2026-09-30, direct owner ruling:** MORE's "Diagnostic detail" no longer triggers
+  the reveal. SYSTEM's diagnostics are plain technical readouts, so they expand inline only
+  (`WhyDisclosure reveal={false}`). TODAY's "How BEYOND decided" and TRAIN's "Why this
+  suggestion"/"Exercise detail" keep the reveal unchanged.
 
 ## Visual system — typography
 

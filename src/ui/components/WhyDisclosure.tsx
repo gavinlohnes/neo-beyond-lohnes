@@ -9,6 +9,10 @@ import { PCBTraceOverlay } from "./PCBTraceOverlay";
  * already rendered inside a plain `<details className="why">`, now paired
  * with the "exposed machinery" reveal (PCBTraceOverlay) while open.
  *
+ * `reveal={false}` keeps the same disclosure without the overlay — used
+ * by MORE's "Diagnostic detail" (2026-09-30, direct owner ruling: plain
+ * technical readouts expand inline only; TODAY/TRAIN keep the reveal).
+ *
  * The disclosure's own content stays plain native `<details>` semantics —
  * instant, unconditional on any animation — so nothing here can gate what
  * a test or a screen reader sees. The overlay is a portal-rendered,
@@ -30,16 +34,18 @@ import { PCBTraceOverlay } from "./PCBTraceOverlay";
 export function WhyDisclosure({
   summary,
   style,
+  reveal = true,
   children,
 }: {
   summary: string;
   style?: CSSProperties;
+  reveal?: boolean;
   children: ReactNode;
 }) {
   const [revealSeed, setRevealSeed] = useState<number | null>(null);
 
   function handleToggle(e: SyntheticEvent<HTMLDetailsElement>) {
-    if (!e.currentTarget.open) {
+    if (!e.currentTarget.open || !reveal) {
       setRevealSeed(null);
       return;
     }
