@@ -655,7 +655,10 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           <p className="status-value">{activeDayYes ? "YES" : "NO"}</p>
         </div>
       </div>
-      <WhyDisclosure summary="Diagnostic detail">
+      {/* No machinery reveal here (2026-09-30, direct owner ruling): SYSTEM's
+          diagnostics are plain technical readouts, so they expand inline
+          only. TODAY/TRAIN's WHY disclosures keep the DEPTH-001 reveal. */}
+      <WhyDisclosure summary="Diagnostic detail" reveal={false}>
         <div style={{ marginTop: 8 }}>
           <DiagRow label="Built" value={BUILD_TIME} />
           <DiagRow label="Days" value={String(days)} />

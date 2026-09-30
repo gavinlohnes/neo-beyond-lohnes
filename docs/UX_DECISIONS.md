@@ -654,6 +654,11 @@ TODAY's separate ATTENTION budget.
   a one-time confirmation pulse on mount; TRAIN's own pre-existing per-set flash (`.set-earned`,
   VISUAL-001) already serves the identical purpose for set logging and is left untouched rather
   than duplicated. All four are pure presentation — no command/query/engine/domain change.
+- **Chamfered plates have square corners (locked 2026-09-30, direct owner ruling).** On
+  `.card--warning` and `.instrument-cluster`, the three corners without the chamfer are square
+  (`border-radius: 0`) instead of inheriting the 4px `--radius` rounding. `.command-surface`
+  already had square corners. So each chamfered surface now has exactly one diagonal cut, and
+  its other three corners are square. Ordinary `.card`s without a chamfer keep `--radius`.
 - **"Exposed Machinery" reveal (locked 2026-09-16, direct owner ruling over four rendered
   mockup passes, DEPTH-001).** A narrow, explicit authorization beyond this section's own
   "ambient motion stays deferred" framing above — obtained through its own independent review
@@ -673,6 +678,10 @@ TODAY's separate ATTENTION budget.
   an earlier reviewed pass had — kept only the reveal itself and a contained brightness-pulse
   flash, consistent with this app's own existing "motion explains a state change, never
   decorates" doctrine (see "Visual system — motion" below, MOTION-001).
+  **Narrowed 2026-09-30, direct owner ruling:** MORE's "Diagnostic detail" no longer triggers
+  the reveal. SYSTEM's diagnostics are plain technical readouts, so they expand inline only
+  (`WhyDisclosure reveal={false}`). TODAY's "How BEYOND decided" and TRAIN's "Why this
+  suggestion"/"Exercise detail" keep the reveal unchanged.
 
 ## Visual system — typography
 

@@ -75,9 +75,12 @@ button, input {
    the real production analog of the launch-vision prototype's red-
    bordered .confirm-panel. Same chamfer VISUAL-001 reserved for
    .command-surface alone; .card's own 16px padding gives the same
-   safety margin. */
+   safety margin. Square corners (2026-09-30, direct owner ruling): the
+   three uncut corners drop .card's inherited --radius so the plate reads
+   as one cut, not one cut plus three rounded corners. */
 .card--warning {
   clip-path: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%);
+  border-radius: 0;
 }
 
 /* FIELD-ARCH-001: the same gap VISUAL-002 found and fixed for the
@@ -156,9 +159,12 @@ button, input {
    16px padding VISUAL-001's own safety margin relied on, so the cut
    never intersects rendered content. Geometry only: this does not add
    any red accent, so BODY's own "no red accent at all" instrument-
-   cluster doctrine (docs/UX_DECISIONS.md) is untouched. */
+   cluster doctrine (docs/UX_DECISIONS.md) is untouched. Square corners
+   (2026-09-30, direct owner ruling): same as .card--warning — the three
+   uncut corners are square, overriding the base rule's --radius above. */
 .instrument-cluster {
   clip-path: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%);
+  border-radius: 0;
 }
 
 /* Overdrive Phase 3: capacity (GREEN/YELLOW/RED) is the single most

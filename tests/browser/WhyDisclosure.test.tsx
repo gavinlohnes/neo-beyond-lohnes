@@ -89,6 +89,17 @@ describe("WhyDisclosure (real browser)", () => {
     matchMediaSpy.mockRestore();
   });
 
+  it("reveal={false} opens the content inline with no overlay", async () => {
+    const screen = await render(
+      <WhyDisclosure summary="Diagnostic detail" reveal={false}>
+        <p>Built: 2026-09-30</p>
+      </WhyDisclosure>,
+    );
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
+    await expect.element(screen.getByText("Built: 2026-09-30")).toBeVisible();
+    expect(document.querySelector(".machinery-reveal-overlay")).toBeNull();
+  });
+
   it("passes the accessible name through to the underlying <details> control unchanged", async () => {
     const screen = await render(
       <WhyDisclosure summary="How BEYOND decided">
