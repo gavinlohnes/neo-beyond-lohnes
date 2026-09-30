@@ -54,6 +54,7 @@ import {
   type WeighIn,
 } from "../../../application/bodyTrendQueries";
 import { WeightTrend } from "./WeightTrend";
+import { QuitTracker } from "./QuitTracker";
 import {
   BODYWEIGHT_PLAUSIBLE_RANGE,
   describeBodyweightLogged,
@@ -1356,6 +1357,9 @@ export function BodyScreen() {
       ) : (
         <CollapsibleRow name="PROTEIN" icon={<LineIcon icon={Drumstick} />} onOpen={() => setProteinOpen(true)} />
       )}
+
+      {/* Drop 6: the quit tracker lives on BODY (owner ruling 2026-09-30). */}
+      <QuitTracker />
 
       {/* NUTRITION TARGETS — NUTRITION-003 (High-Risk Drop, direct owner
           ruling reversing NUTRITION-001's "no calorie/macro goal, no

@@ -46,16 +46,16 @@ At most 3 changes per Drop.
 
 ### Drop 5 — BODY
 
-- A weight trend with "lowest since", milestones, and a projected goal date. **Done (PR pending).**
-- One-tap "same as yesterday" meals. **Done (PR pending).**
+- A weight trend with "lowest since", milestones, and a projected goal date. **Done (PR #123, merged).**
+- One-tap "same as yesterday" meals. **Done (PR #123, merged).**
 
 ### Drop 6 — Quit tracker
 
-- A generic habit to avoid, named by the owner in the app.
-- It shows "clean days this month" (never a resetting streak).
-- A one-tap urge log (time + trigger).
-- A post-shift plan inside SHIFT DOWN.
-- Money saved.
+- A generic habit to avoid, named by the owner in the app. **Done (PR pending).**
+- It shows "clean days this month" (never a resetting streak). **Done (PR pending).**
+- A one-tap urge log (time + trigger). **Done (PR pending).**
+- A post-shift plan inside SHIFT DOWN. **Done (PR pending).**
+- Money saved. **Done (PR pending).**
 
 ### Drop 7 — Tie together
 

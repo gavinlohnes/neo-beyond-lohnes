@@ -7,6 +7,8 @@ import { db } from "../../src/persistence/db";
 import { updateNutritionTargets } from "../../src/application/nutritionTargetCommands";
 import { logBodyweight, startDay } from "../../src/application/commands";
 import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
+import { saveQuitHabit } from "../../src/application/quitCommands";
+import { holdToConfirm } from "./helpers/hold";
 
 /**
  * BEYOND FIELD ALPHA Phase 3 — first real-browser acceptance layer for
@@ -629,5 +631,46 @@ describe("BodyScreen (real browser) — Drop 5 weight trend and same-as-yesterda
     await expect.element(screen.getByText("Logged 2 meals from Sep 28.", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("2 meals logged today", { exact: true })).toBeVisible();
     expect(screen.getByRole("button", { name: /SAME AS YESTERDAY/ }).elements()).toHaveLength(0);
+  });
+});
+
+describe("BodyScreen (real browser) — Drop 6 quit tracker", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("before setup, the row points to MORE → Settings", async () => {
+    const screen = await render(<BodyScreen />);
+    await expect.element(screen.getByText("Set it up in MORE → Settings", { exact: true })).toBeVisible();
+  });
+
+  it("hold logs a clean day, taps log urges with undo, and money saved adds up", async () => {
+    await saveQuitHabit({ name: "Drinking", dailyCostUsd: 7 });
+    const screen = await render(<BodyScreen />);
+    await expect.element(screen.getByText("0 clean days this month · $0 saved", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "Open QUIT: DRINKING" }).click();
+
+    await screen.getByRole("button", { name: "LOG A CLEAN DAY" }).click();
+    await expect.element(screen.getByText("Hold to log.", { exact: true })).toBeVisible();
+    expect(await db.events.where("type").equals("CLEAN_DAY_LOGGED").count()).toBe(0);
+
+    await holdToConfirm(screen.getByRole("button", { name: "LOG A CLEAN DAY" }));
+    await expect.element(screen.getByText("Today is logged as clean.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("1 clean day this month", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("$7 saved this month · $7 total", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "Log urge: Stress" }).click();
+    await expect.element(screen.getByText("Urge logged — Stress.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("1 urge logged today", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "UNDO" }).click();
+    await expect.element(screen.getByText("1 urge logged today", { exact: true })).not.toBeInTheDocument();
+  });
+
+  it("never mentions a streak, a reset, or a slip", async () => {
+    await saveQuitHabit({ name: "Drinking" });
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "Open QUIT: DRINKING" }).click();
+    await expect.element(screen.getByRole("button", { name: "LOG A CLEAN DAY" })).toBeVisible();
+    expect(screen.getByText(/streak|relapse|slip|reset|failed/i).elements()).toHaveLength(0);
   });
 });

@@ -210,7 +210,10 @@ export type DomainEventType =
   | "DECISION_JOURNAL_CREATED"
   | "DECISION_JOURNAL_MODIFIED"
   | "DECISION_JOURNAL_REVIEWED"
-  | "PLANNED_WORK_SET";
+  | "PLANNED_WORK_SET"
+  | "CLEAN_DAY_LOGGED"
+  | "URGE_LOGGED"
+  | "URGE_UNDONE";
 
 /**
  * DERIVED, not stored. Computed by walking a WATER_LOGGED event and any
@@ -482,6 +485,44 @@ export interface WorkPeriodEndedPayload {
  * this generically (any kind, not a workout-specific check), so the
  * generalization boundary needs no further change when that day comes.
  */
+/**
+ * Drop 6 (quit tracker, owner approval 2026-09-30): the habit to avoid,
+ * named by the owner. A single mutable settings row ("current"), same
+ * treatment as NutritionTargets — configuration, not history. Clean days
+ * and urges are ordinary events (CLEAN_DAY_LOGGED / URGE_LOGGED).
+ */
+export interface QuitHabit {
+  id: string;
+  name: string;
+  /** What the habit costs on a day it happens, in US dollars. Drives "money saved". */
+  dailyCostUsd?: number;
+  /** A short owner-written plan shown inside SHIFT DOWN. */
+  postShiftPlan?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const URGE_TRIGGERS = ["AFTER_SHIFT", "STRESS", "TIRED", "SOCIAL", "BORED", "OTHER"] as const;
+export type UrgeTrigger = (typeof URGE_TRIGGERS)[number];
+
+/** Drop 6: logged by the owner with hold-to-confirm; at most one per BeyondDay. Never inferred. */
+export interface CleanDayLoggedPayload {
+  commandId: string;
+  habitName: string;
+}
+
+/** Drop 6: one-tap urge log — the event's own time plus what set it off. */
+export interface UrgeLoggedPayload {
+  commandId: string;
+  trigger: UrgeTrigger;
+}
+
+/** Drop 6: undoes one URGE_LOGGED without touching it, same append-only shape as SET_UNDONE. */
+export interface UrgeUndonePayload {
+  commandId: string;
+  urgeEventId: string;
+}
+
 export interface PlannedWorkSetPayload {
   commandId: string;
   planned: boolean;

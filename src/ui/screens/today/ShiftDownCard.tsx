@@ -33,6 +33,7 @@ export function ShiftDownCard({
   onCompleteShiftDown,
   onCancelShiftDown,
   startButtonRef,
+  postShiftPlan,
 }: {
   prominent: boolean;
   isDominant: boolean;
@@ -48,6 +49,8 @@ export function ShiftDownCard({
   onCompleteShiftDown: () => void;
   onCancelShiftDown: () => void;
   startButtonRef: Ref<HTMLButtonElement>;
+  /** Drop 6: the owner's own post-shift plan from the quit tracker, shown whenever the card is open. */
+  postShiftPlan?: string | undefined;
 }) {
   const active = activeShiftDownId !== null;
   const open = prominent || active || shiftDownOpen;
@@ -75,6 +78,11 @@ export function ShiftDownCard({
         {active ? "SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
       </p>
       <p className="card-body" style={{ marginBottom: 12 }}>{SHIFT_DOWN_EXPLANATION}</p>
+      {postShiftPlan && (
+        <p className="meta-strong" style={{ marginBottom: 12 }}>
+          Your plan: {postShiftPlan}
+        </p>
+      )}
       {active ? (
         <>
           <p className="card-body" style={{ marginBottom: 12 }}>

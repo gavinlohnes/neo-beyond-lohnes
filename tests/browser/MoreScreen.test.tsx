@@ -127,6 +127,19 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     expect(saved?.proteinMultiplierGPerLb).toBe(0.9);
   });
 
+  it("Drop 6: the quit tracker's habit, cost and plan save from Settings", async () => {
+    const screen = await render(<MoreScreen />);
+    await expect.element(screen.getByText("Not set up", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "Open QUIT TRACKER" }).click();
+    await screen.getByRole("textbox", { name: "Habit to avoid" }).fill("Drinking");
+    await screen.getByRole("spinbutton", { name: "Cost per day ($, optional)" }).fill("7");
+    await screen.getByRole("textbox", { name: "Post-shift plan (optional, shown in SHIFT DOWN)" }).fill("Shower, eat, bed");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+
+    await expect.element(screen.getByText("Drinking · $7/day", { exact: true })).toBeVisible();
+    expect(await db.quitHabits.get("current")).toMatchObject({ name: "Drinking", dailyCostUsd: 7, postShiftPlan: "Shower, eat, bed" });
+  });
+
   it("Drop 5: a goal weight saves with the targets and shows in the summary", async () => {
     const screen = await render(<MoreScreen />);
     await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
