@@ -1427,22 +1427,30 @@ describe("TodayScreen (real browser) — narrow phone widths", () => {
  */
 describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural geometry", () => {
   it("a primary action is filled with the red accent token, not the old neutral action tokens", async () => {
-    const day = await startDay();
-    await submitCheckIn(day.id, GREEN);
+    // DECLUTTER Drop 2: "No action needed" is neutral now, so this uses the
+    // no-check-in state, whose ALL GOOD is a real .btn-primary.
+    await startDay();
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Check in when you can", { exact: true })).toBeVisible();
 
-    // The GREEN/NO_ACTION_REQUIRED primary action — .btn-primary, per
-    // describeRecommendationAction — is the one guaranteed .btn-primary
-    // present in this exact state (ALL GOOD is .btn-secondary, not the
-    // one under test here).
-    const el = screen.getByRole("button", { name: "No action needed" }).element();
+    const el = screen.getByRole("button", { name: "ALL GOOD" }).element();
+    expect(el.className).toContain("btn-primary");
     const bg = getComputedStyle(el).backgroundColor;
     // --action-primary-bg is var(--accent) again as of LAUNCH-VISION-001
     // = #c81e2c = rgb(200, 30, 44). The old neutral value it replaced,
     // #f2f2f2 = rgb(242, 242, 242), is what VISUAL-001 had set.
     expect(bg).not.toBe("rgb(242, 242, 242)");
     expect(bg).toBe("rgb(200, 30, 44)");
+  });
+
+  it("DECLUTTER Drop 2: the all-clear \"No action needed\" button is neutral, not red", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("button", { name: "No action needed" })).toBeVisible();
+    const el = screen.getByRole("button", { name: "No action needed" }).element();
+    expect(el.className).toContain("btn-secondary");
+    expect(getComputedStyle(el).backgroundColor).not.toBe("rgb(200, 30, 44)");
   });
 
   it("the dominant recommendation surface (.command-surface) carries the one earned structural cut", async () => {

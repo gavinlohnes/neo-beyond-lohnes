@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { Icon } from "../../icons/Icon";
@@ -176,6 +177,12 @@ export function BodyScreen() {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // DECLUTTER Drop 2: sleep, bodyweight and protein are once-a-day logs, so
+  // each is a one-line row until tapped. A tracker stays open after logging
+  // so its confirmation and undo stay visible.
+  const [sleepOpen, setSleepOpen] = useState(false);
+  const [bodyweightOpen, setBodyweightOpen] = useState(false);
+  const [proteinOpen, setProteinOpen] = useState(false);
 
   // Water
   const [entries, setEntries] = useState<HydrationEntry[]>([]);
@@ -808,10 +815,6 @@ export function BodyScreen() {
         <Icon name="body" size={22} />
         <h1 className="eyebrow">BODY // ESSENTIALS</h1>
       </div>
-      <div className="field-tagline">
-        <h2 className="field-tagline__headline">Evidence, not noise.</h2>
-        <p className="field-tagline__sub">Fast inputs, kept as a permanent record. Correct mistakes without erasing what happened.</p>
-      </div>
 
       {/* Overdrive Phase 5: a single glanceable status strip before the
           four separate logging cards, so BODY reads as one physical-status
@@ -875,8 +878,7 @@ export function BodyScreen() {
           3: .equipment-row, not .card — a logging tool, not a floating
           card; .tool-label, not .eyebrow — that's reserved for identity. */}
       <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>HYDRATION</p>
-        <p className="recommendation-title" style={{ marginBottom: 12 }}>{total} oz today</p>
+        <p className="tool-label" style={{ marginBottom: 12 }}>HYDRATION</p>
         {/* Overdrive Phase 18 (PHONE WIDTH + BODY GLANCEABILITY): quick-add
             and "repeat last" used to share one flexWrap row — at a real
             narrow-Android content width their combined minimum widths sat
@@ -1001,318 +1003,334 @@ export function BodyScreen() {
           value-forward register HYDRATION already used) with kind/
           timestamp as .meta machine metadata underneath, instead of one
           undifferentiated prose sentence. */}
-      <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>SLEEP</p>
-        <p className="recommendation-title" style={{ marginBottom: 2 }}>
-          {lastSleepEntry ? formatDuration(lastSleepEntry.effectiveDurationMinutes) : "Not logged"}
-        </p>
-        <p className="meta" style={{ marginBottom: 12 }}>
-          {lastSleepEntry
-            ? `${lastSleepEntry.kind === "PRIMARY" ? "Main sleep" : "Nap"} · ${new Date(lastSleepEntry.recordedAt).toLocaleTimeString()}`
-            : "No sleep logged yet today."}
-        </p>
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <button
-            type="button"
-            className={`chip ${sleepKind === "PRIMARY" ? "chip--selected" : ""}`}
-            aria-pressed={sleepKind === "PRIMARY"}
-            onClick={() => {
-              setSleepKind("PRIMARY");
-              setSleepPendingConfirm(false);
-            }}
-          >
-            MAIN SLEEP
-          </button>
-          <button
-            type="button"
-            className={`chip ${sleepKind === "SUPPLEMENTAL" ? "chip--selected" : ""}`}
-            aria-pressed={sleepKind === "SUPPLEMENTAL"}
-            onClick={() => {
-              setSleepKind("SUPPLEMENTAL");
-              setSleepPendingConfirm(false);
-            }}
-          >
-            NAP
-          </button>
-        </div>
-        <p className="card-body" style={{ marginBottom: 12 }}>
-          {sleepKind === "PRIMARY"
-            ? "Main sleep suggests ending your day on TODAY once logged."
-            : "A nap doesn't suggest ending your day — log the sleep that actually closes it out as Main Sleep."}
-        </p>
-        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-            <label htmlFor="sleep-hours"><span>Hours</span></label>
-            <input
-              id="sleep-hours"
-              type="number"
-              min={0}
-              value={sleepHoursInput}
-              onChange={(e) => {
-                setSleepHoursInput(e.target.value);
-                setSleepPendingConfirm(false);
-              }}
-              className="input"
-            />
-          </div>
-          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-            <label htmlFor="sleep-minutes"><span>Minutes</span></label>
-            <input
-              id="sleep-minutes"
-              type="number"
-              min={0}
-              max={59}
-              value={sleepMinutesInput}
-              onChange={(e) => {
-                setSleepMinutesInput(e.target.value);
-                setSleepPendingConfirm(false);
-              }}
-              className="input"
-            />
-          </div>
-        </div>
-        {sleepPendingConfirm && (
-          <div style={{ marginBottom: 12 }}>
-            <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
-              {describeImplausibleSleep(
-                hoursAndMinutesToTotalMinutes(Number(sleepHoursInput) || 0, Number(sleepMinutesInput) || 0),
-              )}
-            </p>
-            <button className="btn-secondary" disabled={busy} onClick={() => void handleLogSleep(true)}>
-              LOG ANYWAY
+      {sleepOpen ? (
+        <div className="equipment-row">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+            <p className="tool-label" style={{ margin: 0 }}>SLEEP</p>
+            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} onClick={() => setSleepOpen(false)}>
+              DONE
             </button>
           </div>
-        )}
-        {!sleepPendingConfirm && (
-          <button className="btn-primary" disabled={busy} onClick={() => void handleLogSleep()}>
-            LOG SLEEP
-          </button>
-        )}
-        {sleepConfirmation && (
-          <ConfirmBanner
-            message={sleepConfirmation.message}
-            actionLabel="CORRECT"
-            onAction={() => {
-              const entry = sleepEntries.find((e) => e.headEventId === sleepConfirmation.headEventId);
-              if (entry) beginCorrectSleep(entry);
-            }}
-          />
-        )}
-
-        {sleepEntries.length > 0 && (
-          <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <FieldDisclosure
-              summary={`${sleepHistoryOpen ? "HIDE" : "SHOW"} TODAY'S SLEEP (${sleepEntries.length})`}
-              open={sleepHistoryOpen}
-              onToggle={setSleepHistoryOpen}
+          {lastSleepEntry && (
+            <p className="meta" style={{ marginBottom: 12 }}>
+              {`${lastSleepEntry.kind === "PRIMARY" ? "Main sleep" : "Nap"} · ${new Date(lastSleepEntry.recordedAt).toLocaleTimeString()}`}
+            </p>
+          )}
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <button
+              type="button"
+              className={`chip ${sleepKind === "PRIMARY" ? "chip--selected" : ""}`}
+              aria-pressed={sleepKind === "PRIMARY"}
+              onClick={() => {
+                setSleepKind("PRIMARY");
+                setSleepPendingConfirm(false);
+              }}
             >
-                {sleepEntries.map((entry) => (
-                  <div
-                    key={entry.rootEventId}
-                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>
-                          {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}
-                        </p>
-                        <p className="meta">
-                          {new Date(entry.recordedAt).toLocaleTimeString()}
-                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                        </p>
-                      </div>
-                      <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectSleep(entry)}>
-                        CORRECT
-                      </button>
-                    </div>
-                    {sleepCorrectingId === entry.headEventId && (
-                      <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
-                        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                          <label htmlFor={`sleep-correction-hours-${entry.headEventId}`}><span>Hours</span></label>
-                          <input id={`sleep-correction-hours-${entry.headEventId}`} type="number" min={0} value={sleepCorrectionHours} onChange={(e) => setSleepCorrectionHours(e.target.value)} className="input" />
+              MAIN SLEEP
+            </button>
+            <button
+              type="button"
+              className={`chip ${sleepKind === "SUPPLEMENTAL" ? "chip--selected" : ""}`}
+              aria-pressed={sleepKind === "SUPPLEMENTAL"}
+              onClick={() => {
+                setSleepKind("SUPPLEMENTAL");
+                setSleepPendingConfirm(false);
+              }}
+            >
+              NAP
+            </button>
+          </div>
+          <p className="card-body" style={{ marginBottom: 12 }}>
+            {sleepKind === "PRIMARY"
+              ? "Main sleep suggests ending your day on TODAY once logged."
+              : "A nap doesn't suggest ending your day — log the sleep that actually closes it out as Main Sleep."}
+          </p>
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+              <label htmlFor="sleep-hours"><span>Hours</span></label>
+              <input
+                id="sleep-hours"
+                type="number"
+                min={0}
+                value={sleepHoursInput}
+                onChange={(e) => {
+                  setSleepHoursInput(e.target.value);
+                  setSleepPendingConfirm(false);
+                }}
+                className="input"
+              />
+            </div>
+            <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+              <label htmlFor="sleep-minutes"><span>Minutes</span></label>
+              <input
+                id="sleep-minutes"
+                type="number"
+                min={0}
+                max={59}
+                value={sleepMinutesInput}
+                onChange={(e) => {
+                  setSleepMinutesInput(e.target.value);
+                  setSleepPendingConfirm(false);
+                }}
+                className="input"
+              />
+            </div>
+          </div>
+          {sleepPendingConfirm && (
+            <div style={{ marginBottom: 12 }}>
+              <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
+                {describeImplausibleSleep(
+                  hoursAndMinutesToTotalMinutes(Number(sleepHoursInput) || 0, Number(sleepMinutesInput) || 0),
+                )}
+              </p>
+              <button className="btn-secondary" disabled={busy} onClick={() => void handleLogSleep(true)}>
+                LOG ANYWAY
+              </button>
+            </div>
+          )}
+          {!sleepPendingConfirm && (
+            <button className="btn-primary" disabled={busy} onClick={() => void handleLogSleep()}>
+              LOG SLEEP
+            </button>
+          )}
+          {sleepConfirmation && (
+            <ConfirmBanner
+              message={sleepConfirmation.message}
+              actionLabel="CORRECT"
+              onAction={() => {
+                const entry = sleepEntries.find((e) => e.headEventId === sleepConfirmation.headEventId);
+                if (entry) beginCorrectSleep(entry);
+              }}
+            />
+          )}
+
+          {sleepEntries.length > 0 && (
+            <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+              <FieldDisclosure
+                summary={`${sleepHistoryOpen ? "HIDE" : "SHOW"} TODAY'S SLEEP (${sleepEntries.length})`}
+                open={sleepHistoryOpen}
+                onToggle={setSleepHistoryOpen}
+              >
+                  {sleepEntries.map((entry) => (
+                    <div
+                      key={entry.rootEventId}
+                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>
+                            {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}
+                          </p>
+                          <p className="meta">
+                            {new Date(entry.recordedAt).toLocaleTimeString()}
+                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                          </p>
                         </div>
-                        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                          <label htmlFor={`sleep-correction-minutes-${entry.headEventId}`}><span>Minutes</span></label>
-                          <input id={`sleep-correction-minutes-${entry.headEventId}`} type="number" min={0} max={59} value={sleepCorrectionMinutes} onChange={(e) => setSleepCorrectionMinutes(e.target.value)} className="input" />
-                        </div>
-                        <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveSleepCorrection()}>
-                          SAVE
+                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectSleep(entry)}>
+                          CORRECT
                         </button>
                       </div>
-                    )}
-                  </div>
-                ))}
-            </FieldDisclosure>
-          </div>
-        )}
-      </div>
+                      {sleepCorrectingId === entry.headEventId && (
+                        <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
+                          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+                            <label htmlFor={`sleep-correction-hours-${entry.headEventId}`}><span>Hours</span></label>
+                            <input id={`sleep-correction-hours-${entry.headEventId}`} type="number" min={0} value={sleepCorrectionHours} onChange={(e) => setSleepCorrectionHours(e.target.value)} className="input" />
+                          </div>
+                          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+                            <label htmlFor={`sleep-correction-minutes-${entry.headEventId}`}><span>Minutes</span></label>
+                            <input id={`sleep-correction-minutes-${entry.headEventId}`} type="number" min={0} max={59} value={sleepCorrectionMinutes} onChange={(e) => setSleepCorrectionMinutes(e.target.value)} className="input" />
+                          </div>
+                          <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveSleepCorrection()}>
+                            SAVE
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </FieldDisclosure>
+            </div>
+          )}
+        </div>
+      ) : (
+        <CollapsibleRow name="SLEEP" summary="Log main sleep or a nap" onOpen={() => setSleepOpen(true)} />
+      )}
 
       {/* BODYWEIGHT — FIELD ALPHA Phase 3: same reading-forward pattern as SLEEP. */}
-      <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>BODYWEIGHT</p>
-        <p className="recommendation-title" style={{ marginBottom: 2 }}>
-          {lastBodyweightEntry ? `${lastBodyweightEntry.effectiveWeightLbs} lbs` : "Not logged"}
-        </p>
-        <p className="meta" style={{ marginBottom: 12 }}>
-          {lastBodyweightEntry
-            ? `Logged ${new Date(lastBodyweightEntry.recordedAt).toLocaleTimeString()}`
-            : "No bodyweight logged yet today."}
-          {" "}A fact only — no goal.
-        </p>
-        {/* Overdrive Phase 18 (BODY GLANCEABILITY): manual entry only has
-            a genuine fast-path alternative once a prior weight exists
-            (SAME AS LAST) — collapsed by default in that case, always
-            open when it's the only path (first-ever log). */}
-        {lastBodyweightEntry && (
-          <button
-            className="btn-secondary"
-            style={{ marginBottom: 12 }}
-            disabled={busy}
-            onClick={() => void handleLogBodyweightAmount(lastBodyweightEntry.effectiveWeightLbs)}
-          >
-            SAME AS LAST ({lastBodyweightEntry.effectiveWeightLbs} lbs)
-          </button>
-        )}
-        {lastBodyweightEntry ? (
-          <FieldDisclosure
-            summary={`${bodyweightManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
-            open={bodyweightManualOpen}
-            onToggle={setBodyweightManualOpen}
-          >
-            {bodyweightManualEntryForm}
-          </FieldDisclosure>
-        ) : (
-          <div className="fade-in">{bodyweightManualEntryForm}</div>
-        )}
-        {bodyweightConfirmation && (
-          <ConfirmBanner
-            message={bodyweightConfirmation.message}
-            actionLabel="CORRECT"
-            onAction={() => {
-              const entry = bodyweightEntries.find((e) => e.headEventId === bodyweightConfirmation.headEventId);
-              if (entry) beginCorrectBodyweight(entry);
-            }}
-          />
-        )}
-
-        {bodyweightEntries.length > 0 && (
-          <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <FieldDisclosure
-              summary={`${bodyweightHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${bodyweightEntries.length})`}
-              open={bodyweightHistoryOpen}
-              onToggle={setBodyweightHistoryOpen}
+      {bodyweightOpen ? (
+        <div className="equipment-row">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+            <p className="tool-label" style={{ margin: 0 }}>BODYWEIGHT</p>
+            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} onClick={() => setBodyweightOpen(false)}>
+              DONE
+            </button>
+          </div>
+          {lastBodyweightEntry && (
+            <p className="meta" style={{ marginBottom: 12 }}>
+              Logged {new Date(lastBodyweightEntry.recordedAt).toLocaleTimeString()}
+            </p>
+          )}
+          {/* Overdrive Phase 18 (BODY GLANCEABILITY): manual entry only has
+              a genuine fast-path alternative once a prior weight exists
+              (SAME AS LAST) — collapsed by default in that case, always
+              open when it's the only path (first-ever log). */}
+          {lastBodyweightEntry && (
+            <button
+              className="btn-secondary"
+              style={{ marginBottom: 12 }}
+              disabled={busy}
+              onClick={() => void handleLogBodyweightAmount(lastBodyweightEntry.effectiveWeightLbs)}
             >
-                {bodyweightEntries.map((entry) => (
-                  <div
-                    key={entry.rootEventId}
-                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveWeightLbs} lbs</p>
-                        <p className="meta">
-                          {new Date(entry.recordedAt).toLocaleTimeString()}
-                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                        </p>
-                      </div>
-                      <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectBodyweight(entry)}>
-                        CORRECT
-                      </button>
-                    </div>
-                    {bodyweightCorrectingId === entry.headEventId && (
-                      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                        <input type="number" aria-label="Corrected weight (lbs)" value={bodyweightCorrectionInput} onChange={(e) => setBodyweightCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
-                        <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
-                          SAVE
+              SAME AS LAST ({lastBodyweightEntry.effectiveWeightLbs} lbs)
+            </button>
+          )}
+          {lastBodyweightEntry ? (
+            <FieldDisclosure
+              summary={`${bodyweightManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
+              open={bodyweightManualOpen}
+              onToggle={setBodyweightManualOpen}
+            >
+              {bodyweightManualEntryForm}
+            </FieldDisclosure>
+          ) : (
+            <div className="fade-in">{bodyweightManualEntryForm}</div>
+          )}
+          {bodyweightConfirmation && (
+            <ConfirmBanner
+              message={bodyweightConfirmation.message}
+              actionLabel="CORRECT"
+              onAction={() => {
+                const entry = bodyweightEntries.find((e) => e.headEventId === bodyweightConfirmation.headEventId);
+                if (entry) beginCorrectBodyweight(entry);
+              }}
+            />
+          )}
+
+          {bodyweightEntries.length > 0 && (
+            <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+              <FieldDisclosure
+                summary={`${bodyweightHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${bodyweightEntries.length})`}
+                open={bodyweightHistoryOpen}
+                onToggle={setBodyweightHistoryOpen}
+              >
+                  {bodyweightEntries.map((entry) => (
+                    <div
+                      key={entry.rootEventId}
+                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveWeightLbs} lbs</p>
+                          <p className="meta">
+                            {new Date(entry.recordedAt).toLocaleTimeString()}
+                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                          </p>
+                        </div>
+                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectBodyweight(entry)}>
+                          CORRECT
                         </button>
                       </div>
-                    )}
-                  </div>
-                ))}
-            </FieldDisclosure>
-          </div>
-        )}
-      </div>
+                      {bodyweightCorrectingId === entry.headEventId && (
+                        <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                          <input type="number" aria-label="Corrected weight (lbs)" value={bodyweightCorrectionInput} onChange={(e) => setBodyweightCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
+                          <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
+                            SAVE
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </FieldDisclosure>
+            </div>
+          )}
+        </div>
+      ) : (
+        <CollapsibleRow name="BODYWEIGHT" summary="Log today's weight" onOpen={() => setBodyweightOpen(true)} />
+      )}
 
       {/* PROTEIN — FIELD ALPHA Phase 3: same value-forward pattern as
           HYDRATION (a cumulative daily total, not a single point-in-time
           reading like SLEEP/BODYWEIGHT). */}
-      <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>PROTEIN</p>
-        <p className="recommendation-title" style={{ marginBottom: 2 }}>{proteinTotal} g today</p>
-        <p className="meta" style={{ marginBottom: 12 }}>
-          No daily target — logs the amount only.
-        </p>
-        {lastProteinEntry && (
-          <button
-            className="btn-secondary"
-            style={{ marginBottom: 12 }}
-            disabled={busy}
-            onClick={() => void handleLogProteinAmount(lastProteinEntry.effectiveGrams)}
-          >
-            REPEAT LAST ({lastProteinEntry.effectiveGrams} g)
-          </button>
-        )}
-        {lastProteinEntry ? (
-          <FieldDisclosure
-            summary={`${proteinManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
-            open={proteinManualOpen}
-            onToggle={setProteinManualOpen}
-          >
-            {proteinManualEntryForm}
-          </FieldDisclosure>
-        ) : (
-          <div className="fade-in">{proteinManualEntryForm}</div>
-        )}
-        {proteinConfirmation && (
-          <ConfirmBanner
-            message={proteinConfirmation.message}
-            actionLabel="CORRECT"
-            onAction={() => {
-              const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId);
-              if (entry) beginCorrectProtein(entry);
-            }}
-          />
-        )}
-
-        {proteinEntries.length > 0 && (
-          <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <FieldDisclosure
-              summary={`${proteinHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${proteinEntries.length})`}
-              open={proteinHistoryOpen}
-              onToggle={setProteinHistoryOpen}
+      {proteinOpen ? (
+        <div className="equipment-row">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+            <p className="tool-label" style={{ margin: 0 }}>PROTEIN</p>
+            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} onClick={() => setProteinOpen(false)}>
+              DONE
+            </button>
+          </div>
+          {lastProteinEntry && (
+            <button
+              className="btn-secondary"
+              style={{ marginBottom: 12 }}
+              disabled={busy}
+              onClick={() => void handleLogProteinAmount(lastProteinEntry.effectiveGrams)}
             >
-                {proteinEntries.map((entry) => (
-                  <div
-                    key={entry.rootEventId}
-                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveGrams} g</p>
-                        <p className="meta">
-                          {new Date(entry.recordedAt).toLocaleTimeString()}
-                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                        </p>
-                      </div>
-                      <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectProtein(entry)}>
-                        CORRECT
-                      </button>
-                    </div>
-                    {proteinCorrectingId === entry.headEventId && (
-                      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                        <input type="number" aria-label="Corrected amount (g)" value={proteinCorrectionInput} onChange={(e) => setProteinCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
-                        <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
-                          SAVE
+              REPEAT LAST ({lastProteinEntry.effectiveGrams} g)
+            </button>
+          )}
+          {lastProteinEntry ? (
+            <FieldDisclosure
+              summary={`${proteinManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
+              open={proteinManualOpen}
+              onToggle={setProteinManualOpen}
+            >
+              {proteinManualEntryForm}
+            </FieldDisclosure>
+          ) : (
+            <div className="fade-in">{proteinManualEntryForm}</div>
+          )}
+          {proteinConfirmation && (
+            <ConfirmBanner
+              message={proteinConfirmation.message}
+              actionLabel="CORRECT"
+              onAction={() => {
+                const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId);
+                if (entry) beginCorrectProtein(entry);
+              }}
+            />
+          )}
+
+          {proteinEntries.length > 0 && (
+            <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+              <FieldDisclosure
+                summary={`${proteinHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${proteinEntries.length})`}
+                open={proteinHistoryOpen}
+                onToggle={setProteinHistoryOpen}
+              >
+                  {proteinEntries.map((entry) => (
+                    <div
+                      key={entry.rootEventId}
+                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveGrams} g</p>
+                          <p className="meta">
+                            {new Date(entry.recordedAt).toLocaleTimeString()}
+                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                          </p>
+                        </div>
+                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectProtein(entry)}>
+                          CORRECT
                         </button>
                       </div>
-                    )}
-                  </div>
-                ))}
-            </FieldDisclosure>
-          </div>
-        )}
-      </div>
+                      {proteinCorrectingId === entry.headEventId && (
+                        <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                          <input type="number" aria-label="Corrected amount (g)" value={proteinCorrectionInput} onChange={(e) => setProteinCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
+                          <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
+                            SAVE
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </FieldDisclosure>
+            </div>
+          )}
+        </div>
+      ) : (
+        <CollapsibleRow name="PROTEIN" summary="Log protein grams" onOpen={() => setProteinOpen(true)} />
+      )}
 
       {/* NUTRITION TARGETS — NUTRITION-003 (High-Risk Drop, direct owner
           ruling reversing NUTRITION-001's "no calorie/macro goal, no

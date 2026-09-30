@@ -347,7 +347,6 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
 
       <section aria-labelledby="missions-heading">
       <h2 id="missions-heading" className="section-label">Missions · durable direction</h2>
-      <p className="section-intro">Active Missions describe where you are deliberately headed. Archived Missions remain historical truth.</p>
       <div className="intent-filter" role="group" aria-label="Mission visibility">
         <button aria-pressed={!showAllMissions} className={`chip ${!showAllMissions ? "chip--selected" : ""}`} onClick={() => setShowAllMissions(false)}>
           ACTIVE
@@ -395,7 +394,6 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
 
       <section aria-labelledby="obligations-heading">
       <h2 id="obligations-heading" className="section-label">Obligations · commitments</h2>
-      <p className="section-intro">Open and waiting Obligations still require resolution. Satisfied and released records remain evidence.</p>
       <div className="intent-filter" role="group" aria-label="Obligation visibility">
         <button aria-pressed={!showAllObligations} className={`chip ${!showAllObligations ? "chip--selected" : ""}`} onClick={() => setShowAllObligations(false)}>
           UNRESOLVED

@@ -65,9 +65,9 @@ describe("BodyScreen (real browser) — empty state", () => {
     await expect.element(screen.getByText("0 oz", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("0 g", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Not logged", { exact: true }).first()).toBeVisible();
-    // SLEEP and WEIGHT each show "Not logged" twice: once in the
-    // instrument cluster, once again as their own section's reading.
-    expect(screen.getByText("Not logged", { exact: true }).elements()).toHaveLength(4);
+    // DECLUTTER Drop 2: only the STATUS box shows "Not logged" (SLEEP and
+    // WEIGHT); the trackers below no longer repeat it.
+    expect(screen.getByText("Not logged", { exact: true }).elements()).toHaveLength(2);
   });
 
   it("the instrument cluster is a real .instrument-cluster, not a plain .card", async () => {
@@ -110,7 +110,7 @@ describe("BodyScreen (real browser) — WATER", () => {
     await screen.getByRole("button", { name: "+12 oz" }).click();
 
     await expect.element(screen.getByText("12 oz added.", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("12 oz today", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("12 oz", { exact: true }).first()).toBeVisible();
   });
 
   it("manual entry is reachable via disclosure and its input is properly labeled", async () => {
@@ -137,7 +137,7 @@ describe("BodyScreen (real browser) — WATER", () => {
     await correctionInput.fill("10");
     await screen.getByRole("button", { name: "SAVE" }).click();
 
-    await expect.element(screen.getByText("10 oz today", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("10 oz", { exact: true }).first()).toBeVisible();
     await expect.element(screen.getByText(/corrected 1x/)).toBeVisible();
   });
 
@@ -172,19 +172,20 @@ describe("BodyScreen (real browser) — WATER", () => {
 describe("BodyScreen (real browser) — SLEEP", () => {
   it("logs a duration and shows it as the reading, distinct from the machine-metadata line beneath it", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "Open SLEEP" }).click();
     await screen.getByRole("spinbutton", { name: "Hours" }).fill("7");
     await screen.getByRole("spinbutton", { name: "Minutes" }).fill("15");
     await screen.getByRole("button", { name: "LOG SLEEP" }).click();
 
-    // Matches both the instrument cluster's SLEEP cell and the SLEEP
-    // section's own reading, which now deliberately show the same value.
+    // DECLUTTER Drop 2: the reading shows in the STATUS box only; the open
+    // SLEEP form keeps the kind/time line beneath.
     await expect.element(screen.getByText("7 hr 15 min", { exact: true }).first()).toBeVisible();
-    expect(screen.getByText("7 hr 15 min", { exact: true }).elements().length).toBeGreaterThanOrEqual(2);
     await expect.element(screen.getByText(/Main sleep ·/)).toBeVisible();
   });
 
   it("an implausible duration requires LOG ANYWAY rather than silently blocking", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "Open SLEEP" }).click();
     await screen.getByRole("spinbutton", { name: "Hours" }).fill("20");
     await screen.getByRole("button", { name: "LOG SLEEP" }).click();
 
@@ -195,6 +196,7 @@ describe("BodyScreen (real browser) — SLEEP", () => {
 
   it("NAP does not carry the main-sleep end-day framing", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "Open SLEEP" }).click();
     await screen.getByRole("button", { name: "NAP", exact: true }).click();
     await expect.element(screen.getByText(/doesn't suggest ending your day/)).toBeVisible();
   });
@@ -203,6 +205,7 @@ describe("BodyScreen (real browser) — SLEEP", () => {
 describe("BodyScreen (real browser) — BODYWEIGHT", () => {
   it("first-ever entry has manual entry open by default (no SAME AS LAST without history)", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
     expect(screen.getByRole("button", { name: /SAME AS LAST/ }).elements()).toHaveLength(0);
 
     await screen.getByRole("spinbutton", { name: "Weight (lbs)" }).fill("180");
@@ -212,6 +215,7 @@ describe("BodyScreen (real browser) — BODYWEIGHT", () => {
 
   it("SAME AS LAST reuses the prior value once one exists", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
     await screen.getByRole("spinbutton", { name: "Weight (lbs)" }).fill("180");
     await screen.getByRole("button", { name: "LOG BODYWEIGHT" }).click();
     await expect.element(screen.getByText("180 lbs logged.", { exact: true })).toBeVisible();
@@ -224,10 +228,11 @@ describe("BodyScreen (real browser) — BODYWEIGHT", () => {
 describe("BodyScreen (real browser) — PROTEIN", () => {
   it("logs grams and reflects the running total, same value-forward pattern as HYDRATION", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "Open PROTEIN" }).click();
     await screen.getByRole("spinbutton", { name: "Protein (g)" }).fill("30");
     await screen.getByRole("button", { name: "LOG PROTEIN" }).click();
 
-    await expect.element(screen.getByText("30 g today", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("30 g", { exact: true }).first()).toBeVisible();
   });
 });
 
@@ -255,6 +260,7 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
     await expect.element(screen.getByText(/log a bodyweight to see your target/)).toBeVisible();
 
+    await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
     await screen.getByRole("spinbutton", { name: "Weight (lbs)" }).fill("180");
     await screen.getByRole("button", { name: "LOG BODYWEIGHT" }).click();
     await expect.element(screen.getByText("180 lbs logged.", { exact: true })).toBeVisible();

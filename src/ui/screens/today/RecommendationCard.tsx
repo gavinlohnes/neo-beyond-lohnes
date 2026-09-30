@@ -180,7 +180,9 @@ export function RecommendationCard({
       <div style={{ marginTop: isDominant && !isAllClear ? 20 : 12 }}>
         {decision ? (
           <>
-            <button className="btn-primary" disabled style={isDominant && !isAllClear ? { fontSize: 18, padding: "18px var(--space-4)" } : undefined}>
+            {/* DECLUTTER Drop 2 (owner ruling 2026-09-30): the all-clear
+                button is neutral, not red, in both states. */}
+            <button className={isAllClear ? "btn-secondary" : "btn-primary"} disabled style={isDominant && !isAllClear ? { fontSize: 18, padding: "18px var(--space-4)" } : undefined}>
               {describeRecordedDecision(decision)}
             </button>
             {recommendationHandoff &&
@@ -217,7 +219,7 @@ export function RecommendationCard({
             ) : (
               <div style={{ display: "flex", gap: 8 }}>
                 <button
-                  className="btn-primary"
+                  className={isAllClear ? "btn-secondary" : "btn-primary"}
                   style={{ flex: 1, ...(isDominant && !isAllClear ? { fontSize: 18, padding: "18px var(--space-4)" } : {}) }}
                   disabled={busy}
                   onClick={onRecord}
