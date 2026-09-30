@@ -331,6 +331,10 @@ permanent false-positive conflict for unrelated future Drops.
 hygiene already implies): a Drop's branch that is abandoned without ever being closed or deleted
 continues to read as a live conflict until its branch is deleted or the Drop is explicitly
 closed — the same reason abandoned branches should be cleaned up regardless of this mechanism.
+When a finished branch can't be deleted (agent sessions can't delete branches), list it in
+`docs/agent/RETIRED_BRANCHES.json` on master, pinned to its exact tip SHA. The check reads that
+list from `origin/master` only, and skips a listed branch only while its tip still equals the
+pinned SHA. Any new commit on that branch makes it a live conflict again.
 
 **Activation is committed as part of the Builder's own branch, not as a separate direct commit
 to `master` ahead of it.** The Drop Contract and the `init`-generated `ACTIVE_DROP.md` are both

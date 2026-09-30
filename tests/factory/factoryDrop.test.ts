@@ -492,6 +492,74 @@ describe("activation and closure evidence cannot be fabricated or misapplied", (
     expect(result.stderr).toContain("test-001-branch");
   });
 
+  describe("retired branches (RETIRED_BRANCHES.json on origin/master, pinned to an exact tip)", () => {
+    // TEST-001 is left ACTIVE on its own pushed, never-merged branch — the
+    // same shape as a pre-history-rewrite branch that can't be deleted.
+    function leaveTest001ActiveOnOrigin(): string {
+      writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
+      beginDropBranch(fixture, "test-001-branch");
+      runFactoryDrop(["init", "TEST-001", "--baseline", fixture.headSha, "--branch", "test-001-branch"], fixture);
+      commitActiveDrop(fixture, "activate TEST-001");
+      git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/test-001-branch"]);
+      const tip = git(fixture.workDir, ["rev-parse", "HEAD"]);
+      git(fixture.workDir, ["checkout", "-q", "master"]);
+      return tip;
+    }
+
+    function retire(branch: string, sha: string): void {
+      writeFileSync(
+        join(fixture.workDir, "docs/agent/RETIRED_BRANCHES.json"),
+        `${JSON.stringify({ schema_version: 1, branches: [{ branch, sha }] }, null, 2)}\n`,
+      );
+      git(fixture.workDir, ["add", "docs/agent/RETIRED_BRANCHES.json"]);
+      git(fixture.workDir, ["commit", "-q", "-m", `retire ${branch}`]);
+    }
+
+    // Publishes master (carrying any retirement list) as the new baseline,
+    // then launches an unrelated Drop against it.
+    function initTest002(): RunResult {
+      git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/master"]);
+      const baseline = git(fixture.workDir, ["rev-parse", "HEAD"]);
+      writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline }));
+      return runFactoryDrop(["init", "TEST-002", "--baseline", baseline, "--branch", "test-002-branch"], fixture);
+    }
+
+    it("a branch retired on master at its exact tip no longer blocks a new Drop", () => {
+      const tip = leaveTest001ActiveOnOrigin();
+      retire("test-001-branch", tip);
+      const result = initTest002();
+      expect(result.status).toBe(0);
+    });
+
+    it("a new commit on a retired branch makes it a live conflict again", () => {
+      const tip = leaveTest001ActiveOnOrigin();
+      retire("test-001-branch", tip);
+      git(fixture.workDir, ["checkout", "-q", "test-001-branch"]);
+      writeFileSync(join(fixture.workDir, "late.txt"), "post-retirement work\n");
+      git(fixture.workDir, ["add", "late.txt"]);
+      git(fixture.workDir, ["commit", "-q", "-m", "commit after retirement"]);
+      git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/test-001-branch"]);
+      git(fixture.workDir, ["checkout", "-q", "master"]);
+
+      const result = initTest002();
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+      expect(result.stderr).toContain("TEST-001");
+    });
+
+    it("a retirement list that exists only locally (not on origin/master) is ignored", () => {
+      const tip = leaveTest001ActiveOnOrigin();
+      // Written to the working tree and committed locally, never pushed to master.
+      retire("test-001-branch", tip);
+      const baseline = git(fixture.workDir, ["rev-parse", "origin/master"]);
+      writeContract(fixture, "TEST-002", validContractText({ id: "TEST-002", baseline }));
+      const result = runFactoryDrop(["init", "TEST-002", "--baseline", baseline, "--branch", "test-002-branch"], fixture);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("CONFLICTING_ACTIVE_DROP");
+      expect(result.stderr).toContain("TEST-001");
+    });
+  });
+
   it("an old, already-merged branch's stale ACTIVE snapshot never blocks an unrelated later Drop", () => {
     // TEST-001 merges and is properly closed on master, but its own topic
     // branch is left lying around undeleted (its frozen snapshot still
