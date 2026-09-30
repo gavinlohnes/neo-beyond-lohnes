@@ -6,9 +6,25 @@ and UX adjudications live in `docs/UX_DECISIONS.md`. For the current Drop's auth
 one is in flight, follow its repository-native contract. Doctrine constrains implementation but
 does not itself authorize a feature, campaign, or code change.
 
-For the engineering invariants shared with Codex on this repo (BEYOND's second engineering
-agent), see `docs/agent/BEYOND_ENGINEERING_CONTRACT.md` — this file stays Claude-specific and
-does not duplicate that content.
+## Builder (owner ruling, 2026-09-30)
+
+Claude Code is BEYOND's sole builder. Codex is no longer a second engineering agent on this repo.
+Other AIs are advisory only and never write to the repo. Engineering invariants still live in
+`docs/agent/BEYOND_ENGINEERING_CONTRACT.md`; its Codex-specific role language is historical.
+
+## "Let's work" protocol
+
+When the owner says "let's work":
+1. Read `docs/ROADMAP_1.0.md`.
+2. Propose the next Drop in plain language.
+3. Wait for approval.
+4. Build it.
+5. Open a PR.
+6. Report in plain language.
+
+## Report-only missions
+
+A report-only mission never closes, merges, or deletes anything without owner approval.
 
 ## Authority order (use when sources disagree)
 
@@ -98,6 +114,7 @@ user choice is experienced; or a genuine conflict between current code and highe
 
 ## Pointers
 
+- `docs/ROADMAP_1.0.md` — the 1.0 build order and design rules; start here on "let's work".
 - `docs/OPERATOR_INTERFACE_DOCTRINE.md` — constitutional product/interface doctrine; constrains
   future work but never authorizes implementation by itself.
 - `docs/UX_DECISIONS.md` — BEYOND UX Decision Register, the canonical locked-decision log.

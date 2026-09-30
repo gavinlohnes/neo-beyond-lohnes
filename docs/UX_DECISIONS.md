@@ -22,6 +22,25 @@ authorizes implementation: future changes require a direct owner decision and an
 authorized, bounded Drop. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical evidence, not
 standing implementation authority.
 
+## ROADMAP 1.0 rulings (locked 2026-09-30, direct owner ruling, ROADMAP-1.0-001)
+
+These rulings go with [`ROADMAP_1.0.md`](ROADMAP_1.0.md). Where one overrides an older entry
+below, this entry wins; the older entry is kept for history.
+
+- **Bodyweight trends, milestones, and a projected goal date are now allowed.** Overrides BODY's
+  "a fact only, no goal" position for bodyweight.
+- **Review and the weekly check-in may show trends.** Narrows the "Trend charts" item in
+  "Explicitly out of scope" below for these two surfaces.
+- **Planned Work lives on TRAIN only.**
+- **Nutrition Targets move to a Settings group in MORE.**
+- **BODY's STATUS box shrinks.** Overrides FIELD-PROTOTYPE-001's fixed height.
+- **The "No action needed" button becomes neutral, not red.** Overrides the red-budget entry
+  below that kept it red.
+- **Red never decorates.** Remove it from headers, labels, brackets, the status strip edge, and
+  BODY chips.
+- **Hold-to-confirm is for big moments only** (finishing a workout, ending the day, logging a
+  clean day), never for routine sets.
+
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 
 Locked 2026-09-16, direct owner authorization (FOUNDATION-1A, a doctrine/architecture
@@ -632,6 +651,8 @@ TODAY's separate ATTENTION budget.
   TRAIN, and MORE are unaffected and keep the red default above. The quiet/successful "No action
   needed" state on TODAY was considered for a similar carve-out and explicitly rejected by direct
   owner ruling — it stays red, no per-state exception beyond the BODY-wide one here.
+  **Superseded 2026-09-30 (ROADMAP-1.0-001):** "No action needed" becomes neutral, not red —
+  see "ROADMAP 1.0 rulings" above.
 - The broader "Terry's Suit" direction this reversal is drawn from (chamfered/angular surface
   geometry beyond the existing single-surface `--chamfer` primitive, ambient motion, an
   abstract glyph family) remains prototype-only pending its own separate, explicitly
@@ -753,7 +774,8 @@ system-identity glyph."
 ## Explicitly out of scope (do not build without direct sign-off)
 
 - BATCAVE
-- Trend charts
+- Trend charts — **except** bodyweight trends/milestones/goal date, and trends on Review and the
+  weekly check-in, allowed 2026-09-30 (see "ROADMAP 1.0 rulings" above)
 - Any AI / learning layer over workout data
 
 These need Gavin's direct input and, for the learning layer, real
