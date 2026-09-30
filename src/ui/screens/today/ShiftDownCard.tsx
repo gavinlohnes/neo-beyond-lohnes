@@ -6,7 +6,6 @@ import {
   describeShiftDownResult,
   SHIFT_DOWN_DURATION_PRESETS,
   SHIFT_DOWN_EXPLANATION,
-  SHIFT_DOWN_EXPLANATION_SHORT,
   type SessionOutcome,
 } from "./resetShiftDownCopy";
 
@@ -57,7 +56,6 @@ export function ShiftDownCard({
       <CollapsibleRow
         name="SHIFT DOWN"
         icon={<Icon name="shiftDown" size={20} />}
-        summary={SHIFT_DOWN_EXPLANATION_SHORT}
         onOpen={() => setShiftDownOpen(true)}
       />
     );

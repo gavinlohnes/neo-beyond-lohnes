@@ -45,6 +45,14 @@ below, this entry wins; the older entry is kept for history.
   the dominant recommendation's rail, real warnings (yellow/red status), and the active-tab
   marker. Headers, eyebrows, section labels, the GREEN status-strip edge, and BODY's selected
   chips are neutral; the field-note corner brackets are gone.
+- **As built in Drop 3 (Tidy).** Planned Work is off TODAY (TRAIN keeps its card; the same
+  fact still feeds the Engine). MORE has a Settings group: Nutrition Targets (moved from BODY,
+  which keeps its read-only progress lines) and Diagnostic detail, which now holds the SYSTEM
+  readings. Backup status ("Last backup: N days ago.") sits under EXPORT BACKUP; TODAY's backup
+  reminder is gone. **Lucide React is adopted** (owner approval 2026-09-30) for row icons the
+  locked glyph family doesn't cover, drawn through `src/ui/icons/LineIcon.tsx` at the glyphs'
+  1.7 stroke with square caps. It never replaces a locked glyph. Rows whose icon and name say
+  what they are drop their fixed description line; rows whose summary reports live state keep it.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 

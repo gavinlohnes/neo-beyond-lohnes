@@ -33,7 +33,7 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await expect.element(screen.getByText("Direction", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Data safety", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Evidence", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("System", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Settings", { exact: true })).toBeVisible();
 
     await expect.element(screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open WORK SCHEDULE" })).toBeVisible();
@@ -88,7 +88,7 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
   it("uses semantic operational zones and keeps restore subordinate until explicitly opened", async () => {
     const screen = await render(<MoreScreen />);
 
-    for (const name of ["Direction", "Data safety", "Evidence", "System"]) {
+    for (const name of ["Direction", "Data safety", "Evidence", "Settings"]) {
       await expect.element(screen.getByRole("heading", { name, exact: true })).toBeVisible();
     }
 
@@ -112,8 +112,42 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     expect(document.querySelectorAll(".btn-danger")).toHaveLength(0);
   });
 
+  it("DECLUTTER Drop 3: Settings holds Nutrition Targets, and saving updates the one-line summary", async () => {
+    const screen = await render(<MoreScreen />);
+    await expect.element(screen.getByText("No calorie target · 1 g/lb protein", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
+    await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2200");
+    await screen.getByRole("spinbutton", { name: "Protein multiplier (g per lb bodyweight)" }).fill("0.9");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+
+    await expect.element(screen.getByText("2200 kcal · 0.9 g/lb protein", { exact: true })).toBeVisible();
+    const saved = await db.nutritionTargets.get("current");
+    expect(saved?.calorieTargetKcal).toBe(2200);
+    expect(saved?.proteinMultiplierGPerLb).toBe(0.9);
+  });
+
+  it("DECLUTTER Drop 3: backup status sits beside EXPORT BACKUP — none on record", async () => {
+    localStorage.removeItem("beyond:lastBackupAt");
+    const screen = await render(<MoreScreen />);
+    await expect.element(screen.getByText("No backup on record yet.", { exact: true })).toBeVisible();
+  });
+
+  it("DECLUTTER Drop 3: backup status sits beside EXPORT BACKUP — days since the last one", async () => {
+    localStorage.setItem("beyond:lastBackupAt", new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString());
+    try {
+      const screen = await render(<MoreScreen />);
+      await expect.element(screen.getByText("Last backup: 3 days ago.", { exact: true })).toBeVisible();
+    } finally {
+      localStorage.removeItem("beyond:lastBackupAt");
+    }
+  });
+
   it("the SYSTEM instrument cluster reflects live truth, not a fabricated or duplicated reading", async () => {
     const screen = await render(<MoreScreen />);
+    // DECLUTTER Drop 3: the SYSTEM readings live inside Diagnostic detail now.
+    await expect.element(screen.getByText("SCHEMA", { exact: true })).not.toBeVisible();
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
 
     await expect.element(screen.getByText("SCHEMA", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(String(db.verno), { exact: true })).toBeVisible();

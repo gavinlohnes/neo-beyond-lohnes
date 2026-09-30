@@ -1,6 +1,6 @@
 import { Icon, ConfirmIcon, SignalIcon } from "../../icons/Icon";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
-import { describeResetInProgress, describeResetResult, RESET_EXPLANATION, RESET_EXPLANATION_SHORT, type SessionOutcome } from "./resetShiftDownCopy";
+import { describeResetInProgress, describeResetResult, RESET_EXPLANATION, type SessionOutcome } from "./resetShiftDownCopy";
 
 /**
  * TodayScreen decomposition (2026-09-02): extracted verbatim from
@@ -47,7 +47,6 @@ export function ResetCard({
       <CollapsibleRow
         name="RESET"
         icon={<Icon name="reset" size={20} />}
-        summary={RESET_EXPLANATION_SHORT}
         onOpen={() => setResetOpen(true)}
       />
     );

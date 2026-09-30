@@ -27,6 +27,10 @@ import type { ReactNode } from "react";
  * tests querying `getByRole("button", { name: "Open RESET" })` etc.
  * keep working — this is a visual/interaction change, not a semantic one.
  *
+ * DECLUTTER Drop 3: `summary` is optional. A row whose icon and name
+ * already say what it is drops its fixed description line; summaries that
+ * report live state (WORK CONTEXT, MINIMUM DAY, …) stay.
+ *
  * GLYPH-003: the icon is wrapped in its own `.tool-icon` span (instead of
  * sharing `.tool-label`'s `currentColor` directly with the row's name
  * text) so a press/keyboard-focus can turn the icon red without also
@@ -37,7 +41,7 @@ import type { ReactNode } from "react";
 export interface CollapsibleRowProps {
   name: string;
   icon?: ReactNode;
-  summary: ReactNode;
+  summary?: ReactNode;
   onOpen: () => void;
 }
 
@@ -49,13 +53,15 @@ export function CollapsibleRow({ name, icon, summary, onOpen }: CollapsibleRowPr
           explicit display:block rather than the <p> every other
           TOOLS-tier header uses. */}
       <span style={{ display: "block", minWidth: 0 }}>
-        <span className="tool-label" style={{ marginBottom: 2, display: "flex", alignItems: "center", gap: 6 }}>
+        <span className="tool-label" style={{ marginBottom: summary === undefined ? 0 : 2, display: "flex", alignItems: "center", gap: 6 }}>
           {icon && <span className="tool-icon">{icon}</span>}
           {name}
         </span>
-        <span className="meta" style={{ display: "block" }}>
-          {summary}
-        </span>
+        {summary !== undefined && (
+          <span className="meta" style={{ display: "block" }}>
+            {summary}
+          </span>
+        )}
       </span>
       <svg aria-hidden="true" width={16} height={16} viewBox="0 0 24 24" className="disclosure-chevron">
         <path d="M9 5 L16 12 L9 19" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="square" strokeLinejoin="miter" />

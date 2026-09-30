@@ -1,4 +1,6 @@
+import { Sunset } from "lucide-react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { LineIcon } from "../../icons/LineIcon";
 import { SignalRow } from "../../components/SignalRow";
 
 /**
@@ -32,7 +34,7 @@ export function EndDayCard({
   const open = suggestEndDay || endDayOpen;
   if (!open) {
     return (
-      <CollapsibleRow name="BEYONDDAY" summary="End your day whenever you're ready." onOpen={() => setEndDayOpen(true)} />
+      <CollapsibleRow name="BEYONDDAY" icon={<LineIcon icon={Sunset} />} onOpen={() => setEndDayOpen(true)} />
     );
   }
   const body = (

@@ -3,6 +3,8 @@ import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { Icon } from "../../icons/Icon";
+import { LineIcon } from "../../icons/LineIcon";
+import { Drumstick, Moon, Scale } from "lucide-react";
 import type { BeyondDay, HydrationEntry, NutritionTargets, SavedMeal } from "../../../domain/common/types";
 import {
   logWater,
@@ -41,7 +43,6 @@ import {
 } from "../../../application/nutritionQueries";
 import { searchFoods, type FoodSearchResult } from "../../../application/foodLookupQueries";
 import { getEffectiveProteinTargetG, getNutritionTargets } from "../../../application/nutritionTargetQueries";
-import { updateNutritionTargets } from "../../../application/nutritionTargetCommands";
 import {
   BODYWEIGHT_PLAUSIBLE_RANGE,
   describeBodyweightLogged,
@@ -261,9 +262,6 @@ export function BodyScreen() {
   const [nutritionTargets, setNutritionTargets] = useState<NutritionTargets | null>(null);
   const [effectiveProteinTargetG, setEffectiveProteinTargetG] = useState<number | undefined>(undefined);
   const [totalMealCalories, setTotalMealCalories] = useState(0);
-  const [targetsEditOpen, setTargetsEditOpen] = useState(false);
-  const [calorieTargetInput, setCalorieTargetInput] = useState("");
-  const [proteinMultiplierInput, setProteinMultiplierInput] = useState("");
 
   useEffect(() => {
     void refresh();
@@ -292,28 +290,6 @@ export function BodyScreen() {
     } else {
       setMealEntries([]);
       setTotalMealCalories(0);
-    }
-  }
-
-  async function handleSaveTargets() {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const calorieValue = calorieTargetInput.trim() ? Number(calorieTargetInput) : undefined;
-      const multiplierValue = proteinMultiplierInput.trim() ? Number(proteinMultiplierInput) : undefined;
-      await updateNutritionTargets({
-        ...(calorieValue !== undefined ? { calorieTargetKcal: calorieValue } : {}),
-        ...(multiplierValue !== undefined ? { proteinMultiplierGPerLb: multiplierValue } : {}),
-      });
-      setCalorieTargetInput("");
-      setProteinMultiplierInput("");
-      setTargetsEditOpen(false);
-      await refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save targets.");
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -1152,7 +1128,7 @@ export function BodyScreen() {
           )}
         </div>
       ) : (
-        <CollapsibleRow name="SLEEP" summary="Log main sleep or a nap" onOpen={() => setSleepOpen(true)} />
+        <CollapsibleRow name="SLEEP" icon={<LineIcon icon={Moon} />} onOpen={() => setSleepOpen(true)} />
       )}
 
       {/* BODYWEIGHT — FIELD ALPHA Phase 3: same reading-forward pattern as SLEEP. */}
@@ -1244,7 +1220,7 @@ export function BodyScreen() {
           )}
         </div>
       ) : (
-        <CollapsibleRow name="BODYWEIGHT" summary="Log today's weight" onOpen={() => setBodyweightOpen(true)} />
+        <CollapsibleRow name="BODYWEIGHT" icon={<LineIcon icon={Scale} />} onOpen={() => setBodyweightOpen(true)} />
       )}
 
       {/* PROTEIN — FIELD ALPHA Phase 3: same value-forward pattern as
@@ -1329,7 +1305,7 @@ export function BodyScreen() {
           )}
         </div>
       ) : (
-        <CollapsibleRow name="PROTEIN" summary="Log protein grams" onOpen={() => setProteinOpen(true)} />
+        <CollapsibleRow name="PROTEIN" icon={<LineIcon icon={Drumstick} />} onOpen={() => setProteinOpen(true)} />
       )}
 
       {/* NUTRITION TARGETS — NUTRITION-003 (High-Risk Drop, direct owner
@@ -1343,52 +1319,11 @@ export function BodyScreen() {
         <p className="recommendation-title" style={{ marginBottom: 2 }}>
           {describeCalorieProgress(totalMealCalories, nutritionTargets?.calorieTargetKcal)}
         </p>
-        <p className="meta" style={{ marginBottom: 12 }}>
+        <p className="meta" style={{ marginBottom: 8 }}>
           {describeProteinProgress(combinedProteinToday, effectiveProteinTargetG)}
         </p>
-        <FieldDisclosure
-          summary={`${targetsEditOpen ? "HIDE" : "SHOW"} TARGET SETTINGS`}
-          open={targetsEditOpen}
-          onToggle={setTargetsEditOpen}
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div>
-              <label className="meta" htmlFor="calorie-target-input" style={{ display: "block", marginBottom: 4 }}>
-                Calorie target (kcal/day)
-              </label>
-              <input
-                id="calorie-target-input"
-                type="number"
-                aria-label="Calorie target (kcal/day)"
-                placeholder={nutritionTargets?.calorieTargetKcal?.toString() ?? "e.g. 2200"}
-                value={calorieTargetInput}
-                onChange={(e) => setCalorieTargetInput(e.target.value)}
-                className="input"
-              />
-            </div>
-            <div>
-              <label className="meta" htmlFor="protein-multiplier-input" style={{ display: "block", marginBottom: 4 }}>
-                Protein multiplier (g per lb bodyweight)
-              </label>
-              <input
-                id="protein-multiplier-input"
-                type="number"
-                step="0.05"
-                aria-label="Protein multiplier (g per lb bodyweight)"
-                placeholder={nutritionTargets?.proteinMultiplierGPerLb.toString() ?? "1.0"}
-                value={proteinMultiplierInput}
-                onChange={(e) => setProteinMultiplierInput(e.target.value)}
-                className="input"
-              />
-              <p className="meta" style={{ marginTop: 4 }}>
-                0.8–1.0 g/lb is the common range for a cut.
-              </p>
-            </div>
-            <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveTargets()}>
-              SAVE
-            </button>
-          </div>
-        </FieldDisclosure>
+        {/* DECLUTTER Drop 3: target settings moved to MORE → Settings. */}
+        <p className="meta" style={{ margin: 0 }}>Change targets in MORE → Settings.</p>
       </div>
 
       {/* MEAL MEMORY — NUTRITION-001 (High-Risk Drop): a small reusable

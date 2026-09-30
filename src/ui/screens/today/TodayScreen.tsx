@@ -33,7 +33,6 @@ import type { CaptureDateSuggestion } from "../../../domain/capture/types";
 import { HydrationOperationCard, MinimumDayCard } from "./MinimumDaySection";
 import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
-import { PlannedWorkCard } from "./PlannedWorkCard";
 import { RecommendationCard } from "./RecommendationCard";
 import {
   startDay,
@@ -52,7 +51,6 @@ import {
   rateOutcome,
   setWorkContext,
   markWorkEnded,
-  setPlannedWork,
   captureItem,
   resolveCaptureItem,
   reopenCaptureItem,
@@ -81,19 +79,15 @@ import {
   getOpenShiftDown,
   getWorkPeriodEnded,
   hasUnresolvedPostShift,
-  getPlannedWorkDeclaration,
   getOpenCaptureItems,
   type MinimumDayStatus,
   type PriorOutcomeMemory,
   type RecommendationDecision,
   type RecommendationHandoffTarget,
 } from "../../../application/queries";
-import { getDaysSinceLastBackup } from "../../../persistence/backup";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
 import { getCurrentOperationalContext, type CurrentOperationalContext } from "../../../application/currentContextQueries";
 import { getActiveWorkoutSession } from "../../../application/trainQueries";
-
-const BACKUP_NUDGE_THRESHOLD_DAYS = 7;
 
 /**
  * Quick check-in default ("all good" one-tap, Context & Safety Decisions
@@ -165,13 +159,10 @@ export function TodayScreen({
   const [lastShiftDownOutcome, setLastShiftDownOutcome] = useState<SessionOutcome | null>(null);
   const [suggestEndDay, setSuggestEndDay] = useState(false);
   const [endDayBlockedByWorkout, setEndDayBlockedByWorkout] = useState(false);
-  const [daysSinceBackup, setDaysSinceBackup] = useState<number | null>(null);
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
-  const [plannedWorkDeclaration, setPlannedWorkDeclaration] = useState<boolean | undefined>(undefined);
-  const [plannedWorkOpen, setPlannedWorkOpen] = useState(false);
   // Current Operational Context V1 (bounded proof): feeds the STATUS
   // context strip only — every other read above (day, scheduledContext,
   // unresolvedPostShift) stays exactly as-is for its own other uses
@@ -299,7 +290,6 @@ export function TodayScreen({
 
   useEffect(() => {
     void refresh();
-    setDaysSinceBackup(getDaysSinceLastBackup());
     void getScheduledContext().then(setScheduledContext);
   }, []);
 
@@ -402,7 +392,6 @@ export function TodayScreen({
     let openShiftDown: Awaited<ReturnType<typeof getOpenShiftDown>> | undefined;
     let workPeriodEndedAt: string | null = null;
     let unresolvedPostShift = false;
-    let plannedWorkDeclaration: boolean | undefined;
 
     if (activeDay) {
       checkIn = (await getLatestCheckIn(activeDay.id)) ?? null;
@@ -421,7 +410,6 @@ export function TodayScreen({
       const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
       workPeriodEndedAt = workPeriodEnded ? workPeriodEnded.occurredAt : null;
       unresolvedPostShift = await hasUnresolvedPostShift(activeDay.id);
-      plannedWorkDeclaration = await getPlannedWorkDeclaration(activeDay.id);
     }
     // Intelligence Spine consumption (2026-09-02): advisory notes are pure
     // SUPPORT-tier background context with no ordering dependency on
@@ -488,7 +476,6 @@ export function TodayScreen({
       }
       setWorkPeriodEndedAt(workPeriodEndedAt);
       setUnresolvedPostShift(unresolvedPostShift);
-      setPlannedWorkDeclaration(plannedWorkDeclaration);
     } else {
       setRecommendation(null);
       setDecision(undefined);
@@ -752,19 +739,6 @@ export function TodayScreen({
     try {
       const source = resolveWorkContextSource(scheduledContext.todayIsScheduledWorkDay, value);
       await setWorkContext(day.id, value, source);
-      await refresh();
-    } finally {
-      busyRef.current = false;
-      setBusy(false);
-    }
-  }
-
-  async function handleSetPlannedWork(planned: boolean) {
-    if (busy || busyRef.current || !day) return;
-    busyRef.current = true;
-    setBusy(true);
-    try {
-      await setPlannedWork(day.id, planned);
       await refresh();
     } finally {
       busyRef.current = false;
@@ -1659,15 +1633,7 @@ export function TodayScreen({
         />
       )}
 
-      {day && (
-        <PlannedWorkCard
-          declaration={plannedWorkDeclaration}
-          open={plannedWorkOpen}
-          setOpen={setPlannedWorkOpen}
-          busy={busy}
-          onSetPlannedWork={(planned) => void handleSetPlannedWork(planned)}
-        />
-      )}
+      {/* DECLUTTER Drop 3: Planned Work lives on TRAIN only (owner ruling 2026-09-30). */}
 
       {day && minimumDay && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE" && (
         <MinimumDayCard
@@ -1754,13 +1720,7 @@ export function TodayScreen({
         onOpenMinimumDay={() => setMinimumDayOpen(true)}
       />
 
-      {(daysSinceBackup === null || daysSinceBackup >= BACKUP_NUDGE_THRESHOLD_DAYS) && (
-        <p className="meta" style={{ marginTop: 4 }}>
-          {daysSinceBackup === null
-            ? "No backup on record yet — export one from MORE."
-            : `It's been ${daysSinceBackup} days since your last backup — export one from MORE.`}
-        </p>
-      )}
+      {/* DECLUTTER Drop 3: backup status moved to MORE → Settings. */}
       </div>
     </div>
   );

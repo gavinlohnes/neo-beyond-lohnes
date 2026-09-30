@@ -4,7 +4,7 @@ Short, replaceable snapshot of where BEYOND stands. Replace it wholesale at the 
 don't keep appending. It reports state; it doesn't authorize work. For what to build next, read
 [`docs/ROADMAP_1.0.md`](../ROADMAP_1.0.md).
 
-**As of 2026-09-30.** `origin/master` at `dc9c40e` (PR #119 merge). Replaces the 2026-09-15
+**As of 2026-09-30.** `origin/master` at `e0e6cad` (PR #120 merge). Replaces the 2026-09-15
 snapshot (CHECKPOINT-003, baseline `e066a24`).
 
 ## Where things stand
@@ -14,8 +14,9 @@ snapshot (CHECKPOINT-003, baseline `e066a24`).
 - **Builder:** Claude Code is the sole builder (see `CLAUDE.md`). On "let's work", propose the
   next Drop from the roadmap, wait for approval, build, open a PR, report.
 - **Drop 1 (Declutter I):** done (PRs #118, #119).
-- **Drop 2 (Declutter II):** built, in review. BODY trackers collapse, text cuts, decorative red
-  removed. Next: Drop 3 (Tidy).
+- **Drop 2 (Declutter II):** done (PR #120).
+- **Drop 3 (Tidy):** built, in review. Planned Work on TRAIN only; MORE Settings group; Lucide
+  row icons. Next: Drop 4 (TRAIN).
 - **Recently shipped:** 16:30 day rollover plus rollover on app resume (#111, #112);
   MoreScreen unmount guard (#115); square corners on chamfered panels, Diagnostic detail opens
   inline, TodayScreen test-flake fix (#116); retired stale branches so new Drops can start (#117); START WORKOUT on
