@@ -205,7 +205,12 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     const support = screen.getByText("Support", { exact: true }).element();
     expect(allClear).not.toBeNull();
     expect(allClear!.compareDocumentPosition(support) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(parseFloat(getComputedStyle(allClear!).minHeight)).toBeGreaterThan(200);
+    // DECLUTTER-001 (owner ruling 2026-09-30): no reserved empty field under
+    // the all-clear state, and no repeated rationale or note under its button.
+    expect(getComputedStyle(allClear!).minHeight).toBe("0px");
+    expect(screen.getByText("No rule requires attention right now.", { exact: true }).elements()).toHaveLength(0);
+    // The note now sits inside the closed "How BEYOND decided" disclosure.
+    await expect.element(screen.getByText("Just records that you saw this. Nothing to start.", { exact: true })).not.toBeVisible();
   });
 
   it("runs the truthful hydration loop, confirms mechanically, then recedes to quiet", async () => {
@@ -256,7 +261,9 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     await expect.element(screen.getByText(/nothing here is filled in for you/i)).toBeVisible();
 
     await screen.getByRole("button", { name: "ALL GOOD" }).click();
-    await expect.element(screen.getByText(/Last check-in: Energy 4/i)).toBeVisible();
+    // DECLUTTER-001: a finished check-in collapses to one line with UPDATE.
+    await expect.element(screen.getByText(/^Checked in .* · all good$/)).toBeVisible();
+    expect(screen.getByRole("button", { name: "ALL GOOD" }).elements()).toHaveLength(0);
     expect(screen.getByText(/nothing here is filled in for you/i).elements()).toHaveLength(0);
     expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
   });

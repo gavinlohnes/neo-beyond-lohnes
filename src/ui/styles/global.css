@@ -1052,19 +1052,22 @@ button, input {
  * no border. Quiet text directly on the black field, generous margin —
  * proof that surface calm comes from restraint, not another box. */
 .all-clear {
-  padding: var(--space-6) 0;
-  margin-bottom: var(--space-5);
+  /* DECLUTTER-001: tighter than the original space-6/space-5 so the quiet
+     state doesn't push SHIFT DOWN off the first phone screen. */
+  padding: var(--space-4) 0;
+  margin-bottom: var(--space-3);
 }
 .all-clear .command-title {
   font-size: 24px;
   color: var(--text-2);
 }
 
-/* TODAY-005: when the policy resolves to quiet, the all-clear truth gets
- * enough physical field to stand on its own before tools begin. Support
- * remains fully present and operable below it; no capability is hidden. */
+/* TODAY-005: when the policy resolves to quiet, the all-clear block is laid
+ * out as a column before the tools begin. DECLUTTER-001 (direct owner
+ * ruling, 2026-09-30) removed its old min-height (min(46vh, 400px)): the
+ * empty field it created pushed MARK WORK ENDED and SHIFT DOWN off the
+ * first phone screen. */
 .today-field--quiet .all-clear {
-  min-height: min(46vh, 400px);
   display: flex;
   flex-direction: column;
   justify-content: center;

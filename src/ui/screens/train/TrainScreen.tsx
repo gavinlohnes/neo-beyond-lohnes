@@ -727,6 +727,12 @@ export function TrainScreen({
     ? activeExercises.findIndex((ex) => ex.exerciseId === currentExercise.exerciseId)
     : -1;
   const currentSetNumber = currentExercise ? nextUnloggedSetNumber(currentExercise) : null;
+  // DECLUTTER-001: unlogged sets after the current one, shown as one line.
+  let laterOpenSetCount = 0;
+  if (currentExercise && currentSetNumber !== null) {
+    const logged = loggedSetNumbers(currentExercise.exerciseId);
+    for (let n = currentSetNumber + 1; n <= currentExercise.sets; n++) if (!logged.has(n)) laterOpenSetCount++;
+  }
   // VISUAL-001 review correction: only one exercise's set rows are ever
   // mounted at a time (currentExercise, above) — the jump rail unmounts
   // the previous exercise's rows entirely and remounts whichever one is
@@ -1170,6 +1176,11 @@ export function TrainScreen({
                 </>
               )}
 
+              {/* DECLUTTER-001 (Drop 1): only the current set — the first one
+                  not yet logged or skipped — gets the full input row. Finished
+                  sets stay as one-line summaries; later sets are counted in a
+                  single "N more sets" line instead of each showing its own
+                  steppers and LOG button. */}
               {Array.from({ length: currentExercise.sets }, (_, i) => i + 1).map((setNumber) => {
                 const ex = currentExercise;
                 const loggedSet = sets.find((s) => s.exerciseId === ex.exerciseId && s.setNumber === setNumber);
@@ -1219,6 +1230,7 @@ export function TrainScreen({
                     </div>
                   );
                 }
+                if (setNumber !== currentSetNumber) return null;
                 // Overdrive Phase 18 (REAL-DEVICE ACCEPTANCE CORRECTION,
                 // TRAIN EXECUTION UX + PHONE WIDTH): the old single-row
                 // "# − [lb] + lb x − [reps] + " adjuster packed ~7 fixed-
@@ -1341,6 +1353,11 @@ export function TrainScreen({
                   </div>
                 );
               })}
+              {laterOpenSetCount > 0 && (
+                <p className="meta" style={{ margin: "4px 0 0" }}>
+                  {laterOpenSetCount === 1 ? "1 more set" : `${laterOpenSetCount} more sets`}
+                </p>
+              )}
             </CommandSurface>
           )}
 

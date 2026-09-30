@@ -838,6 +838,29 @@ describe("TrainScreen (real browser) — DECLUTTER-001 override picker behind CH
   });
 });
 
+describe("TrainScreen (real browser) — DECLUTTER-001 one set at a time", () => {
+  it("only the current set has inputs and a LOG button; later sets are one line; logging advances", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+
+    expect(screen.getByRole("button", { name: "LOG" }).elements()).toHaveLength(1);
+    expect(screen.getByRole("spinbutton", { name: "Set 2 weight in pounds" }).elements()).toHaveLength(0);
+    await expect.element(screen.getByText("2 more sets", { exact: true })).toBeVisible();
+
+    await screen.getByPlaceholder("lb").first().fill("135");
+    await screen.getByPlaceholder("reps").first().fill("10");
+    await screen.getByRole("button", { name: "LOG" }).click();
+
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("1 more set", { exact: true })).toBeVisible();
+    expect(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" }).elements()).toHaveLength(0);
+    expect(screen.getByRole("spinbutton", { name: "Set 3 weight in pounds" }).elements()).toHaveLength(0);
+  });
+});
+
 describe("TrainScreen (real browser) — RECOVERY session", () => {
   it("starting RECOVERY shows the duration control, and ending it returns to the picker", async () => {
     const day = await startDay();

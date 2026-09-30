@@ -102,7 +102,11 @@ describe("Gate A correction — State Input red-authority reduction", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByRole("button", { name: "MANUAL CHECK-IN" })).toBeVisible();
+    // DECLUTTER-001: the finished check-in is one line; UPDATE reopens the
+    // full form (ALL GOOD + the manual fields).
+    await screen.getByRole("button", { name: "Update check-in" }).click();
+    await expect.element(screen.getByText(/nothing here is filled in for you/i)).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "SUBMIT CHECK-IN" })).toBeVisible();
   });
 });
 

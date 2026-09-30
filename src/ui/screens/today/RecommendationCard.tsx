@@ -101,7 +101,9 @@ export function RecommendationCard({
         {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
         {recommendation.title}
       </h2>
-      <p className="card-body">{recommendation.rationale}</p>
+      {/* DECLUTTER-001: the all-clear rationale ("No rule requires attention
+          right now.") only repeats the title, so it isn't shown there. */}
+      {!isAllClear && <p className="card-body">{recommendation.rationale}</p>}
       {evidenceBasis && (
         <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
       )}
@@ -166,6 +168,9 @@ export function RecommendationCard({
               </p>
             </div>
           )}
+          {isAllClear && (
+            <p className="card-body" style={{ marginTop: 12 }}>{describeRecommendationEffect(recommendation.kind)}</p>
+          )}
           <p className="meta" style={{ marginTop: 8 }}>
             ENGINE {recommendation.trace.engineVersion} · EVALUATED{" "}
             {new Date(recommendation.trace.evaluatedAt).toLocaleTimeString()}
@@ -226,9 +231,13 @@ export function RecommendationCard({
                 )}
               </div>
             )}
-            <p className={isAllClear ? "meta field-note" : "meta"} style={{ marginTop: 8 }}>
-              {describeRecommendationEffect(recommendation.kind)}
-            </p>
+            {/* DECLUTTER-001: for the all-clear state this note now lives inside
+                "How BEYOND decided" instead of under the button. */}
+            {!isAllClear && (
+              <p className="meta" style={{ marginTop: 8 }}>
+                {describeRecommendationEffect(recommendation.kind)}
+              </p>
+            )}
           </>
         )}
         {confirmPanel}
