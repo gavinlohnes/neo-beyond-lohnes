@@ -801,12 +801,50 @@ describe("TrainScreen (real browser) — TRAIN-WAVE-A: Persistent Rest + Set Com
   });
 });
 
+describe("TrainScreen (real browser) — DECLUTTER-001 override picker behind CHANGE", () => {
+  it("shows the current choice and START WORKOUT with the template/variant chips collapsed", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+
+    await expect.element(screen.getByText("Template A · STANDARD", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
+    const change = screen.getByRole("button", { name: "CHANGE", exact: true });
+    await expect.element(change).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: "RECOVERY", exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "B", exact: true }).elements()).toHaveLength(0);
+
+    // START WORKOUT now comes before the "Why this suggestion" disclosure.
+    const start = screen.getByRole("button", { name: "START WORKOUT" }).element();
+    const why = screen.getByText("Why this suggestion", { exact: true }).element();
+    expect(start.compareDocumentPosition(why) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("CHANGE reveals the override chips; a choice updates the summary line and what START WORKOUT starts", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+
+    await screen.getByRole("button", { name: "CHANGE", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "DONE", exact: true })).toHaveAttribute("aria-expanded", "true");
+    await screen.getByRole("button", { name: "B", exact: true }).click();
+    await screen.getByRole("button", { name: "REDUCED", exact: true }).click();
+    await screen.getByRole("button", { name: "DONE", exact: true }).click();
+
+    await expect.element(screen.getByText("Template B · REDUCED", { exact: true })).toBeVisible();
+    expect(screen.getByRole("button", { name: "REDUCED", exact: true }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await expect.element(screen.getByText(/REDUCED — in progress/i)).toBeVisible();
+  });
+});
+
 describe("TrainScreen (real browser) — RECOVERY session", () => {
   it("starting RECOVERY shows the duration control, and ending it returns to the picker", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
 
+    await screen.getByRole("button", { name: "CHANGE", exact: true }).click();
     await screen.getByRole("button", { name: "RECOVERY", exact: true }).click();
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
 

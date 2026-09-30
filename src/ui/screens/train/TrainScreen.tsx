@@ -148,6 +148,10 @@ export function TrainScreen({
   const [lastAdvancingTemplate, setLastAdvancingTemplate] = useState<WorkoutTemplateId | null>(null);
   const [chosenTemplate, setChosenTemplate] = useState<WorkoutTemplateId>("A");
   const [chosenVariant, setChosenVariant] = useState<SessionType>("STANDARD");
+  // DECLUTTER-001: the template/variant override chips sit behind one
+  // CHANGE tap so START WORKOUT stays on the first screen. Opens itself for
+  // the TODAY → RECOVERY handoff, whose focus target is the RECOVERY chip.
+  const [overridePickerOpen, setOverridePickerOpen] = useState(destination === "RECOVERY");
   const [noCheckIn, setNoCheckIn] = useState(false);
   const [plannedWorkDeclaration, setPlannedWorkDeclaration] = useState<boolean | undefined>(undefined);
   const [plannedWorkOpen, setPlannedWorkOpen] = useState(false);
@@ -229,6 +233,7 @@ export function TrainScreen({
     if (!destination || !destinationReady || destinationConsumedRef.current) return;
     destinationConsumedRef.current = true;
     onDestinationConsumed?.();
+    if (!session && destination !== "WORKOUT") setOverridePickerOpen(true);
     requestAnimationFrame(() => {
       if (session || destination === "WORKOUT") headingRef.current?.focus();
       else recoveryChoiceRef.current?.focus();
@@ -858,10 +863,12 @@ export function TrainScreen({
           DECISION moment before execution starts, same .command-surface
           role TODAY's dominant recommendation uses. The "why suggested"
           reasoning (variant/template rationale + what STANDARD/REDUCED/
-          RECOVERY generically mean) moves behind disclosure — every
-          template/variant chip and its short override hint stays directly
-          visible, since that's the actual decision surface, not the
-          explanation of it. */}
+          RECOVERY generically mean) sits behind disclosure.
+          DECLUTTER-001 (direct owner ruling, 2026-09-30): the template/
+          variant chips now sit behind one CHANGE tap instead of always
+          being visible. The current choice is always shown in the summary
+          line and override stays one tap away, so START WORKOUT lands on
+          the first phone screen. */}
       {!session && !completionSummary && (
         <PlannedWorkCard
           declaration={plannedWorkDeclaration}
@@ -882,45 +889,76 @@ export function TrainScreen({
           </h2>
           {chosenVariant !== "RECOVERY" && (
             <p className="meta" style={{ marginBottom: 12 }}>
-              Template {chosenTemplate} · {suggestedSummary.exerciseNames.join(", ")}
+              {suggestedSummary.exerciseNames.join(", ")}
             </p>
           )}
 
-          <p className="meta" style={{ marginBottom: 6 }}>Template (override always available)</p>
-          <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-            {templateOptions.map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`chip ${chosenTemplate === t ? "chip--selected" : ""}`}
-                style={{ flex: "none", padding: "8px 16px" }}
-                aria-pressed={chosenTemplate === t}
-                disabled={chosenVariant === "RECOVERY"}
-                onClick={() => setChosenTemplate(t)}
-              >
-                {templateLabel(t, customTemplates)}
-              </button>
-            ))}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+            <p className="meta-strong" style={{ margin: 0 }}>
+              {chosenVariant === "RECOVERY"
+                ? "RECOVERY"
+                : `Template ${templateLabel(chosenTemplate, customTemplates)} · ${chosenVariant}`}
+            </p>
+            <button
+              type="button"
+              className="chip"
+              style={{ flex: "none", padding: "8px 14px" }}
+              aria-expanded={overridePickerOpen}
+              aria-controls="train-override-picker"
+              onClick={() => setOverridePickerOpen((open) => !open)}
+            >
+              {overridePickerOpen ? "DONE" : "CHANGE"}
+            </button>
           </div>
 
-          <p className="meta" style={{ marginBottom: 6 }}>Variant (override always available)</p>
-          <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-            {VARIANT_ORDER.map((v) => (
-              <button
-                key={v}
-                ref={v === "RECOVERY" ? recoveryChoiceRef : undefined}
-                type="button"
-                className={`chip ${chosenVariant === v ? "chip--selected" : ""}`}
-                style={{ flex: "none", padding: "8px 14px" }}
-                aria-pressed={chosenVariant === v}
-                onClick={() => setChosenVariant(v)}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
+          {overridePickerOpen && (
+            <div id="train-override-picker">
+              <p className="meta" style={{ marginBottom: 6 }}>Template</p>
+              <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+                {templateOptions.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className={`chip ${chosenTemplate === t ? "chip--selected" : ""}`}
+                    style={{ flex: "none", padding: "8px 16px" }}
+                    aria-pressed={chosenTemplate === t}
+                    disabled={chosenVariant === "RECOVERY"}
+                    onClick={() => setChosenTemplate(t)}
+                  >
+                    {templateLabel(t, customTemplates)}
+                  </button>
+                ))}
+              </div>
 
-          <WhyDisclosure summary="Why this suggestion" style={{ marginBottom: 12 }}>
+              <p className="meta" style={{ marginBottom: 6 }}>Variant</p>
+              <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+                {VARIANT_ORDER.map((v) => (
+                  <button
+                    key={v}
+                    ref={v === "RECOVERY" ? recoveryChoiceRef : undefined}
+                    type="button"
+                    className={`chip ${chosenVariant === v ? "chip--selected" : ""}`}
+                    style={{ flex: "none", padding: "8px 14px" }}
+                    aria-pressed={chosenVariant === v}
+                    onClick={() => setChosenVariant(v)}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <button
+            className="btn-primary"
+            style={{ fontSize: 18, padding: "18px var(--space-4)" }}
+            disabled={busy}
+            onClick={() => void handleStart()}
+          >
+            START WORKOUT
+          </button>
+
+          <WhyDisclosure summary="Why this suggestion" style={{ marginTop: 12 }}>
             <div style={{ marginTop: 8 }}>
               <p className="card-body" style={{ marginBottom: 6 }}>{describeVariantSuggestion(variantSuggestion)}</p>
               {chosenVariant !== "RECOVERY" && (
@@ -931,15 +969,6 @@ export function TrainScreen({
               <p className="card-body">{VARIANT_MEANINGS}</p>
             </div>
           </WhyDisclosure>
-
-          <button
-            className="btn-primary"
-            style={{ fontSize: 18, padding: "18px var(--space-4)" }}
-            disabled={busy}
-            onClick={() => void handleStart()}
-          >
-            START WORKOUT
-          </button>
         </CommandSurface>
       )}
 
