@@ -116,7 +116,7 @@ export async function getRecentSubstitutions(exerciseId: string, limit = 3): Pro
  * queries in this codebase use. See SetUndonePayload's doc comment for
  * why the raw performedSets row itself is never touched.
  */
-async function getUndoneSetIds(): Promise<Set<string>> {
+export async function getUndoneSetIds(): Promise<Set<string>> {
   const events = (await db.events.where("type").equals("SET_UNDONE").toArray()) as DomainEvent<SetUndonePayload>[];
   return new Set(events.map((e) => e.payload.performedSetId));
 }

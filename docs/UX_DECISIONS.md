@@ -53,6 +53,13 @@ below, this entry wins; the older entry is kept for history.
   locked glyph family doesn't cover, drawn through `src/ui/icons/LineIcon.tsx` at the glyphs'
   1.7 stroke with square caps. It never replaces a locked glyph. Rows whose icon and name say
   what they are drop their fixed description line; rows whose summary reports live state keep it.
+- **As built in Drop 4 (TRAIN).** A logged set is a personal record when earlier history exists for
+  that exercise and it is either the heaviest weight yet, or the most reps yet at that weight or
+  heavier. The first session with an exercise, skipped sets, zero-rep sets, and substituted movements never count.
+  Records are derived from logged sets on the fly (nothing stored, nothing fed to the Engine), and
+  BEYOND never mentions a record that wasn't hit. The finish summary adds the session's records and
+  total volume (weight × reps). COMPLETE and PARTIAL are press-and-hold (`HoldButton`, 1 s, a quick
+  tap shows "Hold to finish."); set logging stays one tap.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 

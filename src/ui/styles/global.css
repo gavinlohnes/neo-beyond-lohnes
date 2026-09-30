@@ -1790,3 +1790,52 @@ button, input {
   height: 3px;
   background: var(--accent);
 }
+
+/* Drop 4 (hold-to-confirm, ROADMAP 1.0 design rule): the fill bar grows
+   left to right over --hold-duration while held and snaps back on release.
+   Under reduced motion the hold still takes the same time; only the bar
+   stops animating. */
+.hold-button {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.hold-button__fill {
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0.22;
+  transform: scaleX(0);
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+.hold-button--holding .hold-button__fill {
+  transform: scaleX(1);
+  transition: transform var(--hold-duration, 1000ms) linear;
+}
+
+.hold-button__label {
+  position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hold-button--holding .hold-button__fill {
+    transition: none;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
