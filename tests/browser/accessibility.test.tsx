@@ -256,13 +256,17 @@ describe("accessibility (real browser, axe-core)", () => {
   it("BodyScreen (an entry logged in each tracker) has no violations beyond the known color-contrast exception", async () => {
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "+12 oz" }).click();
+    // DECLUTTER Drop 2: each once-a-day tracker opens with one tap.
+    await screen.getByRole("button", { name: "Open SLEEP" }).click();
     await screen.getByRole("spinbutton", { name: "Hours" }).fill("7");
     await screen.getByRole("button", { name: "LOG SLEEP" }).click();
+    await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
     await screen.getByRole("spinbutton", { name: "Weight (lbs)" }).fill("180");
     await screen.getByRole("button", { name: "LOG BODYWEIGHT" }).click();
+    await screen.getByRole("button", { name: "Open PROTEIN" }).click();
     await screen.getByRole("spinbutton", { name: "Protein (g)" }).fill("30");
     await screen.getByRole("button", { name: "LOG PROTEIN" }).click();
-    await expect.element(screen.getByText("30 g today", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("30 g", { exact: true }).first()).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);

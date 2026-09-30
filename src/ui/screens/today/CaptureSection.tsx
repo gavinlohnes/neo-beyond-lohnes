@@ -152,9 +152,6 @@ export function CaptureToolsCard({
       <p className="tool-label" style={{ marginBottom: 4 }}>
         CAPTURE{hasOpenItems ? ` (${openCaptureItems.length})` : ""}
       </p>
-      <p className="meta" style={{ marginBottom: 8 }}>
-        Jot something down now. Where it belongs is a decision for later, not now.
-      </p>
       <div style={{ display: "flex", gap: 8, marginBottom: showListHere ? 12 : 0 }}>
         <input
           type="text"

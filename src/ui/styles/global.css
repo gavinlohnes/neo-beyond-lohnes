@@ -39,7 +39,8 @@ button, input {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent-strong);
+  /* DECLUTTER Drop 2 (owner ruling 2026-09-30: red never decorates): neutral, not red. */
+  color: var(--text-2);
   margin: 0 0 var(--space-2);
 }
 
@@ -265,6 +266,13 @@ button, input {
    either way. */
 .body-field .btn-primary {
   background: var(--text-1);
+  color: var(--bg);
+}
+/* DECLUTTER Drop 2 (owner ruling 2026-09-30: red never decorates): BODY's selected chips (e.g. MAIN SLEEP)
+   use the same neutral fill as BODY's primary buttons. */
+.body-field .chip--selected {
+  background: var(--text-1);
+  border-color: var(--text-1);
   color: var(--bg);
 }
 
@@ -772,7 +780,9 @@ button, input {
   margin-bottom: var(--space-5);
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
-  border-left: 2px solid var(--accent);
+  /* DECLUTTER Drop 2 (owner ruling 2026-09-30: red never decorates): the nominal (GREEN) edge is neutral;
+     the --yellow / --red modifiers below still color it when it means something. */
+  border-left: 2px solid var(--border-strong);
   border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: 16px;
@@ -1188,10 +1198,11 @@ button, input {
  * .instrument-cluster/.status-value — scoping under `.body-field`
  * (BodyScreen's own root only) keeps this a BODY-only change. */
 .body-field .instrument-cluster {
-  min-height: min(38vh, 320px);
-  align-content: center;
-  padding: var(--space-6) var(--space-5);
-  margin-bottom: var(--space-6);
+  /* DECLUTTER Drop 2 (owner ruling 2026-09-30, overrides FIELD-PROTOTYPE-001's
+     fixed height): the box fits its four readings instead of holding
+     min(38vh, 320px), so the hydration buttons reach the first screen. */
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-5);
 }
 .body-field .instrument-cluster .status-value {
   font-size: 32px;
@@ -1594,7 +1605,8 @@ button, input {
  * rule) — only color changes, so every existing plain .section-label
  * assertion is untouched. */
 .section-label--field {
-  color: var(--accent-strong);
+  /* DECLUTTER Drop 2 (owner ruling 2026-09-30: red never decorates): field labels (ORIENT, ATTENTION,
+     STATUS, EXERCISE...) now share the plain .section-label color. */
 }
 
 /* Identity header — the existing exact "BEYOND // TODAY" .eyebrow text
@@ -1610,39 +1622,15 @@ button, input {
   padding-bottom: var(--space-4);
   margin-bottom: var(--space-5);
   border-bottom: 1px solid var(--border-subtle);
-  color: var(--accent-strong);
+  /* DECLUTTER Drop 2 (owner ruling 2026-09-30: red never decorates): header glyph and text are neutral. */
+  color: var(--text-2);
 }
 .field-header .eyebrow {
   margin: 0;
 }
 
-/* A quiet mechanical aside — a system note, not a decision. Corner
- * brackets mark it as an instrument reading rather than prose (the
- * doctrine's own "geometry that implies motion," applied once, restrained
- * — never per-row, never decorative wallpaper). */
-.field-note {
-  position: relative;
-  margin-top: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-}
-.field-note::before,
-.field-note::after {
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border: 1px solid var(--accent);
-}
-.field-note::before {
-  top: 0;
-  left: 0;
-  border-width: 1px 0 0 1px;
-}
-.field-note::after {
-  bottom: 0;
-  right: 0;
-  border-width: 0 1px 1px 0;
-}
+/* DECLUTTER Drop 2 (owner ruling 2026-09-30: red never decorates): the red corner-bracket .field-note style was removed;
+ * nothing uses it after DECLUTTER Drop 1. */
 
 /* A structural "OR" separator between two genuinely alternative truthful
  * actions, stacked full-width — used on the one currently-dominant

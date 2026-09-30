@@ -377,7 +377,6 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           use .equipment-row instead. */}
       <section className="operational-index-zone" aria-labelledby="operations-heading">
         <h2 id="operations-heading" className="section-label">Direction</h2>
-        <p className="section-intro">Set durable direction and the work pattern BEYOND uses as predicted context.</p>
         <CollapsibleRow
           name="MISSIONS & OBLIGATIONS"
           icon={<Icon name="mission" size={20} />}
@@ -420,15 +419,13 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           implying always-on delivery. */}
       <section className="operational-index-zone" aria-labelledby="reminders-heading">
         <h2 id="reminders-heading" className="section-label">Reminders</h2>
-        <p className="section-intro">
-          An on-device nudge only — no account, no push service. Checked the next time you open BEYOND after your
-          chosen hour, if you haven't checked in yet that day.
-        </p>
         <div className="equipment-row">
           <p className="tool-label" style={{ marginBottom: 4 }}>DAILY CHECK-IN REMINDER</p>
           <p className="card-body" style={{ marginBottom: 8 }}>
             {reminderPreference.enabled ? `On, after ${formatReminderHour(reminderPreference.reminderHour)}.` : "Off."}
           </p>
+          {/* DECLUTTER Drop 2: replaces the cut section intro's key fact. */}
+          <p className="meta" style={{ marginBottom: 8 }}>Checked when you open BEYOND, not a push notification.</p>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <button
               className={reminderPreference.enabled ? "btn-secondary" : "btn-primary"}
@@ -461,7 +458,6 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
 
       <section className="operational-index-zone" aria-labelledby="safety-heading">
         <h2 id="safety-heading" className="section-label">Data safety</h2>
-        <p className="section-intro">Keep a recoverable copy on your terms. Nothing leaves this device unless you export or share it.</p>
         <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
           <Icon name="backup" size={20} />BACKUP
@@ -580,7 +576,6 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           none existed to preserve. */}
       <section className="operational-index-zone" aria-labelledby="records-heading">
       <h2 id="records-heading" className="section-label">Evidence</h2>
-      <p className="section-intro">Trace what happened, review decisions and outcomes, or retrieve a known record.</p>
       <CollapsibleRow
         name="HISTORY"
         icon={<Icon name="history" size={20} />}
@@ -632,7 +627,6 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           constant. */}
       <section className="operational-index-zone" aria-labelledby="system-heading">
       <h2 id="system-heading" className="section-label">System</h2>
-      <p className="section-intro">Current local build and data identity. Technical detail stays closed until requested.</p>
       <div className="instrument-cluster">
         <div>
           <p className="meta" style={{ margin: 0 }}>APP</p>

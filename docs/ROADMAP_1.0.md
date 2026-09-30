@@ -26,10 +26,10 @@ At most 3 changes per Drop.
 ### Drop 2 — Declutter II
 
 - Shrink BODY's STATUS box and collapse once-a-day forms (sleep, bodyweight, protein) so the
-  hydration buttons are on the first screen.
-- Cut slogans, section intros, and repeated text app-wide.
+  hydration buttons are on the first screen. **Done (PR pending).**
+- Cut slogans, section intros, and repeated text app-wide. **Done (PR pending).**
 - Remove decorative red (headers, section labels, corner brackets, the status strip edge, BODY
-  selected chips).
+  selected chips). **Done (PR pending).**
 
 ### Drop 3 — Tidy
 

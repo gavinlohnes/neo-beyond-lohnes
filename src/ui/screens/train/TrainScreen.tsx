@@ -785,10 +785,6 @@ export function TrainScreen({
         <Icon name="train" size={22} />
         <h1 ref={headingRef} tabIndex={-1} className="eyebrow">BEYOND // TRAIN</h1>
       </div>
-      <div className="field-tagline">
-        <h2 className="field-tagline__headline">Training without guesswork.</h2>
-        <p className="field-tagline__sub">The plan adapts to capacity. Progress stays visible.</p>
-      </div>
 
       <ConfirmPanel />
 

@@ -40,6 +40,11 @@ below, this entry wins; the older entry is kept for history.
   BODY chips.
 - **Hold-to-confirm is for big moments only** (finishing a workout, ending the day, logging a
   clean day), never for routine sets.
+- **As built in Drop 2 (Declutter II).** BODY's sleep, bodyweight, and protein trackers are
+  one-line rows until tapped, with a DONE chip to close them. Red stays only on primary buttons,
+  the dominant recommendation's rail, real warnings (yellow/red status), and the active-tab
+  marker. Headers, eyebrows, section labels, the GREEN status-strip edge, and BODY's selected
+  chips are neutral; the field-note corner brackets are gone.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 
