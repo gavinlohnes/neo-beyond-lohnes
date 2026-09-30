@@ -209,13 +209,18 @@ describe("accessibility (real browser, axe-core)", () => {
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
     await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
 
-    for (const setNumber of [1, 2, 3]) {
+    // DECLUTTER-001: only the current set has inputs; each set's fields
+    // keep their own distinct accessible name as it becomes current.
+    for (const setNumber of [1, 2]) {
       await expect
         .element(screen.getByRole("spinbutton", { name: `Set ${setNumber} weight in pounds` }))
         .toBeVisible();
       await expect
         .element(screen.getByRole("spinbutton", { name: `Set ${setNumber} repetitions` }))
         .toBeVisible();
+      if (setNumber === 1) {
+        await screen.getByRole("button", { name: "SKIP" }).click();
+      }
     }
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);

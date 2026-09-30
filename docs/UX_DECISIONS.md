@@ -363,6 +363,21 @@ USER_DECIDES remaining authoritative.
   suggests/decides/override pattern is unchanged. The TODAY → RECOVERY
   handoff opens the picker automatically so it can focus the RECOVERY
   choice.
+- **One set at a time during a workout (locked 2026-09-30, direct owner
+  ruling, DECLUTTER-001 / ROADMAP Drop 1).** Only the current set (the
+  first one not yet logged or skipped) shows weight/reps inputs and LOG /
+  SKIP. Finished sets stay as one-line summaries; later sets are counted
+  in one "N more sets" line. Logging, undo, rest timing and rotation rules
+  are unchanged.
+- **TODAY stays short (locked 2026-09-30, direct owner ruling,
+  DECLUTTER-001 / ROADMAP Drop 1).** A finished check-in is one line
+  ("Checked in 7:08 AM · all good") with UPDATE to reopen ALL GOOD and the
+  manual form. The quiet "No action required" state shows no rationale
+  line, keeps its "Just records that you saw this" note inside "How BEYOND
+  decided", and no longer reserves an empty field below it (TODAY-005's
+  min-height is removed). The Work State card drops its explanation
+  sentence. Goal: MARK WORK ENDED and SHIFT DOWN visible without scrolling
+  on a phone.
 
 ## BODY
 

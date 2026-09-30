@@ -36,6 +36,31 @@ export function CheckInCard({
   onQuickCheckIn: () => void;
   onSubmitCheckIn: () => void;
 }) {
+  // DECLUTTER-001 (Drop 1): once today's check-in exists and the form isn't
+  // open, the whole card is one line — when you checked in, "all good" if it
+  // was the quick check-in — with UPDATE to reopen ALL GOOD and the form.
+  if (checkIn && !checkInFormOpen) {
+    const isQuick = CHECK_IN_FIELDS.every((field) => checkIn[field.key] === quickCheckInValues[field.key]);
+    const time = new Date(checkIn.recordedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    return (
+      <div className="equipment-row fade-in" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <p className="card-body" style={{ margin: 0 }} title={describeCheckInValues(checkIn)}>
+          Checked in {time}
+          {isQuick ? " · all good" : ""}
+        </p>
+        <button
+          type="button"
+          className="chip"
+          style={{ flex: "none", padding: "8px 14px" }}
+          aria-label="Update check-in"
+          onClick={() => setCheckInFormOpen(true)}
+        >
+          UPDATE
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="equipment-row">
       <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>
@@ -48,67 +73,53 @@ export function CheckInCard({
       >
         ALL GOOD
       </button>
-      <p className="meta" style={{ marginBottom: checkIn && !checkInFormOpen ? 12 : 16 }}>
+      <p className="meta" style={{ marginBottom: 16 }}>
         Sets {describeCheckInValues(quickCheckInValues)} — submits immediately.
       </p>
 
-      {checkIn && !checkInFormOpen ? (
-        <div key="summary" className="fade-in">
-          <p className="card-body" style={{ marginBottom: 8 }}>
-            Last check-in: {describeCheckInValues(checkIn)}
-          </p>
-          <p className="meta" style={{ marginBottom: 12 }}>
-            recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
-          </p>
-          <button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>
-            MANUAL CHECK-IN
-          </button>
-        </div>
-      ) : (
-        <div key="form" className="fade-in">
-          <p className="card-body" style={{ marginBottom: 12 }}>
-            How are you doing right now? Tap a number for each — nothing here is filled in for you.
-          </p>
-          {CHECK_IN_FIELDS.map((field) => (
-            <div key={field.key} style={{ marginBottom: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-                <span className="card-body" style={{ margin: 0, fontWeight: 600, color: "var(--text-1)" }}>
-                  {field.label}
-                </span>
-                <span className="meta">{field.directionLabel}</span>
-              </div>
-              <div style={{ display: "flex", gap: 6 }}>
-                {rangeForField(field).map((n) => {
-                  const selected = values[field.key] === n;
-                  return (
-                    <button
-                      key={n}
-                      type="button"
-                      className={`chip ${selected ? "chip--selected" : ""}`}
-                      aria-pressed={selected}
-                      disabled={busy}
-                      onClick={() => setValues((s) => ({ ...s, [field.key]: n }))}
-                    >
-                      {n}
-                    </button>
-                  );
-                })}
-              </div>
+      <div key="form" className="fade-in">
+        <p className="card-body" style={{ marginBottom: 12 }}>
+          How are you doing right now? Tap a number for each — nothing here is filled in for you.
+        </p>
+        {CHECK_IN_FIELDS.map((field) => (
+          <div key={field.key} style={{ marginBottom: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+              <span className="card-body" style={{ margin: 0, fontWeight: 600, color: "var(--text-1)" }}>
+                {field.label}
+              </span>
+              <span className="meta">{field.directionLabel}</span>
             </div>
-          ))}
-          <button className="btn-primary" disabled={busy || !isCheckInComplete(values)} onClick={onSubmitCheckIn}>
-            SUBMIT CHECK-IN
-          </button>
-          {!isCheckInComplete(values) && (
-            <p className="meta" style={{ marginTop: 8 }}>Select all five to submit.</p>
-          )}
-          {checkIn && (
-            <p className="meta" style={{ marginTop: 8 }}>
-              last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
-            </p>
-          )}
-        </div>
-      )}
+            <div style={{ display: "flex", gap: 6 }}>
+              {rangeForField(field).map((n) => {
+                const selected = values[field.key] === n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`chip ${selected ? "chip--selected" : ""}`}
+                    aria-pressed={selected}
+                    disabled={busy}
+                    onClick={() => setValues((s) => ({ ...s, [field.key]: n }))}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        <button className="btn-primary" disabled={busy || !isCheckInComplete(values)} onClick={onSubmitCheckIn}>
+          SUBMIT CHECK-IN
+        </button>
+        {!isCheckInComplete(values) && (
+          <p className="meta" style={{ marginTop: 8 }}>Select all five to submit.</p>
+        )}
+        {checkIn && (
+          <p className="meta" style={{ marginTop: 8 }}>
+            last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

@@ -1419,10 +1419,9 @@ export function TodayScreen({
 
           {workEndInAttention && !workContextOpen && (
             <SignalRow label="WORK STATE">
-              <h2 className="card-title">Working today</h2>
-              <p className="card-body" style={{ marginBottom: 12 }}>
-                Setup is recorded. When your shift is actually over, mark it — BEYOND never guesses this from the clock.
-              </p>
+              {/* DECLUTTER-001: the explanation sentence is cut so SHIFT DOWN
+                  fits on the first phone screen; the button says what it does. */}
+              <h2 className="card-title" style={{ marginBottom: 12 }}>Working today</h2>
               <button className="btn-primary" disabled={busy} onClick={() => void handleMarkWorkEnded()}>
                 MARK WORK ENDED
               </button>

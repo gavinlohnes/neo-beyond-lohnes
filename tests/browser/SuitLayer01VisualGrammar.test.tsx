@@ -144,6 +144,8 @@ describe("Suit Layer 01 — no capability disappeared", () => {
 
     await expect.element(screen.getByRole("button", { name: "Open RESET" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open SHIFT DOWN" })).toBeVisible();
+    // DECLUTTER-001: after a check-in, ALL GOOD is one tap away behind UPDATE.
+    await screen.getByRole("button", { name: "Update check-in" }).click();
     await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
     await expect.element(screen.getByPlaceholder("Capture a thought...")).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open BEYONDDAY" })).toBeVisible();
