@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
+import { HoldButton } from "../../components/HoldButton";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
 import type { ExercisePrescription, PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
 import { WORKOUT_TEMPLATES, WORKOUT_TEMPLATE_ORDER, getReducedExercises } from "../../../domain/workout/types";
@@ -32,6 +33,7 @@ import {
   type LastStrengthSessionSummary,
   type RecentStrengthSessionEntry,
 } from "../../../application/trainQueries";
+import { describePersonalRecord, findSessionRecords, getRecordHistory } from "../../../application/personalRecordQueries";
 import {
   abandonWorkout,
   adjustRest,
@@ -132,6 +134,10 @@ interface CompletionSummary {
   durationMinutes: number | null;
   nextTemplate: WorkoutTemplateId;
   advisoryChanges: { name: string; before: string; after: string }[];
+  /** Drop 4: records set this session, in logged order, already worded for display. */
+  records: string[];
+  /** Drop 4: total weight × reps across logged (non-skipped) sets. */
+  volumeLbs: number;
 }
 
 export type TrainDestination = "RECOVERY" | "WORKOUT";
@@ -185,6 +191,12 @@ export function TrainScreen({
   // different exercise out of order via the compact list below.
   const [focusedExerciseId, setFocusedExerciseId] = useState<string | null>(null);
   const [completionSummary, setCompletionSummary] = useState<CompletionSummary | null>(null);
+  // Drop 4 (live PR alerts): sets from every other session, loaded once per
+  // active session. Records for this session's sets are derived from it and
+  // the sets themselves, so an UNDO simply drops the record with its set.
+  const [recordHistory, setRecordHistory] = useState<PerformedSet[]>([]);
+  // Drop 4: shown after a quick tap on COMPLETE/PARTIAL, which are press-and-hold.
+  const [finishHoldHint, setFinishHoldHint] = useState(false);
   const [destinationReady, setDestinationReady] = useState(false);
   // TRAIN-003 (Performance Brief): only ever loaded/shown pre-workout
   // (see refresh() below) — read-only derived intelligence, never
@@ -228,6 +240,23 @@ export function TrainScreen({
   useEffect(() => {
     void refresh();
   }, []);
+
+  const sessionId = session?.id;
+  useEffect(() => {
+    if (!sessionId) {
+      setRecordHistory([]);
+      return;
+    }
+    let cancelled = false;
+    void getRecordHistory(sessionId).then((history) => {
+      if (!cancelled) setRecordHistory(history);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
+
+  const sessionRecords = useMemo(() => findSessionRecords(recordHistory, sets), [recordHistory, sets]);
 
   useEffect(() => {
     if (!destination || !destinationReady || destinationConsumedRef.current) return;
@@ -581,6 +610,7 @@ export function TrainScreen({
    */
   async function handleCompleteWorkout(status: "COMPLETED" | "PARTIAL") {
     if (busy || !session) return;
+    setFinishHoldHint(false);
     setBusy(true);
     try {
       const sessionType = session.sessionType as SessionType;
@@ -594,6 +624,14 @@ export function TrainScreen({
       const setsSkipped = sets.filter((s) => s.skipped).length;
       const bodyAreas = describeTemplateSummary(activeExercises).bodyAreas;
       const beforeSuggestions = progressionSuggestions;
+      const volumeLbs = sets.filter((s) => !s.skipped).reduce((sum, s) => sum + s.weight * s.reps, 0);
+      const exerciseName = (id: string) => activeExercises.find((ex) => ex.exerciseId === id)?.name ?? id;
+      const records = [...sets]
+        .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))
+        .flatMap((s) => {
+          const record = sessionRecords.get(s.id);
+          return record ? [`${exerciseName(s.exerciseId)}: ${describePersonalRecord(record).replace("NEW PR — ", "")}`] : [];
+        });
 
       await completeWorkout(session.beyondDayId, session.id, sessionType, status, durationMinutes ?? undefined);
 
@@ -624,6 +662,8 @@ export function TrainScreen({
         durationMinutes,
         nextTemplate: await suggestTemplateForNextWorkout(),
         advisoryChanges,
+        records,
+        volumeLbs,
       });
 
       // DAY-ROLLOVER-001: "don't interrupt an in-progress workout, roll
@@ -823,6 +863,19 @@ export function TrainScreen({
             <p className="meta" style={{ marginBottom: 8 }}>
               {describePartialAdvancementResult(completionSummary.sessionType)}
             </p>
+          )}
+          {completionSummary.volumeLbs > 0 && (
+            <p className="meta" style={{ marginBottom: 4 }}>Volume: {completionSummary.volumeLbs.toLocaleString("en-US")} lb</p>
+          )}
+          {completionSummary.records.length > 0 && (
+            <div style={{ marginTop: 8, marginBottom: 8 }}>
+              <p className="meta" style={{ marginBottom: 4 }}>
+                {completionSummary.records.length === 1 ? "1 new PR:" : `${completionSummary.records.length} new PRs:`}
+              </p>
+              {completionSummary.records.map((r, i) => (
+                <p key={`${i}-${r}`} className="card-body" style={{ margin: 0 }}>{r}</p>
+              ))}
+            </div>
           )}
           <p className="meta" style={{ marginBottom: 8 }}>Next up: Template {completionSummary.nextTemplate}.</p>
           {completionSummary.advisoryChanges.length > 0 && (
@@ -1208,6 +1261,11 @@ export function TrainScreen({
                         {!loggedSet.skipped && <ConfirmIcon size={20} />}
                         #{setNumber} — {loggedSet.skipped ? "SKIPPED" : `${loggedSet.weight} lb x ${loggedSet.reps}`}
                       </p>
+                      {sessionRecords.has(loggedSet.id) && (
+                        <p className="meta-strong fade-in" style={{ margin: "2px 0 0" }}>
+                          {describePersonalRecord(sessionRecords.get(loggedSet.id)!)}
+                        </p>
+                      )}
                       {/* TRAIN-WAVE-A (Set Commit Choreography): undo is only ever
                           offered for the exact set this session just committed —
                           `isEarned` already carries that same restriction, so this
@@ -1482,21 +1540,33 @@ export function TrainScreen({
                 Pre-existing gap (no browser test previously verified
                 this), not a Phase 2 regression. */}
             <div style={{ display: "flex", gap: 8 }}>
-              <button
+              {/* Drop 4: finishing is a big moment, so COMPLETE and PARTIAL are
+                  press-and-hold (ROADMAP 1.0 design rule). Logging a set stays one tap. */}
+              <HoldButton
                 className={allExercisesComplete ? "btn-primary" : "btn-secondary"}
                 style={{ flex: 1, minWidth: 0 }}
                 disabled={busy}
-                onClick={() => void handleCompleteWorkout("COMPLETED")}
+                onEarlyRelease={() => setFinishHoldHint(true)}
+                onConfirm={() => void handleCompleteWorkout("COMPLETED")}
               >
                 COMPLETE
-              </button>
-              <button className="btn-secondary" style={{ flex: 1, minWidth: 0 }} disabled={busy} onClick={() => void handleCompleteWorkout("PARTIAL")}>
+              </HoldButton>
+              <HoldButton
+                className="btn-secondary"
+                style={{ flex: 1, minWidth: 0 }}
+                disabled={busy}
+                onEarlyRelease={() => setFinishHoldHint(true)}
+                onConfirm={() => void handleCompleteWorkout("PARTIAL")}
+              >
                 PARTIAL
-              </button>
+              </HoldButton>
               <button className="btn-secondary" style={{ flex: 1, minWidth: 0 }} disabled={busy} onClick={handleStopClick}>
                 {describeStopAction(hasLoggedAnySet)}
               </button>
             </div>
+            <p className="meta" role="status" style={{ margin: finishHoldHint ? "6px 0 0" : 0 }}>
+              {finishHoldHint ? "Hold to finish." : ""}
+            </p>
             {showStopConfirm && (
               <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--border-strong)", borderRadius: "var(--radius)" }}>
                 <p className="card-body" style={{ marginBottom: 12 }}>{describeStopConfirm(sets.length)}</p>

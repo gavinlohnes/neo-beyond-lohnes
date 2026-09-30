@@ -14,6 +14,8 @@ import { archiveCustomExercise, createCustomExercise } from "../../src/applicati
 import { getActiveDay } from "../../src/application/queries";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
+import { holdToConfirm } from "./helpers/hold";
+import { db } from "../../src/persistence/db";
 
 /**
  * BEYOND FIELD ALPHA Phase 2 — first real-browser acceptance layer for
@@ -351,7 +353,7 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "SKIP" }).first().click();
 
-    await screen.getByRole("button", { name: "PARTIAL" }).click();
+    await holdToConfirm(screen.getByRole("button", { name: "PARTIAL" }));
     await expect.element(screen.getByText("WORKOUT SAVED — PARTIAL", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "DONE" }).click();
@@ -786,7 +788,7 @@ describe("TrainScreen (real browser) — TRAIN-WAVE-A: Persistent Rest + Set Com
     const screen = await startStandardWorkout();
     await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "SKIP" }).first().click();
-    await screen.getByRole("button", { name: "COMPLETE" }).click();
+    await holdToConfirm(screen.getByRole("button", { name: "COMPLETE" }));
     await expect.element(screen.getByText("WORKOUT COMPLETE", { exact: true })).toBeVisible();
     expect(document.querySelector(".workout-secured")).not.toBeNull();
   });
@@ -795,7 +797,7 @@ describe("TrainScreen (real browser) — TRAIN-WAVE-A: Persistent Rest + Set Com
     const screen = await startStandardWorkout();
     await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "SKIP" }).first().click();
-    await screen.getByRole("button", { name: "PARTIAL" }).click();
+    await holdToConfirm(screen.getByRole("button", { name: "PARTIAL" }));
     await expect.element(screen.getByText("WORKOUT SAVED — PARTIAL", { exact: true })).toBeVisible();
     expect(document.querySelector(".workout-secured")).toBeNull();
   });
@@ -945,5 +947,80 @@ describe("TrainScreen (real browser) — accessibility", () => {
     expect(el).not.toBeNull();
     const results = await axe.run(el!, { runOnly: ["color-contrast"] });
     expect(results.violations).toEqual([]);
+  });
+});
+
+describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finish", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  /**
+   * A finished earlier session with Machine Chest Press 135 lb x 10. It's
+   * logged under template C so the rotation suggests A (which opens on that
+   * exercise) next — records compare by exercise, whatever the template.
+   */
+  async function seedHistoryAndStart() {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const past = await startWorkout(day.id, "C", "STANDARD");
+    await logSet(day.id, past.id, "machine-chest-press", 1, 135, 10);
+    await completeWorkout(day.id, past.id, "STANDARD", "COMPLETED");
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    return screen;
+  }
+
+  async function logSetViaInputs(screen: Awaited<ReturnType<typeof render>>, weight: string, reps: string) {
+    const weightInput = screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" });
+    const repsInput = screen.getByRole("spinbutton", { name: "Set 1 repetitions" });
+    await userEvent.clear(weightInput);
+    await userEvent.type(weightInput, weight);
+    await userEvent.clear(repsInput);
+    await userEvent.type(repsInput, reps);
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+  }
+
+  it("a heavier set than ever shows a NEW PR line right under it", async () => {
+    const screen = await seedHistoryAndStart();
+    await logSetViaInputs(screen, "145", "6");
+    await expect.element(screen.getByText("#1 — 145 lb x 6", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("NEW PR — heaviest yet (145 lb)", { exact: true })).toBeVisible();
+  });
+
+  it("matching the best so far is not a PR, and says nothing about it", async () => {
+    const screen = await seedHistoryAndStart();
+    await logSetViaInputs(screen, "135", "10");
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+    expect(screen.getByText(/NEW PR/).elements()).toHaveLength(0);
+  });
+
+  it("UNDO removes the PR line with its set", async () => {
+    const screen = await seedHistoryAndStart();
+    await logSetViaInputs(screen, "135", "12");
+    await expect.element(screen.getByText("NEW PR — most reps at 135 lb (12)", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "UNDO" }).click();
+    await expect.element(screen.getByText(/NEW PR/)).not.toBeInTheDocument();
+  });
+
+  it("the finish summary lists the session's PRs and total volume", async () => {
+    const screen = await seedHistoryAndStart();
+    await logSetViaInputs(screen, "145", "6");
+    await expect.element(screen.getByText(/NEW PR/)).toBeVisible();
+    await holdToConfirm(screen.getByRole("button", { name: "PARTIAL" }));
+
+    await expect.element(screen.getByText("WORKOUT SAVED — PARTIAL", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Volume: 870 lb", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("1 new PR:", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Machine Chest Press: heaviest yet (145 lb)", { exact: true })).toBeVisible();
+  });
+
+  it("a quick tap on COMPLETE finishes nothing and says to hold", async () => {
+    const screen = await seedHistoryAndStart();
+    await screen.getByRole("button", { name: "COMPLETE" }).click();
+    await expect.element(screen.getByText("Hold to finish.", { exact: true }).first()).toBeVisible();
+    expect(screen.getByText("WORKOUT COMPLETE", { exact: true }).elements()).toHaveLength(0);
+    expect(await db.workoutSessions.filter((s) => s.status === "ACTIVE").count()).toBe(1);
   });
 });

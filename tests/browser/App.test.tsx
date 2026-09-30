@@ -7,6 +7,7 @@ import { logSet, startWorkout } from "../../src/application/trainCommands";
 import { db } from "../../src/persistence/db";
 import { evaluate } from "../../src/engine/evaluate";
 import type { StateCheckIn } from "../../src/domain/common/types";
+import { holdToConfirm } from "./helpers/hold";
 
 const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
 
@@ -42,7 +43,7 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     // advances on this exact active-execution surface.
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(325);
 
-    await screen.getByRole("button", { name: "PARTIAL" }).click();
+    await holdToConfirm(screen.getByRole("button", { name: "PARTIAL" }));
     await expect.element(screen.getByText("WORKOUT SAVED — PARTIAL", { exact: true })).toBeVisible();
     expect((await db.workoutSessions.get(active.id))?.status).toBe("PARTIAL");
   });
@@ -332,7 +333,7 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
 
     // The block is only while the workout runs: finishing it performs
     // the deferred rollover.
-    await screen.getByRole("button", { name: "PARTIAL" }).click();
+    await holdToConfirm(screen.getByRole("button", { name: "PARTIAL" }));
     await expect.element(screen.getByText("WORKOUT SAVED — PARTIAL", { exact: true })).toBeVisible();
     await expect.poll(async () => (await db.beyondDays.get(day.id))?.status).toBe("ENDED");
     expect(await db.beyondDays.count()).toBe(2);

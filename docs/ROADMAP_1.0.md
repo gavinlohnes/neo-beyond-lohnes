@@ -33,16 +33,16 @@ At most 3 changes per Drop.
 
 ### Drop 3 — Tidy
 
-- Move Planned Work to TRAIN only. **Done (PR pending).**
+- Move Planned Work to TRAIN only. **Done (PR #121, merged).**
 - Add a Settings group in MORE: Nutrition Targets; backup status (replacing TODAY's reminder);
-  the SYSTEM panel inside Diagnostic detail. **Done (PR pending).**
-- Adopt Lucide icons to replace multi-line row descriptions. **Done (PR pending).**
+  the SYSTEM panel inside Diagnostic detail. **Done (PR #121, merged).**
+- Adopt Lucide icons to replace multi-line row descriptions. **Done (PR #121, merged).**
 
 ### Drop 4 — TRAIN
 
-- Live PR alerts.
-- A finish-workout summary.
-- Hold-to-confirm on finish.
+- Live PR alerts. **Done (PR pending).**
+- A finish-workout summary. **Done (PR pending).**
+- Hold-to-confirm on finish. **Done (PR pending).**
 
 ### Drop 5 — BODY
 
