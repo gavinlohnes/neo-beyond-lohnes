@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { db } from "../../../persistence/db";
-import { exportBackup, shareBackup } from "../../../persistence/backup";
+import { exportBackup, getDaysSinceLastBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
 import { getActiveDay, getDayCount, getEventCount, getRecommendationCount } from "../../../application/queries";
 import { getAdvisoryNotes } from "../../../application/advisoryQueries";
@@ -16,6 +16,7 @@ import { IntentScreen, type IntentFocus } from "./IntentScreen";
 import { JournalScreen } from "./JournalScreen";
 import { ExerciseLibraryScreen } from "./ExerciseLibraryScreen";
 import { CustomTemplateScreen } from "./CustomTemplateScreen";
+import { NutritionTargetsSettings } from "./NutritionTargetsSettings";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { Icon } from "../../icons/Icon";
@@ -76,6 +77,8 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
   const [status, setStatus] = useState<string | null>(null);
   const [archiveStatus, setArchiveStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // DECLUTTER Drop 3: backup status lives here now, beside EXPORT BACKUP, instead of as a TODAY reminder.
+  const [daysSinceBackup, setDaysSinceBackup] = useState<number | null>(() => getDaysSinceLastBackup());
   const disposedRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // REMIND-001: loaded once from localStorage on mount (getCheckInReminderPreference
@@ -120,6 +123,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
     try {
       await exportBackup();
     } finally {
+      setDaysSinceBackup(getDaysSinceLastBackup());
       setBusy(false);
     }
   }
@@ -217,6 +221,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
     } catch (e) {
       setArchiveStatus(e instanceof Error ? e.message : "Could not start archive.");
     } finally {
+      setDaysSinceBackup(getDaysSinceLastBackup());
       setBusy(false);
     }
   }
@@ -380,7 +385,6 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
         <CollapsibleRow
           name="MISSIONS & OBLIGATIONS"
           icon={<Icon name="mission" size={20} />}
-          summary="Manage durable direction and commitments requiring deliberate resolution."
           onOpen={() => {
             setIntentFocus(null);
             setView("INTENT");
@@ -389,25 +393,21 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
         <CollapsibleRow
           name="WORK SCHEDULE"
           icon={<Icon name="schedule" size={20} />}
-          summary="Review the rotation BEYOND uses to predict work days and shift phase."
           onOpen={() => setView("WORK_SCHEDULE")}
         />
         <CollapsibleRow
           name="DECISION JOURNAL"
           icon={<Icon name="decisionJournal" size={20} />}
-          summary="Think a decision through, then record what actually happened."
           onOpen={() => setView("JOURNAL")}
         />
         <CollapsibleRow
           name="EXERCISE LIBRARY"
           icon={<Icon name="exerciseLibrary" size={20} />}
-          summary="Save exercises of your own — from a reference list or fully custom."
           onOpen={() => setView("EXERCISE_LIBRARY")}
         />
         <CollapsibleRow
           name="CUSTOM PROGRAMS"
           icon={<Icon name="customPrograms" size={20} />}
-          summary="Build your own workout template from your saved exercises."
           onOpen={() => setView("CUSTOM_TEMPLATES")}
         />
       </section>
@@ -468,6 +468,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
         <button className="btn-primary" disabled={busy} onClick={() => void handleExportBackup()}>
           EXPORT BACKUP
         </button>
+        <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>{describeLastBackup(daysSinceBackup)}</p>
         </div>
 
         <div className="equipment-row">
@@ -579,19 +580,16 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
       <CollapsibleRow
         name="HISTORY"
         icon={<Icon name="history" size={20} />}
-        summary="Every day and every event, exactly as it happened. Read-only."
         onOpen={() => setView("HISTORY")}
       />
       <CollapsibleRow
         name="REVIEW"
         icon={<Icon name="review" size={20} />}
-        summary="What BEYOND recommended, what you decided, and how you rated it. Read-only."
         onOpen={() => setView("REVIEW")}
       />
       <CollapsibleRow
         name="SEARCH"
         icon={<Icon name="search" size={20} />}
-        summary="Find a Mission, Obligation, or Capture by text. Read-only."
         onOpen={() => setView("SEARCH")}
       />
       </section>
@@ -625,35 +623,39 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           untouched — Engine architecture, out of scope this Drop, and
           already single-sourced from evaluate.ts's own exported
           constant. */}
-      <section className="operational-index-zone" aria-labelledby="system-heading">
-      <h2 id="system-heading" className="section-label">System</h2>
-      <div className="instrument-cluster">
-        <div>
-          <p className="meta" style={{ margin: 0 }}>APP</p>
-          <p className="status-value">{APP_RELEASE}</p>
-        </div>
-        <div>
-          <p className="meta" style={{ margin: 0 }}>BUILD</p>
-          <p className="status-value">{BUILD_COMMIT}</p>
-        </div>
-        <div>
-          <p className="meta" style={{ margin: 0 }}>ENGINE</p>
-          <p className="status-value">{ENGINE_VERSION}</p>
-        </div>
-        <div>
-          <p className="meta" style={{ margin: 0 }}>SCHEMA</p>
-          <p className="status-value">{String(DATA_SCHEMA)}</p>
-        </div>
-        <div>
-          <p className="meta" style={{ margin: 0 }}>ACTIVE DAY</p>
-          <p className="status-value">{activeDayYes ? "YES" : "NO"}</p>
-        </div>
-      </div>
+      {/* DECLUTTER Drop 3 (owner ruling 2026-09-30): a Settings group.
+          Nutrition Targets moved here from BODY; the SYSTEM readings moved
+          inside Diagnostic detail so the main list stays short. */}
+      <section className="operational-index-zone" aria-labelledby="settings-heading">
+      <h2 id="settings-heading" className="section-label">Settings</h2>
+      <NutritionTargetsSettings />
       {/* No machinery reveal here (2026-09-30, direct owner ruling): SYSTEM's
           diagnostics are plain technical readouts, so they expand inline
           only. TODAY/TRAIN's WHY disclosures keep the DEPTH-001 reveal. */}
       <WhyDisclosure summary="Diagnostic detail" reveal={false}>
         <div style={{ marginTop: 8 }}>
+          <div className="instrument-cluster">
+            <div>
+              <p className="meta" style={{ margin: 0 }}>APP</p>
+              <p className="status-value">{APP_RELEASE}</p>
+            </div>
+            <div>
+              <p className="meta" style={{ margin: 0 }}>BUILD</p>
+              <p className="status-value">{BUILD_COMMIT}</p>
+            </div>
+            <div>
+              <p className="meta" style={{ margin: 0 }}>ENGINE</p>
+              <p className="status-value">{ENGINE_VERSION}</p>
+            </div>
+            <div>
+              <p className="meta" style={{ margin: 0 }}>SCHEMA</p>
+              <p className="status-value">{String(DATA_SCHEMA)}</p>
+            </div>
+            <div>
+              <p className="meta" style={{ margin: 0 }}>ACTIVE DAY</p>
+              <p className="status-value">{activeDayYes ? "YES" : "NO"}</p>
+            </div>
+          </div>
           <DiagRow label="Built" value={BUILD_TIME} />
           <DiagRow label="Days" value={String(days)} />
           <DiagRow label="Events" value={String(events)} />
@@ -688,6 +690,13 @@ function DiagRow({ label, value }: { label: string; value: string }) {
       <span>{value}</span>
     </div>
   );
+}
+
+function describeLastBackup(days: number | null): string {
+  if (days === null) return "No backup on record yet.";
+  if (days === 0) return "Last backup: today.";
+  if (days === 1) return "Last backup: yesterday.";
+  return `Last backup: ${days} days ago.`;
 }
 
 function isDatabaseClosedError(error: unknown): error is Error {

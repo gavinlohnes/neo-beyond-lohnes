@@ -4,6 +4,7 @@ import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
 import { db } from "../../src/persistence/db";
+import { updateNutritionTargets } from "../../src/application/nutritionTargetCommands";
 
 /**
  * BEYOND FIELD ALPHA Phase 3 — first real-browser acceptance layer for
@@ -250,12 +251,11 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     await expect.element(screen.getByText(/log a bodyweight to see your target/)).toBeVisible();
   });
 
-  it("saving targets updates calorie progress immediately, but protein stays unresolved until a bodyweight is logged", async () => {
+  it("reads saved targets for calorie progress, but protein stays unresolved until a bodyweight is logged", async () => {
+    // DECLUTTER Drop 3: targets are set in MORE → Settings now; BODY only reads them.
+    await updateNutritionTargets({ calorieTargetKcal: 2200, proteinMultiplierGPerLb: 0.9 });
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "SHOW TARGET SETTINGS" }).click();
-    await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2200");
-    await screen.getByRole("spinbutton", { name: "Protein multiplier (g per lb bodyweight)" }).fill("0.9");
-    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText("Change targets in MORE → Settings.", { exact: true })).toBeVisible();
 
     await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
     await expect.element(screen.getByText(/log a bodyweight to see your target/)).toBeVisible();
@@ -269,10 +269,8 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
   });
 
   it("logging a meal counts toward calorie progress against the set target", async () => {
+    await updateNutritionTargets({ calorieTargetKcal: 2200 });
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "SHOW TARGET SETTINGS" }).click();
-    await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2200");
-    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
     await expect.element(screen.getByText(/0 \/ 2200 kcal/)).toBeVisible();
 
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();

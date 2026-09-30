@@ -102,6 +102,7 @@ describe("MoreScreen restore picker — no accept filter (Drop 01 acceptance ret
     getAdvisoryNotesMock.mockClear();
     await startDay();
     const screen = await render(<MoreScreen />);
+    await screen.getByText("Diagnostic detail", { exact: true }).click();
     await expect.element(screen.getByText("YES", { exact: true })).toBeVisible();
     // "YES" lands one await before refresh()'s last read — wait for that
     // read too, so no query is still in flight at teardown.

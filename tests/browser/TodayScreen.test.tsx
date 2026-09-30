@@ -1215,7 +1215,8 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     await screen.getByRole("button", { name: "SATISFY COMMITMENT" }).click();
     await screen.getByRole("button", { name: "CONFIRM SATISFACTION" }).click();
     await expect.element(screen.getByRole("status")).toHaveTextContent("Commitment satisfied: Renew passport.");
-    expect(document.activeElement).toBe(screen.getByRole("status").element());
+    // Focus moves in a useEffect after the feedback renders, so wait for it rather than racing it.
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole("status").element());
     expect((await getObligation(headline.id))!.status).toBe("SATISFIED");
     expect((await getObligation(other.id))!.status).toBe("OPEN");
     await expect.element(screen.getByText(/Write the report/)).toBeVisible();
@@ -1451,6 +1452,17 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     const el = screen.getByRole("button", { name: "No action needed" }).element();
     expect(el.className).toContain("btn-secondary");
     expect(getComputedStyle(el).backgroundColor).not.toBe("rgb(200, 30, 44)");
+  });
+
+  it("DECLUTTER Drop 3: TODAY no longer shows Planned Work or the backup reminder", async () => {
+    localStorage.removeItem("beyond:lastBackupAt");
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("button", { name: "No action needed" })).toBeVisible();
+    expect(screen.getByText("Planning to train today?", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "Open PLANNED WORK" }).elements()).toHaveLength(0);
+    expect(screen.getByText(/No backup on record yet/).elements()).toHaveLength(0);
   });
 
   it("the dominant recommendation surface (.command-surface) carries the one earned structural cut", async () => {

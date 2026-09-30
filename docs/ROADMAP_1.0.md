@@ -26,17 +26,17 @@ At most 3 changes per Drop.
 ### Drop 2 — Declutter II
 
 - Shrink BODY's STATUS box and collapse once-a-day forms (sleep, bodyweight, protein) so the
-  hydration buttons are on the first screen. **Done (PR pending).**
-- Cut slogans, section intros, and repeated text app-wide. **Done (PR pending).**
+  hydration buttons are on the first screen. **Done (PR #120, merged).**
+- Cut slogans, section intros, and repeated text app-wide. **Done (PR #120, merged).**
 - Remove decorative red (headers, section labels, corner brackets, the status strip edge, BODY
-  selected chips). **Done (PR pending).**
+  selected chips). **Done (PR #120, merged).**
 
 ### Drop 3 — Tidy
 
-- Move Planned Work to TRAIN only.
+- Move Planned Work to TRAIN only. **Done (PR pending).**
 - Add a Settings group in MORE: Nutrition Targets; backup status (replacing TODAY's reminder);
-  the SYSTEM panel inside Diagnostic detail.
-- Adopt Lucide icons to replace multi-line row descriptions.
+  the SYSTEM panel inside Diagnostic detail. **Done (PR pending).**
+- Adopt Lucide icons to replace multi-line row descriptions. **Done (PR pending).**
 
 ### Drop 4 — TRAIN
 

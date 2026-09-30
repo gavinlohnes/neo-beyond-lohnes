@@ -184,7 +184,9 @@ Reuse System) — not on every Drop, only when it validates or changes something
 - **fast-check** (property-based testing, dev-only) — identified as the leading candidate for
   correction-chain, export/import equivalence, deterministic event-ordering, and
   one-primary-recommendation invariants (Round 4 audit, 2026-08-22). Dev dependency only.
-- **Lucide React** (ISC) — approved/eligible for a restrained icon grammar since the Trust &
+- **Lucide React** (ISC) — **ADOPTED 2026-09-30 (Drop 3, direct owner approval)** via
+  `src/ui/icons/LineIcon.tsx`, for row icons the locked glyph family doesn't cover. Earlier note:
+  approved/eligible for a restrained icon grammar since the Trust &
   Feel research rounds (2026-08-17/18), deliberately not adopted while the UI was still small
   enough for text-first affordances. Re-evaluation trigger from that same research: "when a
   repeated icon grammar can remove text clutter without reducing accessibility" — worth
