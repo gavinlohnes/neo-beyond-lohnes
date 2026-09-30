@@ -120,3 +120,32 @@ export async function getTotalMealCalories(beyondDayId: string): Promise<number>
   const entries = await getMealEntries(beyondDayId);
   return entries.reduce((sum, e) => sum + e.effectiveCalories, 0);
 }
+
+export interface RepeatableMeals {
+  /** When the day these meals came from started. */
+  dayStartedAt: string;
+  /** In the order they were logged; a meal eaten twice appears twice. */
+  meals: { savedMealId: string; name: string }[];
+}
+
+/**
+ * Drop 5 ("same as yesterday" meals): the saved meals logged on the most
+ * recent earlier day that logged any, limited to presets that can still be
+ * logged (archived or invalid ones drop out, same eligibility as
+ * getSavedMeals). Undefined when there is nothing to repeat.
+ */
+export async function getPreviousDayMeals(currentDayId: string | undefined): Promise<RepeatableMeals | undefined> {
+  const days = (await db.beyondDays.toArray())
+    .filter((d) => d.id !== currentDayId)
+    .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  for (const day of days) {
+    const entries = await getMealEntries(day.id);
+    if (entries.length === 0) continue;
+    const loggable = new Map((await getSavedMeals()).map((m) => [m.id, m.name]));
+    const meals = entries
+      .filter((e) => loggable.has(e.savedMealId))
+      .map((e) => ({ savedMealId: e.savedMealId, name: loggable.get(e.savedMealId)! }));
+    return meals.length > 0 ? { dayStartedAt: day.startedAt, meals } : undefined;
+  }
+  return undefined;
+}

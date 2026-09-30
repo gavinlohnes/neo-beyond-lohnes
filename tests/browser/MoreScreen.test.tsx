@@ -127,6 +127,16 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     expect(saved?.proteinMultiplierGPerLb).toBe(0.9);
   });
 
+  it("Drop 5: a goal weight saves with the targets and shows in the summary", async () => {
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
+    await screen.getByRole("spinbutton", { name: "Goal weight (lb)" }).fill("180");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+
+    await expect.element(screen.getByText("No calorie target · 1 g/lb protein · goal 180 lb", { exact: true })).toBeVisible();
+    expect((await db.nutritionTargets.get("current"))?.goalWeightLbs).toBe(180);
+  });
+
   it("DECLUTTER Drop 3: backup status sits beside EXPORT BACKUP — none on record", async () => {
     localStorage.removeItem("beyond:lastBackupAt");
     const screen = await render(<MoreScreen />);

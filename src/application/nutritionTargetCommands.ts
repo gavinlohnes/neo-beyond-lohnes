@@ -22,10 +22,12 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
   const existing = await db.nutritionTargets.get("current");
   const now = new Date().toISOString();
   const effectiveCalorieTarget = parsed.calorieTargetKcal ?? existing?.calorieTargetKcal;
+  const effectiveGoalWeight = parsed.goalWeightLbs ?? existing?.goalWeightLbs;
   const record: NutritionTargets = {
     id: "current",
     ...(effectiveCalorieTarget !== undefined ? { calorieTargetKcal: effectiveCalorieTarget } : {}),
     proteinMultiplierGPerLb: parsed.proteinMultiplierGPerLb ?? existing?.proteinMultiplierGPerLb ?? 1.0,
+    ...(effectiveGoalWeight !== undefined ? { goalWeightLbs: effectiveGoalWeight } : {}),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };

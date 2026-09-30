@@ -376,7 +376,7 @@ export async function getDayRolloverAmbiguityInput(
  * generically, since these three all gained the identical
  * logged-then-corrected shape this phase.
  */
-function walkCorrectionChain(
+export function walkCorrectionChain(
   correctionEvents: DomainEvent[],
   rootId: string,
   rootValue: number,

@@ -11,12 +11,16 @@ import { updateNutritionTargets } from "../../../application/nutritionTargetComm
  * BODY to MORE → Settings. Same NUTRITION-003 form and command as before —
  * calorie target set directly, protein multiplier in g per lb — only its
  * home changed. BODY keeps the read-only progress lines.
+ *
+ * Drop 5: also holds the optional goal weight BODY's projected goal date
+ * uses. Saved with the same command, so it rides along in backups.
  */
 export function NutritionTargetsSettings() {
   const [targets, setTargets] = useState<NutritionTargets | null>(null);
   const [open, setOpen] = useState(false);
   const [calorieInput, setCalorieInput] = useState("");
   const [multiplierInput, setMultiplierInput] = useState("");
+  const [goalInput, setGoalInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const disposedRef = useRef(false);
@@ -38,14 +42,17 @@ export function NutritionTargetsSettings() {
     try {
       const calorieValue = calorieInput.trim() ? Number(calorieInput) : undefined;
       const multiplierValue = multiplierInput.trim() ? Number(multiplierInput) : undefined;
+      const goalValue = goalInput.trim() ? Number(goalInput) : undefined;
       const saved = await updateNutritionTargets({
         ...(calorieValue !== undefined ? { calorieTargetKcal: calorieValue } : {}),
         ...(multiplierValue !== undefined ? { proteinMultiplierGPerLb: multiplierValue } : {}),
+        ...(goalValue !== undefined ? { goalWeightLbs: goalValue } : {}),
       });
       if (disposedRef.current) return;
       setTargets(saved);
       setCalorieInput("");
       setMultiplierInput("");
+      setGoalInput("");
       setOpen(false);
     } catch (e) {
       if (!disposedRef.current) setError(e instanceof Error ? e.message : "Could not save targets.");
@@ -56,10 +63,11 @@ export function NutritionTargetsSettings() {
 
   const calorieSummary = targets?.calorieTargetKcal !== undefined ? `${targets.calorieTargetKcal} kcal` : "No calorie target";
   const proteinSummary = `${targets?.proteinMultiplierGPerLb ?? 1.0} g/lb protein`;
+  const goalSummary = targets?.goalWeightLbs !== undefined ? ` · goal ${targets.goalWeightLbs} lb` : "";
 
   if (!open) {
     return (
-      <CollapsibleRow name="NUTRITION TARGETS" icon={<LineIcon icon={Target} />} summary={`${calorieSummary} · ${proteinSummary}`} onOpen={() => setOpen(true)} />
+      <CollapsibleRow name="NUTRITION TARGETS" icon={<LineIcon icon={Target} />} summary={`${calorieSummary} · ${proteinSummary}${goalSummary}`} onOpen={() => setOpen(true)} />
     );
   }
 
@@ -100,6 +108,24 @@ export function NutritionTargetsSettings() {
           />
           <p className="meta" style={{ marginTop: 4 }}>
             0.8–1.0 g/lb is the common range for a cut.
+          </p>
+        </div>
+        <div>
+          <label className="meta" htmlFor="goal-weight-input" style={{ display: "block", marginBottom: 4 }}>
+            Goal weight (lb)
+          </label>
+          <input
+            id="goal-weight-input"
+            type="number"
+            step="0.5"
+            aria-label="Goal weight (lb)"
+            placeholder={targets?.goalWeightLbs?.toString() ?? "Optional"}
+            value={goalInput}
+            onChange={(e) => setGoalInput(e.target.value)}
+            className="input"
+          />
+          <p className="meta" style={{ marginTop: 4 }}>
+            Used only for BODY's projected goal date.
           </p>
         </div>
         {error && <p className="meta" role="alert">{error}</p>}

@@ -133,6 +133,17 @@ export async function logMeal(beyondDayId: string, savedMealId: string): Promise
 }
 
 /**
+ * Drop 5 ("same as yesterday" meals): logs each saved meal again, in order,
+ * through logMeal — so every one is an ordinary MEAL_LOGGED event from the
+ * preset's current values, correctable on its own like any other log.
+ */
+export async function logMealsAgain(beyondDayId: string, savedMealIds: readonly string[]): Promise<MealLogResult[]> {
+  const results: MealLogResult[] = [];
+  for (const id of savedMealIds) results.push(await logMeal(beyondDayId, id));
+  return results;
+}
+
+/**
  * Correction/supersession, not overwrite — same chain semantics as
  * correctWater/correctProtein/correctSleep/correctBodyweight
  * (application/commands.ts's correctSingleValueLog), generalized here by

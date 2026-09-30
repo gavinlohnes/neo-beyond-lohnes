@@ -40,14 +40,14 @@ At most 3 changes per Drop.
 
 ### Drop 4 — TRAIN
 
-- Live PR alerts. **Done (PR pending).**
-- A finish-workout summary. **Done (PR pending).**
-- Hold-to-confirm on finish. **Done (PR pending).**
+- Live PR alerts. **Done (PR #122, merged).**
+- A finish-workout summary. **Done (PR #122, merged).**
+- Hold-to-confirm on finish. **Done (PR #122, merged).**
 
 ### Drop 5 — BODY
 
-- A weight trend with "lowest since", milestones, and a projected goal date.
-- One-tap "same as yesterday" meals.
+- A weight trend with "lowest since", milestones, and a projected goal date. **Done (PR pending).**
+- One-tap "same as yesterday" meals. **Done (PR pending).**
 
 ### Drop 6 — Quit tracker
 

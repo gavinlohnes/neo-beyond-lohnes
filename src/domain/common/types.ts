@@ -414,6 +414,8 @@ export interface NutritionTargets {
   id: string;
   calorieTargetKcal?: number;
   proteinMultiplierGPerLb: number;
+  /** Drop 5 (owner approval 2026-09-30): optional goal bodyweight, used only for BODY's projected goal date. */
+  goalWeightLbs?: number;
   createdAt: string;
   updatedAt: string;
 }

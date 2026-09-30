@@ -5,6 +5,8 @@ import axe from "axe-core";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
 import { db } from "../../src/persistence/db";
 import { updateNutritionTargets } from "../../src/application/nutritionTargetCommands";
+import { logBodyweight, startDay } from "../../src/application/commands";
+import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
 
 /**
  * BEYOND FIELD ALPHA Phase 3 — first real-browser acceptance layer for
@@ -554,5 +556,78 @@ describe("BodyScreen (real browser) — LAUNCH-VISION-002 BODY red-budget carve-
     // app-wide default since LAUNCH-VISION-001, is rgb(200, 30, 44).
     expect(bg).not.toBe("rgb(200, 30, 44)");
     expect(bg).toBe("rgb(242, 242, 242)");
+  });
+});
+
+describe("BodyScreen (real browser) — Drop 5 weight trend and same-as-yesterday meals", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    cleanup();
+  });
+
+  async function seedWeighIns(entries: [string, number][]) {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    for (const [iso, lbs] of entries) {
+      vi.setSystemTime(new Date(iso));
+      const day = await startDay();
+      await logBodyweight(day.id, lbs);
+    }
+    vi.useRealTimers();
+  }
+
+  it("shows the trend, best-since, milestone and projected goal date", async () => {
+    await seedWeighIns([
+      ["2026-07-01T12:00:00Z", 200],
+      ["2026-08-20T12:00:00Z", 192],
+      ["2026-08-25T12:00:00Z", 191],
+      ["2026-08-30T12:00:00Z", 189.5],
+      ["2026-09-04T12:00:00Z", 188],
+      ["2026-09-09T12:00:00Z", 186],
+    ]);
+    await updateNutritionTargets({ goalWeightLbs: 176 });
+    const screen = await render(<BodyScreen />);
+
+    await expect.element(screen.getByText("186 lb · lowest yet", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
+    await expect.element(screen.getByRole("img", { name: /Weight over the last 60 days/ })).toBeVisible();
+    await expect.element(screen.getByText("Lowest yet", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Down 10 lb since Jul 1", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/^Goal 176 lb — at this pace, about /)).toBeVisible();
+  });
+
+  it("shows no projection and no warning when the trend heads away from the goal", async () => {
+    await seedWeighIns([
+      ["2026-08-20T12:00:00Z", 186],
+      ["2026-08-25T12:00:00Z", 187],
+      ["2026-08-30T12:00:00Z", 188],
+      ["2026-09-04T12:00:00Z", 189],
+      ["2026-09-09T12:00:00Z", 190],
+    ]);
+    await updateNutritionTargets({ goalWeightLbs: 176 });
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
+    await expect.element(screen.getByRole("img", { name: /Weight over the last 60 days/ })).toBeVisible();
+    expect(screen.getByText(/at this pace/).elements()).toHaveLength(0);
+    expect(screen.getByText(/off track|behind|missed/i).elements()).toHaveLength(0);
+  });
+
+  it("SAME AS YESTERDAY logs the previous day's saved meals, then steps aside", async () => {
+    const oats = await createSavedMeal({ name: "Oats", calories: 300, proteinG: 10, carbsG: 50, fatG: 5 });
+    const bowl = await createSavedMeal({ name: "Bowl", calories: 600, proteinG: 45, carbsG: 60, fatG: 15 });
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-28T12:00:00Z"));
+    const yesterday = await startDay();
+    await logMeal(yesterday.id, oats.id);
+    await logMeal(yesterday.id, bowl.id);
+    vi.useRealTimers();
+    await startDay();
+
+    const screen = await render(<BodyScreen />);
+    await expect.element(screen.getByText("From Sep 28: Oats, Bowl", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "SAME AS YESTERDAY (2 meals)" }).click();
+
+    await expect.element(screen.getByText("Logged 2 meals from Sep 28.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("2 meals logged today", { exact: true })).toBeVisible();
+    expect(screen.getByRole("button", { name: /SAME AS YESTERDAY/ }).elements()).toHaveLength(0);
   });
 });

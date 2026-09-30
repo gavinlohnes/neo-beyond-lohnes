@@ -60,6 +60,16 @@ below, this entry wins; the older entry is kept for history.
   BEYOND never mentions a record that wasn't hit. The finish summary adds the session's records and
   total volume (weight × reps). COMPLETE and PARTIAL are press-and-hold (`HoldButton`, 1 s, a quick
   tap shows "Hold to finish."); set logging stays one tap.
+- **As built in Drop 5 (BODY).** The open BODYWEIGHT tracker shows a neutral 60-day line and, when
+  notable, "Lowest since {date}" / "Lowest yet" (the last earlier weigh-in at or below today's, if
+  2+ weeks back; "Highest" when the goal is a gain), a milestone in whole 5-lb steps since the first
+  weigh-in, and "at this pace, about {date}" from a least-squares line over the last 28 days (needs
+  5+ weigh-ins across 14+ days and a trend heading toward the goal; otherwise nothing, never a
+  warning). The collapsed row reports the latest weight plus best-since. **Goal weight is stored**
+  (owner approval 2026-09-30) as an optional `goalWeightLbs` on the nutrition-targets row, set in
+  MORE → Settings; additive, so older rows and backups stay valid and it rides along in backups.
+  Meal Memory's SAME AS YESTERDAY logs the previous meal day's still-active saved meals as ordinary
+  MEAL_LOGGED entries, and hides once today already has all of them.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 
