@@ -154,6 +154,9 @@ describe("Gate A correction — accessibility", () => {
     // actually exist before grabbing its element synchronously.
     await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY" })).toBeVisible();
     const el = screen.getByRole("button", { name: "Open MINIMUM DAY" }).element();
+    // The screen fades in on mount (.fade-in); measuring mid-fade reads a
+    // blended, partly transparent grey. Let every running animation finish first.
+    await Promise.all(document.getAnimations().map((a) => a.finished));
     const results = await axe.run(el, { runOnly: ["color-contrast"] });
     expect(results.violations).toEqual([]);
   });
