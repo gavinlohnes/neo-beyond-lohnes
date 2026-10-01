@@ -1,7 +1,6 @@
 import { Sunset } from "lucide-react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { LineIcon } from "../../icons/LineIcon";
-import { SignalRow } from "../../components/SignalRow";
 
 /**
  * TodayScreen decomposition (2026-09-02): extracted verbatim from
@@ -59,9 +58,9 @@ export function EndDayCard({
       </button>
     </>
   );
-  if (suggestEndDay) {
-    return <SignalRow label="BEYONDDAY">{body}</SignalRow>;
-  }
+  // LAUNCH POLISH (owner approval 2026-10-01): a suggested day end is a
+  // routine moment, not a warning, so it no longer wears the red signal
+  // rail — same neutral row as the opened card.
   return (
     <div className="equipment-row">
       <p className="tool-label" style={{ marginBottom: 4 }}>BEYONDDAY</p>

@@ -36,7 +36,7 @@ export function FieldDisclosure({
 }) {
   return (
     <details open={open} onToggle={(e) => onToggle(e.currentTarget.open)}>
-      <summary role="button" className="btn-secondary disclosure-summary">{summary}</summary>
+      <summary role="button" className="disclosure-row">{summary}</summary>
       <div className="fade-in" style={{ marginTop: 12 }}>
         {children}
       </div>

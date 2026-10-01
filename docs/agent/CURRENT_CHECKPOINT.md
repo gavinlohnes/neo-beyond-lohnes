@@ -4,7 +4,7 @@ Short, replaceable snapshot of where BEYOND stands. Replace it wholesale at the 
 don't keep appending. It reports state; it doesn't authorize work. For what to build next, read
 [`docs/ROADMAP_1.0.md`](../ROADMAP_1.0.md).
 
-**As of 2026-09-30.** `origin/master` at `490f238` (PR #123 merge). Replaces the 2026-09-15
+**As of 2026-09-30.** `origin/master` at `54bd9ed` (PR #124 merge). Replaces the 2026-09-15
 snapshot (CHECKPOINT-003, baseline `e066a24`).
 
 ## Where things stand
@@ -18,9 +18,10 @@ snapshot (CHECKPOINT-003, baseline `e066a24`).
 - **Drop 3 (Tidy):** done (PR #121).
 - **Drop 4 (TRAIN):** done (PR #122).
 - **Drop 5 (BODY):** done (PR #123).
-- **Drop 6 (quit tracker):** built, in review. On BODY; new `quitHabits` table (Dexie v12);
-  clean days by hold, one-tap urges, money saved, post-shift plan in SHIFT DOWN. Next: Drop 7
-  (tie together).
+- **Drop 6 (quit tracker):** done (PR #124).
+- **Launch polish:** built, in review (owner-added after a review against the Launch Vision
+  prototype). Calmer TODAY, labels-only mono, neutral routine buttons, BODY/TRAIN tidy. Next:
+  Drop 7 (tie together).
 - **Recently shipped:** 16:30 day rollover plus rollover on app resume (#111, #112);
   MoreScreen unmount guard (#115); square corners on chamfered panels, Diagnostic detail opens
   inline, TodayScreen test-flake fix (#116); retired stale branches so new Drops can start (#117); START WORKOUT on

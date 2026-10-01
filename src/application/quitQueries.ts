@@ -1,5 +1,6 @@
 import { db } from "../persistence/db";
 import { parseQuitHabit } from "../persistence/quitHabitValidation";
+import { byTimeThenSeq } from "./queries";
 import type { QuitHabit, UrgeLoggedPayload, UrgeTrigger, UrgeUndonePayload } from "../domain/common/types";
 
 /** Drop 6: the habit settings row, or undefined when none is set up (or the stored row is malformed). */
@@ -54,7 +55,8 @@ export async function getQuitSummary(activeDayId: string | undefined, now: Date 
     );
     urgesToday = dayEvents
       .filter((e) => e.type === "URGE_LOGGED" && !undone.has(e.id))
-      .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))
+      // Same tie-break as every other event list: two urges in the same millisecond keep logged order.
+      .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
       .map((e) => ({ eventId: e.id, trigger: (e.payload as UrgeLoggedPayload).trigger, recordedAt: e.recordedAt }));
   }
 

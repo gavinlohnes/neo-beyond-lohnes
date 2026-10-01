@@ -925,16 +925,6 @@ export function TrainScreen({
           line and override stays one tap away, so START WORKOUT lands on
           the first phone screen. */}
       {!session && !completionSummary && (
-        <PlannedWorkCard
-          declaration={plannedWorkDeclaration}
-          open={plannedWorkOpen}
-          setOpen={setPlannedWorkOpen}
-          busy={busy}
-          onSetPlannedWork={(planned) => void handleSetPlannedWork(planned)}
-        />
-      )}
-
-      {!session && !completionSummary && (
         <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>
             {noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
@@ -1025,6 +1015,18 @@ export function TrainScreen({
             </div>
           </WhyDisclosure>
         </CommandSurface>
+      )}
+
+      {/* LAUNCH POLISH (owner approval 2026-10-01): the suggested workout leads;
+          the planned-work question sits under it instead of above it. */}
+      {!session && !completionSummary && (
+        <PlannedWorkCard
+          declaration={plannedWorkDeclaration}
+          open={plannedWorkOpen}
+          setOpen={setPlannedWorkOpen}
+          busy={busy}
+          onSetPlannedWork={(planned) => void handleSetPlannedWork(planned)}
+        />
       )}
 
       {/* TRAIN-003 (Performance Brief): read-only derived intelligence,
@@ -1254,32 +1256,36 @@ export function TrainScreen({
                   const isEarned = !loggedSet.skipped && justLoggedKey === inputKey(ex.exerciseId, setNumber);
                   return (
                     <div key={setNumber} style={{ marginBottom: 4 }}>
-                      <p
-                        className={`meta fade-in${isEarned ? " set-earned" : ""}`}
-                        style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}
-                      >
-                        {!loggedSet.skipped && <ConfirmIcon size={20} />}
-                        #{setNumber} — {loggedSet.skipped ? "SKIPPED" : `${loggedSet.weight} lb x ${loggedSet.reps}`}
-                      </p>
+                      {/* LAUNCH POLISH (owner approval 2026-10-01): UNDO sits on the logged
+                          set's own line, so the next set's LOG stays clear of the screen edge. */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <p
+                          className={`meta fade-in${isEarned ? " set-earned" : ""}`}
+                          style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}
+                        >
+                          {!loggedSet.skipped && <ConfirmIcon size={20} />}
+                          #{setNumber} — {loggedSet.skipped ? "SKIPPED" : `${loggedSet.weight} lb x ${loggedSet.reps}`}
+                        </p>
+                        {/* TRAIN-WAVE-A (Set Commit Choreography): undo is only ever
+                            offered for the exact set this session just committed —
+                            `isEarned` already carries that same restriction, so this
+                            can never reach back into an arbitrary earlier set. */}
+                        {isEarned && (
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            style={{ width: "auto", padding: "2px 10px", fontSize: 14, flex: "none" }}
+                            disabled={busy}
+                            onClick={() => void handleUndoLastSet()}
+                          >
+                            UNDO
+                          </button>
+                        )}
+                      </div>
                       {sessionRecords.has(loggedSet.id) && (
                         <p className="meta-strong fade-in" style={{ margin: "2px 0 0" }}>
                           {describePersonalRecord(sessionRecords.get(loggedSet.id)!)}
                         </p>
-                      )}
-                      {/* TRAIN-WAVE-A (Set Commit Choreography): undo is only ever
-                          offered for the exact set this session just committed —
-                          `isEarned` already carries that same restriction, so this
-                          can never reach back into an arbitrary earlier set. */}
-                      {isEarned && (
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          style={{ width: "auto", padding: "2px 10px", fontSize: 14, marginTop: 2 }}
-                          disabled={busy}
-                          onClick={() => void handleUndoLastSet()}
-                        >
-                          UNDO
-                        </button>
                       )}
                     </div>
                   );

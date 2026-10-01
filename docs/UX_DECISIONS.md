@@ -81,6 +81,17 @@ below, this entry wins; the older entry is kept for history.
   undo via `URGE_UNDONE`. Money saved = daily cost × clean days. The post-shift plan shows as
   "Your plan: …" inside SHIFT DOWN. None of it feeds the Engine, recommendations, or the
   check-in's alcohol-urge field.
+- **Launch polish (owner approval 2026-10-01, after a review against the Launch Vision
+  prototype).** TODAY's ORIENT reading is a status line: no visible label (the level-2 heading
+  stays for screen readers) and no box, with the colored left tick kept only on YELLOW/RED days.
+  While Work Context is unanswered, its card drops the schedule paragraph the status line already
+  states. Advisory folds into one row when every note is QUIET (SURFACE/INTERRUPT stay open). A
+  suggested day end is a neutral row, not a red signal row. The mono face is for small labels
+  only (`.eyebrow`, `.tool-label`, `.section-label`, chips); `.meta`, `.meta-strong` and the status
+  strips use the body face. MORE's TURN ON and EXPORT BACKUP are secondary buttons.
+  `FieldDisclosure` summaries are quiet caret rows, not grey button slabs. TRAIN shows the
+  suggested workout first and Planned Work under it, drops the picker card's fixed min-height,
+  and puts UNDO on the logged set's own line.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 

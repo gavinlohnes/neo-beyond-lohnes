@@ -428,8 +428,10 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           {/* DECLUTTER Drop 2: replaces the cut section intro's key fact. */}
           <p className="meta" style={{ marginBottom: 8 }}>Checked when you open BEYOND, not a push notification.</p>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {/* LAUNCH POLISH (owner approval 2026-10-01): MORE has no single
+                primary action, so routine settings don't wear red. */}
             <button
-              className={reminderPreference.enabled ? "btn-secondary" : "btn-primary"}
+              className="btn-secondary"
               onClick={() => void handleToggleReminder()}
             >
               {reminderPreference.enabled ? "TURN OFF" : "TURN ON"}
@@ -466,7 +468,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
         <p className="card-body" style={{ marginBottom: 8 }}>
           A file with everything on this device. Nothing leaves unless you share it.
         </p>
-        <button className="btn-primary" disabled={busy} onClick={() => void handleExportBackup()}>
+        <button className="btn-secondary" disabled={busy} onClick={() => void handleExportBackup()}>
           EXPORT BACKUP
         </button>
         <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>{describeLastBackup(daysSinceBackup)}</p>

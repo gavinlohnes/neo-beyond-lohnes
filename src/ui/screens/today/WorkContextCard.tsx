@@ -86,7 +86,12 @@ export function WorkContextCard({
           NO
         </button>
       </div>
-      <p className="card-body" style={{ fontSize: 16 }}>{describeSchedulePrediction(scheduledContext)}</p>
+      {/* LAUNCH POLISH: while unanswered, the status line at the top already
+          says what the schedule predicts — the paragraph only shows once
+          the question has been answered and reopened. */}
+      {day.workContext !== "UNKNOWN" && (
+        <p className="card-body" style={{ fontSize: 16 }}>{describeSchedulePrediction(scheduledContext)}</p>
+      )}
       {day.workContext !== "UNKNOWN" && (
         <p className="meta" style={{ marginTop: 8 }}>
           Currently set: {day.workContext === "WORK" ? "working today" : "off today"}.
