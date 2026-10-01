@@ -67,8 +67,8 @@ At most 3 changes per Drop.
 ### Drop 7 — Tie together
 
 - A weekly check-in screen: weight trend + goal date, workouts + PRs, quit-tracker days, protein
-  average. **Done (PR pending).**
-- Home-screen quick-log shortcuts: water, weight, meal, urge. **Done (PR pending).**
+  average. **Done (PR #126, merged).**
+- Home-screen quick-log shortcuts: water, weight, meal, urge. **Done (PR #126, merged).**
 
 ### Then: field use
 
