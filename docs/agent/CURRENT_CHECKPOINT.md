@@ -4,7 +4,7 @@ Short, replaceable snapshot of where BEYOND stands. Replace it wholesale at the 
 don't keep appending. It reports state; it doesn't authorize work. For what to build next, read
 [`docs/ROADMAP_1.0.md`](../ROADMAP_1.0.md).
 
-**As of 2026-09-30.** `origin/master` at `54bd9ed` (PR #124 merge). Replaces the 2026-09-15
+**As of 2026-09-30.** `origin/master` at `6caa989` (PR #125 merge). Replaces the 2026-09-15
 snapshot (CHECKPOINT-003, baseline `e066a24`).
 
 ## Where things stand
@@ -19,9 +19,9 @@ snapshot (CHECKPOINT-003, baseline `e066a24`).
 - **Drop 4 (TRAIN):** done (PR #122).
 - **Drop 5 (BODY):** done (PR #123).
 - **Drop 6 (quit tracker):** done (PR #124).
-- **Launch polish:** built, in review (owner-added after a review against the Launch Vision
-  prototype). Calmer TODAY, labels-only mono, neutral routine buttons, BODY/TRAIN tidy. Next:
-  Drop 7 (tie together).
+- **Launch polish:** done (PR #125).
+- **Drop 7 (tie together):** built, in review. Weekly check-in in MORE; Android home-screen
+  shortcuts (Water, Weight, Meal, Urge). Next: two weeks of field use, then 1.0.
 - **Recently shipped:** 16:30 day rollover plus rollover on app resume (#111, #112);
   MoreScreen unmount guard (#115); square corners on chamfered panels, Diagnostic detail opens
   inline, TodayScreen test-flake fix (#116); retired stale branches so new Drops can start (#117); START WORKOUT on

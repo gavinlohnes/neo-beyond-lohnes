@@ -55,6 +55,7 @@ import {
 } from "../../../application/bodyTrendQueries";
 import { WeightTrend } from "./WeightTrend";
 import { QuitTracker } from "./QuitTracker";
+import { SHORTCUT_ANCHOR_IDS, type ShortcutTarget } from "../../shortcuts";
 import {
   BODYWEIGHT_PLAUSIBLE_RANGE,
   describeBodyweightLogged,
@@ -186,7 +187,7 @@ function parseMealMacros(form: MealMacroFormState): { calories: number; proteinG
   return { calories, proteinG, carbsG, fatG };
 }
 
-export function BodyScreen() {
+export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -194,7 +195,7 @@ export function BodyScreen() {
   // each is a one-line row until tapped. A tracker stays open after logging
   // so its confirmation and undo stay visible.
   const [sleepOpen, setSleepOpen] = useState(false);
-  const [bodyweightOpen, setBodyweightOpen] = useState(false);
+  const [bodyweightOpen, setBodyweightOpen] = useState(focus === "weight");
   const [proteinOpen, setProteinOpen] = useState(false);
 
   // Water
@@ -282,6 +283,25 @@ export function BodyScreen() {
   useEffect(() => {
     void refresh();
   }, []);
+
+  // Drop 7: bring a home-screen shortcut's destination into view once it
+  // has rendered (BODY and the quit tracker load asynchronously).
+  useEffect(() => {
+    if (!focus) return;
+    let tries = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const tick = () => {
+      const el = document.getElementById(SHORTCUT_ANCHOR_IDS[focus]);
+      if (el) {
+        el.scrollIntoView({ block: "start" });
+        return;
+      }
+      if (++tries < 40) timer = setTimeout(tick, 50);
+    };
+    // A short head start lets the STATUS readings above settle first, so the scroll lands where it stays.
+    timer = setTimeout(tick, 250);
+    return () => clearTimeout(timer);
+  }, [focus]);
 
   async function refresh() {
     const activeDay = (await getActiveDay()) ?? null;
@@ -897,7 +917,7 @@ export function BodyScreen() {
           actions, custom fallback, collapsed history. FIELD ALPHA Phase
           3: .equipment-row, not .card — a logging tool, not a floating
           card; .tool-label, not .eyebrow — that's reserved for identity. */}
-      <div className="equipment-row">
+      <div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.water}>
         <p className="tool-label" style={{ marginBottom: 12 }}>HYDRATION</p>
         {/* Overdrive Phase 18 (PHONE WIDTH + BODY GLANCEABILITY): quick-add
             and "repeat last" used to share one flexWrap row — at a real
@@ -1177,7 +1197,7 @@ export function BodyScreen() {
 
       {/* BODYWEIGHT — FIELD ALPHA Phase 3: same reading-forward pattern as SLEEP. */}
       {bodyweightOpen ? (
-        <div className="equipment-row">
+        <div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.weight}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
             <p className="tool-label" style={{ margin: 0 }}>BODYWEIGHT</p>
             <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} onClick={() => setBodyweightOpen(false)}>
@@ -1359,7 +1379,7 @@ export function BodyScreen() {
       )}
 
       {/* Drop 6: the quit tracker lives on BODY (owner ruling 2026-09-30). */}
-      <QuitTracker />
+      <QuitTracker initiallyOpen={focus === "urge"} />
 
       {/* NUTRITION TARGETS — NUTRITION-003 (High-Risk Drop, direct owner
           ruling reversing NUTRITION-001's "no calorie/macro goal, no
@@ -1390,7 +1410,7 @@ export function BodyScreen() {
           this station's own reading stays a meal COUNT, distinct from the
           PROTEIN station's own gram total above, so the two are never
           visually conflated. */}
-      <div className="equipment-row">
+      <div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.meal}>
         <p className="tool-label" style={{ marginBottom: 4 }}>MEAL MEMORY</p>
         <p className="recommendation-title" style={{ marginBottom: 2 }}>
           {mealEntries.length} {mealEntries.length === 1 ? "meal" : "meals"} logged today

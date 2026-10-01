@@ -92,6 +92,17 @@ below, this entry wins; the older entry is kept for history.
   `FieldDisclosure` summaries are quiet caret rows, not grey button slabs. TRAIN shows the
   suggested workout first and Planned Work under it, drops the picker card's fixed min-height,
   and puts UNDO on the logged set's own line.
+- **As built in Drop 7 (tie together, owner approval 2026-10-01).** A read-only WEEKLY CHECK-IN
+  opens from MORE → Evidence. "The week" is the last 7 days (rolling — fits shift work), compared
+  with the 7 before: weight average and change plus the projected goal date; workouts finished
+  (COMPLETED or PARTIAL) and the PRs they set, judged only against earlier sessions; quit-tracker
+  clean days of 7 and money saved; average protein per logged day (protein logs + meals) with the
+  target shown as a fact; PRs show the best per exercise, at most 5 lines. Thin sections say
+  "Not enough data yet", never a grade. Android
+  home-screen shortcuts (manifest `shortcuts`: Water, Weight, Meal, Urge) open `?go=…`, which lands
+  on BODY at that control (bodyweight entry or quit tracker opened, the rest scrolled into view)
+  and is then cleared from the URL; a shortcut never logs anything by itself and takes
+  precedence over resuming an active workout (the workout stays active on TRAIN).
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 

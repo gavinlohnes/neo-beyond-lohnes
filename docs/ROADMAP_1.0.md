@@ -59,16 +59,16 @@ At most 3 changes per Drop.
 
 ### Launch polish (owner-added 2026-10-01, after a review against the Launch Vision prototype)
 
-- A quieter TODAY on calm days. **Done (PR pending).**
-- Mono type for small labels only; red off routine buttons. **Done (PR pending).**
+- A quieter TODAY on calm days. **Done (PR #125, merged).**
+- Mono type for small labels only; red off routine buttons. **Done (PR #125, merged).**
 - BODY/TRAIN tidy: disclosure rows instead of button stacks, Planned Work under the workout card,
-  LOG clear of the screen edge. **Done (PR pending).**
+  LOG clear of the screen edge. **Done (PR #125, merged).**
 
 ### Drop 7 — Tie together
 
 - A weekly check-in screen: weight trend + goal date, workouts + PRs, quit-tracker days, protein
-  average.
-- Home-screen quick-log shortcuts: water, weight, meal, urge.
+  average. **Done (PR pending).**
+- Home-screen quick-log shortcuts: water, weight, meal, urge. **Done (PR pending).**
 
 ### Then: field use
 

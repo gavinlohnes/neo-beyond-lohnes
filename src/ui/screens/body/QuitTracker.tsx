@@ -9,6 +9,7 @@ import { ensureActiveDay } from "../../../application/commands";
 import { getQuitSummary, type QuitSummary } from "../../../application/quitQueries";
 import { logCleanDay, logUrge, undoUrge } from "../../../application/quitCommands";
 import { describeCleanDays, formatUsd, URGE_TRIGGER_LABELS } from "./quitCopy";
+import { SHORTCUT_ANCHOR_IDS } from "../../shortcuts";
 
 /**
  * Drop 6 (quit tracker, owner approval 2026-09-30), on BODY per the owner's
@@ -17,10 +18,11 @@ import { describeCleanDays, formatUsd, URGE_TRIGGER_LABELS } from "./quitCopy";
  * clean-day log, one-tap urge logging by trigger with undo, and money saved.
  * Neutral ink only; red never decorates.
  */
-export function QuitTracker() {
+export function QuitTracker({ initiallyOpen = false }: { initiallyOpen?: boolean } = {}) {
   const [summary, setSummary] = useState<QuitSummary | undefined>(undefined);
   const [loaded, setLoaded] = useState(false);
-  const [open, setOpen] = useState(false);
+  // Drop 7: the "Urge" home-screen shortcut opens the tracker straight to its urge buttons.
+  const [open, setOpen] = useState(initiallyOpen);
   const [busy, setBusy] = useState(false);
   const [lastUrge, setLastUrge] = useState<{ eventId: string; trigger: UrgeTrigger } | null>(null);
   const [holdHint, setHoldHint] = useState(false);
@@ -98,7 +100,7 @@ export function QuitTracker() {
   }
 
   return (
-    <div className="equipment-row">
+    <div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.urge}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
         <p className="tool-label" style={{ margin: 0 }}>
           {summary ? `QUIT: ${summary.habit.name.toUpperCase()}` : "QUIT TRACKER"}
