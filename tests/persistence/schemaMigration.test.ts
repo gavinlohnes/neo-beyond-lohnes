@@ -15,7 +15,7 @@ import { DEFAULT_NUTRITION_TARGETS } from "../../src/engine/nutritionTargets";
  */
 
 const DB_NAME = "beyond";
-const CURRENT_SCHEMA_VERSION = 11;
+const CURRENT_SCHEMA_VERSION = 12;
 
 afterEach(async () => {
   await Dexie.delete(DB_NAME);
@@ -839,6 +839,52 @@ describe("Dexie v10 -> v11 migration (NUTRITION-003: nutritionTargets)", () => {
     const meal = await upgraded.savedMeals.get("meal-pre-v11");
     expect(meal).toBeDefined();
     expect(meal!.name).toBe("Pre-existing meal");
+
+    upgraded.close();
+  });
+});
+
+describe("Dexie v11 -> v12 migration (Drop 6: quitHabits)", () => {
+  it("adds an empty, unseeded quitHabits table and preserves existing v11 data", async () => {
+    const v11 = new Dexie(DB_NAME);
+    v11.version(11).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId, decisionJournalEntryId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
+      decisionJournalEntries: "id, status, createdAt",
+      customExercises: "id, archivedAt, createdAt",
+      customWorkoutTemplates: "id, archivedAt, createdAt",
+      nutritionTargets: "id",
+    });
+    await v11.open();
+    await v11.table("beyondDays").add({
+      id: "day-pre-v12",
+      startedAt: "2026-09-29T12:00:00.000Z",
+      timezoneId: "America/Chicago",
+      workContext: "UNKNOWN",
+      status: "ACTIVE",
+      createdAt: "2026-09-29T12:00:00.000Z",
+      updatedAt: "2026-09-29T12:00:00.000Z",
+    });
+    await v11.table("nutritionTargets").put({ ...DEFAULT_NUTRITION_TARGETS, goalWeightLbs: 180 });
+    v11.close();
+
+    const upgraded = new BeyondDB();
+    await upgraded.open();
+
+    expect(upgraded.verno).toBe(CURRENT_SCHEMA_VERSION);
+    expect(await upgraded.quitHabits.count()).toBe(0);
+    expect((await upgraded.beyondDays.get("day-pre-v12"))?.status).toBe("ACTIVE");
+    expect((await upgraded.nutritionTargets.get("current"))?.goalWeightLbs).toBe(180);
 
     upgraded.close();
   });

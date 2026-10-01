@@ -70,6 +70,17 @@ below, this entry wins; the older entry is kept for history.
   MORE → Settings; additive, so older rows and backups stay valid and it rides along in backups.
   Meal Memory's SAME AS YESTERDAY logs the previous meal day's still-active saved meals as ordinary
   MEAL_LOGGED entries, and hides once today already has all of them.
+- **As built in Drop 6 (quit tracker).** Lives on **BODY** (owner ruling 2026-09-30) as a
+  collapsible row, "QUIT: {NAME}", set up in MORE → Settings (name, optional daily cost, optional
+  post-shift plan). **New `quitHabits` table at Dexie v12** (owner approval 2026-09-30): one
+  settings row, additive, not seeded — "not set up" is the honest default. Clean days are
+  `CLEAN_DAY_LOGGED` events, logged only by hold-to-confirm, at most one per BeyondDay, never
+  inferred; the tracker shows clean days this calendar month (by the BeyondDay's start) and in
+  total — no streak, no reset, no slip wording, and an unmarked day is simply not counted. Urges
+  are one tap per trigger (After shift, Stress, Tired, Social, Bored, Other) as `URGE_LOGGED`, with
+  undo via `URGE_UNDONE`. Money saved = daily cost × clean days. The post-shift plan shows as
+  "Your plan: …" inside SHIFT DOWN. None of it feeds the Engine, recommendations, or the
+  check-in's alcohol-urge field.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 

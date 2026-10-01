@@ -17,6 +17,7 @@ import { JournalScreen } from "./JournalScreen";
 import { ExerciseLibraryScreen } from "./ExerciseLibraryScreen";
 import { CustomTemplateScreen } from "./CustomTemplateScreen";
 import { NutritionTargetsSettings } from "./NutritionTargetsSettings";
+import { QuitHabitSettings } from "./QuitHabitSettings";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { Icon } from "../../icons/Icon";
@@ -629,6 +630,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
       <section className="operational-index-zone" aria-labelledby="settings-heading">
       <h2 id="settings-heading" className="section-label">Settings</h2>
       <NutritionTargetsSettings />
+      <QuitHabitSettings />
       {/* No machinery reveal here (2026-09-30, direct owner ruling): SYSTEM's
           diagnostics are plain technical readouts, so they expand inline
           only. TODAY/TRAIN's WHY disclosures keep the DEPTH-001 reveal. */}

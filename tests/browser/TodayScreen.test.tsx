@@ -33,6 +33,7 @@ import { getActiveDay } from "../../src/application/queries";
 import { getAdvisoryNotes } from "../../src/application/advisoryQueries";
 import type { BeyondDay } from "../../src/domain/common/types";
 import { startWorkout } from "../../src/application/trainCommands";
+import { saveQuitHabit } from "../../src/application/quitCommands";
 
 /**
  * Current Operational Context V1: getCurrentOperationalContext is
@@ -1452,6 +1453,15 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     const el = screen.getByRole("button", { name: "No action needed" }).element();
     expect(el.className).toContain("btn-secondary");
     expect(getComputedStyle(el).backgroundColor).not.toBe("rgb(200, 30, 44)");
+  });
+
+  it("Drop 6: SHIFT DOWN shows the quit tracker's post-shift plan", async () => {
+    await saveQuitHabit({ name: "Drinking", postShiftPlan: "Shower, eat, text Sam, bed by 9" });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TodayScreen />);
+    await screen.getByRole("button", { name: "Open SHIFT DOWN" }).click();
+    await expect.element(screen.getByText("Your plan: Shower, eat, text Sam, bed by 9", { exact: true })).toBeVisible();
   });
 
   it("DECLUTTER Drop 3: TODAY no longer shows Planned Work or the backup reminder", async () => {

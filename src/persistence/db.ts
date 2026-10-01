@@ -4,6 +4,7 @@ import type {
   CaptureItem,
   DomainEvent,
   NutritionTargets,
+  QuitHabit,
   Outcome,
   PerformedSetRaw,
   Recommendation,
@@ -36,6 +37,7 @@ export class BeyondDB extends Dexie {
   customExercises!: Table<CustomExercise, string>;
   customWorkoutTemplates!: Table<CustomWorkoutTemplate, string>;
   nutritionTargets!: Table<NutritionTargets, string>;
+  quitHabits!: Table<QuitHabit, string>;
 
   constructor() {
     super("beyond");
@@ -267,6 +269,30 @@ export class BeyondDB extends Dexie {
       .upgrade(async (tx) => {
         await tx.table("nutritionTargets").put(DEFAULT_NUTRITION_TARGETS);
       });
+    // v12 (Drop 6, quit tracker, owner approval 2026-09-30): adds quitHabits
+    // — a single mutable settings row, same treatment as nutritionTargets at
+    // v11, but deliberately NOT seeded: "no habit set up yet" is the honest
+    // default, and the tracker says so instead of inventing one. Clean days
+    // and urges live in the existing events table. v1-v11 tables/data untouched.
+    this.version(12).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId, decisionJournalEntryId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
+      decisionJournalEntries: "id, status, createdAt",
+      customExercises: "id, archivedAt, createdAt",
+      customWorkoutTemplates: "id, archivedAt, createdAt",
+      nutritionTargets: "id",
+      quitHabits: "id",
+    });
   }
 }
 

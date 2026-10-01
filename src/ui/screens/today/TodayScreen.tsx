@@ -88,6 +88,7 @@ import {
 import type { ScheduledContext } from "../../../engine/scheduledContext";
 import { getCurrentOperationalContext, type CurrentOperationalContext } from "../../../application/currentContextQueries";
 import { getActiveWorkoutSession } from "../../../application/trainQueries";
+import { getQuitHabit } from "../../../application/quitQueries";
 
 /**
  * Quick check-in default ("all good" one-tap, Context & Safety Decisions
@@ -286,11 +287,17 @@ export function TodayScreen({
   const commitmentFeedbackRef = useRef<HTMLParagraphElement>(null);
   const commitmentSatisfactionPendingRef = useRef(false);
   const shiftDownStartRef = useRef<HTMLButtonElement>(null);
+  // Drop 6: the quit tracker's post-shift plan, shown inside SHIFT DOWN.
+  const [postShiftPlan, setPostShiftPlan] = useState<string | undefined>(undefined);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
   useEffect(() => {
     void refresh();
     void getScheduledContext().then(setScheduledContext);
+    // Best-effort: a missing plan just means SHIFT DOWN shows none.
+    void getQuitHabit()
+      .then((habit) => setPostShiftPlan(habit?.postShiftPlan))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -1252,6 +1259,7 @@ export function TodayScreen({
           onCompleteShiftDown={() => void handleCompleteShiftDown()}
           onCancelShiftDown={() => void handleCancelShiftDown()}
           startButtonRef={shiftDownStartRef}
+          postShiftPlan={postShiftPlan}
         />
       )}
       {day && dominant === "SHIFT_DOWN_ACTIVE" && (
@@ -1270,6 +1278,7 @@ export function TodayScreen({
           onCompleteShiftDown={() => void handleCompleteShiftDown()}
           onCancelShiftDown={() => void handleCancelShiftDown()}
           startButtonRef={shiftDownStartRef}
+          postShiftPlan={postShiftPlan}
         />
       )}
       {day && dominant === "RESET_ACTIVE" && (
@@ -1557,6 +1566,7 @@ export function TodayScreen({
           onCompleteShiftDown={() => void handleCompleteShiftDown()}
           onCancelShiftDown={() => void handleCancelShiftDown()}
           startButtonRef={shiftDownStartRef}
+          postShiftPlan={postShiftPlan}
         />
       )}
       {day && recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (

@@ -1,4 +1,5 @@
-import type { DomainEvent } from "../../../domain/common/types";
+import type { DomainEvent, UrgeTrigger } from "../../../domain/common/types";
+import { URGE_TRIGGER_LABELS } from "../body/quitCopy";
 
 /**
  * Priority 1 (HISTORY screen): one-line, human-readable summary per
@@ -81,6 +82,12 @@ export function describeEvent(event: DomainEvent): string {
       return `Set logged: ${p.exerciseId}${p.substitutedName ? ` (as ${p.substitutedName})` : ""} #${p.setNumber} — ${p.weight} lb x ${p.reps}.`;
     case "SET_SKIPPED":
       return `Set skipped: ${p.exerciseId} #${p.setNumber}.`;
+    case "CLEAN_DAY_LOGGED":
+      return `Clean day logged${p.habitName ? `: ${p.habitName}` : ""}.`;
+    case "URGE_LOGGED":
+      return `Urge logged${p.trigger ? ` (${URGE_TRIGGER_LABELS[p.trigger as UrgeTrigger] ?? p.trigger})` : ""}.`;
+    case "URGE_UNDONE":
+      return "Urge log undone.";
     default:
       return event.type;
   }
