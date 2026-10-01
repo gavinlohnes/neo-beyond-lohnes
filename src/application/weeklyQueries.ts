@@ -2,7 +2,7 @@ import { db } from "../persistence/db";
 import type { PerformedSet } from "../domain/workout/types";
 import { WORKOUT_TEMPLATES } from "../domain/workout/types";
 import { getUndoneSetIds } from "./trainQueries";
-import { findSessionRecords, type PersonalRecord } from "./personalRecordQueries";
+import { byLoggedOrder, findSessionRecords, type PersonalRecord } from "./personalRecordQueries";
 import { getBodyweightHistory, projectGoalDate, type GoalProjection } from "./bodyTrendQueries";
 import { getEffectiveProteinTargetG, getNutritionTargets } from "./nutritionTargetQueries";
 import { getQuitHabit } from "./quitQueries";
@@ -95,7 +95,7 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
     if (inWindow(session.endedAt ?? session.startedAt, start, end)) {
       workouts += 1;
       const found = findSessionRecords(priorSets, sets);
-      for (const set of [...sets].sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))) {
+      for (const set of [...sets].sort(byLoggedOrder)) {
         const record = found.get(set.id);
         if (record) records.push({ exerciseName: names.get(set.exerciseId) ?? set.exerciseId, record });
       }

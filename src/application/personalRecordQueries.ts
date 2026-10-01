@@ -32,6 +32,13 @@ export interface RecordCandidateSet {
   skipped: boolean;
   substitutedName?: string;
   recordedAt: string;
+  /** Tie-break for sets logged in the same millisecond. */
+  setNumber?: number;
+}
+
+/** Logged order: time, then set number when two sets share a timestamp. */
+export function byLoggedOrder(a: RecordCandidateSet, b: RecordCandidateSet): number {
+  return a.recordedAt.localeCompare(b.recordedAt) || (a.setNumber ?? 0) - (b.setNumber ?? 0);
 }
 
 function counts(set: RecordCandidateSet): boolean {
@@ -57,7 +64,7 @@ export function findSessionRecords(
 
   const hasEarlierSession = new Set(seen.keys());
   const records = new Map<string, PersonalRecord>();
-  const ordered = [...sessionSets].sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+  const ordered = [...sessionSets].sort(byLoggedOrder);
   for (const set of ordered) {
     if (!counts(set)) continue;
     const prior = seen.get(set.exerciseId) ?? [];

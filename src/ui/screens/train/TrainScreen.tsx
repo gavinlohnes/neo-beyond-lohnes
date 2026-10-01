@@ -33,7 +33,7 @@ import {
   type LastStrengthSessionSummary,
   type RecentStrengthSessionEntry,
 } from "../../../application/trainQueries";
-import { describePersonalRecord, findSessionRecords, getRecordHistory } from "../../../application/personalRecordQueries";
+import { byLoggedOrder, describePersonalRecord, findSessionRecords, getRecordHistory } from "../../../application/personalRecordQueries";
 import {
   abandonWorkout,
   adjustRest,
@@ -627,7 +627,7 @@ export function TrainScreen({
       const volumeLbs = sets.filter((s) => !s.skipped).reduce((sum, s) => sum + s.weight * s.reps, 0);
       const exerciseName = (id: string) => activeExercises.find((ex) => ex.exerciseId === id)?.name ?? id;
       const records = [...sets]
-        .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))
+        .sort(byLoggedOrder)
         .flatMap((s) => {
           const record = sessionRecords.get(s.id);
           return record ? [`${exerciseName(s.exerciseId)}: ${describePersonalRecord(record).replace("NEW PR — ", "")}`] : [];
