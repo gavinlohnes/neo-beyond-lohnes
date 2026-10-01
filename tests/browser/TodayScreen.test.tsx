@@ -1396,6 +1396,8 @@ describe("TodayScreen (real browser) — ADVISORY (Intelligence Spine consumptio
 
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByText("ADVISORY", { exact: true })).toBeVisible();
+    // LAUNCH POLISH: QUIET-only notes fold into one ADVISORY row until opened.
+    await screen.getByRole("button", { name: "Open ADVISORY" }).click();
     await expect.element(screen.getByText("File expense report — DUE_TODAY", { exact: true })).toBeVisible();
   });
 });

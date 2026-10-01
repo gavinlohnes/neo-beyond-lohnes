@@ -1163,7 +1163,10 @@ export function TodayScreen({
           capacity at all, which reads as calm rather than as genuinely
           unknown). Still a single line, still color-independent: every
           state pairs its dot with an explicit word, never color alone. */}
-      {day && <h2 className="section-label section-label--field">Orient</h2>}
+      {/* LAUNCH POLISH (owner approval 2026-10-01): ORIENT drops its label
+          and box — the same two facts read as a status line under the
+          header, as in the Launch Vision prototype. */}
+      {day && <h2 className="visually-hidden">Orient</h2>}
       {/* FIELD-ARCH-001: same two facts (describeContextStrip's sentence,
           the capacity dot+clause) this strip has always shown — restacked
           into a real label-free instrument reading (a bold headline line,

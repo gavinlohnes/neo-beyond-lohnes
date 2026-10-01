@@ -51,11 +51,18 @@ At most 3 changes per Drop.
 
 ### Drop 6 — Quit tracker
 
-- A generic habit to avoid, named by the owner in the app. **Done (PR pending).**
-- It shows "clean days this month" (never a resetting streak). **Done (PR pending).**
-- A one-tap urge log (time + trigger). **Done (PR pending).**
-- A post-shift plan inside SHIFT DOWN. **Done (PR pending).**
-- Money saved. **Done (PR pending).**
+- A generic habit to avoid, named by the owner in the app. **Done (PR #124, merged).**
+- It shows "clean days this month" (never a resetting streak). **Done (PR #124, merged).**
+- A one-tap urge log (time + trigger). **Done (PR #124, merged).**
+- A post-shift plan inside SHIFT DOWN. **Done (PR #124, merged).**
+- Money saved. **Done (PR #124, merged).**
+
+### Launch polish (owner-added 2026-10-01, after a review against the Launch Vision prototype)
+
+- A quieter TODAY on calm days. **Done (PR pending).**
+- Mono type for small labels only; red off routine buttons. **Done (PR pending).**
+- BODY/TRAIN tidy: disclosure rows instead of button stacks, Planned Work under the workout card,
+  LOG clear of the screen edge. **Done (PR pending).**
 
 ### Drop 7 — Tie together
 

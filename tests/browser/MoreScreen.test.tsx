@@ -106,7 +106,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
   it("keeps routine backup neutral and reserves danger semantics for confirmed replacement", async () => {
     const screen = await render(<MoreScreen />);
-    expect(screen.getByRole("button", { name: "EXPORT BACKUP" }).elements()[0]?.className).toBe("btn-primary");
+    // LAUNCH POLISH (owner approval 2026-10-01): MORE has no single primary action, so backup is a neutral button.
+    expect(screen.getByRole("button", { name: "EXPORT BACKUP" }).elements()[0]?.className).toBe("btn-secondary");
     const restoreLabel = screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).elements()[0];
     expect(restoreLabel?.closest(".restore-disclosure")).not.toBeNull();
     expect(document.querySelectorAll(".btn-danger")).toHaveLength(0);

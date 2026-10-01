@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { WATER_QUICK_ADD_OZ } from "../body/bodyScreenCopy";
 
 /**
@@ -137,6 +138,7 @@ export function AdvisorySection({
   onLogWater?: (amountOz: number) => void;
   onOpenMinimumDay?: () => void;
 }) {
+  const [open, setOpen] = useState(false);
   const filtered = excludeObligationId
     ? notes.filter((note) => basisObligationId(note) !== excludeObligationId)
     : notes;
@@ -147,6 +149,18 @@ export function AdvisorySection({
   const attentionRank = { INTERRUPT: 0, SURFACE: 1, QUIET: 2 } as const;
   const visible = [...filtered].sort((a, b) => attentionRank[a.attentionLevel] - attentionRank[b.attentionLevel]);
   if (visible.length === 0) return null;
+  // LAUNCH POLISH (owner approval 2026-10-01): background-only (QUIET)
+  // notes fold into one row on TODAY; anything SURFACE or INTERRUPT stays
+  // open exactly as before.
+  if (!open && visible.every((note) => note.attentionLevel === "QUIET")) {
+    return (
+      <CollapsibleRow
+        name="ADVISORY"
+        summary={`${visible.length} background ${visible.length === 1 ? "note" : "notes"}`}
+        onOpen={() => setOpen(true)}
+      />
+    );
+  }
   return (
     <div className="equipment-row">
       <p className="tool-label" style={{ marginBottom: 4 }}>ADVISORY</p>

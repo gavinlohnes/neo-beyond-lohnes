@@ -1159,7 +1159,8 @@ button, input {
  * a decision; the fast one-handed execution path stays reachable
  * without excess scroll. */
 .train-field .command-surface {
-  min-height: min(52vh, 440px);
+  /* LAUNCH POLISH (owner approval 2026-10-01): no fixed min-height — the
+     card ends where its content does instead of trailing empty space. */
   padding: var(--space-6) var(--space-5);
 }
 .train-field .command-surface .command-title {
@@ -1838,4 +1839,81 @@ button, input {
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* LAUNCH POLISH (owner approval 2026-10-01) — typography: the mono face is
+   for small labels only (.eyebrow, .tool-label, .section-label, chips),
+   as in the Launch Vision prototype. Sentences and readouts that used it —
+   .meta, .meta-strong, the status strips — move to the body face, which
+   reads calmer and wraps far less at phone width. Sizes and colors are
+   unchanged, so the .meta / .meta-strong hierarchy still holds. */
+.meta,
+.meta-strong,
+.status-strip,
+.status-strip__detail {
+  font-family: var(--font-body);
+}
+
+/* LAUNCH POLISH: TODAY's ORIENT reading becomes a status line under the
+   header — no box, no label. A YELLOW/RED day keeps its colored left tick,
+   because there the color means something. */
+.status-strip--stacked {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+.status-strip--stacked.status-strip--yellow,
+.status-strip--stacked.status-strip--red {
+  border-left: 2px solid;
+  padding-left: var(--space-3);
+}
+.status-strip--stacked.status-strip--yellow { border-left-color: var(--warning); }
+.status-strip--stacked.status-strip--red { border-left-color: var(--accent-strong); }
+.status-strip--stacked .status-strip__headline {
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.status-strip--stacked .status-strip__detail {
+  font-size: 15px;
+}
+
+/* LAUNCH POLISH: "SHOW MANUAL ENTRY" / "SHOW TODAY'S ENTRIES"-style
+   disclosures are quiet text rows with a caret, not full-width grey
+   buttons — real actions keep the button shape, so a stack of grey
+   slabs no longer competes with them. Still a ≥44px tap target. */
+.disclosure-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 0;
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.disclosure-row::-webkit-details-marker,
+.disclosure-row::marker {
+  display: none;
+}
+.disclosure-row::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 1.7px solid currentColor;
+  border-bottom: 1.7px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--motion-fast) var(--motion-easing);
+}
+details[open] > .disclosure-row::before {
+  transform: rotate(45deg);
+}
+.disclosure-row:focus-visible {
+  outline: 2px solid var(--text-1);
+  outline-offset: 2px;
 }
