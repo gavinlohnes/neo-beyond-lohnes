@@ -17,6 +17,9 @@ import { JournalScreen } from "./JournalScreen";
 import { ExerciseLibraryScreen } from "./ExerciseLibraryScreen";
 import { CustomTemplateScreen } from "./CustomTemplateScreen";
 import { NutritionTargetsSettings } from "./NutritionTargetsSettings";
+import { WeeklyCheckInScreen } from "../weekly/WeeklyCheckInScreen";
+import { LineIcon } from "../../icons/LineIcon";
+import { CalendarCheck } from "lucide-react";
 import { QuitHabitSettings } from "./QuitHabitSettings";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
@@ -41,7 +44,7 @@ const DATA_SCHEMA = db.verno;
 
 export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {}) {
   const [view, setView] = useState<
-    "MENU" | "HISTORY" | "REVIEW" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES"
+    "MENU" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES"
   >("MENU");
   // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by
   // the ordinary "MISSIONS & OBLIGATIONS" menu entry point — see its onOpen below. This is what
@@ -238,6 +241,21 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           ← BACK TO MORE
         </button>
         <HistoryScreen />
+      </div>
+    );
+  }
+
+  if (view === "WEEKLY") {
+    return (
+      <div className="screen fade-in">
+        <button
+          className="btn-secondary"
+          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
+          onClick={() => setView("MENU")}
+        >
+          ← BACK TO MORE
+        </button>
+        <WeeklyCheckInScreen />
       </div>
     );
   }
@@ -580,6 +598,12 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           none existed to preserve. */}
       <section className="operational-index-zone" aria-labelledby="records-heading">
       <h2 id="records-heading" className="section-label">Evidence</h2>
+      {/* Drop 7 (owner approval 2026-10-01): the weekly check-in leads Evidence. */}
+      <CollapsibleRow
+        name="WEEKLY CHECK-IN"
+        icon={<LineIcon icon={CalendarCheck} />}
+        onOpen={() => setView("WEEKLY")}
+      />
       <CollapsibleRow
         name="HISTORY"
         icon={<Icon name="history" size={20} />}

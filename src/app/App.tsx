@@ -9,6 +9,7 @@ import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
 import { performDueDayRollover } from "../application/commands";
+import { parseShortcut } from "../ui/shortcuts";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -88,7 +89,16 @@ function AppUpdateBanner() {
 }
 
 export function App() {
-  const [tab, setTab] = useState<Tab>("TODAY");
+  // Drop 7: a home-screen shortcut (?go=…) opens BODY at the right control.
+  // Read once, then dropped from the URL so a reload doesn't repeat it.
+  const [shortcut] = useState(() => parseShortcut(window.location.search));
+  const [tab, setTab] = useState<Tab>(() => (shortcut ? "BODY" : "TODAY"));
+  useEffect(() => {
+    if (!shortcut) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("go");
+    window.history.replaceState(null, "", url.toString());
+  }, [shortcut]);
   const [trainDestination, setTrainDestination] = useState<TrainDestination | null>(null);
   const [continuityResolved, setContinuityResolved] = useState(false);
 
@@ -111,7 +121,9 @@ export function App() {
         getActiveWorkoutSession()
           .then((activeWorkout) => {
             if (!current) return;
-            if (activeWorkout) {
+            // An explicit shortcut wins over workout continuity; the workout
+            // stays active and TRAIN still resumes it when opened.
+            if (activeWorkout && !shortcut) {
               setTrainDestination("WORKOUT");
               setTab("TRAIN");
             }
@@ -218,7 +230,7 @@ export function App() {
             onDestinationConsumed={() => setTrainDestination(null)}
           />
         )}
-        {tab === "BODY" && <BodyScreen />}
+        {tab === "BODY" && <BodyScreen focus={shortcut} />}
         {tab === "MORE" && <MoreScreen onOpenCapture={() => setTab("TODAY")} />}
       </RootErrorBoundary>
 
