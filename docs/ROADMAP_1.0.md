@@ -87,6 +87,26 @@ At most 3 changes per Drop.
 
 Two weeks of field use. Fix whatever bugs the owner. That's 1.0.
 
+### Field-test weekend (owner-added 2026-10-03)
+
+Built during field use, by owner decision: the field test becomes a before/after, with the Burden
+Meter (merged 2026-10-03 05:27 UTC) as the baseline line for the Oct 16 debrief. One Drop at a
+time, each briefed by the owner.
+
+- **Drop 0 — field fixes:** the saved schedule answers "Are you working today?"; open screens
+  follow the 16:30 roll. **Done (PR #130, merged).**
+- **Drop 1 — Day Ledger + Burden Meter.** **Done (PR #131, merged).**
+- **Drop 2 — Shift Clock v1** (TODAY by shift phase, row cap by test, Time-Fit line), with rulings
+  (a) no MARK WORK ENDED before the shift and (b) no check-in prompt before or during it.
+  **Done (PR #132, merged).**
+- **Progression re-entry** (14+ days away → ~90%). **Done (PR #134, merged).**
+- **Sleep draft** ("Slept up to 7h 15m?" after Shift Down). **In review.**
+- Next, in order: the Ribbon (28 lived days in Weekly); read-only findings in Weekly; stretch: urge
+  if-then plans, then the check-in draft. Cut first if short on time: the expenditure readout, then
+  the urge-timing finding.
+- Waits until after Oct 16: the Engine reacting to evidence, rule adoption, Week Ahead,
+  deload/stall suggestions, all wildcards.
+
 ## Design rules
 
 - A hard cap on the items visible per screen.

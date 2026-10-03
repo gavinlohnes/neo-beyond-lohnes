@@ -163,6 +163,18 @@ below, this entry wins; the older entry is kept for history.
   Fuel shows protein (logs + meals) against its target when one exists, and water as a plain total —
   there is no water target to compare against. The check-in row's ALL GOOD is neutral, so red stays
   on the one next step. Burden Meter baseline: Drop 1 merged 2026-10-03 05:27 UTC (PR #131).
+- **As built: sleep draft (owner approval 2026-10-03) — the first Draft.** A Draft
+  (`domain/intelligence/types.ts`) is a value BEYOND proposes from evidence it already has, with a
+  plain reason and basis; it is never written until the operator confirms it, and the resulting fact
+  records how it was decided (`DraftDecision`: CONFIRMED or ADJUSTED). The sleep draft
+  (`engine/sleepDraft.ts`) replaces the post-shift MAIN SLEEP row's text — no new row: "Slept up to
+  7 hr 15 min?" with the reason "Shift Down 07:05 → opened 14:20", LOG, ±15 min, NOT NOW and ENTER IN
+  BODY. It is an **upper bound** — from the latest Shift Down / MARK WORK ENDED to the app being
+  opened — rounded down to 5 min, and only when nothing else was done in BEYOND in between, main sleep
+  isn't logged yet, and the gap is 3–12 h (12 h matches BODY's plausible main-sleep range). LOG
+  writes an ordinary main-sleep `SLEEP_LOGGED` carrying the optional `draft` field (shown in
+  History); NOT NOW is remembered on this phone only, for that day. Known gap left for later: sleeping
+  past the 16:30 roll ends the post-shift phase, so no draft appears (log it in BODY as before).
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 

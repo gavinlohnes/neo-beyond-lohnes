@@ -21,7 +21,9 @@ export function describeEvent(event: DomainEvent): string {
       // needing another branch here every time one is added.
       return `Day ended (${p.reason === "EXPLICIT_END_DAY" ? "explicit" : "auto-closed"}).`;
     case "SLEEP_LOGGED":
-      return `Sleep logged: ${p.durationMinutes} min (${p.kind === "SUPPLEMENTAL" ? "nap" : "main sleep"}).`;
+      return `Sleep logged: ${p.durationMinutes} min (${p.kind === "SUPPLEMENTAL" ? "nap" : "main sleep"}${
+        p.draft === "CONFIRMED" ? ", BEYOND's draft as proposed" : p.draft === "ADJUSTED" ? ", BEYOND's draft, adjusted" : ""
+      }).`;
     case "SLEEP_LOG_CORRECTED":
       return `Sleep corrected to ${p.durationMinutes} min.`;
     case "BODYWEIGHT_LOGGED":

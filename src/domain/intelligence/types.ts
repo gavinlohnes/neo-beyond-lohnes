@@ -99,3 +99,21 @@ export interface AdvisoryNote {
   /** See AttentionLevel's doc comment above. Required so every producer states its tier explicitly rather than an implicit default. */
   attentionLevel: AttentionLevel;
 }
+
+/**
+ * DRAFT (sleep draft, 2026-10-03; the shared "confirm, don't type" contract).
+ * A value BEYOND proposes from evidence it already has, with the reason in
+ * plain words and the basis it came from. A Draft is never itself written:
+ * only an explicit operator action (confirm, or adjust then confirm) turns
+ * it into a fact, recorded with how it was decided; dismissing it writes
+ * nothing. Doctrine: "Learned shortcuts may … prefill … reversible choices."
+ */
+export interface Draft<T> {
+  value: T;
+  /** One line the operator sees, e.g. "Shift Down 07:05 → opened 14:20". */
+  reason: string;
+  basis: AdvisoryNoteBasisEntry[];
+}
+
+/** How a drafted value became a fact — recorded on the fact itself. */
+export type DraftDecision = "CONFIRMED" | "ADJUSTED";
