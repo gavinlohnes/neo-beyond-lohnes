@@ -101,10 +101,11 @@ time, each briefed by the owner.
   **Done (PR #132, merged).**
 - **Progression re-entry** (14+ days away → ~90%). **Done (PR #134, merged).**
 - **Sleep draft** ("Slept up to 7h 15m?" after Shift Down). **Done (PR #135, merged).**
-- **The Ribbon** (the last 28 lived days in Weekly, one column each). **In review.**
-- Next, in order: read-only findings in Weekly; stretch: urge
-  if-then plans, then the check-in draft. Cut first if short on time: the expenditure readout, then
-  the urge-timing finding.
+- **The Ribbon** (the last 28 lived days in Weekly, one column each). **Done (PR #136, merged).**
+- **Read-only findings** in Weekly (sleep before workouts, before vs. after the shift, when urges
+  came, stalls, exercise stories — counts only, with an abstain floor). **In review.**
+- Next, in order (stretch): urge if-then plans, then the check-in draft. Cut first if short on
+  time: the expenditure readout. (The urge-timing finding shipped with the findings.)
 - Waits until after Oct 16: the Engine reacting to evidence, rule adoption, Week Ahead,
   deload/stall suggestions, all wildcards.
 

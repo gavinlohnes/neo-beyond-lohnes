@@ -6,12 +6,13 @@ import { byLoggedOrder, findSessionRecords, type PersonalRecord } from "./person
 import { getBodyweightHistory, projectGoalDate, type GoalProjection } from "./bodyTrendQueries";
 import { getEffectiveProteinTargetG, getNutritionTargets } from "./nutritionTargetQueries";
 import { getQuitHabit } from "./quitQueries";
-import { getTotalProteinGrams } from "./queries";
+import { getSchedulePattern, getTotalProteinGrams } from "./queries";
 import { getTotalMealProteinGrams } from "./nutritionQueries";
 import { getCustomExercises } from "./exerciseLibraryQueries";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { summarizeBurden, type BurdenSummary } from "../engine/dayLedger";
 import { projectRibbon, type RibbonDay } from "../engine/ribbon";
+import { projectFindings, type FindingsResult } from "../engine/findings";
 import { getCustomTemplates } from "./customTemplateQueries";
 
 /**
@@ -55,6 +56,12 @@ export interface WeeklySummary {
    * target the Ribbon's protein row is drawn against (today's, labelled).
    */
   ribbon: { days: RibbonDay[]; templateLabels: Record<string, string>; proteinTargetG?: number };
+  /**
+   * Read-only findings (2026-10-03): counts over the Day Ledger and logged
+   * sets, with each exercise's display name. Nothing stored, nothing fed to
+   * the Engine.
+   */
+  findings: FindingsResult & { exerciseNames: Record<string, string> };
 }
 
 function inWindow(iso: string | undefined, start: number, end: number): boolean {
@@ -156,6 +163,13 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
   for (const id of Object.keys(WORKOUT_TEMPLATES)) templateLabels[id] = id;
   for (const t of await getCustomTemplates({ includeArchived: true })) templateLabels[t.id] = t.name;
 
+  // Read-only findings: the same ledger, plus every logged set (undone ones removed).
+  const findings = projectFindings({ summaries: daySummaries, sets: allSets, schedule: await getSchedulePattern(), now });
+  const exerciseNames: Record<string, string> = {};
+  for (const f of findings.findings) {
+    if (f.kind === "STALL" || f.kind === "EXERCISE_STORY") exerciseNames[f.exerciseId] = names.get(f.exerciseId) ?? f.exerciseId;
+  }
+
   return {
     weight: {
       ...(avgLbs !== undefined ? { avgLbs } : {}),
@@ -177,5 +191,6 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
       templateLabels,
       ...(targetGrams !== undefined ? { proteinTargetG: targetGrams } : {}),
     },
+    findings: { ...findings, exerciseNames },
   };
 }
