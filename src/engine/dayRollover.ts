@@ -35,6 +35,19 @@ export function mostRecentBoundaryAtOrBefore(now: Date): Date {
 }
 
 /**
+ * The first 16:30 local-time instant strictly after `now` (DROP 0, 2026-10-03).
+ * Used to time the next rollover while the app stays open, and as the end of
+ * a lived day when the schedule decides that day's work context. Built from
+ * local calendar parts, like every other boundary here, so DST never shifts it.
+ */
+export function nextRolloverBoundaryAfter(now: Date): Date {
+  const todaysBoundary = boundaryOnCalendarDateOf(now);
+  if (todaysBoundary.getTime() > now.getTime()) return todaysBoundary;
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  return boundaryOnCalendarDateOf(tomorrow);
+}
+
+/**
  * Pure: the same (dayStartedAt, now) pair always derives the same result.
  * Returns the boundary instant a rollover is due at, or null if the
  * currently active day (started at dayStartedAt) hasn't crossed a 16:30

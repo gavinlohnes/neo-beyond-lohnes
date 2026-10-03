@@ -2,7 +2,12 @@ import type { BeyondDay } from "../../../domain/common/types";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmIcon } from "../../icons/Icon";
-import { describeSchedulePrediction } from "./workContextCopy";
+import {
+  OFF_PER_SCHEDULE,
+  WORKING_PER_SCHEDULE,
+  describeSchedulePrediction,
+  describeStandingChange,
+} from "./workContextCopy";
 
 /**
  * TodayScreen decomposition (2026-09-02): extracted verbatim from
@@ -20,6 +25,8 @@ export function WorkContextCard({
   busy,
   onSetWorkContext,
   onMarkWorkEnded,
+  perSchedule = false,
+  onChangeStanding,
 }: {
   day: BeyondDay;
   scheduledContext: ScheduledContext;
@@ -29,7 +36,12 @@ export function WorkContextCard({
   busy: boolean;
   onSetWorkContext: (value: "WORK" | "OFF") => void;
   onMarkWorkEnded: () => void;
+  /** DROP 0: the day's context came from the saved schedule and hasn't been changed since. */
+  perSchedule?: boolean;
+  /** DROP 0: one tap flips a standing value to the other one, recorded as MANUAL. */
+  onChangeStanding?: () => void;
 }) {
+  const standing = perSchedule && onChangeStanding !== undefined;
   const settled = day.workContext === "OFF" || (day.workContext === "WORK" && workPeriodEndedAt !== null);
   const awaitingWorkEnd = day.workContext === "WORK" && workPeriodEndedAt === null;
   const open = workContextOpen || day.workContext === "UNKNOWN";
@@ -38,7 +50,7 @@ export function WorkContextCard({
       return (
         <div className="equipment-row">
           <p className="tool-label" style={{ marginBottom: 4 }}>WORK CONTEXT</p>
-          <h2 className="card-title">Working today</h2>
+          <h2 className="card-title">{standing ? WORKING_PER_SCHEDULE : "Working today"}</h2>
           <p className="meta" style={{ marginBottom: 12 }}>
             Setup recorded. When your shift is actually over, mark it — BEYOND never guesses this from the clock.
           </p>
@@ -49,9 +61,22 @@ export function WorkContextCard({
             className="btn-secondary"
             style={{ marginTop: 8 }}
             disabled={busy}
-            onClick={() => setWorkContextOpen(true)}
+            onClick={standing ? onChangeStanding : () => setWorkContextOpen(true)}
           >
-            CHANGE WORK CONTEXT
+            {standing ? describeStandingChange("WORK") : "CHANGE WORK CONTEXT"}
+          </button>
+        </div>
+      );
+    }
+    // DROP 0: a standing day off keeps its one-tap change visible instead of
+    // collapsing behind a row (title + one button, no explanation).
+    if (standing && day.workContext === "OFF") {
+      return (
+        <div className="equipment-row">
+          <p className="tool-label" style={{ marginBottom: 4 }}>WORK CONTEXT</p>
+          <h2 className="card-title" style={{ marginBottom: 12 }}>{OFF_PER_SCHEDULE}</h2>
+          <button className="btn-secondary" disabled={busy} onClick={onChangeStanding}>
+            {describeStandingChange("OFF")}
           </button>
         </div>
       );
@@ -59,7 +84,7 @@ export function WorkContextCard({
     const summary =
       day.workContext === "OFF"
         ? "Off today."
-        : `Working today — ended ${new Date(workPeriodEndedAt!).toLocaleTimeString()}.`;
+        : `${standing ? WORKING_PER_SCHEDULE : "Working today"} — ended ${new Date(workPeriodEndedAt!).toLocaleTimeString()}.`;
     return <CollapsibleRow name="WORK CONTEXT" summary={summary} onOpen={() => setWorkContextOpen(true)} />;
   }
   return (
@@ -94,7 +119,8 @@ export function WorkContextCard({
       )}
       {day.workContext !== "UNKNOWN" && (
         <p className="meta" style={{ marginTop: 8 }}>
-          Currently set: {day.workContext === "WORK" ? "working today" : "off today"}.
+          Currently set: {day.workContext === "WORK" ? "working today" : "off today"}
+          {standing ? " (per schedule)" : ""}.
         </p>
       )}
       {day.workContext === "WORK" && (

@@ -3,6 +3,7 @@ import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { HoldButton } from "../../components/HoldButton";
 import { useUndoWindow } from "../../hooks/useUndoWindow";
+import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { Icon } from "../../icons/Icon";
 import { LineIcon } from "../../icons/LineIcon";
@@ -314,6 +315,8 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
   useEffect(() => {
     void refresh();
   }, []);
+  // DROP 0: re-read after a 16:30 rollover; form inputs are separate state and survive.
+  useDayRolloverRefresh(refresh);
 
   // Drop 7: bring a home-screen shortcut's destination into view once it
   // has rendered (BODY and the quit tracker load asynchronously).

@@ -455,11 +455,18 @@ export interface OutcomeRatedPayload {
  * write this directly — every change is this one explicit, confirmed
  * fact, whether the user typed it manually or accepted a schedule
  * suggestion. Doctrine: PREDICTION IS NOT FACT.
+ *
+ * SCHEDULE_STANDING (DROP 0, owner-approved exception, 2026-10-03): the
+ * operator's own saved schedule counts as their declaration when it's clear
+ * (engine/scheduledContext.ts's deriveStandingWorkContext), so startDay may
+ * write this one source itself. A later MANUAL declaration always wins.
  */
+export type WorkContextSource = "MANUAL" | "SCHEDULE_SUGGESTION_ACCEPTED" | "SCHEDULE_STANDING";
+
 export interface WorkContextSetPayload {
   commandId: string;
   workContext: "WORK" | "OFF";
-  source: "MANUAL" | "SCHEDULE_SUGGESTION_ACCEPTED";
+  source: WorkContextSource;
 }
 
 /**

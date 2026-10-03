@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { Ban } from "lucide-react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { HoldButton } from "../../components/HoldButton";
@@ -37,6 +38,9 @@ export function QuitTracker({ initiallyOpen = false }: { initiallyOpen?: boolean
     setSummary(next);
     setLoaded(true);
   }
+
+  // DROP 0: today's clean-day and urge state belongs to the new day after a 16:30 rollover.
+  useDayRolloverRefresh(refresh);
 
   useEffect(() => {
     disposedRef.current = false;

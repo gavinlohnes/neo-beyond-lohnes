@@ -15,6 +15,18 @@ export const PHASE_LABELS: Record<SchedulePhase, string> = {
   OFF: "off hours",
 };
 
+/**
+ * DROP 0 (standing schedule, owner ruling 2026-10-03): how TODAY names a work
+ * context that came from the operator's saved schedule rather than a tap.
+ */
+export const WORKING_PER_SCHEDULE = "Working · per schedule";
+export const OFF_PER_SCHEDULE = "Off · per schedule";
+
+/** The one-tap change on a standing day flips to the other value, recorded as MANUAL. */
+export function describeStandingChange(current: "WORK" | "OFF"): string {
+  return current === "WORK" ? "CHANGE TO OFF" : "CHANGE TO WORKING";
+}
+
 export function describeSchedulePrediction(ctx: ScheduledContext): string {
   const dayKind = ctx.todayIsScheduledWorkDay ? "a work day" : "a day off";
   return `Your schedule (Week ${ctx.week}) predicts ${dayKind} today — right now looks like ${PHASE_LABELS[ctx.phase]}. This is a prediction, not a fact, until you confirm.`;
@@ -40,13 +52,15 @@ export function describeContextStrip(
   workContext: "WORK" | "OFF" | "UNKNOWN",
   scheduledContext: ScheduledContext | null,
   hasUnresolvedPostShift: boolean,
+  perSchedule = false,
 ): string {
   if (workContext === "WORK") {
-    if (hasUnresolvedPostShift) return "Working today — shift ended, not yet shifted down";
-    if (scheduledContext) return `Working today — ${PHASE_LABELS[scheduledContext.phase]}`;
-    return "Working today";
+    const working = perSchedule ? WORKING_PER_SCHEDULE : "Working today";
+    if (hasUnresolvedPostShift) return `${working} — shift ended, not yet shifted down`;
+    if (scheduledContext) return `${working} — ${PHASE_LABELS[scheduledContext.phase]}`;
+    return working;
   }
-  if (workContext === "OFF") return "Off today";
+  if (workContext === "OFF") return perSchedule ? OFF_PER_SCHEDULE : "Off today";
   if (!scheduledContext) return "Context not set yet";
   const predicted = scheduledContext.todayIsScheduledWorkDay ? "a work day" : "a day off";
   return `Not confirmed yet — schedule predicts ${predicted} (${PHASE_LABELS[scheduledContext.phase]})`;
