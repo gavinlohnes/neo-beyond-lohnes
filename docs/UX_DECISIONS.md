@@ -185,6 +185,25 @@ below, this entry wins; the older entry is kept for history.
   writes an ordinary main-sleep `SLEEP_LOGGED` carrying the optional `draft` field (shown in
   History); NOT NOW is remembered on this phone only, for that day. Known gap left for later: sleeping
   past the 16:30 roll ends the post-shift phase, so no draft appears (log it in BODY as before).
+- **TODAY behavior from the field soak (Drop 1.6b, owner approval 2026-10-03).**
+  - **Sleep draft counts from your last activity.** It used to stay quiet whenever anything was
+    logged after Shift Down / MARK WORK ENDED — but the after-shift rows themselves suggest a workout,
+    and an urge or a glass of water broke it too. It now runs from the last thing logged after the
+    shift ended to the app open ("Last logged 08:15 → opened 14:20"), still an upper bound (the
+    operator was awake to log it), still 3–12 h, still never written without a tap.
+  - **Minimum Day's Attention offer is one line.** After a YELLOW check-in it used to fill TODAY's
+    first screen (long body, red button), pushing SHIFT DOWN, the workout and main sleep below the
+    fold. Now: "Minimum Day is available if it helps." with a neutral TURN ON, the explanation behind
+    WHY. Placement in Attention is unchanged (the offer still comes from the same capacity rule); only
+    its size and button weight changed. Once on, its checklist is as before.
+  - **MARK WORK ENDED waits for the shift's last hour.** During the scheduled shift it takes an
+    Attention slot only from `WORK_END_LEAD_MINUTES` (60) before the scheduled end; before that it is
+    one tap away in TOOLS (WORK CONTEXT shows it open) for a night that ends early. Owner ruling (a) —
+    never before the shift — is unchanged; a WORK day the schedule doesn't cover keeps it as before.
+  - **No work-day memory on a day off.** A prior day's undecided "Shift down after work" is not shown
+    as a continuity advisory on a day declared OFF. The locked FOUNDATION-1B continuity rule
+    (`engine/continuity.ts`) still resolves it exactly as before; only whether today shows its note
+    changed (`application/advisoryQueries.ts`).
 - **As built: the Ribbon (owner weekend order 2026-10-03).** Weekly's new LAST 28 DAYS section,
   above WEIGHT: one column per lived day (16:30 → 16:30, built from the Day Ledger by the pure
   `engine/ribbon.ts`), one row per fact — Shift (worked), Sleep (main sleep, a bar up to 12 h), Lift

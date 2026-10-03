@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
-import { logSleep, markWorkEnded, startDay, updateSchedulePattern } from "../../src/application/commands";
+import { logSleep, markWorkEnded, startDay, submitCheckIn, updateSchedulePattern } from "../../src/application/commands";
 import { saveQuitHabit } from "../../src/application/quitCommands";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { MAX_PHASE_ROWS } from "../../src/ui/screens/today/shiftClock";
@@ -109,8 +109,9 @@ describe("Shift Clock — on shift (18:00 → 06:00)", () => {
     await expect.element(screen.getByRole("heading", { name: "On shift", exact: true })).toBeVisible();
     await expect.poll(stripHeadline).toBe("Shift ends in 8h");
     await expect.poll(rows).toEqual(["QUICK_LOG", "FUEL"]);
-    // Once the shift has started MARK WORK ENDED is offered (ruling a); the check-in still isn't prompted (ruling b).
-    await expect.element(screen.getByRole("button", { name: "MARK WORK ENDED" })).toBeVisible();
+    // Drop 1.6b: mid-shift, MARK WORK ENDED isn't in Attention (it waits for the last hour) — it's one
+    // tap away in TOOLS for a night that ends early. The check-in still isn't prompted (ruling b).
+    expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(0);
     expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
 
     await screen.getByRole("button", { name: "Log 8 oz water" }).click();
@@ -121,6 +122,30 @@ describe("Shift Clock — on shift (18:00 → 06:00)", () => {
     expect(onOpenBody).toHaveBeenLastCalledWith("meal");
     await screen.getByRole("button", { name: "Log an urge in BODY" }).click();
     expect(onOpenBody).toHaveBeenLastCalledWith("urge");
+  });
+});
+
+describe("Shift Clock — MARK WORK ENDED timing (Drop 1.6b)", () => {
+  it("is in TOOLS mid-shift and in Attention from an hour before the scheduled end", async () => {
+    await startDayAt(at(12, 16, 30));
+    setClock(at(12, 22, 0));
+    let screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("heading", { name: "On shift", exact: true })).toBeVisible();
+    expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(0);
+    // Still a pending action, so WORK CONTEXT shows open inside TOOLS with MARK WORK ENDED.
+    await openTodayTools(screen);
+    await expect.element(screen.getByRole("button", { name: "MARK WORK ENDED" })).toBeVisible();
+    await cleanup();
+
+    setClock(at(13, 4, 59));
+    screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("heading", { name: "On shift", exact: true })).toBeVisible();
+    expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(0);
+    await cleanup();
+
+    setClock(at(13, 5, 0));
+    screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("button", { name: "MARK WORK ENDED" })).toBeVisible();
   });
 });
 
@@ -180,6 +205,34 @@ describe("Shift Clock — after shift (06:00 → main sleep)", () => {
 
     await expect.element(screen.getByRole("heading", { name: "After sleep", exact: true })).toBeVisible();
     await expect.poll(rows).toEqual(["CHECK_IN", "WORKOUT"]);
+  });
+});
+
+describe("Minimum Day offer after a YELLOW check-in (Drop 1.6b)", () => {
+  it("is one line with a neutral TURN ON, so SHIFT DOWN stays on the first screen", async () => {
+    const day = await startDayAt(at(12, 16, 30));
+    setClock(at(13, 6, 10));
+    await markWorkEnded(day.id);
+    setClock(at(13, 6, 20));
+    await submitCheckIn(day.id, { energy: 2, stress: 3, mood: 3, soreness: 2, alcoholUrge: 2 });
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByText("Minimum Day is available if it helps.", { exact: true })).toBeVisible();
+    const turnOn = screen.getByRole("button", { name: "TURN ON" });
+    expect(turnOn.element().className).toContain("btn-secondary");
+    expect(screen.getByRole("button", { name: "ENABLE MINIMUM DAY" }).elements()).toHaveLength(0);
+    // The explanation is behind WHY, not on the screen.
+    expect(screen.getByText(/The same six basics/).element().closest("details")).not.toBeNull();
+    // The offer is a small row now, and the SHIFT DOWN card starts on the first screen (it used to sit
+    // entirely below the fold, under a full-screen Minimum Day offer).
+    const offer = screen.getByText("Minimum Day is available if it helps.", { exact: true }).element().closest(".signal-row")!;
+    expect(offer.getBoundingClientRect().height).toBeLessThan(160);
+    const shiftDownRow = document.querySelector('[data-shift-clock-row="SHIFT_DOWN"]') as HTMLElement;
+    expect(shiftDownRow.getBoundingClientRect().top).toBeLessThan(500);
+
+    await turnOn.click();
+    await expect.poll(() => screen.getByRole("button", { name: "TURN ON" }).elements().length).toBe(0);
+    expect(await db.events.where("type").equals("MINIMUM_DAY_ENABLED").count()).toBe(1);
   });
 });
 

@@ -39,6 +39,8 @@ export const MINIMUM_DAY_ENABLE_BODY =
  * declining the offer is the wrong call.
  */
 export const MINIMUM_DAY_PROMINENT_TITLE = "Minimum Day is here if it helps";
+/** Drop 1.6b: the one-line Attention offer (the body moves behind WHY). */
+export const MINIMUM_DAY_AVAILABLE_LINE = "Minimum Day is available if it helps.";
 export const MINIMUM_DAY_PROMINENT_BODY =
   "The same six basics, with lower expectations and nothing extra added: hydrate, protein, meds, hygiene, a few minutes of movement, and a few minutes of recovery or connection. Turning it on is entirely up to you.";
 

@@ -2,11 +2,13 @@ import { CommandSurface } from "../../components/CommandSurface";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { SignalRow } from "../../components/SignalRow";
+import { WhyDisclosure } from "../../components/WhyDisclosure";
 import {
   describeMinimumDaySummary,
   getHydrationProgressPercent,
   MINIMUM_DAY_ENABLE_BODY,
   MINIMUM_DAY_ITEMS,
+  MINIMUM_DAY_AVAILABLE_LINE,
   MINIMUM_DAY_PROMINENT_BODY,
   MINIMUM_DAY_PROMINENT_TITLE,
 } from "./minimumDayCopy";
@@ -145,6 +147,24 @@ export function MinimumDayCard({
   onLogProtein: () => void;
 }) {
   if (!minimumDay) return null;
+  // Drop 1.6b (field soak): the Attention-tier offer is one line with a neutral TURN ON and its
+  // explanation behind WHY — it used to fill the whole first screen (red button included) and push
+  // SHIFT DOWN, the workout and main sleep below the fold. Placement is unchanged; only its size.
+  if (prominent && !minimumDay.enabled) {
+    return (
+      <SignalRow label="MINIMUM DAY">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <p className="card-body" style={{ margin: 0 }}>{MINIMUM_DAY_AVAILABLE_LINE}</p>
+          <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px", flex: "none" }} disabled={busy} onClick={onEnable}>
+            TURN ON
+          </button>
+        </div>
+        <WhyDisclosure summary="WHY" reveal={false} style={{ marginTop: 8 }}>
+          <p className="meta" style={{ margin: "6px 0 0" }}>{MINIMUM_DAY_PROMINENT_BODY}</p>
+        </WhyDisclosure>
+      </SignalRow>
+    );
+  }
   if (!prominent && !minimumDayOpen) {
     return (
       <CollapsibleRow

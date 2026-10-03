@@ -23,6 +23,7 @@ describe("deriveSleepDraft", () => {
       reason: "Shift Down 07:05 → opened 14:22",
       basis: [
         { key: "from", value: at(13, 7, 5).toISOString() },
+        { key: "shiftOverAt", value: at(13, 7, 5).toISOString() },
         { key: "openedAt", value: at(13, 14, 22).toISOString() },
         { key: "upperBoundMinutes", value: 435 },
       ],
@@ -36,8 +37,17 @@ describe("deriveSleepDraft", () => {
   it("stays quiet rather than guess", () => {
     expect(deriveSleepDraft(input({ anchorAt: null, anchorKind: null }))).toBeNull();
     expect(deriveSleepDraft(input({ mainSleepLogged: true }))).toBeNull();
-    // Something else was done in BEYOND after Shift Down, before this open.
-    expect(deriveSleepDraft(input({ lastOperatorActionAt: at(13, 9, 0).toISOString() }))).toBeNull();
+  });
+
+  it("Drop 1.6b: counts from the last thing logged after the shift — a post-shift workout or urge no longer hides it", () => {
+    // Shift Down 07:05, a workout finished 08:15, opened 14:20 → up to 6 h 5 min, said as "Last logged".
+    const draft = deriveSleepDraft(input({ lastOperatorActionAt: at(13, 8, 15).toISOString(), openedAt: at(13, 14, 20) }));
+    expect(draft?.value).toBe(365);
+    expect(draft?.reason).toBe("Last logged 08:15 → opened 14:20");
+    expect(draft?.basis).toContainEqual({ key: "from", value: at(13, 8, 15).toISOString() });
+    expect(draft?.basis).toContainEqual({ key: "shiftOverAt", value: at(13, 7, 5).toISOString() });
+    // Logged something too close to opening: under 3 h, quiet.
+    expect(deriveSleepDraft(input({ lastOperatorActionAt: at(13, 12, 0).toISOString(), openedAt: at(13, 14, 20) }))).toBeNull();
   });
 
   it(`only proposes gaps from ${SLEEP_DRAFT_MIN_MINUTES / 60}h to ${SLEEP_DRAFT_MAX_MINUTES / 60}h`, () => {
