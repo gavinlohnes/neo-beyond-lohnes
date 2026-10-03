@@ -1,4 +1,5 @@
 import type { SchedulePattern } from "../domain/common/types";
+import { nextRolloverBoundaryAfter } from "./dayRollover";
 
 /**
  * Work schedule / predictive context (Decision Register, "WORK SCHEDULE /
@@ -9,7 +10,9 @@ import type { SchedulePattern } from "../domain/common/types";
  * creates a historical work fact; that boundary is enforced by the
  * application layer (application/commands.ts's setWorkContext is the only
  * thing allowed to change BeyondDay.workContext, and only on explicit
- * confirmation).
+ * confirmation). One owner-approved exception (DROP 0, 2026-10-03): a clear,
+ * operator-saved schedule sets a new day's starting value — see
+ * deriveStandingWorkContext at the bottom of this file.
  *
  * Drop 02a (Daily Intelligence / Context, first slice): this module used
  * to own the Week A/B pattern as hardcoded constants. It now takes a
@@ -182,4 +185,64 @@ export function deriveScheduledContext(now: Date, pattern: SchedulePattern): Sch
   }
 
   return { week: weekOf(today, pattern), todayIsScheduledWorkDay: todayIsWorkDay, phase };
+}
+
+/**
+ * DROP 0 — STANDING SCHEDULE (direct owner ruling, 2026-10-03). An
+ * owner-approved exception to "prediction never writes workContext": a
+ * schedule the operator has saved themselves IS their declaration, so a new
+ * BeyondDay may start from it instead of asking "Are you working today?".
+ * This module only decides; application/commands.ts's startDay is the one
+ * writer, and it records the value as WORK_CONTEXT_SET with source
+ * SCHEDULE_STANDING so History shows where it came from. A manual change is
+ * always a later, ordinary MANUAL declaration that wins.
+ *
+ * A lived day runs from its start to the next 16:30 boundary. It is a work
+ * day when any scheduled shift overlaps that window — so the day that
+ * starts at 16:30 owns the 18:00 shift that follows, and a day started
+ * at 03:00 owns the shift it began inside.
+ */
+export function scheduledWorkContextForLivedDay(dayStartedAt: Date, pattern: SchedulePattern): "WORK" | "OFF" {
+  const windowStart = dayStartedAt.getTime();
+  const windowEnd = nextRolloverBoundaryAfter(dayStartedAt).getTime();
+  const startDate = midnightOf(dayStartedAt);
+  for (let offset = -1; offset <= 1; offset++) {
+    const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + offset);
+    if (!isWorkDay(date, pattern)) continue;
+    const shiftStart = at(date, pattern.shiftStartHour).getTime();
+    const shiftEnd = shiftEndFor(date, pattern).getTime();
+    if (shiftStart < windowEnd && shiftEnd > windowStart) return "WORK";
+  }
+  return "OFF";
+}
+
+/**
+ * True once the operator has saved the schedule themselves. The seeded
+ * default (Dexie v4 migration, or the fallback for a missing/malformed row)
+ * always carries DEFAULT_SCHEDULE_PATTERN's own updatedAt; any save through
+ * updateSchedulePattern stamps a real one.
+ */
+export function isOperatorSavedSchedule(pattern: SchedulePattern): boolean {
+  return pattern.updatedAt !== DEFAULT_SCHEDULE_PATTERN.updatedAt;
+}
+
+export type StandingWorkContext =
+  | { readonly clear: true; readonly workContext: "WORK" | "OFF" }
+  | { readonly clear: false; readonly reason: "SCHEDULE_NOT_SAVED" | "CORRECTED_THIS_LIVED_DAY" };
+
+/**
+ * CLEAR = the operator saved the schedule AND hasn't corrected the work
+ * context away from it earlier in this same lived day (an earlier BeyondDay
+ * in the same 16:30 window carrying a MANUAL WORK_CONTEXT_SET — e.g. they
+ * ended the day early and a new one started). Anything else is UNCLEAR, and
+ * the day starts UNKNOWN so TODAY asks the existing question once.
+ */
+export function deriveStandingWorkContext(input: {
+  dayStartedAt: Date;
+  pattern: SchedulePattern;
+  manualCorrectionEarlierThisLivedDay: boolean;
+}): StandingWorkContext {
+  if (!isOperatorSavedSchedule(input.pattern)) return { clear: false, reason: "SCHEDULE_NOT_SAVED" };
+  if (input.manualCorrectionEarlierThisLivedDay) return { clear: false, reason: "CORRECTED_THIS_LIVED_DAY" };
+  return { clear: true, workContext: scheduledWorkContextForLivedDay(input.dayStartedAt, input.pattern) };
 }

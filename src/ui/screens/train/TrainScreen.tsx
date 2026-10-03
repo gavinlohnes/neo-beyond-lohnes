@@ -14,6 +14,7 @@ import { deriveCapacity } from "../../../engine/capacity";
 import { suggestSessionVariant } from "../../../engine/trainSuggestion";
 import type { ProgressionSuggestion } from "../../../engine/progression";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
+import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { getActiveDay, getLatestCheckIn, getPlannedWorkDeclaration } from "../../../application/queries";
 import { ensureActiveDay, performDueDayRollover, setPlannedWork, submitCheckIn } from "../../../application/commands";
 import { quickCheckInValues } from "../today/TodayScreen";
@@ -240,6 +241,8 @@ export function TrainScreen({
   useEffect(() => {
     void refresh();
   }, []);
+  // DROP 0: re-read after a 16:30 rollover (never during a workout — rollover waits for it to end).
+  useDayRolloverRefresh(refresh);
 
   const sessionId = session?.id;
   useEffect(() => {

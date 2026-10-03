@@ -13,9 +13,11 @@ import type {
   StateCheckIn,
   WaterLogCorrectedPayload,
   WaterLoggedPayload,
+  WorkContextSetPayload,
+  WorkContextSource,
 } from "../domain/common/types";
 import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
-import { getWorkPeriodEnded, hasActivePlannedWork, hasUnresolvedPostShift } from "./queries";
+import { getStandingWorkContext, getWorkPeriodEnded, hasActivePlannedWork, hasUnresolvedPostShift } from "./queries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 
 /**
@@ -107,11 +109,16 @@ export async function startDay(startedAtOverride?: string): Promise<BeyondDay> {
   }
 
   const now = new Date().toISOString();
+  const startedAt = startedAtOverride ?? now;
+  // DROP 0 (standing schedule, owner ruling 2026-10-03): a clear, operator-
+  // saved schedule is the operator's own declaration, so the day starts
+  // from it instead of asking. Unclear → UNKNOWN, and TODAY asks once.
+  const standing = await getStandingWorkContext(new Date(startedAt));
   const day: BeyondDay = {
     id: newId(),
-    startedAt: startedAtOverride ?? now,
+    startedAt,
     timezoneId: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    workContext: "UNKNOWN",
+    workContext: standing.clear ? standing.workContext : "UNKNOWN",
     status: "ACTIVE",
     // createdAt/updatedAt always stay the real, unmodified row-write
     // instant — only startedAt (the semantic "when did this lived day
@@ -121,6 +128,15 @@ export async function startDay(startedAtOverride?: string): Promise<BeyondDay> {
   };
   await db.beyondDays.add(day);
   await logEvent(day.id, "DAY_STARTED", { dayId: day.id }, "USER", newId());
+  if (standing.clear) {
+    const correlationId = newId();
+    const payload: WorkContextSetPayload = {
+      commandId: correlationId,
+      workContext: standing.workContext,
+      source: "SCHEDULE_STANDING",
+    };
+    await logEvent(day.id, "WORK_CONTEXT_SET", payload, "SYSTEM", correlationId);
+  }
   return day;
 }
 
@@ -275,6 +291,32 @@ export class ActiveWorkoutBlocksDayEndError extends Error {
  */
 let performDueDayRolloverInFlight: Promise<BeyondDay | undefined> | null = null;
 
+/**
+ * DROP 0 (stale numbers after the 16:30 roll): screens that stay mounted
+ * across a rollover subscribe here and re-read their data. Called once per
+ * real rollover, after its transaction commits, whichever call site ran it.
+ * A listener that throws never affects the rollover or other listeners.
+ */
+type DayRolloverListener = (newDay: BeyondDay) => void;
+const dayRolloverListeners = new Set<DayRolloverListener>();
+
+export function subscribeToDayRollover(listener: DayRolloverListener): () => void {
+  dayRolloverListeners.add(listener);
+  return () => {
+    dayRolloverListeners.delete(listener);
+  };
+}
+
+function notifyDayRollover(newDay: BeyondDay): void {
+  for (const listener of [...dayRolloverListeners]) {
+    try {
+      listener(newDay);
+    } catch {
+      // One screen's failed refresh must never block another's.
+    }
+  }
+}
+
 export async function performDueDayRollover(now: Date = new Date()): Promise<BeyondDay | undefined> {
   if (performDueDayRolloverInFlight) return performDueDayRolloverInFlight;
   performDueDayRolloverInFlight = (async () => {
@@ -287,14 +329,18 @@ export async function performDueDayRollover(now: Date = new Date()): Promise<Bey
 
       const boundaryIso = boundary.toISOString();
       try {
-        return await db.transaction(
+        const newDay = await db.transaction(
           "rw",
-          [db.beyondDays, db.events, db.workoutSessions, db.checkIns, db.recommendations],
+          // schedulePatterns: startDay reads the saved schedule for the
+          // new day's standing work context (DROP 0).
+          [db.beyondDays, db.events, db.workoutSessions, db.checkIns, db.recommendations, db.schedulePatterns],
           async () => {
             await endDay(activeDay.id, "AUTO_CLOSED_DAY_ROLLOVER", boundaryIso);
             return await startDay(boundaryIso);
           },
         );
+        notifyDayRollover(newDay);
+        return newDay;
       } catch (e) {
         if (e instanceof ActiveWorkoutBlocksDayEndError) return undefined;
         throw e;
@@ -626,8 +672,10 @@ export async function rateOutcome(
 }
 
 /**
- * The ONLY way BeyondDay.workContext ever changes (Decision Register,
- * WORK SCHEDULE / CONTEXT reconciliation, 2026-08-19). Schedule/time may
+ * The only way BeyondDay.workContext changes during a day (Decision Register,
+ * WORK SCHEDULE / CONTEXT reconciliation, 2026-08-19). The one exception is
+ * startDay's standing-schedule value at day start (DROP 0, owner-approved
+ * 2026-10-03), and a call here always supersedes it. Schedule/time may
  * SUGGEST a context via engine/scheduledContext.ts, but nothing writes
  * workContext except this explicit, confirmed command — whether the
  * trigger was typing it manually or accepting a schedule suggestion.
@@ -639,7 +687,9 @@ export async function rateOutcome(
 export async function setWorkContext(
   beyondDayId: string,
   workContext: "WORK" | "OFF",
-  source: "MANUAL" | "SCHEDULE_SUGGESTION_ACCEPTED",
+  // SCHEDULE_STANDING is written only by startDay (DROP 0); an operator's
+  // own change is always MANUAL or an accepted suggestion.
+  source: Exclude<WorkContextSource, "SCHEDULE_STANDING">,
 ): Promise<void> {
   await db.beyondDays.update(beyondDayId, {
     workContext,

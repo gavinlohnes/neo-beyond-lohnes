@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import type { BeyondDay, CaptureItem, Recommendation, StateCheckIn, WorkoutSession } from "../../../domain/common/types";
+import type {
+  BeyondDay,
+  CaptureItem,
+  Recommendation,
+  StateCheckIn,
+  WorkContextSource,
+  WorkoutSession,
+} from "../../../domain/common/types";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { SignalRow } from "../../components/SignalRow";
@@ -15,11 +22,17 @@ import { convertCaptureToObligation, satisfyObligation } from "../../../applicat
 import { formatLocalDate } from "../../../engine/scheduledContext";
 import type { Mission, Obligation } from "../../../domain/intent/types";
 import { isCheckInComplete, type CheckInValues, type PartialCheckInValues } from "./checkInFields";
-import { describeContextStrip, resolveWorkContextSource } from "./workContextCopy";
+import {
+  WORKING_PER_SCHEDULE,
+  describeContextStrip,
+  describeStandingChange,
+  resolveWorkContextSource,
+} from "./workContextCopy";
 import { describeCapacity, describeCapacityUnknown } from "./capacityCopy";
 import { deriveCapacity } from "../../../engine/capacity";
 import { dismissOutcome } from "../../../persistence/outcomeDismissals";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
+import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { isSeriouslyConstrained } from "./minimumDayCopy";
 import { isPrimaryReset, isPrimaryShiftDown, type SessionOutcome } from "./resetShiftDownCopy";
 import { ActiveWorkoutCard } from "./ActiveWorkoutCard";
@@ -78,6 +91,7 @@ import {
   getOpenReset,
   getOpenShiftDown,
   getWorkPeriodEnded,
+  getWorkContextSource,
   hasUnresolvedPostShift,
   getOpenCaptureItems,
   type MinimumDayStatus,
@@ -164,6 +178,8 @@ export function TodayScreen({
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
+  // DROP 0: where the day's work context came from — "per schedule" only while the saved schedule's value stands.
+  const [workContextSource, setWorkContextSource] = useState<WorkContextSource | undefined>(undefined);
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
   // Current Operational Context V1 (bounded proof): feeds the STATUS
   // context strip only — every other read above (day, scheduledContext,
@@ -292,6 +308,12 @@ export function TodayScreen({
   const [postShiftPlan, setPostShiftPlan] = useState<string | undefined>(undefined);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
+  // DROP 0: re-read the new day's numbers and schedule phase after a 16:30 rollover.
+  useDayRolloverRefresh(() => {
+    void getScheduledContext().then(setScheduledContext);
+    return refresh();
+  });
+
   useEffect(() => {
     void refresh();
     void getScheduledContext().then(setScheduledContext);
@@ -400,6 +422,7 @@ export function TodayScreen({
     let openShiftDown: Awaited<ReturnType<typeof getOpenShiftDown>> | undefined;
     let workPeriodEndedAt: string | null = null;
     let unresolvedPostShift = false;
+    let workContextSource: WorkContextSource | undefined;
 
     if (activeDay) {
       checkIn = (await getLatestCheckIn(activeDay.id)) ?? null;
@@ -418,6 +441,7 @@ export function TodayScreen({
       const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
       workPeriodEndedAt = workPeriodEnded ? workPeriodEnded.occurredAt : null;
       unresolvedPostShift = await hasUnresolvedPostShift(activeDay.id);
+      workContextSource = await getWorkContextSource(activeDay.id);
     }
     // Intelligence Spine consumption (2026-09-02): advisory notes are pure
     // SUPPORT-tier background context with no ordering dependency on
@@ -484,6 +508,7 @@ export function TodayScreen({
       }
       setWorkPeriodEndedAt(workPeriodEndedAt);
       setUnresolvedPostShift(unresolvedPostShift);
+      setWorkContextSource(workContextSource);
     } else {
       setRecommendation(null);
       setDecision(undefined);
@@ -747,6 +772,22 @@ export function TodayScreen({
     try {
       const source = resolveWorkContextSource(scheduledContext.todayIsScheduledWorkDay, value);
       await setWorkContext(day.id, value, source);
+      await refresh();
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  }
+
+  // DROP 0: one tap flips the saved schedule's value for this day. Always a
+  // MANUAL declaration, so it wins for the rest of the day and shows in History.
+  async function handleChangeStandingWorkContext() {
+    if (busy || busyRef.current || !day || day.workContext === "UNKNOWN") return;
+    busyRef.current = true;
+    setBusy(true);
+    try {
+      await setWorkContext(day.id, day.workContext === "WORK" ? "OFF" : "WORK", "MANUAL");
+      setWorkContextOpen(false);
       await refresh();
     } finally {
       busyRef.current = false;
@@ -1025,6 +1066,8 @@ export function TodayScreen({
   // supersedes the old ad hoc activeModeInProgress/showSystemSection
   // booleans with one tested module; no Engine policy, capacity, or
   // domain fact is touched by it.
+  // DROP 0: the saved schedule's value still stands for this day (no change since).
+  const workContextPerSchedule = !!day && day.workContext !== "UNKNOWN" && workContextSource === "SCHEDULE_STANDING";
   const attentionPlan = deriveAttentionPlan({
     activeWorkoutId: activeWorkout?.id ?? null,
     activeWorkoutType: activeWorkout?.sessionType ?? null,
@@ -1191,6 +1234,7 @@ export function TodayScreen({
               currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
               currentContext ? currentContext.schedulePrediction : scheduledContext,
               currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
+              workContextPerSchedule,
             )}
           </p>
           <p className="status-strip__detail">
@@ -1408,12 +1452,19 @@ export function TodayScreen({
             <SignalRow label="WORK STATE">
               {/* DECLUTTER-001: the explanation sentence is cut so SHIFT DOWN
                   fits on the first phone screen; the button says what it does. */}
-              <h2 className="card-title" style={{ marginBottom: 12 }}>Working today</h2>
+              <h2 className="card-title" style={{ marginBottom: 12 }}>
+                {workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}
+              </h2>
               <button className="btn-primary" disabled={busy} onClick={() => void handleMarkWorkEnded()}>
                 MARK WORK ENDED
               </button>
-              <button className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} onClick={() => setWorkContextOpen(true)}>
-                CHANGE WORK CONTEXT
+              <button
+                className="btn-secondary"
+                style={{ marginTop: 8 }}
+                disabled={busy}
+                onClick={workContextPerSchedule ? () => void handleChangeStandingWorkContext() : () => setWorkContextOpen(true)}
+              >
+                {workContextPerSchedule ? describeStandingChange("WORK") : "CHANGE WORK CONTEXT"}
               </button>
             </SignalRow>
           )}
@@ -1644,6 +1695,8 @@ export function TodayScreen({
           busy={busy}
           onSetWorkContext={(value) => void handleSetWorkContext(value)}
           onMarkWorkEnded={() => void handleMarkWorkEnded()}
+          perSchedule={workContextPerSchedule}
+          onChangeStanding={() => void handleChangeStandingWorkContext()}
         />
       )}
 

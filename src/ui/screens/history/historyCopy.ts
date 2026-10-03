@@ -45,7 +45,9 @@ export function describeEvent(event: DomainEvent): string {
     case "OUTCOME_RATED":
       return `Outcome rated: ${p.rating}.`;
     case "WORK_CONTEXT_SET":
-      return `Work context set to ${p.workContext} (${p.source === "MANUAL" ? "manual" : "accepted schedule suggestion"}).`;
+      return `Work context set to ${p.workContext} (${
+        p.source === "MANUAL" ? "manual" : p.source === "SCHEDULE_STANDING" ? "per your saved schedule" : "accepted schedule suggestion"
+      }).`;
     case "MINIMUM_DAY_ENABLED":
       return "Minimum Day enabled.";
     case "MEDS_COMPLETED":

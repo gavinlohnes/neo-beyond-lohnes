@@ -9,6 +9,7 @@ import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
 import { performDueDayRollover } from "../application/commands";
+import { nextRolloverBoundaryAfter } from "../engine/dayRollover";
 import { parseShortcut } from "../ui/shortcuts";
 
 /**
@@ -87,6 +88,9 @@ function AppUpdateBanner() {
     </div>
   );
 }
+
+/** Fire just after the boundary, so the rollover check sees it as elapsed. */
+const ROLLOVER_TIMER_MARGIN_MS = 1000;
 
 export function App() {
   // Drop 7: a home-screen shortcut (?go=…) opens BODY at the right control.
@@ -185,6 +189,37 @@ export function App() {
     return () => {
       document.removeEventListener("visibilitychange", handleResume);
       window.removeEventListener("pageshow", handleResume);
+    };
+  }, []);
+
+  /**
+   * DROP 0 (stale numbers after the 16:30 roll): the resume listener above
+   * only helps when the app was hidden. An app left open on screen across
+   * 16:30 never fires it, so this also arms a timer for the next boundary
+   * and re-checks when it fires, then re-arms. Re-armed on every return to
+   * the foreground too, since a phone can suspend timers while the screen is
+   * off. Screens re-read through useDayRolloverRefresh when a rollover
+   * actually happens.
+   */
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    function arm() {
+      clearTimeout(timer);
+      const delay = nextRolloverBoundaryAfter(new Date()).getTime() - Date.now() + ROLLOVER_TIMER_MARGIN_MS;
+      timer = setTimeout(() => {
+        void performDueDayRollover()
+          .catch(() => {})
+          .finally(arm);
+      }, delay);
+    }
+    function handleVisible() {
+      if (document.visibilityState === "visible") arm();
+    }
+    arm();
+    document.addEventListener("visibilitychange", handleVisible);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", handleVisible);
     };
   }, []);
 

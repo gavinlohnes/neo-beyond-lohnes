@@ -103,6 +103,24 @@ below, this entry wins; the older entry is kept for history.
   on BODY at that control (bodyweight entry or quit tracker opened, the rest scrolled into view)
   and is then cleared from the URL; a shortcut never logs anything by itself and takes
   precedence over resuming an active workout (the workout stays active on TRAIN).
+- **Field fixes, Drop 0 (direct owner ruling, 2026-10-03).**
+  - **Standing schedule: an owner-approved exception to "prediction never writes
+    `workContext`"** (see AI_CANNOT_SILENTLY_CHANGE_PLANS below). A schedule the operator saved
+    themselves is their declaration, so when it's clear a new BeyondDay starts from it: WORK or
+    OFF, recorded as `WORK_CONTEXT_SET` with source `SCHEDULE_STANDING` (event source `SYSTEM`),
+    shown on TODAY as "Working · per schedule" / "Off · per schedule" with a one-tap CHANGE TO
+    OFF / CHANGE TO WORKING. **Clear** = the schedule has been saved by the operator at least once
+    (its `updatedAt` differs from the seeded default's) and no earlier BeyondDay in the same 16:30
+    lived-day window carries a MANUAL work-context change. **Unclear** → the day starts UNKNOWN
+    and TODAY asks the existing question once. A lived day (start → next 16:30) is a work day when
+    a scheduled shift overlaps it, so the 16:30 day owns that evening's 18:00 shift. Only
+    `startDay` writes the standing value, only at day start; any later change is an ordinary
+    MANUAL declaration and wins. Pure rule: `engine/scheduledContext.ts`'s
+    `deriveStandingWorkContext`. No schema change.
+  - **Open screens follow the 16:30 roll.** While the app is open it arms a timer for the next
+    boundary (`App.tsx`), and every real rollover notifies subscribed screens
+    (`subscribeToDayRollover`, `useDayRolloverRefresh`): TODAY, BODY, the quit tracker and TRAIN
+    re-read their data without remounting, so unsaved typing survives.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 
@@ -176,7 +194,8 @@ is clearer in context.
   without an explicit operator action. Reconciles to doctrine's learned-shortcuts guarantee
   ("never silently execute consequential actions") and the concrete `scheduledContext.ts`
   boundary: prediction never writes `workContext`; only the explicit `setWorkContext` command
-  can.
+  can. **One owner-approved exception (2026-10-03, Drop 0):** a clear, operator-saved schedule
+  sets a new day's starting value (`SCHEDULE_STANDING`) — see "Field fixes, Drop 0" above.
 - **ENJOYMENT_COUNTS** (new canon) — subjective enjoyment/satisfaction is a legitimate signal to
   record and surface back to the operator, not a lesser one than raw adherence; a
   completed-but-disliked session and a skipped-but-enjoyed one are both honestly representable.

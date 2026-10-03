@@ -10,8 +10,18 @@ import type {
   StateCheckIn,
   WaterLogCorrectedPayload,
   WaterLoggedPayload,
+  WorkContextSetPayload,
+  WorkContextSource,
 } from "../domain/common/types";
-import { DEFAULT_SCHEDULE_PATTERN, deriveScheduledContext, type ScheduledContext } from "../engine/scheduledContext";
+import {
+  DEFAULT_SCHEDULE_PATTERN,
+  deriveScheduledContext,
+  deriveStandingWorkContext,
+  isOperatorSavedSchedule,
+  type ScheduledContext,
+  type StandingWorkContext,
+} from "../engine/scheduledContext";
+import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 import { parseSchedulePattern } from "../persistence/schedulePatternValidation";
 import { isOutcomeDismissed } from "../persistence/outcomeDismissals";
 import { getTotalMealProteinGrams } from "./nutritionQueries";
@@ -756,6 +766,65 @@ export async function getOpenShiftDown(beyondDayId: string): Promise<OpenShiftDo
 export interface WorkPeriodEndedInfo {
   eventId: string;
   occurredAt: string;
+}
+
+/**
+ * DROP 0 (standing schedule, owner ruling 2026-10-03): what a BeyondDay
+ * starting at `dayStartedAt` should start with. Gathers the two facts
+ * engine/scheduledContext.ts's deriveStandingWorkContext needs — the stored
+ * schedule, and whether an earlier BeyondDay in the same 16:30 lived-day
+ * window carries a MANUAL work-context declaration — and lets it decide.
+ * Read-only; application/commands.ts's startDay is the only writer.
+ */
+export async function getStandingWorkContext(dayStartedAt: Date): Promise<StandingWorkContext> {
+  const pattern = await getSchedulePattern();
+  if (!isOperatorSavedSchedule(pattern)) {
+    return deriveStandingWorkContext({ dayStartedAt, pattern, manualCorrectionEarlierThisLivedDay: false });
+  }
+  // Manual work-context declarations are rare, so start from those (indexed
+  // by type) and keep the ones on a day that began earlier in this window.
+  const windowStartIso = mostRecentBoundaryAtOrBefore(dayStartedAt).toISOString();
+  const dayStartedAtIso = dayStartedAt.toISOString();
+  const manualDayIds = new Set(
+    (await db.events.where("type").equals("WORK_CONTEXT_SET").toArray())
+      .filter((e) => (e.payload as WorkContextSetPayload).source === "MANUAL")
+      .flatMap((e) => (e.beyondDayId ? [e.beyondDayId] : [])),
+  );
+  let manualCorrectionEarlierThisLivedDay = false;
+  if (manualDayIds.size > 0) {
+    const days = await db.beyondDays.bulkGet([...manualDayIds]);
+    manualCorrectionEarlierThisLivedDay = days.some(
+      (d) => d !== undefined && d.startedAt >= windowStartIso && d.startedAt < dayStartedAtIso,
+    );
+  }
+  return deriveStandingWorkContext({ dayStartedAt, pattern, manualCorrectionEarlierThisLivedDay });
+}
+
+/**
+ * DROP 0: where the day's current work context came from — the source on
+ * its latest WORK_CONTEXT_SET event, or undefined when it was never set.
+ * TODAY uses this to say "per schedule" only while the schedule's value
+ * still stands.
+ */
+export async function getWorkContextSource(beyondDayId: string): Promise<WorkContextSource | undefined> {
+  const events = await db.events
+    .where("beyondDayId")
+    .equals(beyondDayId)
+    .filter((e) => e.type === "WORK_CONTEXT_SET")
+    .toArray();
+  if (events.length === 0) return undefined;
+  // Write order decides "latest": seq when both events carry it (every
+  // event written by this build does), occurredAt for older imported rows.
+  events.sort((a, b) =>
+    a.seq !== undefined && b.seq !== undefined
+      ? a.seq - b.seq
+      : a.occurredAt === b.occurredAt
+        ? 0
+        : a.occurredAt < b.occurredAt
+          ? -1
+          : 1,
+  );
+  return (events[events.length - 1]!.payload as WorkContextSetPayload).source;
 }
 
 /**
