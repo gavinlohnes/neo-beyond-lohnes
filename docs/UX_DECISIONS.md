@@ -627,6 +627,26 @@ enter Engine recommendation arbitration" further below).
   ontology, and no nutrition *scoring* (a single pass/fail or point
   value judging a day) — only two plain numeric targets with honest
   progress-toward-target display.
+- **As built in Drop 1.5 (protein totals fix, owner brief 2026-10-03).**
+  - **One protein total.** `application/queries.ts`'s `getDayProteinTotalG` (protein-only logs +
+    effective meal protein, deleted entries excluded) is the day's protein for every screen: TODAY's
+    fuel line and Minimum Day card, BODY's PROTEIN status tile and NUTRITION TARGETS, Minimum Day's
+    check and the weekly check-in. The Day Ledger computes the same sum. BODY's status tile used to
+    show protein-only logs (49 g) while the rest showed the combined total (99 g).
+    `getTotalProteinGrams` still means protein-only logs and is no longer shown on its own.
+  - **DELETE for a protein-only log.** Same as meals: tap CORRECT on the entry, then hold DELETE.
+    It appends `PROTEIN_LOG_VOIDED` naming the root `PROTEIN_LOGGED` (nothing erased; History shows
+    "Protein log deleted."), the whole chain leaves every total, and a deleted entry can't be
+    corrected. Confirmation: "Deleted 49 g. Protein today: 50 g." Counted as a correction by the
+    Burden Meter.
+  - **Correcting to 0** ("0", "00", "0.0") is refused with "0 g can't be saved as a correction. To
+    remove this entry, hold DELETE.", shown inside the entry — it used to land in the water card,
+    off screen. `correctProtein` refuses a non-positive value too.
+  - **"Same food?"** (`engine/sameFood.ts`): right after a protein-only log or a saved-meal LOG, if
+    the other kind was logged within 2 minutes with protein within 5 g or 10% (whichever is wider),
+    BODY asks "Same food? 49 g protein at 20:43 and Dinner (50 g protein) at 20:43." with KEEP BOTH /
+    REMOVE ONE. REMOVE ONE deletes the protein-only entry (the meal carries calories and macros) and
+    says so before you tap. Never blocks a log, never removes anything on its own.
 
 ## NUTRITION TARGETS (Calorie + Protein Targets — NUTRITION-003, locked)
 

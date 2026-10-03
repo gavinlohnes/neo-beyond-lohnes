@@ -4,6 +4,7 @@ import type {
   DomainEvent,
   DomainEventType,
   MealLogVoidedPayload,
+  ProteinLogVoidedPayload,
   RecommendationKind,
   SchedulePattern,
   StateCheckIn,
@@ -173,6 +174,7 @@ const CORRECTION_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(
   "PROTEIN_LOG_CORRECTED",
   "MEAL_LOG_CORRECTED",
   "MEAL_LOG_VOIDED",
+  "PROTEIN_LOG_VOIDED",
   "URGE_UNDONE",
 ]);
 
@@ -334,7 +336,8 @@ function summarizeDay(
 
   // Protein + meals (voided meals leave every total, same as getMealEntries)
   const proteinCorrections = correctionsOf(events, "PROTEIN_LOG_CORRECTED");
-  const proteinLogs = ofType(events, "PROTEIN_LOGGED").map((root) =>
+  const voidedProtein = new Set(ofType(events, "PROTEIN_LOG_VOIDED").map((e) => (e.payload as ProteinLogVoidedPayload).proteinEventId));
+  const proteinLogs = ofType(events, "PROTEIN_LOGGED").filter((e) => !voidedProtein.has(e.id)).map((root) =>
     effectiveValue(root, proteinCorrections, (p) => (p as { grams: number }).grams),
   );
   const voided = new Set(ofType(events, "MEAL_LOG_VOIDED").map((e) => (e.payload as MealLogVoidedPayload).mealEventId));

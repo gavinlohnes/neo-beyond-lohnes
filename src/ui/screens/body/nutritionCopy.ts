@@ -60,3 +60,29 @@ export function describeProteinProgress(loggedG: number, targetG: number | undef
     ? `${loggedG} / ${targetG}g protein · ${remaining}g to go`
     : `${loggedG} / ${targetG}g protein · target met, +${Math.abs(remaining)}g over`;
 }
+
+// ---- DROP 1.5 (owner brief 2026-10-03): protein-only DELETE + "Same food?" ----
+
+export const PROTEIN_DELETE_HINT = "Hold to delete.";
+
+/** Correcting to 0 isn't a deletion; point at the one control that is. */
+export const PROTEIN_CORRECT_TO_ZERO = "0 g can't be saved as a correction. To remove this entry, hold DELETE.";
+
+/** Shown after DELETE, with the day's protein as every screen now shows it. */
+export function describeProteinDeleted(grams: number, dayTotalG: number): string {
+  return `Deleted ${grams} g. Protein today: ${dayTotalG} g.`;
+}
+
+function clock(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+/** "Same food? 49 g protein at 20:43 and Dinner (50 g protein) at 20:43." */
+export function describeSameFoodQuestion(protein: { grams: number; at: string }, meal: { name: string; proteinG: number; at: string }): string {
+  return `Same food? ${protein.grams} g protein at ${clock(protein.at)} and ${meal.name} (${meal.proteinG} g protein) at ${clock(meal.at)}.`;
+}
+
+/** REMOVE ONE keeps the meal (it carries calories and macros) and deletes the protein-only entry. */
+export function describeSameFoodRemoveOne(proteinGrams: number): string {
+  return `REMOVE ONE deletes the ${proteinGrams} g protein-only entry; the meal stays.`;
+}
