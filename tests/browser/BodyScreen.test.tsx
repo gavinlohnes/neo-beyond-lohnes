@@ -367,15 +367,15 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
   });
 
-  it("CORRECT preserves history rather than deleting the original entry", async () => {
+  it("editing a logged meal preserves history rather than deleting the original entry", async () => {
     const screen = await render(<BodyScreen />);
     await addSavedMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByText("Chicken & Rice Bowl logged · 600 kcal · 45g", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
-    await screen.getByRole("button", { name: "CORRECT" }).click();
+    await screen.getByRole("button", { name: "Edit Chicken & Rice Bowl" }).click();
     await screen.getByRole("spinbutton", { name: "Corrected calories" }).fill("620");
-    await screen.getByRole("button", { name: "SAVE" }).click();
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
 
     await expect.element(screen.getByText("620 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/corrected 1x/)).toBeVisible();
@@ -409,6 +409,41 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
   });
 
+  it("HOTFIX amendment: a meal row has no CORRECT button; tapping it opens SAVE + DELETE, tapping again cancels", async () => {
+    const day = await startDay();
+    const dinner = await createSavedMeal({ name: "Dinner", calories: 650, proteinG: 45, carbsG: 50, fatG: 20 });
+    await logMeal(day.id, dinner.id);
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
+
+    const row = screen.getByRole("button", { name: "Edit Dinner" });
+    await expect.element(row).toHaveAttribute("aria-expanded", "false");
+    expect(row.element().querySelector(".disclosure-chevron")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "CORRECT" }).elements()).toHaveLength(0);
+
+    await row.click();
+    await expect.element(row).toHaveAttribute("aria-expanded", "true");
+    await expect.element(screen.getByRole("button", { name: "SAVE", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "DELETE" })).toBeVisible();
+    // Plain visible labels; the input keeps a unique accessible name.
+    const card = row.element().parentElement!;
+    expect([...card.querySelectorAll("label")].map((l) => l.textContent)).toEqual(["Calories", "Protein", "Carbs", "Fat"]);
+    await expect.element(screen.getByRole("spinbutton", { name: "Corrected calories" })).toHaveValue(650);
+
+    // SAVE with nothing changed writes nothing.
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText("No changes.", { exact: true })).toBeVisible();
+    expect(await db.events.where("type").equals("MEAL_LOG_CORRECTED").count()).toBe(0);
+
+    // Edits in progress are dropped when the row is tapped again.
+    await screen.getByRole("spinbutton", { name: "Corrected calories" }).fill("999");
+    await row.click();
+    await expect.element(row).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("spinbutton", { name: "Corrected calories" }).elements()).toHaveLength(0);
+    await row.click();
+    await expect.element(screen.getByRole("spinbutton", { name: "Corrected calories" })).toHaveValue(650);
+  });
+
   it("HOTFIX: DELETE needs a hold, then removes the meal from today's calories and protein", async () => {
     const day = await startDay();
     const dinner = await createSavedMeal({ name: "Dinner", calories: 650, proteinG: 45, carbsG: 50, fatG: 20 });
@@ -417,6 +452,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     const screen = await render(<BodyScreen />);
     await expect.element(screen.getByText(/650 \/ 2200 kcal/)).toBeVisible();
     await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
+    await screen.getByRole("button", { name: "Edit Dinner" }).click();
 
     // A quick tap deletes nothing.
     await screen.getByRole("button", { name: "DELETE" }).click();

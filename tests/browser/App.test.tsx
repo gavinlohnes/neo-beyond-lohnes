@@ -4,6 +4,7 @@ import { page } from "vitest/browser";
 import { App } from "../../src/app/App";
 import { recordRecommendation, startDay, submitCheckIn } from "../../src/application/commands";
 import { logSet, startWorkout } from "../../src/application/trainCommands";
+import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
 import { db } from "../../src/persistence/db";
 import { evaluate } from "../../src/engine/evaluate";
 import type { StateCheckIn } from "../../src/domain/common/types";
@@ -96,6 +97,25 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     }
     const todayButton = screen.getByText("TODAY", { exact: true }).element().closest("button")!;
     expect(todayButton.getAttribute("aria-current")).toBe("page");
+  });
+
+  it("HOTFIX amendment: switching tabs cancels an open meal edit", async () => {
+    const day = await startDay();
+    const dinner = await createSavedMeal({ name: "Dinner", calories: 650, proteinG: 45, carbsG: 50, fatG: 20 });
+    await logMeal(day.id, dinner.id);
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
+    await screen.getByRole("button", { name: "Edit Dinner" }).click();
+    await screen.getByRole("spinbutton", { name: "Corrected calories" }).fill("999");
+
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+
+    await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
+    await expect.element(screen.getByRole("button", { name: "Edit Dinner" })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("spinbutton", { name: "Corrected calories" }).elements()).toHaveLength(0);
+    expect(await db.events.where("type").equals("MEAL_LOG_CORRECTED").count()).toBe(0);
   });
 
   it("switching territories updates aria-current and keeps a non-color (bold) cue on the selected tab", async () => {

@@ -87,7 +87,7 @@ import {
   MEALS_TODAY_EMPTY,
   SAVED_MEALS_EMPTY,
 } from "./nutritionCopy";
-import { describeError } from "../../errorMessage";
+import { describeError, NO_CHANGES_MESSAGE } from "../../errorMessage";
 
 type Confirmation = { message: string; headEventId: string } | null;
 /** The MEAL_LOGGED events the confirmation's UNDO voids — one, or a whole SAME AS YESTERDAY batch. */
@@ -123,8 +123,10 @@ const EMPTY_MEAL_MACRO_FORM: MealMacroFormState = { calories: "", proteinG: "", 
  * from props, no state of its own) rather than repeated three times.
  */
 /**
- * `labelPrefix` (e.g. "New meal" / "Edit meal" / "Corrected") makes each
- * field's accessible NAME unique, not just its DOM id — the add-meal
+ * HOTFIX amendment (owner ruling 2026-10-03): the visible labels are just
+ * Calories / Protein / Carbs / Fat. `labelPrefix` (e.g. "New meal" / "Edit
+ * meal" / "Corrected") now lives only in each input's aria-label, which
+ * still contains the visible word, so the accessible NAME stays unique, not just its DOM id — the add-meal
  * form, an in-progress edit, and a correction can all be open on screen
  * at once (independent disclosure/edit/correction state), and a bare
  * "Protein (g)" would also collide with BODY's own PROTEIN station
@@ -142,9 +144,10 @@ function renderMealMacroInputs(
     <>
       <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
         <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-          <label htmlFor={`${idPrefix}-calories`}><span>{labelPrefix} calories</span></label>
+          <label htmlFor={`${idPrefix}-calories`}><span>Calories</span></label>
           <input
             id={`${idPrefix}-calories`}
+            aria-label={`${labelPrefix} calories`}
             type="number"
             min={0}
             value={form.calories}
@@ -153,9 +156,10 @@ function renderMealMacroInputs(
           />
         </div>
         <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-          <label htmlFor={`${idPrefix}-protein`}><span>{labelPrefix} protein (g)</span></label>
+          <label htmlFor={`${idPrefix}-protein`}><span>Protein</span></label>
           <input
             id={`${idPrefix}-protein`}
+            aria-label={`${labelPrefix} protein (g)`}
             type="number"
             min={0}
             value={form.proteinG}
@@ -166,9 +170,10 @@ function renderMealMacroInputs(
       </div>
       <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
         <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-          <label htmlFor={`${idPrefix}-carbs`}><span>{labelPrefix} carbs (g)</span></label>
+          <label htmlFor={`${idPrefix}-carbs`}><span>Carbs</span></label>
           <input
             id={`${idPrefix}-carbs`}
+            aria-label={`${labelPrefix} carbs (g)`}
             type="number"
             min={0}
             value={form.carbsG}
@@ -177,9 +182,10 @@ function renderMealMacroInputs(
           />
         </div>
         <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-          <label htmlFor={`${idPrefix}-fat`}><span>{labelPrefix} fat (g)</span></label>
+          <label htmlFor={`${idPrefix}-fat`}><span>Fat</span></label>
           <input
             id={`${idPrefix}-fat`}
+            aria-label={`${labelPrefix} fat (g)`}
             type="number"
             min={0}
             value={form.fatG}
@@ -267,7 +273,7 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
   const [mealEntries, setMealEntries] = useState<NutritionEntry[]>([]);
   // HOTFIX (owner ruling 2026-10-03): "Dinner logged · 650 kcal · 45g" with
   // UNDO, for a few seconds only (UNDO_WINDOW_MS). Fixing a meal later is
-  // CORRECT or DELETE in TODAY'S MEALS.
+  // tapping it in TODAY'S MEALS (SAVE or DELETE).
   const [mealConfirmation, setMealConfirmation] = useUndoWindow<MealConfirmation>();
   const [mealHistoryOpen, setMealHistoryOpen] = useState(false);
   const [addMealOpen, setAddMealOpen] = useState(false);
@@ -280,6 +286,8 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
   const [editMealForm, setEditMealForm] = useState<MealFormState>(EMPTY_MEAL_FORM);
   const [correctingMealEventId, setCorrectingMealEventId] = useState<string | null>(null);
   const [mealCorrectionForm, setMealCorrectionForm] = useState<MealMacroFormState>(EMPTY_MEAL_MACRO_FORM);
+  // Shown inside the open meal's edit view, next to SAVE — not up at the water card where `error` renders.
+  const [mealEditNotice, setMealEditNotice] = useState<string | null>(null);
   // NUTRITION-002 (2026-09-02): USDA FoodData Central search, scoped to the
   // "ADD MEAL" form only — see application/foodLookupQueries.ts's own doc
   // comment. A selected result only ever pre-fills newMealForm below; the
@@ -726,25 +734,44 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
       carbsG: String(entry.effectiveCarbsG),
       fatG: String(entry.effectiveFatG),
     });
-    setError(null);
+    setMealEditNotice(null);
     setMealHistoryOpen(true);
   }
 
-  async function handleSaveMealCorrection() {
-    if (busy || !day || !correctingMealEventId) return;
+  /** Tapping the open row again cancels; leaving BODY unmounts it, which cancels too. */
+  function toggleMealEdit(entry: NutritionEntry) {
+    if (correctingMealEventId === entry.headEventId) {
+      setCorrectingMealEventId(null);
+      setMealEditNotice(null);
+    } else {
+      beginCorrectMeal(entry);
+    }
+  }
+
+  async function handleSaveMealCorrection(entry: NutritionEntry) {
+    if (busy || !day || correctingMealEventId !== entry.headEventId) return;
     const macros = parseMealMacros(mealCorrectionForm);
     if (!macros) {
-      setError("Enter calories/protein/carbs/fat as numbers 0 or more.");
+      setMealEditNotice("Enter calories, protein, carbs and fat as numbers 0 or more.");
+      return;
+    }
+    if (
+      macros.calories === entry.effectiveCalories &&
+      macros.proteinG === entry.effectiveProteinG &&
+      macros.carbsG === entry.effectiveCarbsG &&
+      macros.fatG === entry.effectiveFatG
+    ) {
+      setMealEditNotice(NO_CHANGES_MESSAGE);
       return;
     }
     setBusy(true);
-    setError(null);
+    setMealEditNotice(null);
     try {
-      await correctMealLog(day.id, correctingMealEventId, macros);
+      await correctMealLog(day.id, entry.headEventId, macros);
       setCorrectingMealEventId(null);
       await refresh();
     } catch (e) {
-      setError(describeError(e, "Correction failed."));
+      setMealEditNotice(describeError(e, "Could not save."));
     } finally {
       setBusy(false);
     }
@@ -775,11 +802,11 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
     setError(null);
     try {
       await voidMealLog(day.id, entry.rootEventId);
-      if (correctingMealEventId === entry.headEventId) setCorrectingMealEventId(null);
+      setCorrectingMealEventId(null);
       if (mealConfirmation?.mealEventIds.includes(entry.rootEventId)) setMealConfirmation(null);
       await refresh();
     } catch (e) {
-      setError(describeError(e, "Could not delete meal."));
+      setMealEditNotice(describeError(e, "Could not delete meal."));
     } finally {
       setBusy(false);
     }
@@ -1650,34 +1677,58 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
               onToggle={setMealHistoryOpen}
             >
                 {mealEntries.length === 0 && <p className="card-body">{MEALS_TODAY_EMPTY}</p>}
-                {mealEntries.map((entry) => (
+                {mealEntries.map((entry) => {
+                  const editing = correctingMealEventId === entry.headEventId;
+                  return (
                   <div
                     key={entry.rootEventId}
                     style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
                   >
-                    <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.name}</p>
-                    <p className="meta">
-                      {describeMacros(entry.effectiveCalories, entry.effectiveProteinG, entry.effectiveCarbsG, entry.effectiveFatG)}
-                    </p>
-                    <p className="meta">
-                      {new Date(entry.recordedAt).toLocaleTimeString()}
-                      {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                    </p>
-                    <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "flex-start" }}>
-                      <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => beginCorrectMeal(entry)}>
-                        CORRECT
-                      </button>
-                      <HoldButton
-                        className="btn-secondary"
-                        style={{ flex: 1 }}
-                        disabled={busy}
-                        hint={MEAL_DELETE_HINT}
-                        onConfirm={() => void handleDeleteMealLog(entry)}
+                    {/* HOTFIX amendment (owner ruling 2026-10-03): the whole row is the
+                        control — tap to edit, tap again to cancel. The chevron says so. */}
+                    <button
+                      type="button"
+                      aria-label={`Edit ${entry.name}`}
+                      aria-expanded={editing}
+                      onClick={() => toggleMealEdit(entry)}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 8,
+                        width: "100%",
+                        minHeight: 44,
+                        padding: 0,
+                        background: "none",
+                        border: "none",
+                        color: "inherit",
+                        font: "inherit",
+                        textAlign: "left",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span style={{ display: "block", minWidth: 0 }}>
+                        <span className="card-title" style={{ display: "block", marginBottom: 2, fontSize: 16 }}>{entry.name}</span>
+                        <span className="meta" style={{ display: "block" }}>
+                          {describeMacros(entry.effectiveCalories, entry.effectiveProteinG, entry.effectiveCarbsG, entry.effectiveFatG)}
+                        </span>
+                        <span className="meta" style={{ display: "block" }}>
+                          {new Date(entry.recordedAt).toLocaleTimeString()}
+                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                        </span>
+                      </span>
+                      <svg
+                        aria-hidden="true"
+                        width={16}
+                        height={16}
+                        viewBox="0 0 24 24"
+                        className="disclosure-chevron"
+                        style={{ transform: editing ? "rotate(90deg)" : undefined }}
                       >
-                        DELETE
-                      </HoldButton>
-                    </div>
-                    {correctingMealEventId === entry.headEventId && (
+                        <path d="M9 5 L16 12 L9 19" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="square" strokeLinejoin="miter" />
+                      </svg>
+                    </button>
+                    {editing && (
                       <div className="fade-in" style={{ marginTop: 12 }}>
                         {renderMealMacroInputs(
                           mealCorrectionForm,
@@ -1685,13 +1736,28 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
                           `correct-meal-${entry.headEventId}`,
                           "Corrected",
                         )}
-                        <button className="btn-primary" disabled={busy} onClick={() => void handleSaveMealCorrection()}>
-                          SAVE
-                        </button>
+                        {mealEditNotice && (
+                          <p className="meta" role="status" style={{ marginBottom: 8 }}>{mealEditNotice}</p>
+                        )}
+                        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                          <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleSaveMealCorrection(entry)}>
+                            SAVE
+                          </button>
+                          <HoldButton
+                            className="btn-secondary"
+                            style={{ flex: 1 }}
+                            disabled={busy}
+                            hint={MEAL_DELETE_HINT}
+                            onConfirm={() => void handleDeleteMealLog(entry)}
+                          >
+                            DELETE
+                          </HoldButton>
+                        </div>
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
             </FieldDisclosure>
           </div>
         )}
