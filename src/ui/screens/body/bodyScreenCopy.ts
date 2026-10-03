@@ -70,6 +70,41 @@ export function describeImplausibleProtein(grams: number): string {
   return `${grams} g is outside the usual range for one log — log it anyway?`;
 }
 
+/**
+ * DROP 3 (sleep entry guardrails, 2026-10-03): read the Hours / Minutes
+ * boxes strictly. Field use found a 14 hr 30 min entry; the old reading
+ * took any number in either box (7 hours + 450 minutes saved as 14 hr 30
+ * min, silently). Whole hours, whole minutes 0–59, and something entered.
+ */
+export type SleepDurationReading = { ok: true; totalMinutes: number } | { ok: false; message: string };
+
+export const SLEEP_MINUTES_RANGE_MESSAGE = "Minutes must be a whole number from 0 to 59.";
+export const SLEEP_HOURS_MESSAGE = "Hours must be a whole number, 0 or more.";
+export const SLEEP_EMPTY_MESSAGE = "Enter a sleep duration.";
+
+export function readSleepDuration(hoursText: string, minutesText: string): SleepDurationReading {
+  const h = hoursText.trim();
+  const m = minutesText.trim();
+  if (h === "" && m === "") return { ok: false, message: SLEEP_EMPTY_MESSAGE };
+  const hours = h === "" ? 0 : Number(h);
+  const minutes = m === "" ? 0 : Number(m);
+  if (!Number.isInteger(hours) || hours < 0) return { ok: false, message: SLEEP_HOURS_MESSAGE };
+  if (!Number.isInteger(minutes) || minutes < 0 || minutes > 59) return { ok: false, message: SLEEP_MINUTES_RANGE_MESSAGE };
+  const totalMinutes = hoursAndMinutesToTotalMinutes(hours, minutes);
+  if (totalMinutes <= 0) return { ok: false, message: SLEEP_EMPTY_MESSAGE };
+  return { ok: true, totalMinutes };
+}
+
+/** A correction outside the usual range asks once, the same way a new log does. */
+export function describeImplausibleSleepCorrection(totalMinutes: number): string {
+  return `${formatDuration(totalMinutes)} is outside the usual range — save it anyway?`;
+}
+
+/** BODY's SLEEP tile shows one entry; when the day has more, it says which. */
+export function describeSleepTileNote(entryCount: number): string | undefined {
+  return entryCount > 1 ? `latest of ${entryCount}` : undefined;
+}
+
 export function describeImplausibleSleep(totalMinutes: number): string {
   return `${formatDuration(totalMinutes)} is outside the usual range — log it anyway?`;
 }

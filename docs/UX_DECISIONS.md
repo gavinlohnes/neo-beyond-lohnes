@@ -562,6 +562,16 @@ USER_DECIDES remaining authoritative.
 
 ## BODY
 
+- **Sleep entry guardrails (Drop 3, owner approval 2026-10-03).** Field use found a 14 hr 30 min
+  sleep reading. BODY's SLEEP tile shows one entry (the latest, main sleep or nap) and never adds
+  entries up, so it was one stored entry; the likeliest way in was the Minutes box, which accepted
+  any number (7 hours + 450 minutes saved as 14 hr 30 min), or a correction, which had no range
+  check. Now, in both the log form and a correction (`readSleepDuration`): hours are a whole
+  number, minutes a whole number 0–59, and something must be entered; the message shows inside the
+  form or entry, not up in the water card. A correction outside the usual range (main sleep 2–12 h,
+  nap 5 min–3 h) asks "… is outside the usual range — save it anyway?" with SAVE ANYWAY, the same
+  as a new log's LOG ANYWAY — flagged, never blocked. When a day has more than one sleep entry the
+  tile adds "latest of N".
 - **Correction, not just logging.** Water, sleep, protein, and
   bodyweight all support in-place correction of a past entry via the
   same correction-chain pattern: the original event stays untouched, a

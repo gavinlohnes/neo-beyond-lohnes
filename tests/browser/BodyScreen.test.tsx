@@ -5,7 +5,7 @@ import axe from "axe-core";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
 import { db } from "../../src/persistence/db";
 import { updateNutritionTargets } from "../../src/application/nutritionTargetCommands";
-import { logBodyweight, startDay } from "../../src/application/commands";
+import { logBodyweight, logSleep, startDay } from "../../src/application/commands";
 import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
 import { saveQuitHabit } from "../../src/application/quitCommands";
 import { holdToConfirm } from "./helpers/hold";
@@ -198,6 +198,38 @@ describe("BodyScreen (real browser) — SLEEP", () => {
     await expect.element(screen.getByText(/outside the usual range/)).toBeVisible();
     await screen.getByRole("button", { name: "LOG ANYWAY" }).click();
     await expect.element(screen.getByText("20 hr", { exact: true }).first()).toBeVisible();
+  });
+
+  it("Drop 3: minutes over 59 are refused in the form, with the message right there, and nothing saved", async () => {
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "Open SLEEP" }).click();
+    await screen.getByRole("spinbutton", { name: "Hours" }).fill("7");
+    await screen.getByRole("spinbutton", { name: "Minutes" }).fill("450");
+    await screen.getByRole("button", { name: "LOG SLEEP" }).click();
+
+    await expect.element(screen.getByText("Minutes must be a whole number from 0 to 59.", { exact: true })).toBeVisible();
+    expect(await db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(0);
+  });
+
+  it("Drop 3: a correction outside the usual range asks SAVE ANYWAY, and the tile says which of two entries it shows", async () => {
+    const day = await startDay();
+    await logSleep(day.id, 435, "PRIMARY");
+    await logSleep(day.id, 30, "SUPPLEMENTAL");
+    const screen = await render(<BodyScreen />);
+    await expect.element(screen.getByText("latest of 2", { exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "Open SLEEP" }).click();
+    await screen.getByRole("button", { name: /SHOW TODAY'S SLEEP/ }).click();
+    await screen.getByRole("button", { name: "CORRECT" }).first().click();
+    const hours = screen.getByRole("spinbutton", { name: "Hours" }).last();
+    await hours.fill("14");
+    await screen.getByRole("spinbutton", { name: "Minutes" }).last().fill("30");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+
+    await expect.element(screen.getByText("14 hr 30 min is outside the usual range — save it anyway?", { exact: true })).toBeVisible();
+    expect(await db.events.where("type").equals("SLEEP_LOG_CORRECTED").count()).toBe(0);
+    await screen.getByRole("button", { name: "SAVE ANYWAY" }).click();
+    await expect.poll(() => db.events.where("type").equals("SLEEP_LOG_CORRECTED").count()).toBe(1);
   });
 
   it("NAP does not carry the main-sleep end-day framing", async () => {
