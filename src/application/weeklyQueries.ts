@@ -11,6 +11,8 @@ import { getTotalMealProteinGrams } from "./nutritionQueries";
 import { getCustomExercises } from "./exerciseLibraryQueries";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { summarizeBurden, type BurdenSummary } from "../engine/dayLedger";
+import { projectRibbon, type RibbonDay } from "../engine/ribbon";
+import { getCustomTemplates } from "./customTemplateQueries";
 
 /**
  * Drop 7 (weekly check-in, owner approval 2026-10-01). One read-only summary
@@ -47,6 +49,12 @@ export interface WeeklySummary {
   };
   /** Burden Meter (Drop 1): what BEYOND asked for this week, from the Day Ledger. */
   burden: BurdenSummary;
+  /**
+   * The Ribbon (2026-10-03): the last 28 lived days from the Day Ledger, with
+   * the display name for each workout template that appears, and the protein
+   * target the Ribbon's protein row is drawn against (today's, labelled).
+   */
+  ribbon: { days: RibbonDay[]; templateLabels: Record<string, string>; proteinTargetG?: number };
 }
 
 function inWindow(iso: string | undefined, start: number, end: number): boolean {
@@ -139,7 +147,14 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
   const targetGrams = await getEffectiveProteinTargetG();
 
   // Burden Meter: the same BeyondDays begun in the window, read from the Day Ledger.
-  const burden = summarizeBurden((await getDaySummaries()).filter((d) => inWindow(d.startedAt, start, end)));
+  const daySummaries = await getDaySummaries();
+  const burden = summarizeBurden(daySummaries.filter((d) => inWindow(d.startedAt, start, end)));
+
+  // The Ribbon: built-in templates show as A/B/C, custom ones by their own name.
+  const ribbonDays = projectRibbon(daySummaries, now);
+  const templateLabels: Record<string, string> = {};
+  for (const id of Object.keys(WORKOUT_TEMPLATES)) templateLabels[id] = id;
+  for (const t of await getCustomTemplates({ includeArchived: true })) templateLabels[t.id] = t.name;
 
   return {
     weight: {
@@ -157,5 +172,10 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
       ...(targetGrams !== undefined ? { targetGrams } : {}),
     },
     burden,
+    ribbon: {
+      days: ribbonDays,
+      templateLabels,
+      ...(targetGrams !== undefined ? { proteinTargetG: targetGrams } : {}),
+    },
   };
 }
