@@ -130,11 +130,12 @@ describe("describePartialAdvancementResult — past-tense sibling, same real loc
 });
 
 describe("describeRecommendationLabel", () => {
-  it("labels every real recommendation value plainly", () => {
-    expect(describeRecommendationLabel("INCREASE")).toBe("increase");
-    expect(describeRecommendationLabel("HOLD")).toBe("hold");
-    expect(describeRecommendationLabel("REDUCE")).toBe("reduce");
-    expect(describeRecommendationLabel("NO_HISTORY")).toBe("no suggestion yet");
+  it("labels every real recommendation value plainly (Drop 1.6a: what to do next time, no jargon)", () => {
+    expect(describeRecommendationLabel("INCREASE")).toBe("add weight");
+    expect(describeRecommendationLabel("HOLD")).toBe("same weight");
+    expect(describeRecommendationLabel("REDUCE")).toBe("lower the weight");
+    expect(describeRecommendationLabel("NO_HISTORY")).toBe("not enough history yet");
+    expect(describeRecommendationLabel("RE_ENTRY")).toBe("ease back in");
   });
 });
 

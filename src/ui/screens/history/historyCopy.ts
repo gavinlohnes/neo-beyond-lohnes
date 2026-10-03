@@ -1,5 +1,27 @@
 import type { DomainEvent, UrgeTrigger } from "../../../domain/common/types";
 import { URGE_TRIGGER_LABELS } from "../body/quitCopy";
+import { formatDuration } from "../body/bodyScreenCopy";
+
+/** Drop 1.6a: plain names for recommendation kinds — the same titles TODAY shows. */
+const RECOMMENDATION_KIND_LABELS: Record<string, string> = {
+  STABILIZE: "Stabilize first",
+  POST_SHIFT_TRANSITION: "Shift down after work",
+  RECOVER: "Protect recovery",
+  EXECUTE_PLANNED_WORK: "Proceed with planned work",
+  OBLIGATION_DUE: "An obligation needs attention",
+  NO_ACTION_REQUIRED: "No action required",
+};
+
+function kindLabel(kind: unknown): string {
+  return RECOMMENDATION_KIND_LABELS[String(kind)] ?? String(kind);
+}
+
+/** "In progress · work day" — a history day's status and work context, in words. */
+export function describeHistoryDayMeta(status: string, workContext: string, eventCount: number): string {
+  const state = status === "ACTIVE" ? "In progress" : "Ended";
+  const work = workContext === "WORK" ? "work day" : workContext === "OFF" ? "day off" : "work not set";
+  return `${state} · ${work} · ${eventCount} ${eventCount === 1 ? "event" : "events"}`;
+}
 
 /**
  * Priority 1 (HISTORY screen): one-line, human-readable summary per
@@ -9,7 +31,8 @@ import { URGE_TRIGGER_LABELS } from "../body/quitCopy";
  * unmapped so a future event type shows up as unpolished text rather
  * than silently vanishing from history.
  */
-export function describeEvent(event: DomainEvent): string {
+export function describeEvent(event: DomainEvent, exerciseNames: Record<string, string> = {}): string {
+  const exercise = (id: unknown) => exerciseNames[String(id)] ?? String(id);
   const p = event.payload as Record<string, unknown>;
   switch (event.type) {
     case "DAY_STARTED":
@@ -21,11 +44,11 @@ export function describeEvent(event: DomainEvent): string {
       // needing another branch here every time one is added.
       return `Day ended (${p.reason === "EXPLICIT_END_DAY" ? "explicit" : "auto-closed"}).`;
     case "SLEEP_LOGGED":
-      return `Sleep logged: ${p.durationMinutes} min (${p.kind === "SUPPLEMENTAL" ? "nap" : "main sleep"}${
+      return `Sleep logged: ${formatDuration(Number(p.durationMinutes))} (${p.kind === "SUPPLEMENTAL" ? "nap" : "main sleep"}${
         p.draft === "CONFIRMED" ? ", BEYOND's draft as proposed" : p.draft === "ADJUSTED" ? ", BEYOND's draft, adjusted" : ""
       }).`;
     case "SLEEP_LOG_CORRECTED":
-      return `Sleep corrected to ${p.durationMinutes} min.`;
+      return `Sleep corrected to ${formatDuration(Number(p.durationMinutes))}.`;
     case "BODYWEIGHT_LOGGED":
       return `Bodyweight logged: ${p.weightLbs} lbs.`;
     case "BODYWEIGHT_LOG_CORRECTED":
@@ -48,6 +71,8 @@ export function describeEvent(event: DomainEvent): string {
       return "Protein log deleted.";
     case "OUTCOME_RATED":
       return `Outcome rated: ${p.rating}.`;
+    case "WORK_PERIOD_ENDED":
+      return "Work marked ended.";
     case "WORK_CONTEXT_SET":
       return `Work context set to ${p.workContext} (${
         p.source === "MANUAL" ? "manual" : p.source === "SCHEDULE_STANDING" ? "per your saved schedule" : "accepted schedule suggestion"
@@ -67,11 +92,11 @@ export function describeEvent(event: DomainEvent): string {
         p.draft === "CONFIRMED" ? " (BEYOND's draft, as proposed)" : p.draft === "ADJUSTED" ? " (BEYOND's draft, adjusted)" : ""
       }.`;
     case "RECOMMENDATION_ISSUED":
-      return `Recommendation issued: ${p.kind}.`;
+      return `Recommendation: ${kindLabel(p.kind)}.`;
     case "RECOMMENDATION_ACCEPTED":
-      return `Recommendation accepted: ${p.kind}.`;
+      return `Recommendation accepted: ${kindLabel(p.kind)}.`;
     case "RECOMMENDATION_DECLINED":
-      return `Recommendation declined: ${p.kind}.`;
+      return `Recommendation declined: ${kindLabel(p.kind)}.`;
     case "NO_ACTION_RECORDED":
       return "No action recorded.";
     case "RESET_STARTED":
@@ -93,9 +118,9 @@ export function describeEvent(event: DomainEvent): string {
     case "WORKOUT_ABANDONED":
       return `Workout stopped: ${p.sessionType}${p.durationMinutes !== undefined ? ` (${p.durationMinutes} min)` : ""}.`;
     case "SET_LOGGED":
-      return `Set logged: ${p.exerciseId}${p.substitutedName ? ` (as ${p.substitutedName})` : ""} #${p.setNumber} — ${p.weight} lb x ${p.reps}.`;
+      return `Set logged: ${exercise(p.exerciseId)}${p.substitutedName ? ` (as ${p.substitutedName})` : ""} #${p.setNumber} — ${p.weight} lb x ${p.reps}.`;
     case "SET_SKIPPED":
-      return `Set skipped: ${p.exerciseId} #${p.setNumber}.`;
+      return `Set skipped: ${exercise(p.exerciseId)} #${p.setNumber}.`;
     case "CLEAN_DAY_LOGGED":
       return `Clean day logged${p.habitName ? `: ${p.habitName}` : ""}.`;
     case "URGE_LOGGED":

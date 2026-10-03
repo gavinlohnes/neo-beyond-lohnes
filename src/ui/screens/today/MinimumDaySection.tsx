@@ -157,7 +157,7 @@ export function MinimumDayCard({
   const content = (
     <>
       <p className="meta" style={{ marginBottom: 12 }}>
-        Progress stays with this active BeyondDay until you end it — a calendar date change does not reset it.
+        Progress counts until the day ends (16:30, or when you end it) — midnight doesn't reset it.
       </p>
       {!minimumDay.enabled ? (
         <>

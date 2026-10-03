@@ -122,6 +122,10 @@ export async function logSet(
   reps: number,
   substitutedName?: string,
 ): Promise<void> {
+  // Drop 1.6a (field soak): an empty LOG tap used to save "0 lb x 0". A logged set has at least one rep
+  // (a set not done is SKIP); weight may be 0 for bodyweight work.
+  if (!Number.isInteger(reps) || reps < 1) throw new Error("SET_REPS_REQUIRED: enter at least 1 rep, or SKIP the set.");
+  if (!Number.isFinite(weight) || weight < 0) throw new Error("SET_WEIGHT_INVALID: weight must be 0 or more.");
   const set: PerformedSet = {
     id: newId(),
     beyondDayId,

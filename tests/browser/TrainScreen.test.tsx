@@ -1016,6 +1016,15 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
     await expect.element(screen.getByText("Machine Chest Press: heaviest yet (145 lb)", { exact: true })).toBeVisible();
   });
 
+  it("Drop 1.6a: LOG with empty boxes asks for reps and saves nothing", async () => {
+    const day = await startDay();
+    await startWorkout(day.id, "A", "STANDARD");
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByText("Enter your reps first — or SKIP if you didn't do this set.", { exact: true })).toBeVisible();
+    expect(await db.performedSets.count()).toBe(0);
+  });
+
   it("a quick tap on COMPLETE finishes nothing and says to hold", async () => {
     const screen = await seedHistoryAndStart();
     await screen.getByRole("button", { name: "COMPLETE" }).click();

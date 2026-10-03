@@ -358,4 +358,14 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
     await expect.poll(async () => (await db.beyondDays.get(day.id))?.status).toBe("ENDED");
     expect(await db.beyondDays.count()).toBe(2);
   });
+
+  it("Drop 1.6a: tapping MORE again inside Weekly goes back to the MORE menu", async () => {
+    const screen = await render(<App />);
+    await screen.getByText("MORE", { exact: true }).click();
+    await screen.getByRole("button", { name: "Open WEEKLY CHECK-IN" }).click();
+    await expect.element(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
+    await screen.getByText("MORE", { exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "Open WEEKLY CHECK-IN" })).toBeVisible();
+    expect(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true }).elements()).toHaveLength(0);
+  });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeEvent } from "../../src/ui/screens/history/historyCopy";
+import { describeEvent, describeHistoryDayMeta } from "../../src/ui/screens/history/historyCopy";
 import type { DomainEvent, DomainEventType } from "../../src/domain/common/types";
 
 function event(type: DomainEventType, payload: unknown): DomainEvent {
@@ -28,7 +28,7 @@ describe("describeEvent — human-readable summary per real event type", () => {
 
   it("SLEEP_LOGGED names duration and kind", () => {
     expect(describeEvent(event("SLEEP_LOGGED", { commandId: "x", durationMinutes: 400, kind: "PRIMARY" }))).toBe(
-      "Sleep logged: 400 min (main sleep).",
+      "Sleep logged: 6 hr 40 min (main sleep).",
     );
     expect(describeEvent(event("SLEEP_LOGGED", { commandId: "x", durationMinutes: 30, kind: "SUPPLEMENTAL" }))).toBe(
       "Sleep logged: 30 min (nap).",
@@ -115,5 +115,25 @@ describe("describeEvent — human-readable summary per real event type", () => {
 
   it("falls back to the raw type name for anything unmapped, rather than vanishing", () => {
     expect(describeEvent(event("COMMAND_STARTED", {}))).toBe("COMMAND_STARTED");
+  });
+});
+
+describe("Drop 1.6a — History says it in words (field soak)", () => {
+  it("names work ending, recommendations by their TODAY title, and exercises by name", () => {
+    expect(describeEvent(event("WORK_PERIOD_ENDED", {}))).toBe("Work marked ended.");
+    expect(describeEvent(event("RECOMMENDATION_ISSUED", { kind: "POST_SHIFT_TRANSITION" }))).toBe("Recommendation: Shift down after work.");
+    expect(describeEvent(event("RECOMMENDATION_ACCEPTED", { kind: "RECOVER" }))).toBe("Recommendation accepted: Protect recovery.");
+    const names = { "machine-chest-press": "Machine Chest Press" };
+    expect(describeEvent(event("SET_LOGGED", { exerciseId: "machine-chest-press", setNumber: 1, weight: 135, reps: 10 }), names)).toBe(
+      "Set logged: Machine Chest Press #1 — 135 lb x 10.",
+    );
+    expect(describeEvent(event("SET_SKIPPED", { exerciseId: "unknown-id", setNumber: 2 }), names)).toBe("Set skipped: unknown-id #2.");
+    expect(describeEvent(event("SLEEP_LOG_CORRECTED", { durationMinutes: 390 }))).toBe("Sleep corrected to 6 hr 30 min.");
+  });
+
+  it("describes a day's state and work context without raw codes", () => {
+    expect(describeHistoryDayMeta("ACTIVE", "OFF", 2)).toBe("In progress · day off · 2 events");
+    expect(describeHistoryDayMeta("ENDED", "WORK", 1)).toBe("Ended · work day · 1 event");
+    expect(describeHistoryDayMeta("ENDED", "UNKNOWN", 0)).toBe("Ended · work not set · 0 events");
   });
 });
