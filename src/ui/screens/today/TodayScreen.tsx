@@ -75,6 +75,7 @@ import {
   markRecoverConnectCompleted,
   logWater,
   logProtein,
+  logSleep,
 } from "../../../application/commands";
 import {
   getActiveDay,
@@ -97,6 +98,7 @@ import {
   getOpenCaptureItems,
   getSchedulePattern,
   getSleepEntries,
+  getSleepDraftEvidence,
   type MinimumDayStatus,
   type PriorOutcomeMemory,
   type RecommendationDecision,
@@ -118,6 +120,9 @@ import { suggestSessionVariant } from "../../../engine/trainSuggestion";
 import type { SchedulePattern } from "../../../domain/common/types";
 import { templateLabel } from "../train/trainCopy";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { deriveSleepDraft } from "../../../engine/sleepDraft";
+import { getAppOpenedAt } from "../../appSession";
+import { formatDuration } from "../body/bodyScreenCopy";
 import {
   deriveShiftClockView,
   describeCountdown,
@@ -155,6 +160,28 @@ export const quickCheckInValues: CheckInValues = {
  * VIEW stops at "switch tabs" rather than deep-linking to the specific
  * Obligation).
  */
+/** Bounds for nudging a sleep draft: 15 min to 16 h. */
+const SLEEP_DRAFT_ADJUST_MIN = 15;
+const SLEEP_DRAFT_ADJUST_MAX = 16 * 60;
+const SLEEP_DRAFT_DISMISSED_KEY = "beyond:sleepDraftDismissedDay";
+
+/** NOT NOW is remembered on this phone only (localStorage); unavailable storage simply means it isn't remembered. */
+function readSleepDraftDismissal(): string | null {
+  try {
+    return localStorage.getItem(SLEEP_DRAFT_DISMISSED_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeSleepDraftDismissal(dayId: string): void {
+  try {
+    localStorage.setItem(SLEEP_DRAFT_DISMISSED_KEY, dayId);
+  } catch {
+    // Not remembered — the draft simply returns next time.
+  }
+}
+
 export function TodayScreen({
   onViewCommitments,
   onOpenTrain,
@@ -356,6 +383,14 @@ export function TodayScreen({
   const [quitHabitSetUp, setQuitHabitSetUp] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(openToolsOnMount);
 
+  // ---- SLEEP DRAFT (2026-10-03) ----
+  const [sleepDraftEvidence, setSleepDraftEvidence] = useState<Awaited<ReturnType<typeof getSleepDraftEvidence>> | null>(null);
+  // ±15-minute nudges applied to the draft before logging it.
+  const [sleepDraftAdjust, setSleepDraftAdjust] = useState(0);
+  // NOT NOW: remembered on this phone only, for that day (per-device convenience).
+  const [sleepDraftDismissedDayId, setSleepDraftDismissedDayId] = useState<string | null>(() => readSleepDraftDismissal());
+  const [sleepConfirmation, setSleepConfirmation] = useState<number | null>(null);
+
   // DROP 0: re-read the new day's numbers and schedule phase after a 16:30 rollover.
   useDayRolloverRefresh(() => {
     void getScheduledContext().then(setScheduledContext);
@@ -379,6 +414,18 @@ export function TodayScreen({
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(tick);
+  }, []);
+
+  // Coming back to the foreground: re-read, so a screen left open overnight
+  // sees this morning's Shift Down and its sleep draft (2026-10-03).
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState !== "visible") return;
+      setNow(new Date());
+      void refresh().catch(() => {});
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, []);
 
   /**
@@ -509,6 +556,7 @@ export function TodayScreen({
     let workContextSource: WorkContextSource | undefined;
     let mainSleepTimes: string[] = [];
     let mealProtein = 0;
+    let draftEvidence: Awaited<ReturnType<typeof getSleepDraftEvidence>> | null = null;
 
     if (activeDay) {
       checkIn = (await getLatestCheckIn(activeDay.id)) ?? null;
@@ -530,6 +578,7 @@ export function TodayScreen({
       workContextSource = await getWorkContextSource(activeDay.id);
       mainSleepTimes = (await getSleepEntries(activeDay.id)).filter((e) => e.kind === "PRIMARY").map((e) => e.recordedAt);
       mealProtein = await getTotalMealProteinGrams(activeDay.id);
+      draftEvidence = await getSleepDraftEvidence(activeDay.id, getAppOpenedAt());
     }
     // Intelligence Spine consumption (2026-09-02): advisory notes are pure
     // SUPPORT-tier background context with no ordering dependency on
@@ -600,6 +649,7 @@ export function TodayScreen({
       setWorkContextSource(workContextSource);
       setMainSleepRecordedAt(mainSleepTimes);
       setMealProteinG(mealProtein);
+      setSleepDraftEvidence(draftEvidence);
     } else {
       setRecommendation(null);
       setDecision(undefined);
@@ -889,6 +939,29 @@ export function TodayScreen({
     }
   }
 
+  // SLEEP DRAFT: one tap logs the (possibly nudged) draft as main sleep,
+  // recording whether it was confirmed as proposed or adjusted first.
+  async function handleLogSleepDraft(minutes: number, adjusted: boolean) {
+    if (busy || busyRef.current || !day) return;
+    busyRef.current = true;
+    setBusy(true);
+    try {
+      await logSleep(day.id, minutes, "PRIMARY", adjusted ? "ADJUSTED" : "CONFIRMED");
+      setSleepDraftAdjust(0);
+      await refresh();
+      setSleepConfirmation(minutes);
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  }
+
+  function dismissSleepDraft() {
+    if (!day) return;
+    setSleepDraftDismissedDayId(day.id);
+    writeSleepDraftDismissal(day.id);
+  }
+
   async function handleMarkWorkEnded() {
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
@@ -1174,6 +1247,15 @@ export function TodayScreen({
   const phaseRows: ShiftClockRow[] = day ? shiftClock.rows : [];
   const toolsItems: ToolsItem[] = day ? shiftClock.tools : [...TOOLS_ORDER];
   const checkInIsRow = phaseRows.includes("CHECK_IN");
+  // SLEEP DRAFT: only on the post-shift MAIN SLEEP row (Command Center rule 3).
+  const sleepDraft =
+    day && phaseRows.includes("MAIN_SLEEP") && sleepDraftEvidence
+      ? deriveSleepDraft({
+          ...sleepDraftEvidence,
+          openedAt: getAppOpenedAt(),
+          mainSleepLogged: mainSleepEndsPostShift(mainSleepRecordedAt, workPeriodEndedAt, shiftWindow),
+        })
+      : null;
   const shiftDownIsRow = phaseRows.includes("SHIFT_DOWN");
   const attentionPlan = deriveAttentionPlan({
     activeWorkoutId: activeWorkout?.id ?? null,
@@ -1678,6 +1760,38 @@ export function TodayScreen({
           </div>
         );
       case "MAIN_SLEEP":
+        if (sleepDraft && sleepDraftDismissedDayId !== day.id) {
+          const minutes = Math.min(SLEEP_DRAFT_ADJUST_MAX, Math.max(SLEEP_DRAFT_ADJUST_MIN, sleepDraft.value + sleepDraftAdjust));
+          return (
+            <div className="equipment-row">
+              <p className="tool-label" style={{ marginBottom: 4 }}>MAIN SLEEP</p>
+              <h2 className="card-title" style={{ marginBottom: 2 }}>Slept up to {formatDuration(minutes)}?</h2>
+              <p className="meta" style={{ marginBottom: 12 }}>
+                {sleepDraft.reason}
+                {sleepDraftAdjust !== 0 ? ` · adjusted ${sleepDraftAdjust > 0 ? "+" : "−"}${Math.abs(sleepDraftAdjust)} min` : ""}
+              </p>
+              <button className="btn-secondary" disabled={busy} onClick={() => void handleLogSleepDraft(minutes, sleepDraftAdjust !== 0)}>
+                LOG {formatDuration(minutes).toUpperCase()}
+              </button>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                <button type="button" className="chip" aria-label="15 minutes less" disabled={busy || minutes <= SLEEP_DRAFT_ADJUST_MIN} onClick={() => setSleepDraftAdjust((a) => a - 15)}>
+                  −15
+                </button>
+                <button type="button" className="chip" aria-label="15 minutes more" disabled={busy || minutes >= SLEEP_DRAFT_ADJUST_MAX} onClick={() => setSleepDraftAdjust((a) => a + 15)}>
+                  +15
+                </button>
+                <button type="button" className="chip" disabled={busy} onClick={dismissSleepDraft}>
+                  NOT NOW
+                </button>
+                {onOpenBody && (
+                  <button type="button" className="chip" onClick={() => onOpenBody("sleep")}>
+                    ENTER IN BODY
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        }
         return (
           <div className="equipment-row">
             <p className="tool-label" style={{ marginBottom: 4 }}>MAIN SLEEP</p>
@@ -1754,6 +1868,20 @@ export function TodayScreen({
         ) : (
           <p role="status" aria-live="polite" className="meta fade-in">
             <ConfirmIcon size={20} /> {hydrationConfirmation} oz recorded. Corrections remain available in BODY.
+          </p>
+        )
+      )}
+
+      {sleepConfirmation !== null && (
+        onOpenBody ? (
+          <ConfirmBanner
+            message={`Main sleep logged · ${formatDuration(sleepConfirmation)}`}
+            actionLabel="CORRECT IN BODY"
+            onAction={() => onOpenBody("sleep")}
+          />
+        ) : (
+          <p role="status" aria-live="polite" className="meta fade-in">
+            <ConfirmIcon size={20} /> Main sleep logged · {formatDuration(sleepConfirmation)}. Corrections remain available in BODY.
           </p>
         )
       )}

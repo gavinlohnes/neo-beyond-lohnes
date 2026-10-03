@@ -1,3 +1,4 @@
+import type { DraftDecision } from "../intelligence/types";
 // Domain layer must not import React, Dexie, or UI code.
 
 export type Capacity = "GREEN" | "YELLOW" | "RED";
@@ -287,6 +288,12 @@ export interface SleepLoggedPayload {
   commandId: string;
   durationMinutes: number;
   kind: "PRIMARY" | "SUPPLEMENTAL";
+  /**
+   * Sleep draft (2026-10-03): present only when the log came from BEYOND's
+   * draft — CONFIRMED as proposed, or ADJUSTED first. Absent for a sleep
+   * typed in BODY. Additive; older logs simply don't have it.
+   */
+  draft?: DraftDecision;
 }
 
 /**

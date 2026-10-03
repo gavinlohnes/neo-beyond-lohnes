@@ -940,3 +940,35 @@ export async function getAllCaptureItems(): Promise<CaptureItem[]> {
   const items = await db.captureItems.toArray();
   return items.sort((a, b) => byTimeThenSeq(a.capturedAt, a.seq, b.capturedAt, b.seq));
 }
+
+/**
+ * SLEEP DRAFT (2026-10-03): the evidence engine/sleepDraft.ts reasons from —
+ * read-only. The anchor is the latest SHIFT_DOWN_COMPLETED or
+ * WORK_PERIOD_ENDED on this day; the last operator action is the latest
+ * thing the operator did on this day before `openedAt` (anything after it is
+ * this visit, and doesn't count against the draft).
+ */
+export async function getSleepDraftEvidence(
+  beyondDayId: string,
+  openedAt: Date,
+): Promise<{ anchorAt: string | null; anchorKind: "SHIFT_DOWN" | "WORK_ENDED" | null; lastOperatorActionAt: string | null }> {
+  const openedIso = openedAt.toISOString();
+  const events = (await db.events.where("beyondDayId").equals(beyondDayId).toArray()).filter(
+    (e) => e.occurredAt <= openedIso,
+  );
+  let anchor: DomainEvent | undefined;
+  let lastOperatorActionAt: string | null = null;
+  for (const e of events) {
+    if ((e.type === "SHIFT_DOWN_COMPLETED" || e.type === "WORK_PERIOD_ENDED") && (!anchor || e.occurredAt >= anchor.occurredAt)) {
+      anchor = e;
+    }
+    if (e.source === "USER" && (lastOperatorActionAt === null || e.occurredAt > lastOperatorActionAt)) {
+      lastOperatorActionAt = e.occurredAt;
+    }
+  }
+  return {
+    anchorAt: anchor ? anchor.occurredAt : null,
+    anchorKind: anchor ? (anchor.type === "SHIFT_DOWN_COMPLETED" ? "SHIFT_DOWN" : "WORK_ENDED") : null,
+    lastOperatorActionAt,
+  };
+}

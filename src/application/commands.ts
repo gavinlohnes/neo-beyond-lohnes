@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import type { DraftDecision } from "../domain/intelligence/types";
 import { evaluate } from "../engine/evaluate";
 import { computeDueRollover } from "../engine/dayRollover";
 import { assertRedOverrideConfirmed } from "../engine/redOverride";
@@ -367,12 +368,14 @@ export async function logSleep(
   beyondDayId: string,
   durationMinutes: number,
   kind: "PRIMARY" | "SUPPLEMENTAL" = "PRIMARY",
+  // Sleep draft (2026-10-03): how a drafted value was decided, when it came from one.
+  draft?: DraftDecision,
 ): Promise<string> {
   const correlationId = newId();
   return logEvent(
     beyondDayId,
     "SLEEP_LOGGED",
-    { commandId: correlationId, durationMinutes, kind },
+    { commandId: correlationId, durationMinutes, kind, ...(draft ? { draft } : {}) },
     "USER",
     correlationId,
   );
