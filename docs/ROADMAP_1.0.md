@@ -11,6 +11,19 @@ a night shift.
 
 **Principle:** each screen does one job and shows less.
 
+## Vision
+
+### Command Center Rules
+
+Owner rulings, 2026-10-03.
+
+1. Replace an app's core job, not all its features.
+2. Four tabs are fixed: TODAY, TRAIN, BODY, MORE. No new tabs.
+3. Every new feature must state when it surfaces. Default home is Tools; it appears on TODAY only in
+   the phase where it matters.
+4. The per-phase row cap is enforced by test. A new item on TODAY must replace an existing one.
+5. Burden Meter is the judge: a feature that raises burden has failed.
+
 ## Build order
 
 At most 3 changes per Drop.
