@@ -65,6 +65,7 @@ import {
   summarizeProgressionSuggestions,
   templateLabel,
   VARIANT_MEANINGS,
+  TRAIN_REPS_REQUIRED,
 } from "./trainCopy";
 
 const VARIANT_ORDER: SessionType[] = ["STANDARD", "REDUCED", "RECOVERY"];
@@ -160,6 +161,8 @@ export function TrainScreen({
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [sets, setSets] = useState<PerformedSet[]>([]);
   const [busy, setBusy] = useState(false);
+  // Drop 1.6a: "enter reps" shown under the set that was tapped.
+  const [logSetNotice, setLogSetNotice] = useState<{ key: string; message: string } | null>(null);
   const [recoveryMinutes, setRecoveryMinutes] = useState(10);
   const [subs, setSubs] = useState<Record<string, string>>({});
   const [inputs, setInputs] = useState<Record<string, SetInputState>>({});
@@ -501,6 +504,12 @@ export function TrainScreen({
     const display = getInputDisplay(exerciseId, setNumber);
     const weight = Number(display.weight) || 0;
     const reps = Number(display.reps) || 0;
+    // Drop 1.6a: an empty or zero-rep LOG asks for reps instead of saving "0 lb x 0".
+    if (!Number.isInteger(reps) || reps < 1) {
+      setLogSetNotice({ key: inputKey(exerciseId, setNumber), message: TRAIN_REPS_REQUIRED });
+      return;
+    }
+    setLogSetNotice(null);
     setBusy(true);
     try {
       await logSet(session.beyondDayId, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined);
@@ -878,11 +887,11 @@ export function TrainScreen({
           <p className="meta" style={{ marginBottom: 8 }}>Next up: Template {completionSummary.nextTemplate}.</p>
           {completionSummary.advisoryChanges.length > 0 && (
             <div style={{ marginTop: 8, marginBottom: 8 }}>
-              <p className="meta" style={{ marginBottom: 4 }}>Advisories that changed:</p>
+              <p className="meta" style={{ marginBottom: 4 }}>Next time:</p>
               {completionSummary.advisoryChanges.map((c) => (
                 <p key={c.name} className="card-body" style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
                   <ConfirmIcon size={20} />
-                  {c.name}: {c.before} → {c.after}
+                  {c.name}: {c.after} (was: {c.before})
                 </p>
               ))}
             </div>
@@ -1408,6 +1417,9 @@ export function TrainScreen({
                         SKIP
                       </button>
                     </div>
+                    {logSetNotice?.key === inputKey(ex.exerciseId, setNumber) && (
+                      <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{logSetNotice.message}</p>
+                    )}
                   </div>
                 );
               })}

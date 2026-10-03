@@ -141,17 +141,20 @@ export function describePartialAdvancementResult(sessionType: SessionType): stri
 export function describeRecommendationLabel(recommendation: ProgressionSuggestion["recommendation"]): string {
   switch (recommendation) {
     case "INCREASE":
-      return "increase";
+      return "add weight";
     case "HOLD":
-      return "hold";
+      return "same weight";
     case "REDUCE":
-      return "reduce";
+      return "lower the weight";
     case "NO_HISTORY":
-      return "no suggestion yet";
+      return "not enough history yet";
     case "RE_ENTRY":
       return "ease back in";
   }
 }
+
+/** Drop 1.6a: LOG with no reps entered asks instead of saving an empty set. */
+export const TRAIN_REPS_REQUIRED = "Enter your reps first — or SKIP if you didn't do this set.";
 
 /** Item 7: live preview of how the entered RECOVERY duration will be recorded, using the real locked thresholds. */
 export function describeRecoveryPreview(durationMinutes: number): string {

@@ -60,7 +60,7 @@ describe("a drafted sleep log", () => {
       .sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
     expect(logs.map((e) => e.payload)).toMatchObject([{ durationMinutes: 435, kind: "PRIMARY", draft: "CONFIRMED" }, { durationMinutes: 30 }]);
     expect(logs[1]!.payload).not.toHaveProperty("draft");
-    expect(describeEvent(logs[0]!)).toBe("Sleep logged: 435 min (main sleep, BEYOND's draft as proposed).");
+    expect(describeEvent(logs[0]!)).toBe("Sleep logged: 7 hr 15 min (main sleep, BEYOND's draft as proposed).");
     expect(describeEvent(logs[1]!)).toBe("Sleep logged: 30 min (nap).");
   });
 });

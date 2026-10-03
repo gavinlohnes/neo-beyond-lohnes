@@ -97,6 +97,8 @@ export function App() {
   // Read once, then dropped from the URL so a reload doesn't repeat it.
   const [shortcut] = useState(() => parseShortcut(window.location.search));
   const [tab, setTab] = useState<Tab>(() => (shortcut ? "BODY" : "TODAY"));
+  // Drop 1.6a: tapping MORE while already on MORE goes back to its menu (a fresh MoreScreen).
+  const [moreResetKey, setMoreResetKey] = useState(0);
   // Where BODY opens: a home-screen shortcut on launch, or a Shift Clock row
   // on TODAY (Drop 2). Cleared whenever the bottom nav is used.
   const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut);
@@ -277,6 +279,7 @@ export function App() {
         {tab === "BODY" && <BodyScreen focus={bodyFocus} />}
         {tab === "MORE" && (
           <MoreScreen
+            key={moreResetKey}
             onOpenCapture={() => {
               setTodayToolsOpen(true);
               setTab("TODAY");
@@ -304,6 +307,7 @@ export function App() {
               setTrainDestination(null);
               setBodyFocus(null);
               setTodayToolsOpen(false);
+              if (t === "MORE" && tab === "MORE") setMoreResetKey((k) => k + 1);
               setTab(t);
             }}
             aria-current={tab === t ? "page" : undefined}

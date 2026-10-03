@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { getHistoryDays, type HistoryDay } from "../../../application/historyQueries";
-import { describeEvent } from "./historyCopy";
+import { getExerciseNames } from "../../../application/exerciseLibraryQueries";
+import { describeEvent, describeHistoryDayMeta } from "./historyCopy";
 
 export function HistoryScreen() {
   const [days, setDays] = useState<HistoryDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [exerciseNames, setExerciseNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     void refresh();
@@ -15,6 +17,7 @@ export function HistoryScreen() {
     setLoading(true);
     try {
       setDays(await getHistoryDays());
+      setExerciseNames(await getExerciseNames());
     } finally {
       setLoading(false);
     }
@@ -55,7 +58,7 @@ export function HistoryScreen() {
                   })}
                 </p>
                 <p className="meta">
-                  {day.status} · {day.workContext} · {events.length} {events.length === 1 ? "event" : "events"}
+                  {describeHistoryDayMeta(day.status, day.workContext, events.length)}
                 </p>
               </div>
               <button
@@ -79,7 +82,7 @@ export function HistoryScreen() {
                     key={event.id}
                     style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "4px 0" }}
                   >
-                    <span className="card-body" style={{ margin: 0 }}>{describeEvent(event)}</span>
+                    <span className="card-body" style={{ margin: 0 }}>{describeEvent(event, exerciseNames)}</span>
                     <span className="meta" style={{ whiteSpace: "nowrap" }}>
                       {new Date(event.occurredAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
                     </span>

@@ -769,6 +769,17 @@ Direct owner ruling, 2026-09-12 (in chat): general authorization to build toward
 - Each day is collapsed by default (status/date/event count only); the
   event-by-event detail is opt-in per day via SHOW/HIDE, so the screen
   stays scannable as history grows.
+- **Field polish (Drop 1.6a, owner approval 2026-10-03, from the field-test soak).** History says
+  things in words: "Work marked ended.", recommendations by the title TODAY shows ("Recommendation:
+  Shift down after work."), exercises by name, sleep as "6 hr 30 min", and each day as "In progress ·
+  day off · 2 events" instead of raw codes. Unmapped future event types still fall back to their
+  raw name rather than vanishing. In the same Drop: TRAIN's LOG with no reps entered says "Enter
+  your reps first — or SKIP if you didn't do this set." and saves nothing (`logSet` refuses fewer
+  than 1 rep or a negative weight; bodyweight sets at 0 lb are fine) — an empty tap used to save
+  "0 lb x 0"; the workout summary says "Next time: Machine Chest Press: same weight (was: not
+  enough history yet)" instead of "no suggestion yet → hold"; Minimum Day drops the internal word
+  "BeyondDay"; Weekly's subtitle notes that LAST 28 DAYS and FINDINGS look further back than 7
+  days; and tapping MORE again inside a MORE sub-screen returns to the MORE menu.
 
 ## Intent & Commitment — Mission archival and Obligation current-attention eligibility
 

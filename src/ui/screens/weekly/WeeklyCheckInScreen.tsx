@@ -35,7 +35,7 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
   return (
     <div className="screen">
       <h1 className="eyebrow">MORE // WEEKLY CHECK-IN</h1>
-      <p className="meta" style={{ marginBottom: 16 }}>The last 7 days.</p>
+      <p className="meta" style={{ marginBottom: 16 }}>The last 7 days. LAST 28 DAYS and FINDINGS look further back.</p>
       {!summary ? (
         <p className="empty-state">Loading…</p>
       ) : (

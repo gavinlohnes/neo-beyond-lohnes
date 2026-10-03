@@ -118,6 +118,14 @@ time, each briefed by the owner.
   - **Drop 6 — expenditure readout** (read-only, in Weekly): an estimated kcal-a-day range from
     logged meals and the weight trend. **Done (PR #142, merged).**
   (The urge-timing finding shipped with the findings.)
+- **Field-test soak (2026-10-03):** 2½ simulated days of the owner's routine through the real app
+  found one data bug and several frictions. Shipped mid-test, dated so the Oct 16 debrief can tell
+  before from after:
+  - **Drop 1.6a — field polish:** no empty "0 lb x 0" sets; History and the workout summary in
+    plain words; Minimum Day without jargon; MORE re-tap returns to its menu. **In review.**
+  - **Drop 1.6b — TODAY behavior:** the sleep draft counts from your last activity after the shift;
+    Minimum Day's offer shrinks to one line; MARK WORK ENDED waits for the last hour of the shift;
+    no work-day memory on a day off. **In review.**
 - Waits until after Oct 16: the Engine reacting to evidence, rule adoption, Week Ahead,
   deload/stall suggestions, all wildcards.
 
