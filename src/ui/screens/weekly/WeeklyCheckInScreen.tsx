@@ -3,7 +3,7 @@ import { getWeeklySummary, type WeeklySummary } from "../../../application/weekl
 import { describePersonalRecord } from "../../../application/personalRecordQueries";
 import { formatShortDate } from "../../../application/bodyTrendQueries";
 import { formatUsd } from "../body/quitCopy";
-import { describeBurdenLine } from "./weeklyCopy";
+import { describeBurdenLine, describeFindings, describeWaitingFindings } from "./weeklyCopy";
 import { Ribbon } from "./Ribbon";
 
 /**
@@ -42,6 +42,22 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
           {/* The Ribbon (2026-10-03): the last 28 lived days at a glance, above the week's numbers. */}
           <Section label="LAST 28 DAYS">
             <Ribbon days={summary.ribbon.days} templateLabels={summary.ribbon.templateLabels} proteinTargetG={summary.ribbon.proteinTargetG} />
+          </Section>
+
+          {/* Read-only findings (2026-10-03): counts over longer windows, never a cause or a rule. */}
+          <Section label="FINDINGS">
+            {describeFindings(summary.findings.findings, summary.findings.exerciseNames).map((copy) => (
+              <div key={copy.key} data-finding={copy.key} style={{ marginBottom: 12 }}>
+                <p className="meta-strong" style={{ margin: 0, color: "var(--text-1)" }}>{copy.title}</p>
+                {copy.lines.map((line) => (
+                  <p key={line} className="meta" style={{ margin: 0, color: "var(--text-2)" }}>{line}</p>
+                ))}
+                {copy.basis && <p className="meta" style={{ margin: "2px 0 0" }}>{copy.basis}</p>}
+              </div>
+            ))}
+            {describeWaitingFindings(summary.findings.waiting) && (
+              <p className="meta" style={{ margin: 0 }}>{describeWaitingFindings(summary.findings.waiting)}</p>
+            )}
           </Section>
 
           <Section label="WEIGHT">

@@ -109,6 +109,12 @@ export interface DaySummary {
   sleep: {
     /** Total effective main sleep logged on this day; absent when none was logged. */
     primaryMinutes?: number;
+    /**
+     * Each main-sleep log behind that total (when it was logged, effective
+     * minutes), in logged order; absent when none was logged. Lets read-only
+     * findings place a sleep before a workout by time, not just by day.
+     */
+    primaryLogs?: { at: string; minutes: number }[];
     /** Total effective naps logged on this day; absent when none was logged. */
     napMinutes?: number;
   };
@@ -311,11 +317,15 @@ function summarizeDay(
   // Sleep
   const sleepCorrections = correctionsOf(events, "SLEEP_LOG_CORRECTED");
   const primary: number[] = [];
+  const primaryLogs: { at: string; minutes: number }[] = [];
   const naps: number[] = [];
   for (const root of ofType(events, "SLEEP_LOGGED")) {
     const minutes = effectiveValue(root, sleepCorrections, (p) => (p as { durationMinutes: number }).durationMinutes);
     if ((root.payload as { kind?: string }).kind === "SUPPLEMENTAL") naps.push(minutes);
-    else primary.push(minutes);
+    else {
+      primary.push(minutes);
+      primaryLogs.push({ at: root.occurredAt, minutes });
+    }
   }
 
   // Water
@@ -412,7 +422,7 @@ function summarizeDay(
       ...(workEnded ? { workEndedAt: workEnded.occurredAt } : {}),
     },
     sleep: {
-      ...(primaryMinutes !== undefined ? { primaryMinutes } : {}),
+      ...(primaryMinutes !== undefined ? { primaryMinutes, primaryLogs } : {}),
       ...(napMinutes !== undefined ? { napMinutes } : {}),
     },
     ...(waterOz !== undefined ? { waterOz } : {}),

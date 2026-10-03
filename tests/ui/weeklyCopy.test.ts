@@ -22,6 +22,8 @@ describe("describeBurdenLine (Drop 1, Burden Meter)", () => {
 });
 
 import { describeRibbonDay, describeRibbonSummary } from "../../src/ui/screens/weekly/weeklyCopy";
+import { describeFinding, describeFindings, describeWaitingFindings } from "../../src/ui/screens/weekly/weeklyCopy";
+import type { Finding } from "../../src/engine/findings";
 
 describe("Ribbon copy (2026-10-03)", () => {
   const start = new Date(2026, 9, 1, 16, 30).toISOString(); // Thu Oct 1
@@ -46,5 +48,101 @@ describe("Ribbon copy (2026-10-03)", () => {
     ]);
     expect(line).toBe("Last 2 days, 1 worked, main sleep logged on 1, 0 workouts, protein logged on 0, 1 urge, 1 clean day.");
     expect(line).not.toMatch(/missed|good|bad|score|%/i);
+  });
+});
+
+describe("read-only findings copy", () => {
+  const names = { bench: "Bench Press", legpress: "Leg Press" };
+  const all: Finding[] = [
+    {
+      kind: "SLEEP_BEFORE_WORKOUT",
+      windowDays: 45,
+      shortSleepMinutes: 360,
+      shortSleep: { workouts: 6, completed: 2, prs: 0 },
+      longerSleep: { workouts: 9, completed: 8, prs: 1 },
+    },
+    { kind: "TRAINING_WINDOW", windowDays: 45, beforeShift: { workouts: 6, completed: 5, prs: 3 }, afterShift: { workouts: 9, completed: 4, prs: 1 } },
+    {
+      kind: "URGE_TIMING",
+      windowDays: 45,
+      total: 12,
+      byPhase: [
+        { phase: "EXPECTED_POST_WORK", count: 9 },
+        { phase: "OFF", count: 2 },
+        { phase: "PRE_WORK", count: 1 },
+      ],
+    },
+    { kind: "STALL", exerciseId: "bench", sessions: 4, topWeights: { min: 185, max: 185 } },
+    { kind: "EXERCISE_STORY", exerciseId: "legpress", fromWeight: 200, toWeight: 270, sessions: 12, days: 50 },
+  ];
+
+  it("says each finding in counts, with its window", () => {
+    expect(all.map((f) => describeFinding(f, names))).toEqual([
+      {
+        title: "Sleep before workouts",
+        lines: ["Under 6 hr: 2 of 6 complete · 0 PRs", "6 hr or more: 8 of 9 complete · 1 PR"],
+        basis: "Last 45 days · the main sleep logged in the 24 hours before each workout.",
+      },
+      {
+        title: "Before vs. after the shift",
+        lines: ["Before the shift: 5 of 6 complete · 3 PRs", "After the shift: 4 of 9 complete · 1 PR"],
+        basis: "Last 45 days · work days only.",
+      },
+      {
+        title: "When urges came",
+        lines: ["9 of 12 after a shift · 2 off work · 1 before a shift"],
+        basis: "Last 45 days · placed against your saved schedule.",
+      },
+      { title: "Bench Press", lines: ["No new record in the last 4 sessions · top set 185 lb each time"] },
+      { title: "Leg Press", lines: ["Top set 200 → 270 lb over 7 weeks · 12 sessions"] },
+    ]);
+  });
+
+  it("gives a stall's range of top sets, and drops weight for bodyweight lifts", () => {
+    expect(describeFinding({ kind: "STALL", exerciseId: "bench", sessions: 4, topWeights: { min: 175, max: 185 } }, names).lines).toEqual([
+      "No new record in the last 4 sessions · top sets 175–185 lb",
+    ]);
+    expect(describeFinding({ kind: "STALL", exerciseId: "pullup", sessions: 4, topWeights: { min: 0, max: 0 } }, names)).toEqual({
+      title: "pullup",
+      lines: ["No new record in the last 4 sessions"],
+    });
+  });
+
+  it("never claims a cause or a habit", () => {
+    const text = all.flatMap((f) => {
+      const c = describeFinding(f, names);
+      return [c.title, ...c.lines, c.basis ?? ""];
+    });
+    for (const line of text) expect(line).not.toMatch(/\b(usually|tends?|because|causes?|leads? to|always|never|better|worse|should)\b/i);
+  });
+
+  it("puts one lift's story and stall under a single heading, story first", () => {
+    const grouped = describeFindings(
+      [
+        all[2]!,
+        { kind: "STALL", exerciseId: "bench", sessions: 4, topWeights: { min: 185, max: 185 } },
+        { kind: "EXERCISE_STORY", exerciseId: "legpress", fromWeight: 200, toWeight: 270, sessions: 12, days: 50 },
+        { kind: "EXERCISE_STORY", exerciseId: "bench", fromWeight: 165, toWeight: 185, sessions: 9, days: 30 },
+      ],
+      names,
+    );
+    expect(grouped.map((g) => [g.title, g.lines])).toEqual([
+      ["When urges came", ["9 of 12 after a shift · 2 off work · 1 before a shift"]],
+      ["Bench Press", ["Top set 165 → 185 lb over 4 weeks · 9 sessions", "No new record in the last 4 sessions · top set 185 lb each time"]],
+      ["Leg Press", ["Top set 200 → 270 lb over 7 weeks · 12 sessions"]],
+    ]);
+  });
+
+  it("names what's still counting in one line, or nothing when all are shown", () => {
+    expect(
+      describeWaitingFindings([
+        { kind: "SLEEP_BEFORE_WORKOUT", have: 2, need: 6 },
+        { kind: "TRAINING_WINDOW", have: 0, need: 6 },
+        { kind: "URGE_TIMING", have: 3, need: 6 },
+      ]),
+    ).toBe(
+      "Not enough data yet: sleep before workouts (2 of 6 each way), before vs. after the shift (0 of 6 each way), when urges came (3 of 6 urges).",
+    );
+    expect(describeWaitingFindings([])).toBeUndefined();
   });
 });
