@@ -12,6 +12,7 @@ import type {
   WaterLoggedPayload,
   WorkContextSetPayload,
   WorkContextSource,
+  ProteinLogVoidedPayload,
 } from "../domain/common/types";
 import {
   DEFAULT_SCHEDULE_PATTERN,
@@ -517,10 +518,17 @@ export interface ProteinEntry {
   recordedAt: string;
 }
 
-/** Every protein log for the day, with corrections resolved to each entry's effective value. */
+/**
+ * Every protein-only log for the day, with corrections resolved to each
+ * entry's effective value. A deleted entry (PROTEIN_LOG_VOIDED, Drop 1.5) is
+ * left out entirely, the same way getMealEntries drops a voided meal.
+ */
 export async function getProteinEntries(beyondDayId: string): Promise<ProteinEntry[]> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const logged = events.filter((e) => e.type === "PROTEIN_LOGGED");
+  const voided = new Set(
+    events.filter((e) => e.type === "PROTEIN_LOG_VOIDED").map((e) => (e.payload as ProteinLogVoidedPayload).proteinEventId),
+  );
+  const logged = events.filter((e) => e.type === "PROTEIN_LOGGED" && !voided.has(e.id));
   const corrections = events.filter((e) => e.type === "PROTEIN_LOG_CORRECTED");
   return logged
     .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
@@ -538,10 +546,26 @@ export async function getProteinEntries(beyondDayId: string): Promise<ProteinEnt
     });
 }
 
-/** Total protein logged for this BeyondDay — sum of every entry's effective (corrected) value, no target/goal. */
+/**
+ * Protein-only logs for this BeyondDay — sum of every entry's effective
+ * (corrected) value, deleted entries excluded. NOT the day's protein: meals
+ * carry protein too. Anything that shows or judges "protein today" uses
+ * getDayProteinTotalG below.
+ */
 export async function getTotalProteinGrams(beyondDayId: string): Promise<number> {
   const entries = await getProteinEntries(beyondDayId);
   return entries.reduce((sum, e) => sum + e.effectiveGrams, 0);
+}
+
+/**
+ * DROP 1.5 (owner brief 2026-10-03): THE protein total for a BeyondDay —
+ * protein-only logs plus effective meal protein, deleted entries and meals
+ * excluded. One calculation for every screen (TODAY, BODY's status tile,
+ * Nutrition Targets, Minimum Day, the weekly check-in) so they can never
+ * disagree.
+ */
+export async function getDayProteinTotalG(beyondDayId: string): Promise<number> {
+  return (await getTotalProteinGrams(beyondDayId)) + (await getTotalMealProteinGrams(beyondDayId));
 }
 
 /**
@@ -626,7 +650,7 @@ export async function getMinimumDayStatus(beyondDayId: string): Promise<MinimumD
   // (it still means exactly "protein-only BODY logs," used as such by
   // BODY's own PROTEIN station) — only this call site's combined total
   // changes.
-  const proteinTotal = (await getTotalProteinGrams(beyondDayId)) + (await getTotalMealProteinGrams(beyondDayId));
+  const proteinTotal = await getDayProteinTotalG(beyondDayId);
 
   const meds = events.some((e) => e.type === "MEDS_COMPLETED");
   const hygiene = events.some((e) => e.type === "HYGIENE_COMPLETED");

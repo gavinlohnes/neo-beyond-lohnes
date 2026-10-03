@@ -199,6 +199,7 @@ export type DomainEventType =
   | "MEAL_LOGGED"
   | "MEAL_LOG_CORRECTED"
   | "MEAL_LOG_VOIDED"
+  | "PROTEIN_LOG_VOIDED"
   | "WORK_PERIOD_ENDED"
   | "MISSION_CREATED"
   | "MISSION_MODIFIED"
@@ -398,6 +399,17 @@ export interface MealLogVoidedPayload {
   commandId: string;
   /** The root MEAL_LOGGED event's id. */
   mealEventId: string;
+}
+
+/**
+ * DROP 1.5 (owner brief 2026-10-03): DELETE for a protein-only log — the
+ * same void treatment as MEAL_LOG_VOIDED. Removes the whole PROTEIN_LOGGED
+ * chain, corrections included, from every total; nothing is erased.
+ */
+export interface ProteinLogVoidedPayload {
+  commandId: string;
+  /** The root PROTEIN_LOGGED event's id. */
+  proteinEventId: string;
 }
 
 /**

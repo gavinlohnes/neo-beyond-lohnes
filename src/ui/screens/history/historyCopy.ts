@@ -44,6 +44,8 @@ export function describeEvent(event: DomainEvent): string {
       return `Meal corrected to ${p.calories} kcal, ${p.proteinG} g protein.`;
     case "MEAL_LOG_VOIDED":
       return "Meal log deleted.";
+    case "PROTEIN_LOG_VOIDED":
+      return "Protein log deleted.";
     case "OUTCOME_RATED":
       return `Outcome rated: ${p.rating}.`;
     case "WORK_CONTEXT_SET":

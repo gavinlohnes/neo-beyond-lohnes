@@ -18,6 +18,7 @@ import {
   correctBodyweight,
   logProtein,
   correctProtein,
+  voidProteinLog,
   ensureActiveDay,
 } from "../../../application/commands";
 import {
@@ -27,6 +28,7 @@ import {
   getSleepEntries,
   getBodyweightEntries,
   getProteinEntries,
+  getDayProteinTotalG,
   type SleepEntry,
   type BodyweightEntry,
   type ProteinEntry,
@@ -49,6 +51,8 @@ import {
   type NutritionEntry,
 } from "../../../application/nutritionQueries";
 import { searchFoods, type FoodSearchResult } from "../../../application/foodLookupQueries";
+import { getSameFoodCheck } from "../../../application/sameFoodQueries";
+import type { SameFoodPair } from "../../../engine/sameFood";
 import { getEffectiveProteinTargetG, getNutritionTargets } from "../../../application/nutritionTargetQueries";
 import {
   describeBestSince,
@@ -87,6 +91,11 @@ import {
   describeRepeatMealsButton,
   describeProteinProgress,
   MEAL_DELETE_HINT,
+  PROTEIN_DELETE_HINT,
+  PROTEIN_CORRECT_TO_ZERO,
+  describeProteinDeleted,
+  describeSameFoodQuestion,
+  describeSameFoodRemoveOne,
   MEALS_TODAY_EMPTY,
   SAVED_MEALS_EMPTY,
 } from "./nutritionCopy";
@@ -275,6 +284,15 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
   const [proteinConfirmation, setProteinConfirmation] = useState<Confirmation>(null);
   const [proteinHistoryOpen, setProteinHistoryOpen] = useState(false);
   const [proteinManualOpen, setProteinManualOpen] = useState(false);
+  // DROP 1.5: the day's one protein total (protein-only logs + meals), as every screen shows it.
+  const [dayProteinG, setDayProteinG] = useState(0);
+  // Shown inside the entry being corrected, next to SAVE/DELETE — not up at the water card.
+  const [proteinEditNotice, setProteinEditNotice] = useState<string | null>(null);
+  const [proteinDeletedMessage, setProteinDeletedMessage] = useState<string | null>(null);
+  // "Same food?" after a protein-only log or a meal lands close to the other kind with similar protein.
+  const [sameFood, setSameFood] = useState<(SameFoodPair & { anchor: "PROTEIN" | { savedMealId: string } }) | null>(null);
+  // What REMOVE ONE did, said where the question was asked.
+  const [sameFoodNotice, setSameFoodNotice] = useState<{ anchor: "PROTEIN" | { savedMealId: string }; message: string } | null>(null);
 
   // Meal Memory (NUTRITION-001)
   const [savedMeals, setSavedMeals] = useState<SavedMeal[]>([]);
@@ -358,19 +376,41 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
       setSleepEntries(await getSleepEntries(activeDay.id));
       setBodyweightEntries(await getBodyweightEntries(activeDay.id));
       setProteinEntries(await getProteinEntries(activeDay.id));
+      setDayProteinG(await getDayProteinTotalG(activeDay.id));
       setMealEntries(await getMealEntries(activeDay.id));
       setTotalMealCalories(await getTotalMealCalories(activeDay.id));
     } else {
       setMealEntries([]);
       setTotalMealCalories(0);
+      setDayProteinG(0);
     }
   }
 
-  const proteinTotal = proteinEntries.reduce((sum, e) => sum + e.effectiveGrams, 0);
-  // NUTRITION-003: the same combined total Minimum Day already treats as
-  // canonical (application/queries.ts's getMinimumDayStatus) — protein-only
-  // logs plus effective meal protein, never two competing totals.
-  const combinedProteinToday = proteinTotal + mealEntries.reduce((sum, e) => sum + e.effectiveProteinG, 0);
+  /** "Same food?" — asked where the second log was made; never blocks, never deletes on its own. */
+  function renderSameFood(at: "PROTEIN" | string) {
+    const matches = (anchor: "PROTEIN" | { savedMealId: string }) =>
+      anchor === "PROTEIN" ? at === "PROTEIN" : anchor.savedMealId === at;
+    if (sameFood && matches(sameFood.anchor)) {
+      return (
+        <div className="fade-in" role="group" aria-label="Same food?" style={{ marginTop: 12, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+          <p className="card-body" style={{ marginBottom: 4 }}>{describeSameFoodQuestion(sameFood.protein, sameFood.meal)}</p>
+          <p className="meta" style={{ marginBottom: 8 }}>{describeSameFoodRemoveOne(sameFood.protein.grams)}</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => setSameFood(null)}>
+              KEEP BOTH
+            </button>
+            <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleSameFoodRemoveOne()}>
+              REMOVE ONE
+            </button>
+          </div>
+        </div>
+      );
+    }
+    if (sameFoodNotice && matches(sameFoodNotice.anchor)) {
+      return <p className="meta" role="status" style={{ marginTop: 8 }}>{sameFoodNotice.message}</p>;
+    }
+    return null;
+  }
   const mealBanner = mealConfirmation && (
     <ConfirmBanner message={mealConfirmation.message} actionLabel="UNDO" disabled={busy} onAction={() => void handleUndoMealLog()} />
   );
@@ -544,8 +584,10 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
         return;
       }
       setProteinInput("");
+      setProteinDeletedMessage(null);
       await refresh();
       setProteinConfirmation({ message: describeProteinLogged(grams), headEventId: eventId });
+      await askSameFood(eventId, "PROTEIN", "PROTEIN");
     } finally {
       setBusy(false);
     }
@@ -568,6 +610,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
 
   function beginCorrectProtein(entry: ProteinEntry) {
     setProteinCorrectingId(entry.headEventId);
+    setProteinEditNotice(null);
     setProteinCorrectionInput(String(entry.effectiveGrams));
     setError(null);
     setProteinHistoryOpen(true);
@@ -576,19 +619,72 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
   async function handleSaveProteinCorrection() {
     if (busy || !day || !proteinCorrectingId) return;
     const grams = Number(proteinCorrectionInput);
+    // DROP 1.5: "0", "00" and "0.0" all mean "remove it" — say where that is, right here.
+    if (proteinCorrectionInput.trim() !== "" && Number.isFinite(grams) && grams === 0) {
+      setProteinEditNotice(PROTEIN_CORRECT_TO_ZERO);
+      return;
+    }
     if (!Number.isFinite(grams) || grams <= 0) {
-      setError("Enter a positive number of grams.");
+      setProteinEditNotice("Enter a positive number of grams.");
       return;
     }
     setBusy(true);
-    setError(null);
+    setProteinEditNotice(null);
     try {
       await correctProtein(day.id, proteinCorrectingId, grams);
       setProteinCorrectingId(null);
       if (proteinConfirmation?.headEventId === proteinCorrectingId) setProteinConfirmation(null);
       await refresh();
     } catch (e) {
-      setError(describeError(e, "Correction failed."));
+      setProteinEditNotice(describeError(e, "Correction failed."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** DROP 1.5 — DELETE (hold-to-confirm) on a protein-only entry: a void event, never an erase. */
+  async function handleDeleteProteinLog(entry: ProteinEntry) {
+    if (busy || !day) return;
+    setBusy(true);
+    try {
+      await voidProteinLog(day.id, entry.rootEventId);
+      setProteinCorrectingId(null);
+      setProteinEditNotice(null);
+      if (proteinConfirmation && entry.headEventId === proteinConfirmation.headEventId) setProteinConfirmation(null);
+      if (sameFood?.protein.id === entry.rootEventId) setSameFood(null);
+      await refresh();
+      setProteinDeletedMessage(describeProteinDeleted(entry.effectiveGrams, await getDayProteinTotalG(day.id)));
+    } catch (e) {
+      setProteinEditNotice(describeError(e, "Could not delete this entry."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Ask "Same food?" when the log just written looks like the other kind logged moments before. */
+  async function askSameFood(eventId: string, kind: "PROTEIN" | "MEAL", anchor: "PROTEIN" | { savedMealId: string }) {
+    const dayId = (await getActiveDay())?.id;
+    if (!dayId) return;
+    const pair = await getSameFoodCheck(dayId, { kind, id: eventId });
+    setSameFoodNotice(null);
+    setSameFood(pair ? { ...pair, anchor } : null);
+  }
+
+  /** REMOVE ONE: deletes the protein-only entry — the meal carries calories and macros, so it stays. */
+  async function handleSameFoodRemoveOne() {
+    if (busy || !day || !sameFood) return;
+    const { protein, anchor } = sameFood;
+    setBusy(true);
+    try {
+      await voidProteinLog(day.id, protein.id);
+      setSameFood(null);
+      if (proteinConfirmation && proteinEntries.some((e) => e.rootEventId === protein.id && e.headEventId === proteinConfirmation.headEventId)) {
+        setProteinConfirmation(null);
+      }
+      await refresh();
+      setSameFoodNotice({ anchor, message: describeProteinDeleted(protein.grams, await getDayProteinTotalG(day.id)) });
+    } catch (e) {
+      setError(describeError(e, "Could not remove the entry."));
     } finally {
       setBusy(false);
     }
@@ -722,6 +818,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
         mealEventIds: [result.eventId],
         anchor: { savedMealId: mealId },
       });
+      await askSameFood(result.eventId, "MEAL", { savedMealId: mealId });
     } catch (e) {
       setError(describeError(e, "Could not log meal."));
     } finally {
@@ -1032,7 +1129,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
         </div>
         <div>
           <p className="meta" style={{ margin: 0 }}>PROTEIN</p>
-          <p className="status-value">{proteinTotal} g</p>
+          <p className="status-value">{dayProteinG} g</p>
         </div>
       </div>
 
@@ -1492,6 +1589,10 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
               }}
             />
           )}
+          {proteinDeletedMessage && (
+            <p className="meta" role="status" style={{ marginTop: 8 }}>{proteinDeletedMessage}</p>
+          )}
+          {renderSameFood("PROTEIN")}
 
           {proteinEntries.length > 0 && (
             <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
@@ -1518,11 +1619,36 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
                         </button>
                       </div>
                       {proteinCorrectingId === entry.headEventId && (
-                        <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                          <input type="number" aria-label="Corrected amount (g)" value={proteinCorrectionInput} onChange={(e) => setProteinCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
-                          <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
-                            SAVE
-                          </button>
+                        <div style={{ marginTop: 12 }}>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <input
+                              type="number"
+                              aria-label="Corrected amount (g)"
+                              value={proteinCorrectionInput}
+                              onChange={(e) => {
+                                setProteinCorrectionInput(e.target.value);
+                                setProteinEditNotice(null);
+                              }}
+                              className="input"
+                              style={{ flex: 1 }}
+                            />
+                            <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
+                              SAVE
+                            </button>
+                          </div>
+                          {proteinEditNotice && (
+                            <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{proteinEditNotice}</p>
+                          )}
+                          {/* DROP 1.5: the same hold-to-confirm DELETE meals have. */}
+                          <HoldButton
+                            className="btn-secondary"
+                            style={{ marginTop: 8 }}
+                            disabled={busy}
+                            hint={PROTEIN_DELETE_HINT}
+                            onConfirm={() => void handleDeleteProteinLog(entry)}
+                          >
+                            DELETE
+                          </HoldButton>
                         </div>
                       )}
                     </div>
@@ -1550,7 +1676,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
           {describeCalorieProgress(totalMealCalories, nutritionTargets?.calorieTargetKcal)}
         </p>
         <p className="meta" style={{ marginBottom: 8 }}>
-          {describeProteinProgress(combinedProteinToday, effectiveProteinTargetG)}
+          {describeProteinProgress(dayProteinG, effectiveProteinTargetG)}
         </p>
         {/* DECLUTTER Drop 3: target settings moved to MORE → Settings. */}
         <p className="meta" style={{ margin: 0 }}>Change targets in MORE → Settings.</p>
@@ -1622,6 +1748,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
                 mealConfirmation.anchor !== "REPEAT" &&
                 mealConfirmation.anchor.savedMealId === meal.id &&
                 mealBanner}
+              {renderSameFood(meal.id)}
               {editingMealId === meal.id && (
                 <div className="fade-in" style={{ marginTop: 12 }}>
                   <div className="field">

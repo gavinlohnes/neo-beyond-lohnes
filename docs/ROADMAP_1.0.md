@@ -96,6 +96,9 @@ time, each briefed by the owner.
 - **Drop 0 — field fixes:** the saved schedule answers "Are you working today?"; open screens
   follow the 16:30 roll. **Done (PR #130, merged).**
 - **Drop 1 — Day Ledger + Burden Meter.** **Done (PR #131, merged).**
+- **Drop 1.5 — protein + sleep totals fix:** one protein total on every screen, DELETE for a
+  protein-only log, correcting to 0 points to DELETE, "Same food?" for a protein log and a meal
+  logged moments apart. **In review.**
 - **Drop 2 — Shift Clock v1** (TODAY by shift phase, row cap by test, Time-Fit line), with rulings
   (a) no MARK WORK ENDED before the shift and (b) no check-in prompt before or during it.
   **Done (PR #132, merged).**

@@ -89,7 +89,7 @@ import {
   getScheduledContext,
   getMinimumDayStatus,
   getEffectiveHydrationTotal,
-  getTotalProteinGrams,
+  getDayProteinTotalG,
   getOpenReset,
   getOpenShiftDown,
   getWorkPeriodEnded,
@@ -112,7 +112,6 @@ import {
   suggestTemplateForNextWorkout,
 } from "../../../application/trainQueries";
 import { getQuitHabit } from "../../../application/quitQueries";
-import { getTotalMealProteinGrams } from "../../../application/nutritionQueries";
 import { getEffectiveProteinTargetG } from "../../../application/nutritionTargetQueries";
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
 import { livedDayShiftWindow } from "../../../engine/scheduledContext";
@@ -372,8 +371,6 @@ export function TodayScreen({
   const [schedulePattern, setSchedulePattern] = useState<SchedulePattern | null>(null);
   // Recorded times of this day's main-sleep logs (see mainSleepEndsPostShift).
   const [mainSleepRecordedAt, setMainSleepRecordedAt] = useState<string[]>([]);
-  // Fuel: meal protein joins protein logs, the same combined total BODY shows.
-  const [mealProteinG, setMealProteinG] = useState(0);
   const [proteinTargetG, setProteinTargetG] = useState<number | undefined>(undefined);
   // The next workout TRAIN would suggest, with Time-Fit estimates per variant.
   const [nextWorkout, setNextWorkout] = useState<{
@@ -555,7 +552,6 @@ export function TodayScreen({
     let unresolvedPostShift = false;
     let workContextSource: WorkContextSource | undefined;
     let mainSleepTimes: string[] = [];
-    let mealProtein = 0;
     let draftEvidence: Awaited<ReturnType<typeof getSleepDraftEvidence>> | null = null;
 
     if (activeDay) {
@@ -569,7 +565,8 @@ export function TodayScreen({
       pendingOutcome = rec ? (await getPendingOutcomeRating(rec)) ?? null : null;
       minimumDay = await getMinimumDayStatus(activeDay.id);
       minimumDayHydrateOz = await getEffectiveHydrationTotal(activeDay.id);
-      minimumDayProteinG = await getTotalProteinGrams(activeDay.id);
+      // DROP 1.5: the one shared day total (protein-only logs + meals), same as BODY and Nutrition Targets.
+      minimumDayProteinG = await getDayProteinTotalG(activeDay.id);
       openReset = await getOpenReset(activeDay.id);
       openShiftDown = await getOpenShiftDown(activeDay.id);
       const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
@@ -577,7 +574,6 @@ export function TodayScreen({
       unresolvedPostShift = await hasUnresolvedPostShift(activeDay.id);
       workContextSource = await getWorkContextSource(activeDay.id);
       mainSleepTimes = (await getSleepEntries(activeDay.id)).filter((e) => e.kind === "PRIMARY").map((e) => e.recordedAt);
-      mealProtein = await getTotalMealProteinGrams(activeDay.id);
       draftEvidence = await getSleepDraftEvidence(activeDay.id, getAppOpenedAt());
     }
     // Intelligence Spine consumption (2026-09-02): advisory notes are pure
@@ -648,7 +644,6 @@ export function TodayScreen({
       setUnresolvedPostShift(unresolvedPostShift);
       setWorkContextSource(workContextSource);
       setMainSleepRecordedAt(mainSleepTimes);
-      setMealProteinG(mealProtein);
       setSleepDraftEvidence(draftEvidence);
     } else {
       setRecommendation(null);
@@ -1302,7 +1297,7 @@ export function TodayScreen({
 
 
   // ---- SHIFT CLOCK rendering (Drop 2) ----
-  const fuelLine = describeFuel(minimumDayProteinG + mealProteinG, proteinTargetG, minimumDayHydrateOz);
+  const fuelLine = describeFuel(minimumDayProteinG, proteinTargetG, minimumDayHydrateOz);
   const suggestedVariant = suggestSessionVariant(capacityResult ? capacityResult.capacity : null).variant;
   const workoutLine = nextWorkout
     ? suggestedVariant === "RESET"

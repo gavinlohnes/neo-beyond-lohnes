@@ -6,8 +6,7 @@ import { byLoggedOrder, findSessionRecords, type PersonalRecord } from "./person
 import { getBodyweightHistory, projectGoalDate, type GoalProjection } from "./bodyTrendQueries";
 import { getEffectiveProteinTargetG, getNutritionTargets } from "./nutritionTargetQueries";
 import { getQuitHabit } from "./quitQueries";
-import { getTotalProteinGrams } from "./queries";
-import { getTotalMealProteinGrams } from "./nutritionQueries";
+import { getDayProteinTotalG } from "./queries";
 import { getCustomExercises } from "./exerciseLibraryQueries";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { summarizeBurden, type BurdenSummary } from "../engine/dayLedger";
@@ -140,7 +139,7 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
   const windowDays = (await db.beyondDays.toArray()).filter((d) => inWindow(d.startedAt, start, end));
   const dailyProtein: number[] = [];
   for (const day of windowDays) {
-    const grams = (await getTotalProteinGrams(day.id)) + (await getTotalMealProteinGrams(day.id));
+    const grams = await getDayProteinTotalG(day.id);
     if (grams > 0) dailyProtein.push(grams);
   }
   const avgGrams = average(dailyProtein);

@@ -9,6 +9,7 @@ import type {
   BeyondDay,
   CaptureItem,
   DomainEvent,
+  ProteinLogVoidedPayload,
   Recommendation,
   SchedulePattern,
   StateCheckIn,
@@ -1058,6 +1059,17 @@ export async function correctProtein(
   targetEventId: string,
   newGrams: number,
 ): Promise<void> {
+  // 0 g is a deletion, not a correction: the BODY row's DELETE removes an entry.
+  if (!Number.isFinite(newGrams) || newGrams <= 0) {
+    throw new Error("PROTEIN_CORRECTION_NOT_POSITIVE: to remove a protein entry, use DELETE.");
+  }
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const target = events.find((e) => e.id === targetEventId);
+  const rootId =
+    target?.type === "PROTEIN_LOG_CORRECTED" ? (target.payload as { originalEventId: string }).originalEventId : targetEventId;
+  if (isProteinLogVoided(events, rootId)) {
+    throw new Error("PROTEIN_LOG_VOIDED: this entry was deleted and can no longer be corrected.");
+  }
   return correctSingleValueLog({
     beyondDayId,
     targetEventId,
@@ -1066,6 +1078,32 @@ export async function correctProtein(
     correctedType: "PROTEIN_LOG_CORRECTED",
     valueKey: "grams",
   });
+}
+
+function isProteinLogVoided(dayEvents: readonly DomainEvent[], proteinEventId: string): boolean {
+  return dayEvents.some(
+    (e) => e.type === "PROTEIN_LOG_VOIDED" && (e.payload as ProteinLogVoidedPayload).proteinEventId === proteinEventId,
+  );
+}
+
+/**
+ * DROP 1.5 (owner brief 2026-10-03): DELETE for a protein-only log, the same
+ * way voidMealLog deletes a meal. Appends PROTEIN_LOG_VOIDED naming the root
+ * PROTEIN_LOGGED event; nothing is erased, so History keeps the entry and
+ * its deletion side by side. Accepts the root or any correction in its
+ * chain. Deleting an already-deleted entry is a no-op.
+ */
+export async function voidProteinLog(beyondDayId: string, proteinEventId: string): Promise<void> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const target = events.find((e) => e.id === proteinEventId);
+  if (!target || (target.type !== "PROTEIN_LOGGED" && target.type !== "PROTEIN_LOG_CORRECTED")) {
+    throw new Error("PROTEIN_LOG_NOT_FOUND: that protein entry could not be found for this day.");
+  }
+  const rootId = target.type === "PROTEIN_LOGGED" ? target.id : (target.payload as { originalEventId: string }).originalEventId;
+  if (isProteinLogVoided(events, rootId)) return;
+  const commandId = newId();
+  const payload: ProteinLogVoidedPayload = { commandId, proteinEventId: rootId };
+  await logEvent(beyondDayId, "PROTEIN_LOG_VOIDED", payload, "USER", commandId, rootId);
 }
 
 export async function correctBodyweight(
