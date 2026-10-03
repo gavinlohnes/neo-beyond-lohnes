@@ -17,7 +17,7 @@ import {
 } from "../../src/application/nutritionCommands";
 import { getWeeklySummary } from "../../src/application/weeklyQueries";
 import { getTotalMealCalories } from "../../src/application/nutritionQueries";
-import { getMealEntries, getSavedMeals, getTotalMealProteinGrams } from "../../src/application/nutritionQueries";
+import { getMealEntries, getRecentSavedMeals, getSavedMeals, getTotalMealProteinGrams } from "../../src/application/nutritionQueries";
 
 /**
  * NUTRITION-001 (Meal Memory, High-Risk Drop): same "gained the same
@@ -82,6 +82,51 @@ describe("SavedMeal CRUD — directly mutable, no event trail of its own", () =>
   it("rejects operating on a nonexistent SavedMeal", async () => {
     await expect(updateSavedMeal("does-not-exist", { calories: 100 })).rejects.toThrow(/SAVED_MEAL_NOT_FOUND/);
     await expect(archiveSavedMeal("does-not-exist")).rejects.toThrow(/SAVED_MEAL_NOT_FOUND/);
+  });
+});
+
+describe("BODY-QUICK-001 — recently used meal shortcuts", () => {
+  it("puts a used preset before a newer never-used preset", async () => {
+    const used = await makeMeal({ name: "Used meal" });
+    const unused = await makeMeal({ name: "New but unused" });
+    const day = await startDay();
+    await logMeal(day.id, used.id);
+
+    expect((await getRecentSavedMeals()).map((meal) => meal.id)).toEqual([used.id, unused.id]);
+  });
+
+  it("drops voided use evidence and honors the requested limit", async () => {
+    const voidedUse = await makeMeal({ name: "Voided use" });
+    const survivingUse = await makeMeal({ name: "Surviving use" });
+    const day = await startDay();
+    const loggedThenVoided = await logMeal(day.id, voidedUse.id);
+    await logMeal(day.id, survivingUse.id);
+    await voidMealLog(day.id, loggedThenVoided.eventId);
+
+    expect((await getRecentSavedMeals(1)).map((meal) => meal.id)).toEqual([survivingUse.id]);
+    expect(await getRecentSavedMeals(0)).toEqual([]);
+  });
+
+  it("excludes archived and malformed presets even when history references them", async () => {
+    const archived = await makeMeal({ name: "Archived" });
+    const active = await makeMeal({ name: "Active" });
+    const day = await startDay();
+    await logMeal(day.id, archived.id);
+    await archiveSavedMeal(archived.id);
+    await db.savedMeals.put({ id: "malformed", name: "Broken" } as never);
+
+    expect((await getRecentSavedMeals()).map((meal) => meal.id)).toEqual([active.id]);
+  });
+
+  it("keeps every active preset reachable when no limit is requested", async () => {
+    await Promise.all([
+      makeMeal({ name: "One" }),
+      makeMeal({ name: "Two" }),
+      makeMeal({ name: "Three" }),
+      makeMeal({ name: "Four" }),
+    ]);
+
+    expect(await getRecentSavedMeals()).toHaveLength(4);
   });
 });
 

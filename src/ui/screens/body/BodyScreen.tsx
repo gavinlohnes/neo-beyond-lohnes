@@ -46,7 +46,7 @@ import {
   getMealEntries,
   getPreviousDayMeals,
   type RepeatableMeals,
-  getSavedMeals,
+  getRecentSavedMeals,
   getTotalMealCalories,
   type NutritionEntry,
 } from "../../../application/nutritionQueries";
@@ -369,7 +369,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     // SavedMeal presets are not day-scoped (same as SchedulePattern) —
     // loaded regardless of whether a day exists yet, since creating one
     // doesn't require ensureActiveDay (only logMeal does).
-    setSavedMeals(await getSavedMeals());
+    setSavedMeals(await getRecentSavedMeals());
     // Nutrition targets aren't day-scoped (same as SchedulePattern) —
     // loaded regardless of whether a day exists yet.
     const targets = await getNutritionTargets();

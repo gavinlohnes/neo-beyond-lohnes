@@ -39,6 +39,57 @@ export async function getSavedMeals(options: { includeArchived?: boolean } = {})
 }
 
 /**
+ * BODY-QUICK-001: active presets ordered for quick logging by the most
+ * recent surviving MEAL_LOGGED fact. Recency stays derived from history:
+ * voiding a log removes its evidence automatically, and no duplicate
+ * mutable "last used" field can drift from the event stream.
+ */
+export async function getRecentSavedMeals(limit = Number.POSITIVE_INFINITY): Promise<SavedMeal[]> {
+  const safeLimit = Math.max(0, Math.floor(limit));
+  if (safeLimit === 0) return [];
+
+  const [meals, logged, voids] = await Promise.all([
+    getSavedMeals(),
+    db.events.where("type").equals("MEAL_LOGGED").toArray(),
+    db.events.where("type").equals("MEAL_LOG_VOIDED").toArray(),
+  ]);
+  const voidedIds = new Set(
+    voids.map((event) => (event.payload as MealLogVoidedPayload).mealEventId),
+  );
+  const latestUseByMealId = new Map<string, DomainEvent<MealLoggedPayload>>();
+
+  const survivingLogs = logged
+    .filter(
+      (event): event is DomainEvent<MealLoggedPayload> =>
+        event.type === "MEAL_LOGGED" && !voidedIds.has(event.id),
+    )
+    .sort((a, b) => {
+      const byRecency = byTimeThenSeq(b.recordedAt, b.seq, a.recordedAt, a.seq);
+      return byRecency !== 0 ? byRecency : a.id.localeCompare(b.id);
+    });
+  for (const event of survivingLogs) {
+    if (!latestUseByMealId.has(event.payload.savedMealId)) {
+      latestUseByMealId.set(event.payload.savedMealId, event);
+    }
+  }
+
+  return [...meals]
+    .sort((a, b) => {
+      const aUse = latestUseByMealId.get(a.id);
+      const bUse = latestUseByMealId.get(b.id);
+      if (aUse && bUse) {
+        const byRecency = byTimeThenSeq(bUse.recordedAt, bUse.seq, aUse.recordedAt, aUse.seq);
+        return byRecency !== 0 ? byRecency : aUse.id.localeCompare(bUse.id);
+      }
+      if (aUse) return -1;
+      if (bUse) return 1;
+      const byCreatedAt = b.createdAt.localeCompare(a.createdAt);
+      return byCreatedAt !== 0 ? byCreatedAt : a.id.localeCompare(b.id);
+    })
+    .slice(0, safeLimit);
+}
+
+/**
  * DERIVED, not stored — reconstructs effective meal-log truth from the
  * raw event stream, same hydration-style correction-chain pattern as
  * getHydrationEntries/getProteinEntries: MEAL_LOGGED starts a chain,

@@ -1,12 +1,13 @@
 ---
-id: TODAY-QUICKACTIONS-001
-status: CLOSED
-baseline: c91a7f710499af6e1a71e5d193bfea05aeffd7df
-branch: claude/today-quickactions-001-night-shift
-contract: docs/agent/drops/TODAY-QUICKACTIONS-001.md
-builder: Claude, this session, direct owner authorization 2026-09-20/21 (NEXT DROP SCOPING mission, all 3 items picked, build order 1,2,3)
-integration_sha: 6ba6cc2d6b4194f6bb4041a49c4b7c95daee1cdf
-closed_at: 2026-09-21T09:48:20.058Z
+id: BODY-QUICK-001
+status: ACTIVE
+baseline: e8908ef4c2fe39b1bc782b0730be34ce258a139c
+branch: codex/body-quick-001
+contract: docs/agent/drops/BODY-QUICK-001.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Codex, direct owner authorization 2026-10-03 DAILY-USE campaign
+reviewer: (unassigned)
+integrator: (unassigned)
 ---
 
 # ACTIVE_DROP
@@ -20,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/TODAY-QUICKACTIONS-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/BODY-QUICK-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
