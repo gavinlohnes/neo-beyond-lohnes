@@ -28,7 +28,8 @@ use. It adds no stored state and changes no logging semantics.
 - Architecture boundaries: passed (153 files scanned).
 - Full `npm run verify`: passed (160 files; 1,845 tests passed, 1 skipped; production PWA
   build completed).
-- Risk classification will be recorded from the committed diff before push.
+- Committed-diff risk check: passed; no Architectural/High-Risk trigger detected, confirming
+  the Drop's ROUTINE classification.
 - PR URL will be recorded in `docs/agent/ACTIVE_DROP.md` immediately after creation.
 - Unresolved implementation issues: none.
 
