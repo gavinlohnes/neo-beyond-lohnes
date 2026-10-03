@@ -70,6 +70,21 @@ describe("Shift Clock — before shift (16:30 → 18:00)", () => {
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
   });
 
+  it("asks for nothing before the shift: no MARK WORK ENDED, no check-in prompt — the check-in waits in TOOLS (owner rulings a, b)", async () => {
+    await startDayAt(at(12, 16, 30));
+    setClock(at(12, 16, 40));
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByRole("heading", { name: "Before shift", exact: true })).toBeVisible();
+    await expect.poll(stripHeadline).toBe("Shift in 1h 20m");
+    expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(0);
+    expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
+
+    await openTodayTools(screen);
+    await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
+  });
+
   it("the TOOLS summary names only what's inside", async () => {
     await startDayAt(at(12, 16, 30));
     setClock(at(12, 16, 40));
@@ -94,6 +109,9 @@ describe("Shift Clock — on shift (18:00 → 06:00)", () => {
     await expect.element(screen.getByRole("heading", { name: "On shift", exact: true })).toBeVisible();
     await expect.poll(stripHeadline).toBe("Shift ends in 8h");
     await expect.poll(rows).toEqual(["QUICK_LOG", "FUEL"]);
+    // Once the shift has started MARK WORK ENDED is offered (ruling a); the check-in still isn't prompted (ruling b).
+    await expect.element(screen.getByRole("button", { name: "MARK WORK ENDED" })).toBeVisible();
+    expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
 
     await screen.getByRole("button", { name: "Log 8 oz water" }).click();
     await expect.element(screen.getByText("8 oz recorded.", { exact: true })).toBeVisible();

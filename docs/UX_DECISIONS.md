@@ -152,7 +152,10 @@ below, this entry wins; the older entry is kept for history.
   workout. A declared work context wins over the schedule; an unanswered day takes no phase from the
   schedule's prediction (it shows the work question, check-in and workout). Attention and its cap
   of 2 are unchanged, except that a phase row showing the same thing isn't also offered as an
-  attention item (post-shift MARK WORK ENDED; the check-in where it is a row). Kept visible above
+  attention item (post-shift MARK WORK ENDED; the check-in where it is a row), and two owner rulings
+  (2026-10-03): **(a)** MARK WORK ENDED is offered only once the shift has started — never in
+  PRE_WORK; **(b)** the check-in is never prompted in Attention before or during the shift (it
+  happens after shift); outside its rows it waits in TOOLS. Kept visible above
   TOOLS while they matter: the per-schedule one-tap change (in the status strip), an
   Engine-recommended SHIFT DOWN/RESET, a check-in form or work-context card opened from Attention,
   and SURFACE/INTERRUPT advisory notes. **Time-Fit** (`engine/timeFit.ts`): the median of the last 5

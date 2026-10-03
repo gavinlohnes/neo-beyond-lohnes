@@ -1189,8 +1189,17 @@ export function TodayScreen({
     // A row that already shows the same thing this phase doesn't also take an
     // attention slot: post-shift folds MARK WORK ENDED into SHIFT DOWN, and the
     // check-in row asks for the check-in itself (Drop 2).
-    hasWorkEndAvailable: day?.workContext === "WORK" && workPeriodEndedAt === null && !shiftDownIsRow,
-    isCheckInMissing: day !== null && checkIn === null && !checkInIsRow,
+    // Owner rulings (a) and (b), 2026-10-03: MARK WORK ENDED is offered only
+    // once the shift has started (never before it), and the check-in is never
+    // prompted before or during the shift — it happens after shift.
+    hasWorkEndAvailable:
+      day?.workContext === "WORK" && workPeriodEndedAt === null && !shiftDownIsRow && shiftClock.phase !== "PRE_WORK",
+    isCheckInMissing:
+      day !== null &&
+      checkIn === null &&
+      !checkInIsRow &&
+      shiftClock.phase !== "PRE_WORK" &&
+      shiftClock.phase !== "SCHEDULED_SHIFT",
     isMinimumDayProminent: showProminentMinimumDay,
     isHydrationOperationOpen:
       hydrationOperationOpen &&

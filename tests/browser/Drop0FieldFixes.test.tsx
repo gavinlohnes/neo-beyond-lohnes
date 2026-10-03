@@ -60,7 +60,8 @@ describe("Fix 1 — TODAY no longer asks when the saved schedule is clear", () =
 
     await expect.element(screen.getByText("Working · per schedule", { exact: true }).first()).toBeVisible();
     expect(screen.getByRole("heading", { name: "Are you working today?" }).elements()).toHaveLength(0);
-    await expect.element(screen.getByRole("button", { name: "MARK WORK ENDED" })).toBeVisible();
+    // Drop 2 ruling (a): before the shift starts, MARK WORK ENDED isn't offered.
+    expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(0);
 
     // Drop 2: the one-tap change sits in the status strip, once.
     expect(screen.getByRole("button", { name: "CHANGE TO OFF" }).elements()).toHaveLength(1);
