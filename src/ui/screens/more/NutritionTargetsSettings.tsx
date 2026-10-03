@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Target } from "lucide-react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { ConfirmBanner } from "../../components/ConfirmBanner";
+import { useUndoWindow } from "../../hooks/useUndoWindow";
 import { LineIcon } from "../../icons/LineIcon";
 import type { NutritionTargets } from "../../../domain/common/types";
 import { getNutritionTargets } from "../../../application/nutritionTargetQueries";
-import { updateNutritionTargets } from "../../../application/nutritionTargetCommands";
+import { saveNutritionTargets } from "../../../application/nutritionTargetCommands";
+import { describeError, NO_CHANGES_MESSAGE } from "../../errorMessage";
 
 /**
  * DECLUTTER Drop 3 (owner ruling 2026-09-30): Nutrition Targets moved from
@@ -14,7 +17,31 @@ import { updateNutritionTargets } from "../../../application/nutritionTargetComm
  *
  * Drop 5: also holds the optional goal weight BODY's projected goal date
  * uses. Saved with the same command, so it rides along in backups.
+ *
+ * HOTFIX (owner ruling 2026-10-03): the inputs open filled with the saved
+ * values (real values, not gray placeholders); SAVE with nothing changed
+ * says "No changes." and writes nothing; a real save shows what was saved
+ * with UNDO for UNDO_WINDOW_MS.
  */
+interface TargetsSaveConfirmation {
+  message: string;
+  undo: () => Promise<void>;
+}
+
+function formInputs(targets: NutritionTargets | null): { calorie: string; multiplier: string; goal: string } {
+  return {
+    calorie: targets?.calorieTargetKcal?.toString() ?? "",
+    multiplier: (targets?.proteinMultiplierGPerLb ?? 1.0).toString(),
+    goal: targets?.goalWeightLbs?.toString() ?? "",
+  };
+}
+
+function describeTargets(targets: NutritionTargets | null): string {
+  const calorieSummary = targets?.calorieTargetKcal !== undefined ? `${targets.calorieTargetKcal} kcal` : "No calorie target";
+  const proteinSummary = `${targets?.proteinMultiplierGPerLb ?? 1.0} g/lb protein`;
+  const goalSummary = targets?.goalWeightLbs !== undefined ? ` · goal ${targets.goalWeightLbs} lb` : "";
+  return `${calorieSummary} · ${proteinSummary}${goalSummary}`;
+}
 export function NutritionTargetsSettings() {
   const [targets, setTargets] = useState<NutritionTargets | null>(null);
   const [open, setOpen] = useState(false);
@@ -23,6 +50,7 @@ export function NutritionTargetsSettings() {
   const [goalInput, setGoalInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useUndoWindow<TargetsSaveConfirmation>();
   const disposedRef = useRef(false);
 
   useEffect(() => {
@@ -35,39 +63,72 @@ export function NutritionTargetsSettings() {
     };
   }, []);
 
+  function openForm() {
+    const filled = formInputs(targets);
+    setCalorieInput(filled.calorie);
+    setMultiplierInput(filled.multiplier);
+    setGoalInput(filled.goal);
+    setError(null);
+    setOpen(true);
+  }
+
   async function handleSave() {
     if (busy) return;
-    setBusy(true);
     setError(null);
+    const calorieValue = calorieInput.trim() ? Number(calorieInput) : undefined;
+    const multiplierValue = multiplierInput.trim() ? Number(multiplierInput) : undefined;
+    const goalValue = goalInput.trim() ? Number(goalInput) : undefined;
+    // An empty box means "leave as is" (there's no clear-to-unset), so only
+    // a value that differs from what's saved counts as a change.
+    const changes = {
+      ...(calorieValue !== undefined && calorieValue !== targets?.calorieTargetKcal ? { calorieTargetKcal: calorieValue } : {}),
+      ...(multiplierValue !== undefined && multiplierValue !== (targets?.proteinMultiplierGPerLb ?? 1.0)
+        ? { proteinMultiplierGPerLb: multiplierValue }
+        : {}),
+      ...(goalValue !== undefined && goalValue !== targets?.goalWeightLbs ? { goalWeightLbs: goalValue } : {}),
+    };
+    if (Object.keys(changes).length === 0) {
+      setError(NO_CHANGES_MESSAGE);
+      return;
+    }
+    setBusy(true);
     try {
-      const calorieValue = calorieInput.trim() ? Number(calorieInput) : undefined;
-      const multiplierValue = multiplierInput.trim() ? Number(multiplierInput) : undefined;
-      const goalValue = goalInput.trim() ? Number(goalInput) : undefined;
-      const saved = await updateNutritionTargets({
-        ...(calorieValue !== undefined ? { calorieTargetKcal: calorieValue } : {}),
-        ...(multiplierValue !== undefined ? { proteinMultiplierGPerLb: multiplierValue } : {}),
-        ...(goalValue !== undefined ? { goalWeightLbs: goalValue } : {}),
-      });
+      const { saved, undo } = await saveNutritionTargets(changes);
       if (disposedRef.current) return;
       setTargets(saved);
-      setCalorieInput("");
-      setMultiplierInput("");
-      setGoalInput("");
       setOpen(false);
+      setConfirmation({ message: `Targets saved · ${describeTargets(saved)}`, undo });
     } catch (e) {
-      if (!disposedRef.current) setError(e instanceof Error ? e.message : "Could not save targets.");
+      if (!disposedRef.current) setError(describeError(e, "Could not save targets."));
     } finally {
       if (!disposedRef.current) setBusy(false);
     }
   }
 
-  const calorieSummary = targets?.calorieTargetKcal !== undefined ? `${targets.calorieTargetKcal} kcal` : "No calorie target";
-  const proteinSummary = `${targets?.proteinMultiplierGPerLb ?? 1.0} g/lb protein`;
-  const goalSummary = targets?.goalWeightLbs !== undefined ? ` · goal ${targets.goalWeightLbs} lb` : "";
+  async function handleUndo() {
+    if (busy || !confirmation) return;
+    setBusy(true);
+    try {
+      await confirmation.undo();
+      const restored = await getNutritionTargets();
+      if (disposedRef.current) return;
+      setTargets(restored);
+      setConfirmation(null);
+    } finally {
+      if (!disposedRef.current) setBusy(false);
+    }
+  }
+
+  const banner = confirmation && (
+    <ConfirmBanner message={confirmation.message} actionLabel="UNDO" disabled={busy} onAction={() => void handleUndo()} />
+  );
 
   if (!open) {
     return (
-      <CollapsibleRow name="NUTRITION TARGETS" icon={<LineIcon icon={Target} />} summary={`${calorieSummary} · ${proteinSummary}${goalSummary}`} onOpen={() => setOpen(true)} />
+      <>
+        <CollapsibleRow name="NUTRITION TARGETS" icon={<LineIcon icon={Target} />} summary={describeTargets(targets)} onOpen={openForm} />
+        {banner}
+      </>
     );
   }
 
@@ -86,7 +147,7 @@ export function NutritionTargetsSettings() {
             id="calorie-target-input"
             type="number"
             aria-label="Calorie target (kcal/day)"
-            placeholder={targets?.calorieTargetKcal?.toString() ?? "e.g. 2200"}
+            placeholder="Not set"
             value={calorieInput}
             onChange={(e) => setCalorieInput(e.target.value)}
             className="input"
@@ -101,7 +162,6 @@ export function NutritionTargetsSettings() {
             type="number"
             step="0.05"
             aria-label="Protein multiplier (g per lb bodyweight)"
-            placeholder={targets?.proteinMultiplierGPerLb.toString() ?? "1.0"}
             value={multiplierInput}
             onChange={(e) => setMultiplierInput(e.target.value)}
             className="input"
@@ -119,7 +179,7 @@ export function NutritionTargetsSettings() {
             type="number"
             step="0.5"
             aria-label="Goal weight (lb)"
-            placeholder={targets?.goalWeightLbs?.toString() ?? "Optional"}
+            placeholder="Optional"
             value={goalInput}
             onChange={(e) => setGoalInput(e.target.value)}
             className="input"
@@ -128,7 +188,7 @@ export function NutritionTargetsSettings() {
             Used only for BODY's projected goal date.
           </p>
         </div>
-        {error && <p className="meta" role="alert">{error}</p>}
+        {error && <p className="meta" role={error === NO_CHANGES_MESSAGE ? "status" : "alert"}>{error}</p>}
         <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSave()}>
           SAVE
         </button>

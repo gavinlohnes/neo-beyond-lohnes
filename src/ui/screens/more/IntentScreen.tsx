@@ -29,6 +29,7 @@ import {
   type RecurrenceFreq,
 } from "../../../engine/recurrence";
 import { formatLocalDate } from "../../../engine/scheduledContext";
+import { describeError } from "../../errorMessage";
 
 /** INTENT-002: shared create/edit picker state — "" means "does not repeat". */
 interface RecurrenceFormState {
@@ -275,7 +276,7 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
     try {
       await fn();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(describeError(e, "Something went wrong."));
     } finally {
       setBusy(false);
     }
@@ -513,7 +514,7 @@ function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () =>
       setEditing(false);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save.");
+      setError(describeError(e, "Could not save."));
     } finally {
       setBusy(false);
     }
@@ -528,7 +529,7 @@ function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () =>
       setArchiveConfirming(false);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not archive.");
+      setError(describeError(e, "Could not archive."));
     } finally {
       setBusy(false);
     }
@@ -669,7 +670,7 @@ function ObligationDetail({
       setEditing(false);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save.");
+      setError(describeError(e, "Could not save."));
     } finally {
       setBusy(false);
     }
@@ -684,7 +685,7 @@ function ObligationDetail({
       setPendingResolution(null);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not update.");
+      setError(describeError(e, "Could not update."));
     } finally {
       setBusy(false);
     }

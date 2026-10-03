@@ -13,7 +13,10 @@ import {
   createSavedMeal,
   logMeal,
   updateSavedMeal,
+  voidMealLog,
 } from "../../src/application/nutritionCommands";
+import { getWeeklySummary } from "../../src/application/weeklyQueries";
+import { getTotalMealCalories } from "../../src/application/nutritionQueries";
 import { getMealEntries, getSavedMeals, getTotalMealProteinGrams } from "../../src/application/nutritionQueries";
 
 /**
@@ -351,5 +354,68 @@ describe("Minimum Day protein — meal protein counts alongside protein-only log
 
     const status = await getMinimumDayStatus(day.id);
     expect(status.protein).toBe(true);
+  });
+});
+
+describe("voidMealLog — HOTFIX DELETE/UNDO: a void event, never an erase", () => {
+  it("removes the meal from today's entries, calories and protein, but keeps every original event", async () => {
+    const day = await startDay();
+    const keep = await makeMeal({ name: "Breakfast", calories: 400, proteinG: 30 });
+    const drop = await makeMeal({ name: "Dinner", calories: 650, proteinG: 45 });
+    await logMeal(day.id, keep.id);
+    const { eventId } = await logMeal(day.id, drop.id);
+
+    await voidMealLog(day.id, eventId);
+
+    const entries = await getMealEntries(day.id);
+    expect(entries.map((e) => e.name)).toEqual(["Breakfast"]);
+    expect(await getTotalMealCalories(day.id)).toBe(400);
+    expect(await getTotalMealProteinGrams(day.id)).toBe(30);
+    const events = await db.events.where("beyondDayId").equals(day.id).toArray();
+    expect(events.find((e) => e.id === eventId)?.type).toBe("MEAL_LOGGED");
+    const voids = events.filter((e) => e.type === "MEAL_LOG_VOIDED");
+    expect(voids).toHaveLength(1);
+    expect(voids[0]!.payload).toMatchObject({ mealEventId: eventId });
+    expect(voids[0]!.causationId).toBe(eventId);
+  });
+
+  it("voids a corrected meal's whole chain, and a voided meal can no longer be corrected", async () => {
+    const day = await startDay();
+    const meal = await makeMeal();
+    const { eventId } = await logMeal(day.id, meal.id);
+    await correctMealLog(day.id, eventId, { calories: 700, proteinG: 50, carbsG: 60, fatG: 15 });
+    const [corrected] = await getMealEntries(day.id);
+
+    await voidMealLog(day.id, eventId);
+
+    expect(await getMealEntries(day.id)).toHaveLength(0);
+    await expect(
+      correctMealLog(day.id, corrected!.headEventId, { calories: 1, proteinG: 1, carbsG: 1, fatG: 1 }),
+    ).rejects.toThrow(/MEAL_LOG_VOIDED/);
+  });
+
+  it("is a no-op the second time, and rejects anything that isn't a logged meal on this day", async () => {
+    const day = await startDay();
+    const meal = await makeMeal();
+    const { eventId } = await logMeal(day.id, meal.id);
+    await voidMealLog(day.id, eventId);
+    await voidMealLog(day.id, eventId);
+    expect(await db.events.where("type").equals("MEAL_LOG_VOIDED").count()).toBe(1);
+
+    await expect(voidMealLog(day.id, "nope")).rejects.toThrow(/MEAL_LOG_NOT_FOUND/);
+    await expect(voidMealLog("another-day", eventId)).rejects.toThrow(/MEAL_LOG_NOT_FOUND/);
+  });
+
+  it("drops out of Minimum Day protein and the weekly check-in", async () => {
+    const day = await startDay();
+    const meal = await makeMeal({ proteinG: 45 });
+    const { eventId } = await logMeal(day.id, meal.id);
+    expect((await getWeeklySummary()).protein.avgGrams).toBe(45);
+    expect((await getMinimumDayStatus(day.id)).protein).toBe(true);
+
+    await voidMealLog(day.id, eventId);
+
+    expect((await getWeeklySummary()).protein.daysLogged).toBe(0);
+    expect((await getMinimumDayStatus(day.id)).protein).toBe(false);
   });
 });

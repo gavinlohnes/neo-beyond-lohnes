@@ -1,6 +1,12 @@
 import { db } from "../persistence/db";
 import { logEvent, newId } from "./commands";
-import type { DomainEvent, MealLogCorrectedPayload, MealLoggedPayload, SavedMeal } from "../domain/common/types";
+import type {
+  DomainEvent,
+  MealLogCorrectedPayload,
+  MealLoggedPayload,
+  MealLogVoidedPayload,
+  SavedMeal,
+} from "../domain/common/types";
 import {
   parseSavedMeal,
   savedMealInputSchema,
@@ -190,6 +196,9 @@ export async function correctMealLog(
   }
   const originalEventId =
     target.type === "MEAL_LOGGED" ? target.id : (target.payload as MealLogCorrectedPayload).originalEventId;
+  if (isVoided(events, originalEventId)) {
+    throw new Error("MEAL_LOG_VOIDED: this meal was deleted and can no longer be corrected.");
+  }
 
   const correlationId = newId();
   await logEvent(
@@ -200,4 +209,31 @@ export async function correctMealLog(
     correlationId,
     targetEventId,
   );
+}
+
+function isVoided(dayEvents: readonly DomainEvent[], mealEventId: string): boolean {
+  return dayEvents.some(
+    (e) => e.type === "MEAL_LOG_VOIDED" && (e.payload as MealLogVoidedPayload).mealEventId === mealEventId,
+  );
+}
+
+/**
+ * HOTFIX (BODY logging trust, owner ruling 2026-10-03): DELETE and UNDO for
+ * a logged meal. Appends MEAL_LOG_VOIDED naming the root MEAL_LOGGED event;
+ * nothing is erased, so history keeps the meal and the void side by side
+ * (same append-only treatment as corrections). getMealEntries drops a voided
+ * chain, which takes it out of today's calories/protein, Minimum Day and the
+ * weekly check-in at once. Voiding an already-voided meal is a no-op, so a
+ * DELETE racing an UNDO can't fail or double-write.
+ */
+export async function voidMealLog(beyondDayId: string, mealEventId: string): Promise<void> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const target = events.find((e) => e.id === mealEventId);
+  if (!target || target.type !== "MEAL_LOGGED") {
+    throw new Error("MEAL_LOG_NOT_FOUND: that meal could not be found for this day.");
+  }
+  if (isVoided(events, mealEventId)) return;
+  const commandId = newId();
+  const payload: MealLogVoidedPayload = { commandId, mealEventId };
+  await logEvent(beyondDayId, "MEAL_LOG_VOIDED", payload, "USER", commandId, mealEventId);
 }

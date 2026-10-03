@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
+import { HoldButton } from "../../components/HoldButton";
+import { useUndoWindow } from "../../hooks/useUndoWindow";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { Icon } from "../../icons/Icon";
 import { LineIcon } from "../../icons/LineIcon";
@@ -35,6 +37,7 @@ import {
   logMeal,
   logMealsAgain,
   updateSavedMeal,
+  voidMealLog,
 } from "../../../application/nutritionCommands";
 import {
   getMealEntries,
@@ -78,12 +81,23 @@ import {
   describeCalorieProgress,
   describeMacros,
   describeMealLogged,
+  describeMealsRelogged,
   describeProteinProgress,
+  MEAL_DELETE_HINT,
   MEALS_TODAY_EMPTY,
   SAVED_MEALS_EMPTY,
 } from "./nutritionCopy";
+import { describeError } from "../../errorMessage";
 
 type Confirmation = { message: string; headEventId: string } | null;
+/** The MEAL_LOGGED events the confirmation's UNDO voids — one, or a whole SAME AS YESTERDAY batch. */
+type MealConfirmation = {
+  message: string;
+  dayId: string;
+  mealEventIds: string[];
+  /** Where it shows: under the saved meal just logged, or at the top for SAME AS YESTERDAY — always next to the tap. */
+  anchor: { savedMealId: string } | "REPEAT";
+};
 
 interface MealFormState {
   name: string;
@@ -251,7 +265,10 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
   // Meal Memory (NUTRITION-001)
   const [savedMeals, setSavedMeals] = useState<SavedMeal[]>([]);
   const [mealEntries, setMealEntries] = useState<NutritionEntry[]>([]);
-  const [mealConfirmation, setMealConfirmation] = useState<Confirmation>(null);
+  // HOTFIX (owner ruling 2026-10-03): "Dinner logged · 650 kcal · 45g" with
+  // UNDO, for a few seconds only (UNDO_WINDOW_MS). Fixing a meal later is
+  // CORRECT or DELETE in TODAY'S MEALS.
+  const [mealConfirmation, setMealConfirmation] = useUndoWindow<MealConfirmation>();
   const [mealHistoryOpen, setMealHistoryOpen] = useState(false);
   const [addMealOpen, setAddMealOpen] = useState(false);
   // BODY-UX-001: manual macro entry starts collapsed — search stays the one
@@ -336,6 +353,9 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
   // canonical (application/queries.ts's getMinimumDayStatus) — protein-only
   // logs plus effective meal protein, never two competing totals.
   const combinedProteinToday = proteinTotal + mealEntries.reduce((sum, e) => sum + e.effectiveProteinG, 0);
+  const mealBanner = mealConfirmation && (
+    <ConfirmBanner message={mealConfirmation.message} actionLabel="UNDO" disabled={busy} onAction={() => void handleUndoMealLog()} />
+  );
   const lastWaterAmount = entries.length > 0 ? entries[entries.length - 1]!.effectiveAmountOz : null;
   const lastSleepEntry = sleepEntries.length > 0 ? sleepEntries[sleepEntries.length - 1]! : null;
   const lastBodyweightEntry = bodyweightEntries.length > 0 ? bodyweightEntries[bodyweightEntries.length - 1]! : null;
@@ -405,7 +425,7 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
       if (sleepConfirmation?.headEventId === sleepCorrectingId) setSleepConfirmation(null);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Correction failed.");
+      setError(describeError(e, "Correction failed."));
     } finally {
       setBusy(false);
     }
@@ -465,7 +485,7 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
       if (bodyweightConfirmation?.headEventId === bodyweightCorrectingId) setBodyweightConfirmation(null);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Correction failed.");
+      setError(describeError(e, "Correction failed."));
     } finally {
       setBusy(false);
     }
@@ -525,7 +545,7 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
       if (proteinConfirmation?.headEventId === proteinCorrectingId) setProteinConfirmation(null);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Correction failed.");
+      setError(describeError(e, "Correction failed."));
     } finally {
       setBusy(false);
     }
@@ -589,7 +609,7 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
       setFoodResults(null);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save meal.");
+      setError(describeError(e, "Could not save meal."));
     } finally {
       setBusy(false);
     }
@@ -626,7 +646,7 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
       setEditingMealId(null);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not update meal.");
+      setError(describeError(e, "Could not update meal."));
     } finally {
       setBusy(false);
     }
@@ -653,9 +673,14 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
       const activeDay = await ensureActiveDay();
       const result = await logMeal(activeDay.id, mealId);
       await refresh();
-      setMealConfirmation({ message: describeMealLogged(result.name), headEventId: result.eventId });
+      setMealConfirmation({
+        message: describeMealLogged(result.name, result.calories, result.proteinG),
+        dayId: activeDay.id,
+        mealEventIds: [result.eventId],
+        anchor: { savedMealId: mealId },
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not log meal.");
+      setError(describeError(e, "Could not log meal."));
     } finally {
       setBusy(false);
     }
@@ -672,15 +697,21 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
         repeatMeals.meals.map((m) => m.savedMealId),
       );
       await refresh();
-      const last = results.at(-1);
-      if (last) {
+      if (results.length > 0) {
         setMealConfirmation({
-          message: `Logged ${results.length} ${results.length === 1 ? "meal" : "meals"} from ${formatShortDate(repeatMeals.dayStartedAt)}.`,
-          headEventId: last.eventId,
+          message: describeMealsRelogged(
+            results.length,
+            formatShortDate(repeatMeals.dayStartedAt),
+            results.reduce((sum, r) => sum + r.calories, 0),
+            results.reduce((sum, r) => sum + r.proteinG, 0),
+          ),
+          dayId: activeDay.id,
+          mealEventIds: results.map((r) => r.eventId),
+          anchor: "REPEAT",
         });
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not log meals.");
+      setError(describeError(e, "Could not log meals."));
       await refresh();
     } finally {
       setBusy(false);
@@ -711,10 +742,44 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
     try {
       await correctMealLog(day.id, correctingMealEventId, macros);
       setCorrectingMealEventId(null);
-      if (mealConfirmation?.headEventId === correctingMealEventId) setMealConfirmation(null);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Correction failed.");
+      setError(describeError(e, "Correction failed."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** UNDO on the just-logged banner: voids what it logged, same as DELETE. */
+  async function handleUndoMealLog() {
+    if (busy || !mealConfirmation) return;
+    const { dayId, mealEventIds } = mealConfirmation;
+    setBusy(true);
+    setError(null);
+    try {
+      for (const id of mealEventIds) await voidMealLog(dayId, id);
+      setMealConfirmation(null);
+      await refresh();
+    } catch (e) {
+      setError(describeError(e, "Could not undo."));
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** DELETE (hold-to-confirm) in TODAY'S MEALS: a void event, never an erase. */
+  async function handleDeleteMealLog(entry: NutritionEntry) {
+    if (busy || !day) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await voidMealLog(day.id, entry.rootEventId);
+      if (correctingMealEventId === entry.headEventId) setCorrectingMealEventId(null);
+      if (mealConfirmation?.mealEventIds.includes(entry.rootEventId)) setMealConfirmation(null);
+      await refresh();
+    } catch (e) {
+      setError(describeError(e, "Could not delete meal."));
     } finally {
       setBusy(false);
     }
@@ -762,7 +827,7 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
       if (waterConfirmation?.headEventId === entry.headEventId) setWaterConfirmation(null);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Correction failed.");
+      setError(describeError(e, "Correction failed."));
     } finally {
       setBusy(false);
     }
@@ -1421,6 +1486,7 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
 
         {/* Drop 5: one tap logs the previous day's saved meals again. Hidden
             once today already has every one of them, so it can't double up. */}
+        {mealConfirmation?.anchor === "REPEAT" && <div style={{ marginBottom: 12 }}>{mealBanner}</div>}
         {repeatMeals && !alreadyLoggedAll(repeatMeals, mealEntries) && (
           <div style={{ marginBottom: 12 }}>
             <button className="btn-secondary" disabled={busy} onClick={() => void handleRepeatMeals()}>
@@ -1460,6 +1526,10 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
                   ARCHIVE
                 </button>
               </div>
+              {mealConfirmation &&
+                mealConfirmation.anchor !== "REPEAT" &&
+                mealConfirmation.anchor.savedMealId === meal.id &&
+                mealBanner}
               {editingMealId === meal.id && (
                 <div className="fade-in" style={{ marginTop: 12 }}>
                   <div className="field">
@@ -1567,16 +1637,10 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
           </FieldDisclosure>
         </FieldDisclosure>
 
-        {mealConfirmation && (
-          <ConfirmBanner
-            message={mealConfirmation.message}
-            actionLabel="CORRECT"
-            onAction={() => {
-              const entry = mealEntries.find((e) => e.headEventId === mealConfirmation.headEventId);
-              if (entry) beginCorrectMeal(entry);
-            }}
-          />
-        )}
+        {mealConfirmation &&
+          mealConfirmation.anchor !== "REPEAT" &&
+          !savedMeals.some((m) => m.id === (mealConfirmation.anchor as { savedMealId: string }).savedMealId) &&
+          mealBanner}
 
         {mealEntries.length > 0 && (
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
@@ -1591,20 +1655,27 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
                     key={entry.rootEventId}
                     style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.name}</p>
-                        <p className="meta">
-                          {describeMacros(entry.effectiveCalories, entry.effectiveProteinG, entry.effectiveCarbsG, entry.effectiveFatG)}
-                        </p>
-                        <p className="meta">
-                          {new Date(entry.recordedAt).toLocaleTimeString()}
-                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                        </p>
-                      </div>
-                      <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectMeal(entry)}>
+                    <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.name}</p>
+                    <p className="meta">
+                      {describeMacros(entry.effectiveCalories, entry.effectiveProteinG, entry.effectiveCarbsG, entry.effectiveFatG)}
+                    </p>
+                    <p className="meta">
+                      {new Date(entry.recordedAt).toLocaleTimeString()}
+                      {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                    </p>
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "flex-start" }}>
+                      <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => beginCorrectMeal(entry)}>
                         CORRECT
                       </button>
+                      <HoldButton
+                        className="btn-secondary"
+                        style={{ flex: 1 }}
+                        disabled={busy}
+                        hint={MEAL_DELETE_HINT}
+                        onConfirm={() => void handleDeleteMealLog(entry)}
+                      >
+                        DELETE
+                      </HoldButton>
                     </div>
                     {correctingMealEventId === entry.headEventId && (
                       <div className="fade-in" style={{ marginTop: 12 }}>

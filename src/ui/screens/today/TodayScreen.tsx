@@ -89,6 +89,7 @@ import type { ScheduledContext } from "../../../engine/scheduledContext";
 import { getCurrentOperationalContext, type CurrentOperationalContext } from "../../../application/currentContextQueries";
 import { getActiveWorkoutSession } from "../../../application/trainQueries";
 import { getQuitHabit } from "../../../application/quitQueries";
+import { describeError } from "../../errorMessage";
 
 /**
  * Quick check-in default ("all good" one-tap, Context & Safety Decisions
@@ -821,7 +822,7 @@ export function TodayScreen({
       await refresh();
       setCommitmentFeedback({ kind: "SUCCESS", message: `Commitment satisfied: ${target.title}.` });
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "Could not satisfy the commitment.";
+      const detail = error instanceof Error ? error.message : "";
       const stale = detail.startsWith("OBLIGATION_NOT_FOUND");
       if (stale) {
         setCommitmentConfirmation(null);
@@ -832,7 +833,7 @@ export function TodayScreen({
         kind: "ERROR",
         message: stale
           ? `Could not satisfy ${target.title}: the commitment no longer exists. TODAY has been refreshed.`
-          : `Could not satisfy ${target.title}: ${detail}`,
+          : `Could not satisfy ${target.title}: ${describeError(error, "something went wrong.")}`,
       });
     } finally {
       commitmentSatisfactionPendingRef.current = false;
@@ -890,7 +891,7 @@ export function TodayScreen({
     } catch (error) {
       setCaptureConversionFeedback({
         kind: "ERROR",
-        message: error instanceof Error ? error.message : "Could not create the obligation.",
+        message: describeError(error, "Could not create the obligation."),
       });
     } finally {
       busyRef.current = false;

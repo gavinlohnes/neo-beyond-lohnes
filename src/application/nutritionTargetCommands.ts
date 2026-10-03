@@ -34,3 +34,32 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
   await db.nutritionTargets.put(record);
   return record;
 }
+
+export interface NutritionTargetsSave {
+  saved: NutritionTargets;
+  /** Puts the targets back exactly as they were before this save. */
+  undo: () => Promise<void>;
+}
+
+/**
+ * HOTFIX (BODY logging trust, owner ruling 2026-10-03): the same save as
+ * updateNutritionTargets, plus a short-lived UNDO. Targets are configuration
+ * with no event trail, so undo restores the prior row itself — or removes
+ * it when there was none, which reads back as the defaults again. Undo does
+ * nothing once a later save has replaced this one.
+ */
+export async function saveNutritionTargets(input: NutritionTargetsInput): Promise<NutritionTargetsSave> {
+  const previous = await db.nutritionTargets.get("current");
+  const saved = await updateNutritionTargets(input);
+  return {
+    saved,
+    undo: async () => {
+      await db.transaction("rw", db.nutritionTargets, async () => {
+        const current = await db.nutritionTargets.get("current");
+        if (current?.updatedAt !== saved.updatedAt) return;
+        if (previous) await db.nutritionTargets.put(previous);
+        else await db.nutritionTargets.delete("current");
+      });
+    },
+  };
+}

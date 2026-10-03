@@ -286,7 +286,7 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     await screen.getByRole("spinbutton", { name: "New meal fat (g)" }).fill("15");
     await screen.getByRole("button", { name: "SAVE MEAL" }).click();
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
-    await expect.element(screen.getByText("Chicken & Rice Bowl logged.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Chicken & Rice Bowl logged · 600 kcal · 45g", { exact: true })).toBeVisible();
 
     await expect.element(screen.getByText(/600 \/ 2200 kcal · 1600 remaining/)).toBeVisible();
   });
@@ -331,7 +331,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     await addSavedMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
 
-    await expect.element(screen.getByText("Chicken & Rice Bowl logged.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Chicken & Rice Bowl logged · 600 kcal · 45g", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
   });
 
@@ -370,16 +370,65 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
   it("CORRECT preserves history rather than deleting the original entry", async () => {
     const screen = await render(<BodyScreen />);
     await addSavedMeal(screen);
-    listReadDelay.ms = 150;
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
-    // Clicked the moment the banner appears (see the water CORRECT test).
-    await expect.element(screen.getByText("Chicken & Rice Bowl logged.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Chicken & Rice Bowl logged · 600 kcal · 45g", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
     await screen.getByRole("button", { name: "CORRECT" }).click();
     await screen.getByRole("spinbutton", { name: "Corrected calories" }).fill("620");
     await screen.getByRole("button", { name: "SAVE" }).click();
 
     await expect.element(screen.getByText("620 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/corrected 1x/)).toBeVisible();
+  });
+
+  it("HOTFIX: UNDO on the logged line takes the meal back out of today's totals", async () => {
+    await updateNutritionTargets({ calorieTargetKcal: 2200 });
+    const screen = await render(<BodyScreen />);
+    await addSavedMeal(screen);
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByText(/600 \/ 2200 kcal/)).toBeVisible();
+
+    await screen.getByRole("button", { name: "UNDO" }).click();
+
+    await expect.element(screen.getByText("0 meals logged today", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
+    expect(screen.getByRole("button", { name: "UNDO" }).elements()).toHaveLength(0);
+    // History keeps both facts: the log and its void.
+    expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
+    expect(await db.events.where("type").equals("MEAL_LOG_VOIDED").count()).toBe(1);
+  });
+
+  it("HOTFIX: the logged line and its UNDO clear themselves after about 5 seconds", async () => {
+    const screen = await render(<BodyScreen />);
+    await addSavedMeal(screen);
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "UNDO" })).toBeVisible();
+    await expect
+      .poll(() => screen.getByRole("button", { name: "UNDO" }).elements().length, { timeout: 7000, interval: 250 })
+      .toBe(0);
+    await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
+  });
+
+  it("HOTFIX: DELETE needs a hold, then removes the meal from today's calories and protein", async () => {
+    const day = await startDay();
+    const dinner = await createSavedMeal({ name: "Dinner", calories: 650, proteinG: 45, carbsG: 50, fatG: 20 });
+    await logMeal(day.id, dinner.id);
+    await updateNutritionTargets({ calorieTargetKcal: 2200 });
+    const screen = await render(<BodyScreen />);
+    await expect.element(screen.getByText(/650 \/ 2200 kcal/)).toBeVisible();
+    await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
+
+    // A quick tap deletes nothing.
+    await screen.getByRole("button", { name: "DELETE" }).click();
+    await expect.element(screen.getByText("Hold to delete.", { exact: true })).toBeVisible();
+    expect(await db.events.where("type").equals("MEAL_LOG_VOIDED").count()).toBe(0);
+
+    await holdToConfirm(screen.getByRole("button", { name: "DELETE" }));
+
+    await expect.element(screen.getByText("0 meals logged today", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
+    expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
+    expect(await db.events.where("type").equals("MEAL_LOG_VOIDED").count()).toBe(1);
   });
 });
 
@@ -628,7 +677,7 @@ describe("BodyScreen (real browser) — Drop 5 weight trend and same-as-yesterda
     await expect.element(screen.getByText("From Sep 28: Oats, Bowl", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "SAME AS YESTERDAY (2 meals)" }).click();
 
-    await expect.element(screen.getByText("Logged 2 meals from Sep 28.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("2 meals from Sep 28 logged · 900 kcal · 55g", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("2 meals logged today", { exact: true })).toBeVisible();
     expect(screen.getByRole("button", { name: /SAME AS YESTERDAY/ }).elements()).toHaveLength(0);
   });

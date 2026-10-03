@@ -197,6 +197,7 @@ export type DomainEventType =
   | "WATER_LOG_CORRECTED"
   | "MEAL_LOGGED"
   | "MEAL_LOG_CORRECTED"
+  | "MEAL_LOG_VOIDED"
   | "WORK_PERIOD_ENDED"
   | "MISSION_CREATED"
   | "MISSION_MODIFIED"
@@ -378,6 +379,18 @@ export interface MealLogCorrectedPayload {
   proteinG: number;
   carbsG: number;
   fatG: number;
+}
+
+/**
+ * HOTFIX (BODY logging trust, owner ruling 2026-10-03): removes one logged
+ * meal — its whole MEAL_LOGGED chain, corrections included — from every
+ * total, without touching the original events. Append-only, same shape as
+ * SET_UNDONE/URGE_UNDONE. Used by both DELETE and the post-log UNDO.
+ */
+export interface MealLogVoidedPayload {
+  commandId: string;
+  /** The root MEAL_LOGGED event's id. */
+  mealEventId: string;
 }
 
 /**

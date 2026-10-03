@@ -10,9 +10,17 @@ export function describeMacros(calories: number, proteinG: number, carbsG: numbe
   return `${calories} cal · ${proteinG}g protein · ${carbsG}g carbs · ${fatG}g fat`;
 }
 
-export function describeMealLogged(name: string): string {
-  return `${name} logged.`;
+/** HOTFIX (owner ruling 2026-10-03): "Dinner logged · 650 kcal · 45g" — what was just counted, at a glance. */
+export function describeMealLogged(name: string, calories: number, proteinG: number): string {
+  return `${name} logged · ${calories} kcal · ${proteinG}g`;
 }
+
+/** Same line for SAME AS YESTERDAY, totalled across every meal it logged. */
+export function describeMealsRelogged(count: number, fromDate: string, calories: number, proteinG: number): string {
+  return `${count} ${count === 1 ? "meal" : "meals"} from ${fromDate} logged · ${calories} kcal · ${proteinG}g`;
+}
+
+export const MEAL_DELETE_HINT = "Hold to delete.";
 
 /** Calm, anticipatory — no saved meal presets created yet is an expected starting state, not an error. */
 export const SAVED_MEALS_EMPTY =

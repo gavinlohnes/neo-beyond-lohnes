@@ -8,6 +8,7 @@ import {
 } from "../../../engine/scheduledContext";
 import { describeSchedulePrediction } from "../today/workContextCopy";
 import type { SchedulePattern } from "../../../domain/common/types";
+import { describeError } from "../../errorMessage";
 
 /**
  * Drop 02a (Daily Intelligence / Context, first slice). MORE -> Work
@@ -99,7 +100,7 @@ export function WorkScheduleScreen() {
       });
       setStatus("Saved.");
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : "Could not save.");
+      setStatus(describeError(e, "Could not save."));
     } finally {
       setSaving(false);
     }
