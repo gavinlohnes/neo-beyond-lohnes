@@ -175,6 +175,18 @@ below, this entry wins; the older entry is kept for history.
   writes an ordinary main-sleep `SLEEP_LOGGED` carrying the optional `draft` field (shown in
   History); NOT NOW is remembered on this phone only, for that day. Known gap left for later: sleeping
   past the 16:30 roll ends the post-shift phase, so no draft appears (log it in BODY as before).
+- **As built: the Ribbon (owner weekend order 2026-10-03).** Weekly's new LAST 28 DAYS section,
+  above WEIGHT: one column per lived day (16:30 → 16:30, built from the Day Ledger by the pure
+  `engine/ribbon.ts`), one row per fact — Shift (worked), Sleep (main sleep, a bar up to 12 h), Lift
+  (filled square finished, open square partial, a dot for a PR), Protein (filled at or above today's
+  protein target, open below it, said in a line under the strip; all filled when there's no target),
+  Urges (up to 3 dots), Clean (clean day). Facts only: no score, no colour judgement — every mark is
+  neutral ink and rows are told apart by their labels, never colour. A row with nothing in all 28
+  days is left out; a day with no record is an empty column, said as "nothing logged". Each column is
+  a real button whose name is that day in words ("Thu, Oct 1 · worked · slept 7 hr 15 min · lift B,
+  1 PR · protein 182 g · 2 urges · clean day"); tapping one shows the same sentence underneath.
+  Where one lived day holds two BeyondDays (ended early, started again) their records are combined.
+  Read-only; nothing stored, nothing fed to the Engine; no new tab and nothing on TODAY.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 

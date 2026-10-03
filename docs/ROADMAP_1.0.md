@@ -100,8 +100,9 @@ time, each briefed by the owner.
   (a) no MARK WORK ENDED before the shift and (b) no check-in prompt before or during it.
   **Done (PR #132, merged).**
 - **Progression re-entry** (14+ days away → ~90%). **Done (PR #134, merged).**
-- **Sleep draft** ("Slept up to 7h 15m?" after Shift Down). **In review.**
-- Next, in order: the Ribbon (28 lived days in Weekly); read-only findings in Weekly; stretch: urge
+- **Sleep draft** ("Slept up to 7h 15m?" after Shift Down). **Done (PR #135, merged).**
+- **The Ribbon** (the last 28 lived days in Weekly, one column each). **In review.**
+- Next, in order: read-only findings in Weekly; stretch: urge
   if-then plans, then the check-in draft. Cut first if short on time: the expenditure readout, then
   the urge-timing finding.
 - Waits until after Oct 16: the Engine reacting to evidence, rule adoption, Week Ahead,

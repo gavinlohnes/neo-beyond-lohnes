@@ -4,6 +4,7 @@ import { describePersonalRecord } from "../../../application/personalRecordQueri
 import { formatShortDate } from "../../../application/bodyTrendQueries";
 import { formatUsd } from "../body/quitCopy";
 import { describeBurdenLine } from "./weeklyCopy";
+import { Ribbon } from "./Ribbon";
 
 /**
  * Drop 7 (weekly check-in, owner approval 2026-10-01): one quiet, read-only
@@ -38,6 +39,11 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
         <p className="empty-state">Loading…</p>
       ) : (
         <>
+          {/* The Ribbon (2026-10-03): the last 28 lived days at a glance, above the week's numbers. */}
+          <Section label="LAST 28 DAYS">
+            <Ribbon days={summary.ribbon.days} templateLabels={summary.ribbon.templateLabels} proteinTargetG={summary.ribbon.proteinTargetG} />
+          </Section>
+
           <Section label="WEIGHT">
             {summary.weight.avgLbs === undefined ? (
               <p className="meta">Not enough data yet — no weigh-ins this week.</p>
