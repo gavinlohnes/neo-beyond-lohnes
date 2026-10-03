@@ -9,6 +9,8 @@ import { getQuitHabit } from "./quitQueries";
 import { getTotalProteinGrams } from "./queries";
 import { getTotalMealProteinGrams } from "./nutritionQueries";
 import { getCustomExercises } from "./exerciseLibraryQueries";
+import { getDaySummaries } from "./dayLedgerQueries";
+import { summarizeBurden, type BurdenSummary } from "../engine/dayLedger";
 
 /**
  * Drop 7 (weekly check-in, owner approval 2026-10-01). One read-only summary
@@ -43,6 +45,8 @@ export interface WeeklySummary {
     daysLogged: number;
     targetGrams?: number;
   };
+  /** Burden Meter (Drop 1): what BEYOND asked for this week, from the Day Ledger. */
+  burden: BurdenSummary;
 }
 
 function inWindow(iso: string | undefined, start: number, end: number): boolean {
@@ -134,6 +138,9 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
   const avgGrams = average(dailyProtein);
   const targetGrams = await getEffectiveProteinTargetG();
 
+  // Burden Meter: the same BeyondDays begun in the window, read from the Day Ledger.
+  const burden = summarizeBurden((await getDaySummaries()).filter((d) => inWindow(d.startedAt, start, end)));
+
   return {
     weight: {
       ...(avgLbs !== undefined ? { avgLbs } : {}),
@@ -149,5 +156,6 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
       daysLogged: dailyProtein.length,
       ...(targetGrams !== undefined ? { targetGrams } : {}),
     },
+    burden,
   };
 }

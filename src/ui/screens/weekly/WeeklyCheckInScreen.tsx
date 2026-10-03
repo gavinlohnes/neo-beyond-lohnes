@@ -3,6 +3,7 @@ import { getWeeklySummary, type WeeklySummary } from "../../../application/weekl
 import { describePersonalRecord } from "../../../application/personalRecordQueries";
 import { formatShortDate } from "../../../application/bodyTrendQueries";
 import { formatUsd } from "../body/quitCopy";
+import { describeBurdenLine } from "./weeklyCopy";
 
 /**
  * Drop 7 (weekly check-in, owner approval 2026-10-01): one quiet, read-only
@@ -108,6 +109,11 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
                 </p>
               </>
             )}
+          </Section>
+
+          {/* Drop 1 (Burden Meter): one neutral, read-only line. */}
+          <Section label="BURDEN">
+            <p className="meta" style={{ margin: 0 }}>{describeBurdenLine(summary.burden)}</p>
           </Section>
         </>
       )}

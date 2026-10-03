@@ -121,6 +121,23 @@ below, this entry wins; the older entry is kept for history.
     boundary (`App.tsx`), and every real rollover notifies subscribed screens
     (`subscribeToDayRollover`, `useDayRolloverRefresh`): TODAY, BODY, the quit tracker and TRAIN
     re-read their data without remounting, so unsaved typing survives.
+- **As built in Drop 1 (Day Ledger + Burden Meter, owner brief 2026-10-03).**
+  - **Day Ledger.** `engine/dayLedger.ts`'s pure `projectDaySummaries` derives one record per
+    BeyondDay from stored history (days, events, workout sessions, sets, the saved schedule):
+    lived-day window, declared/scheduled work and when work ended, main sleep and naps, water,
+    protein (logs + meals), meal kcal, workouts (status, minutes, sets, PRs), urges with their
+    schedule phase, clean day, the latest check-in's capacity, and the latest recommendation with
+    the operator's decision. **Missing stays missing:** a value exists only when something was
+    logged (never a 0 stand-in). Corrections and deletions resolve exactly as the screens resolve
+    them. Read-only, nothing stored, nothing fed to the Engine; covers all history via
+    `application/dayLedgerQueries.ts`'s `getDaySummaries`. The pure PR rule moved, unchanged, to
+    `engine/personalRecords.ts` so the ledger can use it (re-exported from its old home).
+  - **Burden Meter.** Per day: manual entries (body logs, check-ins, answers, routine
+    completions, quit entries), corrections (fixes, deletions, undone urges, changing an
+    already-set work context), and training sets, counted apart. Weekly shows one neutral line:
+    "Entries per day: N · corrections this week: N". **Not built:** time from first open to first
+    useful action. No stored event records an app open, so it can't be derived from existing data
+    without guessing; it needs a new, owner-approved signal first.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 
