@@ -38,6 +38,7 @@ describe("getPreviousDayMeals", () => {
     const repeat = await getPreviousDayMeals(today.id);
     expect(repeat?.dayStartedAt).toBe(yesterday.startedAt);
     expect(repeat?.meals.map((m) => m.name)).toEqual(["Oats", "Bowl", "Oats"]);
+    expect(repeat?.isPreviousLivedDay).toBe(true);
   });
 
   it("skips days with no meals and drops archived presets", async () => {
@@ -58,6 +59,57 @@ describe("getPreviousDayMeals", () => {
   it("is undefined when nothing earlier can be repeated", async () => {
     const today = await startDay();
     expect(await getPreviousDayMeals(today.id)).toBeUndefined();
+  });
+});
+
+/**
+ * POST-QA STABILIZATION (Mission 2): which day gets repeated is unchanged;
+ * isPreviousLivedDay only says whether BODY may call that day "yesterday".
+ */
+describe("getPreviousDayMeals — is the source really yesterday?", () => {
+  it("an empty day in between means the source is not yesterday, but its meals are still offered", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const oats = await meal("Oats");
+    const source = await dayAt("2026-09-26T12:00:00Z");
+    await logMeal(source.id, oats.id);
+    await dayAt("2026-09-27T12:00:00Z"); // no meals
+    await dayAt("2026-09-28T12:00:00Z"); // no meals
+    const today = await dayAt("2026-09-29T12:00:00Z");
+
+    const repeat = await getPreviousDayMeals(today.id);
+    expect(repeat?.dayStartedAt).toBe(source.startedAt);
+    expect(repeat?.meals.map((m) => m.name)).toEqual(["Oats"]);
+    expect(repeat?.isPreviousLivedDay).toBe(false);
+  });
+
+  it("the day just before today, but days ago (app closed in between), is not yesterday", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const oats = await meal("Oats");
+    const source = await dayAt("2026-09-25T12:00:00Z");
+    await logMeal(source.id, oats.id);
+    const today = await dayAt("2026-09-29T12:00:00Z");
+
+    const repeat = await getPreviousDayMeals(today.id);
+    expect(repeat?.dayStartedAt).toBe(source.startedAt);
+    expect(repeat?.isPreviousLivedDay).toBe(false);
+  });
+
+  it("repeating an older day logs exactly those meals once, today only", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const oats = await meal("Oats");
+    const bowl = await meal("Bowl");
+    const source = await dayAt("2026-09-26T12:00:00Z");
+    await logMeal(source.id, oats.id);
+    await logMeal(source.id, bowl.id);
+    await dayAt("2026-09-27T12:00:00Z"); // no meals
+    const today = await dayAt("2026-09-29T12:00:00Z");
+
+    const repeat = (await getPreviousDayMeals(today.id))!;
+    await logMealsAgain(today.id, repeat.meals.map((m) => m.savedMealId));
+
+    expect((await getMealEntries(today.id)).map((e) => e.name)).toEqual(["Oats", "Bowl"]);
+    expect((await getMealEntries(source.id)).map((e) => e.name)).toEqual(["Oats", "Bowl"]);
+    expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(4);
   });
 });
 

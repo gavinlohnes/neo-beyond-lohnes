@@ -73,3 +73,10 @@ export function describeImplausibleProtein(grams: number): string {
 export function describeImplausibleSleep(totalMinutes: number): string {
   return `${formatDuration(totalMinutes)} is outside the usual range — log it anyway?`;
 }
+
+/**
+ * POST-QA STABILIZATION: shown beside a BODY log control when the device
+ * write itself failed. Says plainly that nothing was kept, so the reading
+ * on screen is still the truth and trying again is safe.
+ */
+export const BODY_WRITE_FAILED = "Couldn't save — nothing was logged. Try again.";

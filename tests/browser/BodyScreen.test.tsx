@@ -9,6 +9,7 @@ import { logBodyweight, startDay } from "../../src/application/commands";
 import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
 import { saveQuitHabit } from "../../src/application/quitCommands";
 import { holdToConfirm } from "./helpers/hold";
+import { formatShortDate } from "../../src/application/bodyTrendQueries";
 
 /**
  * BEYOND FIELD ALPHA Phase 3 — first real-browser acceptance layer for
@@ -711,11 +712,50 @@ describe("BodyScreen (real browser) — Drop 5 weight trend and same-as-yesterda
 
     const screen = await render(<BodyScreen />);
     await expect.element(screen.getByText("From Sep 28: Oats, Bowl", { exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "SAME AS YESTERDAY (2 meals)" }).click();
+    // Sep 28 is days before today's real date, so BODY must not call it yesterday.
+    expect(screen.getByRole("button", { name: /SAME AS YESTERDAY/ }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "REPEAT SEP 28 MEALS (2 meals)" }).click();
 
     await expect.element(screen.getByText("2 meals from Sep 28 logged · 900 kcal · 55g", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("2 meals logged today", { exact: true })).toBeVisible();
+    expect(screen.getByRole("button", { name: /REPEAT SEP 28 MEALS/ }).elements()).toHaveLength(0);
+  });
+
+  it("POST-QA: an actual yesterday keeps SAME AS YESTERDAY, and repeating logs each meal once", async () => {
+    const oats = await createSavedMeal({ name: "Oats", calories: 300, proteinG: 10, carbsG: 50, fatG: 5 });
+    const bowl = await createSavedMeal({ name: "Bowl", calories: 600, proteinG: 45, carbsG: 60, fatG: 15 });
+    const yesterdayStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const yesterday = await startDay(yesterdayStart.toISOString());
+    await logMeal(yesterday.id, oats.id);
+    await logMeal(yesterday.id, bowl.id);
+    await startDay();
+
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SAME AS YESTERDAY (2 meals)" }).click();
+
+    await expect.element(screen.getByText("2 meals logged today", { exact: true })).toBeVisible();
+    expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(4);
     expect(screen.getByRole("button", { name: /SAME AS YESTERDAY/ }).elements()).toHaveLength(0);
+  });
+
+  it("POST-QA: past an empty day, the button names the source date instead of 'yesterday'", async () => {
+    const oats = await createSavedMeal({ name: "Oats", calories: 300, proteinG: 10, carbsG: 50, fatG: 5 });
+    const DAY = 24 * 60 * 60 * 1000;
+    const sourceStart = new Date(Date.now() - 2 * DAY);
+    const source = await startDay(sourceStart.toISOString());
+    await logMeal(source.id, oats.id);
+    await startDay(new Date(Date.now() - DAY).toISOString()); // a day with no meals
+    await startDay();
+
+    const screen = await render(<BodyScreen />);
+    const date = formatShortDate(sourceStart);
+    await expect.element(screen.getByText(`From ${date}: Oats`, { exact: true })).toBeVisible();
+    expect(screen.getByRole("button", { name: /SAME AS YESTERDAY/ }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: `REPEAT ${date.toUpperCase()} MEALS (1 meal)` }).click();
+
+    await expect.element(screen.getByText(`1 meal from ${date} logged · 300 kcal · 10g`, { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
+    expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(2);
   });
 });
 

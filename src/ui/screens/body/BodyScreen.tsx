@@ -60,6 +60,7 @@ import { WeightTrend } from "./WeightTrend";
 import { QuitTracker } from "./QuitTracker";
 import { SHORTCUT_ANCHOR_IDS, type ShortcutTarget } from "../../shortcuts";
 import {
+  BODY_WRITE_FAILED,
   BODYWEIGHT_PLAUSIBLE_RANGE,
   describeBodyweightLogged,
   describeImplausibleBodyweight,
@@ -82,6 +83,7 @@ import {
   describeMacros,
   describeMealLogged,
   describeMealsRelogged,
+  describeRepeatMealsButton,
   describeProteinProgress,
   MEAL_DELETE_HINT,
   MEALS_TODAY_EMPTY,
@@ -211,6 +213,10 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // POST-QA STABILIZATION: which station's last log write failed. Shown
+  // beside that station's controls (BODY_WRITE_FAILED), not at the shared
+  // `error` line, which sits in the water card.
+  const [writeFailure, setWriteFailure] = useState<"WATER" | "SLEEP" | "BODYWEIGHT" | "PROTEIN" | null>(null);
   // DECLUTTER Drop 2: sleep, bodyweight and protein are once-a-day logs, so
   // each is a one-line row until tapped. A tracker stays open after logging
   // so its confirmation and undo stay visible.
@@ -387,10 +393,19 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
     }
     setBusy(true);
     setError(null);
+    setWriteFailure(null);
     setSleepPendingConfirm(false);
     try {
-      const activeDay = await ensureActiveDay();
-      const eventId = await logSleep(activeDay.id, totalMinutes, sleepKind);
+      let eventId: string;
+      try {
+        const activeDay = await ensureActiveDay();
+        eventId = await logSleep(activeDay.id, totalMinutes, sleepKind);
+      } catch {
+        // Nothing was written: drop any earlier banner so it can't read as this save.
+        setSleepConfirmation(null);
+        setWriteFailure("SLEEP");
+        return;
+      }
       setSleepHoursInput("");
       setSleepMinutesInput("");
       setSleepKind("PRIMARY");
@@ -445,9 +460,17 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
     if (busy || weight <= 0) return;
     setBusy(true);
     setError(null);
+    setWriteFailure(null);
     try {
-      const activeDay = await ensureActiveDay();
-      const eventId = await logBodyweight(activeDay.id, weight);
+      let eventId: string;
+      try {
+        const activeDay = await ensureActiveDay();
+        eventId = await logBodyweight(activeDay.id, weight);
+      } catch {
+        setBodyweightConfirmation(null);
+        setWriteFailure("BODYWEIGHT");
+        return;
+      }
       setBodyweightInput("");
       await refresh();
       setBodyweightConfirmation({ message: describeBodyweightLogged(weight), headEventId: eventId });
@@ -505,9 +528,17 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
     if (busy || grams <= 0) return;
     setBusy(true);
     setError(null);
+    setWriteFailure(null);
     try {
-      const activeDay = await ensureActiveDay();
-      const eventId = await logProtein(activeDay.id, grams);
+      let eventId: string;
+      try {
+        const activeDay = await ensureActiveDay();
+        eventId = await logProtein(activeDay.id, grams);
+      } catch {
+        setProteinConfirmation(null);
+        setWriteFailure("PROTEIN");
+        return;
+      }
       setProteinInput("");
       await refresh();
       setProteinConfirmation({ message: describeProteinLogged(grams), headEventId: eventId });
@@ -818,9 +849,17 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
     if (busy || amount <= 0) return;
     setBusy(true);
     setError(null);
+    setWriteFailure(null);
     try {
-      const activeDay = await ensureActiveDay();
-      const eventId = await logWater(activeDay.id, amount);
+      let eventId: string;
+      try {
+        const activeDay = await ensureActiveDay();
+        eventId = await logWater(activeDay.id, amount);
+      } catch {
+        setWaterConfirmation(null);
+        setWriteFailure("WATER");
+        return;
+      }
       setInput("");
       await refresh();
       setWaterConfirmation({ message: describeWaterLogged(amount), headEventId: eventId });
@@ -1051,6 +1090,11 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
             LOG WATER
           </button>
         </FieldDisclosure>
+        {writeFailure === "WATER" && (
+          <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>
+            {BODY_WRITE_FAILED}
+          </p>
+        )}
         {waterConfirmation && (
           <ConfirmBanner
             message={waterConfirmation.message}
@@ -1225,6 +1269,11 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
               LOG SLEEP
             </button>
           )}
+          {writeFailure === "SLEEP" && (
+            <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>
+              {BODY_WRITE_FAILED}
+            </p>
+          )}
           {sleepConfirmation && (
             <ConfirmBanner
               message={sleepConfirmation.message}
@@ -1326,6 +1375,11 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
           ) : (
             <div className="fade-in">{bodyweightManualEntryForm}</div>
           )}
+          {writeFailure === "BODYWEIGHT" && (
+            <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>
+              {BODY_WRITE_FAILED}
+            </p>
+          )}
           {bodyweightConfirmation && (
             <ConfirmBanner
               message={bodyweightConfirmation.message}
@@ -1416,6 +1470,11 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
             </FieldDisclosure>
           ) : (
             <div className="fade-in">{proteinManualEntryForm}</div>
+          )}
+          {writeFailure === "PROTEIN" && (
+            <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>
+              {BODY_WRITE_FAILED}
+            </p>
           )}
           {proteinConfirmation && (
             <ConfirmBanner
@@ -1517,7 +1576,7 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
         {repeatMeals && !alreadyLoggedAll(repeatMeals, mealEntries) && (
           <div style={{ marginBottom: 12 }}>
             <button className="btn-secondary" disabled={busy} onClick={() => void handleRepeatMeals()}>
-              SAME AS YESTERDAY ({repeatMeals.meals.length} {repeatMeals.meals.length === 1 ? "meal" : "meals"})
+              {describeRepeatMealsButton(repeatMeals.isPreviousLivedDay, formatShortDate(repeatMeals.dayStartedAt), repeatMeals.meals.length)}
             </button>
             <p className="meta" style={{ marginTop: 4 }}>
               From {formatShortDate(repeatMeals.dayStartedAt)}: {repeatMeals.meals.map((m) => m.name).join(", ")}
