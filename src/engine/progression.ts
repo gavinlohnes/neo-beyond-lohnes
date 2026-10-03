@@ -16,13 +16,35 @@ import type { ExercisePrescription, PerformedSet } from "../domain/workout/types
  * from HOLD (which implies real evidence was weighed and didn't qualify
  * for a change).
  */
-export type ProgressionRecommendation = "INCREASE" | "HOLD" | "REDUCE" | "NO_HISTORY";
+export type ProgressionRecommendation = "INCREASE" | "HOLD" | "REDUCE" | "NO_HISTORY" | "RE_ENTRY";
 
 export interface ProgressionSuggestion {
   recommendation: ProgressionRecommendation;
   reason: string;
   lastWeight?: number;
   suggestedNextWeight?: number;
+  /** RE_ENTRY only: whole days since the exercise was last performed. */
+  daysSinceLastPerformed?: number;
+}
+
+/**
+ * RE-ENTRY (owner-approved amendment to the locked progression rule,
+ * 2026-10-03). After a layoff the rule above would still say INCREASE, or
+ * HOLD at the old weight — lifting the old load cold. When an exercise was
+ * last performed RE_ENTRY_DAYS or more ago (in any template or variant —
+ * a layoff is about the lift, not the slot it sits in), an INCREASE or
+ * HOLD becomes RE_ENTRY: about RE_ENTRY_FRACTION of the last load, rounded
+ * DOWN to the exercise's own increment so it's a weight the equipment
+ * actually has. REDUCE stays as it is (already lighter), and NO_HISTORY
+ * has nothing to ease back into. Advisory only, like every suggestion
+ * here: never applied, never pre-filled; the WHY is the reason text.
+ */
+export const RE_ENTRY_DAYS = 14;
+export const RE_ENTRY_FRACTION = 0.9;
+
+export interface ProgressionContext {
+  /** Whole days since the exercise was last performed anywhere; undefined when unknown. */
+  daysSinceLastPerformed?: number | undefined;
 }
 
 /**
@@ -34,7 +56,32 @@ export interface ProgressionSuggestion {
 export function evaluateProgression(
   prescription: ExercisePrescription,
   lastSessionSets: PerformedSet[],
+  context: ProgressionContext = {},
 ): ProgressionSuggestion {
+  const base = evaluateLastSession(prescription, lastSessionSets);
+  const days = context.daysSinceLastPerformed;
+  if (days === undefined || days < RE_ENTRY_DAYS) return base;
+  if (base.recommendation !== "INCREASE" && base.recommendation !== "HOLD") return base;
+
+  // The load to ease back from: the clean last weight when there is one,
+  // otherwise (mixed/incomplete evidence) the heaviest set actually done.
+  const performedWeights = lastSessionSets.filter((s) => !s.skipped).map((s) => s.weight);
+  const fromWeight = base.lastWeight ?? (performedWeights.length > 0 ? Math.max(...performedWeights) : undefined);
+  if (fromWeight === undefined || fromWeight <= 0) return base;
+  const step = prescription.incrementLbs > 0 ? prescription.incrementLbs : 1;
+  const next = Math.floor((fromWeight * RE_ENTRY_FRACTION) / step) * step;
+  if (next <= 0 || next >= fromWeight) return base;
+  return {
+    recommendation: "RE_ENTRY",
+    reason: `${days} days since your last ${prescription.name} — suggests ${next}lb (about 90% of ${fromWeight}lb) to start back.`,
+    lastWeight: fromWeight,
+    suggestedNextWeight: next,
+    daysSinceLastPerformed: days,
+  };
+}
+
+/** The locked rule itself, unchanged: judged only from the most recent matching session. */
+function evaluateLastSession(prescription: ExercisePrescription, lastSessionSets: PerformedSet[]): ProgressionSuggestion {
   if (lastSessionSets.length === 0) {
     return {
       recommendation: "NO_HISTORY",

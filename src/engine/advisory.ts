@@ -80,12 +80,15 @@ export function composeAdvisoryNoteFromProgression(
   prescription: ExercisePrescription,
   suggestion: ProgressionSuggestion,
 ): AdvisoryNote | null {
-  if (suggestion.recommendation !== "INCREASE" && suggestion.recommendation !== "REDUCE") return null;
+  if (suggestion.recommendation !== "INCREASE" && suggestion.recommendation !== "REDUCE" && suggestion.recommendation !== "RE_ENTRY") {
+    return null;
+  }
 
   return {
     id: crypto.randomUUID(),
     sourceModule: "progression",
-    message: `${prescription.name} — ${suggestion.recommendation}`,
+    // RE-ENTRY (2026-10-03) reads as plain words; the other kinds keep their existing token.
+    message: `${prescription.name} — ${suggestion.recommendation === "RE_ENTRY" ? "EASE BACK IN" : suggestion.recommendation}`,
     basis: [
       { key: "exerciseId", value: prescription.exerciseId },
       { key: "recommendation", value: suggestion.recommendation },

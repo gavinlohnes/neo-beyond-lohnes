@@ -357,9 +357,13 @@ describe("TRAIN-003 — summarizeProgressionSuggestions / describeProgressionSum
       { suggestion: { recommendation: "HOLD" as const, reason: "x" } },
       { suggestion: { recommendation: "REDUCE" as const, reason: "x" } },
       { suggestion: { recommendation: "NO_HISTORY" as const, reason: "x" } },
+      { suggestion: { recommendation: "RE_ENTRY" as const, reason: "x" } },
     ];
     const counts = summarizeProgressionSuggestions(suggestions);
-    expect(counts).toEqual({ increase: 2, hold: 1, reduce: 1, noHistory: 1, total: 5 });
+    expect(counts).toEqual({ increase: 2, hold: 1, reduce: 1, reEntry: 1, noHistory: 1, total: 6 });
+    expect(describeProgressionSummary(counts)).toBe(
+      "2 ready to increase, 1 holding steady, 1 suggest reducing, 1 easing back in, and 1 without history yet.",
+    );
   });
 
   it("describeProgressionSummary never uses negative language for NO_HISTORY, even when it's everything", () => {
