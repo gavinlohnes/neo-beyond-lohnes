@@ -384,14 +384,21 @@ export async function logSleep(
 
 export async function submitCheckIn(
   beyondDayId: string,
-  values: Omit<StateCheckIn, "id" | "beyondDayId" | "recordedAt" | "seq">,
+  values: Omit<StateCheckIn, "id" | "beyondDayId" | "recordedAt" | "seq" | "draft">,
+  // Check-in draft (Drop 5): how a drafted check-in was decided, when the form opened with one.
+  draft?: DraftDecision,
 ): Promise<{ checkIn: StateCheckIn; recommendation: Recommendation }> {
   const checkIn: StateCheckIn = {
     id: newId(),
     beyondDayId,
     recordedAt: new Date().toISOString(),
     seq: await nextSeq(),
-    ...values,
+    energy: values.energy,
+    stress: values.stress,
+    mood: values.mood,
+    soreness: values.soreness,
+    alcoholUrge: values.alcoholUrge,
+    ...(draft ? { draft } : {}),
   };
   const correlationId = newId();
   await db.checkIns.add(checkIn);

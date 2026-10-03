@@ -1,4 +1,5 @@
 import type { StateCheckIn } from "../../../domain/common/types";
+import type { CheckInDraft } from "../../../engine/checkInDraft";
 import {
   CHECK_IN_FIELDS,
   describeCheckInValues,
@@ -25,6 +26,8 @@ export function CheckInCard({
   quickCheckInValues,
   onQuickCheckIn,
   onSubmitCheckIn,
+  draft,
+  onStartBlank,
 }: {
   busy: boolean;
   checkIn: StateCheckIn | null;
@@ -35,7 +38,11 @@ export function CheckInCard({
   quickCheckInValues: CheckInValues;
   onQuickCheckIn: () => void;
   onSubmitCheckIn: () => void;
+  /** Drop 5: the operator's previous answers, carried forward; `values` already includes them. */
+  draft?: CheckInDraft | undefined;
+  onStartBlank?: () => void;
 }) {
+  const unchangedDraft = draft !== undefined && CHECK_IN_FIELDS.every((f) => values[f.key] === draft.value[f.key]);
   // DECLUTTER-001 (Drop 1): once today's check-in exists and the form isn't
   // open, the whole card is one line — when you checked in, "all good" if it
   // was the quick check-in — with UPDATE to reopen ALL GOOD and the form.
@@ -78,9 +85,26 @@ export function CheckInCard({
       </p>
 
       <div key="form" className="fade-in">
-        <p className="card-body" style={{ marginBottom: 12 }}>
-          How are you doing right now? Tap a number for each — nothing here is filled in for you.
-        </p>
+        {draft ? (
+          <div style={{ marginBottom: 12 }}>
+            {/* Drop 5: a draft, said plainly — never auto-confirmed, one tap from blank. */}
+            <p className="card-body" style={{ marginBottom: 4 }}>
+              Draft: {draft.reason.charAt(0).toLowerCase() + draft.reason.slice(1)}. Change anything that's different now.
+            </p>
+            {draft.since.length > 0 && (
+              <p className="meta" style={{ marginBottom: 4 }}>Since then: {draft.since.join(" · ")}</p>
+            )}
+            {onStartBlank && (
+              <button type="button" className="chip" disabled={busy} onClick={onStartBlank}>
+                START BLANK
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="card-body" style={{ marginBottom: 12 }}>
+            How are you doing right now? Tap a number for each — nothing here is filled in for you.
+          </p>
+        )}
         {CHECK_IN_FIELDS.map((field) => (
           <div key={field.key} style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
@@ -109,7 +133,7 @@ export function CheckInCard({
           </div>
         ))}
         <button className="btn-primary" disabled={busy || !isCheckInComplete(values)} onClick={onSubmitCheckIn}>
-          SUBMIT CHECK-IN
+          {unchangedDraft ? "CONFIRM CHECK-IN" : "SUBMIT CHECK-IN"}
         </button>
         {!isCheckInComplete(values) && (
           <p className="meta" style={{ marginTop: 8 }}>Select all five to submit.</p>

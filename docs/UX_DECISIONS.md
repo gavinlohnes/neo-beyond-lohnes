@@ -207,6 +207,18 @@ below, this entry wins; the older entry is kept for history.
   Adopting a finding as a rule, deload/stall *suggestions*, and any Engine use wait for separate
   sign-off. The Day Ledger's sleep gains `primaryLogs` (each main-sleep log's time and minutes) so a
   sleep can be placed before a workout by time.
+- **As built: check-in draft (Drop 5, owner approval 2026-10-03 — "Never auto-confirm. Record
+  whether each draft was confirmed unchanged or adjusted.").** The check-in form (MANUAL CHECK-IN,
+  or UPDATE) opens pre-set to the operator's own latest check-in, when it's no more than 36 hours
+  old (`engine/checkInDraft.ts`): "Draft: your check-in Wed 07:00. Change anything that's different
+  now.", plus "Since then: main sleep 7 hr · lift B (partial) · 1 urge" — the facts logged after it.
+  **No value is guessed from other data** (no "short sleep → lower energy" rule): the check-in
+  feeds the Engine's locked capacity read, and any evidence-to-value rule waits for separate
+  sign-off. Taps win over the draft; the button reads CONFIRM CHECK-IN while nothing has changed,
+  SUBMIT CHECK-IN once anything has. START BLANK escapes to the old empty form. Nothing is written
+  until the tap; the check-in records `draft: CONFIRMED | ADJUSTED` (absent for ALL GOOD and a blank
+  start), shown in History. ALL GOOD is unchanged. Older than 36 hours: no draft, the empty form as
+  before (doctrine: prefill only when evidence is stable).
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 
