@@ -3,6 +3,7 @@ import {
   describeMacros,
   describeMealLogged,
   describeMealsRelogged,
+  describeRepeatMealsButton,
   MEALS_TODAY_EMPTY,
   SAVED_MEALS_EMPTY,
 } from "../../src/ui/screens/body/nutritionCopy";
@@ -14,6 +15,12 @@ describe("NUTRITION-001 — nutritionCopy", () => {
 
   it("describeMealLogged names the meal with the calories and protein it just counted", () => {
     expect(describeMealLogged("Dinner", 650, 45)).toBe("Dinner logged · 650 kcal · 45g");
+  });
+
+  it("describeRepeatMealsButton says YESTERDAY only for the previous lived day, otherwise names the date", () => {
+    expect(describeRepeatMealsButton(true, "Oct 2", 2)).toBe("SAME AS YESTERDAY (2 meals)");
+    expect(describeRepeatMealsButton(false, "Sep 28", 1)).toBe("REPEAT SEP 28 MEALS (1 meal)");
+    expect(describeRepeatMealsButton(false, "Sep 28", 3)).not.toMatch(/YESTERDAY/);
   });
 
   it("describeMealsRelogged totals a SAME AS YESTERDAY batch", () => {

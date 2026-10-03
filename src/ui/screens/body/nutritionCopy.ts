@@ -20,6 +20,16 @@ export function describeMealsRelogged(count: number, fromDate: string, calories:
   return `${count} ${count === 1 ? "meal" : "meals"} from ${fromDate} logged · ${calories} kcal · ${proteinG}g`;
 }
 
+/**
+ * POST-QA STABILIZATION: the repeat-meals button only says YESTERDAY when
+ * the source really is the previous lived day; otherwise it names the date
+ * it reached back to. `fromDate` is already formatted, e.g. "Sep 28".
+ */
+export function describeRepeatMealsButton(isPreviousLivedDay: boolean, fromDate: string, count: number): string {
+  const meals = `${count} ${count === 1 ? "meal" : "meals"}`;
+  return isPreviousLivedDay ? `SAME AS YESTERDAY (${meals})` : `REPEAT ${fromDate.toUpperCase()} MEALS (${meals})`;
+}
+
 export const MEAL_DELETE_HINT = "Hold to delete.";
 
 /** Calm, anticipatory — no saved meal presets created yet is an expected starting state, not an error. */

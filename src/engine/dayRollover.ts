@@ -22,8 +22,12 @@ function boundaryOnCalendarDateOf(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate(), DAY_ROLLOVER_HOUR, DAY_ROLLOVER_MINUTE, 0, 0);
 }
 
-/** The most recent 16:30 local-time instant at or before `now`. */
-function mostRecentBoundaryAtOrBefore(now: Date): Date {
+/**
+ * The most recent 16:30 local-time instant at or before `now`. Exported
+ * (POST-QA STABILIZATION) so BODY can tell whether a past day began in the
+ * previous lived-day window; the rollover math itself is unchanged.
+ */
+export function mostRecentBoundaryAtOrBefore(now: Date): Date {
   const todaysBoundary = boundaryOnCalendarDateOf(now);
   if (todaysBoundary.getTime() <= now.getTime()) return todaysBoundary;
   const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
