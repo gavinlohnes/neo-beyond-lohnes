@@ -63,7 +63,9 @@ export function describeEvent(event: DomainEvent): string {
     case "RECOVER_CONNECT_COMPLETED":
       return p.activity ? `${p.activity === "RECOVER" ? "Recover" : "Connect"} marked done.` : "Recover/Connect marked done.";
     case "STATE_CHECKED_IN":
-      return `Check-in: energy ${p.energy}, stress ${p.stress}, mood ${p.mood}, soreness ${p.soreness}, urge ${p.alcoholUrge}.`;
+      return `Check-in: energy ${p.energy}, stress ${p.stress}, mood ${p.mood}, soreness ${p.soreness}, urge ${p.alcoholUrge}${
+        p.draft === "CONFIRMED" ? " (BEYOND's draft, as proposed)" : p.draft === "ADJUSTED" ? " (BEYOND's draft, adjusted)" : ""
+      }.`;
     case "RECOMMENDATION_ISSUED":
       return `Recommendation issued: ${p.kind}.`;
     case "RECOMMENDATION_ACCEPTED":

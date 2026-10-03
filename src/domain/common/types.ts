@@ -41,6 +41,14 @@ export interface StateCheckIn {
   soreness: 0 | 1 | 2 | 3 | 4 | 5;
   alcoholUrge: 0 | 1 | 2 | 3 | 4 | 5;
   /**
+   * Check-in draft (Drop 5, 2026-10-03): present only when the form opened
+   * with BEYOND's draft (the operator's previous answers carried forward) —
+   * CONFIRMED when submitted unchanged, ADJUSTED when any value changed.
+   * Absent for ALL GOOD and for a check-in started blank. The values above
+   * are always the operator's own, submitted by them.
+   */
+  draft?: DraftDecision;
+  /**
    * Deterministic same-instant tie-break (event-ordering redesign,
    * following Drop 02b): recordedAt stays the real, unmodified moment this
    * was recorded — seq only disambiguates two records that are otherwise

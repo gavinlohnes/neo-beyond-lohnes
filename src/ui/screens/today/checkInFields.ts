@@ -8,7 +8,7 @@ import type { StateCheckIn } from "../../../domain/common/types";
  * locked StateCheckIn shape — this file only adds labels and direction.
  */
 
-export type CheckInValues = Omit<StateCheckIn, "id" | "beyondDayId" | "recordedAt">;
+export type CheckInValues = Omit<StateCheckIn, "id" | "beyondDayId" | "recordedAt" | "seq" | "draft">;
 export type CheckInFieldKey = keyof CheckInValues;
 export type PartialCheckInValues = Partial<CheckInValues>;
 

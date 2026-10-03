@@ -120,6 +120,8 @@ import type { SchedulePattern } from "../../../domain/common/types";
 import { templateLabel } from "../train/trainCopy";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { deriveSleepDraft } from "../../../engine/sleepDraft";
+import { checkInDraftDecision, type CheckInDraft } from "../../../engine/checkInDraft";
+import { getCheckInDraft } from "../../../application/checkInDraftQueries";
 import { getAppOpenedAt } from "../../appSession";
 import { formatDuration } from "../body/bodyScreenCopy";
 import {
@@ -201,6 +203,12 @@ export function TodayScreen({
   const [priorOutcomeMemory, setPriorOutcomeMemory] = useState<PriorOutcomeMemory | null>(null);
   const [materiallyRepeated, setMateriallyRepeated] = useState(false);
   const [values, setValues] = useState<PartialCheckInValues>({});
+  // Drop 5: the check-in draft (the operator's previous answers), and whether they chose START BLANK.
+  const [checkInDraft, setCheckInDraft] = useState<CheckInDraft | undefined>(undefined);
+  const [checkInDraftDismissed, setCheckInDraftDismissed] = useState(false);
+  const activeCheckInDraft = checkInDraft && !checkInDraftDismissed ? checkInDraft : undefined;
+  // What the form shows and submits: taps win over the draft.
+  const checkInFormValues: PartialCheckInValues = activeCheckInDraft ? { ...activeCheckInDraft.value, ...values } : values;
   const [busy, setBusy] = useState(false);
   // TODAY-009 (residual TODAY-R02, flagged in TODAY-006): `busy` is React
   // state, so setBusy(true) doesn't take effect (and re-render the
@@ -553,6 +561,8 @@ export function TodayScreen({
     let workContextSource: WorkContextSource | undefined;
     let mainSleepTimes: string[] = [];
     let draftEvidence: Awaited<ReturnType<typeof getSleepDraftEvidence>> | null = null;
+    // Drop 5: the check-in draft reads the operator's latest check-in on any day.
+    const nextCheckInDraft = await getCheckInDraft();
 
     if (activeDay) {
       checkIn = (await getLatestCheckIn(activeDay.id)) ?? null;
@@ -645,6 +655,7 @@ export function TodayScreen({
       setWorkContextSource(workContextSource);
       setMainSleepRecordedAt(mainSleepTimes);
       setSleepDraftEvidence(draftEvidence);
+      setCheckInDraft(nextCheckInDraft);
     } else {
       setRecommendation(null);
       setDecision(undefined);
@@ -713,12 +724,19 @@ export function TodayScreen({
   }
 
   async function handleCheckIn() {
-    if (busy || busyRef.current || !isCheckInComplete(values)) return;
+    const submitted = checkInFormValues;
+    if (busy || busyRef.current || !isCheckInComplete(submitted)) return;
     busyRef.current = true;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
-      await submitCheckIn(activeDay.id, values);
+      // Drop 5: never auto-confirmed — this runs only on the operator's tap, and records how the draft was decided.
+      await submitCheckIn(
+        activeDay.id,
+        submitted,
+        activeCheckInDraft ? checkInDraftDecision(activeCheckInDraft.value, submitted) : undefined,
+      );
+      setCheckInDraftDismissed(false);
       // Refetch everything derived from the new recommendation — not just
       // checkIn/recommendation — so pendingOutcome (CP10) and any other
       // derived state stay in sync without requiring a page reload.
@@ -1425,8 +1443,13 @@ export function TodayScreen({
           checkIn={checkIn}
           checkInFormOpen={checkInFormOpen}
           setCheckInFormOpen={setCheckInFormOpen}
-          values={values}
+          values={checkInFormValues}
           setValues={setValues}
+          draft={activeCheckInDraft}
+          onStartBlank={() => {
+            setCheckInDraftDismissed(true);
+            setValues({});
+          }}
           quickCheckInValues={quickCheckInValues}
           onQuickCheckIn={() => void handleQuickCheckIn()}
           onSubmitCheckIn={() => void handleCheckIn()}
@@ -1697,8 +1720,13 @@ export function TodayScreen({
               checkIn={checkIn}
               checkInFormOpen={checkInFormOpen}
               setCheckInFormOpen={setCheckInFormOpen}
-              values={values}
+              values={checkInFormValues}
               setValues={setValues}
+              draft={activeCheckInDraft}
+              onStartBlank={() => {
+                setCheckInDraftDismissed(true);
+                setValues({});
+              }}
               quickCheckInValues={quickCheckInValues}
               onQuickCheckIn={() => void handleQuickCheckIn()}
               onSubmitCheckIn={() => void handleCheckIn()}
@@ -1732,8 +1760,13 @@ export function TodayScreen({
               checkIn={checkIn}
               checkInFormOpen={false}
               setCheckInFormOpen={setCheckInFormOpen}
-              values={values}
+              values={checkInFormValues}
               setValues={setValues}
+              draft={activeCheckInDraft}
+              onStartBlank={() => {
+                setCheckInDraftDismissed(true);
+                setValues({});
+              }}
               quickCheckInValues={quickCheckInValues}
               onQuickCheckIn={() => void handleQuickCheckIn()}
               onSubmitCheckIn={() => void handleCheckIn()}
