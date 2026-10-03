@@ -92,7 +92,7 @@ describe("Sleep draft (real browser)", () => {
     expect(mainSleepRow()).not.toContain("Slept up to");
   });
 
-  it("stays quiet when something else was done in BEYOND after Shift Down", async () => {
+  it("Drop 1.6b: counts from the last thing logged after Shift Down instead of going quiet", async () => {
     const day = await workNightThenShiftDown();
     vi.setSystemTime(at(13, 9, 0));
     await logWater(day.id, 16);
@@ -100,7 +100,7 @@ describe("Sleep draft (real browser)", () => {
     await render(<TodayScreen />);
 
     const mainSleepRow = () => document.querySelector('[data-shift-clock-row="MAIN_SLEEP"]')?.textContent ?? "";
-    await expect.poll(mainSleepRow, { timeout: 10_000 }).toContain("Log it when you wake.");
-    expect(mainSleepRow()).not.toContain("Slept up to");
+    await expect.poll(mainSleepRow, { timeout: 10_000 }).toContain("Slept up to 5 hr 20 min?");
+    expect(mainSleepRow()).toContain("Last logged 09:00 → opened 14:20");
   });
 });

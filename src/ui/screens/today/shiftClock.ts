@@ -29,6 +29,19 @@ import type { SchedulePhase } from "../../../engine/scheduledContext";
  */
 export type ShiftClockPhase = SchedulePhase;
 
+/**
+ * Drop 1.6b (field soak, owner approval 2026-10-03): during the shift,
+ * MARK WORK ENDED earns an Attention slot only in its last hour — before
+ * that it sat in red at the top of TODAY for the whole night. It stays one
+ * tap away in TOOLS (WORK CONTEXT) for a night that ends early.
+ */
+export const WORK_END_LEAD_MINUTES = 60;
+
+export function isWorkEndDue(phase: ShiftClockPhase | null, shiftWindow: { start: Date; end: Date } | null, now: Date): boolean {
+  if (phase !== "SCHEDULED_SHIFT" || !shiftWindow) return true;
+  return now.getTime() >= shiftWindow.end.getTime() - WORK_END_LEAD_MINUTES * 60_000;
+}
+
 export type ShiftClockRow =
   | "WORK_QUESTION"
   | "TONIGHT"

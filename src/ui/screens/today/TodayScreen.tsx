@@ -131,6 +131,7 @@ import {
   describePlannedWorkout,
   describePhaseHeading,
   describeToolsSummary,
+  isWorkEndDue,
   mainSleepEndsPostShift,
   TOOLS_ORDER,
   type ShiftClockRow,
@@ -1288,7 +1289,11 @@ export function TodayScreen({
     // once the shift has started (never before it), and the check-in is never
     // prompted before or during the shift — it happens after shift.
     hasWorkEndAvailable:
-      day?.workContext === "WORK" && workPeriodEndedAt === null && !shiftDownIsRow && shiftClock.phase !== "PRE_WORK",
+      day?.workContext === "WORK" &&
+      workPeriodEndedAt === null &&
+      !shiftDownIsRow &&
+      shiftClock.phase !== "PRE_WORK" &&
+      isWorkEndDue(shiftClock.phase, shiftWindow, now),
     isCheckInMissing:
       day !== null &&
       checkIn === null &&

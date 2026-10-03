@@ -128,7 +128,12 @@ export async function getAdvisoryNotes(now: Date = new Date()): Promise<Advisory
     });
     if (concern) shiftProtectionNotes = [composeAdvisoryNoteFromShiftProtection(concern)];
 
-    if (continuityCandidate) {
+    // Drop 1.6b (owner approval 2026-10-03, field soak): a prior day's "Shift down after work" is a
+    // work-day memory, so it isn't brought back on a day declared OFF. The locked continuity rule
+    // (engine/continuity.ts) is untouched — this only decides whether its note is shown today.
+    const workMemoryOnDayOff =
+      activeDay.workContext === "OFF" && continuityCandidate?.recommendation.kind === "POST_SHIFT_TRANSITION";
+    if (continuityCandidate && !workMemoryOnDayOff) {
       const note = composeAdvisoryNoteFromContinuity(
         continuityCandidate.recommendation.kind,
         continuityCandidate.recommendation.title,

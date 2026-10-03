@@ -956,10 +956,11 @@ describe("TodayScreen (real browser) — active mode dominance", () => {
 describe("TodayScreen (real browser) — Work Context progressive resolution", () => {
   it("subordinates the answered YES setup and promotes MARK WORK ENDED as the next valid operation", async () => {
     await page.viewport(320, 800);
-    // Shift Clock (Drop 2): the layout follows the clock, so pin it mid-shift
-    // (Mon Oct 12 2026, 19:00 — a Week A work night under the default schedule).
+    // Shift Clock (Drop 2): the layout follows the clock. Drop 1.6b: MARK WORK ENDED takes an
+    // Attention slot in the shift's last hour, so pin it there (Tue Oct 13 2026, 05:10 — the end of a
+    // Week A work night under the default schedule).
     vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date(2026, 9, 12, 19, 0));
+    vi.setSystemTime(new Date(2026, 9, 13, 5, 10));
     const day = await startDay();
     await setWorkContext(day.id, "WORK", "MANUAL");
     const screen = await render(<TodayScreen />);
@@ -1413,6 +1414,11 @@ describe("TodayScreen (real browser) — ADVISORY (Intelligence Spine consumptio
     // Commitments only ever names the single headline obligation, plus a plain
     // count of anything else unresolved (see CommitmentsCard.tsx) — the second
     // obligation's own identity is real information that lives only in ADVISORY.
+    // Pinned to a day-off afternoon (Wed Oct 14 2026, 14:00 under the default schedule): on a work
+    // day's run-up a shift-protection INTERRUPT note lifts ADVISORY out of TOOLS, so this test
+    // used to fail whenever the real clock fell before a scheduled shift.
+    vi.useFakeTimers({ toFake: ["Date"], shouldAdvanceTime: true });
+    vi.setSystemTime(new Date(2026, 9, 14, 14, 0));
     await createObligation({ title: "Renew passport", dueAt: dateOffset(0) });
     await createObligation({ title: "File expense report", dueAt: dateOffset(0) });
     const day = await startDay();
@@ -1424,6 +1430,7 @@ describe("TodayScreen (real browser) — ADVISORY (Intelligence Spine consumptio
     // LAUNCH POLISH: QUIET-only notes fold into one ADVISORY row until opened.
     await screen.getByRole("button", { name: "Open ADVISORY" }).click();
     await expect.element(screen.getByText("File expense report — DUE_TODAY", { exact: true })).toBeVisible();
+    vi.useRealTimers();
   });
 });
 
