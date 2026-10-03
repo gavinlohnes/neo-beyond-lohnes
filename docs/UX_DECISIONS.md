@@ -81,6 +81,16 @@ below, this entry wins; the older entry is kept for history.
   undo via `URGE_UNDONE`. Money saved = daily cost × clean days. The post-shift plan shows as
   "Your plan: …" inside SHIFT DOWN. None of it feeds the Engine, recommendations, or the
   check-in's alcohol-urge field.
+- **Urge if-then plans (Drop 4, owner approval 2026-10-03 — "go all").** In MORE → Settings →
+  QUIT TRACKER the owner can write one short plan per urge trigger ("If it's “After shift”, then
+  I'll…", up to 140 characters each, all optional) — stored on the `quitHabits` row as
+  `ifThenPlans` (configuration, like the post-shift plan; no migration — an optional field on the
+  existing row, carried by the restore validator). Right after an urge with that trigger is logged,
+  the quit tracker shows "Your plan for After shift: …" in the owner's own words, with PLAN USED /
+  NOT THIS TIME. The tap is optional, asked once per urge, and recorded as `URGE_PLAN_RESPONDED`
+  (urge, trigger, the plan text as it read, used yes/no) — a manual entry in the Burden Meter. No
+  plan for a trigger: nothing extra appears. Surfaces only on BODY, never on TODAY; BEYOND never
+  writes, suggests, or scores a plan, and nothing feeds the Engine.
 - **Launch polish (owner approval 2026-10-01, after a review against the Launch Vision
   prototype).** TODAY's ORIENT reading is a status line: no visible label (the level-2 heading
   stays for screen readers) and no box, with the colored left tick kept only on YELLOW/RED days.

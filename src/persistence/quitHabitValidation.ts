@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { QuitHabit } from "../domain/common/types";
+import { URGE_TRIGGERS, type QuitHabit } from "../domain/common/types";
 
 /**
  * Drop 6 (quit tracker): same shared-schema pattern as
@@ -13,6 +13,8 @@ const quitHabitFields = {
   name: z.string().trim().min(1).max(60),
   dailyCostUsd: z.number().min(0).max(10000).optional(),
   postShiftPlan: z.string().trim().max(280).optional(),
+  // Drop 4: one short if-then plan per urge trigger, each optional.
+  ifThenPlans: z.partialRecord(z.enum(URGE_TRIGGERS), z.string().trim().min(1).max(140)).optional(),
 };
 
 export const quitHabitInputSchema = z.object(quitHabitFields);

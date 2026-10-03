@@ -7,6 +7,7 @@ import type {
   DomainEvent,
   QuitHabit,
   UrgeLoggedPayload,
+  UrgePlanRespondedPayload,
   UrgeTrigger,
   UrgeUndonePayload,
 } from "../domain/common/types";
@@ -26,6 +27,7 @@ export async function saveQuitHabit(input: QuitHabitInput): Promise<QuitHabit> {
     name: parsed.name,
     ...(parsed.dailyCostUsd !== undefined ? { dailyCostUsd: parsed.dailyCostUsd } : {}),
     ...(parsed.postShiftPlan ? { postShiftPlan: parsed.postShiftPlan } : {}),
+    ...(parsed.ifThenPlans && Object.keys(parsed.ifThenPlans).length > 0 ? { ifThenPlans: parsed.ifThenPlans } : {}),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -66,4 +68,22 @@ export async function undoUrge(beyondDayId: string, urgeEventId: string): Promis
   const commandId = newId();
   const payload: UrgeUndonePayload = { commandId, urgeEventId };
   await logEvent(beyondDayId, "URGE_UNDONE", payload, "USER", commandId, urgeEventId);
+}
+
+/**
+ * Drop 4 (urge if-then plans): records the operator's PLAN USED / NOT THIS
+ * TIME for their own plan, shown after logging an urge. Only for a real,
+ * logged urge whose trigger has a plan set.
+ */
+export async function respondToUrgePlan(beyondDayId: string, urgeEventId: string, used: boolean): Promise<string> {
+  const target = (await db.events.get(urgeEventId)) as DomainEvent | undefined;
+  if (!target || target.type !== "URGE_LOGGED" || target.beyondDayId !== beyondDayId) {
+    throw new Error(`URGE_NOT_FOUND: ${urgeEventId}`);
+  }
+  const trigger = (target.payload as UrgeLoggedPayload).trigger;
+  const plan = (await getQuitHabit())?.ifThenPlans?.[trigger];
+  if (!plan) throw new Error("URGE_PLAN_NOT_SET: there's no plan for this trigger.");
+  const commandId = newId();
+  const payload: UrgePlanRespondedPayload = { commandId, urgeEventId, trigger, plan, used };
+  return logEvent(beyondDayId, "URGE_PLAN_RESPONDED", payload, "USER", commandId, urgeEventId);
 }

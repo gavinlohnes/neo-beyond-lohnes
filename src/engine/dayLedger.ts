@@ -164,6 +164,7 @@ const MANUAL_ENTRY_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType
   "MOVE_COMPLETED",
   "RECOVER_CONNECT_COMPLETED",
   "URGE_LOGGED",
+  "URGE_PLAN_RESPONDED",
   "CLEAN_DAY_LOGGED",
 ]);
 

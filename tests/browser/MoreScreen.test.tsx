@@ -4,6 +4,7 @@ import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { updateNutritionTargets } from "../../src/application/nutritionTargetCommands";
 import { db } from "../../src/persistence/db";
+import { saveQuitHabit } from "../../src/application/quitCommands";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../src/app/buildInfo";
 import { ENGINE_VERSION } from "../../src/engine/evaluate";
@@ -176,6 +177,19 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
     await expect.element(screen.getByText("Drinking · $7/day", { exact: true })).toBeVisible();
     expect(await db.quitHabits.get("current")).toMatchObject({ name: "Drinking", dailyCostUsd: 7, postShiftPlan: "Shower, eat, bed" });
+  });
+
+  it("Drop 4: if-then plans save per trigger from Settings; a blank one is left out", async () => {
+    await saveQuitHabit({ name: "Drinking", ifThenPlans: { BORED: "Old plan" } });
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open QUIT TRACKER" }).click();
+    await expect.element(screen.getByRole("textbox", { name: "If it's “Bored”, then I'll… (optional)" })).toHaveValue("Old plan");
+    await screen.getByRole("textbox", { name: "If it's “After shift”, then I'll… (optional)" }).fill("Shower and eat first");
+    await screen.getByRole("textbox", { name: "If it's “Bored”, then I'll… (optional)" }).fill("");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+
+    await expect.element(screen.getByText("Drinking", { exact: true })).toBeVisible();
+    expect((await db.quitHabits.get("current"))?.ifThenPlans).toEqual({ AFTER_SHIFT: "Shower and eat first" });
   });
 
   it("Drop 5: a goal weight saves with the targets and shows in the summary", async () => {

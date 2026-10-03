@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Ban } from "lucide-react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { LineIcon } from "../../icons/LineIcon";
-import type { QuitHabit } from "../../../domain/common/types";
+import { URGE_TRIGGERS, type QuitHabit, type UrgeTrigger } from "../../../domain/common/types";
 import { getQuitHabit } from "../../../application/quitQueries";
 import { saveQuitHabit } from "../../../application/quitCommands";
-import { formatUsd } from "../body/quitCopy";
+import { describeIfThenPlanLabel, formatUsd } from "../body/quitCopy";
 
 /**
  * Drop 6 (quit tracker, owner approval 2026-09-30): the habit to avoid, named
@@ -19,6 +19,8 @@ export function QuitHabitSettings() {
   const [name, setName] = useState("");
   const [cost, setCost] = useState("");
   const [plan, setPlan] = useState("");
+  // Drop 4: one optional if-then plan per urge trigger.
+  const [ifThen, setIfThen] = useState<Partial<Record<UrgeTrigger, string>>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const disposedRef = useRef(false);
@@ -39,6 +41,7 @@ export function QuitHabitSettings() {
     setName(habit?.name ?? "");
     setCost(habit?.dailyCostUsd !== undefined ? String(habit.dailyCostUsd) : "");
     setPlan(habit?.postShiftPlan ?? "");
+    setIfThen({ ...(habit?.ifThenPlans ?? {}) });
     setError(null);
     setOpen(true);
   }
@@ -52,6 +55,9 @@ export function QuitHabitSettings() {
         name,
         ...(cost.trim() ? { dailyCostUsd: Number(cost) } : {}),
         ...(plan.trim() ? { postShiftPlan: plan } : {}),
+        ifThenPlans: Object.fromEntries(
+          URGE_TRIGGERS.flatMap((t) => (ifThen[t]?.trim() ? [[t, ifThen[t]!.trim()]] : [])),
+        ) as Partial<Record<UrgeTrigger, string>>,
       });
       if (disposedRef.current) return;
       setHabit(saved);
@@ -119,6 +125,26 @@ export function QuitHabitSettings() {
             onChange={(e) => setPlan(e.target.value)}
             className="input"
           />
+        </div>
+        <div>
+          <p className="meta" style={{ marginBottom: 4 }}>If-then plans (optional, shown right after you log an urge with that trigger)</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {URGE_TRIGGERS.map((trigger) => (
+              <div key={trigger}>
+                <label className="meta" htmlFor={`quit-if-then-${trigger}`} style={{ display: "block", marginBottom: 4 }}>
+                  {describeIfThenPlanLabel(trigger)}
+                </label>
+                <input
+                  id={`quit-if-then-${trigger}`}
+                  type="text"
+                  maxLength={140}
+                  value={ifThen[trigger] ?? ""}
+                  onChange={(e) => setIfThen((prev) => ({ ...prev, [trigger]: e.target.value }))}
+                  className="input"
+                />
+              </div>
+            ))}
+          </div>
         </div>
         {error && <p className="meta" role="alert">{error}</p>}
         <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSave()}>

@@ -216,7 +216,8 @@ export type DomainEventType =
   | "PLANNED_WORK_SET"
   | "CLEAN_DAY_LOGGED"
   | "URGE_LOGGED"
-  | "URGE_UNDONE";
+  | "URGE_UNDONE"
+  | "URGE_PLAN_RESPONDED";
 
 /**
  * DERIVED, not stored. Computed by walking a WATER_LOGGED event and any
@@ -537,6 +538,13 @@ export interface QuitHabit {
   dailyCostUsd?: number;
   /** A short owner-written plan shown inside SHIFT DOWN. */
   postShiftPlan?: string;
+  /**
+   * Drop 4 (urge if-then plans, 2026-10-03): the owner's own "if this sets
+   * it off, then I'll…" plan per trigger, shown right after an urge with
+   * that trigger is logged. Configuration, like postShiftPlan; never
+   * written or suggested by BEYOND.
+   */
+  ifThenPlans?: Partial<Record<UrgeTrigger, string>>;
   createdAt: string;
   updatedAt: string;
 }
@@ -554,6 +562,21 @@ export interface CleanDayLoggedPayload {
 export interface UrgeLoggedPayload {
   commandId: string;
   trigger: UrgeTrigger;
+}
+
+/**
+ * Drop 4 (urge if-then plans, 2026-10-03): the operator's one-tap answer to
+ * their own plan shown after an urge — PLAN USED or NOT THIS TIME. A fact
+ * they chose to record; never asked twice, never inferred, never judged.
+ * The latest answer for an urge stands.
+ */
+export interface UrgePlanRespondedPayload {
+  commandId: string;
+  urgeEventId: string;
+  trigger: UrgeTrigger;
+  /** The plan text as it read when answered (the setting can change later). */
+  plan: string;
+  used: boolean;
 }
 
 /** Drop 6: undoes one URGE_LOGGED without touching it, same append-only shape as SET_UNDONE. */
