@@ -30,7 +30,13 @@ use. It adds no stored state and changes no logging semantics.
   build completed).
 - Committed-diff risk check: passed; no Architectural/High-Risk trigger detected, confirming
   the Drop's ROUTINE classification.
-- PR: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/146 (opened, not merged).
+- PR: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/146, merged as
+  `26e328496f89fc380abb6f98ed3dbcf7f8709727` from head
+  `eafb5f44315e4c6ba5e49269a546ecc8ab0e74f3` before independent review/integration
+  bookkeeping was complete.
+- Post-merge review: a separate Reviewer session inspected the exact incorporated head and
+  returned **PASS WITH GOVERNANCE RECONCILIATION REQUIRED** with no product defect. This is
+  post-merge evidence and is not represented as pre-merge approval.
 - Unresolved implementation issues: none.
 
 ## Deferred work

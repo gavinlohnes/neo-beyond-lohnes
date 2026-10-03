@@ -100,3 +100,13 @@ disposition, then closes the Drop. No admin bypass and no self-merge.
 
 Stop for any required event/schema/correction semantic change, any conflict with the current
 field-soak layout, a concurrently active Drop, or a changed `origin/master` baseline.
+
+## Historical governance reconciliation
+
+PR #146 merged as master commit `26e328496f89fc380abb6f98ed3dbcf7f8709727` before the
+required independent review and integration bookkeeping were complete. No pre-merge review is
+claimed. A separate post-merge Reviewer session subsequently inspected the exact incorporated PR
+head `eafb5f44315e4c6ba5e49269a546ecc8ab0e74f3` and reported **PASS WITH GOVERNANCE
+RECONCILIATION REQUIRED**, with no product defect. This reconciliation records that verdict,
+adds the contract-requested deterministic equal-time test evidence, and closes the Drop only
+after those omissions were corrected.
