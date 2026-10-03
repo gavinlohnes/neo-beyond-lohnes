@@ -110,10 +110,13 @@ time, each briefed by the owner.
 - **Weekend push (owner: "go all out", 2026-10-03)** — one PR each, built back to back:
   - **Drop 3 — sleep entry guardrails:** whole hours and minutes 0–59, the "outside the usual
     range" check on corrections too, and BODY's SLEEP tile says "latest of N" when a day has more
-    than one entry.
-  - **Drop 4 — urge if-then plans** (stretch).
-  - **Drop 5 — check-in draft** (stretch).
-  - **Drop 6 — expenditure readout** (read-only, in Weekly).
+    than one entry. **Done (PR #139, merged).**
+  - **Drop 4 — urge if-then plans** (stretch): your own plan per trigger, shown right after an
+    urge, with PLAN USED / NOT THIS TIME. **Done (PR #140, merged).**
+  - **Drop 5 — check-in draft** (stretch): the form opens with your last answers and what's been
+    logged since; never auto-confirmed; records CONFIRMED / ADJUSTED. **Done (PR #141, merged).**
+  - **Drop 6 — expenditure readout** (read-only, in Weekly): an estimated kcal-a-day range from
+    logged meals and the weight trend. **Done (PR #142, merged).**
   (The urge-timing finding shipped with the findings.)
 - Waits until after Oct 16: the Engine reacting to evidence, rule adoption, Week Ahead,
   deload/stall suggestions, all wildcards.
