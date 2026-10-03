@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: e8908ef4c2fe39b1bc782b0730be34ce258a139c
 branch: codex/body-quick-001
 contract: docs/agent/drops/BODY-QUICK-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/146
 builder: Codex, direct owner authorization 2026-10-03 DAILY-USE campaign
 reviewer: (unassigned)
 integrator: (unassigned)

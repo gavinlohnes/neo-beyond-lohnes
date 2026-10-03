@@ -30,7 +30,7 @@ use. It adds no stored state and changes no logging semantics.
   build completed).
 - Committed-diff risk check: passed; no Architectural/High-Risk trigger detected, confirming
   the Drop's ROUTINE classification.
-- PR URL will be recorded in `docs/agent/ACTIVE_DROP.md` immediately after creation.
+- PR: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/146 (opened, not merged).
 - Unresolved implementation issues: none.
 
 ## Deferred work
