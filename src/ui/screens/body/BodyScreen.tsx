@@ -124,7 +124,7 @@ const EMPTY_MEAL_MACRO_FORM: MealMacroFormState = { calories: "", proteinG: "", 
  */
 /**
  * HOTFIX amendment (owner ruling 2026-10-03): the visible labels are just
- * Calories / Protein / Carbs / Fat. `labelPrefix` (e.g. "New meal" / "Edit
+ * Calories / Protein (g) / Carbs (g) / Fat (g). `labelPrefix` (e.g. "New meal" / "Edit
  * meal" / "Corrected") now lives only in each input's aria-label, which
  * still contains the visible word, so the accessible NAME stays unique, not just its DOM id — the add-meal
  * form, an in-progress edit, and a correction can all be open on screen
@@ -156,7 +156,7 @@ function renderMealMacroInputs(
           />
         </div>
         <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-          <label htmlFor={`${idPrefix}-protein`}><span>Protein</span></label>
+          <label htmlFor={`${idPrefix}-protein`}><span>Protein (g)</span></label>
           <input
             id={`${idPrefix}-protein`}
             aria-label={`${labelPrefix} protein (g)`}
@@ -170,7 +170,7 @@ function renderMealMacroInputs(
       </div>
       <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
         <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-          <label htmlFor={`${idPrefix}-carbs`}><span>Carbs</span></label>
+          <label htmlFor={`${idPrefix}-carbs`}><span>Carbs (g)</span></label>
           <input
             id={`${idPrefix}-carbs`}
             aria-label={`${labelPrefix} carbs (g)`}
@@ -182,7 +182,7 @@ function renderMealMacroInputs(
           />
         </div>
         <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-          <label htmlFor={`${idPrefix}-fat`}><span>Fat</span></label>
+          <label htmlFor={`${idPrefix}-fat`}><span>Fat (g)</span></label>
           <input
             id={`${idPrefix}-fat`}
             aria-label={`${labelPrefix} fat (g)`}

@@ -427,7 +427,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     await expect.element(screen.getByRole("button", { name: "DELETE" })).toBeVisible();
     // Plain visible labels; the input keeps a unique accessible name.
     const card = row.element().parentElement!;
-    expect([...card.querySelectorAll("label")].map((l) => l.textContent)).toEqual(["Calories", "Protein", "Carbs", "Fat"]);
+    expect([...card.querySelectorAll("label")].map((l) => l.textContent)).toEqual(["Calories", "Protein (g)", "Carbs (g)", "Fat (g)"]);
     await expect.element(screen.getByRole("spinbutton", { name: "Corrected calories" })).toHaveValue(650);
 
     // SAVE with nothing changed writes nothing.
