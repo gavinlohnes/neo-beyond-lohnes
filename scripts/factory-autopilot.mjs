@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { campaignDigest, deriveNextAction, reconcileActiveDrops } from "./factory-autopilot-core.mjs";
+import { loadRetiredBranches } from "./factory-drop.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -68,10 +69,17 @@ function repoRelative(path) {
 function discoverActiveDrop() {
   const local = parseFrontmatter(join(root, "docs/agent/ACTIVE_DROP.md"));
   const found = local?.status === "ACTIVE" ? [local] : [];
+  const retired = loadRetiredBranches(root);
   const refs = git(["for-each-ref", "--format=%(refname:short)", "refs/remotes/origin"])
     .split("\n").filter((ref) => ref && ref !== "origin/HEAD");
   for (const ref of refs) {
     try { git(["merge-base", "--is-ancestor", ref, "origin/master"]); continue; } catch { /* unmerged */ }
+    const pinnedSha = retired.get(ref.replace(/^origin\//, ""));
+    if (pinnedSha) {
+      let tip = null;
+      try { tip = git(["rev-parse", ref]); } catch { /* normal active-Drop inspection fails closed below */ }
+      if (tip === pinnedSha) continue;
+    }
     let text;
     try { text = git(["show", `${ref}:docs/agent/ACTIVE_DROP.md`]); } catch { continue; }
     const active = parseFrontmatterText(text, `${ref}:docs/agent/ACTIVE_DROP.md`);

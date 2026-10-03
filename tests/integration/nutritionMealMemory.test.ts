@@ -128,6 +128,26 @@ describe("BODY-QUICK-001 — recently used meal shortcuts", () => {
 
     expect(await getRecentSavedMeals()).toHaveLength(4);
   });
+
+  it("orders equal-time uses deterministically by event id", async () => {
+    const first = await makeMeal({ name: "Equal-time first" });
+    const second = await makeMeal({ name: "Equal-time second" });
+    const day = await startDay();
+    const firstLog = await logMeal(day.id, first.id);
+    const secondLog = await logMeal(day.id, second.id);
+    const tiedAt = "2026-10-03T12:00:00.000Z";
+
+    await db.events.update(firstLog.eventId, { recordedAt: tiedAt, seq: 7 });
+    await db.events.update(secondLog.eventId, { recordedAt: tiedAt, seq: 7 });
+
+    const expected = [
+      { eventId: firstLog.eventId, mealId: first.id },
+      { eventId: secondLog.eventId, mealId: second.id },
+    ].sort((a, b) => a.eventId.localeCompare(b.eventId)).map(({ mealId }) => mealId);
+
+    expect((await getRecentSavedMeals()).map((meal) => meal.id)).toEqual(expected);
+    expect((await getRecentSavedMeals()).map((meal) => meal.id)).toEqual(expected);
+  });
 });
 
 describe("logMeal — snapshots current macros into immutable history", () => {

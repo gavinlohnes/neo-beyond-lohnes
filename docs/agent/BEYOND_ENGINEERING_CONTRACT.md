@@ -67,6 +67,12 @@ unilaterally.
 - No self-merge — the agent that builds a Drop does not merge its own PR. Integration is a
   distinct, explicitly authorized step, requested only after builder verification, independent
   review (when applicable), dispositioned findings, and green required CI.
+- For this personal repository, reviewer independence means a separate agent/session explicitly
+  assigned the Reviewer role, independently inspecting an exact identified commit/SHA, recording
+  evidence-backed verification and findings, and issuing a durable PASS/BLOCK verdict. The Builder
+  may not review its own work in the same session. A distinct GitHub account is not required when
+  agents share Gavin's GitHub identity; native GitHub approval identity is supporting evidence,
+  not the sole definition of independence. Gavin remains the owner and final approval authority.
 - No use of admin privileges or any other mechanism to bypass a required branch-protection/
   status check, ever.
 - Integration is serialized — one PR merges at a time.

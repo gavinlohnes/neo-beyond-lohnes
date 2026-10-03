@@ -92,11 +92,13 @@ that identifies one supplies `--escalation <CODE>`; a declared code yields
 `OWNER_DECISION_REQUIRED`, while undeclared codes fail closed. Mechanical conditions remain
 detected directly from repository/GitHub state.
 
-Integration readiness requires a formal GitHub `APPROVED` review whose `commit_id` is the current
-PR head, from an eligible collaborator other than the PR author. Comments may preserve findings
-but never authorize. A moved head invalidates approval. GitHub proves account/state/head binding,
-not stronger separate-session provenance; Builder/Reviewer session separation remains a
-procedural trust boundary and insufficient identity evidence fails closed.
+Integration readiness normally uses a formal GitHub `APPROVED` review whose `commit_id` is the
+current PR head. In this personal repository, agents may share Gavin's GitHub identity, so a
+distinct approving account is supporting evidence rather than the definition of reviewer
+independence. The controlling evidence is a separate explicitly assigned Reviewer session,
+independent inspection of the exact identified SHA, evidence-backed verification/findings, and a
+durable PASS/BLOCK verdict; the Builder may not self-review in the same session. A moved head
+invalidates exact-head review evidence. Gavin remains the owner and final approval authority.
 
 ## Builder App identity bootstrap
 
