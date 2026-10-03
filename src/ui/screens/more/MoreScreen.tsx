@@ -31,6 +31,7 @@ import {
   type CheckInReminderPreference,
 } from "../../../application/checkInReminderQueries";
 import { formatReminderHour } from "./moreCopy";
+import { describeError } from "../../errorMessage";
 
 const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 
@@ -170,7 +171,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
       setPreview(p);
       setPendingFile(file);
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : "Could not read file.");
+      setStatus(describeError(e, "Could not read file."));
       setPreview(null);
       setPendingFile(null);
     } finally {
@@ -199,7 +200,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
       await applyAnyRestore(pendingFile);
       window.location.reload();
     } catch (e) {
-      setStatus(e instanceof Error ? `Restore failed: ${e.message}` : "Restore failed.");
+      setStatus(`Restore failed: ${describeError(e, "the backup could not be applied.")}`);
       setBusy(false);
     }
   }
@@ -223,7 +224,7 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           : "Share sheet unavailable on this device; downloaded a backup file instead.",
       );
     } catch (e) {
-      setArchiveStatus(e instanceof Error ? e.message : "Could not start archive.");
+      setArchiveStatus(describeError(e, "Could not start archive."));
     } finally {
       setDaysSinceBackup(getDaysSinceLastBackup());
       setBusy(false);

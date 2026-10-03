@@ -10,6 +10,7 @@ import { getQuitSummary, type QuitSummary } from "../../../application/quitQueri
 import { logCleanDay, logUrge, undoUrge } from "../../../application/quitCommands";
 import { describeCleanDays, formatUsd, URGE_TRIGGER_LABELS } from "./quitCopy";
 import { SHORTCUT_ANCHOR_IDS } from "../../shortcuts";
+import { describeError } from "../../errorMessage";
 
 /**
  * Drop 6 (quit tracker, owner approval 2026-09-30), on BODY per the owner's
@@ -53,7 +54,7 @@ export function QuitTracker({ initiallyOpen = false }: { initiallyOpen?: boolean
       await action();
       await refresh();
     } catch (e) {
-      if (!disposedRef.current) setError(e instanceof Error ? e.message : "Could not save that.");
+      if (!disposedRef.current) setError(describeError(e, "Could not save that."));
     } finally {
       if (!disposedRef.current) setBusy(false);
     }

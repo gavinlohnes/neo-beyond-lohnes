@@ -4,6 +4,7 @@ import { EXERCISE_LIBRARY, searchLibraryExercises, type LibraryExercise, type Mu
 import { getCustomExercises } from "../../../application/exerciseLibraryQueries";
 import { archiveCustomExercise, createCustomExercise } from "../../../application/exerciseLibraryCommands";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { describeError } from "../../errorMessage";
 
 /**
  * TRAIN-CREATE-001 (Personal Exercise Library). The one dedicated
@@ -82,7 +83,7 @@ export function ExerciseLibraryScreen() {
     try {
       await fn();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(describeError(e, "Something went wrong."));
     } finally {
       setBusy(false);
     }

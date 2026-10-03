@@ -1,6 +1,12 @@
 import { db } from "../persistence/db";
 import { parseSavedMeal } from "../persistence/nutritionValidation";
-import type { DomainEvent, MealLogCorrectedPayload, MealLoggedPayload, SavedMeal } from "../domain/common/types";
+import type {
+  DomainEvent,
+  MealLogCorrectedPayload,
+  MealLoggedPayload,
+  MealLogVoidedPayload,
+  SavedMeal,
+} from "../domain/common/types";
 
 /**
  * Same deterministic same-instant tie-break as application/queries.ts's
@@ -40,6 +46,9 @@ export async function getSavedMeals(options: { includeArchived?: boolean } = {})
  * (queries.ts) rather than reusing it, since that helper resolves a
  * single numeric field and a meal snapshot has four — a real second
  * value shape, not an excuse to touch the existing single-value helper.
+ *
+ * A chain whose root has a MEAL_LOG_VOIDED event (DELETE/UNDO) is left out
+ * entirely — every total built on this function drops it with it.
  */
 export interface NutritionEntry {
   rootEventId: string;
@@ -60,7 +69,12 @@ export interface NutritionEntry {
 
 export async function getMealEntries(beyondDayId: string): Promise<NutritionEntry[]> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const logged = events.filter((e): e is DomainEvent<MealLoggedPayload> => e.type === "MEAL_LOGGED");
+  const voided = new Set(
+    events.filter((e) => e.type === "MEAL_LOG_VOIDED").map((e) => (e.payload as MealLogVoidedPayload).mealEventId),
+  );
+  const logged = events.filter(
+    (e): e is DomainEvent<MealLoggedPayload> => e.type === "MEAL_LOGGED" && !voided.has(e.id),
+  );
   const corrections = events.filter(
     (e): e is DomainEvent<MealLogCorrectedPayload> => e.type === "MEAL_LOG_CORRECTED",
   );

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
+import { updateNutritionTargets } from "../../src/application/nutritionTargetCommands";
 import { db } from "../../src/persistence/db";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../src/app/buildInfo";
@@ -126,6 +127,42 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     const saved = await db.nutritionTargets.get("current");
     expect(saved?.calorieTargetKcal).toBe(2200);
     expect(saved?.proteinMultiplierGPerLb).toBe(0.9);
+  });
+
+  it("HOTFIX: the targets form opens filled with the saved values, not placeholders", async () => {
+    await updateNutritionTargets({ calorieTargetKcal: 2200, proteinMultiplierGPerLb: 0.9, goalWeightLbs: 180 });
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
+    await expect.element(screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" })).toHaveValue(2200);
+    await expect.element(screen.getByRole("spinbutton", { name: "Protein multiplier (g per lb bodyweight)" })).toHaveValue(0.9);
+    await expect.element(screen.getByRole("spinbutton", { name: "Goal weight (lb)" })).toHaveValue(180);
+  });
+
+  it("HOTFIX: SAVE with nothing changed says 'No changes.' in plain words and writes nothing", async () => {
+    await updateNutritionTargets({ calorieTargetKcal: 2200 });
+    const before = await db.nutritionTargets.get("current");
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
+    await expect.element(screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" })).toHaveValue(2200);
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+
+    await expect.element(screen.getByText("No changes.", { exact: true })).toBeVisible();
+    expect(document.body.textContent).not.toMatch(/At least one field|"code"|\[\{/);
+    expect(await db.nutritionTargets.get("current")).toEqual(before);
+  });
+
+  it("HOTFIX: a targets SAVE shows what was saved with UNDO, and UNDO puts the old targets back", async () => {
+    await updateNutritionTargets({ calorieTargetKcal: 2200 });
+    const screen = await render(<MoreScreen />);
+    await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
+    await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2000");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+
+    await expect.element(screen.getByText("Targets saved · 2000 kcal · 1 g/lb protein", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "UNDO" }).click();
+
+    await expect.element(screen.getByText("2200 kcal · 1 g/lb protein", { exact: true })).toBeVisible();
+    expect((await db.nutritionTargets.get("current"))?.calorieTargetKcal).toBe(2200);
   });
 
   it("Drop 6: the quit tracker's habit, cost and plan save from Settings", async () => {

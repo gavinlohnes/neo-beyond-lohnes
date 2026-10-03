@@ -6,6 +6,7 @@ import { getCustomExercises } from "../../../application/exerciseLibraryQueries"
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
 import { archiveCustomTemplate, createCustomTemplate } from "../../../application/customTemplateCommands";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { describeError } from "../../errorMessage";
 
 /**
  * TRAIN-CREATE-002 (Custom Workout Templates). The one dedicated
@@ -77,7 +78,7 @@ export function CustomTemplateScreen() {
     try {
       await fn();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(describeError(e, "Something went wrong."));
     } finally {
       setBusy(false);
     }

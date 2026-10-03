@@ -8,6 +8,7 @@ import {
   reviewDecisionJournalEntry,
 } from "../../../application/journalCommands";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { describeError } from "../../errorMessage";
 
 /**
  * Decision Journal (approved under the Whole-Life Capability North Star,
@@ -98,7 +99,7 @@ export function JournalScreen() {
     try {
       await fn();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(describeError(e, "Something went wrong."));
     } finally {
       setBusy(false);
     }
@@ -291,7 +292,7 @@ function JournalEntryDetail({ entryId, onBack }: { entryId: string; onBack: () =
       setEditing(false);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save.");
+      setError(describeError(e, "Could not save."));
     } finally {
       setBusy(false);
     }
@@ -311,7 +312,7 @@ function JournalEntryDetail({ entryId, onBack }: { entryId: string; onBack: () =
       setLesson("");
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save the review.");
+      setError(describeError(e, "Could not save the review."));
     } finally {
       setBusy(false);
     }

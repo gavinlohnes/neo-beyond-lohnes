@@ -36,6 +36,12 @@ export function describeEvent(event: DomainEvent): string {
       return `Water logged: ${p.amountOz} oz.`;
     case "WATER_LOG_CORRECTED":
       return `Water corrected to ${p.amountOz} oz.`;
+    case "MEAL_LOGGED":
+      return `Meal logged: ${p.name} (${p.calories} kcal, ${p.proteinG} g protein).`;
+    case "MEAL_LOG_CORRECTED":
+      return `Meal corrected to ${p.calories} kcal, ${p.proteinG} g protein.`;
+    case "MEAL_LOG_VOIDED":
+      return "Meal log deleted.";
     case "OUTCOME_RATED":
       return `Outcome rated: ${p.rating}.`;
     case "WORK_CONTEXT_SET":
