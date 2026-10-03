@@ -16,6 +16,11 @@ import {
   SLEEP_SUPPLEMENTAL_PLAUSIBLE_RANGE,
   totalMinutesToHoursAndMinutes,
   WATER_QUICK_ADD_OZ,
+  readSleepDuration,
+  describeSleepTileNote,
+  SLEEP_MINUTES_RANGE_MESSAGE,
+  SLEEP_HOURS_MESSAGE,
+  SLEEP_EMPTY_MESSAGE,
 } from "../../src/ui/screens/body/bodyScreenCopy";
 
 describe("hours/minutes conversion round-trips exactly", () => {
@@ -108,5 +113,34 @@ describe("implausible-value copy invites confirmation, never states a hard refus
 describe("WATER_QUICK_ADD_OZ", () => {
   it("is a small ascending set of common amounts", () => {
     expect(WATER_QUICK_ADD_OZ).toEqual([8, 12, 16]);
+  });
+});
+
+describe("readSleepDuration (Drop 3, sleep entry guardrails)", () => {
+  it("reads whole hours and minutes 0–59", () => {
+    expect(readSleepDuration("7", "15")).toEqual({ ok: true, totalMinutes: 435 });
+    expect(readSleepDuration("7", "")).toEqual({ ok: true, totalMinutes: 420 });
+    expect(readSleepDuration("", "45")).toEqual({ ok: true, totalMinutes: 45 });
+    expect(readSleepDuration(" 8 ", "0")).toEqual({ ok: true, totalMinutes: 480 });
+  });
+
+  it("refuses minutes over 59 — 7 hours + 450 minutes never becomes 14 hr 30 min", () => {
+    expect(readSleepDuration("7", "450")).toEqual({ ok: false, message: SLEEP_MINUTES_RANGE_MESSAGE });
+    expect(readSleepDuration("7", "60")).toEqual({ ok: false, message: SLEEP_MINUTES_RANGE_MESSAGE });
+    expect(readSleepDuration("7", "15.5")).toEqual({ ok: false, message: SLEEP_MINUTES_RANGE_MESSAGE });
+    expect(readSleepDuration("7", "-5")).toEqual({ ok: false, message: SLEEP_MINUTES_RANGE_MESSAGE });
+  });
+
+  it("refuses fractional or negative hours, and an empty or zero duration", () => {
+    expect(readSleepDuration("7.5", "0")).toEqual({ ok: false, message: SLEEP_HOURS_MESSAGE });
+    expect(readSleepDuration("-1", "0")).toEqual({ ok: false, message: SLEEP_HOURS_MESSAGE });
+    expect(readSleepDuration("", "")).toEqual({ ok: false, message: SLEEP_EMPTY_MESSAGE });
+    expect(readSleepDuration("0", "0")).toEqual({ ok: false, message: SLEEP_EMPTY_MESSAGE });
+  });
+
+  it("names which entry the SLEEP tile shows only when there's more than one", () => {
+    expect(describeSleepTileNote(0)).toBeUndefined();
+    expect(describeSleepTileNote(1)).toBeUndefined();
+    expect(describeSleepTileNote(2)).toBe("latest of 2");
   });
 });

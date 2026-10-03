@@ -98,7 +98,7 @@ time, each briefed by the owner.
 - **Drop 1 — Day Ledger + Burden Meter.** **Done (PR #131, merged).**
 - **Drop 1.5 — protein + sleep totals fix:** one protein total on every screen, DELETE for a
   protein-only log, correcting to 0 points to DELETE, "Same food?" for a protein log and a meal
-  logged moments apart. **In review.**
+  logged moments apart. **Done (PR #138, merged).**
 - **Drop 2 — Shift Clock v1** (TODAY by shift phase, row cap by test, Time-Fit line), with rulings
   (a) no MARK WORK ENDED before the shift and (b) no check-in prompt before or during it.
   **Done (PR #132, merged).**
@@ -107,8 +107,14 @@ time, each briefed by the owner.
 - **The Ribbon** (the last 28 lived days in Weekly, one column each). **Done (PR #136, merged).**
 - **Read-only findings** in Weekly (sleep before workouts, before vs. after the shift, when urges
   came, stalls, exercise stories — counts only, with an abstain floor). **Done (PR #137, merged).**
-- Next, in order (stretch): urge if-then plans, then the check-in draft. Cut first if short on
-  time: the expenditure readout. (The urge-timing finding shipped with the findings.)
+- **Weekend push (owner: "go all out", 2026-10-03)** — one PR each, built back to back:
+  - **Drop 3 — sleep entry guardrails:** whole hours and minutes 0–59, the "outside the usual
+    range" check on corrections too, and BODY's SLEEP tile says "latest of N" when a day has more
+    than one entry.
+  - **Drop 4 — urge if-then plans** (stretch).
+  - **Drop 5 — check-in draft** (stretch).
+  - **Drop 6 — expenditure readout** (read-only, in Weekly).
+  (The urge-timing finding shipped with the findings.)
 - Waits until after Oct 16: the Engine reacting to evidence, rule adoption, Week Ahead,
   deload/stall suggestions, all wildcards.
 

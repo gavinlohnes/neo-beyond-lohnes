@@ -71,6 +71,9 @@ import {
   describeImplausibleBodyweight,
   describeImplausibleProtein,
   describeImplausibleSleep,
+  describeImplausibleSleepCorrection,
+  describeSleepTileNote,
+  readSleepDuration,
   describeProteinLogged,
   describeSleepLogged,
   describeWaterLogged,
@@ -260,6 +263,10 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
   const [sleepCorrectionHours, setSleepCorrectionHours] = useState("");
   const [sleepCorrectionMinutes, setSleepCorrectionMinutes] = useState("");
   const [sleepConfirmation, setSleepConfirmation] = useState<Confirmation>(null);
+  // DROP 3: messages shown inside the sleep form / the entry being corrected, never up at the water card.
+  const [sleepNotice, setSleepNotice] = useState<string | null>(null);
+  const [sleepCorrectionNotice, setSleepCorrectionNotice] = useState<string | null>(null);
+  const [sleepCorrectionPendingConfirm, setSleepCorrectionPendingConfirm] = useState(false);
   const [sleepHistoryOpen, setSleepHistoryOpen] = useState(false);
 
   // Bodyweight
@@ -423,13 +430,13 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
 
   async function handleLogSleep(skipConfirm = false) {
     if (busy) return;
-    const hours = Number(sleepHoursInput) || 0;
-    const minutes = Number(sleepMinutesInput) || 0;
-    const totalMinutes = hoursAndMinutesToTotalMinutes(hours, minutes);
-    if (totalMinutes <= 0) {
-      setError("Enter a sleep duration.");
+    const reading = readSleepDuration(sleepHoursInput, sleepMinutesInput);
+    if (!reading.ok) {
+      setSleepNotice(reading.message);
       return;
     }
+    setSleepNotice(null);
+    const { totalMinutes } = reading;
     const range = sleepKind === "PRIMARY" ? SLEEP_PRIMARY_PLAUSIBLE_RANGE : SLEEP_SUPPLEMENTAL_PLAUSIBLE_RANGE;
     if (!skipConfirm && isImplausible(totalMinutes, range)) {
       setSleepPendingConfirm(true);
@@ -468,31 +475,40 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     const { hours, minutes } = totalMinutesToHoursAndMinutes(entry.effectiveDurationMinutes);
     setSleepCorrectionHours(String(hours));
     setSleepCorrectionMinutes(String(minutes));
-    setError(null);
+    setSleepCorrectionNotice(null);
+    setSleepCorrectionPendingConfirm(false);
     // The correction row lives inside the collapsed history disclosure —
     // called from the just-logged confirmation banner too, where that
     // disclosure may still be closed.
     setSleepHistoryOpen(true);
   }
 
-  async function handleSaveSleepCorrection() {
+  async function handleSaveSleepCorrection(skipConfirm = false) {
     if (busy || !day || !sleepCorrectingId) return;
-    const hours = Number(sleepCorrectionHours) || 0;
-    const minutes = Number(sleepCorrectionMinutes) || 0;
-    const totalMinutes = hoursAndMinutesToTotalMinutes(hours, minutes);
-    if (totalMinutes <= 0) {
-      setError("Enter a sleep duration.");
+    const reading = readSleepDuration(sleepCorrectionHours, sleepCorrectionMinutes);
+    if (!reading.ok) {
+      setSleepCorrectionNotice(reading.message);
+      return;
+    }
+    const { totalMinutes } = reading;
+    // DROP 3: a correction gets the same "outside the usual range" check a new log does.
+    const entry = sleepEntries.find((e) => e.headEventId === sleepCorrectingId);
+    const range = entry?.kind === "SUPPLEMENTAL" ? SLEEP_SUPPLEMENTAL_PLAUSIBLE_RANGE : SLEEP_PRIMARY_PLAUSIBLE_RANGE;
+    if (!skipConfirm && isImplausible(totalMinutes, range)) {
+      setSleepCorrectionNotice(null);
+      setSleepCorrectionPendingConfirm(true);
       return;
     }
     setBusy(true);
-    setError(null);
+    setSleepCorrectionNotice(null);
+    setSleepCorrectionPendingConfirm(false);
     try {
       await correctSleep(day.id, sleepCorrectingId, totalMinutes);
       setSleepCorrectingId(null);
       if (sleepConfirmation?.headEventId === sleepCorrectingId) setSleepConfirmation(null);
       await refresh();
     } catch (e) {
-      setError(describeError(e, "Correction failed."));
+      setSleepCorrectionNotice(describeError(e, "Correction failed."));
     } finally {
       setBusy(false);
     }
@@ -1120,6 +1136,10 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
           <p className={lastSleepEntry ? "status-value" : "status-value status-value--empty"}>
             {lastSleepEntry ? formatDuration(lastSleepEntry.effectiveDurationMinutes) : "Not logged"}
           </p>
+          {/* DROP 3: one entry is shown; with more than one, say which (a span, not .meta — the cluster's labels are .meta). */}
+          {describeSleepTileNote(sleepEntries.length) && (
+            <span className="status-note" style={{ fontSize: 16, color: "var(--text-3-strong)" }}>{describeSleepTileNote(sleepEntries.length)}</span>
+          )}
         </div>
         <div>
           <p className="meta" style={{ margin: 0 }}>WEIGHT</p>
@@ -1334,6 +1354,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
                 onChange={(e) => {
                   setSleepHoursInput(e.target.value);
                   setSleepPendingConfirm(false);
+                  setSleepNotice(null);
                 }}
                 className="input"
               />
@@ -1349,6 +1370,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
                 onChange={(e) => {
                   setSleepMinutesInput(e.target.value);
                   setSleepPendingConfirm(false);
+                  setSleepNotice(null);
                 }}
                 className="input"
               />
@@ -1357,14 +1379,18 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
           {sleepPendingConfirm && (
             <div style={{ marginBottom: 12 }}>
               <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
-                {describeImplausibleSleep(
-                  hoursAndMinutesToTotalMinutes(Number(sleepHoursInput) || 0, Number(sleepMinutesInput) || 0),
-                )}
+                {(() => {
+                  const reading = readSleepDuration(sleepHoursInput, sleepMinutesInput);
+                  return reading.ok ? describeImplausibleSleep(reading.totalMinutes) : "";
+                })()}
               </p>
               <button className="btn-secondary" disabled={busy} onClick={() => void handleLogSleep(true)}>
                 LOG ANYWAY
               </button>
             </div>
+          )}
+          {sleepNotice && (
+            <p className="meta" role="status" style={{ marginTop: 0, marginBottom: 8 }}>{sleepNotice}</p>
           )}
           {!sleepPendingConfirm && (
             <button className="btn-primary" disabled={busy} onClick={() => void handleLogSleep()}>
@@ -1417,14 +1443,55 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
                         <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
                           <div className="field" style={{ flex: 1, marginBottom: 0 }}>
                             <label htmlFor={`sleep-correction-hours-${entry.headEventId}`}><span>Hours</span></label>
-                            <input id={`sleep-correction-hours-${entry.headEventId}`} type="number" min={0} value={sleepCorrectionHours} onChange={(e) => setSleepCorrectionHours(e.target.value)} className="input" />
+                            <input
+                              id={`sleep-correction-hours-${entry.headEventId}`}
+                              type="number"
+                              min={0}
+                              step={1}
+                              value={sleepCorrectionHours}
+                              onChange={(e) => {
+                                setSleepCorrectionHours(e.target.value);
+                                setSleepCorrectionNotice(null);
+                                setSleepCorrectionPendingConfirm(false);
+                              }}
+                              className="input"
+                            />
                           </div>
                           <div className="field" style={{ flex: 1, marginBottom: 0 }}>
                             <label htmlFor={`sleep-correction-minutes-${entry.headEventId}`}><span>Minutes</span></label>
-                            <input id={`sleep-correction-minutes-${entry.headEventId}`} type="number" min={0} max={59} value={sleepCorrectionMinutes} onChange={(e) => setSleepCorrectionMinutes(e.target.value)} className="input" />
+                            <input
+                              id={`sleep-correction-minutes-${entry.headEventId}`}
+                              type="number"
+                              min={0}
+                              max={59}
+                              step={1}
+                              value={sleepCorrectionMinutes}
+                              onChange={(e) => {
+                                setSleepCorrectionMinutes(e.target.value);
+                                setSleepCorrectionNotice(null);
+                                setSleepCorrectionPendingConfirm(false);
+                              }}
+                              className="input"
+                            />
                           </div>
                           <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveSleepCorrection()}>
                             SAVE
+                          </button>
+                        </div>
+                      )}
+                      {sleepCorrectingId === entry.headEventId && sleepCorrectionNotice && (
+                        <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{sleepCorrectionNotice}</p>
+                      )}
+                      {sleepCorrectingId === entry.headEventId && sleepCorrectionPendingConfirm && (
+                        <div style={{ marginTop: 8 }}>
+                          <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
+                            {(() => {
+                              const reading = readSleepDuration(sleepCorrectionHours, sleepCorrectionMinutes);
+                              return reading.ok ? describeImplausibleSleepCorrection(reading.totalMinutes) : "";
+                            })()}
+                          </p>
+                          <button className="btn-secondary" disabled={busy} onClick={() => void handleSaveSleepCorrection(true)}>
+                            SAVE ANYWAY
                           </button>
                         </div>
                       )}
