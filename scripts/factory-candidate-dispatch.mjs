@@ -50,8 +50,12 @@ async function main() {
   const activeText = git(["show", "HEAD:docs/agent/ACTIVE_DROP.md"]);
   const active = frontmatter(activeText, "ACTIVE_DROP.md");
   if (active.status !== "ACTIVE" || !/^[0-9a-f]{40}$/.test(active.baseline) || !active.contract) throw new Error("ACTIVE_DROP_NOT_DISPATCHABLE");
+  const activationAncestor = git(["merge-base", "HEAD", "origin/master"]);
+  if (active.baseline !== activationAncestor) throw new Error("ACTIVATION_BASELINE_NOT_PROTECTED_ANCESTRY");
 
   const protectedContract = git(["show", `origin/master:${active.contract}`]);
+  const activationContract = git(["show", `${active.baseline}:${active.contract}`]);
+  if (activationContract !== protectedContract) throw new Error("ACTIVATION_CONTRACT_NOT_PROTECTED");
   const contract = frontmatter(protectedContract, active.contract);
   if (contract.id !== active.id || contract.baseline !== "AT_ACTIVATION") throw new Error("PROTECTED_CONTRACT_MISMATCH");
   const pointer = JSON.parse(git(["show", "origin/master:docs/agent/ACTIVE_CAMPAIGN.json"]));

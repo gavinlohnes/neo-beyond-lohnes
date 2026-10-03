@@ -28,6 +28,7 @@ const activeText = readFileSync("docs/agent/ACTIVE_DROP.md", "utf8");
 const active = frontmatter(activeText);
 if (active.status !== "ACTIVE" || active.branch !== process.env.GITHUB_REF_NAME || active.baseline !== git(["merge-base", process.env.GITHUB_SHA, "origin/master"])) throw new Error("SOURCE_DROP_STATE_MISMATCH");
 const contractText = git(["show", `origin/master:${active.contract}`]);
+if (git(["show", `${active.baseline}:${active.contract}`]) !== contractText) throw new Error("ACTIVATION_CONTRACT_NOT_PROTECTED");
 const contract = frontmatter(contractText);
 if (contract.id !== active.id || contract.baseline !== "AT_ACTIVATION") throw new Error("PROTECTED_CONTRACT_MISMATCH");
 const pointer = JSON.parse(git(["show", "origin/master:docs/agent/ACTIVE_CAMPAIGN.json"]));
@@ -37,36 +38,42 @@ const expected = candidateIdentity({ campaign_id: campaign.id, campaign_revision
   campaign_digest: campaign.authorization.digest, drop_id: active.id, activation_baseline: active.baseline,
   protected_contract: protectedContractIdentity({ path: active.contract, content: contractText }) });
 
-const branch = candidateBranchName(active.id, process.env.GITHUB_SHA);
-let ref;
-try { ref = await api(`/repos/${repo}/git/ref/heads/${branch}`); } catch (error) {
-  if (!String(error.message).startsWith("GITHUB_API_404")) throw error;
-  ref = await api(`/repos/${repo}/git/refs`, { method: "POST", body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: process.env.GITHUB_SHA }), headers: { "Content-Type": "application/json" } });
-}
-const existing = await api(`/repos/${repo}/pulls?state=open&head=gavinlohnes:${encodeURIComponent(branch)}`);
-let candidate = existing[0];
+const openPulls = await api(`/repos/${repo}/pulls?state=open&per_page=100`);
+const matching = openPulls.filter((pull) => {
+  const marker = parseCandidateMarker(pull.body);
+  return marker.state === "VALID" && JSON.stringify(marker.identity) === JSON.stringify(expected);
+});
+if (matching.length > 1) throw new Error("DUPLICATE_CANDIDATES");
+let candidate = matching[0];
+let branch = candidate?.head.ref ?? candidateBranchName(active.id, process.env.GITHUB_SHA);
+let replacingHead = false;
 if (candidate) {
   verifyBuilderBot(candidate.user, installation.app_slug);
-  const marker = parseCandidateMarker(candidate.body);
   const headCommit = await api(`/repos/${repo}/git/commits/${candidate.head.sha}`);
-  if (marker.state !== "VALID" || JSON.stringify(marker.identity) !== JSON.stringify(expected) || headCommit.parents?.[0]?.sha !== process.env.GITHUB_SHA) {
-    throw new Error("CANDIDATE_BRANCH_COLLISION");
-  }
+  if (headCommit.parents?.[0]?.sha === process.env.GITHUB_SHA) {
   console.log(JSON.stringify({ ok: true, reused: true, authenticated_builder: `${installation.app_slug}[bot]`, candidate_pr: candidate.html_url, candidate_head: candidate.head.sha, candidate_identity: expected }));
   process.exit(0);
+  }
+  replacingHead = true;
+} else {
+  let ref;
+  try { ref = await api(`/repos/${repo}/git/ref/heads/${branch}`); } catch (error) {
+    if (!String(error.message).startsWith("GITHUB_API_404")) throw error;
+    ref = await api(`/repos/${repo}/git/refs`, { method: "POST", body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: process.env.GITHUB_SHA }), headers: { "Content-Type": "application/json" } });
+  }
+  if (ref.object.sha !== process.env.GITHUB_SHA) throw new Error("CANDIDATE_BRANCH_COLLISION");
+  candidate = await api(`/repos/${repo}/pulls`, { method: "POST", body: JSON.stringify({
+    title: `${active.id}: Candidate Dispatch`, head: branch, base: "master",
+    body: `Canonical Builder-App candidate for protected Drop contract \`${active.contract}\`.\n\n${encodeCandidateMarker(expected)}\n\nNo prior-head review or CI evidence carries to this candidate.`,
+  }), headers: { "Content-Type": "application/json" } });
+  verifyBuilderBot(candidate.user, installation.app_slug);
+  if (candidate.head.sha !== process.env.GITHUB_SHA) throw new Error("CANDIDATE_HEAD_MISMATCH");
 }
-if (ref.object.sha !== process.env.GITHUB_SHA) throw new Error("CANDIDATE_BRANCH_COLLISION");
-if (!candidate) candidate = await api(`/repos/${repo}/pulls`, { method: "POST", body: JSON.stringify({
-  title: `${active.id}: Candidate Dispatch`, head: branch, base: "master",
-  body: `Canonical Builder-App candidate for protected Drop contract \`${active.contract}\`.\n\n${encodeCandidateMarker(expected)}\n\nNo prior-head review or CI evidence carries to this candidate.`,
-}), headers: { "Content-Type": "application/json" } });
-verifyBuilderBot(candidate.user, installation.app_slug);
-if (candidate.head.sha !== process.env.GITHUB_SHA) throw new Error("CANDIDATE_HEAD_MISMATCH");
 
 const routed = routeCandidate(activeText, { dropId: active.id, sourceBranch: active.branch, candidateUrl: candidate.html_url, candidateBranch: branch });
 const sourceCommit = await api(`/repos/${repo}/git/commits/${process.env.GITHUB_SHA}`);
 const blob = await api(`/repos/${repo}/git/blobs`, { method: "POST", body: JSON.stringify({ content: routed, encoding: "utf-8" }), headers: { "Content-Type": "application/json" } });
 const tree = await api(`/repos/${repo}/git/trees`, { method: "POST", body: JSON.stringify({ base_tree: sourceCommit.tree.sha, tree: [{ path: "docs/agent/ACTIVE_DROP.md", mode: "100644", type: "blob", sha: blob.sha }] }), headers: { "Content-Type": "application/json" } });
 const commit = await api(`/repos/${repo}/git/commits`, { method: "POST", body: JSON.stringify({ message: `chore(factory): route active Drop to PR #${candidate.number}`, tree: tree.sha, parents: [process.env.GITHUB_SHA] }), headers: { "Content-Type": "application/json" } });
-await api(`/repos/${repo}/git/refs/heads/${branch}`, { method: "PATCH", body: JSON.stringify({ sha: commit.sha, force: false }), headers: { "Content-Type": "application/json" } });
+await api(`/repos/${repo}/git/refs/heads/${branch}`, { method: "PATCH", body: JSON.stringify({ sha: commit.sha, force: replacingHead }), headers: { "Content-Type": "application/json" } });
 console.log(JSON.stringify({ ok: true, authenticated_builder: `${installation.app_slug}[bot]`, candidate_pr: candidate.html_url, candidate_head: commit.sha, candidate_identity: expected }));

@@ -62,6 +62,7 @@ describe("Factory candidate reconciliation", () => {
     ["divergent duplicate", [candidate(), candidate({ number: 101, head_sha: sha("e") })], "DIVERGENT_CANDIDATES"],
     ["protected contract mismatch", [candidate({ identity: { ...expected, protected_contract: { ...expected.protected_contract, sha256: digest("e") } } })], "PROTECTED_CONTRACT_MISMATCH"],
     ["campaign mismatch", [candidate({ identity: { ...expected, campaign_digest: digest("e") } })], "CAMPAIGN_IDENTITY_MISMATCH"],
+    ["campaign id mismatch", [candidate({ identity: { ...expected, campaign_id: "OTHER-CAMPAIGN" } })], "CAMPAIGN_IDENTITY_MISMATCH"],
     ["base mismatch", [candidate({ base_sha: sha("e") })], "CANDIDATE_BASELINE_MISMATCH"],
     ["human-authored candidate", [candidate({ author_login: "gavinlohnes" })], "CANDIDATE_AUTHOR_MISMATCH"],
   ])("fails closed for %s", (_name, candidates, code) => {

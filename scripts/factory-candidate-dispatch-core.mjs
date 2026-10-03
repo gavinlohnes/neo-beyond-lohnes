@@ -98,7 +98,7 @@ export function reconcileCandidates({ expected_identity, candidates = [], eviden
       if (branchClaimsDrop) return fail("AMBIGUOUS_CANDIDATE_EVIDENCE", expected, evidence_source, [{ number: item?.number, state: parsed.state }]);
       continue;
     }
-    if (parsed.identity.campaign_id === expected.campaign_id && parsed.identity.drop_id === expected.drop_id) {
+    if (parsed.identity.drop_id === expected.drop_id) {
       relevant.push({ ...item, identity: parsed.identity });
     }
   }
@@ -117,7 +117,8 @@ export function reconcileCandidates({ expected_identity, candidates = [], eviden
   if (contractDivergent.length) return fail("PROTECTED_CONTRACT_MISMATCH", expected, evidence_source, contractDivergent);
 
   const campaignDivergent = relevant.filter((item) =>
-    item.identity.campaign_revision !== expected.campaign_revision || item.identity.campaign_digest !== expected.campaign_digest);
+    item.identity.campaign_id !== expected.campaign_id || item.identity.campaign_revision !== expected.campaign_revision ||
+    item.identity.campaign_digest !== expected.campaign_digest);
   if (campaignDivergent.length) return fail("CAMPAIGN_IDENTITY_MISMATCH", expected, evidence_source, campaignDivergent);
 
   const obsolete = relevant.filter((item) => item.identity.activation_baseline !== expected.activation_baseline);
