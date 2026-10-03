@@ -453,6 +453,19 @@ USER_DECIDES remaining authoritative.
   in [progression.ts](../src/engine/progression.ts)) always produces a
   suggestion (INCREASE / HOLD / REDUCE) with a plain-language reason —
   it never auto-applies a weight change. The lifter always chooses.
+- **Re-entry — an amendment to the locked progression rule (direct owner approval,
+  2026-10-03).** When an exercise was last actually performed 14 or more days ago — in any
+  template or variant (a layoff is about the lift, not the slot), not counting skipped or undone
+  sets or a session still in progress — an INCREASE or HOLD becomes `RE_ENTRY`: about 90% of the
+  last load (the clean last weight, or the heaviest set done when last time was mixed or
+  incomplete), rounded **down** to the exercise's own increment so it's a weight the equipment
+  has. 270 lb on a 10-lb stack → 240 lb. REDUCE stays as it is (already lighter); NO_HISTORY has
+  nothing to ease back into; with no lighter step available the ordinary advice stands. The WHY is
+  visible ("20 days since you last did this — suggests easing back in at 240lb (about 90% of
+  270lb)."), and like all progression advice it is never applied and never pre-fills an input —
+  the set inputs still pre-fill from the last performed set, unchanged. Pure rule in
+  `engine/progression.ts` (`RE_ENTRY_DAYS`, `RE_ENTRY_FRACTION`); the day count comes from
+  `application/trainQueries.ts`'s `getDaysSinceExerciseLastPerformed`.
 - HOLD has three distinct sub-paths in the engine (clean hold, incomplete
   evidence, mixed weights in recent history) and only the clean-hold path
   sets a numeric `lastWeight`. UI copy must fall back to the engine's own

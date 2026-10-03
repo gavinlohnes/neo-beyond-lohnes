@@ -149,6 +149,7 @@ export async function getProgressionSuggestion(
   templateId: WorkoutTemplateId,
   sessionType: "STANDARD" | "REDUCED",
   exerciseId: string,
+  now: Date = new Date(),
 ): Promise<ProgressionSuggestion> {
   const prescription = await resolvePrescription(templateId, sessionType, exerciseId);
   if (!prescription) {
@@ -162,10 +163,35 @@ export async function getProgressionSuggestion(
   for (let i = sessions.length - 1; i >= 0; i--) {
     const sets = (await getPerformedSets(sessions[i]!.id)).filter((s) => s.exerciseId === exerciseId);
     if (sets.length > 0) {
-      return evaluateProgression(prescription, sets);
+      return evaluateProgression(prescription, sets, {
+        daysSinceLastPerformed: await getDaysSinceExerciseLastPerformed(exerciseId, now),
+      });
     }
   }
   return { recommendation: "NO_HISTORY", reason: "No prior performance recorded for this exercise in this context yet." };
+}
+
+/**
+ * RE-ENTRY (2026-10-03): whole days (24 h each) since this exercise was
+ * last actually performed — in any template or variant, so a layoff is
+ * about the lift rather than the slot. Skipped and undone sets don't
+ * count, and neither does a session still in progress (its own sets are
+ * being judged against this). Undefined when it has never been performed.
+ */
+export async function getDaysSinceExerciseLastPerformed(exerciseId: string, now: Date = new Date()): Promise<number | undefined> {
+  const [sets, undoneIds, activeSessionIds] = await Promise.all([
+    db.performedSets.where("exerciseId").equals(exerciseId).toArray() as unknown as Promise<PerformedSet[]>,
+    getUndoneSetIds(),
+    db.workoutSessions
+      .filter((s) => s.status === "ACTIVE")
+      .primaryKeys()
+      .then((ids) => new Set(ids as string[])),
+  ]);
+  const last = sets
+    .filter((s) => !s.skipped && !undoneIds.has(s.id) && !activeSessionIds.has(s.sessionId))
+    .reduce<string | undefined>((latest, s) => (latest === undefined || s.recordedAt > latest ? s.recordedAt : latest), undefined);
+  if (last === undefined) return undefined;
+  return Math.floor((now.getTime() - new Date(last).getTime()) / (24 * 60 * 60 * 1000));
 }
 
 /**
