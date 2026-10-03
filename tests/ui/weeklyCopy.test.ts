@@ -22,7 +22,7 @@ describe("describeBurdenLine (Drop 1, Burden Meter)", () => {
 });
 
 import { describeRibbonDay, describeRibbonSummary } from "../../src/ui/screens/weekly/weeklyCopy";
-import { describeFinding, describeFindings, describeWaitingFindings } from "../../src/ui/screens/weekly/weeklyCopy";
+import { describeExpenditure, describeFinding, describeFindings, describeWaitingFindings } from "../../src/ui/screens/weekly/weeklyCopy";
 import type { Finding } from "../../src/engine/findings";
 
 describe("Ribbon copy (2026-10-03)", () => {
@@ -144,5 +144,26 @@ describe("read-only findings copy", () => {
       "Not enough data yet: sleep before workouts (2 of 6 each way), before vs. after the shift (0 of 6 each way), when urges came (3 of 6 urges).",
     );
     expect(describeWaitingFindings([])).toBeUndefined();
+  });
+});
+
+describe("expenditure readout copy (Drop 6)", () => {
+  it("says a range, where it came from, and what it assumes", () => {
+    expect(
+      describeExpenditure({ kind: "ESTIMATE", lowKcal: 2150, highKcal: 2350, windowDays: 28, intakeDays: 20, avgIntakeKcal: 2000, weeklyChangeLbs: -0.5, weighIns: 14 }),
+    ).toEqual({
+      headline: "About 2,150–2,350 kcal a day",
+      detail: "Estimated from the last 28 days: 20 days with meals logged (avg 2,000 kcal) and weight down 0.5 lb a week. Assumes those days' meals were all logged.",
+    });
+  });
+
+  it("says exactly what it's still waiting for", () => {
+    const waiting = { kind: "WAITING", windowDays: 28, intakeDays: { have: 6, need: 14 }, weighIns: { have: 3, need: 8 }, spanOk: false, tooNoisy: false } as const;
+    expect(describeExpenditure(waiting)).toEqual({
+      detail: "Not enough data yet — needs 14 days with meals logged (have 6) and 8 weigh-ins over 2 weeks (have 3) in the last 28 days.",
+    });
+    expect(describeExpenditure({ ...waiting, intakeDays: { have: 20, need: 14 }, weighIns: { have: 10, need: 8 }, spanOk: true, tooNoisy: true })).toEqual({
+      detail: "Not enough data yet — weight is moving around too much for a useful range.",
+    });
   });
 });

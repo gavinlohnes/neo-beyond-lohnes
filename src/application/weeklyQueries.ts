@@ -12,6 +12,7 @@ import { getDaySummaries } from "./dayLedgerQueries";
 import { summarizeBurden, type BurdenSummary } from "../engine/dayLedger";
 import { projectRibbon, type RibbonDay } from "../engine/ribbon";
 import { projectFindings, type FindingsResult } from "../engine/findings";
+import { projectExpenditure, type ExpenditureReadout } from "../engine/expenditure";
 import { getCustomTemplates } from "./customTemplateQueries";
 
 /**
@@ -61,6 +62,12 @@ export interface WeeklySummary {
    * the Engine.
    */
   findings: FindingsResult & { exerciseNames: Record<string, string> };
+  /**
+   * Expenditure readout (Drop 6, 2026-10-03): a read-only estimated range
+   * from logged meals and the weight trend over the last 28 days — or what
+   * it's still waiting for. Feeds nothing.
+   */
+  expenditure: ExpenditureReadout;
 }
 
 function inWindow(iso: string | undefined, start: number, end: number): boolean {
@@ -191,5 +198,6 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
       ...(targetGrams !== undefined ? { proteinTargetG: targetGrams } : {}),
     },
     findings: { ...findings, exerciseNames },
+    expenditure: projectExpenditure(daySummaries, history, now),
   };
 }
