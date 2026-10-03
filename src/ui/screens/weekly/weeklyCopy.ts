@@ -1,5 +1,7 @@
 import type { BurdenSummary } from "../../../engine/dayLedger";
 import type { RibbonDay } from "../../../engine/ribbon";
+import type { Finding, WaitingFinding, WorkoutArm } from "../../../engine/findings";
+import type { SchedulePhase } from "../../../engine/scheduledContext";
 
 /**
  * Burden Meter (Drop 1, owner brief 2026-10-03): one neutral, read-only line
@@ -63,4 +65,113 @@ export function describeRibbonSummary(days: readonly RibbonDay[]): string {
     `${urges} ${urges === 1 ? "urge" : "urges"}`,
     `${count((d) => d.cleanDay)} clean ${count((d) => d.cleanDay) === 1 ? "day" : "days"}`,
   ].join(", ") + ".";
+}
+
+// ---- READ-ONLY FINDINGS (2026-10-03) ----
+//
+// Counts only, in plain words: the real numbers and the window they were
+// counted over. Never "usually", "tends to", "because" or any other claim of
+// cause or habit — a finding says what happened, not why.
+
+export interface FindingCopy {
+  title: string;
+  lines: string[];
+  /** Where the numbers came from: window and rule, one quiet line. */
+  basis?: string;
+}
+
+function plural(n: number, one: string, many: string): string {
+  return `${n} ${n === 1 ? one : many}`;
+}
+
+function describeArm(label: string, arm: WorkoutArm): string {
+  return `${label}: ${arm.completed} of ${arm.workouts} complete · ${plural(arm.prs, "PR", "PRs")}`;
+}
+
+const PHASE_WORDS: Record<SchedulePhase, string> = {
+  EXPECTED_POST_WORK: "after a shift",
+  OFF: "off work",
+  PRE_WORK: "before a shift",
+  SCHEDULED_SHIFT: "during a shift",
+};
+
+export function describeFinding(finding: Finding, exerciseNames: Record<string, string>): FindingCopy {
+  switch (finding.kind) {
+    case "SLEEP_BEFORE_WORKOUT": {
+      const cut = hoursAndMinutes(finding.shortSleepMinutes);
+      return {
+        title: "Sleep before workouts",
+        lines: [describeArm(`Under ${cut}`, finding.shortSleep), describeArm(`${cut} or more`, finding.longerSleep)],
+        basis: `Last ${finding.windowDays} days · the main sleep logged in the 24 hours before each workout.`,
+      };
+    }
+    case "TRAINING_WINDOW":
+      return {
+        title: "Before vs. after the shift",
+        lines: [describeArm("Before the shift", finding.beforeShift), describeArm("After the shift", finding.afterShift)],
+        basis: `Last ${finding.windowDays} days · work days only.`,
+      };
+    case "URGE_TIMING": {
+      const [first, ...rest] = finding.byPhase;
+      const parts = first ? [`${first.count} of ${finding.total} ${PHASE_WORDS[first.phase]}`] : [];
+      for (const p of rest) parts.push(`${p.count} ${PHASE_WORDS[p.phase]}`);
+      return {
+        title: "When urges came",
+        lines: [parts.join(" · ")],
+        basis: `Last ${finding.windowDays} days · placed against your saved schedule.`,
+      };
+    }
+    case "STALL": {
+      const { min, max } = finding.topWeights;
+      const tops = max <= 0 ? "" : min === max ? ` · top set ${max} lb each time` : ` · top sets ${min}–${max} lb`;
+      return {
+        title: exerciseNames[finding.exerciseId] ?? finding.exerciseId,
+        lines: [`No new record in the last ${finding.sessions} sessions${tops}`],
+      };
+    }
+    case "EXERCISE_STORY": {
+      const weeks = Math.floor(finding.days / 7);
+      return {
+        title: exerciseNames[finding.exerciseId] ?? finding.exerciseId,
+        lines: [`Top set ${finding.fromWeight} → ${finding.toWeight} lb over ${plural(weeks, "week", "weeks")} · ${finding.sessions} sessions`],
+      };
+    }
+  }
+}
+
+/**
+ * Every finding in order, with one lift's stall and story under a single
+ * heading (story first: where it went, then where it's held).
+ */
+export function describeFindings(findings: readonly Finding[], exerciseNames: Record<string, string>): (FindingCopy & { key: string })[] {
+  const out: (FindingCopy & { key: string })[] = [];
+  const byExercise = new Map<string, FindingCopy & { key: string }>();
+  for (const finding of findings) {
+    if (finding.kind !== "STALL" && finding.kind !== "EXERCISE_STORY") {
+      out.push({ key: finding.kind, ...describeFinding(finding, exerciseNames) });
+      continue;
+    }
+    if (byExercise.has(finding.exerciseId)) continue;
+    const forLift = (kind: "STALL" | "EXERCISE_STORY") =>
+      findings
+        .filter((f) => f.kind === kind && "exerciseId" in f && f.exerciseId === finding.exerciseId)
+        .flatMap((f) => describeFinding(f, exerciseNames).lines);
+    const lines = [...forLift("EXERCISE_STORY"), ...forLift("STALL")];
+    const entry = { key: `exercise-${finding.exerciseId}`, title: exerciseNames[finding.exerciseId] ?? finding.exerciseId, lines };
+    byExercise.set(finding.exerciseId, entry);
+    out.push(entry);
+  }
+  return out;
+}
+
+const WAITING_WORDS: Record<WaitingFinding["kind"], (w: WaitingFinding) => string> = {
+  SLEEP_BEFORE_WORKOUT: (w) => `sleep before workouts (${w.have} of ${w.need} each way)`,
+  TRAINING_WINDOW: (w) => `before vs. after the shift (${w.have} of ${w.need} each way)`,
+  URGE_TIMING: (w) => `when urges came (${w.have} of ${w.need} urges)`,
+};
+
+/** One quiet line naming what's still counting, and how far along it is. */
+export function describeWaitingFindings(waiting: readonly WaitingFinding[]): string | undefined {
+  if (waiting.length === 0) return undefined;
+  return `Not enough data yet: ${waiting.map((w) => WAITING_WORDS[w.kind](w)).join(", ")}.`;
 }

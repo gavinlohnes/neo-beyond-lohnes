@@ -187,6 +187,26 @@ below, this entry wins; the older entry is kept for history.
   1 PR · protein 182 g · 2 urges · clean day"); tapping one shows the same sentence underneath.
   Where one lived day holds two BeyondDays (ended early, started again) their records are combined.
   Read-only; nothing stored, nothing fed to the Engine; no new tab and nothing on TODAY.
+- **As built: read-only findings (owner decision 2026-10-03: "read-only findings over workout
+  data are approved, including stall detection and the exercise story as findings").** Weekly's
+  FINDINGS section, under LAST 28 DAYS. A fixed catalogue of five templates in the pure
+  `engine/findings.ts`, over the Day Ledger and logged sets (undone sets removed):
+  **sleep before workouts** (finished workouts split by the main sleep logged in the 24 h before
+  each: under 6 h vs 6 h or more — how many were COMPLETED, and PRs); **before vs. after the shift**
+  (work days only; "after" starts at the scheduled shift end, or at MARK WORK ENDED when that came
+  earlier; mid-shift starts aren't counted); **when urges came** (urges by schedule phase); a
+  **stall** (an exercise's last 4 sessions set no new record — heaviest or reps, the PR rule
+  already in use); an **exercise story** (first top set → latest, at least 4 sessions over at least
+  14 days). Comparisons and urge timing look back 45 days; stall and story cover only exercises done
+  in the last 28 days, at most 2 each, with one lift's story and stall under one heading.
+  **Counts only:** each finding shows its real numbers and its window, never a cause or a habit
+  ("usually", "tends to", "because" are excluded by test). **Abstain floor:** a comparison needs 6
+  workouts on each side and urge timing 6 urges; below that it's listed in one quiet line ("Not
+  enough data yet: sleep before workouts (2 of 6 each way), …") and never shown as a finding.
+  Recomputed on every read; nothing stored, nothing fed to the Engine, nothing to accept or act on.
+  Adopting a finding as a rule, deload/stall *suggestions*, and any Engine use wait for separate
+  sign-off. The Day Ledger's sleep gains `primaryLogs` (each main-sleep log's time and minutes) so a
+  sleep can be placed before a workout by time.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 
@@ -952,7 +972,9 @@ system-identity glyph."
 - BATCAVE
 - Trend charts — **except** bodyweight trends/milestones/goal date, and trends on Review and the
   weekly check-in, allowed 2026-09-30 (see "ROADMAP 1.0 rulings" above)
-- Any AI / learning layer over workout data
+- Any AI / learning layer over workout data — **except** the read-only findings (deterministic
+  counts with an abstain floor, shown in Weekly, never fed to the Engine), approved by the owner
+  2026-10-03 (see "As built: read-only findings" above)
 
 These need Gavin's direct input and, for the learning layer, real
 workout data volume that doesn't exist yet. A future session should not

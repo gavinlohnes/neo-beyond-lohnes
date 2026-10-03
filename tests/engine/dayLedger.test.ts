@@ -70,7 +70,11 @@ describe("projectDaySummaries — a normal work day", () => {
 
   it("resolves corrections and voids the way BODY does", () => {
     expect(summary!.waterOz).toBe(32); // 20 (corrected from 16) + 12
-    expect(summary!.sleep).toEqual({ primaryMinutes: 400, napMinutes: 30 });
+    expect(summary!.sleep).toEqual({
+      primaryMinutes: 400,
+      primaryLogs: [{ at: at(10, 13, 14, 0), minutes: 400 }],
+      napMinutes: 30,
+    });
     expect(summary!.kcal).toBe(800); // the voided 900 kcal meal is gone
     expect(summary!.proteinG).toBe(100); // 25 logged + 45 + 30 from meals
   });
