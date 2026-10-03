@@ -10,7 +10,7 @@ import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
 import { performDueDayRollover } from "../application/commands";
 import { nextRolloverBoundaryAfter } from "../engine/dayRollover";
-import { parseShortcut } from "../ui/shortcuts";
+import { parseShortcut, type BodyFocus } from "../ui/shortcuts";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -97,6 +97,11 @@ export function App() {
   // Read once, then dropped from the URL so a reload doesn't repeat it.
   const [shortcut] = useState(() => parseShortcut(window.location.search));
   const [tab, setTab] = useState<Tab>(() => (shortcut ? "BODY" : "TODAY"));
+  // Where BODY opens: a home-screen shortcut on launch, or a Shift Clock row
+  // on TODAY (Drop 2). Cleared whenever the bottom nav is used.
+  const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut);
+  // MORE's capture link opens TODAY with TOOLS expanded, where Capture lives (Drop 2).
+  const [todayToolsOpen, setTodayToolsOpen] = useState(false);
   useEffect(() => {
     if (!shortcut) return;
     const url = new URL(window.location.href);
@@ -256,7 +261,11 @@ export function App() {
           <TodayScreen
             onViewCommitments={() => setTab("MORE")}
             onOpenTrain={openTrain}
-            onOpenBody={() => setTab("BODY")}
+            openToolsOnMount={todayToolsOpen}
+            onOpenBody={(target) => {
+              setBodyFocus(target ?? null);
+              setTab("BODY");
+            }}
           />
         )}
         {tab === "TRAIN" && (
@@ -265,8 +274,15 @@ export function App() {
             onDestinationConsumed={() => setTrainDestination(null)}
           />
         )}
-        {tab === "BODY" && <BodyScreen focus={shortcut} />}
-        {tab === "MORE" && <MoreScreen onOpenCapture={() => setTab("TODAY")} />}
+        {tab === "BODY" && <BodyScreen focus={bodyFocus} />}
+        {tab === "MORE" && (
+          <MoreScreen
+            onOpenCapture={() => {
+              setTodayToolsOpen(true);
+              setTab("TODAY");
+            }}
+          />
+        )}
       </RootErrorBoundary>
 
       <AppUpdateBanner />
@@ -286,6 +302,8 @@ export function App() {
             key={t}
             onClick={() => {
               setTrainDestination(null);
+              setBodyFocus(null);
+              setTodayToolsOpen(false);
               setTab(t);
             }}
             aria-current={tab === t ? "page" : undefined}

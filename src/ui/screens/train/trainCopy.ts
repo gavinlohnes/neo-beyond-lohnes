@@ -1,5 +1,6 @@
 import type { ExercisePrescription, SessionType, WorkoutSessionStatus, WorkoutTemplateId } from "../../../domain/workout/types";
-import { WORKOUT_TEMPLATE_ORDER } from "../../../domain/workout/types";
+import { WORKOUT_TEMPLATE_ORDER, WORKOUT_TEMPLATES } from "../../../domain/workout/types";
+import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
 import type { SessionVariantSuggestion } from "../../../engine/trainSuggestion";
 import { doesSessionAdvanceRotation, deriveRecoverySessionStatus } from "../../../engine/trainSuggestion";
 import type { ProgressionSuggestion } from "../../../engine/progression";
@@ -266,4 +267,13 @@ export function describeProgressionSummary(counts: ProgressionSummaryCounts): st
   if (counts.reduce > 0) parts.push(`${counts.reduce} suggest reducing`);
   if (counts.noHistory > 0) parts.push(`${counts.noHistory} without history yet`);
   return `${joinWithAnd(parts)}.`;
+}
+
+/**
+ * Bare id for a built-in template ("A"/"B"/"C"); the template's own name for
+ * a custom one. Shared by TRAIN and TODAY's Shift Clock workout rows (Drop 2).
+ */
+export function templateLabel(templateId: WorkoutTemplateId, customTemplates: readonly CustomWorkoutTemplate[]): string {
+  if (WORKOUT_TEMPLATES[templateId]) return templateId;
+  return customTemplates.find((t) => t.id === templateId)?.name ?? templateId;
 }

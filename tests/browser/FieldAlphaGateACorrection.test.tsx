@@ -6,6 +6,7 @@ import { createObligation } from "../../src/application/intentCommands";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
+import { openTodayTools } from "./helpers/todayTools";
 
 /**
  * BEYOND FIELD ALPHA — Experience Gate A correction checkpoint
@@ -35,6 +36,7 @@ describe("Gate A correction — Minimum Day GLANCE-depth compaction", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
+    await openTodayTools(screen);
 
     await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY" })).toBeVisible();
     expect(screen.getByRole("button", { name: "ENABLE MINIMUM DAY" }).elements()).toHaveLength(0);
@@ -45,6 +47,7 @@ describe("Gate A correction — Minimum Day GLANCE-depth compaction", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
+    await openTodayTools(screen);
 
     await screen.getByRole("button", { name: "Open MINIMUM DAY" }).click();
     await expect.element(screen.getByRole("button", { name: "ENABLE MINIMUM DAY" })).toBeVisible();
@@ -58,6 +61,7 @@ describe("Gate A correction — Minimum Day GLANCE-depth compaction", () => {
     await markHygieneCompleted(day.id);
 
     const screen = await render(<TodayScreen />);
+    await openTodayTools(screen);
 
     await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY" })).toBeVisible();
     await expect.element(screen.getByText("This active BeyondDay · 2 / 6", { exact: true })).toBeVisible();
@@ -70,14 +74,22 @@ describe("Gate A correction — Minimum Day GLANCE-depth compaction", () => {
     await markMedsCompleted(day.id);
 
     const screen = await render(<TodayScreen />);
+    await openTodayTools(screen);
     await expect.element(screen.getByText("This active BeyondDay · 1 / 6", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "Open MINIMUM DAY" }).click();
 
     // Hydrate/Protein always append a live "— Noz logged" suffix
     // (unrelated to this checkpoint), so match those two by prefix;
     // the rest have no such suffix and match exactly.
+    // Scoped to the Minimum Day block: TOOLS also holds the FUEL line, which starts with "Protein".
+    const minimumDayBlock = screen.getByText("MINIMUM DAY", { exact: true }).element().closest(".equipment-row, .card") as HTMLElement;
     for (const label of [/^Hydrate/, /^Protein/, "Meds", "Hygiene", "Move ≥5min", "Recover or Connect ≥10min"]) {
-      await expect.element(screen.getByText(label, typeof label === "string" ? { exact: true } : undefined)).toBeVisible();
+      const matches = [...minimumDayBlock.querySelectorAll("*")].filter((el) =>
+        [...el.childNodes].some(
+          (n) => n.nodeType === Node.TEXT_NODE && (typeof label === "string" ? n.textContent?.trim() === label : label.test(n.textContent?.trim() ?? "")),
+        ),
+      );
+      expect(matches.length).toBeGreaterThan(0);
     }
     // The already-completed item's own MARK DONE control is gone (it's
     // done), proving this is the real, live six-item list, not a static
@@ -88,10 +100,11 @@ describe("Gate A correction — Minimum Day GLANCE-depth compaction", () => {
 
 describe("Gate A correction — State Input red-authority reduction", () => {
   it("ALL GOOD remains reachable and functional but is no longer styled as the primary red action at rest", async () => {
-    const day = await startDay();
-    await submitCheckIn(day.id, GREEN);
+    await startDay();
     const screen = await render(<TodayScreen />);
 
+    // Shift Clock (Drop 2): an unanswered day asks for its check-in in its own row.
+    await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
     const button = screen.getByRole("button", { name: "ALL GOOD" }).element();
     expect(button.className).toContain("btn-secondary");
     expect(button.className).not.toContain("btn-primary");
@@ -136,10 +149,11 @@ describe("Gate A correction — commitment label clarity", () => {
 
 describe("Gate A correction — accessibility", () => {
   it("the ALL GOOD control passes real WCAG AA color-contrast after its visual-weight reduction", async () => {
-    const day = await startDay();
-    await submitCheckIn(day.id, GREEN);
+    await startDay();
     const screen = await render(<TodayScreen />);
 
+    await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
+    await Promise.all(document.getAnimations().map((a) => a.finished));
     const el = screen.getByRole("button", { name: "ALL GOOD" }).element();
     const results = await axe.run(el, { runOnly: ["color-contrast"] });
     expect(results.violations).toEqual([]);
@@ -149,6 +163,7 @@ describe("Gate A correction — accessibility", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
+    await openTodayTools(screen);
 
     // minimumDay loads asynchronously after mount — wait for the row to
     // actually exist before grabbing its element synchronously.

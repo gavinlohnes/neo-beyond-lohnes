@@ -3,6 +3,7 @@ import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn, startShiftDown, recordRecommendation } from "../../src/application/commands";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { openTodayTools } from "./helpers/todayTools";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
@@ -141,6 +142,7 @@ describe("accessibility (real browser, axe-core)", () => {
     await submitCheckIn(day.id, GREEN);
     await startWorkout(day.id, "A", "STANDARD");
     const screen = await render(<TodayScreen onOpenTrain={() => {}} />);
+    await openTodayTools(screen);
     await screen.getByRole("button", { name: "Open BEYONDDAY" }).click();
     await screen.getByRole("button", { name: "END DAY" }).click();
     await expect.element(screen.getByRole("button", { name: "RETURN TO WORKOUT" })).toBeVisible();

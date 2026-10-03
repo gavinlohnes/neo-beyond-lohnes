@@ -63,6 +63,7 @@ import {
   describeVariantSuggestion,
   RECENT_STRENGTH_EMPTY,
   summarizeProgressionSuggestions,
+  templateLabel,
   VARIANT_MEANINGS,
 } from "./trainCopy";
 
@@ -105,12 +106,6 @@ function exercisesFor(
   }
   const exercises = customTemplates.find((t) => t.id === templateId)?.exercises ?? [];
   return sessionType === "REDUCED" ? exercises.slice(0, 2).map((ex) => ({ ...ex, sets: 2 })) : exercises;
-}
-
-/** Bare id for a built-in template ("A"/"B"/"C"); the template's own name for a custom one. */
-function templateLabel(templateId: WorkoutTemplateId, customTemplates: CustomWorkoutTemplate[]): string {
-  if (WORKOUT_TEMPLATES[templateId]) return templateId;
-  return customTemplates.find((t) => t.id === templateId)?.name ?? templateId;
 }
 
 interface SetInputState {

@@ -138,6 +138,31 @@ below, this entry wins; the older entry is kept for history.
     "Entries per day: N · corrections this week: N". **Not built:** time from first open to first
     useful action. No stored event records an app open, so it can't be derived from existing data
     without guessing; it needs a new, owner-approved signal first.
+- **As built in Drop 2 (Shift Clock v1, owner brief 2026-10-03).** TODAY shows the rows the
+  current part of the shift needs — at most 4 (`MAX_PHASE_ROWS`, enforced by test) — and one TOOLS
+  row holding every other TODAY capability (nothing removed). Pure placement policy in
+  `ui/screens/today/shiftClock.ts`; the Engine and recommendations are unchanged. Phases reuse the
+  `SchedulePhase` names, read from the BeyondDay's own lived-day window and the scheduled shift it
+  owns: **PRE_WORK** 16:30 → 18:00 (countdown strip "Shift in 1h 20m", AFTER SHIFT workout preview,
+  FUEL); **SCHEDULED_SHIFT** 18:00 → 06:00 ("Shift ends in …", QUICK LOG water/meal/urge, FUEL);
+  **EXPECTED_POST_WORK** from 06:00 (or MARK WORK ENDED) until a main sleep is logged after the shift
+  (or the 16:30 roll) — SHIFT DOWN with MARK WORK ENDED folded in and the post-shift plan, the
+  check-in (which becomes the recommendation once done), the workout, MAIN SLEEP; **OFF** a day off,
+  and the rest of a work day once main sleep is logged ("After sleep") — check-in/recommendation and
+  workout. A declared work context wins over the schedule; an unanswered day takes no phase from the
+  schedule's prediction (it shows the work question, check-in and workout). Attention and its cap
+  of 2 are unchanged, except that a phase row showing the same thing isn't also offered as an
+  attention item (post-shift MARK WORK ENDED; the check-in where it is a row), and two owner rulings
+  (2026-10-03): **(a)** MARK WORK ENDED is offered only once the shift has started — never in
+  PRE_WORK; **(b)** the check-in is never prompted in Attention before or during the shift (it
+  happens after shift); outside its rows it waits in TOOLS. Kept visible above
+  TOOLS while they matter: the per-schedule one-tap change (in the status strip), an
+  Engine-recommended SHIFT DOWN/RESET, a check-in form or work-context card opened from Attention,
+  and SURFACE/INTERRUPT advisory notes. **Time-Fit** (`engine/timeFit.ts`): the median of the last 5
+  COMPLETED sessions of that template + variant, shown as "~48 min" only once 3 exist; display only.
+  Fuel shows protein (logs + meals) against its target when one exists, and water as a plain total —
+  there is no water target to compare against. The check-in row's ALL GOOD is neutral, so red stays
+  on the one next step. Burden Meter baseline: Drop 1 merged 2026-10-03 05:27 UTC (PR #131).
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 
