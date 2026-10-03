@@ -8,8 +8,8 @@ import { URGE_TRIGGERS, type UrgeTrigger } from "../../../domain/common/types";
 import { getActiveDay } from "../../../application/queries";
 import { ensureActiveDay } from "../../../application/commands";
 import { getQuitSummary, type QuitSummary } from "../../../application/quitQueries";
-import { logCleanDay, logUrge, undoUrge } from "../../../application/quitCommands";
-import { describeCleanDays, formatUsd, URGE_TRIGGER_LABELS } from "./quitCopy";
+import { logCleanDay, logUrge, respondToUrgePlan, undoUrge } from "../../../application/quitCommands";
+import { describeCleanDays, describePlanResponse, describeYourPlan, formatUsd, URGE_TRIGGER_LABELS } from "./quitCopy";
 import { SHORTCUT_ANCHOR_IDS } from "../../shortcuts";
 import { describeError } from "../../errorMessage";
 
@@ -27,6 +27,8 @@ export function QuitTracker({ initiallyOpen = false }: { initiallyOpen?: boolean
   const [open, setOpen] = useState(initiallyOpen);
   const [busy, setBusy] = useState(false);
   const [lastUrge, setLastUrge] = useState<{ eventId: string; trigger: UrgeTrigger } | null>(null);
+  // Drop 4: the operator's answer to their own plan for lastUrge, once given.
+  const [planAnswer, setPlanAnswer] = useState<boolean | null>(null);
   const [holdHint, setHoldHint] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const disposedRef = useRef(false);
@@ -76,6 +78,7 @@ export function QuitTracker({ initiallyOpen = false }: { initiallyOpen?: boolean
       const day = await ensureActiveDay();
       const eventId = await logUrge(day.id, trigger);
       setLastUrge({ eventId, trigger });
+      setPlanAnswer(null);
     });
 
   const handleUndoUrge = () =>
@@ -84,7 +87,18 @@ export function QuitTracker({ initiallyOpen = false }: { initiallyOpen?: boolean
       const day = await ensureActiveDay();
       await undoUrge(day.id, lastUrge.eventId);
       setLastUrge(null);
+      setPlanAnswer(null);
     });
+
+  const handlePlanAnswer = (used: boolean) =>
+    run(async () => {
+      if (!lastUrge) return;
+      const day = await ensureActiveDay();
+      await respondToUrgePlan(day.id, lastUrge.eventId, used);
+      setPlanAnswer(used);
+    });
+
+  const lastUrgePlan = lastUrge ? summary?.habit.ifThenPlans?.[lastUrge.trigger] : undefined;
 
   if (!loaded) return null;
 
@@ -163,6 +177,24 @@ export function QuitTracker({ initiallyOpen = false }: { initiallyOpen?: boolean
               <button type="button" className="btn-secondary" style={{ width: "auto", padding: "2px 10px", fontSize: 14 }} disabled={busy} onClick={() => void handleUndoUrge()}>
                 UNDO
               </button>
+            </div>
+          )}
+          {/* Drop 4: the owner's own if-then plan for this trigger, in their words. One optional tap, never asked twice. */}
+          {lastUrge && lastUrgePlan && (
+            <div className="fade-in" role="group" aria-label="Your plan" style={{ margin: "4px 0 10px" }}>
+              <p className="card-body" style={{ marginBottom: 6 }}>{describeYourPlan(lastUrge.trigger, lastUrgePlan)}</p>
+              {planAnswer === null ? (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button type="button" className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handlePlanAnswer(true)}>
+                    PLAN USED
+                  </button>
+                  <button type="button" className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handlePlanAnswer(false)}>
+                    NOT THIS TIME
+                  </button>
+                </div>
+              ) : (
+                <p className="meta" role="status" style={{ margin: 0 }}>{describePlanResponse(planAnswer)}</p>
+              )}
             </div>
           )}
           {error && <p className="meta" role="alert">{error}</p>}

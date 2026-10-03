@@ -791,6 +791,26 @@ describe("BodyScreen (real browser) — Drop 6 quit tracker", () => {
     await expect.element(screen.getByText("1 urge logged today", { exact: true })).not.toBeInTheDocument();
   });
 
+  it("Drop 4: after an urge, the owner's own plan for that trigger shows with one optional tap", async () => {
+    await saveQuitHabit({ name: "Drinking", ifThenPlans: { AFTER_SHIFT: "Shower and eat first" } });
+    const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "Open QUIT: DRINKING" }).click();
+
+    // No plan for Stress: nothing extra appears.
+    await screen.getByRole("button", { name: "Log urge: Stress" }).click();
+    await expect.element(screen.getByText("Urge logged — Stress.", { exact: true })).toBeVisible();
+    expect(screen.getByRole("group", { name: "Your plan" }).elements()).toHaveLength(0);
+
+    await screen.getByRole("button", { name: "Log urge: After shift" }).click();
+    const plan = screen.getByRole("group", { name: "Your plan" });
+    await expect.element(plan.getByText("Your plan for After shift: Shower and eat first", { exact: true })).toBeVisible();
+    await plan.getByRole("button", { name: "PLAN USED" }).click();
+    await expect.element(plan.getByText("Noted — plan used.", { exact: true })).toBeVisible();
+    expect(plan.getByRole("button").elements()).toHaveLength(0);
+    const [event] = await db.events.where("type").equals("URGE_PLAN_RESPONDED").toArray();
+    expect(event!.payload).toMatchObject({ trigger: "AFTER_SHIFT", used: true });
+  });
+
   it("never mentions a streak, a reset, or a slip", async () => {
     await saveQuitHabit({ name: "Drinking" });
     const screen = await render(<BodyScreen />);
