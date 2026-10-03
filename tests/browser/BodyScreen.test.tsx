@@ -359,6 +359,21 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     await expect.element(screen.getByText("600 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
   });
 
+  it("BODY-QUICK-001: orders saved-meal shortcuts by recent use", async () => {
+    const used = await createSavedMeal({ name: "Used recently", calories: 500, proteinG: 35, carbsG: 50, fatG: 15 });
+    await createSavedMeal({ name: "New but unused", calories: 400, proteinG: 25, carbsG: 45, fatG: 12 });
+    const day = await startDay();
+    await logMeal(day.id, used.id);
+
+    const screen = await render(<BodyScreen />);
+    await expect.element(screen.getByText("Used recently", { exact: true }).first()).toBeVisible();
+    await expect.element(screen.getByText("New but unused", { exact: true })).toBeVisible();
+    const shortcutNames = Array.from(document.querySelectorAll(".equipment-row .card-title"))
+      .map((element) => element.textContent)
+      .filter((text) => text === "Used recently" || text === "New but unused");
+    expect(shortcutNames).toEqual(["Used recently", "New but unused"]);
+  });
+
   it("LOG snapshots the current macros, shows a confirmation, and updates today's count", async () => {
     const screen = await render(<BodyScreen />);
     await addSavedMeal(screen);
