@@ -34,6 +34,7 @@ import { getAdvisoryNotes } from "../../src/application/advisoryQueries";
 import type { BeyondDay } from "../../src/domain/common/types";
 import { startWorkout } from "../../src/application/trainCommands";
 import { saveQuitHabit } from "../../src/application/quitCommands";
+import { openTodayTools } from "./helpers/todayTools";
 
 /**
  * Current Operational Context V1: getCurrentOperationalContext is
@@ -161,6 +162,8 @@ async function useScheduleWithNoWorkdays() {
 }
 
 async function submitCapture(screen: Awaited<ReturnType<typeof render>>, text: string) {
+  // Shift Clock (Drop 2): Capture lives behind TOOLS.
+  if (screen.getByRole("button", { name: "Close TOOLS" }).elements().length === 0) await openTodayTools(screen);
   await screen.getByPlaceholder("Capture a thought...").fill(text);
   await screen.getByRole("button", { name: "CAPTURE" }).click();
 }
@@ -190,20 +193,20 @@ afterEach(() => {
 });
 
 describe("TodayScreen (real browser) — ordinary/quiet state", () => {
-  it("gives NO ACTION REQUIRED a quiet field before Support with no Attention section", async () => {
+  it("gives NO ACTION REQUIRED a quiet field before TOOLS with no Attention section", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
 
     await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Support", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open TOOLS" })).toBeVisible();
     await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
     expect(screen.getByText("Operate", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
     expect(document.querySelector(".today-field")?.getAttribute("data-field-state")).toBe("quiet");
     const allClear = document.querySelector(".all-clear");
-    const support = screen.getByText("Support", { exact: true }).element();
+    const support = screen.getByRole("button", { name: "Open TOOLS" }).element();
     expect(allClear).not.toBeNull();
     expect(allClear!.compareDocumentPosition(support) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // DECLUTTER-001 (owner ruling 2026-09-30): no reserved empty field under
@@ -223,6 +226,7 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     const onOpenBody = vi.fn();
     const screen = await render(<TodayScreen onOpenBody={onOpenBody} />);
 
+    await openTodayTools(screen);
     await screen.getByRole("button", { name: "Open MINIMUM DAY" }).click();
     await expect.element(screen.getByRole("heading", { name: "Record what you drank" })).toBeVisible();
     expect(document.querySelector(".today-field")?.getAttribute("data-field-state")).toBe("earned");
@@ -244,13 +248,16 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     expect(onOpenBody).toHaveBeenCalledOnce();
   });
 
-  it("promotes missing state input without manufacturing an Engine action", async () => {
+  it("asks for missing state input in its own row, once, without manufacturing an Engine action", async () => {
     await startDay();
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("Check in when you can", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText(/no current state input/i)).toBeVisible();
+    // Shift Clock (Drop 2): until the day is answered the check-in is one of
+    // TODAY's rows, so it isn't also repeated as an Attention item.
+    await expect.element(screen.getByRole("heading", { name: "Check in", exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
+    expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("Operate", { exact: true }).elements()).toHaveLength(0);
   });
 
   it("expands one manual check-in surface and recedes it after quick resolution", async () => {
@@ -519,13 +526,14 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
 });
 
 describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — section headings and pre-day state", () => {
-  it("renders ORIENT and SUPPORT as real level-2 headings, not decorative paragraphs", async () => {
+  it("renders ORIENT and the Shift Clock rows' heading as real level-2 headings, not decorative paragraphs", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByRole("heading", { level: 2, name: "Orient", exact: true })).toBeVisible();
-    await expect.element(screen.getByRole("heading", { level: 2, name: "Support", exact: true })).toBeVisible();
+    // An unanswered day takes no phase from the schedule's guess: its rows sit under "Today".
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Today", exact: true })).toBeVisible();
   });
 
   it("renders ATTENTION as a real level-2 heading once an item has earned it", async () => {
@@ -929,6 +937,7 @@ describe("TodayScreen (real browser) — active mode dominance", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
 
+    await openTodayTools(screen);
     await screen.getByRole("button", { name: "Open SHIFT DOWN" }).click();
     await expect.element(screen.getByRole("button", { name: "START SHIFT DOWN" })).toBeVisible();
     await screen.getByRole("button", { name: "COLLAPSE" }).click();
@@ -947,6 +956,10 @@ describe("TodayScreen (real browser) — active mode dominance", () => {
 describe("TodayScreen (real browser) — Work Context progressive resolution", () => {
   it("subordinates the answered YES setup and promotes MARK WORK ENDED as the next valid operation", async () => {
     await page.viewport(320, 800);
+    // Shift Clock (Drop 2): the layout follows the clock, so pin it mid-shift
+    // (Mon Oct 12 2026, 19:00 — a Week A work night under the default schedule).
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 12, 19, 0));
     const day = await startDay();
     await setWorkContext(day.id, "WORK", "MANUAL");
     const screen = await render(<TodayScreen />);
@@ -959,8 +972,12 @@ describe("TodayScreen (real browser) — Work Context progressive resolution", (
     await screen.getByRole("button", { name: "CHANGE WORK CONTEXT" }).click();
     await expect.element(screen.getByRole("heading", { name: "Are you working today?" })).toBeVisible();
     await screen.getByRole("button", { name: "MARK WORK ENDED" }).click();
+    // Marked ended: the post-shift rows take over and the work context waits behind TOOLS.
+    await expect.element(screen.getByRole("heading", { name: "After shift", exact: true })).toBeVisible();
+    await openTodayTools(screen);
     await expect.element(screen.getByRole("button", { name: "Open WORK CONTEXT" })).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+    vi.useRealTimers();
   });
 
   it("keeps the NO path compact and truthful", async () => {
@@ -968,6 +985,7 @@ describe("TodayScreen (real browser) — Work Context progressive resolution", (
     await setWorkContext(day.id, "OFF", "MANUAL");
     const screen = await render(<TodayScreen />);
 
+    await openTodayTools(screen);
     await expect.element(screen.getByRole("button", { name: "Open WORK CONTEXT" })).toBeVisible();
     await expect.element(screen.getByText("Off today.", { exact: true })).toBeVisible();
     expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(0);
@@ -977,6 +995,7 @@ describe("TodayScreen (real browser) — Work Context progressive resolution", (
 describe("TodayScreen (real browser) — Capture", () => {
   it("is available even with no BeyondDay started at all", async () => {
     const screen = await render(<TodayScreen />);
+    await openTodayTools(screen);
     await expect.element(screen.getByPlaceholder("Capture a thought...")).toBeVisible();
     await expect.element(screen.getByText("Start your BEYOND Day", { exact: true })).toBeVisible();
   });
@@ -1107,6 +1126,7 @@ describe("TodayScreen (real browser) — END DAY relevance", () => {
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
+    await openTodayTools(screen);
     await expect.element(screen.getByRole("button", { name: "Open BEYONDDAY" })).toBeVisible();
   });
 
@@ -1129,6 +1149,7 @@ describe("TodayScreen (real browser) — END DAY relevance", () => {
     const openTrain = vi.fn();
     const screen = await render(<TodayScreen onOpenTrain={openTrain} />);
 
+    await openTodayTools(screen);
     await screen.getByRole("button", { name: "Open BEYONDDAY" }).click();
     await screen.getByRole("button", { name: "END DAY" }).click();
 
@@ -1170,7 +1191,8 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     // name is the fixed role "COMMITMENT" (it used to be the
     // obligation's own title, which could visually collide with
     // TODAY's "Orient" section header) — the title itself still shows, in
-    // the summary line.
+    // the summary line. Shift Clock (Drop 2): that quiet row lives in TOOLS.
+    await openTodayTools(screen);
     await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
     await expect.element(screen.getByText(/Someday maybe/)).toBeVisible();
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
@@ -1311,6 +1333,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     const screen = await render(<TodayScreen />);
 
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
+    await openTodayTools(screen);
     await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
     await expect.element(screen.getByText(/Blocked on someone else/)).toBeVisible();
   });
@@ -1395,6 +1418,7 @@ describe("TodayScreen (real browser) — ADVISORY (Intelligence Spine consumptio
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
+    await openTodayTools(screen);
     await expect.element(screen.getByText("ADVISORY", { exact: true })).toBeVisible();
     // LAUNCH POLISH: QUIET-only notes fold into one ADVISORY row until opened.
     await screen.getByRole("button", { name: "Open ADVISORY" }).click();
@@ -1431,13 +1455,13 @@ describe("TodayScreen (real browser) — narrow phone widths", () => {
  */
 describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural geometry", () => {
   it("a primary action is filled with the red accent token, not the old neutral action tokens", async () => {
-    // DECLUTTER Drop 2: "No action needed" is neutral now, so this uses the
-    // no-check-in state, whose ALL GOOD is a real .btn-primary.
-    await startDay();
+    // DECLUTTER Drop 2: "No action needed" is neutral now, and Shift Clock
+    // (Drop 2) keeps the check-in row's ALL GOOD neutral too, so this uses the
+    // pre-day state, whose START DAY is a real .btn-primary.
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Check in when you can", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "START DAY", exact: true })).toBeVisible();
 
-    const el = screen.getByRole("button", { name: "ALL GOOD" }).element();
+    const el = screen.getByRole("button", { name: "START DAY", exact: true }).element();
     expect(el.className).toContain("btn-primary");
     const bg = getComputedStyle(el).backgroundColor;
     // --action-primary-bg is var(--accent) again as of LAUNCH-VISION-001
@@ -1462,6 +1486,7 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
+    await openTodayTools(screen);
     await screen.getByRole("button", { name: "Open SHIFT DOWN" }).click();
     await expect.element(screen.getByText("Your plan: Shower, eat, text Sam, bed by 9", { exact: true })).toBeVisible();
   });
@@ -1542,6 +1567,7 @@ describe("TodayScreen (real browser) — TODAY-008 day-transition refresh (resid
     // End day A through the real UI (handleEndDay already calls refresh()),
     // then start day B through the real START DAY button — the exact
     // handler (handleStartDay) this Drop fixes.
+    await openTodayTools(screen);
     await screen.getByRole("button", { name: "Open BEYONDDAY" }).click();
     await screen.getByRole("button", { name: "END DAY" }).click();
     await expect.element(screen.getByRole("button", { name: "START DAY", exact: true })).toBeVisible();
@@ -1554,7 +1580,8 @@ describe("TodayScreen (real browser) — TODAY-008 day-transition refresh (resid
     await vi.waitFor(() => {
       expect(screen.getByText("No action required", { exact: true }).elements()).toHaveLength(0);
     });
-    await expect.element(screen.getByText("Check in when you can", { exact: true })).toBeVisible();
+    // Shift Clock (Drop 2): the fresh, unanswered day asks for its check-in in its own row.
+    await expect.element(screen.getByRole("heading", { name: "Check in", exact: true })).toBeVisible();
   });
 });
 
@@ -1562,6 +1589,7 @@ describe("TodayScreen (real browser) — TODAY-009 busy-guard race (residual TOD
   it("two synchronous clicks before any re-render only submit the mutation once", async () => {
     await startDay();
     const screen = await render(<TodayScreen />);
+    await openTodayTools(screen);
     await screen.getByPlaceholder("Capture a thought...").fill("race condition test");
 
     // A real double-click always leaves time for at least one render

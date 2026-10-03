@@ -203,17 +203,27 @@ export function deriveScheduledContext(now: Date, pattern: SchedulePattern): Sch
  * at 03:00 owns the shift it began inside.
  */
 export function scheduledWorkContextForLivedDay(dayStartedAt: Date, pattern: SchedulePattern): "WORK" | "OFF" {
+  return livedDayShiftWindow(dayStartedAt, pattern) ? "WORK" : "OFF";
+}
+
+/**
+ * The scheduled shift a lived day owns — the first one overlapping its
+ * start → next 16:30 window — or null on a scheduled day off. Shift Clock
+ * (Drop 2) times its countdowns against this; scheduledWorkContextForLivedDay
+ * above is the same test reduced to WORK/OFF.
+ */
+export function livedDayShiftWindow(dayStartedAt: Date, pattern: SchedulePattern): { start: Date; end: Date } | null {
   const windowStart = dayStartedAt.getTime();
   const windowEnd = nextRolloverBoundaryAfter(dayStartedAt).getTime();
   const startDate = midnightOf(dayStartedAt);
   for (let offset = -1; offset <= 1; offset++) {
     const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + offset);
     if (!isWorkDay(date, pattern)) continue;
-    const shiftStart = at(date, pattern.shiftStartHour).getTime();
-    const shiftEnd = shiftEndFor(date, pattern).getTime();
-    if (shiftStart < windowEnd && shiftEnd > windowStart) return "WORK";
+    const shiftStart = at(date, pattern.shiftStartHour);
+    const shiftEnd = shiftEndFor(date, pattern);
+    if (shiftStart.getTime() < windowEnd && shiftEnd.getTime() > windowStart) return { start: shiftStart, end: shiftEnd };
   }
-  return "OFF";
+  return null;
 }
 
 /**

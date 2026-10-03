@@ -15,6 +15,7 @@
  * every audited site in this codebase.
  */
 import { db } from "../persistence/db";
+import { estimateSessionMinutes } from "../engine/timeFit";
 import { doesSessionAdvanceRotation, suggestNextTemplate } from "../engine/trainSuggestion";
 import { evaluateProgression, type ProgressionSuggestion } from "../engine/progression";
 import { WORKOUT_TEMPLATE_ORDER } from "../domain/workout/types";
@@ -340,4 +341,14 @@ export async function getLastPerformedSetForExercise(
     }
   }
   return undefined;
+}
+
+/**
+ * TIME-FIT (Drop 2, Shift Clock): the usual length of this template +
+ * variant from finished sessions — engine/timeFit.ts decides, including
+ * that there's no estimate before enough sessions exist. Display only.
+ */
+export async function getSessionMinutesEstimate(templateId: WorkoutTemplateId, sessionType: string): Promise<number | undefined> {
+  const sessions = await db.workoutSessions.toArray();
+  return estimateSessionMinutes(sessions, templateId, sessionType);
 }

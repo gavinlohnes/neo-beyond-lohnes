@@ -34,6 +34,8 @@ export function ShiftDownCard({
   onCancelShiftDown,
   startButtonRef,
   postShiftPlan,
+  forceOpen = false,
+  onMarkWorkEnded,
 }: {
   prominent: boolean;
   isDominant: boolean;
@@ -51,9 +53,17 @@ export function ShiftDownCard({
   startButtonRef: Ref<HTMLButtonElement>;
   /** Drop 6: the owner's own post-shift plan from the quit tracker, shown whenever the card is open. */
   postShiftPlan?: string | undefined;
+  /** Drop 2 (Shift Clock): the post-shift row keeps the card open, with no COLLAPSE. */
+  forceOpen?: boolean;
+  /**
+   * Drop 2: MARK WORK ENDED folded into the post-shift row while work isn't
+   * marked ended yet. It's the next step, so it takes the primary button and
+   * START SHIFT DOWN steps down to secondary until it's done.
+   */
+  onMarkWorkEnded?: (() => void) | undefined;
 }) {
   const active = activeShiftDownId !== null;
-  const open = prominent || active || shiftDownOpen;
+  const open = forceOpen || prominent || active || shiftDownOpen;
   if (!open) {
     return (
       <CollapsibleRow
@@ -78,6 +88,11 @@ export function ShiftDownCard({
         {active ? "SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
       </p>
       <p className="card-body" style={{ marginBottom: 12 }}>{SHIFT_DOWN_EXPLANATION}</p>
+      {onMarkWorkEnded && !active && (
+        <button className="btn-primary" style={{ marginBottom: 12 }} disabled={busy} onClick={onMarkWorkEnded}>
+          MARK WORK ENDED
+        </button>
+      )}
       {postShiftPlan && (
         <p className="meta-strong" style={{ marginBottom: 12 }}>
           Your plan: {postShiftPlan}
@@ -156,10 +171,15 @@ export function ShiftDownCard({
             />
             <span className="meta">min</span>
           </div>
-          <button ref={startButtonRef} className="btn-primary" disabled={busy} onClick={onStartShiftDown}>
+          <button
+            ref={startButtonRef}
+            className={onMarkWorkEnded ? "btn-secondary" : "btn-primary"}
+            disabled={busy}
+            onClick={onStartShiftDown}
+          >
             START SHIFT DOWN
           </button>
-          {!prominent && (
+          {!prominent && !forceOpen && (
             <button
               className="btn-secondary"
               style={{ marginTop: 8 }}

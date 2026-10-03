@@ -4,6 +4,7 @@ import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn, recordRecommendation } from "../../src/application/commands";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { openTodayTools } from "./helpers/todayTools";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 
 /**
@@ -62,7 +63,9 @@ describe("TODAY // Minimum Day access", () => {
 
     // FIELD ALPHA Gate A correction: Minimum Day now defaults to a
     // compact GLANCE-depth CollapsibleRow when it isn't the operator's
-    // primary concern — open it to reach the enable offer.
+    // primary concern — open it to reach the enable offer. Shift Clock
+    // (Drop 2): that row lives behind TOOLS.
+    await openTodayTools(screen);
     await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY" })).toBeVisible();
     await screen.getByRole("button", { name: "Open MINIMUM DAY" }).click();
 

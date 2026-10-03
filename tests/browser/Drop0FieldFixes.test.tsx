@@ -45,19 +45,28 @@ afterEach(() => {
 });
 
 describe("Fix 1 — TODAY no longer asks when the saved schedule is clear", () => {
+  /** Pins the clock (Date only) for the rest of the test; Shift Clock (Drop 2) lays TODAY out by the time. */
+  function pinClock(when: Date) {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(when);
+  }
+
   it("scheduled work day: no question, 'Working · per schedule', and one tap changes it", async () => {
     await page.viewport(360, 800);
     await saveOwnersSchedule();
     const day = await startDayAt(at(10, 12, 16, 30));
+    pinClock(at(10, 12, 16, 40));
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByRole("heading", { name: "Working · per schedule" })).toBeVisible();
+    await expect.element(screen.getByText("Working · per schedule", { exact: true }).first()).toBeVisible();
     expect(screen.getByRole("heading", { name: "Are you working today?" }).elements()).toHaveLength(0);
     await expect.element(screen.getByRole("button", { name: "MARK WORK ENDED" })).toBeVisible();
 
+    // Drop 2: the one-tap change sits in the status strip, once.
+    expect(screen.getByRole("button", { name: "CHANGE TO OFF" }).elements()).toHaveLength(1);
     await screen.getByRole("button", { name: "CHANGE TO OFF" }).click();
-    await expect.element(screen.getByText("Off today.", { exact: true })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Working · per schedule" }).elements()).toHaveLength(0);
+    await expect.element(screen.getByText("Off today", { exact: true })).toBeVisible();
+    expect(screen.getByText("Working · per schedule", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByRole("heading", { name: "Are you working today?" }).elements()).toHaveLength(0);
     expect((await getActiveDay())?.workContext).toBe("OFF");
     expect(await getWorkContextSource(day.id)).toBe("MANUAL");
@@ -67,9 +76,10 @@ describe("Fix 1 — TODAY no longer asks when the saved schedule is clear", () =
   it("scheduled day off: no question, 'Off · per schedule', and one tap changes it", async () => {
     await saveOwnersSchedule();
     const day = await startDayAt(at(10, 14, 16, 30));
+    pinClock(at(10, 14, 16, 40));
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByRole("heading", { name: "Off · per schedule" })).toBeVisible();
+    await expect.element(screen.getByText("Off · per schedule", { exact: true })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Are you working today?" }).elements()).toHaveLength(0);
 
     await screen.getByRole("button", { name: "CHANGE TO WORKING" }).click();
@@ -81,10 +91,11 @@ describe("Fix 1 — TODAY no longer asks when the saved schedule is clear", () =
 
   it("seeded default schedule only: the existing question appears", async () => {
     await startDayAt(at(10, 12, 16, 30));
+    pinClock(at(10, 12, 16, 40));
     const screen = await render(<TodayScreen />);
 
     await expect.element(screen.getByRole("heading", { name: "Are you working today?" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Working · per schedule" }).elements()).toHaveLength(0);
+    expect(screen.getByText("Working · per schedule", { exact: true }).elements()).toHaveLength(0);
   });
 });
 

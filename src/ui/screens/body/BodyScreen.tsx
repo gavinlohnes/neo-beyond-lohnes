@@ -59,7 +59,7 @@ import {
 } from "../../../application/bodyTrendQueries";
 import { WeightTrend } from "./WeightTrend";
 import { QuitTracker } from "./QuitTracker";
-import { SHORTCUT_ANCHOR_IDS, type ShortcutTarget } from "../../shortcuts";
+import { SHORTCUT_ANCHOR_IDS, type BodyFocus } from "../../shortcuts";
 import {
   BODY_WRITE_FAILED,
   BODYWEIGHT_PLAUSIBLE_RANGE,
@@ -210,7 +210,7 @@ function parseMealMacros(form: MealMacroFormState): { calories: number; proteinG
   return { calories, proteinG, carbsG, fatG };
 }
 
-export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } = {}) {
+export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -221,7 +221,8 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
   // DECLUTTER Drop 2: sleep, bodyweight and protein are once-a-day logs, so
   // each is a one-line row until tapped. A tracker stays open after logging
   // so its confirmation and undo stay visible.
-  const [sleepOpen, setSleepOpen] = useState(false);
+  // Drop 2: TODAY's MAIN SLEEP row opens BODY with the sleep tracker open.
+  const [sleepOpen, setSleepOpen] = useState(focus === "sleep");
   const [bodyweightOpen, setBodyweightOpen] = useState(focus === "weight");
   const [proteinOpen, setProteinOpen] = useState(false);
 
@@ -1182,6 +1183,7 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
           value-forward register HYDRATION already used) with kind/
           timestamp as .meta machine metadata underneath, instead of one
           undifferentiated prose sentence. */}
+      <div id={SHORTCUT_ANCHOR_IDS.sleep}>
       {sleepOpen ? (
         <div className="equipment-row">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
@@ -1338,6 +1340,7 @@ export function BodyScreen({ focus = null }: { focus?: ShortcutTarget | null } =
       ) : (
         <CollapsibleRow name="SLEEP" icon={<LineIcon icon={Moon} />} onOpen={() => setSleepOpen(true)} />
       )}
+      </div>
 
       {/* BODYWEIGHT — FIELD ALPHA Phase 3: same reading-forward pattern as SLEEP. */}
       {bodyweightOpen ? (

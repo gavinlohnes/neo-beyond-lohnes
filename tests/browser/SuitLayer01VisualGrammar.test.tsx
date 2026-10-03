@@ -5,6 +5,7 @@ import { startDay, submitCheckIn, logSleep } from "../../src/application/command
 import { createObligation } from "../../src/application/intentCommands";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { openTodayTools } from "./helpers/todayTools";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 
 /**
@@ -87,10 +88,11 @@ describe("Suit Layer 01 — accent budget: ATTENTION items are signal-row, not d
 
 describe("Suit Layer 01 — utility cards use the neutral tool-label, not the red eyebrow", () => {
   it("STATE INPUT's header is .tool-label, not .eyebrow", async () => {
-    const day = await startDay();
-    await submitCheckIn(day.id, GREEN);
+    await startDay();
     const screen = await render(<TodayScreen />);
 
+    // Shift Clock (Drop 2): an unanswered day's check-in row carries the STATE INPUT label.
+    await expect.element(screen.getByText("STATE INPUT", { exact: true })).toBeVisible();
     const stateInputLabel = screen.getByText("STATE INPUT", { exact: true }).element();
     expect(stateInputLabel.className).toContain("tool-label");
     expect(stateInputLabel.className).not.toContain("eyebrow");
@@ -142,6 +144,8 @@ describe("Suit Layer 01 — no capability disappeared", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
 
+    // Shift Clock (Drop 2): every tool is one tap away, behind TOOLS.
+    await openTodayTools(screen);
     await expect.element(screen.getByRole("button", { name: "Open RESET" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open SHIFT DOWN" })).toBeVisible();
     // DECLUTTER-001: after a check-in, ALL GOOD is one tap away behind UPDATE.

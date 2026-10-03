@@ -33,6 +33,7 @@ import { deriveCapacity } from "../../../engine/capacity";
 import { dismissOutcome } from "../../../persistence/outcomeDismissals";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
+import type { BodyFocus } from "../../shortcuts";
 import { isSeriouslyConstrained } from "./minimumDayCopy";
 import { isPrimaryReset, isPrimaryShiftDown, type SessionOutcome } from "./resetShiftDownCopy";
 import { ActiveWorkoutCard } from "./ActiveWorkoutCard";
@@ -94,6 +95,8 @@ import {
   getWorkContextSource,
   hasUnresolvedPostShift,
   getOpenCaptureItems,
+  getSchedulePattern,
+  getSleepEntries,
   type MinimumDayStatus,
   type PriorOutcomeMemory,
   type RecommendationDecision,
@@ -101,8 +104,32 @@ import {
 } from "../../../application/queries";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
 import { getCurrentOperationalContext, type CurrentOperationalContext } from "../../../application/currentContextQueries";
-import { getActiveWorkoutSession } from "../../../application/trainQueries";
+import {
+  getActiveWorkoutSession,
+  getSessionMinutesEstimate,
+  suggestTemplateForNextWorkout,
+} from "../../../application/trainQueries";
 import { getQuitHabit } from "../../../application/quitQueries";
+import { getTotalMealProteinGrams } from "../../../application/nutritionQueries";
+import { getEffectiveProteinTargetG } from "../../../application/nutritionTargetQueries";
+import { getCustomTemplates } from "../../../application/customTemplateQueries";
+import { livedDayShiftWindow } from "../../../engine/scheduledContext";
+import { suggestSessionVariant } from "../../../engine/trainSuggestion";
+import type { SchedulePattern } from "../../../domain/common/types";
+import { templateLabel } from "../train/trainCopy";
+import { CollapsibleRow } from "../../components/CollapsibleRow";
+import {
+  deriveShiftClockView,
+  describeCountdown,
+  describeFuel,
+  describePlannedWorkout,
+  describePhaseHeading,
+  describeToolsSummary,
+  mainSleepEndsPostShift,
+  TOOLS_ORDER,
+  type ShiftClockRow,
+  type ToolsItem,
+} from "./shiftClock";
 import { describeError } from "../../errorMessage";
 
 /**
@@ -132,10 +159,13 @@ export function TodayScreen({
   onViewCommitments,
   onOpenTrain,
   onOpenBody,
+  openToolsOnMount = false,
 }: {
   onViewCommitments?: () => void;
   onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
-  onOpenBody?: () => void;
+  onOpenBody?: (target?: BodyFocus) => void;
+  /** Drop 2: open with TOOLS expanded (MORE's capture link lands in it). */
+  openToolsOnMount?: boolean;
 } = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
@@ -308,20 +338,74 @@ export function TodayScreen({
   const [postShiftPlan, setPostShiftPlan] = useState<string | undefined>(undefined);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
 
+  // ---- SHIFT CLOCK (Drop 2) ----
+  // The clock the phase and countdowns are read against; ticks every 30 s so
+  // the strip and the phase change on their own at 18:00 and 06:00.
+  const [now, setNow] = useState(() => new Date());
+  const [schedulePattern, setSchedulePattern] = useState<SchedulePattern | null>(null);
+  // Recorded times of this day's main-sleep logs (see mainSleepEndsPostShift).
+  const [mainSleepRecordedAt, setMainSleepRecordedAt] = useState<string[]>([]);
+  // Fuel: meal protein joins protein logs, the same combined total BODY shows.
+  const [mealProteinG, setMealProteinG] = useState(0);
+  const [proteinTargetG, setProteinTargetG] = useState<number | undefined>(undefined);
+  // The next workout TRAIN would suggest, with Time-Fit estimates per variant.
+  const [nextWorkout, setNextWorkout] = useState<{
+    label: string;
+    minutes: Partial<Record<"STANDARD" | "REDUCED", number>>;
+  } | null>(null);
+  const [quitHabitSetUp, setQuitHabitSetUp] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(openToolsOnMount);
+
   // DROP 0: re-read the new day's numbers and schedule phase after a 16:30 rollover.
   useDayRolloverRefresh(() => {
     void getScheduledContext().then(setScheduledContext);
+    void loadShiftClockSetup();
     return refresh();
   });
 
   useEffect(() => {
     void refresh();
     void getScheduledContext().then(setScheduledContext);
+    void loadShiftClockSetup();
     // Best-effort: a missing plan just means SHIFT DOWN shows none.
     void getQuitHabit()
-      .then((habit) => setPostShiftPlan(habit?.postShiftPlan))
+      .then((habit) => {
+        setPostShiftPlan(habit?.postShiftPlan);
+        setQuitHabitSetUp(habit !== undefined);
+      })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const tick = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(tick);
+  }, []);
+
+  /**
+   * Shift Clock's slower-changing inputs: the saved schedule and the next
+   * workout with its Time-Fit estimates. Read on mount and after a rollover,
+   * not on every refresh. Best-effort — a failed read just leaves a row
+   * without its duration or countdown.
+   */
+  async function loadShiftClockSetup() {
+    try {
+      setSchedulePattern(await getSchedulePattern());
+      const [templateId, customTemplates] = await Promise.all([suggestTemplateForNextWorkout(), getCustomTemplates()]);
+      const [standard, reduced] = await Promise.all([
+        getSessionMinutesEstimate(templateId, "STANDARD"),
+        getSessionMinutesEstimate(templateId, "REDUCED"),
+      ]);
+      setNextWorkout({
+        label: templateLabel(templateId, customTemplates),
+        minutes: {
+          ...(standard !== undefined ? { STANDARD: standard } : {}),
+          ...(reduced !== undefined ? { REDUCED: reduced } : {}),
+        },
+      });
+    } catch {
+      // Leave whatever was there.
+    }
+  }
 
   useEffect(() => {
     commitmentFeedbackRef.current?.focus();
@@ -423,6 +507,8 @@ export function TodayScreen({
     let workPeriodEndedAt: string | null = null;
     let unresolvedPostShift = false;
     let workContextSource: WorkContextSource | undefined;
+    let mainSleepTimes: string[] = [];
+    let mealProtein = 0;
 
     if (activeDay) {
       checkIn = (await getLatestCheckIn(activeDay.id)) ?? null;
@@ -442,6 +528,8 @@ export function TodayScreen({
       workPeriodEndedAt = workPeriodEnded ? workPeriodEnded.occurredAt : null;
       unresolvedPostShift = await hasUnresolvedPostShift(activeDay.id);
       workContextSource = await getWorkContextSource(activeDay.id);
+      mainSleepTimes = (await getSleepEntries(activeDay.id)).filter((e) => e.kind === "PRIMARY").map((e) => e.recordedAt);
+      mealProtein = await getTotalMealProteinGrams(activeDay.id);
     }
     // Intelligence Spine consumption (2026-09-02): advisory notes are pure
     // SUPPORT-tier background context with no ordering dependency on
@@ -449,6 +537,7 @@ export function TodayScreen({
     // above rather than separately, now that everything commits together
     // anyway.
     const advisoryNotes = await getAdvisoryNotes();
+    const effectiveProteinTarget = await getEffectiveProteinTargetG();
 
     // Everything on the active-day/context path is gated on this single
     // ownership check: a refresh superseded by the time its getActiveDay()
@@ -509,12 +598,15 @@ export function TodayScreen({
       setWorkPeriodEndedAt(workPeriodEndedAt);
       setUnresolvedPostShift(unresolvedPostShift);
       setWorkContextSource(workContextSource);
+      setMainSleepRecordedAt(mainSleepTimes);
+      setMealProteinG(mealProtein);
     } else {
       setRecommendation(null);
       setDecision(undefined);
       setRecommendationHandoff(null);
     }
     setAdvisoryNotes(advisoryNotes);
+    setProteinTargetG(effectiveProteinTarget);
 
     // A fresh, independently-composed view each refresh — never memoized
     // across calls, matching every other piece of state in this function.
@@ -541,6 +633,8 @@ export function TodayScreen({
   function handleRecommendationHandoff(target: RecommendationHandoffTarget) {
     if (target === "SHIFT_DOWN") {
       setShiftDownOpen(true);
+      // SHIFT DOWN may be behind TOOLS in this part of the shift (Drop 2).
+      if (!shiftDownIsRow && !liftedShiftDown) setToolsOpen(true);
       requestAnimationFrame(() => {
         shiftDownStartRef.current?.scrollIntoView({ block: "center" });
         shiftDownStartRef.current?.focus();
@@ -1068,6 +1162,19 @@ export function TodayScreen({
   // domain fact is touched by it.
   // DROP 0: the saved schedule's value still stands for this day (no change since).
   const workContextPerSchedule = !!day && day.workContext !== "UNKNOWN" && workContextSource === "SCHEDULE_STANDING";
+  // SHIFT CLOCK (Drop 2): which rows this part of the shift shows; the rest go behind TOOLS.
+  const shiftWindow = day && schedulePattern ? livedDayShiftWindow(new Date(day.startedAt), schedulePattern) : null;
+  const shiftClock = deriveShiftClockView({
+    now,
+    workContext: day?.workContext ?? "UNKNOWN",
+    shiftWindow,
+    workEnded: workPeriodEndedAt !== null,
+    mainSleepLogged: mainSleepEndsPostShift(mainSleepRecordedAt, workPeriodEndedAt, shiftWindow),
+  });
+  const phaseRows: ShiftClockRow[] = day ? shiftClock.rows : [];
+  const toolsItems: ToolsItem[] = day ? shiftClock.tools : [...TOOLS_ORDER];
+  const checkInIsRow = phaseRows.includes("CHECK_IN");
+  const shiftDownIsRow = phaseRows.includes("SHIFT_DOWN");
   const attentionPlan = deriveAttentionPlan({
     activeWorkoutId: activeWorkout?.id ?? null,
     activeWorkoutType: activeWorkout?.sessionType ?? null,
@@ -1079,8 +1186,11 @@ export function TodayScreen({
     hasPendingOutcome: !!pendingOutcome,
     hasUnresolvedCapture: openCaptureItems.length > 0,
     hasCommitmentDue,
-    hasWorkEndAvailable: day?.workContext === "WORK" && workPeriodEndedAt === null,
-    isCheckInMissing: day !== null && checkIn === null,
+    // A row that already shows the same thing this phase doesn't also take an
+    // attention slot: post-shift folds MARK WORK ENDED into SHIFT DOWN, and the
+    // check-in row asks for the check-in itself (Drop 2).
+    hasWorkEndAvailable: day?.workContext === "WORK" && workPeriodEndedAt === null && !shiftDownIsRow,
+    isCheckInMissing: day !== null && checkIn === null && !checkInIsRow,
     isMinimumDayProminent: showProminentMinimumDay,
     isHydrationOperationOpen:
       hydrationOperationOpen &&
@@ -1098,6 +1208,480 @@ export function TodayScreen({
   const checkInInAttention = isInAttention(attentionPlan, "CHECK_IN_MISSING");
   const minimumDayInAttention = isInAttention(attentionPlan, "MINIMUM_DAY_PROMINENT");
 
+
+
+  // ---- SHIFT CLOCK rendering (Drop 2) ----
+  const fuelLine = describeFuel(minimumDayProteinG + mealProteinG, proteinTargetG, minimumDayHydrateOz);
+  const suggestedVariant = suggestSessionVariant(capacityResult ? capacityResult.capacity : null).variant;
+  const workoutLine = nextWorkout
+    ? suggestedVariant === "RESET"
+      ? `${nextWorkout.label} · RESET suggested first`
+      : describePlannedWorkout(nextWorkout.label, suggestedVariant, nextWorkout.minutes[suggestedVariant])
+    : null;
+  const liftedShiftDown = !!day && shiftDownIsPrimary && !shiftDownIsRow && toolsItems.includes("SHIFT_DOWN");
+  const liftedReset = !!day && resetIsPrimary && toolsItems.includes("RESET");
+  const liftedCheckIn = checkInFormOpen && !checkInIsRow;
+  const liftedWorkContext = workContextOpen && !phaseRows.includes("WORK_QUESTION");
+  // SURFACE/INTERRUPT advisory notes were never folded away (LAUNCH POLISH),
+  // so they stay visible above TOOLS; only all-QUIET advisory waits inside.
+  const liftedAdvisory = advisoryNotes.some((note) => note.attentionLevel !== "QUIET");
+
+  /** Whether a TOOLS item has anything to show right now — the summary names only these. */
+  function toolHasContent(item: ToolsItem): boolean {
+    switch (item) {
+      case "CHECK_IN":
+        return (
+          !liftedCheckIn &&
+          !!day &&
+          ((!checkInInAttention || checkInFormOpen) ||
+            (!!recommendation && attentionPlan.recommendationPlacement === "SUPPORT"))
+        );
+      case "SHIFT_DOWN":
+        return !liftedShiftDown && !!day && !!recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT";
+      case "RESET":
+        return !liftedReset && !!day && !!recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT";
+      case "WORK_CONTEXT":
+        return !liftedWorkContext && !!day && !!scheduledContext && (!workEndInAttention || workContextOpen);
+      case "FUEL":
+        return !!day;
+      case "MINIMUM_DAY":
+        return !!day && !!minimumDay && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE";
+      case "CAPTURE":
+        return true;
+      case "COMMITMENTS":
+        return !commitmentInAttention && !!headlineCommitment;
+      case "END_DAY":
+        return !endDayInAttention;
+      case "ADVISORY":
+        return !liftedAdvisory && advisoryNotes.length > 0;
+    }
+  }
+  const visibleTools = toolsItems.filter(toolHasContent);
+
+  function renderShiftDownTool() {
+    return (
+      <>
+      {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
+        <ShiftDownCard
+          prominent={shiftDownIsPrimary}
+          isDominant={false}
+          activeShiftDownId={activeShiftDownId}
+          shiftDownDuration={shiftDownDuration}
+          setShiftDownDuration={setShiftDownDuration}
+          openShiftDownStartedAt={openShiftDownStartedAt}
+          lastShiftDownOutcome={lastShiftDownOutcome}
+          shiftDownOpen={shiftDownOpen}
+          setShiftDownOpen={setShiftDownOpen}
+          busy={busy}
+          onStartShiftDown={() => void handleStartShiftDown()}
+          onCompleteShiftDown={() => void handleCompleteShiftDown()}
+          onCancelShiftDown={() => void handleCancelShiftDown()}
+          startButtonRef={shiftDownStartRef}
+          postShiftPlan={postShiftPlan}
+        />
+      )}
+      </>
+    );
+  }
+
+  function renderResetTool() {
+    return (
+      <>
+      {day && recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
+        <ResetCard
+          prominent={resetIsPrimary}
+          isDominant={false}
+          activeResetId={activeResetId}
+          resetIntensity={resetIntensity}
+          setResetIntensity={setResetIntensity}
+          openResetStartedAt={openResetStartedAt}
+          lastResetOutcome={lastResetOutcome}
+          resetOpen={resetOpen}
+          setResetOpen={setResetOpen}
+          busy={busy}
+          onStartReset={() => void handleStartReset()}
+          onCompleteReset={() => void handleCompleteReset()}
+          onCancelReset={() => void handleCancelReset()}
+        />
+      )}
+      </>
+    );
+  }
+
+  function renderCheckInTool() {
+    return (
+      <div id="today-check-in">
+      {day && recommendation && attentionPlan.recommendationPlacement === "SUPPORT" &&
+        recommendation.kind !== "NO_ACTION_REQUIRED" && (
+          <RecommendationCard
+            day={day}
+            recommendation={recommendation}
+            isDominant={false}
+            decision={decision}
+            checkIn={checkIn}
+            recommendationOpen={recommendationOpen}
+            setRecommendationOpen={setRecommendationOpen}
+            recommendationHandoff={recommendationHandoff}
+            activeShiftDownId={activeShiftDownId}
+            priorOutcomeMemory={priorOutcomeMemory}
+            materiallyRepeated={materiallyRepeated}
+            busy={busy}
+            onOpenTrain={onOpenTrain}
+            onRecord={() => void handleRecord()}
+            onDecline={handleDecline}
+            onHandoff={handleRecommendationHandoff}
+            confirmPanel={<ConfirmPanel />}
+          />
+        )}
+      {(!checkInInAttention || checkInFormOpen) && (
+        <CheckInCard
+          busy={busy}
+          checkIn={checkIn}
+          checkInFormOpen={checkInFormOpen}
+          setCheckInFormOpen={setCheckInFormOpen}
+          values={values}
+          setValues={setValues}
+          quickCheckInValues={quickCheckInValues}
+          onQuickCheckIn={() => void handleQuickCheckIn()}
+          onSubmitCheckIn={() => void handleCheckIn()}
+        />
+      )}
+      {day && recommendation && dominant === "NONE" && recommendation.kind === "NO_ACTION_REQUIRED" && (
+        <RecommendationCard
+          day={day}
+          recommendation={recommendation}
+          isDominant={false}
+          decision={decision}
+          checkIn={checkIn}
+          recommendationOpen={recommendationOpen}
+          setRecommendationOpen={setRecommendationOpen}
+          recommendationHandoff={recommendationHandoff}
+          activeShiftDownId={activeShiftDownId}
+          priorOutcomeMemory={priorOutcomeMemory}
+          materiallyRepeated={materiallyRepeated}
+          busy={busy}
+          onOpenTrain={onOpenTrain}
+          onRecord={() => void handleRecord()}
+          onDecline={handleDecline}
+          onHandoff={handleRecommendationHandoff}
+          confirmPanel={<ConfirmPanel />}
+        />
+      )}
+      </div>
+    );
+  }
+
+  function renderWorkContextTool() {
+    return (
+      <>
+      {/* Overdrive Phase 18 (TODAY PRIORITY COMPRESSION): once work
+          context is settled for the day — OFF, or WORK with the shift
+          already marked ended — there's nothing left to decide here, so
+          it collapses to the same compact summary-row pattern RESET/
+          SHIFT DOWN already use rather than staying a permanently
+          full-weight card. Still WORK and not yet ended keeps the full
+          card open, since MARK WORK ENDED is a real pending action. */}
+      {(!workEndInAttention || workContextOpen) && day && scheduledContext && (
+        <WorkContextCard
+          day={day}
+          scheduledContext={scheduledContext}
+          workContextOpen={workContextOpen}
+          setWorkContextOpen={setWorkContextOpen}
+          workPeriodEndedAt={workPeriodEndedAt}
+          busy={busy}
+          onSetWorkContext={(value) => void handleSetWorkContext(value)}
+          onMarkWorkEnded={() => void handleMarkWorkEnded()}
+          perSchedule={workContextPerSchedule}
+          // Shift Clock (Drop 2): the per-schedule one-tap change lives in the
+          // status strip; here the card keeps its ordinary controls.
+        />
+      )}
+      </>
+    );
+  }
+
+  function renderFuel() {
+    return (
+      <div className="equipment-row">
+        <p className="tool-label" style={{ marginBottom: 4 }}>FUEL</p>
+        <p className="card-body" style={{ margin: 0 }}>{fuelLine}</p>
+      </div>
+    );
+  }
+
+  function renderToolsItem(item: ToolsItem) {
+    switch (item) {
+      case "CHECK_IN":
+        return liftedCheckIn ? null : renderCheckInTool();
+      case "SHIFT_DOWN":
+        return liftedShiftDown ? null : renderShiftDownTool();
+      case "RESET":
+        return liftedReset ? null : renderResetTool();
+      case "WORK_CONTEXT":
+        return liftedWorkContext ? null : renderWorkContextTool();
+      case "FUEL":
+        return day ? renderFuel() : null;
+      case "MINIMUM_DAY":
+        return (
+          <>
+      {day && minimumDay && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE" && (
+        <MinimumDayCard
+          prominent={false}
+          minimumDay={minimumDay}
+          minimumDayOpen={minimumDayOpen}
+          onOpenCollapsed={() => {
+            if (minimumDay.enabled && !minimumDay.hydrate && minimumDayHydrateOz > 0) {
+              setHydrationConfirmation(null);
+              setHydrationOperationOpen(true);
+            } else {
+              setMinimumDayOpen(true);
+            }
+          }}
+          minimumDayHydrateOz={minimumDayHydrateOz}
+          minimumDayProteinG={minimumDayProteinG}
+          mdWaterInput={mdWaterInput}
+          setMdWaterInput={setMdWaterInput}
+          mdProteinInput={mdProteinInput}
+          setMdProteinInput={setMdProteinInput}
+          busy={busy}
+          onEnable={() => void handleEnableMinimumDay()}
+          onMarkMinimum={(kind) => void handleMarkMinimum(kind)}
+          onLogWater={() => void handleMinimumDayLogWater()}
+          onLogProtein={() => void handleMinimumDayLogProtein()}
+        />
+      )}
+          </>
+        );
+      case "CAPTURE":
+        return (
+          <CaptureToolsCard
+        openCaptureItems={openCaptureItems}
+        captureInAttention={captureInAttention}
+        captureText={captureText}
+        setCaptureText={setCaptureText}
+        busy={busy}
+        onCapture={() => void handleCapture()}
+        justResolvedCapture={justResolvedCapture}
+        onUndoResolve={() => void handleUndoResolveCapture()}
+        captureConversion={captureConversion}
+        conversionTitle={conversionTitle}
+        setConversionTitle={setConversionTitle}
+        conversionDueAt={conversionDueAt}
+        setConversionDueAt={setConversionDueAt}
+        conversionDateSuggestion={conversionDateSuggestion}
+        onRequestConversion={requestCaptureConversion}
+        onCancelConversion={cancelCaptureConversion}
+        onConfirmConversion={() => void confirmCaptureConversion()}
+        onResolve={(item) => void handleResolveCapture(item)}
+      />
+        );
+      case "COMMITMENTS":
+        return (
+          <>
+      {!commitmentInAttention && (
+        <CommitmentsCard
+          headlineCommitment={headlineCommitment}
+          unresolvedObligationsCount={unresolvedObligations.length}
+          commitmentsOpen={commitmentsOpen}
+          setCommitmentsOpen={setCommitmentsOpen}
+          headlineCommitmentMission={headlineCommitmentMission}
+          commitmentConfirmation={commitmentConfirmation}
+          busy={busy}
+          onViewCommitments={onViewCommitments}
+          onRequestSatisfaction={requestCommitmentSatisfaction}
+          onCancelSatisfaction={cancelCommitmentSatisfaction}
+          onConfirmSatisfaction={() => void confirmCommitmentSatisfaction()}
+        />
+      )}
+          </>
+        );
+      case "END_DAY":
+        return (
+          <>
+      {!endDayInAttention && (
+        <EndDayCard
+          hasDay={!!day}
+          suggestEndDay={suggestEndDay}
+          endDayOpen={endDayOpen}
+          setEndDayOpen={setEndDayOpen}
+          endDayBlockedByWorkout={endDayBlockedByWorkout}
+          busy={busy}
+          onOpenTrain={onOpenTrain}
+          onEndDay={() => void handleEndDay()}
+        />
+      )}
+          </>
+        );
+      case "ADVISORY":
+        return (
+          <AdvisorySection
+        notes={advisoryNotes}
+        excludeObligationId={headlineCommitment?.obligation.id}
+        busy={busy}
+        onLogWater={(amountOz) => void handleMinimumDayLogWater(amountOz)}
+        onOpenMinimumDay={() => setMinimumDayOpen(true)}
+      />
+        );
+    }
+  }
+
+  function renderPhaseRow(row: ShiftClockRow) {
+    if (!day) return null;
+    switch (row) {
+      case "WORK_QUESTION":
+        return renderWorkContextTool();
+      case "TONIGHT":
+        return (
+          <div className="equipment-row">
+            <p className="tool-label" style={{ marginBottom: 4 }}>AFTER SHIFT</p>
+            <p className="card-title" style={{ margin: 0 }}>{workoutLine ?? "Workout suggestion loading…"}</p>
+          </div>
+        );
+      case "FUEL":
+        return renderFuel();
+      case "QUICK_LOG":
+        return (
+          <div className="equipment-row">
+            <p className="tool-label" style={{ marginBottom: 8 }}>QUICK LOG</p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button type="button" className="chip" aria-label="Log 8 oz water" disabled={busy} onClick={() => void handleMinimumDayLogWater(8)}>
+                +8 oz
+              </button>
+              <button type="button" className="chip" aria-label="Log 16 oz water" disabled={busy} onClick={() => void handleMinimumDayLogWater(16)}>
+                +16 oz
+              </button>
+              {onOpenBody && (
+                <button type="button" className="chip" aria-label="Log a meal in BODY" onClick={() => onOpenBody("meal")}>
+                  MEAL
+                </button>
+              )}
+              {onOpenBody && quitHabitSetUp && (
+                <button type="button" className="chip" aria-label="Log an urge in BODY" onClick={() => onOpenBody("urge")}>
+                  URGE
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      case "SHIFT_DOWN":
+        // An in-progress SHIFT DOWN already owns Operate above.
+        if (dominant === "SHIFT_DOWN_ACTIVE" || dominant === "OPERATION_CONFLICT") return null;
+        return (
+          <ShiftDownCard
+            prominent={shiftDownIsPrimary}
+            isDominant={false}
+            forceOpen
+            activeShiftDownId={activeShiftDownId}
+            shiftDownDuration={shiftDownDuration}
+            setShiftDownDuration={setShiftDownDuration}
+            openShiftDownStartedAt={openShiftDownStartedAt}
+            lastShiftDownOutcome={lastShiftDownOutcome}
+            shiftDownOpen={shiftDownOpen}
+            setShiftDownOpen={setShiftDownOpen}
+            busy={busy}
+            onStartShiftDown={() => void handleStartShiftDown()}
+            onCompleteShiftDown={() => void handleCompleteShiftDown()}
+            onCancelShiftDown={() => void handleCancelShiftDown()}
+            startButtonRef={shiftDownStartRef}
+            postShiftPlan={postShiftPlan}
+            onMarkWorkEnded={
+              day.workContext === "WORK" && workPeriodEndedAt === null ? () => void handleMarkWorkEnded() : undefined
+            }
+          />
+        );
+      case "CHECK_IN":
+        if (!checkIn && !checkInFormOpen) {
+          return (
+            <div className="equipment-row">
+              <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>
+              <h2 className="card-title">Check in</h2>
+              <button className="btn-secondary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
+                ALL GOOD
+              </button>
+              <button className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setCheckInFormOpen(true)}>
+                MANUAL CHECK-IN
+              </button>
+            </div>
+          );
+        }
+        if (!checkIn || checkInFormOpen || !recommendation || attentionPlan.recommendationPlacement === "ATTENTION") {
+          return (
+            <CheckInCard
+              busy={busy}
+              checkIn={checkIn}
+              checkInFormOpen={checkInFormOpen}
+              setCheckInFormOpen={setCheckInFormOpen}
+              values={values}
+              setValues={setValues}
+              quickCheckInValues={quickCheckInValues}
+              onQuickCheckIn={() => void handleQuickCheckIn()}
+              onSubmitCheckIn={() => void handleCheckIn()}
+            />
+          );
+        }
+        // Checked in: the row becomes the recommendation, with the check-in kept as one line under it.
+        return (
+          <>
+            <RecommendationCard
+          day={day}
+          recommendation={recommendation}
+          isDominant={dominant === "RECOMMENDATION"}
+          decision={decision}
+          checkIn={checkIn}
+          recommendationOpen={recommendationOpen}
+          setRecommendationOpen={setRecommendationOpen}
+          recommendationHandoff={recommendationHandoff}
+          activeShiftDownId={activeShiftDownId}
+          priorOutcomeMemory={priorOutcomeMemory}
+          materiallyRepeated={materiallyRepeated}
+          busy={busy}
+          onOpenTrain={onOpenTrain}
+          onRecord={() => void handleRecord()}
+          onDecline={handleDecline}
+          onHandoff={handleRecommendationHandoff}
+          confirmPanel={<ConfirmPanel />}
+        />
+            <CheckInCard
+              busy={busy}
+              checkIn={checkIn}
+              checkInFormOpen={false}
+              setCheckInFormOpen={setCheckInFormOpen}
+              values={values}
+              setValues={setValues}
+              quickCheckInValues={quickCheckInValues}
+              onQuickCheckIn={() => void handleQuickCheckIn()}
+              onSubmitCheckIn={() => void handleCheckIn()}
+            />
+          </>
+        );
+      case "WORKOUT":
+        // An active workout already owns Operate above.
+        if (activeWorkout) return null;
+        return (
+          <div className="equipment-row">
+            <p className="tool-label" style={{ marginBottom: 4 }}>WORKOUT</p>
+            <p className="card-title" style={{ marginBottom: onOpenTrain ? 12 : 0 }}>{workoutLine ?? "Workout suggestion loading…"}</p>
+            {onOpenTrain && (
+              <button className="btn-secondary" onClick={() => onOpenTrain("WORKOUT")}>
+                OPEN TRAIN
+              </button>
+            )}
+          </div>
+        );
+      case "MAIN_SLEEP":
+        return (
+          <div className="equipment-row">
+            <p className="tool-label" style={{ marginBottom: 4 }}>MAIN SLEEP</p>
+            <p className="card-body" style={{ marginBottom: onOpenBody ? 12 : 0 }}>Log it when you wake.</p>
+            {onOpenBody && (
+              <button className="btn-secondary" onClick={() => onOpenBody("sleep")}>
+                LOG MAIN SLEEP
+              </button>
+            )}
+          </div>
+        );
+    }
+  }
 
   return (
     <div
@@ -1156,7 +1740,7 @@ export function TodayScreen({
           <ConfirmBanner
             message={`${hydrationConfirmation} oz recorded.`}
             actionLabel="CORRECT IN BODY"
-            onAction={onOpenBody}
+            onAction={() => onOpenBody("water")}
           />
         ) : (
           <p role="status" aria-live="polite" className="meta fade-in">
@@ -1229,14 +1813,36 @@ export function TodayScreen({
               : "status-strip status-strip--stacked"
           }
         >
-          <p className="status-strip__headline">
-            {describeContextStrip(
-              currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
-              currentContext ? currentContext.schedulePrediction : scheduledContext,
-              currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
-              workContextPerSchedule,
+          {/* SHIFT CLOCK (Drop 2): before and during a scheduled shift the
+              headline is the countdown; the work context it rests on moves to
+              a quiet line under it. The "per schedule" one-tap change stays
+              here in every phase, so it's never behind TOOLS. */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <p className="status-strip__headline" style={{ margin: 0 }}>
+              {shiftClock.countdown
+                ? describeCountdown(shiftClock.countdown, now)
+                : describeContextStrip(
+                    currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
+                    currentContext ? currentContext.schedulePrediction : scheduledContext,
+                    currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
+                    workContextPerSchedule,
+                  )}
+            </p>
+            {workContextPerSchedule && day.workContext !== "UNKNOWN" && (
+              <button
+                type="button"
+                className="chip"
+                style={{ flex: "none", padding: "8px 14px" }}
+                disabled={busy}
+                onClick={() => void handleChangeStandingWorkContext()}
+              >
+                {describeStandingChange(day.workContext)}
+              </button>
             )}
-          </p>
+          </div>
+          {shiftClock.countdown && (
+            <p className="status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>
+          )}
           <p className="status-strip__detail">
             {capacityResult ? (
               <span
@@ -1259,7 +1865,9 @@ export function TodayScreen({
       {/* OPERATE — exactly one dominant operating surface. Multiple active
           operation state is named explicitly rather than
           silently allowing JSX order to choose a winner. */}
-      {day && dominant !== "NONE" && <h2 className="section-label section-label--field">Operate</h2>}
+      {day && dominant !== "NONE" && !(dominant === "RECOMMENDATION" && checkInIsRow) && (
+        <h2 className="section-label section-label--field">Operate</h2>
+      )}
       {day && dominant === "OPERATION_CONFLICT" && (
         <div className="card card--warning" role="alert">
           <p className="tool-label">OPERATION CONFLICT</p>
@@ -1363,7 +1971,10 @@ export function TodayScreen({
           }}
         />
       )}
-      {day && recommendation && dominant === "RECOMMENDATION" && (
+      {/* SHIFT CLOCK (Drop 2): where the phase has a check-in row, the
+          recommendation renders in that row instead (the check-in "becomes"
+          it), never twice. */}
+      {day && recommendation && dominant === "RECOMMENDATION" && !checkInIsRow && (
         <RecommendationCard
           day={day}
           recommendation={recommendation}
@@ -1384,27 +1995,8 @@ export function TodayScreen({
           confirmPanel={<ConfirmPanel />}
         />
       )}
-      {day && recommendation && dominant === "NONE" && recommendation.kind === "NO_ACTION_REQUIRED" && (
-        <RecommendationCard
-          day={day}
-          recommendation={recommendation}
-          isDominant={false}
-          decision={decision}
-          checkIn={checkIn}
-          recommendationOpen={recommendationOpen}
-          setRecommendationOpen={setRecommendationOpen}
-          recommendationHandoff={recommendationHandoff}
-          activeShiftDownId={activeShiftDownId}
-          priorOutcomeMemory={priorOutcomeMemory}
-          materiallyRepeated={materiallyRepeated}
-          busy={busy}
-          onOpenTrain={onOpenTrain}
-          onRecord={() => void handleRecord()}
-          onDecline={handleDecline}
-          onHandoff={handleRecommendationHandoff}
-          confirmPanel={<ConfirmPanel />}
-        />
-      )}
+      {/* SHIFT CLOCK (Drop 2): the quiet "No action required" result now
+          renders with the check-in — its row, or TOOLS outside that phase. */}
 
       {/* ATTENTION — earned, capped at ATTENTION_MAX, and disappears
           entirely when nothing currently qualifies (attentionPolicy.ts). */}
@@ -1458,14 +2050,13 @@ export function TodayScreen({
               <button className="btn-primary" disabled={busy} onClick={() => void handleMarkWorkEnded()}>
                 MARK WORK ENDED
               </button>
-              <button
-                className="btn-secondary"
-                style={{ marginTop: 8 }}
-                disabled={busy}
-                onClick={workContextPerSchedule ? () => void handleChangeStandingWorkContext() : () => setWorkContextOpen(true)}
-              >
-                {workContextPerSchedule ? describeStandingChange("WORK") : "CHANGE WORK CONTEXT"}
-              </button>
+              {/* Shift Clock (Drop 2): a per-schedule day's one-tap change lives
+                  in the status strip, always visible — not repeated here. */}
+              {!workContextPerSchedule && (
+                <button className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} onClick={() => setWorkContextOpen(true)}>
+                  CHANGE WORK CONTEXT
+                </button>
+              )}
             </SignalRow>
           )}
 
@@ -1599,194 +2190,48 @@ export function TodayScreen({
         </>
       )}
 
-      {/* SUPPORT — quiet, always-reachable capabilities that aren't
-          currently competing with NOW. No capability is deleted; every
-          item below is one tap from full content. */}
+      {/* SHIFT CLOCK (Drop 2) — the rows this part of the shift needs, at
+          most MAX_PHASE_ROWS (shiftClock.ts), then one TOOLS row holding
+          every other TODAY capability. Nothing is removed: each tool is one
+          tap away. Operate and Attention above are unchanged. */}
+      {day && (
+        <section className="shift-clock-rows" aria-label={`${describePhaseHeading(shiftClock.phase, day.workContext)} rows`}>
+          <h2 className="section-label">{describePhaseHeading(shiftClock.phase, day.workContext)}</h2>
+          {phaseRows.map((row) => (
+            <div key={row} data-shift-clock-row={row}>
+              {renderPhaseRow(row)}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* Lifted out of TOOLS while they matter: the Engine's own recommended
+          SHIFT DOWN / RESET, and a check-in form or work-context card the
+          operator just opened from Attention. */}
+      {liftedShiftDown && renderShiftDownTool()}
+      {liftedReset && renderResetTool()}
+      {liftedCheckIn && renderCheckInTool()}
+      {liftedWorkContext && renderWorkContextTool()}
+      {liftedAdvisory && renderToolsItem("ADVISORY")}
+
       <div className={`today-support${dominant !== "NONE" ? " today-support--subordinate" : ""}`}>
-        <h2 className="section-label">Support</h2>
-
-      {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
-        <ShiftDownCard
-          prominent={shiftDownIsPrimary}
-          isDominant={false}
-          activeShiftDownId={activeShiftDownId}
-          shiftDownDuration={shiftDownDuration}
-          setShiftDownDuration={setShiftDownDuration}
-          openShiftDownStartedAt={openShiftDownStartedAt}
-          lastShiftDownOutcome={lastShiftDownOutcome}
-          shiftDownOpen={shiftDownOpen}
-          setShiftDownOpen={setShiftDownOpen}
-          busy={busy}
-          onStartShiftDown={() => void handleStartShiftDown()}
-          onCompleteShiftDown={() => void handleCompleteShiftDown()}
-          onCancelShiftDown={() => void handleCancelShiftDown()}
-          startButtonRef={shiftDownStartRef}
-          postShiftPlan={postShiftPlan}
-        />
-      )}
-      {day && recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
-        <ResetCard
-          prominent={resetIsPrimary}
-          isDominant={false}
-          activeResetId={activeResetId}
-          resetIntensity={resetIntensity}
-          setResetIntensity={setResetIntensity}
-          openResetStartedAt={openResetStartedAt}
-          lastResetOutcome={lastResetOutcome}
-          resetOpen={resetOpen}
-          setResetOpen={setResetOpen}
-          busy={busy}
-          onStartReset={() => void handleStartReset()}
-          onCompleteReset={() => void handleCompleteReset()}
-          onCancelReset={() => void handleCancelReset()}
-        />
-      )}
-      {day && recommendation && attentionPlan.recommendationPlacement === "SUPPORT" &&
-        recommendation.kind !== "NO_ACTION_REQUIRED" && (
-          <RecommendationCard
-            day={day}
-            recommendation={recommendation}
-            isDominant={false}
-            decision={decision}
-            checkIn={checkIn}
-            recommendationOpen={recommendationOpen}
-            setRecommendationOpen={setRecommendationOpen}
-            recommendationHandoff={recommendationHandoff}
-            activeShiftDownId={activeShiftDownId}
-            priorOutcomeMemory={priorOutcomeMemory}
-            materiallyRepeated={materiallyRepeated}
-            busy={busy}
-            onOpenTrain={onOpenTrain}
-            onRecord={() => void handleRecord()}
-            onDecline={handleDecline}
-            onHandoff={handleRecommendationHandoff}
-            confirmPanel={<ConfirmPanel />}
-          />
+        {!toolsOpen ? (
+          <CollapsibleRow name="TOOLS" summary={describeToolsSummary(visibleTools)} onOpen={() => setToolsOpen(true)} />
+        ) : (
+          <section aria-label="TOOLS">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+              <h2 className="section-label" style={{ margin: 0 }}>Tools</h2>
+              <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} aria-label="Close TOOLS" onClick={() => setToolsOpen(false)}>
+                CLOSE
+              </button>
+            </div>
+            {visibleTools.map((item) => (
+              <div key={item} data-tools-item={item}>
+                {renderToolsItem(item)}
+              </div>
+            ))}
+          </section>
         )}
-
-      {(!checkInInAttention || checkInFormOpen) && (
-        <CheckInCard
-          busy={busy}
-          checkIn={checkIn}
-          checkInFormOpen={checkInFormOpen}
-          setCheckInFormOpen={setCheckInFormOpen}
-          values={values}
-          setValues={setValues}
-          quickCheckInValues={quickCheckInValues}
-          onQuickCheckIn={() => void handleQuickCheckIn()}
-          onSubmitCheckIn={() => void handleCheckIn()}
-        />
-      )}
-
-      {/* Overdrive Phase 18 (TODAY PRIORITY COMPRESSION): once work
-          context is settled for the day — OFF, or WORK with the shift
-          already marked ended — there's nothing left to decide here, so
-          it collapses to the same compact summary-row pattern RESET/
-          SHIFT DOWN already use rather than staying a permanently
-          full-weight card. Still WORK and not yet ended keeps the full
-          card open, since MARK WORK ENDED is a real pending action. */}
-      {(!workEndInAttention || workContextOpen) && day && scheduledContext && (
-        <WorkContextCard
-          day={day}
-          scheduledContext={scheduledContext}
-          workContextOpen={workContextOpen}
-          setWorkContextOpen={setWorkContextOpen}
-          workPeriodEndedAt={workPeriodEndedAt}
-          busy={busy}
-          onSetWorkContext={(value) => void handleSetWorkContext(value)}
-          onMarkWorkEnded={() => void handleMarkWorkEnded()}
-          perSchedule={workContextPerSchedule}
-          onChangeStanding={() => void handleChangeStandingWorkContext()}
-        />
-      )}
-
-      {/* DECLUTTER Drop 3: Planned Work lives on TRAIN only (owner ruling 2026-09-30). */}
-
-      {day && minimumDay && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE" && (
-        <MinimumDayCard
-          prominent={false}
-          minimumDay={minimumDay}
-          minimumDayOpen={minimumDayOpen}
-          onOpenCollapsed={() => {
-            if (minimumDay.enabled && !minimumDay.hydrate && minimumDayHydrateOz > 0) {
-              setHydrationConfirmation(null);
-              setHydrationOperationOpen(true);
-            } else {
-              setMinimumDayOpen(true);
-            }
-          }}
-          minimumDayHydrateOz={minimumDayHydrateOz}
-          minimumDayProteinG={minimumDayProteinG}
-          mdWaterInput={mdWaterInput}
-          setMdWaterInput={setMdWaterInput}
-          mdProteinInput={mdProteinInput}
-          setMdProteinInput={setMdProteinInput}
-          busy={busy}
-          onEnable={() => void handleEnableMinimumDay()}
-          onMarkMinimum={(kind) => void handleMarkMinimum(kind)}
-          onLogWater={() => void handleMinimumDayLogWater()}
-          onLogProtein={() => void handleMinimumDayLogProtein()}
-        />
-      )}
-
-      <CaptureToolsCard
-        openCaptureItems={openCaptureItems}
-        captureInAttention={captureInAttention}
-        captureText={captureText}
-        setCaptureText={setCaptureText}
-        busy={busy}
-        onCapture={() => void handleCapture()}
-        justResolvedCapture={justResolvedCapture}
-        onUndoResolve={() => void handleUndoResolveCapture()}
-        captureConversion={captureConversion}
-        conversionTitle={conversionTitle}
-        setConversionTitle={setConversionTitle}
-        conversionDueAt={conversionDueAt}
-        setConversionDueAt={setConversionDueAt}
-        conversionDateSuggestion={conversionDateSuggestion}
-        onRequestConversion={requestCaptureConversion}
-        onCancelConversion={cancelCaptureConversion}
-        onConfirmConversion={() => void confirmCaptureConversion()}
-        onResolve={(item) => void handleResolveCapture(item)}
-      />
-
-      {!commitmentInAttention && (
-        <CommitmentsCard
-          headlineCommitment={headlineCommitment}
-          unresolvedObligationsCount={unresolvedObligations.length}
-          commitmentsOpen={commitmentsOpen}
-          setCommitmentsOpen={setCommitmentsOpen}
-          headlineCommitmentMission={headlineCommitmentMission}
-          commitmentConfirmation={commitmentConfirmation}
-          busy={busy}
-          onViewCommitments={onViewCommitments}
-          onRequestSatisfaction={requestCommitmentSatisfaction}
-          onCancelSatisfaction={cancelCommitmentSatisfaction}
-          onConfirmSatisfaction={() => void confirmCommitmentSatisfaction()}
-        />
-      )}
-
-      {!endDayInAttention && (
-        <EndDayCard
-          hasDay={!!day}
-          suggestEndDay={suggestEndDay}
-          endDayOpen={endDayOpen}
-          setEndDayOpen={setEndDayOpen}
-          endDayBlockedByWorkout={endDayBlockedByWorkout}
-          busy={busy}
-          onOpenTrain={onOpenTrain}
-          onEndDay={() => void handleEndDay()}
-        />
-      )}
-
-      <AdvisorySection
-        notes={advisoryNotes}
-        excludeObligationId={headlineCommitment?.obligation.id}
-        busy={busy}
-        onLogWater={(amountOz) => void handleMinimumDayLogWater(amountOz)}
-        onOpenMinimumDay={() => setMinimumDayOpen(true)}
-      />
-
       {/* DECLUTTER Drop 3: backup status moved to MORE → Settings. */}
       </div>
     </div>
