@@ -3,6 +3,7 @@ import { getWeeklySummary, type WeeklySummary } from "../../../application/weekl
 import { describePersonalRecord } from "../../../application/personalRecordQueries";
 import { formatShortDate } from "../../../application/bodyTrendQueries";
 import { formatUsd } from "../body/quitCopy";
+import { describeExpenditure } from "./weeklyCopy";
 import { describeBurdenLine, describeFindings, describeWaitingFindings } from "./weeklyCopy";
 import { Ribbon } from "./Ribbon";
 
@@ -131,6 +132,19 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
                 </p>
               </>
             )}
+          </Section>
+
+          {/* Drop 6: a read-only estimated range — never a target, never fed anywhere. */}
+          <Section label="EXPENDITURE">
+            {(() => {
+              const copy = describeExpenditure(summary.expenditure);
+              return (
+                <>
+                  {copy.headline && <p className="recommendation-title" style={{ marginBottom: 2 }}>{copy.headline}</p>}
+                  <p className="meta" style={{ margin: 0 }}>{copy.detail}</p>
+                </>
+              );
+            })()}
           </Section>
 
           {/* Drop 1 (Burden Meter): one neutral, read-only line. */}

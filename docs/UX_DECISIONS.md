@@ -691,6 +691,15 @@ hitting a protein floor.
   Diet/MacroFactor-style weight-trend-correlated TDEE was considered and deliberately deferred
   as a possible future direction, not built here). `NutritionTargets.calorieTargetKcal` is an
   optional plain number; omitted means "no target set," not zero.
+- **Expenditure readout (Drop 6, owner approval 2026-10-03 — "go all").** The deferred
+  weight-trend estimate now exists as a **read-only readout in Weekly only** — the calorie target
+  above is still set by hand, with no formula, and nothing reads the estimate. `engine/expenditure.ts`:
+  over the last 28 days, average logged intake (finished BeyondDays with at least one meal; today
+  and meal-less days are missing, never zero) minus the least-squares weight slope × 3,500 kcal/lb.
+  Shown as a range — ± two standard errors of the slope, at least ±100 kcal, rounded outward to 50 —
+  "About 2,150–2,350 kcal a day", with what it came from and "Assumes those days' meals were all
+  logged." It abstains ("Not enough data yet — needs …") below 14 meal-logged days or 8 weigh-ins
+  spanning 2 weeks, and when the range would be wider than 1,000 kcal.
 - **Protein target is derived, not set directly.** `getEffectiveProteinTargetG()`
   (`application/nutritionTargetQueries.ts`) = `proteinMultiplierGPerLb` × the most recently
   logged bodyweight (`getMostRecentBodyweight()`, cross-day — unlike the day-scoped

@@ -34,4 +34,20 @@ describe("Weekly check-in — burden line (real browser)", () => {
       .element(screen.getByRole("region", { name: "BURDEN" }).getByText("Not enough data yet — no days this week.", { exact: true }))
       .toBeVisible();
   });
+
+  it("Drop 6: the EXPENDITURE section says what it's waiting for, read-only", async () => {
+    await page.viewport(360, 800);
+    const screen = await render(<WeeklyCheckInScreen />);
+    const section = screen.getByRole("region", { name: "EXPENDITURE" });
+    await expect
+      .element(
+        section.getByText(
+          "Not enough data yet — needs 14 days with meals logged (have 0) and 8 weigh-ins over 2 weeks (have 0) in the last 28 days.",
+          { exact: true },
+        ),
+      )
+      .toBeVisible();
+    expect(section.getByRole("button").elements()).toHaveLength(0);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+  });
 });

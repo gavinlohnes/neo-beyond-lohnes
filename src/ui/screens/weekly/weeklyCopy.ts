@@ -1,5 +1,6 @@
 import type { BurdenSummary } from "../../../engine/dayLedger";
 import type { RibbonDay } from "../../../engine/ribbon";
+import type { ExpenditureReadout } from "../../../engine/expenditure";
 import type { Finding, WaitingFinding, WorkoutArm } from "../../../engine/findings";
 import type { SchedulePhase } from "../../../engine/scheduledContext";
 
@@ -174,4 +175,37 @@ const WAITING_WORDS: Record<WaitingFinding["kind"], (w: WaitingFinding) => strin
 export function describeWaitingFindings(waiting: readonly WaitingFinding[]): string | undefined {
   if (waiting.length === 0) return undefined;
   return `Not enough data yet: ${waiting.map((w) => WAITING_WORDS[w.kind](w)).join(", ")}.`;
+}
+
+// ---- EXPENDITURE READOUT (Drop 6, 2026-10-03) ----
+
+function kcal(n: number): string {
+  return n.toLocaleString("en-US");
+}
+
+/** The headline and the quiet line under it: a range, what it came from, and what it assumes. */
+export function describeExpenditure(readout: ExpenditureReadout): { headline?: string; detail: string } {
+  if (readout.kind === "ESTIMATE") {
+    const change =
+      Math.abs(readout.weeklyChangeLbs) < 0.05
+        ? "weight steady"
+        : `weight ${readout.weeklyChangeLbs < 0 ? "down" : "up"} ${Math.abs(readout.weeklyChangeLbs).toFixed(1)} lb a week`;
+    return {
+      headline: `About ${kcal(readout.lowKcal)}–${kcal(readout.highKcal)} kcal a day`,
+      detail: `Estimated from the last ${readout.windowDays} days: ${readout.intakeDays} days with meals logged (avg ${kcal(
+        readout.avgIntakeKcal,
+      )} kcal) and ${change}. Assumes those days' meals were all logged.`,
+    };
+  }
+  if (readout.tooNoisy) {
+    return { detail: "Not enough data yet — weight is moving around too much for a useful range." };
+  }
+  const needs: string[] = [];
+  if (readout.intakeDays.have < readout.intakeDays.need) {
+    needs.push(`${readout.intakeDays.need} days with meals logged (have ${readout.intakeDays.have})`);
+  }
+  if (readout.weighIns.have < readout.weighIns.need || !readout.spanOk) {
+    needs.push(`${readout.weighIns.need} weigh-ins over 2 weeks (have ${readout.weighIns.have})`);
+  }
+  return { detail: `Not enough data yet — needs ${needs.join(" and ")} in the last ${readout.windowDays} days.` };
 }
