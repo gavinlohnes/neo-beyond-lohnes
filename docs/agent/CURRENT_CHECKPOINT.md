@@ -12,7 +12,7 @@ merge, BACKUP-AUTO-001 closed).
 
 - **Drop:** `PR-CARDS-001` PR record cards: ROUTINE, `ACTIVE`. Built after Gavin's 2026-10-04
   "A" (merge #163, then build this). Routine: merges on green checks after Claude's review.
-- **Branch:** `claude/pr-cards-001`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+- **Branch:** `claude/pr-cards-001`. **PR:** [#164](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/164).
 - **Done:** a record set shows a quiet `PR` tag (1px red outline, no fill, no sound/vibration)
   beside "heaviest yet (145 lb)"; TRAIN's pre-workout rows gain RECORDS, a list of cards (newest
   first: exercise, "Heaviest: 145 lb × 6" / "Most reps at 145 lb: 8", date). `getAllRecords()` in

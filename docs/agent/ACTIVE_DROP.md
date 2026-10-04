@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 7569c889e80f3b6c2484957541c479f04d59d1e9
 branch: claude/pr-cards-001
 contract: docs/agent/drops/PR-CARDS-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/164
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
