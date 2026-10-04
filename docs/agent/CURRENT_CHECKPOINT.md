@@ -28,8 +28,9 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
   (10 passed); `npx vitest run --project browser tests/browser/DuplicateMeal.test.tsx` (3 passed);
   existing `tests/browser/Drop15ProteinTotals.test.tsx` regression suite (7 passed); `npm run
   check:risk -- a75da3d2ae605291cb00cf78f1c92a86908d639e`; `npm run verify`; `npm run build`;
-  `git diff --check`. Full verification and production build passed locally.
-- **Left:** wait for exact-head PR Verification; independent reviewer checks PR #155, especially false positives and total
+  `git diff --check`. Full verification and production build passed locally; exact-head PR
+  Verification passed after the final handoff update.
+- **Left:** independent reviewer checks PR #155, especially false positives and total
   removal; owner approves any merge. Claude/owner adds the as-built `docs/UX_DECISIONS.md` entry
   during review/integration because `AGENTS.md` rule 4 forbids Codex from editing that locked file.
 - **Open risks:** matching the same saved-meal ID intentionally wins even if its effective macros
