@@ -1,6 +1,6 @@
 ---
 id: BODY-TIMELINE-001
-baseline: 5538f0f7750905baa8116a54cd9218a23a7be6ec
+baseline: 891a9f44fc79293be621f289ee94ebb13e08a418
 risk_tier: ROUTINE
 ---
 
@@ -14,7 +14,7 @@ Owner brief 2026-10-04 (Queue item 4).
 
 ## Approved baseline
 
-`origin/master` at `5538f0f7750905baa8116a54cd9218a23a7be6ec` (update before init).
+`origin/master` at `891a9f44fc79293be621f289ee94ebb13e08a418` (update before init).
 
 ## Risk classification
 
