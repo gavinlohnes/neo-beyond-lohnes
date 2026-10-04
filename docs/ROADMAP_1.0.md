@@ -129,7 +129,8 @@ time, each briefed by the owner.
 - **FIELD-NAV-001 — position and reveal reliability:** every tab opens at its top; UPDATE
   CHECK-IN and disclosures open into view. **Done (PR #149, merged).** Follow-up: tab switches
   from buttons inside a screen also start at the top; a revealed surface clears the real bottom
-  nav (iPhone safe area included); reduced motion tested in a real browser. **In review.**
+  nav (iPhone safe area included); reduced motion tested in a real browser. **Done (PR #150,
+  merged).**
 
 ### After the field test (owner ruling, 2026-10-04)
 
@@ -138,7 +139,8 @@ Items once held until after Oct 16 (the Engine reacting to evidence, Week Ahead,
 suggestions, wildcards) are no longer date-gated, but each still needs its own owner brief, and
 adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-03).
 
-- **Next queued (owner ruling, 2026-10-03): Undo after every log.**
+- **Undo after every log** (owner ruling 2026-10-03; scope approved 2026-10-04: water, sleep,
+  weight and protein, in BODY and on TODAY). **In review.**
 
 ## Design rules
 

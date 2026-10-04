@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { HoldButton } from "../../components/HoldButton";
-import { useUndoWindow } from "../../hooks/useUndoWindow";
+import { useUndoOpen, useUndoWindow } from "../../hooks/useUndoWindow";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { Icon } from "../../icons/Icon";
@@ -19,6 +19,9 @@ import {
   logProtein,
   correctProtein,
   voidProteinLog,
+  voidWaterLog,
+  voidSleepLog,
+  voidBodyweightLog,
   ensureActiveDay,
 } from "../../../application/commands";
 import {
@@ -104,7 +107,9 @@ import {
 } from "./nutritionCopy";
 import { describeError, NO_CHANGES_MESSAGE } from "../../errorMessage";
 
-type Confirmation = { message: string; headEventId: string } | null;
+/** A just-logged entry: UNDO for the first UNDO_WINDOW_MS (voids it), then CORRECT. */
+type Confirmation = { message: string; headEventId: string; dayId: string } | null;
+type UndoableLog = "WATER" | "SLEEP" | "BODYWEIGHT" | "PROTEIN";
 /** The MEAL_LOGGED events the confirmation's UNDO voids — one, or a whole SAME AS YESTERDAY batch. */
 type MealConfirmation = {
   message: string;
@@ -289,6 +294,12 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
   const [proteinCorrectingId, setProteinCorrectingId] = useState<string | null>(null);
   const [proteinCorrectionInput, setProteinCorrectionInput] = useState("");
   const [proteinConfirmation, setProteinConfirmation] = useState<Confirmation>(null);
+  // UNDO-001: each banner offers UNDO for its first UNDO_WINDOW_MS, then CORRECT.
+  const waterUndoOpen = useUndoOpen(waterConfirmation);
+  const sleepUndoOpen = useUndoOpen(sleepConfirmation);
+  const bodyweightUndoOpen = useUndoOpen(bodyweightConfirmation);
+  const proteinUndoOpen = useUndoOpen(proteinConfirmation);
+  const [undoFailure, setUndoFailure] = useState<{ log: UndoableLog; message: string } | null>(null);
   const [proteinHistoryOpen, setProteinHistoryOpen] = useState(false);
   const [proteinManualOpen, setProteinManualOpen] = useState(false);
   // DROP 1.5: the day's one protein total (protein-only logs + meals), as every screen shows it.
@@ -448,8 +459,10 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     setSleepPendingConfirm(false);
     try {
       let eventId: string;
+      let dayId: string;
       try {
         const activeDay = await ensureActiveDay();
+        dayId = activeDay.id;
         eventId = await logSleep(activeDay.id, totalMinutes, sleepKind);
       } catch {
         // Nothing was written: drop any earlier banner so it can't read as this save.
@@ -464,7 +477,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
       // the banner's CORRECT looks the new entry up in the refreshed list,
       // so showing it earlier made an immediate tap a silent no-op.
       await refresh();
-      setSleepConfirmation({ message: describeSleepLogged(totalMinutes), headEventId: eventId });
+      setSleepConfirmation({ message: describeSleepLogged(totalMinutes), headEventId: eventId, dayId });
     } finally {
       setBusy(false);
     }
@@ -523,8 +536,10 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     setWriteFailure(null);
     try {
       let eventId: string;
+      let dayId: string;
       try {
         const activeDay = await ensureActiveDay();
+        dayId = activeDay.id;
         eventId = await logBodyweight(activeDay.id, weight);
       } catch {
         setBodyweightConfirmation(null);
@@ -533,7 +548,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
       }
       setBodyweightInput("");
       await refresh();
-      setBodyweightConfirmation({ message: describeBodyweightLogged(weight), headEventId: eventId });
+      setBodyweightConfirmation({ message: describeBodyweightLogged(weight), headEventId: eventId, dayId });
     } finally {
       setBusy(false);
     }
@@ -591,8 +606,10 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     setWriteFailure(null);
     try {
       let eventId: string;
+      let dayId: string;
       try {
         const activeDay = await ensureActiveDay();
+        dayId = activeDay.id;
         eventId = await logProtein(activeDay.id, grams);
       } catch {
         setProteinConfirmation(null);
@@ -602,7 +619,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
       setProteinInput("");
       setProteinDeletedMessage(null);
       await refresh();
-      setProteinConfirmation({ message: describeProteinLogged(grams), headEventId: eventId });
+      setProteinConfirmation({ message: describeProteinLogged(grams), headEventId: eventId, dayId });
       await askSameFood(eventId, "PROTEIN", "PROTEIN");
     } finally {
       setBusy(false);
@@ -925,6 +942,36 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     }
   }
 
+  /**
+   * UNDO-001: UNDO on a just-logged water/sleep/bodyweight/protein banner —
+   * a void event, never an erase, the same as protein's DELETE.
+   */
+  async function handleUndoLog(log: UndoableLog) {
+    const confirmation = { WATER: waterConfirmation, SLEEP: sleepConfirmation, BODYWEIGHT: bodyweightConfirmation, PROTEIN: proteinConfirmation }[log];
+    if (busy || !confirmation) return;
+    const voidLog = { WATER: voidWaterLog, SLEEP: voidSleepLog, BODYWEIGHT: voidBodyweightLog, PROTEIN: voidProteinLog }[log];
+    const clear = { WATER: setWaterConfirmation, SLEEP: setSleepConfirmation, BODYWEIGHT: setBodyweightConfirmation, PROTEIN: setProteinConfirmation }[log];
+    setBusy(true);
+    setUndoFailure(null);
+    try {
+      await voidLog(confirmation.dayId, confirmation.headEventId);
+      clear(null);
+      if (log === "PROTEIN" && sameFood?.protein.id === confirmation.headEventId) setSameFood(null);
+      await refresh();
+    } catch (e) {
+      setUndoFailure({ log, message: describeError(e, "Could not undo.") });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function renderUndoFailure(log: UndoableLog) {
+    return undoFailure?.log === log ? (
+      <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>{undoFailure.message}</p>
+    ) : null;
+  }
+
   /** UNDO on the just-logged banner: voids what it logged, same as DELETE. */
   async function handleUndoMealLog() {
     if (busy || !mealConfirmation) return;
@@ -969,8 +1016,10 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     setWriteFailure(null);
     try {
       let eventId: string;
+      let dayId: string;
       try {
         const activeDay = await ensureActiveDay();
+        dayId = activeDay.id;
         eventId = await logWater(activeDay.id, amount);
       } catch {
         setWaterConfirmation(null);
@@ -979,7 +1028,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
       }
       setInput("");
       await refresh();
-      setWaterConfirmation({ message: describeWaterLogged(amount), headEventId: eventId });
+      setWaterConfirmation({ message: describeWaterLogged(amount), headEventId: eventId, dayId });
     } finally {
       setBusy(false);
     }
@@ -1219,8 +1268,13 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
         {waterConfirmation && (
           <ConfirmBanner
             message={waterConfirmation.message}
-            actionLabel="CORRECT"
+            actionLabel={waterUndoOpen ? "UNDO" : "CORRECT"}
+            disabled={waterUndoOpen && busy}
             onAction={() => {
+              if (waterUndoOpen) {
+                void handleUndoLog("WATER");
+                return;
+              }
               const entry = entries.find((e) => e.headEventId === waterConfirmation.headEventId);
               if (entry) {
                 setCorrectingId(entry.headEventId);
@@ -1231,6 +1285,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
             }}
           />
         )}
+        {renderUndoFailure("WATER")}
         {error && <p className="meta" style={{ color: "var(--danger)", marginTop: 8 }}>{error}</p>}
 
         {entries.length > 0 && (
@@ -1405,13 +1460,19 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
           {sleepConfirmation && (
             <ConfirmBanner
               message={sleepConfirmation.message}
-              actionLabel="CORRECT"
+              actionLabel={sleepUndoOpen ? "UNDO" : "CORRECT"}
+              disabled={sleepUndoOpen && busy}
               onAction={() => {
+                if (sleepUndoOpen) {
+                  void handleUndoLog("SLEEP");
+                  return;
+                }
                 const entry = sleepEntries.find((e) => e.headEventId === sleepConfirmation.headEventId);
                 if (entry) beginCorrectSleep(entry);
               }}
             />
           )}
+          {renderUndoFailure("SLEEP")}
 
           {sleepEntries.length > 0 && (
             <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
@@ -1553,13 +1614,19 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
           {bodyweightConfirmation && (
             <ConfirmBanner
               message={bodyweightConfirmation.message}
-              actionLabel="CORRECT"
+              actionLabel={bodyweightUndoOpen ? "UNDO" : "CORRECT"}
+              disabled={bodyweightUndoOpen && busy}
               onAction={() => {
+                if (bodyweightUndoOpen) {
+                  void handleUndoLog("BODYWEIGHT");
+                  return;
+                }
                 const entry = bodyweightEntries.find((e) => e.headEventId === bodyweightConfirmation.headEventId);
                 if (entry) beginCorrectBodyweight(entry);
               }}
             />
           )}
+          {renderUndoFailure("BODYWEIGHT")}
 
           {bodyweightEntries.length > 0 && (
             <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
@@ -1649,13 +1716,19 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
           {proteinConfirmation && (
             <ConfirmBanner
               message={proteinConfirmation.message}
-              actionLabel="CORRECT"
+              actionLabel={proteinUndoOpen ? "UNDO" : "CORRECT"}
+              disabled={proteinUndoOpen && busy}
               onAction={() => {
+                if (proteinUndoOpen) {
+                  void handleUndoLog("PROTEIN");
+                  return;
+                }
                 const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId);
                 if (entry) beginCorrectProtein(entry);
               }}
             />
           )}
+          {renderUndoFailure("PROTEIN")}
           {proteinDeletedMessage && (
             <p className="meta" role="status" style={{ marginTop: 8 }}>{proteinDeletedMessage}</p>
           )}

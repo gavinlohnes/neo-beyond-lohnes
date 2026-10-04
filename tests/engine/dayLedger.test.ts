@@ -329,3 +329,22 @@ describe("burden counting", () => {
     expect(summarizeBurden([])).toEqual({ days: 0, corrections: 0 });
   });
 });
+
+describe("projectDaySummaries — UNDO-001 undone water and sleep", () => {
+  it("leaves an undone log out of every total and counts the undo as a correction", () => {
+    const D = "undo-day";
+    const events = [
+      ev(D, "WATER_LOGGED", at(10, 14, 9, 0), { amountOz: 16 }, "USER", "w-keep"),
+      ev(D, "WATER_LOGGED", at(10, 14, 9, 1), { amountOz: 500 }, "USER", "w-undo"),
+      ev(D, "WATER_LOG_VOIDED", at(10, 14, 9, 1), { loggedEventId: "w-undo" }),
+      ev(D, "SLEEP_LOGGED", at(10, 14, 10, 0), { durationMinutes: 435, kind: "PRIMARY" }, "USER", "s-undo"),
+      ev(D, "SLEEP_LOG_VOIDED", at(10, 14, 10, 0), { loggedEventId: "s-undo" }),
+    ];
+    const [summary] = projectDaySummaries(input({ days: [day(D, at(10, 14, 8, 0), "OFF")], events }));
+    expect(summary!.waterOz).toBe(16);
+    expect(summary!.sleep).toEqual({});
+    // Three logs by hand, two undos.
+    expect(summary!.burden.manualEntries).toBe(3);
+    expect(summary!.burden.corrections).toBe(2);
+  });
+});

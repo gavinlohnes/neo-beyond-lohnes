@@ -208,6 +208,9 @@ export type DomainEventType =
   | "MEAL_LOG_CORRECTED"
   | "MEAL_LOG_VOIDED"
   | "PROTEIN_LOG_VOIDED"
+  | "WATER_LOG_VOIDED"
+  | "SLEEP_LOG_VOIDED"
+  | "BODYWEIGHT_LOG_VOIDED"
   | "WORK_PERIOD_ENDED"
   | "MISSION_CREATED"
   | "MISSION_MODIFIED"
@@ -419,6 +422,19 @@ export interface ProteinLogVoidedPayload {
   commandId: string;
   /** The root PROTEIN_LOGGED event's id. */
   proteinEventId: string;
+}
+
+/**
+ * UNDO-001 (owner approval 2026-10-04): UNDO for water, sleep and bodyweight
+ * logs — the same void treatment as MEAL_LOG_VOIDED and PROTEIN_LOG_VOIDED,
+ * one shape for all three (WATER_LOG_VOIDED, SLEEP_LOG_VOIDED,
+ * BODYWEIGHT_LOG_VOIDED). Removes the whole chain, corrections included,
+ * from every total; nothing is erased.
+ */
+export interface BodyLogVoidedPayload {
+  commandId: string;
+  /** The root *_LOGGED event's id. */
+  loggedEventId: string;
 }
 
 /**

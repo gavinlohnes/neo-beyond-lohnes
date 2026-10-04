@@ -1,5 +1,5 @@
 import { db } from "../persistence/db";
-import { byTimeThenSeq, walkCorrectionChain } from "./queries";
+import { byTimeThenSeq, voidedLogIds, walkCorrectionChain } from "./queries";
 
 /**
  * Drop 5 (owner approval 2026-09-30; ROADMAP 1.0 rulings allow bodyweight
@@ -13,13 +13,16 @@ export interface WeighIn {
   weightLbs: number;
 }
 
-/** Every weigh-in across all days, oldest first, at its effective (corrected) value. */
+/** Every weigh-in across all days, oldest first, at its effective (corrected) value. Undone weigh-ins are left out. */
 export async function getBodyweightHistory(): Promise<WeighIn[]> {
-  const [logged, corrections] = await Promise.all([
+  const [logged, corrections, voids] = await Promise.all([
     db.events.where("type").equals("BODYWEIGHT_LOGGED").toArray(),
     db.events.where("type").equals("BODYWEIGHT_LOG_CORRECTED").toArray(),
+    db.events.where("type").equals("BODYWEIGHT_LOG_VOIDED").toArray(),
   ]);
+  const undone = voidedLogIds(voids, "BODYWEIGHT_LOG_VOIDED");
   return logged
+    .filter((root) => !undone.has(root.id))
     .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
     .map((root) => {
       const payload = root.payload as { weightLbs: number };
