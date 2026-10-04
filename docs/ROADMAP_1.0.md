@@ -159,6 +159,8 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 - **Soak-run fixes** (owner approval 2026-10-04, option A): eight frictions from a scripted
   night-shift → day-off walk through the real app (Shift Down repeating, a contradictory header at
   15:00, leftover developer wording, a stale schedule-screen promise). **Done (PR #157, merged).**
+- **PR-CARDS-001 — PR record cards** (owner brief 2026-10-04, Queue item 3): a quiet red-outlined
+  PR tag, and every PR kept as a card in TRAIN → RECORDS. **Done (PR #164, merged 2026-10-04).**
 
 ## Queue
 
@@ -180,9 +182,7 @@ PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
    restore check, no server.
    Drop: `docs/agent/drops/BACKUP-AUTO-001.md`.
    **Done (PR #162, merged 2026-10-04).**
-3. **PR-CARDS-001 — PR record cards** (ROUTINE). Quiet red-outlined PR tag, no sound; every PR
-   kept as a card in TRAIN → RECORDS. Drop: `docs/agent/drops/PR-CARDS-001.md`.
-4. **BODY-TIMELINE-001 — transformation timeline** (ROUTINE). Weight trend in BODY with PRs,
+3. **BODY-TIMELINE-001 — transformation timeline** (ROUTINE). Weight trend in BODY with PRs,
    clean-day and weight milestones, goal date pinned; filters per event type; read-only. Drop:
    `docs/agent/drops/BODY-TIMELINE-001.md`.
 

@@ -324,6 +324,7 @@ below, this entry wins; the older entry is kept for history.
   "Check your latest backup": the chosen file is only previewed, never restored, and its table
   counts are compared with the device ("Backup from Oct 3 restores 1,204 records ✓", or the
   tables that differ). The month is counted from when the setting is turned on.
+- **As built: PR record cards (PR-CARDS-001, PR #164, merged 2026-10-04, Routine).** A record set shows a quiet 1px red-outlined `PR` tag (no fill, no sound, no vibration), and TRAIN → RECORDS (pre-workout only) lists every PR as a card, newest first, e.g. "Machine Chest Press · Heaviest: 145 lb × 6", using the same rule as the finish summary and Weekly.
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks

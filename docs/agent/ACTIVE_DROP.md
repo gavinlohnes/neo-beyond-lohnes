@@ -1,6 +1,6 @@
 ---
 id: PR-CARDS-001
-status: ACTIVE
+status: CLOSED
 baseline: 7569c889e80f3b6c2484957541c479f04d59d1e9
 branch: claude/pr-cards-001
 contract: docs/agent/drops/PR-CARDS-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/164
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: be353013b120229e772c9b56327e04e3cd0463f7
+closed_at: 2026-10-04T16:16:20.990Z
 ---
 
 # ACTIVE_DROP
