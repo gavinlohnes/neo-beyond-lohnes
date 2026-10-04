@@ -128,6 +128,133 @@
       "drop": "FACTORY-003",
       "pr": 107,
       "reason": "PR #107 closed unmerged (OPEN-PR-CLEANUP-001); its commits stay under refs/pull/107/head."
+    },
+    {
+      "branch": "claude/beyond-launch-vision-prototype-sx75ch",
+      "sha": "7f54a23b3422204624da1946f367ba90bdc168a1",
+      "drop": "AUTOPILOT-AUTH-002",
+      "pr": 71,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/decisions-001-body-outcome-scope",
+      "sha": "9aae6684583cd8122d803fec5cae78f2b40b9499",
+      "drop": "DECISIONS-001",
+      "pr": 100,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/deps-001-audit-fix",
+      "sha": "6155c845fde38498065ec0fc513958c0795522a3",
+      "drop": "DEPS-001",
+      "pr": 90,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/depth-001-machinery-reveal",
+      "sha": "cb2d6d70b4b6afcf14112b8406787a65b7efcc4d",
+      "drop": "DEPTH-001",
+      "pr": 99,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/glyph-002-more-nav-icons",
+      "sha": "aac14dc2d3e155101f4188b4852298d17c2bb16f",
+      "drop": "GLYPH-002",
+      "pr": 98,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/glyph-003-remaining-more-icons",
+      "sha": "e41a0adc6ec46eba16b7d7f22c358285587430ab",
+      "drop": "GLYPH-003",
+      "pr": 101,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/intent-arbitration-001-obligation-recommendation",
+      "sha": "03fcf2581849c81f0849cc00e2059386e4759b41",
+      "drop": "INTENT-ARBITRATION-001",
+      "pr": 97,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/journal-001-advisory-integration",
+      "sha": "99e5d69cb66aad882ae8840093d26a99196cd638",
+      "drop": "JOURNAL-001",
+      "pr": 91,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/journal-002-widen-relevance-matching",
+      "sha": "9d4eb4235a38defb58b8efdad5436a698eccc680",
+      "drop": "JOURNAL-002",
+      "pr": 94,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/readme-001-repository-truth-refresh",
+      "sha": "f8317d8dc3fd62fce3fdaac6aac6ba5a07cdc163",
+      "drop": "README-001",
+      "pr": 96,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/remind-001-checkin-notification",
+      "sha": "f748cbda3add65c217f8eee54d3034ac9245bd0a",
+      "drop": "REMIND-001",
+      "pr": 93,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/search-result-navigation-v6lqt8",
+      "sha": "e1bd16ec569d7c535fa60229529821c2d5eb07eb",
+      "drop": "AUTOPILOT-AUTH-002",
+      "pr": 67,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/today-008-start-day-refresh",
+      "sha": "cd2ce7b1d203e7869a583dde2b3a0afcb0d94975",
+      "drop": "TODAY-008",
+      "pr": 88,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/today-009-busy-guard-race",
+      "sha": "df6eab56c4316133c1275015756eb09f753cd591",
+      "drop": "TODAY-009",
+      "pr": 89,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/today-grammar-compliance-3g408s",
+      "sha": "d09156083eb1eed694d8002c9b6e2b7eda2fe2af",
+      "drop": "AUTOPILOT-AUTH-002",
+      "pr": 69,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/train-progression-001-equipment-increments",
+      "sha": "ebc2ae9fa5371f23e30de074072bfec4c3f232c9",
+      "drop": "TRAIN-PROGRESSION-001",
+      "pr": 92,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "claude/train-wave-a-001",
+      "sha": "782fc6e97455c168c125288fcda7706508371720",
+      "drop": "AUTOPILOT-AUTH-002",
+      "pr": 68,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "codex/checkpoint-003-refresh",
+      "sha": "91e517780a26130e372d6d935393d9873dcba571",
+      "drop": "CHECKPOINT-003",
+      "pr": 95,
+      "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
     }
-  ]
+  ],
+  "note_2026_10_04": "Owner approved deleting the old branches (2026-10-04). Agent sessions can't delete remote branches, so the ACTIVE-snapshot ones whose PR merged at their exact tip are listed here until the owner deletes them."
 }
