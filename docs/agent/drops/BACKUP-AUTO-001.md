@@ -1,6 +1,6 @@
 ---
 id: BACKUP-AUTO-001
-baseline: 5538f0f7750905baa8116a54cd9218a23a7be6ec
+baseline: 6848d3012245febf1350f336f52c9b5cf442fbff
 risk_tier: ARCHITECTURAL
 ---
 
@@ -13,7 +13,7 @@ server. Owner brief 2026-10-04 (Queue item 2). Web-app part only.
 
 ## Approved baseline
 
-`origin/master` at `5538f0f7750905baa8116a54cd9218a23a7be6ec` (update to fresh master before init, as in other Drops).
+`origin/master` at `6848d3012245febf1350f336f52c9b5cf442fbff` (update to fresh master before init, as in other Drops).
 
 ## Risk classification
 
