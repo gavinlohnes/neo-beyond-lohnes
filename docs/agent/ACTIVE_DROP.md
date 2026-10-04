@@ -1,15 +1,13 @@
 ---
-id: BODY-TIMELINE-001
-status: CLOSED
-baseline: 891a9f44fc79293be621f289ee94ebb13e08a418
-branch: claude/body-timeline-001
-contract: docs/agent/drops/BODY-TIMELINE-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/166
+id: HUD-002
+status: ACTIVE
+baseline: eb6c2816d340ea4445b754b9df9f67fc8632b931
+branch: claude/hud-002
+contract: docs/agent/drops/HUD-002.md
+pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: 02ec2f28d144a69c615ded4ba6b9336d59c6b99f
-closed_at: 2026-10-04T18:27:45.572Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/BODY-TIMELINE-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/HUD-002.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
