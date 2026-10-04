@@ -1,4 +1,4 @@
-import { findDuplicateMeal, findSameFood, type DuplicateMealPair, type SameFoodPair } from "../engine/sameFood";
+import { findBatchDuplicateMeals, findDuplicateMeal, findSameFood, type DuplicateMealPair, type SameFoodPair } from "../engine/sameFood";
 import { getProteinEntries } from "./queries";
 import { getMealEntries } from "./nutritionQueries";
 
@@ -32,4 +32,9 @@ export async function getDuplicateMealCheck(
   mealRootId: string,
 ): Promise<DuplicateMealPair | undefined> {
   return findDuplicateMeal((await getMealEntries(beyondDayId)).map(toSameFoodMeal), mealRootId);
+}
+
+/** SAME AS YESTERDAY (DUP-MEAL-002): which meals of a just-logged batch repeat a meal logged moments before it. */
+export async function getBatchDuplicateMealCheck(beyondDayId: string, batchRootIds: readonly string[]): Promise<DuplicateMealPair[]> {
+  return findBatchDuplicateMeals((await getMealEntries(beyondDayId)).map(toSameFoodMeal), batchRootIds);
 }

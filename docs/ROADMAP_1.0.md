@@ -154,6 +154,8 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
   it."). Not a defect; no change.
 - **DUP-MEAL-001 — duplicate-meal prompt** (owner brief 2026-10-04; built by Codex). **Done (PR
   #155, merged).** First Codex-built Drop under the builder-roles rules.
+- **DUP-MEAL-002 — SAME AS YESTERDAY duplicates** (owner approval 2026-10-04, option B): the
+  duplicate-meal prompt covers the SAME AS YESTERDAY batch too. **In review.**
 
 ## Queue
 

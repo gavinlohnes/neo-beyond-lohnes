@@ -280,6 +280,14 @@ below, this entry wins; the older entry is kept for history.
   today: 50 g."). Never a silent merge. When the protein-vs-meal "Same food?" check would also
   fire, only "Same meal?" shows. Pure rule `findDuplicateMeal` in `engine/sameFood.ts`. SAME AS
   YESTERDAY batches aren't checked. No schema or new event type.
+- **As built: SAME AS YESTERDAY duplicates (DUP-MEAL-002, owner approval 2026-10-04).** The
+  duplicate-meal prompt now also covers SAME AS YESTERDAY: after the batch logs, each new meal that
+  repeats a standing meal logged within the 2 minutes before the tap (same rule as DUP-MEAL-001) is
+  named in one question under the button — one: "Same meal? Dinner already logged at 20:00." with
+  KEEP BOTH / REMOVE THIS ONE; several: "Same meals? Dinner (20:00) and Shake (20:01) were already
+  logged." with KEEP ALL / REMOVE THE REPEATS. Meals inside the batch never match each other, so a
+  day with two shakes repeats as two shakes. Removing voids only the repeated new entries and
+  clears the batch's UNDO banner. Pure rule `findBatchDuplicateMeals` in `engine/sameFood.ts`.
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks

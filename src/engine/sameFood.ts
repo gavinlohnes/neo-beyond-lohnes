@@ -55,21 +55,53 @@ export function findDuplicateMeal(
   if (index < 0) return undefined;
   const justLogged = meals[index]!;
   const justLoggedAt = new Date(justLogged.at).getTime();
-  const sameNameAndMacros = (candidate: SameFoodMeal) =>
-    candidate.name.trim().toLocaleLowerCase() === justLogged.name.trim().toLocaleLowerCase() &&
-    candidate.calories === justLogged.calories &&
-    candidate.proteinG === justLogged.proteinG;
-
   const earlier = meals
     .slice(0, index)
     .filter((candidate) => {
       const gap = justLoggedAt - new Date(candidate.at).getTime();
-      return gap >= 0 && gap <= SAME_FOOD_WINDOW_MS &&
-        (candidate.savedMealId === justLogged.savedMealId || sameNameAndMacros(candidate));
+      return gap >= 0 && gap <= SAME_FOOD_WINDOW_MS && isSameMeal(candidate, justLogged);
     })
     .at(-1);
 
   return earlier ? { earlier, justLogged } : undefined;
+}
+
+/** The same saved meal, or the same name (trimmed, any case) with the same calories and protein. */
+export function isSameMeal(a: SameFoodMeal, b: SameFoodMeal): boolean {
+  return (
+    a.savedMealId === b.savedMealId ||
+    (a.name.trim().toLocaleLowerCase() === b.name.trim().toLocaleLowerCase() && a.calories === b.calories && a.proteinG === b.proteinG)
+  );
+}
+
+/**
+ * SAME AS YESTERDAY (DUP-MEAL-002): for a batch just logged together, each
+ * new meal that repeats a standing meal logged before the batch, within the
+ * same window. Meals inside the batch never match each other — a day that
+ * had two shakes is repeated as two shakes, not flagged.
+ */
+export function findBatchDuplicateMeals(meals: readonly SameFoodMeal[], batchIds: readonly string[]): DuplicateMealPair[] {
+  const batch = new Set(batchIds);
+  const before = meals.filter((m) => !batch.has(m.id));
+  const used = new Set<string>();
+  const pairs: DuplicateMealPair[] = [];
+  for (const id of batchIds) {
+    const justLogged = meals.find((m) => m.id === id);
+    if (!justLogged) continue;
+    const t = new Date(justLogged.at).getTime();
+    const earlier = before
+      .filter((c) => !used.has(c.id))
+      .filter((c) => {
+        const gap = t - new Date(c.at).getTime();
+        return gap >= 0 && gap <= SAME_FOOD_WINDOW_MS && isSameMeal(c, justLogged);
+      })
+      .at(-1);
+    if (earlier) {
+      used.add(earlier.id);
+      pairs.push({ earlier, justLogged });
+    }
+  }
+  return pairs;
 }
 
 export function isSimilarProtein(a: number, b: number): boolean {
