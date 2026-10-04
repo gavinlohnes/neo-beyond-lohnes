@@ -76,10 +76,13 @@ function fail(code, identity, evidence, candidates) {
   });
 }
 
-export function reconcileCandidates({ expected_identity, candidates = [], evidence_source = "LIVE_GITHUB" }) {
+export function reconcileCandidates({ expected_identity, expected_builder_login, candidates = [], evidence_source = "LIVE_GITHUB" }) {
   let expected;
   try { expected = candidateIdentity(expected_identity); } catch {
     return fail("MALFORMED_EXPECTED_IDENTITY", expected_identity ?? null, evidence_source, []);
+  }
+  if (!/^[a-z0-9-]+\[bot\]$/i.test(expected_builder_login ?? "")) {
+    return fail("MALFORMED_EXPECTED_BUILDER", expected, evidence_source, []);
   }
   if (!Array.isArray(candidates)) return fail("MALFORMED_CANDIDATE_SET", expected, evidence_source, []);
 
@@ -105,7 +108,7 @@ export function reconcileCandidates({ expected_identity, candidates = [], eviden
 
   const exact = relevant.filter((item) => same(item.identity, expected));
   const invalidExact = exact.filter((item) =>
-    item.base_sha !== expected.activation_baseline || !String(item.author_login ?? "").endsWith("[bot]"));
+    item.base_sha !== expected.activation_baseline || item.author_login !== expected_builder_login);
   if (invalidExact.length) {
     const code = invalidExact.some((item) => item.base_sha !== expected.activation_baseline)
       ? "CANDIDATE_BASELINE_MISMATCH" : "CANDIDATE_AUTHOR_MISMATCH";

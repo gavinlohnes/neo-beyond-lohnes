@@ -81,7 +81,7 @@ async function main() {
       body: pr.body, identity: parsed.state === "VALID" ? parsed.identity : undefined,
     };
   });
-  const output = reconcileCandidates({ expected_identity: expected, candidates, evidence_source: "LIVE_GITHUB_AND_PROTECTED_MASTER" });
+  const output = reconcileCandidates({ expected_identity: expected, expected_builder_login: "beyond-builder[bot]", candidates, evidence_source: "LIVE_GITHUB_AND_PROTECTED_MASTER" });
   console.log(JSON.stringify({
     ...output, generated_at: new Date().toISOString(), repository: repo, protected_master_sha: master,
     evidence_digest: createHash("sha256").update(JSON.stringify({ expected, candidates: candidates.filter((item) => item.identity) })).digest("hex"),

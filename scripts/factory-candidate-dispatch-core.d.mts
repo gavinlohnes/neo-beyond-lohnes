@@ -14,6 +14,7 @@ export function encodeCandidateMarker(identity: CandidateIdentity): string;
 export function parseCandidateMarker(body: string): { state: string; identity?: CandidateIdentity; code?: string };
 export function reconcileCandidates(input: {
   expected_identity: CandidateIdentity;
+  expected_builder_login: string;
   candidates?: Array<Record<string, unknown>>;
   evidence_source?: string;
 }): Record<string, unknown>;

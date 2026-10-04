@@ -13,6 +13,9 @@ const candidate = (overrides: Record<string, unknown> = {}) => ({
   branch: "beyond-builder/autopilot-candidate-dispatch-002-abc", head_sha: sha("d"), base_sha: expected.activation_baseline,
   author_login: "beyond-builder[bot]", identity: expected, ...overrides,
 });
+const reconcile = (candidates: Array<Record<string, unknown>> = []) => reconcileCandidates({
+  expected_identity: expected, expected_builder_login: "beyond-builder[bot]", candidates,
+});
 
 describe("Factory candidate identity", () => {
   it("binds protected contract content and round-trips one machine marker", () => {
@@ -32,29 +35,29 @@ describe("Factory candidate identity", () => {
 
 describe("Factory candidate reconciliation", () => {
   it("dispatches creation when no candidate exists", () => {
-    expect(reconcileCandidates({ expected_identity: expected })).toMatchObject({ ok: true, action: "CREATE_CANDIDATE", role: "BUILDER", external_session_required: true });
+    expect(reconcile()).toMatchObject({ ok: true, action: "CREATE_CANDIDATE", role: "BUILDER", external_session_required: true });
   });
 
   it("reuses one exact open candidate idempotently", () => {
-    expect(reconcileCandidates({ expected_identity: expected, candidates: [candidate()] })).toMatchObject({ ok: true, action: "REUSE_CANDIDATE", candidate: { number: 100 } });
+    expect(reconcile([candidate()])).toMatchObject({ ok: true, action: "REUSE_CANDIDATE", candidate: { number: 100 } });
   });
 
   it("routes a merged candidate to an external Integrator for closure", () => {
-    expect(reconcileCandidates({ expected_identity: expected, candidates: [candidate({ state: "MERGED" })] })).toMatchObject({ ok: true, action: "ROUTE_EXISTING_CANDIDATE", role: "INTEGRATOR" });
+    expect(reconcile([candidate({ state: "MERGED" })])).toMatchObject({ ok: true, action: "ROUTE_EXISTING_CANDIDATE", role: "INTEGRATOR" });
   });
 
   it("creates a clean replacement for a stale closed candidate without carrying evidence", () => {
-    expect(reconcileCandidates({ expected_identity: expected, candidates: [candidate({ state: "CLOSED" })] })).toMatchObject({ ok: true, action: "CREATE_REPLACEMENT_CANDIDATE", stale_candidates: [{ number: 100 }] });
+    expect(reconcile([candidate({ state: "CLOSED" })])).toMatchObject({ ok: true, action: "CREATE_REPLACEMENT_CANDIDATE", stale_candidates: [{ number: 100 }] });
   });
 
   it("preserves obsolete baseline candidates while allowing a new candidate", () => {
     const obsolete = candidate({ identity: { ...expected, activation_baseline: sha("e") }, state: "CLOSED" });
-    expect(reconcileCandidates({ expected_identity: expected, candidates: [obsolete] })).toMatchObject({ action: "CREATE_CANDIDATE", obsolete_candidates: [{ number: 100 }] });
+    expect(reconcile([obsolete])).toMatchObject({ action: "CREATE_CANDIDATE", obsolete_candidates: [{ number: 100 }] });
   });
 
   it("preserves a closed pre-marker candidate as legacy obsolete evidence", () => {
     const legacy = { number: 54, url: "https://github.com/example/pull/54", state: "CLOSED", branch: "codex/autopilot-candidate-dispatch-002", body: "pre-ruling" };
-    expect(reconcileCandidates({ expected_identity: expected, candidates: [legacy] })).toMatchObject({ action: "CREATE_CANDIDATE", obsolete_candidates: [{ number: 54 }] });
+    expect(reconcile([legacy])).toMatchObject({ action: "CREATE_CANDIDATE", obsolete_candidates: [{ number: 54 }] });
   });
 
   it.each([
@@ -66,15 +69,20 @@ describe("Factory candidate reconciliation", () => {
     ["base mismatch", [candidate({ base_sha: sha("e") })], "CANDIDATE_BASELINE_MISMATCH"],
     ["human-authored candidate", [candidate({ author_login: "gavinlohnes" })], "CANDIDATE_AUTHOR_MISMATCH"],
   ])("fails closed for %s", (_name, candidates, code) => {
-    expect(reconcileCandidates({ expected_identity: expected, candidates })).toMatchObject({ ok: false, action: "ESCALATION_REQUIRED", escalation: { code } });
+    expect(reconcile(candidates)).toMatchObject({ ok: false, action: "ESCALATION_REQUIRED", escalation: { code } });
   });
 
   it("fails closed for ambiguous malformed evidence on a candidate-shaped branch", () => {
     const malformed = { number: 102, state: "OPEN", branch: "builder/autopilot-candidate-dispatch-002", body: "bad" };
-    expect(reconcileCandidates({ expected_identity: expected, candidates: [malformed] })).toMatchObject({ escalation: { code: "AMBIGUOUS_CANDIDATE_EVIDENCE" } });
+    expect(reconcile([malformed])).toMatchObject({ escalation: { code: "AMBIGUOUS_CANDIDATE_EVIDENCE" } });
   });
 
   it("refuses malformed expected scope and baseline", () => {
-    expect(reconcileCandidates({ expected_identity: { ...expected, activation_baseline: "master" } })).toMatchObject({ escalation: { code: "MALFORMED_EXPECTED_IDENTITY" } });
+    expect(reconcileCandidates({ expected_identity: { ...expected, activation_baseline: "master" }, expected_builder_login: "beyond-builder[bot]" })).toMatchObject({ escalation: { code: "MALFORMED_EXPECTED_IDENTITY" } });
+  });
+
+  it("requires the configured Builder App rather than any bot account", () => {
+    expect(reconcile([candidate({ author_login: "dependabot[bot]" })])).toMatchObject({ escalation: { code: "CANDIDATE_AUTHOR_MISMATCH" } });
+    expect(reconcileCandidates({ expected_identity: expected, expected_builder_login: "" })).toMatchObject({ escalation: { code: "MALFORMED_EXPECTED_BUILDER" } });
   });
 });
