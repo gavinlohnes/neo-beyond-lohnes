@@ -36,8 +36,8 @@ export default defineConfig({
         name: "BEYOND",
         short_name: "BEYOND",
         description: "Personal operating system",
-        theme_color: "#0a0a0a",
-        background_color: "#0a0a0a",
+        theme_color: "#000000",
+        background_color: "#000000",
         display: "standalone",
         icons: [
           { src: "icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },

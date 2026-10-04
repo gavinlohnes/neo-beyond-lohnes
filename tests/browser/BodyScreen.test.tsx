@@ -688,8 +688,8 @@ describe("BodyScreen (real browser) — LAUNCH-VISION-002 BODY red-budget carve-
     const el = screen.getByRole("button", { name: "LOG WATER" }).element();
     const bg = getComputedStyle(el).backgroundColor;
     // --text-1 = #f2f2f2 = rgb(242, 242, 242). var(--accent), the
-    // app-wide default since LAUNCH-VISION-001, is rgb(200, 30, 44).
-    expect(bg).not.toBe("rgb(200, 30, 44)");
+    // app-wide default since LAUNCH-VISION-001, is HUD-001's one red rgb(208, 20, 27).
+    expect(bg).not.toBe("rgb(208, 20, 27)");
     expect(bg).toBe("rgb(242, 242, 242)");
   });
 });

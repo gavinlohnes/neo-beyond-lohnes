@@ -58,6 +58,9 @@ button, input {
   border-radius: var(--radius);
   padding: var(--space-4);
   margin-bottom: var(--space-4);
+  /* HUD-001: two cut corners (top right, bottom left), each with its 1px
+     diagonal drawn back in — see .hud-cut-lines at the end of this file. */
+  clip-path: var(--cut-shape);
 }
 
 /* VISUAL-002: the RED-capacity override confirm panel (shared by TODAY
@@ -237,6 +240,8 @@ button, input {
   min-height: 44px;
   cursor: pointer;
   transition: transform var(--motion-fast) var(--motion-easing);
+  /* HUD-001: cut corners. */
+  clip-path: var(--cut-shape);
 }
 
 .btn-primary:active {
@@ -300,6 +305,8 @@ button, input {
   min-height: 44px;
   cursor: pointer;
   transition: transform var(--motion-fast) var(--motion-easing);
+  /* HUD-001: cut corners. */
+  clip-path: var(--cut-shape);
 }
 
 .btn-secondary:active {
@@ -345,6 +352,8 @@ button, input {
   min-height: 44px;
   cursor: pointer;
   transition: transform var(--motion-fast) var(--motion-easing);
+  /* HUD-001: cut corners. */
+  clip-path: var(--cut-shape);
 }
 
 .btn-danger:active {
@@ -508,7 +517,7 @@ button, input {
    surface/geometry — same one-shot-on-fresh-mount pattern .fade-in
    already uses, so it plays exactly once and never loops. */
 @keyframes beyond-earned-flash {
-  from { background: rgba(226, 69, 79, 0.22); }
+  from { background: rgba(208, 20, 27, 0.22); }
   to { background: transparent; }
 }
 .set-earned {
@@ -527,8 +536,8 @@ button, input {
    twitch) rather than reusing a shared token for one intentionally
    one-off moment. */
 @keyframes beyond-workout-secured {
-  0% { background: rgba(226, 69, 79, 0.32); }
-  70% { background: rgba(226, 69, 79, 0.32); }
+  0% { background: rgba(208, 20, 27, 0.32); }
+  70% { background: rgba(208, 20, 27, 0.32); }
   100% { background: transparent; }
 }
 .workout-secured {
@@ -576,8 +585,8 @@ button, input {
   top: 0;
   height: 3px;
   z-index: 1;
-  background: linear-gradient(90deg, transparent, rgba(226, 69, 79, 0.9), transparent);
-  box-shadow: 0 0 16px 2px rgba(226, 69, 79, 0.9);
+  background: linear-gradient(90deg, transparent, rgba(208, 20, 27, 0.9), transparent);
+  box-shadow: 0 0 16px 2px rgba(208, 20, 27, 0.9);
   animation: beyond-power-on-sweep 900ms linear forwards;
   pointer-events: none;
 }
@@ -592,7 +601,7 @@ button, input {
    matching "no invented new motion vocabulary beyond the four
    authorized elements." */
 @keyframes beyond-confirm-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(226, 69, 79, 0.5); }
+  0% { box-shadow: 0 0 0 0 rgba(208, 20, 27, 0.5); }
   100% { box-shadow: 0 0 0 8px transparent; }
 }
 .confirm-banner {
@@ -809,7 +818,8 @@ button, input {
   border-left-color: var(--accent-strong);
 }
 .status-strip--red .status-strip__capacity {
-  color: var(--accent-strong);
+  /* HUD-001: white text; the strip's red left edge carries the signal. */
+  color: var(--red-text);
   font-weight: 700;
 }
 
@@ -1042,7 +1052,7 @@ button, input {
      even noticeable) and raised blur/opacity (48px/0.4 -> 64px/0.6) so
      it reads as a genuine glow rather than a barely-there tint, without
      introducing a new color or turning it into a decorative halo. */
-  box-shadow: 0 0 64px -6px rgba(226, 69, 79, 0.6);
+  box-shadow: 0 0 64px -6px rgba(208, 20, 27, 0.6);
 }
 
 /* COMMAND TITLE — genuinely large display type for the one dominant
@@ -1329,7 +1339,8 @@ button, input {
 }
 
 .restore-disclosure__label {
-  color: var(--danger);
+  /* HUD-001: white text; .restore-disclosure's red left edge carries it. */
+  color: var(--red-text);
   margin-bottom: var(--space-1);
 }
 
@@ -1916,4 +1927,94 @@ details[open] > .disclosure-row::before {
 .disclosure-row:focus-visible {
   outline: 2px solid var(--text-1);
   outline-offset: 2px;
+}
+
+/*
+ * HUD-001 // HUD DESIGN SYSTEM (owner brief 2026-10-04; doctrine amendment
+ * 1A allows cut corners, bracket ticks and 1px lines as frame geometry).
+ * Visual only: tokens.css carries the black ground, the one red and the
+ * faces; the rules below add the frame geometry.
+ */
+
+/* Cut-corner diagonals. clip-path removes the border at each cut, so the
+   1px line is drawn back along the diagonal, just inside the cut. Filled
+   buttons need no line: the fill shows the shape. */
+.card:not(.card--warning):not(.instrument-cluster):not(.command-surface),
+.btn-secondary {
+  background-image:
+    linear-gradient(to top right, transparent calc(50% - 1.5px), var(--cut-line, var(--border-subtle)) calc(50% - 1.5px), var(--cut-line, var(--border-subtle)) 50%, transparent 50%),
+    linear-gradient(to top right, transparent 50%, var(--cut-line, var(--border-subtle)) 50%, var(--cut-line, var(--border-subtle)) calc(50% + 1.5px), transparent calc(50% + 1.5px));
+  background-size: var(--cut) var(--cut);
+  background-position: top right, bottom left;
+  background-repeat: no-repeat;
+  background-origin: border-box;
+}
+
+/* The diagonal matches the card's own border color. */
+.card--caution {
+  --cut-line: var(--warning);
+}
+
+/* A clip-path also clips an outline drawn outside the box, so cut buttons
+   draw their keyboard focus ring inside the edge instead. */
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-danger:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -4px;
+}
+
+/* Bracket ticks: each section frame's top rule ends in short downward
+   ticks at both edges, so the rule reads as a bracketed frame. */
+.equipment-row:not(:first-child) {
+  background-image:
+    linear-gradient(var(--border-strong), var(--border-strong)),
+    linear-gradient(var(--border-strong), var(--border-strong));
+  background-size: var(--line) var(--tick);
+  background-position: top left, top right;
+  background-repeat: no-repeat;
+}
+
+/* An error line: white text with a red stroke, since #D0141B is too dark
+   for small text on black (tokens.css). */
+.meta--error {
+  color: var(--red-text);
+  border-left: 2px solid var(--red);
+  padding-left: var(--space-2);
+}
+
+/* Weekly keeps its pre-HUD look until the F1 field-test review (owner
+   brief 2026-10-04): the old token values, faces and frame geometry,
+   scoped to MORE's Weekly view. */
+.hud-legacy {
+  --bg: #0a0a0a;
+  --surface-1: #131313;
+  --surface-2: #1c1c1c;
+  --surface-active: #221414;
+  --text-3: #6e6e6e;
+  --accent: #c81e2c;
+  --accent-strong: #e2454f;
+  --danger: #c8302e;
+  --focus: #e2454f;
+  --red-text: #e2454f;
+  --radius: 4px;
+  --font-display: "Big Shoulders Display", "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  background: var(--bg);
+  font-family: var(--font-body);
+}
+body:has(.hud-legacy) {
+  background: #0a0a0a;
+}
+.hud-legacy .card:not(.card--warning):not(.instrument-cluster):not(.command-surface),
+.hud-legacy .btn-primary,
+.hud-legacy .btn-secondary,
+.hud-legacy .btn-danger {
+  clip-path: none;
+}
+.hud-legacy .card,
+.hud-legacy .btn-secondary,
+.hud-legacy .equipment-row {
+  background-image: none;
 }

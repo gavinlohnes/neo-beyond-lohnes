@@ -235,7 +235,7 @@ export function JournalScreen() {
           </FieldDisclosure>
         </div>
       </section>
-      {error && <p className="meta" style={{ color: "var(--danger)" }}>{error}</p>}
+      {error && <p className="meta meta--error">{error}</p>}
     </div>
   );
 }
@@ -429,7 +429,7 @@ function JournalEntryDetail({ entryId, onBack }: { entryId: string; onBack: () =
                 </div>
               </>
             )}
-            {error && <p className="meta" style={{ color: "var(--danger)", marginTop: 8 }}>{error}</p>}
+            {error && <p className="meta meta--error" style={{ marginTop: 8 }}>{error}</p>}
           </article>
 
           <div className="intent-history">

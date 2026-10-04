@@ -20,7 +20,12 @@
  * Grotesk to Big Shoulders Display, matching the BEYOND Launch Vision
  * prototype's "Terry's Suit" direction (direct owner decision). Same
  * weights (600/700), same self-hosting pattern — only the family changed.
+ *
+ * HUD-001 (2026-10-04): the app now uses Chakra Petch + JetBrains Mono from
+ * hud-fonts.css. The @fontsource faces below stay only because Weekly keeps
+ * its pre-HUD look (.hud-legacy) until the F1 field-test review.
  */
+import "./hud-fonts.css";
 // big-shoulders-display's package.json exports map, unlike the other @fontsource packages
 // below, has no explicit "./*.css" entry — only "./*" -> "./*.css". Importing with ".css"
 // already in the specifier resolves to a nonexistent "*.css.css" and fails the production

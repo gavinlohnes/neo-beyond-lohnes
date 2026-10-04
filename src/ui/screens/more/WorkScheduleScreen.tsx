@@ -206,7 +206,7 @@ export function WorkScheduleScreen() {
           </label>
         </div>
         {shiftHoursInvalid && (
-          <p className="meta" style={{ color: "var(--danger)", marginTop: 8 }}>
+          <p className="meta meta--error" style={{ marginTop: 8 }}>
             Start and end can't be the same time.
           </p>
         )}

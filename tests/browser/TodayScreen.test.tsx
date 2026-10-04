@@ -1507,10 +1507,10 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     expect(el.className).toContain("btn-primary");
     const bg = getComputedStyle(el).backgroundColor;
     // --action-primary-bg is var(--accent) again as of LAUNCH-VISION-001
-    // = #c81e2c = rgb(200, 30, 44). The old neutral value it replaced,
+    // = HUD-001's one red #D0141B = rgb(208, 20, 27). The old neutral value it replaced,
     // #f2f2f2 = rgb(242, 242, 242), is what VISUAL-001 had set.
     expect(bg).not.toBe("rgb(242, 242, 242)");
-    expect(bg).toBe("rgb(200, 30, 44)");
+    expect(bg).toBe("rgb(208, 20, 27)");
   });
 
   it("DECLUTTER Drop 2: the all-clear \"No action needed\" button is neutral, not red", async () => {
@@ -1520,7 +1520,7 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     await expect.element(screen.getByRole("button", { name: "GOT IT" })).toBeVisible();
     const el = screen.getByRole("button", { name: "GOT IT" }).element();
     expect(el.className).toContain("btn-secondary");
-    expect(getComputedStyle(el).backgroundColor).not.toBe("rgb(200, 30, 44)");
+    expect(getComputedStyle(el).backgroundColor).not.toBe("rgb(208, 20, 27)");
   });
 
   it("Drop 6: SHIFT DOWN shows the quit tracker's post-shift plan", async () => {
@@ -1578,7 +1578,7 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
 
     const panel = document.querySelector(".card--warning");
     expect(panel).not.toBeNull();
-    expect(getComputedStyle(panel!).borderColor).toBe("rgb(200, 48, 46)"); // --danger: #c8302e
+    expect(getComputedStyle(panel!).borderColor).toBe("rgb(208, 20, 27)"); // --danger: HUD-001's one red #D0141B
     // Square corners (2026-09-30, direct owner ruling): chamfer kept, the
     // three uncut corners square instead of .card's inherited --radius.
     expect(getComputedStyle(panel!).clipPath).not.toBe("none");

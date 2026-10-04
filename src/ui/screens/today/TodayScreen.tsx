@@ -1958,7 +1958,7 @@ export function TodayScreen({
         renderLoggedBanner(`${proteinConfirmation.amount} g protein recorded.`, proteinUndoOpen, "PROTEIN")}
 
       {undoFailure && (
-        <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>{undoFailure}</p>
+        <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>{undoFailure}</p>
       )}
 
       {/* FIELD-ARCH-001: before a day exists, START DAY is the one
