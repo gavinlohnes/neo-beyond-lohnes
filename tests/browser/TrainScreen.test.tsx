@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
@@ -982,38 +982,80 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
   }
 
-  it("a heavier set than ever shows a NEW PR line right under it", async () => {
-    const screen = await seedHistoryAndStart();
-    await logSetViaInputs(screen, "145", "6");
-    await expect.element(screen.getByText("#1 — 145 lb x 6", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("NEW PR — heaviest yet (145 lb)", { exact: true })).toBeVisible();
+  it("a heavier set than ever shows a quiet outlined PR tag right under it, with no sound or vibration", async () => {
+    const vibrate = vi.fn();
+    const realVibrate = navigator.vibrate;
+    Object.defineProperty(navigator, "vibrate", { value: vibrate, configurable: true });
+    const play = vi.spyOn(HTMLMediaElement.prototype, "play");
+    try {
+      const screen = await seedHistoryAndStart();
+      await logSetViaInputs(screen, "145", "6");
+      await expect.element(screen.getByText("#1 — 145 lb x 6", { exact: true })).toBeVisible();
+      await expect.element(screen.getByText("heaviest yet (145 lb)", { exact: true })).toBeVisible();
+      // PR-CARDS-001: a 1px red outline, no fill.
+      const tag = document.querySelector(".pr-line .pr-tag")!;
+      expect(tag.textContent).toBe("PR");
+      const style = getComputedStyle(tag);
+      expect(style.borderTopWidth).toBe("1px");
+      expect(style.borderTopColor).toBe("rgb(208, 20, 27)");
+      expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+      expect(document.querySelector("audio")).toBeNull();
+      expect(vibrate).not.toHaveBeenCalled();
+      expect(play).not.toHaveBeenCalled();
+    } finally {
+      play.mockRestore();
+      Object.defineProperty(navigator, "vibrate", { value: realVibrate, configurable: true });
+    }
   });
 
   it("matching the best so far is not a PR, and says nothing about it", async () => {
     const screen = await seedHistoryAndStart();
     await logSetViaInputs(screen, "135", "10");
     await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
-    expect(screen.getByText(/NEW PR/).elements()).toHaveLength(0);
+    expect(document.querySelector(".pr-line")).toBeNull();
   });
 
   it("UNDO removes the PR line with its set", async () => {
     const screen = await seedHistoryAndStart();
     await logSetViaInputs(screen, "135", "12");
-    await expect.element(screen.getByText("NEW PR — most reps at 135 lb (12)", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("most reps at 135 lb (12)", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "UNDO" }).click();
-    await expect.element(screen.getByText(/NEW PR/)).not.toBeInTheDocument();
+    await expect.poll(() => document.querySelector(".pr-line")).toBeNull();
   });
 
   it("the finish summary lists the session's PRs and total volume", async () => {
     const screen = await seedHistoryAndStart();
     await logSetViaInputs(screen, "145", "6");
-    await expect.element(screen.getByText(/NEW PR/)).toBeVisible();
+    await expect.element(screen.getByText("heaviest yet (145 lb)", { exact: true })).toBeVisible();
     await holdToConfirm(screen.getByRole("button", { name: "PARTIAL" }));
 
     await expect.element(screen.getByText("WORKOUT SAVED — PARTIAL", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Volume: 870 lb", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("1 new PR:", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Machine Chest Press: heaviest yet (145 lb)", { exact: true })).toBeVisible();
+  });
+
+  it("PR-CARDS-001: TRAIN → RECORDS keeps each PR as a card, newest first, without overflow", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    for (const [weight, reps] of [[135, 10], [145, 6], [145, 8]] as const) {
+      const s = await startWorkout(day.id, "C", "STANDARD");
+      await logSet(day.id, s.id, "machine-chest-press", 1, weight, reps);
+      await completeWorkout(day.id, s.id, "STANDARD", "COMPLETED");
+    }
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "Open RECORDS" }).click();
+    await expect.element(screen.getByRole("heading", { name: "Records" })).toBeVisible();
+    await expect
+      .poll(() => [...document.querySelectorAll(".record-card .card-body")].map((el) => el.textContent))
+      .toEqual(["Most reps at 145 lb: 8", "Heaviest: 145 lb × 6"]);
+    expect(document.querySelectorAll(".record-card .pr-tag")).toHaveLength(2);
+    for (const width of [320, 360, 412]) {
+      await page.viewport(width, 800);
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+    }
+    await screen.getByRole("button", { name: "BACK" }).click();
+    await expect.element(screen.getByRole("button", { name: "Open RECORDS" })).toBeVisible();
   });
 
   it("Drop 1.6a: LOG with empty boxes asks for reps and saves nothing", async () => {

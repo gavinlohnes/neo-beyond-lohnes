@@ -5,7 +5,9 @@ import { completeWorkout, logSet, skipSet, startWorkout, undoLastSet } from "../
 import { getPerformedSets } from "../../src/application/trainQueries";
 import {
   describePersonalRecord,
+  describeRecordCard,
   findSessionRecords,
+  getAllRecords,
   getRecordHistory,
   type RecordCandidateSet,
 } from "../../src/application/personalRecordQueries";
@@ -117,5 +119,71 @@ describe("getRecordHistory (real Dexie)", () => {
 
     const records = findSessionRecords(history, await getPerformedSets(current.id));
     expect([...records.values()]).toEqual([{ kind: "HEAVIEST", weight: 140, reps: 10 }]);
+  });
+});
+
+describe("getAllRecords — TRAIN → RECORDS (PR-CARDS-001)", () => {
+  beforeEach(async () => {
+    await db.open();
+  });
+
+  afterEach(async () => {
+    db.close();
+  });
+
+  it("lists every PR from finished workouts, newest first, with the exercise name", async () => {
+    const day = await startDay();
+    const first = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, first.id, "machine-chest-press", 1, 135, 10);
+    await completeWorkout(day.id, first.id, "STANDARD", "COMPLETED");
+    const second = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, second.id, "machine-chest-press", 1, 145, 6);
+    await completeWorkout(day.id, second.id, "STANDARD", "COMPLETED");
+    const third = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, third.id, "machine-chest-press", 1, 145, 8);
+    await completeWorkout(day.id, third.id, "STANDARD", "PARTIAL");
+
+    const cards = await getAllRecords();
+    expect(cards.map((c) => [c.exerciseName, c.record])).toEqual([
+      ["Machine Chest Press", { kind: "REPS", weight: 145, reps: 8 }],
+      ["Machine Chest Press", { kind: "HEAVIEST", weight: 145, reps: 6 }],
+    ]);
+    expect(describeRecordCard(cards[0]!.record)).toBe("Most reps at 145 lb: 8");
+    expect(describeRecordCard(cards[1]!.record)).toBe("Heaviest: 145 lb × 6");
+  });
+
+  it("an undone PR set disappears", async () => {
+    const day = await startDay();
+    const first = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, first.id, "machine-chest-press", 1, 135, 10);
+    await completeWorkout(day.id, first.id, "STANDARD", "COMPLETED");
+    const second = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, second.id, "machine-chest-press", 1, 150, 5);
+    await undoLastSet(day.id, second.id);
+    await completeWorkout(day.id, second.id, "STANDARD", "COMPLETED");
+    expect(await getAllRecords()).toEqual([]);
+  });
+
+  it("counts the same PRs as the finish summary's rule for the same sessions", async () => {
+    const day = await startDay();
+    const sessionIds: string[] = [];
+    const plan: [number, number][][] = [[[135, 10], [140, 8]], [[145, 6], [140, 9]], [[145, 7], [150, 3]]];
+    for (const sets of plan) {
+      const session = await startWorkout(day.id, "A", "STANDARD");
+      sessionIds.push(session.id);
+      let n = 0;
+      for (const [weight, reps] of sets) await logSet(day.id, session.id, "machine-chest-press", ++n, weight, reps);
+      await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
+    }
+    // The finish summary judges a session's sets against earlier sessions' sets (getRecordHistory
+    // minus anything logged later), exactly what each session saw when it was finished.
+    let summaryTotal = 0;
+    for (const [i, id] of sessionIds.entries()) {
+      const earlier = new Set(sessionIds.slice(0, i));
+      const history = (await getRecordHistory(id)).filter((s) => earlier.has(s.sessionId));
+      summaryTotal += findSessionRecords(history, await getPerformedSets(id)).size;
+    }
+    expect(summaryTotal).toBeGreaterThan(0);
+    expect((await getAllRecords()).length).toBe(summaryTotal);
   });
 });
