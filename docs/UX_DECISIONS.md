@@ -270,6 +270,24 @@ below, this entry wins; the older entry is kept for history.
   be corrected afterwards. Undoing twice is a no-op. No schema change; backups carry the new events
   like any other.
 
+- **As built: personal baselines in Weekly (FOUNDATION-A-F1, owner approval 2026-10-04, with
+  addendum and the water fix).** A YOUR USUAL section compares the last 7 finished lived days
+  (16:30 → 16:30, never the one in progress) with Gavin's own usual range over the 56 lived days
+  before them — no overlap, so a week is never compared with itself. Measures: main sleep (naps
+  excluded), water, protein; per day kind from the **declared** work context (what was said, or
+  what stood per the saved schedule), never re-derived from today's schedule; UNKNOWN days count
+  for neither kind. A day counts only when really logged: main sleep with any main-sleep log;
+  water with 2+ entries or one entry of 40 oz or more (the Minimum Day water amount — "one big
+  bottle" counts, a lone 8 oz quick-add doesn't); protein with 2+ food entries. Kcal, check-in
+  capacity, workouts and urges are left out (categories and small counts don't get a median).
+  Usual range = the middle half (P25–P75, linear interpolation), at least 30 min / 8 oz / 10 g wide,
+  rounded outward; the week's value is the median of its qualifying days; the verdict (below /
+  inside / above your usual) is judged on the rounded numbers shown. Under 10 comparable days it
+  says "Still learning your usual … (N of 10)"; with fewer than 2 days this week, "Nothing to
+  compare this week". At most 6 comparison lines and 1 quiet line, neutral words, no color.
+  Derived on read, never stored, never fed to the Engine; nothing on TODAY. The shared primitive is
+  `engine/livedDaySeries.ts`; the Ribbon now uses its lived-day grouping. Field-test stop: about 3
+  work rotations before any F2/F3/F4 work.
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 
 Locked 2026-09-16, direct owner authorization (FOUNDATION-1A, a doctrine/architecture

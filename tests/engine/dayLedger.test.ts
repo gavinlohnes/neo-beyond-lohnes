@@ -348,3 +348,22 @@ describe("projectDaySummaries — UNDO-001 undone water and sleep", () => {
     expect(summary!.burden.corrections).toBe(2);
   });
 });
+
+describe("projectDaySummaries — FOUNDATION-A-F1 entry counts", () => {
+  it("counts the water and food entries behind each total, undone and deleted ones excluded", () => {
+    const D = "count-day";
+    const events = [
+      ev(D, "WATER_LOGGED", at(10, 14, 9, 0), { amountOz: 16 }, "USER", "cw1"),
+      ev(D, "WATER_LOGGED", at(10, 14, 10, 0), { amountOz: 16 }, "USER", "cw2"),
+      ev(D, "WATER_LOG_VOIDED", at(10, 14, 10, 1), { loggedEventId: "cw2" }),
+      ev(D, "PROTEIN_LOGGED", at(10, 14, 11, 0), { grams: 30 }, "USER", "cp1"),
+      ev(D, "MEAL_LOGGED", at(10, 14, 12, 0), { name: "Bowl", calories: 600, proteinG: 45, carbsG: 60, fatG: 15 }, "USER", "cm1"),
+      ev(D, "MEAL_LOGGED", at(10, 14, 13, 0), { name: "Shake", calories: 200, proteinG: 30, carbsG: 5, fatG: 3 }, "USER", "cm2"),
+      ev(D, "MEAL_LOG_VOIDED", at(10, 14, 13, 1), { mealEventId: "cm2" }),
+    ];
+    const [summary] = projectDaySummaries(input({ days: [day(D, at(10, 14, 8, 0), "OFF")], events }));
+    expect(summary!.waterOz).toBe(16);
+    expect(summary!.proteinG).toBe(75);
+    expect(summary!.entryCounts).toEqual({ water: 1, food: 2 });
+  });
+});

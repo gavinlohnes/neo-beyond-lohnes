@@ -1,15 +1,13 @@
 ---
-id: FIELD-NAV-001
-status: CLOSED
-baseline: e0ccb40350eaa4e87bcc90c25d9ff9379d0507e0
-branch: codex/field-nav-001
-contract: docs/agent/drops/FIELD-NAV-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/149
-builder: Codex Builder, direct owner authorization 2026-10-04
-reviewer: Claude Code, independent exact-head review of db17d60 (owner session 2026-10-04)
-integrator: Claude Code, direct owner instruction 2026-10-04
-integration_sha: cd733d780a0c54e46ac09e4fb0d1ec82c7bc0055
-closed_at: 2026-10-04T01:16:55.596Z
+id: FOUNDATION-A-F1
+status: ACTIVE
+baseline: 449c152181b3afddf3f6bfc2093473ee2dbff545
+branch: ccr-22d7c0f8-rqhhjm
+contract: docs/agent/drops/FOUNDATION-A-F1.md
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/152
+builder: Claude Code, direct owner approval 2026-10-04
+reviewer: (unassigned)
+integrator: (unassigned)
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/FIELD-NAV-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/FOUNDATION-A-F1.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and

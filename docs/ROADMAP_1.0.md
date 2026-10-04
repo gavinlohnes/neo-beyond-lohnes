@@ -140,7 +140,11 @@ suggestions, wildcards) are no longer date-gated, but each still needs its own o
 adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-03).
 
 - **Undo after every log** (owner ruling 2026-10-03; scope approved 2026-10-04: water, sleep,
-  weight and protein, in BODY and on TODAY). **In review.**
+  weight and protein, in BODY and on TODAY). **Done (PR #151, merged).**
+- **FOUNDATION-A-F1 — lived-day series, personal baselines in Weekly** (owner approval
+  2026-10-04, with addendum; water fix: one entry of 40 oz or more counts a day). **In review.**
+  Then a mandatory field-test stop: about 3 work rotations (~3 weeks). Passing tests doesn't
+  authorize F2, F3 or F4; field use is the gate.
 
 ## Queue
 
