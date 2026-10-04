@@ -109,7 +109,7 @@ describe("MoreScreen restore picker — no accept filter (Drop 01 acceptance ret
     await expect.poll(() => getAdvisoryNotesMock.mock.results.length).toBe(1);
     await getAdvisoryNotesMock.mock.results[0]!.value;
 
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
+    const fileInput = document.querySelector('input[type="file"][aria-label="Choose a backup file to restore"]') as HTMLInputElement | null;
     expect(fileInput).not.toBeNull();
     expect(fileInput!.accept).toBe("");
     expect(fileInput!.hasAttribute("accept")).toBe(false);
