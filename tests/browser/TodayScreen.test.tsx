@@ -300,6 +300,17 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
   });
 });
 
+describe("TodayScreen (real browser) — plain words (owner ruling 2026-10-04)", () => {
+  it("TODAY's check-in row reads CHECK-IN, and the screen shows no developer terms", async () => {
+    await useScheduleWithNoWorkdays();
+    await startDay();
+    const screen = await render(<TodayScreen />);
+
+    await expect.element(screen.getByText("CHECK-IN", { exact: true })).toBeVisible();
+    expect(document.body.textContent).not.toMatch(/BeyondDay|deterministic|STATE INPUT|state input/);
+  });
+});
+
 describe("TodayScreen (real browser) — accepted recommendation handoff", () => {
   it("records acceptance without execution, then focuses the existing SHIFT DOWN executor", async () => {
     const day = await startDay();
@@ -1162,7 +1173,7 @@ describe("TodayScreen (real browser) — END DAY relevance", () => {
     const screen = await render(<TodayScreen />);
 
     await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText(/BeyondDay looks done/)).toBeVisible();
+    await expect.element(screen.getByText(/today looks done/)).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "END DAY" })).toBeVisible();
   });
 

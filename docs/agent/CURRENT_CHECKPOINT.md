@@ -7,23 +7,33 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code.** `origin/master` at `2052f3f` (PR #152 merge).
+**Written 2026-10-04 by Claude Code (low usage).** `origin/master` at `20872d7` (PR #153 merge).
+Branch `ccr-22d7c0f8-rqhhjm`, last commit `21c0a15`, everything pushed. No unfinished work.
 
-- **Drop:** none active. FOUNDATION-A-F1 (lived-day series, personal baselines in Weekly) merged
-  as PR #152 and closed.
-- **Branch:** none in flight (`ccr-22d7c0f8-rqhhjm` carries only this closure note).
-- **PR:** this closure update only.
-- **Done:** F1's shared lived-day series, YOUR USUAL in Weekly, the water rule (2+ entries or one
-  of 40 oz+), Undo after every log, builder roles.
-- **Left:** F1 field-test stop, about 3 work rotations (~3 weeks, to about Oct 25). At the stop,
-  ask: did the ranges match how the days felt; did Gavin look at them unprompted; did one answer
-  "is this low for me?"; was anything misleading (protein especially); was the evidence line
-  enough; did Weekly feel heavier; should the band, floors or entry rules change. F2/F3/F4 wait
-  for that. The Queue is otherwise empty.
-- **Verification run:** on #152: `npm run check:architecture`, `npm run typecheck`, full
-  `vitest run` (167 files, 1,918 passed, 1 skipped), `npm run build`; PR Verification green.
-- **Open risks:** protein partial logging can still pass the 2-entry rule; "below/above" will
-  show some weeks by design. FACTORY-PHASE-2 still reads APPROVED, with no PAUSED record.
+- **FOUNDATION-A-F1 is finished:** built, merged (PR #152) and closed. Nothing of F1 is left to
+  build; it's in its field-test stop to about Oct 25. Don't start F2/F3/F4 before that.
+- **Open PR:** #154, plain words on TODAY (owner ruling 2026-10-04). Complete, CI green, waiting
+  only on the owner's merge. Codex never merges (`AGENTS.md`, rule 3).
+- **Codex: build Queue item 1, DUP-MEAL-001** (`docs/agent/drops/DUP-MEAL-001.md`), the
+  duplicate-meal prompt. Risk ROUTINE. Start from fresh `origin/master` after #154 merges (update
+  the Drop's `baseline:` to that SHA), activate with `factory-drop.mjs init`, build, verify, open
+  the PR, write the handoff note, stop.
+
+### Checklist
+1. [ ] Owner merges #154.
+2. [ ] F1 field-test stop (~3 work rotations, to about Oct 25), then the debrief questions in
+       `docs/agent/drops/FOUNDATION-A-F1.md` / `docs/UX_DECISIONS.md`.
+3. [ ] Codex builds DUP-MEAL-001 from its Drop and opens a PR (doesn't merge).
+4. [ ] Claude Code reviews the exact PR head; owner says merge.
+
+### Traps
+- `factory-drop.mjs init/validate` was blocked by stale branches; fixed in #153 via
+  `docs/agent/RETIRED_BRANCHES.json`. Agent sessions can't delete remote branches.
+- Browser tests in a fresh cloud container may need a Chromium path workaround; CI is unaffected.
+
+### Verification commands
+`npm run check:architecture` · `npm run typecheck` · `npx vitest run` (168 files, 1,920 passed,
+1 skipped) · `npm run build` · `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ## Where things stand
 
@@ -36,9 +46,6 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Known loose ends
 
-- Field-test friction still open: TODAY's no-check-in card says "…for this BeyondDay. Guidance
-  remains deterministic, but less informed." (developer wording); that card's ALL GOOD button is
-  red (`btn-primary`). Not yet approved for work — see the roadmap's "Known, not yet approved".
 - Codex's factory automation from 2026-10-03 (`scripts/factory-*.mjs`, the Builder App
   workflow, campaign manifests) is still in the repo. `ACTIVE_DROP.md` and
   `node scripts/factory-drop.mjs` remain the one-active-Drop lock; nothing else in it is

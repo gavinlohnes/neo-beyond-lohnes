@@ -40,13 +40,13 @@ export function EndDayCard({
     <>
       {suggestEndDay && (
         <p className="card-body" style={{ marginBottom: 12 }}>
-          Primary sleep logged — this BeyondDay looks done. End it whenever you're ready.
+          Main sleep logged — today looks done. End the day whenever you're ready.
         </p>
       )}
       {endDayBlockedByWorkout && (
         <div role="alert" className="card card--warning" style={{ marginBottom: 12 }}>
           <p className="card-body" style={{ marginBottom: 8 }}>
-            Workout in progress. Finish it, save it as partial, or stop it on TRAIN before ending this BeyondDay.
+            Workout in progress. Finish it, save it as partial, or stop it on TRAIN before ending the day.
           </p>
           <button className="btn-primary" disabled={busy} onClick={() => onOpenTrain?.("WORKOUT")}>
             RETURN TO WORKOUT

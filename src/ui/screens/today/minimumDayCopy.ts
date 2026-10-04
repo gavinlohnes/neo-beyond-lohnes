@@ -83,7 +83,7 @@ export function describeMinimumDaySummary(status: { enabled: boolean } & Record<
   }
   const total = MINIMUM_DAY_ITEMS.length;
   const done = MINIMUM_DAY_ITEMS.filter((item) => status[item.key]).length;
-  return `This active BeyondDay · ${done} / ${total}`;
+  return `Today · ${done} / ${total}`;
 }
 
 export const MINIMUM_DAY_ITEMS: MinimumDayItemConfig[] = [

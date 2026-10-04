@@ -6,6 +6,8 @@ risk_tier: ARCHITECTURAL
 
 # FOUNDATION-A-F1 // LIVED-DAY SERIES (PERSONAL BASELINES IN WEEKLY)
 
+**Status: DONE.** Merged as PR #152 (`2052f3f`), closed in #153. In its field-test stop; nothing left to build.
+
 ## Mission
 
 One pure, reusable way to ask "what is this measure over a window of lived BeyondDays?" and

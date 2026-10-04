@@ -87,13 +87,13 @@ describe("Suit Layer 01 — accent budget: ATTENTION items are signal-row, not d
 });
 
 describe("Suit Layer 01 — utility cards use the neutral tool-label, not the red eyebrow", () => {
-  it("STATE INPUT's header is .tool-label, not .eyebrow", async () => {
+  it("the check-in header is .tool-label, not .eyebrow", async () => {
     await startDay();
     const screen = await render(<TodayScreen />);
 
-    // Shift Clock (Drop 2): an unanswered day's check-in row carries the STATE INPUT label.
-    await expect.element(screen.getByText("STATE INPUT", { exact: true })).toBeVisible();
-    const stateInputLabel = screen.getByText("STATE INPUT", { exact: true }).element();
+    // Shift Clock (Drop 2): an unanswered day's check-in row carries the CHECK-IN label.
+    await expect.element(screen.getByText("CHECK-IN", { exact: true })).toBeVisible();
+    const stateInputLabel = screen.getByText("CHECK-IN", { exact: true }).element();
     expect(stateInputLabel.className).toContain("tool-label");
     expect(stateInputLabel.className).not.toContain("eyebrow");
   });

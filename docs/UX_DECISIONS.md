@@ -270,6 +270,14 @@ below, this entry wins; the older entry is kept for history.
   be corrected afterwards. Undoing twice is a no-op. No schema change; backups carry the new events
   like any other.
 
+- **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
+  day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
+  CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks
+  done. End the day whenever you're ready."; Minimum Day reads "Today · 2 / 6" and "40 oz recorded
+  today."; the no-check-in card says "No check-in yet today. Suggestions still work without one; a
+  check-in just helps them fit." The "How BEYOND decided" machinery panel stays technical by
+  design. `tests/ui/plainWords.test.ts` guards TODAY, BODY, TRAIN, Weekly and History. Red on the
+  attention card's ALL GOOD stays: the owner likes some red (same ruling).
 - **As built: personal baselines in Weekly (FOUNDATION-A-F1, owner approval 2026-10-04, with
   addendum and the water fix).** A YOUR USUAL section compares the last 7 finished lived days
   (16:30 → 16:30, never the one in progress) with Gavin's own usual range over the 56 lived days

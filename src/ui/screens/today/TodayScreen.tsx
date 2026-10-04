@@ -1756,7 +1756,7 @@ export function TodayScreen({
         if (!checkIn && !checkInFormOpen) {
           return (
             <div className="equipment-row">
-              <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>
+              <p className="tool-label" style={{ marginBottom: 4 }}>CHECK-IN</p>
               <h2 className="card-title">Check in</h2>
               <button className="btn-secondary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
                 ALL GOOD
@@ -2281,10 +2281,10 @@ export function TodayScreen({
           )}
 
           {checkInInAttention && !checkInFormOpen && (
-            <SignalRow label="STATE INPUT">
+            <SignalRow label="CHECK-IN">
               <h2 className="card-title">Check in when you can</h2>
               <p className="card-body" style={{ marginBottom: 12 }}>
-                BEYOND has no current state input for this BeyondDay. Guidance remains deterministic, but less informed.
+                No check-in yet today. Suggestions still work without one; a check-in just helps them fit.
               </p>
               <button className="btn-primary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
                 ALL GOOD
