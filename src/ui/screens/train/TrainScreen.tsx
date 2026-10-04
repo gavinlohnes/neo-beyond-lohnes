@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { RecordsList } from "./RecordsList";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { HoldButton } from "../../components/HoldButton";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
@@ -177,6 +178,8 @@ export function TrainScreen({
   // when they aren't the prominent tool, so it structurally recedes
   // instead of consuming full footprint before any decision is made.
   const [performanceBriefOpen, setPerformanceBriefOpen] = useState(false);
+  // PR-CARDS-001: TRAIN → RECORDS, the list of personal-record cards.
+  const [recordsOpen, setRecordsOpen] = useState(false);
   // VISUAL-001 (Hybrid Foundation): the one earned-salience moment on
   // active TRAIN — which set was *just* logged this session, if any.
   // Starts null on every mount (including a resumed session), so a
@@ -1106,6 +1109,12 @@ export function TrainScreen({
         </>
       )}
 
+      {/* PR-CARDS-001 (owner brief 2026-10-04): every personal record kept as a card, pre-workout only. */}
+      {!session && !completionSummary && !recordsOpen && (
+        <CollapsibleRow name="RECORDS" summary="Your personal records" onOpen={() => setRecordsOpen(true)} />
+      )}
+      {!session && !completionSummary && recordsOpen && <RecordsList onClose={() => setRecordsOpen(false)} />}
+
       {session && session.sessionType === "RECOVERY" && !completionSummary && (
         <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>RECOVERY — IN PROGRESS</p>
@@ -1290,8 +1299,10 @@ export function TrainScreen({
                         )}
                       </div>
                       {sessionRecords.has(loggedSet.id) && (
-                        <p className="meta-strong fade-in" style={{ margin: "2px 0 0" }}>
-                          {describePersonalRecord(sessionRecords.get(loggedSet.id)!)}
+                        // PR-CARDS-001: a quiet outlined PR tag; no sound, no vibration.
+                        <p className="meta-strong fade-in pr-line">
+                          <span className="pr-tag">PR</span>
+                          <span>{describePersonalRecord(sessionRecords.get(loggedSet.id)!).replace("NEW PR — ", "")}</span>
                         </p>
                       )}
                     </div>
