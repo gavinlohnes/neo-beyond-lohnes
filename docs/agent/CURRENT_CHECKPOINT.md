@@ -13,7 +13,7 @@ an event, edited in the gym screen only; recorded in the roadmap, `docs/UX_DECIS
 Drop.
 
 - **Drop:** `GYM-002` cue text per lift: HIGH-RISK (new stored data; Gavin approves the merge),
-  `ACTIVE`. Branch `claude/gym-002`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+  `ACTIVE`. Branch `claude/gym-002`. **PR:** [#173](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/173).
 - **Done:** new event type `EXERCISE_CUE_SET` {commandId, exerciseId, cue} (domain union +
   `ExerciseCueSetPayload`, `EXERCISE_CUE_MAX_LENGTH` 140); `setExerciseCue` in `trainCommands.ts`
   (trims; rejects > 140; "" clears); `getExerciseCues` in `trainQueries.ts` (latest per lift by
