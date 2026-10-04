@@ -1,13 +1,15 @@
 ---
 id: FIELD-NAV-001
-status: ACTIVE
+status: CLOSED
 baseline: e0ccb40350eaa4e87bcc90c25d9ff9379d0507e0
 branch: codex/field-nav-001
 contract: docs/agent/drops/FIELD-NAV-001.md
 pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/149
 builder: Codex Builder, direct owner authorization 2026-10-04
-reviewer: (unassigned)
-integrator: (unassigned)
+reviewer: Claude Code, independent exact-head review of db17d60 (owner session 2026-10-04)
+integrator: Claude Code, direct owner instruction 2026-10-04
+integration_sha: cd733d780a0c54e46ac09e4fb0d1ec82c7bc0055
+closed_at: 2026-10-04T01:16:55.596Z
 ---
 
 # ACTIVE_DROP
