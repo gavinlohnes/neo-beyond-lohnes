@@ -1,6 +1,6 @@
 ---
 id: HUD-001
-status: ACTIVE
+status: CLOSED
 baseline: 3f6903ebf63f781d15b870de35a631684edc15f5
 branch: claude/hud-001
 contract: docs/agent/drops/HUD-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/160
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 749b8856e15f1ae164105579bdb4a38ec9318ebc
+closed_at: 2026-10-04T14:50:25.081Z
 ---
 
 # ACTIVE_DROP

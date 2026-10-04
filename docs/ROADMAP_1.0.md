@@ -174,6 +174,7 @@ PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
    #000, one red #D0141B, cut corners, bracket ticks, 1px lines, Chakra Petch + JetBrains Mono
    self-hosted, WCAG AA, every screen except Weekly until the F1 review, no emblems/logos/
    character names, visual-only. Drop: `docs/agent/drops/HUD-001.md`.
+   **Done (PR #160, merged 2026-10-04).**
 2. **BACKUP-AUTO-001 — automatic backup** (ARCHITECTURAL; due-on-open + share, no account,
    owner decision 2A). Opt-in, due-on-open backup shared to a destination Gavin picks, monthly
    restore check, no server.

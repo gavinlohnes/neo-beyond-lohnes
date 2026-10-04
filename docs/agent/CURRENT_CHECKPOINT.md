@@ -7,43 +7,35 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code.** Baseline `origin/master` at `3f6903e` (PR #159 merge).
+**Written 2026-10-04 by Claude Code (review + integration session).** `origin/master` at
+`749b885` (PR #160 merge).
 
-- **Drop:** `HUD-001` HUD design system — ARCHITECTURAL, `ACTIVE`. Built; awaiting a separate
-  review session and Gavin's merge.
-- **Branch:** `claude/hud-001` (worktree `../beyond-worktrees/claude-hud-001`). **PR:**
-  [#160](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/160).
-- **Done:** black #000 ground; every red role resolves to `--red` #D0141B; cut corners
-  (`--cut-shape`) on `.card` and `.btn-primary/-secondary/-danger`, with the 1px diagonal drawn
-  back in; bracket ticks on `.equipment-row` frames; `--radius: 0`; Chakra Petch + JetBrains Mono
-  self-hosted in `public/fonts/` (OFL licenses beside them; build rewrites the base path; the
-  service worker precaches them; no CDN). #D0141B is ~3.8:1 on black, so small red text became
-  white with a red stroke (`.meta--error` for error lines, status strip, restore label, active
-  RESET/SHIFT DOWN label); `--text-3` lifted to #808080 for AA. Weekly keeps the old look via
-  `.hud-legacy` on MORE's Weekly wrapper (no Weekly/F1 file touched). Browser theme and PWA
-  colors set to #000.
-- **Tests:** new `tests/browser/Hud001.test.tsx` (axe color-contrast enabled on TODAY GREEN/RED,
-  TRAIN, BODY, MORE; no red but #D0141B anywhere on those screens; Weekly's ground, faces and
-  corners unchanged). Four existing tests updated for the new red/face values only.
-- **Verification run:** `npm run check:architecture` OK; `npm run typecheck` OK; full
-  `npx vitest run`: 1,931 passed, the only failures were 13 `tests/factory/factoryDrop.test.ts`
-  timeouts on Windows (git-heavy fixtures; all 39 pass with `--testTimeout 60000`, untouched by
-  this Drop); `npm run build` OK; `check:risk` OK; `git diff --check` OK. Checked in the browser
-  at 360 px; screenshots in `docs/agent/screenshots/HUD-001/`.
-- **Left:** independent review at the PR's exact head; Gavin approves the merge; then
-  `node scripts/factory-drop.mjs close HUD-001 --integration-sha <merge sha>`.
-- **Open risks:** clip-path clips anything that overflows a card or button (none seen in tests or
-  at 360 px). The @fontsource packages stay installed only for Weekly; remove them when Weekly
+- **Drop:** `HUD-001` HUD design system: **merged and closed.** Reviewed independently at head
+  `1242ae2` with no blocking findings; PR Verification green on that head; merged per Gavin's
+  2026-10-04 ruling "merge as is"; `ACTIVE_DROP.md` closed at integration `749b885`.
+- **Active Drop:** none.
+- **Branch / PR for this note:** `claude/hud-001-close` (docs only: Drop close, Queue item marked
+  done, `docs/UX_DECISIONS.md` as-built entry, this handoff).
+- **Review notes (non-blocking, follow-up only):** an old `tokens.css` comment still cites
+  #c81e2c ~5.11:1 for the primary button (now #D0141B, ~4.9:1, still AA); bracket ticks sit on
+  `.equipment-row` frames only, not `.tool-label`; `.hud-legacy` would not un-cut a
+  `.card--warning` inside Weekly (Weekly has none today).
+- **Verification run (review):** `tests/browser/Hud001.test.tsx` 7/7, and it fails when
+  `--text-3` is set back to #6e6e6e; `check:architecture` OK; `typecheck` OK; `build` OK (fonts
+  under the base path and precached by `sw.js`, no CDN); PR Verification success on `1242ae2`.
+- **Next in Queue:** `BACKUP-AUTO-001` automatic backup (ARCHITECTURAL; written Drop at
+  `docs/agent/drops/BACKUP-AUTO-001.md`). Needs Gavin's go-ahead before anyone builds it. After
+  it: `PR-CARDS-001`, `BODY-TIMELINE-001` (ROUTINE).
+- **Open risks:** clip-path clips anything that overflows a card or button (none found in
+  review). The @fontsource packages stay installed only for Weekly; remove them when Weekly
   moves to HUD after the F1 review. `npm run factory:status` needs `GITHUB_TOKEN`. 56 merged
-  branches plus `codex/dup-meal-001`/`codex/duplicate-meal-prompt` still await deletion by Gavin;
-  then clear `docs/agent/RETIRED_BRANCHES.json`.
-- **Next in Queue after HUD-001:** `BACKUP-AUTO-001` (ARCHITECTURAL), `PR-CARDS-001`,
-  `BODY-TIMELINE-001` (ROUTINE). All have written Drops.
+  branches plus `codex/dup-meal-001`/`codex/duplicate-meal-prompt` and now `claude/hud-001`
+  still await deletion by Gavin; then clear `docs/agent/RETIRED_BRANCHES.json`.
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-1. HUD-001 after review: **A. Merge as is (recommended)** · B. Merge, but tune a detail first
-   (say which) · C. Hold.
+1. Start BACKUP-AUTO-001 (automatic backup) next: **A. Yes, build it (recommended)** · B. Build
+   something else first (say which) · C. Hold.
