@@ -103,6 +103,10 @@ Reject generic card walls, universal card abstraction, gradients, glassmorphism,
 geometry, fake telemetry, cyberpunk clutter, tiny decorative technical text, consumer-app pill
 language, excessive rounding, and decorative looping animation.
 
+Amendment (owner ruling, 2026-10-04, HUD-001): the HUD design system's cut corners, bracket ticks
+on section frames and 1px lines are allowed as functional frame geometry: they mark structure, not
+decoration. Still one red (#D0141B), still WCAG AA, still no fake telemetry or decorative text.
+
 ## FIELD, COMMAND, and truth boundaries
 
 FIELD is one-hand, divided-attention operation: glanceable, thumb-reachable, interruption-safe,
