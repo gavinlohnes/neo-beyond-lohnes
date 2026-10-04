@@ -1,5 +1,6 @@
 import type { StateCheckIn } from "../../../domain/common/types";
 import type { CheckInDraft } from "../../../engine/checkInDraft";
+import { useRevealOnOpen } from "../../hooks/useRevealOnOpen";
 import {
   CHECK_IN_FIELDS,
   describeCheckInValues,
@@ -42,6 +43,9 @@ export function CheckInCard({
   draft?: CheckInDraft | undefined;
   onStartBlank?: () => void;
 }) {
+  // The ATTENTION layout can remount this card when UPDATE lifts the form
+  // into Operate depth, so an initially-open mount is also a real reveal.
+  const formRef = useRevealOnOpen<HTMLDivElement>(checkInFormOpen, { focusOnOpen: true, revealOnMount: true });
   const unchangedDraft = draft !== undefined && CHECK_IN_FIELDS.every((f) => values[f.key] === draft.value[f.key]);
   // DECLUTTER-001 (Drop 1): once today's check-in exists and the form isn't
   // open, the whole card is one line — when you checked in, "all good" if it
@@ -69,9 +73,15 @@ export function CheckInCard({
   }
 
   return (
-    <div className="equipment-row">
+    <div
+      ref={formRef}
+      className="equipment-row"
+      role="group"
+      aria-labelledby="state-check-in-title"
+      tabIndex={-1}
+    >
       <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>
-      <h2 className="card-title">State check-in</h2>
+      <h2 id="state-check-in-title" className="card-title">State check-in</h2>
       <button
         className="btn-secondary"
         style={{ marginBottom: 4 }}

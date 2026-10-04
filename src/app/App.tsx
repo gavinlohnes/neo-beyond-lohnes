@@ -11,6 +11,7 @@ import { maybeSendCheckInReminder } from "../application/checkInReminderQueries"
 import { performDueDayRollover } from "../application/commands";
 import { nextRolloverBoundaryAfter } from "../engine/dayRollover";
 import { parseShortcut, type BodyFocus } from "../ui/shortcuts";
+import { positionPrimaryDestination } from "../ui/navigationPosition";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -235,6 +236,17 @@ export function App() {
     setTab("TRAIN");
   }
 
+  function openPrimaryTab(destination: Tab) {
+    setTrainDestination(null);
+    setBodyFocus(null);
+    setTodayToolsOpen(false);
+    if (destination === "MORE" && tab === "MORE") setMoreResetKey((key) => key + 1);
+    setTab(destination);
+    // Wait until the destination commit so the browser cannot restore the
+    // outgoing screen's document offset onto the incoming screen.
+    window.requestAnimationFrame(positionPrimaryDestination);
+  }
+
   if (!continuityResolved) {
     return (
       <main className="screen" aria-busy="true">
@@ -303,13 +315,7 @@ export function App() {
         {(["TODAY", "TRAIN", "BODY", "MORE"] as Tab[]).map((t) => (
           <button
             key={t}
-            onClick={() => {
-              setTrainDestination(null);
-              setBodyFocus(null);
-              setTodayToolsOpen(false);
-              if (t === "MORE" && tab === "MORE") setMoreResetKey((k) => k + 1);
-              setTab(t);
-            }}
+            onClick={() => openPrimaryTab(t)}
             aria-current={tab === t ? "page" : undefined}
             className={`shell-nav__item${tab === t ? " shell-nav__item--active" : ""}`}
           >

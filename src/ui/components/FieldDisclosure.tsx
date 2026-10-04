@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useRevealOnOpen } from "../hooks/useRevealOnOpen";
 
 /**
  * VISUAL-003 (BODY Field Instrument): the "SHOW X / HIDE X" collapsible
@@ -34,10 +35,11 @@ export function FieldDisclosure({
   onToggle: (open: boolean) => void;
   children: ReactNode;
 }) {
+  const revealedRef = useRevealOnOpen<HTMLDivElement>(open);
   return (
     <details open={open} onToggle={(e) => onToggle(e.currentTarget.open)}>
       <summary role="button" className="disclosure-row">{summary}</summary>
-      <div className="fade-in" style={{ marginTop: 12 }}>
+      <div ref={revealedRef} className="fade-in" style={{ marginTop: 12 }}>
         {children}
       </div>
     </details>

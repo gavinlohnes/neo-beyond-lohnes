@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
+import { page } from "vitest/browser";
 import { FieldDisclosure } from "../../src/ui/components/FieldDisclosure";
+import { positionRevealedSurface } from "../../src/ui/navigationPosition";
 
 /**
  * VISUAL-003 (BODY Field Instrument): FieldDisclosure formalizes the
@@ -20,6 +22,8 @@ function Harness({ initialOpen = false }: { initialOpen?: boolean }) {
 }
 
 describe("FieldDisclosure (real browser)", () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it("is closed by default, opens on click, and exposes a real button-role toggle", async () => {
     const screen = await render(<Harness />);
 
@@ -43,5 +47,32 @@ describe("FieldDisclosure (real browser)", () => {
     const screen = await render(<Harness initialOpen={true} />);
     await expect.element(screen.getByText("Hidden content")).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "HIDE THING" })).toBeVisible();
+  });
+
+  it("brings a representative BODY-style disclosure surface inside a phone viewport", async () => {
+    await page.viewport(390, 844);
+    const screen = await render(
+      <div style={{ paddingTop: 1200, paddingBottom: 1200 }}>
+        <Harness />
+      </div>,
+    );
+    const toggle = screen.getByRole("button", { name: "SHOW THING" }).element();
+    window.scrollTo(0, toggle.getBoundingClientRect().top + window.scrollY - 760);
+    toggle.click();
+
+    const content = screen.getByText("Hidden content").element().parentElement!;
+    await expect.element(screen.getByText("Hidden content")).toBeVisible();
+    await expect.poll(() => content.getBoundingClientRect().top).toBeLessThan(window.innerHeight - 88);
+  });
+
+  it("uses immediate positioning under reduced motion without disabling the reveal", () => {
+    vi.spyOn(window, "matchMedia").mockReturnValue({ matches: true } as MediaQueryList);
+    const scrollBy = vi.spyOn(window, "scrollBy").mockImplementation(() => {});
+    const target = document.createElement("div");
+    vi.spyOn(target, "getBoundingClientRect").mockReturnValue({ top: 900 } as DOMRect);
+
+    positionRevealedSurface(target);
+
+    expect(scrollBy).toHaveBeenCalledWith({ top: 888, left: 0, behavior: "auto" });
   });
 });
