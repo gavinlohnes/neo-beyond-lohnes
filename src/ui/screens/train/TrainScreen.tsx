@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
@@ -183,6 +183,7 @@ export function TrainScreen({
   const [recordsOpen, setRecordsOpen] = useState(false);
   // GYM-001: the full-screen gym view over the active workout.
   const [gymModeOpen, setGymModeOpen] = useState(false);
+  const gymModeButtonRef = useRef<HTMLButtonElement>(null);
   // VISUAL-001 (Hybrid Foundation): the one earned-salience moment on
   // active TRAIN — which set was *just* logged this session, if any.
   // Starts null on every mount (including a resumed session), so a
@@ -752,6 +753,12 @@ export function TrainScreen({
   // state, recomputed on every render — no separate query/state needed.
   const progressionCounts = summarizeProgressionSuggestions(currentProgressionSuggestions);
 
+  // GYM-POLISH-001: closing gym mode hands keyboard focus back to its button.
+  const closeGymMode = useCallback(() => {
+    setGymModeOpen(false);
+    requestAnimationFrame(() => gymModeButtonRef.current?.focus());
+  }, []);
+
   // P4 (one-handed execution mode): "current" is whichever exercise still
   // has an unlogged set, unless the lifter explicitly focused a different
   // one via the compact list. If every exercise is fully logged, "current"
@@ -1176,7 +1183,7 @@ export function TrainScreen({
           })()}
 
           {/* GYM-001: a full-screen, one-handed view of the same session. */}
-          <button type="button" className="btn-secondary" style={{ marginBottom: 12 }} onClick={() => setGymModeOpen(true)}>
+          <button ref={gymModeButtonRef} type="button" className="btn-secondary" style={{ marginBottom: 12 }} onClick={() => setGymModeOpen(true)}>
             GYM MODE
           </button>
           {gymModeOpen && currentExercise && (
@@ -1210,7 +1217,8 @@ export function TrainScreen({
               onSetReps={(value) => currentSetNumber !== null && patchInput(currentExercise.exerciseId, currentSetNumber, { reps: value })}
               onLog={() => currentSetNumber !== null && void handleLogSet(currentExercise.exerciseId, currentSetNumber)}
               onSkip={() => currentSetNumber !== null && void handleSkipSet(currentExercise.exerciseId, currentSetNumber)}
-              onExit={() => setGymModeOpen(false)}
+              onExit={closeGymMode}
+              onNextExercise={() => setFocusedExerciseId(null)}
             />
           )}
 

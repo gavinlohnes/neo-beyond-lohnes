@@ -2202,7 +2202,11 @@ body:has(.hud-legacy) {
 }
 .gym-mode__exit {
   width: auto;
-  padding: 8px 18px;
+  min-height: 56px;
+  padding: 8px 22px;
+}
+.gym-mode:focus {
+  outline: none;
 }
 .gym-mode__name {
   font-family: var(--font-display);

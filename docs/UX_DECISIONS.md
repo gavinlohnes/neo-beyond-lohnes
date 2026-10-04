@@ -334,6 +334,11 @@ below, this entry wins; the older entry is kept for history.
   then about 50% ×5, 70% ×3 and 85% ×1 of the working weight, rounded to the nearest loadable weight.
   Example: working weight 185 lb reads "Warm-up: 45 ×10 · 95 ×5 · 130 ×3 · 155 ×1". Plate math and
   the ramp apply to barbell lifts only (built-in templates A/B/C are machine and cable).
+- **As built: gym screen (GYM-001, PR #170, merged 2026-10-04, Architectural).** TRAIN → GYM MODE
+  during a workout covers the screen with the current lift: typeable weight and reps with −/+, LOG
+  SET n, SKIP, the rest countdown, "Last time 185 × 5", auto-advance, the screen kept awake; a
+  barbell lift adds "185 lb = bar + 45 + 25 per side" and, before its first set, the warm-up line.
+  Logging goes through TRAIN's own path; EXIT keeps everything.
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks
