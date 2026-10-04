@@ -1,15 +1,13 @@
 ---
-id: GYM-001
-status: CLOSED
-baseline: b58fbaf2a827ce15a25513e008d90ec600d42f48
-branch: claude/gym-001
-contract: docs/agent/drops/GYM-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/170
+id: GYM-POLISH-001
+status: ACTIVE
+baseline: 3ba21b60cacc175cd54a8eb1d0be7f1fd024d9e9
+branch: claude/gym-polish-001
+contract: docs/agent/drops/GYM-POLISH-001.md
+pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: 3ba21b60cacc175cd54a8eb1d0be7f1fd024d9e9
-closed_at: 2026-10-04T21:35:58.059Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/GYM-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/GYM-POLISH-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
