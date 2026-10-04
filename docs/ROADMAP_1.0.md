@@ -183,7 +183,11 @@ Codex can build it when Claude is out.
 Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
 PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
 
-Queue empty — Gavin adds the next item.
+1. **HUD-002 — sprint cleanup** (ROUTINE; from Gavin's sprint go-ahead 2026-10-04, whose plan named
+   it). A stale contrast comment and two test-coverage gaps the reviews of #160/#164/#166 found;
+   nothing on screen changes. Drop: `docs/agent/drops/HUD-002.md`.
+
+After HUD-002 the Queue is empty — Gavin adds the next item.
 
 ### Known, not yet approved
 

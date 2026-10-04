@@ -167,7 +167,9 @@ describe("getAllRecords — TRAIN → RECORDS (PR-CARDS-001)", () => {
   it("counts the same PRs as the finish summary's rule for the same sessions", async () => {
     const day = await startDay();
     const sessionIds: string[] = [];
-    const plan: [number, number][][] = [[[135, 10], [140, 8]], [[145, 6], [140, 9]], [[145, 7], [150, 3]]];
+    // HUD-002: asymmetric on purpose. Judged only against earlier sessions, 145x6 and 160x10 are
+    // both PRs (2); judged against every other session, the later 160x10 would erase 145x6 (1).
+    const plan: [number, number][][] = [[[135, 10]], [[145, 6]], [[160, 10]]];
     for (const sets of plan) {
       const session = await startWorkout(day.id, "A", "STANDARD");
       sessionIds.push(session.id);
@@ -183,7 +185,7 @@ describe("getAllRecords — TRAIN → RECORDS (PR-CARDS-001)", () => {
       const history = (await getRecordHistory(id)).filter((s) => earlier.has(s.sessionId));
       summaryTotal += findSessionRecords(history, await getPerformedSets(id)).size;
     }
-    expect(summaryTotal).toBeGreaterThan(0);
+    expect(summaryTotal).toBe(2);
     expect((await getAllRecords()).length).toBe(summaryTotal);
   });
 });
