@@ -270,6 +270,16 @@ below, this entry wins; the older entry is kept for history.
   be corrected afterwards. Undoing twice is a no-op. No schema change; backups carry the new events
   like any other.
 
+- **As built: duplicate-meal prompt (DUP-MEAL-001, owner brief 2026-10-04, PR #155).** Field case:
+  dinner logged twice doubled the day's protein and kcal. Right after a meal is logged on BODY, an
+  earlier standing meal the same BeyondDay counts as a possible duplicate when it was logged at
+  most 2 minutes before (`SAME_FOOD_WINDOW_MS`) and is the same saved meal, or has the same name
+  (trimmed, case-insensitive) with the same effective calories and protein. BODY asks under that
+  meal's row: "Same meal? Dinner already logged at 02:14." — KEEP BOTH (writes nothing) / REMOVE
+  THIS ONE (voids only the new entry via `MEAL_LOG_VOIDED`; "Removed the second Dinner. Protein
+  today: 50 g."). Never a silent merge. When the protein-vs-meal "Same food?" check would also
+  fire, only "Same meal?" shows. Pure rule `findDuplicateMeal` in `engine/sameFood.ts`. SAME AS
+  YESTERDAY batches aren't checked. No schema or new event type.
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks

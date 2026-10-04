@@ -41,6 +41,15 @@ Also:
   when something merges.
 - **Keeping Codex fed:** Claude Code writes the Drop contract for each Queue item when the owner
   approves it, so Codex always has a written Drop to pick up.
+- **Codex PR hygiene (owner session 2026-10-04, after DUP-MEAL-001):**
+  - Don't create a branch until the Drop file exists on `origin/master`.
+  - Title the PR `[NEEDS CLAUDE REVIEW] <DROP-ID>: …` and start its description with "Don't merge
+    until Claude Code has reviewed this exact head."
+  - Once the PR is open, push only fixes asked for in review; never push to the branch after it
+    merges (a late commit strands outside master and blocks `factory-drop.mjs close`).
+- **Claude Code closes every merged Drop**, Codex's included: `factory-drop.mjs close`, the
+  `docs/UX_DECISIONS.md` as-built entry, the roadmap (mark done, clear it from the Queue) and the
+  handoff note, in one small PR right after the merge.
 - Other AIs are advisory only and never write to the repo.
 
 ## "Let's work" protocol

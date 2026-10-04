@@ -149,9 +149,11 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
   reads CHECK-IN (was STATE INPUT); "this BeyondDay" becomes "today" / "the day" on the End Day
   card and in Minimum Day; the no-check-in card's "Guidance remains deterministic, but less
   informed" becomes "Suggestions still work without one; a check-in just helps them fit." A test
-  keeps those terms off TODAY, BODY, TRAIN, Weekly and History. **In review.**
+  keeps those terms off TODAY, BODY, TRAIN, Weekly and History. **Done (PR #154, merged).**
 - **Red ALL GOOD stays** (owner ruling 2026-10-04: "I don't mind some of the red. I kind of like
   it."). Not a defect; no change.
+- **DUP-MEAL-001 — duplicate-meal prompt** (owner brief 2026-10-04; built by Codex). **Done (PR
+  #155, merged).** First Codex-built Drop under the builder-roles rules.
 
 ## Queue
 
@@ -160,11 +162,7 @@ work". Only the owner adds to it. Each item is one short brief (what changes, wh
 one concrete example of the problem it fixes) plus a written Drop in `docs/agent/drops/` so
 Codex can build it when Claude is out.
 
-1. **DUP-MEAL-001 — duplicate-meal prompt** (owner brief 2026-10-04). Logging a meal that matches
-   one logged in the last 2 minutes (same saved meal, or same name + calories + protein) asks
-   "Same meal? Dinner already logged at 02:14." with KEEP BOTH / REMOVE THIS ONE (voids the new
-   entry). Example: dinner logged twice in the field test doubled protein and kcal. Drop:
-   `docs/agent/drops/DUP-MEAL-001.md`. Builder: Codex.
+1. *(empty: waiting for the owner's next pick)*
 
 ### Known, not yet approved
 
