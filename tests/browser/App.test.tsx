@@ -41,13 +41,13 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     for (const destination of ["MORE", "BODY", "TODAY"] as const) {
       window.scrollTo(0, 1400);
       expect(window.scrollY).toBeGreaterThan(0);
-      screen.getByRole("button", { name: destination, exact: true }).element().click();
+      (screen.getByRole("button", { name: destination, exact: true }).element() as HTMLButtonElement).click();
       await expect.poll(() => screen.getByRole("button", { name: destination, exact: true }).element().getAttribute("aria-current")).toBe("page");
       await expect.poll(() => window.scrollY).toBe(0);
     }
 
     window.scrollTo(0, 1400);
-    screen.getByRole("button", { name: "TODAY", exact: true }).element().click();
+    (screen.getByRole("button", { name: "TODAY", exact: true }).element() as HTMLButtonElement).click();
     await expect.poll(() => window.scrollY).toBe(0);
     spacer.remove();
   });
@@ -67,7 +67,7 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     window.scrollTo(0, 2400);
     expect(update.getBoundingClientRect().bottom).toBeLessThan(0);
 
-    update.click();
+    (update as HTMLButtonElement).click();
     const formLocator = screen.getByRole("group", { name: "State check-in" });
     await expect.element(formLocator).toBeVisible();
     const form = formLocator.element();

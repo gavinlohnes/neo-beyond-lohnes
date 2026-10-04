@@ -58,7 +58,7 @@ describe("FieldDisclosure (real browser)", () => {
     );
     const toggle = screen.getByRole("button", { name: "SHOW THING" }).element();
     window.scrollTo(0, toggle.getBoundingClientRect().top + window.scrollY - 760);
-    toggle.click();
+    (toggle as HTMLElement).click();
 
     const content = screen.getByText("Hidden content").element().parentElement!;
     await expect.element(screen.getByText("Hidden content")).toBeVisible();
