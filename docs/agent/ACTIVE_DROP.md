@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: e0ccb40350eaa4e87bcc90c25d9ff9379d0507e0
 branch: codex/field-nav-001
 contract: docs/agent/drops/FIELD-NAV-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/149
 builder: Codex Builder, direct owner authorization 2026-10-04
 reviewer: (unassigned)
 integrator: (unassigned)
