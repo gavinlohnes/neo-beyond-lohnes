@@ -13,7 +13,7 @@ merge, HUD-001 closed).
 - **Drop:** `BACKUP-AUTO-001` automatic backup: ARCHITECTURAL, `ACTIVE`. Built after Gavin's
   2026-10-04 go-ahead ("merge and build option A"); awaiting a separate review session and
   Gavin's merge.
-- **Branch:** `claude/backup-auto-001`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+- **Branch:** `claude/backup-auto-001`. **PR:** [#162](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/162).
 - **Done:** MORE → Data safety has an AUTOMATIC BACKUP row (off by default; TURN ON, every
   1/3/7/14/30 days, default 7; CHECK A BACKUP). With it on and a backup due (none on record, or
   last one ≥ N days old), TODAY shows one line above the screen: "Backup due · 9 days old",

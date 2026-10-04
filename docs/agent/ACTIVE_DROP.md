@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 6848d3012245febf1350f336f52c9b5cf442fbff
 branch: claude/backup-auto-001
 contract: docs/agent/drops/BACKUP-AUTO-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/162
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
