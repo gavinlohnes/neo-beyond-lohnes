@@ -1,4 +1,4 @@
-import { findSameFood, type SameFoodPair } from "../engine/sameFood";
+import { findDuplicateMeal, findSameFood, type DuplicateMealPair, type SameFoodPair } from "../engine/sameFood";
 import { getProteinEntries } from "./queries";
 import { getMealEntries } from "./nutritionQueries";
 
@@ -13,6 +13,23 @@ export async function getSameFoodCheck(
   justLogged: { kind: "PROTEIN" | "MEAL"; id: string },
 ): Promise<SameFoodPair | undefined> {
   const proteinLogs = (await getProteinEntries(beyondDayId)).map((e) => ({ id: e.rootEventId, grams: e.effectiveGrams, at: e.recordedAt }));
-  const meals = (await getMealEntries(beyondDayId)).map((m) => ({ id: m.rootEventId, name: m.name, proteinG: m.effectiveProteinG, at: m.recordedAt }));
+  const meals = (await getMealEntries(beyondDayId)).map(toSameFoodMeal);
   return findSameFood(proteinLogs, meals, justLogged);
+}
+
+const toSameFoodMeal = (meal: Awaited<ReturnType<typeof getMealEntries>>[number]) => ({
+  id: meal.rootEventId,
+  savedMealId: meal.savedMealId,
+  name: meal.name,
+  calories: meal.effectiveCalories,
+  proteinG: meal.effectiveProteinG,
+  at: meal.recordedAt,
+});
+
+/** Standing meals only: getMealEntries has already removed voided roots. */
+export async function getDuplicateMealCheck(
+  beyondDayId: string,
+  mealRootId: string,
+): Promise<DuplicateMealPair | undefined> {
+  return findDuplicateMeal((await getMealEntries(beyondDayId)).map(toSameFoodMeal), mealRootId);
 }

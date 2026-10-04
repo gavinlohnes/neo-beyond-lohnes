@@ -1,15 +1,13 @@
 ---
-id: FOUNDATION-A-F1
-status: CLOSED
-baseline: 449c152181b3afddf3f6bfc2093473ee2dbff545
-branch: ccr-22d7c0f8-rqhhjm
-contract: docs/agent/drops/FOUNDATION-A-F1.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/152
-builder: Claude Code, direct owner approval 2026-10-04
+id: DUP-MEAL-001
+status: ACTIVE
+baseline: a75da3d2ae605291cb00cf78f1c92a86908d639e
+branch: codex/dup-meal-001
+contract: docs/agent/drops/DUP-MEAL-001.md
+pr: (pending — set by Builder immediately after opening the PR)
+builder: Codex backup builder
 reviewer: (unassigned)
-integrator: Owner merge of PR #152, 2026-10-04
-integration_sha: 2052f3ff2d2d0bf3d110bf68bc3d22ea629bcca3
-closed_at: 2026-10-04T03:40:03.164Z
+integrator: (unassigned)
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/FOUNDATION-A-F1.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/DUP-MEAL-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and

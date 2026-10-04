@@ -25,7 +25,9 @@ export interface SameFoodProteinLog {
 export interface SameFoodMeal {
   /** The root MEAL_LOGGED event id. */
   id: string;
+  savedMealId: string;
   name: string;
+  calories: number;
   proteinG: number;
   at: string;
 }
@@ -33,6 +35,41 @@ export interface SameFoodMeal {
 export interface SameFoodPair {
   protein: SameFoodProteinLog;
   meal: SameFoodMeal;
+}
+
+export interface DuplicateMealPair {
+  earlier: SameFoodMeal;
+  justLogged: SameFoodMeal;
+}
+
+/**
+ * Most recent standing meal before `justLoggedId` that is an exact duplicate.
+ * Array order breaks same-millisecond ties because getMealEntries already
+ * orders roots by recordedAt + seq.
+ */
+export function findDuplicateMeal(
+  meals: readonly SameFoodMeal[],
+  justLoggedId: string,
+): DuplicateMealPair | undefined {
+  const index = meals.findIndex((meal) => meal.id === justLoggedId);
+  if (index < 0) return undefined;
+  const justLogged = meals[index]!;
+  const justLoggedAt = new Date(justLogged.at).getTime();
+  const sameNameAndMacros = (candidate: SameFoodMeal) =>
+    candidate.name.trim().toLocaleLowerCase() === justLogged.name.trim().toLocaleLowerCase() &&
+    candidate.calories === justLogged.calories &&
+    candidate.proteinG === justLogged.proteinG;
+
+  const earlier = meals
+    .slice(0, index)
+    .filter((candidate) => {
+      const gap = justLoggedAt - new Date(candidate.at).getTime();
+      return gap >= 0 && gap <= SAME_FOOD_WINDOW_MS &&
+        (candidate.savedMealId === justLogged.savedMealId || sameNameAndMacros(candidate));
+    })
+    .at(-1);
+
+  return earlier ? { earlier, justLogged } : undefined;
 }
 
 export function isSimilarProtein(a: number, b: number): boolean {
