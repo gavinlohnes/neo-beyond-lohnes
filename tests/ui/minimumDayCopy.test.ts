@@ -144,7 +144,7 @@ describe("MINIMUM_DAY_ITEMS — auto vs manual is explained per item, matching g
         move: false,
         recoverConnect: false,
       }),
-    ).toBe("This active BeyondDay · 4 / 6");
+    ).toBe("Today · 4 / 6");
   });
 
   it("hydrate and protein note they can be logged directly, not just described as automatic", () => {

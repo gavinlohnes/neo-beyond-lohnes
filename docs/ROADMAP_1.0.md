@@ -145,6 +145,13 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
   2026-10-04, with addendum; water fix: one entry of 40 oz or more counts a day). **Done (PR #152,
   merged 2026-10-04).** Now in its field-test stop: about 3 work rotations (~3 weeks, to about
   Oct 25). Passing tests doesn't authorize F2, F3 or F4; field use is the gate.
+- **Plain words** (owner ruling 2026-10-04: "fix the developer wording"): TODAY's check-in row
+  reads CHECK-IN (was STATE INPUT); "this BeyondDay" becomes "today" / "the day" on the End Day
+  card and in Minimum Day; the no-check-in card's "Guidance remains deterministic, but less
+  informed" becomes "Suggestions still work without one; a check-in just helps them fit." A test
+  keeps those terms off TODAY, BODY, TRAIN, Weekly and History. **In review.**
+- **Red ALL GOOD stays** (owner ruling 2026-10-04: "I don't mind some of the red. I kind of like
+  it."). Not a defect; no change.
 
 ## Queue
 
@@ -159,9 +166,6 @@ Codex can build it when Claude is out.
 
 Spotted but not briefed. The owner moves an item up into the Queue or drops it.
 
-- TODAY's no-check-in card reads "BEYOND has no current state input for this BeyondDay.
-  Guidance remains deterministic, but less informed." (developer wording).
-- That card's ALL GOOD button is red; the other two ALL GOOD buttons are neutral.
 - Items no longer held for Oct 16: the Engine reacting to evidence, Week Ahead, deload/stall
   suggestions. Each needs a brief; Engine rule adoption needs sign-off.
 

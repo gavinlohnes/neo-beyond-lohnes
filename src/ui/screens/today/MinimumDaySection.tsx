@@ -49,7 +49,7 @@ export function HydrationOperationCard({
       <p className="tool-label">MINIMUM DAY // HYDRATION</p>
       <h2 className="command-title">Record what you drank</h2>
       <p className="card-body" style={{ marginBottom: 4 }}>
-        {minimumDayHydrateOz}oz recorded for this active BeyondDay.
+        {minimumDayHydrateOz} oz recorded today.
       </p>
       <div
         className="field-progress"

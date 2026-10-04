@@ -68,7 +68,7 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     expect(update.getBoundingClientRect().bottom).toBeLessThan(0);
 
     (update as HTMLButtonElement).click();
-    const formLocator = screen.getByRole("group", { name: "State check-in" });
+    const formLocator = screen.getByRole("group", { name: "Check-in" });
     await expect.element(formLocator).toBeVisible();
     const form = formLocator.element();
     await expect.poll(() => document.activeElement).toBe(form);

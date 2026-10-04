@@ -80,8 +80,8 @@ export function CheckInCard({
       aria-labelledby="state-check-in-title"
       tabIndex={-1}
     >
-      <p className="tool-label" style={{ marginBottom: 4 }}>STATE INPUT</p>
-      <h2 id="state-check-in-title" className="card-title">State check-in</h2>
+      <p className="tool-label" style={{ marginBottom: 4 }}>CHECK-IN</p>
+      <h2 id="state-check-in-title" className="card-title">Check-in</h2>
       <button
         className="btn-secondary"
         style={{ marginBottom: 4 }}
