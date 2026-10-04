@@ -155,10 +155,10 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 - **DUP-MEAL-001 — duplicate-meal prompt** (owner brief 2026-10-04; built by Codex). **Done (PR
   #155, merged).** First Codex-built Drop under the builder-roles rules.
 - **DUP-MEAL-002 — SAME AS YESTERDAY duplicates** (owner approval 2026-10-04, option B): the
-  duplicate-meal prompt covers the SAME AS YESTERDAY batch too. **In review.**
+  duplicate-meal prompt covers the SAME AS YESTERDAY batch too. **Done (PR #157, merged).**
 - **Soak-run fixes** (owner approval 2026-10-04, option A): eight frictions from a scripted
   night-shift → day-off walk through the real app (Shift Down repeating, a contradictory header at
-  15:00, leftover developer wording, a stale schedule-screen promise). **In review.**
+  15:00, leftover developer wording, a stale schedule-screen promise). **Done (PR #157, merged).**
 
 ## Queue
 
@@ -167,7 +167,21 @@ work". Only the owner adds to it. Each item is one short brief (what changes, wh
 one concrete example of the problem it fixes) plus a written Drop in `docs/agent/drops/` so
 Codex can build it when Claude is out.
 
-1. *(empty: waiting for the owner's next pick)*
+Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
+PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
+
+1. **HUD-001 — HUD design system** (ARCHITECTURAL; waits for the owner's doctrine call). Black
+   #000, one red #D0141B, cut corners, bracket ticks, 1px lines, Chakra Petch + JetBrains Mono
+   self-hosted, WCAG AA, every screen except Weekly until the F1 review, no emblems/logos/
+   character names, visual-only. Drop: `docs/agent/drops/HUD-001.md`.
+2. **BACKUP-AUTO-001 — automatic backup** (ARCHITECTURAL; waits for the owner's (a)/(b) pick).
+   Opt-in, due-on-open backup to a destination Gavin picks, monthly restore check, no server.
+   Drop: `docs/agent/drops/BACKUP-AUTO-001.md`.
+3. **PR-CARDS-001 — PR record cards** (ROUTINE). Quiet red-outlined PR tag, no sound; every PR
+   kept as a card in TRAIN → RECORDS. Drop: `docs/agent/drops/PR-CARDS-001.md`.
+4. **BODY-TIMELINE-001 — transformation timeline** (ROUTINE). Weight trend in BODY with PRs,
+   clean-day and weight milestones, goal date pinned; filters per event type; read-only. Drop:
+   `docs/agent/drops/BODY-TIMELINE-001.md`.
 
 ### Known, not yet approved
 
@@ -175,8 +189,19 @@ Spotted but not briefed. The owner moves an item up into the Queue or drops it.
 
 - Items no longer held for Oct 16: the Engine reacting to evidence, Week Ahead, deload/stall
   suggestions. Each needs a brief; Engine rule adoption needs sign-off.
+- **Parking lot (owner brief 2026-10-04), no Drops yet:**
+  - **Gym mode:** full-screen lift view, big buttons, screen kept awake, auto-advance, plate math,
+    warm-up ramp, Gavin's own cue text per lift, ghost set.
+  - **Notes that go somewhere:** day-off capture sweep, time capsule, shift handoff.
+  - **Data views (after the F1 review):** tap a number to see its story: lift strength curve,
+    12-week training heat grid, a measure against its "your usual" band.
+  - **Open-source parts to evaluate (licenses first):** free-exercise-db; wger (study only).
 
 ## Builders (owner ruling, 2026-10-04)
+
+Speed rules (owner, 2026-10-04): Routine Drops are half a page and merge on green checks;
+Architectural/High-Risk keep the full process and wait for the owner. Handoff notes end with
+"DECISIONS FOR GAVIN". Field notes come in as GitHub Issues labeled `field`.
 
 Claude Code is the primary builder; OpenAI Codex is the backup builder when Claude's usage runs
 out. One builder at a time; Codex builds only from a written Drop, never merges, and doesn't

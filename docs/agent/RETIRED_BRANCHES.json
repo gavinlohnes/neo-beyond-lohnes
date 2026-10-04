@@ -254,6 +254,13 @@
       "drop": "CHECKPOINT-003",
       "pr": 95,
       "reason": "Merged before master's history rewrite; no shared history, so git can't see the merge."
+    },
+    {
+      "branch": "codex/dup-meal-001",
+      "sha": "8adc44a76e50c88a62e641c5417eeafafb565c92",
+      "drop": "DUP-MEAL-001",
+      "pr": 155,
+      "reason": "PR #155 merged at b689e01; Codex pushed a docs-only handoff commit (8adc44a) after the merge. Superseded by #156; delete the branch."
     }
   ],
   "note_2026_10_04": "Owner approved deleting the old branches (2026-10-04). Agent sessions can't delete remote branches, so the ACTIVE-snapshot ones whose PR merged at their exact tip are listed here until the owner deletes them."

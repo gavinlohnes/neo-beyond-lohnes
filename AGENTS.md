@@ -38,7 +38,7 @@ Also:
   builder's Drop is in flight without a handoff, don't start on top of it: report it and ask.
 - **Claude Code's own Drops** are reviewed by a separate session before they merge
   (`docs/agent/BEYOND_ENGINEERING_CONTRACT.md`, Integration discipline). Only the owner says
-  when something merges.
+  when something merges, except Routine Drops, which merge on green checks (speed rules below).
 - **Keeping Codex fed:** Claude Code writes the Drop contract for each Queue item when the owner
   approves it, so Codex always has a written Drop to pick up.
 - **Codex PR hygiene (owner session 2026-10-04, after DUP-MEAL-001):**
@@ -47,6 +47,16 @@ Also:
     until Claude Code has reviewed this exact head."
   - Once the PR is open, push only fixes asked for in review; never push to the branch after it
     merges (a late commit strands outside master and blocks `factory-drop.mjs close`).
+- **Speed rules (owner ruling, 2026-10-04):**
+  - **Routine Drops:** a half-page Drop; no `docs/UX_DECISIONS.md` essay (one line in the roadmap
+    is enough); **merge on green checks** without waiting for the owner. Architectural and
+    High-Risk Drops keep the full process and wait for the owner's approval to build and to merge.
+  - **Every handoff note ends with "DECISIONS FOR GAVIN"**: at most 3, multiple choice, the
+    recommendation marked; or "None."
+  - **Field notes arrive as GitHub Issues labeled `field`.** Triage them first each session:
+    fix small ones as Routine, turn bigger ones into a Queue proposal for the owner.
+  - Keep branches clean: after a merge, the merged branch should be deleted (agent sessions can't
+    delete remote branches; list them for the owner) and `npm run factory:status` should run clean.
 - **Claude Code closes every merged Drop**, Codex's included: `factory-drop.mjs close`, the
   `docs/UX_DECISIONS.md` as-built entry, the roadmap (mark done, clear it from the Queue) and the
   handoff note, in one small PR right after the merge.
