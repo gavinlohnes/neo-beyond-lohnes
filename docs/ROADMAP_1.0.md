@@ -2,7 +2,7 @@
 
 Owner rulings, 2026-09-30 (ROADMAP-1.0-001). This is the build plan for BEYOND 1.0. When the
 owner says "let's work", start here: propose the next unfinished Drop, wait for approval, build
-it, open a PR, and report in plain language (see `CLAUDE.md`).
+it, open a PR, and report in plain language (see `AGENTS.md`).
 
 ## Goal
 
@@ -141,6 +141,29 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 - **Undo after every log** (owner ruling 2026-10-03; scope approved 2026-10-04: water, sleep,
   weight and protein, in BODY and on TODAY). **In review.**
+
+## Queue
+
+What gets built next, top first. Either builder (Claude Code or Codex, one at a time, see
+`AGENTS.md`) takes the top item on "let's work". Only the owner adds to it. Each item is one
+short brief: what changes, where it surfaces, and one concrete example of the problem it fixes.
+
+1. *(empty: waiting for the owner's next pick)*
+
+### Known, not yet approved
+
+Spotted but not briefed. The owner moves an item up into the Queue or drops it.
+
+- TODAY's no-check-in card reads "BEYOND has no current state input for this BeyondDay.
+  Guidance remains deterministic, but less informed." (developer wording).
+- That card's ALL GOOD button is red; the other two ALL GOOD buttons are neutral.
+- Items no longer held for Oct 16: the Engine reacting to evidence, Week Ahead, deload/stall
+  suggestions. Each needs a brief; Engine rule adoption needs sign-off.
+
+## Builders (owner ruling, 2026-10-04)
+
+Claude Code and Codex both build, one at a time, so work continues when either one's usage runs
+out. Rules in `AGENTS.md`; the handoff note is `docs/agent/CURRENT_CHECKPOINT.md`.
 
 ## Design rules
 

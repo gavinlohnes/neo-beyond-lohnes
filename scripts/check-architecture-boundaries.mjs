@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Factory Drop 01B — deterministic architecture-boundary enforcement.
 // Zero dependencies: plain Node fs/path + a regex import scan. Enforces
-// the layer rules already stated in CLAUDE.md's "Architecture layer
+// the layer rules already stated in AGENTS.md's "Architecture layer
 // rules" section and .claude/rules/engine.md — it doesn't invent new
 // doctrine, it makes the existing doctrine mechanically checkable.
 //
@@ -16,7 +16,7 @@
 // existing, accepted code): a blanket "UI must never import engine
 // directly" rule. UI already imports several engine/* functions directly
 // today (e.g. deriveCapacity, suggestSessionVariant) for pure, in-memory
-// computation that doesn't need a persistence round-trip — CLAUDE.md's
+// computation that doesn't need a persistence round-trip — AGENTS.md's
 // own wording ("never engine/* directly for anything requiring
 // persistence") already reflects that this is fine; only the
 // persistence-direction rule is a hard line.
@@ -119,7 +119,7 @@ if (violations.length > 0) {
   console.error("Architecture boundary violations found:\n");
   for (const v of violations) console.error(" - " + v);
   console.error(
-    `\n${violations.length} violation(s). See CLAUDE.md's "Architecture layer rules" and .claude/rules/engine.md.`,
+    `\n${violations.length} violation(s). See AGENTS.md's "Architecture layer rules" and .claude/rules/engine.md.`,
   );
   process.exit(1);
 } else {

@@ -2,7 +2,7 @@
 
 Read by both Claude Code (via CLAUDE.md) and Codex (via AGENTS.md). The single source of
 implementation-critical invariants both engineering agents must never violate, regardless of
-which one is building. Not a replacement for CLAUDE.md, docs/UX_DECISIONS.md, or
+which one is building. Not a replacement for AGENTS.md (which CLAUDE.md imports), docs/UX_DECISIONS.md, or
 .claude/rules/* — the correctness-critical subset, kept short.
 
 ## Authority order
@@ -35,7 +35,7 @@ src/persistence/     Dexie schema, backup/restore, legacy-format compat.
 src/ui/              screens + components, calls application/* only.
 ```
 
-Mechanically enforced by `npm run check:architecture`. Full detail in `CLAUDE.md` and
+Mechanically enforced by `npm run check:architecture`. Full detail in `AGENTS.md` and
 `.claude/rules/engine.md` / `persistence.md` — not duplicated here.
 
 ## Escalate before continuing (do not guess)
