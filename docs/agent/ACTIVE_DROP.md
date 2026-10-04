@@ -1,6 +1,6 @@
 ---
 id: GYM-POLISH-001
-status: ACTIVE
+status: CLOSED
 baseline: 3ba21b60cacc175cd54a8eb1d0be7f1fd024d9e9
 branch: claude/gym-polish-001
 contract: docs/agent/drops/GYM-POLISH-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/171
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: fbe0820d57eb1b8d4f38e1d4067695493601c439
+closed_at: 2026-10-04T21:43:37.694Z
 ---
 
 # ACTIVE_DROP
