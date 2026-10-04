@@ -1,15 +1,13 @@
 ---
-id: AUTOPILOT-CANDIDATE-DISPATCH-002
-status: CLOSED
-baseline: f718686574aea2fe2b20d256382146bf52c2ae60
-branch: beyond-builder/autopilot-candidate-dispatch-002-38040710a9fb
-contract: docs/agent/drops/AUTOPILOT-CANDIDATE-DISPATCH-002.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/148
-builder: Codex Builder, direct owner authorization 2026-10-03 Option C
+id: FIELD-NAV-001
+status: ACTIVE
+baseline: e0ccb40350eaa4e87bcc90c25d9ff9379d0507e0
+branch: codex/field-nav-001
+contract: docs/agent/drops/FIELD-NAV-001.md
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/149
+builder: Codex Builder, direct owner authorization 2026-10-04
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: 0941beabdbfc55c03b59eb34c2304fe24b790278
-closed_at: 2026-10-04T00:22:39.673Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/AUTOPILOT-CANDIDATE-DISPATCH-002.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/FIELD-NAV-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and

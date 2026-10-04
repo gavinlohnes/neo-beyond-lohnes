@@ -23,9 +23,60 @@ const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
 
 afterEach(() => {
   cleanup();
+  document.querySelectorAll("[data-field-nav-spacer]").forEach((element) => element.remove());
+  window.scrollTo(0, 0);
 });
 
 describe("Utility Belt (App shell bottom navigation)", () => {
+  it("starts every primary destination at the top and active-tab re-taps return there predictably", async () => {
+    await page.viewport(390, 844);
+    await startDay();
+    const screen = await render(<App />);
+    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toBeVisible();
+    const spacer = document.createElement("div");
+    spacer.dataset.fieldNavSpacer = "true";
+    spacer.style.height = "3000px";
+    document.body.append(spacer);
+
+    for (const destination of ["MORE", "BODY", "TODAY"] as const) {
+      window.scrollTo(0, 1400);
+      expect(window.scrollY).toBeGreaterThan(0);
+      (screen.getByRole("button", { name: destination, exact: true }).element() as HTMLButtonElement).click();
+      await expect.poll(() => screen.getByRole("button", { name: destination, exact: true }).element().getAttribute("aria-current")).toBe("page");
+      await expect.poll(() => window.scrollY).toBe(0);
+    }
+
+    window.scrollTo(0, 1400);
+    (screen.getByRole("button", { name: "TODAY", exact: true }).element() as HTMLButtonElement).click();
+    await expect.poll(() => window.scrollY).toBe(0);
+    spacer.remove();
+  });
+
+  it("reveals and focuses UPDATE CHECK-IN even when the prior viewport is far below it", async () => {
+    await page.viewport(390, 844);
+    const day = await startDay();
+    await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
+    const screen = await render(<App />);
+    const updateLocator = screen.getByRole("button", { name: "Update check-in" });
+    await expect.element(updateLocator).toBeVisible();
+    const update = updateLocator.element();
+    const spacer = document.createElement("div");
+    spacer.dataset.fieldNavSpacer = "true";
+    spacer.style.height = "3000px";
+    document.body.append(spacer);
+    window.scrollTo(0, 2400);
+    expect(update.getBoundingClientRect().bottom).toBeLessThan(0);
+
+    (update as HTMLButtonElement).click();
+    const formLocator = screen.getByRole("group", { name: "State check-in" });
+    await expect.element(formLocator).toBeVisible();
+    const form = formLocator.element();
+    await expect.poll(() => document.activeElement).toBe(form);
+    await expect.poll(() => form.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
+    expect(form.getBoundingClientRect().top).toBeLessThan(window.innerHeight - 88);
+    spacer.remove();
+  });
+
   it("re-entry returns directly to a canonical ACTIVE workout at its exact next set without creating a duplicate", async () => {
     await page.viewport(320, 800);
     const day = await startDay();
