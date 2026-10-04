@@ -161,6 +161,17 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
   15:00, leftover developer wording, a stale schedule-screen promise). **Done (PR #157, merged).**
 - **PR-CARDS-001 — PR record cards** (owner brief 2026-10-04, Queue item 3): a quiet red-outlined
   PR tag, and every PR kept as a card in TRAIN → RECORDS. **Done (PR #164, merged 2026-10-04).**
+- **HUD-001 — HUD design system** (owner brief 2026-10-04, Queue item 1; doctrine amendment 1A):
+  black, one red, cut corners, 1px lines, self-hosted fonts, every screen except Weekly.
+  **Done (PR #160, merged 2026-10-04).**
+- **BACKUP-AUTO-001 — automatic backup** (owner brief 2026-10-04, Queue item 2; decision 2A):
+  opt-in, due-on-open backup shared to a destination Gavin picks, monthly restore check, no server.
+  **Done (PR #162, merged 2026-10-04).**
+- **BODY-TIMELINE-001 — transformation timeline** (owner brief 2026-10-04, Queue item 4): BODY →
+  BODYWEIGHT → SHOW TIMELINE shows 90 days of weight with PRs, clean-day milestones (7/30/60/90/
+  180/365, a count, never a streak), weight milestones and the goal date pinned; filters per kind;
+  read only. Example: tapping a marker reads "Machine Chest Press: heaviest yet (145 lb)", the
+  finish summary's own words. **Done (PR #166, merged 2026-10-04).**
 
 ## Queue
 
@@ -172,19 +183,7 @@ Codex can build it when Claude is out.
 Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
 PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
 
-1. **HUD-001 — HUD design system** (ARCHITECTURAL; doctrine amendment approved 2026-10-04, 1A). Black
-   #000, one red #D0141B, cut corners, bracket ticks, 1px lines, Chakra Petch + JetBrains Mono
-   self-hosted, WCAG AA, every screen except Weekly until the F1 review, no emblems/logos/
-   character names, visual-only. Drop: `docs/agent/drops/HUD-001.md`.
-   **Done (PR #160, merged 2026-10-04).**
-2. **BACKUP-AUTO-001 — automatic backup** (ARCHITECTURAL; due-on-open + share, no account,
-   owner decision 2A). Opt-in, due-on-open backup shared to a destination Gavin picks, monthly
-   restore check, no server.
-   Drop: `docs/agent/drops/BACKUP-AUTO-001.md`.
-   **Done (PR #162, merged 2026-10-04).**
-3. **BODY-TIMELINE-001 — transformation timeline** (ROUTINE). Weight trend in BODY with PRs,
-   clean-day and weight milestones, goal date pinned; filters per event type; read-only. Drop:
-   `docs/agent/drops/BODY-TIMELINE-001.md`.
+Queue empty — Gavin adds the next item.
 
 ### Known, not yet approved
 
