@@ -13,7 +13,7 @@ in backups), 3A (warm-up ramp as a suggestion); recorded in the roadmap Queue an
 `docs/UX_DECISIONS.md`.
 
 - **Drop:** `GYM-001` gym screen: ARCHITECTURAL, `ACTIVE`. Gavin approves the merge.
-- **Branch:** `claude/gym-001`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+- **Branch:** `claude/gym-001`. **PR:** [#170](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/170).
 - **Done:** GYM MODE in an active STANDARD/REDUCED workout opens a full-screen view: typeable
   weight and reps with −/+ (weight by the lift's `incrementLbs`), LOG SET n, SKIP, rest
   countdown, ghost set ("Last time 185 × 5"), auto-advance, EXIT. Screen Wake Lock while open.

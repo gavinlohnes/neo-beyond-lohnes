@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: b58fbaf2a827ce15a25513e008d90ec600d42f48
 branch: claude/gym-001
 contract: docs/agent/drops/GYM-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/170
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
