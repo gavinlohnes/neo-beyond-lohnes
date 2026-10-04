@@ -331,8 +331,8 @@ below, this entry wins; the older entry is kept for history.
   warm-up ramp); GYM-002 adds Gavin's own cue text per lift, **stored in the database so it is in
   backups** (not device-only). The **warm-up ramp is a suggestion only**: shown before the first
   working set of a session's first barbell lift, never logged unless Gavin logs it; the bar ×10,
-  then about 50% ×5, 70% ×3 and 85% ×1 of the working weight, rounded down to a loadable weight.
-  Example: working weight 185 lb reads "Warm-up: 45 ×10 · 95 ×5 · 125 ×3 · 155 ×1". Plate math and
+  then about 50% ×5, 70% ×3 and 85% ×1 of the working weight, rounded to the nearest loadable weight.
+  Example: working weight 185 lb reads "Warm-up: 45 ×10 · 95 ×5 · 130 ×3 · 155 ×1". Plate math and
   the ramp apply to barbell lifts only (built-in templates A/B/C are machine and cable).
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
