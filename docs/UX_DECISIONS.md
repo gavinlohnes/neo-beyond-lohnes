@@ -344,6 +344,10 @@ below, this entry wins; the older entry is kept for history.
   database upgrade; the latest one per lift wins and an empty one clears it. It is edited only in
   the gym screen, where it's used. Example: Leg Press shows "Feet high, slow down, don't lock
   knees." under its name.
+- **As built: cue text (GYM-002, PR #173, merged 2026-10-04, High-Risk).** Gym mode → + ADD CUE /
+  EDIT under the lift's name saves up to 140 characters as an `EXERCISE_CUE_SET` event; the latest
+  per lift shows, an empty one clears it, History reads "Cue set: Leg Press.", and backups carry it
+  with no database upgrade.
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks
