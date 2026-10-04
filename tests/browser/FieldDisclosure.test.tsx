@@ -1,9 +1,9 @@
+/// <reference types="@vitest/browser-playwright" />
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
-import { page } from "vitest/browser";
+import { cdp, page } from "vitest/browser";
 import { FieldDisclosure } from "../../src/ui/components/FieldDisclosure";
-import { positionRevealedSurface } from "../../src/ui/navigationPosition";
 
 /**
  * VISUAL-003 (BODY Field Instrument): FieldDisclosure formalizes the
@@ -21,8 +21,29 @@ function Harness({ initialOpen = false }: { initialOpen?: boolean }) {
   );
 }
 
+function TallHarness() {
+  const [open, setOpen] = useState(false);
+  return (
+    <FieldDisclosure summary={open ? "HIDE FORM" : "SHOW FORM"} open={open} onToggle={setOpen}>
+      <div data-testid="tall-content" style={{ height: 120 }}>Form</div>
+    </FieldDisclosure>
+  );
+}
+
+// Stands in for App's fixed bottom nav as an iPhone home-screen app draws
+// it: 64px of buttons plus a 34px home-indicator safe area.
+function FakeShellNav() {
+  return <nav className="shell-nav" style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: 98 }} />;
+}
+
+const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+
 describe("FieldDisclosure (real browser)", () => {
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(async () => {
+    vi.restoreAllMocks();
+    window.scrollTo(0, 0);
+    await cdp().send("Emulation.setEmulatedMedia", { features: [] });
+  });
 
   it("is closed by default, opens on click, and exposes a real button-role toggle", async () => {
     const screen = await render(<Harness />);
@@ -65,14 +86,63 @@ describe("FieldDisclosure (real browser)", () => {
     await expect.poll(() => content.getBoundingClientRect().top).toBeLessThan(window.innerHeight - 88);
   });
 
-  it("uses immediate positioning under reduced motion without disabling the reveal", () => {
-    vi.spyOn(window, "matchMedia").mockReturnValue({ matches: true } as MediaQueryList);
-    const scrollBy = vi.spyOn(window, "scrollBy").mockImplementation(() => {});
-    const target = document.createElement("div");
-    vi.spyOn(target, "getBoundingClientRect").mockReturnValue({ top: 900 } as DOMRect);
+  it("leaves content that opens fully in view where it is", async () => {
+    await page.viewport(390, 844);
+    const screen = await render(
+      <div style={{ paddingTop: 100, paddingBottom: 2000 }}>
+        <Harness />
+      </div>,
+    );
+    (screen.getByRole("button", { name: "SHOW THING" }).element() as HTMLElement).click();
+    await expect.element(screen.getByText("Hidden content")).toBeVisible();
+    await nextFrame();
+    await nextFrame();
+    expect(window.scrollY).toBe(0);
+  });
 
-    positionRevealedSurface(target);
+  it("shows the whole revealed surface above the bottom nav, safe area included", async () => {
+    await page.viewport(390, 844);
+    const screen = await render(
+      <div style={{ paddingTop: 1200, paddingBottom: 1200 }}>
+        <TallHarness />
+        <FakeShellNav />
+      </div>,
+    );
+    const toggle = screen.getByRole("button", { name: "SHOW FORM" }).element();
+    // Content opens with its top just above where a fixed 88px inset would
+    // end, but its body would sit under the taller real nav.
+    window.scrollTo(0, toggle.getBoundingClientRect().top + window.scrollY - 640);
+    (toggle as HTMLElement).click();
 
-    expect(scrollBy).toHaveBeenCalledWith({ top: 888, left: 0, behavior: "auto" });
+    const content = screen.getByTestId("tall-content").element();
+    await expect.element(screen.getByTestId("tall-content")).toBeVisible();
+    const navTop = document.querySelector(".shell-nav")!.getBoundingClientRect().top;
+    await expect.poll(() => content.getBoundingClientRect().bottom).toBeLessThanOrEqual(navTop + 1);
+    expect(content.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
+  });
+
+  it("under a real reduced-motion preference, positions immediately instead of animating", async () => {
+    await cdp().send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+    expect(window.matchMedia("(prefers-reduced-motion: reduce)").matches).toBe(true);
+    await page.viewport(390, 844);
+    const scrollBy = vi.spyOn(window, "scrollBy");
+    const screen = await render(
+      <div style={{ paddingTop: 1200, paddingBottom: 1200 }}>
+        <TallHarness />
+        <FakeShellNav />
+      </div>,
+    );
+    const toggle = screen.getByRole("button", { name: "SHOW FORM" }).element();
+    window.scrollTo(0, toggle.getBoundingClientRect().top + window.scrollY - 760);
+    (toggle as HTMLElement).click();
+    await expect.element(screen.getByTestId("tall-content")).toBeVisible();
+    await expect.poll(() => scrollBy.mock.calls.length).toBe(1);
+
+    // No polling for the final position: an instant scroll is already done.
+    const content = screen.getByTestId("tall-content").element();
+    const navTop = document.querySelector(".shell-nav")!.getBoundingClientRect().top;
+    expect(scrollBy.mock.calls[0]![0]).toMatchObject({ behavior: "auto" });
+    expect(content.getBoundingClientRect().bottom).toBeLessThanOrEqual(navTop + 1);
+    expect(content.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
   });
 });

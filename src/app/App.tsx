@@ -231,9 +231,18 @@ export function App() {
     };
   }, []);
 
+  // Every in-app tab switch, from the bottom nav or from a button inside a
+  // screen, starts the destination at its top.
+  function showTab(destination: Tab) {
+    setTab(destination);
+    // Wait until the destination commit so the browser cannot restore the
+    // outgoing screen's document offset onto the incoming screen.
+    window.requestAnimationFrame(positionPrimaryDestination);
+  }
+
   function openTrain(destination: TrainDestination) {
     setTrainDestination(destination);
-    setTab("TRAIN");
+    showTab("TRAIN");
   }
 
   function openPrimaryTab(destination: Tab) {
@@ -241,10 +250,7 @@ export function App() {
     setBodyFocus(null);
     setTodayToolsOpen(false);
     if (destination === "MORE" && tab === "MORE") setMoreResetKey((key) => key + 1);
-    setTab(destination);
-    // Wait until the destination commit so the browser cannot restore the
-    // outgoing screen's document offset onto the incoming screen.
-    window.requestAnimationFrame(positionPrimaryDestination);
+    showTab(destination);
   }
 
   if (!continuityResolved) {
@@ -273,12 +279,12 @@ export function App() {
             require lifting new state through MoreScreen/IntentScreen too. */}
         {tab === "TODAY" && (
           <TodayScreen
-            onViewCommitments={() => setTab("MORE")}
+            onViewCommitments={() => showTab("MORE")}
             onOpenTrain={openTrain}
             openToolsOnMount={todayToolsOpen}
             onOpenBody={(target) => {
               setBodyFocus(target ?? null);
-              setTab("BODY");
+              showTab("BODY");
             }}
           />
         )}
@@ -294,7 +300,7 @@ export function App() {
             key={moreResetKey}
             onOpenCapture={() => {
               setTodayToolsOpen(true);
-              setTab("TODAY");
+              showTab("TODAY");
             }}
           />
         )}
