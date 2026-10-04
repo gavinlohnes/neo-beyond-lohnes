@@ -125,6 +125,14 @@ export interface DaySummary {
   proteinG?: number;
   /** Meal calories; absent when no meal was logged. */
   kcal?: number;
+  /**
+   * FOUNDATION-A-F1: how many entries stand behind `waterOz` and `proteinG`
+   * (undone and deleted ones excluded) — water logs, and food entries
+   * (protein-only logs plus meals). Lets a lived-day series tell a day logged
+   * once from a day logged throughout. Absent when neither was logged (the
+   * same "nothing logged, nothing present" rule as every other field).
+   */
+  entryCounts?: { water: number; food: number };
   workouts: LedgerWorkout[];
   urges: LedgerUrge[];
   /** A clean day was logged (hold-to-confirm) on this day. Never inferred. */
@@ -417,6 +425,7 @@ function summarizeDay(
   const waterOz = sumOrUndefined(water);
   const proteinG = sumOrUndefined([...proteinLogs, ...mealProtein]);
   const kcal = sumOrUndefined(meals.map((m) => m.calories));
+  const entryCounts = { water: water.length, food: proteinLogs.length + meals.length };
   const declaredSource = latestWorkContext ? (latestWorkContext.payload as WorkContextSetPayload).source : undefined;
 
   return {
@@ -437,6 +446,7 @@ function summarizeDay(
     ...(waterOz !== undefined ? { waterOz } : {}),
     ...(proteinG !== undefined ? { proteinG } : {}),
     ...(kcal !== undefined ? { kcal } : {}),
+    ...(entryCounts.water > 0 || entryCounts.food > 0 ? { entryCounts } : {}),
     workouts,
     urges,
     cleanDay: events.some((e) => e.type === "CLEAN_DAY_LOGGED"),

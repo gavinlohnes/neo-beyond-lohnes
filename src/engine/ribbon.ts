@@ -1,5 +1,6 @@
 import type { DaySummary } from "./dayLedger";
 import { mostRecentBoundaryAtOrBefore } from "./dayRollover";
+import { groupLivedDays, livedDayBoundary } from "./livedDaySeries";
 
 /**
  * THE RIBBON (2026-10-03): the last RIBBON_DAYS lived days (16:30 → 16:30),
@@ -32,24 +33,16 @@ export interface RibbonDay {
   cleanDay: boolean;
 }
 
-/** Calendar-built boundaries, so a DST change never shifts a column. */
-function boundaryDaysBefore(latest: Date, daysBack: number): Date {
-  return new Date(latest.getFullYear(), latest.getMonth(), latest.getDate() - daysBack, latest.getHours(), latest.getMinutes(), 0, 0);
-}
-
+// FOUNDATION-A-F1: lived-day grouping and calendar-built (DST-safe) boundaries
+// come from the shared lived-day series; this module only draws the columns.
 export function projectRibbon(summaries: readonly DaySummary[], now: Date, days = RIBBON_DAYS): RibbonDay[] {
   const latest = mostRecentBoundaryAtOrBefore(now);
-  const byWindow = new Map<string, DaySummary[]>();
-  for (const s of summaries) {
-    const list = byWindow.get(s.livedDayStart) ?? [];
-    list.push(s);
-    byWindow.set(s.livedDayStart, list);
-  }
+  const byWindow = groupLivedDays(summaries);
 
   const columns: RibbonDay[] = [];
   for (let back = days - 1; back >= 0; back--) {
-    const livedDayStart = boundaryDaysBefore(latest, back).toISOString();
-    const records = byWindow.get(livedDayStart) ?? [];
+    const livedDayStart = livedDayBoundary(latest, back).toISOString();
+    const records = byWindow.get(livedDayStart)?.records ?? [];
     columns.push(combine(livedDayStart, records));
   }
   return columns;

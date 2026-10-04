@@ -3,6 +3,9 @@ import type { RibbonDay } from "../../../engine/ribbon";
 import type { ExpenditureReadout } from "../../../engine/expenditure";
 import type { Finding, WaitingFinding, WorkoutArm } from "../../../engine/findings";
 import type { SchedulePhase } from "../../../engine/scheduledContext";
+import type { PersonalBaseline } from "../../../engine/personalBaselines";
+import type { DayKind, MeasureId } from "../../../engine/livedDaySeries";
+import { formatDuration } from "../body/bodyScreenCopy";
 
 /**
  * Burden Meter (Drop 1, owner brief 2026-10-03): one neutral, read-only line
@@ -208,4 +211,68 @@ export function describeExpenditure(readout: ExpenditureReadout): { headline?: s
     needs.push(`${readout.weighIns.need} weigh-ins over 2 weeks (have ${readout.weighIns.have})`);
   }
   return { detail: `Not enough data yet — needs ${needs.join(" and ")} in the last ${readout.windowDays} days.` };
+}
+
+// ---- YOUR USUAL (FOUNDATION-A-F1) ----
+
+const MEASURE_WORDS: Record<MeasureId, string> = { MAIN_SLEEP: "Sleep", WATER: "Water", PROTEIN: "Protein" };
+const KIND_WORDS: Record<DayKind, { label: string; one: string; many: string }> = {
+  WORK: { label: "on work days", one: "work day", many: "work days" },
+  OFF: { label: "on days off", one: "day off", many: "days off" },
+};
+const VERDICT_WORDS = { BELOW: "below", INSIDE: "inside", ABOVE: "above" } as const;
+
+function formatAmount(measure: MeasureId, value: number): string {
+  if (measure === "MAIN_SLEEP") return formatDuration(value);
+  return measure === "WATER" ? `${value} oz` : `${value} g`;
+}
+
+function formatRange(measure: MeasureId, low: number, high: number): string {
+  return `${formatAmount(measure, low)}–${formatAmount(measure, high)}`;
+}
+
+function days(kind: DayKind, n: number): string {
+  return `${n} ${n === 1 ? KIND_WORDS[kind].one : KIND_WORDS[kind].many}`;
+}
+
+export interface BaselineCopy {
+  /** Stable key, e.g. "MAIN_SLEEP-WORK". */
+  key: string;
+  headline: string;
+  basis: string;
+}
+
+/**
+ * One headline + one basis line per comparison, in BASELINE_ORDER. Neutral
+ * words only — inside / below / above your usual — never good or bad.
+ */
+export function describeBaselines(baselines: readonly PersonalBaseline[]): BaselineCopy[] {
+  return baselines.flatMap((b) => {
+    if (b.kind !== "COMPARED") return [];
+    const name = `${MEASURE_WORDS[b.measure]} ${KIND_WORDS[b.dayKind].label}`;
+    return [
+      {
+        key: `${b.measure}-${b.dayKind}`,
+        headline: `${name} · ${formatAmount(b.measure, b.period)} · ${VERDICT_WORDS[b.verdict]} your usual ${formatRange(b.measure, b.low, b.high)}`,
+        basis: `${days(b.dayKind, b.periodDays)} this week · usual from ${days(b.dayKind, b.baselineDays)} before`,
+      },
+    ];
+  });
+}
+
+/** One quiet line for everything not compared: still learning (with progress), or nothing to compare this week. */
+export function describeBaselinesQuiet(baselines: readonly PersonalBaseline[]): string | undefined {
+  const learning = baselines.flatMap((b) =>
+    b.kind === "LEARNING"
+      ? [`${MEASURE_WORDS[b.measure].toLowerCase()} ${KIND_WORDS[b.dayKind].label} (${b.have} of ${days(b.dayKind, b.need)})`]
+      : [],
+  );
+  const notThisWeek = baselines.flatMap((b) =>
+    b.kind === "NOT_THIS_WEEK" ? [`${MEASURE_WORDS[b.measure].toLowerCase()} ${KIND_WORDS[b.dayKind].label}`] : [],
+  );
+  const parts = [
+    ...(learning.length ? [`Still learning your usual: ${learning.join(", ")}.`] : []),
+    ...(notThisWeek.length ? [`Nothing to compare this week: ${notThisWeek.join(", ")}.`] : []),
+  ];
+  return parts.length ? parts.join(" ") : undefined;
 }

@@ -13,6 +13,7 @@ import { summarizeBurden, type BurdenSummary } from "../engine/dayLedger";
 import { projectRibbon, type RibbonDay } from "../engine/ribbon";
 import { projectFindings, type FindingsResult } from "../engine/findings";
 import { projectExpenditure, type ExpenditureReadout } from "../engine/expenditure";
+import { projectPersonalBaselines, type PersonalBaseline } from "../engine/personalBaselines";
 import { getCustomTemplates } from "./customTemplateQueries";
 
 /**
@@ -68,6 +69,12 @@ export interface WeeklySummary {
    * it's still waiting for. Feeds nothing.
    */
   expenditure: ExpenditureReadout;
+  /**
+   * YOUR USUAL (FOUNDATION-A-F1, 2026-10-04): the last 7 finished lived days
+   * against Gavin's own usual range for main sleep, water and protein, per
+   * work day / day off — or what each is still learning. Feeds nothing.
+   */
+  baselines: PersonalBaseline[];
 }
 
 function inWindow(iso: string | undefined, start: number, end: number): boolean {
@@ -199,5 +206,6 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
     },
     findings: { ...findings, exerciseNames },
     expenditure: projectExpenditure(daySummaries, history, now),
+    baselines: projectPersonalBaselines(daySummaries, now),
   };
 }

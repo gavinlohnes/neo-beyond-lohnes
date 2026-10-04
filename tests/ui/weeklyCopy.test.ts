@@ -167,3 +167,39 @@ describe("expenditure readout copy (Drop 6)", () => {
     });
   });
 });
+
+describe("YOUR USUAL copy (FOUNDATION-A-F1)", () => {
+  it("one headline and one basis line per comparison, in neutral words", async () => {
+    const { describeBaselines } = await import("../../src/ui/screens/weekly/weeklyCopy");
+    const copy = describeBaselines([
+      { kind: "COMPARED", measure: "MAIN_SLEEP", dayKind: "WORK", low: 350, high: 405, period: 320, verdict: "BELOW", periodDays: 3, baselineDays: 17 },
+      { kind: "COMPARED", measure: "WATER", dayKind: "OFF", low: 48, high: 72, period: 60, verdict: "INSIDE", periodDays: 2, baselineDays: 11 },
+      { kind: "COMPARED", measure: "PROTEIN", dayKind: "WORK", low: 120, high: 150, period: 165, verdict: "ABOVE", periodDays: 2, baselineDays: 12 },
+      { kind: "LEARNING", measure: "PROTEIN", dayKind: "OFF", have: 3, need: 10 },
+    ]);
+    expect(copy).toEqual([
+      {
+        key: "MAIN_SLEEP-WORK",
+        headline: "Sleep on work days · 5 hr 20 min · below your usual 5 hr 50 min–6 hr 45 min",
+        basis: "3 work days this week · usual from 17 work days before",
+      },
+      { key: "WATER-OFF", headline: "Water on days off · 60 oz · inside your usual 48 oz–72 oz", basis: "2 days off this week · usual from 11 days off before" },
+      { key: "PROTEIN-WORK", headline: "Protein on work days · 165 g · above your usual 120 g–150 g", basis: "2 work days this week · usual from 12 work days before" },
+    ]);
+    expect(copy.map((c) => c.headline).join(" ")).not.toMatch(/good|bad|poor|great|warning|should/i);
+  });
+
+  it("folds learning and nothing-this-week into one quiet line, with progress", async () => {
+    const { describeBaselinesQuiet } = await import("../../src/ui/screens/weekly/weeklyCopy");
+    expect(
+      describeBaselinesQuiet([
+        { kind: "LEARNING", measure: "WATER", dayKind: "WORK", have: 6, need: 10 },
+        { kind: "LEARNING", measure: "PROTEIN", dayKind: "OFF", have: 3, need: 10 },
+        { kind: "NOT_THIS_WEEK", measure: "MAIN_SLEEP", dayKind: "OFF", low: 420, high: 510, periodDays: 1, baselineDays: 14 },
+      ]),
+    ).toBe(
+      "Still learning your usual: water on work days (6 of 10 work days), protein on days off (3 of 10 days off). Nothing to compare this week: sleep on days off.",
+    );
+    expect(describeBaselinesQuiet([])).toBeUndefined();
+  });
+});
