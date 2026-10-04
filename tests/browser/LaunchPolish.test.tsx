@@ -90,8 +90,8 @@ describe("Launch polish (real browser)", () => {
 
   it("MORE's routine settings are neutral buttons", async () => {
     const screen = await render(<MoreScreen />);
-    await expect.element(screen.getByRole("button", { name: "TURN ON" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "TURN ON" }).element().className).toBe("btn-secondary");
+    await expect.element(screen.getByRole("button", { name: "TURN ON" }).first()).toBeVisible();
+    expect(screen.getByRole("button", { name: "TURN ON" }).first().element().className).toBe("btn-secondary");
     expect(screen.getByRole("button", { name: "EXPORT BACKUP" }).element().className).toBe("btn-secondary");
   });
 });

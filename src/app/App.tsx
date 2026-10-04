@@ -6,6 +6,7 @@ import { BodyScreen } from "../ui/screens/body/BodyScreen";
 import { MoreScreen } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
+import { BackupDueLine } from "../ui/components/BackupDueLine";
 import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
 import { performDueDayRollover } from "../application/commands";
@@ -277,6 +278,8 @@ export function App() {
             to the MORE tab (where Missions & Obligations already lives),
             rather than deep-linking to the specific Obligation, which would
             require lifting new state through MoreScreen/IntentScreen too. */}
+        {/* BACKUP-AUTO-001: one line above TODAY when automatic backup is on and due. */}
+        {tab === "TODAY" && <BackupDueLine />}
         {tab === "TODAY" && (
           <TodayScreen
             onViewCommitments={() => showTab("MORE")}

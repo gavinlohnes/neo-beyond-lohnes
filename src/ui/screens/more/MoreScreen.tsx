@@ -17,6 +17,7 @@ import { JournalScreen } from "./JournalScreen";
 import { ExerciseLibraryScreen } from "./ExerciseLibraryScreen";
 import { CustomTemplateScreen } from "./CustomTemplateScreen";
 import { NutritionTargetsSettings } from "./NutritionTargetsSettings";
+import { AutoBackupSettings } from "./AutoBackupSettings";
 import { WeeklyCheckInScreen } from "../weekly/WeeklyCheckInScreen";
 import { LineIcon } from "../../icons/LineIcon";
 import { CalendarCheck } from "lucide-react";
@@ -493,6 +494,8 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
         </button>
         <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>{describeLastBackup(daysSinceBackup)}</p>
         </div>
+
+        <AutoBackupSettings />
 
         <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>ARCHIVE</p>

@@ -7,35 +7,51 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (review + integration session).** `origin/master` at
-`749b885` (PR #160 merge).
+**Written 2026-10-04 by Claude Code (builder).** Baseline `origin/master` at `6848d30` (PR #161
+merge, HUD-001 closed).
 
-- **Drop:** `HUD-001` HUD design system: **merged and closed.** Reviewed independently at head
-  `1242ae2` with no blocking findings; PR Verification green on that head; merged per Gavin's
-  2026-10-04 ruling "merge as is"; `ACTIVE_DROP.md` closed at integration `749b885`.
-- **Active Drop:** none.
-- **Branch / PR for this note:** `claude/hud-001-close` (docs only: Drop close, Queue item marked
-  done, `docs/UX_DECISIONS.md` as-built entry, this handoff).
-- **Review notes (non-blocking, follow-up only):** an old `tokens.css` comment still cites
-  #c81e2c ~5.11:1 for the primary button (now #D0141B, ~4.9:1, still AA); bracket ticks sit on
-  `.equipment-row` frames only, not `.tool-label`; `.hud-legacy` would not un-cut a
-  `.card--warning` inside Weekly (Weekly has none today).
-- **Verification run (review):** `tests/browser/Hud001.test.tsx` 7/7, and it fails when
-  `--text-3` is set back to #6e6e6e; `check:architecture` OK; `typecheck` OK; `build` OK (fonts
-  under the base path and precached by `sw.js`, no CDN); PR Verification success on `1242ae2`.
-- **Next in Queue:** `BACKUP-AUTO-001` automatic backup (ARCHITECTURAL; written Drop at
-  `docs/agent/drops/BACKUP-AUTO-001.md`). Needs Gavin's go-ahead before anyone builds it. After
-  it: `PR-CARDS-001`, `BODY-TIMELINE-001` (ROUTINE).
-- **Open risks:** clip-path clips anything that overflows a card or button (none found in
-  review). The @fontsource packages stay installed only for Weekly; remove them when Weekly
-  moves to HUD after the F1 review. `npm run factory:status` needs `GITHUB_TOKEN`. 56 merged
-  branches plus `codex/dup-meal-001`/`codex/duplicate-meal-prompt` and now `claude/hud-001`
-  still await deletion by Gavin; then clear `docs/agent/RETIRED_BRANCHES.json`.
+- **Drop:** `BACKUP-AUTO-001` automatic backup: ARCHITECTURAL, `ACTIVE`. Built after Gavin's
+  2026-10-04 go-ahead ("merge and build option A"); awaiting a separate review session and
+  Gavin's merge.
+- **Branch:** `claude/backup-auto-001`. **PR:** [#162](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/162).
+- **Done:** MORE → Data safety has an AUTOMATIC BACKUP row (off by default; TURN ON, every
+  1/3/7/14/30 days, default 7; CHECK A BACKUP). With it on and a backup due (none on record, or
+  last one ≥ N days old), TODAY shows one line above the screen: "Backup due · 9 days old",
+  BACK UP NOW (existing `shareBackup()`: share menu → Drive/Files/a file share; download on
+  desktop), LATER (hides it for a day). Closing the share menu keeps the line. Once a month (the
+  clock starts when it's turned on, so it never asks right after the first backup) the line asks
+  "Check your latest backup": the chosen file goes through the existing `previewAnyRestore()`
+  (no write) and each table's row count is compared with the device: "Backup from Oct 3
+  restores 1,204 records ✓" or the tables that differ. Settings, snooze and last-check time in
+  `localStorage` (`src/persistence/autoBackup.ts`), reached only through
+  `src/application/autoBackupQueries.ts`. No schema, backup-format, restore or dependency change.
+- **Tests:** `tests/integration/autoBackup.test.ts` (due/snooze/monthly rules, count comparison,
+  fresh backup matches, changed device names the table, the check never writes, the file still
+  restores, a non-backup file is rejected writing nothing); `tests/browser/AutoBackup.test.tsx`
+  (off by default, line on TODAY at 360 px with 44 px buttons, BACK UP NOW shares a dexie file and
+  clears it, cancelled share keeps it, LATER, MORE toggle + interval). Three existing MORE tests
+  now pick the reminder row's TURN ON/"Off." with `.first()` and the restore picker by its label,
+  since MORE has a second TURN ON and file picker.
+- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run` earlier in
+  the build: 1,957 passed, 5 failures from the duplicate TURN ON / file picker selectors, fixed
+  and re-run (affected files 165/165); compat + restore tests 39/39; `build` OK; `git diff
+  --check` OK. Checked in the browser at 360 px; screenshot in
+  `docs/agent/screenshots/BACKUP-AUTO-001/`.
+- **Left:** independent review at the PR's exact head (format compatibility, the check is
+  read-only); Gavin approves the merge; close with `factory-drop.mjs close`, and add the
+  as-built `docs/UX_DECISIONS.md` entry.
+- **Open risks:** the line shows only on TODAY (the screen BEYOND opens to). The restore check
+  can't verify the file's contents beyond what the preview reads (its table list and counts).
+  Carried over: HUD follow-ups (stale `tokens.css` contrast comment; ticks not on `.tool-label`);
+  @fontsource kept only for Weekly; `factory:status` needs `GITHUB_TOKEN`; 56 merged branches plus
+  `codex/dup-meal-001`, `codex/duplicate-meal-prompt`, `claude/hud-001` and
+  `claude/hud-001-close` await deletion by Gavin.
+- **Next in Queue after this:** `PR-CARDS-001`, `BODY-TIMELINE-001` (ROUTINE, written Drops).
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-1. Start BACKUP-AUTO-001 (automatic backup) next: **A. Yes, build it (recommended)** · B. Build
-   something else first (say which) · C. Hold.
+1. BACKUP-AUTO-001 after review: **A. Merge as is (recommended)** · B. Tune a detail first (say
+   which) · C. Hold.
