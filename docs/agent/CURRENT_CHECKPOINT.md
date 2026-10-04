@@ -7,33 +7,32 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (builder), at the end of Gavin's authorized sprint**
-("perform a sprint ... in a safe and responsible way": Queue items only; Routine merges on
-green after an independent review; nothing Architectural/High-Risk merged without Gavin).
-Baseline `origin/master` at `eb6c281` (PR #167 merge, BODY-TIMELINE-001 closed).
+**Written 2026-10-04 by Claude Code (reviewer/integrator), at the end of Gavin's authorized
+sprint** ("perform a sprint ... in a safe and responsible way": Queue items only; Routine merges
+on green after an independent review; nothing Architectural/High-Risk merged without Gavin).
+Baseline `origin/master` at `7596152` (PR #168 merge, HUD-002).
 
-- **Sprint so far:** BODY-TIMELINE-001 built, reviewed, merged (PR #166) and closed (#167);
-  the Queue's Done items cleared.
-- **Drop:** `HUD-002` sprint cleanup: ROUTINE, `ACTIVE`. Branch `claude/hud-002`. **PR:**
-  [#168](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/168).
-- **Done:** the stale primary-button contrast comment in `tokens.css` now states #D0141B
-  (~4.9:1); the PR count-equivalence test uses asymmetric data and fails if `getAllRecords`
-  judges against later sessions (checked by breaking it and reverting); new
-  `tests/browser/TimelineFilters.test.tsx` covers the Clean days and Goal chips and the goal's
-  right-edge pin. Nothing on screen changes.
-- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run
-  --testTimeout 60000`: 1,976 passed, 0 failed; `build` OK; `git diff --check` OK.
-- **Left:** review, merge on green, close HUD-002. Then the Queue is empty; the sprint stops there.
+- **Sprint finished.** BODY-TIMELINE-001 merged (PR #166) and closed (#167); HUD-002 sprint
+  cleanup independently reviewed, merged on green PR Verification (PR #168, merge `7596152`),
+  and closed on branch `claude/hud-002-close` (this PR).
+- **Drop:** none active. `docs/agent/ACTIVE_DROP.md` records HUD-002 `CLOSED` at `7596152`.
+- **Queue:** empty — Gavin adds the next item (see DECISIONS FOR GAVIN, item 1).
+- **Verification run (review of #168):** diff limited to a `tokens.css` comment, two test files
+  and Drop docs; contrast #f2f2f2 on #D0141B recomputed at 4.94:1; the PR count test fails when
+  `getAllRecords` is broken to judge against all other sessions (reverted); TimelineFilters +
+  Timeline browser tests pass; CI PR Verification green on head `0e6f75f`.
+- **Left:** merge this close-out docs PR (Gavin's call); nothing else in flight.
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because
-  data has been logged since it was made. Carried over: HUD follow-ups (stale `tokens.css`
-  contrast comment; ticks not on `.tool-label`); @fontsource kept only for Weekly;
-  `factory:status` needs `GITHUB_TOKEN`. The timeline was never checked by eye in a browser;
-  tests cover its layout. Branches awaiting deletion by Gavin: 56 merged branches plus
-  `codex/dup-meal-001`, `codex/duplicate-meal-prompt`, `claude/hud-001`, `claude/hud-001-close`,
+  data has been logged since it was made. Carried over: HUD follow-up (ticks not on
+  `.tool-label`, see decision 2); @fontsource kept only for Weekly; `factory:status` needs
+  `GITHUB_TOKEN`. The timeline was never checked by eye in a browser; tests cover its layout.
+  Branches awaiting deletion by Gavin: 56 merged branches plus `codex/dup-meal-001`,
+  `codex/duplicate-meal-prompt`, `claude/hud-001`, `claude/hud-001-close`,
   `claude/backup-auto-001`, `claude/pr-cards-001`, `claude/pr-cards-001-close`,
-  `claude/body-timeline-001`, `claude/body-timeline-001-close`, `claude/hud-002` (and `claude/body-timeline-001-close` once merged).
+  `claude/body-timeline-001`, `claude/body-timeline-001-close`, `claude/hud-002`, and
+  `claude/hud-002-close` (once merged).
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
