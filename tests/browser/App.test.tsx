@@ -73,7 +73,36 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     const form = formLocator.element();
     await expect.poll(() => document.activeElement).toBe(form);
     await expect.poll(() => form.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
-    expect(form.getBoundingClientRect().top).toBeLessThan(window.innerHeight - 88);
+    const navTop = document.querySelector(".shell-nav")!.getBoundingClientRect().top;
+    expect(form.getBoundingClientRect().top).toBeLessThan(navTop);
+    spacer.remove();
+  });
+
+  it("re-tapping TRAIN mid-workout returns to the top and keeps the exact next set", async () => {
+    await page.viewport(390, 844);
+    const day = await startDay();
+    const active = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, active.id, "machine-chest-press", 1, 135, 10);
+    const screen = await render(<App />);
+    await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
+    const spacer = document.createElement("div");
+    spacer.dataset.fieldNavSpacer = "true";
+    spacer.style.height = "3000px";
+    document.body.append(spacer);
+
+    window.scrollTo(0, 1400);
+    (screen.getByRole("button", { name: "TRAIN", exact: true }).element() as HTMLButtonElement).click();
+    await expect.poll(() => window.scrollY).toBe(0);
+    await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
+
+    (screen.getByRole("button", { name: "BODY", exact: true }).element() as HTMLButtonElement).click();
+    await expect.poll(() => screen.getByRole("button", { name: "BODY", exact: true }).element().getAttribute("aria-current")).toBe("page");
+    window.scrollTo(0, 1400);
+    (screen.getByRole("button", { name: "TRAIN", exact: true }).element() as HTMLButtonElement).click();
+    await expect.poll(() => window.scrollY).toBe(0);
+    await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
+    expect(await db.workoutSessions.filter((row) => row.status === "ACTIVE").count()).toBe(1);
     spacer.remove();
   });
 
@@ -217,6 +246,28 @@ describe("Recommendation-to-Action Handoff (App shell)", () => {
     const sessions = await db.workoutSessions.where("beyondDayId").equals(day.id).toArray();
     expect(sessions).toHaveLength(1);
     expect(sessions[0]!.sessionType).toBe("RECOVERY");
+  });
+
+  it("a TODAY button that opens TRAIN starts TRAIN at the top, not at TODAY's scroll position", async () => {
+    await page.viewport(390, 844);
+    const day = await startDay();
+    const { recommendation } = await submitCheckIn(day.id, YELLOW);
+    await recordRecommendation(day.id, recommendation);
+    const screen = await render(<App />);
+    await expect.element(screen.getByText("OPEN RECOVERY ON TRAIN", { exact: true })).toBeVisible();
+    const spacer = document.createElement("div");
+    spacer.dataset.fieldNavSpacer = "true";
+    spacer.style.height = "3000px";
+    document.body.append(spacer);
+    window.scrollTo(0, 1400);
+
+    (screen.getByText("OPEN RECOVERY ON TRAIN", { exact: true }).element() as HTMLElement).click();
+    const recovery = screen.getByRole("button", { name: "RECOVERY", exact: true });
+    await expect.element(recovery).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(() => document.activeElement).toBe(recovery.element());
+    expect(window.scrollY).toBe(0);
+    expect(recovery.element().getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
+    spacer.remove();
   });
 
   it("returns directly to an existing active workout instead of showing the stale one-use RECOVERY handoff", async () => {

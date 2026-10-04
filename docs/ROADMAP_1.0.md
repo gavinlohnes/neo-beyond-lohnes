@@ -122,12 +122,23 @@ time, each briefed by the owner.
   found one data bug and several frictions. Shipped mid-test, dated so the Oct 16 debrief can tell
   before from after:
   - **Drop 1.6a — field polish:** no empty "0 lb x 0" sets; History and the workout summary in
-    plain words; Minimum Day without jargon; MORE re-tap returns to its menu. **In review.**
+    plain words; Minimum Day without jargon; MORE re-tap returns to its menu. **Done (PR #144, merged).**
   - **Drop 1.6b — TODAY behavior:** the sleep draft counts from your last activity after the shift;
     Minimum Day's offer shrinks to one line; MARK WORK ENDED waits for the last hour of the shift;
-    no work-day memory on a day off. **In review.**
-- Waits until after Oct 16: the Engine reacting to evidence, rule adoption, Week Ahead,
-  deload/stall suggestions, all wildcards.
+    no work-day memory on a day off. **Done (PR #145, merged).**
+- **FIELD-NAV-001 — position and reveal reliability:** every tab opens at its top; UPDATE
+  CHECK-IN and disclosures open into view. **Done (PR #149, merged).** Follow-up: tab switches
+  from buttons inside a screen also start at the top; a revealed surface clears the real bottom
+  nav (iPhone safe area included); reduced motion tested in a real browser. **In review.**
+
+### After the field test (owner ruling, 2026-10-04)
+
+The Oct 16 debrief is dropped: BEYOND keeps improving now instead of waiting out the field test.
+Items once held until after Oct 16 (the Engine reacting to evidence, Week Ahead, deload/stall
+suggestions, wildcards) are no longer date-gated, but each still needs its own owner brief, and
+adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-03).
+
+- **Next queued (owner ruling, 2026-10-03): Undo after every log.**
 
 ## Design rules
 

@@ -248,6 +248,16 @@ below, this entry wins; the older entry is kept for history.
   until the tap; the check-in records `draft: CONFIRMED | ADJUSTED` (absent for ALL GOOD and a blank
   start), shown in History. ALL GOOD is unchanged. Older than 36 hours: no draft, the empty form as
   before (doctrine: prefill only when evidence is stable).
+- **As built: position and reveal (FIELD-NAV-001, PR #149, plus follow-up, owner approval
+  2026-10-04).** Every tab switch, from the bottom nav or from a button inside a screen (OPEN
+  RECOVERY ON TRAIN, RESUME WORKOUT, VIEW, a BODY row, MORE's capture link), opens the destination
+  at its top; re-tapping the current tab does the same. Navigation position is not operation
+  state: an active workout still resumes at its exact next set. A newly opened disclosure or
+  UPDATE CHECK-IN is brought into view by the smallest scroll that shows all of it above the
+  bottom nav (measured live, so the iPhone safe area counts), or its top at the top when it's
+  taller than the screen; content already fully in view doesn't move. UPDATE CHECK-IN also moves
+  focus to the form so screen readers announce it. Reduced motion jumps instead of gliding. Pure
+  helpers in `ui/navigationPosition.ts`; shared hook `ui/hooks/useRevealOnOpen.ts`.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 
