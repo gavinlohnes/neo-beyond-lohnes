@@ -65,6 +65,7 @@ import {
   type WeighIn,
 } from "../../../application/bodyTrendQueries";
 import { WeightTrend } from "./WeightTrend";
+import { TransformationTimeline } from "./TransformationTimeline";
 import { QuitTracker } from "./QuitTracker";
 import { SHORTCUT_ANCHOR_IDS, type BodyFocus } from "../../shortcuts";
 import {
@@ -286,6 +287,8 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
   const [bodyweightCorrectionInput, setBodyweightCorrectionInput] = useState("");
   const [bodyweightConfirmation, setBodyweightConfirmation] = useState<Confirmation>(null);
   const [bodyweightHistoryOpen, setBodyweightHistoryOpen] = useState(false);
+  // BODY-TIMELINE-001: the transformation timeline, closed until asked for.
+  const [timelineOpen, setTimelineOpen] = useState(false);
   // Manual entry only has a real "fast path" alternative (SAME AS LAST)
   // once a prior entry exists — see the `lastBodyweightEntry ? ... : ...`
   // branch further down (FieldDisclosure vs. always-open).
@@ -1756,6 +1759,11 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
             </div>
           )}
           <WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
+          <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+            <FieldDisclosure summary={`${timelineOpen ? "HIDE" : "SHOW"} TIMELINE`} open={timelineOpen} onToggle={setTimelineOpen}>
+              {timelineOpen && <TransformationTimeline />}
+            </FieldDisclosure>
+          </div>
         </div>
       ) : (
         <CollapsibleRow
