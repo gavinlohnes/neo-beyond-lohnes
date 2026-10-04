@@ -3,6 +3,7 @@ import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { RecordsList } from "./RecordsList";
+import { GymMode } from "./GymMode";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { HoldButton } from "../../components/HoldButton";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
@@ -180,6 +181,8 @@ export function TrainScreen({
   const [performanceBriefOpen, setPerformanceBriefOpen] = useState(false);
   // PR-CARDS-001: TRAIN → RECORDS, the list of personal-record cards.
   const [recordsOpen, setRecordsOpen] = useState(false);
+  // GYM-001: the full-screen gym view over the active workout.
+  const [gymModeOpen, setGymModeOpen] = useState(false);
   // VISUAL-001 (Hybrid Foundation): the one earned-salience moment on
   // active TRAIN — which set was *just* logged this session, if any.
   // Starts null on every mount (including a resumed session), so a
@@ -1171,6 +1174,45 @@ export function TrainScreen({
               </p>
             );
           })()}
+
+          {/* GYM-001: a full-screen, one-handed view of the same session. */}
+          <button type="button" className="btn-secondary" style={{ marginBottom: 12 }} onClick={() => setGymModeOpen(true)}>
+            GYM MODE
+          </button>
+          {gymModeOpen && currentExercise && (
+            <GymMode
+              exercise={currentExercise}
+              exerciseIndex={currentExerciseIndex}
+              exerciseCount={activeExercises.length}
+              setNumber={currentSetNumber}
+              allComplete={allExercisesComplete}
+              weight={currentSetNumber !== null ? getInputDisplay(currentExercise.exerciseId, currentSetNumber).weight : ""}
+              reps={currentSetNumber !== null ? getInputDisplay(currentExercise.exerciseId, currentSetNumber).reps : ""}
+              ghost={lastPerformedSets[currentExercise.exerciseId]}
+              exerciseUntouched={loggedSetNumbers(currentExercise.exerciseId).size === 0}
+              sessionExerciseIds={activeExercises.map((ex) => ex.exerciseId)}
+              restLabel={
+                isResting && restRemainingMs !== null
+                  ? restComplete
+                    ? "REST COMPLETE"
+                    : `RESTING · ${formatRestRemaining(restRemainingMs)}`
+                  : null
+              }
+              notice={
+                currentSetNumber !== null && logSetNotice?.key === inputKey(currentExercise.exerciseId, currentSetNumber)
+                  ? logSetNotice.message
+                  : null
+              }
+              busy={busy}
+              onAdjustWeight={(delta) => currentSetNumber !== null && adjustWeight(currentExercise.exerciseId, currentSetNumber, delta)}
+              onAdjustReps={(delta) => currentSetNumber !== null && adjustReps(currentExercise.exerciseId, currentSetNumber, delta)}
+              onSetWeight={(value) => currentSetNumber !== null && patchInput(currentExercise.exerciseId, currentSetNumber, { weight: value })}
+              onSetReps={(value) => currentSetNumber !== null && patchInput(currentExercise.exerciseId, currentSetNumber, { reps: value })}
+              onLog={() => currentSetNumber !== null && void handleLogSet(currentExercise.exerciseId, currentSetNumber)}
+              onSkip={() => currentSetNumber !== null && void handleSkipSet(currentExercise.exerciseId, currentSetNumber)}
+              onExit={() => setGymModeOpen(false)}
+            />
+          )}
 
           <p className="section-label section-label--field">Exercise</p>
 
