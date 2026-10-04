@@ -193,7 +193,8 @@ database so it rides in backups; the warm-up ramp is a suggestion only.
 
 1. **GYM-002 — cue text per lift** (HIGH-RISK: new stored data; storage ruling 2A obtained).
    Example: "Squat: brace, knees out" shown in the gym screen. Drop: `docs/agent/drops/GYM-002.md`.
-   Built after GYM-001 merges; Gavin signs off on the exact storage change first.
+   Storage signed off 2026-10-04 ("1. a, 2. A"): a saved entry (event) in the existing events list,
+   no database upgrade; edited in the gym screen only.
 
 ### Known, not yet approved
 
