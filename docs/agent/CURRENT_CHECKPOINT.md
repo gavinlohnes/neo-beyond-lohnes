@@ -11,7 +11,7 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 merge: GYM-001 gym screen, merged on Gavin's "A"; closed in this branch).
 
 - **Drop:** `GYM-POLISH-001` gym screen follow-ups: ROUTINE, `ACTIVE`. Branch
-  `claude/gym-polish-001`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+  `claude/gym-polish-001`. **PR:** [#171](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/171).
 - **Done:** GYM-001 closed (ACTIVE_DROP, roadmap Done list, `docs/UX_DECISIONS.md` as-built line).
   The #170 review's four notes fixed: EXIT 56 px; focus moves into gym mode, Escape closes, focus
   returns to GYM MODE; a held wake lock is released before a new one is kept; a finished exercise
