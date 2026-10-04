@@ -1,18 +1,27 @@
 # Current Checkpoint — the handoff note
 
-**Every agent reads this first and updates it last** (see `AGENTS.md`, "Builders: one baton").
-Replace the snapshot below wholesale each time; don't append history. It reports state; it
-doesn't authorize work. For what to build next, read the Queue in
+**Every session reads this first and rewrites it last** (`AGENTS.md`, "Builder roles", rule 5),
+Claude Code or Codex alike. Replace the handoff wholesale each time; don't append history. It
+reports state; it doesn't authorize work. For what to build next, read the Queue in
 [`docs/ROADMAP_1.0.md`](../ROADMAP_1.0.md).
 
-**As of 2026-10-04, written by Claude Code.** `origin/master` at `b25a95b` (PR #150 merge).
+## Handoff
 
-## Baton
+**Written 2026-10-04 by Claude Code.** `origin/master` at `b25a95b` (PR #150 merge).
 
-- **Holder:** Claude Code.
-- **In flight:** one PR from branch `ccr-22d7c0f8-rqhhjm`: UNDO-001 (undo after every water,
-  sleep, weight and protein log) plus this agent-handoff setup. Waiting on owner review.
-- **Next:** nothing approved yet. The Queue in the roadmap is empty until the owner picks.
+- **Drop:** UNDO-001 (undo after every water, sleep, weight and protein log), plus the builder-roles
+  setup (owner rulings 2026-10-04).
+- **Branch:** `ccr-22d7c0f8-rqhhjm`.
+- **PR:** #151, open, PR Verification green. Waiting on the owner's go-ahead to merge.
+- **Done:** UNDO on BODY's water/sleep/bodyweight/protein banners and TODAY's water, sleep draft
+  and Minimum Day protein banners; `*_LOG_VOIDED` events; undone entries leave every total.
+  `AGENTS.md` is the shared rulebook with the builder roles; roadmap Queue added.
+- **Left:** merge #151. The Queue is empty until the owner picks the next item; Claude Code then
+  writes its Drop so Codex can build it if needed.
+- **Verification run:** `npm run check:architecture`, `npm run typecheck`, full `vitest run`
+  (163 files, 1,887 passed, 1 skipped, node + real Chromium), `npm run build`, `git diff --check`.
+- **Open risks:** UNDO-001 is Architectural (new event types read by the Engine's Day Ledger),
+  approved by the owner as option A. No schema or backup-format change.
 
 ## Where things stand
 
@@ -21,7 +30,6 @@ doesn't authorize work. For what to build next, read the Queue in
   #149 and #150.
 - **Field test:** the Oct 16 debrief is dropped (owner ruling 2026-10-04); BEYOND keeps improving
   now. Formerly date-gated items still need their own owner brief.
-- **Tests:** `npm run verify` green: 163 files, 1,887 tests (node + real Chromium), PWA build.
 - **Deployed:** GitHub Pages deploys on every merge to master.
 
 ## Known loose ends

@@ -144,9 +144,10 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 ## Queue
 
-What gets built next, top first. Either builder (Claude Code or Codex, one at a time, see
-`AGENTS.md`) takes the top item on "let's work". Only the owner adds to it. Each item is one
-short brief: what changes, where it surfaces, and one concrete example of the problem it fixes.
+What gets built next, top first. The builder (see `AGENTS.md`) takes the top item on "let's
+work". Only the owner adds to it. Each item is one short brief (what changes, where it surfaces,
+one concrete example of the problem it fixes) plus a written Drop in `docs/agent/drops/` so
+Codex can build it when Claude is out.
 
 1. *(empty: waiting for the owner's next pick)*
 
@@ -162,8 +163,10 @@ Spotted but not briefed. The owner moves an item up into the Queue or drops it.
 
 ## Builders (owner ruling, 2026-10-04)
 
-Claude Code and Codex both build, one at a time, so work continues when either one's usage runs
-out. Rules in `AGENTS.md`; the handoff note is `docs/agent/CURRENT_CHECKPOINT.md`.
+Claude Code is the primary builder; OpenAI Codex is the backup builder when Claude's usage runs
+out. One builder at a time; Codex builds only from a written Drop, never merges, and doesn't
+change doctrine, roadmap or governance docs; every session ends with a handoff note. Full rules
+in `AGENTS.md`; the handoff note is `docs/agent/CURRENT_CHECKPOINT.md`.
 
 ## Design rules
 
