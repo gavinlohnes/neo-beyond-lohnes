@@ -172,6 +172,7 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
   180/365, a count, never a streak), weight milestones and the goal date pinned; filters per kind;
   read only. Example: tapping a marker reads "Machine Chest Press: heaviest yet (145 lb)", the
   finish summary's own words. **Done (PR #166, merged 2026-10-04).**
+- **HUD-002 — sprint cleanup** (Gavin's sprint go-ahead 2026-10-04): contrast comment and test gaps only. **Done (PR #168, merged 2026-10-04).**
 
 ## Queue
 
@@ -183,11 +184,7 @@ Codex can build it when Claude is out.
 Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
 PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
 
-1. **HUD-002 — sprint cleanup** (ROUTINE; from Gavin's sprint go-ahead 2026-10-04, whose plan named
-   it). A stale contrast comment and two test-coverage gaps the reviews of #160/#164/#166 found;
-   nothing on screen changes. Drop: `docs/agent/drops/HUD-002.md`.
-
-After HUD-002 the Queue is empty — Gavin adds the next item.
+Queue empty — Gavin adds the next item.
 
 ### Known, not yet approved
 
