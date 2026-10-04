@@ -11,8 +11,8 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 - **Drop:** `HUD-001` HUD design system — ARCHITECTURAL, `ACTIVE`. Built; awaiting a separate
   review session and Gavin's merge.
-- **Branch:** `claude/hud-001` (worktree `../beyond-worktrees/claude-hud-001`). **PR:** see
-  `docs/agent/ACTIVE_DROP.md` once recorded, or `gh pr list --head claude/hud-001`.
+- **Branch:** `claude/hud-001` (worktree `../beyond-worktrees/claude-hud-001`). **PR:**
+  [#160](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/160).
 - **Done:** black #000 ground; every red role resolves to `--red` #D0141B; cut corners
   (`--cut-shape`) on `.card` and `.btn-primary/-secondary/-danger`, with the 1px diagonal drawn
   back in; bracket ticks on `.equipment-row` frames; `--radius: 0`; Chakra Petch + JetBrains Mono

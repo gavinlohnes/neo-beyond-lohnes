@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 3f6903ebf63f781d15b870de35a631684edc15f5
 branch: claude/hud-001
 contract: docs/agent/drops/HUD-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/160
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
