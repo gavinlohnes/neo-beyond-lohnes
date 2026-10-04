@@ -339,6 +339,11 @@ below, this entry wins; the older entry is kept for history.
   SET n, SKIP, the rest countdown, "Last time 185 × 5", auto-advance, the screen kept awake; a
   barbell lift adds "185 lb = bar + 45 + 25 per side" and, before its first set, the warm-up line.
   Logging goes through TRAIN's own path; EXIT keeps everything.
+- **Cue text storage and editing (owner sign-off 2026-10-04: "1. a, 2. A").** A cue is a saved
+  entry (`EXERCISE_CUE_SET` event) in the existing events list, so it is in every backup with no
+  database upgrade; the latest one per lift wins and an empty one clears it. It is edited only in
+  the gym screen, where it's used. Example: Leg Press shows "Feet high, slow down, don't lock
+  knees." under its name.
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks

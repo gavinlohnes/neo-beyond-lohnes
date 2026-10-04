@@ -5,7 +5,8 @@ import { deriveRecoverySessionStatus } from "../engine/trainSuggestion";
 import { logEvent } from "./commands";
 import { getLatestCheckIn } from "./queries";
 import { getPerformedSets } from "./trainQueries";
-import type { Capacity, PerformedSetRaw } from "../domain/common/types";
+import type { Capacity, ExerciseCueSetPayload, PerformedSetRaw } from "../domain/common/types";
+import { EXERCISE_CUE_MAX_LENGTH } from "../domain/common/types";
 import type {
   PerformedSet,
   SessionType,
@@ -344,4 +345,20 @@ export async function completeRecoverySession(
     return;
   }
   await completeWorkout(beyondDayId, sessionId, "RECOVERY", status, durationMinutes);
+}
+
+/**
+ * GYM-002 (owner sign-off 2026-10-04): saves Gavin's cue for one lift as an
+ * EXERCISE_CUE_SET event under the given day. Trims it; an empty cue clears
+ * the lift's cue. Rejects a cue over EXERCISE_CUE_MAX_LENGTH characters.
+ */
+export async function setExerciseCue(beyondDayId: string, exerciseId: string, cue: string): Promise<string> {
+  const trimmed = cue.trim();
+  if (!exerciseId) throw new Error("INVALID_EXERCISE: a cue needs an exercise.");
+  if (trimmed.length > EXERCISE_CUE_MAX_LENGTH) {
+    throw new Error(`CUE_TOO_LONG: Keep a cue to ${EXERCISE_CUE_MAX_LENGTH} characters.`);
+  }
+  const commandId = newId();
+  const payload: ExerciseCueSetPayload = { commandId, exerciseId, cue: trimmed };
+  return logEvent(beyondDayId, "EXERCISE_CUE_SET", payload, "USER", commandId);
 }

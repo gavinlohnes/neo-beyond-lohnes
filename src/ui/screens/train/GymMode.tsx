@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { ExercisePrescription } from "../../../domain/workout/types";
 import { describePlates, describeWarmUp, getBarbellExerciseIds, warmUpRamp } from "../../../application/gymModeQueries";
+import { getExerciseCues } from "../../../application/trainQueries";
+import { EXERCISE_CUE_MAX_LENGTH } from "../../../domain/common/types";
+import { describeError } from "../../errorMessage";
 
 export interface GymModeProps {
   exercise: ExercisePrescription;
@@ -29,6 +32,8 @@ export interface GymModeProps {
   onExit: () => void;
   /** Moves to the first exercise with sets left (TRAIN's own rule). */
   onNextExercise: () => void;
+  /** GYM-002: saves this lift's cue (TRAIN writes it under the workout's day). "" clears it. */
+  onSaveCue: (exerciseId: string, cue: string) => Promise<void>;
 }
 
 type WakeLockSentinelLike = { release: () => Promise<void> };
@@ -91,6 +96,7 @@ export function GymMode(props: GymModeProps) {
       </div>
 
       <h2 className="gym-mode__name">{exercise.name}</h2>
+      <CueLine key={exercise.exerciseId} exerciseId={exercise.exerciseId} exerciseName={exercise.name} onSave={props.onSaveCue} />
       <p className="meta-strong" style={{ margin: "0 0 4px" }}>
         {setNumber !== null ? `Set ${setNumber} of ${exercise.sets}` : "All sets logged"} · {exercise.repRangeLow}-{exercise.repRangeHigh} reps
       </p>
@@ -156,6 +162,91 @@ export function GymMode(props: GymModeProps) {
 }
 
 /** A big typeable number with −/+ on either side; empty reads "0" as a placeholder, never a logged value. */
+/**
+ * GYM-002 (owner sign-off 2026-10-04): the lift's own cue under its name,
+ * edited here and nowhere else. One line, up to 140 characters; saving an
+ * empty cue clears it.
+ */
+function CueLine(props: { exerciseId: string; exerciseName: string; onSave: (exerciseId: string, cue: string) => Promise<void> }) {
+  const [cue, setCue] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let current = true;
+    void getExerciseCues().then((cues) => {
+      if (current) setCue(cues.get(props.exerciseId) ?? "");
+    });
+    return () => {
+      current = false;
+    };
+  }, [props.exerciseId]);
+
+  if (cue === null) return null;
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    try {
+      await props.onSave(props.exerciseId, draft);
+      setCue(draft.trim());
+      setEditing(false);
+    } catch (e) {
+      setError(describeError(e, "Cue not saved."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <div className="gym-mode__cue-edit">
+        <input
+          className="input"
+          type="text"
+          maxLength={EXERCISE_CUE_MAX_LENGTH}
+          aria-label={`Cue for ${props.exerciseName}`}
+          placeholder="e.g. brace, knees out, slow down"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+        />
+        <div className="gym-mode__cue-actions">
+          <button type="button" className="btn-secondary" disabled={saving} onClick={() => void save()}>
+            SAVE
+          </button>
+          <button type="button" className="btn-secondary" disabled={saving} onClick={() => setEditing(false)}>
+            CANCEL
+          </button>
+        </div>
+        {error && (
+          <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="gym-mode__cue">
+      {cue && <p className="gym-mode__cue-text">{cue}</p>}
+      <button
+        type="button"
+        className="gym-mode__cue-button"
+        aria-label={cue ? `Edit cue for ${props.exerciseName}` : `Add a cue for ${props.exerciseName}`}
+        onClick={() => {
+          setDraft(cue);
+          setEditing(true);
+        }}
+      >
+        {cue ? "EDIT" : "+ ADD CUE"}
+      </button>
+    </div>
+  );
+}
+
 function Stepper(props: {
   label: string;
   unit: string;

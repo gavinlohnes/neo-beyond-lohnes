@@ -228,7 +228,8 @@ export type DomainEventType =
   | "CLEAN_DAY_LOGGED"
   | "URGE_LOGGED"
   | "URGE_UNDONE"
-  | "URGE_PLAN_RESPONDED";
+  | "URGE_PLAN_RESPONDED"
+  | "EXERCISE_CUE_SET";
 
 /**
  * DERIVED, not stored. Computed by walking a WATER_LOGGED event and any
@@ -608,6 +609,21 @@ export interface UrgeUndonePayload {
   commandId: string;
   urgeEventId: string;
 }
+
+/**
+ * GYM-002 (owner sign-off 2026-10-04): Gavin's own cue text for one lift,
+ * shown in the gym screen. Append-only: the latest EXERCISE_CUE_SET for an
+ * exerciseId is its cue, and an empty `cue` clears it. Written under the
+ * active workout's day; it rides in backups like every other event.
+ */
+export interface ExerciseCueSetPayload {
+  commandId: string;
+  exerciseId: string;
+  /** Trimmed, at most EXERCISE_CUE_MAX_LENGTH characters; "" clears the cue. */
+  cue: string;
+}
+
+export const EXERCISE_CUE_MAX_LENGTH = 140;
 
 export interface PlannedWorkSetPayload {
   commandId: string;

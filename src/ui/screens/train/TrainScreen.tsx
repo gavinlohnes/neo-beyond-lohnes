@@ -43,6 +43,7 @@ import {
   completeRecoverySession,
   completeWorkout,
   logSet,
+  setExerciseCue,
   skipRest,
   skipSet,
   startRest,
@@ -1219,6 +1220,9 @@ export function TrainScreen({
               onSkip={() => currentSetNumber !== null && void handleSkipSet(currentExercise.exerciseId, currentSetNumber)}
               onExit={closeGymMode}
               onNextExercise={() => setFocusedExerciseId(null)}
+              onSaveCue={async (exerciseId, cue) => {
+                await setExerciseCue(session.beyondDayId, exerciseId, cue);
+              }}
             />
           )}
 
