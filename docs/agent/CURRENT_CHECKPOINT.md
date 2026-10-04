@@ -7,21 +7,23 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (reviewer/integrator).** `origin/master` at `e80315d` (PR #162
-merge).
+**Written 2026-10-04 by Claude Code (builder).** Baseline `origin/master` at `7569c88` (PR #163
+merge, BACKUP-AUTO-001 closed).
 
-- **Drop:** `BACKUP-AUTO-001` automatic backup: **merged and closed** (PR
-  [#162](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/162), merge `e80315d`, on Gavin's
-  2026-10-04 option A: merge if the review is clean and checks pass). **No Drop is active.**
-- **Review (head `5491482`):** clean. Backup format unchanged (`backup.ts`/`restore.ts`, schema,
-  package files and protected fixtures untouched); BACK UP NOW goes through `shareBackup()`; the
-  restore check only previews and counts rows. A deliberate write inserted into the check made the
-  "never writes" test fail, which shows the test catches it. Off by default; architecture and
-  typecheck OK; targeted tests 109/109; PR Verification green. Findings posted on the PR.
-- **Close-out (branch `claude/backup-auto-001-close`):** `factory-drop.mjs close` run; Roadmap
-  Queue marks BACKUP-AUTO-001 done; as-built entry in `docs/UX_DECISIONS.md`.
-- **Next in Queue:** `PR-CARDS-001` (ROUTINE, written Drop: `docs/agent/drops/PR-CARDS-001.md`),
-  then `BODY-TIMELINE-001` (ROUTINE, written Drop).
+- **Drop:** `PR-CARDS-001` PR record cards: ROUTINE, `ACTIVE`. Built after Gavin's 2026-10-04
+  "A" (merge #163, then build this). Routine: merges on green checks after Claude's review.
+- **Branch:** `claude/pr-cards-001`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+- **Done:** a record set shows a quiet `PR` tag (1px red outline, no fill, no sound/vibration)
+  beside "heaviest yet (145 lb)"; TRAIN's pre-workout rows gain RECORDS, a list of cards (newest
+  first: exercise, "Heaviest: 145 lb × 6" / "Most reps at 145 lb: 8", date). `getAllRecords()` in
+  `application/personalRecordQueries.ts` walks finished sessions with the same
+  `findSessionRecords` rule as the finish summary and Weekly; undone sets drop out. Read only.
+- **Tests:** 3 new integration tests (newest first with names, undone PR disappears, count equals
+  the finish summary's rule for the same sessions); TRAIN browser tests updated for the tag
+  (outline, no audio/vibrate) plus a RECORDS test (order, tags, BACK, no overflow at 320/360/412).
+- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run
+  --testTimeout 60000`: 1,966 passed, 0 failed; `build` OK; `git diff --check` OK.
+- **Left:** review, merge on green, close the Drop; then `BODY-TIMELINE-001` (ROUTINE) is next.
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because
