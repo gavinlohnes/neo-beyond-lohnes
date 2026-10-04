@@ -1,6 +1,6 @@
 ---
 id: PR-CARDS-001
-baseline: 5538f0f7750905baa8116a54cd9218a23a7be6ec
+baseline: 7569c889e80f3b6c2484957541c479f04d59d1e9
 risk_tier: ROUTINE
 ---
 
@@ -14,7 +14,7 @@ exercise, what it beat ("Heaviest: 145 lb x 8"), date. Owner brief 2026-10-04 (Q
 
 ## Approved baseline
 
-`origin/master` at `5538f0f7750905baa8116a54cd9218a23a7be6ec` (update before init).
+`origin/master` at `7569c889e80f3b6c2484957541c479f04d59d1e9` (update before init).
 
 ## Risk classification
 
