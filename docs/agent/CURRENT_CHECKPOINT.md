@@ -7,20 +7,30 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (reviewer/integrator).** Baseline `origin/master` at
-`fbe0820` (PR #171 merge: GYM-POLISH-001 gym screen follow-ups).
+**Written 2026-10-04 by Claude Code (builder).** Baseline `origin/master` at `2951b67` (PR #172
+merge, GYM-POLISH-001 closed). Gavin signed off the cue storage plan 2026-10-04 ("1. a, 2. A"):
+an event, edited in the gym screen only; recorded in the roadmap, `docs/UX_DECISIONS.md` and the
+Drop.
 
-- **Drop:** none active. `GYM-POLISH-001` (ROUTINE) merged on green checks after an independent
-  review (PR [#171](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/171), merge `fbe0820`)
-  and closed in this branch (`claude/gym-polish-001-close`).
-- **Done:** EXIT 56 px; focus moves into gym mode, Escape closes, focus returns to GYM MODE; a
-  held wake lock is released before a new one is kept; a finished exercise offers NEXT EXERCISE.
-- **Verification run (review):** `check:architecture` OK; `typecheck` OK; GymMode + TrainScreen
-  browser tests and gymMode integration: 82 passed, 0 failed; removing the wake-lock release or
-  the Escape handler fails the new tests. PR Verification green on the reviewed head `4c2e0ed`.
-- **Next:** `GYM-002` cue text (HIGH-RISK): the builder writes the exact storage plan and stops
-  for Gavin's sign-off before any code. Custom exercises already have an optional `notes` field;
-  built-in exercises have no record of their own.
+- **Drop:** `GYM-002` cue text per lift: HIGH-RISK (new stored data; Gavin approves the merge),
+  `ACTIVE`. Branch `claude/gym-002`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+- **Done:** new event type `EXERCISE_CUE_SET` {commandId, exerciseId, cue} (domain union +
+  `ExerciseCueSetPayload`, `EXERCISE_CUE_MAX_LENGTH` 140); `setExerciseCue` in `trainCommands.ts`
+  (trims; rejects > 140; "" clears); `getExerciseCues` in `trainQueries.ts` (latest per lift by
+  time then seq). Gym screen: cue under the lift's name with + ADD CUE / EDIT, SAVE / CANCEL.
+  History: "Cue set: Leg Press." / "Cue cleared: Leg Press."; not counted in the Day Ledger. **No
+  `db.version` change, no new table.**
+- **Boundary crossed:** backup contract (new event type rides in native backups). Owner ruling:
+  obtained (2A storage; "1. a" event). Rollback: revert the PR; existing `EXERCISE_CUE_SET` events
+  would then be inert rows that History shows by their raw type name, nothing else reads them.
+- **Compatibility verification:** `tests/compat` 30/30 (protected fixtures, legacy restore);
+  `tests/integration/exerciseCues.test.ts` round trip (cue survives backup → later changes →
+  restore), schema version unchanged, > 140 writes nothing.
+- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run
+  --testTimeout 60000`: 1,994 passed, 0 failed; `build` OK; `git diff --check` OK;
+  `check:risk` flags the domain type (expected).
+- **Left:** independent review (back-compat and round trip); Gavin approves the merge; close.
+  After that the Queue is empty.
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because
@@ -39,4 +49,4 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-None.
+1. GYM-002 after review: **A. Merge as is (recommended)** · B. Tune a detail first · C. Hold.
