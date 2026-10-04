@@ -57,8 +57,9 @@
      in the app (RED-tier, .btn-danger, .command-surface's edge/chamfer,
      .capacity-dot--red) is unaffected — this is scoped to .btn-primary's
      fill only, not a general loosening of red-scarcity doctrine.
-     Contrast: --text-1 (#f2f2f2) on --accent (#c81e2c) computes to
-     ~5.11:1, passing WCAG AA (4.5:1) for normal text. */
+     Contrast: --text-1 (#f2f2f2) on --accent, HUD-001's #D0141B, computes
+     to ~4.9:1, passing WCAG AA (4.5:1) for normal text (it was ~5.11:1 on
+     the pre-HUD #c81e2c). */
   --action-primary-bg: var(--accent);
   --action-primary-text: var(--text-1);
 

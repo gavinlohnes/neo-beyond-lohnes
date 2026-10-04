@@ -7,27 +7,23 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (independent reviewer + integrator), during Gavin's authorized
-sprint** ("perform a sprint ... in a safe and responsible way", 2026-10-04: Queue items only;
-Routine merges on green after an independent review; nothing Architectural/High-Risk merged
-without Gavin). Baseline `origin/master` at `02ec2f2` (PR #166 merge).
+**Written 2026-10-04 by Claude Code (builder), at the end of Gavin's authorized sprint**
+("perform a sprint ... in a safe and responsible way": Queue items only; Routine merges on
+green after an independent review; nothing Architectural/High-Risk merged without Gavin).
+Baseline `origin/master` at `eb6c281` (PR #167 merge, BODY-TIMELINE-001 closed).
 
-- **Drop:** `BODY-TIMELINE-001` transformation timeline (ROUTINE): **merged and closed.** An
-  independent review found no blocking issue (review comment on PR #166). CI PR Verification
-  passed on the reviewed head `2378f1c`. Merged as `02ec2f28d144a69c615ded4ba6b9336d59c6b99f`.
-  Closed with `factory-drop.mjs close`.
-- **No Drop active.** `docs/agent/ACTIVE_DROP.md` is closed.
-- **Queue empty — Gavin adds the next item.** HUD-001, BACKUP-AUTO-001 and BODY-TIMELINE-001
-  were moved out of the Queue into the roadmap's Done list.
-- **Branch / PR:** `claude/body-timeline-001-close` (this close-out: roadmap, as-built line in
-  `docs/UX_DECISIONS.md`, this note). Docs only. Not merged; waiting for Gavin.
-- **Review notes (non-blocking):** the timeline's PR labels use the finish summary's words
-  ("heaviest yet (145 lb)"). The RECORDS cards use their own card wording ("Heaviest: 145 lb × 6").
-  Both list the same PRs. The Clean days and Goal filter chips have no browser test of their
-  own; they run the same toggle code as PRs and Weight, which are tested.
-- **Verification run (review):** `check:architecture` OK; `typecheck` OK; `git diff --check` OK;
-  the timeline, Timeline, BodyScreen, Hud001 and accessibility tests: 86/86 passed. Breaking the
-  PR, goal or weight-milestone label made a test fail each time. CI PR Verification passed.
+- **Sprint so far:** BODY-TIMELINE-001 built, reviewed, merged (PR #166) and closed (#167);
+  the Queue's Done items cleared.
+- **Drop:** `HUD-002` sprint cleanup: ROUTINE, `ACTIVE`. Branch `claude/hud-002`. **PR:**
+  [#168](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/168).
+- **Done:** the stale primary-button contrast comment in `tokens.css` now states #D0141B
+  (~4.9:1); the PR count-equivalence test uses asymmetric data and fails if `getAllRecords`
+  judges against later sessions (checked by breaking it and reverting); new
+  `tests/browser/TimelineFilters.test.tsx` covers the Clean days and Goal chips and the goal's
+  right-edge pin. Nothing on screen changes.
+- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run
+  --testTimeout 60000`: 1,976 passed, 0 failed; `build` OK; `git diff --check` OK.
+- **Left:** review, merge on green, close HUD-002. Then the Queue is empty; the sprint stops there.
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because
@@ -37,16 +33,16 @@ without Gavin). Baseline `origin/master` at `02ec2f2` (PR #166 merge).
   tests cover its layout. Branches awaiting deletion by Gavin: 56 merged branches plus
   `codex/dup-meal-001`, `codex/duplicate-meal-prompt`, `claude/hud-001`, `claude/hud-001-close`,
   `claude/backup-auto-001`, `claude/pr-cards-001`, `claude/pr-cards-001-close`,
-  `claude/body-timeline-001` (and `claude/body-timeline-001-close` once merged).
+  `claude/body-timeline-001`, `claude/body-timeline-001-close`, `claude/hud-002` (and `claude/body-timeline-001-close` once merged).
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-1. **What goes into the Queue next?** (A) Gym mode: a full-screen lift view with big buttons,
-   the screen kept awake, plate math and a warm-up ramp. **Recommended:** you use it every
-   workout. (B) Notes that go somewhere: a day-off capture sweep, a time capsule, a shift
-   handoff. (C) Small HUD follow-ups only: ticks on `.tool-label` and the stale contrast comment.
-   (D) Nothing yet; wait for field notes.
-2. **Merge this docs-only close-out PR?** (A) Yes. **Recommended.** (B) Hold it.
+1. What goes into the Queue next: **A. Gym mode (recommended; it's the parking-lot item used every
+   workout)** · B. Notes that go somewhere · C. Nothing yet; wait for field notes.
+2. HUD-001's "bracket ticks on `.tool-label` frames": **A. Leave as is: the section frames already
+   carry ticks (recommended)** · B. Add small brackets around tool labels too.
+3. Old branches: **A. Delete every branch already merged into master (recommended; nothing is
+   lost)** · B. Keep them. The one-line command is in the sprint report.
