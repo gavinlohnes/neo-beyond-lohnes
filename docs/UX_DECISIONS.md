@@ -307,6 +307,12 @@ below, this entry wins; the older entry is kept for history.
   cut corners and bracket ticks (removed 2026-09-30) as functional frame geometry, with one red
   (#D0141B) and AA contrast; the doctrine's "decorative HUD geometry" line carries the amendment.
   Weekly keeps its look until the F1 review.
+- **As built: HUD design system (HUD-001, PR #160, merged 2026-10-04 on the owner's "merge as
+  is").** Black #000 ground; every red role resolves to #D0141B; 8px cut corners on cards and
+  buttons with the 1px diagonal drawn back in; bracket ticks on `.equipment-row` frames; square
+  corners; Chakra Petch + JetBrains Mono self-hosted and precached. #D0141B is ~3.8:1 on black,
+  so small red text became white with a red stroke (e.g. an error line reads white beside a red
+  left edge). Weekly keeps the pre-HUD look via `.hud-legacy`.
 - **Automatic backup is due-on-open + share (owner ruling 2026-10-04, decision 2A).** No Google
   account or OAuth: when a backup is due, BEYOND reminds on open and one tap shares the file to
   Drive/Files; a monthly restore check previews the latest file without writing.
