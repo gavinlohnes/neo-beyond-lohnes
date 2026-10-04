@@ -100,21 +100,33 @@ independent inspection of the exact identified SHA, evidence-backed verification
 durable PASS/BLOCK verdict; the Builder may not self-review in the same session. A moved head
 invalidates exact-head review evidence. Gavin remains the owner and final approval authority.
 
-## Builder App identity bootstrap
+## Candidate dispatch and Builder App identity
 
-The one-shot `Builder Identity Bootstrap` workflow migrates the in-flight
-FACTORY-AUTOPILOT-001 candidate from an owner-authored PR to a PR authored by the repository-only
-BEYOND Builder GitHub App. It uses the official token action pinned to an exact commit, requests
+Run `npm run factory:candidate` from an activated Drop branch. It derives candidate identity from
+the active campaign and Drop, the activation baseline, and the Drop contract as it exists on
+protected `origin/master`; routing text, PR titles, and Builder-controlled contract copies are not
+authority. It reconciles live GitHub candidates and emits versioned JSON naming the one next legal
+role/action and its required inputs. The command never launches a session or mutates GitHub.
+
+Candidate reconciliation reuses one exact open candidate, preserves obsolete evidence, requires a
+fresh candidate after a closed one, and fails closed for duplicate, divergent, malformed, ambiguous,
+campaign-mismatched, or protected-contract-mismatched evidence. A replacement inherits no review
+or CI evidence.
+
+The source-specific `Builder Identity Bootstrap` workflow creates the current canonical candidate
+as the repository-only BEYOND Builder GitHub App. It uses the official token action pinned to an exact commit, requests
 only Contents and Pull requests write access, disables checkout credential persistence, and lets
 the action revoke the short-lived installation token at job completion. The private key and token
 are never repository files or command output.
 
 Before mutation, the bootstrap verifies the token action's installation ID, configured App ID,
-App slug, source PR author, and exact source head. After PR creation it verifies the observed bot
-account type/login. It creates a replacement candidate from that exact commit, then adds one
+App slug, active Drop identity, activation ancestry, protected contract, campaign scope, and exact
+source head. After PR creation it verifies the observed bot account type/login. It creates a
+candidate from that exact commit, then adds one
 App-authored routing commit so `ACTIVE_DROP.md` points to the replacement PR. It does not merge,
 approve, close, or delete either PR. A fresh formal exact-head
-review is still mandatory. The source-specific push trigger is intentionally not a general agent
+review is still mandatory. Re-running the same source candidate reuses it only when identity and
+ancestry still match. The source-specific push trigger is intentionally not a general agent
 credential service or an autonomous integration path.
 
 ## Owner-work metric
