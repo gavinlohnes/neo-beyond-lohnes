@@ -1,13 +1,16 @@
 ---
 id: DUP-MEAL-001
-status: ACTIVE
+status: CLOSED
 baseline: a75da3d2ae605291cb00cf78f1c92a86908d639e
 branch: codex/dup-meal-001
 contract: docs/agent/drops/DUP-MEAL-001.md
 pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/155
 builder: Codex backup builder
-reviewer: (unassigned)
-integrator: (unassigned)
+reviewer: Claude Code, post-merge review of 94b10cc (owner session 2026-10-04): no defects
+integrator: Owner merge of PR #155, 2026-10-04
+integration_sha: 94b10cc3d89dc5d21803f166990cf8b5a3c52980
+closed_at: 2026-10-04T06:55:00.000Z
+close_note: closed by hand; factory-drop close refused because codex/dup-meal-001 gained a docs-only handoff commit (8adc44a) after the merge, superseded by this close-out
 ---
 
 # ACTIVE_DROP
