@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ExercisePrescription } from "../../../domain/workout/types";
 import { describePlates, describeWarmUp, getBarbellExerciseIds, warmUpRamp } from "../../../application/gymModeQueries";
 
@@ -27,6 +27,8 @@ export interface GymModeProps {
   onLog: () => void;
   onSkip: () => void;
   onExit: () => void;
+  /** Moves to the first exercise with sets left (TRAIN's own rule). */
+  onNextExercise: () => void;
 }
 
 type WakeLockSentinelLike = { release: () => Promise<void> };
@@ -57,6 +59,18 @@ export function GymMode(props: GymModeProps) {
 
   useWakeLock();
 
+  // GYM-POLISH-001: focus moves into gym mode on open; Escape closes it.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const { onExit } = props;
+  useEffect(() => {
+    dialogRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onExit();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onExit]);
+
   const isBarbell = barbellIds.has(exercise.exerciseId);
   const firstBarbellId = props.sessionExerciseIds.find((id) => barbellIds.has(id));
   const weightLbs = Number(props.weight);
@@ -66,7 +80,7 @@ export function GymMode(props: GymModeProps) {
       : [];
 
   return (
-    <div className="gym-mode" role="dialog" aria-modal="true" aria-label="Gym mode">
+    <div ref={dialogRef} tabIndex={-1} className="gym-mode" role="dialog" aria-modal="true" aria-label="Gym mode">
       <div className="gym-mode__top">
         <p className="meta" style={{ margin: 0 }}>
           Exercise {props.exerciseIndex + 1} of {props.exerciseCount}
@@ -92,7 +106,12 @@ export function GymMode(props: GymModeProps) {
           <p className="card-body">EXIT to finish the workout in TRAIN.</p>
         </div>
       ) : setNumber === null ? (
-        <p className="card-body">This exercise is done. EXIT to choose the next one in TRAIN.</p>
+        <div className="gym-mode__done">
+          <p className="card-body">This exercise is done.</p>
+          <button type="button" className="btn-primary gym-mode__log" onClick={props.onNextExercise}>
+            NEXT EXERCISE
+          </button>
+        </div>
       ) : (
         <>
           {ramp.length > 0 && <p className="gym-mode__hint">{describeWarmUp(ramp)}</p>}
@@ -182,8 +201,13 @@ function useWakeLock() {
       void nav.wakeLock!
         .request("screen")
         .then((s) => {
-          if (active) sentinel = s;
-          else void s.release();
+          if (!active) {
+            void s.release();
+            return;
+          }
+          // GYM-POLISH-001: let go of a lock still held before keeping the new one.
+          void sentinel?.release().catch(() => {});
+          sentinel = s;
         })
         .catch(() => {});
     };

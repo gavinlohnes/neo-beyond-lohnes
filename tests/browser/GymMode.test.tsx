@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { page } from "vitest/browser";
+import { page, userEvent } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn } from "../../src/application/commands";
@@ -49,6 +49,55 @@ async function barbellSessionWithHistory() {
 }
 
 describe("GYM-001 — gym screen", () => {
+  it("GYM-POLISH-001: focus moves in on open, Escape closes, focus returns to GYM MODE", async () => {
+    stubWakeLock();
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await screen.getByRole("button", { name: "GYM MODE" }).click();
+    await expect.poll(() => document.activeElement?.classList.contains("gym-mode")).toBe(true);
+    await userEvent.keyboard("{Escape}");
+    await expect.poll(() => document.querySelector(".gym-mode")).toBeNull();
+    await expect.poll(() => document.activeElement?.textContent).toBe("GYM MODE");
+  });
+
+  it("GYM-POLISH-001: a wake lock still held is released before a new one is kept", async () => {
+    const released: number[] = [];
+    let n = 0;
+    const request = vi.fn(async () => {
+      const id = ++n;
+      return { release: vi.fn(async () => void released.push(id)) };
+    });
+    Object.defineProperty(navigator, "wakeLock", { value: { request }, configurable: true });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await screen.getByRole("button", { name: "GYM MODE" }).click();
+    await expect.poll(() => request.mock.calls.length).toBe(1);
+    document.dispatchEvent(new Event("visibilitychange"));
+    await expect.poll(() => released).toEqual([1]);
+    await screen.getByRole("button", { name: "EXIT" }).click();
+    await expect.poll(() => released).toEqual([1, 2]);
+  });
+
+  it("GYM-POLISH-001: a finished exercise offers NEXT EXERCISE instead of a dead end", async () => {
+    stubWakeLock();
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    for (const n of [1, 2, 3]) await logSet(day.id, session.id, "machine-chest-press", n, 135, 10);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: /^Machine Chest Press — 3 of 3 sets, complete/ }).click();
+    await screen.getByRole("button", { name: "GYM MODE" }).click();
+    const dialog = screen.getByRole("dialog", { name: "Gym mode" });
+    await expect.element(dialog.getByText("This exercise is done.")).toBeVisible();
+    await dialog.getByRole("button", { name: "NEXT EXERCISE" }).click();
+    await expect.element(dialog.getByText("Pec Deck", { exact: true })).toBeVisible();
+    await expect.element(dialog.getByRole("button", { name: "LOG SET 1" })).toBeVisible();
+  });
+
   it("shows the lift big, with the ghost set, plates and warm-up; LOG uses TRAIN's own path and advances", async () => {
     const { request, release } = stubWakeLock();
     const { session } = await barbellSessionWithHistory();
@@ -92,7 +141,7 @@ describe("GYM-001 — gym screen", () => {
     await expect.element(dialog.getByRole("button", { name: "LOG SET 1" })).toBeVisible();
     expect(document.querySelectorAll(".gym-mode__hint")).toHaveLength(0);
 
-    for (const name of ["LOG SET 1", "SKIP", "Weight up", "Weight down", "Reps up", "Reps down"]) {
+    for (const name of ["LOG SET 1", "SKIP", "EXIT", "Weight up", "Weight down", "Reps up", "Reps down"]) {
       expect(dialog.getByRole("button", { name, exact: true }).element().getBoundingClientRect().height).toBeGreaterThanOrEqual(56);
     }
     for (const width of [320, 360, 412]) {
