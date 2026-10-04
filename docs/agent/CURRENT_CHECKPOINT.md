@@ -7,21 +7,30 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (reviewer/integrator), at the end of Gavin's authorized
-sprint** ("perform a sprint ... in a safe and responsible way": Queue items only; Routine merges
-on green after an independent review; nothing Architectural/High-Risk merged without Gavin).
-Baseline `origin/master` at `7596152` (PR #168 merge, HUD-002).
+**Written 2026-10-04 by Claude Code (builder).** Baseline `origin/master` at `b58fbaf` (PR #169
+merge). Gavin queued Gym mode with rulings 1A (two Drops), 2A (cue text stored in the database,
+in backups), 3A (warm-up ramp as a suggestion); recorded in the roadmap Queue and
+`docs/UX_DECISIONS.md`.
 
-- **Sprint finished.** BODY-TIMELINE-001 merged (PR #166) and closed (#167); HUD-002 sprint
-  cleanup independently reviewed, merged on green PR Verification (PR #168, merge `7596152`),
-  and closed on branch `claude/hud-002-close` (this PR).
-- **Drop:** none active. `docs/agent/ACTIVE_DROP.md` records HUD-002 `CLOSED` at `7596152`.
-- **Queue:** empty — Gavin adds the next item (see DECISIONS FOR GAVIN, item 1).
-- **Verification run (review of #168):** diff limited to a `tokens.css` comment, two test files
-  and Drop docs; contrast #f2f2f2 on #D0141B recomputed at 4.94:1; the PR count test fails when
-  `getAllRecords` is broken to judge against all other sessions (reverted); TimelineFilters +
-  Timeline browser tests pass; CI PR Verification green on head `0e6f75f`.
-- **Left:** merge this close-out docs PR (Gavin's call); nothing else in flight.
+- **Drop:** `GYM-001` gym screen: ARCHITECTURAL, `ACTIVE`. Gavin approves the merge.
+- **Branch:** `claude/gym-001`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+- **Done:** GYM MODE in an active STANDARD/REDUCED workout opens a full-screen view: typeable
+  weight and reps with −/+ (weight by the lift's `incrementLbs`), LOG SET n, SKIP, rest
+  countdown, ghost set ("Last time 185 × 5"), auto-advance, EXIT. Screen Wake Lock while open.
+  Barbell custom exercises add plate math ("185 lb = bar + 45 + 25 per side") and, before the
+  first barbell set, "Warm-up: 45 ×10 · 95 ×5 · 130 ×3 · 155 ×1" (suggestion only). Built-in
+  templates A/B/C are machine/cable, so those two lines only appear for barbell lifts Gavin adds.
+  All logging goes through TRAIN's own handlers. Helpers in `application/gymModeQueries.ts`.
+- **Tests:** `tests/integration/gymMode.test.ts` (plate math, unloadable weights, ramp rounding);
+  `tests/browser/GymMode.test.tsx` (ghost/plates/ramp, LOG = same logSet, auto-advance, wake lock
+  requested and released, EXIT keeps state, machine lift without hints, ≥ 56 px targets, no
+  overflow at 320/360/412, AA contrast, typing a first-ever weight, no-wake-lock browsers).
+- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run
+  --testTimeout 60000`: 1,985 passed, 0 failed; `build` OK; `git diff --check` OK. Checked in the
+  browser at 390 px; screenshot in `docs/agent/screenshots/GYM-001/`.
+- **Left:** independent review; Gavin approves the merge; close the Drop. Next: `GYM-002` (cue
+  text, HIGH-RISK): stop at the plan for Gavin's sign-off on the exact storage change. Note for that
+  plan: custom exercises already have an optional `notes` field; built-in exercises have no record.
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because
@@ -39,9 +48,5 @@ Baseline `origin/master` at `7596152` (PR #168 merge, HUD-002).
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-1. What goes into the Queue next: **A. Gym mode (recommended; it's the parking-lot item used every
-   workout)** · B. Notes that go somewhere · C. Nothing yet; wait for field notes.
-2. HUD-001's "bracket ticks on `.tool-label` frames": **A. Leave as is: the section frames already
-   carry ticks (recommended)** · B. Add small brackets around tool labels too.
-3. Old branches: **A. Delete every branch already merged into master (recommended; nothing is
-   lost)** · B. Keep them. The one-line command is in the sprint report.
+1. GYM-001 after review: **A. Merge as is (recommended)** · B. Tune a detail first (say which) ·
+   C. Hold.
