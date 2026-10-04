@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: a75da3d2ae605291cb00cf78f1c92a86908d639e
 branch: codex/dup-meal-001
 contract: docs/agent/drops/DUP-MEAL-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/155
 builder: Codex backup builder
 reviewer: (unassigned)
 integrator: (unassigned)
