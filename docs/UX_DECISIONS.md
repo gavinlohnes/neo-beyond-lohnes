@@ -303,6 +303,13 @@ below, this entry wins; the older entry is kept for history.
   SCHEDULE screen said a schedule "never counts … until you confirm it" — since DROP 0 a saved
   schedule starts each day ("per schedule"), so the screen and its preview say that. TODAY's
   unconfirmed-day card keeps "a prediction, not a fact, until you confirm" (still true there).
+- **HUD design system approved (owner ruling 2026-10-04, decision 1A).** HUD-001 may bring back
+  cut corners and bracket ticks (removed 2026-09-30) as functional frame geometry, with one red
+  (#D0141B) and AA contrast; the doctrine's "decorative HUD geometry" line carries the amendment.
+  Weekly keeps its look until the F1 review.
+- **Automatic backup is due-on-open + share (owner ruling 2026-10-04, decision 2A).** No Google
+  account or OAuth: when a backup is due, BEYOND reminds on open and one tap shares the file to
+  Drive/Files; a monthly restore check previews the latest file without writing.
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks

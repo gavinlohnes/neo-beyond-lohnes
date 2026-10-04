@@ -170,12 +170,13 @@ Codex can build it when Claude is out.
 Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
 PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
 
-1. **HUD-001 — HUD design system** (ARCHITECTURAL; waits for the owner's doctrine call). Black
+1. **HUD-001 — HUD design system** (ARCHITECTURAL; doctrine amendment approved 2026-10-04, 1A). Black
    #000, one red #D0141B, cut corners, bracket ticks, 1px lines, Chakra Petch + JetBrains Mono
    self-hosted, WCAG AA, every screen except Weekly until the F1 review, no emblems/logos/
    character names, visual-only. Drop: `docs/agent/drops/HUD-001.md`.
-2. **BACKUP-AUTO-001 — automatic backup** (ARCHITECTURAL; waits for the owner's (a)/(b) pick).
-   Opt-in, due-on-open backup to a destination Gavin picks, monthly restore check, no server.
+2. **BACKUP-AUTO-001 — automatic backup** (ARCHITECTURAL; due-on-open + share, no account,
+   owner decision 2A). Opt-in, due-on-open backup shared to a destination Gavin picks, monthly
+   restore check, no server.
    Drop: `docs/agent/drops/BACKUP-AUTO-001.md`.
 3. **PR-CARDS-001 — PR record cards** (ROUTINE). Quiet red-outlined PR tag, no sound; every PR
    kept as a card in TRAIN → RECORDS. Drop: `docs/agent/drops/PR-CARDS-001.md`.
