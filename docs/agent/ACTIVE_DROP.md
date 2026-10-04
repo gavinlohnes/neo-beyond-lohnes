@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 891a9f44fc79293be621f289ee94ebb13e08a418
 branch: claude/body-timeline-001
 contract: docs/agent/drops/BODY-TIMELINE-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/166
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)

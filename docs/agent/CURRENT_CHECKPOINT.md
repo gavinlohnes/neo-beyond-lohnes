@@ -13,7 +13,7 @@ after an independent review; nothing Architectural/High-Risk merged without Gavi
 `origin/master` at `891a9f4` (PR #165 merge, PR-CARDS-001 closed).
 
 - **Drop:** `BODY-TIMELINE-001` transformation timeline: ROUTINE, `ACTIVE`.
-- **Branch:** `claude/body-timeline-001`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+- **Branch:** `claude/body-timeline-001`. **PR:** [#166](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/166).
 - **Done:** BODY → BODYWEIGHT → SHOW TIMELINE: weight over the last 90 days (inline SVG) with
   markers for PRs (finish-summary wording), clean-day milestones at 7/30/60/90/180/365 clean days
   (a running count, never a streak), weight milestones (each new 5-lb step, `describeMilestone`
