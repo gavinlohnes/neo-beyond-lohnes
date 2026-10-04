@@ -105,6 +105,8 @@ export interface ShiftClockInput {
    * coming work night into OFF; see mainSleepEndsPostShift.
    */
   mainSleepLogged: boolean;
+  /** SHIFT DOWN was completed after this day's shift began; its row then steps back into TOOLS. */
+  shiftDownDone?: boolean;
 }
 
 export interface ShiftClockView {
@@ -131,7 +133,9 @@ export function deriveShiftClockPhase(input: ShiftClockInput): ShiftClockPhase |
 
 export function deriveShiftClockView(input: ShiftClockInput): ShiftClockView {
   const phase = deriveShiftClockPhase(input);
-  const rows = [...(phase === null ? UNANSWERED_ROWS : PHASE_ROWS[phase])].slice(0, MAX_PHASE_ROWS);
+  const rows = [...(phase === null ? UNANSWERED_ROWS : PHASE_ROWS[phase])]
+    .filter((row) => !(row === "SHIFT_DOWN" && input.shiftDownDone))
+    .slice(0, MAX_PHASE_ROWS);
   const tools = TOOLS_ORDER.filter((item) => !(rows as readonly string[]).includes(item));
   const window = input.shiftWindow;
   const countdown =

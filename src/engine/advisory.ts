@@ -143,11 +143,14 @@ export function composeAdvisoryNoteFromJournal(entry: DecisionJournalEntry): Adv
  * is not already RED/YELLOW (something else already has authority then).
  */
 export function composeAdvisoryNoteFromShiftProtection(concern: ShiftProtectionConcern): AdvisoryNote {
-  const items = concern.unmetItems.map((item) => item.toLowerCase()).join(" and ");
+  // Soak fix (2026-10-04): "hasn't been logged" was false once some water was logged but
+  // under the Minimum Day amount; say what's actually true.
+  const items = concern.unmetItems.map((item) => (item === "HYDRATE" ? "water" : "protein")).join(" and ");
+  const plural = concern.unmetItems.length > 1;
   return {
     id: crypto.randomUUID(),
     sourceModule: "shiftProtection",
-    message: `Shift is coming up and ${items} still ${concern.unmetItems.length > 1 ? "haven't" : "hasn't"} been logged today.`,
+    message: `Shift is coming up and today's ${items} ${plural ? "are" : "is"} still short of the Minimum Day ${plural ? "amounts" : "amount"}.`,
     basis: concern.unmetItems.map((item) => ({ key: "unmetItem", value: item })),
     attentionLevel: "INTERRUPT",
   };

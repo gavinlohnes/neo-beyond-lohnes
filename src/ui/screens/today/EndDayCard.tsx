@@ -33,7 +33,7 @@ export function EndDayCard({
   const open = suggestEndDay || endDayOpen;
   if (!open) {
     return (
-      <CollapsibleRow name="BEYONDDAY" icon={<LineIcon icon={Sunset} />} onOpen={() => setEndDayOpen(true)} />
+      <CollapsibleRow name="END DAY" icon={<LineIcon icon={Sunset} />} onOpen={() => setEndDayOpen(true)} />
     );
   }
   const body = (
@@ -63,7 +63,7 @@ export function EndDayCard({
   // rail — same neutral row as the opened card.
   return (
     <div className="equipment-row">
-      <p className="tool-label" style={{ marginBottom: 4 }}>BEYONDDAY</p>
+      <p className="tool-label" style={{ marginBottom: 4 }}>END DAY</p>
       {body}
     </div>
   );

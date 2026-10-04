@@ -6,7 +6,7 @@ import {
   deriveScheduledContext,
   type ScheduleWeek,
 } from "../../../engine/scheduledContext";
-import { describeSchedulePrediction } from "../today/workContextCopy";
+import { describeSchedulePreview } from "../today/workContextCopy";
 import type { SchedulePattern } from "../../../domain/common/types";
 import { describeError } from "../../errorMessage";
 
@@ -83,7 +83,7 @@ export function WorkScheduleScreen() {
     };
   }
 
-  const preview = loaded && !shiftHoursInvalid ? describeSchedulePrediction(deriveScheduledContext(new Date(), draftPattern())) : null;
+  const preview = loaded && !shiftHoursInvalid ? describeSchedulePreview(deriveScheduledContext(new Date(), draftPattern())) : null;
 
   async function handleSave() {
     if (saving || shiftHoursInvalid) return;
@@ -113,8 +113,8 @@ export function WorkScheduleScreen() {
   return (
     <div className="fade-in">
       <p className="card-body" style={{ marginBottom: 16 }}>
-        Your work rotation. BEYOND uses this only to predict and suggest — it never counts as an actual
-        record of when you worked until you confirm it yourself.
+        Your work rotation. Once saved, each day starts from it ("per schedule"); one tap on TODAY
+        changes any day.
       </p>
 
       <p className="section-label">Configuration</p>

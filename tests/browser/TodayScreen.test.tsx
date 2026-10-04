@@ -544,15 +544,15 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     expect(capacitySegment!.textContent).toContain("RED");
   });
 
-  it("states capacity as UNKNOWN, with a neutral dot, before any check-in exists today", async () => {
+  it("states that there is no check-in yet, with a neutral dot, before any check-in exists today", async () => {
     await startDay();
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Capacity", { exact: false })).toBeVisible();
+    await expect.element(screen.getByText("No check-in yet today.", { exact: false })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect(strip!.className).toBe("status-strip status-strip--stacked");
-    expect(strip!.textContent).toContain("Capacity is UNKNOWN");
+    expect(strip!.textContent).toContain("No check-in yet today.");
     expect(document.querySelector(".capacity-dot--unknown")).not.toBeNull();
     // UNKNOWN is not a severity — no warning/red modifier, no bolded segment.
     expect(document.querySelector(".status-strip__capacity")).toBeNull();
@@ -1162,7 +1162,7 @@ describe("TodayScreen (real browser) — END DAY relevance", () => {
 
     const screen = await render(<TodayScreen />);
     await openTodayTools(screen);
-    await expect.element(screen.getByRole("button", { name: "Open BEYONDDAY" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open END DAY" })).toBeVisible();
   });
 
   it("surfaces in Attention once primary sleep is logged", async () => {
@@ -1185,7 +1185,7 @@ describe("TodayScreen (real browser) — END DAY relevance", () => {
     const screen = await render(<TodayScreen onOpenTrain={openTrain} />);
 
     await openTodayTools(screen);
-    await screen.getByRole("button", { name: "Open BEYONDDAY" }).click();
+    await screen.getByRole("button", { name: "Open END DAY" }).click();
     await screen.getByRole("button", { name: "END DAY" }).click();
 
     await expect.element(screen.getByText(/Workout in progress/)).toBeVisible();
@@ -1517,8 +1517,8 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("button", { name: "No action needed" })).toBeVisible();
-    const el = screen.getByRole("button", { name: "No action needed" }).element();
+    await expect.element(screen.getByRole("button", { name: "GOT IT" })).toBeVisible();
+    const el = screen.getByRole("button", { name: "GOT IT" }).element();
     expect(el.className).toContain("btn-secondary");
     expect(getComputedStyle(el).backgroundColor).not.toBe("rgb(200, 30, 44)");
   });
@@ -1538,7 +1538,7 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("button", { name: "No action needed" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "GOT IT" })).toBeVisible();
     expect(screen.getByText("Planning to train today?", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByRole("button", { name: "Open PLANNED WORK" }).elements()).toHaveLength(0);
     expect(screen.getByText(/No backup on record yet/).elements()).toHaveLength(0);
@@ -1610,7 +1610,7 @@ describe("TodayScreen (real browser) — TODAY-008 day-transition refresh (resid
     // then start day B through the real START DAY button — the exact
     // handler (handleStartDay) this Drop fixes.
     await openTodayTools(screen);
-    await screen.getByRole("button", { name: "Open BEYONDDAY" }).click();
+    await screen.getByRole("button", { name: "Open END DAY" }).click();
     await screen.getByRole("button", { name: "END DAY" }).click();
     await expect.element(screen.getByRole("button", { name: "START DAY", exact: true })).toBeVisible();
 

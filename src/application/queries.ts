@@ -803,6 +803,15 @@ export async function getOpenShiftDown(beyondDayId: string): Promise<OpenShiftDo
   };
 }
 
+/** Soak fix (2026-10-04): when this day's latest SHIFT DOWN completed, if one did. */
+export async function getLastShiftDownCompletedAt(beyondDayId: string): Promise<string | undefined> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  return events
+    .filter((e) => e.type === "SHIFT_DOWN_COMPLETED")
+    .sort((a, b) => byTimeThenSeq(a.occurredAt, a.seq, b.occurredAt, b.seq))
+    .at(-1)?.occurredAt;
+}
+
 export interface WorkPeriodEndedInfo {
   eventId: string;
   occurredAt: string;

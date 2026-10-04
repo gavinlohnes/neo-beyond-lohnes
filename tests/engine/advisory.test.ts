@@ -246,7 +246,7 @@ describe("composeAdvisoryNoteFromShiftProtection (FOUNDATION-1B)", () => {
   it("names every unmet item and is attributed to 'shiftProtection'", () => {
     const note = composeAdvisoryNoteFromShiftProtection({ unmetItems: ["HYDRATE", "PROTEIN"] });
     expect(note.sourceModule).toBe("shiftProtection");
-    expect(note.message).toContain("hydrate");
+    expect(note.message).toContain("water");
     expect(note.message).toContain("protein");
     expect(note.basis).toEqual([
       { key: "unmetItem", value: "HYDRATE" },
@@ -268,7 +268,7 @@ describe("composeAdvisoryNoteFromShiftProtection (FOUNDATION-1B)", () => {
 
   it("single unmet item uses singular verb agreement", () => {
     const note = composeAdvisoryNoteFromShiftProtection({ unmetItems: ["PROTEIN"] });
-    expect(note.message).toContain("hasn't been logged");
+    expect(note.message).toContain("is still short of the Minimum Day amount");
   });
 });
 

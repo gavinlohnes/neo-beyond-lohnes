@@ -36,7 +36,7 @@ describe("describeRecommendationAction", () => {
   });
 
   it("uses a distinct label for NO_ACTION_REQUIRED", () => {
-    expect(describeRecommendationAction("NO_ACTION_REQUIRED")).toBe("No action needed");
+    expect(describeRecommendationAction("NO_ACTION_REQUIRED")).toBe("GOT IT");
   });
 });
 

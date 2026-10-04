@@ -95,7 +95,7 @@ describe("Scenario B — pre-shift conflict (PROTECT vs EXECUTE, resolved as Adv
     const protect = notes.find((n) => n.sourceModule === "shiftProtection");
     expect(protect).toBeDefined();
     expect(protect!.attentionLevel).toBe("INTERRUPT");
-    expect(protect!.message).toContain("hydrate");
+    expect(protect!.message).toContain("water");
     expect(protect!.message).toContain("protein");
   });
 

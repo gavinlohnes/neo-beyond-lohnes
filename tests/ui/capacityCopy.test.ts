@@ -45,7 +45,7 @@ describe("describeCapacity", () => {
   it("describes GREEN without implying anything was wrong", () => {
     const { capacity, reasonCodes } = deriveCapacity(checkIn({}));
     expect(describeCapacity(capacity, reasonCodes)).toBe(
-      "Capacity is GREEN — nothing is flagged as severe or constrained.",
+      "Capacity is GREEN — nothing in your check-in needs care.",
     );
   });
 

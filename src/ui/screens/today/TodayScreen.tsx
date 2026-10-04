@@ -96,6 +96,7 @@ import {
   getDayProteinTotalG,
   getOpenReset,
   getOpenShiftDown,
+  getLastShiftDownCompletedAt,
   getWorkPeriodEnded,
   getWorkContextSource,
   hasUnresolvedPostShift,
@@ -245,6 +246,8 @@ export function TodayScreen({
   const [shiftDownDuration, setShiftDownDuration] = useState(10);
   const [openShiftDownStartedAt, setOpenShiftDownStartedAt] = useState<string | null>(null);
   const [lastShiftDownOutcome, setLastShiftDownOutcome] = useState<SessionOutcome | null>(null);
+  // Soak fix (2026-10-04): when this day's latest SHIFT DOWN completed, from history, so a reload knows too.
+  const [shiftDownCompletedAt, setShiftDownCompletedAt] = useState<string | null>(null);
   const [suggestEndDay, setSuggestEndDay] = useState(false);
   const [endDayBlockedByWorkout, setEndDayBlockedByWorkout] = useState(false);
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
@@ -570,6 +573,7 @@ export function TodayScreen({
     let minimumDayProteinG = 0;
     let openReset: Awaited<ReturnType<typeof getOpenReset>> | undefined;
     let openShiftDown: Awaited<ReturnType<typeof getOpenShiftDown>> | undefined;
+    let shiftDownCompletedAtValue: string | null = null;
     let workPeriodEndedAt: string | null = null;
     let unresolvedPostShift = false;
     let workContextSource: WorkContextSource | undefined;
@@ -593,6 +597,7 @@ export function TodayScreen({
       minimumDayProteinG = await getDayProteinTotalG(activeDay.id);
       openReset = await getOpenReset(activeDay.id);
       openShiftDown = await getOpenShiftDown(activeDay.id);
+      shiftDownCompletedAtValue = (await getLastShiftDownCompletedAt(activeDay.id)) ?? null;
       const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
       workPeriodEndedAt = workPeriodEnded ? workPeriodEnded.occurredAt : null;
       unresolvedPostShift = await hasUnresolvedPostShift(activeDay.id);
@@ -656,6 +661,7 @@ export function TodayScreen({
         setActiveResetId(null);
         setOpenResetStartedAt(null);
       }
+      setShiftDownCompletedAt(shiftDownCompletedAtValue);
       if (openShiftDown) {
         setActiveShiftDownId(openShiftDown.eventId);
         setShiftDownDuration(openShiftDown.durationMinutes);
@@ -1306,6 +1312,8 @@ export function TodayScreen({
     shiftWindow,
     workEnded: workPeriodEndedAt !== null,
     mainSleepLogged: mainSleepEndsPostShift(mainSleepRecordedAt, workPeriodEndedAt, shiftWindow),
+    shiftDownDone:
+      shiftDownCompletedAt !== null && (!shiftWindow || new Date(shiftDownCompletedAt).getTime() >= shiftWindow.start.getTime()),
   });
   const phaseRows: ShiftClockRow[] = day ? shiftClock.rows : [];
   const toolsItems: ToolsItem[] = day ? shiftClock.tools : [...TOOLS_ORDER];
@@ -2030,6 +2038,7 @@ export function TodayScreen({
                     currentContext ? currentContext.schedulePrediction : scheduledContext,
                     currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
                     workContextPerSchedule,
+                    shiftClock.phase,
                   )}
             </p>
             {workContextPerSchedule && day.workContext !== "UNKNOWN" && (

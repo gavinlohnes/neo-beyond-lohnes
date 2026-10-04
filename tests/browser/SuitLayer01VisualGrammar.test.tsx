@@ -152,6 +152,6 @@ describe("Suit Layer 01 — no capability disappeared", () => {
     await screen.getByRole("button", { name: "Update check-in" }).click();
     await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
     await expect.element(screen.getByPlaceholder("Capture a thought...")).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "Open BEYONDDAY" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open END DAY" })).toBeVisible();
   });
 });

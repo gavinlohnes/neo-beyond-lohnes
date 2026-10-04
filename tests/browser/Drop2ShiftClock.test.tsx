@@ -65,7 +65,7 @@ describe("Shift Clock — before shift (16:30 → 18:00)", () => {
     // The per-schedule one-tap change stays visible.
     await expect.element(screen.getByRole("button", { name: "CHANGE TO OFF" })).toBeVisible();
     // An INTERRUPT-tier advisory (shift protection) is never folded into TOOLS.
-    await expect.element(screen.getByText(/Shift is coming up and hydrate and protein still haven't been logged today/)).toBeVisible();
+    await expect.element(screen.getByText(/Shift is coming up and today's water and protein are still short of the Minimum Day amounts./)).toBeVisible();
     expect(screen.getByRole("button", { name: "Close TOOLS" }).elements()).toHaveLength(0);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
   });
@@ -259,7 +259,7 @@ describe("Shift Clock — day off", () => {
     await expect.element(screen.getByRole("button", { name: "Open WORK CONTEXT" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY" })).toBeVisible();
     await expect.element(screen.getByPlaceholder("Capture a thought...")).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "Open BEYONDDAY" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open END DAY" })).toBeVisible();
     // The strip's one-tap change is the only one, even with TOOLS open.
     expect(screen.getByRole("button", { name: "CHANGE TO WORKING" }).elements()).toHaveLength(1);
   });
