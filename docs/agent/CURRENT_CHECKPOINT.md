@@ -14,8 +14,8 @@ Baseline `origin/master` at `eb6c281` (PR #167 merge, BODY-TIMELINE-001 closed).
 
 - **Sprint so far:** BODY-TIMELINE-001 built, reviewed, merged (PR #166) and closed (#167);
   the Queue's Done items cleared.
-- **Drop:** `HUD-002` sprint cleanup: ROUTINE, `ACTIVE`. Branch `claude/hud-002`. **PR:** see
-  `docs/agent/ACTIVE_DROP.md` `pr:`.
+- **Drop:** `HUD-002` sprint cleanup: ROUTINE, `ACTIVE`. Branch `claude/hud-002`. **PR:**
+  [#168](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/168).
 - **Done:** the stale primary-button contrast comment in `tokens.css` now states #D0141B
   (~4.9:1); the PR count-equivalence test uses asymmetric data and fails if `getAllRecords`
   judges against later sessions (checked by breaking it and reverting); new
