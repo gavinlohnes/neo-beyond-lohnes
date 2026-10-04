@@ -1,6 +1,6 @@
 ---
 id: BACKUP-AUTO-001
-status: ACTIVE
+status: CLOSED
 baseline: 6848d3012245febf1350f336f52c9b5cf442fbff
 branch: claude/backup-auto-001
 contract: docs/agent/drops/BACKUP-AUTO-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/162
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: e80315d0dbba230e4fff3fdb64843abe31f3cb49
+closed_at: 2026-10-04T16:02:40.892Z
 ---
 
 # ACTIVE_DROP

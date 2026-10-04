@@ -7,51 +7,33 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (builder).** Baseline `origin/master` at `6848d30` (PR #161
-merge, HUD-001 closed).
+**Written 2026-10-04 by Claude Code (reviewer/integrator).** `origin/master` at `e80315d` (PR #162
+merge).
 
-- **Drop:** `BACKUP-AUTO-001` automatic backup: ARCHITECTURAL, `ACTIVE`. Built after Gavin's
-  2026-10-04 go-ahead ("merge and build option A"); awaiting a separate review session and
-  Gavin's merge.
-- **Branch:** `claude/backup-auto-001`. **PR:** [#162](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/162).
-- **Done:** MORE → Data safety has an AUTOMATIC BACKUP row (off by default; TURN ON, every
-  1/3/7/14/30 days, default 7; CHECK A BACKUP). With it on and a backup due (none on record, or
-  last one ≥ N days old), TODAY shows one line above the screen: "Backup due · 9 days old",
-  BACK UP NOW (existing `shareBackup()`: share menu → Drive/Files/a file share; download on
-  desktop), LATER (hides it for a day). Closing the share menu keeps the line. Once a month (the
-  clock starts when it's turned on, so it never asks right after the first backup) the line asks
-  "Check your latest backup": the chosen file goes through the existing `previewAnyRestore()`
-  (no write) and each table's row count is compared with the device: "Backup from Oct 3
-  restores 1,204 records ✓" or the tables that differ. Settings, snooze and last-check time in
-  `localStorage` (`src/persistence/autoBackup.ts`), reached only through
-  `src/application/autoBackupQueries.ts`. No schema, backup-format, restore or dependency change.
-- **Tests:** `tests/integration/autoBackup.test.ts` (due/snooze/monthly rules, count comparison,
-  fresh backup matches, changed device names the table, the check never writes, the file still
-  restores, a non-backup file is rejected writing nothing); `tests/browser/AutoBackup.test.tsx`
-  (off by default, line on TODAY at 360 px with 44 px buttons, BACK UP NOW shares a dexie file and
-  clears it, cancelled share keeps it, LATER, MORE toggle + interval). Three existing MORE tests
-  now pick the reminder row's TURN ON/"Off." with `.first()` and the restore picker by its label,
-  since MORE has a second TURN ON and file picker.
-- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run` earlier in
-  the build: 1,957 passed, 5 failures from the duplicate TURN ON / file picker selectors, fixed
-  and re-run (affected files 165/165); compat + restore tests 39/39; `build` OK; `git diff
-  --check` OK. Checked in the browser at 360 px; screenshot in
-  `docs/agent/screenshots/BACKUP-AUTO-001/`.
-- **Left:** independent review at the PR's exact head (format compatibility, the check is
-  read-only); Gavin approves the merge; close with `factory-drop.mjs close`, and add the
-  as-built `docs/UX_DECISIONS.md` entry.
-- **Open risks:** the line shows only on TODAY (the screen BEYOND opens to). The restore check
-  can't verify the file's contents beyond what the preview reads (its table list and counts).
-  Carried over: HUD follow-ups (stale `tokens.css` contrast comment; ticks not on `.tool-label`);
-  @fontsource kept only for Weekly; `factory:status` needs `GITHUB_TOKEN`; 56 merged branches plus
-  `codex/dup-meal-001`, `codex/duplicate-meal-prompt`, `claude/hud-001` and
-  `claude/hud-001-close` await deletion by Gavin.
-- **Next in Queue after this:** `PR-CARDS-001`, `BODY-TIMELINE-001` (ROUTINE, written Drops).
+- **Drop:** `BACKUP-AUTO-001` automatic backup: **merged and closed** (PR
+  [#162](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/162), merge `e80315d`, on Gavin's
+  2026-10-04 option A: merge if the review is clean and checks pass). **No Drop is active.**
+- **Review (head `5491482`):** clean. Backup format unchanged (`backup.ts`/`restore.ts`, schema,
+  package files and protected fixtures untouched); BACK UP NOW goes through `shareBackup()`; the
+  restore check only previews and counts rows. A deliberate write inserted into the check made the
+  "never writes" test fail, which shows the test catches it. Off by default; architecture and
+  typecheck OK; targeted tests 109/109; PR Verification green. Findings posted on the PR.
+- **Close-out (branch `claude/backup-auto-001-close`):** `factory-drop.mjs close` run; Roadmap
+  Queue marks BACKUP-AUTO-001 done; as-built entry in `docs/UX_DECISIONS.md`.
+- **Next in Queue:** `PR-CARDS-001` (ROUTINE, written Drop: `docs/agent/drops/PR-CARDS-001.md`),
+  then `BODY-TIMELINE-001` (ROUTINE, written Drop).
+- **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
+  menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
+  weeks-old backup will usually report "differs from this device" in the restore check, because
+  data has been logged since it was made. Carried over: HUD follow-ups (stale `tokens.css`
+  contrast comment; ticks not on `.tool-label`); @fontsource kept only for Weekly;
+  `factory:status` needs `GITHUB_TOKEN`; 56 merged branches plus `codex/dup-meal-001`,
+  `codex/duplicate-meal-prompt`, `claude/hud-001`, `claude/hud-001-close` and
+  `claude/backup-auto-001` (and this close branch once merged) await deletion by Gavin.
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-1. BACKUP-AUTO-001 after review: **A. Merge as is (recommended)** · B. Tune a detail first (say
-   which) · C. Hold.
+None.

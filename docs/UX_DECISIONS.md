@@ -316,6 +316,14 @@ below, this entry wins; the older entry is kept for history.
 - **Automatic backup is due-on-open + share (owner ruling 2026-10-04, decision 2A).** No Google
   account or OAuth: when a backup is due, BEYOND reminds on open and one tap shares the file to
   Drive/Files; a monthly restore check previews the latest file without writing.
+- **As built: automatic backup (BACKUP-AUTO-001, PR #162, merged 2026-10-04 on the owner's
+  option A).** Off by default; MORE → Data safety → AUTOMATIC BACKUP turns it on (every 1/3/7/14/30
+  days, default 7). When it is on and a backup is due (none on record, or the last one at least N
+  days old), TODAY opens with one line, e.g. "Backup due · 9 days old" with BACK UP NOW (the
+  existing share-menu backup, same file format) and LATER (hidden for a day). Once a month it asks
+  "Check your latest backup": the chosen file is only previewed, never restored, and its table
+  counts are compared with the device ("Backup from Oct 3 restores 1,204 records ✓", or the
+  tables that differ). The month is counted from when the setting is turned on.
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks

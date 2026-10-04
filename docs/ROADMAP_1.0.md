@@ -179,6 +179,7 @@ PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
    owner decision 2A). Opt-in, due-on-open backup shared to a destination Gavin picks, monthly
    restore check, no server.
    Drop: `docs/agent/drops/BACKUP-AUTO-001.md`.
+   **Done (PR #162, merged 2026-10-04).**
 3. **PR-CARDS-001 — PR record cards** (ROUTINE). Quiet red-outlined PR tag, no sound; every PR
    kept as a card in TRAIN → RECORDS. Drop: `docs/agent/drops/PR-CARDS-001.md`.
 4. **BODY-TIMELINE-001 — transformation timeline** (ROUTINE). Weight trend in BODY with PRs,
