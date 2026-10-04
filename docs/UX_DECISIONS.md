@@ -258,6 +258,17 @@ below, this entry wins; the older entry is kept for history.
   taller than the screen; content already fully in view doesn't move. UPDATE CHECK-IN also moves
   focus to the form so screen readers announce it. Reduced motion jumps instead of gliding. Pure
   helpers in `ui/navigationPosition.ts`; shared hook `ui/hooks/useRevealOnOpen.ts`.
+- **As built: UNDO after every log (UNDO-001, owner approval 2026-10-04, option A).** Water,
+  sleep, bodyweight and protein-only logs get the same UNDO meals already had. BODY's banner reads
+  UNDO for its first 5 seconds (`UNDO_WINDOW_MS`), then CORRECT as before; TODAY's water, sleep
+  draft and Minimum Day protein banners read UNDO, then CORRECT IN BODY. UNDO appends a void event
+  naming the root log: `WATER_LOG_VOIDED`, `SLEEP_LOG_VOIDED` and `BODYWEIGHT_LOG_VOIDED` (one
+  `BodyLogVoidedPayload` shape), and protein's existing `PROTEIN_LOG_VOIDED`. Nothing is erased;
+  History says "Water log undone." and so on. An undone entry leaves every list and total — BODY,
+  TODAY, the Day Ledger and Burden Meter (where an undo counts as a correction), the weight trend
+  and protein target's latest weight, and the end-the-day suggestion after main sleep — and can't
+  be corrected afterwards. Undoing twice is a no-op. No schema change; backups carry the new events
+  like any other.
 
 ## FOUNDATION-1A — Product-language pillars & behavioral guarantees
 

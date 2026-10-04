@@ -13,6 +13,7 @@ import type {
   WorkContextSetPayload,
   WorkContextSource,
   ProteinLogVoidedPayload,
+  BodyLogVoidedPayload,
 } from "../domain/common/types";
 import {
   DEFAULT_SCHEDULE_PATTERN,
@@ -260,6 +261,15 @@ export async function getPriorOutcomeMemory(
 }
 
 /**
+ * UNDO-001: root *_LOGGED ids undone by a WATER/SLEEP/BODYWEIGHT_LOG_VOIDED
+ * event. An undone entry leaves every list and total, the same way
+ * getProteinEntries drops a deleted protein log.
+ */
+export function voidedLogIds(events: readonly DomainEvent[], voidedType: DomainEvent["type"]): Set<string> {
+  return new Set(events.filter((e) => e.type === voidedType).map((e) => (e.payload as BodyLogVoidedPayload).loggedEventId));
+}
+
+/**
  * Reconstructs effective hydration truth from the raw event stream.
  * WATER_LOGGED starts a chain; WATER_LOG_CORRECTED events supersede the
  * amount without erasing the original fact. Effective total = sum of each
@@ -269,8 +279,9 @@ export async function getHydrationEntries(
   beyondDayId: string,
 ): Promise<HydrationEntry[]> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const undone = voidedLogIds(events, "WATER_LOG_VOIDED");
   const logged = events.filter(
-    (e): e is DomainEvent<WaterLoggedPayload> => e.type === "WATER_LOGGED",
+    (e): e is DomainEvent<WaterLoggedPayload> => e.type === "WATER_LOGGED" && !undone.has(e.id),
   );
   const corrections = events.filter(
     (e): e is DomainEvent<WaterLogCorrectedPayload> => e.type === "WATER_LOG_CORRECTED",
@@ -335,9 +346,11 @@ export async function getDayCount(): Promise<number> {
 /** Shared by shouldSuggestEndDay and DAY-ROLLOVER-001's dayRolloverAmbiguity advisory query. */
 async function hasPrimarySleepLogged(beyondDayId: string): Promise<boolean> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const undone = voidedLogIds(events, "SLEEP_LOG_VOIDED");
   return events.some(
     (e) =>
       e.type === "SLEEP_LOGGED" &&
+      !undone.has(e.id) &&
       ((e.payload as { kind?: "PRIMARY" | "SUPPLEMENTAL" }).kind ?? "PRIMARY") === "PRIMARY",
   );
 }
@@ -420,10 +433,11 @@ export interface SleepEntry {
   kind: "PRIMARY" | "SUPPLEMENTAL";
 }
 
-/** Every sleep log for the day (PRIMARY and SUPPLEMENTAL), with corrections resolved to each entry's effective value. */
+/** Every sleep log for the day (PRIMARY and SUPPLEMENTAL), with corrections resolved to each entry's effective value. Undone entries are left out. */
 export async function getSleepEntries(beyondDayId: string): Promise<SleepEntry[]> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const logged = events.filter((e) => e.type === "SLEEP_LOGGED");
+  const undone = voidedLogIds(events, "SLEEP_LOG_VOIDED");
+  const logged = events.filter((e) => e.type === "SLEEP_LOGGED" && !undone.has(e.id));
   const corrections = events.filter((e) => e.type === "SLEEP_LOG_CORRECTED");
   return logged
     .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
@@ -462,10 +476,11 @@ export interface BodyweightEntry {
   recordedAt: string;
 }
 
-/** Every bodyweight log for the day, with corrections resolved to each entry's effective value. */
+/** Every bodyweight log for the day, with corrections resolved to each entry's effective value. Undone entries are left out. */
 export async function getBodyweightEntries(beyondDayId: string): Promise<BodyweightEntry[]> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const logged = events.filter((e) => e.type === "BODYWEIGHT_LOGGED");
+  const undone = voidedLogIds(events, "BODYWEIGHT_LOG_VOIDED");
+  const logged = events.filter((e) => e.type === "BODYWEIGHT_LOGGED" && !undone.has(e.id));
   const corrections = events.filter((e) => e.type === "BODYWEIGHT_LOG_CORRECTED");
   return logged
     .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
@@ -500,7 +515,8 @@ export async function getLatestBodyweight(beyondDayId: string): Promise<number |
  * corrections list is exactly as correct as the day-scoped version).
  */
 export async function getMostRecentBodyweight(): Promise<number | undefined> {
-  const logged = await db.events.where("type").equals("BODYWEIGHT_LOGGED").toArray();
+  const undone = voidedLogIds(await db.events.where("type").equals("BODYWEIGHT_LOG_VOIDED").toArray(), "BODYWEIGHT_LOG_VOIDED");
+  const logged = (await db.events.where("type").equals("BODYWEIGHT_LOGGED").toArray()).filter((e) => !undone.has(e.id));
   if (logged.length === 0) return undefined;
   const mostRecentRoot = logged.sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq)).at(-1)!;
   const corrections = await db.events.where("type").equals("BODYWEIGHT_LOG_CORRECTED").toArray();

@@ -2,7 +2,7 @@
 
 Owner rulings, 2026-09-30 (ROADMAP-1.0-001). This is the build plan for BEYOND 1.0. When the
 owner says "let's work", start here: propose the next unfinished Drop, wait for approval, build
-it, open a PR, and report in plain language (see `CLAUDE.md`).
+it, open a PR, and report in plain language (see `AGENTS.md`).
 
 ## Goal
 
@@ -129,7 +129,8 @@ time, each briefed by the owner.
 - **FIELD-NAV-001 — position and reveal reliability:** every tab opens at its top; UPDATE
   CHECK-IN and disclosures open into view. **Done (PR #149, merged).** Follow-up: tab switches
   from buttons inside a screen also start at the top; a revealed surface clears the real bottom
-  nav (iPhone safe area included); reduced motion tested in a real browser. **In review.**
+  nav (iPhone safe area included); reduced motion tested in a real browser. **Done (PR #150,
+  merged).**
 
 ### After the field test (owner ruling, 2026-10-04)
 
@@ -138,7 +139,34 @@ Items once held until after Oct 16 (the Engine reacting to evidence, Week Ahead,
 suggestions, wildcards) are no longer date-gated, but each still needs its own owner brief, and
 adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-03).
 
-- **Next queued (owner ruling, 2026-10-03): Undo after every log.**
+- **Undo after every log** (owner ruling 2026-10-03; scope approved 2026-10-04: water, sleep,
+  weight and protein, in BODY and on TODAY). **In review.**
+
+## Queue
+
+What gets built next, top first. The builder (see `AGENTS.md`) takes the top item on "let's
+work". Only the owner adds to it. Each item is one short brief (what changes, where it surfaces,
+one concrete example of the problem it fixes) plus a written Drop in `docs/agent/drops/` so
+Codex can build it when Claude is out.
+
+1. *(empty: waiting for the owner's next pick)*
+
+### Known, not yet approved
+
+Spotted but not briefed. The owner moves an item up into the Queue or drops it.
+
+- TODAY's no-check-in card reads "BEYOND has no current state input for this BeyondDay.
+  Guidance remains deterministic, but less informed." (developer wording).
+- That card's ALL GOOD button is red; the other two ALL GOOD buttons are neutral.
+- Items no longer held for Oct 16: the Engine reacting to evidence, Week Ahead, deload/stall
+  suggestions. Each needs a brief; Engine rule adoption needs sign-off.
+
+## Builders (owner ruling, 2026-10-04)
+
+Claude Code is the primary builder; OpenAI Codex is the backup builder when Claude's usage runs
+out. One builder at a time; Codex builds only from a written Drop, never merges, and doesn't
+change doctrine, roadmap or governance docs; every session ends with a handoff note. Full rules
+in `AGENTS.md`; the handoff note is `docs/agent/CURRENT_CHECKPOINT.md`.
 
 ## Design rules
 

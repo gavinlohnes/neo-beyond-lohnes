@@ -5,6 +5,7 @@ import type {
   DomainEventType,
   MealLogVoidedPayload,
   ProteinLogVoidedPayload,
+  BodyLogVoidedPayload,
   RecommendationKind,
   SchedulePattern,
   StateCheckIn,
@@ -176,6 +177,9 @@ const CORRECTION_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(
   "MEAL_LOG_CORRECTED",
   "MEAL_LOG_VOIDED",
   "PROTEIN_LOG_VOIDED",
+  "WATER_LOG_VOIDED",
+  "SLEEP_LOG_VOIDED",
+  "BODYWEIGHT_LOG_VOIDED",
   "URGE_UNDONE",
 ]);
 
@@ -320,7 +324,11 @@ function summarizeDay(
   const primary: number[] = [];
   const primaryLogs: { at: string; minutes: number }[] = [];
   const naps: number[] = [];
-  for (const root of ofType(events, "SLEEP_LOGGED")) {
+  // UNDO-001: undone logs leave every total, the same as a deleted protein log.
+  const undoneLogs = new Set(
+    [...ofType(events, "SLEEP_LOG_VOIDED"), ...ofType(events, "WATER_LOG_VOIDED")].map((e) => (e.payload as BodyLogVoidedPayload).loggedEventId),
+  );
+  for (const root of ofType(events, "SLEEP_LOGGED").filter((e) => !undoneLogs.has(e.id))) {
     const minutes = effectiveValue(root, sleepCorrections, (p) => (p as { durationMinutes: number }).durationMinutes);
     if ((root.payload as { kind?: string }).kind === "SUPPLEMENTAL") naps.push(minutes);
     else {
@@ -331,7 +339,7 @@ function summarizeDay(
 
   // Water
   const waterCorrections = correctionsOf(events, "WATER_LOG_CORRECTED");
-  const water = ofType(events, "WATER_LOGGED").map((root) =>
+  const water = ofType(events, "WATER_LOGGED").filter((e) => !undoneLogs.has(e.id)).map((root) =>
     effectiveValue(root, waterCorrections, (p) => (p as { amountOz: number }).amountOz),
   );
 

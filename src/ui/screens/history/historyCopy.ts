@@ -69,6 +69,12 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return "Meal log deleted.";
     case "PROTEIN_LOG_VOIDED":
       return "Protein log deleted.";
+    case "WATER_LOG_VOIDED":
+      return "Water log undone.";
+    case "SLEEP_LOG_VOIDED":
+      return "Sleep log undone.";
+    case "BODYWEIGHT_LOG_VOIDED":
+      return "Bodyweight log undone.";
     case "OUTCOME_RATED":
       return `Outcome rated: ${p.rating}.`;
     case "WORK_PERIOD_ENDED":

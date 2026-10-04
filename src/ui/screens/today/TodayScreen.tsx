@@ -33,6 +33,7 @@ import { deriveCapacity } from "../../../engine/capacity";
 import { dismissOutcome } from "../../../persistence/outcomeDismissals";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
+import { useUndoOpen } from "../../hooks/useUndoWindow";
 import type { BodyFocus } from "../../shortcuts";
 import { isSeriouslyConstrained } from "./minimumDayCopy";
 import { isPrimaryReset, isPrimaryShiftDown, type SessionOutcome } from "./resetShiftDownCopy";
@@ -76,6 +77,9 @@ import {
   logWater,
   logProtein,
   logSleep,
+  voidWaterLog,
+  voidSleepLog,
+  voidProteinLog,
 } from "../../../application/commands";
 import {
   getActiveDay,
@@ -138,6 +142,9 @@ import {
   type ToolsItem,
 } from "./shiftClock";
 import { describeError } from "../../errorMessage";
+
+/** UNDO-001: what a TODAY log banner needs to undo the entry it confirms. */
+type LoggedEntry = { amount: number; eventId: string; dayId: string };
 
 /**
  * Quick check-in default ("all good" one-tap, Context & Safety Decisions
@@ -350,7 +357,12 @@ export function TodayScreen({
   const [minimumDayOpen, setMinimumDayOpen] = useState(false);
   const [hydrationOperationOpen, setHydrationOperationOpen] = useState(false);
   const [hydrationManualOpen, setHydrationManualOpen] = useState(false);
-  const [hydrationConfirmation, setHydrationConfirmation] = useState<number | null>(null);
+  // UNDO-001: a just-logged entry, UNDO for its first UNDO_WINDOW_MS, then CORRECT IN BODY.
+  const [hydrationConfirmation, setHydrationConfirmation] = useState<LoggedEntry | null>(null);
+  const [proteinConfirmation, setProteinConfirmation] = useState<LoggedEntry | null>(null);
+  const hydrationUndoOpen = useUndoOpen(hydrationConfirmation);
+  const proteinUndoOpen = useUndoOpen(proteinConfirmation);
+  const [undoFailure, setUndoFailure] = useState<string | null>(null);
   // Intent & Commitment Spine, Drop 02: currently-eligible unresolved
   // Obligations, fetched unconditionally like openCaptureItems above —
   // Obligations are not day-scoped either (see application/intentQueries.ts).
@@ -395,7 +407,8 @@ export function TodayScreen({
   const [sleepDraftAdjust, setSleepDraftAdjust] = useState(0);
   // NOT NOW: remembered on this phone only, for that day (per-device convenience).
   const [sleepDraftDismissedDayId, setSleepDraftDismissedDayId] = useState<string | null>(() => readSleepDraftDismissal());
-  const [sleepConfirmation, setSleepConfirmation] = useState<number | null>(null);
+  const [sleepConfirmation, setSleepConfirmation] = useState<LoggedEntry | null>(null);
+  const sleepUndoOpen = useUndoOpen(sleepConfirmation);
 
   // DROP 0: re-read the new day's numbers and schedule phase after a 16:30 rollover.
   useDayRolloverRefresh(() => {
@@ -960,10 +973,10 @@ export function TodayScreen({
     busyRef.current = true;
     setBusy(true);
     try {
-      await logSleep(day.id, minutes, "PRIMARY", adjusted ? "ADJUSTED" : "CONFIRMED");
+      const eventId = await logSleep(day.id, minutes, "PRIMARY", adjusted ? "ADJUSTED" : "CONFIRMED");
       setSleepDraftAdjust(0);
       await refresh();
-      setSleepConfirmation(minutes);
+      setSleepConfirmation({ amount: minutes, eventId, dayId: day.id });
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -1151,6 +1164,41 @@ export function TodayScreen({
     }
   }
 
+  /** UNDO-001: UNDO on a just-logged banner voids that entry — never an erase. */
+  async function handleUndoLog(log: "WATER" | "SLEEP" | "PROTEIN") {
+    const confirmation = { WATER: hydrationConfirmation, SLEEP: sleepConfirmation, PROTEIN: proteinConfirmation }[log];
+    if (busy || busyRef.current || !confirmation) return;
+    const voidLog = { WATER: voidWaterLog, SLEEP: voidSleepLog, PROTEIN: voidProteinLog }[log];
+    const clear = { WATER: setHydrationConfirmation, SLEEP: setSleepConfirmation, PROTEIN: setProteinConfirmation }[log];
+    busyRef.current = true;
+    setBusy(true);
+    setUndoFailure(null);
+    try {
+      await voidLog(confirmation.dayId, confirmation.eventId);
+      clear(null);
+      await refresh();
+    } catch (e) {
+      setUndoFailure(describeError(e, "Could not undo."));
+      await refresh();
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  }
+
+  function renderLoggedBanner(message: string, undoOpen: boolean, log: "WATER" | "SLEEP" | "PROTEIN", focus?: BodyFocus) {
+    if (undoOpen) {
+      return <ConfirmBanner message={message} actionLabel="UNDO" disabled={busy} onAction={() => void handleUndoLog(log)} />;
+    }
+    return onOpenBody ? (
+      <ConfirmBanner message={message} actionLabel="CORRECT IN BODY" onAction={() => onOpenBody(focus)} />
+    ) : (
+      <p role="status" aria-live="polite" className="meta fade-in">
+        <ConfirmIcon size={20} /> {message.replace(/\.$/, "")}. Corrections remain available in BODY.
+      </p>
+    );
+  }
+
   /**
    * Item 3 (Phase 3): logs directly from the same commands/events BODY
    * uses (logWater/logProtein) — no separate record-keeping path, so
@@ -1164,10 +1212,10 @@ export function TodayScreen({
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
-      await logWater(activeDay.id, amount);
+      const eventId = await logWater(activeDay.id, amount);
       setMdWaterInput("");
       await refresh();
-      setHydrationConfirmation(amount);
+      setHydrationConfirmation({ amount, eventId, dayId: activeDay.id });
       setHydrationOperationOpen(false);
       setHydrationManualOpen(false);
     } finally {
@@ -1184,9 +1232,10 @@ export function TodayScreen({
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
-      await logProtein(activeDay.id, grams);
+      const eventId = await logProtein(activeDay.id, grams);
       setMdProteinInput("");
       await refresh();
+      setProteinConfirmation({ amount: grams, eventId, dayId: activeDay.id });
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -1891,32 +1940,17 @@ export function TodayScreen({
         </p>
       )}
 
-      {hydrationConfirmation !== null && (
-        onOpenBody ? (
-          <ConfirmBanner
-            message={`${hydrationConfirmation} oz recorded.`}
-            actionLabel="CORRECT IN BODY"
-            onAction={() => onOpenBody("water")}
-          />
-        ) : (
-          <p role="status" aria-live="polite" className="meta fade-in">
-            <ConfirmIcon size={20} /> {hydrationConfirmation} oz recorded. Corrections remain available in BODY.
-          </p>
-        )
-      )}
+      {hydrationConfirmation !== null &&
+        renderLoggedBanner(`${hydrationConfirmation.amount} oz recorded.`, hydrationUndoOpen, "WATER", "water")}
 
-      {sleepConfirmation !== null && (
-        onOpenBody ? (
-          <ConfirmBanner
-            message={`Main sleep logged · ${formatDuration(sleepConfirmation)}`}
-            actionLabel="CORRECT IN BODY"
-            onAction={() => onOpenBody("sleep")}
-          />
-        ) : (
-          <p role="status" aria-live="polite" className="meta fade-in">
-            <ConfirmIcon size={20} /> Main sleep logged · {formatDuration(sleepConfirmation)}. Corrections remain available in BODY.
-          </p>
-        )
+      {sleepConfirmation !== null &&
+        renderLoggedBanner(`Main sleep logged · ${formatDuration(sleepConfirmation.amount)}`, sleepUndoOpen, "SLEEP", "sleep")}
+
+      {proteinConfirmation !== null &&
+        renderLoggedBanner(`${proteinConfirmation.amount} g protein recorded.`, proteinUndoOpen, "PROTEIN")}
+
+      {undoFailure && (
+        <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>{undoFailure}</p>
       )}
 
       {/* FIELD-ARCH-001: before a day exists, START DAY is the one

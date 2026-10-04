@@ -16,3 +16,22 @@ export function useUndoWindow<T>(): [T | null, (next: T | null) => void] {
   }, [value]);
   return [value, setValue];
 }
+
+/**
+ * UNDO-001: true for UNDO_WINDOW_MS after `token` is set, false once the
+ * window has passed or `token` is null. For a confirmation that stays up
+ * longer than its UNDO (BODY's banners keep CORRECT afterwards).
+ */
+export function useUndoOpen(token: object | null): boolean {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (token === null) {
+      setOpen(false);
+      return;
+    }
+    setOpen(true);
+    const timer = setTimeout(() => setOpen(false), UNDO_WINDOW_MS);
+    return () => clearTimeout(timer);
+  }, [token]);
+  return open;
+}

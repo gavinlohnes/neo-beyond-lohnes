@@ -233,6 +233,12 @@ GitHub UI without recording the change here.
 
 ## 8. Multi-agent operating model
 
+**Current ruling (owner, 2026-10-04):** `AGENTS.md`, "Builder roles" — Claude Code is the
+primary builder and OpenAI Codex the backup; one at a time; Codex builds only from a written
+Drop, never merges, and Claude Code reviews and integrates its PRs; every session ends with a
+handoff note in `docs/agent/CURRENT_CHECKPOINT.md`. Where the text below calls Codex the
+"primary" Builder, that wording is historical.
+
 Claude and Codex share this same Drop procedure — it does not replace it. See
 `docs/agent/BEYOND_ENGINEERING_CONTRACT.md` for the full shared, tool-neutral invariants this
 section operationalizes for the Drop workflow specifically.

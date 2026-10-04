@@ -10,6 +10,7 @@ import type {
   CaptureItem,
   DomainEvent,
   ProteinLogVoidedPayload,
+  BodyLogVoidedPayload,
   Recommendation,
   SchedulePattern,
   StateCheckIn,
@@ -969,6 +970,10 @@ export async function correctWater(
   if (target.type !== "WATER_LOGGED" && target.type !== "WATER_LOG_CORRECTED") {
     throw new Error("CORRECTION_TARGET_INVALID_TYPE");
   }
+  const waterRootId = target.type === "WATER_LOGGED" ? target.id : (target.payload as WaterLogCorrectedPayload).originalEventId;
+  if (isBodyLogVoided(events, "WATER_LOG_VOIDED", waterRootId)) {
+    throw new Error("LOG_VOIDED: this entry was undone and can no longer be corrected.");
+  }
   const currentAmount =
     target.type === "WATER_LOGGED"
       ? (target.payload as WaterLoggedPayload).amountOz
@@ -1008,9 +1013,10 @@ async function correctSingleValueLog(params: {
   newValue: number;
   loggedType: DomainEvent["type"];
   correctedType: DomainEvent["type"];
+  voidedType?: DomainEvent["type"];
   valueKey: string;
 }): Promise<void> {
-  const { beyondDayId, targetEventId, newValue, loggedType, correctedType, valueKey } = params;
+  const { beyondDayId, targetEventId, newValue, loggedType, correctedType, voidedType, valueKey } = params;
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
   const corrections = events.filter((e) => e.type === correctedType);
   const alreadySuperseded = corrections.some(
@@ -1027,6 +1033,10 @@ async function correctSingleValueLog(params: {
   }
   if (target.type !== loggedType && target.type !== correctedType) {
     throw new Error("CORRECTION_TARGET_INVALID_TYPE");
+  }
+  const rootId = target.type === loggedType ? target.id : (target.payload as { originalEventId: string }).originalEventId;
+  if (voidedType && isBodyLogVoided(events, voidedType, rootId)) {
+    throw new Error("LOG_VOIDED: this entry was undone and can no longer be corrected.");
   }
   const currentValue = (target.payload as Record<string, number>)[valueKey];
   if (currentValue === newValue) {
@@ -1057,6 +1067,7 @@ export async function correctSleep(
     newValue: newDurationMinutes,
     loggedType: "SLEEP_LOGGED",
     correctedType: "SLEEP_LOG_CORRECTED",
+    voidedType: "SLEEP_LOG_VOIDED",
     valueKey: "durationMinutes",
   });
 }
@@ -1124,7 +1135,57 @@ export async function correctBodyweight(
     newValue: newWeightLbs,
     loggedType: "BODYWEIGHT_LOGGED",
     correctedType: "BODYWEIGHT_LOG_CORRECTED",
+    voidedType: "BODYWEIGHT_LOG_VOIDED",
     valueKey: "weightLbs",
+  });
+}
+
+function isBodyLogVoided(dayEvents: readonly DomainEvent[], voidedType: DomainEvent["type"], loggedEventId: string): boolean {
+  return dayEvents.some((e) => e.type === voidedType && (e.payload as BodyLogVoidedPayload).loggedEventId === loggedEventId);
+}
+
+/**
+ * UNDO-001 (owner approval 2026-10-04): shared UNDO for water, sleep and
+ * bodyweight — the same void treatment voidProteinLog gives protein. Appends
+ * the *_LOG_VOIDED event naming the root *_LOGGED event; nothing is erased,
+ * so History keeps the entry and its undo side by side. Accepts the root or
+ * any correction in its chain. Voiding an already-voided entry is a no-op.
+ */
+async function voidBodyLog(params: {
+  beyondDayId: string;
+  eventId: string;
+  loggedType: DomainEvent["type"];
+  correctedType: DomainEvent["type"];
+  voidedType: DomainEvent["type"];
+}): Promise<void> {
+  const { beyondDayId, eventId, loggedType, correctedType, voidedType } = params;
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const target = events.find((e) => e.id === eventId);
+  if (!target || (target.type !== loggedType && target.type !== correctedType)) {
+    throw new Error("LOG_NOT_FOUND: that entry could not be found for this day.");
+  }
+  const rootId = target.type === loggedType ? target.id : (target.payload as { originalEventId: string }).originalEventId;
+  if (isBodyLogVoided(events, voidedType, rootId)) return;
+  const commandId = newId();
+  const payload: BodyLogVoidedPayload = { commandId, loggedEventId: rootId };
+  await logEvent(beyondDayId, voidedType, payload, "USER", commandId, rootId);
+}
+
+export async function voidWaterLog(beyondDayId: string, eventId: string): Promise<void> {
+  return voidBodyLog({ beyondDayId, eventId, loggedType: "WATER_LOGGED", correctedType: "WATER_LOG_CORRECTED", voidedType: "WATER_LOG_VOIDED" });
+}
+
+export async function voidSleepLog(beyondDayId: string, eventId: string): Promise<void> {
+  return voidBodyLog({ beyondDayId, eventId, loggedType: "SLEEP_LOGGED", correctedType: "SLEEP_LOG_CORRECTED", voidedType: "SLEEP_LOG_VOIDED" });
+}
+
+export async function voidBodyweightLog(beyondDayId: string, eventId: string): Promise<void> {
+  return voidBodyLog({
+    beyondDayId,
+    eventId,
+    loggedType: "BODYWEIGHT_LOGGED",
+    correctedType: "BODYWEIGHT_LOG_CORRECTED",
+    voidedType: "BODYWEIGHT_LOG_VOIDED",
   });
 }
 
