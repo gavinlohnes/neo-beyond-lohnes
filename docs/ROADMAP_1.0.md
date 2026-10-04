@@ -140,7 +140,7 @@ suggestions, wildcards) are no longer date-gated, but each still needs its own o
 adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-03).
 
 - **Undo after every log** (owner ruling 2026-10-03; scope approved 2026-10-04: water, sleep,
-  weight and protein, in BODY and on TODAY). **In review.**
+  weight and protein, in BODY and on TODAY). **Done (PR #151, merged).**
 
 ## Queue
 

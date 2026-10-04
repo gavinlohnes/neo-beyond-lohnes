@@ -7,21 +7,20 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code.** `origin/master` at `b25a95b` (PR #150 merge).
+**Written 2026-10-04 by Claude Code.** `origin/master` at `449c152` (PR #151 merge).
 
-- **Drop:** UNDO-001 (undo after every water, sleep, weight and protein log), plus the builder-roles
-  setup (owner rulings 2026-10-04).
-- **Branch:** `ccr-22d7c0f8-rqhhjm`.
-- **PR:** #151, open, PR Verification green. Waiting on the owner's go-ahead to merge.
-- **Done:** UNDO on BODY's water/sleep/bodyweight/protein banners and TODAY's water, sleep draft
-  and Minimum Day protein banners; `*_LOG_VOIDED` events; undone entries leave every total.
-  `AGENTS.md` is the shared rulebook with the builder roles; roadmap Queue added.
-- **Left:** merge #151. The Queue is empty until the owner picks the next item; Claude Code then
-  writes its Drop so Codex can build it if needed.
-- **Verification run:** `npm run check:architecture`, `npm run typecheck`, full `vitest run`
-  (163 files, 1,887 passed, 1 skipped, node + real Chromium), `npm run build`, `git diff --check`.
-- **Open risks:** UNDO-001 is Architectural (new event types read by the Engine's Day Ledger),
-  approved by the owner as option A. No schema or backup-format change.
+- **Drop:** none active. Last finished: UNDO-001 (undo after every water, sleep, weight and
+  protein log) and the builder-roles setup, merged as PR #151.
+- **Branch:** none in flight (`ccr-22d7c0f8-rqhhjm` carries only this note).
+- **PR:** this handoff update only.
+- **Done:** UNDO on BODY's and TODAY's log banners, `*_LOG_VOIDED` events, undone entries leave
+  every total. `AGENTS.md` is the shared rulebook: Claude Code primary builder, Codex backup.
+- **Left:** the Queue in the roadmap is empty. When the owner picks the next item, Claude Code
+  writes its Drop in `docs/agent/drops/` so Codex can build it if Claude is out.
+- **Verification run:** on #151: `npm run check:architecture`, `npm run typecheck`, full
+  `vitest run` (163 files, 1,887 passed, 1 skipped), `npm run build`; PR Verification green.
+- **Open risks:** none known. UNDO-001 added new event types read by the Engine's Day Ledger
+  (owner-approved); watch BODY and TODAY totals after an UNDO during field use.
 
 ## Where things stand
 
