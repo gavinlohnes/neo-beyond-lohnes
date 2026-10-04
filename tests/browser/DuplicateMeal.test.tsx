@@ -82,3 +82,56 @@ describe("DUP-MEAL-001 duplicate-meal prompt", () => {
     expect(body.getByRole("group", { name: "Same food?" }).elements()).toHaveLength(0);
   });
 });
+
+describe("DUP-MEAL-002 SAME AS YESTERDAY repeats", () => {
+  async function seedYesterdayAndTodayDinner() {
+    const dinner = await createSavedMeal({ name: "Dinner", calories: 650, proteinG: 50, carbsG: 60, fatG: 15 });
+    const snack = await createSavedMeal({ name: "Snack", calories: 200, proteinG: 10, carbsG: 20, fatG: 5 });
+    vi.setSystemTime(new Date(2026, 9, 3, 20, 0, 0));
+    const yesterday = await startDay();
+    await logMeal(yesterday.id, dinner.id);
+    await logMeal(yesterday.id, snack.id);
+    vi.setSystemTime(NOW);
+    const today = await startDay();
+    await logMeal(today.id, dinner.id);
+    return { today };
+  }
+
+  it("asks about the repeated Dinner only; REMOVE THIS ONE voids that repeat and keeps the Snack", async () => {
+    const { today } = await seedYesterdayAndTodayDinner();
+    const body = await render(<BodyScreen />);
+    await body.getByRole("button", { name: /SAME AS YESTERDAY \(2 meals\)/ }).click();
+
+    const prompt = body.getByRole("group", { name: "Same meal?" });
+    await expect.element(prompt.getByText("Same meal? Dinner already logged at 20:00.", { exact: true })).toBeVisible();
+    await prompt.getByRole("button", { name: "REMOVE THIS ONE" }).click();
+    await expect.element(body.getByText("Removed the second Dinner. Protein today: 60 g.", { exact: true })).toBeVisible();
+
+    const voided = (await db.events.where("beyondDayId").equals(today.id).toArray()).filter((e) => e.type === "MEAL_LOG_VOIDED");
+    expect(voided).toHaveLength(1);
+  });
+
+  it("KEEP BOTH writes nothing", async () => {
+    await seedYesterdayAndTodayDinner();
+    const body = await render(<BodyScreen />);
+    await body.getByRole("button", { name: /SAME AS YESTERDAY \(2 meals\)/ }).click();
+    const prompt = body.getByRole("group", { name: "Same meal?" });
+    await prompt.getByRole("button", { name: "KEEP BOTH" }).click();
+    expect(body.getByRole("group", { name: "Same meal?" }).elements()).toHaveLength(0);
+    expect(await db.events.where("type").equals("MEAL_LOG_VOIDED").count()).toBe(0);
+  });
+
+  it("repeating yesterday's two shakes with nothing logged today asks nothing", async () => {
+    const shake = await createSavedMeal({ name: "Shake", calories: 250, proteinG: 40, carbsG: 10, fatG: 3 });
+    vi.setSystemTime(new Date(2026, 9, 3, 20, 0, 0));
+    const yesterday = await startDay();
+    await logMeal(yesterday.id, shake.id);
+    await logMeal(yesterday.id, shake.id);
+    vi.setSystemTime(NOW);
+    await startDay();
+    const body = await render(<BodyScreen />);
+    await body.getByRole("button", { name: /SAME AS YESTERDAY \(2 meals\)/ }).click();
+    await expect.element(body.getByText(/2 meals from .* logged/)).toBeVisible();
+    expect(body.getByRole("group", { name: /Same meals?\?/ }).elements()).toHaveLength(0);
+  });
+});

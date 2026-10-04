@@ -12,7 +12,7 @@ import type { RecommendationDecision, RecommendationHandoffTarget } from "../../
  */
 
 export function describeRecommendationAction(kind: RecommendationKind): string {
-  return kind === "NO_ACTION_REQUIRED" ? "No action needed" : "I'll do this";
+  return kind === "NO_ACTION_REQUIRED" ? "GOT IT" : "I'll do this";
 }
 
 export const DECLINE_LABEL = "Not doing this";

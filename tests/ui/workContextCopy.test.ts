@@ -87,3 +87,12 @@ describe("describeContextStrip — Priority 3 (Daily Intelligence follow-on)", (
     expect(describeContextStrip("UNKNOWN", null, false)).toBe("Context not set yet");
   });
 });
+
+describe("Soak fix 2026-10-04: the header follows the lived day's shift phase", () => {
+  it("at 15:00 after a night shift it says after your shift, not before the next one", () => {
+    const nextShiftAhead = { week: "A", todayIsScheduledWorkDay: true, phase: "PRE_WORK" } as const;
+    expect(describeContextStrip("WORK", nextShiftAhead, false, true, "EXPECTED_POST_WORK")).toBe("Working · per schedule — after your shift");
+    expect(describeContextStrip("WORK", nextShiftAhead, false, false, "OFF")).toBe("Working today — after sleep");
+    expect(describeContextStrip("WORK", nextShiftAhead, false)).toBe("Working today — before your shift");
+  });
+});

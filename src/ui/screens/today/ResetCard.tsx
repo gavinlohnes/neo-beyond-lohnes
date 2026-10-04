@@ -70,7 +70,7 @@ export function ResetCard({
         <>
           <p className="card-body" style={{ marginBottom: 12 }}>
             {describeResetInProgress(resetIntensity)}
-            {openResetStartedAt ? ` Started ${new Date(openResetStartedAt).toLocaleTimeString()}.` : ""}
+            {openResetStartedAt ? ` Started ${new Date(openResetStartedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.` : ""}
           </p>
           {isCommand ? (
             <>

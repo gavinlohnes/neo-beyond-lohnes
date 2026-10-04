@@ -21,7 +21,7 @@ const REASON_LABELS: Record<string, string> = {
   "mood <= 2": "mood is low",
   "soreness >= 4": "soreness is high",
   "alcoholUrge >= 2": "alcohol urge is elevated",
-  "no severe or constrained condition": "nothing is flagged as severe or constrained",
+  "no severe or constrained condition": "nothing in your check-in needs care",
 };
 
 function describeReason(code: string): string {
@@ -50,5 +50,5 @@ export function describeCapacity(capacity: Capacity, reasonCodes: string[]): str
  * as one more state in the same family, not a different kind of message.
  */
 export function describeCapacityUnknown(): string {
-  return "Capacity is UNKNOWN — no check-in yet today.";
+  return "No check-in yet today.";
 }

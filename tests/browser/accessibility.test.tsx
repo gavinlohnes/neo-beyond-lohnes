@@ -86,7 +86,7 @@ describe("accessibility (real browser, axe-core)", () => {
   it("TodayScreen (capacity UNKNOWN, day started but no check-in yet) has no violations beyond the known color-contrast exception", async () => {
     await startDay();
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Capacity is UNKNOWN", { exact: false })).toBeVisible();
+    await expect.element(screen.getByText("No check-in yet today.", { exact: false })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);
@@ -143,7 +143,7 @@ describe("accessibility (real browser, axe-core)", () => {
     await startWorkout(day.id, "A", "STANDARD");
     const screen = await render(<TodayScreen onOpenTrain={() => {}} />);
     await openTodayTools(screen);
-    await screen.getByRole("button", { name: "Open BEYONDDAY" }).click();
+    await screen.getByRole("button", { name: "Open END DAY" }).click();
     await screen.getByRole("button", { name: "END DAY" }).click();
     await expect.element(screen.getByRole("button", { name: "RETURN TO WORKOUT" })).toBeVisible();
 

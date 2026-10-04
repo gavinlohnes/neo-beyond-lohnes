@@ -280,6 +280,29 @@ below, this entry wins; the older entry is kept for history.
   today: 50 g."). Never a silent merge. When the protein-vs-meal "Same food?" check would also
   fire, only "Same meal?" shows. Pure rule `findDuplicateMeal` in `engine/sameFood.ts`. SAME AS
   YESTERDAY batches aren't checked. No schema or new event type.
+- **As built: SAME AS YESTERDAY duplicates (DUP-MEAL-002, owner approval 2026-10-04).** The
+  duplicate-meal prompt now also covers SAME AS YESTERDAY: after the batch logs, each new meal that
+  repeats a standing meal logged within the 2 minutes before the tap (same rule as DUP-MEAL-001) is
+  named in one question under the button — one: "Same meal? Dinner already logged at 20:00." with
+  KEEP BOTH / REMOVE THIS ONE; several: "Same meals? Dinner (20:00) and Shake (20:01) were already
+  logged." with KEEP ALL / REMOVE THE REPEATS. Meals inside the batch never match each other, so a
+  day with two shakes repeats as two shakes. Removing voids only the repeated new entries and
+  clears the batch's UNDO banner. Pure rule `findBatchDuplicateMeals` in `engine/sameFood.ts`.
+- **Soak-run fixes (2026-10-04, owner-approved soak run "A").** A scripted night-shift → day-off
+  walk through the production build at phone width found: (1) a completed SHIFT DOWN kept showing
+  its start form after the shift (row now steps back into TOOLS once a SHIFT DOWN completed after
+  the shift began; from history, so a reload knows too); (2) at 15:00 after a night shift the
+  header said "before your shift" (the wall-clock schedule's NEXT shift) while the rows said AFTER
+  SHIFT — on a work day the header now follows the lived day's Shift Clock phase ("after your
+  shift" / "after sleep"); (3) "Capacity is UNKNOWN — no check-in yet today." is now "No check-in
+  yet today."; GREEN's reason reads "nothing in your check-in needs care"; (4) the all-clear
+  acknowledge button "No action needed" (under the "No action required" title) is now GOT IT;
+  (5) PROTECT said water "hasn't been logged" once some was logged under the Minimum Day amount —
+  now "today's water … is still short of the Minimum Day amount"; (6) the End Day card's
+  "BEYONDDAY" label is END DAY; (7) SHIFT DOWN / RESET start times drop the seconds; (8) the WORK
+  SCHEDULE screen said a schedule "never counts … until you confirm it" — since DROP 0 a saved
+  schedule starts each day ("per schedule"), so the screen and its preview say that. TODAY's
+  unconfirmed-day card keeps "a prediction, not a fact, until you confirm" (still true there).
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findDuplicateMeal, findSameFood, isSimilarProtein } from "../../src/engine/sameFood";
+import { findDuplicateMeal, findSameFood, isSimilarProtein, findBatchDuplicateMeals } from "../../src/engine/sameFood";
 
 /** "Same food?" (Drop 1.5): the Oct 3 case, and the cases that must stay quiet. */
 const at = (h: number, m: number, s = 0) => new Date(2026, 9, 3, h, m, s).toISOString();
@@ -74,5 +74,27 @@ describe("findDuplicateMeal", () => {
       dinner("old", at(20, 43, 0)),
       latest,
     ], latest.id)).toBeUndefined();
+  });
+});
+
+describe("findBatchDuplicateMeals (DUP-MEAL-002, SAME AS YESTERDAY)", () => {
+  const meal = (id: string, name: string, at: string, savedMealId = name, calories = 600, proteinG = 45) => ({ id, savedMealId, name, calories, proteinG, at });
+  it("flags a batch meal that repeats one logged moments before the tap", () => {
+    const meals = [meal("d0", "Dinner", "2026-10-04T02:14:00Z"), meal("b1", "Dinner", "2026-10-04T02:15:00Z"), meal("b2", "Snack", "2026-10-04T02:15:00Z")];
+    const pairs = findBatchDuplicateMeals(meals, ["b1", "b2"]);
+    expect(pairs.map((p) => [p.justLogged.id, p.earlier.id])).toEqual([["b1", "d0"]]);
+  });
+  it("never flags meals inside the batch against each other (yesterday's two shakes)", () => {
+    const meals = [meal("b1", "Shake", "2026-10-04T02:15:00Z"), meal("b2", "Shake", "2026-10-04T02:15:00Z")];
+    expect(findBatchDuplicateMeals(meals, ["b1", "b2"])).toEqual([]);
+  });
+  it("matches each earlier meal at most once, and ignores ones over two minutes old", () => {
+    const meals = [
+      meal("old", "Shake", "2026-10-04T02:10:00Z"),
+      meal("s0", "Shake", "2026-10-04T02:14:30Z"),
+      meal("b1", "Shake", "2026-10-04T02:15:00Z"),
+      meal("b2", "Shake", "2026-10-04T02:15:00Z"),
+    ];
+    expect(findBatchDuplicateMeals(meals, ["b1", "b2"]).map((p) => [p.justLogged.id, p.earlier.id])).toEqual([["b1", "s0"]]);
   });
 });

@@ -54,7 +54,7 @@ import {
   type NutritionEntry,
 } from "../../../application/nutritionQueries";
 import { searchFoods, type FoodSearchResult } from "../../../application/foodLookupQueries";
-import { getDuplicateMealCheck, getSameFoodCheck } from "../../../application/sameFoodQueries";
+import { getBatchDuplicateMealCheck, getDuplicateMealCheck, getSameFoodCheck } from "../../../application/sameFoodQueries";
 import type { DuplicateMealPair, SameFoodPair } from "../../../engine/sameFood";
 import { getEffectiveProteinTargetG, getNutritionTargets } from "../../../application/nutritionTargetQueries";
 import {
@@ -95,6 +95,8 @@ import {
   describeMealLogged,
   describeDuplicateMealQuestion,
   describeDuplicateMealRemoved,
+  describeRepeatDuplicatesQuestion,
+  describeRepeatDuplicatesRemoved,
   describeMealsRelogged,
   describeRepeatMealsButton,
   describeProteinProgress,
@@ -315,6 +317,9 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
   const [sameFoodNotice, setSameFoodNotice] = useState<{ anchor: "PROTEIN" | { savedMealId: string }; message: string } | null>(null);
   const [duplicateMeal, setDuplicateMeal] = useState<DuplicateMealPair | null>(null);
   const [duplicateMealNotice, setDuplicateMealNotice] = useState<{ savedMealId: string; message: string } | null>(null);
+  // DUP-MEAL-002: SAME AS YESTERDAY meals that repeat a meal logged moments before the tap.
+  const [repeatDuplicates, setRepeatDuplicates] = useState<DuplicateMealPair[] | null>(null);
+  const [repeatDuplicatesNotice, setRepeatDuplicatesNotice] = useState<string | null>(null);
 
   // Meal Memory (NUTRITION-001)
   const [savedMeals, setSavedMeals] = useState<SavedMeal[]>([]);
@@ -751,6 +756,25 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     }
   }
 
+  /** DUP-MEAL-002: REMOVE on the SAME AS YESTERDAY question voids only the repeated new entries. */
+  async function handleRepeatDuplicatesRemove() {
+    if (busy || !day || !repeatDuplicates) return;
+    const pairs = repeatDuplicates;
+    setBusy(true);
+    try {
+      for (const pair of pairs) await voidMealLog(day.id, pair.justLogged.id);
+      setRepeatDuplicates(null);
+      // The batch's UNDO would now undo a different set than it says; the totals already show the result.
+      if (mealConfirmation?.anchor === "REPEAT") setMealConfirmation(null);
+      await refresh();
+      setRepeatDuplicatesNotice(describeRepeatDuplicatesRemoved(pairs.map((p) => p.justLogged.name), await getDayProteinTotalG(day.id)));
+    } catch (e) {
+      setError(describeError(e, "Could not remove the meals."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleDuplicateMealRemoveThisOne() {
     if (busy || !day || !duplicateMeal) return;
     const { justLogged } = duplicateMeal;
@@ -891,6 +915,8 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     setError(null);
     setDuplicateMeal(null);
     setDuplicateMealNotice(null);
+    setRepeatDuplicates(null);
+    setRepeatDuplicatesNotice(null);
     try {
       const activeDay = await ensureActiveDay();
       const result = await logMeal(activeDay.id, mealId);
@@ -920,6 +946,8 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     if (busy || !repeatMeals) return;
     setBusy(true);
     setError(null);
+    setRepeatDuplicates(null);
+    setRepeatDuplicatesNotice(null);
     try {
       const activeDay = await ensureActiveDay();
       const results = await logMealsAgain(
@@ -939,6 +967,8 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
           mealEventIds: results.map((r) => r.eventId),
           anchor: "REPEAT",
         });
+        const repeats = await getBatchDuplicateMealCheck(activeDay.id, results.map((r) => r.eventId));
+        setRepeatDuplicates(repeats.length > 0 ? repeats : null);
       }
     } catch (e) {
       setError(describeError(e, "Could not log meals."));
@@ -1039,6 +1069,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
       for (const id of mealEventIds) await voidMealLog(dayId, id);
       setMealConfirmation(null);
       if (duplicateMeal && mealEventIds.includes(duplicateMeal.justLogged.id)) setDuplicateMeal(null);
+      if (repeatDuplicates?.some((p) => mealEventIds.includes(p.justLogged.id))) setRepeatDuplicates(null);
       await refresh();
     } catch (e) {
       setError(describeError(e, "Could not undo."));
@@ -1904,6 +1935,20 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
         {/* Drop 5: one tap logs the previous day's saved meals again. Hidden
             once today already has every one of them, so it can't double up. */}
         {mealConfirmation?.anchor === "REPEAT" && <div style={{ marginBottom: 12 }}>{mealBanner}</div>}
+        {repeatDuplicates && (
+          <div className="fade-in" role="group" aria-label={repeatDuplicates.length === 1 ? "Same meal?" : "Same meals?"} style={{ marginBottom: 12, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+            <p className="card-body" style={{ marginBottom: 8 }}>{describeRepeatDuplicatesQuestion(repeatDuplicates)}</p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn-secondary" style={{ flex: 1, minHeight: 44 }} disabled={busy} onClick={() => setRepeatDuplicates(null)}>
+                {repeatDuplicates.length === 1 ? "KEEP BOTH" : "KEEP ALL"}
+              </button>
+              <button className="btn-secondary" style={{ flex: 1, minHeight: 44 }} disabled={busy} onClick={() => void handleRepeatDuplicatesRemove()}>
+                {repeatDuplicates.length === 1 ? "REMOVE THIS ONE" : "REMOVE THE REPEATS"}
+              </button>
+            </div>
+          </div>
+        )}
+        {repeatDuplicatesNotice && <p className="meta" role="status" style={{ marginBottom: 12 }}>{repeatDuplicatesNotice}</p>}
         {repeatMeals && !alreadyLoggedAll(repeatMeals, mealEntries) && (
           <div style={{ marginBottom: 12 }}>
             <button className="btn-secondary" disabled={busy} onClick={() => void handleRepeatMeals()}>

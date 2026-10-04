@@ -174,3 +174,13 @@ describe("copy", () => {
     expect(describeToolsSummary(["CHECK_IN", "RESET", "CAPTURE"])).toBe("Check-in, reset, capture");
   });
 });
+
+describe("Soak fix 2026-10-04: a completed SHIFT DOWN steps aside", () => {
+  it("after the shift, a done SHIFT DOWN leaves the rows and is still in TOOLS", () => {
+    const before = deriveShiftClockView(input(at(13, 7)));
+    expect(before.rows[0]).toBe("SHIFT_DOWN");
+    const after = deriveShiftClockView({ ...input(at(13, 7)), shiftDownDone: true });
+    expect(after.rows).not.toContain("SHIFT_DOWN");
+    expect(after.tools).toContain("SHIFT_DOWN");
+  });
+});

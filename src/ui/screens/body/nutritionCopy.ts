@@ -85,6 +85,21 @@ export function describeDuplicateMealRemoved(name: string, dayTotalG: number): s
   return `Removed the second ${name}. Protein today: ${dayTotalG} g.`;
 }
 
+function listNames(names: readonly string[]): string {
+  return names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+}
+
+/** SAME AS YESTERDAY repeats: "Same meals? Dinner (02:14) and Shake (02:15) were already logged." */
+export function describeRepeatDuplicatesQuestion(pairs: readonly { justLogged: { name: string }; earlier: { at: string } }[]): string {
+  if (pairs.length === 1) return describeDuplicateMealQuestion(pairs[0]!.justLogged, pairs[0]!.earlier);
+  return `Same meals? ${listNames(pairs.map((p) => `${p.justLogged.name} (${clock(p.earlier.at)})`))} were already logged.`;
+}
+
+export function describeRepeatDuplicatesRemoved(names: readonly string[], dayTotalG: number): string {
+  if (names.length === 1) return describeDuplicateMealRemoved(names[0]!, dayTotalG);
+  return `Removed the repeated ${listNames(names)}. Protein today: ${dayTotalG} g.`;
+}
+
 /** "Same food? 49 g protein at 20:43 and Dinner (50 g protein) at 20:43." */
 export function describeSameFoodQuestion(protein: { grams: number; at: string }, meal: { name: string; proteinG: number; at: string }): string {
   return `Same food? ${protein.grams} g protein at ${clock(protein.at)} and ${meal.name} (${meal.proteinG} g protein) at ${clock(meal.at)}.`;

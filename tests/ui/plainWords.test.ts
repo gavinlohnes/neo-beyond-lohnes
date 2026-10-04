@@ -31,9 +31,9 @@ describe("plain words on screen", () => {
       // Text-like occurrences only: inside quotes/template literals or between JSX tags — not types or identifiers.
       const patterns = [
         // inside quotes / template literals, or between JSX tags on one line
-        /["'`>][^"'`<>\n]*\b(?:BeyondDay|deterministic|STATE INPUT)\b[^"'`<>\n]*["'`<]/g,
+        /["'`>][^"'`<>\n]*\b(?:BeyondDay|BEYONDDAY|deterministic|STATE INPUT|Capacity is UNKNOWN)\b[^"'`<>\n]*["'`<]/g,
         // a JSX text line on its own, or text right after a {value}
-        /(?:^[ \t]*|\})[^{}()<>=;:"'`\n]*\b(?:BeyondDay|deterministic|STATE INPUT)\b[^{}()<>=;"'`\n]*$/gm,
+        /(?:^[ \t]*|\})[^{}()<>=;:"'`\n]*\b(?:BeyondDay|BEYONDDAY|deterministic|STATE INPUT|Capacity is UNKNOWN)\b[^{}()<>=;"'`\n]*$/gm,
       ];
       for (const pattern of patterns) {
         for (const match of code.matchAll(pattern)) {
