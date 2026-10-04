@@ -1,6 +1,6 @@
 ---
 id: GYM-001
-status: ACTIVE
+status: CLOSED
 baseline: b58fbaf2a827ce15a25513e008d90ec600d42f48
 branch: claude/gym-001
 contract: docs/agent/drops/GYM-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/170
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 3ba21b60cacc175cd54a8eb1d0be7f1fd024d9e9
+closed_at: 2026-10-04T21:35:58.059Z
 ---
 
 # ACTIVE_DROP

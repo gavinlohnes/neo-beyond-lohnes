@@ -173,6 +173,9 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
   read only. Example: tapping a marker reads "Machine Chest Press: heaviest yet (145 lb)", the
   finish summary's own words. **Done (PR #166, merged 2026-10-04).**
 - **HUD-002 — sprint cleanup** (Gavin's sprint go-ahead 2026-10-04): contrast comment and test gaps only. **Done (PR #168, merged 2026-10-04).**
+- **GYM-001 — gym screen** (owner rulings 2026-10-04, 1A/3A): GYM MODE in an active workout opens a
+  full-screen, one-handed view (typeable weight/reps, LOG, ghost set, auto-advance, screen awake,
+  plate math and warm-up ramp for barbell lifts). **Done (PR #170, merged 2026-10-04).**
 
 ## Queue
 
@@ -187,11 +190,11 @@ PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
 Gym mode (owner rulings 2026-10-04: "1. A, 2. A, 3. A"): split in two; cue text stored in the
 database so it rides in backups; the warm-up ramp is a suggestion only.
 
-1. **GYM-001 — gym screen** (ARCHITECTURAL; Gavin merges). A full-screen view of the current lift
-   during a workout: big −/+ and LOG, screen kept awake, auto-advance, last time's numbers as a
-   ghost set, plate math and a warm-up ramp suggestion for barbell lifts. Example: at the rack,
-   "185 lb = bar + 45 + 25 per side" instead of doing the math between sets. Drop:
-   `docs/agent/drops/GYM-001.md`. Builder: Claude Code.
+1. **GYM-POLISH-001 — gym screen follow-ups** (ROUTINE; Gavin's "A" on #170, 2026-10-04: merge,
+   then fix the review's small notes). EXIT as big as the other controls, keyboard focus moves
+   into gym mode and Escape closes it, the wake lock is released before it's replaced, and a
+   finished exercise offers NEXT EXERCISE instead of a dead end. Drop:
+   `docs/agent/drops/GYM-POLISH-001.md`.
 2. **GYM-002 — cue text per lift** (HIGH-RISK: new stored data; storage ruling 2A obtained).
    Example: "Squat: brace, knees out" shown in the gym screen. Drop: `docs/agent/drops/GYM-002.md`.
    Built after GYM-001 merges; Gavin signs off on the exact storage change first.
