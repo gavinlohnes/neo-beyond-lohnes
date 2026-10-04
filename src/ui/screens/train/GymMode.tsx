@@ -161,7 +161,6 @@ export function GymMode(props: GymModeProps) {
   );
 }
 
-/** A big typeable number with −/+ on either side; empty reads "0" as a placeholder, never a logged value. */
 /**
  * GYM-002 (owner sign-off 2026-10-04): the lift's own cue under its name,
  * edited here and nowhere else. One line, up to 140 characters; saving an
@@ -247,6 +246,7 @@ function CueLine(props: { exerciseId: string; exerciseName: string; onSave: (exe
   );
 }
 
+/** A big typeable number with −/+ on either side; empty reads "0" as a placeholder, never a logged value. */
 function Stepper(props: {
   label: string;
   unit: string;

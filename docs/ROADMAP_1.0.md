@@ -176,6 +176,9 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 - **GYM-001 — gym screen** (owner rulings 2026-10-04, 1A/3A): GYM MODE in an active workout opens a
   full-screen, one-handed view (typeable weight/reps, LOG, ghost set, auto-advance, screen awake,
   plate math and warm-up ramp for barbell lifts). **Done (PR #170, merged 2026-10-04).**
+- **GYM-002 — cue text per lift** (owner sign-off 2026-10-04, "1. a, 2. A"): a cue under the lift's
+  name in the gym screen, stored as an `EXERCISE_CUE_SET` event (in backups, no database upgrade).
+  **Done (PR #173, merged 2026-10-04).**
 - **GYM-POLISH-001 — gym screen follow-ups** (Gavin's "A" on #170, 2026-10-04): EXIT 56 px, focus into gym mode and Escape closes it, wake lock released before replaced, NEXT EXERCISE on a finished exercise. **Done (PR #171, merged 2026-10-04).**
 
 ## Queue
@@ -188,13 +191,7 @@ Codex can build it when Claude is out.
 Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
 PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
 
-Gym mode (owner rulings 2026-10-04: "1. A, 2. A, 3. A"): split in two; cue text stored in the
-database so it rides in backups; the warm-up ramp is a suggestion only.
-
-1. **GYM-002 — cue text per lift** (HIGH-RISK: new stored data; storage ruling 2A obtained).
-   Example: "Squat: brace, knees out" shown in the gym screen. Drop: `docs/agent/drops/GYM-002.md`.
-   Storage signed off 2026-10-04 ("1. a, 2. A"): a saved entry (event) in the existing events list,
-   no database upgrade; edited in the gym screen only.
+Queue empty — Gavin adds the next item.
 
 ### Known, not yet approved
 
