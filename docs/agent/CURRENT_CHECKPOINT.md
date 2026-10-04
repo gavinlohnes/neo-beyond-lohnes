@@ -7,43 +7,46 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (builder), during Gavin's authorized sprint** ("perform a
-sprint ... in a safe and responsible way", 2026-10-04: Queue items only; Routine merges on green
-after an independent review; nothing Architectural/High-Risk merged without Gavin). Baseline
-`origin/master` at `891a9f4` (PR #165 merge, PR-CARDS-001 closed).
+**Written 2026-10-04 by Claude Code (independent reviewer + integrator), during Gavin's authorized
+sprint** ("perform a sprint ... in a safe and responsible way", 2026-10-04: Queue items only;
+Routine merges on green after an independent review; nothing Architectural/High-Risk merged
+without Gavin). Baseline `origin/master` at `02ec2f2` (PR #166 merge).
 
-- **Drop:** `BODY-TIMELINE-001` transformation timeline: ROUTINE, `ACTIVE`.
-- **Branch:** `claude/body-timeline-001`. **PR:** [#166](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/166).
-- **Done:** BODY → BODYWEIGHT → SHOW TIMELINE: weight over the last 90 days (inline SVG) with
-  markers for PRs (finish-summary wording), clean-day milestones at 7/30/60/90/180/365 clean days
-  (a running count, never a streak), weight milestones (each new 5-lb step, `describeMilestone`
-  wording) and the goal date pinned right when `projectGoalDate` gives one. Chips PRs · Clean days
-  · Weight · Goal filter each kind; markers are 44 px buttons (close ones share one) that show
-  their lines. No weigh-ins: "Log a bodyweight to start your timeline." `application/
-  timelineQueries.ts` (`buildTimeline` pure, `getTimeline`). Read only.
-- **Tests:** `tests/integration/timeline.test.ts` (6: every kind pinned in order with source
-  wording, milestone steps, 90-day window, no goal pin without a projection, empty and
-  write-free, same PRs as RECORDS); `tests/browser/Timeline.test.tsx` (2: empty message; markers,
-  filters, tap label, 44 px, no overflow at 320/360/412).
-- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run
-  --testTimeout 60000`: 1,974 passed, 0 failed; `build` OK; `git diff --check` OK. Not checked
-  by eye in a browser (the pane rendered blank frames earlier); layout covered by tests.
-- **Left:** review, merge on green, close the Drop. Then the Queue is empty except sprint cleanup
-  (clear Done items from the Queue; HUD follow-ups: ticks on `.tool-label`, stale `tokens.css`
-  contrast comment).
+- **Drop:** `BODY-TIMELINE-001` transformation timeline (ROUTINE): **merged and closed.** An
+  independent review found no blocking issue (review comment on PR #166). CI PR Verification
+  passed on the reviewed head `2378f1c`. Merged as `02ec2f28d144a69c615ded4ba6b9336d59c6b99f`.
+  Closed with `factory-drop.mjs close`.
+- **No Drop active.** `docs/agent/ACTIVE_DROP.md` is closed.
+- **Queue empty — Gavin adds the next item.** HUD-001, BACKUP-AUTO-001 and BODY-TIMELINE-001
+  were moved out of the Queue into the roadmap's Done list.
+- **Branch / PR:** `claude/body-timeline-001-close` (this close-out: roadmap, as-built line in
+  `docs/UX_DECISIONS.md`, this note). Docs only. Not merged; waiting for Gavin.
+- **Review notes (non-blocking):** the timeline's PR labels use the finish summary's words
+  ("heaviest yet (145 lb)"). The RECORDS cards use their own card wording ("Heaviest: 145 lb × 6").
+  Both list the same PRs. The Clean days and Goal filter chips have no browser test of their
+  own; they run the same toggle code as PRs and Weight, which are tested.
+- **Verification run (review):** `check:architecture` OK; `typecheck` OK; `git diff --check` OK;
+  the timeline, Timeline, BodyScreen, Hud001 and accessibility tests: 86/86 passed. Breaking the
+  PR, goal or weight-milestone label made a test fail each time. CI PR Verification passed.
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because
   data has been logged since it was made. Carried over: HUD follow-ups (stale `tokens.css`
   contrast comment; ticks not on `.tool-label`); @fontsource kept only for Weekly;
-  `factory:status` needs `GITHUB_TOKEN`. HUD-001 and BACKUP-AUTO-001 still sit in the Queue
-  marked Done. Branches awaiting deletion by Gavin: 56 merged branches plus `codex/dup-meal-001`,
-  `codex/duplicate-meal-prompt`, `claude/hud-001`, `claude/hud-001-close`,
-  `claude/backup-auto-001`, `claude/pr-cards-001`, `claude/pr-cards-001-close` (and this close branch once merged).
+  `factory:status` needs `GITHUB_TOKEN`. The timeline was never checked by eye in a browser;
+  tests cover its layout. Branches awaiting deletion by Gavin: 56 merged branches plus
+  `codex/dup-meal-001`, `codex/duplicate-meal-prompt`, `claude/hud-001`, `claude/hud-001-close`,
+  `claude/backup-auto-001`, `claude/pr-cards-001`, `claude/pr-cards-001-close`,
+  `claude/body-timeline-001` (and `claude/body-timeline-001-close` once merged).
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-None.
+1. **What goes into the Queue next?** (A) Gym mode: a full-screen lift view with big buttons,
+   the screen kept awake, plate math and a warm-up ramp. **Recommended:** you use it every
+   workout. (B) Notes that go somewhere: a day-off capture sweep, a time capsule, a shift
+   handoff. (C) Small HUD follow-ups only: ticks on `.tool-label` and the stale contrast comment.
+   (D) Nothing yet; wait for field notes.
+2. **Merge this docs-only close-out PR?** (A) Yes. **Recommended.** (B) Hold it.

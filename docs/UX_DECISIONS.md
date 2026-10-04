@@ -325,6 +325,7 @@ below, this entry wins; the older entry is kept for history.
   counts are compared with the device ("Backup from Oct 3 restores 1,204 records ✓", or the
   tables that differ). The month is counted from when the setting is turned on.
 - **As built: PR record cards (PR-CARDS-001, PR #164, merged 2026-10-04, Routine).** A record set shows a quiet 1px red-outlined `PR` tag (no fill, no sound, no vibration), and TRAIN → RECORDS (pre-workout only) lists every PR as a card, newest first, e.g. "Machine Chest Press · Heaviest: 145 lb × 6", using the same rule as the finish summary and Weekly.
+- **As built: transformation timeline (BODY-TIMELINE-001, PR #166, merged 2026-10-04, Routine).** BODY → BODYWEIGHT → SHOW TIMELINE draws the last 90 days of weight (inline SVG, neutral ink) with PRs, clean-day milestones (7/30/60/90/180/365 clean days, a running count, never a streak), weight milestones and the projected goal date pinned as 44 px markers, a filter chip per kind, read only; every label reuses its source wording, e.g. a marker reads "Machine Chest Press: heaviest yet (145 lb)", as the finish summary does, and with no weigh-ins it says "Log a bodyweight to start your timeline."
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks

@@ -1,6 +1,6 @@
 ---
 id: BODY-TIMELINE-001
-status: ACTIVE
+status: CLOSED
 baseline: 891a9f44fc79293be621f289ee94ebb13e08a418
 branch: claude/body-timeline-001
 contract: docs/agent/drops/BODY-TIMELINE-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/166
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 02ec2f28d144a69c615ded4ba6b9336d59c6b99f
+closed_at: 2026-10-04T18:27:45.572Z
 ---
 
 # ACTIVE_DROP
