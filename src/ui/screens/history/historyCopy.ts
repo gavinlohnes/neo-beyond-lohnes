@@ -133,6 +133,8 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Urge logged${p.trigger ? ` (${URGE_TRIGGER_LABELS[p.trigger as UrgeTrigger] ?? p.trigger})` : ""}.`;
     case "URGE_UNDONE":
       return "Urge log undone.";
+    case "EXERCISE_CUE_SET":
+      return `${p.cue ? "Cue set" : "Cue cleared"}: ${exercise(p.exerciseId)}.`;
     case "URGE_PLAN_RESPONDED":
       return `Urge plan ${p.used ? "used" : "not used this time"}${p.trigger ? ` (${URGE_TRIGGER_LABELS[p.trigger as UrgeTrigger] ?? p.trigger})` : ""}.`;
     default:

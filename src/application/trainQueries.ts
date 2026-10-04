@@ -26,8 +26,9 @@ import type {
   WorkoutSessionStatus,
   WorkoutTemplateId,
 } from "../domain/workout/types";
-import type { DomainEvent, SetUndonePayload, WorkoutSession } from "../domain/common/types";
+import type { DomainEvent, ExerciseCueSetPayload, SetUndonePayload, WorkoutSession } from "../domain/common/types";
 import { getCustomTemplates, resolvePrescription, resolveTemplateExercises } from "./customTemplateQueries";
+import { byTimeThenSeq } from "./queries";
 
 /**
  * For resuming an in-progress session across refresh/reopen. Only one
@@ -377,4 +378,20 @@ export async function getLastPerformedSetForExercise(
 export async function getSessionMinutesEstimate(templateId: WorkoutTemplateId, sessionType: string): Promise<number | undefined> {
   const sessions = await db.workoutSessions.toArray();
   return estimateSessionMinutes(sessions, templateId, sessionType);
+}
+
+/**
+ * GYM-002: each lift's current cue (the latest EXERCISE_CUE_SET for it, by
+ * logged order); a lift whose latest cue is empty has none.
+ */
+export async function getExerciseCues(): Promise<Map<string, string>> {
+  const events = await db.events.where("type").equals("EXERCISE_CUE_SET").toArray();
+  events.sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq));
+  const cues = new Map<string, string>();
+  for (const event of events) {
+    const { exerciseId, cue } = event.payload as ExerciseCueSetPayload;
+    if (cue) cues.set(exerciseId, cue);
+    else cues.delete(exerciseId);
+  }
+  return cues;
 }

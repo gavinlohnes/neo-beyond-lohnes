@@ -4,7 +4,7 @@ import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn } from "../../src/application/commands";
 import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
-import { getActiveWorkoutSession, getPerformedSets } from "../../src/application/trainQueries";
+import { getActiveWorkoutSession, getExerciseCues, getPerformedSets } from "../../src/application/trainQueries";
 import { createCustomExercise } from "../../src/application/exerciseLibraryCommands";
 import { createCustomTemplate } from "../../src/application/customTemplateCommands";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
@@ -80,6 +80,35 @@ describe("GYM-001 — gym screen", () => {
     await expect.poll(() => released).toEqual([1]);
     await screen.getByRole("button", { name: "EXIT" }).click();
     await expect.poll(() => released).toEqual([1, 2]);
+  });
+
+  it("GYM-002: add, edit and clear a cue in the gym screen; it stays after closing", async () => {
+    stubWakeLock();
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await screen.getByRole("button", { name: "GYM MODE" }).click();
+    const dialog = screen.getByRole("dialog", { name: "Gym mode" });
+
+    await dialog.getByRole("button", { name: "Add a cue for Machine Chest Press" }).click();
+    await dialog.getByRole("textbox", { name: "Cue for Machine Chest Press" }).fill("Shoulders down, slow out");
+    await dialog.getByRole("button", { name: "SAVE" }).click();
+    await expect.element(dialog.getByText("Shoulders down, slow out")).toBeVisible();
+    expect((await getExerciseCues()).get("machine-chest-press")).toBe("Shoulders down, slow out");
+
+    // Close and reopen: the cue comes back from storage.
+    await dialog.getByRole("button", { name: "EXIT" }).click();
+    await screen.getByRole("button", { name: "GYM MODE" }).click();
+    await expect.element(screen.getByRole("dialog", { name: "Gym mode" }).getByText("Shoulders down, slow out")).toBeVisible();
+
+    // Saving it empty clears it.
+    await screen.getByRole("button", { name: "Edit cue for Machine Chest Press" }).click();
+    await screen.getByRole("textbox", { name: "Cue for Machine Chest Press" }).fill("");
+    await screen.getByRole("button", { name: "SAVE" }).click();
+    await expect.element(screen.getByRole("button", { name: "Add a cue for Machine Chest Press" })).toBeVisible();
+    expect((await getExerciseCues()).has("machine-chest-press")).toBe(false);
+    expect(screen.getByRole("textbox", { name: /Cue for/ }).elements()).toHaveLength(0);
   });
 
   it("GYM-POLISH-001: a finished exercise offers NEXT EXERCISE instead of a dead end", async () => {
