@@ -247,8 +247,9 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
   }
 
   if (view === "WEEKLY") {
+    // HUD-001: Weekly keeps its pre-HUD look until the F1 review (.hud-legacy).
     return (
-      <div className="screen fade-in">
+      <div className="screen fade-in hud-legacy">
         <button
           className="btn-secondary"
           style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}

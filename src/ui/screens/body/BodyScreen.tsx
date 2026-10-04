@@ -1055,7 +1055,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
 
   function renderUndoFailure(log: UndoableLog) {
     return undoFailure?.log === log ? (
-      <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>{undoFailure.message}</p>
+      <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>{undoFailure.message}</p>
     ) : null;
   }
 
@@ -1351,7 +1351,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
           </button>
         </FieldDisclosure>
         {writeFailure === "WATER" && (
-          <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>
+          <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
             {BODY_WRITE_FAILED}
           </p>
         )}
@@ -1376,7 +1376,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
           />
         )}
         {renderUndoFailure("WATER")}
-        {error && <p className="meta" style={{ color: "var(--danger)", marginTop: 8 }}>{error}</p>}
+        {error && <p className="meta meta--error" style={{ marginTop: 8 }}>{error}</p>}
 
         {entries.length > 0 && (
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
@@ -1543,7 +1543,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
             </button>
           )}
           {writeFailure === "SLEEP" && (
-            <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>
+            <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
               {BODY_WRITE_FAILED}
             </p>
           )}
@@ -1697,7 +1697,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
             <div className="fade-in">{bodyweightManualEntryForm}</div>
           )}
           {writeFailure === "BODYWEIGHT" && (
-            <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>
+            <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
               {BODY_WRITE_FAILED}
             </p>
           )}
@@ -1799,7 +1799,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
             <div className="fade-in">{proteinManualEntryForm}</div>
           )}
           {writeFailure === "PROTEIN" && (
-            <p className="meta" role="alert" style={{ color: "var(--danger)", marginTop: 8 }}>
+            <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
               {BODY_WRITE_FAILED}
             </p>
           )}

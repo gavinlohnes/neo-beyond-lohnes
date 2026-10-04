@@ -37,8 +37,8 @@ describe("Launch polish (real browser)", () => {
     await submitCheckIn(day.id, GREEN);
     await render(<TodayScreen />);
     await expect.poll(() => document.querySelector(".meta")).not.toBeNull();
-    expect(getComputedStyle(document.querySelector(".meta")!).fontFamily).toMatch(/IBM Plex Sans/);
-    expect(getComputedStyle(document.querySelector(".tool-label, .section-label")!).fontFamily).toMatch(/IBM Plex Mono/);
+    expect(getComputedStyle(document.querySelector(".meta")!).fontFamily).toMatch(/Chakra Petch/); // HUD-001
+    expect(getComputedStyle(document.querySelector(".tool-label, .section-label")!).fontFamily).toMatch(/JetBrains Mono/); // HUD-001
   });
 
   it("a suggested day end is a neutral row, not a red signal row", async () => {

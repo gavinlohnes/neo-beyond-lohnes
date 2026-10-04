@@ -458,7 +458,7 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
       </FieldDisclosure>
       </div>
       </section>
-      {error && <p className="meta" style={{ color: "var(--danger)" }}>{error}</p>}
+      {error && <p className="meta meta--error">{error}</p>}
     </div>
   );
 }
@@ -586,7 +586,7 @@ function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () =>
                 </div>
               </>
             )}
-            {error && <p className="meta" style={{ color: "var(--danger)", marginTop: 8 }}>{error}</p>}
+            {error && <p className="meta meta--error" style={{ marginTop: 8 }}>{error}</p>}
           </article>
 
           <p className="section-label">Obligations</p>
@@ -781,7 +781,7 @@ function ObligationDetail({
                 </div>
               </>
             )}
-            {error && <p className="meta" style={{ color: "var(--danger)", marginTop: 8 }}>{error}</p>}
+            {error && <p className="meta meta--error" style={{ marginTop: 8 }}>{error}</p>}
           </article>
 
           <div className="intent-history">

@@ -81,7 +81,7 @@ export function ShiftDownCard({
     >
       <p
         className={isCommand ? "command-title" : "tool-label"}
-        style={{ marginBottom: 4, color: active ? "var(--accent-strong)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
+        style={{ marginBottom: 4, color: active ? "var(--red-text)" : undefined, display: "flex", alignItems: "center", gap: 6 }}
       >
         {prominent ? <SignalIcon key="on" name="shiftDown" size={20} /> : <Icon key="off" name="shiftDown" size={20} />}
         {active && <span aria-hidden="true" className="diamond" />}

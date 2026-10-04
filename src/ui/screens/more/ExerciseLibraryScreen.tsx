@@ -277,7 +277,7 @@ export function ExerciseLibraryScreen() {
           </FieldDisclosure>
         </div>
       </section>
-      {error && <p className="meta" style={{ color: "var(--danger)" }}>{error}</p>}
+      {error && <p className="meta meta--error">{error}</p>}
     </div>
   );
 }

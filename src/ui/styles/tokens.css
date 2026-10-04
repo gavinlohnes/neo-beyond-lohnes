@@ -1,13 +1,24 @@
 :root {
-  --bg: #0a0a0a;
-  --surface-1: #131313;
-  --surface-2: #1c1c1c;
-  --surface-active: #221414;
+  /* HUD-001 (owner brief 2026-10-04, doctrine amendment 1A): one HUD visual
+     system. Pure black ground, near-black plates told apart by 1px lines,
+     and ONE red (--red) that every red role below now resolves to. #D0141B
+     measures ~3.8:1 on #000: enough for strokes, fills, icons and large
+     text (3:1), not for small text (4.5:1) — so text that used to be red
+     reads --red-text (white) and keeps its red as a stroke beside it.
+     Weekly keeps its pre-HUD values (.hud-legacy, global.css) until the
+     F1 field-test review. */
+  --red: #D0141B;
+  --red-text: var(--text-1);
+  --bg: #000;
+  --surface-1: #070707;
+  --surface-2: #0f0f0f;
+  --surface-active: rgba(208, 20, 27, 0.12);
   --border-subtle: #2a2a2a;
   --border-strong: #3a3a3a;
   --text-1: #f2f2f2;
   --text-2: #a8a8a8;
-  --text-3: #6e6e6e;
+  /* HUD-001: lifted from #6e6e6e so quiet labels pass AA on black (~5.3:1). */
+  --text-3: #808080;
   /* Suit Layer 01 — Visual System Hardening (2026-08-22): the known axe
      finding was that --text-3 as TEXT (.meta) measures ~3.6:1 on --bg,
      below WCAG AA's 4.5:1. Per "split semantic roles rather than
@@ -18,18 +29,19 @@
      need to actually pass AA (.meta, .why-rule's unmatched rows).
      Computed: rgb(140,140,140) on #0a0a0a ≈ 5.9:1. */
   --text-3-strong: #8c8c8c;
-  --accent: #c81e2c;
+  --accent: var(--red);
   /* Overdrive Phase 1: a second, brighter accent tier for the handful of
      moments that genuinely need more visual weight than restrained red
      already carries (RED capacity, high-emphasis warnings) — reuses the
      existing --focus red rather than inventing a new hue, so the palette
      stays a closed, already-vetted set. Never a global brightening: the
      base --accent stays the restrained-red default everywhere else. */
-  --accent-strong: #e2454f;
+  --accent-strong: var(--red);
   --success: #2f9e5b;
   --warning: #c8901e;
-  --danger: #c8302e;
-  --focus: #e2454f;
+  --danger: var(--red);
+  /* HUD-001: white, so focus still shows on a red-filled control. */
+  --focus: var(--text-1);
 
   /* LAUNCH-VISION-001 (2026-09-03, direct owner ruling) — reverses
      VISUAL-001's neutral-CTA correction below, kept here as provenance,
@@ -68,6 +80,13 @@
      rather than truthful. See docs/UX_DECISIONS.md's "Visual system —
      red budget" entry for the full reversal record. */
   --chamfer: 14px;
+  /* HUD-001: the smaller cut every card and button carries, and the arm
+     length of the bracket ticks on section frames. */
+  --cut: 8px;
+  --tick: 10px;
+  --line: 1px;
+  --cut-shape: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%,
+    var(--cut) 100%, 0 calc(100% - var(--cut)));
 
   /* Overdrive Phase 1: restrained elevation for the one card per screen
      that's meant to visually lead (the primary recommendation card,
@@ -91,7 +110,7 @@
      in-card breathing room/readability doesn't suffer. */
   --gutter: 12px;
 
-  --radius: 4px;
+  --radius: 0;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -115,9 +134,11 @@
    * Vision prototype's "Terry's Suit" direction (direct owner decision;
    * see docs/UX_DECISIONS.md). --font-body/--font-mono unchanged.
    */
-  --font-display: "Big Shoulders Display", "IBM Plex Sans", system-ui, sans-serif;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* HUD-001: Chakra Petch for display and body, JetBrains Mono for labels
+     and numbers, both self-hosted from public/fonts (see hud-fonts.css). */
+  --font-display: "Chakra Petch", system-ui, sans-serif;
+  --font-body: "Chakra Petch", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* Product Experience Sprint, P2: interaction motion should explain a
      state change, never decorate. 150ms is the default for most

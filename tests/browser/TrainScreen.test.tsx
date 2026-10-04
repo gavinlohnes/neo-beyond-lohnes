@@ -562,7 +562,7 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     const logBg = getComputedStyle(logButton).backgroundColor;
     // --action-primary-bg is var(--accent) again as of LAUNCH-VISION-001.
     expect(logBg).not.toBe("rgb(242, 242, 242)"); // was the VISUAL-001 neutral fill
-    expect(logBg).toBe("rgb(200, 30, 44)"); // var(--accent)
+    expect(logBg).toBe("rgb(208, 20, 27)"); // var(--accent) = HUD-001's one red
 
     // LOG (.btn-primary) must still read as more prominent than SKIP
     // (.btn-secondary) purely from contrast against the dark surface —
