@@ -7,26 +7,30 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (reviewer/integrator).** Baseline `origin/master` at
-`be35301` (PR #164 merge).
+**Written 2026-10-04 by Claude Code (builder), during Gavin's authorized sprint** ("perform a
+sprint ... in a safe and responsible way", 2026-10-04: Queue items only; Routine merges on green
+after an independent review; nothing Architectural/High-Risk merged without Gavin). Baseline
+`origin/master` at `891a9f4` (PR #165 merge, PR-CARDS-001 closed).
 
-- **Drop:** `PR-CARDS-001` PR record cards: ROUTINE, **merged and closed**. An independent
-  review approved it (one PR rule, the same walk as Weekly's; no sound or haptics; RECORDS lives
-  in pre-workout TRAIN). PR Verification was green on head `d93dffe`. Merged under the Routine
-  speed rule as [#164](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/164), merge commit
-  `be353013b120229e772c9b56327e04e3cd0463f7`. `ACTIVE_DROP.md` is `CLOSED`.
-- **No Drop is active.**
-- **Branch:** `claude/pr-cards-001-close` (this close-out: ACTIVE_DROP closed, roadmap Done line
-  with PR-CARDS-001 cleared from the Queue, a one-line UX_DECISIONS as-built entry, this note).
-- **Next:** Queue item `BODY-TIMELINE-001`, the transformation timeline (ROUTINE). Its Drop is
-  written at `docs/agent/drops/BODY-TIMELINE-001.md`.
-- **Review note (not blocking):** with the test data the count-equivalence test in
-  `tests/integration/personalRecords.test.ts` uses, judging against *all other* sessions gives the
-  same count, 4 PRs. The exact-record test beside it does catch that mutation. A later Routine
-  touch could give the count test asymmetric data.
-- **Verification run (review):** `check:architecture` OK; `typecheck` OK; targeted vitest
-  (personalRecords, TrainScreen, accessibility, Hud001) 107/107; mutation checks as above; CI
-  PR Verification green on the exact head.
+- **Drop:** `BODY-TIMELINE-001` transformation timeline: ROUTINE, `ACTIVE`.
+- **Branch:** `claude/body-timeline-001`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+- **Done:** BODY → BODYWEIGHT → SHOW TIMELINE: weight over the last 90 days (inline SVG) with
+  markers for PRs (finish-summary wording), clean-day milestones at 7/30/60/90/180/365 clean days
+  (a running count, never a streak), weight milestones (each new 5-lb step, `describeMilestone`
+  wording) and the goal date pinned right when `projectGoalDate` gives one. Chips PRs · Clean days
+  · Weight · Goal filter each kind; markers are 44 px buttons (close ones share one) that show
+  their lines. No weigh-ins: "Log a bodyweight to start your timeline." `application/
+  timelineQueries.ts` (`buildTimeline` pure, `getTimeline`). Read only.
+- **Tests:** `tests/integration/timeline.test.ts` (6: every kind pinned in order with source
+  wording, milestone steps, 90-day window, no goal pin without a projection, empty and
+  write-free, same PRs as RECORDS); `tests/browser/Timeline.test.tsx` (2: empty message; markers,
+  filters, tap label, 44 px, no overflow at 320/360/412).
+- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run
+  --testTimeout 60000`: 1,974 passed, 0 failed; `build` OK; `git diff --check` OK. Not checked
+  by eye in a browser (the pane rendered blank frames earlier); layout covered by tests.
+- **Left:** review, merge on green, close the Drop. Then the Queue is empty except sprint cleanup
+  (clear Done items from the Queue; HUD follow-ups: ticks on `.tool-label`, stale `tokens.css`
+  contrast comment).
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because
@@ -35,7 +39,7 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
   `factory:status` needs `GITHUB_TOKEN`. HUD-001 and BACKUP-AUTO-001 still sit in the Queue
   marked Done. Branches awaiting deletion by Gavin: 56 merged branches plus `codex/dup-meal-001`,
   `codex/duplicate-meal-prompt`, `claude/hud-001`, `claude/hud-001-close`,
-  `claude/backup-auto-001`, `claude/pr-cards-001` (and this close branch once merged).
+  `claude/backup-auto-001`, `claude/pr-cards-001`, `claude/pr-cards-001-close` (and this close branch once merged).
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
