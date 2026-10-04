@@ -54,8 +54,8 @@ import {
   type NutritionEntry,
 } from "../../../application/nutritionQueries";
 import { searchFoods, type FoodSearchResult } from "../../../application/foodLookupQueries";
-import { getSameFoodCheck } from "../../../application/sameFoodQueries";
-import type { SameFoodPair } from "../../../engine/sameFood";
+import { getDuplicateMealCheck, getSameFoodCheck } from "../../../application/sameFoodQueries";
+import type { DuplicateMealPair, SameFoodPair } from "../../../engine/sameFood";
 import { getEffectiveProteinTargetG, getNutritionTargets } from "../../../application/nutritionTargetQueries";
 import {
   describeBestSince,
@@ -93,6 +93,8 @@ import {
   describeCalorieProgress,
   describeMacros,
   describeMealLogged,
+  describeDuplicateMealQuestion,
+  describeDuplicateMealRemoved,
   describeMealsRelogged,
   describeRepeatMealsButton,
   describeProteinProgress,
@@ -311,6 +313,8 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
   const [sameFood, setSameFood] = useState<(SameFoodPair & { anchor: "PROTEIN" | { savedMealId: string } }) | null>(null);
   // What REMOVE ONE did, said where the question was asked.
   const [sameFoodNotice, setSameFoodNotice] = useState<{ anchor: "PROTEIN" | { savedMealId: string }; message: string } | null>(null);
+  const [duplicateMeal, setDuplicateMeal] = useState<DuplicateMealPair | null>(null);
+  const [duplicateMealNotice, setDuplicateMealNotice] = useState<{ savedMealId: string; message: string } | null>(null);
 
   // Meal Memory (NUTRITION-001)
   const [savedMeals, setSavedMeals] = useState<SavedMeal[]>([]);
@@ -426,6 +430,30 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     }
     if (sameFoodNotice && matches(sameFoodNotice.anchor)) {
       return <p className="meta" role="status" style={{ marginTop: 8 }}>{sameFoodNotice.message}</p>;
+    }
+    return null;
+  }
+
+  function renderDuplicateMeal(savedMealId: string) {
+    if (duplicateMeal?.justLogged.savedMealId === savedMealId) {
+      return (
+        <div className="fade-in" role="group" aria-label="Same meal?" style={{ marginTop: 12, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+          <p className="card-body" style={{ marginBottom: 8 }}>
+            {describeDuplicateMealQuestion(duplicateMeal.justLogged, duplicateMeal.earlier)}
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn-secondary" style={{ flex: 1, minHeight: 44 }} disabled={busy} onClick={() => setDuplicateMeal(null)}>
+              KEEP BOTH
+            </button>
+            <button className="btn-secondary" style={{ flex: 1, minHeight: 44 }} disabled={busy} onClick={() => void handleDuplicateMealRemoveThisOne()}>
+              REMOVE THIS ONE
+            </button>
+          </div>
+        </div>
+      );
+    }
+    if (duplicateMealNotice?.savedMealId === savedMealId) {
+      return <p className="meta" role="status" style={{ marginTop: 8 }}>{duplicateMealNotice.message}</p>;
     }
     return null;
   }
@@ -723,6 +751,26 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     }
   }
 
+  async function handleDuplicateMealRemoveThisOne() {
+    if (busy || !day || !duplicateMeal) return;
+    const { justLogged } = duplicateMeal;
+    setBusy(true);
+    try {
+      await voidMealLog(day.id, justLogged.id);
+      setDuplicateMeal(null);
+      if (mealConfirmation?.mealEventIds.includes(justLogged.id)) setMealConfirmation(null);
+      await refresh();
+      setDuplicateMealNotice({
+        savedMealId: justLogged.savedMealId,
+        message: describeDuplicateMealRemoved(justLogged.name, await getDayProteinTotalG(day.id)),
+      });
+    } catch (e) {
+      setError(describeError(e, "Could not remove the meal."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   // ---- MEAL MEMORY (NUTRITION-001) ----
 
   async function handleSearchFoods() {
@@ -841,6 +889,8 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     if (busy) return;
     setBusy(true);
     setError(null);
+    setDuplicateMeal(null);
+    setDuplicateMealNotice(null);
     try {
       const activeDay = await ensureActiveDay();
       const result = await logMeal(activeDay.id, mealId);
@@ -851,7 +901,14 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
         mealEventIds: [result.eventId],
         anchor: { savedMealId: mealId },
       });
-      await askSameFood(result.eventId, "MEAL", { savedMealId: mealId });
+      const duplicate = await getDuplicateMealCheck(activeDay.id, result.eventId);
+      setDuplicateMeal(duplicate ?? null);
+      if (duplicate) {
+        setSameFood(null);
+        setSameFoodNotice(null);
+      } else {
+        await askSameFood(result.eventId, "MEAL", { savedMealId: mealId });
+      }
     } catch (e) {
       setError(describeError(e, "Could not log meal."));
     } finally {
@@ -981,6 +1038,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
     try {
       for (const id of mealEventIds) await voidMealLog(dayId, id);
       setMealConfirmation(null);
+      if (duplicateMeal && mealEventIds.includes(duplicateMeal.justLogged.id)) setDuplicateMeal(null);
       await refresh();
     } catch (e) {
       setError(describeError(e, "Could not undo."));
@@ -999,6 +1057,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
       await voidMealLog(day.id, entry.rootEventId);
       setCorrectingMealEventId(null);
       if (mealConfirmation?.mealEventIds.includes(entry.rootEventId)) setMealConfirmation(null);
+      if (duplicateMeal?.justLogged.id === entry.rootEventId) setDuplicateMeal(null);
       await refresh();
     } catch (e) {
       setMealEditNotice(describeError(e, "Could not delete meal."));
@@ -1889,6 +1948,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
                 mealConfirmation.anchor.savedMealId === meal.id &&
                 mealBanner}
               {renderSameFood(meal.id)}
+              {renderDuplicateMeal(meal.id)}
               {editingMealId === meal.id && (
                 <div className="fade-in" style={{ marginTop: 12 }}>
                   <div className="field">

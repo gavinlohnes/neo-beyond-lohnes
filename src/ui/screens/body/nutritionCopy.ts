@@ -77,6 +77,14 @@ function clock(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
+export function describeDuplicateMealQuestion(meal: { name: string }, earlier: { at: string }): string {
+  return `Same meal? ${meal.name} already logged at ${clock(earlier.at)}.`;
+}
+
+export function describeDuplicateMealRemoved(name: string, dayTotalG: number): string {
+  return `Removed the second ${name}. Protein today: ${dayTotalG} g.`;
+}
+
 /** "Same food? 49 g protein at 20:43 and Dinner (50 g protein) at 20:43." */
 export function describeSameFoodQuestion(protein: { grams: number; at: string }, meal: { name: string; proteinG: number; at: string }): string {
   return `Same food? ${protein.grams} g protein at ${clock(protein.at)} and ${meal.name} (${meal.proteinG} g protein) at ${clock(meal.at)}.`;
