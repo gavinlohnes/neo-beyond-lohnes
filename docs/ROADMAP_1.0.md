@@ -160,7 +160,11 @@ work". Only the owner adds to it. Each item is one short brief (what changes, wh
 one concrete example of the problem it fixes) plus a written Drop in `docs/agent/drops/` so
 Codex can build it when Claude is out.
 
-1. *(empty: waiting for the owner's next pick)*
+1. **DUP-MEAL-001 — duplicate-meal prompt** (owner brief 2026-10-04). Logging a meal that matches
+   one logged in the last 2 minutes (same saved meal, or same name + calories + protein) asks
+   "Same meal? Dinner already logged at 02:14." with KEEP BOTH / REMOVE THIS ONE (voids the new
+   entry). Example: dinner logged twice in the field test doubled protein and kcal. Drop:
+   `docs/agent/drops/DUP-MEAL-001.md`. Builder: Codex.
 
 ### Known, not yet approved
 

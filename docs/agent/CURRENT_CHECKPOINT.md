@@ -14,14 +14,17 @@ Branch `ccr-22d7c0f8-rqhhjm`, last commit `21c0a15`, everything pushed. No unfin
   build; it's in its field-test stop to about Oct 25. Don't start F2/F3/F4 before that.
 - **Open PR:** #154, plain words on TODAY (owner ruling 2026-10-04). Complete, CI green, waiting
   only on the owner's merge. Codex never merges (`AGENTS.md`, rule 3).
-- **Codex: there is no written Drop to build right now.** The roadmap Queue is empty. Stop and
-  ask the owner what's next (`AGENTS.md`, rule 2).
+- **Codex: build Queue item 1, DUP-MEAL-001** (`docs/agent/drops/DUP-MEAL-001.md`), the
+  duplicate-meal prompt. Risk ROUTINE. Start from fresh `origin/master` after #154 merges (update
+  the Drop's `baseline:` to that SHA), activate with `factory-drop.mjs init`, build, verify, open
+  the PR, write the handoff note, stop.
 
 ### Checklist
 1. [ ] Owner merges #154.
 2. [ ] F1 field-test stop (~3 work rotations, to about Oct 25), then the debrief questions in
        `docs/agent/drops/FOUNDATION-A-F1.md` / `docs/UX_DECISIONS.md`.
-3. [ ] Owner picks the next Queue item; Claude writes its Drop file so Codex can build it.
+3. [ ] Codex builds DUP-MEAL-001 from its Drop and opens a PR (doesn't merge).
+4. [ ] Claude Code reviews the exact PR head; owner says merge.
 
 ### Traps
 - `factory-drop.mjs init/validate` was blocked by stale branches; fixed in #153 via
