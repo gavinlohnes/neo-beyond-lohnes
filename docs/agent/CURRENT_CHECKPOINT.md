@@ -23,9 +23,7 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 - **Verification run:** on #152: `npm run check:architecture`, `npm run typecheck`, full
   `vitest run` (167 files, 1,918 passed, 1 skipped), `npm run build`; PR Verification green.
 - **Open risks:** protein partial logging can still pass the 2-entry rule; "below/above" will
-  show some weeks by design. `factory-drop.mjs init/validate` refuses while about 14 stale branches
-  carry ACTIVE snapshots (F1 was activated by hand). FACTORY-PHASE-2 still reads APPROVED, with no
-  PAUSED record.
+  show some weeks by design. FACTORY-PHASE-2 still reads APPROVED, with no PAUSED record.
 
 ## Where things stand
 
@@ -45,7 +43,10 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
   workflow, campaign manifests) is still in the repo. `ACTIVE_DROP.md` and
   `node scripts/factory-drop.mjs` remain the one-active-Drop lock; nothing else in it is
   required for a Drop.
-- About 40 old branches remain on GitHub. About 14 still carry ACTIVE Drop snapshots, which
-  blocks `factory-drop.mjs init/validate`. Deleting them needs the owner's go-ahead.
+- Old branches: the owner approved deleting them (2026-10-04), but agent sessions can't delete
+  remote branches. 55 are safe to delete (their work is in master, or their PR merged at their
+  exact tip); 11 hold unmerged work and are kept (see the PR #153 description). The 18 merged ones
+  that still read ACTIVE are pinned in `docs/agent/RETIRED_BRANCHES.json`, so
+  `factory-drop.mjs init/validate` works again; drop their entries once they're deleted.
 - On Android, new home-screen shortcuts appear only after the app updates; if missing, remove
   BEYOND from the home screen and add it again.
