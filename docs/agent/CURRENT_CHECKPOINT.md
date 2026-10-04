@@ -9,18 +9,21 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 **Written 2026-10-04 by Claude Code.** `origin/master` at `449c152` (PR #151 merge).
 
-- **Drop:** none active. Last finished: UNDO-001 (undo after every water, sleep, weight and
-  protein log) and the builder-roles setup, merged as PR #151.
-- **Branch:** none in flight (`ccr-22d7c0f8-rqhhjm` carries only this note).
-- **PR:** this handoff update only.
-- **Done:** UNDO on BODY's and TODAY's log banners, `*_LOG_VOIDED` events, undone entries leave
-  every total. `AGENTS.md` is the shared rulebook: Claude Code primary builder, Codex backup.
-- **Left:** the Queue in the roadmap is empty. When the owner picks the next item, Claude Code
-  writes its Drop in `docs/agent/drops/` so Codex can build it if Claude is out.
-- **Verification run:** on #151: `npm run check:architecture`, `npm run typecheck`, full
-  `vitest run` (163 files, 1,887 passed, 1 skipped), `npm run build`; PR Verification green.
-- **Open risks:** none known. UNDO-001 added new event types read by the Engine's Day Ledger
-  (owner-approved); watch BODY and TODAY totals after an UNDO during field use.
+- **Drop:** FOUNDATION-A-F1 — lived-day series, personal baselines in Weekly (ACTIVE).
+- **Branch:** `ccr-22d7c0f8-rqhhjm`.
+- **PR:** #152 (it also carries the post-#151 handoff note).
+- **Done:** `engine/livedDaySeries.ts` (shared primitive), `engine/personalBaselines.ts`, Day
+  Ledger `entryCounts`, Ribbon on the shared grouping, Weekly's YOUR USUAL section, the water rule
+  (2+ entries or one of 40 oz+), tests, decision-log entry.
+- **Left:** independent review of the exact PR head, owner's go-ahead to merge, close the Drop,
+  then the field-test stop (~3 work rotations) before any F2/F3/F4.
+- **Verification run:** `npm run check:architecture`, `npm run typecheck`, full `vitest run`
+  (167 files, 1,918 passed, 1 skipped, node + real Chromium), `npm run build`,
+  `npm run check:risk` (Architectural, as contracted), `git diff --check`.
+- **Open risks:** protein partial logging can still pass the 2-entry rule; the middle-half band
+  means "below/above" will show some weeks by design; `factory-drop.mjs init/validate` refuses
+  while stale unmerged branches (DECISIONS-001 and about 13 others) carry ACTIVE snapshots, so
+  this Drop was activated by hand. FACTORY-PHASE-2 still reads APPROVED, with no PAUSED record.
 
 ## Where things stand
 
@@ -40,6 +43,7 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
   workflow, campaign manifests) is still in the repo. `ACTIVE_DROP.md` and
   `node scripts/factory-drop.mjs` remain the one-active-Drop lock; nothing else in it is
   required for a Drop.
-- About 40 old branches remain on GitHub. Harmless; deleting them needs the owner's go-ahead.
+- About 40 old branches remain on GitHub. About 14 still carry ACTIVE Drop snapshots, which
+  blocks `factory-drop.mjs init/validate`. Deleting them needs the owner's go-ahead.
 - On Android, new home-screen shortcuts appear only after the app updates; if missing, remove
   BEYOND from the home screen and add it again.
