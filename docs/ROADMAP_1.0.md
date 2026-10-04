@@ -184,7 +184,17 @@ Codex can build it when Claude is out.
 Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
 PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
 
-Queue empty — Gavin adds the next item.
+Gym mode (owner rulings 2026-10-04: "1. A, 2. A, 3. A"): split in two; cue text stored in the
+database so it rides in backups; the warm-up ramp is a suggestion only.
+
+1. **GYM-001 — gym screen** (ARCHITECTURAL; Gavin merges). A full-screen view of the current lift
+   during a workout: big −/+ and LOG, screen kept awake, auto-advance, last time's numbers as a
+   ghost set, plate math and a warm-up ramp suggestion for barbell lifts. Example: at the rack,
+   "185 lb = bar + 45 + 25 per side" instead of doing the math between sets. Drop:
+   `docs/agent/drops/GYM-001.md`. Builder: Claude Code.
+2. **GYM-002 — cue text per lift** (HIGH-RISK: new stored data; storage ruling 2A obtained).
+   Example: "Squat: brace, knees out" shown in the gym screen. Drop: `docs/agent/drops/GYM-002.md`.
+   Built after GYM-001 merges; Gavin signs off on the exact storage change first.
 
 ### Known, not yet approved
 
@@ -193,8 +203,7 @@ Spotted but not briefed. The owner moves an item up into the Queue or drops it.
 - Items no longer held for Oct 16: the Engine reacting to evidence, Week Ahead, deload/stall
   suggestions. Each needs a brief; Engine rule adoption needs sign-off.
 - **Parking lot (owner brief 2026-10-04), no Drops yet:**
-  - **Gym mode:** full-screen lift view, big buttons, screen kept awake, auto-advance, plate math,
-    warm-up ramp, Gavin's own cue text per lift, ghost set.
+  - **Gym mode:** moved to the Queue as GYM-001 and GYM-002 (owner rulings 2026-10-04).
   - **Notes that go somewhere:** day-off capture sweep, time capsule, shift handoff.
   - **Data views (after the F1 review):** tap a number to see its story: lift strength curve,
     12-week training heat grid, a measure against its "your usual" band.

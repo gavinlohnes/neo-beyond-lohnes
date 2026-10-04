@@ -326,6 +326,14 @@ below, this entry wins; the older entry is kept for history.
   tables that differ). The month is counted from when the setting is turned on.
 - **As built: PR record cards (PR-CARDS-001, PR #164, merged 2026-10-04, Routine).** A record set shows a quiet 1px red-outlined `PR` tag (no fill, no sound, no vibration), and TRAIN → RECORDS (pre-workout only) lists every PR as a card, newest first, e.g. "Machine Chest Press · Heaviest: 145 lb × 6", using the same rule as the finish summary and Weekly.
 - **As built: transformation timeline (BODY-TIMELINE-001, PR #166, merged 2026-10-04, Routine).** BODY → BODYWEIGHT → SHOW TIMELINE draws the last 90 days of weight (inline SVG, neutral ink) with PRs, clean-day milestones (7/30/60/90/180/365 clean days, a running count, never a streak), weight milestones and the projected goal date pinned as 44 px markers, a filter chip per kind, read only; every label reuses its source wording, e.g. a marker reads "Machine Chest Press: heaviest yet (145 lb)", as the finish summary does, and with no weigh-ins it says "Log a bodyweight to start your timeline."
+- **Gym mode (owner rulings 2026-10-04: 1A, 2A, 3A).** Built as two Drops: GYM-001 is the gym
+  screen (full-screen current lift, big buttons, screen awake, auto-advance, ghost set, plate math,
+  warm-up ramp); GYM-002 adds Gavin's own cue text per lift, **stored in the database so it is in
+  backups** (not device-only). The **warm-up ramp is a suggestion only**: shown before the first
+  working set of a session's first barbell lift, never logged unless Gavin logs it; the bar ×10,
+  then about 50% ×5, 70% ×3 and 85% ×1 of the working weight, rounded to the nearest loadable weight.
+  Example: working weight 185 lb reads "Warm-up: 45 ×10 · 95 ×5 · 130 ×3 · 155 ×1". Plate math and
+  the ramp apply to barbell lifts only (built-in templates A/B/C are machine and cable).
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks

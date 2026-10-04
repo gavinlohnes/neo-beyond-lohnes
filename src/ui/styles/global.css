@@ -2175,3 +2175,117 @@ body:has(.hud-legacy) {
   padding-left: var(--space-2);
   border-left: 1px solid var(--border-strong);
 }
+
+/* GYM-001 (owner brief 2026-10-04): the gym screen. Covers the whole
+   viewport (bottom nav included) with big targets for one hand: steppers
+   and LOG are at least 56px tall. Same HUD tokens as the rest of TRAIN. */
+.gym-mode {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow-y: auto;
+  background: var(--bg);
+  padding: var(--space-4) var(--gutter) calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  /* On a wide screen, black out what's beside the column too. */
+  box-shadow: 0 0 0 100vmax var(--bg);
+}
+.gym-mode__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.gym-mode__exit {
+  width: auto;
+  padding: 8px 18px;
+}
+.gym-mode__name {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0 0 var(--space-2);
+  overflow-wrap: anywhere;
+}
+.gym-mode__ghost {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--text-3-strong);
+}
+.gym-mode__hint {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--text-2);
+}
+.gym-mode__stepper {
+  display: grid;
+  grid-template-columns: 72px 1fr 72px;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.gym-mode__step {
+  min-height: 64px;
+  font-size: 32px;
+  padding: 0;
+}
+.gym-mode__value {
+  margin: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+.gym-mode__number {
+  width: 100%;
+  min-width: 0;
+  min-height: 56px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-1);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.1;
+  -moz-appearance: textfield;
+}
+.gym-mode__number::-webkit-outer-spin-button,
+.gym-mode__number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.gym-mode__number::placeholder {
+  color: var(--text-3);
+}
+.gym-mode__number:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.gym-mode__log {
+  min-height: 72px;
+  font-size: 22px;
+  margin-top: var(--space-2);
+}
+.gym-mode__skip {
+  margin-top: var(--space-3);
+  min-height: 56px;
+}
+.gym-mode__done {
+  margin-top: var(--space-4);
+}
+.gym-mode__rest {
+  margin: var(--space-4) 0 0;
+  padding-left: var(--space-2);
+  border-left: 2px solid var(--red);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  color: var(--text-1);
+}
