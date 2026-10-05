@@ -7,20 +7,26 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code.** `origin/master` at `f45385e` (PR #177 merge).
+**Written 2026-10-04 by Claude Code (builder).** Baseline `origin/master` at `cc28335` (PR #178).
 
-- **Drop:** none active. `NOTES-HANDOFF-001` merged on Gavin's "A" (independent review APPROVE,
-  PR Verification green on the reviewed head) and closed in `claude/notes-handoff-001-close`.
-- **New owner rulings (2026-10-04, recorded in the roadmap Queue and `docs/UX_DECISIONS.md`):**
-  finish the time capsule; then WALKTHROUGH-001 (phone-size walk-through with screenshots, report
-  only); CLEANUP-002 (review-note cleanup); then a week of field use with no new features; and a
-  separate GitHub review account that Gavin creates (Claude never creates accounts or handles
-  its token).
-- **Next:** `NOTES-CAPSULE-001` (HIGH-RISK; storage ruled 2A; Gavin approves the merge).
-- **Review notes carried (non-blocking):** several unread handoffs show newest first, older
-  after GOT IT; `noteShiftHandoff` doesn't itself enforce "work ended / one per day" (the screen
-  does); a restore doesn't carry SKIP marks; `check:risk` files localStorage modules under
-  persistence as OTHER.
+- **Drop:** `NOTES-CAPSULE-001` time capsule: HIGH-RISK (new stored data; storage ruled 2A;
+  Gavin approves the merge), `ACTIVE`. Branch `claude/notes-capsule-001`. **PR:** see
+  `docs/agent/ACTIVE_DROP.md` `pr:`.
+- **Done:** events `TIME_CAPSULE_SEALED` {commandId, note, opensOn} and `TIME_CAPSULE_OPENED`
+  {commandId, capsuleEventId}, not tied to a day (no beyondDayId, like Decision Journal events),
+  written by `application/timeCapsuleCommands.ts` (trim, 1–500 chars, 1/3/6/12 months;
+  `opensOnAfter` clamps to month end); `application/timeCapsuleQueries.ts` (waiting = dates only;
+  due = on/after opensOn and unread). MORE → Direction → TIME CAPSULE (write, pick, SEAL; list of
+  sealed dates); above TODAY, a due capsule shows until GOT IT. History copy never shows sealed text.
+- **Boundary crossed:** backup contract (two new event types). Owner ruling: obtained (2A).
+  Rollback: revert; saved events become inert rows.
+- **Compatibility verification:** `tests/compat` 30/30; `tests/integration/timeCapsule.test.ts`
+  (6: month math, sealed text hidden until the date, due until GOT IT, no beyondDayId, limits,
+  backup → restore keeps sealed/unread state, schema version unchanged, history wording).
+- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run
+  --testTimeout 60000`: 2,017 passed, 0 failed; `build` OK; `git diff --check` OK.
+- **Left:** independent review; Gavin approves the merge; close. Then WALKTHROUGH-001,
+  CLEANUP-002, a field-use week, and the review account (Gavin sets it up).
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because
@@ -39,4 +45,5 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-None.
+1. NOTES-CAPSULE-001 after review: **A. Merge as is (recommended)** · B. Tune a detail first ·
+   C. Hold.
