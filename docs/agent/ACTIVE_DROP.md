@@ -1,15 +1,13 @@
 ---
-id: NOTES-HANDOFF-001
-status: CLOSED
-baseline: 90bc0260d21c429d1d2a2816976635a2b6dda8a4
-branch: claude/notes-handoff-001
-contract: docs/agent/drops/NOTES-HANDOFF-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/177
+id: NOTES-CAPSULE-001
+status: ACTIVE
+baseline: cc28335df2d9e67ba9a27a8511196ef0b6d86e18
+branch: claude/notes-capsule-001
+contract: docs/agent/drops/NOTES-CAPSULE-001.md
+pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: f45385e6500db0313845c456365e8017f16437b0
-closed_at: 2026-10-05T01:53:08.122Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/NOTES-HANDOFF-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/NOTES-CAPSULE-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
