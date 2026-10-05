@@ -9,6 +9,7 @@ import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
 import { NotesSweep } from "../ui/components/NotesSweep";
 import { ShiftHandoff } from "../ui/components/ShiftHandoff";
+import { TimeCapsuleOpened } from "../ui/components/TimeCapsuleOpened";
 import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
 import { performDueDayRollover } from "../application/commands";
@@ -290,6 +291,8 @@ export function App() {
         {tab === "TODAY" && <NotesSweep onSwept={() => setTodayRefreshKey((k) => k + 1)} />}
         {/* NOTES-HANDOFF-001: "Note for next shift?" after work ends; "From last shift" on the next work day. */}
         {tab === "TODAY" && <ShiftHandoff refreshKey={workEndedKey} />}
+        {/* NOTES-CAPSULE-001: a time capsule whose day has come, until GOT IT. */}
+        {tab === "TODAY" && <TimeCapsuleOpened />}
         {tab === "TODAY" && (
           <TodayScreen
             key={todayRefreshKey}

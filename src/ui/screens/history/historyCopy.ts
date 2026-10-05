@@ -133,6 +133,10 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Urge logged${p.trigger ? ` (${URGE_TRIGGER_LABELS[p.trigger as UrgeTrigger] ?? p.trigger})` : ""}.`;
     case "URGE_UNDONE":
       return "Urge log undone.";
+    case "TIME_CAPSULE_SEALED":
+      return `Time capsule sealed (opens ${p.opensOn}).`;
+    case "TIME_CAPSULE_OPENED":
+      return "Time capsule opened.";
     case "SHIFT_HANDOFF_NOTED":
       return `Note for next shift: ${p.note}`;
     case "SHIFT_HANDOFF_READ":
