@@ -18,6 +18,7 @@ import { ExerciseLibraryScreen } from "./ExerciseLibraryScreen";
 import { CustomTemplateScreen } from "./CustomTemplateScreen";
 import { NutritionTargetsSettings } from "./NutritionTargetsSettings";
 import { AutoBackupSettings } from "./AutoBackupSettings";
+import { TimeCapsuleSettings } from "./TimeCapsuleSettings";
 import { WeeklyCheckInScreen } from "../weekly/WeeklyCheckInScreen";
 import { LineIcon } from "../../icons/LineIcon";
 import { CalendarCheck } from "lucide-react";
@@ -432,6 +433,8 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
           icon={<Icon name="customPrograms" size={20} />}
           onOpen={() => setView("CUSTOM_TEMPLATES")}
         />
+        {/* NOTES-CAPSULE-001: a note to future you, sealed until its day. */}
+        <TimeCapsuleSettings />
       </section>
 
       {/* REMIND-001: on-device only — no account, no push service. Fires

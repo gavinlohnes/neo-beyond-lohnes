@@ -231,7 +231,9 @@ export type DomainEventType =
   | "URGE_PLAN_RESPONDED"
   | "EXERCISE_CUE_SET"
   | "SHIFT_HANDOFF_NOTED"
-  | "SHIFT_HANDOFF_READ";
+  | "SHIFT_HANDOFF_READ"
+  | "TIME_CAPSULE_SEALED"
+  | "TIME_CAPSULE_OPENED";
 
 /**
  * DERIVED, not stored. Computed by walking a WATER_LOGGED event and any
@@ -644,6 +646,27 @@ export interface ShiftHandoffReadPayload {
 }
 
 export const SHIFT_HANDOFF_MAX_LENGTH = 280;
+
+/**
+ * NOTES-CAPSULE-001 (owner rulings 2026-10-04, 1A/2A): a note to future
+ * Gavin, sealed until `opensOn` (a local "YYYY-MM-DD" date). Not tied to a
+ * day (no beyondDayId), like Decision Journal events. TIME_CAPSULE_OPENED
+ * marks one as read on TODAY. Append-only.
+ */
+export interface TimeCapsuleSealedPayload {
+  commandId: string;
+  /** Trimmed, 1..TIME_CAPSULE_MAX_LENGTH characters. */
+  note: string;
+  opensOn: string;
+}
+
+export interface TimeCapsuleOpenedPayload {
+  commandId: string;
+  capsuleEventId: string;
+}
+
+export const TIME_CAPSULE_MAX_LENGTH = 500;
+export const TIME_CAPSULE_MONTHS = [1, 3, 6, 12] as const;
 
 export interface PlannedWorkSetPayload {
   commandId: string;
