@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: cc28335df2d9e67ba9a27a8511196ef0b6d86e18
 branch: claude/notes-capsule-001
 contract: docs/agent/drops/NOTES-CAPSULE-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/179
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)

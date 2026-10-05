@@ -10,8 +10,8 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 **Written 2026-10-04 by Claude Code (builder).** Baseline `origin/master` at `cc28335` (PR #178).
 
 - **Drop:** `NOTES-CAPSULE-001` time capsule: HIGH-RISK (new stored data; storage ruled 2A;
-  Gavin approves the merge), `ACTIVE`. Branch `claude/notes-capsule-001`. **PR:** see
-  `docs/agent/ACTIVE_DROP.md` `pr:`.
+  Gavin approves the merge), `ACTIVE`. Branch `claude/notes-capsule-001`. **PR:**
+  [#179](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/179).
 - **Done:** events `TIME_CAPSULE_SEALED` {commandId, note, opensOn} and `TIME_CAPSULE_OPENED`
   {commandId, capsuleEventId}, not tied to a day (no beyondDayId, like Decision Journal events),
   written by `application/timeCapsuleCommands.ts` (trim, 1–500 chars, 1/3/6/12 months;
