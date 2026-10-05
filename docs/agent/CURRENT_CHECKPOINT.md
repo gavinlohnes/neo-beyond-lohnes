@@ -7,22 +7,27 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (reviewer/integrator).** `origin/master` at `648f591` (PR #175
-merge).
+**Written 2026-10-04 by Claude Code (builder).** Baseline `origin/master` at `90bc026` (PR #176,
+NOTES-SWEEP-001 closed).
 
-- **Drop:** `NOTES-SWEEP-001` day-off notes sweep (ROUTINE): independently reviewed, merged
-  ([#175](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/175), merge `648f591`) on green
-  PR Verification, and closed (`ACTIVE_DROP` CLOSED). Close-out branch
-  `claude/notes-sweep-001-close` (docs only).
-- **No Drop active.**
-- **Next:** `NOTES-HANDOFF-001` shift handoff note (HIGH-RISK: new stored data; storage already
-  ruled 2A, saved as events like cue text; Gavin approves the merge). Then `NOTES-CAPSULE-001`.
-- **Verification run (review):** `check:architecture` OK; `typecheck` OK; NotesSweep, App,
-  TodayScreen and captureInbox tests 118/118. Mutation checks: making KEEP resolve, or dropping
-  the hold on DELETE, each fails 2 tests.
-- **Sweep follow-ups (non-blocking, from review):** the sweep reads the day-off state on mount, so
-  switching OFF/WORK on TODAY shows or hides its line only after TODAY is reopened; a failed UNDO
-  restore shows no message; `convertCaptureToObligation` is not one transaction (pre-existing).
+- **Drop:** `NOTES-HANDOFF-001` shift handoff: HIGH-RISK (new stored data; storage ruled 2A by
+  Gavin 2026-10-04; Gavin approves the merge), `ACTIVE`. Branch `claude/notes-handoff-001`.
+  **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+- **Done:** new events `SHIFT_HANDOFF_NOTED` {commandId, note} and `SHIFT_HANDOFF_READ`
+  {commandId, handoffEventId}; `noteShiftHandoff` / `markShiftHandoffRead` in `commands.ts`
+  (trim, 1–280 chars); `application/shiftHandoffQueries.ts` (prompt after WORK_PERIOD_ENDED on a
+  WORK day until noted or skipped; latest unread note from an earlier day, shown only on WORK
+  days); SKIP is a per-day localStorage mark (`persistence/shiftHandoffSkips.ts`), no event.
+  `ui/components/ShiftHandoff.tsx` above TODAY; TodayScreen's new optional `onWorkEnded` prop
+  makes the question appear at once. History copy for both events.
+- **Boundary crossed:** backup contract (two new event types). Owner ruling: obtained (2A).
+  Rollback: revert; saved events become inert rows History shows by raw type.
+- **Compatibility verification:** `tests/compat` 30/30; `tests/integration/shiftHandoff.test.ts`
+  (7: prompt timing, SKIP writes nothing, next work day only, GOT IT, own-day note not echoed,
+  limits, backup → restore keeps it unread, schema version unchanged, history wording).
+- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run
+  --testTimeout 60000`: 2,009 passed, 0 failed; `build` OK; `git diff --check` OK.
+- **Left:** independent review; Gavin approves the merge; close. Then `NOTES-CAPSULE-001`.
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because
@@ -41,4 +46,5 @@ merge).
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-None.
+1. NOTES-HANDOFF-001 after review: **A. Merge as is (recommended)** · B. Tune a detail first ·
+   C. Hold.
