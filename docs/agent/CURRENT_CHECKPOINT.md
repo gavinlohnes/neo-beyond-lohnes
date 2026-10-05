@@ -12,7 +12,7 @@ the walk-through report). Gavin ruled "Let's do B. All 13" on the walk-through f
 in the roadmap and `docs/UX_DECISIONS.md`, split into CLEANUP-002 and CLEANUP-003.
 
 - **Drop:** `CLEANUP-002` gym mode and TODAY polish: ROUTINE, `ACTIVE`. Branch
-  `claude/cleanup-002`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+  `claude/cleanup-002`. **PR:** [#182](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/182).
 - **Done:** findings 1–2 (gym mode "Last set" line with PR tag and UNDO), 3 (TODAY lines in a
   `banners` slot under the header), 4 (day off: Attention points to the sweep; TODAY says "task"),
   11 (dominant TODAY card centers its contents), 13 (work-context change re-reads the sweep), and a

@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: ca1c89973ced509943a4f13bd42fd63ed26cd4bd
 branch: claude/cleanup-002
 contract: docs/agent/drops/CLEANUP-002.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/182
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
