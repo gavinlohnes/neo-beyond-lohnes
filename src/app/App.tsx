@@ -7,6 +7,7 @@ import { MoreScreen } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
+import { NotesSweep } from "../ui/components/NotesSweep";
 import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
 import { performDueDayRollover } from "../application/commands";
@@ -99,6 +100,8 @@ export function App() {
   // Read once, then dropped from the URL so a reload doesn't repeat it.
   const [shortcut] = useState(() => parseShortcut(window.location.search));
   const [tab, setTab] = useState<Tab>(() => (shortcut ? "BODY" : "TODAY"));
+  // NOTES-SWEEP-001: bumped after a notes sweep so TODAY re-reads its capture count.
+  const [todayRefreshKey, setTodayRefreshKey] = useState(0);
   // Drop 1.6a: tapping MORE while already on MORE goes back to its menu (a fresh MoreScreen).
   const [moreResetKey, setMoreResetKey] = useState(0);
   // Where BODY opens: a home-screen shortcut on launch, or a Shift Clock row
@@ -280,8 +283,11 @@ export function App() {
             require lifting new state through MoreScreen/IntentScreen too. */}
         {/* BACKUP-AUTO-001: one line above TODAY when automatic backup is on and due. */}
         {tab === "TODAY" && <BackupDueLine />}
+        {/* NOTES-SWEEP-001: on a day off, one line offers to sweep open notes; TODAY re-reads after. */}
+        {tab === "TODAY" && <NotesSweep onSwept={() => setTodayRefreshKey((k) => k + 1)} />}
         {tab === "TODAY" && (
           <TodayScreen
+            key={todayRefreshKey}
             onViewCommitments={() => showTab("MORE")}
             onOpenTrain={openTrain}
             openToolsOnMount={todayToolsOpen}

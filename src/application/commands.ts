@@ -847,6 +847,24 @@ export async function resolveCaptureItem(id: string): Promise<void> {
   await db.captureItems.update(id, { status: "RESOLVED", resolvedAt: new Date().toISOString() });
 }
 
+/**
+ * NOTES-SWEEP-001 (owner ruling 2026-10-04, sweep choices incl. DELETE): removes a
+ * capture row. Captures are directly mutable rows (like SchedulePattern), not
+ * events, so this rewrites no history. Returns the removed row so the caller
+ * can offer UNDO through restoreCaptureItem.
+ */
+export async function deleteCaptureItem(id: string): Promise<CaptureItem | undefined> {
+  const existing = await db.captureItems.get(id);
+  if (!existing) return undefined;
+  await db.captureItems.delete(id);
+  return existing;
+}
+
+/** NOTES-SWEEP-001: UNDO for deleteCaptureItem — puts the exact same row back. */
+export async function restoreCaptureItem(item: CaptureItem): Promise<void> {
+  await db.captureItems.put(item);
+}
+
 /** Undoes an accidental resolve — same reasoning as RESET/SHIFT DOWN's cancel path having a real undo, not a one-way door. */
 export async function reopenCaptureItem(id: string): Promise<void> {
   const existing = await db.captureItems.get(id);
