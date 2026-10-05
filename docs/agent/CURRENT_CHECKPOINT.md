@@ -7,25 +7,22 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (builder).** Baseline `origin/master` at `8f0565a` (PR #174).
-Gavin queued "Notes that go somewhere" with rulings 1A (three Drops: sweep, handoff, capsule),
-2A (handoff/capsule stored as events like cue text), 3 "A and B" (sweep choices DONE / MAKE IT A
-TASK / KEEP plus DELETE); recorded in the roadmap Queue, `docs/UX_DECISIONS.md` and three Drops.
+**Written 2026-10-04 by Claude Code (reviewer/integrator).** `origin/master` at `648f591` (PR #175
+merge).
 
-- **Drop:** `NOTES-SWEEP-001` day-off notes sweep: ROUTINE, `ACTIVE`. Branch
-  `claude/notes-sweep-001`. **PR:** [#175](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/175).
-- **Done:** `ui/components/NotesSweep.tsx` above TODAY (App) when the active day is OFF and open
-  notes exist; DONE / MAKE IT A TASK / KEEP / hold DELETE with UNDO; summary line; TODAY remounts
-  after a sweep (App `todayRefreshKey`) so its capture count matches. New `deleteCaptureItem` /
-  `restoreCaptureItem` in `commands.ts` (capture rows are mutable rows, not events);
-  `application/notesSweepQueries.ts`.
-- **Tests:** `tests/browser/NotesSweep.test.tsx` (5: day off vs work day, each choice's effect and
-  obligation, quick tap doesn't delete, hold deletes, UNDO restores the exact row, KEEP writes
-  nothing, summary wording, 44 px, no overflow at 360).
-- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run
-  --testTimeout 60000`: 1,999 passed, 0 failed; `build` OK; `git diff --check` OK.
-- **Left:** review, merge on green, close. Next: `NOTES-HANDOFF-001` then `NOTES-CAPSULE-001`
-  (both HIGH-RISK; storage already ruled 2A, Gavin approves each merge).
+- **Drop:** `NOTES-SWEEP-001` day-off notes sweep (ROUTINE): independently reviewed, merged
+  ([#175](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/175), merge `648f591`) on green
+  PR Verification, and closed (`ACTIVE_DROP` CLOSED). Close-out branch
+  `claude/notes-sweep-001-close` (docs only).
+- **No Drop active.**
+- **Next:** `NOTES-HANDOFF-001` shift handoff note (HIGH-RISK: new stored data; storage already
+  ruled 2A, saved as events like cue text; Gavin approves the merge). Then `NOTES-CAPSULE-001`.
+- **Verification run (review):** `check:architecture` OK; `typecheck` OK; NotesSweep, App,
+  TodayScreen and captureInbox tests 118/118. Mutation checks: making KEEP resolve, or dropping
+  the hold on DELETE, each fails 2 tests.
+- **Sweep follow-ups (non-blocking, from review):** the sweep reads the day-off state on mount, so
+  switching OFF/WORK on TODAY shows or hides its line only after TODAY is reopened; a failed UNDO
+  restore shows no message; `convertCaptureToObligation` is not one transaction (pre-existing).
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because
@@ -36,8 +33,8 @@ TASK / KEEP plus DELETE); recorded in the roadmap Queue, `docs/UX_DECISIONS.md` 
   `codex/duplicate-meal-prompt`, `claude/hud-001`, `claude/hud-001-close`,
   `claude/backup-auto-001`, `claude/pr-cards-001`, `claude/pr-cards-001-close`,
   `claude/body-timeline-001`, `claude/body-timeline-001-close`, `claude/hud-002`,
-  `claude/hud-002-close`, `claude/gym-001`, `claude/gym-polish-001`, `claude/gym-polish-001-close`, `claude/gym-002`, `claude/gym-002-close`, `claude/gym-polish-001`, and
-  `claude/gym-polish-001-close` (once merged).
+  `claude/hud-002-close`, `claude/gym-001`, `claude/gym-polish-001`, `claude/gym-polish-001-close`, `claude/gym-002`, `claude/gym-002-close`,
+  `claude/notes-sweep-001`, and `claude/notes-sweep-001-close` (once merged).
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·

@@ -179,6 +179,7 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 - **GYM-002 — cue text per lift** (owner sign-off 2026-10-04, "1. a, 2. A"): a cue under the lift's
   name in the gym screen, stored as an `EXERCISE_CUE_SET` event (in backups, no database upgrade).
   **Done (PR #173, merged 2026-10-04).**
+- **NOTES-SWEEP-001 — day-off notes sweep** (owner rulings 2026-10-04, 1A / 3 "A and B"): on a day off, "Sweep your notes · 6 waiting" walks open notes one at a time (DONE / MAKE IT A TASK / KEEP / hold DELETE with UNDO). **Done (PR #175, merged 2026-10-04).**
 - **GYM-POLISH-001 — gym screen follow-ups** (Gavin's "A" on #170, 2026-10-04): EXIT 56 px, focus into gym mode and Escape closes it, wake lock released before replaced, NEXT EXERCISE on a finished exercise. **Done (PR #171, merged 2026-10-04).**
 
 ## Queue
@@ -195,14 +196,10 @@ Notes that go somewhere (owner rulings 2026-10-04: "1. A, 2. A, 3. A and B"): th
 order; handoff and capsule stored as saved entries (events) like cue text; the sweep's choices are
 DONE / MAKE IT A TASK / KEEP plus DELETE.
 
-1. **NOTES-SWEEP-001 — day-off notes sweep** (ROUTINE). On a day off, TODAY offers "Sweep your
-   notes · 6 waiting" and walks open notes one at a time: DONE, MAKE IT A TASK, KEEP, or hold
-   DELETE (with UNDO). Example: Saturday morning clears the week's jotted notes in a minute.
-   Drop: `docs/agent/drops/NOTES-SWEEP-001.md`.
-2. **NOTES-HANDOFF-001 — shift handoff note** (HIGH-RISK: new stored data). After ending a work
+1. **NOTES-HANDOFF-001 — shift handoff note** (HIGH-RISK: new stored data). After ending a work
    period, "Note for next shift?"; it shows at the top of TODAY on the next work day. Example:
    "Truck 12 brakes still soft, check first thing." Drop: `docs/agent/drops/NOTES-HANDOFF-001.md`.
-3. **NOTES-CAPSULE-001 — time capsule** (HIGH-RISK: new stored data). A note to future you that
+2. **NOTES-CAPSULE-001 — time capsule** (HIGH-RISK: new stored data). A note to future you that
    opens in 1/3/6/12 months on TODAY. Example: "Three months from now: did the 5 a.m. workouts
    stick?" Drop: `docs/agent/drops/NOTES-CAPSULE-001.md`.
 

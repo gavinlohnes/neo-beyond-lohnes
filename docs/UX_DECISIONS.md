@@ -353,6 +353,10 @@ below, this entry wins; the older entry is kept for history.
   entries (events) like cue text: in backups, no database upgrade. The sweep offers DONE, MAKE IT A
   TASK, KEEP and DELETE; DELETE needs a hold and has UNDO, like DELETE on a logged entry. Example:
   on a day off, "Sweep your notes · 6 waiting" → "Swept 6: 3 done, 1 task, 1 kept, 1 deleted."
+- **As built in NOTES-SWEEP-001 (PR #175, merged 2026-10-04).** The sweep line sits above TODAY only on
+  a day off with open notes. Each choice uses the existing capture/obligation commands, and DELETE removes the
+  capture row (captures are mutable rows, not events). Example: hold DELETE on "Old grocery list", tap UNDO, and
+  the same note returns as it was.
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks
