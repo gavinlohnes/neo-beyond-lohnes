@@ -348,6 +348,11 @@ below, this entry wins; the older entry is kept for history.
   EDIT under the lift's name saves up to 140 characters as an `EXERCISE_CUE_SET` event; the latest
   per lift shows, an empty one clears it, History reads "Cue set: Leg Press.", and backups carry it
   with no database upgrade.
+- **Notes that go somewhere (owner rulings 2026-10-04: 1A, 2A, 3 "A and B").** Three Drops, in order:
+  day-off notes sweep, shift handoff, time capsule. Handoff notes and capsules are stored as saved
+  entries (events) like cue text: in backups, no database upgrade. The sweep offers DONE, MAKE IT A
+  TASK, KEEP and DELETE; DELETE needs a hold and has UNDO, like DELETE on a logged entry. Example:
+  on a day off, "Sweep your notes · 6 waiting" → "Swept 6: 3 done, 1 task, 1 kept, 1 deleted."
 - **Plain words on screen (owner ruling 2026-10-04).** Text the operator reads says "today" / "the
   day", never "BeyondDay", and never "deterministic" or "STATE INPUT": the check-in row's label is
   CHECK-IN and the form's title "Check-in"; the End Day card says "Main sleep logged — today looks

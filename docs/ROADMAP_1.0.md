@@ -191,7 +191,20 @@ Codex can build it when Claude is out.
 Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
 PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
 
-Queue empty — Gavin adds the next item.
+Notes that go somewhere (owner rulings 2026-10-04: "1. A, 2. A, 3. A and B"): three Drops in this
+order; handoff and capsule stored as saved entries (events) like cue text; the sweep's choices are
+DONE / MAKE IT A TASK / KEEP plus DELETE.
+
+1. **NOTES-SWEEP-001 — day-off notes sweep** (ROUTINE). On a day off, TODAY offers "Sweep your
+   notes · 6 waiting" and walks open notes one at a time: DONE, MAKE IT A TASK, KEEP, or hold
+   DELETE (with UNDO). Example: Saturday morning clears the week's jotted notes in a minute.
+   Drop: `docs/agent/drops/NOTES-SWEEP-001.md`.
+2. **NOTES-HANDOFF-001 — shift handoff note** (HIGH-RISK: new stored data). After ending a work
+   period, "Note for next shift?"; it shows at the top of TODAY on the next work day. Example:
+   "Truck 12 brakes still soft, check first thing." Drop: `docs/agent/drops/NOTES-HANDOFF-001.md`.
+3. **NOTES-CAPSULE-001 — time capsule** (HIGH-RISK: new stored data). A note to future you that
+   opens in 1/3/6/12 months on TODAY. Example: "Three months from now: did the 5 a.m. workouts
+   stick?" Drop: `docs/agent/drops/NOTES-CAPSULE-001.md`.
 
 ### Known, not yet approved
 
@@ -201,7 +214,7 @@ Spotted but not briefed. The owner moves an item up into the Queue or drops it.
   suggestions. Each needs a brief; Engine rule adoption needs sign-off.
 - **Parking lot (owner brief 2026-10-04), no Drops yet:**
   - **Gym mode:** moved to the Queue as GYM-001 and GYM-002 (owner rulings 2026-10-04).
-  - **Notes that go somewhere:** day-off capture sweep, time capsule, shift handoff.
+  - **Notes that go somewhere:** moved to the Queue (NOTES-SWEEP-001, -HANDOFF-001, -CAPSULE-001), 2026-10-04.
   - **Data views (after the F1 review):** tap a number to see its story: lift strength curve,
     12-week training heat grid, a measure against its "your usual" band.
   - **Open-source parts to evaluate (licenses first):** free-exercise-db; wger (study only).
