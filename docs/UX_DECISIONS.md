@@ -353,6 +353,14 @@ below, this entry wins; the older entry is kept for history.
   entries (events) like cue text: in backups, no database upgrade. The sweep offers DONE, MAKE IT A
   TASK, KEEP and DELETE; DELETE needs a hold and has UNDO, like DELETE on a logged entry. Example:
   on a day off, "Sweep your notes · 6 waiting" → "Swept 6: 3 done, 1 task, 1 kept, 1 deleted."
+- **As built: shift handoff (NOTES-HANDOFF-001, PR #177, merged 2026-10-04, High-Risk).** MARK WORK
+  ENDED brings up "Note for next shift?" above TODAY (SAVE writes `SHIFT_HANDOFF_NOTED`; SKIP writes
+  nothing). The next work day opens with "From last shift · Tue, Oct 13" and the note until GOT IT
+  (`SHIFT_HANDOFF_READ`); unread notes show newest first; nothing on days off.
+- **Plan after Notes (owner ruling 2026-10-04, "2. A, 3. A").** Finish the time capsule, then a
+  phone-size walk-through of the live app with screenshots, a small review-note cleanup, then a
+  week of field use with no new features (field notes first). A separate GitHub review account so
+  independent reviews count as formal approvals; Gavin creates it, Claude never handles its token.
 - **As built in NOTES-SWEEP-001 (PR #175, merged 2026-10-04).** The sweep line sits above TODAY only on
   a day off with open notes. Each choice uses the existing capture/obligation commands, and DELETE removes the
   capture row (captures are mutable rows, not events). Example: hold DELETE on "Old grocery list", tap UNDO, and
