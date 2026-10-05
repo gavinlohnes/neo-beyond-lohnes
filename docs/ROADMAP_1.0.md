@@ -184,6 +184,7 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 - **NOTES-CAPSULE-001 — time capsule** (owner rulings 2026-10-04, 1A/2A): MORE → TIME CAPSULE seals a note for 1/3/6/12 months; it opens on TODAY that day until GOT IT; text hidden until then; stored as day-independent events. **Done (PR #179, merged 2026-10-04).**
 - **WALKTHROUGH-001 — phone-size walk-through** (owner ruling 2026-10-04): report in `docs/agent/WALKTHROUGH-001.md`, 13 screenshots; nothing broken, 13 polish findings for Gavin to pick from. **Done 2026-10-04.**
 - **GYM-POLISH-001 — gym screen follow-ups** (Gavin's "A" on #170, 2026-10-04): EXIT 56 px, focus into gym mode and Escape closes it, wake lock released before replaced, NEXT EXERCISE on a finished exercise. **Done (PR #171, merged 2026-10-04).**
+- **CLEANUP-002 — gym mode and TODAY polish** (Gavin's "Let's do B. All 13", 2026-10-04): walk-through findings 1–4, 11, 13 and the sweep's silent UNDO failure; e.g. gym mode shows "Last set: Machine Chest Press #1 — 110 × 10" with the PR tag and UNDO. **Done (PR #182, merged 2026-10-04).**
 
 ## Queue
 
@@ -195,13 +196,9 @@ Codex can build it when Claude is out.
 Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
 PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
 
-1. **CLEANUP-002 — gym mode and TODAY polish** (ROUTINE; Gavin's "Let's do B. All 13", 2026-10-04,
-   on the walk-through findings). Findings 1–4, 11, 13 and the sweep's silent UNDO failure. Example:
-   gym mode shows "Last set: Machine Chest Press #1 — 110 × 10 [PR] · UNDO". Drop:
-   `docs/agent/drops/CLEANUP-002.md`.
-2. **CLEANUP-003 — words and clutter** (ROUTINE). Findings 5–10 and 12 plus the Windows test
+1. **CLEANUP-003 — words and clutter** (ROUTINE). Findings 5–10 and 12 plus the Windows test
    timeouts. Then **a week of field use**: no new features; field notes first.
-3. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
+2. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
    for reviews (Claude walks him through it; Claude never creates accounts or handles the token),
    so independent reviews are formal approvals.
 
