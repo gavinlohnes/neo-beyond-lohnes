@@ -7,16 +7,22 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code.** `origin/master` at `7ea4533` (PR #179 merge).
+**Written 2026-10-04 by Claude Code (builder).** Baseline `origin/master` at `ca1c899` (PR #181,
+the walk-through report). Gavin ruled "Let's do B. All 13" on the walk-through findings; recorded
+in the roadmap and `docs/UX_DECISIONS.md`, split into CLEANUP-002 and CLEANUP-003.
 
-- **Drop:** none active. `NOTES-CAPSULE-001` merged on Gavin's "A" (independent review APPROVE,
-  PR Verification green on the reviewed head) and closed here. "Notes that go somewhere" is
-  complete: NOTES-SWEEP-001 (#175), NOTES-HANDOFF-001 (#177), NOTES-CAPSULE-001 (#179).
-- **Next (Queue):** WALKTHROUGH-001 (phone-size walk-through with screenshots, report only), then
-  CLEANUP-002, then a week of field use; Gavin is setting up the review account.
-- **Capsule review notes (non-blocking):** capsule events have no day, so History (grouped by
-  day) never lists them; TODAY checks for due capsules on load only; any future code reading all
-  events must not assume a day/mission/journal id.
+- **Drop:** `CLEANUP-002` gym mode and TODAY polish: ROUTINE, `ACTIVE`. Branch
+  `claude/cleanup-002`. **PR:** [#182](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/182).
+- **Done:** findings 1–2 (gym mode "Last set" line with PR tag and UNDO), 3 (TODAY lines in a
+  `banners` slot under the header), 4 (day off: Attention points to the sweep; TODAY says "task"),
+  11 (dominant TODAY card centers its contents), 13 (work-context change re-reads the sweep), and a
+  failed sweep UNDO now shows a message.
+- **Tests:** `tests/browser/Cleanup002.test.tsx` (6); TodayScreen capture tests updated to the
+  "task" wording.
+- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run
+  --testTimeout 60000`: 2,023 passed, 0 failed; `build` OK; `git diff --check` OK.
+- **Left:** review, merge on green, close. Then CLEANUP-003 (findings 5–10, 12, Windows test
+  timeouts), then a week of field use; Gavin is setting up the review account.
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because

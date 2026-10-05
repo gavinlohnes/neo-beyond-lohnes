@@ -2429,3 +2429,42 @@ body:has(.hud-legacy) {
   margin: var(--space-3) 0 0;
   padding: 0;
 }
+
+/* CLEANUP-002 (walk-through findings 1–2): gym mode's "Last set" line with
+   the PR tag and UNDO. */
+.gym-mode__last {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+.gym-mode__last-text {
+  min-width: 0;
+}
+.gym-mode__undo {
+  width: auto;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 8px 16px;
+}
+
+/* CLEANUP-002 (walk-through finding 3): the shell's lines now render inside
+   TODAY under its header, so they drop their own column gutter. */
+.today-banners > .backup-due,
+.today-banners > .notes-sweep,
+.today-banners > .shift-handoff {
+  max-width: none;
+  padding: 0;
+  margin: 0 0 var(--space-3);
+}
+
+/* CLEANUP-002 (walk-through finding 11): a short dominant card (START DAY)
+   centers its contents instead of leaving an empty block below them. */
+.today-field .command-surface {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}

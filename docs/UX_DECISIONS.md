@@ -366,6 +366,10 @@ below, this entry wins; the older entry is kept for history.
   phone-size walk-through of the live app with screenshots, a small review-note cleanup, then a
   week of field use with no new features (field notes first). A separate GitHub review account so
   independent reviews count as formal approvals; Gavin creates it, Claude never handles its token.
+- **Walk-through findings: fix all 13 (owner ruling 2026-10-04, "Let's do B. All 13").** Split into
+  CLEANUP-002 (gym mode and TODAY) and CLEANUP-003 (words and clutter). TODAY says "task", not
+  "obligation", for turning a note into something to do (the sweep's "MAKE IT A TASK"; Attention's
+  "→ TASK"). Example: gym mode gains a "Last set" line with the PR tag and UNDO.
 - **As built in NOTES-SWEEP-001 (PR #175, merged 2026-10-04).** The sweep line sits above TODAY only on
   a day off with open notes. Each choice uses the existing capture/obligation commands, and DELETE removes the
   capture row (captures are mutable rows, not events). Example: hold DELETE on "Old grocery list", tap UNDO, and

@@ -34,6 +34,10 @@ export interface GymModeProps {
   onNextExercise: () => void;
   /** GYM-002: saves this lift's cue (TRAIN writes it under the workout's day). "" clears it. */
   onSaveCue: (exerciseId: string, cue: string) => Promise<void>;
+  /** CLEANUP-002: the session's most recent set, with its PR line when it was a record. */
+  lastSet: { label: string; record?: string } | undefined;
+  /** CLEANUP-002: undoes that set (TRAIN's own handleUndoLastSet). */
+  onUndoLastSet: () => void;
 }
 
 type WakeLockSentinelLike = { release: () => Promise<void> };
@@ -150,6 +154,25 @@ export function GymMode(props: GymModeProps) {
             SKIP
           </button>
         </>
+      )}
+
+      {props.lastSet && (
+        <div className="gym-mode__last">
+          <div className="gym-mode__last-text">
+            <p className="meta" style={{ margin: 0 }}>
+              Last set: {props.lastSet.label}
+            </p>
+            {props.lastSet.record && (
+              <p className="meta-strong pr-line">
+                <span className="pr-tag">PR</span>
+                <span>{props.lastSet.record}</span>
+              </p>
+            )}
+          </div>
+          <button type="button" className="btn-secondary gym-mode__undo" disabled={props.busy} onClick={props.onUndoLastSet}>
+            UNDO
+          </button>
+        </div>
       )}
 
       {props.restLabel && (

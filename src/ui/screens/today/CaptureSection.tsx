@@ -50,7 +50,7 @@ export function CaptureListRow({
             disabled={busy}
             onClick={() => (converting ? onCancelConversion() : onRequestConversion(item))}
           >
-            {converting ? "CANCEL" : "→ OBLIGATION"}
+            {converting ? "CANCEL" : "→ TASK"}
           </button>
           <button
             className="btn-secondary"
@@ -98,7 +98,7 @@ export function CaptureListRow({
             disabled={busy || !conversionTitle.trim()}
             onClick={onConfirmConversion}
           >
-            CREATE OBLIGATION
+            CREATE TASK
           </button>
         </div>
       )}

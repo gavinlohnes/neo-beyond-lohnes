@@ -754,6 +754,21 @@ export function TrainScreen({
   // state, recomputed on every render — no separate query/state needed.
   const progressionCounts = summarizeProgressionSuggestions(currentProgressionSuggestions);
 
+  // CLEANUP-002: gym mode's "Last set" line — the session's most recent set (the same one
+  // undoLastSet would undo), with its PR wording when it was a record.
+  function describeGymLastSet(): { label: string; record?: string } | undefined {
+    const last = sets.reduce<PerformedSet | null>((latest, s) => {
+      if (!latest) return s;
+      if (s.recordedAt !== latest.recordedAt) return s.recordedAt > latest.recordedAt ? s : latest;
+      return s.setNumber > latest.setNumber ? s : latest;
+    }, null);
+    if (!last) return undefined;
+    const name = activeExercises.find((ex) => ex.exerciseId === last.exerciseId)?.name ?? last.exerciseId;
+    const label = `${name} #${last.setNumber} — ${last.skipped ? "skipped" : `${last.weight} × ${last.reps}`}`;
+    const record = sessionRecords.get(last.id);
+    return record ? { label, record: describePersonalRecord(record).replace("NEW PR — ", "") } : { label };
+  }
+
   // GYM-POLISH-001: closing gym mode hands keyboard focus back to its button.
   const closeGymMode = useCallback(() => {
     setGymModeOpen(false);
@@ -1220,6 +1235,8 @@ export function TrainScreen({
               onSkip={() => currentSetNumber !== null && void handleSkipSet(currentExercise.exerciseId, currentSetNumber)}
               onExit={closeGymMode}
               onNextExercise={() => setFocusedExerciseId(null)}
+              lastSet={describeGymLastSet()}
+              onUndoLastSet={() => void handleUndoLastSet()}
               onSaveCue={async (exerciseId, cue) => {
                 await setExerciseCue(session.beyondDayId, exerciseId, cue);
               }}

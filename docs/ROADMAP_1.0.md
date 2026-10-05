@@ -195,10 +195,13 @@ Codex can build it when Claude is out.
 Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
 PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
 
-1. **CLEANUP-002 — review-note cleanup** (ROUTINE). The sweep notices a work-day/day-off switch
-   without reopening TODAY; a failed UNDO shows a message; Windows test timeouts for the factory
-   tests. Then **a week of field use**: no new features; field notes first.
-2. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
+1. **CLEANUP-002 — gym mode and TODAY polish** (ROUTINE; Gavin's "Let's do B. All 13", 2026-10-04,
+   on the walk-through findings). Findings 1–4, 11, 13 and the sweep's silent UNDO failure. Example:
+   gym mode shows "Last set: Machine Chest Press #1 — 110 × 10 [PR] · UNDO". Drop:
+   `docs/agent/drops/CLEANUP-002.md`.
+2. **CLEANUP-003 — words and clutter** (ROUTINE). Findings 5–10 and 12 plus the Windows test
+   timeouts. Then **a week of field use**: no new features; field notes first.
+3. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
    for reviews (Claude walks him through it; Claude never creates accounts or handles the token),
    so independent reviews are formal approvals.
 

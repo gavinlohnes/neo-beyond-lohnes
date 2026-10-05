@@ -16,7 +16,7 @@ type Outcome = "DONE" | "TASK" | "KEPT" | "DELETED";
  * be undone until the sweep moves on. Renders nothing on work days or with
  * no notes waiting. `onSwept` lets TODAY refresh its own capture count.
  */
-export function NotesSweep({ onSwept }: { onSwept: () => void }) {
+export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; refreshKey?: number }) {
   const [items, setItems] = useState<CaptureItem[] | null>(null);
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
@@ -35,7 +35,7 @@ export function NotesSweep({ onSwept }: { onSwept: () => void }) {
     return () => {
       current = false;
     };
-  }, [loadKey]);
+  }, [loadKey, refreshKey]);
 
   if (!items || (items.length === 0 && outcomes.length === 0)) return null;
 
@@ -81,6 +81,9 @@ export function NotesSweep({ onSwept }: { onSwept: () => void }) {
       setDeleted(null);
       setOutcomes((prev) => prev.slice(0, -1));
       setIndex((i) => i - 1);
+    } catch {
+      // CLEANUP-002: a failed UNDO used to fail silently.
+      setError("Couldn't bring it back. Try again.");
     } finally {
       setBusy(false);
     }
@@ -128,6 +131,11 @@ export function NotesSweep({ onSwept }: { onSwept: () => void }) {
             <button type="button" className="btn-primary" onClick={close}>
               CLOSE
             </button>
+            {error && (
+              <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
+                {error}
+              </p>
+            )}
           </>
         ) : (
           note && (

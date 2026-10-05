@@ -286,17 +286,24 @@ export function App() {
             rather than deep-linking to the specific Obligation, which would
             require lifting new state through MoreScreen/IntentScreen too. */}
         {/* BACKUP-AUTO-001: one line above TODAY when automatic backup is on and due. */}
-        {tab === "TODAY" && <BackupDueLine />}
-        {/* NOTES-SWEEP-001: on a day off, one line offers to sweep open notes; TODAY re-reads after. */}
-        {tab === "TODAY" && <NotesSweep onSwept={() => setTodayRefreshKey((k) => k + 1)} />}
-        {/* NOTES-HANDOFF-001: "Note for next shift?" after work ends; "From last shift" on the next work day. */}
-        {tab === "TODAY" && <ShiftHandoff refreshKey={workEndedKey} />}
-        {/* NOTES-CAPSULE-001: a time capsule whose day has come, until GOT IT. */}
-        {tab === "TODAY" && <TimeCapsuleOpened />}
         {tab === "TODAY" && (
           <TodayScreen
             key={todayRefreshKey}
             onWorkEnded={() => setWorkEndedKey((k) => k + 1)}
+            onWorkContextChanged={() => setWorkEndedKey((k) => k + 1)}
+            // CLEANUP-002: these lines render inside TODAY, under its header.
+            banners={
+              <>
+                {/* BACKUP-AUTO-001: one line when automatic backup is on and due. */}
+                <BackupDueLine />
+                {/* NOTES-SWEEP-001: on a day off, one line offers to sweep open notes; TODAY re-reads after. */}
+                <NotesSweep refreshKey={workEndedKey} onSwept={() => setTodayRefreshKey((k) => k + 1)} />
+                {/* NOTES-HANDOFF-001: "Note for next shift?" after work ends; "From last shift" on the next work day. */}
+                <ShiftHandoff refreshKey={workEndedKey} />
+                {/* NOTES-CAPSULE-001: a time capsule whose day has come, until GOT IT. */}
+                <TimeCapsuleOpened />
+              </>
+            }
             onViewCommitments={() => showTab("MORE")}
             onOpenTrain={openTrain}
             openToolsOnMount={todayToolsOpen}
