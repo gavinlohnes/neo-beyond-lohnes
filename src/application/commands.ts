@@ -18,7 +18,10 @@ import type {
   WaterLoggedPayload,
   WorkContextSetPayload,
   WorkContextSource,
+  ShiftHandoffNotedPayload,
+  ShiftHandoffReadPayload,
 } from "../domain/common/types";
+import { SHIFT_HANDOFF_MAX_LENGTH } from "../domain/common/types";
 import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
 import { getStandingWorkContext, getWorkPeriodEnded, hasActivePlannedWork, hasUnresolvedPostShift } from "./queries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
@@ -1241,4 +1244,27 @@ export async function logEvent(
   };
   await db.events.add(event);
   return event.id;
+}
+
+/**
+ * NOTES-HANDOFF-001 (owner rulings 2026-10-04): saves a note for the next
+ * shift on the day whose work period just ended. Trimmed; empty or over
+ * SHIFT_HANDOFF_MAX_LENGTH is rejected without writing.
+ */
+export async function noteShiftHandoff(beyondDayId: string, note: string): Promise<string> {
+  const trimmed = note.trim();
+  if (!trimmed) throw new Error("EMPTY_HANDOFF: Write a note, or skip it.");
+  if (trimmed.length > SHIFT_HANDOFF_MAX_LENGTH) {
+    throw new Error(`HANDOFF_TOO_LONG: Keep it to ${SHIFT_HANDOFF_MAX_LENGTH} characters.`);
+  }
+  const correlationId = newId();
+  const payload: ShiftHandoffNotedPayload = { commandId: correlationId, note: trimmed };
+  return logEvent(beyondDayId, "SHIFT_HANDOFF_NOTED", payload, "USER", correlationId);
+}
+
+/** NOTES-HANDOFF-001: GOT IT on a shown handoff, recorded under the day it was read. */
+export async function markShiftHandoffRead(beyondDayId: string, handoffEventId: string): Promise<void> {
+  const correlationId = newId();
+  const payload: ShiftHandoffReadPayload = { commandId: correlationId, handoffEventId };
+  await logEvent(beyondDayId, "SHIFT_HANDOFF_READ", payload, "USER", correlationId, handoffEventId);
 }

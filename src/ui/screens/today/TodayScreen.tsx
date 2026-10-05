@@ -197,12 +197,15 @@ export function TodayScreen({
   onOpenTrain,
   onOpenBody,
   openToolsOnMount = false,
+  onWorkEnded,
 }: {
   onViewCommitments?: () => void;
   onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
   onOpenBody?: (target?: BodyFocus) => void;
   /** Drop 2: open with TOOLS expanded (MORE's capture link lands in it). */
   openToolsOnMount?: boolean;
+  /** NOTES-HANDOFF-001: told after MARK WORK ENDED succeeds, so the shell can ask for a handoff note. */
+  onWorkEnded?: () => void;
 } = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
@@ -1003,6 +1006,7 @@ export function TodayScreen({
       await markWorkEnded(day.id);
       setWorkContextOpen(false);
       await refresh();
+      onWorkEnded?.();
     } finally {
       busyRef.current = false;
       setBusy(false);
