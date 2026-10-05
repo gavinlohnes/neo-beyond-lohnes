@@ -357,6 +357,11 @@ below, this entry wins; the older entry is kept for history.
   ENDED brings up "Note for next shift?" above TODAY (SAVE writes `SHIFT_HANDOFF_NOTED`; SKIP writes
   nothing). The next work day opens with "From last shift · Tue, Oct 13" and the note until GOT IT
   (`SHIFT_HANDOFF_READ`); unread notes show newest first; nothing on days off.
+- **As built: time capsule (NOTES-CAPSULE-001, PR #179, merged 2026-10-04, High-Risk).** MORE →
+  Direction → TIME CAPSULE → WRITE ONE seals a note (up to 500 characters) for 1 month, 3 months,
+  6 months or 1 year; MORE lists sealed ones by date only ("Sealed Oct 4, 2026 · opens Jan 4,
+  2027"); on the day, TODAY shows "TIME CAPSULE · A NOTE FROM OCT 4, 2026" with the note until GOT
+  IT. Stored as `TIME_CAPSULE_SEALED` / `TIME_CAPSULE_OPENED` events with no day attached.
 - **Plan after Notes (owner ruling 2026-10-04, "2. A, 3. A").** Finish the time capsule, then a
   phone-size walk-through of the live app with screenshots, a small review-note cleanup, then a
   week of field use with no new features (field notes first). A separate GitHub review account so
