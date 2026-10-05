@@ -13,7 +13,7 @@ Gavin queued "Notes that go somewhere" with rulings 1A (three Drops: sweep, hand
 TASK / KEEP plus DELETE); recorded in the roadmap Queue, `docs/UX_DECISIONS.md` and three Drops.
 
 - **Drop:** `NOTES-SWEEP-001` day-off notes sweep: ROUTINE, `ACTIVE`. Branch
-  `claude/notes-sweep-001`. **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+  `claude/notes-sweep-001`. **PR:** [#175](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/175).
 - **Done:** `ui/components/NotesSweep.tsx` above TODAY (App) when the active day is OFF and open
   notes exist; DONE / MAKE IT A TASK / KEEP / hold DELETE with UNDO; summary line; TODAY remounts
   after a sweep (App `todayRefreshKey`) so its capture count matches. New `deleteCaptureItem` /

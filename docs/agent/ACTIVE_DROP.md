@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: 8f0565a04e9dee0485fbd6072b7cfe98e0ae8527
 branch: claude/notes-sweep-001
 contract: docs/agent/drops/NOTES-SWEEP-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/175
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
