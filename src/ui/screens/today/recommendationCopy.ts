@@ -1,3 +1,4 @@
+import { describeReason } from "./capacityCopy";
 import type { Outcome, RecommendationKind } from "../../../domain/common/types";
 import type { RecommendationDecision, RecommendationHandoffTarget } from "../../../application/queries";
 
@@ -93,7 +94,17 @@ export function describeTraceLabel(key: string): string {
 export function describeTraceValue(value: string | number | boolean): string {
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (value === "") return "—";
-  return String(value);
+  // CLEANUP-003 (walk-through finding 8): capacity reason codes in the same plain words TODAY uses.
+  return describeReason(String(value));
+}
+
+/** CLEANUP-003 (walk-through finding 8): the Engine's selection reason, in plain words where it's a fixed phrase. */
+const PLAIN_SELECTION_REASONS: Record<string, string> = {
+  "No higher-priority rule matched.": "Nothing else needed attention first.",
+};
+
+export function describeSelectionReason(reason: string): string {
+  return PLAIN_SELECTION_REASONS[reason] ?? reason;
 }
 
 /** Observational history only: names the recorded fact without implying that it predicts the current result. */

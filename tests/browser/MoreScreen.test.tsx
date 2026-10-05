@@ -43,7 +43,7 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await expect.element(screen.getByRole("button", { name: "Open REVIEW" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open SEARCH" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "EXPORT BACKUP" })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "SHARE / ARCHIVE" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "SHARE BACKUP" })).toBeVisible();
     await expect.element(screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true })).toBeVisible();
   });
 

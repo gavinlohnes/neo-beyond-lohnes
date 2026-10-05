@@ -395,3 +395,9 @@ export async function getExerciseCues(): Promise<Map<string, string>> {
   }
   return cues;
 }
+
+/** CLEANUP-003 (walk-through finding 10): whether a workout was finished (COMPLETED or PARTIAL) on this day. */
+export async function hasFinishedWorkoutOnDay(beyondDayId: string): Promise<boolean> {
+  const sessions = await db.workoutSessions.where("beyondDayId").equals(beyondDayId).toArray();
+  return sessions.some((s) => s.status === "COMPLETED" || s.status === "PARTIAL");
+}

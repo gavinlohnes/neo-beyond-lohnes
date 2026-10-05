@@ -31,6 +31,7 @@ import {
   getProgressionSuggestion,
   getRecentStrengthSessions,
   getRecentSubstitutions,
+  hasFinishedWorkoutOnDay,
   suggestTemplateForNextWorkout,
   type LastSetInfo,
   type LastStrengthSessionSummary,
@@ -161,6 +162,8 @@ export function TrainScreen({
   const [noCheckIn, setNoCheckIn] = useState(false);
   const [plannedWorkDeclaration, setPlannedWorkDeclaration] = useState<boolean | undefined>(undefined);
   const [plannedWorkOpen, setPlannedWorkOpen] = useState(false);
+  // CLEANUP-003 (walk-through finding 10): no "Planning to train today?" once today's workout is done.
+  const [workoutFinishedToday, setWorkoutFinishedToday] = useState(false);
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [sets, setSets] = useState<PerformedSet[]>([]);
   const [busy, setBusy] = useState(false);
@@ -294,6 +297,7 @@ export function TrainScreen({
     // an honest hasPlannedWork record for the day, same PLANNED_WORK_SET
     // fact, same "explicit, never inferred" doctrine (PLANNED-WORK-001).
     setPlannedWorkDeclaration(activeDay ? await getPlannedWorkDeclaration(activeDay.id) : undefined);
+    setWorkoutFinishedToday(activeDay ? await hasFinishedWorkoutOnDay(activeDay.id) : false);
 
     const loadedCustomTemplates = await getCustomTemplates();
     setCustomTemplates(loadedCustomTemplates);
@@ -1055,7 +1059,7 @@ export function TrainScreen({
 
       {/* LAUNCH POLISH (owner approval 2026-10-01): the suggested workout leads;
           the planned-work question sits under it instead of above it. */}
-      {!session && !completionSummary && (
+      {!session && !completionSummary && !workoutFinishedToday && (
         <PlannedWorkCard
           declaration={plannedWorkDeclaration}
           open={plannedWorkOpen}

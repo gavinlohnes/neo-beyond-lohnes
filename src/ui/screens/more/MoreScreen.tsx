@@ -222,8 +222,8 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
       const result = await shareBackup();
       setArchiveStatus(
         result.shared
-          ? "Sent to share sheet — pick a destination there."
-          : "Share sheet unavailable on this device; downloaded a backup file instead.",
+          ? "Sent to your share menu — pick where it goes."
+          : "No share menu on this device, so the backup file was downloaded instead.",
       );
     } catch (e) {
       setArchiveStatus(describeError(e, "Could not start archive."));
@@ -492,25 +492,21 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
         <p className="card-body" style={{ marginBottom: 8 }}>
           A file with everything on this device. Nothing leaves unless you share it.
         </p>
-        <button className="btn-secondary" disabled={busy} onClick={() => void handleExportBackup()}>
-          EXPORT BACKUP
-        </button>
+        {/* CLEANUP-003 (walk-through finding 12): one backup row — download here, or send it
+            through the phone's share menu (the old ARCHIVE row's job). */}
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleExportBackup()}>
+            EXPORT BACKUP
+          </button>
+          <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleArchive()}>
+            SHARE BACKUP
+          </button>
+        </div>
         <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>{describeLastBackup(daysSinceBackup)}</p>
+        {archiveStatus && <p className="meta" style={{ marginTop: 8 }}>{archiveStatus}</p>}
         </div>
 
         <AutoBackupSettings />
-
-        <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>ARCHIVE</p>
-        <p className="card-body" style={{ marginBottom: 8 }}>
-          Quarterly archival via the device's native share sheet — you pick the destination (e.g. Drive).
-          Data stays on-device; this never deletes anything.
-        </p>
-        <button className="btn-secondary" disabled={busy} onClick={() => void handleArchive()}>
-          SHARE / ARCHIVE
-        </button>
-        {archiveStatus && <p className="meta" style={{ marginTop: 8 }}>{archiveStatus}</p>}
-        </div>
 
       {/* Restore is the one genuinely dangerous, rare action on this
           screen — replaces everything on the device. Kept functionally

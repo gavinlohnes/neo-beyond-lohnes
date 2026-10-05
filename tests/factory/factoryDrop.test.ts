@@ -1,9 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+// CLEANUP-003: these tests build real git repositories; on Windows that takes longer than
+// vitest's 5 s default, so they get a minute each.
+vi.setConfig({ testTimeout: 60_000 });
 
 /**
  * FACTORY-002 (Development Factory V1): automated proof of scripts/

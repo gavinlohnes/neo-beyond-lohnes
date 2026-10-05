@@ -74,7 +74,7 @@ export function TransformationTimeline() {
           <button
             key={f.kind}
             type="button"
-            className={`chip${hidden.has(f.kind) ? "" : " chip--selected"}`}
+            className="chip timeline__chip"
             aria-pressed={!hidden.has(f.kind)}
             onClick={() => toggle(f.kind)}
           >
