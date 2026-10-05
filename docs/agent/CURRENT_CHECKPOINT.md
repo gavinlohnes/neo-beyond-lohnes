@@ -12,7 +12,7 @@ NOTES-SWEEP-001 closed).
 
 - **Drop:** `NOTES-HANDOFF-001` shift handoff: HIGH-RISK (new stored data; storage ruled 2A by
   Gavin 2026-10-04; Gavin approves the merge), `ACTIVE`. Branch `claude/notes-handoff-001`.
-  **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+  **PR:** [#177](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/177).
 - **Done:** new events `SHIFT_HANDOFF_NOTED` {commandId, note} and `SHIFT_HANDOFF_READ`
   {commandId, handoffEventId}; `noteShiftHandoff` / `markShiftHandoffRead` in `commands.ts`
   (trim, 1–280 chars); `application/shiftHandoffQueries.ts` (prompt after WORK_PERIOD_ENDED on a
