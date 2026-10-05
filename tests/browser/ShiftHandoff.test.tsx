@@ -61,6 +61,8 @@ describe("NOTES-HANDOFF-001 — shift handoff", () => {
     const screen = await render(<App />);
     await expect.element(screen.getByText("Truck 12 brakes still soft")).toBeVisible();
     await expect.element(screen.getByText(/^FROM LAST SHIFT · /)).toBeVisible();
+    // Inside TODAY, whose entrance animation briefly scales it; measure at rest.
+    for (const animation of document.getAnimations()) animation.finish();
     expect(screen.getByRole("button", { name: "GOT IT", exact: true }).element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     await screen.getByRole("button", { name: "GOT IT", exact: true }).click();
     await expect.poll(() => document.querySelector(".shift-handoff")).toBeNull();

@@ -92,6 +92,19 @@ describe("CLEANUP-002", () => {
     await expect.element(screen.getByText("Sweep your notes · 1 waiting")).toBeVisible();
   });
 
+  it("switching to a day off on TODAY brings up the sweep line without reopening (finding 13, App wiring)", async () => {
+    const day = await startDay();
+    await setWorkContext(day.id, "WORK", "MANUAL");
+    await captureItem("Call the dentist");
+    const screen = await render(<App />);
+    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toBeVisible();
+    expect(document.querySelector(".notes-sweep")).toBeNull();
+    await screen.getByRole("button", { name: "Open TOOLS" }).click();
+    await screen.getByRole("button", { name: "CHANGE WORK CONTEXT" }).click();
+    await screen.getByRole("button", { name: "NO", exact: true }).click();
+    await expect.element(screen.getByText("Sweep your notes · 1 waiting")).toBeVisible();
+  });
+
   it("a failed sweep UNDO says so", async () => {
     const day = await startDay();
     await setWorkContext(day.id, "OFF", "MANUAL");

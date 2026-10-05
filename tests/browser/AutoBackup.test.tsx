@@ -48,6 +48,8 @@ describe("BACKUP-AUTO-001 — automatic backup", () => {
     const button = screen.getByRole("button", { name: "BACK UP NOW" });
     await expect.element(button).toBeVisible();
     await expect.element(screen.getByText("Backup due", { exact: true })).toBeVisible();
+    // The line now sits inside TODAY, whose entrance animation briefly scales it; measure at rest.
+    for (const animation of document.getAnimations()) animation.finish();
     expect(button.element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
 
