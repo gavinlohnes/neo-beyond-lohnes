@@ -1,6 +1,6 @@
 ---
 id: NOTES-CAPSULE-001
-baseline: SET_AT_INIT
+baseline: cc28335df2d9e67ba9a27a8511196ef0b6d86e18
 risk_tier: HIGH-RISK
 ---
 
@@ -14,12 +14,13 @@ and appears on TODAY that day. Owner brief 2026-10-04 ("Notes that go somewhere"
 
 ## Approved baseline
 
-Set to a fresh `origin/master` SHA before `factory-drop.mjs init`.
+`origin/master` at `cc28335df2d9e67ba9a27a8511196ef0b6d86e18`.
 
 ## Risk classification
 
 HIGH-RISK: new stored data (backup contract). Owner storage ruling obtained (2A): a new event
-type `TIME_CAPSULE_SEALED` {commandId, note, opensOn (local date)} in the existing events table;
+type `TIME_CAPSULE_SEALED` {commandId, note, opensOn (local date)} in the existing events table, not
+tied to a day (no `beyondDayId`, like Decision Journal events);
 opening records `TIME_CAPSULE_OPENED` {commandId, capsuleEventId}. No `db.version` change, no new
 table. Gavin approves the merge.
 
