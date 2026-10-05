@@ -374,6 +374,12 @@ below, this entry wins; the older entry is kept for history.
   render inside TODAY under its header; on a day off Attention's CAPTURE points to the sweep instead of
   listing the notes. Example: gym mode shows "Last set: Machine Chest Press #1 — 110 × 10" with the PR tag
   and UNDO, which removes the same set TRAIN's UNDO LAST SET would.
+- **As built in CLEANUP-003 (PR #184, merged 2026-10-04).** Engine wording is translated on screen only
+  (display maps; the Engine's strings are unchanged); BODY times show hour:minute; the timeline's chips are
+  outlined and replace the 60-day line while open; "Planning to train today?" hides after a finished
+  (COMPLETED or PARTIAL) workout; MORE's backup row offers EXPORT BACKUP and SHARE BACKUP, with no separate
+  ARCHIVE row. Example: "How BEYOND decided" reads "Nothing else needed attention first." instead of "No
+  higher-priority rule matched."
 - **As built in NOTES-SWEEP-001 (PR #175, merged 2026-10-04).** The sweep line sits above TODAY only on
   a day off with open notes. Each choice uses the existing capture/obligation commands, and DELETE removes the
   capture row (captures are mutable rows, not events). Example: hold DELETE on "Old grocery list", tap UNDO, and
