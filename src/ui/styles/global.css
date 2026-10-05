@@ -2468,3 +2468,15 @@ body:has(.hud-legacy) {
   flex-direction: column;
   justify-content: center;
 }
+
+/* CLEANUP-003 (walk-through finding 9): the timeline's filter chips are
+   outlined, not solid white — on reads as a bright outline, off as quiet. */
+.timeline__filters .timeline__chip {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-3-strong);
+}
+.timeline__filters .timeline__chip[aria-pressed="true"] {
+  border-color: var(--text-1);
+  color: var(--text-1);
+}

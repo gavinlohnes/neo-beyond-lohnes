@@ -18,7 +18,16 @@ const PAD = 4;
  * ink only; red never decorates. Renders nothing until there are two
  * weigh-ins to draw a line between.
  */
-export function WeightTrend({ history, goalWeightLbs }: { history: readonly WeighIn[]; goalWeightLbs?: number | undefined }) {
+export function WeightTrend({
+  history,
+  goalWeightLbs,
+  hideChart = false,
+}: {
+  history: readonly WeighIn[];
+  goalWeightLbs?: number | undefined;
+  /** CLEANUP-003: the facts stay; the 60-day line hides while the timeline is open. */
+  hideChart?: boolean;
+}) {
   const latest = history.at(-1);
   if (!latest || history.length < 2) return null;
 
@@ -44,8 +53,8 @@ export function WeightTrend({ history, goalWeightLbs }: { history: readonly Weig
 
   return (
     <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-      <p className="meta" style={{ marginBottom: 6 }}>Last {WINDOW_DAYS} days</p>
-      <svg
+      {!hideChart && <p className="meta" style={{ marginBottom: 6 }}>Last {WINDOW_DAYS} days</p>}
+      {!hideChart && <svg
         role="img"
         aria-label={`Weight over the last ${WINDOW_DAYS} days, from ${shown[0]!.weightLbs} to ${latest.weightLbs} lb`}
         viewBox={`0 0 ${W} ${H}`}
@@ -75,7 +84,7 @@ export function WeightTrend({ history, goalWeightLbs }: { history: readonly Weig
           />
         )}
         <circle cx={x(latest.recordedAt)} cy={y(latest.weightLbs)} r={3} fill="var(--text-1)" />
-      </svg>
+      </svg>}
       {bestSince && <p className="meta-strong" style={{ margin: "8px 0 0" }}>{bestSince}</p>}
       {milestone && <p className="meta" style={{ margin: "4px 0 0" }}>{milestone}</p>}
       {projection.kind === "DATE" && (

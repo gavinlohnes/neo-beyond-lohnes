@@ -7,25 +7,25 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (reviewer/integrator).** `origin/master` at `02f5c66` (PR #182
-merge). CLEANUP-002 is merged and closed; no Drop is active.
+**Written 2026-10-04 by Claude Code (builder).** Baseline `origin/master` at `70e2ec2` (PR #183,
+CLEANUP-002 closed).
 
-- **Drop:** `CLEANUP-002` gym mode and TODAY polish: ROUTINE, `CLOSED` at integration `02f5c66`.
-  **PR:** [#182](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/182), merged after an
-  independent review. Close-out branch `claude/cleanup-002-close` (this docs PR).
-- **Done:** findings 1–2 (gym mode "Last set" line with PR tag and UNDO), 3 (TODAY lines under the
-  header), 4 (day off: Attention points to the sweep; TODAY says "task"), 11 (dominant TODAY card
-  centered), 13 (work-context change re-reads the sweep), and a failed sweep UNDO shows a message.
-  The first CI run failed: the 44px size checks for the backup and shift-handoff buttons measured
-  mid fade-in (43.99999). The tests now finish animations before measuring, and an App-level test for
-  finding 13 was added.
-- **Verification run:** reviewer: `check:architecture` OK; `typecheck` OK; targeted browser suites
-  green; mutation checks (PR tag, banner position, App wiring) each caught; PR Verification green
-  on head `30abdc1`.
-- **Next:** CLEANUP-003 (findings 5–10, 12, Windows test timeouts), then a week of field use;
-  Gavin is setting up the review account.
-- **Review notes (non-blocking):** TODAY's lines now remount when a sweep closes (TODAY reloads), so
-  a half-typed shift note would be lost if a sweep closes at the same moment.
+- **Drop:** `CLEANUP-003` words and clutter: ROUTINE, `ACTIVE`. Branch `claude/cleanup-003`.
+  **PR:** [#184](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/184).
+- **Done:** walk-through findings 5 ("first time"), 6 (TRAIN advice reasons via a display map in
+  `trainCopy.ts`; engine strings unchanged), 7 (BODY times without seconds), 8 (decision panel uses
+  the capacity plain labels and "Nothing else needed attention first."), 9 (outlined timeline
+  chips; the 60-day line hides while the timeline is open), 10 ("Planning to train today?" hides
+  after a finished workout; `hasFinishedWorkoutOnDay`), 12 (one BACKUP row with EXPORT and SHARE;
+  ARCHIVE row removed, same share action); factoryDrop tests get a 60 s timeout.
+- **Tests:** `tests/ui/cleanup003Copy.test.ts`, `tests/browser/Cleanup003.test.tsx`; three tests
+  updated to the plain wording.
+- **Verification run:** `check:architecture` OK; `typecheck` OK; full `npx vitest run` (no
+  timeout flag): 2,030 passed, 0 failed; `build` OK; `git diff --check` OK.
+- **Left:** review, merge on green, close. That finishes everything Gavin has approved; next is a
+  week of field use (no new features) and the review account Gavin is setting up.
+- **Known small thing:** on TRAIN the planned-work question can show for a moment before it hides
+  after a finished workout (it waits on one read).
 - **Open risks:** the backup line shows only on TODAY (the screen BEYOND opens to). If the share
   menu is cancelled, the line shows the browser's own wording (e.g. "Share canceled."). A
   weeks-old backup will usually report "differs from this device" in the restore check, because

@@ -132,6 +132,20 @@ export function describePartialAdvancementResult(sessionType: SessionType): stri
 }
 
 /**
+ * CLEANUP-003 (walk-through finding 6): the progression engine's fixed
+ * reasons (src/engine/progression.ts) in the words TRAIN shows. A display
+ * map only, like capacityCopy.ts; an unknown reason shows as written.
+ */
+const PLAIN_ADVICE_REASONS: Record<string, string> = {
+  "No prior performance recorded for this exercise in this context yet.":
+    "First time doing this one here, so there's nothing to compare yet.",
+  "Incomplete evidence last time (fewer sets performed than prescribed, or one was skipped).":
+    "Last time a set was skipped or short, so keep the same weight.",
+  "Mixed weights across sets last time — not clean evidence either way.":
+    "Last time the weight changed between sets, so keep it the same.",
+};
+
+/**
  * Product Experience Sprint, P4 (workout completion state): a short label
  * for evaluateProgression's recommendation, used only to say which way an
  * advisory changed ("hold -> increase") in the completion summary — never
@@ -147,7 +161,8 @@ export function describeRecommendationLabel(recommendation: ProgressionSuggestio
     case "REDUCE":
       return "lower the weight";
     case "NO_HISTORY":
-      return "not enough history yet";
+      // CLEANUP-003 (walk-through finding 5): plain words.
+      return "first time";
     case "RE_ENTRY":
       return "ease back in";
   }
@@ -192,10 +207,9 @@ export function describeProgressionAdvisory(suggestion: ProgressionSuggestion): 
     return `Suggests holding at ${suggestion.lastWeight}lb.`;
   }
   // HOLD from incomplete evidence or mixed weights carries no single
-  // lastWeight/suggestedNextWeight to name — the engine's own reason is
-  // already the correct plain explanation for those cases, so use it
-  // directly rather than fabricating a weight that isn't there.
-  return suggestion.reason;
+  // lastWeight/suggestedNextWeight to name, so it explains itself instead.
+  // CLEANUP-003 (walk-through finding 6): the engine's reason, in plain words.
+  return PLAIN_ADVICE_REASONS[suggestion.reason] ?? suggestion.reason;
 }
 
 /**

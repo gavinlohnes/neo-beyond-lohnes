@@ -134,7 +134,7 @@ describe("describeRecommendationLabel", () => {
     expect(describeRecommendationLabel("INCREASE")).toBe("add weight");
     expect(describeRecommendationLabel("HOLD")).toBe("same weight");
     expect(describeRecommendationLabel("REDUCE")).toBe("lower the weight");
-    expect(describeRecommendationLabel("NO_HISTORY")).toBe("not enough history yet");
+    expect(describeRecommendationLabel("NO_HISTORY")).toBe("first time");
     expect(describeRecommendationLabel("RE_ENTRY")).toBe("ease back in");
   });
 });
@@ -256,7 +256,8 @@ describe("describeProgressionAdvisory — reflects evaluateProgression's real ou
     expect(suggestion.lastWeight).toBeUndefined();
     const text = describeProgressionAdvisory(suggestion);
     expect(text).not.toContain("undefined");
-    expect(text).toBe(suggestion.reason);
+    // CLEANUP-003 (walk-through finding 6): the engine's reason, in plain words.
+    expect(text).toBe("Last time a set was skipped or short, so keep the same weight.");
   });
 
   it("HOLD from mixed weights across sets falls back to the engine's own reason, not a fabricated weight", () => {
@@ -280,7 +281,8 @@ describe("describeProgressionAdvisory — reflects evaluateProgression's real ou
     expect(suggestion.lastWeight).toBeUndefined();
     const text = describeProgressionAdvisory(suggestion);
     expect(text).not.toContain("undefined");
-    expect(text).toBe(suggestion.reason);
+    // CLEANUP-003 (walk-through finding 6): the engine's reason, in plain words.
+    expect(text).toBe("Last time the weight changed between sets, so keep it the same.");
   });
 });
 

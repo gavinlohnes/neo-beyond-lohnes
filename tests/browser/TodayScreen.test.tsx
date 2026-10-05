@@ -382,7 +382,8 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — WHY machinery panel", () =>
 
     // Real rule evaluation and the actual selection sentence — no fabricated technical content.
     await expect.element(screen.getByText("Rules evaluated", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText(/No higher-priority rule matched/)).toBeVisible();
+    // CLEANUP-003 (walk-through finding 8): the selection reason in plain words.
+    await expect.element(screen.getByText("Nothing else needed attention first.")).toBeVisible();
     await expect.element(screen.getByText(/^ENGINE /)).toBeVisible();
   });
 

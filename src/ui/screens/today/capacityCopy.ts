@@ -24,7 +24,7 @@ const REASON_LABELS: Record<string, string> = {
   "no severe or constrained condition": "nothing in your check-in needs care",
 };
 
-function describeReason(code: string): string {
+export function describeReason(code: string): string {
   return REASON_LABELS[code] ?? code;
 }
 

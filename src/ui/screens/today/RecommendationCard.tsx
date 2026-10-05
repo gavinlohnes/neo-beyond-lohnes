@@ -16,6 +16,7 @@ import {
   describeRecordedDecision,
   describeTraceLabel,
   describeTraceValue,
+  describeSelectionReason,
 } from "./recommendationCopy";
 
 /**
@@ -155,7 +156,7 @@ export function RecommendationCard({
             </div>
           ))}
 
-          <p className="why-selection">{recommendation.trace.selectionReason}</p>
+          <p className="why-selection">{describeSelectionReason(recommendation.trace.selectionReason)}</p>
           {priorOutcomeMemory && (
             <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
               <p className="why-group-label">Previous result</p>
