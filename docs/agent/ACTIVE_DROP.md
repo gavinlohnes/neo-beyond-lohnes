@@ -1,6 +1,6 @@
 ---
 id: NOTES-CAPSULE-001
-status: ACTIVE
+status: CLOSED
 baseline: cc28335df2d9e67ba9a27a8511196ef0b6d86e18
 branch: claude/notes-capsule-001
 contract: docs/agent/drops/NOTES-CAPSULE-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/179
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 7ea4533b32daf6c44339d1c786fa1cbb840aa09f
+closed_at: 2026-10-05T02:26:15.231Z
 ---
 
 # ACTIVE_DROP
