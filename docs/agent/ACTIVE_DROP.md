@@ -1,6 +1,6 @@
 ---
 id: NOTES-HANDOFF-001
-status: ACTIVE
+status: CLOSED
 baseline: 90bc0260d21c429d1d2a2816976635a2b6dda8a4
 branch: claude/notes-handoff-001
 contract: docs/agent/drops/NOTES-HANDOFF-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/177
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: f45385e6500db0313845c456365e8017f16437b0
+closed_at: 2026-10-05T01:53:08.122Z
 ---
 
 # ACTIVE_DROP
