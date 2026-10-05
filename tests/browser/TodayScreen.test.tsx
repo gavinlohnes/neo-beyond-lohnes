@@ -1057,12 +1057,12 @@ describe("TodayScreen (real browser) — Capture to Obligation handoff", () => {
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByText("renew the car registration")).toBeVisible();
 
-    await screen.getByRole("button", { name: "→ OBLIGATION" }).click();
+    await screen.getByRole("button", { name: "→ TASK" }).click();
     const titleInput = screen.getByRole("textbox", { name: "New obligation title" });
     await expect.element(titleInput).toHaveValue("renew the car registration");
 
-    await screen.getByRole("button", { name: "CREATE OBLIGATION" }).click();
-    await expect.element(screen.getByText(/Obligation created: renew the car registration/)).toBeVisible();
+    await screen.getByRole("button", { name: "CREATE TASK" }).click();
+    await expect.element(screen.getByText(/Task created: renew the car registration/)).toBeVisible();
     // The capture row (with its RESOLVE button) is gone — the item is
     // resolved, not merely hidden. The same title now legitimately
     // appears again as the new Obligation's own commitment text, so this
@@ -1082,7 +1082,7 @@ describe("TodayScreen (real browser) — Capture to Obligation handoff", () => {
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "→ OBLIGATION" }).click();
+    await screen.getByRole("button", { name: "→ TASK" }).click();
     await expect.element(screen.getByRole("textbox", { name: "New obligation title" })).toBeVisible();
 
     await screen.getByRole("button", { name: "CANCEL" }).click();
@@ -1105,14 +1105,14 @@ describe("TodayScreen (real browser) — Capture Intelligence (chrono-node + Com
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "→ OBLIGATION" }).click();
+    await screen.getByRole("button", { name: "→ TASK" }).click();
 
     const dueInput = screen.getByLabelText("Due date");
     await expect.element(dueInput).toHaveValue(dateOffset(1));
     await expect.element(screen.getByText(/Detected from/)).toBeVisible();
 
-    await screen.getByRole("button", { name: "CREATE OBLIGATION" }).click();
-    await expect.element(screen.getByText(/Obligation created:/)).toBeVisible();
+    await screen.getByRole("button", { name: "CREATE TASK" }).click();
+    await expect.element(screen.getByText(/Task created:/)).toBeVisible();
 
     const obligations = await db.obligations.toArray();
     expect(obligations).toHaveLength(1);
@@ -1125,13 +1125,13 @@ describe("TodayScreen (real browser) — Capture Intelligence (chrono-node + Com
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "→ OBLIGATION" }).click();
+    await screen.getByRole("button", { name: "→ TASK" }).click();
 
     const dueInput = screen.getByLabelText("Due date");
     await expect.element(dueInput).toHaveValue("");
     await expect.element(screen.getByText(/Detected from/)).not.toBeInTheDocument();
 
-    await screen.getByRole("button", { name: "CREATE OBLIGATION" }).click();
+    await screen.getByRole("button", { name: "CREATE TASK" }).click();
     const obligations = await db.obligations.toArray();
     expect(obligations[0]?.dueAt).toBeUndefined();
   });
@@ -1142,14 +1142,14 @@ describe("TodayScreen (real browser) — Capture Intelligence (chrono-node + Com
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "→ OBLIGATION" }).click();
+    await screen.getByRole("button", { name: "→ TASK" }).click();
 
     const dueInput = screen.getByLabelText("Due date");
     await expect.element(dueInput).toHaveValue(dateOffset(1));
     await dueInput.fill("");
     await expect.element(screen.getByText(/Detected from/)).not.toBeInTheDocument();
 
-    await screen.getByRole("button", { name: "CREATE OBLIGATION" }).click();
+    await screen.getByRole("button", { name: "CREATE TASK" }).click();
     const obligations = await db.obligations.toArray();
     expect(obligations[0]?.dueAt).toBeUndefined();
   });

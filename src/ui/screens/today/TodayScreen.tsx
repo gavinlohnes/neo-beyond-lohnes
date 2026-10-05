@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type {
   BeyondDay,
   CaptureItem,
@@ -198,6 +198,8 @@ export function TodayScreen({
   onOpenBody,
   openToolsOnMount = false,
   onWorkEnded,
+  onWorkContextChanged,
+  banners,
 }: {
   onViewCommitments?: () => void;
   onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
@@ -206,6 +208,10 @@ export function TodayScreen({
   openToolsOnMount?: boolean;
   /** NOTES-HANDOFF-001: told after MARK WORK ENDED succeeds, so the shell can ask for a handoff note. */
   onWorkEnded?: () => void;
+  /** CLEANUP-002: told after the day's work context changes, so the notes sweep line re-reads. */
+  onWorkContextChanged?: () => void;
+  /** CLEANUP-002: the shell's lines (backup, sweep, handoff, capsule), shown right under the header. */
+  banners?: ReactNode;
 } = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
@@ -953,6 +959,7 @@ export function TodayScreen({
       const source = resolveWorkContextSource(scheduledContext.todayIsScheduledWorkDay, value);
       await setWorkContext(day.id, value, source);
       await refresh();
+      onWorkContextChanged?.();
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -969,6 +976,7 @@ export function TodayScreen({
       await setWorkContext(day.id, day.workContext === "WORK" ? "OFF" : "WORK", "MANUAL");
       setWorkContextOpen(false);
       await refresh();
+      onWorkContextChanged?.();
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -1132,11 +1140,11 @@ export function TodayScreen({
       setConversionDueAt("");
       setConversionDateSuggestion(null);
       await refresh();
-      setCaptureConversionFeedback({ kind: "SUCCESS", message: `Obligation created: ${title}` });
+      setCaptureConversionFeedback({ kind: "SUCCESS", message: `Task created: ${title}` });
     } catch (error) {
       setCaptureConversionFeedback({
         kind: "ERROR",
-        message: describeError(error, "Could not create the obligation."),
+        message: describeError(error, "Could not create the task."),
       });
     } finally {
       busyRef.current = false;
@@ -1926,6 +1934,9 @@ export function TodayScreen({
         <h1 className="eyebrow">BEYOND // TODAY</h1>
       </div>
 
+      {/* CLEANUP-002: the shell's own lines sit under the header, part of the screen. */}
+      {banners && <div className="today-banners">{banners}</div>}
+
       {commitmentFeedback && (
         <p
           ref={commitmentFeedbackRef}
@@ -2376,7 +2387,14 @@ export function TodayScreen({
 
           {captureInAttention && (
             <SignalRow label={`CAPTURE (${openCaptureItems.length})`}>
-              {openCaptureItems.map((item) => (
+              {/* CLEANUP-002 (walk-through finding 4): on a day off the sweep above is the one
+                  place to go through notes, so Attention points there instead of repeating them. */}
+              {day?.workContext === "OFF" ? (
+                <p className="meta" style={{ margin: "4px 0 0" }}>
+                  {openCaptureItems.length === 1 ? "1 note waiting" : `${openCaptureItems.length} notes waiting`}. SWEEP above
+                  takes them one at a time.
+                </p>
+              ) : openCaptureItems.map((item) => (
                 <CaptureListRow
                   key={item.id}
                   item={item}
