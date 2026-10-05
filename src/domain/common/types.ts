@@ -229,7 +229,9 @@ export type DomainEventType =
   | "URGE_LOGGED"
   | "URGE_UNDONE"
   | "URGE_PLAN_RESPONDED"
-  | "EXERCISE_CUE_SET";
+  | "EXERCISE_CUE_SET"
+  | "SHIFT_HANDOFF_NOTED"
+  | "SHIFT_HANDOFF_READ";
 
 /**
  * DERIVED, not stored. Computed by walking a WATER_LOGGED event and any
@@ -624,6 +626,24 @@ export interface ExerciseCueSetPayload {
 }
 
 export const EXERCISE_CUE_MAX_LENGTH = 140;
+
+/**
+ * NOTES-HANDOFF-001 (owner rulings 2026-10-04, 1A/2A): a note for the next
+ * shift, written after MARK WORK ENDED under that day. Shown at the top of
+ * TODAY on the next work day until SHIFT_HANDOFF_READ names it. Append-only.
+ */
+export interface ShiftHandoffNotedPayload {
+  commandId: string;
+  /** Trimmed, 1..SHIFT_HANDOFF_MAX_LENGTH characters. */
+  note: string;
+}
+
+export interface ShiftHandoffReadPayload {
+  commandId: string;
+  handoffEventId: string;
+}
+
+export const SHIFT_HANDOFF_MAX_LENGTH = 280;
 
 export interface PlannedWorkSetPayload {
   commandId: string;

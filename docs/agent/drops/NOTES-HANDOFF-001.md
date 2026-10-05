@@ -1,6 +1,6 @@
 ---
 id: NOTES-HANDOFF-001
-baseline: SET_AT_INIT
+baseline: 90bc0260d21c429d1d2a2816976635a2b6dda8a4
 risk_tier: HIGH-RISK
 ---
 
@@ -14,7 +14,7 @@ somewhere"), rulings 1A (second of three) and 2A (stored like cue text).
 
 ## Approved baseline
 
-Set to a fresh `origin/master` SHA before `factory-drop.mjs init`.
+`origin/master` at `90bc0260d21c429d1d2a2816976635a2b6dda8a4`.
 
 ## Risk classification
 

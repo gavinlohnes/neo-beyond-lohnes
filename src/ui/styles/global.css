@@ -2385,3 +2385,31 @@ body:has(.hud-legacy) {
 .notes-sweep__stop {
   margin-top: var(--space-2);
 }
+
+/* NOTES-HANDOFF-001 (owner rulings 2026-10-04): the shift handoff above
+   TODAY — "Note for next shift?" after work ends, "From last shift" on the
+   next work day. A plate with a quiet left rule, not a red signal. */
+.shift-handoff {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-3) var(--gutter) 0;
+}
+.shift-handoff__card {
+  padding: var(--space-3);
+  border-left: 2px solid var(--border-strong);
+  background: var(--surface-1);
+  margin-bottom: var(--space-2);
+}
+.shift-handoff__card--unread {
+  border-left-color: var(--text-1);
+}
+.shift-handoff__note {
+  color: var(--text-1);
+  margin-bottom: var(--space-3);
+  overflow-wrap: anywhere;
+}
+.shift-handoff__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}

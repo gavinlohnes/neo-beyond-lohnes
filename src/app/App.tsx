@@ -8,6 +8,7 @@ import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
 import { NotesSweep } from "../ui/components/NotesSweep";
+import { ShiftHandoff } from "../ui/components/ShiftHandoff";
 import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
 import { performDueDayRollover } from "../application/commands";
@@ -102,6 +103,8 @@ export function App() {
   const [tab, setTab] = useState<Tab>(() => (shortcut ? "BODY" : "TODAY"));
   // NOTES-SWEEP-001: bumped after a notes sweep so TODAY re-reads its capture count.
   const [todayRefreshKey, setTodayRefreshKey] = useState(0);
+  // NOTES-HANDOFF-001: bumped when TODAY ends a work period, so "Note for next shift?" appears.
+  const [workEndedKey, setWorkEndedKey] = useState(0);
   // Drop 1.6a: tapping MORE while already on MORE goes back to its menu (a fresh MoreScreen).
   const [moreResetKey, setMoreResetKey] = useState(0);
   // Where BODY opens: a home-screen shortcut on launch, or a Shift Clock row
@@ -285,9 +288,12 @@ export function App() {
         {tab === "TODAY" && <BackupDueLine />}
         {/* NOTES-SWEEP-001: on a day off, one line offers to sweep open notes; TODAY re-reads after. */}
         {tab === "TODAY" && <NotesSweep onSwept={() => setTodayRefreshKey((k) => k + 1)} />}
+        {/* NOTES-HANDOFF-001: "Note for next shift?" after work ends; "From last shift" on the next work day. */}
+        {tab === "TODAY" && <ShiftHandoff refreshKey={workEndedKey} />}
         {tab === "TODAY" && (
           <TodayScreen
             key={todayRefreshKey}
+            onWorkEnded={() => setWorkEndedKey((k) => k + 1)}
             onViewCommitments={() => showTab("MORE")}
             onOpenTrain={openTrain}
             openToolsOnMount={todayToolsOpen}
