@@ -1,6 +1,6 @@
 ---
 id: NOTES-SWEEP-001
-status: ACTIVE
+status: CLOSED
 baseline: 8f0565a04e9dee0485fbd6072b7cfe98e0ae8527
 branch: claude/notes-sweep-001
 contract: docs/agent/drops/NOTES-SWEEP-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/175
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 648f59185fb69bf20dceda7fcb69b1b0d418ed70
+closed_at: 2026-10-05T01:37:30.230Z
 ---
 
 # ACTIVE_DROP
