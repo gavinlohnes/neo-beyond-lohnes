@@ -182,6 +182,7 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 - **NOTES-SWEEP-001 — day-off notes sweep** (owner rulings 2026-10-04, 1A / 3 "A and B"): on a day off, "Sweep your notes · 6 waiting" walks open notes one at a time (DONE / MAKE IT A TASK / KEEP / hold DELETE with UNDO). **Done (PR #175, merged 2026-10-04).**
 - **NOTES-HANDOFF-001 — shift handoff** (owner rulings 2026-10-04, 1A/2A): after MARK WORK ENDED, "Note for next shift?"; the next work day opens with "From last shift" until GOT IT; stored as events. **Done (PR #177, merged 2026-10-04).**
 - **NOTES-CAPSULE-001 — time capsule** (owner rulings 2026-10-04, 1A/2A): MORE → TIME CAPSULE seals a note for 1/3/6/12 months; it opens on TODAY that day until GOT IT; text hidden until then; stored as day-independent events. **Done (PR #179, merged 2026-10-04).**
+- **WALKTHROUGH-001 — phone-size walk-through** (owner ruling 2026-10-04): report in `docs/agent/WALKTHROUGH-001.md`, 13 screenshots; nothing broken, 13 polish findings for Gavin to pick from. **Done 2026-10-04.**
 - **GYM-POLISH-001 — gym screen follow-ups** (Gavin's "A" on #170, 2026-10-04): EXIT 56 px, focus into gym mode and Escape closes it, wake lock released before replaced, NEXT EXERCISE on a finished exercise. **Done (PR #171, merged 2026-10-04).**
 
 ## Queue
@@ -194,14 +195,10 @@ Codex can build it when Claude is out.
 Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
 PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
 
-1. **WALKTHROUGH-001 — phone-size walk-through** (owner ruling 2026-10-04, plan "2. A"). Drive the live
-   app through a realistic day at phone width and screenshot every screen for Gavin (start day,
-   check-in, gym mode, food and water, RECORDS, the timeline, a day-off sweep, end of shift).
-   Report only; findings become field issues. Example: RECORDS and the timeline seen by eye.
-2. **CLEANUP-002 — review-note cleanup** (ROUTINE). The sweep notices a work-day/day-off switch
+1. **CLEANUP-002 — review-note cleanup** (ROUTINE). The sweep notices a work-day/day-off switch
    without reopening TODAY; a failed UNDO shows a message; Windows test timeouts for the factory
    tests. Then **a week of field use**: no new features; field notes first.
-3. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
+2. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
    for reviews (Claude walks him through it; Claude never creates accounts or handles the token),
    so independent reviews are formal approvals.
 
