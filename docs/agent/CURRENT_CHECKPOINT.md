@@ -11,7 +11,7 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 CLEANUP-002 closed).
 
 - **Drop:** `CLEANUP-003` words and clutter: ROUTINE, `ACTIVE`. Branch `claude/cleanup-003`.
-  **PR:** see `docs/agent/ACTIVE_DROP.md` `pr:`.
+  **PR:** [#184](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/184).
 - **Done:** walk-through findings 5 ("first time"), 6 (TRAIN advice reasons via a display map in
   `trainCopy.ts`; engine strings unchanged), 7 (BODY times without seconds), 8 (decision panel uses
   the capacity plain labels and "Nothing else needed attention first."), 9 (outlined timeline
