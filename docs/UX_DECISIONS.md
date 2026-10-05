@@ -370,6 +370,10 @@ below, this entry wins; the older entry is kept for history.
   CLEANUP-002 (gym mode and TODAY) and CLEANUP-003 (words and clutter). TODAY says "task", not
   "obligation", for turning a note into something to do (the sweep's "MAKE IT A TASK"; Attention's
   "→ TASK"). Example: gym mode gains a "Last set" line with the PR tag and UNDO.
+- **As built in CLEANUP-002 (PR #182, merged 2026-10-04).** The backup, sweep, handoff and capsule lines
+  render inside TODAY under its header; on a day off Attention's CAPTURE points to the sweep instead of
+  listing the notes. Example: gym mode shows "Last set: Machine Chest Press #1 — 110 × 10" with the PR tag
+  and UNDO, which removes the same set TRAIN's UNDO LAST SET would.
 - **As built in NOTES-SWEEP-001 (PR #175, merged 2026-10-04).** The sweep line sits above TODAY only on
   a day off with open notes. Each choice uses the existing capture/obligation commands, and DELETE removes the
   capture row (captures are mutable rows, not events). Example: hold DELETE on "Old grocery list", tap UNDO, and

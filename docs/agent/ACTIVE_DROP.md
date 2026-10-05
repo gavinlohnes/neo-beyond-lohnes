@@ -1,6 +1,6 @@
 ---
 id: CLEANUP-002
-status: ACTIVE
+status: CLOSED
 baseline: ca1c89973ced509943a4f13bd42fd63ed26cd4bd
 branch: claude/cleanup-002
 contract: docs/agent/drops/CLEANUP-002.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/182
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 02f5c6604937bc44184d15bbc09887fc80f335cb
+closed_at: 2026-10-05T03:04:33.214Z
 ---
 
 # ACTIVE_DROP
