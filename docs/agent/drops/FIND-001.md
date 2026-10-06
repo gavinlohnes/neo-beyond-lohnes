@@ -1,6 +1,6 @@
 ---
 id: FIND-001
-baseline: SET-AT-ACTIVATION
+baseline: 08ca0c469689084f16cc704a6f790e629a8e4288
 risk_tier: ROUTINE
 ---
 
@@ -13,7 +13,7 @@ Example: "chest" returns every chest PR, note and session; tapping one jumps to 
 
 ## Approved baseline
 
-Set at activation to fresh `origin/master`.
+`origin/master` at `08ca0c469689084f16cc704a6f790e629a8e4288`.
 
 ## Risk classification
 
