@@ -31,7 +31,8 @@ export async function getStrengthCurve(exerciseId: string): Promise<StrengthPoin
   const [sessions, undone, records] = await Promise.all([finishedSessions(), getUndoneSetIds(), getAllRecords()]);
   const prSessions = new Set(records.filter((r) => r.exerciseId === exerciseId).map((r) => r.sessionId));
   const sets = ((await db.performedSets.where("exerciseId").equals(exerciseId).toArray()) as unknown as PerformedSet[]).filter(
-    (s) => !undone.has(s.id) && !s.skipped && s.reps > 0,
+    // Counted sets only, as RECORDS counts them: a substitute is a different lift in the same slot.
+    (s) => !undone.has(s.id) && !s.skipped && s.reps > 0 && !s.substitutedName,
   );
   const points: StrengthPoint[] = [];
   for (const session of sessions) {

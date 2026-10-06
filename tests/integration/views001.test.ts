@@ -38,6 +38,22 @@ describe("VIEWS-001", () => {
     expect(await getStrengthCurve("leg-press")).toEqual([]);
   });
 
+  it("a set done as a substitute movement isn't this lift's (the RECORDS rule)", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    await session(new Date(2026, 8, 1, 10), 100);
+    vi.setSystemTime(new Date(2026, 8, 3, 10));
+    const day = await startDay();
+    const sub = await startWorkout(day.id, "A", "STANDARD", { overrideConfirmed: true });
+    await logSet(day.id, sub.id, "machine-chest-press", 1, 200, 10, "Dumbbell Press");
+    await completeWorkout(day.id, sub.id, "STANDARD", "COMPLETED", 45);
+    await session(new Date(2026, 8, 5, 10), 105);
+    const curve = await getStrengthCurve("machine-chest-press");
+    expect(curve.map((p) => [p.topWeight, p.pr])).toEqual([
+      [100, false],
+      [105, true],
+    ]);
+  });
+
   it("the grid is 84 days ending today: strength, recovery, or none", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     const today = new Date(2026, 9, 14, 12);
