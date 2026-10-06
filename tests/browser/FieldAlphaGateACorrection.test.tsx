@@ -146,7 +146,8 @@ describe("Gate A correction — commitment label clarity", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText(/Renew passport/)).toBeVisible();
+    // ADVISORY-002: the OBLIGATION_DUE recommendation is titled with it too.
+    await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" }).getByText(/Renew passport/)).toBeVisible();
   });
 });
 

@@ -8,7 +8,7 @@ const RECOMMENDATION_KIND_LABELS: Record<string, string> = {
   POST_SHIFT_TRANSITION: "Shift down after work",
   RECOVER: "Protect recovery",
   EXECUTE_PLANNED_WORK: "Proceed with planned work",
-  OBLIGATION_DUE: "An obligation needs attention",
+  OBLIGATION_DUE: "A commitment was due",
   NO_ACTION_REQUIRED: "No action required",
 };
 

@@ -3,6 +3,7 @@ import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { WATER_QUICK_ADD_OZ } from "../body/bodyScreenCopy";
+import { describeAdvisorySummary, groupAdvisoryNotes, type AdvisoryRow as AdvisoryRowModel } from "./advisoryCopy";
 
 /**
  * Intelligence Spine (I1/I2/I3, approved 2026-08-22/23) had a real,
@@ -21,20 +22,11 @@ import { WATER_QUICK_ADD_OZ } from "../body/bodyScreenCopy";
  * matching the "every recommendation carries a full WHY trace" doctrine
  * AdvisoryNote is built to follow, without demanding attention for it.
  *
- * `excludeObligationId` drops the one obligation-sourced note that would
- * otherwise exactly duplicate what the Commitments card already shows on
- * this same screen (same "no second dashboard hiding underneath the
- * first" reasoning renderCaptureToolsCard's own history already
- * establishes for Capture) — TodayScreen passes the current headline
- * commitment's id. Any *other* attention-worthy obligation, and every
- * progression note, still shows here: that information isn't shown
- * anywhere else on TODAY.
+ * ADVISORY-002 (owner brief 2026-10-05): obligation notes no longer show
+ * here at all — real to-dos live in COMMITMENT, which lists every due one.
+ * Same-kind notes are grouped into one row each, three rows at most, with
+ * the WHY one tap down (see advisoryCopy.ts).
  */
-function basisObligationId(note: AdvisoryNote): string | undefined {
-  const entry = note.basis.find((b) => b.key === "obligationId");
-  return typeof entry?.value === "string" ? entry.value : undefined;
-}
-
 /** engine/shiftProtection.ts's composeAdvisoryNoteFromShiftProtection always stamps one `unmetItem` basis entry per unmet item — see its own doc comment. */
 function unmetItems(note: AdvisoryNote): ("HYDRATE" | "PROTEIN")[] {
   return note.basis
@@ -43,7 +35,7 @@ function unmetItems(note: AdvisoryNote): ("HYDRATE" | "PROTEIN")[] {
     .filter((v): v is "HYDRATE" | "PROTEIN" => v === "HYDRATE" || v === "PROTEIN");
 }
 
-function AdvisoryNoteRow({
+function QuickActions({
   note,
   busy,
   onLogWater,
@@ -54,7 +46,6 @@ function AdvisoryNoteRow({
   onLogWater?: ((amountOz: number) => void) | undefined;
   onOpenMinimumDay?: (() => void) | undefined;
 }) {
-  const [open, setOpen] = useState(false);
   // TODAY-QUICKACTIONS-001: the one action surface any AdvisoryNote gets —
   // still not a Recommendation (no accept/decline, nothing recorded about
   // the note itself), just a shortcut to the same real BODY-logging
@@ -65,110 +56,110 @@ function AdvisoryNoteRow({
   // (NO_FAKE_PRECISION), so its action opens Minimum Day's own input
   // instead of guessing a gram amount.
   const items = note.sourceModule === "shiftProtection" ? unmetItems(note) : [];
+  if (items.length === 0 || (!onLogWater && !onOpenMinimumDay)) return null;
+  return (
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+      {items.includes("HYDRATE") &&
+        onLogWater &&
+        WATER_QUICK_ADD_OZ.map((amount) => (
+          <button
+            key={amount}
+            type="button"
+            className="btn-secondary"
+            style={{ width: "auto", padding: "8px 14px" }}
+            disabled={busy}
+            onClick={() => onLogWater(amount)}
+          >
+            +{amount} OZ
+          </button>
+        ))}
+      {items.includes("PROTEIN") && onOpenMinimumDay && (
+        <button
+          type="button"
+          className="btn-secondary"
+          style={{ width: "auto", padding: "8px 14px" }}
+          disabled={busy}
+          onClick={onOpenMinimumDay}
+        >
+          LOG PROTEIN
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * ADVISORY-002: one row per kind. The row shows its label ("Easing back in ·
+ * 4 lifts"); a tap lists the items, each with its WHY. A PROTECT (INTERRUPT)
+ * row keeps its message and quick actions on the row itself, since acting
+ * before the shift is the point.
+ */
+function AdvisoryRowView({
+  row,
+  busy,
+  onLogWater,
+  onOpenMinimumDay,
+}: {
+  row: AdvisoryRowModel;
+  busy: boolean;
+  onLogWater?: ((amountOz: number) => void) | undefined;
+  onOpenMinimumDay?: (() => void) | undefined;
+}) {
+  const [open, setOpen] = useState(false);
   return (
     <div style={{ padding: "8px 0", borderTop: "1px solid var(--border-subtle)" }}>
-      {/* FOUNDATION-1B: INTERRUPT is the one rare, evidence-gated tier
-          (engine/shiftProtection.ts's pre-shift concern, resolved as
-          Advisory-only PROTECT — see docs/agent/drops/FOUNDATION-1B.md).
-          A text label, not color alone, per doctrine's accessibility
-          requirement — this note is still only ever an AdvisoryNote:
-          no priority, not accept/decline-able, never a Recommendation. */}
-      {note.attentionLevel === "INTERRUPT" && (
+      {/* FOUNDATION-1B: INTERRUPT is the one rare, evidence-gated tier. A
+          text label, not color alone, per doctrine's accessibility
+          requirement — still only an AdvisoryNote: no priority, not
+          accept/decline-able, never a Recommendation. */}
+      {row.attentionLevel === "INTERRUPT" && (
         <p className="eyebrow" style={{ marginBottom: 4 }}>PROTECT</p>
       )}
-      <p className="card-body" style={{ margin: 0 }}>{note.message}</p>
-      {items.length > 0 && (onLogWater || onOpenMinimumDay) && (
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-          {items.includes("HYDRATE") &&
-            onLogWater &&
-            WATER_QUICK_ADD_OZ.map((amount) => (
-              <button
-                key={amount}
-                type="button"
-                className="btn-secondary"
-                style={{ width: "auto", padding: "8px 14px" }}
-                disabled={busy}
-                onClick={() => onLogWater(amount)}
-              >
-                +{amount} OZ
-              </button>
-            ))}
-          {items.includes("PROTEIN") && onOpenMinimumDay && (
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ width: "auto", padding: "8px 14px" }}
-              disabled={busy}
-              onClick={onOpenMinimumDay}
-            >
-              LOG PROTEIN
-            </button>
-          )}
-        </div>
+      {row.lead ? (
+        <>
+          <p className="card-body" style={{ margin: 0 }}>{row.lead.message}</p>
+          <QuickActions note={row.lead} busy={busy} onLogWater={onLogWater} onOpenMinimumDay={onOpenMinimumDay} />
+        </>
+      ) : (
+        <p className="card-body" style={{ margin: 0 }}>{row.label}</p>
       )}
-      {note.basis.length > 0 && (
-        <FieldDisclosure summary={open ? "HIDE WHY" : "WHY"} open={open} onToggle={setOpen}>
-          {note.basis.map((entry, index) => (
-            // TODAY-QUICKACTIONS-001: a producer (e.g. shiftProtection with
-            // both HYDRATE and PROTEIN unmet) can legitimately repeat the
-            // same basis key across entries — index disambiguates the React
-            // key without changing what's actually rendered or touching the
-            // composer's own basis shape.
-            <div key={`${entry.key}-${index}`} className="why-rule">
-              <span>{entry.key}</span>
-              <span>{String(entry.value)}</span>
-            </div>
-          ))}
-        </FieldDisclosure>
-      )}
+      <FieldDisclosure summary={open ? "HIDE" : row.lead ? "WHY" : "SHOW"} open={open} onToggle={setOpen}>
+        {row.items.map((item) => (
+          <div key={item.note.id} style={{ padding: "4px 0" }}>
+            {!row.lead && <p className="card-body" style={{ margin: 0 }}>{item.name}</p>}
+            {item.why && <p className="meta" style={{ margin: 0 }}>{item.why}</p>}
+          </div>
+        ))}
+      </FieldDisclosure>
     </div>
   );
 }
 
 export function AdvisorySection({
   notes,
-  excludeObligationId,
   busy = false,
   onLogWater,
   onOpenMinimumDay,
 }: {
   notes: AdvisoryNote[];
-  excludeObligationId?: string | null | undefined;
   busy?: boolean;
   onLogWater?: (amountOz: number) => void;
   onOpenMinimumDay?: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const filtered = excludeObligationId
-    ? notes.filter((note) => basisObligationId(note) !== excludeObligationId)
-    : notes;
-  // FOUNDATION-1B: INTERRUPT-tier notes sort first within this same quiet
-  // section — elevated prominence, not a competing primary Recommendation
-  // (see AdvisoryNoteRow's PROTECT label above). A stable sort preserves
-  // every other producer's existing relative order.
-  const attentionRank = { INTERRUPT: 0, SURFACE: 1, QUIET: 2 } as const;
-  const visible = [...filtered].sort((a, b) => attentionRank[a.attentionLevel] - attentionRank[b.attentionLevel]);
-  if (visible.length === 0) return null;
+  const rows = groupAdvisoryNotes(notes);
+  if (rows.length === 0) return null;
   // LAUNCH POLISH (owner approval 2026-10-01): background-only (QUIET)
   // notes fold into one row on TODAY; anything SURFACE or INTERRUPT stays
   // open exactly as before.
-  if (!open && visible.every((note) => note.attentionLevel === "QUIET")) {
-    return (
-      <CollapsibleRow
-        name="ADVISORY"
-        summary={`${visible.length} background ${visible.length === 1 ? "note" : "notes"}`}
-        onOpen={() => setOpen(true)}
-      />
-    );
+  if (!open && rows.every((row) => row.attentionLevel === "QUIET")) {
+    return <CollapsibleRow name="ADVISORY" summary={describeAdvisorySummary(rows)} onOpen={() => setOpen(true)} />;
   }
   return (
     <div className="equipment-row">
       <p className="tool-label" style={{ marginBottom: 4 }}>ADVISORY</p>
-      <p className="meta" style={{ marginBottom: 8 }}>
-        Background context, not a recommendation — nothing here requires a decision.
-      </p>
-      {visible.map((note) => (
-        <AdvisoryNoteRow key={note.id} note={note} busy={busy} onLogWater={onLogWater} onOpenMinimumDay={onOpenMinimumDay} />
+      {rows.map((row) => (
+        <AdvisoryRowView key={row.key} row={row} busy={busy} onLogWater={onLogWater} onOpenMinimumDay={onOpenMinimumDay} />
       ))}
     </div>
   );

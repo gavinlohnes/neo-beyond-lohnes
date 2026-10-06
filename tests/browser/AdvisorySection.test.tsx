@@ -92,8 +92,10 @@ describe("AdvisorySection (real browser) — PROTECT quick actions", () => {
     const screen = await render(<AdvisorySection notes={[journalNote]} onLogWater={() => {}} onOpenMinimumDay={() => {}} />);
 
     // LAUNCH POLISH: QUIET-only notes fold into one ADVISORY row until opened.
-    await expect.element(screen.getByText("1 background note", { exact: true })).toBeVisible();
+    // ADVISORY-002: the row is labeled by kind; the item sits one tap down.
+    await expect.element(screen.getByText("From your journal · 1 lesson", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "Open ADVISORY" }).click();
+    await screen.getByText("SHOW").click();
     await expect.element(screen.getByText(journalNote.message)).toBeVisible();
     expect(screen.getByRole("button", { name: "+8 OZ" }).elements()).toHaveLength(0);
     expect(screen.getByRole("button", { name: "LOG PROTEIN" }).elements()).toHaveLength(0);

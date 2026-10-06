@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { BeyondDay, Recommendation, StateCheckIn } from "../../../domain/common/types";
+import type { ObligationRelevance } from "../../../engine/obligationRelevance";
 import type { PriorOutcomeMemory, RecommendationDecision, RecommendationHandoffTarget } from "../../../application/queries";
 import { CommandSurface } from "../../components/CommandSurface";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
@@ -13,6 +14,7 @@ import {
   describeRecommendationEffect,
   describePriorOutcomeMemory,
   describeRecommendationHandoff,
+  describeRecommendationTitle,
   describeRecordedDecision,
   describeTraceLabel,
   describeTraceValue,
@@ -33,6 +35,7 @@ import {
 export function RecommendationCard({
   day,
   recommendation,
+  headlineCommitment = null,
   isDominant,
   isAttention = false,
   decision,
@@ -52,6 +55,8 @@ export function RecommendationCard({
 }: {
   day: BeyondDay | null;
   recommendation: Recommendation | null;
+  /** ADVISORY-002: an OBLIGATION_DUE recommendation is titled with the real commitment, not "An obligation needs attention". */
+  headlineCommitment?: ObligationRelevance | null;
   isDominant: boolean;
   isAttention?: boolean;
   decision: RecommendationDecision | undefined;
@@ -79,13 +84,14 @@ export function RecommendationCard({
 }) {
   if (!day || !recommendation) return null;
   const evidenceBasis = describeEvidenceBasis(checkIn !== null);
+  const title = describeRecommendationTitle(recommendation, headlineCommitment);
   const isAllClear = recommendation.kind === "NO_ACTION_REQUIRED";
   const open = isDominant || isAttention || isAllClear || recommendationOpen;
   if (!open) {
     return (
       <CollapsibleRow
         name="RECOMMENDATION"
-        summary={decision ? `${recommendation.title} — ${describeRecordedDecision(decision)}` : recommendation.title}
+        summary={decision ? `${title} — ${describeRecordedDecision(decision)}` : title}
         onOpen={() => setRecommendationOpen(true)}
       />
     );
@@ -100,7 +106,7 @@ export function RecommendationCard({
       {(isAttention || isDominant) && !isAllClear && <p className="tool-label">ENGINE GUIDANCE</p>}
       <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
         {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
-        {recommendation.title}
+        {title}
       </h2>
       {/* DECLUTTER-001: the all-clear rationale ("No rule requires attention
           right now.") only repeats the title, so it isn't shown there. */}

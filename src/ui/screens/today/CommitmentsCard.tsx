@@ -14,6 +14,7 @@ import { describeCommitmentMission, describeCommitmentsSummary, describeObligati
  */
 export function CommitmentsCard({
   headlineCommitment,
+  otherDueCommitments = [],
   unresolvedObligationsCount,
   commitmentsOpen,
   setCommitmentsOpen,
@@ -26,6 +27,8 @@ export function CommitmentsCard({
   onConfirmSatisfaction,
 }: {
   headlineCommitment: ObligationRelevance | null;
+  /** ADVISORY-002: the other due/overdue commitments, listed by name once the card is open. */
+  otherDueCommitments?: readonly ObligationRelevance[];
   unresolvedObligationsCount: number;
   commitmentsOpen: boolean;
   setCommitmentsOpen: (open: boolean) => void;
@@ -63,9 +66,14 @@ export function CommitmentsCard({
       <p className="meta" style={{ marginBottom: otherCount > 0 ? 4 : 12 }}>
         {describeObligationRelevance(tier, obligation)}
       </p>
-      {otherCount > 0 && (
+      {otherDueCommitments.map(({ obligation: other, tier: otherTier }) => (
+        <p key={other.id} className="meta" style={{ marginBottom: 4 }}>
+          Also: {other.title} · {describeObligationRelevance(otherTier, other)}
+        </p>
+      ))}
+      {otherCount > otherDueCommitments.length && (
         <p className="meta" style={{ marginBottom: 12 }}>
-          +{otherCount} more unresolved.
+          +{otherCount - otherDueCommitments.length} more unresolved.
         </p>
       )}
       {commitmentConfirmation?.id === obligation.id && (

@@ -1,5 +1,6 @@
 import { describeReason } from "./capacityCopy";
-import type { Outcome, RecommendationKind } from "../../../domain/common/types";
+import type { ObligationRelevance } from "../../../engine/obligationRelevance";
+import type { Outcome, Recommendation, RecommendationKind } from "../../../domain/common/types";
 import type { RecommendationDecision, RecommendationHandoffTarget } from "../../../application/queries";
 
 /**
@@ -17,6 +18,26 @@ export function describeRecommendationAction(kind: RecommendationKind): string {
 }
 
 export const DECLINE_LABEL = "Not doing this";
+
+/**
+ * ADVISORY-002 (owner brief 2026-10-05): the Engine titles OBLIGATION_DUE
+ * "An obligation needs attention", which says nothing. TODAY shows the
+ * actual commitment instead, e.g. "Blood work · Overdue" (the date stays
+ * on the COMMITMENT card). The Engine's own title is unchanged.
+ */
+const SHORT_TIER: Record<ObligationRelevance["tier"], string> = {
+  OVERDUE: "Overdue",
+  DUE_TODAY: "Due today",
+  DUE_SOON: "Due soon",
+  PLANNED_TODAY: "Planned today",
+  WAITING: "Waiting",
+  QUIET: "Open",
+};
+
+export function describeRecommendationTitle(recommendation: Recommendation, headline: ObligationRelevance | null): string {
+  if (recommendation.kind !== "OBLIGATION_DUE" || !headline) return recommendation.title;
+  return `${headline.obligation.title} · ${SHORT_TIER[headline.tier]}`;
+}
 
 export function describeRecommendationHandoff(target: RecommendationHandoffTarget): string {
   if (target === "SHIFT_DOWN") return "GO TO SHIFT DOWN";
