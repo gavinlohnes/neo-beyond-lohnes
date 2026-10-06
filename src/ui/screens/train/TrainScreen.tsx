@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { haptic } from "../../feel/haptics";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
@@ -525,6 +526,7 @@ export function TrainScreen({
     setBusy(true);
     try {
       await logSet(session.beyondDayId, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined);
+      haptic("SET_LOGGED");
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(inputKey(exerciseId, setNumber));
       await startRestAfterCommit();
@@ -553,6 +555,7 @@ export function TrainScreen({
         suggestion.reps,
         subs[exerciseId] || undefined,
       );
+      haptic("SET_LOGGED");
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(inputKey(exerciseId, setNumber));
       await startRestAfterCommit();

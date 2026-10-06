@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TickNumber } from "../../feel/TickNumber";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { HoldButton } from "../../components/HoldButton";
@@ -1271,7 +1272,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
       <div className="instrument-cluster">
         <div>
           <p className="meta" style={{ margin: 0 }}>WATER</p>
-          <p className="status-value">{total} oz</p>
+          <p className="status-value"><TickNumber value={total} /> oz</p>
         </div>
         <div>
           <p className="meta" style={{ margin: 0 }}>SLEEP</p>
@@ -1291,7 +1292,7 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
         </div>
         <div>
           <p className="meta" style={{ margin: 0 }}>PROTEIN</p>
-          <p className="status-value">{dayProteinG} g</p>
+          <p className="status-value"><TickNumber value={dayProteinG} /> g</p>
         </div>
       </div>
 

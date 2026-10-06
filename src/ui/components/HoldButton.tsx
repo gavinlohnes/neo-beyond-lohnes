@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
+import { haptic } from "../feel/haptics";
 
 /**
  * Hold-to-confirm (ROADMAP 1.0 design rule, owner ruling 2026-09-30): for big
@@ -49,6 +50,7 @@ export function HoldButton({
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
       setHolding(false);
+      haptic("CONFIRMED");
       onConfirm();
     }, durationMs);
   }

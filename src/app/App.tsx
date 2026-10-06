@@ -280,6 +280,8 @@ export function App() {
           changes, so switching tabs is itself a natural retry, not a
           second dead end next to a working nav. */}
       <RootErrorBoundary key={tab}>
+        {/* FEEL-001: the incoming tab arrives in 180 ms (instant with reduced motion). */}
+        <div className="tab-enter">
         {/* Intent & Commitment Spine, Drop 02: the only cross-screen
             navigation TODAY needs — VIEW on a surfaced commitment switches
             to the MORE tab (where Missions & Obligations already lives),
@@ -329,6 +331,7 @@ export function App() {
             }}
           />
         )}
+        </div>
       </RootErrorBoundary>
 
       <AppUpdateBanner />

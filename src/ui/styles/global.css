@@ -2480,3 +2480,75 @@ body:has(.hud-legacy) {
   border-color: var(--text-1);
   color: var(--text-1);
 }
+
+/*
+ * FEEL-001 // FINISH-AND-FEEL PASS (owner brief 2026-10-05). Visual only.
+ * Sharp, short, no overshoot: every curve is --motion-easing
+ * (cubic-bezier(.2,.8,.2,1), which never passes its end value). The
+ * reduced-motion rule above makes all of it instant.
+ */
+
+/* A tab change: the incoming screen arrives in 180 ms. */
+@keyframes beyond-tab-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.tab-enter {
+  animation: beyond-tab-in 180ms var(--motion-easing);
+}
+
+/* HUD lines draw in once, when they first show: a section rule from the
+   left, a frame's bracket ticks downward. */
+@keyframes beyond-line-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.section-label::after {
+  transform-origin: left center;
+  animation: beyond-line-draw 240ms var(--motion-easing) both;
+}
+@keyframes beyond-tick-draw {
+  from {
+    background-size: var(--line) 0;
+  }
+  to {
+    background-size: var(--line) var(--tick);
+  }
+}
+.equipment-row:not(:first-child) {
+  animation: beyond-tick-draw 200ms var(--motion-easing) both;
+}
+.equipment-row.fade-in:not(:first-child) {
+  animation:
+    beyond-fade-in var(--motion-base) var(--motion-easing),
+    beyond-tick-draw 200ms var(--motion-easing) both;
+}
+.hud-legacy .equipment-row:not(:first-child) {
+  animation: none;
+}
+
+/* Press states on every button: a small push in and a brighter face, so a
+   press reads without color alone. Disabled buttons don't answer. */
+button {
+  transition:
+    transform var(--motion-fast) var(--motion-easing),
+    filter var(--motion-fast) var(--motion-easing);
+}
+button:not(:disabled):active {
+  transform: scale(var(--tap-scale));
+  filter: brightness(1.35);
+}
+
+.tick-number {
+  font-variant-numeric: tabular-nums;
+}
