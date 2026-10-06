@@ -221,6 +221,7 @@ Codex can build it when Claude is out.
    three status lines (e.g. DAY 14 · SHIFT 1800 · BACKUP OK), about 1 s, tap to skip.
    **Done (PR #189, merged 2026-10-06).**
 4. **SHORTCUTS-001 — home-screen shortcuts** (Routine). START WORKOUT, +WATER, LOG MEAL.
+   **Done (PR #190, merged 2026-10-06).**
 5. **VIEWS-001 — data views** (Routine, read only). Lift strength curve with PRs; 12-week heat
    grid in Weekly. "Your usual" bands wait for the F1 stop (~Oct 25).
 6. **STATUS-001 — System Status** (Architectural). One TODAY line, e.g. "AMBER · 5h sleep, 3 hard

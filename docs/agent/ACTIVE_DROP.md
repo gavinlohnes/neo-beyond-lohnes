@@ -1,6 +1,6 @@
 ---
 id: SHORTCUTS-001
-status: ACTIVE
+status: CLOSED
 baseline: 473dd1999a52d7357433e82e8f5a005b3dc1cb0e
 branch: ccr-a34b4863-xb2jzi
 contract: docs/agent/drops/SHORTCUTS-001.md
@@ -8,6 +8,8 @@ pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: c27e1f1c0b41c4b9076146364b7b338714f10c1e
+closed_at: 2026-10-06T05:41:56.515Z
 ---
 
 # ACTIVE_DROP
