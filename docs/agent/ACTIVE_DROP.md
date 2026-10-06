@@ -1,6 +1,6 @@
 ---
 id: VIEWS-001
-status: ACTIVE
+status: CLOSED
 baseline: c27e1f1c0b41c4b9076146364b7b338714f10c1e
 branch: ccr-a34b4863-xb2jzi
 contract: docs/agent/drops/VIEWS-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/191
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: a6d204437a74681057162f7475c25b24ef3a33bc
+closed_at: 2026-10-06T05:53:12.048Z
 ---
 
 # ACTIVE_DROP

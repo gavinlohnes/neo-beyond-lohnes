@@ -356,6 +356,12 @@ below, this entry wins; the older entry is kept for history.
   in progress), +WATER (BODY at the water quick-add) and LOG MEAL (BODY with the meal entry open).
   A shortcut never logs or starts anything (Drop 7 ruling); older pinned weight/urge shortcuts
   still open their controls.
+- **As built: data views (VIEWS-001, PR #191, merged 2026-10-06, Routine).** TRAIN → RECORDS: a
+  tap on a record opens that lift's strength curve — the heaviest counted set per finished session
+  (substituted, skipped and undone sets left out, as RECORDS counts them), PR sessions as
+  red-outlined squares, and a words line, e.g. "100 lb (Sep 10) → 125 lb (Oct 10) over 6 sessions
+  · 5 PR sessions". Weekly: SHOW 12 WEEKS under LAST 28 DAYS opens an 84-day grid (strength /
+  recovery / none, each cell labeled). Read only; no row added. "Your usual" bands wait for F1.
 - **Icon on the boot screen (owner ruling 2026-10-05).** The existing app icon (`public/icons`, the
   bat) stays and may appear on the icon and the boot screen only, used as-is, never redrawn; this
   amends the HUD no-logo rule and the EMBLEM entry's "not used anywhere inside the running app".
