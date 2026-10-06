@@ -7,34 +7,35 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `7a36018` (PR #187,
-ADVISORY-002 merged after independent review; closed in this branch).
+**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `aaa42c2` (PR #188,
+FEEL-001 merged after independent review; closed in this branch).
 
-- **Drop:** `FEEL-001` finish-and-feel pass: ROUTINE. **ACTIVE**, branch `ccr-a34b4863-xb2jzi`.
-- **Done:** ADVISORY-002 closed (as-built entry, roadmap). FEEL-001 built:
-  - A tab change arrives in 180 ms (fade + 6 px rise, the existing no-overshoot easing).
-  - HUD section rules draw in from the left (240 ms) and frame bracket ticks draw down (200 ms),
-    once, when they first show. Weekly (pre-HUD look) is left alone.
-  - BODY's water and protein totals and TODAY's FUEL line count to their new value in 250 ms.
-  - Haptics (`src/ui/feel/haptics.ts`): one 15 ms tap when a set is saved (LOG, in TRAIN and gym
-    mode), one 30 ms tap when a hold-to-confirm completes (finishing a workout, ending the day,
-    a clean day). No tap for a refused LOG, navigation or a plain press; nothing on iPhone.
-  - Every enabled button has a press state (slight push in + brighter face).
-  - Reduced motion keeps all of it instant (the existing global rule; tested).
-  - Screenshots, 390 px wide: `docs/agent/screenshots/FEEL-001/` (TODAY, TRAIN, RECORDS, active
-    workout, gym mode, BODY, BODY timeline, MORE, Weekly, History, Search). On full-page shots
-    the fixed bottom bar shows partway down; that is the capture, not the app.
-- **Left:** independent review, merge on green, close. Then BOOT-001.
-- **Verification run:** `npm run verify` (190 files / 2044 tests passed, build OK);
-  `git diff --check` OK; `check:risk` vs `7a36018`: Routine.
-- **Open risks:** a PR set now taps once like every other saved set (PR-CARDS-001 said the PR tag
-  has no vibration; the PR adds nothing of its own, and the test says so) — see decision 2. While
-  a tab is animating in (180 ms), a full-screen overlay opened in that instant is offset by up to
-  6 px. The BODY timeline draws 90 days even when weigh-ins cover fewer, so a short history sits
-  at the right edge (unchanged, pre-existing). With an OBLIGATION_DUE recommendation the
-  commitment's name shows twice on TODAY. Agent sessions clone shallow: `git fetch --unshallow
-  origin` before `factory-drop.mjs init`. Carried over: raw capacity codes in "How BEYOND decided"
-  with 2+ reasons; `factory:status` needs `GITHUB_TOKEN`; merged branches await deletion.
+- **Drop:** `BOOT-001` boot sequence: ROUTINE. **ACTIVE**, branch `ccr-a34b4863-xb2jzi`.
+- **Done:** FEEL-001 closed (as-built entry, roadmap). BOOT-001 built:
+  - `src/ui/components/BootSequence.tsx`, mounted next to `App` in `src/main.tsx`: about 1.05 s on
+    pure black — the app icon file (`icons/icon-192.png`, as-is), a 1px line drawing across,
+    "BEYOND" typing in, then three status lines ticking in, then it cuts to whatever the app opened
+    underneath (TODAY, a resumed workout, a shortcut). The app's startup runs underneath unchanged.
+  - Status lines from `src/application/bootQueries.ts` (read only): **DAY n** (BEYOND days on
+    record), **SHIFT 1800** / **SHIFT OFF** (the lived day's scheduled shift, or a declared day
+    off), **BACKUP OK / DUE / OFF**. A value that can't be read is left out.
+  - Once per page load; a remount mid-sequence carries on, never replays; a resume never shows it;
+    tap anywhere skips; reduced motion shows nothing.
+  - The manifest's background/theme colors were already #000000; `index.html` now paints black
+    from the first frame too.
+  - FEEL-001 review nits: the red filled buttons keep their darker press; a ticking number never
+    dips below its start.
+  - Screenshots: `docs/agent/screenshots/BOOT-001/` (three frames of the sequence, then TODAY).
+- **Left:** independent review, merge on green, close. Then SHORTCUTS-001.
+- **Verification run:** `npm run verify` (192 files / 2051 tests passed, build OK; built manifest
+  `background_color` #000000); `git diff --check` OK.
+- **Open risks:** "DAY n" counts BEYOND days on record (every lived day, including auto-rolled
+  ones) — see decision 2. The icon PNG is the maskable home-screen icon, so the bat sits small
+  inside its own padding on the boot screen (used as-is, per the ruling). A PR set taps once like
+  any set (FEEL-001 decision). With an OBLIGATION_DUE recommendation the commitment's name shows
+  twice on TODAY. Agent sessions clone shallow: `git fetch --unshallow origin` before
+  `factory-drop.mjs init`. Carried over: raw capacity codes in "How BEYOND decided" with 2+
+  reasons; `factory:status` needs `GITHUB_TOKEN`; merged branches await deletion.
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
@@ -45,5 +46,7 @@ ADVISORY-002 merged after independent review; closed in this branch).
    **A (recommended)** a workout on each day off, none on work days, A/B rotation, at most 2 days
    in a row · **B** as A plus a short session the morning after a last shift · **C** a fixed 3 per
    week, days off first.
-2. **A PR set's tap:** **A (recommended, built)** the same single LOG tap as any set · **B** no tap
-   at all on a PR set (strict reading of "PR: no vibration").
+2. **What "DAY 14" counts on the boot screen:** **A (recommended, built)** BEYOND days on record ·
+   **B** days since the first one (calendar days) · **C** the day of the current work rotation.
+3. **A PR set's tap (FEEL-001):** **A (recommended, built)** the same single LOG tap as any set ·
+   **B** no tap at all on a PR set (strict reading of "PR: no vibration").
