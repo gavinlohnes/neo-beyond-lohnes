@@ -68,10 +68,66 @@ describe("getSystemStatus", () => {
     const { recommendation } = await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
     const before = await db.recommendations.toArray();
 
-    const status = await getSystemStatus(new Date(2026, 9, 4, 9));
+    const eventsBefore = await db.events.count();
+
+    const status = await getSystemStatus(undefined, new Date(2026, 9, 4, 9));
     expect(describeSystemStatus(status)).toBe("AMBER · 5h sleep, 3 hard sessions in 4 days");
-    // Read only: nothing written, the Engine's recommendation unchanged.
+    // Read only: nothing written; the stored recommendation is the Engine's own, unchanged.
     expect(await db.recommendations.toArray()).toEqual(before);
-    expect(recommendation.kind).toBe((await db.recommendations.get(recommendation.id))!.kind);
+    expect(await db.events.count()).toBe(eventsBefore);
+    expect(before.map((r) => r.id)).toContain(recommendation.id);
+  });
+});
+
+describe("getSystemStatus edges", () => {
+  const GREEN_VALUES = { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 } as const;
+
+  it("falls back to the day before's main sleep only while it is fresh (36 h)", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 1, 9));
+    const old = await startDay();
+    await logSleep(old.id, 210, "PRIMARY");
+    vi.setSystemTime(new Date(2026, 9, 1, 20));
+    const today = await startDay();
+    await submitCheckIn(today.id, GREEN_VALUES);
+    // 11 h later: last night's 3h30m still reads.
+    expect(describeSystemStatus(await getSystemStatus(undefined, new Date(2026, 9, 1, 20)))).toBe("RED · 3h 30m sleep");
+    // 35 days later, with no newer sleep: it no longer colors today.
+    expect(describeSystemStatus(await getSystemStatus(undefined, new Date(2026, 10, 5, 9)))).toBe(
+      "GREEN · check-in clear, 0 hard sessions in 4 days",
+    );
+  });
+
+  it("an undone sleep isn't read; recovery, abandoned, unfinished and future sessions aren't hard sessions", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 3, 9));
+    const day = await startDay();
+    const sleepId = await logSleep(day.id, 200, "PRIMARY");
+    const { voidSleepLog } = await import("../../src/application/commands");
+    await voidSleepLog(day.id, sleepId);
+    const rec = await startWorkout(day.id, null, "RECOVERY", { overrideConfirmed: true });
+    await completeWorkout(day.id, rec.id, "RECOVERY", "COMPLETED", 20);
+    const { abandonWorkout } = await import("../../src/application/trainCommands");
+    const gone = await startWorkout(day.id, "A", "STANDARD", { overrideConfirmed: true });
+    await abandonWorkout(day.id, gone.id, "STANDARD");
+    await startWorkout(day.id, "B", "STANDARD", { overrideConfirmed: true }); // still active
+    await submitCheckIn(day.id, GREEN_VALUES);
+    const status = await getSystemStatus(undefined, new Date(2026, 9, 3, 10));
+    expect(describeSystemStatus(status)).toBe("GREEN · check-in clear, 0 hard sessions in 4 days");
+  });
+
+  it("the 4-day window: a session started exactly 4 days ago counts, a minute earlier doesn't", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const now = new Date(2026, 9, 10, 12, 0);
+    for (const at of [new Date(2026, 9, 6, 11, 59), new Date(2026, 9, 6, 12, 0), new Date(2026, 9, 8, 12), new Date(2026, 9, 9, 12)]) {
+      vi.setSystemTime(at);
+      const d = await startDay();
+      const s = await startWorkout(d.id, "A", "STANDARD", { overrideConfirmed: true });
+      await completeWorkout(d.id, s.id, "STANDARD", "COMPLETED", 45);
+    }
+    vi.setSystemTime(now);
+    const today = await startDay();
+    await submitCheckIn(today.id, GREEN_VALUES);
+    expect(describeSystemStatus(await getSystemStatus(undefined, now))).toBe("AMBER · 3 hard sessions in 4 days");
   });
 });

@@ -633,8 +633,9 @@ export function TodayScreen({
     // above rather than separately, now that everything commits together
     // anyway.
     const advisoryNotes = await getAdvisoryNotes();
-    // STATUS-001: the one System Status line (read only; never reaches the Engine).
-    const nextSystemStatus = await getSystemStatus().catch(() => null);
+    // STATUS-001: the one System Status line (read only; never reaches the Engine), composed from
+    // THIS refresh's own activeDay and installed only by the refresh that owns the screen.
+    const nextSystemStatus = await getSystemStatus(activeDay ?? null).catch(() => null);
     const effectiveProteinTarget = await getEffectiveProteinTargetG();
 
     // Everything on the active-day/context path is gated on this single
@@ -706,7 +707,7 @@ export function TodayScreen({
       setRecommendationHandoff(null);
     }
     setAdvisoryNotes(advisoryNotes);
-    setSystemStatus(nextSystemStatus);
+    if (isOwner) setSystemStatus(nextSystemStatus);
     setProteinTargetG(effectiveProteinTarget);
 
     // A fresh, independently-composed view each refresh — never memoized

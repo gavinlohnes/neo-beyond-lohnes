@@ -24,16 +24,21 @@ VIEWS-001 merged after independent review; closed in this branch).
     or 3+ finished strength sessions started in the last 4 days. GREEN otherwise, listing what it
     rests on ("GREEN · 7h sleep, check-in clear, 1 hard session in 4 days"). With neither sleep nor
     a check-in: "NO READ · log sleep or check in", never a guessed color. "Last main sleep" = the
-    latest PRIMARY sleep on the active day, else on the day before.
+    latest PRIMARY sleep on the active day, else on the day before, and only if logged within the
+    last 36 h (review fix: an old short sleep can't color today). "Hard sessions" = finished
+    STANDARD or REDUCED sessions (not RECOVERY, abandoned or in progress) started in the last 4 days.
   - **Files:** `src/application/systemStatus.ts` (pure rule + read-only query),
     `src/ui/screens/today/statusCopy.ts`, `TodayScreen.tsx` (the strip line), tests.
+  - **Review fixes:** the line is composed from TODAY's own refresh (its active day, installed only
+    by the refresh that owns the screen) — this was the PR Verification failure; stale-sleep cutoff
+    above; more edge tests (undone sleep, recovery/abandoned/active sessions, the 4-day edge).
   - **Protected invariants:** Engine, capacity rule, recommendations, schema and events
-    untouched; nothing written (an integration test checks the recommendation table is unchanged);
+    untouched; nothing written (an integration test checks recommendations and events unchanged);
     the capacity reading still shows in full under "How BEYOND decided".
   - Screenshot: `docs/agent/screenshots/STATUS-001/today-status-amber.jpg`.
 - **Left:** independent review; Gavin approves the merge (and the thresholds); close. While this
   PR waits, no other Drop can be ACTIVE (one-at-a-time rule) — see decision 4.
-- **Verification run:** `npm run verify` (197 files / 2067 tests passed, build OK); `git diff
+- **Verification run:** `npm run verify` (197 files / 2070 tests passed, build OK); `git diff
   --check` OK. `check:risk` vs `a6d2044` sees no Engine/domain path; the tier is Architectural by
   the contract (a new TODAY line and a new rule).
 - **Open risks:** before the status has been read (a few hundred ms on open) the strip shows the
