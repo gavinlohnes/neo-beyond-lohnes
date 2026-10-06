@@ -107,6 +107,10 @@ Amendment (owner ruling, 2026-10-04, HUD-001): the HUD design system's cut corne
 on section frames and 1px lines are allowed as functional frame geometry: they mark structure, not
 decoration. Still one red (#D0141B), still WCAG AA, still no fake telemetry or decorative text.
 
+Amendment (owner ruling, 2026-10-05): the app icon (the bat in `public/icons`) may appear on the
+home-screen icon and the cold-launch boot screen only, used as-is and never redrawn. No other
+in-app screen carries the mark.
+
 ## FIELD, COMMAND, and truth boundaries
 
 FIELD is one-hand, divided-attention operation: glanceable, thumb-reachable, interruption-safe,
