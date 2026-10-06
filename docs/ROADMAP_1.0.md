@@ -216,6 +216,7 @@ Codex can build it when Claude is out.
 2. **FEEL-001 — finish-and-feel pass** (Routine, visual only). 150–250 ms transitions, no bounce;
    HUD lines draw in; numbers tick up; haptic tap on LOG, finished set and hold-to-confirm where
    supported; press states; reduced motion makes it instant; phone screenshots of every screen.
+   **Done (PR #188, merged 2026-10-06).**
 3. **BOOT-001 — boot sequence** (Routine). Cold launch only: icon, a 1px line, "BEYOND" types in,
    three status lines (e.g. DAY 14 · SHIFT 1800 · BACKUP OK), about 1 s, tap to skip.
 4. **SHORTCUTS-001 — home-screen shortcuts** (Routine). START WORKOUT, +WATER, LOG MEAL.

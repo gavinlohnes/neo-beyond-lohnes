@@ -1,6 +1,6 @@
 ---
 id: FEEL-001
-status: ACTIVE
+status: CLOSED
 baseline: 7a36018edef4b82eb3e0099c98724db547970a82
 branch: ccr-a34b4863-xb2jzi
 contract: docs/agent/drops/FEEL-001.md
@@ -8,6 +8,8 @@ pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: aaa42c234fa585f32f151b777aa013c692761e19
+closed_at: 2026-10-06T05:26:19.229Z
 ---
 
 # ACTIVE_DROP
