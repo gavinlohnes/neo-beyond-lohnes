@@ -8,6 +8,7 @@ import { describeBurdenLine, describeFindings, describeWaitingFindings } from ".
 import { describeBaselines, describeBaselinesQuiet } from "./weeklyCopy";
 import { Ribbon } from "./Ribbon";
 import { HeatGrid } from "./HeatGrid";
+import { MirrorView } from "./MirrorView";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 
 /**
@@ -23,6 +24,7 @@ const MAX_RECORD_LINES = 5;
 export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [gridOpen, setGridOpen] = useState(false);
+  const [mirrorOpen, setMirrorOpen] = useState(false);
 
   useEffect(() => {
     let current = true;
@@ -39,7 +41,7 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
   return (
     <div className="screen">
       <h1 className="eyebrow">MORE // WEEKLY CHECK-IN</h1>
-      <p className="meta" style={{ marginBottom: 16 }}>The last 7 days. LAST 28 DAYS, FINDINGS and YOUR USUAL look further back.</p>
+      <p className="meta" style={{ marginBottom: 16 }}>The last 7 days. LAST 28 DAYS, MIRROR, FINDINGS and YOUR USUAL look further back.</p>
       {!summary ? (
         <p className="empty-state">Loading…</p>
       ) : (
@@ -50,6 +52,13 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
             {/* VIEWS-001: the 12-week training grid, one tap down. */}
             <FieldDisclosure summary={gridOpen ? "HIDE 12 WEEKS" : "SHOW 12 WEEKS"} open={gridOpen} onToggle={setGridOpen}>
               {gridOpen && <HeatGrid now={now} />}
+            </FieldDisclosure>
+          </Section>
+
+          {/* MIRROR-001: you now vs 30 and 90 days ago, one tap down. */}
+          <Section label="MIRROR">
+            <FieldDisclosure summary={mirrorOpen ? "HIDE MIRROR" : "SHOW MIRROR"} open={mirrorOpen} onToggle={setMirrorOpen}>
+              {mirrorOpen && <MirrorView now={now} />}
             </FieldDisclosure>
           </Section>
 
