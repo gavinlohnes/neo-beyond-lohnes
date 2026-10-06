@@ -7,29 +7,34 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `c84e391` (PR #186,
-the ten Advanced-batch Drops).
+**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `7a36018` (PR #187,
+ADVISORY-002 merged after independent review; closed in this branch).
 
-- **Drop:** `ADVISORY-002` Advisory cleanup: ROUTINE. **ACTIVE**, branch `ccr-a34b4863-xb2jzi`,
-  PR opened from it.
-- **Done:** ADVISORY groups same-kind notes into one row each ("Easing back in · 8 lifts"); a tap
-  (SHOW) lists each lift with its plain WHY; three rows max, the rest fold into "More · n notes";
-  PROTECT keeps its message and quick actions on the row. Obligation notes left ADVISORY: the
-  COMMITMENT card now lists every other due one ("Also: Blood work · Overdue — was due …").
-  TODAY titles OBLIGATION_DUE with the real commitment ("Blood work · Overdue"); the Engine's
-  own title "An obligation needs attention" is unchanged and no longer shown; History labels it
-  "A commitment was due". The "Background context…" explainer is gone.
-  Screenshots: `docs/agent/screenshots/ADVISORY-002/` (TODAY, ADVISORY open, COMMITMENT open).
-- **Left:** independent review, merge on green, close. Then FEEL-001 (Queue order). WEEKAHEAD-001
-  needs Gavin's placement rule; STATUS-001 and REPORT-001 wait for Gavin to approve their merges.
-- **Verification run:** `npm run verify` (architecture OK, 189 files / 2035 tests passed, build
-  OK); `git diff --check` OK; `check:risk` vs `c84e391`: Routine (UI + tests only).
-- **Open risks:** with an OBLIGATION_DUE recommendation, the commitment's name now appears twice on
-  TODAY (the recommendation title and the COMMITMENT row); before, the title said nothing. The
-  clone in agent sessions is shallow: run `git fetch --unshallow origin` before
-  `factory-drop.mjs init`, or old merged branches read as ACTIVE conflicts. Carried over: raw
-  capacity codes in "How BEYOND decided" with 2+ reasons; `factory:status` needs `GITHUB_TOKEN`;
-  80+ merged branches await deletion by Gavin.
+- **Drop:** `FEEL-001` finish-and-feel pass: ROUTINE. **ACTIVE**, branch `ccr-a34b4863-xb2jzi`.
+- **Done:** ADVISORY-002 closed (as-built entry, roadmap). FEEL-001 built:
+  - A tab change arrives in 180 ms (fade + 6 px rise, the existing no-overshoot easing).
+  - HUD section rules draw in from the left (240 ms) and frame bracket ticks draw down (200 ms),
+    once, when they first show. Weekly (pre-HUD look) is left alone.
+  - BODY's water and protein totals and TODAY's FUEL line count to their new value in 250 ms.
+  - Haptics (`src/ui/feel/haptics.ts`): one 15 ms tap when a set is saved (LOG, in TRAIN and gym
+    mode), one 30 ms tap when a hold-to-confirm completes (finishing a workout, ending the day,
+    a clean day). No tap for a refused LOG, navigation or a plain press; nothing on iPhone.
+  - Every enabled button has a press state (slight push in + brighter face).
+  - Reduced motion keeps all of it instant (the existing global rule; tested).
+  - Screenshots, 390 px wide: `docs/agent/screenshots/FEEL-001/` (TODAY, TRAIN, RECORDS, active
+    workout, gym mode, BODY, BODY timeline, MORE, Weekly, History, Search). On full-page shots
+    the fixed bottom bar shows partway down; that is the capture, not the app.
+- **Left:** independent review, merge on green, close. Then BOOT-001.
+- **Verification run:** `npm run verify` (190 files / 2044 tests passed, build OK);
+  `git diff --check` OK; `check:risk` vs `7a36018`: Routine.
+- **Open risks:** a PR set now taps once like every other saved set (PR-CARDS-001 said the PR tag
+  has no vibration; the PR adds nothing of its own, and the test says so) — see decision 2. While
+  a tab is animating in (180 ms), a full-screen overlay opened in that instant is offset by up to
+  6 px. The BODY timeline draws 90 days even when weigh-ins cover fewer, so a short history sits
+  at the right edge (unchanged, pre-existing). With an OBLIGATION_DUE recommendation the
+  commitment's name shows twice on TODAY. Agent sessions clone shallow: `git fetch --unshallow
+  origin` before `factory-drop.mjs init`. Carried over: raw capacity codes in "How BEYOND decided"
+  with 2+ reasons; `factory:status` needs `GITHUB_TOKEN`; merged branches await deletion.
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
@@ -40,3 +45,5 @@ the ten Advanced-batch Drops).
    **A (recommended)** a workout on each day off, none on work days, A/B rotation, at most 2 days
    in a row · **B** as A plus a short session the morning after a last shift · **C** a fixed 3 per
    week, days off first.
+2. **A PR set's tap:** **A (recommended, built)** the same single LOG tap as any set · **B** no tap
+   at all on a PR set (strict reading of "PR: no vibration").
