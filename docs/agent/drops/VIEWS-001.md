@@ -1,6 +1,6 @@
 ---
 id: VIEWS-001
-baseline: SET-AT-ACTIVATION
+baseline: c27e1f1c0b41c4b9076146364b7b338714f10c1e
 risk_tier: ROUTINE
 ---
 
@@ -13,7 +13,7 @@ Press" in TRAIN → RECORDS shows its strength curve over time with each PR mark
 
 ## Approved baseline
 
-Set at activation to fresh `origin/master`.
+`origin/master` at `c27e1f1c0b41c4b9076146364b7b338714f10c1e`.
 
 ## Risk classification
 

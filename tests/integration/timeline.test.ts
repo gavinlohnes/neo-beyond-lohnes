@@ -18,6 +18,8 @@ const weigh = (n: number, weightLbs: number): WeighIn => ({ recordedAt: daysAgo(
 const history = [weigh(80, 200), weigh(60, 197), weigh(40, 194), weigh(30, 191), weigh(20, 189), weigh(14, 188), weigh(10, 187.5), weigh(7, 187), weigh(1, 186)];
 const record: RecordCard = {
   setId: "s1",
+  exerciseId: "machine-chest-press",
+  sessionId: "session-1",
   exerciseName: "Machine Chest Press",
   record: { kind: "HEAVIEST", weight: 145, reps: 6 },
   recordedAt: daysAgo(10),

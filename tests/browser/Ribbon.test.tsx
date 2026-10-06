@@ -48,8 +48,9 @@ describe("Weekly check-in — the Ribbon (real browser)", () => {
     const section = screen.getByRole("region", { name: "LAST 28 DAYS" });
     await expect.element(section).toBeVisible();
 
-    // 28 day buttons, one per lived day, oldest first; today is the last.
-    await expect.poll(() => section.getByRole("button").elements().length).toBe(28);
+    // 28 day buttons, one per lived day, oldest first; today is the last. (VIEWS-001's SHOW 12
+    // WEEKS disclosure also sits in this section; it isn't a day.)
+    await expect.poll(() => section.getByRole("button").elements().filter((b) => !/12 WEEKS/.test(b.textContent ?? "")).length).toBe(28);
     // Rows appear only for facts logged at least once: no lift, no clean day here.
     await expect.poll(ribbonRows).toEqual(["shift", "sleep", "protein", "urges"]);
     await expect.element(section.getByText("Tap a day to see it.", { exact: true })).toBeVisible();
