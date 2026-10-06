@@ -1,6 +1,6 @@
 import { livedDayShiftWindow } from "../engine/scheduledContext";
 import { getActiveDay, getDayCount, getSchedulePattern } from "./queries";
-import { getAutoBackupPreference, getBackupPrompt } from "./autoBackupQueries";
+import { getAutoBackupPreference, getDaysSinceLastBackup } from "./autoBackupQueries";
 
 /**
  * BOOT-001 (owner brief 2026-10-05): the three status lines the cold-launch
@@ -28,6 +28,7 @@ async function settle<T>(read: () => Promise<T> | T): Promise<T | null> {
 }
 
 export async function getBootStatus(now: Date = new Date()): Promise<BootStatus> {
+  // `now` places the shift line; the backup age is read as of the real clock, as TODAY reads it.
   const [day, shift, backup] = await Promise.all([
     settle(async () => {
       const count = await getDayCount();
@@ -40,8 +41,12 @@ export async function getBootStatus(now: Date = new Date()): Promise<BootStatus>
       return window ? `SHIFT ${hhmm(window.start)}` : "SHIFT OFF";
     }),
     settle(() => {
-      if (!getAutoBackupPreference().enabled) return "OFF" as const;
-      return getBackupPrompt(now)?.kind === "BACKUP_DUE" ? ("DUE" as const) : ("OK" as const);
+      // From the backup itself, not from whether TODAY's line is showing: LATER hides the
+      // line for a day but leaves an overdue backup overdue.
+      const preference = getAutoBackupPreference();
+      if (!preference.enabled) return "OFF" as const;
+      const days = getDaysSinceLastBackup();
+      return days === null || days >= preference.everyDays ? ("DUE" as const) : ("OK" as const);
     }),
   ]);
   return { day, shift, backup };

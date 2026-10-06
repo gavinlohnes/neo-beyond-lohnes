@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { startDay } from "../../src/application/commands";
 import { describeBootStatus, getBootStatus } from "../../src/application/bootQueries";
-import { setAutoBackupPreferenceAndReset } from "../../src/application/autoBackupQueries";
+import { setAutoBackupPreferenceAndReset, snoozeBackupPrompt } from "../../src/application/autoBackupQueries";
 import { BOOT_TOTAL_MS, BootSequence, resetBootSequenceForTests } from "../../src/ui/components/BootSequence";
 
 /** BOOT-001: cold launch only, tap to skip, reduced motion skips, real status lines. */
@@ -80,6 +80,9 @@ describe("BOOT-001", () => {
     expect(describeBootStatus(await getBootStatus(new Date(2026, 9, 14, 14, 0)))).toEqual(["SHIFT OFF", "BACKUP OFF"]);
     expect((await getBootStatus(new Date(2026, 9, 16, 17, 0))).shift).toBe("SHIFT 1800");
     setAutoBackupPreferenceAndReset({ enabled: true, everyDays: 7 });
+    expect((await getBootStatus()).backup).toBe("DUE");
+    // LATER hides TODAY's line for a day; the backup is still overdue.
+    snoozeBackupPrompt();
     expect((await getBootStatus()).backup).toBe("DUE");
     await startDay();
     expect((await getBootStatus()).day).toBe(1);
