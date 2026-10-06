@@ -38,15 +38,20 @@ export function ReportReadyLine({ now }: { now?: Date | undefined } = {}) {
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
+  // Re-checked every minute, so a TODAY left open across 0200 (or 0600) still offers it.
   useEffect(() => {
     let current = true;
-    void getReportTiming(now)
-      .then((next) => {
-        if (current) setTiming(next);
-      })
-      .catch(() => {});
+    const check = () =>
+      void getReportTiming(now)
+        .then((next) => {
+          if (current) setTiming(next);
+        })
+        .catch(() => {});
+    check();
+    const timer = now ? undefined : setInterval(check, 60_000);
     return () => {
       current = false;
+      clearInterval(timer);
     };
   }, [now]);
 

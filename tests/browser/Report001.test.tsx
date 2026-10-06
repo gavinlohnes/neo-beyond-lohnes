@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { startDay } from "../../src/application/commands";
@@ -26,20 +27,43 @@ describe("REPORT-001", () => {
     expect(localStorage.getItem("beyond.reportSeen")).toBe("AFTER_ACTION:2026-10-14");
   });
 
-  it("once opened that day, the line steps back", async () => {
-    localStorage.setItem("beyond.reportSeen", "AFTER_ACTION:2026-10-14");
-    const screen = await render(<ReportReadyLine now={FIRST_DAY_OFF} />);
-    await expect.poll(() => screen.container.textContent).toBe("");
+  it("once opened that day, the line steps back on the next open of TODAY; it returns when the marker is gone", async () => {
+    await startDay();
+    function Harness() {
+      const [n, setN] = useState(0);
+      return (
+        <>
+          <button type="button" onClick={() => setN((x) => x + 1)}>REOPEN TODAY</button>
+          <ReportReadyLine key={n} now={FIRST_DAY_OFF} />
+        </>
+      );
+    }
+    const screen = await render(<Harness />);
+    await screen.getByRole("button", { name: "Open the after action report" }).click();
+    await expect.element(screen.getByText("This block vs last")).toBeVisible();
+    await screen.getByRole("button", { name: "REOPEN TODAY" }).click();
+    // A fresh TODAY that day: the line stays back…
+    await expect.poll(() => screen.container.textContent).toBe("REOPEN TODAY");
+    // …because of the marker: without it, the same fresh TODAY shows the line again.
+    localStorage.removeItem("beyond.reportSeen");
+    await screen.getByRole("button", { name: "REOPEN TODAY" }).click();
+    await expect.element(screen.getByText("AFTER ACTION READY")).toBeVisible();
   });
 
-  it("BRIEFING READY on a work night at 0300", async () => {
-    const screen = await render(<ReportReadyLine now={new Date(2026, 9, 13, 3)} />);
+  it("BRIEFING READY on a work night at 0300; gone by 1500 on that work day", async () => {
+    function Harness() {
+      const [now, setNow] = useState(() => new Date(2026, 9, 13, 3));
+      return (
+        <>
+          <button type="button" onClick={() => setNow(new Date(2026, 9, 13, 15))}>LATER</button>
+          <ReportReadyLine now={now} />
+        </>
+      );
+    }
+    const screen = await render(<Harness />);
     await expect.element(screen.getByText("BRIEFING READY")).toBeVisible();
-  });
-
-  it("nothing at 1500 on a work day", async () => {
-    const screen = await render(<ReportReadyLine now={new Date(2026, 9, 13, 15)} />);
-    await expect.poll(() => screen.container.textContent).toBe("");
+    await screen.getByRole("button", { name: "LATER" }).click();
+    await expect.poll(() => screen.container.textContent).toBe("LATER");
   });
 
   it("Weekly opens the report any time, closed by default", async () => {

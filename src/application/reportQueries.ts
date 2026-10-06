@@ -5,6 +5,7 @@ import { getAllRecords } from "./personalRecordQueries";
 import { getExerciseNames } from "./exerciseLibraryQueries";
 import { getActiveDay, getSchedulePattern, getSleepEntries } from "./queries";
 import { getTimeCapsules } from "./timeCapsuleQueries";
+import { getTimeline } from "./timelineQueries";
 import { getUndoneSetIds } from "./trainQueries";
 
 /**
@@ -13,8 +14,9 @@ import { getUndoneSetIds } from "./trainQueries";
  * between 0200 and 0500 TODAY offers "BRIEFING READY"; on the first day off
  * after a work block, "AFTER ACTION READY". Weekly opens it any time.
  *
- * At most five items: this block vs last; what moved (PRs); what stalled
- * (a lift trained this block with no PR in 3+ weeks); what's coming (the
+ * At most five items: this block vs last; what moved (PRs, clean-day and
+ * weight milestones); what stalled (a lift trained this block whose heaviest
+ * set hasn't risen in 3+ weeks); what's coming (the
  * next work block, a capsule opening); and ONE call, phrased as a
  * suggestion, from a fixed ordered list. Deterministic: the same data and
  * time always give the same report. An item with nothing behind it is left
@@ -46,7 +48,7 @@ export interface BlockFacts {
 
 export type ReportItem =
   | { kind: "BLOCK"; current: BlockFacts; previous: BlockFacts | null }
-  | { kind: "MOVED"; prs: { name: string; weight: number; reps: number }[] }
+  | { kind: "MOVED"; prs: { name: string; weight: number; reps: number }[]; milestones: string[] }
   | { kind: "STALLED"; lifts: { name: string; lastMovedOn: string }[] }
   | { kind: "COMING"; nextBlock: { from: string; to: string; shifts: number } | null; capsuleOpensOn: string | null }
   | { kind: "CALL"; call: { kind: "LIGHTER_WEEK"; lift: string } | { kind: "PROTECT_SLEEP" } };
@@ -123,7 +125,7 @@ export async function getReportTiming(now: Date = new Date()): Promise<ReportTim
 }
 
 export async function getReport(now: Date = new Date()): Promise<Report> {
-  const [pattern, sessions, undone, records, names, days, capsules] = await Promise.all([
+  const [pattern, sessions, undone, records, names, days, capsules, timeline] = await Promise.all([
     getSchedulePattern(),
     db.workoutSessions.toArray(),
     getUndoneSetIds(),
@@ -131,6 +133,7 @@ export async function getReport(now: Date = new Date()): Promise<Report> {
     getExerciseNames(),
     db.beyondDays.toArray(),
     getTimeCapsules(now),
+    getTimeline(now),
   ]);
   const workOn: WorkOn = (d) => scheduledWorkContextForLivedDay(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 17), pattern) === "WORK";
   const finished = sessions.filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL");
@@ -168,8 +171,12 @@ export async function getReport(now: Date = new Date()): Promise<Report> {
 
   const items: ReportItem[] = [];
   // "This block" is the one running now (a work night) or just finished (the first day off).
-  const currentBlock = blockEndingBy(noon(workOn(noon(now)) ? now : addDays(now, -1)), workOn);
-  if (!currentBlock) return { items };
+  const found = blockEndingBy(noon(workOn(noon(now)) ? now : addDays(now, -1)), workOn);
+  if (!found) return { items };
+  // Mid-block (a work night), the block runs on through the following work days.
+  let blockLast = found.last;
+  while (workOn(addDays(blockLast, 1)) && blockLast.getTime() - found.first.getTime() < LOOK_DAYS * DAY_MS) blockLast = addDays(blockLast, 1);
+  const currentBlock = { first: found.first, last: blockLast };
   const current = facts(currentBlock);
   const previousBlock = blockEndingBy(addDays(currentBlock.first, -2), workOn);
   const previous = previousBlock ? facts(previousBlock) : null;
@@ -181,19 +188,35 @@ export async function getReport(now: Date = new Date()): Promise<Report> {
     return t >= current.start && t < current.end;
   };
   const moved = records.filter((r) => inBlock(r.recordedAt));
-  if (moved.length) {
-    items.push({ kind: "MOVED", prs: moved.map((r) => ({ name: r.exerciseName, weight: r.record.weight, reps: r.record.reps })) });
+  // Clean-day and weight milestones reached in the block, in the timeline's own words.
+  const milestones = timeline.events
+    .filter((e) => (e.kind === "CLEAN_DAY_MILESTONE" || e.kind === "WEIGHT_MILESTONE") && inBlock(e.date))
+    .map((e) => e.label);
+  if (moved.length || milestones.length) {
+    items.push({
+      kind: "MOVED",
+      prs: moved.map((r) => ({ name: r.exerciseName, weight: r.record.weight, reps: r.record.reps })),
+      milestones,
+    });
   }
 
-  // Stalled: a lift trained this block (as itself, not a substitute) whose latest PR — or, with none,
-  // its first session — is 21+ days old.
+  // Stalled: a lift trained this block (as itself, not a substitute, with a load) whose heaviest set
+  // hasn't risen in 21+ days: its latest HEAVIEST record — or, with none, its first session — is that old.
   const stallCutoff = now.getTime() - STALLED_AFTER_DAYS * DAY_MS;
   const trainedNow = [
-    ...new Set(sets.filter((s) => !s.substitutedName && inBlock(finishedById.get(s.sessionId)!.startedAt)).map((s) => s.exerciseId)),
+    ...new Set(
+      sets
+        .filter((s) => !s.substitutedName && s.weight > 0 && inBlock(finishedById.get(s.sessionId)!.startedAt))
+        .map((s) => s.exerciseId),
+    ),
   ];
   const stalled: { name: string; lastMovedOn: string }[] = [];
   for (const exerciseId of trainedNow) {
-    const latestPr = records.filter((r) => r.exerciseId === exerciseId).map((r) => r.recordedAt).sort().at(-1);
+    const latestPr = records
+      .filter((r) => r.exerciseId === exerciseId && r.record.kind === "HEAVIEST")
+      .map((r) => r.recordedAt)
+      .sort()
+      .at(-1);
     const firstSession = sets
       .filter((s) => s.exerciseId === exerciseId && !s.substitutedName)
       .map((s) => finishedById.get(s.sessionId)!.startedAt)

@@ -70,7 +70,7 @@ describe("getReport", () => {
     expect(copy[0]!.lines[0]).toBe("This block (Mon, Oct 12 – Tue, Oct 13, 2 shifts): 2 sessions, 2 sets, avg sleep 5h");
     expect(copy[0]!.lines[1]).toBe("Last block (Wed, Oct 7 – Thu, Oct 8): 1 session, 1 set");
     expect(copy[1]!.lines).toEqual(["1 PR: Machine Chest Press 110 lb × 10"]);
-    expect(copy[2]!.lines).toEqual(["Leg Press: no PR since Tue, Sep 1"]);
+    expect(copy[2]!.lines).toEqual(["Leg Press: heaviest set unchanged since Tue, Sep 1"]);
     expect(copy[3]!.lines).toEqual(["Next block: Fri, Oct 16 – Sun, Oct 18 (3 shifts)"]);
     expect(copy[4]!.lines).toEqual(["Consider a lighter week on Leg Press."]);
     // Deterministic: the same data and time give the same report.
@@ -87,5 +87,51 @@ describe("getReport", () => {
     const call = report.items.find((i) => i.kind === "CALL");
     expect(call && describeReportItem(call).lines).toEqual(["Consider protecting sleep before the next block."]);
     expect(report.items.find((i) => i.kind === "STALLED")).toBeUndefined();
+  });
+});
+
+describe("getReport review fixes", () => {
+  it("mid-block (a work night) the block runs on to its true end, and 'next block' is the one after", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    await session(new Date(2026, 9, 16, 10), "machine-chest-press", 100);
+    const now = new Date(2026, 9, 17, 3); // Sat 0300, inside the Fri 16 – Sun 18 block
+    vi.setSystemTime(now);
+    expect(await getReportTiming(now)).toBe("BRIEFING");
+    const copy = (await getReport(now)).items.map(describeReportItem);
+    expect(copy[0]!.lines[0]).toMatch(/^This block \(Fri, Oct 16 – Sun, Oct 18, 3 shifts\)/);
+    expect(copy.find((c) => c.heading === "What's coming")!.lines).toEqual(["Next block: Wed, Oct 21 – Thu, Oct 22 (2 shifts)"]);
+  });
+
+  it("what moved includes a clean-day milestone reached in the block", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const { saveQuitHabit, logCleanDay } = await import("../../src/application/quitCommands");
+    vi.setSystemTime(new Date(2026, 9, 6, 9));
+    await saveQuitHabit({ name: "Drinking" });
+    for (let d = 7; d <= 13; d++) {
+      vi.setSystemTime(new Date(2026, 9, d, 9));
+      const day = await startDay();
+      await logCleanDay(day.id);
+    }
+    const now = new Date(2026, 9, 14, 9);
+    vi.setSystemTime(now);
+    const moved = (await getReport(now)).items.find((i) => i.kind === "MOVED");
+    expect(moved && describeReportItem(moved).lines).toEqual(["7 clean days"]);
+  });
+
+  it("a rep-only PR doesn't count as the heaviest set moving; a 0 lb lift is never stalled", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    await session(new Date(2026, 8, 1, 10), "leg-press", 200);
+    vi.setSystemTime(new Date(2026, 8, 3, 10));
+    const d = await startDay();
+    const s = await startWorkout(d.id, "A", "STANDARD", { overrideConfirmed: true });
+    await logSet(d.id, s.id, "leg-press", 1, 200, 15); // most reps at 200: a REPS record, not heavier
+    await completeWorkout(d.id, s.id, "STANDARD", "COMPLETED", 45);
+    await session(new Date(2026, 9, 12, 10), "leg-press", 200);
+    await session(new Date(2026, 8, 1, 11), "pec-deck", 0);
+    await session(new Date(2026, 9, 13, 10), "pec-deck", 0);
+    const now = new Date(2026, 9, 14, 9);
+    vi.setSystemTime(now);
+    const stalled = (await getReport(now)).items.find((i) => i.kind === "STALLED");
+    expect(stalled && describeReportItem(stalled).lines).toEqual(["Leg Press: heaviest set unchanged since Tue, Sep 1"]);
   });
 });

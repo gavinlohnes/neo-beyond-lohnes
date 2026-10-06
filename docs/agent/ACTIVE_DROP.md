@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: c83114f7bbb721a473fb45eb523d853a300b7910
 branch: ccr-a34b4863-xb2jzi
 contract: docs/agent/drops/REPORT-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/195
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)

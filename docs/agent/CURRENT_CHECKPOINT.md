@@ -21,12 +21,18 @@ MIRROR-001 merged after independent review; closed in this branch).
     REPORT row that opens it any time.
   - **The report (five items at most, each left out when empty):** (1) this block vs last —
     sessions, sets, average main sleep, e.g. "This block (Mon, Oct 12 – Tue, Oct 13, 2 shifts): 2
-    sessions, 2 sets, avg sleep 5h"; (2) what moved — PRs set in the block; (3) what stalled — a
-    lift trained this block with no PR in 21+ days ("Leg Press: no PR since Tue, Sep 1"); (4)
+    sessions, 2 sets, avg sleep 5h"; (2) what moved — PRs set in the block, and clean-day and
+    weight milestones reached in it ("7 clean days"); (3) what stalled — a lift trained this block
+    whose heaviest set hasn't risen in 21+ days ("Leg Press: heaviest set unchanged since Tue, Sep
+    1"; 0 lb bodyweight lifts and rep-only records aside); (4)
     what's coming — the next block's dates, a time capsule opening within 14 days (its date only);
     (5) ONE call, from a fixed ordered list: a stalled lift → "Consider a lighter week on X.", else
     a block averaging under 6 h sleep → "Consider protecting sleep before the next block.", else
     none.
+  - **Review fixes:** mid-block (a work night) the block now runs on to its true end, so "next
+    block" is the one after it (it used to call tomorrow's shift the next block); the TODAY line
+    re-checks every minute, so a screen left open across 0200 still offers it; tests now prove the
+    line steps back after opening and disappears out of its window.
   - **Definitions:** a block is a run of consecutive scheduled work days (the saved schedule); its
     period is the lived days that hold its shifts (16:30 the day before its first shift to 16:30
     after its last). Deterministic for the same data and time (tested); read only.
@@ -38,10 +44,11 @@ MIRROR-001 merged after independent review; closed in this branch).
   - Screenshots: `docs/agent/screenshots/REPORT-001/`.
 - **Left:** independent review; Gavin approves the merge (and the call list); close. Then
   WEEKAHEAD-001 (Architectural; rule A signed off).
-- **Verification run:** `npm run verify` (203 files / 2091 tests passed, build OK); `git diff
+- **Verification run:** `npm run verify` (203 files / 2094 tests passed, build OK); `git diff
   --check` OK. `check:risk` sees no Engine/domain path; the tier is Architectural by the contract.
 - **Open risks:** blocks come from the saved schedule, not from days actually worked, so a swapped
-  shift isn't seen. The opened-today marker lives in this phone's storage only. In the browser
+  shift isn't seen. AFTER ACTION READY shows from 0600 to midnight on the first day off; a night
+  declared OFF hides the line only for that lived day. The opened-today marker lives in this phone's storage only. In the browser
   test runner, unmounting and re-rendering within one test leaves later renders uncommitted
   (tests are written one render each; seen in BOOT-001 too). Carried over: the Mirror reads at the
   same time of day as now; TODAY's strip briefly shows the old capacity sentence before the System

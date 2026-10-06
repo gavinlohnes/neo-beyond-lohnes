@@ -73,3 +73,20 @@ describe("getMirror", () => {
     expect(d90!.weightLbs).toBeNull();
   });
 });
+
+describe("getMirror 0 lb sets", () => {
+  it("a lift logged only at 0 lb (bodyweight) isn't a top lift", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const now = new Date(2026, 9, 14, 12);
+    for (const d of [10, 11, 12]) {
+      await dayAt(new Date(2026, 9, d, 10), async (id) => {
+        const s = await startWorkout(id, "A", "STANDARD", { overrideConfirmed: true });
+        await logSet(id, s.id, "pec-deck", 1, 0, 10);
+        if (d === 12) await logSet(id, s.id, "machine-chest-press", 1, 100, 10);
+        await completeWorkout(id, s.id, "STANDARD", "COMPLETED", 45);
+      });
+    }
+    vi.setSystemTime(now);
+    expect((await getMirror(now)).lifts.map((l) => l.exerciseId)).toEqual(["machine-chest-press"]);
+  });
+});

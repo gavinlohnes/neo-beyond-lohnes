@@ -52,12 +52,17 @@ export function describeReportItem(item: ReportItem): { heading: string; lines: 
     case "MOVED":
       return {
         heading: "What moved",
-        lines: [`${item.prs.length} ${item.prs.length === 1 ? "PR" : "PRs"}: ${item.prs.map((p) => `${p.name} ${p.weight} lb × ${p.reps}`).join(", ")}`],
+        lines: [
+          item.prs.length
+            ? `${item.prs.length} ${item.prs.length === 1 ? "PR" : "PRs"}: ${item.prs.map((p) => `${p.name} ${p.weight} lb × ${p.reps}`).join(", ")}`
+            : null,
+          ...item.milestones,
+        ].filter((l): l is string => l !== null),
       };
     case "STALLED":
       return {
         heading: "What stalled",
-        lines: item.lifts.map((l) => `${l.name}: no PR since ${day(l.lastMovedOn)}`),
+        lines: item.lifts.map((l) => `${l.name}: heaviest set unchanged since ${day(l.lastMovedOn)}`),
       };
     case "COMING":
       return {
