@@ -72,13 +72,13 @@ export function SearchScreen({ onSelectResult }: { onSelectResult?: (result: Sea
     <div className="screen">
       <h1 className="eyebrow">MORE // SEARCH</h1>
       <p className="card-body" style={{ marginBottom: 16 }}>
-        Find a Mission, Obligation, or Capture by text. Read-only — every result, whatever its status.
+        Find anything by text: lifts, PRs, meals, notes, days, journal entries and commitments. Read-only — tap a result to go to it.
       </p>
 
       <input
         type="text"
         className="input"
-        aria-label="Search Missions, Obligations, and Capture"
+        aria-label="Search everything"
         placeholder="Search…"
         value={query}
         onChange={(e) => void handleChange(e.target.value)}
@@ -87,7 +87,7 @@ export function SearchScreen({ onSelectResult }: { onSelectResult?: (result: Sea
 
       {!searched && !loading && !error && (
         <p className="empty-state" role="status" aria-live="polite">
-          Type to search Missions, Obligations, and Capture.
+          Type to search lifts, PRs, meals, notes, days, journal entries and commitments.
         </p>
       )}
       {loading && (
@@ -113,7 +113,8 @@ export function SearchScreen({ onSelectResult }: { onSelectResult?: (result: Sea
           const body = (
             <>
               <p className="meta" style={{ marginBottom: 2 }}>
-                {describeSearchDomain(result.domain)} · {result.status}
+                {describeSearchDomain(result.domain)}
+                {result.status ? ` · ${result.status}` : ""}
               </p>
               <p className="card-body" style={{ margin: 0 }}>{result.title}</p>
               {result.context && <p className="meta" style={{ marginTop: 4 }}>{result.context}</p>}

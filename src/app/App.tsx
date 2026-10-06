@@ -121,6 +121,9 @@ export function App() {
     window.history.replaceState(null, "", url.toString());
   }, [shortcut]);
   const [trainDestination, setTrainDestination] = useState<TrainDestination | null>(shortcut === "workout" ? "WORKOUT" : null);
+  // FIND-001: a LIFT/PR search result opens TRAIN → RECORDS at that lift; the top-bar icon opens SEARCH.
+  const [trainRecordsFocus, setTrainRecordsFocus] = useState<string | null>(null);
+  const [moreView, setMoreView] = useState<"MENU" | "SEARCH">("MENU");
   const [continuityResolved, setContinuityResolved] = useState(false);
 
   useEffect(() => {
@@ -256,6 +259,8 @@ export function App() {
 
   function openPrimaryTab(destination: Tab) {
     setTrainDestination(null);
+    setTrainRecordsFocus(null);
+    setMoreView("MENU");
     setBodyFocus(null);
     setTodayToolsOpen(false);
     if (destination === "MORE" && tab === "MORE") setMoreResetKey((key) => key + 1);
@@ -319,6 +324,7 @@ export function App() {
         {tab === "TRAIN" && (
           <TrainScreen
             destination={trainDestination}
+            recordsFocus={trainRecordsFocus}
             onDestinationConsumed={() => setTrainDestination(null)}
           />
         )}
@@ -326,14 +332,38 @@ export function App() {
         {tab === "MORE" && (
           <MoreScreen
             key={moreResetKey}
+            initialView={moreView}
             onOpenCapture={() => {
               setTodayToolsOpen(true);
               showTab("TODAY");
+            }}
+            onOpenRecords={(exerciseId) => {
+              setTrainDestination(null);
+              setTrainRecordsFocus(exerciseId);
+              showTab("TRAIN");
+            }}
+            onOpenMeal={() => {
+              setBodyFocus("meal");
+              showTab("BODY");
             }}
           />
         )}
         </div>
       </RootErrorBoundary>
+
+      {/* FIND-001: search everything, one tap from the top of every primary screen. */}
+      <button
+        type="button"
+        className="topbar-search"
+        aria-label="Search everything"
+        onClick={() => {
+          setMoreView("SEARCH");
+          setMoreResetKey((key) => key + 1);
+          showTab("MORE");
+        }}
+      >
+        <Icon name="search" size={20} />
+      </button>
 
       <AppUpdateBanner />
 

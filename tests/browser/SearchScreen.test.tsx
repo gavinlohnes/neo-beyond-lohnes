@@ -37,7 +37,7 @@ afterEach(() => {
   cleanup();
 });
 
-const SEARCH_INPUT = { role: "textbox" as const, name: "Search Missions, Obligations, and Capture" };
+const SEARCH_INPUT = { role: "textbox" as const, name: "Search everything" };
 
 /** A promise whose settlement this test controls, standing in for real Dexie retrieval timing. */
 function createDeferred<T>() {
@@ -80,14 +80,14 @@ describe("SearchScreen (real browser)", () => {
     await captureItem("Renew the car registration");
 
     const screen = await render(<SearchScreen />);
-    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("deck");
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("deck");
     await expect.element(screen.getByText("Rebuild the deck", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Call the electrician", { exact: true })).not.toBeInTheDocument();
 
-    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("electrician");
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("electrician");
     await expect.element(screen.getByText("Call the electrician", { exact: true })).toBeVisible();
 
-    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("registration");
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("registration");
     await expect.element(screen.getByText("Renew the car registration", { exact: true })).toBeVisible();
   });
 
@@ -96,11 +96,11 @@ describe("SearchScreen (real browser)", () => {
     await archiveMission(mission.id);
 
     const screen = await render(<SearchScreen />);
-    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("kitchen");
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("kitchen");
     await expect.element(screen.getByText("Old kitchen project", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("MISSION · ARCHIVED", { exact: true })).toBeVisible();
 
-    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("nothing-matches-this");
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("nothing-matches-this");
     await expect.element(screen.getByText(/No matches for/, { exact: false })).toBeVisible();
   });
 });
@@ -153,7 +153,7 @@ describe("SearchScreen (real browser) — narrow phone widths", () => {
     await createMission({ title: "Rebuild the deck" });
     await page.viewport(width, 800);
     const screen = await render(<SearchScreen />);
-    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("deck");
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("deck");
     await expect.element(screen.getByText("Rebuild the deck", { exact: true })).toBeVisible();
 
     await expect.poll(() => document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
@@ -167,7 +167,7 @@ describe("SearchScreen (real browser) — accessibility", () => {
     let results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
 
-    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("deck");
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("deck");
     await expect.element(screen.getByText("Rebuild the deck", { exact: true })).toBeVisible();
     results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
@@ -183,7 +183,7 @@ describe("SearchScreen (real browser) — accessibility", () => {
     // Initial prompt.
     await expect
       .element(screen.getByRole("status"))
-      .toHaveTextContent("Type to search Missions, Obligations, and Capture.");
+      .toHaveTextContent("Type to search lifts, PRs, meals, notes, days, journal entries and commitments.");
     let results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
 
@@ -213,7 +213,7 @@ describe("SearchScreen (real browser) — accessibility", () => {
     await input.fill("");
     await expect
       .element(screen.getByRole("status"))
-      .toHaveTextContent("Type to search Missions, Obligations, and Capture.");
+      .toHaveTextContent("Type to search lifts, PRs, meals, notes, days, journal entries and commitments.");
     expect(document.activeElement).toBe(input.element());
   });
 });
