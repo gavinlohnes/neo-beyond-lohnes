@@ -1,6 +1,6 @@
 ---
 id: MIRROR-001
-baseline: SET-AT-ACTIVATION
+baseline: e8c391d7fb5a2ab5280f09d11677e025580e6765
 risk_tier: ROUTINE
 ---
 
@@ -14,7 +14,7 @@ days ago: weight trend, top lifts, average sleep, clean days. Example: "Weight 2
 
 ## Approved baseline
 
-Set at activation to fresh `origin/master`.
+`origin/master` at `e8c391d7fb5a2ab5280f09d11677e025580e6765`.
 
 ## Risk classification
 
