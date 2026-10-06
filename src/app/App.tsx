@@ -101,7 +101,8 @@ export function App() {
   // Drop 7: a home-screen shortcut (?go=…) opens BODY at the right control.
   // Read once, then dropped from the URL so a reload doesn't repeat it.
   const [shortcut] = useState(() => parseShortcut(window.location.search));
-  const [tab, setTab] = useState<Tab>(() => (shortcut ? "BODY" : "TODAY"));
+  // SHORTCUTS-001: START WORKOUT opens TRAIN; the others open BODY.
+  const [tab, setTab] = useState<Tab>(() => (shortcut === "workout" ? "TRAIN" : shortcut ? "BODY" : "TODAY"));
   // NOTES-SWEEP-001: bumped after a notes sweep so TODAY re-reads its capture count.
   const [todayRefreshKey, setTodayRefreshKey] = useState(0);
   // NOTES-HANDOFF-001: bumped when TODAY ends a work period, so "Note for next shift?" appears.
@@ -110,7 +111,7 @@ export function App() {
   const [moreResetKey, setMoreResetKey] = useState(0);
   // Where BODY opens: a home-screen shortcut on launch, or a Shift Clock row
   // on TODAY (Drop 2). Cleared whenever the bottom nav is used.
-  const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut);
+  const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut === "workout" ? null : shortcut);
   // MORE's capture link opens TODAY with TOOLS expanded, where Capture lives (Drop 2).
   const [todayToolsOpen, setTodayToolsOpen] = useState(false);
   useEffect(() => {
@@ -119,7 +120,7 @@ export function App() {
     url.searchParams.delete("go");
     window.history.replaceState(null, "", url.toString());
   }, [shortcut]);
-  const [trainDestination, setTrainDestination] = useState<TrainDestination | null>(null);
+  const [trainDestination, setTrainDestination] = useState<TrainDestination | null>(shortcut === "workout" ? "WORKOUT" : null);
   const [continuityResolved, setContinuityResolved] = useState(false);
 
   useEffect(() => {

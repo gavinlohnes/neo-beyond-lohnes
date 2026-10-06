@@ -1,6 +1,6 @@
 ---
 id: SHORTCUTS-001
-baseline: SET-AT-ACTIVATION
+baseline: 473dd1999a52d7357433e82e8f5a005b3dc1cb0e
 risk_tier: ROUTINE
 ---
 
@@ -14,7 +14,7 @@ start (or the workout already in progress) instead of TODAY.
 
 ## Approved baseline
 
-Set at activation to fresh `origin/master`.
+`origin/master` at `473dd1999a52d7357433e82e8f5a005b3dc1cb0e`.
 
 ## Risk classification
 

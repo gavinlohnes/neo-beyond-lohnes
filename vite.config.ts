@@ -43,14 +43,13 @@ export default defineConfig({
           { src: "icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
           { src: "icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
         ],
-        // Drop 7 (owner approval 2026-10-01): Android long-press shortcuts.
-        // Each opens BODY at the right control (src/ui/shortcuts.ts) — none
-        // logs anything by itself.
+        // SHORTCUTS-001 (owner brief 2026-10-05): long-press the icon for
+        // START WORKOUT, +WATER and LOG MEAL. Each opens straight to that
+        // control (src/ui/shortcuts.ts) — none logs or starts anything by itself.
         shortcuts: [
-          { name: "Log water", short_name: "Water", url: "./?go=water", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
-          { name: "Log weight", short_name: "Weight", url: "./?go=weight", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
-          { name: "Log a meal", short_name: "Meal", url: "./?go=meal", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
-          { name: "Log an urge", short_name: "Urge", url: "./?go=urge", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] }
+          { name: "START WORKOUT", short_name: "START WORKOUT", url: "./?go=workout", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
+          { name: "+WATER", short_name: "+WATER", url: "./?go=water", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
+          { name: "LOG MEAL", short_name: "LOG MEAL", url: "./?go=meal", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] }
         ]
       }
     })

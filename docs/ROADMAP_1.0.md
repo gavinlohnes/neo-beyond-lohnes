@@ -219,6 +219,7 @@ Codex can build it when Claude is out.
    **Done (PR #188, merged 2026-10-06).**
 3. **BOOT-001 — boot sequence** (Routine). Cold launch only: icon, a 1px line, "BEYOND" types in,
    three status lines (e.g. DAY 14 · SHIFT 1800 · BACKUP OK), about 1 s, tap to skip.
+   **Done (PR #189, merged 2026-10-06).**
 4. **SHORTCUTS-001 — home-screen shortcuts** (Routine). START WORKOUT, +WATER, LOG MEAL.
 5. **VIEWS-001 — data views** (Routine, read only). Lift strength curve with PRs; 12-week heat
    grid in Weekly. "Your usual" bands wait for the F1 stop (~Oct 25).
