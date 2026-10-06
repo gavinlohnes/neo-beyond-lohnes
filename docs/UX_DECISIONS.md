@@ -381,6 +381,11 @@ below, this entry wins; the older entry is kept for history.
   (a lift or PR at its strength curve in TRAIN → RECORDS; a note or day in HISTORY with that day
   open; a meal at BODY's meal entry; a journal entry in JOURNAL). A search icon sits at the top
   right of every primary screen; MORE's SEARCH row stays. Sealed time capsules are never indexed.
+- **As built: the Mirror (MIRROR-001, PR #194, merged 2026-10-06, Routine).** Weekly's MIRROR row
+  (closed; SHOW MIRROR) compares NOW / 30 / 90 DAYS AGO: 7-day average weight, the 3 most-trained
+  lifts' heaviest counted set by then, 7-day average main sleep, and clean days in the 30 days
+  ending then (only once the quit tracker existed). An empty value reads "not enough data yet";
+  nothing is estimated. Read only.
 - **Icon on the boot screen (owner ruling 2026-10-05).** The existing app icon (`public/icons`, the
   bat) stays and may appear on the icon and the boot screen only, used as-is, never redrawn; this
   amends the HUD no-logo rule and the EMBLEM entry's "not used anywhere inside the running app".

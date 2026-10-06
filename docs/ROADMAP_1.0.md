@@ -239,6 +239,7 @@ Codex can build it when Claude is out.
 7. **FIND-001 — search everything** (Routine, read only). "chest" returns every chest PR, note and
    session. **Done (PR #193, merged 2026-10-06).**
 8. **MIRROR-001 — the Mirror** (Routine, read only, in Weekly). Now vs 30 and 90 days ago.
+   **Done (PR #194, merged 2026-10-06).**
 9. **REPORT-001 — Briefing / After Action Report** (Architectural). BRIEFING READY on work nights
    0200–0500, AFTER ACTION READY on the first day off; five items max; one suggested call.
 10. **WEEKAHEAD-001 — Week Ahead** (Architectural). Placement rule signed off 2026-10-06 ("3. A"):

@@ -1,6 +1,6 @@
 ---
 id: MIRROR-001
-status: ACTIVE
+status: CLOSED
 baseline: e8c391d7fb5a2ab5280f09d11677e025580e6765
 branch: ccr-a34b4863-xb2jzi
 contract: docs/agent/drops/MIRROR-001.md
@@ -8,6 +8,8 @@ pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: c83114f7bbb721a473fb45eb523d853a300b7910
+closed_at: 2026-10-06T09:14:31.017Z
 ---
 
 # ACTIVE_DROP
