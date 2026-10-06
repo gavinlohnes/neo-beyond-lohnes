@@ -21,22 +21,24 @@ export const DECLINE_LABEL = "Not doing this";
 
 /**
  * ADVISORY-002 (owner brief 2026-10-05): the Engine titles OBLIGATION_DUE
- * "An obligation needs attention", which says nothing. TODAY shows the
- * actual commitment instead, e.g. "Blood work · Overdue" (the date stays
- * on the COMMITMENT card). The Engine's own title is unchanged.
+ * "An obligation needs attention", which says nothing. TODAY never shows
+ * that title: a current OBLIGATION_DUE names the commitment that fires the
+ * rule (OVERDUE or DUE_TODAY), e.g. "Blood work · Overdue" (the date stays
+ * on the COMMITMENT card); anywhere else it reads "A commitment was due",
+ * History's label. The Engine's own title is unchanged.
  */
-const SHORT_TIER: Record<ObligationRelevance["tier"], string> = {
-  OVERDUE: "Overdue",
-  DUE_TODAY: "Due today",
-  DUE_SOON: "Due soon",
-  PLANNED_TODAY: "Planned today",
-  WAITING: "Waiting",
-  QUIET: "Open",
-};
+export const PLAIN_OBLIGATION_DUE_TITLE = "A commitment was due";
+
+/** A recommendation's title as TODAY words it when no current commitment applies (past ones, notes). */
+export function describePlainRecommendationTitle(kind: RecommendationKind, title: string): string {
+  return kind === "OBLIGATION_DUE" ? PLAIN_OBLIGATION_DUE_TITLE : title;
+}
 
 export function describeRecommendationTitle(recommendation: Recommendation, headline: ObligationRelevance | null): string {
-  if (recommendation.kind !== "OBLIGATION_DUE" || !headline) return recommendation.title;
-  return `${headline.obligation.title} · ${SHORT_TIER[headline.tier]}`;
+  if (recommendation.kind !== "OBLIGATION_DUE") return recommendation.title;
+  // Only a commitment that fires the rule names it; after it's satisfied the next one may not be due.
+  if (!headline || (headline.tier !== "OVERDUE" && headline.tier !== "DUE_TODAY")) return PLAIN_OBLIGATION_DUE_TITLE;
+  return `${headline.obligation.title} · ${headline.tier === "OVERDUE" ? "Overdue" : "Due today"}`;
 }
 
 export function describeRecommendationHandoff(target: RecommendationHandoffTarget): string {

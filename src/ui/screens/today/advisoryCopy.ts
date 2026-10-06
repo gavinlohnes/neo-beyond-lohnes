@@ -1,5 +1,6 @@
 import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { describePlainAdviceReason } from "../train/trainCopy";
+import { PLAIN_OBLIGATION_DUE_TITLE } from "./recommendationCopy";
 
 /**
  * ADVISORY-002 (owner brief 2026-10-05): TODAY's ADVISORY groups same-kind
@@ -83,7 +84,15 @@ function kindOf(note: AdvisoryNote): Kind | null {
       return {
         key: "continuity",
         label: (items) => (items.length === 1 ? "Still relevant from last time" : `Still relevant from last time · ${items.length}`),
-        item: (n) => ({ note: n, name: n.message, why: "You set this aside last time, and it still fits today." }),
+        item: (n) => ({
+          note: n,
+          // The composer quotes the prior recommendation's Engine title; an OBLIGATION_DUE one is reworded.
+          name:
+            basisValue(n, "priorKind") === "OBLIGATION_DUE"
+              ? `"${PLAIN_OBLIGATION_DUE_TITLE}" from last time is still relevant today.`
+              : n.message,
+          why: "You set this aside last time, and it still fits today.",
+        }),
       };
     case "shiftProtection":
       return {

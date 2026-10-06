@@ -73,3 +73,34 @@ describe("ADVISORY-002 grouping", () => {
     expect(rows.flatMap((r) => r.items)).toHaveLength(5);
   });
 });
+
+describe("ADVISORY-002 review fixes", () => {
+  it("OBLIGATION_DUE names only a commitment that fires the rule; otherwise it reads 'A commitment was due'", async () => {
+    const { describeRecommendationTitle } = await import("../../src/ui/screens/today/recommendationCopy");
+    const rec = { kind: "OBLIGATION_DUE", title: "An obligation needs attention" } as never;
+    const obligation = { id: "o", title: "Dentist" } as never;
+    expect(describeRecommendationTitle(rec, { obligation, tier: "OVERDUE" })).toBe("Dentist · Overdue");
+    expect(describeRecommendationTitle(rec, { obligation, tier: "DUE_TODAY" })).toBe("Dentist · Due today");
+    // After the due one is satisfied, the next headline may not be due at all.
+    expect(describeRecommendationTitle(rec, { obligation, tier: "WAITING" })).toBe("A commitment was due");
+    expect(describeRecommendationTitle(rec, { obligation, tier: "DUE_SOON" })).toBe("A commitment was due");
+    expect(describeRecommendationTitle(rec, null)).toBe("A commitment was due");
+    const other = { kind: "RECOVER", title: "Recover" } as never;
+    expect(describeRecommendationTitle(other, null)).toBe("Recover");
+  });
+
+  it("a 'still relevant' note about an OBLIGATION_DUE never quotes the Engine title", async () => {
+    const { composeAdvisoryNoteFromContinuity } = await import("../../src/engine/advisory");
+    const note = composeAdvisoryNoteFromContinuity("OBLIGATION_DUE", "An obligation needs attention", "REINTRODUCE")!;
+    const [row] = groupAdvisoryNotes([note]);
+    expect(row!.items[0]!.name).toBe('"A commitment was due" from last time is still relevant today.');
+    const recover = composeAdvisoryNoteFromContinuity("RECOVER", "Recover", "REINTRODUCE")!;
+    expect(groupAdvisoryNotes([recover])[0]!.items[0]!.name).toBe(recover.message);
+  });
+
+  it("the outcome prompt rewords a past OBLIGATION_DUE", async () => {
+    const { describePlainRecommendationTitle } = await import("../../src/ui/screens/today/recommendationCopy");
+    expect(describePlainRecommendationTitle("OBLIGATION_DUE", "An obligation needs attention")).toBe("A commitment was due");
+    expect(describePlainRecommendationTitle("RECOVER", "Recover")).toBe("Recover");
+  });
+});

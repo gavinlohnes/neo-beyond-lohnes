@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { describePlainRecommendationTitle } from "./recommendationCopy";
 import type {
   BeyondDay,
   CaptureItem,
@@ -2376,7 +2377,7 @@ export function TodayScreen({
           {pendingOutcomeInAttention && pendingOutcome && (
             <SignalRow label="OUTCOME">
               <p className="card-body" style={{ marginBottom: 8 }}>
-                Last time, BEYOND recommended "{pendingOutcome.title}" — how did that go?
+                Last time, BEYOND recommended "{describePlainRecommendationTitle(pendingOutcome.kind, pendingOutcome.title)}" — how did that go?
               </p>
               <p className="meta" style={{ marginBottom: 12 }}>
                 This just records your answer for later review. It won't change today's guidance.
