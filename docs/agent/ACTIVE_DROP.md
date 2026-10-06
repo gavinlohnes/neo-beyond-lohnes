@@ -1,6 +1,6 @@
 ---
 id: REPORT-001
-status: ACTIVE
+status: CLOSED
 baseline: c83114f7bbb721a473fb45eb523d853a300b7910
 branch: ccr-a34b4863-xb2jzi
 contract: docs/agent/drops/REPORT-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/195
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 5edbbe3d54ed653e3d14520fb41ad8188c2fbd7f
+closed_at: 2026-10-06T22:44:37.974Z
 ---
 
 # ACTIVE_DROP

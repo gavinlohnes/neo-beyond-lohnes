@@ -7,13 +7,16 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-06 by Codex (backup builder, taking over after Claude's handoff).** Baseline
-`origin/master` at `c83114f` (PR #194, MIRROR-001 merged after independent review; closed in this
-branch).
+**Written 2026-10-06 by Codex (backup builder/integrator under direct temporary owner
+authorization).** REPORT-001 is merged and closed.
 
-- **Drop:** `REPORT-001` Briefing / After Action Report: **ARCHITECTURAL**. **ACTIVE**, branch
-  `ccr-a34b4863-xb2jzi`. Gavin approved call-list Option A on 2026-10-06. **The PR remains
-  unmerged and waits for a distinct-collaborator formal approval plus Gavin's merge approval.**
+- **Drop:** `REPORT-001` Briefing / After Action Report: **ARCHITECTURAL**. **CLOSED**. PR
+  [#195](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/195) merged as
+  `5edbbe3d54ed653e3d14520fb41ad8188c2fbd7f`; final head
+  `558a6c0ccf6208c0986255523871608b3b8889ec`.
+- **Owner rulings:** Gavin approved call-list Option A on 2026-10-06. While Claude was unavailable,
+  Gavin directly authorized Codex to review and merge. The temporary exception is recorded on PR
+  #195; permanent governance remains unchanged pending owner/Claude follow-up.
 - **Done:** MIRROR-001 closed (as-built entry, roadmap). REPORT-001 built — Standard report:
   - **Scope / behavioral effect:** one report, two timings. TODAY shows one line in its banner
     slot (with the backup line; no phase row): "BRIEFING READY" on a work night 0200–0459 (last
@@ -46,9 +49,9 @@ branch).
     written (tested); the line is a banner, not a phase row.
   - Also: the Mirror now leaves 0 lb sets out of its top lifts (MIRROR-001 review note).
   - Screenshots: `docs/agent/screenshots/REPORT-001/`.
-- **Left:** a different GitHub collaborator formally approves the final exact head; Gavin approves
-  the merge; a separate Integrator merges and closes. Then WEEKAHEAD-001 (Architectural; rule A
-  signed off).
+- **Left:** no REPORT-001 implementation work. Confirm this closure on `origin/master`, then read
+  the Queue and written contract before activating the next Drop. Do not fold the separately
+  authorized Visual Command Center campaign into another Drop.
 - **Verification run:** Builder's full `npm run verify` passed (203 files / 2094 tests, build OK).
   Codex takeover verification after the review-test fixes: REPORT-001 node suite 8/8; browser suite
   7/7; `npm run check:architecture`; `npm run typecheck`; `git diff --check` — all passed.
@@ -73,5 +76,4 @@ branch).
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-The call-list decision is resolved: Option A approved 2026-10-06. Final merge approval remains a
-separate owner decision after formal independent approval.
+None.
