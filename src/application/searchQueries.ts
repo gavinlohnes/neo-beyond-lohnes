@@ -1,6 +1,6 @@
 import MiniSearch from "minisearch";
 import { db } from "../persistence/db";
-import type { MealLoggedPayload, ShiftHandoffNotedPayload } from "../domain/common/types";
+import type { MealLoggedPayload, MealLogVoidedPayload, ShiftHandoffNotedPayload } from "../domain/common/types";
 import type { PerformedSet } from "../domain/workout/types";
 import { getMissions, getObligations } from "./intentQueries";
 import { getAllCaptureItems } from "./queries";
@@ -65,7 +65,7 @@ function shortDate(iso: string): string {
 
 /** FIND-001: lifts, PRs, meals, journal, handoff notes and History days, as search documents. */
 async function trainingAndLifeDocs(): Promise<IndexedDoc[]> {
-  const [names, records, meals, journal, days, sessions, undone, handoffs, mealEvents] = await Promise.all([
+  const [names, records, meals, journal, days, sessions, undone, handoffs, loggedMeals, mealVoids] = await Promise.all([
     getExerciseNames(),
     getAllRecords(),
     getSavedMeals({ includeArchived: true }),
@@ -75,7 +75,11 @@ async function trainingAndLifeDocs(): Promise<IndexedDoc[]> {
     getUndoneSetIds(),
     db.events.where("type").equals("SHIFT_HANDOFF_NOTED").toArray(),
     db.events.where("type").equals("MEAL_LOGGED").toArray(),
+    db.events.where("type").equals("MEAL_LOG_VOIDED").toArray(),
   ]);
+  // A meal deleted or undone after logging was never eaten that day.
+  const voidedMeals = new Set(mealVoids.map((e) => (e.payload as MealLogVoidedPayload).mealEventId));
+  const mealEvents = loggedMeals.filter((e) => !voidedMeals.has(e.id));
   const finished = new Map(
     sessions.filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL").map((s) => [s.id, s] as const),
   );

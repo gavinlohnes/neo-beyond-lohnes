@@ -253,6 +253,7 @@ export function App() {
   }
 
   function openTrain(destination: TrainDestination) {
+    setTrainRecordsFocus(null);
     setTrainDestination(destination);
     showTab("TRAIN");
   }
@@ -312,7 +313,10 @@ export function App() {
                 <TimeCapsuleOpened />
               </>
             }
-            onViewCommitments={() => showTab("MORE")}
+            onViewCommitments={() => {
+              setMoreView("MENU");
+              showTab("MORE");
+            }}
             onOpenTrain={openTrain}
             openToolsOnMount={todayToolsOpen}
             onOpenBody={(target) => {
@@ -334,15 +338,18 @@ export function App() {
             key={moreResetKey}
             initialView={moreView}
             onOpenCapture={() => {
+              setMoreView("MENU");
               setTodayToolsOpen(true);
               showTab("TODAY");
             }}
             onOpenRecords={(exerciseId) => {
+              setMoreView("MENU");
               setTrainDestination(null);
               setTrainRecordsFocus(exerciseId);
               showTab("TRAIN");
             }}
             onOpenMeal={() => {
+              setMoreView("MENU");
               setBodyFocus("meal");
               showTab("BODY");
             }}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { noteShiftHandoff, startDay } from "../../src/application/commands";
 import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
-import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
+import { createSavedMeal, logMeal, voidMealLog } from "../../src/application/nutritionCommands";
 import { createDecisionJournalEntry } from "../../src/application/journalCommands";
 import { sealTimeCapsule } from "../../src/application/timeCapsuleCommands";
 import { searchAll } from "../../src/application/searchQueries";
@@ -40,6 +40,15 @@ describe("FIND-001 searchAll", () => {
     await createDecisionJournalEntry({ title: "Train before shift", decision: "Lift at 1600 on work days" });
     expect((await searchAll("oats")).map((r) => r.domain).sort()).toEqual(["DAY", "MEAL"]);
     expect((await searchAll("shift")).map((r) => r.domain)).toContain("JOURNAL");
+  });
+
+  it("a meal deleted after logging isn't shown as eaten that day", async () => {
+    const day = await startDay();
+    const bake = await createSavedMeal({ name: "Zucchini bake", calories: 500, proteinG: 20, carbsG: 40, fatG: 20 });
+    const logged = await logMeal(day.id, bake.id);
+    await voidMealLog(day.id, logged.eventId);
+    // The saved meal itself is still findable; the day it was deleted from is not.
+    expect((await searchAll("zucchini")).map((r) => r.domain)).toEqual(["MEAL"]);
   });
 
   it("a sealed time capsule's text is never searchable", async () => {

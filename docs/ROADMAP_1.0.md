@@ -210,9 +210,10 @@ Codex can build it when Claude is out.
   thresholds — RED: a RED check-in or under 4 h sleep; AMBER: a YELLOW check-in, under 6 h sleep,
   or 3+ strength sessions in 4 days. (2) Order after STATUS: FIND-001, MIRROR-001, then REPORT-001
   (Mirror moves ahead of the report). (3) Week Ahead rule A: a workout on each day off, none on a
-  work day. Example: a week with Thu/Fri off and Sat–Mon on shift suggests workouts Thu and Fri
-  only. The smaller built defaults stand (+WATER opens the quick-add; boot "DAY n" counts BEYOND
-  days on record; a PR set taps once like any set).
+  work day, following the A/B rotation, at most 2 days in a row. Example: a week with Thu/Fri off
+  and Sat–Mon on shift suggests workouts Thu and Fri only. (The smaller choices Gavin wasn't asked
+  to answer stay as built until he says otherwise: +WATER opens the quick-add; boot "DAY n" counts
+  BEYOND days on record; a PR set taps once like any set.)
 - Write all Drops in one session, then build in this order. Every Drop's handoff carries
   screenshots and DECISIONS FOR GAVIN; Architectural Drops wait for Gavin to approve the merge.
 
