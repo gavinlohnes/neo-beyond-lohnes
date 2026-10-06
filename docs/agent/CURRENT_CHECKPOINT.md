@@ -7,37 +7,71 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `e8c391d` (PR #193,
-FIND-001 merged after independent review; closed in this branch).
+**Written 2026-10-06 by Codex (backup builder, taking over after Claude's handoff).** Baseline
+`origin/master` at `c83114f` (PR #194, MIRROR-001 merged after independent review; closed in this
+branch).
 
-- **Drop:** `MIRROR-001` the Mirror: ROUTINE. **ACTIVE**, branch `ccr-a34b4863-xb2jzi`.
-- **Done:** FIND-001 closed (as-built entry, roadmap). MIRROR-001 built: Weekly has a MIRROR row,
-  closed by default (SHOW MIRROR). It compares NOW / 30 DAYS AGO / 90 DAYS AGO:
-  - Weight: the average of weigh-ins in the 7 days ending then.
-  - The 3 lifts with the most finished sessions: the heaviest counted set on record by then
-    (substituted, skipped and undone sets left out, as RECORDS counts them).
-  - Sleep: the average main sleep over BEYOND days that began in the 7 days ending then.
-  - Clean days: days logged clean in the 30 days ending then (only once the quit tracker existed).
-  - Any value with nothing behind it reads "not enough data yet"; nothing is estimated. Read only
-    (`src/application/mirrorQueries.ts`).
-  - Screenshot: `docs/agent/screenshots/MIRROR-001/weekly-mirror.jpg`.
-- **Left:** independent review, merge on green, close. Then REPORT-001 (Architectural: its PR waits
-  for Gavin), then WEEKAHEAD-001 (Architectural; rule A signed off).
-- **Verification run:** `npm run verify` (201 files / 2081 tests passed, build OK); `git diff
-  --check` OK.
-- **Open risks:** the Mirror reads at the same time of day as now (e.g. "30 days ago" = that date at
-  this hour), so a weigh-in later that day isn't counted. On a narrow phone the three columns wrap
-  "not enough data yet" over two lines. Carried over: a LIFT/PR search result during an active
-  workout opens TRAIN on the workout; TODAY's strip briefly shows the old capacity sentence before
-  the System Status reads; a curve opens only from a record card; Android caches home-screen
-  shortcuts until the PWA updates; with an OBLIGATION_DUE recommendation the commitment's name
-  shows twice on TODAY; agent sessions clone shallow (`git fetch --unshallow origin` before
-  `factory-drop.mjs init`); raw capacity codes in "How BEYOND decided" with 2+ reasons;
-  `factory:status` needs `GITHUB_TOKEN`; merged branches await deletion.
+- **Drop:** `REPORT-001` Briefing / After Action Report: **ARCHITECTURAL**. **ACTIVE**, branch
+  `ccr-a34b4863-xb2jzi`. Gavin approved call-list Option A on 2026-10-06. **The PR remains
+  unmerged and waits for a distinct-collaborator formal approval plus Gavin's merge approval.**
+- **Done:** MIRROR-001 closed (as-built entry, roadmap). REPORT-001 built — Standard report:
+  - **Scope / behavioral effect:** one report, two timings. TODAY shows one line in its banner
+    slot (with the backup line; no phase row): "BRIEFING READY" on a work night 0200–0459 (last
+    night a scheduled shift), "AFTER ACTION READY" from 0600 on the first day off after a work
+    block. Neither shows if last night was declared OFF. OPEN shows the report in place; after
+    that the line steps back for the day (remembered on the phone only). Weekly has a closed
+    REPORT row that opens it any time.
+  - **The report (five items at most, each left out when empty):** (1) this block vs last —
+    sessions, sets, average main sleep, e.g. "This block (Mon, Oct 12 – Tue, Oct 13, 2 shifts): 2
+    sessions, 2 sets, avg sleep 5h"; (2) what moved — PRs set in the block, and clean-day and
+    weight milestones reached in it ("7 clean days"); (3) what stalled — a lift trained this block
+    whose heaviest set hasn't risen in 21+ days ("Leg Press: heaviest set unchanged since Tue, Sep
+    1"; 0 lb bodyweight lifts and rep-only records aside); (4)
+    what's coming — the next block's dates, a time capsule opening within 14 days (its date only);
+    (5) ONE call, from a fixed ordered list: a stalled lift → "Consider a lighter week on X.", else
+    a block averaging under 6 h sleep → "Consider protecting sleep before the next block.", else
+    none.
+  - **Review fixes:** mid-block (a work night) the block now runs on to its true end, so "next
+    block" is the one after it (it used to call tomorrow's shift the next block); the TODAY line
+    re-checks every minute, so a screen left open across 0200 still offers it; tests now prove the
+    line steps back after opening and disappears out of its window. After exact-head technical
+    review, Codex added explicit coverage for Option A's final no-call branch and 320/360 px
+    overflow, 44 px control-height, and 16 px report-text contracts.
+  - **Definitions:** a block is a run of consecutive scheduled work days (the saved schedule); its
+    period is the lived days that hold its shifts (16:30 the day before its first shift to 16:30
+    after its last). Deterministic for the same data and time (tested); read only.
+  - **Files:** `src/application/reportQueries.ts`, `src/ui/screens/report/` (copy + view),
+    `src/ui/components/ReportReadyLine.tsx`, App banner slot, Weekly row, tests.
+  - **Protected invariants:** Engine, recommendations, schema and events untouched; nothing
+    written (tested); the line is a banner, not a phase row.
+  - Also: the Mirror now leaves 0 lb sets out of its top lifts (MIRROR-001 review note).
+  - Screenshots: `docs/agent/screenshots/REPORT-001/`.
+- **Left:** a different GitHub collaborator formally approves the final exact head; Gavin approves
+  the merge; a separate Integrator merges and closes. Then WEEKAHEAD-001 (Architectural; rule A
+  signed off).
+- **Verification run:** Builder's full `npm run verify` passed (203 files / 2094 tests, build OK).
+  Codex takeover verification after the review-test fixes: REPORT-001 node suite 8/8; browser suite
+  7/7; `npm run check:architecture`; `npm run typecheck`; `git diff --check` — all passed.
+  A full rerun reached 2094 passing tests but three unrelated Factory fixture setup hooks timed out
+  under the long Windows run; the isolated Factory suite then passed 39/39. Production build and
+  `check:risk -- c83114f` passed; risk sees no Engine/domain path, while the contract remains
+  Architectural.
+- **Open risks:** blocks come from the saved schedule, not from days actually worked, so a swapped
+  shift isn't seen. AFTER ACTION READY shows from 0600 to midnight on the first day off; a night
+  declared OFF hides the line only for that lived day. The opened-today marker lives in this phone's storage only. In the browser
+  test runner, unmounting and re-rendering within one test leaves later renders uncommitted
+  (tests are written one render each; seen in BOOT-001 too). Carried over: the Mirror reads at the
+  same time of day as now; TODAY's strip briefly shows the old capacity sentence before the System
+  Status reads; a curve opens only from a record card; Android caches home-screen shortcuts until
+  the PWA updates; with an OBLIGATION_DUE recommendation the commitment's name shows twice on
+  TODAY; agent sessions clone shallow (`git fetch --unshallow origin` before `factory-drop.mjs
+  init`); raw capacity codes in "How BEYOND decided" with 2+ reasons; `factory:status` needs
+  `GITHUB_TOKEN`; merged branches await deletion.
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-None.
+The call-list decision is resolved: Option A approved 2026-10-06. Final merge approval remains a
+separate owner decision after formal independent approval.

@@ -10,6 +10,7 @@ import { BackupDueLine } from "../ui/components/BackupDueLine";
 import { NotesSweep } from "../ui/components/NotesSweep";
 import { ShiftHandoff } from "../ui/components/ShiftHandoff";
 import { TimeCapsuleOpened } from "../ui/components/TimeCapsuleOpened";
+import { ReportReadyLine } from "../ui/components/ReportReadyLine";
 import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
 import { performDueDayRollover } from "../application/commands";
@@ -311,6 +312,8 @@ export function App() {
                 <ShiftHandoff refreshKey={workEndedKey} />
                 {/* NOTES-CAPSULE-001: a time capsule whose day has come, until GOT IT. */}
                 <TimeCapsuleOpened />
+                {/* REPORT-001: BRIEFING READY on a work night 0200–0500; AFTER ACTION READY on the first day off. */}
+                <ReportReadyLine />
               </>
             }
             onViewCommitments={() => {

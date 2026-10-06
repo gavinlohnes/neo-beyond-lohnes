@@ -9,6 +9,7 @@ import { describeBaselines, describeBaselinesQuiet } from "./weeklyCopy";
 import { Ribbon } from "./Ribbon";
 import { HeatGrid } from "./HeatGrid";
 import { MirrorView } from "./MirrorView";
+import { ReportView } from "../report/ReportView";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 
 /**
@@ -25,6 +26,7 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [gridOpen, setGridOpen] = useState(false);
   const [mirrorOpen, setMirrorOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
     let current = true;
@@ -59,6 +61,13 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
           <Section label="MIRROR">
             <FieldDisclosure summary={mirrorOpen ? "HIDE MIRROR" : "SHOW MIRROR"} open={mirrorOpen} onToggle={setMirrorOpen}>
               {mirrorOpen && <MirrorView now={now} />}
+            </FieldDisclosure>
+          </Section>
+
+          {/* REPORT-001: the Briefing / After Action Report, any time, one tap down. */}
+          <Section label="REPORT">
+            <FieldDisclosure summary={reportOpen ? "HIDE REPORT" : "SHOW REPORT"} open={reportOpen} onToggle={setReportOpen}>
+              {reportOpen && <ReportView now={now} />}
             </FieldDisclosure>
           </Section>
 

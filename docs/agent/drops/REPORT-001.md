@@ -1,6 +1,6 @@
 ---
 id: REPORT-001
-baseline: SET-AT-ACTIVATION
+baseline: c83114f7bbb721a473fb45eb523d853a300b7910
 risk_tier: ARCHITECTURAL
 ---
 
@@ -14,7 +14,7 @@ day off after the block shows "AFTER ACTION READY". Both open the same five-item
 
 ## Approved baseline
 
-Set at activation to fresh `origin/master`.
+`origin/master` at `c83114f7bbb721a473fb45eb523d853a300b7910`.
 
 ## Risk classification
 

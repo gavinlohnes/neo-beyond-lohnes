@@ -61,7 +61,8 @@ export async function getMirror(now: Date = new Date()): Promise<Mirror> {
     sessions.filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL").map((s) => [s.id, new Date(s.startedAt).getTime()] as const),
   );
   const sets = ((await db.performedSets.toArray()) as unknown as PerformedSet[]).filter(
-    (s) => finished.has(s.sessionId) && !undone.has(s.id) && !s.skipped && s.reps > 0 && !s.substitutedName,
+    // weight > 0: a bodyweight lift logged at 0 lb has no heaviest set to compare (MIRROR-001 review note).
+    (s) => finished.has(s.sessionId) && !undone.has(s.id) && !s.skipped && s.reps > 0 && s.weight > 0 && !s.substitutedName,
   );
   const sessionsPerLift = new Map<string, Set<string>>();
   for (const s of sets) sessionsPerLift.set(s.exerciseId, (sessionsPerLift.get(s.exerciseId) ?? new Set()).add(s.sessionId));
