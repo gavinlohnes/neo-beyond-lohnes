@@ -374,6 +374,13 @@ below, this entry wins; the older entry is kept for history.
 - **Week Ahead placement rule (owner sign-off 2026-10-06, "3. A").** WEEKAHEAD-001 suggests a
   workout on each day off and none on a work day, following the A/B rotation, at most 2 days in a
   row. Suggestions only; Gavin moves or skips; the Engine is not told.
+- **As built: search everything (FIND-001, PR #193, merged 2026-10-06, Routine).** Search covers
+  lifts, PRs, saved meals, journal entries, shift-handoff notes and History days (lifts trained,
+  meals eaten — deleted meals left out — and notes) alongside Missions, Obligations and Capture;
+  "chest" returns the lift, every chest PR and each day it was trained. A tap opens where it lives
+  (a lift or PR at its strength curve in TRAIN → RECORDS; a note or day in HISTORY with that day
+  open; a meal at BODY's meal entry; a journal entry in JOURNAL). A search icon sits at the top
+  right of every primary screen; MORE's SEARCH row stays. Sealed time capsules are never indexed.
 - **Icon on the boot screen (owner ruling 2026-10-05).** The existing app icon (`public/icons`, the
   bat) stays and may appear on the icon and the boot screen only, used as-is, never redrawn; this
   amends the HUD no-logo rule and the EMBLEM entry's "not used anywhere inside the running app".
