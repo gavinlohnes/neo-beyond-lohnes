@@ -1,15 +1,13 @@
 ---
-id: VIEWS-001
-status: CLOSED
-baseline: c27e1f1c0b41c4b9076146364b7b338714f10c1e
+id: STATUS-001
+status: ACTIVE
+baseline: a6d204437a74681057162f7475c25b24ef3a33bc
 branch: ccr-a34b4863-xb2jzi
-contract: docs/agent/drops/VIEWS-001.md
-pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/191
+contract: docs/agent/drops/STATUS-001.md
+pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
-integration_sha: a6d204437a74681057162f7475c25b24ef3a33bc
-closed_at: 2026-10-06T05:53:12.048Z
 ---
 
 # ACTIVE_DROP
@@ -23,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/VIEWS-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/STATUS-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and
