@@ -78,7 +78,11 @@ describe("FEEL-001", () => {
     const press = cssRules().find((r) => r.selectorText === "button:not(:disabled):active");
     expect(press).toBeDefined();
     expect(press!.style.transform).toContain("scale");
-    expect(press!.style.filter).toContain("brightness");
+    // Brighter face for every button except the red filled ones, which keep their darker press.
+    const brighter = cssRules().find((r) => r.selectorText === "button:not(:disabled):not(.btn-primary):not(.btn-danger):active");
+    expect(brighter!.style.filter).toContain("brightness(1.35)");
+    const red = cssRules().filter((r) => r.selectorText === ".btn-primary:active");
+    expect(red.some((r) => r.style.filter.includes("brightness(0.9)"))).toBe(true);
   });
 
   it("a number counts to its new value and lands exactly on it", async () => {

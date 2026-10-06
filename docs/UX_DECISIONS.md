@@ -339,6 +339,12 @@ below, this entry wins; the older entry is kept for history.
   shows the Engine title "An obligation needs attention": a current OBLIGATION_DUE names the due
   commitment ("Blood work · Overdue"), otherwise it reads "A commitment was due" (History, the
   outcome prompt, a "still relevant" note). The "Background context…" line is gone.
+- **As built: finish-and-feel pass (FEEL-001, PR #188, merged 2026-10-06, Routine).** A tab change
+  arrives in 180 ms (fade + 6 px rise, no overshoot); HUD section rules and frame ticks draw in
+  once; BODY's water/protein and TODAY's FUEL totals count up in 250 ms; one short tap (Vibration
+  API, skipped on iPhone) when a set is saved and when a hold-to-confirm completes — a PR set gets
+  the same single tap, nothing extra; every enabled button has a press state; reduced motion keeps
+  all of it instant. Example: LOG in gym mode buzzes once and the set appears.
 - **Icon on the boot screen (owner ruling 2026-10-05).** The existing app icon (`public/icons`, the
   bat) stays and may appear on the icon and the boot screen only, used as-is, never redrawn; this
   amends the HUD no-logo rule and the EMBLEM entry's "not used anywhere inside the running app".

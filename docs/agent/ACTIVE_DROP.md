@@ -1,10 +1,10 @@
 ---
-id: FEEL-001
+id: BOOT-001
 status: ACTIVE
-baseline: 7a36018edef4b82eb3e0099c98724db547970a82
+baseline: aaa42c234fa585f32f151b777aa013c692761e19
 branch: ccr-a34b4863-xb2jzi
-contract: docs/agent/drops/FEEL-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+contract: docs/agent/drops/BOOT-001.md
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/189
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
@@ -21,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/FEEL-001.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/BOOT-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and

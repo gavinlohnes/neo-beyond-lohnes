@@ -1,6 +1,6 @@
 ---
 id: BOOT-001
-baseline: SET-AT-ACTIVATION
+baseline: aaa42c234fa585f32f151b777aa013c692761e19
 risk_tier: ROUTINE
 ---
 
@@ -14,7 +14,7 @@ existing icon, a 1px line drawing across, "BEYOND" typing in, three status lines
 
 ## Approved baseline
 
-Set at activation to fresh `origin/master`.
+`origin/master` at `aaa42c234fa585f32f151b777aa013c692761e19`.
 
 ## Risk classification
 
@@ -27,7 +27,7 @@ ROUTINE: a presentation overlay plus one read-only status query. The icon is the
 - Sequence (~1 s): black, icon, 1px line draws across, "BEYOND" types in, three status lines tick
   in, cut to the screen the app would have opened anyway (TODAY, a resumed workout, a shortcut).
 - Status lines from a read-only query: **DAY n** (the number of BEYOND days on record), **SHIFT
-  hhmm** (today's scheduled shift start, or OFF / NO SCHEDULE), **BACKUP OK / DUE / OFF** (the
+  hhmm** (today's scheduled shift start, or SHIFT OFF), **BACKUP OK / DUE / OFF** (the
   automatic-backup state). A value that can't be read is left out, never guessed.
 - Tap anywhere skips; reduced motion shows no sequence at all.
 - Manifest `background_color`/`theme_color` and the page background stay pure black (#000000) so
