@@ -194,22 +194,56 @@ work". Only the owner adds to it. Each item is one short brief (what changes, wh
 one concrete example of the problem it fixes) plus a written Drop in `docs/agent/drops/` so
 Codex can build it when Claude is out.
 
-Owner brief 2026-10-04. (Brief item 3, the duplicate-meal prompt, is already done: DUP-MEAL-001,
-PR #155, plus SAME AS YESTERDAY in DUP-MEAL-002, PR #157.)
+**Owner brief 2026-10-05 ("Advanced batch").** Rulings, same day:
 
-1. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
-   for reviews (Claude walks him through it; Claude never creates accounts or handles the token),
-   so independent reviews are formal approvals.
+- **The field-week hold is lifted; build now.** Field notes still jump the queue for any TRAIN or
+  BODY break. Example: a GitHub Issue labeled `field` saying "LOG doesn't save in gym mode" goes
+  ahead of everything below.
+- **The app icon stays** (`public/icons`, the bat). It may appear on the icon and the boot screen
+  only (the HUD no-logo rule is amended), used as-is, never redrawn. Example: BOOT-001 shows the
+  icon file itself, not a traced or animated copy.
+- **Approved merges:** System Status is one line on TODAY; Briefing and After Action Report are
+  one report; the Mirror lives in Weekly. Example: there is no separate "Mirror" screen; it is a
+  closed row in Weekly.
+- **The review account stays in the Queue; nothing waits on it.**
+- Write all Drops in one session, then build in this order. Every Drop's handoff carries
+  screenshots and DECISIONS FOR GAVIN; Architectural Drops wait for Gavin to approve the merge.
 
-Then **a week of field use**: no new features; field notes first.
+1. **ADVISORY-002 — Advisory cleanup** (Routine). Same-kind notes grouped ("Easing back in · 4
+   lifts", a tap lists the lifts with WHY); real to-dos such as "Blood work OVERDUE" go to
+   Commitments; the vague "An obligation needs attention" line and the "Background context..."
+   explainer are cut; three rows max.
+2. **FEEL-001 — finish-and-feel pass** (Routine, visual only). 150–250 ms transitions, no bounce;
+   HUD lines draw in; numbers tick up; haptic tap on LOG, finished set and hold-to-confirm where
+   supported; press states; reduced motion makes it instant; phone screenshots of every screen.
+3. **BOOT-001 — boot sequence** (Routine). Cold launch only: icon, a 1px line, "BEYOND" types in,
+   three status lines (e.g. DAY 14 · SHIFT 1800 · BACKUP OK), about 1 s, tap to skip.
+4. **SHORTCUTS-001 — home-screen shortcuts** (Routine). START WORKOUT, +WATER, LOG MEAL.
+5. **VIEWS-001 — data views** (Routine, read only). Lift strength curve with PRs; 12-week heat
+   grid in Weekly. "Your usual" bands wait for the F1 stop (~Oct 25).
+6. **STATUS-001 — System Status** (Architectural). One TODAY line, e.g. "AMBER · 5h sleep, 3 hard
+   sessions in 4 days"; never changes the Engine.
+7. **FIND-001 — search everything** (Routine, read only). "chest" returns every chest PR, note and
+   session.
+8. **REPORT-001 — Briefing / After Action Report** (Architectural). BRIEFING READY on work nights
+   0200–0500, AFTER ACTION READY on the first day off; five items max; one suggested call.
+9. **MIRROR-001 — the Mirror** (Routine, read only, in Weekly). Now vs 30 and 90 days ago.
+10. **WEEKAHEAD-001 — Week Ahead** (Architectural). Needs Gavin's sign-off on a placement rule
+    before it is built.
+11. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
+    for reviews (Claude walks him through it; Claude never creates accounts or handles the token),
+    so independent reviews are formal approvals. Nothing waits on it.
 
 ### Known, not yet approved
 
 Spotted but not briefed. The owner moves an item up into the Queue or drops it.
 
-- Items no longer held for Oct 16: the Engine reacting to evidence, Week Ahead, deload/stall
-  suggestions. Each needs a brief; Engine rule adoption needs sign-off.
+- Items no longer held for Oct 16: the Engine reacting to evidence, deload/stall suggestions.
+  Each needs a brief; Engine rule adoption needs sign-off. (Week Ahead was briefed 2026-10-05 as
+  WEEKAHEAD-001.)
 - **Parking lot (owner brief 2026-10-04), no Drops yet:**
+  - **Data views:** moved to the Queue as VIEWS-001 (owner brief 2026-10-05); "your usual" bands
+    still wait for the F1 review.
   - **Gym mode:** moved to the Queue as GYM-001 and GYM-002 (owner rulings 2026-10-04).
   - **Notes that go somewhere:** moved to the Queue (NOTES-SWEEP-001, -HANDOFF-001, -CAPSULE-001), 2026-10-04.
   - **Data views (after the F1 review):** tap a number to see its story: lift strength curve,

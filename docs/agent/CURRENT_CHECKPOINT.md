@@ -7,43 +7,30 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-04 by Claude Code (reviewer/integrator).** Baseline `origin/master` at `dd2e12f`
-(PR #184, CLEANUP-003 merged).
+**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `e7441dc`.
 
-- **Drop:** `CLEANUP-003` words and clutter: ROUTINE. **Merged** (PR
-  [#184](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/184), merge `dd2e12f`) and
-  **closed** on branch `claude/cleanup-003-close`. **No Drop is active.**
-- **Done:** independent review of #184 at `03638a4`: scope clean (no Engine, domain, persistence,
-  schema or package change; Engine strings unchanged); each of findings 5-10 and 12 checked;
-  mutation checks failed the right tests. PR Verification green on the reviewed head.
-- **Verification run (review):** `check:architecture` OK; `typecheck` OK; `git diff --check` OK;
-  10 targeted test files 333/333 passed (factoryDrop included, no timeout flag).
-- **Left:** nothing. Everything Gavin has approved is finished. Next is **a week of field use**
-  (no new features; field notes first, as GitHub Issues labeled `field`) and Gavin's **review
-  account**.
-- **Open risks:** "How BEYOND decided" still shows raw capacity codes on a day with two or more
-  reasons (the Engine joins them as one string, e.g. "energy <= 2, stress >= 4"); a single reason
-  reads plainly. A small display follow-up if Gavin wants it. On TRAIN the planned-work question
-  can show for a moment before it hides after a finished workout (it waits on one read); a
-  finished RECOVERY session also hides it. The backup line shows only on TODAY (the screen BEYOND
-  opens to). If the share menu is cancelled, the line shows the browser's own wording (e.g. "Share
-  canceled."). A weeks-old backup will usually report "differs from this device" in the restore
-  check, because data has been logged since it was made. Carried over: HUD follow-up (ticks not on
-  `.tool-label`, see decision 2); @fontsource kept only for Weekly; `factory:status` needs
-  `GITHUB_TOKEN`. The timeline was never checked by eye in a browser; tests cover its layout.
-  Branches awaiting deletion by Gavin: 56 merged branches plus `codex/dup-meal-001`,
-  `codex/duplicate-meal-prompt`, `claude/hud-001`, `claude/hud-001-close`,
-  `claude/backup-auto-001`, `claude/pr-cards-001`, `claude/pr-cards-001-close`,
-  `claude/body-timeline-001`, `claude/body-timeline-001-close`, `claude/hud-002`,
-  `claude/hud-002-close`, `claude/gym-001`, `claude/gym-polish-001`, `claude/gym-polish-001-close`,
-  `claude/gym-002`, `claude/gym-002-close`, `claude/notes-sweep-001`,
-  `claude/notes-sweep-001-close`, `claude/notes-handoff-001`, `claude/notes-handoff-001-close`,
-  `claude/notes-capsule-001`, `claude/notes-capsule-001-close`, `claude/cleanup-002`,
-  `claude/cleanup-002-close`, `claude/cleanup-003`, and `claude/cleanup-003-close` (once merged).
+- **Drop:** none active. This session wrote the ten Drops of Gavin's "Advanced batch" brief
+  (2026-10-05): `ADVISORY-002`, `FEEL-001`, `BOOT-001`, `SHORTCUTS-001`, `VIEWS-001`,
+  `STATUS-001`, `FIND-001`, `REPORT-001`, `MIRROR-001`, `WEEKAHEAD-001`, in
+  `docs/agent/drops/`, each with `baseline: SET-AT-ACTIVATION` (set to fresh `origin/master` when
+  the Drop is activated). Branch `ccr-a34b4863-xb2jzi`.
+- **Done:** Drops written; Gavin's rulings recorded the same day (roadmap Queue, `UX_DECISIONS.md`,
+  doctrine amendment: the app icon may appear on the icon and the boot screen only).
+- **Left:** build in Queue order, starting with ADVISORY-002. WEEKAHEAD-001 is not buildable until
+  Gavin signs off a placement rule. STATUS-001 and REPORT-001 wait for Gavin to approve the merge
+  (and their thresholds / call list).
+- **Verification run:** docs only; `git diff --check` OK.
+- **Open risks:** carried over from the last handoff: "How BEYOND decided" shows raw capacity
+  codes on a day with two or more reasons; the planned-work question can flash on TRAIN after a
+  finished workout; `factory:status` needs `GITHUB_TOKEN`; 80+ merged branches await deletion by
+  Gavin (listed in git history of this file, 2026-10-04).
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-None.
+1. **Week Ahead placement rule** (needed before WEEKAHEAD-001 is built):
+   **A (recommended)** a workout on each day off, none on work days, A/B rotation, at most 2 days
+   in a row · **B** as A plus a short session the morning after a last shift · **C** a fixed 3 per
+   week, days off first.

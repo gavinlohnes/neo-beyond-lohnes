@@ -326,6 +326,16 @@ below, this entry wins; the older entry is kept for history.
   tables that differ). The month is counted from when the setting is turned on.
 - **As built: PR record cards (PR-CARDS-001, PR #164, merged 2026-10-04, Routine).** A record set shows a quiet 1px red-outlined `PR` tag (no fill, no sound, no vibration), and TRAIN → RECORDS (pre-workout only) lists every PR as a card, newest first, e.g. "Machine Chest Press · Heaviest: 145 lb × 6", using the same rule as the finish summary and Weekly.
 - **As built: transformation timeline (BODY-TIMELINE-001, PR #166, merged 2026-10-04, Routine).** BODY → BODYWEIGHT → SHOW TIMELINE draws the last 90 days of weight (inline SVG, neutral ink) with PRs, clean-day milestones (7/30/60/90/180/365 clean days, a running count, never a streak), weight milestones and the projected goal date pinned as 44 px markers, a filter chip per kind, read only; every label reuses its source wording, e.g. a marker reads "Machine Chest Press: heaviest yet (145 lb)", as the finish summary does, and with no weigh-ins it says "Log a bodyweight to start your timeline."
+- **Advanced batch (owner brief 2026-10-05).** The field-week hold is lifted; field notes still
+  jump the queue for a TRAIN or BODY break. Approved merges: System Status is one line on TODAY
+  (not a new screen or phase row); Briefing and After Action Report are one report with two
+  timings; the Mirror is a closed row in Weekly. Ten Drops written (ADVISORY-002 through
+  WEEKAHEAD-001, see the roadmap Queue). Example: "AMBER · 5h sleep, 3 hard sessions in 4 days" is
+  the whole System Status surface.
+- **Icon on the boot screen (owner ruling 2026-10-05).** The existing app icon (`public/icons`, the
+  bat) stays and may appear on the icon and the boot screen only, used as-is, never redrawn; this
+  amends the HUD no-logo rule and the EMBLEM entry's "not used anywhere inside the running app".
+  Example: BOOT-001 shows `icons/icon-192.png` on black, then cuts to TODAY.
 - **Gym mode (owner rulings 2026-10-04: 1A, 2A, 3A).** Built as two Drops: GYM-001 is the gym
   screen (full-screen current lift, big buttons, screen awake, auto-advance, ghost set, plate math,
   warm-up ramp); GYM-002 adds Gavin's own cue text per lift, **stored in the database so it is in
@@ -1205,7 +1215,8 @@ system-identity glyph."
   micro) live in `docs/brand/beyond-mark/`, per that directory's own README: update the master
   geometry there first, then regenerate derivatives — never redraw from concept imagery. Wired in
   as the app icon / home-screen mark (`public/icons/icon-*.png`, `index.html`'s favicon and
-  `apple-touch-icon` links) only; it is not used anywhere inside the running app's own UI.
+  `apple-touch-icon` links) only; it is not used anywhere inside the running app's own UI —
+  except the boot screen, where the icon file is shown as-is (owner ruling 2026-10-05, BOOT-001).
 - **Emblem color is independent of the in-app UI's red.** `#EA131C` is the emblem's own locked
   brand color — it does not change, and was not derived from, `--accent`/`--red-b` in
   [tokens.css](../src/ui/styles/tokens.css). Unifying the two is a separate, larger decision
