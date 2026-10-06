@@ -1,6 +1,6 @@
 ---
 id: STATUS-001
-status: ACTIVE
+status: CLOSED
 baseline: a6d204437a74681057162f7475c25b24ef3a33bc
 branch: ccr-a34b4863-xb2jzi
 contract: docs/agent/drops/STATUS-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/192
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 08ca0c469689084f16cc704a6f790e629a8e4288
+closed_at: 2026-10-06T06:14:24.717Z
 ---
 
 # ACTIVE_DROP
