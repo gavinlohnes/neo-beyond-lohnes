@@ -2690,3 +2690,41 @@ button:not(:disabled):not(.btn-primary):not(.btn-danger):active {
   color: var(--text-2);
   cursor: pointer;
 }
+
+/*
+ * MIRROR-001 // THE MIRROR (owner brief 2026-10-05): now vs 30 and 90 days
+ * ago in Weekly. A plain four-column table; an empty value is said in words.
+ */
+.mirror {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-2) 0;
+  font-size: 14px;
+}
+.mirror__head {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-3-strong);
+  text-align: right;
+  padding: 0 0 6px 6px;
+}
+.mirror__label {
+  text-align: left;
+  font-weight: 400;
+  color: var(--text-2);
+  padding: 6px 6px 6px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.mirror__value {
+  text-align: right;
+  color: var(--text-1);
+  padding: 6px 0 6px 6px;
+  border-top: 1px solid var(--border-subtle);
+  font-variant-numeric: tabular-nums;
+}
+.mirror__value--none {
+  color: var(--text-3-strong);
+  font-size: 12px;
+}
