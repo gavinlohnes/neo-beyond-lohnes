@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { describeRecordCard, getAllRecords, type RecordCard } from "../../../application/personalRecordQueries";
+import { StrengthCurve } from "./StrengthCurve";
 
 /**
  * PR-CARDS-001 (owner brief 2026-10-04): TRAIN → RECORDS. One card per
  * personal record, newest first, each with the quiet outlined PR tag. Read
  * only; opened from TRAIN's pre-workout rows, closed with BACK.
+ *
+ * VIEWS-001: tapping a card opens that lift's strength curve in place.
  */
 export function RecordsList({ onClose }: { onClose: () => void }) {
   const [records, setRecords] = useState<RecordCard[] | null>(null);
+  const [curve, setCurve] = useState<{ exerciseId: string; exerciseName: string } | null>(null);
 
   useEffect(() => {
     let current = true;
@@ -18,6 +22,8 @@ export function RecordsList({ onClose }: { onClose: () => void }) {
       current = false;
     };
   }, []);
+
+  if (curve) return <StrengthCurve exerciseId={curve.exerciseId} exerciseName={curve.exerciseName} onClose={() => setCurve(null)} />;
 
   return (
     <section aria-labelledby="records-heading">
@@ -30,12 +36,19 @@ export function RecordsList({ onClose }: { onClose: () => void }) {
         <ul className="record-cards">
           {records.map((r) => (
             <li key={r.setId} className="card record-card">
-              <div className="record-card__head">
-                <span className="pr-tag">PR</span>
-                <span className="record-card__date meta">{formatRecordDate(r.recordedAt)}</span>
-              </div>
-              <p className="card-title" style={{ margin: "6px 0 2px" }}>{r.exerciseName}</p>
-              <p className="card-body">{describeRecordCard(r.record)}</p>
+              <button
+                type="button"
+                className="record-card__open"
+                aria-label={`${r.exerciseName}: ${describeRecordCard(r.record)}. Show its strength curve`}
+                onClick={() => setCurve({ exerciseId: r.exerciseId, exerciseName: r.exerciseName })}
+              >
+                <span className="record-card__head">
+                  <span className="pr-tag">PR</span>
+                  <span className="record-card__date meta">{formatRecordDate(r.recordedAt)}</span>
+                </span>
+                <span className="card-title" style={{ display: "block", margin: "6px 0 2px" }}>{r.exerciseName}</span>
+                <span className="card-body" style={{ display: "block" }}>{describeRecordCard(r.record)}</span>
+              </button>
             </li>
           ))}
         </ul>

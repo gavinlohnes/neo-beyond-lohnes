@@ -27,6 +27,9 @@ export function describePersonalRecord(record: PersonalRecord): string {
 
 export interface RecordCard {
   setId: string;
+  /** VIEWS-001: which lift and which session, so a card can open that lift's curve. */
+  exerciseId: string;
+  sessionId: string;
   exerciseName: string;
   record: PersonalRecord;
   recordedAt: string;
@@ -65,7 +68,14 @@ export async function getAllRecords(): Promise<RecordCard[]> {
     for (const set of [...sets].sort(byLoggedOrder)) {
       const record = found.get(set.id);
       if (record) {
-        cards.push({ setId: set.id, exerciseName: names.get(set.exerciseId) ?? set.exerciseId, record, recordedAt: set.recordedAt });
+        cards.push({
+          setId: set.id,
+          exerciseId: set.exerciseId,
+          sessionId: set.sessionId,
+          exerciseName: names.get(set.exerciseId) ?? set.exerciseId,
+          record,
+          recordedAt: set.recordedAt,
+        });
       }
     }
     priorSets.push(...sets);

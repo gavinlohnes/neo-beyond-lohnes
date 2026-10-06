@@ -7,6 +7,8 @@ import { describeExpenditure } from "./weeklyCopy";
 import { describeBurdenLine, describeFindings, describeWaitingFindings } from "./weeklyCopy";
 import { describeBaselines, describeBaselinesQuiet } from "./weeklyCopy";
 import { Ribbon } from "./Ribbon";
+import { HeatGrid } from "./HeatGrid";
+import { FieldDisclosure } from "../../components/FieldDisclosure";
 
 /**
  * Drop 7 (weekly check-in, owner approval 2026-10-01): one quiet, read-only
@@ -20,6 +22,7 @@ const MAX_RECORD_LINES = 5;
 
 export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
+  const [gridOpen, setGridOpen] = useState(false);
 
   useEffect(() => {
     let current = true;
@@ -44,6 +47,10 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
           {/* The Ribbon (2026-10-03): the last 28 lived days at a glance, above the week's numbers. */}
           <Section label="LAST 28 DAYS">
             <Ribbon days={summary.ribbon.days} templateLabels={summary.ribbon.templateLabels} proteinTargetG={summary.ribbon.proteinTargetG} />
+            {/* VIEWS-001: the 12-week training grid, one tap down. */}
+            <FieldDisclosure summary={gridOpen ? "HIDE 12 WEEKS" : "SHOW 12 WEEKS"} open={gridOpen} onToggle={setGridOpen}>
+              {gridOpen && <HeatGrid now={now} />}
+            </FieldDisclosure>
           </Section>
 
           {/* Read-only findings (2026-10-03): counts over longer windows, never a cause or a rule. */}
