@@ -1,6 +1,6 @@
 ---
 id: ADVISORY-002
-status: ACTIVE
+status: CLOSED
 baseline: c84e391f75ccfa24f3799abf076e5ffcfabd5fd3
 branch: ccr-a34b4863-xb2jzi
 contract: docs/agent/drops/ADVISORY-002.md
@@ -8,6 +8,8 @@ pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 7a36018edef4b82eb3e0099c98724db547970a82
+closed_at: 2026-10-06T05:12:58.541Z
 ---
 
 # ACTIVE_DROP

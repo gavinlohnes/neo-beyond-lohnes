@@ -332,6 +332,13 @@ below, this entry wins; the older entry is kept for history.
   timings; the Mirror is a closed row in Weekly. Ten Drops written (ADVISORY-002 through
   WEEKAHEAD-001, see the roadmap Queue). Example: "AMBER · 5h sleep, 3 hard sessions in 4 days" is
   the whole System Status surface.
+- **As built: Advisory cleanup (ADVISORY-002, PR #187, merged 2026-10-06, Routine).** TODAY's
+  ADVISORY shows one row per kind, three rows at most ("Easing back in · 8 lifts"; the rest fold
+  into "More · n notes"); SHOW lists each item with its plain WHY. Obligation notes left ADVISORY:
+  COMMITMENT lists every other due one ("Also: Blood work · Overdue — was due …"). TODAY never
+  shows the Engine title "An obligation needs attention": a current OBLIGATION_DUE names the due
+  commitment ("Blood work · Overdue"), otherwise it reads "A commitment was due" (History, the
+  outcome prompt, a "still relevant" note). The "Background context…" line is gone.
 - **Icon on the boot screen (owner ruling 2026-10-05).** The existing app icon (`public/icons`, the
   bat) stays and may appear on the icon and the boot screen only, used as-is, never redrawn; this
   amends the HUD no-logo rule and the EMBLEM entry's "not used anywhere inside the running app".
