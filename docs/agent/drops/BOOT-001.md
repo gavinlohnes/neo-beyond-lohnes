@@ -1,6 +1,6 @@
 ---
 id: BOOT-001
-baseline: SET-AT-ACTIVATION
+baseline: aaa42c234fa585f32f151b777aa013c692761e19
 risk_tier: ROUTINE
 ---
 
@@ -14,7 +14,7 @@ existing icon, a 1px line drawing across, "BEYOND" typing in, three status lines
 
 ## Approved baseline
 
-Set at activation to fresh `origin/master`.
+`origin/master` at `aaa42c234fa585f32f151b777aa013c692761e19`.
 
 ## Risk classification
 
