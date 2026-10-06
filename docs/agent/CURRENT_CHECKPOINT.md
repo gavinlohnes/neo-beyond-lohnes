@@ -7,35 +7,28 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `aaa42c2` (PR #188,
-FEEL-001 merged after independent review; closed in this branch).
+**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `473dd19` (PR #189,
+BOOT-001 merged after independent review; closed in this branch).
 
-- **Drop:** `BOOT-001` boot sequence: ROUTINE. **ACTIVE**, branch `ccr-a34b4863-xb2jzi`.
-- **Done:** FEEL-001 closed (as-built entry, roadmap). BOOT-001 built:
-  - `src/ui/components/BootSequence.tsx`, mounted next to `App` in `src/main.tsx`: about 1.05 s on
-    pure black — the app icon file (`icons/icon-192.png`, as-is), a 1px line drawing across,
-    "BEYOND" typing in, then three status lines ticking in, then it cuts to whatever the app opened
-    underneath (TODAY, a resumed workout, a shortcut). The app's startup runs underneath unchanged.
-  - Status lines from `src/application/bootQueries.ts` (read only): **DAY n** (BEYOND days on
-    record), **SHIFT 1800** / **SHIFT OFF** (the lived day's scheduled shift, or a declared day
-    off), **BACKUP OK / DUE / OFF**. A value that can't be read is left out.
-  - Once per page load; a remount mid-sequence carries on, never replays; a resume never shows it;
-    tap anywhere skips; reduced motion shows nothing.
-  - The manifest's background/theme colors were already #000000; `index.html` now paints black
-    from the first frame too.
-  - FEEL-001 review nits: the red filled buttons keep their darker press; a ticking number never
-    dips below its start.
-  - Screenshots: `docs/agent/screenshots/BOOT-001/` (three frames of the sequence, then TODAY).
-- **Left:** independent review, merge on green, close. Then SHORTCUTS-001.
-- **Verification run:** `npm run verify` (192 files / 2051 tests passed, build OK; built manifest
-  `background_color` #000000); `git diff --check` OK.
-- **Open risks:** "DAY n" counts BEYOND days on record (every lived day, including auto-rolled
-  ones) — see decision 2. The icon PNG is the maskable home-screen icon, so the bat sits small
-  inside its own padding on the boot screen (used as-is, per the ruling). A PR set taps once like
-  any set (FEEL-001 decision). With an OBLIGATION_DUE recommendation the commitment's name shows
-  twice on TODAY. Agent sessions clone shallow: `git fetch --unshallow origin` before
-  `factory-drop.mjs init`. Carried over: raw capacity codes in "How BEYOND decided" with 2+
-  reasons; `factory:status` needs `GITHUB_TOKEN`; merged branches await deletion.
+- **Drop:** `SHORTCUTS-001` home-screen shortcuts: ROUTINE. **ACTIVE**, branch
+  `ccr-a34b4863-xb2jzi`.
+- **Done:** BOOT-001 closed (as-built entry, roadmap). SHORTCUTS-001 built: long-pressing the icon
+  offers exactly START WORKOUT (`?go=workout`: TRAIN at the workout start, or the workout in
+  progress), +WATER (`?go=water`: BODY at the water quick-add) and LOG MEAL (`?go=meal`: BODY with
+  the meal entry already open). A shortcut never logs or starts anything (Drop 7 ruling). Older
+  pinned `?go=weight` / `?go=urge` shortcuts still open their controls. Screenshots:
+  `docs/agent/screenshots/SHORTCUTS-001/`.
+- **Left:** independent review, merge on green, close. Then VIEWS-001 (in progress locally).
+- **Verification run:** `npm run verify` (194 files / 2056 tests passed, build OK; built manifest
+  lists the three shortcuts); `git diff --check` OK.
+- **Open risks:** Android caches shortcuts with the installed app: the new list shows after the
+  PWA updates (sometimes only after re-adding it to the home screen). "+WATER" opens the water
+  quick-add rather than adding water by itself — see decision 2. "DAY n" on the boot screen counts
+  BEYOND days on record. A PR set taps once like any set. With an OBLIGATION_DUE recommendation
+  the commitment's name shows twice on TODAY. Agent sessions clone shallow: `git fetch
+  --unshallow origin` before `factory-drop.mjs init`. Carried over: raw capacity codes in "How
+  BEYOND decided" with 2+ reasons; `factory:status` needs `GITHUB_TOKEN`; merged branches await
+  deletion.
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
@@ -46,7 +39,8 @@ FEEL-001 merged after independent review; closed in this branch).
    **A (recommended)** a workout on each day off, none on work days, A/B rotation, at most 2 days
    in a row · **B** as A plus a short session the morning after a last shift · **C** a fixed 3 per
    week, days off first.
-2. **What "DAY 14" counts on the boot screen:** **A (recommended, built)** BEYOND days on record ·
-   **B** days since the first one (calendar days) · **C** the day of the current work rotation.
-3. **A PR set's tap (FEEL-001):** **A (recommended, built)** the same single LOG tap as any set ·
-   **B** no tap at all on a PR set (strict reading of "PR: no vibration").
+2. **+WATER shortcut:** **A (recommended, built)** opens the water quick-add; one more tap logs ·
+   **B** logs 8 oz straight away, with UNDO on screen (changes the Drop 7 "never logs by itself"
+   rule).
+3. **What "DAY 14" counts on the boot screen:** **A (recommended, built)** BEYOND days on record ·
+   **B** calendar days since the first one · **C** the day of the current work rotation.
