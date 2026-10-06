@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
+import { describeSystemStatus } from "./statusCopy";
 import { describePlainRecommendationTitle } from "./recommendationCopy";
 import { TickNumber } from "../../feel/TickNumber";
 import type {
@@ -199,6 +201,9 @@ function writeSleepDraftDismissal(dayId: string): void {
   }
 }
 
+/** STATUS-001: the existing capacity dot styles, by System Status level. */
+const STATUS_DOT: Record<SystemStatus["level"], string> = { GREEN: "green", AMBER: "yellow", RED: "red", NO_READ: "unknown" };
+
 export function TodayScreen({
   onViewCommitments,
   onOpenTrain,
@@ -311,6 +316,7 @@ export function TodayScreen({
   }, []);
   const [openCaptureItems, setOpenCaptureItems] = useState<CaptureItem[]>([]);
   const [advisoryNotes, setAdvisoryNotes] = useState<AdvisoryNote[]>([]);
+  const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [captureText, setCaptureText] = useState("");
   // Overdrive Phase 17 (Capture 1.1): reopenCaptureItem already existed
   // (application/commands.ts) and was already tested
@@ -627,6 +633,9 @@ export function TodayScreen({
     // above rather than separately, now that everything commits together
     // anyway.
     const advisoryNotes = await getAdvisoryNotes();
+    // STATUS-001: the one System Status line (read only; never reaches the Engine), composed from
+    // THIS refresh's own activeDay and installed only by the refresh that owns the screen.
+    const nextSystemStatus = await getSystemStatus(activeDay ?? null).catch(() => null);
     const effectiveProteinTarget = await getEffectiveProteinTargetG();
 
     // Everything on the active-day/context path is gated on this single
@@ -698,6 +707,7 @@ export function TodayScreen({
       setRecommendationHandoff(null);
     }
     setAdvisoryNotes(advisoryNotes);
+    if (isOwner) setSystemStatus(nextSystemStatus);
     setProteinTargetG(effectiveProteinTarget);
 
     // A fresh, independently-composed view each refresh — never memoized
@@ -1287,6 +1297,16 @@ export function TodayScreen({
   }
 
   const capacityResult = checkIn ? deriveCapacity(checkIn) : null;
+  // STATUS-001: the strip's edge follows the System Status once it's read (AMBER uses the yellow edge).
+  const stripLevel: "yellow" | "red" | null = systemStatus
+    ? systemStatus.level === "RED"
+      ? "red"
+      : systemStatus.level === "AMBER"
+        ? "yellow"
+        : null
+    : capacityResult && capacityResult.capacity !== "GREEN"
+      ? (capacityResult.capacity.toLowerCase() as "yellow" | "red")
+      : null;
   // Item 1 (Phase 3): RED or multi-factor YELLOW offers Minimum Day
   // prominently, but only while it isn't already enabled — once it's on,
   // there's nothing left to "offer."
@@ -2056,8 +2076,8 @@ export function TodayScreen({
       {day && (
         <div
           className={
-            capacityResult && capacityResult.capacity !== "GREEN"
-              ? `status-strip status-strip--stacked status-strip--${capacityResult.capacity.toLowerCase()}`
+            stripLevel
+              ? `status-strip status-strip--stacked status-strip--${stripLevel}`
               : "status-strip status-strip--stacked"
           }
         >
@@ -2092,8 +2112,21 @@ export function TodayScreen({
           {shiftClock.countdown && (
             <p className="status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>
           )}
-          <p className="status-strip__detail">
-            {capacityResult ? (
+          {/* STATUS-001 (owner brief 2026-10-05; approved merge: System Status is one line on
+              TODAY): this line was the check-in's capacity sentence; it is now the System Status,
+              which carries the check-in's reading along with sleep and training load, e.g.
+              "AMBER · 5h sleep, 3 hard sessions in 4 days". A text label always leads (never
+              color alone). Until the status is read, the capacity sentence stays. */}
+          <p className="status-strip__detail" data-system-status={systemStatus?.level ?? undefined}>
+            {systemStatus ? (
+              <span
+                className={systemStatus.level === "AMBER" || systemStatus.level === "RED" ? "status-strip__capacity" : undefined}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                <span aria-hidden="true" className={`capacity-dot capacity-dot--${STATUS_DOT[systemStatus.level]}`} />
+                {describeSystemStatus(systemStatus)}
+              </span>
+            ) : capacityResult ? (
               <span
                 className={capacityResult.capacity !== "GREEN" ? "status-strip__capacity" : undefined}
                 style={{ display: "inline-flex", alignItems: "center", gap: 6 }}

@@ -1,6 +1,6 @@
 ---
 id: STATUS-001
-baseline: SET-AT-ACTIVATION
+baseline: a6d204437a74681057162f7475c25b24ef3a33bc
 risk_tier: ARCHITECTURAL
 ---
 
@@ -14,7 +14,7 @@ load. Example: "AMBER · 5h sleep, 3 hard sessions in 4 days."
 
 ## Approved baseline
 
-Set at activation to fresh `origin/master`.
+`origin/master` at `a6d204437a74681057162f7475c25b24ef3a33bc`.
 
 ## Risk classification
 

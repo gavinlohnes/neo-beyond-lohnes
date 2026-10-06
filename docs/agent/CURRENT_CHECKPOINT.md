@@ -7,28 +7,44 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `c27e1f1` (PR #190,
-SHORTCUTS-001 merged after independent review; closed in this branch).
+**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `a6d2044` (PR #191,
+VIEWS-001 merged after independent review; closed in this branch).
 
-- **Drop:** `VIEWS-001` data views: ROUTINE. **ACTIVE**, branch `ccr-a34b4863-xb2jzi`.
-- **Done:** SHORTCUTS-001 closed (as-built entry, roadmap). VIEWS-001 built:
-  - TRAIN → RECORDS: tapping a record card opens that lift's strength curve — the heaviest counted
-    set in each finished session, oldest to newest, PR sessions as red-outlined squares (the RECORDS
-    rule), and a words line, e.g. "100 lb (Sep 10) → 125 lb (Oct 10) over 6 sessions · 5 PR
-    sessions". CLOSE returns to RECORDS.
-  - Weekly: SHOW 12 WEEKS under LAST 28 DAYS opens an 84-day grid ending today (filled =
-    strength, hatched = recovery, empty = none; each cell has a text label) with a count line.
-  - Read only (`src/application/viewQueries.ts`); no screen gains a row. "Your usual" bands wait
-    for the F1 stop (~Oct 25).
-  - Screenshots: `docs/agent/screenshots/VIEWS-001/`.
-- **Left:** independent review, merge on green, close. Next is STATUS-001 (Architectural: its PR
-  waits for Gavin; while it waits, no other Drop can be ACTIVE — see decision 4).
-- **Verification run:** `npm run verify` (196 files / 2061 tests passed, build OK); `git diff
-  --check` OK; `check:risk` Routine.
-- **Open risks:** a curve opens only from a record card, so a lift with no PR yet has no curve to
-  open (every lift gets one after its first PR). The grid's rows are not fixed weekdays (the last
-  column ends today). Android caches home-screen shortcuts until the PWA updates. "DAY n" on the
-  boot screen counts BEYOND days on record. A PR set taps once like any set. With an OBLIGATION_DUE
+- **Drop:** `STATUS-001` System Status: **ARCHITECTURAL**. **ACTIVE**, branch
+  `ccr-a34b4863-xb2jzi`. **Waits for Gavin to approve the merge and the thresholds.**
+- **Done:** VIEWS-001 closed (as-built entry, roadmap). STATUS-001 built — Standard report:
+  - **Scope / behavioral effect:** TODAY's status strip line under the headline is now the System
+    Status: a text label (GREEN / AMBER / RED / NO READ) with its dot, then the facts that set it,
+    e.g. "AMBER · 5h sleep, 3 hard sessions in 4 days". It replaces the capacity sentence that sat
+    there ("Capacity is YELLOW because energy is low."): a check-in's reasons now ride inside the
+    status ("AMBER · energy is low"). So TODAY gains no line and no row. The strip's colored edge
+    follows the status (AMBER uses the existing yellow edge).
+  - **The rule (proposed; Gavin signs off at merge):** RED when the check-in reads RED or the last
+    main sleep is under 4 h. AMBER when the check-in reads YELLOW, the last main sleep is under 6 h,
+    or 3+ finished strength sessions started in the last 4 days. GREEN otherwise, listing what it
+    rests on ("GREEN · 7h sleep, check-in clear, 1 hard session in 4 days"). With neither sleep nor
+    a check-in: "NO READ · log sleep or check in", never a guessed color. "Last main sleep" = the
+    latest PRIMARY sleep on the active day, else on the day before, and only if logged within the
+    last 36 h (review fix: an old short sleep can't color today). "Hard sessions" = finished
+    STANDARD or REDUCED sessions (not RECOVERY, abandoned or in progress) started in the last 4 days.
+  - **Files:** `src/application/systemStatus.ts` (pure rule + read-only query),
+    `src/ui/screens/today/statusCopy.ts`, `TodayScreen.tsx` (the strip line), tests.
+  - **Review fixes:** the line is composed from TODAY's own refresh (its active day, installed only
+    by the refresh that owns the screen) — this was the PR Verification failure; stale-sleep cutoff
+    above; more edge tests (undone sleep, recovery/abandoned/active sessions, the 4-day edge).
+  - **Protected invariants:** Engine, capacity rule, recommendations, schema and events
+    untouched; nothing written (an integration test checks recommendations and events unchanged);
+    the capacity reading still shows in full under "How BEYOND decided".
+  - Screenshot: `docs/agent/screenshots/STATUS-001/today-status-amber.jpg`.
+- **Left:** independent review; Gavin approves the merge (and the thresholds); close. While this
+  PR waits, no other Drop can be ACTIVE (one-at-a-time rule) — see decision 4.
+- **Verification run:** `npm run verify` (197 files / 2070 tests passed, build OK); `git diff
+  --check` OK. `check:risk` vs `a6d2044` sees no Engine/domain path; the tier is Architectural by
+  the contract (a new TODAY line and a new rule).
+- **Open risks:** before the status has been read (a few hundred ms on open) the strip shows the
+  old capacity sentence, then switches. A curve opens only from a record card (no PR yet → no
+  curve). Android caches home-screen shortcuts until the PWA updates. "DAY n" on the boot screen
+  counts BEYOND days on record. A PR set taps once like any set. With an OBLIGATION_DUE
   recommendation the commitment's name shows twice on TODAY. Agent sessions clone shallow: `git
   fetch --unshallow origin` before `factory-drop.mjs init`. Carried over: raw capacity codes in
   "How BEYOND decided" with 2+ reasons; `factory:status` needs `GITHUB_TOKEN`; merged branches
@@ -39,15 +55,12 @@ SHORTCUTS-001 merged after independent review; closed in this branch).
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-1. **Week Ahead placement rule** (needed before WEEKAHEAD-001 is built):
-   **A (recommended)** a workout on each day off, none on work days, A/B rotation, at most 2 days
-   in a row · **B** as A plus a short session the morning after a last shift · **C** a fixed 3 per
-   week, days off first.
-2. **+WATER shortcut:** **A (recommended, built)** opens the water quick-add; one more tap logs ·
-   **B** logs 8 oz straight away, with UNDO on screen (changes the Drop 7 "never logs by itself"
-   rule).
-3. **What "DAY 14" counts on the boot screen:** **A (recommended, built)** BEYOND days on record ·
-   **B** calendar days since the first one · **C** the day of the current work rotation.
-4. **While STATUS-001 waits for your merge approval:** **A (recommended)** let me build the
-   Routine Drops after it (FIND-001, MIRROR-001) first, then STATUS and REPORT · **B** keep the
-   brief's order and wait.
+1. **System Status thresholds (STATUS-001, needed to merge):** **A (recommended, built)** RED: RED
+   check-in or under 4 h sleep · AMBER: YELLOW check-in, under 6 h sleep, or 3+ strength sessions
+   in 4 days · **B** the same with AMBER at under 7 h sleep · **C** tell me your numbers.
+2. **While STATUS-001 waits for your approval:** **A (recommended)** build FIND-001 and MIRROR-001
+   next, then REPORT-001 · **B** keep the brief's order and wait. (A needs your OK, because only
+   one Drop may be active at a time.)
+3. **Week Ahead placement rule** (needed before WEEKAHEAD-001 is built): **A (recommended)** a
+   workout on each day off, none on work days, A/B rotation, at most 2 days in a row · **B** as A
+   plus a short session the morning after a last shift · **C** a fixed 3 per week, days off first.

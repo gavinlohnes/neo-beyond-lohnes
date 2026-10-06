@@ -522,13 +522,14 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
 
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Capacity is YELLOW", { exact: false })).toBeVisible();
+    // STATUS-001: the strip's line is the System Status; a YELLOW check-in reads AMBER, with its reasons.
+    await expect.element(screen.getByText(/^AMBER · /)).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect(strip!.className).toBe("status-strip status-strip--stacked status-strip--yellow");
     const capacitySegment = document.querySelector(".status-strip__capacity");
     expect(capacitySegment).not.toBeNull();
-    expect(capacitySegment!.textContent).toContain("YELLOW");
+    expect(capacitySegment!.textContent).toContain("AMBER");
   });
 
   it("adds the red severity modifier and colors the capacity segment for RED capacity", async () => {
@@ -545,15 +546,16 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     expect(capacitySegment!.textContent).toContain("RED");
   });
 
-  it("states that there is no check-in yet, with a neutral dot, before any check-in exists today", async () => {
+  it("states that there is no read yet, with a neutral dot, before any check-in or sleep exists", async () => {
     await startDay();
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("No check-in yet today.", { exact: false })).toBeVisible();
+    // STATUS-001: with neither sleep nor a check-in, the System Status says so — never a guessed color.
+    await expect.element(screen.getByText("NO READ · log sleep or check in", { exact: false })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect(strip!.className).toBe("status-strip status-strip--stacked");
-    expect(strip!.textContent).toContain("No check-in yet today.");
+    expect(strip!.textContent).toContain("NO READ · log sleep or check in");
     expect(document.querySelector(".capacity-dot--unknown")).not.toBeNull();
     // UNKNOWN is not a severity — no warning/red modifier, no bolded segment.
     expect(document.querySelector(".status-strip__capacity")).toBeNull();

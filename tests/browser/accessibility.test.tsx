@@ -86,7 +86,8 @@ describe("accessibility (real browser, axe-core)", () => {
   it("TodayScreen (capacity UNKNOWN, day started but no check-in yet) has no violations beyond the known color-contrast exception", async () => {
     await startDay();
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("No check-in yet today.", { exact: false })).toBeVisible();
+    // STATUS-001: the strip's line is the System Status once read.
+    await expect.element(screen.getByText("NO READ · log sleep or check in", { exact: false })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);
