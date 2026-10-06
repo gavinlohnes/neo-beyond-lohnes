@@ -424,7 +424,7 @@ describe("MoreScreen (real browser) — search-to-navigate", () => {
 
     const screen = await render(<MoreScreen />);
     await screen.getByRole("button", { name: "Open SEARCH" }).click();
-    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("deck");
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("deck");
     await screen.getByRole("button", { name: "Open MISSION: Rebuild the deck" }).click();
 
     await expect.element(screen.getByText("MORE // MISSIONS & OBLIGATIONS", { exact: true })).toBeVisible();
@@ -443,7 +443,7 @@ describe("MoreScreen (real browser) — search-to-navigate", () => {
 
     const screen = await render(<MoreScreen />);
     await screen.getByRole("button", { name: "Open SEARCH" }).click();
-    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("electrician");
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("electrician");
     await screen.getByRole("button", { name: "Open OBLIGATION: Call the electrician" }).click();
 
     await expect.element(screen.getByText("MORE // MISSIONS & OBLIGATIONS", { exact: true })).toBeVisible();
@@ -457,7 +457,7 @@ describe("MoreScreen (real browser) — search-to-navigate", () => {
 
     const screen = await render(<MoreScreen onOpenCapture={onOpenCapture} />);
     await screen.getByRole("button", { name: "Open SEARCH" }).click();
-    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("registration");
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("registration");
     await screen.getByRole("button", { name: "Open CAPTURE: Renew the car registration" }).click();
 
     expect(onOpenCapture).toHaveBeenCalledTimes(1);
@@ -470,7 +470,7 @@ describe("MoreScreen (real browser) — search-to-navigate", () => {
 
     const screen = await render(<MoreScreen />);
     await screen.getByRole("button", { name: "Open SEARCH" }).click();
-    await screen.getByRole("textbox", { name: "Search Missions, Obligations, and Capture" }).fill("deck");
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("deck");
     await screen.getByRole("button", { name: "Open MISSION: Rebuild the deck" }).click();
     await expect.element(screen.getByRole("heading", { name: "Rebuild the deck", exact: true })).toBeVisible();
 

@@ -362,6 +362,18 @@ below, this entry wins; the older entry is kept for history.
   red-outlined squares, and a words line, e.g. "100 lb (Sep 10) → 125 lb (Oct 10) over 6 sessions
   · 5 PR sessions". Weekly: SHOW 12 WEEKS under LAST 28 DAYS opens an 84-day grid (strength /
   recovery / none, each cell labeled). Read only; no row added. "Your usual" bands wait for F1.
+- **As built: System Status (STATUS-001, PR #192, merged 2026-10-06 on Gavin's "1. A",
+  Architectural).** TODAY's status-strip line is the System Status: GREEN / AMBER / RED (text label
+  and dot) plus only the facts that set it, e.g. "AMBER · 5h sleep, 3 hard sessions in 4 days".
+  Locked thresholds: RED = a RED check-in or a main sleep under 4 h; AMBER = a YELLOW check-in, a
+  main sleep under 6 h, or 3+ finished STANDARD/REDUCED sessions started in the last 4 days; GREEN
+  otherwise. The main sleep is the latest PRIMARY on the active day, else the day before, and only
+  if logged in the last 36 h. With neither sleep nor a check-in: "NO READ · log sleep or check in".
+  It replaced the capacity sentence (the check-in's reasons ride inside it); the strip's edge
+  follows it. Read only; never feeds the Engine.
+- **Week Ahead placement rule (owner sign-off 2026-10-06, "3. A").** WEEKAHEAD-001 suggests a
+  workout on each day off and none on a work day, following the A/B rotation, at most 2 days in a
+  row. Suggestions only; Gavin moves or skips; the Engine is not told.
 - **Icon on the boot screen (owner ruling 2026-10-05).** The existing app icon (`public/icons`, the
   bat) stays and may appear on the icon and the boot screen only, used as-is, never redrawn; this
   amends the HUD no-logo rule and the EMBLEM entry's "not used anywhere inside the running app".

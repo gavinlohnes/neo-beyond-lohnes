@@ -206,6 +206,14 @@ Codex can build it when Claude is out.
   one report; the Mirror lives in Weekly. Example: there is no separate "Mirror" screen; it is a
   closed row in Weekly.
 - **The review account stays in the Queue; nothing waits on it.**
+- **Gavin's answers, 2026-10-06 ("1. A 2, a 3. A"):** (1) STATUS-001 merges with the proposed
+  thresholds — RED: a RED check-in or under 4 h sleep; AMBER: a YELLOW check-in, under 6 h sleep,
+  or 3+ strength sessions in 4 days. (2) Order after STATUS: FIND-001, MIRROR-001, then REPORT-001
+  (Mirror moves ahead of the report). (3) Week Ahead rule A: a workout on each day off, none on a
+  work day, following the A/B rotation, at most 2 days in a row. Example: a week with Thu/Fri off
+  and Sat–Mon on shift suggests workouts Thu and Fri only. (The smaller choices Gavin wasn't asked
+  to answer stay as built until he says otherwise: +WATER opens the quick-add; boot "DAY n" counts
+  BEYOND days on record; a PR set taps once like any set.)
 - Write all Drops in one session, then build in this order. Every Drop's handoff carries
   screenshots and DECISIONS FOR GAVIN; Architectural Drops wait for Gavin to approve the merge.
 
@@ -226,14 +234,15 @@ Codex can build it when Claude is out.
    grid in Weekly. "Your usual" bands wait for the F1 stop (~Oct 25). **Done (PR #191, merged
    2026-10-06).**
 6. **STATUS-001 — System Status** (Architectural). One TODAY line, e.g. "AMBER · 5h sleep, 3 hard
-   sessions in 4 days"; never changes the Engine.
+   sessions in 4 days"; never changes the Engine. **Done (PR #192, merged 2026-10-06 on Gavin's
+   "1. A": the proposed thresholds).**
 7. **FIND-001 — search everything** (Routine, read only). "chest" returns every chest PR, note and
    session.
-8. **REPORT-001 — Briefing / After Action Report** (Architectural). BRIEFING READY on work nights
+8. **MIRROR-001 — the Mirror** (Routine, read only, in Weekly). Now vs 30 and 90 days ago.
+9. **REPORT-001 — Briefing / After Action Report** (Architectural). BRIEFING READY on work nights
    0200–0500, AFTER ACTION READY on the first day off; five items max; one suggested call.
-9. **MIRROR-001 — the Mirror** (Routine, read only, in Weekly). Now vs 30 and 90 days ago.
-10. **WEEKAHEAD-001 — Week Ahead** (Architectural). Needs Gavin's sign-off on a placement rule
-    before it is built.
+10. **WEEKAHEAD-001 — Week Ahead** (Architectural). Placement rule signed off 2026-10-06 ("3. A"):
+    a workout on each day off, none on a work day, the A/B rotation, at most 2 days in a row.
 11. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
     for reviews (Claude walks him through it; Claude never creates accounts or handles the token),
     so independent reviews are formal approvals. Nothing waits on it.

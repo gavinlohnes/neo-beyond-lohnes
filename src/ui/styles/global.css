@@ -2668,3 +2668,25 @@ button:not(:disabled):not(.btn-primary):not(.btn-danger):active {
   margin-right: 4px;
   vertical-align: middle;
 }
+
+/*
+ * FIND-001 // SEARCH EVERYTHING (owner brief 2026-10-05): a search icon at
+ * the top right of every primary screen, in line with the screen's own
+ * header (it scrolls away with the page, so it never covers content).
+ */
+.topbar-search {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 13px);
+  right: max(var(--gutter), calc(50% - 240px + var(--gutter)));
+  z-index: 5;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+}

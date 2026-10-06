@@ -146,9 +146,12 @@ export type TrainDestination = "RECOVERY" | "WORKOUT";
 
 export function TrainScreen({
   destination,
+  recordsFocus = null,
   onDestinationConsumed,
 }: {
   destination?: TrainDestination | null;
+  /** FIND-001: open TRAIN → RECORDS at this lift's strength curve. */
+  recordsFocus?: string | null;
   onDestinationConsumed?: () => void;
 } = {}) {
   const [capacity, setCapacity] = useState<Capacity | null>(null);
@@ -185,7 +188,7 @@ export function TrainScreen({
   // instead of consuming full footprint before any decision is made.
   const [performanceBriefOpen, setPerformanceBriefOpen] = useState(false);
   // PR-CARDS-001: TRAIN → RECORDS, the list of personal-record cards.
-  const [recordsOpen, setRecordsOpen] = useState(false);
+  const [recordsOpen, setRecordsOpen] = useState(recordsFocus !== null);
   // GYM-001: the full-screen gym view over the active workout.
   const [gymModeOpen, setGymModeOpen] = useState(false);
   const gymModeButtonRef = useRef<HTMLButtonElement>(null);
@@ -1146,7 +1149,7 @@ export function TrainScreen({
       {!session && !completionSummary && !recordsOpen && (
         <CollapsibleRow name="RECORDS" summary="Your personal records" onOpen={() => setRecordsOpen(true)} />
       )}
-      {!session && !completionSummary && recordsOpen && <RecordsList onClose={() => setRecordsOpen(false)} />}
+      {!session && !completionSummary && recordsOpen && <RecordsList focusExerciseId={recordsFocus} onClose={() => setRecordsOpen(false)} />}
 
       {session && session.sessionType === "RECOVERY" && !completionSummary && (
         <CommandSurface>

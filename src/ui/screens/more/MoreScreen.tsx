@@ -45,10 +45,25 @@ const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 // it can't drift again.
 const DATA_SCHEMA = db.verno;
 
-export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {}) {
+export function MoreScreen({
+  onOpenCapture,
+  initialView = "MENU",
+  onOpenRecords,
+  onOpenMeal,
+}: {
+  onOpenCapture?: () => void;
+  /** FIND-001: the top-bar search icon opens MORE straight at SEARCH. */
+  initialView?: "MENU" | "SEARCH";
+  /** FIND-001: a LIFT or PR result opens TRAIN → RECORDS at that lift's curve. */
+  onOpenRecords?: (exerciseId: string) => void;
+  /** FIND-001: a MEAL result opens BODY's meal entry. */
+  onOpenMeal?: () => void;
+} = {}) {
   const [view, setView] = useState<
     "MENU" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES"
-  >("MENU");
+  >(initialView);
+  // FIND-001: a NOTE or DAY result opens HISTORY with that day open.
+  const [historyFocusDayId, setHistoryFocusDayId] = useState<string | null>(null);
   // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by
   // the ordinary "MISSIONS & OBLIGATIONS" menu entry point — see its onOpen below. This is what
   // lets IntentScreen open straight to a specific record from Search without a normal visit to
@@ -56,6 +71,24 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
   const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(null);
 
   function handleSelectSearchResult(result: SearchResult) {
+    // FIND-001: the new kinds open where they live.
+    if ((result.domain === "LIFT" || result.domain === "PR") && result.exerciseId && onOpenRecords) {
+      onOpenRecords(result.exerciseId);
+      return;
+    }
+    if (result.domain === "MEAL" && onOpenMeal) {
+      onOpenMeal();
+      return;
+    }
+    if (result.domain === "JOURNAL") {
+      setView("JOURNAL");
+      return;
+    }
+    if (result.domain === "NOTE" || result.domain === "DAY") {
+      setHistoryFocusDayId(result.dayId ?? null);
+      setView("HISTORY");
+      return;
+    }
     if (result.domain === "CAPTURE") {
       // Capture has no dedicated browsing surface of its own — TODAY's inbox is the only place
       // it's triaged. Switching tabs is the honest amount of "navigate" available here; scrolling
@@ -239,11 +272,14 @@ export function MoreScreen({ onOpenCapture }: { onOpenCapture?: () => void } = {
         <button
           className="btn-secondary"
           style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
-          onClick={() => setView("MENU")}
+          onClick={() => {
+            setHistoryFocusDayId(null);
+            setView("MENU");
+          }}
         >
           ← BACK TO MORE
         </button>
-        <HistoryScreen />
+        <HistoryScreen focusDayId={historyFocusDayId} />
       </div>
     );
   }

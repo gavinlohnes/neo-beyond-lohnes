@@ -18,17 +18,14 @@ Set at activation to fresh `origin/master`.
 
 ## Risk classification
 
-ARCHITECTURAL: a placement rule for suggested workouts. **Building waits for Gavin's written
-sign-off on the placement rule** (no Engine rule adoption without it, ruling 2026-10-03).
+ARCHITECTURAL: a placement rule for suggested workouts. **Placement rule signed off by Gavin
+2026-10-06 ("3. A")**; the merge still waits for Gavin.
 
 ## Authorized scope
 
-Pending sign-off. Proposed for Gavin to pick:
-
-- **A (recommended):** a workout on each day off and none on a work day; the template follows the
-  existing A/B rotation; at most 2 days in a row.
-- **B:** as A, plus one short session on the post-shift morning before a day off.
-- **C:** fixed count per week (e.g. 3), spread across days off first.
+Signed-off rule (Gavin, 2026-10-06, option A): a workout on each day off and none on a work day;
+the template follows the existing A/B rotation; at most 2 days in a row. (Options B and C were
+not chosen.)
 
 Surface: Weekly (read only), one row "WEEK AHEAD", opening the 7 days. Week Ahead stores nothing:
 moving or skipping is simply doing something else on the day, answered on TODAY/TRAIN as now
@@ -48,7 +45,10 @@ Suggestions are labeled as suggestions; skipping costs nothing (no shame, no str
 
 ## Acceptance criteria
 
-Set once Gavin picks the rule.
+1. The next 7 days show each day's shift (or OFF) from the saved schedule, and a suggested
+   workout on days off only (tests).
+2. Never more than 2 suggested days in a row; templates follow the A/B rotation (tests).
+3. Read only; nothing stored; the Engine is unchanged (tests).
 
 ## Required verification
 
@@ -56,7 +56,7 @@ Set once Gavin picks the rule.
 
 ## Builder expectations
 
-Claude Code, only after written sign-off on a placement rule.
+Claude Code. Build, verify, PR, Standard report, handoff with screenshots and DECISIONS FOR GAVIN.
 
 ## Reviewer expectations
 
@@ -68,4 +68,4 @@ Architectural: waits for Gavin to approve the merge.
 
 ## Stop / escalation conditions
 
-Stop now until the placement rule is signed off.
+Stop if placement would need Engine input or a stored field.

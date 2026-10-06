@@ -3,15 +3,21 @@ import { getHistoryDays, type HistoryDay } from "../../../application/historyQue
 import { getExerciseNames } from "../../../application/exerciseLibraryQueries";
 import { describeEvent, describeHistoryDayMeta } from "./historyCopy";
 
-export function HistoryScreen() {
+export function HistoryScreen({ focusDayId = null }: { focusDayId?: string | null } = {}) {
   const [days, setDays] = useState<HistoryDay[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // FIND-001: a search result opens its day already expanded, scrolled into view.
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(() => (focusDayId ? { [focusDayId]: true } : {}));
   const [exerciseNames, setExerciseNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     void refresh();
   }, []);
+
+  useEffect(() => {
+    if (loading || !focusDayId) return;
+    document.getElementById(`history-day-${focusDayId}`)?.scrollIntoView({ block: "start" });
+  }, [loading, focusDayId]);
 
   async function refresh() {
     setLoading(true);
@@ -43,7 +49,7 @@ export function HistoryScreen() {
       {days.map(({ day, events }) => {
         const isOpen = expanded[day.id] ?? false;
         return (
-          <div className="card" key={day.id}>
+          <div className="card" key={day.id} id={`history-day-${day.id}`}>
             <div
               style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
               onClick={() => setExpanded((prev) => ({ ...prev, [day.id]: !isOpen }))}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { describeRecordCard, getAllRecords, type RecordCard } from "../../../application/personalRecordQueries";
 import { StrengthCurve } from "./StrengthCurve";
+import { getExerciseNames } from "../../../application/exerciseLibraryQueries";
 
 /**
  * PR-CARDS-001 (owner brief 2026-10-04): TRAIN → RECORDS. One card per
@@ -9,9 +10,24 @@ import { StrengthCurve } from "./StrengthCurve";
  *
  * VIEWS-001: tapping a card opens that lift's strength curve in place.
  */
-export function RecordsList({ onClose }: { onClose: () => void }) {
+export function RecordsList({ onClose, focusExerciseId = null }: { onClose: () => void; focusExerciseId?: string | null }) {
   const [records, setRecords] = useState<RecordCard[] | null>(null);
   const [curve, setCurve] = useState<{ exerciseId: string; exerciseName: string } | null>(null);
+  // FIND-001: a LIFT or PR search result opens straight at that lift's curve.
+  const [focusExerciseName, setFocusExerciseName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!focusExerciseId) return;
+    let current = true;
+    void getExerciseNames().then((names) => {
+      if (current) setFocusExerciseName(names[focusExerciseId] ?? focusExerciseId);
+    });
+    return () => {
+      current = false;
+    };
+  }, [focusExerciseId]);
+  useEffect(() => {
+    if (focusExerciseId && focusExerciseName) setCurve({ exerciseId: focusExerciseId, exerciseName: focusExerciseName });
+  }, [focusExerciseId, focusExerciseName]);
 
   useEffect(() => {
     let current = true;
