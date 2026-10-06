@@ -345,6 +345,12 @@ below, this entry wins; the older entry is kept for history.
   API, skipped on iPhone) when a set is saved and when a hold-to-confirm completes — a PR set gets
   the same single tap, nothing extra; every enabled button has a press state; reduced motion keeps
   all of it instant. Example: LOG in gym mode buzzes once and the set appears.
+- **As built: boot sequence (BOOT-001, PR #189, merged 2026-10-06, Routine).** On a cold launch
+  only, about one second on pure black: the app icon file as-is, a 1px line draws across, "BEYOND"
+  types in, three status lines tick in — e.g. "DAY 14 · SHIFT 1800 · BACKUP OK" (DAY = BEYOND days
+  on record; SHIFT OFF on a day off; BACKUP DUE/OK from the backup's own age, so LATER on TODAY
+  doesn't turn it OK; OFF when automatic backup is off) — then a cut to the app. Never on resume;
+  a tap skips; reduced motion shows nothing; the page paints black from the first frame.
 - **Icon on the boot screen (owner ruling 2026-10-05).** The existing app icon (`public/icons`, the
   bat) stays and may appear on the icon and the boot screen only, used as-is, never redrawn; this
   amends the HUD no-logo rule and the EMBLEM entry's "not used anywhere inside the running app".

@@ -1,6 +1,6 @@
 ---
 id: BOOT-001
-status: ACTIVE
+status: CLOSED
 baseline: aaa42c234fa585f32f151b777aa013c692761e19
 branch: ccr-a34b4863-xb2jzi
 contract: docs/agent/drops/BOOT-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/189
 builder: Claude Code
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: 473dd1999a52d7357433e82e8f5a005b3dc1cb0e
+closed_at: 2026-10-06T05:36:00.495Z
 ---
 
 # ACTIVE_DROP
