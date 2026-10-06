@@ -212,7 +212,7 @@ Codex can build it when Claude is out.
 1. **ADVISORY-002 — Advisory cleanup** (Routine). Same-kind notes grouped ("Easing back in · 4
    lifts", a tap lists the lifts with WHY); real to-dos such as "Blood work OVERDUE" go to
    Commitments; the vague "An obligation needs attention" line and the "Background context..."
-   explainer are cut; three rows max.
+   explainer are cut; three rows max. **Done (PR #187, merged 2026-10-06).**
 2. **FEEL-001 — finish-and-feel pass** (Routine, visual only). 150–250 ms transitions, no bounce;
    HUD lines draw in; numbers tick up; haptic tap on LOG, finished set and hold-to-confirm where
    supported; press states; reduced motion makes it instant; phone screenshots of every screen.

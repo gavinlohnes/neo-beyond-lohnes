@@ -1,6 +1,6 @@
 ---
 id: FEEL-001
-baseline: SET-AT-ACTIVATION
+baseline: 7a36018edef4b82eb3e0099c98724db547970a82
 risk_tier: ROUTINE
 ---
 
@@ -14,7 +14,7 @@ and the set count ticks up, instead of the number silently swapping.
 
 ## Approved baseline
 
-Set at activation to fresh `origin/master`.
+`origin/master` at `7a36018edef4b82eb3e0099c98724db547970a82`.
 
 ## Risk classification
 

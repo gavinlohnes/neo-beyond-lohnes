@@ -1,9 +1,9 @@
 ---
-id: ADVISORY-002
+id: FEEL-001
 status: ACTIVE
-baseline: c84e391f75ccfa24f3799abf076e5ffcfabd5fd3
+baseline: 7a36018edef4b82eb3e0099c98724db547970a82
 branch: ccr-a34b4863-xb2jzi
-contract: docs/agent/drops/ADVISORY-002.md
+contract: docs/agent/drops/FEEL-001.md
 pr: (pending — set by Builder immediately after opening the PR)
 builder: Claude Code
 reviewer: (unassigned)
@@ -21,7 +21,7 @@ this file's recorded facts alongside the live git facts derived at that moment; 
 `.claude/skills/beyond-drop/SKILL.md` §9 for the full mechanism.
 
 Full authorized scope, exclusions, invariants, acceptance criteria, and role expectations
-for this Drop live in `docs/agent/drops/ADVISORY-002.md` — this file is a pointer, not a copy.
+for this Drop live in `docs/agent/drops/FEEL-001.md` — this file is a pointer, not a copy.
 
 At most one Drop may be `status: ACTIVE` at a time, enforced across every branch on origin
 (not just master) — `node scripts/factory-drop.mjs validate|init` fetches every branch and

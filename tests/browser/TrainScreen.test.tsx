@@ -982,7 +982,7 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
   }
 
-  it("a heavier set than ever shows a quiet outlined PR tag right under it, with no sound or vibration", async () => {
+  it("a heavier set than ever shows a quiet outlined PR tag right under it, with no sound and no PR-specific vibration", async () => {
     const vibrate = vi.fn();
     const realVibrate = navigator.vibrate;
     Object.defineProperty(navigator, "vibrate", { value: vibrate, configurable: true });
@@ -1000,7 +1000,9 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
       expect(style.borderTopColor).toBe("rgb(208, 20, 27)");
       expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
       expect(document.querySelector("audio")).toBeNull();
-      expect(vibrate).not.toHaveBeenCalled();
+      // FEEL-001: every logged set taps once (the LOG haptic); a PR adds nothing of its own.
+      expect(vibrate).toHaveBeenCalledOnce();
+      expect(vibrate).toHaveBeenCalledWith(15);
       expect(play).not.toHaveBeenCalled();
     } finally {
       play.mockRestore();

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { describePlainRecommendationTitle } from "./recommendationCopy";
+import { TickNumber } from "../../feel/TickNumber";
 import type {
   BeyondDay,
   CaptureItem,
@@ -1602,7 +1603,11 @@ export function TodayScreen({
     return (
       <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4 }}>FUEL</p>
-        <p className="card-body" style={{ margin: 0 }}>{fuelLine}</p>
+        {/* FEEL-001: the totals count up when they change; the settled text is fuelLine's. */}
+        <p className="card-body" style={{ margin: 0 }} aria-label={fuelLine}>
+          Protein <TickNumber value={minimumDayProteinG} />
+          {proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g · Water <TickNumber value={minimumDayHydrateOz} /> oz
+        </p>
       </div>
     );
   }
