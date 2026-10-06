@@ -7,36 +7,33 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `08ca0c4` (PR #192,
-STATUS-001 merged on Gavin's "1. A"; closed in this branch with his 2026-10-06 answers recorded).
+**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `e8c391d` (PR #193,
+FIND-001 merged after independent review; closed in this branch).
 
-- **Drop:** `FIND-001` search everything: ROUTINE. **ACTIVE**, branch `ccr-a34b4863-xb2jzi`.
-- **Done:** STATUS-001 closed (as-built entry with the locked thresholds, roadmap). Gavin's answers
-  recorded: thresholds as built; order FIND → MIRROR → REPORT; Week Ahead rule A written into
-  `WEEKAHEAD-001.md`. FIND-001 built:
-  - Search covers lifts, PRs, saved meals, journal entries, shift-handoff notes and History days
-    (each day carries the lifts trained, meals eaten and its handoff note), alongside Missions,
-    Obligations and Capture. Example: "chest" returns Machine Chest Press, every chest PR, and each
-    day it was trained.
-  - A tap opens where it lives: a LIFT or PR at that lift's strength curve (TRAIN → RECORDS); a
-    NOTE or DAY in HISTORY with that day open; a MEAL at BODY's meal entry; a JOURNAL entry in
-    JOURNAL; commitments and Capture as before.
-  - A search icon at the top right of TODAY, TRAIN, BODY and MORE opens it (MORE's SEARCH row
-    stays). Sealed time capsules are never indexed. Read only; no new dependency.
-  - Screenshots: `docs/agent/screenshots/FIND-001/`.
-- **Left:** independent review, merge on green, close. Then MIRROR-001, then REPORT-001
-  (Architectural), then WEEKAHEAD-001 (Architectural).
-- **Verification run:** `npm run verify` (199 files / 2077 tests passed, build OK); `git diff
-  --check` OK; `check:risk` Routine.
-- **Open risks:** a LIFT/PR result during an active workout opens TRAIN on the workout (RECORDS
-  only shows between workouts). A JOURNAL result opens the journal list, not the entry itself.
-  Capture results still open TODAY's TOOLS, as before. The top-bar icon scrolls away with the
-  page. Carried over: TODAY's strip briefly shows the old capacity sentence before the System
-  Status reads; a curve opens only from a record card; Android caches home-screen shortcuts until
-  the PWA updates; with an OBLIGATION_DUE recommendation the commitment's name shows twice on
-  TODAY; agent sessions clone shallow (`git fetch --unshallow origin` before `factory-drop.mjs
-  init`); raw capacity codes in "How BEYOND decided" with 2+ reasons; `factory:status` needs
-  `GITHUB_TOKEN`; merged branches await deletion.
+- **Drop:** `MIRROR-001` the Mirror: ROUTINE. **ACTIVE**, branch `ccr-a34b4863-xb2jzi`.
+- **Done:** FIND-001 closed (as-built entry, roadmap). MIRROR-001 built: Weekly has a MIRROR row,
+  closed by default (SHOW MIRROR). It compares NOW / 30 DAYS AGO / 90 DAYS AGO:
+  - Weight: the average of weigh-ins in the 7 days ending then.
+  - The 3 lifts with the most finished sessions: the heaviest counted set on record by then
+    (substituted, skipped and undone sets left out, as RECORDS counts them).
+  - Sleep: the average main sleep over BEYOND days that began in the 7 days ending then.
+  - Clean days: days logged clean in the 30 days ending then (only once the quit tracker existed).
+  - Any value with nothing behind it reads "not enough data yet"; nothing is estimated. Read only
+    (`src/application/mirrorQueries.ts`).
+  - Screenshot: `docs/agent/screenshots/MIRROR-001/weekly-mirror.jpg`.
+- **Left:** independent review, merge on green, close. Then REPORT-001 (Architectural: its PR waits
+  for Gavin), then WEEKAHEAD-001 (Architectural; rule A signed off).
+- **Verification run:** `npm run verify` (201 files / 2081 tests passed, build OK); `git diff
+  --check` OK.
+- **Open risks:** the Mirror reads at the same time of day as now (e.g. "30 days ago" = that date at
+  this hour), so a weigh-in later that day isn't counted. On a narrow phone the three columns wrap
+  "not enough data yet" over two lines. Carried over: a LIFT/PR search result during an active
+  workout opens TRAIN on the workout; TODAY's strip briefly shows the old capacity sentence before
+  the System Status reads; a curve opens only from a record card; Android caches home-screen
+  shortcuts until the PWA updates; with an OBLIGATION_DUE recommendation the commitment's name
+  shows twice on TODAY; agent sessions clone shallow (`git fetch --unshallow origin` before
+  `factory-drop.mjs init`); raw capacity codes in "How BEYOND decided" with 2+ reasons;
+  `factory:status` needs `GITHUB_TOKEN`; merged branches await deletion.
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
