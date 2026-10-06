@@ -333,7 +333,8 @@ export function BodyScreen({ focus = null }: { focus?: BodyFocus | null } = {}) 
   // tapping it in TODAY'S MEALS (SAVE or DELETE).
   const [mealConfirmation, setMealConfirmation] = useUndoWindow<MealConfirmation>();
   const [mealHistoryOpen, setMealHistoryOpen] = useState(false);
-  const [addMealOpen, setAddMealOpen] = useState(false);
+  // SHORTCUTS-001: LOG MEAL opens straight to the meal entry.
+  const [addMealOpen, setAddMealOpen] = useState(focus === "meal");
   // BODY-UX-001: manual macro entry starts collapsed — search stays the one
   // visible action until a search comes up empty, a result is picked for
   // review, or the operator explicitly asks for it.
