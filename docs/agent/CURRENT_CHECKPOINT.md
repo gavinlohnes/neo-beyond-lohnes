@@ -7,23 +7,29 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `e7441dc`.
+**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `c84e391` (PR #186,
+the ten Advanced-batch Drops).
 
-- **Drop:** none active. This session wrote the ten Drops of Gavin's "Advanced batch" brief
-  (2026-10-05): `ADVISORY-002`, `FEEL-001`, `BOOT-001`, `SHORTCUTS-001`, `VIEWS-001`,
-  `STATUS-001`, `FIND-001`, `REPORT-001`, `MIRROR-001`, `WEEKAHEAD-001`, in
-  `docs/agent/drops/`, each with `baseline: SET-AT-ACTIVATION` (set to fresh `origin/master` when
-  the Drop is activated). Branch `ccr-a34b4863-xb2jzi`.
-- **Done:** Drops written; Gavin's rulings recorded the same day (roadmap Queue, `UX_DECISIONS.md`,
-  doctrine amendment: the app icon may appear on the icon and the boot screen only).
-- **Left:** build in Queue order, starting with ADVISORY-002. WEEKAHEAD-001 is not buildable until
-  Gavin signs off a placement rule. STATUS-001 and REPORT-001 wait for Gavin to approve the merge
-  (and their thresholds / call list).
-- **Verification run:** docs only; `git diff --check` OK.
-- **Open risks:** carried over from the last handoff: "How BEYOND decided" shows raw capacity
-  codes on a day with two or more reasons; the planned-work question can flash on TRAIN after a
-  finished workout; `factory:status` needs `GITHUB_TOKEN`; 80+ merged branches await deletion by
-  Gavin (listed in git history of this file, 2026-10-04).
+- **Drop:** `ADVISORY-002` Advisory cleanup: ROUTINE. **ACTIVE**, branch `ccr-a34b4863-xb2jzi`,
+  PR opened from it.
+- **Done:** ADVISORY groups same-kind notes into one row each ("Easing back in · 8 lifts"); a tap
+  (SHOW) lists each lift with its plain WHY; three rows max, the rest fold into "More · n notes";
+  PROTECT keeps its message and quick actions on the row. Obligation notes left ADVISORY: the
+  COMMITMENT card now lists every other due one ("Also: Blood work · Overdue — was due …").
+  TODAY titles OBLIGATION_DUE with the real commitment ("Blood work · Overdue"); the Engine's
+  own title "An obligation needs attention" is unchanged and no longer shown; History labels it
+  "A commitment was due". The "Background context…" explainer is gone.
+  Screenshots: `docs/agent/screenshots/ADVISORY-002/` (TODAY, ADVISORY open, COMMITMENT open).
+- **Left:** independent review, merge on green, close. Then FEEL-001 (Queue order). WEEKAHEAD-001
+  needs Gavin's placement rule; STATUS-001 and REPORT-001 wait for Gavin to approve their merges.
+- **Verification run:** `npm run verify` (architecture OK, 189 files / 2035 tests passed, build
+  OK); `git diff --check` OK; `check:risk` vs `c84e391`: Routine (UI + tests only).
+- **Open risks:** with an OBLIGATION_DUE recommendation, the commitment's name now appears twice on
+  TODAY (the recommendation title and the COMMITMENT row); before, the title said nothing. The
+  clone in agent sessions is shallow: run `git fetch --unshallow origin` before
+  `factory-drop.mjs init`, or old merged branches read as ACTIVE conflicts. Carried over: raw
+  capacity codes in "How BEYOND decided" with 2+ reasons; `factory:status` needs `GITHUB_TOKEN`;
+  80+ merged branches await deletion by Gavin.
 
 ### Verification commands
 `npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·

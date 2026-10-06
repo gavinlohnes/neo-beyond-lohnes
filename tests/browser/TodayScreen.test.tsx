@@ -1244,10 +1244,10 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
 
     await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
-    await expect.element(screen.getByText(/Renew passport/)).toBeVisible();
+    await expect.element(screen.getByText(/Renew passport/).first()).toBeVisible();
 
     await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
-    await expect.element(screen.getByText(/Overdue/)).toBeVisible();
+    await expect.element(screen.getByText(/^Overdue/)).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "SATISFY COMMITMENT" })).toBeVisible();
 
     await screen.getByRole("button", { name: "VIEW" }).click();
@@ -1278,7 +1278,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     await expect.poll(() => document.activeElement).toBe(screen.getByRole("status").element());
     expect((await getObligation(headline.id))!.status).toBe("SATISFIED");
     expect((await getObligation(other.id))!.status).toBe("OPEN");
-    await expect.element(screen.getByText(/Write the report/)).toBeVisible();
+    await expect.element(screen.getByText(/Write the report/).first()).toBeVisible();
 
     const storedRecommendation = await db.recommendations.get(recommendation.id);
     expect(storedRecommendation).toMatchObject(recommendation);
@@ -1445,13 +1445,10 @@ describe("TodayScreen (real browser) — ADVISORY (Intelligence Spine consumptio
     expect(screen.getByText("ADVISORY", { exact: true }).elements().length).toBe(0);
   });
 
-  it("still surfaces a second, non-headline attention-worthy obligation in ADVISORY", async () => {
-    // Commitments only ever names the single headline obligation, plus a plain
-    // count of anything else unresolved (see CommitmentsCard.tsx) — the second
-    // obligation's own identity is real information that lives only in ADVISORY.
-    // Pinned to a day-off afternoon (Wed Oct 14 2026, 14:00 under the default schedule): on a work
-    // day's run-up a shift-protection INTERRUPT note lifts ADVISORY out of TOOLS, so this test
-    // used to fail whenever the real clock fell before a scheduled shift.
+  it("lists a second, non-headline due obligation in COMMITMENT, not ADVISORY (ADVISORY-002)", async () => {
+    // ADVISORY-002 (owner brief 2026-10-05): real to-dos live in COMMITMENT, which now names every
+    // due obligation; ADVISORY carries no obligation notes. Pinned to a day-off afternoon (Wed Oct
+    // 14 2026, 14:00 under the default schedule) so no shift-protection note lifts ADVISORY.
     vi.useFakeTimers({ toFake: ["Date"], shouldAdvanceTime: true });
     vi.setSystemTime(new Date(2026, 9, 14, 14, 0));
     await createObligation({ title: "Renew passport", dueAt: dateOffset(0) });
@@ -1460,11 +1457,9 @@ describe("TodayScreen (real browser) — ADVISORY (Intelligence Spine consumptio
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await openTodayTools(screen);
-    await expect.element(screen.getByText("ADVISORY", { exact: true })).toBeVisible();
-    // LAUNCH POLISH: QUIET-only notes fold into one ADVISORY row until opened.
-    await screen.getByRole("button", { name: "Open ADVISORY" }).click();
-    await expect.element(screen.getByText("File expense report — DUE_TODAY", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
+    await expect.element(screen.getByText("Also: File expense report · Due today", { exact: true })).toBeVisible();
+    expect(screen.getByText(/File expense report — DUE_TODAY/).elements()).toHaveLength(0);
     vi.useRealTimers();
   });
 });

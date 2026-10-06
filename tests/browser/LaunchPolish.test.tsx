@@ -61,6 +61,9 @@ describe("Launch polish (real browser)", () => {
 
   it("a SURFACE note keeps the advisory section open", async () => {
     const open = await render(<AdvisorySection notes={[quiet, surface]} />);
+    // ADVISORY-002: same-kind notes share one row; the notes sit one tap down.
+    await expect.element(open.getByText("From your journal · 2 lessons")).toBeVisible();
+    await open.getByText("SHOW").click();
     await expect.element(open.getByText("Surfaced note.")).toBeVisible();
     await expect.element(open.getByText("Quiet note.")).toBeVisible();
   });

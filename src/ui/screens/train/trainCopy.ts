@@ -145,6 +145,11 @@ const PLAIN_ADVICE_REASONS: Record<string, string> = {
     "Last time the weight changed between sets, so keep it the same.",
 };
 
+/** ADVISORY-002: the same display map, for TODAY's ADVISORY WHY lines. */
+export function describePlainAdviceReason(reason: string): string {
+  return PLAIN_ADVICE_REASONS[reason] ?? reason;
+}
+
 /**
  * Product Experience Sprint, P4 (workout completion state): a short label
  * for evaluateProgression's recommendation, used only to say which way an
@@ -209,7 +214,7 @@ export function describeProgressionAdvisory(suggestion: ProgressionSuggestion): 
   // HOLD from incomplete evidence or mixed weights carries no single
   // lastWeight/suggestedNextWeight to name, so it explains itself instead.
   // CLEANUP-003 (walk-through finding 6): the engine's reason, in plain words.
-  return PLAIN_ADVICE_REASONS[suggestion.reason] ?? suggestion.reason;
+  return describePlainAdviceReason(suggestion.reason);
 }
 
 /**

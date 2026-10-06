@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { describePlainRecommendationTitle } from "./recommendationCopy";
 import type {
   BeyondDay,
   CaptureItem,
@@ -12,7 +13,12 @@ import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { SignalRow } from "../../components/SignalRow";
 import { CommandSurface } from "../../components/CommandSurface";
 import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
-import { getMostRelevantUnresolvedObligation, hasObligationRequiringAttention } from "../../../engine/obligationRelevance";
+import {
+  classifyObligation,
+  getMostRelevantUnresolvedObligation,
+  hasObligationRequiringAttention,
+  isAttentionWorthyTier,
+} from "../../../engine/obligationRelevance";
 import { getCurrentlyEligibleUnresolvedObligations, getMissionForObligation } from "../../../application/intentQueries";
 import { getAdvisoryNotes } from "../../../application/advisoryQueries";
 import { wasRecommendationMateriallyRepeated } from "../../../application/continuityQueries";
@@ -1306,6 +1312,11 @@ export function TodayScreen({
   // `now` parameter already uses.
   const todayLocalDate = formatLocalDate(new Date());
   const headlineCommitment = getMostRelevantUnresolvedObligation(unresolvedObligations, todayLocalDate);
+  // ADVISORY-002: every other due commitment is listed in COMMITMENT (it used to sit in ADVISORY).
+  const otherDueCommitments = unresolvedObligations
+    .filter((obligation) => obligation.id !== headlineCommitment?.obligation.id)
+    .map((obligation) => ({ obligation, tier: classifyObligation(obligation, todayLocalDate) }))
+    .filter((commitment) => isAttentionWorthyTier(commitment.tier));
   const hasCommitmentDue = hasObligationRequiringAttention(unresolvedObligations, todayLocalDate);
 
   // Harvest Checkpoint 2/3 (TODAY presentation policy): a pure,
@@ -1402,7 +1413,9 @@ export function TodayScreen({
   const liftedWorkContext = workContextOpen && !phaseRows.includes("WORK_QUESTION");
   // SURFACE/INTERRUPT advisory notes were never folded away (LAUNCH POLISH),
   // so they stay visible above TOOLS; only all-QUIET advisory waits inside.
-  const liftedAdvisory = advisoryNotes.some((note) => note.attentionLevel !== "QUIET");
+  // ADVISORY-002: obligation notes live in COMMITMENT, not ADVISORY.
+  const shownAdvisoryNotes = advisoryNotes.filter((note) => note.sourceModule !== "obligationRelevance");
+  const liftedAdvisory = shownAdvisoryNotes.some((note) => note.attentionLevel !== "QUIET");
 
   /** Whether a TOOLS item has anything to show right now — the summary names only these. */
   function toolHasContent(item: ToolsItem): boolean {
@@ -1431,7 +1444,7 @@ export function TodayScreen({
       case "END_DAY":
         return !endDayInAttention;
       case "ADVISORY":
-        return !liftedAdvisory && advisoryNotes.length > 0;
+        return !liftedAdvisory && shownAdvisoryNotes.length > 0;
     }
   }
   const visibleTools = toolsItems.filter(toolHasContent);
@@ -1494,6 +1507,7 @@ export function TodayScreen({
           <RecommendationCard
             day={day}
             recommendation={recommendation}
+            headlineCommitment={headlineCommitment}
             isDominant={false}
             decision={decision}
             checkIn={checkIn}
@@ -1533,6 +1547,7 @@ export function TodayScreen({
         <RecommendationCard
           day={day}
           recommendation={recommendation}
+          headlineCommitment={headlineCommitment}
           isDominant={false}
           decision={decision}
           checkIn={checkIn}
@@ -1663,6 +1678,7 @@ export function TodayScreen({
           <>
       {!commitmentInAttention && (
         <CommitmentsCard
+          otherDueCommitments={otherDueCommitments}
           headlineCommitment={headlineCommitment}
           unresolvedObligationsCount={unresolvedObligations.length}
           commitmentsOpen={commitmentsOpen}
@@ -1698,8 +1714,7 @@ export function TodayScreen({
       case "ADVISORY":
         return (
           <AdvisorySection
-        notes={advisoryNotes}
-        excludeObligationId={headlineCommitment?.obligation.id}
+        notes={shownAdvisoryNotes}
         busy={busy}
         onLogWater={(amountOz) => void handleMinimumDayLogWater(amountOz)}
         onOpenMinimumDay={() => setMinimumDayOpen(true)}
@@ -1813,6 +1828,7 @@ export function TodayScreen({
             <RecommendationCard
           day={day}
           recommendation={recommendation}
+          headlineCommitment={headlineCommitment}
           isDominant={dominant === "RECOMMENDATION"}
           decision={decision}
           checkIn={checkIn}
@@ -2206,6 +2222,7 @@ export function TodayScreen({
         <RecommendationCard
           day={day}
           recommendation={recommendation}
+          headlineCommitment={headlineCommitment}
           isDominant={true}
           decision={decision}
           checkIn={checkIn}
@@ -2236,6 +2253,7 @@ export function TodayScreen({
             <RecommendationCard
               day={day}
               recommendation={recommendation}
+              headlineCommitment={headlineCommitment}
               isDominant={false}
               isAttention={true}
               decision={decision}
@@ -2290,6 +2308,7 @@ export function TodayScreen({
 
           {commitmentInAttention && (
             <CommitmentsCard
+              otherDueCommitments={otherDueCommitments}
               headlineCommitment={headlineCommitment}
               unresolvedObligationsCount={unresolvedObligations.length}
               commitmentsOpen={commitmentsOpen}
@@ -2358,7 +2377,7 @@ export function TodayScreen({
           {pendingOutcomeInAttention && pendingOutcome && (
             <SignalRow label="OUTCOME">
               <p className="card-body" style={{ marginBottom: 8 }}>
-                Last time, BEYOND recommended "{pendingOutcome.title}" — how did that go?
+                Last time, BEYOND recommended "{describePlainRecommendationTitle(pendingOutcome.kind, pendingOutcome.title)}" — how did that go?
               </p>
               <p className="meta" style={{ marginBottom: 12 }}>
                 This just records your answer for later review. It won't change today's guidance.
