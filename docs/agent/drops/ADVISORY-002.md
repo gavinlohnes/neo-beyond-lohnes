@@ -1,6 +1,6 @@
 ---
 id: ADVISORY-002
-baseline: SET-AT-ACTIVATION
+baseline: c84e391f75ccfa24f3799abf076e5ffcfabd5fd3
 risk_tier: ROUTINE
 ---
 
@@ -14,7 +14,7 @@ one row, "Easing back in · 4 lifts"; tapping it lists the four lifts, each with
 
 ## Approved baseline
 
-Set at activation to fresh `origin/master`.
+`origin/master` at `c84e391f75ccfa24f3799abf076e5ffcfabd5fd3`.
 
 ## Risk classification
 
