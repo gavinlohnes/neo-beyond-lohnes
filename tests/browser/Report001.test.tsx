@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
+import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import { startDay } from "../../src/application/commands";
 import { ReportReadyLine } from "../../src/ui/components/ReportReadyLine";
@@ -74,6 +75,27 @@ describe("REPORT-001", () => {
     await screen.getByText("SHOW REPORT").click();
     // Whatever today's schedule holds, the report renders (items, or an honest "not enough data yet").
     await expect.poll(() => document.querySelector("[data-report]")?.textContent ?? "").toMatch(/This block vs last|Not enough data yet/);
+  });
+
+  it.each([320, 360])("keeps the ready line and opened report accessible without overflow at %ipx", async (width) => {
+    await page.viewport(width, 800);
+    await startDay();
+    const screen = await render(<ReportReadyLine now={FIRST_DAY_OFF} />);
+    const open = screen.getByRole("button", { name: "Open the after action report" });
+    await expect.element(open).toBeVisible();
+
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+    expect(open.element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    expect(Number.parseFloat(getComputedStyle(screen.getByText("AFTER ACTION READY").element()).fontSize)).toBeGreaterThanOrEqual(16);
+
+    await open.click();
+    const close = screen.getByRole("button", { name: "CLOSE", exact: true });
+    await expect.element(close).toBeVisible();
+    const reportHeading = screen.getByText("This block vs last");
+    await expect.element(reportHeading).toBeVisible();
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+    expect(close.element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    expect(Number.parseFloat(getComputedStyle(reportHeading.element()).fontSize)).toBeGreaterThanOrEqual(16);
   });
 });
 

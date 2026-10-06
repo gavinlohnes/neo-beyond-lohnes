@@ -88,6 +88,19 @@ describe("getReport", () => {
     expect(call && describeReportItem(call).lines).toEqual(["Consider protecting sleep before the next block."]);
     expect(report.items.find((i) => i.kind === "STALLED")).toBeUndefined();
   });
+
+  it("with nothing stalled and sleep at or above six hours, makes no call", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const d = await session(new Date(2026, 9, 12, 10), "machine-chest-press", 100);
+    await logSleep(d.id, 360, "PRIMARY");
+    const now = new Date(2026, 9, 14, 9);
+    vi.setSystemTime(now);
+
+    const report = await getReport(now);
+
+    expect(report.items.find((i) => i.kind === "STALLED")).toBeUndefined();
+    expect(report.items.find((i) => i.kind === "CALL")).toBeUndefined();
+  });
 });
 
 describe("getReport review fixes", () => {

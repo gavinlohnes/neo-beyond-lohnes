@@ -7,11 +7,13 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-06 by Claude Code (builder).** Baseline `origin/master` at `c83114f` (PR #194,
-MIRROR-001 merged after independent review; closed in this branch).
+**Written 2026-10-06 by Codex (backup builder, taking over after Claude's handoff).** Baseline
+`origin/master` at `c83114f` (PR #194, MIRROR-001 merged after independent review; closed in this
+branch).
 
 - **Drop:** `REPORT-001` Briefing / After Action Report: **ARCHITECTURAL**. **ACTIVE**, branch
-  `ccr-a34b4863-xb2jzi`. **Waits for Gavin to approve the merge and the call list.**
+  `ccr-a34b4863-xb2jzi`. Gavin approved call-list Option A on 2026-10-06. **The PR remains
+  unmerged and waits for a distinct-collaborator formal approval plus Gavin's merge approval.**
 - **Done:** MIRROR-001 closed (as-built entry, roadmap). REPORT-001 built — Standard report:
   - **Scope / behavioral effect:** one report, two timings. TODAY shows one line in its banner
     slot (with the backup line; no phase row): "BRIEFING READY" on a work night 0200–0459 (last
@@ -32,7 +34,9 @@ MIRROR-001 merged after independent review; closed in this branch).
   - **Review fixes:** mid-block (a work night) the block now runs on to its true end, so "next
     block" is the one after it (it used to call tomorrow's shift the next block); the TODAY line
     re-checks every minute, so a screen left open across 0200 still offers it; tests now prove the
-    line steps back after opening and disappears out of its window.
+    line steps back after opening and disappears out of its window. After exact-head technical
+    review, Codex added explicit coverage for Option A's final no-call branch and 320/360 px
+    overflow, 44 px control-height, and 16 px report-text contracts.
   - **Definitions:** a block is a run of consecutive scheduled work days (the saved schedule); its
     period is the lived days that hold its shifts (16:30 the day before its first shift to 16:30
     after its last). Deterministic for the same data and time (tested); read only.
@@ -42,10 +46,16 @@ MIRROR-001 merged after independent review; closed in this branch).
     written (tested); the line is a banner, not a phase row.
   - Also: the Mirror now leaves 0 lb sets out of its top lifts (MIRROR-001 review note).
   - Screenshots: `docs/agent/screenshots/REPORT-001/`.
-- **Left:** independent review; Gavin approves the merge (and the call list); close. Then
-  WEEKAHEAD-001 (Architectural; rule A signed off).
-- **Verification run:** `npm run verify` (203 files / 2094 tests passed, build OK); `git diff
-  --check` OK. `check:risk` sees no Engine/domain path; the tier is Architectural by the contract.
+- **Left:** a different GitHub collaborator formally approves the final exact head; Gavin approves
+  the merge; a separate Integrator merges and closes. Then WEEKAHEAD-001 (Architectural; rule A
+  signed off).
+- **Verification run:** Builder's full `npm run verify` passed (203 files / 2094 tests, build OK).
+  Codex takeover verification after the review-test fixes: REPORT-001 node suite 8/8; browser suite
+  7/7; `npm run check:architecture`; `npm run typecheck`; `git diff --check` — all passed.
+  A full rerun reached 2094 passing tests but three unrelated Factory fixture setup hooks timed out
+  under the long Windows run; the isolated Factory suite then passed 39/39. Production build and
+  `check:risk -- c83114f` passed; risk sees no Engine/domain path, while the contract remains
+  Architectural.
 - **Open risks:** blocks come from the saved schedule, not from days actually worked, so a swapped
   shift isn't seen. AFTER ACTION READY shows from 0600 to midnight on the first day off; a night
   declared OFF hides the line only for that lived day. The opened-today marker lives in this phone's storage only. In the browser
@@ -63,7 +73,5 @@ MIRROR-001 merged after independent review; closed in this branch).
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-1. **The report's one call (REPORT-001, needed to merge):** **A (recommended, built)** a stalled
-   lift (no PR in 21+ days) → "Consider a lighter week on X", else a block averaging under 6 h
-   sleep → "Consider protecting sleep before the next block", else no call · **B** the same with
-   "stalled" at 28 days · **C** tell me the calls you want.
+The call-list decision is resolved: Option A approved 2026-10-06. Final merge approval remains a
+separate owner decision after formal independent approval.
