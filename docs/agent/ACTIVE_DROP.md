@@ -4,7 +4,7 @@ status: ACTIVE
 baseline: ebdfe9e3f37ae560f3745d48d8e97bba7959d856
 branch: codex/weekahead-001
 contract: docs/agent/drops/WEEKAHEAD-001.md
-pr: (pending — set by Builder immediately after opening the PR)
+pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/196
 builder: Codex backup builder
 reviewer: (unassigned)
 integrator: (unassigned)

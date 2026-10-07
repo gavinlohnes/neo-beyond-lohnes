@@ -7,18 +7,21 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-07 by Codex (backup builder).** WEEKAHEAD-001 is activated but implementation
-is paused at a product-authority conflict before feature code was changed.
+**Written 2026-10-07 by Codex (backup builder).** WEEKAHEAD-001 is implemented and open for
+review as PR #196. It is not merged.
 
 - **Drop:** `WEEKAHEAD-001` — Week Ahead. **ARCHITECTURAL**, ACTIVE on
-  `codex/weekahead-001`; baseline `ebdfe9e3f37ae560f3745d48d8e97bba7959d856`.
-- **Done this session:** fetched live repository truth; confirmed REPORT-001 closed and no open
-  PRs; set the written Drop's exact baseline; activated WEEKAHEAD-001 through the Factory and
-  pushed the activation branch. No product source or test file has been changed yet.
-- **Blocker:** the Drop/roadmap/Decision Register say Week Ahead follows the "A/B rotation," while
-  repository truth and the locked TRAIN behavior use `A → B → C` (`WORKOUT_TEMPLATE_ORDER`). The
-  Drop forbids guessing at placement behavior, so the owner must say whether Week Ahead should
-  project A/B/C or intentionally use only A/B.
+  `codex/weekahead-001`; baseline `ebdfe9e3f37ae560f3745d48d8e97bba7959d856`; PR
+  `https://github.com/gavinlohnes/neo-beyond-lohnes/pull/196`.
+- **Owner ruling:** Gavin chose Option A on 2026-10-07: preserve BEYOND's locked A → B → C
+  workout rotation. Codex cannot edit the locked Decision Register, so this is flagged in the PR
+  for owner/Claude follow-up.
+- **Built this session:** Weekly now has a closed-by-default `WEEK AHEAD` disclosure showing today
+  plus six days as scheduled shift/OFF. Read-only workout suggestions appear only on days off,
+  advance through A → B → C, and stop at two consecutive days; the third is rest before suggestions
+  resume. Copy says suggestions may be moved or skipped. Tests cover seven-day shape, rotation,
+  cap, determinism, no writes, 320/360 px overflow, 44 px controls and neutral copy. Screenshot:
+  `docs/agent/screenshots/WEEKAHEAD-001/week-ahead.jpg`.
 - **Owner rulings:** Gavin approved call-list Option A on 2026-10-06. While Claude was unavailable,
   Gavin directly authorized Codex to review and merge. The temporary exception is recorded on PR
   #195; permanent governance remains unchanged pending owner/Claude follow-up.
@@ -54,16 +57,16 @@ is paused at a product-authority conflict before feature code was changed.
     written (tested); the line is a banner, not a phase row.
   - Also: the Mirror now leaves 0 lb sets out of its top lifts (MIRROR-001 review note).
   - Screenshots: `docs/agent/screenshots/REPORT-001/`.
-- **Left:** resolve the rotation wording, then implement the read-only seven-day Weekly disclosure,
-  tests, screenshots, full verification and PR. Do not fold Visual Command Center work into this
-  Drop.
-- **Verification run:** Builder's full `npm run verify` passed (203 files / 2094 tests, build OK).
-  Codex takeover verification after the review-test fixes: REPORT-001 node suite 8/8; browser suite
-  7/7; `npm run check:architecture`; `npm run typecheck`; `git diff --check` — all passed.
-  A full rerun reached 2094 passing tests but three unrelated Factory fixture setup hooks timed out
-  under the long Windows run; the isolated Factory suite then passed 39/39. Production build and
-  `check:risk -- c83114f` passed; risk sees no Engine/domain path, while the contract remains
-  Architectural.
+- **Left:** obtain exact-head CI and technical review evidence. Because this is an Architectural
+  Drop, do not merge until Gavin explicitly approves PR #196 after review. Do not fold Visual
+  Command Center or unrelated advisory work into this Drop.
+- **Verification run:** focused WEEKAHEAD integration 2/2 and Chromium browser 2/2;
+  `check:architecture`, typecheck, production build, risk classification and diff check passed.
+  Full `npm run verify` reached 2,096 passed / 1 skipped / 5 failed: four Factory setup hooks timed
+  out only under the full parallel Windows run and passed 39/39 alone. Existing date-sensitive
+  `Advisory002.test.tsx` still fails alone because its unfrozen current-date setup now produces an
+  advisory; WEEKAHEAD touches neither TODAY nor advisory behavior, so this is reported rather than
+  silently expanding scope.
 - **Open risks:** blocks come from the saved schedule, not from days actually worked, so a swapped
   shift isn't seen. AFTER ACTION READY shows from 0600 to midnight on the first day off; a night
   declared OFF hides the line only for that lived day. The opened-today marker lives in this phone's storage only. In the browser
@@ -81,5 +84,6 @@ is paused at a product-authority conflict before feature code was changed.
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-1. **Week Ahead template sequence:** **A (recommended)** preserve BEYOND's locked A → B → C
-   rotation · **B** intentionally restrict Week Ahead suggestions to A → B only.
+
+None before review. After review and green exact-head CI, explicitly approve or reject merging PR
+#196; Architectural Drops never merge from silence.
