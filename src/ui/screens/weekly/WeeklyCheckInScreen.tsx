@@ -10,6 +10,7 @@ import { Ribbon } from "./Ribbon";
 import { HeatGrid } from "./HeatGrid";
 import { MirrorView } from "./MirrorView";
 import { ReportView } from "../report/ReportView";
+import { WeekAheadView } from "./WeekAheadView";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 
 /**
@@ -27,6 +28,7 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
   const [gridOpen, setGridOpen] = useState(false);
   const [mirrorOpen, setMirrorOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [weekAheadOpen, setWeekAheadOpen] = useState(false);
 
   useEffect(() => {
     let current = true;
@@ -68,6 +70,13 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
           <Section label="REPORT">
             <FieldDisclosure summary={reportOpen ? "HIDE REPORT" : "SHOW REPORT"} open={reportOpen} onToggle={setReportOpen}>
               {reportOpen && <ReportView now={now} />}
+            </FieldDisclosure>
+          </Section>
+
+          {/* WEEKAHEAD-001: read-only suggestions from the saved schedule and locked rotation. */}
+          <Section label="WEEK AHEAD">
+            <FieldDisclosure summary={weekAheadOpen ? "HIDE WEEK AHEAD" : "SHOW WEEK AHEAD"} open={weekAheadOpen} onToggle={setWeekAheadOpen}>
+              {weekAheadOpen && <WeekAheadView now={now} />}
             </FieldDisclosure>
           </Section>
 
