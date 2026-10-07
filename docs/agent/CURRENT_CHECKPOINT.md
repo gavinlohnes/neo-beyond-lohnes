@@ -62,11 +62,11 @@ review as PR #196. It is not merged.
   Command Center or unrelated advisory work into this Drop.
 - **Verification run:** focused WEEKAHEAD integration 2/2 and Chromium browser 2/2;
   `check:architecture`, typecheck, production build, risk classification and diff check passed.
-  Full `npm run verify` reached 2,096 passed / 1 skipped / 5 failed: four Factory setup hooks timed
-  out only under the full parallel Windows run and passed 39/39 alone. Existing date-sensitive
-  `Advisory002.test.tsx` still fails alone because its unfrozen current-date setup now produces an
-  advisory; WEEKAHEAD touches neither TODAY nor advisory behavior, so this is reported rather than
-  silently expanding scope.
+  The first exact-head CI run exposed an existing date-sensitive `Advisory002.test.tsx`: its
+  unfrozen current date produced an unrelated advisory. Gavin authorized continuing; the test now
+  freezes its clock with no product-code change. It passes alone and alongside the WEEKAHEAD browser
+  suite (3/3); focused integration remains 2/2 and typecheck/diff check pass. Four Factory setup
+  hooks that timed out only under a local full parallel Windows run passed 39/39 alone.
 - **Open risks:** blocks come from the saved schedule, not from days actually worked, so a swapped
   shift isn't seen. AFTER ACTION READY shows from 0600 to midnight on the first day off; a night
   declared OFF hides the line only for that lived day. The opened-today marker lives in this phone's storage only. In the browser
