@@ -1,6 +1,6 @@
 ---
 id: WEEKAHEAD-001
-baseline: SET-AT-ACTIVATION
+baseline: ebdfe9e3f37ae560f3745d48d8e97bba7959d856
 risk_tier: ARCHITECTURAL
 ---
 
@@ -14,7 +14,7 @@ shift · rest".
 
 ## Approved baseline
 
-Set at activation to fresh `origin/master`.
+`ebdfe9e3f37ae560f3745d48d8e97bba7959d856` (`origin/master`, fetched 2026-10-07).
 
 ## Risk classification
 

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { startDay, submitCheckIn } from "../../src/application/commands";
 import { createObligation } from "../../src/application/intentCommands";
@@ -10,6 +10,11 @@ import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 
 const GREEN: CheckInValues = { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 };
 
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"], shouldAdvanceTime: true });
+  vi.setSystemTime(new Date(2026, 9, 5, 12, 0, 0));
+});
+
 function dateOffset(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
@@ -18,6 +23,7 @@ function dateOffset(days: number): string {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
 });
 
 describe("ADVISORY-002 on TODAY", () => {
