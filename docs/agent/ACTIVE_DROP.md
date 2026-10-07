@@ -1,6 +1,6 @@
 ---
 id: WEEKAHEAD-001
-status: ACTIVE
+status: CLOSED
 baseline: ebdfe9e3f37ae560f3745d48d8e97bba7959d856
 branch: codex/weekahead-001
 contract: docs/agent/drops/WEEKAHEAD-001.md
@@ -8,6 +8,8 @@ pr: https://github.com/gavinlohnes/neo-beyond-lohnes/pull/196
 builder: Codex backup builder
 reviewer: (unassigned)
 integrator: (unassigned)
+integration_sha: ec4f96313177e66343a68ef1da62324dcb6e1d8d
+closed_at: 2026-10-07T08:56:58.293Z
 ---
 
 # ACTIVE_DROP
