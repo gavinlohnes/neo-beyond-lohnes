@@ -242,8 +242,10 @@ Codex can build it when Claude is out.
    **Done (PR #194, merged 2026-10-06).**
 9. **REPORT-001 — Briefing / After Action Report** (Architectural). BRIEFING READY on work nights
    0200–0500, AFTER ACTION READY on the first day off; five items max; one suggested call.
+   **Done (PR #195, merged 2026-10-06).**
 10. **WEEKAHEAD-001 — Week Ahead** (Architectural). Placement rule signed off 2026-10-06 ("3. A"):
     a workout on each day off, none on a work day, the A/B rotation, at most 2 days in a row.
+    **Done (PR #196, merged 2026-10-07 after Gavin's explicit approval).**
 11. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
     for reviews (Claude walks him through it; Claude never creates accounts or handles the token),
     so independent reviews are formal approvals. Nothing waits on it.

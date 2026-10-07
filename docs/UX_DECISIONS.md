@@ -374,6 +374,14 @@ below, this entry wins; the older entry is kept for history.
 - **Week Ahead placement rule (owner sign-off 2026-10-06, "3. A").** WEEKAHEAD-001 suggests a
   workout on each day off and none on a work day, following the A/B rotation, at most 2 days in a
   row. Suggestions only; Gavin moves or skips; the Engine is not told.
+- **As built: Week Ahead (WEEKAHEAD-001, PR #196, merged 2026-10-07 after Gavin's explicit
+  approval, Architectural).** Weekly's closed-by-default WEEK AHEAD row shows today plus six days
+  from the saved schedule. Work days show SHIFT and never receive a workout; days off advance the
+  canonical A → B → C rotation, with no more than two suggested workout days in a row. The third
+  consecutive day off is rest before suggestions resume. The projection is deterministic and
+  read only, never feeds the Engine, and says suggestions may be moved or skipped. Example: if
+  Thursday and Friday are off and Saturday through Monday are shifts, it suggests workouts on
+  Thursday and Friday only.
 - **As built: search everything (FIND-001, PR #193, merged 2026-10-06, Routine).** Search covers
   lifts, PRs, saved meals, journal entries, shift-handoff notes and History days (lifts trained,
   meals eaten — deleted meals left out — and notes) alongside Missions, Obligations and Capture;
