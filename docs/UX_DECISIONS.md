@@ -371,6 +371,15 @@ below, this entry wins; the older entry is kept for history.
   if logged in the last 36 h. With neither sleep nor a check-in: "NO READ · log sleep or check in".
   It replaced the capacity sentence (the check-in's reasons ride inside it); the strip's edge
   follows it. Read only; never feeds the Engine.
+- **VCC-001 authorized: TODAY State Rail (owner approval 2026-10-07).** Replace the existing
+  status strip in its current position and footprint with one compact State Rail. It leads with
+  the current operational state, retains System Status as an explicit subordinate reading, and
+  shows `BEFORE → SHIFT → AFTER → OFF` using only `deriveShiftClockView`; UNKNOWN highlights
+  nothing. A closed-by-default INTELLIGENCE disclosure may reveal only existing work-context
+  provenance, System Status reasons, and phase/countdown basis. RED illuminates the rail only for
+  existing RED status; AMBER uses the warning treatment; GREEN and NO READ remain neutral; meaning
+  is always written. Existing choices, row/surface counts, recommendation authority, thresholds,
+  behavior, and other screens remain unchanged. Full contract: `docs/agent/drops/VCC-001.md`.
 - **Week Ahead placement rule (owner sign-off 2026-10-06, "3. A").** WEEKAHEAD-001 suggests a
   workout on each day off and none on a work day, following the A/B rotation, at most 2 days in a
   row. Suggestions only; Gavin moves or skips; the Engine is not told.
