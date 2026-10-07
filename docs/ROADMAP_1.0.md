@@ -217,36 +217,42 @@ Codex can build it when Claude is out.
 - Write all Drops in one session, then build in this order. Every Drop's handoff carries
   screenshots and DECISIONS FOR GAVIN; Architectural Drops wait for Gavin to approve the merge.
 
-1. **ADVISORY-002 — Advisory cleanup** (Routine). Same-kind notes grouped ("Easing back in · 4
+1. **VCC-001 — TODAY State Rail** (Architectural, owner approval 2026-10-07). Replace TODAY's
+   existing status strip in place with one compact State Rail: operational state first, existing
+   System Status subordinate, `BEFORE → SHIFT → AFTER → OFF` from `deriveShiftClockView`, and one
+   closed `INTELLIGENCE` disclosure containing existing provenance/reasons/basis only. No new fact,
+   inference, choice, row, recommendation authority, or red semantics. Written contract:
+   `docs/agent/drops/VCC-001.md`.
+2. **ADVISORY-002 — Advisory cleanup** (Routine). Same-kind notes grouped ("Easing back in · 4
    lifts", a tap lists the lifts with WHY); real to-dos such as "Blood work OVERDUE" go to
    Commitments; the vague "An obligation needs attention" line and the "Background context..."
    explainer are cut; three rows max. **Done (PR #187, merged 2026-10-06).**
-2. **FEEL-001 — finish-and-feel pass** (Routine, visual only). 150–250 ms transitions, no bounce;
+3. **FEEL-001 — finish-and-feel pass** (Routine, visual only). 150–250 ms transitions, no bounce;
    HUD lines draw in; numbers tick up; haptic tap on LOG, finished set and hold-to-confirm where
    supported; press states; reduced motion makes it instant; phone screenshots of every screen.
    **Done (PR #188, merged 2026-10-06).**
-3. **BOOT-001 — boot sequence** (Routine). Cold launch only: icon, a 1px line, "BEYOND" types in,
+4. **BOOT-001 — boot sequence** (Routine). Cold launch only: icon, a 1px line, "BEYOND" types in,
    three status lines (e.g. DAY 14 · SHIFT 1800 · BACKUP OK), about 1 s, tap to skip.
    **Done (PR #189, merged 2026-10-06).**
-4. **SHORTCUTS-001 — home-screen shortcuts** (Routine). START WORKOUT, +WATER, LOG MEAL.
+5. **SHORTCUTS-001 — home-screen shortcuts** (Routine). START WORKOUT, +WATER, LOG MEAL.
    **Done (PR #190, merged 2026-10-06).**
-5. **VIEWS-001 — data views** (Routine, read only). Lift strength curve with PRs; 12-week heat
+6. **VIEWS-001 — data views** (Routine, read only). Lift strength curve with PRs; 12-week heat
    grid in Weekly. "Your usual" bands wait for the F1 stop (~Oct 25). **Done (PR #191, merged
    2026-10-06).**
-6. **STATUS-001 — System Status** (Architectural). One TODAY line, e.g. "AMBER · 5h sleep, 3 hard
+7. **STATUS-001 — System Status** (Architectural). One TODAY line, e.g. "AMBER · 5h sleep, 3 hard
    sessions in 4 days"; never changes the Engine. **Done (PR #192, merged 2026-10-06 on Gavin's
    "1. A": the proposed thresholds).**
-7. **FIND-001 — search everything** (Routine, read only). "chest" returns every chest PR, note and
+8. **FIND-001 — search everything** (Routine, read only). "chest" returns every chest PR, note and
    session. **Done (PR #193, merged 2026-10-06).**
-8. **MIRROR-001 — the Mirror** (Routine, read only, in Weekly). Now vs 30 and 90 days ago.
+9. **MIRROR-001 — the Mirror** (Routine, read only, in Weekly). Now vs 30 and 90 days ago.
    **Done (PR #194, merged 2026-10-06).**
-9. **REPORT-001 — Briefing / After Action Report** (Architectural). BRIEFING READY on work nights
+10. **REPORT-001 — Briefing / After Action Report** (Architectural). BRIEFING READY on work nights
    0200–0500, AFTER ACTION READY on the first day off; five items max; one suggested call.
    **Done (PR #195, merged 2026-10-06).**
-10. **WEEKAHEAD-001 — Week Ahead** (Architectural). Placement rule signed off 2026-10-06 ("3. A"):
+11. **WEEKAHEAD-001 — Week Ahead** (Architectural). Placement rule signed off 2026-10-06 ("3. A"):
     a workout on each day off, none on a work day, the A/B rotation, at most 2 days in a row.
     **Done (PR #196, merged 2026-10-07 after Gavin's explicit approval).**
-11. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
+12. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
     for reviews (Claude walks him through it; Claude never creates accounts or handles the token),
     so independent reviews are formal approvals. Nothing waits on it.
 
