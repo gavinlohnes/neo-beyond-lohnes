@@ -7,13 +7,18 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-06 by Codex (backup builder/integrator under direct temporary owner
-authorization).** REPORT-001 is merged and closed.
+**Written 2026-10-07 by Codex (backup builder).** WEEKAHEAD-001 is activated but implementation
+is paused at a product-authority conflict before feature code was changed.
 
-- **Drop:** `REPORT-001` Briefing / After Action Report: **ARCHITECTURAL**. **CLOSED**. PR
-  [#195](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/195) merged as
-  `5edbbe3d54ed653e3d14520fb41ad8188c2fbd7f`; final head
-  `558a6c0ccf6208c0986255523871608b3b8889ec`.
+- **Drop:** `WEEKAHEAD-001` — Week Ahead. **ARCHITECTURAL**, ACTIVE on
+  `codex/weekahead-001`; baseline `ebdfe9e3f37ae560f3745d48d8e97bba7959d856`.
+- **Done this session:** fetched live repository truth; confirmed REPORT-001 closed and no open
+  PRs; set the written Drop's exact baseline; activated WEEKAHEAD-001 through the Factory and
+  pushed the activation branch. No product source or test file has been changed yet.
+- **Blocker:** the Drop/roadmap/Decision Register say Week Ahead follows the "A/B rotation," while
+  repository truth and the locked TRAIN behavior use `A → B → C` (`WORKOUT_TEMPLATE_ORDER`). The
+  Drop forbids guessing at placement behavior, so the owner must say whether Week Ahead should
+  project A/B/C or intentionally use only A/B.
 - **Owner rulings:** Gavin approved call-list Option A on 2026-10-06. While Claude was unavailable,
   Gavin directly authorized Codex to review and merge. The temporary exception is recorded on PR
   #195; permanent governance remains unchanged pending owner/Claude follow-up.
@@ -49,9 +54,9 @@ authorization).** REPORT-001 is merged and closed.
     written (tested); the line is a banner, not a phase row.
   - Also: the Mirror now leaves 0 lb sets out of its top lifts (MIRROR-001 review note).
   - Screenshots: `docs/agent/screenshots/REPORT-001/`.
-- **Left:** no REPORT-001 implementation work. Confirm this closure on `origin/master`, then read
-  the Queue and written contract before activating the next Drop. Do not fold the separately
-  authorized Visual Command Center campaign into another Drop.
+- **Left:** resolve the rotation wording, then implement the read-only seven-day Weekly disclosure,
+  tests, screenshots, full verification and PR. Do not fold Visual Command Center work into this
+  Drop.
 - **Verification run:** Builder's full `npm run verify` passed (203 files / 2094 tests, build OK).
   Codex takeover verification after the review-test fixes: REPORT-001 node suite 8/8; browser suite
   7/7; `npm run check:architecture`; `npm run typecheck`; `git diff --check` — all passed.
@@ -76,4 +81,5 @@ authorization).** REPORT-001 is merged and closed.
 `npm run check:risk -- <baseline sha>` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
-None.
+1. **Week Ahead template sequence:** **A (recommended)** preserve BEYOND's locked A → B → C
+   rotation · **B** intentionally restrict Week Ahead suggestions to A → B only.
