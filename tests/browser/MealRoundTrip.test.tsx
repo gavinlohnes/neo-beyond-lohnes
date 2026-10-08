@@ -202,6 +202,40 @@ describe("TODAY meal round trip", () => {
     expect(await loggedCount()).toBe(1);
   });
 
+  it.each([false, true])("restores focus after delayed reopen recovery without losing a draft or logging twice (operator moved focus: %s)", async (moveFocus) => {
+    await seedMeal();
+    const screen = await render(<App />);
+    await openMeal(screen);
+    await fillMeal(screen, "Unfinished dinner");
+    const originalRead = db.savedMeals.toArray.bind(db.savedMeals);
+    const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal logged.");
+    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    read.mockImplementation(() => Dexie.Promise.resolve(gate).then(originalRead));
+    const returnButton = screen.getByRole("button", { name: "RETURN TO TODAY" });
+    try {
+      await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+      await expect.element(returnButton).toBeDisabled();
+      // Let App's one-shot animation-frame handoff encounter the disabled control.
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      if (moveFocus) (screen.getByRole("textbox", { name: "New meal name" }).element() as HTMLInputElement).focus();
+    } finally { release(); }
+    await expect.element(returnButton).toBeEnabled();
+    const expectedFocus = moveFocus ? screen.getByRole("textbox", { name: "New meal name" }).element() : returnButton.element();
+    await expect.poll(() => document.activeElement).toBe(expectedFocus);
+    await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
+    await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "SHOW TODAY'S MEALS (1)" }).click();
+    await expect.element(screen.getByRole("button", { name: "Edit Lunch" })).toBeVisible();
+    expect(await loggedCount()).toBe(1);
+    expect(await getTotalMealCalories(dayId)).toBe(600);
+    expect(await getDayProteinTotalG(dayId)).toBe(45);
+    expect((await getHistoryDays()).flatMap((day) => day.events).filter((event) => event.type === "MEAL_LOGGED")).toHaveLength(1);
+  });
+
   it("recovers a committed preset on reopen without creating or logging it again", async () => {
     const screen = await render(<App />);
     await openMeal(screen);
