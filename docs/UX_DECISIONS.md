@@ -24,9 +24,7 @@ boundaries. Historical references to Drops retain their product scope and eviden
 require the legacy lifecycle for new work. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical
 evidence, not standing implementation authority.
 
-## ROADMAP 1.0 rulings (locked 2026-09-30, direct owner ruling, ROADMAP-1.0-001)
-
-### Command Console production milestone 1 — owner ruling, 2026-10-08
+## Command Console production milestone 1 — owner ruling, 2026-10-08
 
 Gavin approves the Command Console + System Launcher hybrid direction and this bounded first
 production milestone: a compact TODAY console using Concept A from PR #204 as an interaction
@@ -49,6 +47,8 @@ No prototype fixture/state or synthetic production data is adopted. Small-screen
 offline operation and workout continuity remain binding. VCC-001 remains paused; this does not
 implement its State Rail contract. Independent exact-head review and explicit owner merge approval
 are required. No Milestone 2, merge or deployment is authorized.
+
+## ROADMAP 1.0 rulings (locked 2026-09-30, direct owner ruling, ROADMAP-1.0-001)
 
 These rulings go with [`ROADMAP_1.0.md`](ROADMAP_1.0.md). Where one overrides an older entry
 below, this entry wins; the older entry is kept for history.
