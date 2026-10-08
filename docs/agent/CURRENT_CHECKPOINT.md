@@ -23,8 +23,8 @@ verify branch/PR/head/CI from Git and GitHub rather than assuming this checkpoin
 - **Brief:** [`DEV-FLOW-002.md`](DEV-FLOW-002.md), including scope and hard exclusions.
 - **Branch:** `codex/dev-flow-002-adoption`. Exact head is derived with `git rev-parse HEAD` and
   will be bound in the PR description/review; do not use a self-referential checkpoint hash.
-- **PR:** creation pending GitHub API network access. Requested title:
-  `DEV-FLOW-002 — Simplify BEYOND Development Workflow`.
+- **PR:** [#203](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/203),
+  `DEV-FLOW-002 — Simplify BEYOND Development Workflow`; opened, not merged.
 - **Done:** central workflow charter; reconciled procedural instructions; preserved historical
   Drop skill with a supersession notice; Protected governance risk guidance and 25 CLI regression
   cases; VCC-001 procedural transfer retaining all product scope, acceptance evidence, six
@@ -35,19 +35,18 @@ verify branch/PR/head/CI from Git and GitHub rather than assuming this checkpoin
   acceptance/review, historical skill body, Factory pointer, CI workflows, and dependency files.
   Browser tests used the ignored onboarding config selecting installed `/usr/bin/chromium`;
   no tests, assertions, or tracked browser configuration were bypassed or weakened.
-- **Remaining:** open the adoption PR, confirm exact-head required PR Verification, obtain independent
-  Protected review, and wait for Gavin's merge approval. No PR merge is authorized in this session.
-- **Blocker:** `api.github.com` requests return Forbidden under the current egress policy. Existing
-  `GH_TOKEN` binding is present; no new token was requested. Git fetch and public GitHub pages work.
-  The cloud environment draft adds only `api.github.com` to custom allowed domains, preserving
-  package-manager presets and setup instructions; saving the draft does not apply it to this machine.
-- **Next action:** apply the proposed API access through environment settings, retry read-only
-  GitHub API access, create the PR from the pushed branch with the prepared description, record its
-  URL in GitHub, and confirm required CI on the exact head. Do not modify PR #201, start VCC-001,
-  activate Factory Phase 2, or integrate anything.
+- **Remaining:** confirm exact-head required PR Verification, obtain independent Protected review,
+  and wait for Gavin's merge approval. No PR merge is authorized in this session.
+- **Environment:** initial GitHub API requests were denied by the egress policy. Added only
+  `api.github.com` to the cloud environment draft, preserving presets and setup instructions.
+  PR creation and subsequent read-only API checks now succeed using the existing binding; no
+  new token was requested. Draft publication is not claimed.
+- **Next action:** inspect required CI on the final PR head, then assign an independent Protected
+  Reviewer to that exact head and resolve any findings. Wait for Gavin's explicit merge approval.
+  Do not modify PR #201, start VCC-001, activate Factory Phase 2, or integrate anything.
 - **Authority conflicts:** none unresolved within the approved adoption scope. Historical procedure
   is explicitly superseded for new work only after this adoption merges with owner approval.
 
 ## DECISIONS FOR GAVIN
 
-No product decision needed. GitHub API egress must be enabled to finish PR creation and CI validation.
+None. Independent Protected review and owner merge approval remain separate steps.

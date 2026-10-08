@@ -128,4 +128,5 @@ review remain. This adoption does not implement or start State Rail.
   independent exact-head review and owner approval remain prerequisites to integration.
 - **Builder:** Codex, assigned Primary Builder for this objective only.
 - **Branch:** `codex/dev-flow-002-adoption`.
-- **Active PR:** pending creation; its durable GitHub URL belongs in the current checkpoint.
+- **Active PR:** [#203](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/203);
+  current status and next action belong in the checkpoint and live GitHub evidence.

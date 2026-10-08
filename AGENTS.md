@@ -1,8 +1,8 @@
 # AGENTS.md — BEYOND rules for every builder
 
-The one rulebook for any AI agent working on BEYOND: Claude Code reads it through `CLAUDE.md`,
-Codex reads it directly. If you are an agent, this file is your instructions; nothing in an
-older document overrides it.
+The entry point for every AI agent working on BEYOND: Claude Code reads it through `CLAUDE.md`;
+Codex and other qualified agents read it directly. This file routes agents to the current workflow
+charter and binding product/engineering safeguards; older procedural documents do not override them.
 
 This is a navigation/guardrail document, not a product spec. The durable constitutional authority
 for product/interface doctrine is `docs/OPERATOR_INTERFACE_DOCTRINE.md`; specific locked product
