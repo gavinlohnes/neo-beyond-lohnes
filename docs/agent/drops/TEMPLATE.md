@@ -1,6 +1,6 @@
 ---
 id: <DROP-ID>
-baseline: <exact origin/master SHA for a single Drop; AT_ACTIVATION for a preregistered campaign Drop>
+baseline: <exact origin/master SHA; AT_ACTIVATION for a protected preregistered campaign or standalone Drop>
 risk_tier: ROUTINE | ARCHITECTURAL | HIGH-RISK
 ---
 
@@ -29,6 +29,10 @@ For an authorized campaign Drop, use `AT_ACTIVATION` in frontmatter and state th
 baseline is the freshly fetched protected `origin/master` SHA when the Drop is activated. The
 protected preregistration commit necessarily precedes that activation SHA; do not predict its
 own merge commit.
+
+An explicitly owner-preregistered standalone Drop may use the same sentinel only after its complete
+contract is merged to protected master; Factory requires the Builder checkout to match that trusted
+copy exactly. Otherwise standalone Drops use the exact-SHA form.
 
 ## Risk classification
 

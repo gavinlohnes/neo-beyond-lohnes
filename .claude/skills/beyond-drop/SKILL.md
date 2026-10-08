@@ -20,6 +20,11 @@ contract change fails closed and requires a separately reviewed protected-master
 This rule is mandatory for campaign Drops and does not alter legacy/non-campaign single-Drop
 contract authority or exact-baseline semantics.
 
+An owner may also preregister a standalone Drop contract on protected master with
+`baseline: AT_ACTIVATION`. Factory accepts that sentinel only when the complete contract already
+exists identically on `origin/master`; it binds the actual build baseline during activation and
+rejects a Builder-only or mutated copy. Ordinary standalone contracts keep exact-SHA semantics.
+
 ## 1. Risk classification — semantic, not path-based
 
 Path detection is only a **prompt to inspect** what changed — it is never the final risk

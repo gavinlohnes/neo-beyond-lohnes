@@ -7,42 +7,41 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-07 by Codex (backup builder/integrator under direct, one-Drop owner
-authorization).** WEEKAHEAD-001 is merged and closed.
+**Written 2026-10-07 by Codex (backup builder).** FACTORY-STANDALONE-ACTIVATION-001 is ready for
+independent review; VCC-001 remains authorized but unstarted.
 
-- **Drop:** `WEEKAHEAD-001` — Week Ahead. **ARCHITECTURAL. CLOSED.** PR
-  [#196](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/196) merged as
-  `ec4f96313177e66343a68ef1da62324dcb6e1d8d`; final head
-  `32942a222ec9a3f188d9e25732f54bb1afaa10c9`.
-- **Owner rulings:** Gavin chose Option A on 2026-10-07: preserve the locked A → B → C workout
-  rotation. After exact-head review and green CI, Gavin explicitly approved the merge and directly
-  authorized Codex to override the normal no-merge role restriction for this Drop and its closure.
-  The exception is recorded on PR #196 and does not change permanent governance.
-- **Done:** Weekly has a closed-by-default `WEEK AHEAD` disclosure showing today plus six days as
-  scheduled SHIFT/OFF. Read-only workout suggestions appear only on days off, advance through
-  A → B → C, and stop at two consecutive suggested days; the third consecutive day off is rest
-  before suggestions resume. Copy says suggestions may be moved or skipped. The Engine,
-  recommendations, persistence schema, events, and dependencies are unchanged.
-- **Review and verification:** exact-head independent technical review found no actionable code
-  issues. PR Verification passed at the final head, including the full suite, architecture check,
-  typecheck, risk classification, and production build. Focused WEEKAHEAD integration tests passed
-  2/2; browser tests passed 2/2 and cover 320/360 px overflow, the 44 px disclosure control,
-  neutral copy, deterministic output, and no writes. The final test-only delta froze the clock in
-  `Advisory002.test.tsx`; combined browser coverage passed 3/3.
-- **Left:** no WEEKAHEAD-001 implementation or integration work. Confirm this closure on
-  `origin/master`, then read the Queue and require a written authorized Drop before starting the
-  next project. The separate Visual Command Center campaign remains separate and must not be
-  folded into another Drop.
-- **Open risks:** Week Ahead uses the saved schedule, not actual worked-day overrides, so swapped
-  shifts are not reflected. Suggestions are intentionally read-only and do not alter the Engine's
-  next-workout authority. Carried over: merged branches await owner deletion; `factory:status`
-  needs `GITHUB_TOKEN`; agent sessions may need `git fetch --unshallow origin` before Factory init.
+- **Drop:** `FACTORY-STANDALONE-ACTIVATION-001` — protected standalone activation.
+  **ARCHITECTURAL. IN REVIEW.** Branch `codex/factory-standalone-activation-001`; PR pending at the
+  time of this checkpoint commit. Baseline `25d5c4c330c88c78f42e14edef58893c5935c3b0`.
+- **Owner ruling:** Gavin selected policy option 2 on 2026-10-07: allow an owner-preregistered
+  standalone Drop contract on protected master to use `baseline: AT_ACTIVATION`, with Factory
+  binding the actual protected-master SHA at activation. This is a one-Drop Factory policy change,
+  not VCC implementation authority by itself.
+- **Done:** Factory accepts the sentinel for a standalone Drop only when the complete contract is
+  already present identically on `origin/master`. Builder-only contracts fail with
+  `TRUSTED_CONTRACT_REQUIRED`; altered Builder copies fail with `BUILDER_CONTRACT_MUTATION`.
+  Exact-SHA standalone behavior and campaign authorization remain unchanged. Governing Factory
+  documentation and the Drop template describe the new protected path.
+- **Verification:** full `tests/factory/factoryDrop.test.ts` passed 42/42. Focused authorization
+  coverage passed 8/8, including campaign compatibility, exact-baseline rejection, protected
+  standalone activation, Builder-only rejection, and mutation rejection. Architecture boundaries,
+  typecheck, production build, and `git diff --check` passed. Run the risk classifier again after
+  the implementation commit so it evaluates the committed diff.
+- **Left:** push the branch, open the PR, replace the pending PR reference in this checkpoint, and
+  wait for exact-head CI plus independent review. After integration, close this policy Drop; then
+  activate VCC-001 from freshly fetched protected master and build it separately on
+  `codex/vcc-001-state-rail`.
+- **Open risks:** this changes the Factory authorization boundary, so it must not be self-reviewed
+  or merged by this Builder session. VCC-001 remains blocked until this policy PR is independently
+  approved and integrated. No product, Engine, persistence, schema, or runtime dependency changed.
 
 ### Verification commands
 
-`npm run check:architecture` · `npm run typecheck` · `npx vitest run` · `npm run build` ·
-`npm run check:risk -- <baseline sha>` · `git diff --check`
+`npx vitest run tests/factory/factoryDrop.test.ts` · focused Factory authorization suite ·
+`npm run check:architecture` · `npm run typecheck` · `npm run build` ·
+`npm run check:risk -- 25d5c4c330c88c78f42e14edef58893c5935c3b0` · `git diff --check`
 
 ### DECISIONS FOR GAVIN
 
-None.
+- Arrange independent exact-head review and owner approval for the policy PR. Do not start VCC-001
+  until this policy change is integrated and the Drop is closed.

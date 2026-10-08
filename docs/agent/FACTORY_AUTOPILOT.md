@@ -21,6 +21,12 @@ and independent review remain unchanged.
 This requirement is specific to campaign Drops. It does not redefine the existing authority or
 exact-SHA contract semantics for legacy/non-campaign single Drops.
 
+The same protected-contract trust boundary is available to an explicitly owner-preregistered
+standalone Drop: its complete contract may declare `baseline: AT_ACTIVATION` on protected master,
+and Factory binds the exact current master SHA when that Drop is activated. The sentinel is never
+accepted from Builder-controlled HEAD alone, and any mismatch from the protected copy fails closed.
+Standalone contracts that do not use the sentinel retain exact-SHA semantics.
+
 ### One-time AUTOPILOT-CANDIDATE-DISPATCH-002 transition
 
 PR #54 predates the Owner's protected-contract ruling and is permanently superseded as an

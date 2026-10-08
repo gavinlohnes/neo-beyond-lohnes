@@ -447,8 +447,27 @@ export function preflight(id, flags, root = getRoot()) {
   } else {
     contract = readContract(id, root);
     if (!contract.ok) return { ok: false, code: "MALFORMED_CONTRACT", message: contract.errors.join("\n") };
+    if (contract.frontmatter.baseline === ACTIVATION_BASELINE) {
+      const trustedContract = readTrustedCampaignContract(id, root);
+      if (!trustedContract.ok) {
+        return {
+          ok: false,
+          code: "TRUSTED_CONTRACT_REQUIRED",
+          message: `Protected standalone contract for "${id}" must already exist on origin/master before AT_ACTIVATION may be used.\n${trustedContract.errors.join("\n")}`,
+        };
+      }
+      const headContract = readGitFile(root, "HEAD", trustedContract.relativePath);
+      if (!headContract.ok || headContract.text !== trustedContract.text) {
+        return {
+          ok: false,
+          code: "BUILDER_CONTRACT_MUTATION",
+          message: `Standalone AT_ACTIVATION contract identity is protected by origin/master:${trustedContract.relativePath}; the Builder checkout must contain that exact trusted contract.`,
+        };
+      }
+      contract = trustedContract;
+    }
   }
-  if (!trustedCampaign.campaignDrop && contract.frontmatter.baseline !== flags.baseline) {
+  if (!trustedCampaign.campaignDrop && contract.frontmatter.baseline !== ACTIVATION_BASELINE && contract.frontmatter.baseline !== flags.baseline) {
     return {
       ok: false,
       code: "CONTRACT_BASELINE_MISMATCH",
