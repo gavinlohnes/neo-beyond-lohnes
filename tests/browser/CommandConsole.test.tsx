@@ -103,6 +103,19 @@ describe("Production Command Console", () => {
     expect(document.querySelectorAll(".today-field .command-surface").length).toBeLessThanOrEqual(1);
   });
 
+  it("reflows a wider standing-context control without horizontal overflow at 320px", async () => {
+    await page.viewport(320, 800);
+    await startDay();
+    const screen = await render(<App />);
+    const standing = screen.getByRole("button", { name: "CHANGE TO WORKING", exact: true });
+    await expect.element(standing).toBeVisible();
+    // Model wider fallback-font metrics observed in CI, without waiting
+    // for font loading or weakening the actual viewport assertion.
+    (standing.element() as HTMLButtonElement).style.minWidth = "232px";
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+    expect(standing.element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+  });
+
   it("does not abandon a TODAY write through same-tick persistent controls", async () => {
     vi.setSystemTime(new Date(2026, 9, 12, 22));
     const day = await startDay();

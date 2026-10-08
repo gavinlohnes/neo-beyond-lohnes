@@ -1,6 +1,6 @@
 /* Bounded production console: existing fonts, status semantics and primary-action tokens. */
-.command-console { --console-gap: 20px; }
-.command-console .field-header { margin-bottom: 16px; }
+.command-console.today-field { --console-gap: 20px; }
+.command-console.today-field .field-header { margin-bottom: 16px; }
 .console-controls {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -25,24 +25,27 @@
 }
 .console-controls button:hover, .console-controls button:active { background: var(--surface-2); }
 .console-controls button:disabled { opacity: .5; cursor: default; }
-.command-console .status-strip--stacked {
+.command-console.today-field .status-strip--stacked {
   margin-bottom: var(--console-gap);
   padding: 12px 0 12px 12px;
   background: transparent;
 }
-.command-console .console-guidance { margin-bottom: var(--console-gap); }
-.command-console .command-surface {
+.command-console.today-field .status-strip--stacked > div { flex-wrap: wrap; }
+.command-console.today-field .status-strip--stacked .chip { min-height: 48px; }
+.command-console.today-field .console-guidance { margin-bottom: var(--console-gap); }
+.command-console.today-field .command-surface {
+  min-height: 0;
   padding: 20px 16px;
   margin-bottom: 0;
 }
-.command-console .command-surface .command-title {
+.command-console.today-field .command-surface .command-title {
   font-size: clamp(28px, 8vw, 36px);
   line-height: 1.08;
   letter-spacing: .01em;
 }
-.command-console .shift-clock-rows { border-top: 1px solid var(--border-subtle); padding-top: 16px; }
-.command-console .shift-clock-rows .equipment-row { padding-block: 12px; }
-.command-console .today-support { margin-top: 16px; }
+.command-console.today-field .shift-clock-rows { border-top: 1px solid var(--border-subtle); padding-top: 16px; }
+.command-console.today-field .shift-clock-rows .equipment-row { padding-block: 12px; }
+.command-console.today-field .today-support { margin-top: 16px; }
 .console-system {
   width: min(480px, calc(100vw - 24px));
   max-height: calc(100dvh - 32px);
@@ -76,5 +79,5 @@
 .console-system button:focus-visible, .console-controls button:focus-visible { outline: 2px solid var(--text-1); outline-offset: 2px; }
 .console-destination:hover { background: var(--surface-2); }
 @media (prefers-reduced-motion: reduce) {
-  .command-console *, .console-system * { scroll-behavior: auto; }
+  .command-console.today-field *, .console-system * { scroll-behavior: auto; }
 }

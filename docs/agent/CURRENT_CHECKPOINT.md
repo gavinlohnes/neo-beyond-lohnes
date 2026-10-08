@@ -4,7 +4,7 @@
 
 Gavin authorized this bounded Protected milestone and explicitly amended the placement rule for
 persistent WATER/MEAL/SYSTEM controls (UX Decision Register, 2026-10-08). Builder: Codex, sole
-Lead Builder; branch `codex/command-console-m1`; active PR linked from this branch in GitHub.
+Lead Builder; branch `codex/command-console-m1`; active PR [#207](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/207).
 Starting fresh master: `db5bae3267ddd82e15f3038f65dc7ba3412893ff`; PR #206 is integrated with
 its reviewed head and green CI. PR #204 remains the sole overlapping open prototype PR, untouched.
 
@@ -17,15 +17,15 @@ backup, dependency, fixture, identity-asset or prototype changes. VCC-001 remain
 implemented; complete searchable launcher/Milestone 2 is deferred. BUILD OWNED composition over
 existing components/commands; USE PLATFORM native dialog with explicit focus containment/return.
 
-Evidence: 16 new real-browser console cases; 47 console/phase/visual/motion cases passed,
-with all 16 console cases repeated after final native-close focus ordering and fixture correction.
-The full local run passed 2,166 tests with one existing skip; two old selector assumptions failed,
-were corrected without weakening their assertions, and passed targeted verification. Final
-TypeScript/build, architecture and whitespace pass. Actual synthetic-fixture screenshots at
-320/360/412 px, status/evidence, logging, SYSTEM and resume are in
-`docs/screenshots/command-console-m1/`. Exact head, final offline evidence and required full CI
-are recorded in the linked PR. Built PWA checks pass offline save/log, cold reload, meal return,
-SYSTEM navigation, water logging/undo, canonical totals and keyboard focus return.
+Evidence: 17 new real-browser console cases, including a deterministic wider-font context
+control regression; console/phase/visual/motion coverage retains overflow, touch-target and
+resume visibility assertions. Status context safely wraps at 320 px; touch targets stay at least
+44 px. Full local regression: 208 files passed, 2,169 tests passed and one existing skip. Final
+TypeScript/build, architecture, whitespace, offline and exact-head required CI results are recorded
+in PR #207. Actual synthetic-fixture screenshots at 320/360/412 px,
+status/evidence, logging, SYSTEM and resume are in `docs/screenshots/command-console-m1/`.
+Built PWA checks cover offline save/log, cold reload, meal return, SYSTEM navigation,
+water logging/undo, canonical totals and keyboard focus return.
 Independent exact-head review and Gavin's final merge approval
 remain required. Chromium automation is not physical-device/Safari or screen-reader testing;
 memory-only meal drafts, existing undo windows and the existing bundle-size warning remain.
