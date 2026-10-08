@@ -1,8 +1,23 @@
 # Current checkpoint
 
-Updated 2026-10-08 by Codex, assigned Primary Builder for DEV-FLOW-002 only.
+Updated 2026-10-08 by Codex, Builder for the owner-approved interaction laboratory.
 This is a handoff, not implementation or merge authorization. Read the approved objective brief;
 verify branch/PR/head/CI from Git and GitHub rather than assuming this checkpoint is live state.
+
+## Current objective — Next-Generation Interface Exploration
+
+- Fresh master: `8035dfbc0011bed03fb668e100aa8794cda4a8e7`, merged PR #203. The older adoption handoff below is historical, not pending routing.
+- Owner explicitly authorizes isolated navigation/task-flow experiments, not production changes.
+- Builder: Codex. Branch: `codex/beyond-interaction-lab`; PR pending creation.
+- Brief, research, comparison, preview instructions, verification and proposed roadmap: [`prototype/interaction-lab/README.md`](../../prototype/interaction-lab/README.md).
+- Three working concepts: Command Console, System Launcher and Adaptive Experience. Synthetic in-memory records/session continuity only; no production, dependency, data, governance or CI changes.
+- Risk: conservatively Protected interaction architecture exploration. Independent exact-head review and owner approval remain required before integration. No merge or deployment authorized.
+- Previous redirected visual study preserved separately on `codex/beyond-open-design`; A–F history untouched. Its interrupted verification is not a completed deliverable.
+- PR #201 remains unrelated and untouched. VCC-001 production implementation remains unstarted by this Builder.
+- Verification: 69 prototype layout/semantic checks, 60 axe scans and 47 browser screenshots; all three built concepts passed water-entry smoke checks. Zero prototype storage accesses, external requests or browser errors. Architecture, standalone/production TypeScript and builds passed; existing full suite 206 files / 2,129 passed / one skipped.
+- Next action: open isolated prototype PR with exact-head evidence for owner visual review; independent review and CI still separate gates, no integration.
+
+## Historical DEV-FLOW-002 handoff
 
 ## Verified starting state
 
