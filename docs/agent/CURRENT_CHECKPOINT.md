@@ -29,8 +29,9 @@ independent review; VCC-001 remains authorized but unstarted.
   typecheck, production build, and `git diff --check` passed. Run the risk classifier again after
   the implementation commit so it evaluates the committed diff.
 - **Left:** wait for PR #199 exact-head CI plus independent review. After integration, close this
-  policy Drop; then activate VCC-001 from freshly fetched protected master and build it separately on
-  `codex/vcc-001-state-rail`.
+  policy Drop, amend VCC-001's protected contract baseline from its superseded exact SHA to
+  `AT_ACTIVATION` in a separate authorization-only protected-master change, and only then activate
+  VCC-001 from freshly fetched protected master and build it on `codex/vcc-001-state-rail`.
 - **Open risks:** this changes the Factory authorization boundary, so it must not be self-reviewed
   or merged by this Builder session. VCC-001 remains blocked until this policy PR is independently
   approved and integrated. No product, Engine, persistence, schema, or runtime dependency changed.
@@ -44,4 +45,5 @@ independent review; VCC-001 remains authorized but unstarted.
 ### DECISIONS FOR GAVIN
 
 - Arrange independent exact-head review and owner approval for the policy PR. Do not start VCC-001
-  until this policy change is integrated and the Drop is closed.
+  until this policy change is integrated, this Drop is closed, and VCC-001's protected contract is
+  separately amended to `baseline: AT_ACTIVATION`.
