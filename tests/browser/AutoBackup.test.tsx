@@ -35,7 +35,7 @@ describe("BACKUP-AUTO-001 — automatic backup", () => {
     await startDay();
     const screen = await render(<App />);
     await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toBeVisible();
-    expect(document.querySelector(".backup-due")).toBeNull();
+    expect(document.querySelector('section[aria-label="Backup"]')).toBeNull();
   });
 
   it("on and due: one line on TODAY; BACK UP NOW shares the backup and the line clears", async () => {
@@ -59,7 +59,7 @@ describe("BACKUP-AUTO-001 — automatic backup", () => {
     const shared = (share.mock.calls[0] as unknown as [{ files: File[] }])[0].files[0]!;
     expect(shared.type).toBe("application/json");
     expect(JSON.parse(await shared.text()).formatName).toBe("dexie");
-    expect(document.querySelector('.backup-due button')).toBeNull();
+    expect(document.querySelector('section[aria-label="Backup"] button')).toBeNull();
   });
 
   it("closing the share menu without picking keeps the line", async () => {
@@ -80,7 +80,7 @@ describe("BACKUP-AUTO-001 — automatic backup", () => {
     await startDay();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "LATER" }).click();
-    await expect.poll(() => document.querySelector(".backup-due")).toBeNull();
+    await expect.poll(() => document.querySelector('section[aria-label="Backup"]')).toBeNull();
   });
 
   it("MORE → Data safety turns it on and picks the interval", async () => {
