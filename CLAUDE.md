@@ -8,4 +8,5 @@ read the same file. Everything there applies here:
 ## Claude-only notes
 
 - `.claude/rules/*.md` load automatically when you edit the paths they name.
-- The `beyond-drop` skill holds the Drop workflow; invoke it for a Drop.
+- Follow `docs/agent/DEV-FLOW-002.md` for new work. The `beyond-drop` skill is historical
+  reference; invoking it does not restore superseded procedures or provider-specific authority.

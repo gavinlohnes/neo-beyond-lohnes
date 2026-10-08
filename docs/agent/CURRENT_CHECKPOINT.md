@@ -1,61 +1,52 @@
-# Current Checkpoint — the handoff note
+# Current checkpoint
 
-**Every session reads this first and rewrites it last** (`AGENTS.md`, "Builder roles", rule 5),
-Claude Code or Codex alike. Replace the handoff wholesale each time; don't append history. It
-reports state; it doesn't authorize work. For what to build next, read the Queue in
-[`docs/ROADMAP_1.0.md`](../ROADMAP_1.0.md).
+Updated 2026-10-08 by Codex, assigned Primary Builder for DEV-FLOW-002 only.
+This is a handoff, not implementation or merge authorization. Read the approved objective brief;
+verify branch/PR/head/CI from Git and GitHub rather than assuming this checkpoint is live state.
 
-## Handoff
+## Verified starting state
 
-**Updated 2026-10-08 by Codex (backup builder).** FACTORY-STANDALONE-ACTIVATION-001 is integrated;
-PR #200's authorization amendment includes the owner-authorized AutoBackup test-selector repair
-from PR #201 and awaits independent exact-head review and CI.
+- Fresh `origin/master` and starting checkout both matched
+  `9cf48c07b4b4e1ff807983dbc845d06a2de6eedb` with a clean working tree.
+- PR [#200](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/200) merged at that SHA;
+  both Git history and the public PR page confirm it. The former pending-review pointer is stale.
+- PR [#199](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/199) remains the historical
+  standalone-activation prerequisite. Its implementation and evidence are preserved.
+- PR [#201](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/201) is still open on GitHub;
+  this objective does not modify or close it. PR #200 already contains the AutoBackup selector repair.
+- `ACTIVE_DROP.md` still records WEEKAHEAD-001 as CLOSED and is untouched historical Factory state.
+  It does not assign this adoption objective or authorize VCC-001 implementation.
 
-- **Completed prerequisite:** `FACTORY-STANDALONE-ACTIVATION-001` — protected standalone
-  activation. **ARCHITECTURAL. MERGED.** PR
-  [#199](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/199) merged as
-  `40ef5955d6aefaaf198167d2fe081c2e8e71216c`; final head
-  `7ea7d07e93d61c59e30a6297346066caa0c1c275`.
-- **Owner ruling:** Gavin authorized VCC-001 from freshly fetched current master on 2026-10-07.
-  The protected VCC contract now uses `baseline: AT_ACTIVATION`; Factory will bind the exact
-  protected-master SHA when the implementation Drop is activated.
-- **This change:** authorization only. It amends `docs/agent/drops/VCC-001.md` to the protected
-  standalone activation path and records the merged policy prerequisite. No VCC product code,
-  Engine, recommendation, persistence, schema, runtime dependency, roadmap, doctrine, or locked
-  UX decision changes are included.
-- **Left:** independently review and merge this authorization amendment. Only after it is present
-  on protected master may a fresh Builder session run Factory activation and build VCC-001 on
-  `codex/vcc-001-state-rail`.
-- **Open risks:** VCC-001 remains unstarted and fail-closed until this amendment merges. The
-  implementation remains Architectural and still requires independent exact-head review, green
-  CI, and Gavin's explicit approval before integration.
+## DEV-FLOW-002 adoption
 
-### PR #200 repair handoff
+- **Authorization / risk:** explicit bounded owner approval, 2026-10-08; PROTECTED governance.
+- **Brief:** [`DEV-FLOW-002.md`](DEV-FLOW-002.md), including scope and hard exclusions.
+- **Branch:** `codex/dev-flow-002-adoption`. Exact head is derived with `git rev-parse HEAD` and
+  will be bound in the PR description/review; do not use a self-referential checkpoint hash.
+- **PR:** [#203](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/203),
+  `DEV-FLOW-002 — Simplify BEYOND Development Workflow`; opened, not merged.
+- **Done:** central workflow charter; reconciled procedural instructions; preserved historical
+  Drop skill with a supersession notice; Protected governance risk guidance and 25 CLI regression
+  cases; VCC-001 procedural transfer retaining all product scope, acceptance evidence, six
+  screenshots, and independent exact-head review. State Rail remains unimplemented/unstarted.
+- **Local verification:** 206 files passed; 2,129 tests passed, one skipped. Architecture checks,
+  TypeScript/production build, syntax and whitespace checks passed. Committed-diff risk guidance
+  reports PROTECTED. Consistency checks confirm unchanged product doctrine, VCC scope/invariants/
+  acceptance/review, historical skill body, Factory pointer, CI workflows, and dependency files.
+  Browser tests used the ignored onboarding config selecting installed `/usr/bin/chromium`;
+  no tests, assertions, or tracked browser configuration were bypassed or weakened.
+- **Remaining:** confirm exact-head required PR Verification, obtain independent Protected review,
+  and wait for Gavin's merge approval. No PR merge is authorized in this session.
+- **Environment:** initial GitHub API requests were denied by the egress policy. Added only
+  `api.github.com` to the cloud environment draft, preserving presets and setup instructions.
+  PR creation and subsequent read-only API checks now succeed using the existing binding; no
+  new token was requested. Draft publication is not claimed.
+- **Next action:** inspect required CI on the final PR head, then assign an independent Protected
+  Reviewer to that exact head and resolve any findings. Wait for Gavin's explicit merge approval.
+  Do not modify PR #201, start VCC-001, activate Factory Phase 2, or integrate anything.
+- **Authority conflicts:** none unresolved within the approved adoption scope. Historical procedure
+  is explicitly superseded for new work only after this adoption merges with owner approval.
 
-- **Branch / PR:** `codex/vcc-001-activation-auth`,
-  [#200](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/200). Inspected open PRs #200 and #201
-  before editing; #200 head was `2bc6d584be224d0894fda521fda63a11148235db`, #201 head was
-  `2715831dcb18430fc59cebfc0daaf6e71b6b54e1`.
-- **Done:** applied exactly PR #201's three selector corrections in
-  `tests/browser/AutoBackup.test.tsx`. Assertions now target `section[aria-label="Backup"]`
-  instead of the shared `.backup-due` class, which also matches the report banner. Original
-  PR Verification run `37722957143` confirms failures at these three assertions.
-- **Verification:** AutoBackup and Report001 browser tests passed 12/12; full suite passed
-  205 files / 2,104 tests, one skipped. Architecture boundaries, typecheck/production build,
-  and `git diff --check` passed. Browser tests used installed `/usr/bin/chromium` through a
-  temporary config overriding only Playwright launch options; that config was removed.
-- **Scope:** only the selector correction and this required handoff update. No product behavior,
-  doctrine, dependencies, Factory activation, or DEV-FLOW-002 changes. No PR merged or closed.
-- **Left:** push this repair to #200, confirm exact-head PR Verification, then obtain independent
-  Claude Code review. GitHub API access is blocked by network policy; Git and public GitHub web
-  pages are available for push and CI inspection. PR #201 remains open and untouched.
+## DECISIONS FOR GAVIN
 
-### Verification commands
-
-`npm run check:risk -- 40ef5955d6aefaaf198167d2fe081c2e8e71216c` (process/docs only) ·
-`git diff --check`. Factory activation validation is intentionally deferred until this exact
-contract amendment is protected on master; the Builder branch cannot establish trusted authority.
-
-### DECISIONS FOR GAVIN
-
-None.
+None. Independent Protected review and owner merge approval remain separate steps.

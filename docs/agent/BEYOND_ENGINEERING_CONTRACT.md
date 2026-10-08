@@ -1,16 +1,16 @@
 # BEYOND Engineering Contract (shared, tool-neutral)
 
-Read by both Claude Code (via CLAUDE.md) and Codex (via AGENTS.md). The single source of
-implementation-critical invariants both engineering agents must never violate, regardless of
-which one is building. Not a replacement for AGENTS.md (which CLAUDE.md imports), docs/UX_DECISIONS.md, or
-.claude/rules/* — the correctness-critical subset, kept short.
+Read by every qualified Builder and Reviewer through `AGENTS.md` (which `CLAUDE.md` imports).
+This is the correctness-critical subset of engineering invariants, not a replacement for product
+doctrine, `docs/UX_DECISIONS.md`, or `.claude/rules/*`. Development procedure is governed only by
+[`DEV-FLOW-002.md`](DEV-FLOW-002.md); this contract preserves the engineering safeguards.
 
 ## Authority order
 
 1. Direct owner decision.
 2. BEYOND Product Constitution / Operator Doctrine.
 3. Canonical Spec + locked Decision Register entries (docs/UX_DECISIONS.md).
-4. The current Drop's own approved task contract.
+4. The current objective's approved brief.
 5. Current repository implementation truth.
 6. .claude/rules/* path-scoped detail.
 
@@ -45,46 +45,47 @@ or destructive schema/migration; correction-model changes; historical fixture mo
 backup-contract changes; removing user capability; a meaningful new runtime dependency; external
 provider/account/backend introduction; a composition change that materially changes how
 recommendation authority or user choice is experienced; or a genuine conflict between current
-code and higher authority. Route to Gavin + ChatGPT — neither engineering agent has product
-authority.
+code and higher authority. Obtain Gavin's bounded approval for any boundary not already approved
+in the objective. Agents have no independent product authority; unresolved conflicts stop work.
 
 ## No scope invention
 
-Implement exactly the approved task contract's declared scope. A change that would expand
-product behavior beyond it is a specification conflict, not something either agent resolves
-unilaterally.
+Implement the approved brief's scope. Ordinary implementation details are within that approval;
+expanded product behavior or Protected boundaries require an owner ruling.
 
-## Baseline & worktree discipline
+## Baseline & checkout discipline
 
 - Never branch from an assumed/local `master` — always `git fetch origin master` first and
-  record the exact resulting SHA in the task contract.
-- One task, one owner, one branch, one worktree, one declared expected footprint.
-- Verify repository state (`git rev-parse HEAD`, `git status`) inside the worktree before
+  record the exact starting SHA in the brief.
+- One objective, one active Builder, one branch, one declared expected footprint. Use the existing
+  isolated cloud checkout; do not create a worktree unless the owner requests one.
+- Verify repository state (`git rev-parse HEAD`, `git status`) inside the checkout before
   writing any code.
 
-## Integration discipline (current phase)
+## Review and integration safeguards
 
-- No self-merge — the agent that builds a Drop does not merge its own PR. Integration is a
-  distinct, explicitly authorized step, requested only after builder verification, independent
-  review (when applicable), dispositioned findings, and green required CI.
+- Every PR requires Gavin's merge approval, including Routine work. No self-merge or automatic
+  merge. Integration is a distinct, explicitly owner-authorized step after verification, resolved
+  findings, green required CI, and independent exact-head review for Protected work. No provider
+  is specifically required as Reviewer or Integrator.
 - For this personal repository, reviewer independence means a separate agent/session explicitly
   assigned the Reviewer role, independently inspecting an exact identified commit/SHA, recording
   evidence-backed verification and findings, and issuing a durable PASS/BLOCK verdict. The Builder
-  may not review its own work in the same session. A distinct GitHub account is not required when
-  agents share Gavin's GitHub identity; native GitHub approval identity is supporting evidence,
+  may not supply the independent review of its own changes. A distinct GitHub account is not
+  required when agents share Gavin's GitHub identity; native GitHub approval identity is supporting evidence,
   not the sole definition of independence. Gavin remains the owner and final approval authority.
 - No use of admin privileges or any other mechanism to bypass a required branch-protection/
   status check, ever.
 - Integration is serialized — one PR merges at a time.
-- `npm run verify` is the standard full local verification command. It is never run by two
-  agents' worktrees simultaneously — this repo's browser test suite has observed real
-  IndexedDB/resource contention under concurrent load.
+- Verification is proportional to risk under DEV-FLOW-002; existing required CI is unchanged.
+  `npm run verify` is the full local gate. Do not run concurrent full verification sessions: the
+  browser suite has observed real IndexedDB/resource contention under concurrent load.
 
 ## SERIAL-ONLY seams
 
 A seam marked SERIAL ONLY means **only one implementation owner may modify it concurrently** —
 it does not forbid a builder/reviewer pair (whichever two agents hold those roles on a given
-Drop, per `.claude/skills/beyond-drop` §8) from working on it; it forbids two simultaneous
+objective, under DEV-FLOW-002) from working on it; it forbids two simultaneous
 *builders*. `src/engine/**`, `domain/common/types.ts`, `persistence/**`,
 `src/ui/screens/today/**`, and `src/ui/styles/global.css` are the current SERIAL-ONLY seams.
 
