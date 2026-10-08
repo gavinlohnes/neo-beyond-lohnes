@@ -1,0 +1,132 @@
+/* WAYNE SYSTEMS: separate compositions, unchanged operational truth.
+   Available IBM Plex assets are bundled; no font service or new dependency. */
+@font-face { font-family: 'Wayne Sans'; font-weight: 400; font-display: swap; src: url('../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Wayne Sans'; font-weight: 500; font-display: swap; src: url('../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Wayne Sans'; font-weight: 700; font-display: swap; src: url('../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-700-normal.woff2') format('woff2'); }
+:is(.concept-E1,.concept-E2) { --text-2: #a8a8ae; --wayne-rule: #37373d; font-family: 'Wayne Sans', sans-serif; }
+:is(.concept-E1,.concept-E2) .rail-kicker,
+:is(.concept-E1,.concept-E2) .rail-lead > svg,
+:is(.concept-E1,.concept-E2) .prototype-header > div > svg,
+:is(.concept-E1,.concept-E2) .recommendation-label > svg { display: none; }
+:is(.concept-E1,.concept-E2) .equipment-row .tool-label,
+:is(.concept-E1,.concept-E2) .equipment-row .meta { font-family: 'Wayne Sans', sans-serif; }
+:is(.concept-E1,.concept-E2) .prototype-header h1 { font-family: 'Wayne Sans', sans-serif; font-size: 22px; letter-spacing: -.035em; }
+:is(.concept-E1,.concept-E2) .prototype-header h1 span { margin-left: 8px; font-family: var(--font-mono); font-size: 16px; letter-spacing: -.04em; }
+:is(.concept-E1,.concept-E2) .scene-stamp { font-family: 'Wayne Sans', sans-serif; }
+:is(.concept-E1,.concept-E2) .phase-link { display: none; }
+:is(.concept-E1,.concept-E2) .command-surface { background: transparent; border: 0; padding: 0; }
+:is(.concept-E1,.concept-E2) .quiet-recommendation { padding: 0; }
+:is(.concept-E1,.concept-E2) .recommendation-label { font-family: var(--font-mono); letter-spacing: -.04em; }
+:is(.concept-E1,.concept-E2) .recommendation-label > span { max-width: 100%; }
+:is(.concept-E1,.concept-E2) .disclosure-row { font-family: 'Wayne Sans', sans-serif; }
+:is(.concept-E1,.concept-E2) .prototype-nav button > svg { display: none; }
+:is(.concept-E1,.concept-E2) .prototype-nav button { font-family: 'Wayne Sans', sans-serif; min-height: 64px; justify-content: center; }
+
+/* E1 / Suit Interface: an unboxed continuous field. Context is compact;
+   the recommendation becomes the silhouette. Crimson is the action's directional
+   blade, never a status indicator or an ambient brand light. */
+.concept-E1 .device-field { padding: 24px 20px calc(100px + env(safe-area-inset-bottom)); }
+.concept-E1 .prototype-header { border: 0; padding-bottom: 8px; }
+.concept-E1 .prototype-header button { border: 0; background: #131316; }
+.concept-E1 .scene-stamp { padding: 4px 0 20px; }
+.concept-E1 .state-rail { border: 0; border-left: 2px solid var(--border-strong); background: none; padding: 0 0 0 12px; margin-bottom: 36px; }
+.concept-E1 .state-rail[data-status=RED] { border-left-color: var(--red); background: #160507; }
+.concept-E1 .state-rail[data-status=AMBER] { border-left-color: var(--warning); }
+.concept-E1 .rail-lead h2 { font-family: 'Wayne Sans', sans-serif; font-size: 28px; letter-spacing: -.04em; font-weight: 500; line-height: 1.15; }
+.concept-E1 .rail-detail { margin-top: 4px !important; }
+.concept-E1 .system-status { margin-top: 10px !important; gap: 7px; }
+.concept-E1 .status-marker { width: 4px; flex-basis: 4px; height: 12px; }
+.concept-E1 .phase-track { margin: 14px 0 4px; gap: 5px; border: 0; }
+.concept-E1 .phase-track li { padding: 6px 0; justify-content: center; border-bottom: 1px solid var(--wayne-rule); }
+.concept-E1 .phase-track li[aria-current=step] { border-bottom: 3px solid #eee; }
+.concept-E1 .phase-track li[aria-current=step]::before { display: none; }
+.concept-E1 .rail-choice { border: 0; padding: 8px 0; gap: 6px; }
+.concept-E1 .rail-choice .demo-button { border: 0; border-bottom: 1px solid #74747c; background: transparent; padding-inline: 4px; }
+.concept-E1 .state-rail .disclosure-row { border-top: 0; }
+.concept-E1 .recommendation { margin-bottom: 40px; }
+.concept-E1 .recommendation h2 { font-family: 'Wayne Sans', sans-serif; font-size: clamp(44px,13.5vw,58px); line-height: 1.01; letter-spacing: -.065em; margin-top: 18px; font-weight: 700; }
+.concept-E1 .suit-title-lead, .concept-E1 .suit-title-tail { display: block; }
+.concept-E1 .suit-title-tail { font-weight: 400; color: #d2d2d8; }
+.concept-E1 .recommendation-body { font-size: 18px; line-height: 1.45; max-width: 29ch; margin-top: 18px !important; }
+.concept-E1 .recommendation-actions { margin-top: 24px; gap: 8px; }
+.concept-E1 .demo-primary { position: relative; isolation: isolate; overflow: hidden; background: #18181d; color: #fff !important; border: 0; min-height: 64px !important; padding-inline: 18px 24px; font-size: 18px; }
+.concept-E1 .demo-primary::before { content: ''; position: absolute; inset: 0 0 0 auto; width: 78px; background: var(--red); z-index: -1; clip-path: polygon(22px 0,100% 0,100% 100%,0 100%); pointer-events: none; }
+.concept-E1 .demo-primary > svg { width: 26px; height: 26px; }
+.concept-E1 .decline-button { border: 0; border-bottom: 1px solid var(--wayne-rule); min-height: 48px; }
+.concept-E1 .recommendation .disclosure-row { border: 0; }
+.concept-E1 .quiet-recommendation h2 { font-size: 38px; }
+.concept-E1 .phase-rows { border-top: 1px solid #6c6c73; padding-top: 18px; }
+.concept-E1 .section-heading { text-transform: none; font-size: 18px; letter-spacing: -.02em; color: var(--text-1); }
+.concept-E1 .section-heading > span { display: none; }
+.concept-E1 .phase-rows > div { padding-block: 18px; }
+.concept-E1 .prototype-nav { border-top: 0; background: #08080a; }
+.concept-E1 .prototype-nav button { border: 0; background: none; color: var(--text-2); }
+.concept-E1 .prototype-nav button[aria-current=page] { color: #fff; box-shadow: inset 0 -3px 0 var(--red); }
+.concept-E1 .concept-content { animation-name: suit-arrive; }
+@keyframes suit-arrive { from { opacity: .5; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* E2 / Wayne Command System: a phase spine anchors a factual register. Deeper
+   evidence unfolds in aligned text, not instrument dials. Decision and rationale
+   share an editorial two-column structure; operator controls stay full width. */
+.concept-E2 .device-field { padding: 18px 16px calc(100px + env(safe-area-inset-bottom)); }
+.concept-E2 .prototype-header { border-bottom: 1px solid #6c6c73; padding-bottom: 12px; }
+.concept-E2 .prototype-header h1 { font-family: var(--font-mono); font-size: 20px; font-weight: 700; letter-spacing: -.07em; }
+.concept-E2 .prototype-header button { border: 0; }
+.concept-E2 .scene-stamp { padding: 10px 0 18px; }
+.concept-E2 .state-rail { display: grid; grid-template-columns: 72px minmax(0,1fr); column-gap: 16px; border: 0; border-left: 2px solid #54545c; padding: 0 0 0 12px; background: transparent; margin-bottom: 26px; }
+.concept-E2 .state-rail[data-status=RED] { border-left-color: var(--red); background: #160507; }
+.concept-E2 .state-rail[data-status=AMBER] { border-left-color: var(--warning); }
+.concept-E2 .rail-lead { grid-column: 1 / -1; border-bottom: 1px solid var(--wayne-rule); padding-bottom: 14px; margin-bottom: 12px; }
+.concept-E2 .rail-lead h2 { font-family: 'Wayne Sans', sans-serif; font-size: 32px; line-height: 1.1; letter-spacing: -.04em; font-weight: 500; }
+.concept-E2 .rail-detail { margin-top: 6px !important; font-family: var(--font-mono); letter-spacing: -.05em; }
+.concept-E2 .system-status { grid-column: 2; grid-row: 2; display: grid; grid-template-columns: 8px 1fr; align-content: start; gap: 2px 8px; margin: 0 !important; font-size: 16px; }
+.concept-E2 .system-status strong { grid-column: 2; font-family: var(--font-mono); font-size: 20px; }
+.concept-E2 .status-reason { display: block; grid-column: 2; grid-row: 3; margin-top: 8px !important; padding-bottom: 10px; border-bottom: 1px solid var(--wayne-rule); }
+.concept-E2 .phase-track { grid-column: 1; grid-row: 2 / 5; display: grid; align-content: start; border: 0; margin: 0; padding: 0; }
+.concept-E2 .phase-track li { font-family: var(--font-mono); letter-spacing: -.06em; min-height: 40px; padding: 8px 3px; justify-content: flex-start; border-right: 1px solid var(--wayne-rule); }
+.concept-E2 .phase-track li[aria-current=step] { background: #eee; color: #000; border: 0; }
+.concept-E2 .phase-track li[aria-current=step]::before { display: none; }
+.concept-E2 .rail-choice { grid-column: 2; grid-row: 4; grid-template-columns: 1fr; gap: 5px; border: 0; padding: 10px 0 12px; }
+.concept-E2 .rail-choice .demo-button { width: 100%; background: transparent; padding: 8px 2px; border-color: #74747c; }
+.concept-E2 .state-rail > details { grid-column: 1 / -1; }
+.concept-E2 .state-rail .disclosure-row { border-top: 1px solid #6c6c73; font-family: var(--font-mono); letter-spacing: -.03em; }
+.concept-E2 .intelligence-data { gap: 0; }
+.concept-E2 .intelligence-data > div { padding: 14px 0; border-bottom: 1px solid var(--wayne-rule); }
+.concept-E2 .intelligence-data dt { font-family: var(--font-mono); font-weight: 400; margin-bottom: 6px; }
+.concept-E2 .recommendation { border-top: 1px solid #6c6c73; padding-top: 18px; }
+.concept-E2 .decision-copy { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); gap: 18px; margin-top: 18px; align-items: start; }
+.concept-E2 .recommendation h2 { font-family: 'Wayne Sans', sans-serif; font-size: 34px; line-height: 1.06; letter-spacing: -.055em; font-weight: 500; margin-top: 0; }
+.concept-E2 .recommendation-body { margin-top: 0 !important; line-height: 1.5; border-left: 1px solid var(--wayne-rule); padding-left: 14px; }
+.concept-E2 .recommendation-actions { margin-top: 24px; }
+.concept-E2 .demo-primary { color: #fff !important; background: #141418; border: 1px solid #6c6c73; border-left: 5px solid var(--red); min-height: 56px !important; }
+.concept-E2 .decline-button { background: transparent; border: 0; min-height: 48px; }
+.concept-E2 .recommendation .disclosure-row { border-bottom: 1px solid var(--wayne-rule); border-top: 0; }
+.concept-E2 .section-heading { font-family: var(--font-mono); color: #eee; letter-spacing: -.04em; }
+.concept-E2 .phase-rows > div { padding: 14px 0 14px 12px; border-left: 1px solid var(--wayne-rule); }
+.concept-E2 .equipment-row { min-height: 64px; }
+.concept-E2 .equipment-row .tool-label { font-weight: 500; }
+.concept-E2 .prototype-nav { border-top: 1px solid #6c6c73; background: #08080a; }
+.concept-E2 .prototype-nav button { border: 0; font-family: var(--font-mono); letter-spacing: -.05em; }
+.concept-E2 .prototype-nav button[aria-current=page] { color: #000; background: #eee; box-shadow: none; }
+.concept-E2 .concept-content { animation-name: register-arrive; }
+@keyframes register-arrive { from { opacity: .65; transform: translateX(3px); } to { opacity: 1; transform: none; } }
+@media (max-width: 359px) {
+  .concept-E1 .rail-choice { grid-template-columns: 1fr; }
+  .concept-E1 .rail-choice .demo-button { width: 100%; text-align: left; }
+  .concept-E2 .decision-copy { grid-template-columns: 1fr; gap: 12px; }
+  .concept-E2 .recommendation-body { border-left: 0; padding-left: 0; }
+  .concept-E2 .state-rail { column-gap: 12px; }
+}
+@media (min-width: 820px) {
+  .concept-E1 .prototype-nav { margin-inline: -20px; width: calc(100% + 40px); }
+  .concept-E2 .prototype-nav { margin-inline: -16px; width: calc(100% + 32px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.concept-E1,.concept-E2) *, :is(.concept-E1,.concept-E2) *::before, :is(.concept-E1,.concept-E2) *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+/* Refinement after real-device-width rendering: give the suit field a distinctive
+   staggered text silhouette while leaving its reading order unchanged. */
+.concept-E1 .prototype-header h1 { font-size: 28px; letter-spacing: -.055em; }
+.concept-E1 .suit-title-tail { margin-left: 24px; }
+.concept-E1 .rail-lead h2 { font-size: 30px; }
+.concept-E2 .rail-lead h2 { font-family: var(--font-display); font-size: 34px; font-weight: 600; letter-spacing: -.04em; }

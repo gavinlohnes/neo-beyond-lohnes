@@ -13,5 +13,5 @@ export default defineConfig({
   plugins: [react()],
   server: { host: "127.0.0.1", port: 5174, strictPort: true, fs: { allow: [repository] } },
   preview: { host: "127.0.0.1", port: 5174, strictPort: true },
-  build: { outDir: ".output", emptyOutDir: true, copyPublicDir: false },
+  build: { outDir: ".output", emptyOutDir: true, copyPublicDir: false, rolldownOptions: { input: { prototype: fileURLToPath(new URL("index.html", import.meta.url)), comparison: fileURLToPath(new URL("comparison.html", import.meta.url)) } } },
 });

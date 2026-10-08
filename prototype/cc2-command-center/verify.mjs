@@ -45,7 +45,7 @@ async function checkGeometry(page, label) {
     };
     const text = [...document.querySelectorAll('body *')].filter(e => visible(e) && [...e.childNodes].some(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim()));
     const controls = [...document.querySelectorAll('button,select,summary')].filter(visible);
-    const redOutsideRail = [...document.querySelectorAll('.device-field *')].filter(e => visible(e) && !e.closest('.state-rail') && !(document.querySelector('.cc2').dataset.concept === 'D' && e.matches('.recommendation[data-dominant=true] .demo-primary, .destination-preview .demo-primary')) && ['color','backgroundColor','borderTopColor','borderLeftColor','borderBottomColor','borderRightColor'].some(key => getComputedStyle(e)[key] === 'rgb(208, 20, 27)'));
+    const redOutsideRail = [...document.querySelectorAll('.device-field *')].filter(e => visible(e) && !e.closest('.state-rail') && !(['D','E1','E2'].includes(document.querySelector('.cc2').dataset.concept) && e.matches('.recommendation[data-dominant=true] .demo-primary, .destination-preview .demo-primary')) && ['color','backgroundColor','borderTopColor','borderLeftColor','borderBottomColor','borderRightColor'].some(key => getComputedStyle(e)[key] === 'rgb(208, 20, 27)'));
     return {
       overflow: document.documentElement.scrollWidth > innerWidth,
       smallText: text.filter(e => parseFloat(getComputedStyle(e).fontSize) < 16).map(e => e.textContent.trim()),
@@ -68,13 +68,13 @@ async function checkGeometry(page, label) {
 
 async function capture(page, name) {
   await page.evaluate(() => window.scrollTo({ top: document.querySelector('.device-field').offsetTop, behavior:'instant' }));
-  if (!name.startsWith('concept-d-')) return; // Preserve the original A/B/C review captures.
+  if (!/^concept-e[12]-/.test(name)) return; // Preserve the original A/B/C/D review captures.
   await page.screenshot({ path: `${screenshotDirectory}/${name}.png` });
   report.screenshots.push(`${name}.png`);
 }
 
 try {
-  for (const concept of ['A','B','C','D']) {
+  for (const concept of ['A','B','C','D','E1','E2']) {
     for (const width of [320,360,412]) {
       for (const example of ['GREEN','AMBER','RED','UNKNOWN','NO_READ']) {
         const page = await openPage(width, `concept=${concept}&example=${example}&phase=AFTER`);
@@ -97,28 +97,34 @@ try {
         const color = await rail.evaluate(e => getComputedStyle(e).borderLeftColor);
         if (example === 'RED') assert.equal(color, 'rgb(208, 20, 27)');
         else assert.notEqual(color, 'rgb(208, 20, 27)');
+        if (concept.startsWith('E')) {
+          const copy = await page.locator('.recommendation h2').textContent();
+          const expected = ['UNKNOWN','NO_READ'].includes(example) ? 'No action required' : example === 'RED' ? 'Stabilize first' : 'Shift down after work';
+          assert.equal(copy.replace(/\s+/g,' ').trim(), expected, `Recommendation wording: ${label}`);
+          assert.equal(await rail.locator('.intelligence-data').count(),1);
+        }
         await checkGeometry(page, label);
-        if (width === 360 || concept === 'D') {
+        if (width === 360 || concept.startsWith('E')) {
           await page.addScriptTag({content:axe});
           const results = await page.evaluate(async () => await window.axe.run(document, { runOnly: { type:'tag', values:['wcag2a','wcag2aa','wcag21a','wcag21aa'] } }));
           assert.deepEqual(results.violations.map(v => ({id:v.id,nodes:v.nodes.map(n=>n.target)})), [], `Accessibility: ${label}`);
           report.axeScans++;
         }
-        if ((width === 412 || concept === 'D') && example !== 'NO_READ') await capture(page, `concept-${concept.toLowerCase()}-${example.toLowerCase()}-${width}`);
+        if ((width === 412 || concept.startsWith('E')) && example !== 'NO_READ') await capture(page, `concept-${concept.toLowerCase()}-${example.toLowerCase()}-${width}`);
         if (concept === 'A' && example === 'GREEN' && width !== 412) await capture(page, `concept-a-green-${width}`);
         await rail.locator('summary').filter({hasText:'INTELLIGENCE'}).click();
         await page.locator('.intelligence-data').waitFor({state:'visible'});
         assert.match(await page.locator('.intelligence-data').innerText(), /Synthetic|UNKNOWN|unanswered/);
         assert.equal(await page.locator('[data-shift-clock-row]').count(), example === 'UNKNOWN' ? 3 : 4);
         await checkGeometry(page, label+'/expanded');
-        if (concept === 'D') {
+        if (concept.startsWith('E')) {
           await page.addScriptTag({content:axe});
           const audit = await page.evaluate(async () => window.axe.run(document, {runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}}));
           assert.deepEqual(audit.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})), [], `Expanded accessibility: ${label}`);
           assert.equal(await page.locator('.intelligence-data button,.intelligence-data input,.intelligence-data select').count(), 0);
           report.axeScans++;
         }
-        if ((width === 412 || concept === 'D') && example === 'GREEN') await capture(page, `concept-${concept.toLowerCase()}-intelligence-${width}`);
+        if ((width === 412 || concept.startsWith('E')) && example === 'GREEN') await capture(page, `concept-${concept.toLowerCase()}-intelligence-${width}`);
         report.mobileScenes++;
         await page.close();
       }
@@ -137,7 +143,7 @@ try {
       await page.close();
     }
     const interactive=await openPage(412, `concept=${concept}`);
-    if (concept === 'D') {
+    if (concept.startsWith('E')) {
       const disclosure=interactive.locator('.state-rail summary');
       await disclosure.focus();
       await interactive.keyboard.press('Enter');
@@ -153,7 +159,7 @@ try {
     await interactive.getByRole('button',{name:'TRAIN',exact:true}).click();
     assert.match(await interactive.locator('main').innerText(), /Production TRAIN stays unchanged/);
     await interactive.getByRole('button',{name:'RETURN TO TODAY'}).click();
-    for (const next of ['A','B','C','D']) {
+    for (const next of ['A','B','C','D','E1','E2']) {
       await interactive.getByRole('button',{name:new RegExp(`^Concept ${next}`)}).click();
       assert.equal(await interactive.locator('.cc2').getAttribute('data-concept'),next);
       assert.equal(await interactive.locator('.state-rail details').getAttribute('open'),null);
@@ -175,12 +181,12 @@ try {
     await capture(reduced, `concept-${concept.toLowerCase()}-reduced-motion-412`);
     report.reducedMotionCases++;
     await reduced.close();
-    if (concept === 'D') for (const width of [320,360]) {
-      const page = await openPage(width, 'concept=D&example=RED', 'reduce');
+    if (concept.startsWith('E')) for (const width of [320,360]) {
+      const page = await openPage(width, `concept=${concept}&example=RED`, 'reduce');
       await page.locator('.state-rail summary').click();
-      await checkGeometry(page, `D/reduced/${width}`);
+      await checkGeometry(page, `${concept}/reduced/${width}`);
       assert.equal(await page.locator('main').evaluate(e => getComputedStyle(e).animationName), 'none');
-      await capture(page, `concept-d-reduced-motion-${width}`);
+      await capture(page, `concept-${concept.toLowerCase()}-reduced-motion-${width}`);
       report.reducedMotionCases++;
       await page.close();
     }

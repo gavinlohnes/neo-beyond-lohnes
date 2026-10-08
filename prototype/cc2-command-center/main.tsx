@@ -11,6 +11,7 @@ import type { ShiftClockRow } from "../../src/ui/screens/today/shiftClock";
 import "../../src/ui/styles/tokens.css";
 import "../../src/ui/styles/global.css";
 import "./prototype.css";
+import "./wayne.css";
 import { concepts, examples, phases, makeScene } from "./scenes";
 import type { Concept, Example, Phase, Scene } from "./scenes";
 
@@ -56,14 +57,17 @@ function DemoButton({ children, primary = false }: { children: string; primary?:
   return <button type="button" className={primary ? "demo-primary" : "demo-button"} onClick={() => showFeedback(`“${children}” previewed. Nothing saved or started.`)}>{children}{primary && <LineIcon icon={ArrowUpRight} />}</button>;
 }
 
-function Recommendation({ scene }: { scene: Scene }) {
+function Recommendation({ scene, concept }: { scene: Scene; concept: Concept }) {
   const showFeedback = useContext(FeedbackContext);
   const [whyOpen, setWhyOpen] = useState(false);
   const [declineConfirm, setDeclineConfirm] = useState(false);
   const actionable = scene.suggestion.kind !== "NO_ACTION_REQUIRED";
+  const titleWords = scene.suggestion.title.split(" ");
+  const title = concept === "E1" ? <><span className="suit-title-lead">{titleWords.slice(0, 2).join(" ")}</span>{titleWords.length > 2 && <> <span className="suit-title-tail">{titleWords.slice(2).join(" ")}</span></>}</> : scene.suggestion.title;
+  const copy = <><h2>{title}</h2><p className="recommendation-body">{scene.suggestion.body}</p></>;
   const content = <>
     <div className="recommendation-label"><span>EXAMPLE RECOMMENDATION</span><Icon name="mission" size={22} /></div>
-    <h2>{scene.suggestion.title}</h2><p className="recommendation-body">{scene.suggestion.body}</p>
+    {concept === "E2" ? <div className="decision-copy">{copy}</div> : copy}
     <div className="recommendation-actions"><DemoButton primary={actionable}>{scene.suggestion.action}</DemoButton>
       {actionable && <button type="button" className="decline-button" onClick={() => scene.suggestion.kind === "STABILIZE" ? setDeclineConfirm(true) : showFeedback('“Not doing this” previewed. Nothing saved.')} >Not doing this</button>}
     </div>
@@ -93,11 +97,11 @@ function PhaseRow({ row, scene }: { row: ShiftClockRow; scene: Scene }) {
   </div>;
 }
 
-function Today({ scene }: { scene: Scene }) {
+function Today({ scene, concept }: { scene: Scene; concept: Concept }) {
   const [toolsOpen, setToolsOpen] = useState(false);
   return <>
     <StateRail scene={scene} />
-    <Recommendation scene={scene} />
+    <Recommendation scene={scene} concept={concept} />
     <section className="phase-rows" aria-label="Phase-specific rows"><h2 className="section-heading">{scene.heading}<span aria-hidden="true" /></h2>
       {scene.view.rows.map(row => <div key={row} data-shift-clock-row={row}><PhaseRow row={row} scene={scene} /></div>)}
     </section>
@@ -109,7 +113,7 @@ function Today({ scene }: { scene: Scene }) {
 }
 
 function Prototype() {
-  const [concept, setConcept] = useState<Concept>(initial<Concept>("concept", ["A", "B", "C", "D"], "A"));
+  const [concept, setConcept] = useState<Concept>(initial<Concept>("concept", ["A", "B", "C", "D", "E1", "E2"], "A"));
   const [example, setExample] = useState<Example>(initial("example", examples, "GREEN"));
   const [phase, setPhase] = useState<Phase>(initial("phase", phases, "AFTER"));
   const [tab, setTab] = useState("TODAY");
@@ -120,7 +124,7 @@ function Prototype() {
     <aside className="review-controls" aria-label="Prototype review controls">
       <div className="review-brand"><span>BEYOND / DESIGN LAB</span><span>CC2</span></div>
       <p className="preview-notice">SYNTHETIC PREVIEW · NO DATA SAVED</p>
-      <div className="concept-switch" role="group" aria-label="Visual concept">{(["A", "B", "C", "D"] as Concept[]).map(key => <button key={key} type="button" aria-pressed={concept === key} onClick={() => { setConcept(key); changeScene(); }} aria-label={`Concept ${key} — ${concepts[key].name}`}><span>{key}</span><span>{key === "A" ? "Refined" : key === "B" ? "Tactical" : key === "C" ? "Living" : "Neo-Gotham"}</span></button>)}</div>
+      <div className="concept-switch" role="group" aria-label="Visual concept">{(["A", "B", "C", "D", "E1", "E2"] as Concept[]).map(key => <button key={key} type="button" aria-pressed={concept === key} onClick={() => { setConcept(key); changeScene(); }} aria-label={`Concept ${key} — ${concepts[key].name}`}><span>{key}</span><span>{key === "A" ? "Refined" : key === "B" ? "Tactical" : key === "C" ? "Living" : key === "D" ? "Neo-Gotham" : key === "E1" ? "Suit" : "Command"}</span></button>)}</div>
       <div className="scene-selectors"><label>Example<select value={example} onChange={e => { setExample(e.target.value as Example); changeScene(); }}>{examples.map(value => <option key={value} value={value}>{value.replace("_", " ")}</option>)}</select></label><label>Phase<select value={phase} disabled={example === "UNKNOWN"} onChange={e => { setPhase(e.target.value as Phase); changeScene(); }}>{phases.map(value => <option key={value}>{value}</option>)}</select></label></div>
       <p className="lab-caption">{concepts[concept].name}<br /><span>{concepts[concept].note}</span></p>
     </aside>
@@ -128,7 +132,7 @@ function Prototype() {
       <header className="prototype-header"><div><Icon name="mission" size={22} /><h1>BEYOND <span>// {tab}</span></h1></div><button type="button" aria-label="Search preview" onClick={() => setFeedback('Search preview only. No real data is queried.')}><Icon name="search" size={24} /></button></header>
       <p className="scene-stamp">Synthetic scene <span>{scene.time}</span></p>
       <main key={`${concept}-${example}-${phase}`} id="concept-content" className="concept-content">
-        {tab === "TODAY" ? <Today scene={scene} /> : <section className="destination-preview"><Icon name={tab === "TRAIN" ? "train" : tab === "BODY" ? "body" : "more"} size={40} /><h2>{tab}</h2><p>This concept explores TODAY. Production {tab} stays unchanged.</p><p>No real records are read or written.</p><button className="demo-primary" onClick={() => setTab("TODAY")}>RETURN TO TODAY<LineIcon icon={ArrowDownRight} /></button></section>}
+        {tab === "TODAY" ? <Today scene={scene} concept={concept} /> : <section className="destination-preview"><Icon name={tab === "TRAIN" ? "train" : tab === "BODY" ? "body" : "more"} size={40} /><h2>{tab}</h2><p>This concept explores TODAY. Production {tab} stays unchanged.</p><p>No real records are read or written.</p><button className="demo-primary" onClick={() => setTab("TODAY")}>RETURN TO TODAY<LineIcon icon={ArrowDownRight} /></button></section>}
       </main>
       <footer className="field-footnote">Authored examples. Not live Engine output.<br />INFORM → INTERPRET → RECOMMEND<br />USER DECIDES</footer>
       {feedback && <div className="preview-feedback" role="status"><p>Preview only: {feedback}</p><button type="button" aria-label="Dismiss preview feedback" onClick={() => setFeedback("")}><LineIcon icon={X} /></button></div>}

@@ -3,12 +3,14 @@ import { deriveShiftClockView, describeCountdown, describePhaseHeading } from ".
 import type { ShiftClockInput } from "../../src/ui/screens/today/shiftClock";
 import { describeStatusFact, describeSystemStatus } from "../../src/ui/screens/today/statusCopy";
 
-export type Concept = "A" | "B" | "C" | "D";
+export type Concept = "A" | "B" | "C" | "D" | "E1" | "E2";
 export type Example = "GREEN" | "AMBER" | "RED" | "UNKNOWN" | "NO_READ";
 export type Phase = "BEFORE" | "SHIFT" | "AFTER" | "OFF";
 export const concepts = {
   A: { name: "Refined Command", note: "Precise. Practical. Unmistakably BEYOND." },
   B: { name: "Tactical Operations", note: "Sharper structure. The same truth." },
+  E1: { name: "WAYNE SYSTEMS — Suit Interface", note: "Immediate context. One deliberate move." },
+  E2: { name: "WAYNE SYSTEMS — Wayne Command System", note: "Truth in layers. Precision without noise." },
   D: { name: "NEO-GOTHAM COMMAND", note: "Architectural precision. Deliberate authority." },
   C: { name: "Living Intelligence", note: "Context first. Depth when you want it." },
 };
