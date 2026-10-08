@@ -5,7 +5,7 @@ import axe from "axe-core";
 import Dexie from "dexie";
 import { App } from "../../src/app/App";
 import { startDay, updateSchedulePattern } from "../../src/application/commands";
-import { createSavedMeal } from "../../src/application/nutritionCommands";
+import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
 import { getMealEntries, getTotalMealCalories } from "../../src/application/nutritionQueries";
 import { getDayProteinTotalG } from "../../src/application/queries";
 import { getHistoryDays } from "../../src/application/historyQueries";
@@ -122,23 +122,28 @@ describe("TODAY meal round trip", () => {
     await expect.poll(loggedCount).toBe(1);
   });
 
-  it("blocks same-tick duplicate taps and leaving during an in-flight canonical write", async () => {
-    await seedMeal();
-    const screen = await render(<App />);
-    await openMeal(screen);
-    const original = db.events.add.bind(db.events);
-    let release!: () => void;
-    const gate = new Promise<void>((resolve) => { release = resolve; });
-    const write = vi.spyOn(db.events, "add").mockImplementation((...args) => Dexie.Promise.resolve(gate).then(() => original(...args)));
-    const button = screen.getByRole("button", { name: "LOG", exact: true }).element() as HTMLButtonElement;
-    button.click(); button.click();
-    await expect.element(screen.getByRole("button", { name: "RETURN TO TODAY" })).toBeDisabled();
-    await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "RETURN TO TODAY" })).toBeVisible();
-    release();
-    await expect.poll(loggedCount).toBe(1);
-    expect(write).toHaveBeenCalledOnce();
-  });
+  for (const destination of ["TRAIN", "TODAY", "BODY", "MORE", "Search everything", "RETURN TO TODAY"]) {
+    it(`blocks LOG followed immediately by ${destination}, plus same-tick duplicate taps`, async () => {
+      await seedMeal();
+      const screen = await render(<App />);
+      await openMeal(screen);
+      const original = db.events.add.bind(db.events);
+      let release!: () => void;
+      const gate = new Promise<void>((resolve) => { release = resolve; });
+      const write = vi.spyOn(db.events, "add").mockImplementation((...args) => Dexie.Promise.resolve(gate).then(() => original(...args)));
+      const button = screen.getByRole("button", { name: "LOG", exact: true }).element() as HTMLButtonElement;
+      const navigate = screen.getByRole("button", { name: destination, exact: true }).element() as HTMLButtonElement;
+      try {
+        // No await, disabled-state wait or React commit between the dispatches.
+        button.click(); button.click(); navigate.click();
+        await expect.element(screen.getByRole("button", { name: "RETURN TO TODAY" })).toBeVisible();
+        await expect.poll(() => screen.getByRole("button", { name: "BODY", exact: true }).element().getAttribute("aria-current")).toBe("page");
+      } finally { release(); }
+      await expect.poll(loggedCount).toBe(1);
+      expect(write).toHaveBeenCalledOnce();
+      await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
+    });
+  }
 
   it("preserves immediate undo when returning and reopening Meal", async () => {
     await seedMeal();
@@ -185,7 +190,69 @@ describe("TODAY meal round trip", () => {
     await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal logged.");
     await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
     expect(await loggedCount()).toBe(1);
+    expect(await getMealEntries(dayId)).toHaveLength(1);
+    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     read.mockRestore();
+    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "SHOW TODAY'S MEALS (1)" }).click();
+    await expect.element(screen.getByRole("button", { name: "Edit Lunch" })).toBeVisible();
+    await expect.poll(() => screen.getByRole("alert").elements().length).toBe(0);
+    expect(await loggedCount()).toBe(1);
+  });
+
+  it("recovers a committed preset on reopen without creating or logging it again", async () => {
+    const screen = await render(<App />);
+    await openMeal(screen);
+    await fillMeal(screen);
+    const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
+    await screen.getByRole("button", { name: "SAVE MEAL", exact: true }).click();
+    await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal saved for reuse.");
+    expect(await db.savedMeals.count()).toBe(1);
+    expect(screen.getByRole("button", { name: "LOG", exact: true }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    read.mockRestore();
+    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeVisible();
+    expect(await db.savedMeals.count()).toBe(1);
+    expect(await loggedCount()).toBe(0);
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.poll(loggedCount).toBe(1);
+  });
+
+  it("retries failed reads explicitly, preserving another draft and the committed log", async () => {
+    await seedMeal();
+    const screen = await render(<App />);
+    await openMeal(screen);
+    await fillMeal(screen, "Unfinished dinner");
+    const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "RETRY READINGS" })).toBeVisible();
+    await screen.getByRole("button", { name: "RETRY READINGS" }).click();
+    await expect.element(screen.getByRole("alert")).toHaveTextContent("Could not refresh");
+    read.mockRestore();
+    await screen.getByRole("button", { name: "RETRY READINGS" }).click();
+    await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
+    expect(await loggedCount()).toBe(1);
+    await expect.poll(() => screen.getByRole("button", { name: "RETRY READINGS" }).elements().length).toBe(0);
+  });
+
+  it("restores duplicate detection when the post-commit read is retried", async () => {
+    const meal = await seedMeal();
+    await logMeal(dayId, meal.id);
+    const screen = await render(<App />);
+    await openMeal(screen);
+    const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal logged.");
+    read.mockRestore();
+    await screen.getByRole("button", { name: "RETRY READINGS" }).click();
+    await expect.element(screen.getByRole("group", { name: "Same meal?", exact: true })).toBeVisible();
+    await expect.poll(() => screen.getByRole("button", { name: "RETRY READINGS" }).elements().length).toBe(0);
+    expect(await loggedCount()).toBe(2);
+    expect(await getMealEntries(dayId)).toHaveLength(2);
   });
 
   it("keeps ordinary direct BODY entry independent of the TODAY round trip", async () => {

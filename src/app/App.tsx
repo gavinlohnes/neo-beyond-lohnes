@@ -117,6 +117,8 @@ export function App() {
   // primary navigation still resets destinations as before.
   const [mealOrigin, setMealOrigin] = useState<{ scrollY: number; trigger: HTMLElement | null } | null>(null);
   const [mealState, setMealState] = useState({ busy: false, dirty: false });
+  const mealInFlight = useRef(false);
+  const updateMealInFlight = useCallback((busy: boolean) => { mealInFlight.current = busy; }, []);
   const [mealRefreshKey, setMealRefreshKey] = useState(0);
   const [mealBoundaryReset, setMealBoundaryReset] = useState(0);
   const mealBodyPosition = useRef(0);
@@ -287,7 +289,7 @@ export function App() {
 
   function leaveMealJourney() {
     if (!mealOrigin) return true;
-    if (mealState.busy) return false;
+    if (mealInFlight.current) return false;
     if (mealState.dirty && !window.confirm("Discard unsaved meal details and leave this meal entry?")) return false;
     setMealOrigin(null);
     setMealState({ busy: false, dirty: false });
@@ -316,7 +318,7 @@ export function App() {
   }
 
   function returnFromMeal() {
-    if (!mealOrigin || mealState.busy) return;
+    if (!mealOrigin || mealInFlight.current) return;
     mealBodyPosition.current = window.scrollY;
     setMealRefreshKey((key) => key + 1);
     setTab("TODAY");
@@ -399,6 +401,7 @@ export function App() {
             <BodyScreen key={mealOrigin ? "meal-round-trip" : "body"} focus={bodyFocus}
               visible={tab === "BODY"}
               onReturnToToday={mealOrigin ? returnFromMeal : undefined}
+              onMealJourneyInFlightChange={mealOrigin ? updateMealInFlight : undefined}
               onMealJourneyStateChange={mealOrigin ? updateMealState : undefined} />
           </div>
         )}

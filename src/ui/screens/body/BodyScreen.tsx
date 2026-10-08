@@ -233,15 +233,24 @@ function parseMealMacros(form: MealMacroFormState): { calories: number; proteinG
   return { calories, proteinG, carbsG, fatG };
 }
 
-export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMealJourneyStateChange }: {
+export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange }: {
   focus?: BodyFocus | null;
   visible?: boolean;
   onReturnToToday?: (() => void) | undefined;
   onMealJourneyStateChange?: ((state: { busy: boolean; dirty: boolean }) => void) | undefined;
+  /** Synchronous shell guard: publish before awaiting a command or query. */
+  onMealJourneyInFlightChange?: ((busy: boolean) => void) | undefined;
 } = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusyState] = useState(false);
+  const busyRef = useRef(false);
+  const foodSearchBusyRef = useRef(false);
+  function setBusy(next: boolean) {
+    busyRef.current = next;
+    onMealJourneyInFlightChange?.(next || foodSearchBusyRef.current);
+    setBusyState(next);
+  }
   // POST-QA STABILIZATION: which station's last log write failed. Shown
   // beside that station's controls (BODY_WRITE_FAILED), not at the shared
   // `error` line, which sits in the water card.
@@ -356,10 +365,19 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   // comment. A selected result only ever pre-fills newMealForm below; the
   // operator still reviews/edits and clicks SAVE MEAL themselves.
   const [foodQuery, setFoodQuery] = useState("");
-  const [foodSearchBusy, setFoodSearchBusy] = useState(false);
+  const [foodSearchBusy, setFoodSearchBusyState] = useState(false);
+  function setFoodSearchBusy(next: boolean) {
+    foodSearchBusyRef.current = next;
+    onMealJourneyInFlightChange?.(next || busyRef.current);
+    setFoodSearchBusyState(next);
+  }
   const [foodResults, setFoodResults] = useState<FoodSearchResult[] | null>(null);
   const [mealError, setMealError] = useState<string | null>(null);
   const [mealPresetNotice, setMealPresetNotice] = useState<string | null>(null);
+  const [mealReadFailed, setMealReadFailed] = useState(false);
+  // Preserve the whole post-commit read, including duplicate/same-food checks.
+  // Retrying this continuation can never call a save/log command.
+  const mealReadRetry = useRef<(() => Promise<void>) | null>(null);
   const mealWriteInFlight = useRef(false);
   const mealPositioned = useRef(false);
   const mealDirty = Boolean(foodQuery.trim() || Object.values(newMealForm).some((value) => value.trim()) || editingMealId || correctingMealEventId);
@@ -379,6 +397,26 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   useEffect(() => {
     void refresh();
   }, []);
+  // The retained BODY screen does not remount on explicit return/reopen.
+  // Recover reads only; keep drafts, confirmations and canonical writes intact.
+  useEffect(() => {
+    if (visible && mealReadFailed) void retryMealRead();
+  }, [visible]);
+
+  async function retryMealRead() {
+    if (busyRef.current || foodSearchBusyRef.current) return;
+    setBusy(true);
+    try {
+      await (mealReadRetry.current ?? refresh)();
+      mealReadRetry.current = null;
+      setMealReadFailed(false);
+      setMealError(null);
+    } catch {
+      setMealError("Could not refresh the meal readings. Retry readings without saving or logging again.");
+    } finally {
+      setBusy(false);
+    }
+  }
   // DROP 0: re-read after a 16:30 rollover; form inputs are separate state and survive.
   useDayRolloverRefresh(refresh);
 
@@ -495,7 +533,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   // ---- SLEEP ----
 
   async function handleLogSleep(skipConfirm = false) {
-    if (busy) return;
+    if (busyRef.current) return;
     const reading = readSleepDuration(sleepHoursInput, sleepMinutesInput);
     if (!reading.ok) {
       setSleepNotice(reading.message);
@@ -552,7 +590,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleSaveSleepCorrection(skipConfirm = false) {
-    if (busy || !day || !sleepCorrectingId) return;
+    if (busyRef.current || !day || !sleepCorrectingId) return;
     const reading = readSleepDuration(sleepCorrectionHours, sleepCorrectionMinutes);
     if (!reading.ok) {
       setSleepCorrectionNotice(reading.message);
@@ -585,7 +623,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   // ---- BODYWEIGHT ----
 
   async function handleLogBodyweightAmount(weight: number) {
-    if (busy || weight <= 0) return;
+    if (busyRef.current || weight <= 0) return;
     setBusy(true);
     setError(null);
     setWriteFailure(null);
@@ -610,7 +648,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleLogBodyweight(skipConfirm = false) {
-    if (busy) return;
+    if (busyRef.current) return;
     const weight = Number(bodyweightInput);
     if (!Number.isFinite(weight) || weight <= 0) {
       setError("Enter a positive weight in lbs.");
@@ -632,7 +670,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleSaveBodyweightCorrection() {
-    if (busy || !day || !bodyweightCorrectingId) return;
+    if (busyRef.current || !day || !bodyweightCorrectingId) return;
     const weight = Number(bodyweightCorrectionInput);
     if (!Number.isFinite(weight) || weight <= 0) {
       setError("Enter a positive weight in lbs.");
@@ -655,7 +693,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   // ---- PROTEIN ----
 
   async function handleLogProteinAmount(grams: number) {
-    if (busy || grams <= 0) return;
+    if (busyRef.current || grams <= 0) return;
     setBusy(true);
     setError(null);
     setWriteFailure(null);
@@ -682,7 +720,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleLogProtein(skipConfirm = false) {
-    if (busy) return;
+    if (busyRef.current) return;
     const grams = Number(proteinInput);
     if (!Number.isFinite(grams) || grams <= 0) {
       setError("Enter a positive number of grams.");
@@ -705,7 +743,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleSaveProteinCorrection() {
-    if (busy || !day || !proteinCorrectingId) return;
+    if (busyRef.current || !day || !proteinCorrectingId) return;
     const grams = Number(proteinCorrectionInput);
     // DROP 1.5: "0", "00" and "0.0" all mean "remove it" — say where that is, right here.
     if (proteinCorrectionInput.trim() !== "" && Number.isFinite(grams) && grams === 0) {
@@ -732,7 +770,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
 
   /** DROP 1.5 — DELETE (hold-to-confirm) on a protein-only entry: a void event, never an erase. */
   async function handleDeleteProteinLog(entry: ProteinEntry) {
-    if (busy || !day) return;
+    if (busyRef.current || !day) return;
     setBusy(true);
     try {
       await voidProteinLog(day.id, entry.rootEventId);
@@ -760,7 +798,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
 
   /** REMOVE ONE: deletes the protein-only entry — the meal carries calories and macros, so it stays. */
   async function handleSameFoodRemoveOne() {
-    if (busy || !day || !sameFood) return;
+    if (busyRef.current || !day || !sameFood) return;
     const { protein, anchor } = sameFood;
     setBusy(true);
     try {
@@ -780,7 +818,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
 
   /** DUP-MEAL-002: REMOVE on the SAME AS YESTERDAY question voids only the repeated new entries. */
   async function handleRepeatDuplicatesRemove() {
-    if (busy || !day || !repeatDuplicates) return;
+    if (busyRef.current || !day || !repeatDuplicates) return;
     const pairs = repeatDuplicates;
     setBusy(true);
     try {
@@ -798,7 +836,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleDuplicateMealRemoveThisOne() {
-    if (busy || !day || !duplicateMeal) return;
+    if (busyRef.current || !day || !duplicateMeal) return;
     const { justLogged } = duplicateMeal;
     setBusy(true);
     try {
@@ -820,7 +858,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   // ---- MEAL MEMORY (NUTRITION-001) ----
 
   async function handleSearchFoods() {
-    if (foodSearchBusy || !foodQuery.trim()) return;
+    if (foodSearchBusyRef.current || !foodQuery.trim()) return;
     setFoodSearchBusy(true);
     try {
       const results = await searchFoods(foodQuery);
@@ -853,7 +891,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleCreateSavedMeal() {
-    if (busy || mealWriteInFlight.current) return;
+    if (busyRef.current || mealWriteInFlight.current) return;
     const name = newMealForm.name.trim();
     const macros = parseMealMacros(newMealForm);
     if (!name) {
@@ -875,7 +913,15 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
       setManualMealEntryOpen(false);
       setFoodQuery("");
       setFoodResults(null);
-      await refresh().catch(() => setMealError("Meal saved for reuse. Could not refresh the readings; reopen BODY to refresh them."));
+      mealReadRetry.current = refresh;
+      try {
+        await refresh();
+        mealReadRetry.current = null;
+        setMealReadFailed(false);
+      } catch {
+        setMealReadFailed(true);
+        setMealError("Meal saved for reuse. Could not refresh the readings; retry readings or reopen Meal to refresh them.");
+      }
     } catch (e) {
       setMealError(describeError(e, "Could not save meal."));
     } finally {
@@ -897,7 +943,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleSaveMealEdit() {
-    if (busy || !editingMealId) return;
+    if (busyRef.current || !editingMealId) return;
     const name = editMealForm.name.trim();
     const macros = parseMealMacros(editMealForm);
     if (!name) {
@@ -922,7 +968,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleArchiveSavedMeal(id: string) {
-    if (busy) return;
+    if (busyRef.current) return;
     setBusy(true);
     setError(null);
     try {
@@ -935,7 +981,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleLogMeal(mealId: string) {
-    if (busy || mealWriteInFlight.current) return;
+    if (busyRef.current || mealWriteInFlight.current) return;
     mealWriteInFlight.current = true;
     setBusy(true);
     setMealError(null);
@@ -955,7 +1001,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
       });
       // Once the write succeeds, a failed read must never be described as a
       // failed log (which invites a duplicate retry).
-      try {
+      mealReadRetry.current = async () => {
         await refresh();
         const duplicate = await getDuplicateMealCheck(activeDay.id, result.eventId);
         setDuplicateMeal(duplicate ?? null);
@@ -965,8 +1011,14 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
         } else {
           await askSameFood(result.eventId, "MEAL", { savedMealId: mealId });
         }
+      };
+      try {
+        await mealReadRetry.current();
+        mealReadRetry.current = null;
+        setMealReadFailed(false);
       } catch {
-        setMealError("Meal logged. Could not refresh the readings; return to TODAY or reopen BODY to refresh them.");
+        setMealReadFailed(true);
+        setMealError("Meal logged. Could not refresh the readings; retry readings or reopen Meal to refresh them.");
       }
     } catch (e) {
       setMealError(describeError(e, "Could not log meal."));
@@ -977,7 +1029,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleRepeatMeals() {
-    if (busy || !repeatMeals) return;
+    if (busyRef.current || !repeatMeals) return;
     setBusy(true);
     setError(null);
     setRepeatDuplicates(null);
@@ -1035,7 +1087,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleSaveMealCorrection(entry: NutritionEntry) {
-    if (busy || !day || correctingMealEventId !== entry.headEventId) return;
+    if (busyRef.current || !day || correctingMealEventId !== entry.headEventId) return;
     const macros = parseMealMacros(mealCorrectionForm);
     if (!macros) {
       setMealEditNotice("Enter calories, protein, carbs and fat as numbers 0 or more.");
@@ -1069,7 +1121,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
    */
   async function handleUndoLog(log: UndoableLog) {
     const confirmation = { WATER: waterConfirmation, SLEEP: sleepConfirmation, BODYWEIGHT: bodyweightConfirmation, PROTEIN: proteinConfirmation }[log];
-    if (busy || !confirmation) return;
+    if (busyRef.current || !confirmation) return;
     const voidLog = { WATER: voidWaterLog, SLEEP: voidSleepLog, BODYWEIGHT: voidBodyweightLog, PROTEIN: voidProteinLog }[log];
     const clear = { WATER: setWaterConfirmation, SLEEP: setSleepConfirmation, BODYWEIGHT: setBodyweightConfirmation, PROTEIN: setProteinConfirmation }[log];
     setBusy(true);
@@ -1095,7 +1147,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
 
   /** UNDO on the just-logged banner: voids what it logged, same as DELETE. */
   async function handleUndoMealLog() {
-    if (busy || !mealConfirmation) return;
+    if (busyRef.current || !mealConfirmation) return;
     const { dayId, mealEventIds } = mealConfirmation;
     setBusy(true);
     setError(null);
@@ -1115,7 +1167,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
 
   /** DELETE (hold-to-confirm) in TODAY'S MEALS: a void event, never an erase. */
   async function handleDeleteMealLog(entry: NutritionEntry) {
-    if (busy || !day) return;
+    if (busyRef.current || !day) return;
     setBusy(true);
     setError(null);
     try {
@@ -1134,7 +1186,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   // ---- WATER ----
 
   async function handleLogWaterAmount(amount: number) {
-    if (busy || amount <= 0) return;
+    if (busyRef.current || amount <= 0) return;
     setBusy(true);
     setError(null);
     setWriteFailure(null);
@@ -1168,7 +1220,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }
 
   async function handleCorrect(entry: HydrationEntry) {
-    if (busy || !day) return;
+    if (busyRef.current || !day) return;
     const amount = Number(correctionInput);
     if (!Number.isFinite(amount) || amount <= 0) {
       setError("Enter a positive number of ounces.");
@@ -1975,6 +2027,11 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
           </div>
         )}
         {mealError && <p className="meta" role="alert" style={{ marginBottom: 12 }}>{mealError}</p>}
+        {mealReadFailed && (
+          <button className="btn-secondary" disabled={busy || foodSearchBusy} onClick={() => void retryMealRead()}>
+            RETRY READINGS
+          </button>
+        )}
         {mealPresetNotice && <p className="meta" role="status" style={{ marginBottom: 12 }}>{mealPresetNotice}</p>}
         <p className="tool-label" style={{ marginBottom: 4 }}>MEAL MEMORY</p>
         <p className="recommendation-title" style={{ marginBottom: 2 }}>

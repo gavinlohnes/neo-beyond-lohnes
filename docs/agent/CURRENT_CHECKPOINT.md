@@ -40,6 +40,24 @@ This is a handoff, not merge authorization. Exact head and CI are recorded in th
 - **Next:** confirm green required CI at the final head, obtain independent exact-head review,
   then owner review. No merge or deployment authorized. No unapproved product boundary is crossed.
 
+## Independent review corrections — PR #205
+
+- Owner supplied a BLOCK review of `16cff0feb46bc80b9b0e8da7e5e5dbfe6a7b7ac7`:
+  P2 same-tick navigation could abandon a pending meal write; P2 post-commit read failures
+  did not recover through explicit return/reopen. The reviewer reported a Forbidden review POST;
+  no GitHub review existed. This handoff records the findings, not a Builder-issued review verdict.
+- Fixes: synchronous BODY in-flight reporting and shell guards; synchronous existing BODY action
+  guards; failed read continuations retried on reopen or through RETRY READINGS. Retry runs only
+  reads, including duplicate/same-food checks, preserving drafts, confirmation and undo.
+- Evidence: three new assertions fail on the blocked head. Fixed tree: 122 browser tests pass
+  across seven files, plus one additional duplicate-check recovery case (21 round-trip cases total);
+  immediate LOG -> all navigation paths,
+  committed-preset/log recovery and explicit retry preserving another draft. Architecture,
+  TypeScript/production build and whitespace pass. Built PWA offline save/log/return and cold
+  reload pass again. Required CI at the new head is pending.
+- The prior BLOCK is not cleared by Builder verification. Next: green exact-head CI and renewed
+  independent review; owner merge approval remains required. No merge or deployment authorized.
+
 ## Historical adoption handoff
 
 The following checkpoint is preserved as historical evidence. Its pending-adoption/merge pointers
