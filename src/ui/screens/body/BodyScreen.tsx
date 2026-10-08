@@ -380,6 +380,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   const mealReadRetry = useRef<(() => Promise<void>) | null>(null);
   const mealWriteInFlight = useRef(false);
   const mealPositioned = useRef(false);
+  const mealRecoveryFocusPending = useRef(false);
   const mealDirty = Boolean(foodQuery.trim() || Object.values(newMealForm).some((value) => value.trim()) || editingMealId || correctingMealEventId);
   useEffect(() => {
     onMealJourneyStateChange?.({ busy: busy || foodSearchBusy, dirty: mealDirty });
@@ -400,8 +401,23 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   // The retained BODY screen does not remount on explicit return/reopen.
   // Recover reads only; keep drafts, confirmations and canonical writes intact.
   useEffect(() => {
+    mealRecoveryFocusPending.current = Boolean(visible && mealReadFailed && onReturnToToday);
     if (visible && mealReadFailed) void retryMealRead();
   }, [visible]);
+
+  // App's reopen handoff cannot focus RETURN while recovery disables it.
+  // Complete that handoff once reads settle, without taking focus from a
+  // control the operator has chosen in the meantime.
+  useEffect(() => {
+    if (!visible || !mealRecoveryFocusPending.current || busyRef.current || foodSearchBusyRef.current) return;
+    const control = document.getElementById("meal-return") as HTMLButtonElement | null;
+    if (!control || control.disabled) return;
+    mealRecoveryFocusPending.current = false;
+    const active = document.activeElement;
+    if (!active || active === document.body || active.closest("[hidden]")) {
+      control.focus({ preventScroll: true });
+    }
+  }, [visible, busy, foodSearchBusy]);
 
   async function retryMealRead() {
     if (busyRef.current || foodSearchBusyRef.current) return;

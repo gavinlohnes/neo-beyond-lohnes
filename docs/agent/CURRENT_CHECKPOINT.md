@@ -1,5 +1,29 @@
 # Current checkpoint
 
+## Current objective — post-merge meal recovery focus correction
+
+Updated 2026-10-08 by Codex. Gavin authorized a bounded accessibility follow-up to merged
+PR #205. Fresh master is `22fa8c5af134088bdb0c9391914cea4282fa6a61`; open PRs #201 and
+#204 are untouched. Builder: Codex; branch `codex/meal-recovery-focus`; corrective PR linked
+from this branch's GitHub PR. Risk: ROUTINE accessibility repair, with independent exact-head
+review explicitly requested before owner approval. BUILD OWNED: complete the existing native
+focus handoff; no dependency, navigation, command, Engine, schema or persistence changes.
+
+The delayed-read regression reproduced focus loss on master. BODY now completes the return-control
+handoff after automatic recovery enables it, without stealing focus from a chosen visible control.
+Deterministic gated-read tests also preserve the draft, canonical totals/history, correction access
+and exactly one log. Verification: 99 browser tests passed across meal/App/BODY; both final focus
+variants passed separately (21 unselected cases skipped). Architecture, TypeScript/production
+build and whitespace passed. Built PWA passed offline save/log, offline cold reload, and offline
+TODAY meal return with refreshed totals. Existing memory-only drafts and five-second undo remain.
+Browser verification used Chromium. Required CI and exact head are recorded in the corrective PR.
+
+Next: independent review of the exact corrective head, then Gavin's merge decision. No merge or
+deployment authorized. VCC-001 remains paused. The prior milestone handoff below is historical;
+its pending-merge pointers are superseded by PR #205's verified merge.
+
+## Historical milestone 1 handoff
+
 Updated 2026-10-08 by Codex, Lead Builder for Product Unification milestone 1.
 This is a handoff, not merge authorization. Exact head and CI are recorded in the linked PR.
 
