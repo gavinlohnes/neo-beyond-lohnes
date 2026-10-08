@@ -1,8 +1,10 @@
 # BEYOND 1.0 Roadmap
 
 Owner rulings, 2026-09-30 (ROADMAP-1.0-001). This is the build plan for BEYOND 1.0. When the
-owner says "let's work", start here: propose the next unfinished Drop, wait for approval, build
-it, open a PR, and report in plain language (see `AGENTS.md`).
+owner says "let's work", start here: propose the next unfinished objective, obtain any missing
+approval, build it, open a PR, and report in plain language. New work follows
+[`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
+feature history, and product rulings below are preserved.
 
 ## Goal
 
@@ -26,7 +28,8 @@ Owner rulings, 2026-10-03.
 
 ## Build order
 
-At most 3 changes per Drop.
+Historical build batches below used at most 3 changes per Drop. New objectives use a bounded
+brief under DEV-FLOW-002; the old batching rule does not require a formal Drop.
 
 ### Drop 1 — Declutter I
 
@@ -190,9 +193,10 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 ## Queue
 
 What gets built next, top first. The builder (see `AGENTS.md`) takes the top item on "let's
-work". Only the owner adds to it. Each item is one short brief (what changes, where it surfaces,
-one concrete example of the problem it fixes) plus a written Drop in `docs/agent/drops/` so
-Codex can build it when Claude is out.
+work". Only the owner adds to it. Each objective has one concise durable brief under DEV-FLOW-002
+with authorization, risk lane, scope/exclusions, acceptance evidence, starting commit, Builder,
+and active PR. Existing approved scope documents may serve as that brief; no duplicate Drop or
+separate authorization PR is required.
 
 **Owner brief 2026-10-05 ("Advanced batch").** Rulings, same day:
 
@@ -214,10 +218,12 @@ Codex can build it when Claude is out.
   and Sat–Mon on shift suggests workouts Thu and Fri only. (The smaller choices Gavin wasn't asked
   to answer stay as built until he says otherwise: +WATER opens the quick-add; boot "DAY n" counts
   BEYOND days on record; a PR set taps once like any set.)
-- Write all Drops in one session, then build in this order. Every Drop's handoff carries
-  screenshots and DECISIONS FOR GAVIN; Architectural Drops wait for Gavin to approve the merge.
+- Follow this owner-approved build order with one brief per objective. Preserve each objective's
+  acceptance evidence, including required screenshots. All PRs wait for Gavin's merge approval;
+  Protected work also requires independent exact-head review.
 
-1. **VCC-001 — TODAY State Rail** (Architectural, owner approval 2026-10-07). Replace TODAY's
+1. **VCC-001 — TODAY State Rail** (Protected under DEV-FLOW-002; formerly Architectural,
+   owner approval 2026-10-07). Replace TODAY's
    existing status strip in place with one compact State Rail: operational state first, existing
    System Status subordinate, `BEFORE → SHIFT → AFTER → OFF` from `deriveShiftClockView`, and one
    closed `INTELLIGENCE` disclosure containing existing provenance/reasons/basis only. No new fact,
@@ -254,7 +260,8 @@ Codex can build it when Claude is out.
     **Done (PR #196, merged 2026-10-07 after Gavin's explicit approval).**
 12. **Review account** (owner ruling 2026-10-04, "3. A"). Gavin sets up a separate GitHub account
     for reviews (Claude walks him through it; Claude never creates accounts or handles the token),
-    so independent reviews are formal approvals. Nothing waits on it.
+    so independent reviews are formal approvals. Nothing waits on it. This is a historical
+    account plan, not a new-work prerequisite under DEV-FLOW-002; existing protections remain.
 
 ### Known, not yet approved
 
@@ -272,16 +279,14 @@ Spotted but not briefed. The owner moves an item up into the Queue or drops it.
     12-week training heat grid, a measure against its "your usual" band.
   - **Open-source parts to evaluate (licenses first):** free-exercise-db; wger (study only).
 
-## Builders (owner ruling, 2026-10-04)
+## Development workflow
 
-Speed rules (owner, 2026-10-04): Routine Drops are half a page and merge on green checks;
-Architectural/High-Risk keep the full process and wait for the owner. Handoff notes end with
-"DECISIONS FOR GAVIN". Field notes come in as GitHub Issues labeled `field`.
-
-Claude Code is the primary builder; OpenAI Codex is the backup builder when Claude's usage runs
-out. One builder at a time; Codex builds only from a written Drop, never merges, and doesn't
-change doctrine, roadmap or governance docs; every session ends with a handoff note. Full rules
-in `AGENTS.md`; the handoff note is `docs/agent/CURRENT_CHECKPOINT.md`.
+DEV-FLOW-002 supersedes the 2026-10-04 provider roles, half-page Drop requirement, and automatic
+Routine merge rule. Qualified Builders are provider-neutral, one per objective; verification is
+proportional to the Routine, Feature, or Protected lane. Every merge needs owner approval.
+Protected work needs independent exact-head review and green required CI. Keep a concise GitHub
+checkpoint for handoffs; field notes remain GitHub Issues labeled `field`. The workflow charter
+is the sole procedural authority; this roadmap records priorities and feature history.
 
 ## Design rules
 

@@ -156,13 +156,15 @@ Classify field evidence before acting:
 
 This doctrine answers **what an interface is allowed to mean**. The Decision Register locks
 specific product/UX adjudications. Code and tests show **what currently exists**. A current
-approved Drop defines **what may be changed now**.
+approved objective brief defines **what may be changed now** under
+[`DEV-FLOW-002`](agent/DEV-FLOW-002.md), the development workflow authority.
 
 Doctrine is a constraint, not implementation authorization. It does not activate a campaign,
-approve a feature, expand a Drop, or permit an agent to modify the product. Future implementation
-requires a direct owner decision and an explicitly authorized Drop with bounded scope and an
-exact baseline. Genuine conflicts stop and escalate; doctrine is never silently reinterpreted to
-fit implementation.
+approve a feature, expand an objective, or permit an agent to modify the product. Implementation
+requires an approved objective recorded in a concise brief with bounded scope and an exact
+starting commit; Protected boundaries require explicit owner approval. A formal Drop or Factory
+activation is not required for new work. Genuine conflicts stop and escalate; doctrine is never
+silently reinterpreted to fit implementation.
 
 `docs/FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical evidence. Its completed campaign
 authority and older restrictions do not override current constitutional doctrine or confer

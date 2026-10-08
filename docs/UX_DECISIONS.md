@@ -3,7 +3,7 @@
 Concise, durable record of product/UX behavior that has been explicitly
 decided and locked in this codebase's chat-built rebuild lineage (see
 [README.md](../README.md#versions--lineage) for the lineage explanation).
-Written for future sessions (human or Claude) so a decision doesn't need
+Written for future sessions (human or agent) so a decision doesn't need
 to be re-derived from git archaeology or re-litigated by accident.
 
 Each entry is the *decision*, not the implementation — see the linked
@@ -18,9 +18,11 @@ Locked 2026-08-29: [`OPERATOR_INTERFACE_DOCTRINE.md`](OPERATOR_INTERFACE_DOCTRIN
 durable constitutional authority for what BEYOND's operator interfaces are allowed to mean.
 This register records narrower locked product/UX adjudications under that doctrine; code and
 tests record current implementation truth. Neither doctrine nor this register independently
-authorizes implementation: future changes require a direct owner decision and an explicitly
-authorized, bounded Drop. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical evidence, not
-standing implementation authority.
+authorizes implementation: future changes require an approved objective recorded in a bounded
+brief under [`DEV-FLOW-002`](agent/DEV-FLOW-002.md), with explicit owner approval for Protected
+boundaries. Historical references to Drops retain their product scope and evidence, but do not
+require the legacy lifecycle for new work. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical
+evidence, not standing implementation authority.
 
 ## ROADMAP 1.0 rulings (locked 2026-09-30, direct owner ruling, ROADMAP-1.0-001)
 
@@ -447,6 +449,9 @@ below, this entry wins; the older entry is kept for history.
   phone-size walk-through of the live app with screenshots, a small review-note cleanup, then a
   week of field use with no new features (field notes first). A separate GitHub review account so
   independent reviews count as formal approvals; Gavin creates it, Claude never handles its token.
+  **Procedural update, DEV-FLOW-002 (2026-10-08):** the account plan remains historical;
+  Protected review requires an independent qualified agent/session and durable exact-head evidence,
+  not a particular provider or newly created account. Existing repository protections still apply.
 - **Walk-through findings: fix all 13 (owner ruling 2026-10-04, "Let's do B. All 13").** Split into
   CLEANUP-002 (gym mode and TODAY) and CLEANUP-003 (words and clutter). TODAY says "task", not
   "obligation", for turning a note into something to do (the sweep's "MAKE IT A TASK"; Attention's
@@ -570,7 +575,7 @@ is clearer in context.
   completed-but-disliked session and a skipped-but-enjoyed one are both honestly representable.
   Scope boundary: this does not reopen or change "Recommendation Engine — outcome ratings stay
   observational" below — enjoyment stays observational data, same as any other Outcome rating,
-  unless a future Drop is separately authorized to change that.
+  unless a future Protected objective is separately authorized to change that.
 - **BEYOND_MAY_DO_LESS** — a successful outcome can be BEYOND doing nothing. Already literal:
   doctrine's "**NO ACTION REQUIRED** is a successful FIELD state."
 - **NO_FAKE_PRECISION** — BEYOND never presents a fabricated, guessed, or default-substituted
@@ -578,7 +583,7 @@ is clearer in context.
   — e.g. `getEffectiveProteinTargetG()` returning `undefined` rather than a guessed number (see
   "NUTRITION TARGETS" below) — and doctrine's "must not fabricate missing facts."
 
-A future implementation Drop that touches behavior one of these guarantees describes should
+A future implementation brief that touches behavior one of these guarantees describes should
 cite the guarantee name above alongside its underlying mechanism — the name is a pointer to the
 mechanism, not an independent authority of its own.
 
@@ -1185,7 +1190,7 @@ TODAY's separate ATTENTION budget.
 - The broader "Terry's Suit" direction this reversal is drawn from (chamfered/angular surface
   geometry beyond the existing single-surface `--chamfer` primitive, ambient motion, an
   abstract glyph family) remains prototype-only pending its own separate, explicitly
-  authorized Drop(s). Typography is no longer in that deferred set — see "Visual system —
+  authorized objective(s). Typography is no longer in that deferred set — see "Visual system —
   typography" below (TYPOGRAPHY-001). One narrow slice of motion is also now authorized — see
   "Visual system — motion" below (MOTION-001) — but that Drop only reshaped the timing curve
   of transitions/animations that already existed; it did not add, and does not authorize, any

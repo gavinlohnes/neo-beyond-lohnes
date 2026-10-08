@@ -1,9 +1,20 @@
 ---
 name: beyond-drop
-description: BEYOND repo's Drop workflow — task-contract templates, semantic risk classification, verification, and the git/CI ship procedure for a single BEYOND Drop (routine, architectural, or high-risk change).
+description: Historical BEYOND Drop and Factory procedures; retained evidence, superseded for new work by docs/agent/DEV-FLOW-002.md.
 ---
 
-# BEYOND Drop workflow
+# BEYOND Drop workflow — historical reference
+
+**Superseded for new work after DEV-FLOW-002 adoption.** Follow
+[`docs/agent/DEV-FLOW-002.md`](../../../docs/agent/DEV-FLOW-002.md) and `AGENTS.md` for current
+briefs, Routine/Feature/Protected lanes, provider-neutral roles, proportional verification,
+independent Protected review, and owner approval for every merge. Everything below is retained
+historical evidence, not current instructions. In particular, do not execute legacy direct-master
+shipping/admin-bypass examples, extract credentials, require provider-specific roles, or perform
+mandatory Factory activation/closure. Factory implementation, records, tests, and CI remain
+unchanged; this adoption does not activate Phase 2.
+
+## Historical procedure (preserved)
 
 One cohesive procedure for running a BEYOND Drop end to end: state the contract, classify risk
 semantically, implement, verify, report, ship, confirm CI. This is process scaffolding — it
