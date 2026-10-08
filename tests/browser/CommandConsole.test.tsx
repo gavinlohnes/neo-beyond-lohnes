@@ -62,7 +62,7 @@ describe("Production Command Console", () => {
   it("retains UNKNOWN context without inferring a phase and keeps every workspace reachable", async () => {
     const day = await startDay();
     // Synthetic legacy unanswered day: no real records or Engine rules are changed.
-    await db.beyondDays.update(day.id, { workContext: "UNKNOWN", workContextSource: undefined });
+    await db.beyondDays.update(day.id, { workContext: "UNKNOWN" });
     const screen = await render(<App />);
     await expect.poll(() => [...document.querySelectorAll("[data-shift-clock-row]")].map((element) => element.getAttribute("data-shift-clock-row")))
       .toEqual(["WORK_QUESTION", "CHECK_IN", "WORKOUT"]);
@@ -188,9 +188,15 @@ describe("Production Command Console", () => {
       expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
       await userEvent.keyboard("{Escape}");
       await expect.poll(() => document.activeElement).toBe(opener.element());
+      // The handoff must survive native close and React's effect cleanup,
+      // not merely pass while focus is transiently on the trigger.
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      expect(document.activeElement).toBe(opener.element());
       await opener.click();
       await screen.getByRole("button", { name: /TODAY TOOLS/ }).click();
       await expect.poll(() => document.activeElement?.id).toBe("console-tools-heading");
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      expect(document.activeElement?.id).toBe("console-tools-heading");
       await expect.element(screen.getByRole("button", { name: "Close TOOLS" })).toBeVisible();
     });
   }

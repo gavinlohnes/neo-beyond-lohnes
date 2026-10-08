@@ -18,17 +18,21 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenTools, onOpenDe
   const [open, setOpen] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const restoreTrigger = useRef(true);
   useEffect(() => {
     if (!open) return;
     const element = dialog.current!;
     element.showModal();
-    return () => element.close();
+    return () => {
+      element.close();
+      // Native close runs during cleanup. Restore only afterwards, and
+      // leave selected workspace/tool destinations in charge of focus.
+      if (restoreTrigger.current) window.requestAnimationFrame(() => trigger.current?.focus({ preventScroll: true }));
+    };
   }, [open]);
-  function close() {
+  function close(restoreFocus = true) {
+    restoreTrigger.current = restoreFocus;
     setOpen(false);
-    // Restore after the native dialog closes/unmounts; its own close
-    // algorithm can otherwise overwrite a synchronous focus handoff.
-    window.requestAnimationFrame(() => trigger.current?.focus({ preventScroll: true }));
   }
   return <>
     <div className="console-controls" role="group" aria-label="Optional operator controls">
@@ -53,10 +57,10 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenTools, onOpenDe
       }}>
       <header className="console-system-header">
         <h2 id="console-system-title" className="card-title">SYSTEM</h2>
-        <button type="button" className="chip" onClick={close} aria-label="Close SYSTEM" autoFocus>CLOSE</button>
+        <button type="button" className="chip" onClick={() => close()} aria-label="Close SYSTEM" autoFocus>CLOSE</button>
       </header>
       <p id="console-system-description" className="meta">Choose a workspace. Nothing starts or logs until you decide.</p>
-      <button type="button" className="console-destination" onClick={() => { close(); onOpenTools(); }}>
+      <button type="button" className="console-destination" onClick={() => { close(false); onOpenTools(); }}>
         <Icon name="mission" size={24} /><span><strong>TODAY TOOLS</strong><span>Check-in, work context and daily controls</span></span><LineIcon icon={ArrowUpRight} />
       </button>
       {([
@@ -64,7 +68,7 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenTools, onOpenDe
         ["BODY", "Nutrition, water, sleep and bodyweight", "body"],
         ["MORE", "History, planning, insights and backups", "more"],
       ] as const).map(([destination, description, icon]) => <button key={destination} type="button" className="console-destination" disabled={!onOpenDestination}
-        onClick={() => { close(); onOpenDestination?.(destination); }}>
+        onClick={() => { close(false); onOpenDestination?.(destination); }}>
         <Icon name={icon} size={24} /><span><strong>{destination}</strong><span>{description}</span></span><LineIcon icon={ArrowUpRight} />
       </button>)}
     </dialog>}

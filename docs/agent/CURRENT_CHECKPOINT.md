@@ -17,13 +17,16 @@ backup, dependency, fixture, identity-asset or prototype changes. VCC-001 remain
 implemented; complete searchable launcher/Milestone 2 is deferred. BUILD OWNED composition over
 existing components/commands; USE PLATFORM native dialog with explicit focus containment/return.
 
-Evidence: 16 new real-browser console cases; all 47 final console/phase/visual/motion cases pass.
+Evidence: 16 new real-browser console cases; 47 console/phase/visual/motion cases passed,
+with all 16 console cases repeated after final native-close focus ordering and fixture correction.
 The full local run passed 2,166 tests with one existing skip; two old selector assumptions failed,
 were corrected without weakening their assertions, and passed targeted verification. Final
 TypeScript/build, architecture and whitespace pass. Actual synthetic-fixture screenshots at
 320/360/412 px, status/evidence, logging, SYSTEM and resume are in
 `docs/screenshots/command-console-m1/`. Exact head, final offline evidence and required full CI
-are recorded in the linked PR; independent exact-head review and Gavin's final merge approval
+are recorded in the linked PR. Built PWA checks pass offline save/log, cold reload, meal return,
+SYSTEM navigation, water logging/undo, canonical totals and keyboard focus return.
+Independent exact-head review and Gavin's final merge approval
 remain required. Chromium automation is not physical-device/Safari or screen-reader testing;
 memory-only meal drafts, existing undo windows and the existing bundle-size warning remain.
 No merge or deployment is authorized. Next: independent review, then owner review.

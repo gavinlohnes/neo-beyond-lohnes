@@ -447,7 +447,9 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
       if (el) {
         el.scrollIntoView({ block: "start" });
         if (onReturnToToday) document.getElementById("meal-return")?.focus({ preventScroll: true });
-        else if (focus === "water") el.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus({ preventScroll: true });
+        else if (focus === "water" && document.activeElement === document.body) {
+          el.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus({ preventScroll: true });
+        }
         mealPositioned.current = true;
         return;
       }
