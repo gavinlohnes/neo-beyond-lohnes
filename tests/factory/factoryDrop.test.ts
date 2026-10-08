@@ -298,6 +298,43 @@ describe("protected campaign contract preregistration", () => {
   });
 });
 
+describe("protected standalone contract preregistration", () => {
+  function preregisterStandalone(id = "STANDALONE-001"): void {
+    writeContract(fixture, id, validContractText({ id, baseline: "AT_ACTIVATION" }));
+    git(fixture.workDir, ["push", "-q", "origin", "HEAD:refs/heads/master"]);
+    fixture.headSha = git(fixture.workDir, ["rev-parse", "HEAD"]);
+  }
+
+  it("binds current protected master for a preregistered standalone AT_ACTIVATION contract", () => {
+    preregisterStandalone();
+    beginDropBranch(fixture, "builder/standalone-001");
+    const result = runFactoryDrop(
+      ["init", "STANDALONE-001", "--baseline", fixture.headSha, "--branch", "builder/standalone-001"],
+      fixture,
+    );
+    expect(result.status).toBe(0);
+    const active = readFileSync(join(fixture.workDir, "docs/agent/ACTIVE_DROP.md"), "utf8");
+    expect(active).toContain(`baseline: ${fixture.headSha}`);
+  });
+
+  it("rejects standalone AT_ACTIVATION when the contract exists only in Builder HEAD", () => {
+    beginDropBranch(fixture, "builder/standalone-001");
+    writeContract(fixture, "STANDALONE-001", validContractText({ id: "STANDALONE-001", baseline: "AT_ACTIVATION" }));
+    const result = runFactoryDrop(["validate", "STANDALONE-001", "--baseline", fixture.headSha], fixture);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("TRUSTED_CONTRACT_REQUIRED");
+  });
+
+  it("rejects a Builder mutation of the protected standalone contract", () => {
+    preregisterStandalone();
+    beginDropBranch(fixture, "builder/standalone-001");
+    writeContract(fixture, "STANDALONE-001", validContractText({ id: "STANDALONE-001", baseline: "AT_ACTIVATION", riskTier: "ROUTINE" }));
+    const result = runFactoryDrop(["validate", "STANDALONE-001", "--baseline", fixture.headSha], fixture);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("BUILDER_CONTRACT_MUTATION");
+  });
+});
+
 describe("unsafe local state is never destroyed or silently modified", () => {
   it("refuses launch over a dirty working tree by default", () => {
     writeContract(fixture, "TEST-001", validContractText({ id: "TEST-001", baseline: fixture.headSha }));
