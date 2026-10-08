@@ -4,7 +4,7 @@ Three different ways to operate BEYOND. This is a navigation and task-flow exper
 
 ## Objective and authority
 
-Owner-approved **Next-Generation Interface Exploration**, 2026-10-08. Builder: Codex. Branch: `codex/beyond-interaction-lab`. Starting point: freshly fetched master `8035dfbc0011bed03fb668e100aa8794cda4a8e7` (merged DEV-FLOW-002 adoption, PR #203). Existing open PR #201 is unrelated and untouched.
+Owner-approved **Next-Generation Interface Exploration**, 2026-10-08. Builder: Codex. Branch: `codex/beyond-interaction-lab`. Starting point: freshly fetched master `8035dfbc0011bed03fb668e100aa8794cda4a8e7` (merged DEV-FLOW-002 adoption, PR #203). Active draft PR: [#204](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/204). Existing open PR #201 is unrelated and untouched.
 
 Conservative risk lane: **PROTECTED — isolated primary interaction architecture exploration**. The owner explicitly authorized experimentation with navigation, hierarchy and task flow. That authority applies only to this laboratory; locked production navigation and VCC-001 scope are unchanged. Independent exact-head review and owner merge approval remain prerequisites to integrating even this prototype PR. No unresolved authority conflict was identified within this bounded scope.
 
