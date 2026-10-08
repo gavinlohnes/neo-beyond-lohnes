@@ -80,7 +80,12 @@ describe("HUD-001 — HUD design system", () => {
       const el = document.querySelector(sel);
       if (el) expect(getComputedStyle(el).clipPath, sel).toMatch(/^polygon/);
     }
-    const rows = document.querySelectorAll(".equipment-row:not(:first-child)");
+    // TODAY's guidance now has its own region rather than sharing the
+    // check-in parent. Verify the same shared frame geometry on MORE's
+    // actual consecutive capability rows, not accidental TODAY siblings.
+    const system = await render(<MoreScreen />);
+    await expect.element(system.getByRole("button", { name: "Open HISTORY" })).toBeVisible();
+    const rows = system.container.querySelectorAll(".equipment-row:not(:first-child)");
     const row = rows[0];
     expect(row).toBeDefined();
     expect(getComputedStyle(row!).backgroundImage).toMatch(/linear-gradient/);

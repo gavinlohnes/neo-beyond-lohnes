@@ -386,6 +386,13 @@ export function App() {
             onOpenTrain={openTrain}
             openToolsOnMount={todayToolsOpen}
             onOpenBody={openBody}
+            onOpenSystemDestination={(destination) => {
+              openPrimaryTab(destination);
+              window.requestAnimationFrame(() => {
+                const heading = document.querySelector<HTMLElement>(".screen h1");
+                if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
+              });
+            }}
           />
           </div>
         )}

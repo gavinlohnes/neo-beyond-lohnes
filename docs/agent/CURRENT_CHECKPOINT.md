@@ -1,6 +1,34 @@
 # Current checkpoint
 
-## Current objective — post-merge meal recovery focus correction
+## Current objective — Command Console production milestone 1
+
+Gavin authorized this bounded Protected milestone and explicitly amended the placement rule for
+persistent WATER/MEAL/SYSTEM controls (UX Decision Register, 2026-10-08). Builder: Codex, sole
+Lead Builder; branch `codex/command-console-m1`; active PR linked from this branch in GitHub.
+Starting fresh master: `db5bae3267ddd82e15f3038f65dc7ba3412893ff`; PR #206 is integrated with
+its reviewed head and green CI. PR #204 remains the sole overlapping open prototype PR, untouched.
+
+Scope: compact production TODAY composition, one canonical RecommendationCard retaining existing
+dominant/attention/support authority, existing work context/System Status, visible workout resume,
+canonical BODY water/meal entry, and a native SYSTEM chooser over existing workspaces/TODAY Tools.
+The four tabs and all capabilities stay. Contextual phase rows retain their four-row cap, semantics
+and timing; time-sensitive work controls keep precedence. No Engine, commands, persistence, schema,
+backup, dependency, fixture, identity-asset or prototype changes. VCC-001 remains paused and is not
+implemented; complete searchable launcher/Milestone 2 is deferred. BUILD OWNED composition over
+existing components/commands; USE PLATFORM native dialog with explicit focus containment/return.
+
+Evidence: 16 new real-browser console cases; all 47 final console/phase/visual/motion cases pass.
+The full local run passed 2,166 tests with one existing skip; two old selector assumptions failed,
+were corrected without weakening their assertions, and passed targeted verification. Final
+TypeScript/build, architecture and whitespace pass. Actual synthetic-fixture screenshots at
+320/360/412 px, status/evidence, logging, SYSTEM and resume are in
+`docs/screenshots/command-console-m1/`. Exact head, final offline evidence and required full CI
+are recorded in the linked PR; independent exact-head review and Gavin's final merge approval
+remain required. Chromium automation is not physical-device/Safari or screen-reader testing;
+memory-only meal drafts, existing undo windows and the existing bundle-size warning remain.
+No merge or deployment is authorized. Next: independent review, then owner review.
+
+## Historical objective — post-merge meal recovery focus correction
 
 Updated 2026-10-08 by Codex. Gavin authorized a bounded accessibility follow-up to merged
 PR #205. Fresh master is `22fa8c5af134088bdb0c9391914cea4282fa6a61`; open PRs #201 and

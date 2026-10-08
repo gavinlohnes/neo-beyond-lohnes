@@ -184,12 +184,13 @@ describe("Shift Clock — after shift (06:00 → main sleep)", () => {
     await screen.getByRole("button", { name: "LOG MAIN SLEEP" }).click();
     expect(onOpenBody).toHaveBeenCalledWith("sleep");
 
-    // Mark work ended, then check in: the check-in row becomes the recommendation (SHIFT DOWN), in place.
+    // Check-in produces the same guidance; the console renders it once outside the contextual row.
     await screen.getByRole("button", { name: "MARK WORK ENDED" }).click();
     await expect.poll(() => screen.getByRole("button", { name: "MARK WORK ENDED" }).elements().length).toBe(0);
     await screen.getByRole("button", { name: "ALL GOOD" }).click();
     const checkInRow = document.querySelector('[data-shift-clock-row="CHECK_IN"]') as HTMLElement;
-    await expect.poll(() => checkInRow.textContent ?? "").toContain("Shift down after work");
+    await expect.poll(() => document.querySelector(".console-guidance")?.textContent ?? "").toContain("Shift down after work");
+    expect(document.querySelectorAll(".console-guidance")).toHaveLength(1);
     await expect.poll(() => checkInRow.textContent ?? "").toMatch(/Checked in/);
     expect(screen.getByText("Operate", { exact: true }).elements()).toHaveLength(0);
     expect(rows().length).toBeLessThanOrEqual(MAX_PHASE_ROWS);
@@ -237,7 +238,7 @@ describe("Minimum Day offer after a YELLOW check-in (Drop 1.6b)", () => {
 });
 
 describe("Shift Clock — day off", () => {
-  it("puts the check-in on top until it's done, then shows the recommendation in its place; fuel waits in TOOLS", async () => {
+  it("keeps check-in contextual and shows its canonical guidance once in the console; fuel waits in TOOLS", async () => {
     await startDayAt(at(14, 16, 30));
     setClock(at(14, 17, 0));
     const screen = await render(<TodayScreen />);
@@ -249,7 +250,8 @@ describe("Shift Clock — day off", () => {
 
     await screen.getByRole("button", { name: "ALL GOOD" }).click();
     const checkInRow = document.querySelector('[data-shift-clock-row="CHECK_IN"]') as HTMLElement;
-    await expect.poll(() => checkInRow.textContent ?? "").toContain("No action required");
+    await expect.poll(() => document.querySelector(".console-guidance")?.textContent ?? "").toContain("No action required");
+    await expect.poll(() => checkInRow.textContent ?? "").toMatch(/Checked in/);
 
     // Every tool is one tap away.
     await openTodayTools(screen);

@@ -104,7 +104,7 @@ describe("FEEL-001", () => {
   it("tab changes animate in 150–250 ms, and are instant with reduced motion", async () => {
     await startDay();
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "BODY" }).click();
+    await screen.getByRole("button", { name: "BODY", exact: true }).click();
     const wrapper = document.querySelector(".tab-enter")!;
     const duration = parseFloat(getComputedStyle(wrapper).animationDuration) * 1000;
     expect(duration).toBeGreaterThanOrEqual(150);
