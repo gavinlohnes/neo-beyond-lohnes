@@ -8,13 +8,15 @@ This is a handoff, not merge authorization. Exact head and CI are recorded in th
 - **Authorization:** Gavin explicitly approved this bounded implementation following the Unified
   Product Blueprint. Product Unification takes priority; VCC-001 is paused, not canceled or
   superseded. No State Rail implementation or PR #204 integration is authorized.
-- **Risk:** FEATURE — UI handoff within existing TODAY/BODY destinations. No primary navigation,
+- **Risk:** FEATURE UI handoff; conservative PROTECTED review lane because the roadmap records
+  Gavin's explicit priority instruction (no workflow/authority rules changed). Independent exact-head
+  review is required before merge. No primary navigation,
   doctrine, Engine, application commands, schemas, persistence, backups, dependencies or identity
   assets changed. BUILD OWNED: small React presentation state over existing canonical meal commands;
   native confirmation/focus/scroll behavior, no new infrastructure.
 - **Starting state:** fresh `origin/master` = `8035dfbc0011bed03fb668e100aa8794cda4a8e7`;
   PR #203 is merged and DEV-FLOW-002 adopted. Open PRs #201 and #204 remain untouched.
-- **Builder / branch:** Codex; `codex/unify-meal-round-trip`. Active PR pending creation.
+- **Builder / branch:** Codex; `codex/unify-meal-round-trip`. Active PR is linked in the GitHub branch/PR handoff.
 - **Scope:** existing TODAY meal entry -> real BODY workflow -> explicit return with TODAY
   disclosures/position/focus retained; in-memory draft preservation; busy/discard guards; canonical
   confirmation, undo/correction and totals; near-control errors and duplicate-tap latch.
@@ -35,7 +37,7 @@ This is a handoff, not merge authorization. Exact head and CI are recorded in th
 - **Offline evidence:** built PWA passed offline preset save, canonical logging, TODAY -> BODY
   -> explicit return with updated totals, and service-worker cold reload with the meal retained.
 - **Next:** open the focused PR, confirm green required CI,
-  then owner review. No merge or deployment authorized. No unresolved Protected boundary needed.
+  then owner review. No merge or deployment authorized. No unapproved product boundary is crossed.
 
 ## Historical adoption handoff
 
