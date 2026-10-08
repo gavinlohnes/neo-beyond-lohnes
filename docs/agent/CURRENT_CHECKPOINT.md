@@ -11,8 +11,9 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 independent review; VCC-001 remains authorized but unstarted.
 
 - **Drop:** `FACTORY-STANDALONE-ACTIVATION-001` — protected standalone activation.
-  **ARCHITECTURAL. IN REVIEW.** Branch `codex/factory-standalone-activation-001`; PR pending at the
-  time of this checkpoint commit. Baseline `25d5c4c330c88c78f42e14edef58893c5935c3b0`.
+  **ARCHITECTURAL. IN REVIEW.** Branch `codex/factory-standalone-activation-001`; PR
+  [#199](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/199). Baseline
+  `25d5c4c330c88c78f42e14edef58893c5935c3b0`.
 - **Owner ruling:** Gavin selected policy option 2 on 2026-10-07: allow an owner-preregistered
   standalone Drop contract on protected master to use `baseline: AT_ACTIVATION`, with Factory
   binding the actual protected-master SHA at activation. This is a one-Drop Factory policy change,
@@ -27,9 +28,8 @@ independent review; VCC-001 remains authorized but unstarted.
   standalone activation, Builder-only rejection, and mutation rejection. Architecture boundaries,
   typecheck, production build, and `git diff --check` passed. Run the risk classifier again after
   the implementation commit so it evaluates the committed diff.
-- **Left:** push the branch, open the PR, replace the pending PR reference in this checkpoint, and
-  wait for exact-head CI plus independent review. After integration, close this policy Drop; then
-  activate VCC-001 from freshly fetched protected master and build it separately on
+- **Left:** wait for PR #199 exact-head CI plus independent review. After integration, close this
+  policy Drop; then activate VCC-001 from freshly fetched protected master and build it separately on
   `codex/vcc-001-state-rail`.
 - **Open risks:** this changes the Factory authorization boundary, so it must not be self-reviewed
   or merged by this Builder session. VCC-001 remains blocked until this policy PR is independently
