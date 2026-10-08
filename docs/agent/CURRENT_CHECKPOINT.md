@@ -7,43 +7,55 @@ reports state; it doesn't authorize work. For what to build next, read the Queue
 
 ## Handoff
 
-**Written 2026-10-07 by Codex (backup builder).** FACTORY-STANDALONE-ACTIVATION-001 is ready for
-independent review; VCC-001 remains authorized but unstarted.
+**Updated 2026-10-08 by Codex (backup builder).** FACTORY-STANDALONE-ACTIVATION-001 is integrated;
+PR #200's authorization amendment includes the owner-authorized AutoBackup test-selector repair
+from PR #201 and awaits independent exact-head review and CI.
 
-- **Drop:** `FACTORY-STANDALONE-ACTIVATION-001` — protected standalone activation.
-  **ARCHITECTURAL. IN REVIEW.** Branch `codex/factory-standalone-activation-001`; PR
-  [#199](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/199). Baseline
-  `25d5c4c330c88c78f42e14edef58893c5935c3b0`.
-- **Owner ruling:** Gavin selected policy option 2 on 2026-10-07: allow an owner-preregistered
-  standalone Drop contract on protected master to use `baseline: AT_ACTIVATION`, with Factory
-  binding the actual protected-master SHA at activation. This is a one-Drop Factory policy change,
-  not VCC implementation authority by itself.
-- **Done:** Factory accepts the sentinel for a standalone Drop only when the complete contract is
-  already present identically on `origin/master`. Builder-only contracts fail with
-  `TRUSTED_CONTRACT_REQUIRED`; altered Builder copies fail with `BUILDER_CONTRACT_MUTATION`.
-  Exact-SHA standalone behavior and campaign authorization remain unchanged. Governing Factory
-  documentation and the Drop template describe the new protected path.
-- **Verification:** full `tests/factory/factoryDrop.test.ts` passed 42/42. Focused authorization
-  coverage passed 8/8, including campaign compatibility, exact-baseline rejection, protected
-  standalone activation, Builder-only rejection, and mutation rejection. Architecture boundaries,
-  typecheck, production build, and `git diff --check` passed. Run the risk classifier again after
-  the implementation commit so it evaluates the committed diff.
-- **Left:** wait for PR #199 exact-head CI plus independent review. After integration, close this
-  policy Drop, amend VCC-001's protected contract baseline from its superseded exact SHA to
-  `AT_ACTIVATION` in a separate authorization-only protected-master change, and only then activate
-  VCC-001 from freshly fetched protected master and build it on `codex/vcc-001-state-rail`.
-- **Open risks:** this changes the Factory authorization boundary, so it must not be self-reviewed
-  or merged by this Builder session. VCC-001 remains blocked until this policy PR is independently
-  approved and integrated. No product, Engine, persistence, schema, or runtime dependency changed.
+- **Completed prerequisite:** `FACTORY-STANDALONE-ACTIVATION-001` — protected standalone
+  activation. **ARCHITECTURAL. MERGED.** PR
+  [#199](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/199) merged as
+  `40ef5955d6aefaaf198167d2fe081c2e8e71216c`; final head
+  `7ea7d07e93d61c59e30a6297346066caa0c1c275`.
+- **Owner ruling:** Gavin authorized VCC-001 from freshly fetched current master on 2026-10-07.
+  The protected VCC contract now uses `baseline: AT_ACTIVATION`; Factory will bind the exact
+  protected-master SHA when the implementation Drop is activated.
+- **This change:** authorization only. It amends `docs/agent/drops/VCC-001.md` to the protected
+  standalone activation path and records the merged policy prerequisite. No VCC product code,
+  Engine, recommendation, persistence, schema, runtime dependency, roadmap, doctrine, or locked
+  UX decision changes are included.
+- **Left:** independently review and merge this authorization amendment. Only after it is present
+  on protected master may a fresh Builder session run Factory activation and build VCC-001 on
+  `codex/vcc-001-state-rail`.
+- **Open risks:** VCC-001 remains unstarted and fail-closed until this amendment merges. The
+  implementation remains Architectural and still requires independent exact-head review, green
+  CI, and Gavin's explicit approval before integration.
+
+### PR #200 repair handoff
+
+- **Branch / PR:** `codex/vcc-001-activation-auth`,
+  [#200](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/200). Inspected open PRs #200 and #201
+  before editing; #200 head was `2bc6d584be224d0894fda521fda63a11148235db`, #201 head was
+  `2715831dcb18430fc59cebfc0daaf6e71b6b54e1`.
+- **Done:** applied exactly PR #201's three selector corrections in
+  `tests/browser/AutoBackup.test.tsx`. Assertions now target `section[aria-label="Backup"]`
+  instead of the shared `.backup-due` class, which also matches the report banner. Original
+  PR Verification run `37722957143` confirms failures at these three assertions.
+- **Verification:** AutoBackup and Report001 browser tests passed 12/12; full suite passed
+  205 files / 2,104 tests, one skipped. Architecture boundaries, typecheck/production build,
+  and `git diff --check` passed. Browser tests used installed `/usr/bin/chromium` through a
+  temporary config overriding only Playwright launch options; that config was removed.
+- **Scope:** only the selector correction and this required handoff update. No product behavior,
+  doctrine, dependencies, Factory activation, or DEV-FLOW-002 changes. No PR merged or closed.
+- **Left:** push this repair to #200, confirm exact-head PR Verification, then obtain independent
+  Claude Code review. GitHub API access is blocked by network policy; Git and public GitHub web
+  pages are available for push and CI inspection. PR #201 remains open and untouched.
 
 ### Verification commands
 
-`npx vitest run tests/factory/factoryDrop.test.ts` · focused Factory authorization suite ·
-`npm run check:architecture` · `npm run typecheck` · `npm run build` ·
-`npm run check:risk -- 25d5c4c330c88c78f42e14edef58893c5935c3b0` · `git diff --check`
+`npm run check:risk -- 40ef5955d6aefaaf198167d2fe081c2e8e71216c` (process/docs only) ·
+`git diff --check`. Factory activation validation is intentionally deferred until this exact
+contract amendment is protected on master; the Builder branch cannot establish trusted authority.
 
 ### DECISIONS FOR GAVIN
 
-- Arrange independent exact-head review and owner approval for the policy PR. Do not start VCC-001
-  until this policy change is integrated, this Drop is closed, and VCC-001's protected contract is
-  separately amended to `baseline: AT_ACTIVATION`.
+None.
