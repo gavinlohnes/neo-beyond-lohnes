@@ -1,6 +1,6 @@
 # Current checkpoint
 
-Updated 2026-10-08 by Codex, Primary Builder for CC2-PROTOTYPE-001.
+Updated 2026-10-08 by Codex, Primary Builder for CC2-PROTOTYPE-002.
 The current handoff is below; DEV-FLOW-002 adoption notes are retained historical evidence.
 This is a handoff, not implementation or merge authorization. Read the approved objective brief;
 verify branch/PR/head/CI from Git and GitHub rather than assuming this checkpoint is live state.
@@ -73,3 +73,22 @@ The adoption review/integration steps above are superseded by the verified merge
   Preserve this branch for handoff; derive its exact head from Git. No integration is authorized.
   Existing PR #201, historical Drops, Factory state and product decisions remain untouched.
 - **Authority conflicts:** none unresolved in this bounded prototype scope.
+
+## Current handoff — CC2-PROTOTYPE-002
+
+- **Owner objective:** fourth isolated concept, D — NEO-GOTHAM COMMAND; preserve A/B/C.
+  FEATURE visual exploration only, Codex Builder; no production VCC-001 authorization.
+- **Starting reference:** owner-specified prototype head
+  `b23edae228b247ae272bfab9f8c440325c8f0826`; clean checkout on `codex/cc2-prototype-001`.
+  Fresh `origin/master` remains `8035dfbc0011bed03fb668e100aa8794cda4a8e7`.
+  Only open PR is #201, untouched. No PR is opened for this exploration.
+- **Brief / preview / screenshots:** the linked prototype README above, current CC2-PROTOTYPE-002
+  brief and D comparison. Concept selector now includes D; original screenshots remain intact.
+- **Isolation:** unchanged synthetic scenes and phase derivation, no production source/data,
+  dependency, storage, Engine, schema, backup, CI or deployment changes. Crimson primary controls
+  follow existing UX red-budget roles; rail RED still requires System Status RED.
+- **Verification:** standalone TypeScript/build, architecture and production build; expanded
+  browser matrix across A/B/C/D, accessibility, keyboard, reduced motion and storage/network guards.
+  Evidence and commands are in the brief; no full production suite repeated for scoped prototype CSS.
+- **Next:** owner visually reviews D against A/B/C, then decides. No merge or production work.
+  No unresolved authority conflict in this prototype scope.

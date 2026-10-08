@@ -109,7 +109,7 @@ function Today({ scene }: { scene: Scene }) {
 }
 
 function Prototype() {
-  const [concept, setConcept] = useState<Concept>(initial<Concept>("concept", ["A", "B", "C"], "A"));
+  const [concept, setConcept] = useState<Concept>(initial<Concept>("concept", ["A", "B", "C", "D"], "A"));
   const [example, setExample] = useState<Example>(initial("example", examples, "GREEN"));
   const [phase, setPhase] = useState<Phase>(initial("phase", phases, "AFTER"));
   const [tab, setTab] = useState("TODAY");
@@ -120,7 +120,7 @@ function Prototype() {
     <aside className="review-controls" aria-label="Prototype review controls">
       <div className="review-brand"><span>BEYOND / DESIGN LAB</span><span>CC2</span></div>
       <p className="preview-notice">SYNTHETIC PREVIEW · NO DATA SAVED</p>
-      <div className="concept-switch" role="group" aria-label="Visual concept">{(["A", "B", "C"] as Concept[]).map(key => <button key={key} type="button" aria-pressed={concept === key} onClick={() => { setConcept(key); changeScene(); }} aria-label={`Concept ${key} — ${concepts[key].name}`}><span>{key}</span><span>{key === "A" ? "Refined" : key === "B" ? "Tactical" : "Living"}</span></button>)}</div>
+      <div className="concept-switch" role="group" aria-label="Visual concept">{(["A", "B", "C", "D"] as Concept[]).map(key => <button key={key} type="button" aria-pressed={concept === key} onClick={() => { setConcept(key); changeScene(); }} aria-label={`Concept ${key} — ${concepts[key].name}`}><span>{key}</span><span>{key === "A" ? "Refined" : key === "B" ? "Tactical" : key === "C" ? "Living" : "Neo-Gotham"}</span></button>)}</div>
       <div className="scene-selectors"><label>Example<select value={example} onChange={e => { setExample(e.target.value as Example); changeScene(); }}>{examples.map(value => <option key={value} value={value}>{value.replace("_", " ")}</option>)}</select></label><label>Phase<select value={phase} disabled={example === "UNKNOWN"} onChange={e => { setPhase(e.target.value as Phase); changeScene(); }}>{phases.map(value => <option key={value}>{value}</option>)}</select></label></div>
       <p className="lab-caption">{concepts[concept].name}<br /><span>{concepts[concept].note}</span></p>
     </aside>

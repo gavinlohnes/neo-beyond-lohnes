@@ -210,3 +210,63 @@ body { height: auto; }
   .rail-choice { grid-template-columns: 1fr; gap: 6px; }
   .rail-choice .demo-button { width: 100%; }
 }
+
+/* D / NEO-GOTHAM COMMAND. Architecture, not ornament: an open command surface,
+   a cutaway context frame and directional action geometry. No logo/telemetry.
+   Crimson on actionable primary controls and the selected destination is the
+   existing red-budget meaning; rail illumination still belongs ONLY to RED. */
+@font-face { font-family: 'Beyond Condensed'; font-weight: 700; font-display: swap; src: url('../../node_modules/@fontsource/big-shoulders-display/files/big-shoulders-display-latin-700-normal.woff2') format('woff2'); }
+.concept-switch { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.concept-switch button:nth-child(-n+2) { border-bottom: 1px solid var(--border-strong); }
+.concept-switch button:nth-child(2) { border-right: 0; }
+.concept-D { --d-frame: #555558; --d-ink: #efefef; }
+.concept-D .device-field { padding: 20px 16px calc(112px + env(safe-area-inset-bottom)); }
+.concept-D .prototype-header { padding-bottom: 12px; border-bottom: 0; align-items: flex-end; }
+.concept-D .prototype-header > div { display: block; }
+.concept-D .prototype-header > div > svg { display: none; }
+.concept-D .prototype-header h1 { font-family: 'Beyond Condensed', sans-serif; font-size: 44px; line-height: .95; letter-spacing: .035em; display: flex; gap: 14px; align-items: baseline; }
+.concept-D .prototype-header h1 span { font-family: var(--font-body); font-size: 16px; letter-spacing: 0; }
+.concept-D .prototype-header button { border-color: var(--d-frame); }
+.concept-D .scene-stamp { padding: 10px 0 16px; border-top: 1px solid var(--d-frame); }
+.concept-D .state-rail { --d-edge: var(--d-frame); isolation: isolate; border: 0; border-left: 2px solid var(--d-edge); padding: 14px 14px 0; background: #0b0b0d; margin-bottom: 28px; }
+.concept-D .state-rail::before { content: ''; position: absolute; inset: 0; z-index: -2; background: var(--d-edge); clip-path: polygon(0 0,calc(100% - 28px) 0,100% 28px,100% 100%,18px 100%,0 calc(100% - 18px)); pointer-events: none; }
+.concept-D .state-rail::after { content: ''; position: absolute; inset: 1px 1px 1px 0; z-index: -1; background: #0b0b0d; clip-path: polygon(0 0,calc(100% - 28px) 0,100% 28px,100% 100%,18px 100%,0 calc(100% - 18px)); pointer-events: none; }
+.concept-D .state-rail[data-status=RED] { --d-edge: var(--red); border-left-color: var(--red); }
+.concept-D .state-rail[data-status=RED]::after { background: #180608; }
+.concept-D .state-rail[data-status=AMBER] { --d-edge: var(--warning); border-left-color: var(--warning); }
+.concept-D .rail-kicker, .concept-D .rail-lead > svg { display: none; }
+.concept-D .rail-lead h2 { font-family: 'Beyond Condensed', sans-serif; text-transform: uppercase; font-size: clamp(36px,10.8vw,46px); font-weight: 700; letter-spacing: .005em; line-height: 1.04; padding-right: 12px; }
+.concept-D .rail-detail { margin-top: 5px !important; }
+.concept-D .system-status { margin-top: 12px !important; }
+.concept-D .system-status strong { font-family: var(--font-mono); font-size: 16px; }
+.concept-D .phase-track { gap: 3px; border-top: 0; margin-top: 12px; margin-bottom: 8px; }
+.concept-D .phase-track li { justify-content: center; border-bottom: 1px solid var(--d-frame); padding: 8px 0; }
+.concept-D .phase-track li[aria-current=step] { color: #000; background: var(--d-ink); clip-path: polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px); border-bottom: 0; }
+.concept-D .phase-track li[aria-current=step]::before, .concept-D .phase-link { display: none; }
+.concept-D .rail-choice { padding-block: 8px; gap: 8px; }
+.concept-D .rail-choice .demo-button { background: transparent; border-color: var(--d-frame); }
+.concept-D .state-rail .disclosure-row { padding-inline: 4px; min-height: 48px; }
+.concept-D .recommendation { margin-bottom: 32px; }
+.concept-D .command-surface { border: 0; border-top: 1px solid var(--d-frame); background: transparent; padding: 18px 0 0; }
+.concept-D .recommendation-label > svg { display: none; }
+.concept-D .recommendation h2 { font-family: 'Beyond Condensed', sans-serif; text-transform: uppercase; font-size: clamp(46px,14vw,58px); line-height: 1.02; letter-spacing: .005em; max-width: 11ch; margin-top: 14px; }
+.concept-D .recommendation-body { max-width: 34ch; margin-top: 12px !important; }
+.concept-D .recommendation-actions { margin-top: 18px; margin-bottom: 16px; }
+.concept-D .demo-primary { position: relative; background: var(--red); color: #fff !important; border-color: var(--red); min-height: 56px !important; padding-right: 24px; }
+.concept-D .demo-primary::after { content: ''; position: absolute; right: -1px; top: -1px; width: 14px; height: 14px; background: #000; clip-path: polygon(0 0,100% 0,100% 100%); pointer-events: none; }
+.concept-D .decline-button { border-color: var(--d-frame); }
+.concept-D .quiet-recommendation h2 { font-size: clamp(36px,10vw,42px); max-width: none; }
+.concept-D .phase-rows > div { padding-block: 14px; }
+.concept-D .section-heading { color: var(--text-1); letter-spacing: .02em; }
+.concept-D .section-heading > span { border-color: var(--d-frame); }
+.concept-D .prototype-nav { background: #09090b; border-top-color: var(--d-frame); }
+.concept-D .prototype-nav button[aria-current=page] { box-shadow: inset 0 3px 0 var(--red); background: #151517; }
+.concept-D .concept-content { animation-duration: var(--motion-fast); }
+@media (max-width: 359px) {
+  .concept-D .rail-choice { grid-template-columns: 1fr; }
+  .concept-D .rail-choice .demo-button { width: 100%; }
+  .concept-D .prototype-header h1 { font-size: 40px; gap: 10px; }
+}
+@media (min-width: 820px) {
+  .concept-D .prototype-nav { margin-inline: -16px; width: calc(100% + 32px); }
+}

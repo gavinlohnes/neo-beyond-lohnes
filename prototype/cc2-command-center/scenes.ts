@@ -3,12 +3,13 @@ import { deriveShiftClockView, describeCountdown, describePhaseHeading } from ".
 import type { ShiftClockInput } from "../../src/ui/screens/today/shiftClock";
 import { describeStatusFact, describeSystemStatus } from "../../src/ui/screens/today/statusCopy";
 
-export type Concept = "A" | "B" | "C";
+export type Concept = "A" | "B" | "C" | "D";
 export type Example = "GREEN" | "AMBER" | "RED" | "UNKNOWN" | "NO_READ";
 export type Phase = "BEFORE" | "SHIFT" | "AFTER" | "OFF";
 export const concepts = {
   A: { name: "Refined Command", note: "Precise. Practical. Unmistakably BEYOND." },
   B: { name: "Tactical Operations", note: "Sharper structure. The same truth." },
+  D: { name: "NEO-GOTHAM COMMAND", note: "Architectural precision. Deliberate authority." },
   C: { name: "Living Intelligence", note: "Context first. Depth when you want it." },
 };
 export const phases: Phase[] = ["BEFORE", "SHIFT", "AFTER", "OFF"];
