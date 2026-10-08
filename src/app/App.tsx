@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import { TrainScreen, type TrainDestination } from "../ui/screens/train/TrainScreen";
@@ -113,6 +113,22 @@ export function App() {
   // Where BODY opens: a home-screen shortcut on launch, or a Shift Clock row
   // on TODAY (Drop 2). Cleared whenever the bottom nav is used.
   const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut === "workout" ? null : shortcut);
+  // Only the explicit TODAY meal round trip retains its two screens. Ordinary
+  // primary navigation still resets destinations as before.
+  const [mealOrigin, setMealOrigin] = useState<{ scrollY: number; trigger: HTMLElement | null } | null>(null);
+  const [mealState, setMealState] = useState({ busy: false, dirty: false });
+  const mealInFlight = useRef(false);
+  const updateMealInFlight = useCallback((busy: boolean) => { mealInFlight.current = busy; }, []);
+  const [mealRefreshKey, setMealRefreshKey] = useState(0);
+  const [mealBoundaryReset, setMealBoundaryReset] = useState(0);
+  const mealBodyPosition = useRef(0);
+  const updateMealState = useCallback((state: { busy: boolean; dirty: boolean }) => setMealState(state), []);
+  useEffect(() => {
+    if (!mealOrigin || !mealState.dirty) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [mealOrigin, mealState.dirty]);
   // MORE's capture link opens TODAY with TOOLS expanded, where Capture lives (Drop 2).
   const [todayToolsOpen, setTodayToolsOpen] = useState(false);
   useEffect(() => {
@@ -254,12 +270,14 @@ export function App() {
   }
 
   function openTrain(destination: TrainDestination) {
+    if (!leaveMealJourney()) return;
     setTrainRecordsFocus(null);
     setTrainDestination(destination);
     showTab("TRAIN");
   }
 
   function openPrimaryTab(destination: Tab) {
+    if (!leaveMealJourney()) return;
     setTrainDestination(null);
     setTrainRecordsFocus(null);
     setMoreView("MENU");
@@ -267,6 +285,48 @@ export function App() {
     setTodayToolsOpen(false);
     if (destination === "MORE" && tab === "MORE") setMoreResetKey((key) => key + 1);
     showTab(destination);
+  }
+
+  function leaveMealJourney() {
+    if (!mealOrigin) return true;
+    if (mealInFlight.current) return false;
+    if (mealState.dirty && !window.confirm("Discard unsaved meal details and leave this meal entry?")) return false;
+    setMealOrigin(null);
+    setMealState({ busy: false, dirty: false });
+    // Leaving via ordinary navigation also resets a possibly failed boundary,
+    // including BODY -> TODAY (whose retained boundary otherwise shares a key).
+    setMealBoundaryReset((key) => key + 1);
+    return true;
+  }
+
+  function openBody(target?: BodyFocus) {
+    if (target === "meal") {
+      const origin = { scrollY: window.scrollY, trigger: document.activeElement instanceof HTMLButtonElement ? document.activeElement : document.querySelector<HTMLElement>('[aria-label="Log a meal in BODY"]') };
+      if (mealOrigin) {
+        setMealOrigin(origin);
+        setTab("BODY");
+        window.requestAnimationFrame(() => {
+          window.scrollTo({ top: mealBodyPosition.current, behavior: "instant" });
+          document.getElementById("meal-return")?.focus({ preventScroll: true });
+        });
+        return;
+      }
+      setMealOrigin(origin);
+    } else if (!leaveMealJourney()) return;
+    setBodyFocus(target ?? null);
+    showTab("BODY");
+  }
+
+  function returnFromMeal() {
+    if (!mealOrigin || mealInFlight.current) return;
+    mealBodyPosition.current = window.scrollY;
+    setMealRefreshKey((key) => key + 1);
+    setTab("TODAY");
+    window.requestAnimationFrame(() => {
+      const trigger = mealOrigin.trigger?.isConnected ? mealOrigin.trigger : document.querySelector<HTMLElement>('[aria-label="Log a meal in BODY"]') ?? document.querySelector<HTMLElement>('.shell-nav__item[aria-current="page"]');
+      trigger?.focus({ preventScroll: true });
+      window.scrollTo({ top: mealOrigin.scrollY, behavior: "instant" });
+    });
   }
 
   if (!continuityResolved) {
@@ -287,7 +347,7 @@ export function App() {
           screen. `key={tab}` resets the boundary whenever the tab
           changes, so switching tabs is itself a natural retry, not a
           second dead end next to a working nav. */}
-      <RootErrorBoundary key={tab}>
+      <RootErrorBoundary key={`${mealOrigin ? "TODAY" : tab}:${mealBoundaryReset}`}>
         {/* FEEL-001: the incoming tab arrives in 180 ms (instant with reduced motion). */}
         <div className="tab-enter">
         {/* Intent & Commitment Spine, Drop 02: the only cross-screen
@@ -296,9 +356,11 @@ export function App() {
             rather than deep-linking to the specific Obligation, which would
             require lifting new state through MoreScreen/IntentScreen too. */}
         {/* BACKUP-AUTO-001: one line above TODAY when automatic backup is on and due. */}
-        {tab === "TODAY" && (
+        {(tab === "TODAY" || mealOrigin) && (
+          <div hidden={tab !== "TODAY"}>
           <TodayScreen
             key={todayRefreshKey}
+            mealRefreshKey={mealRefreshKey}
             onWorkEnded={() => setWorkEndedKey((k) => k + 1)}
             onWorkContextChanged={() => setWorkEndedKey((k) => k + 1)}
             // CLEANUP-002: these lines render inside TODAY, under its header.
@@ -317,16 +379,15 @@ export function App() {
               </>
             }
             onViewCommitments={() => {
+              if (!leaveMealJourney()) return;
               setMoreView("MENU");
               showTab("MORE");
             }}
             onOpenTrain={openTrain}
             openToolsOnMount={todayToolsOpen}
-            onOpenBody={(target) => {
-              setBodyFocus(target ?? null);
-              showTab("BODY");
-            }}
+            onOpenBody={openBody}
           />
+          </div>
         )}
         {tab === "TRAIN" && (
           <TrainScreen
@@ -335,7 +396,15 @@ export function App() {
             onDestinationConsumed={() => setTrainDestination(null)}
           />
         )}
-        {tab === "BODY" && <BodyScreen focus={bodyFocus} />}
+        {(tab === "BODY" || mealOrigin) && (
+          <div hidden={tab !== "BODY"}>
+            <BodyScreen key={mealOrigin ? "meal-round-trip" : "body"} focus={bodyFocus}
+              visible={tab === "BODY"}
+              onReturnToToday={mealOrigin ? returnFromMeal : undefined}
+              onMealJourneyInFlightChange={mealOrigin ? updateMealInFlight : undefined}
+              onMealJourneyStateChange={mealOrigin ? updateMealState : undefined} />
+          </div>
+        )}
         {tab === "MORE" && (
           <MoreScreen
             key={moreResetKey}
@@ -367,6 +436,7 @@ export function App() {
         className="topbar-search"
         aria-label="Search everything"
         onClick={() => {
+          if (!leaveMealJourney()) return;
           setMoreView("SEARCH");
           setMoreResetKey((key) => key + 1);
           showTab("MORE");

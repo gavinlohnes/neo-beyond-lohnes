@@ -1,5 +1,70 @@
 # Current checkpoint
 
+Updated 2026-10-08 by Codex, Lead Builder for Product Unification milestone 1.
+This is a handoff, not merge authorization. Exact head and CI are recorded in the linked PR.
+
+## Current objective — complete the meal-logging round trip
+
+- **Authorization:** Gavin explicitly approved this bounded implementation following the Unified
+  Product Blueprint. Product Unification takes priority; VCC-001 is paused, not canceled or
+  superseded. No State Rail implementation or PR #204 integration is authorized.
+- **Risk:** FEATURE UI handoff; conservative PROTECTED review lane because the roadmap records
+  Gavin's explicit priority instruction (no workflow/authority rules changed). Independent exact-head
+  review is required before merge. No primary navigation,
+  doctrine, Engine, application commands, schemas, persistence, backups, dependencies or identity
+  assets changed. BUILD OWNED: small React presentation state over existing canonical meal commands;
+  native confirmation/focus/scroll behavior, no new infrastructure.
+- **Starting state:** fresh `origin/master` = `8035dfbc0011bed03fb668e100aa8794cda4a8e7`;
+  PR #203 is merged and DEV-FLOW-002 adopted. Open PRs #201 and #204 remain untouched.
+- **Builder / branch:** Codex; `codex/unify-meal-round-trip`. Active PR: [#205](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/205).
+- **Scope:** existing TODAY meal entry -> real BODY workflow -> explicit return with TODAY
+  disclosures/position/focus retained; in-memory draft preservation; busy/discard guards; canonical
+  confirmation, undo/correction and totals; near-control errors and duplicate-tap latch.
+- **Exclusions:** new logger/persistence path, Engine/data/backup changes, navigation redesign,
+  VCC-001, prototype changes, deployment and merges.
+- **Acceptance evidence:** 115 targeted browser tests passed across seven files; follow-up
+  browser/canonical nutrition/correction tests: 69 passed, one existing skip across six files
+  (includes the 13 new round-trip cases again). Final repeated-return refinement: all 13
+  round-trip cases pass; architecture, TypeScript/build and whitespace pass.
+  Browser tests reuse installed Chromium through the existing temporary onboarding config, with
+  no assertion or tracked configuration changes. Required full CI will be recorded in the PR.
+- **Screenshots:** `docs/screenshots/unify-meal-round-trip/`, running app at 320/360/412 px,
+  success/undo and returned TODAY; synthetic fixtures only, reduced-motion browser context.
+- **Limitations:** drafts are session memory, not saved records; a supported browser warns on
+  reload/close, but OS termination cannot preserve them. Existing five-second undo window is
+  unchanged; later correction remains in TODAY'S MEALS. Primary tab navigation keeps its existing
+  reset semantics after any needed discard confirmation. Only the existing TODAY meal entry
+  gains this round trip; no new phase action is introduced.
+- **Offline evidence:** built PWA passed offline preset save, canonical logging, TODAY -> BODY
+  -> explicit return with updated totals, and service-worker cold reload with the meal retained.
+- **Next:** confirm green required CI at the final head, obtain independent exact-head review,
+  then owner review. No merge or deployment authorized. No unapproved product boundary is crossed.
+
+## Independent review corrections — PR #205
+
+- Owner supplied a BLOCK review of `16cff0feb46bc80b9b0e8da7e5e5dbfe6a7b7ac7`:
+  P2 same-tick navigation could abandon a pending meal write; P2 post-commit read failures
+  did not recover through explicit return/reopen. The reviewer reported a Forbidden review POST;
+  no GitHub review existed. This handoff records the findings, not a Builder-issued review verdict.
+- Fixes: synchronous BODY in-flight reporting and shell guards; synchronous existing BODY action
+  guards; failed read continuations retried on reopen or through RETRY READINGS. Retry runs only
+  reads, including duplicate/same-food checks, preserving drafts, confirmation and undo.
+- Evidence: three new assertions fail on the blocked head. Fixed tree: 122 browser tests pass
+  across seven files, plus one additional duplicate-check recovery case (21 round-trip cases total);
+  immediate LOG -> all navigation paths,
+  committed-preset/log recovery and explicit retry preserving another draft. Architecture,
+  TypeScript/production build and whitespace pass. Built PWA offline save/log/return and cold
+  reload pass again. Required CI at the new head is pending.
+- The prior BLOCK is not cleared by Builder verification. Next: green exact-head CI and renewed
+  independent review; owner merge approval remains required. No merge or deployment authorized.
+
+## Historical adoption handoff
+
+The following checkpoint is preserved as historical evidence. Its pending-adoption/merge pointers
+are superseded by the verified state above.
+
+# Current checkpoint
+
 Updated 2026-10-08 by Codex, assigned Primary Builder for DEV-FLOW-002 only.
 This is a handoff, not implementation or merge authorization. Read the approved objective brief;
 verify branch/PR/head/CI from Git and GitHub rather than assuming this checkpoint is live state.
