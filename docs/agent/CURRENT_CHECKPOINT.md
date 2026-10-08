@@ -1,6 +1,7 @@
 # Current checkpoint
 
-Updated 2026-10-08 by Codex, assigned Primary Builder for DEV-FLOW-002 only.
+Updated 2026-10-08 by Codex, Primary Builder for CC2-PROTOTYPE-001.
+The current handoff is below; DEV-FLOW-002 adoption notes are retained historical evidence.
 This is a handoff, not implementation or merge authorization. Read the approved objective brief;
 verify branch/PR/head/CI from Git and GitHub rather than assuming this checkpoint is live state.
 
@@ -47,6 +48,28 @@ verify branch/PR/head/CI from Git and GitHub rather than assuming this checkpoin
 - **Authority conflicts:** none unresolved within the approved adoption scope. Historical procedure
   is explicitly superseded for new work only after this adoption merges with owner approval.
 
-## DECISIONS FOR GAVIN
+## Historical adoption handoff
 
-None. Independent Protected review and owner merge approval remain separate steps.
+The adoption review/integration steps above are superseded by the verified merge below.
+
+## Current handoff — CC2-PROTOTYPE-001
+
+- **Verified baseline:** fresh `origin/master` is `8035dfbc0011bed03fb668e100aa8794cda4a8e7`,
+  the merge of adoption PR #203. Its pending integration instructions above are historical;
+  DEV-FLOW-002 is now the workflow authority. This agent performed no merge.
+- **Authorization:** owner-approved, prototype-only Command Center 2.0 visual exploration.
+  FEATURE lane; no authorization for production VCC-001 or protected product changes.
+- **Builder / branch:** Codex; `codex/cc2-prototype-001`. No PR requested or opened.
+- **Durable brief / preview / evidence:**
+  [`prototype/cc2-command-center/README.md`](../../prototype/cc2-command-center/README.md).
+  Three isolated interactive concepts, synthetic status/phase examples and real browser screenshots.
+- **Isolation:** separate Vite entry/config/origin, no production navigation entry, no storage,
+  no live Engine invocation, no dependency changes, no deployment or service-worker registration.
+  Production source, Engine, events, schemas, persistence, backups and user data are unchanged.
+- **Verification:** standalone TypeScript/build, architecture and production build; browser
+  mobile/state/phase/interaction/accessibility/reduced-motion checks documented in the brief.
+  Full existing production test suite was not repeated for this isolated visual exploration.
+- **Next action:** owner reviews A/B/C and chooses the design before any production work.
+  Preserve this branch for handoff; derive its exact head from Git. No integration is authorized.
+  Existing PR #201, historical Drops, Factory state and product decisions remain untouched.
+- **Authority conflicts:** none unresolved in this bounded prototype scope.
