@@ -212,6 +212,7 @@ export function TodayScreen({
   onWorkEnded,
   onWorkContextChanged,
   banners,
+  mealRefreshKey = 0,
 }: {
   onViewCommitments?: () => void;
   onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
@@ -224,6 +225,8 @@ export function TodayScreen({
   onWorkContextChanged?: () => void;
   /** CLEANUP-002: the shell's lines (backup, sweep, handoff, capsule), shown right under the header. */
   banners?: ReactNode;
+  /** Re-read canonical totals after BODY without resetting TODAY's disclosures. */
+  mealRefreshKey?: number;
 } = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
@@ -441,6 +444,10 @@ export function TodayScreen({
     void loadShiftClockSetup();
     return refresh();
   });
+
+  useEffect(() => {
+    if (mealRefreshKey > 0) void refresh();
+  }, [mealRefreshKey]);
 
   useEffect(() => {
     void refresh();

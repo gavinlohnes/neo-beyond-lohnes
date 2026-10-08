@@ -192,6 +192,12 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 ## Queue
 
+**Owner priority 2026-10-08 — Product Unification.** The bounded first milestone is the
+existing TODAY → BODY meal-logging round trip, followed by explicit return with context and
+undo/correction access preserved. It takes priority over VCC-001, which is **paused**, not
+canceled or superseded. No broader redesign, State Rail work, or PR #204 integration is
+authorized by this milestone. Current implementation handoff: `docs/agent/CURRENT_CHECKPOINT.md`.
+
 What gets built next, top first. The builder (see `AGENTS.md`) takes the top item on "let's
 work". Only the owner adds to it. Each objective has one concise durable brief under DEV-FLOW-002
 with authorization, risk lane, scope/exclusions, acceptance evidence, starting commit, Builder,
