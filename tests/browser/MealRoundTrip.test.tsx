@@ -73,8 +73,12 @@ describe("TODAY meal round trip", () => {
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     expect(await db.savedMeals.count()).toBe(0);
     expect(await loggedCount()).toBe(0);
+    window.scrollTo(0, 80);
+    const reopenedOrigin = window.scrollY;
     await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
+    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await expect.poll(() => window.scrollY).toBe(reopenedOrigin);
   });
 
   it("asks before abandoning a draft through primary navigation and respects cancel", async () => {

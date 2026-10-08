@@ -299,7 +299,9 @@ export function App() {
 
   function openBody(target?: BodyFocus) {
     if (target === "meal") {
+      const origin = { scrollY: window.scrollY, trigger: document.activeElement instanceof HTMLButtonElement ? document.activeElement : document.querySelector<HTMLElement>('[aria-label="Log a meal in BODY"]') };
       if (mealOrigin) {
+        setMealOrigin(origin);
         setTab("BODY");
         window.requestAnimationFrame(() => {
           window.scrollTo({ top: mealBodyPosition.current, behavior: "instant" });
@@ -307,7 +309,7 @@ export function App() {
         });
         return;
       }
-      setMealOrigin({ scrollY: window.scrollY, trigger: document.activeElement instanceof HTMLButtonElement ? document.activeElement : document.querySelector<HTMLElement>('[aria-label="Log a meal in BODY"]') });
+      setMealOrigin(origin);
     } else if (!leaveMealJourney()) return;
     setBodyFocus(target ?? null);
     showTab("BODY");

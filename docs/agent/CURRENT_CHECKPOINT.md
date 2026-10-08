@@ -16,7 +16,7 @@ This is a handoff, not merge authorization. Exact head and CI are recorded in th
   native confirmation/focus/scroll behavior, no new infrastructure.
 - **Starting state:** fresh `origin/master` = `8035dfbc0011bed03fb668e100aa8794cda4a8e7`;
   PR #203 is merged and DEV-FLOW-002 adopted. Open PRs #201 and #204 remain untouched.
-- **Builder / branch:** Codex; `codex/unify-meal-round-trip`. Active PR is linked in the GitHub branch/PR handoff.
+- **Builder / branch:** Codex; `codex/unify-meal-round-trip`. Active PR: [#205](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/205).
 - **Scope:** existing TODAY meal entry -> real BODY workflow -> explicit return with TODAY
   disclosures/position/focus retained; in-memory draft preservation; busy/discard guards; canonical
   confirmation, undo/correction and totals; near-control errors and duplicate-tap latch.
@@ -24,7 +24,8 @@ This is a handoff, not merge authorization. Exact head and CI are recorded in th
   VCC-001, prototype changes, deployment and merges.
 - **Acceptance evidence:** 115 targeted browser tests passed across seven files; follow-up
   browser/canonical nutrition/correction tests: 69 passed, one existing skip across six files
-  (includes the 13 new round-trip cases again). Architecture, TypeScript/build and whitespace pass.
+  (includes the 13 new round-trip cases again). Final repeated-return refinement: all 13
+  round-trip cases pass; architecture, TypeScript/build and whitespace pass.
   Browser tests reuse installed Chromium through the existing temporary onboarding config, with
   no assertion or tracked configuration changes. Required full CI will be recorded in the PR.
 - **Screenshots:** `docs/screenshots/unify-meal-round-trip/`, running app at 320/360/412 px,
@@ -36,7 +37,7 @@ This is a handoff, not merge authorization. Exact head and CI are recorded in th
   gains this round trip; no new phase action is introduced.
 - **Offline evidence:** built PWA passed offline preset save, canonical logging, TODAY -> BODY
   -> explicit return with updated totals, and service-worker cold reload with the meal retained.
-- **Next:** open the focused PR, confirm green required CI,
+- **Next:** confirm green required CI at the final head, obtain independent exact-head review,
   then owner review. No merge or deployment authorized. No unapproved product boundary is crossed.
 
 ## Historical adoption handoff
