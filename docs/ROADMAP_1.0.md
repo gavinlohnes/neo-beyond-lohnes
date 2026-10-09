@@ -15,6 +15,12 @@ a night shift.
 
 ## Vision
 
+Current product vision and creative approach: [`PRODUCT_DIRECTION`](PRODUCT_DIRECTION.md).
+Historical build choices and queue entries below remain useful context, not permanent design
+constraints. Builders may propose better outcomes and ambitious alternatives; Gavin approves
+priorities and any locked/Protected amendments before implementation. Favor complete experiences
+rather than automatic micro-milestones; no standing authority to begin unrelated work.
+
 ### Command Center Rules
 
 Owner rulings, 2026-10-03.
@@ -192,14 +198,16 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 ## Queue
 
-**Current owner objective, 2026-10-09 — focused meals, Product Experience Milestone 3.**
-Gavin approved a focused BODY meal presentation: saved-meal LOG leads, manual entry is directly
-available, management/online lookup recede, and all meal draft/recovery/undo/correction/return
-protections remain. Preserve direct BODY logging and four tabs. No new logger, command semantics,
-Engine/storage changes, hydration redesign or progress consolidation. PR #208 merged at
-`97103b5235ff02b07fffdc7d0b5727470f2abcdb`; milestones 1 and 2 below are historical.
-VCC-001 remains paused, not canceled or superseded. Next: this bounded Protected PR and independent
-exact-head review, then owner merge decision; no merge or deployment is authorized.
+**Current owner objective, 2026-10-09 — product direction and creative freedom transition.**
+One Protected governance PR: concise product direction, necessary authority reconciliation and
+continuity. No runtime changes or Delta removal. Smart by design, AI optional replaces the standing
+Delta-advisor requirement; cleanup is a separate future objective, not activated by this transition.
+Independent exact-head review, green required CI and Gavin's merge approval remain required.
+
+**Completed — focused meals, Product Experience Milestone 3.** PR #209 merged at
+`5a021de81d73520c3ed3a32d47ca5e5d85e69a76`. Its scope/evidence remain in the UX register,
+checkpoint and PR; no active meal implementation overlaps this governance objective. VCC-001
+stays paused, not canceled or superseded. Prototype PR #204 remains separate and untouched.
 
 **Historical objective, 2026-10-09 — searchable SYSTEM catalog.** PR #207 is merged at
 `9b2e62417d639eb541b1de47e1b52ff9f5502845`. Gavin approves the bounded 18-entry catalog of
@@ -223,8 +231,9 @@ undo/correction access preserved. It takes priority over VCC-001, which is **pau
 canceled or superseded. No broader redesign, State Rail work, or PR #204 integration is
 authorized by this milestone. Current implementation handoff: `docs/agent/CURRENT_CHECKPOINT.md`.
 
-What gets built next, top first. The builder (see `AGENTS.md`) takes the top item on "let's
-work". Only the owner adds to it. Each objective has one concise durable brief under DEV-FLOW-002
+The Queue preserves owner priorities; it is not standing implementation authorization. Builders
+proactively recommend additions, alternatives and useful next outcomes; Gavin decides priorities
+and approves objectives. Each approved objective has one concise durable brief under DEV-FLOW-002
 with authorization, risk lane, scope/exclusions, acceptance evidence, starting commit, Builder,
 and active PR. Existing approved scope documents may serve as that brief; no duplicate Drop or
 separate authorization PR is required.

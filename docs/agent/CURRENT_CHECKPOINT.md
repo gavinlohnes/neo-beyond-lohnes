@@ -1,6 +1,29 @@
 # Current checkpoint
 
-## Current objective — focused meals, Product Experience Milestone 3
+## Current objective — product direction and creative freedom transition
+
+Gavin explicitly authorized this bounded Protected governance transition on 2026-10-09.
+Freshly fetched master: `5a021de81d73520c3ed3a32d47ca5e5d85e69a76`; PR #209 is merged at
+that commit, so no active meal Builder overlaps this objective. PR #204 is the only open prototype
+PR and is untouched. Older pending meal/catalog pointers below are historical.
+Builder: Codex; branch `codex/product-direction-transition`; active PR pending.
+
+Scope: one concise Product Direction reference and necessary links/authority reconciliation;
+creative independence within approved outcomes, complete experiences, existing leverage gate,
+historical-decision amendment path and smart-by-design/AI-optional direction; classify the new
+product-direction authority as Protected with a focused regression. Preserve DEV-FLOW-002
+review/CI/merge safeguards, locked behavior until amended and all engineering/data protections.
+No product code, Delta removal, dependencies, settings, CI/protection changes, deployments or merges.
+BUILD OWNED concise repository direction; reuse the current workflow and leverage gate.
+Verification: 30 local document links resolve; identified authority conflicts are reconciled;
+CLAUDE's router and the engineering contract are byte-unchanged. Architecture passed (196 files),
+whitespace passed, and all 26 risk-classifier cases passed. The new Product Direction case failed
+before path recognition and passes after it. Changes are governance documents plus the classifier
+path and its regression; production code, dependencies, historical Drops/fixtures and CI stay intact.
+Required CI and independent exact-head review belong in the PR. Independent PASS/BLOCK must be
+recorded in GitHub before owner merge approval. No unrelated objective is activated.
+
+## Historical objective — focused meals, Product Experience Milestone 3
 
 Gavin approved the read-only assessment's bounded Protected recommendation on 2026-10-09.
 Starting freshly fetched master: `97103b5235ff02b07fffdc7d0b5727470f2abcdb`; PRs #205–#208

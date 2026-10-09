@@ -24,6 +24,20 @@ boundaries. Historical references to Drops retain their product scope and eviden
 require the legacy lifecycle for new work. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical
 evidence, not standing implementation authority.
 
+## Product direction and creative freedom — owner ruling, 2026-10-09
+
+[`PRODUCT_DIRECTION`](PRODUCT_DIRECTION.md) records Gavin's current vision and creative approach.
+Historical design choices are informed starting points, not unquestionable truths: Builders may
+recommend replacing them, explain the benefit/tradeoff, and seek a specific owner amendment for
+locked or Protected changes. Until amended, the existing rulings remain binding; ordinary
+unlocked details are resolved within approved objectives. This ruling does not itself change
+four-tab navigation, visual identity rules, Engine authority or runtime behavior.
+
+Smart by design, AI optional supersedes the standing supervised-Delta-advisor assumption.
+Delta's active AI removal is a separately approved future implementation objective; preserve
+useful deterministic intelligence. No Delta removal or new AI capability is implemented here.
+Protected review/CI and owner-controlled merges remain under DEV-FLOW-002.
+
 ## Focused meals — Product Experience Milestone 3, owner ruling, 2026-10-09
 
 Gavin approved the assessed bounded Protected objective: a focused meal presentation within BODY,

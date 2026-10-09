@@ -38,6 +38,7 @@ describe("DEV-FLOW-002 risk guidance", () => {
     "AGENTS.md", "CLAUDE.md", "docs/agent/DEV-FLOW-002.md",
     "docs/agent/BEYOND_ENGINEERING_CONTRACT.md", "docs/agent/drops/VCC-001.md",
     "docs/OPERATOR_INTERFACE_DOCTRINE.md", "docs/UX_DECISIONS.md", "docs/ROADMAP_1.0.md",
+    "docs/PRODUCT_DIRECTION.md",
     ".claude/skills/beyond-drop/SKILL.md", ".claude/rules/engine.md",
     ".github/workflows/pr-verify.yml", "scripts/classify-risk.mjs",
     "scripts/check-architecture-boundaries.mjs", "scripts/factory-drop.mjs",
