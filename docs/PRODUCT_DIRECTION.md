@@ -51,13 +51,15 @@ polishing. **BUILD → USE → LEARN → REFINE → BUILD AGAIN.**
 
 ## Smart by design. AI optional.
 
-Delta's active AI implementation is to be removed through a separately approved cleanup objective.
+Delta is not a required feature or future implementation objective. The owner-approved cleanup
+audit on 2026-10-09 found no active Delta assistant, model integration or AI-specific dependency
+on current master; there is no runtime implementation to remove.
 Embedded language models, chatbots, external AI services and AI subscriptions are not current
 product requirements. Preserve valuable deterministic recommendations, context, baselines,
 analytics, calculations, reminders and explainable interfaces, including capabilities formerly
-associated with Delta. Intelligence must remain evidence-grounded, inspectable, correctable and
+associated with an advisor. Intelligence must remain evidence-grounded, inspectable, correctable and
 subordinate to the operator. Future AI requires a new owner decision; do not retain unnecessary
-active AI infrastructure solely for speculative future use. This transition removes no code.
+active AI infrastructure solely for speculative future use. Preserve useful non-AI infrastructure.
 
 ## Keep collaboration light and safeguards strong
 

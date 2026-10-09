@@ -1,6 +1,38 @@
 # Current checkpoint
 
-## Current objective — product direction and creative freedom transition
+## Current objective — Delta removal and intelligence preservation
+
+Gavin explicitly authorized this bounded Protected cleanup on 2026-10-09. Fresh master:
+`1170a13bbbd96627665087cef203e45d662f3a86`, the verified merge of #210. The meal milestone
+#209 is already merged; only prototype PR #204 is open and stays untouched. Builder: Codex;
+branch `codex/delta-removal`; active cleanup PR will carry exact-head evidence and independent review.
+
+Audit: current tracked production navigation/App/MORE/SYSTEM, runtime source, package manifest and
+lockfile, Vite/PWA/deployment configuration, environment declarations, event/storage types and
+native/legacy restore contracts contain no active Delta assistant, model integration, AI-specific
+prompt/configuration/dependency or Delta storage contract. Mathematical variables named `delta`
+are unrelated. Optional USDA food lookup is non-AI and remains. Local chrono-node/Compromise date
+parsing, MiniSearch retrieval/relevance, advisory composition, baselines, analytics and the canonical
+Engine are useful non-AI capabilities, not deletion targets. No Delta-specific compatibility shim
+is needed; existing legacy importers and native backup/restore remain necessary and unchanged.
+
+Scope: remove misleading active future-cleanup requirements and record the verified intelligence
+strategy in existing documents. No invented runtime deletion, migration, dependency removal or
+replacement abstraction. Production source, data, commands, schemas, backups, tests, packages,
+CI/protections and historical evidence remain unchanged. Leverage: REUSE existing deterministic
+capabilities; REJECT unnecessary replacement infrastructure. Acceptance: preservation regressions,
+architecture/type/build, document consistency, required CI and independent exact-head review.
+Verification: 18 preservation test files passed (331 tests, one existing skip), covering Engine,
+advisory/date/baseline/progression intelligence, canonical nutrition/hydration, meal drafts/recovery,
+SYSTEM, TRAIN and historical restore fixtures. Architecture passed (196 files), TypeScript/build,
+whitespace and 38 local document links passed. Built PWA in an isolated synthetic Chromium profile
+passed offline preset save, exactly-once log, explicit return/focus/reopen, undo, correction and
+cold reload retaining canonical totals. No new tests are needed for documentation-only changes;
+required full CI and independent exact-head review belong in the PR before owner merge approval.
+Existing Chromium-only verification, memory-only drafts, undo windows and bundle warning remain.
+No merge/deployment authorized.
+
+## Historical objective — product direction and creative freedom transition
 
 Gavin explicitly authorized this bounded Protected governance transition on 2026-10-09.
 Freshly fetched master: `5a021de81d73520c3ed3a32d47ca5e5d85e69a76`; PR #209 is merged at

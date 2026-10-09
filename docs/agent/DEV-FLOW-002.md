@@ -92,9 +92,8 @@ and architecture checks. In particular:
 - Existing architecture-layer boundaries and protected compatibility checks remain.
 - BEYOND's distinctive futuristic black/red command-center direction remains; accessibility,
   readable text, adequate controls, contrast, and reduced motion remain binding.
-- Smart by design, AI optional: Delta's active AI implementation is slated for separately
-  approved cleanup, not required future development. Preserve deterministic intelligence and
-  user authority; future AI needs a new owner decision. This governance transition removes no code.
+- Smart by design, AI optional: no required Delta assistant or standing AI implementation objective.
+  Preserve deterministic intelligence and user authority; future AI needs a new owner decision.
 
 The charter neither changes product functionality nor approves future provider/backend, schema,
 Engine, primary-navigation, or AI-autonomy work. Google Drive is a planning archive, not a

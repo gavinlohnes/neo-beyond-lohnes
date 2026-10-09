@@ -19,8 +19,8 @@ must earn recession through evidence; it never earns authority over the operator
   Recommendation, and **NO ACTION REQUIRED** is a successful FIELD state.
 - The system reports and exposes evidence-grounded interpretations; an AI Advisor is not required.
   Prediction is not fact, silence is valid, manual operation remains available, and user authority
-  is absolute. Owner amendment, 2026-10-09: smart by design, AI optional; Delta's active AI cleanup
-  is a separate objective. Preserve deterministic intelligence and the operator's final decision.
+  is absolute. Owner amendment, 2026-10-09: smart by design, AI optional; Delta is not required.
+  Preserve deterministic intelligence and the operator's final decision.
 - History and provenance remain inspectable. Corrections supersede rather than erase.
 
 ## Depth, attention, and control

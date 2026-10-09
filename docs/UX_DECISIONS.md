@@ -38,6 +38,20 @@ Delta's active AI removal is a separately approved future implementation objecti
 useful deterministic intelligence. No Delta removal or new AI capability is implemented here.
 Protected review/CI and owner-controlled merges remain under DEV-FLOW-002.
 
+### Delta cleanup audit — owner-approved objective, 2026-10-09
+
+Gavin separately authorized removing active Delta AI implementation while preserving useful
+intelligence and historical compatibility. Fresh master after #210 contains no Delta assistant
+screen/control, model integration, AI prompt/configuration, AI-specific dependency or Delta-specific
+storage contract. The cleanup therefore corrects active documentation rather than deleting runtime
+code or introducing a migration. The future-cleanup wording above records the earlier ruling;
+no further Delta-removal objective is pending on this audited baseline.
+
+Retain the deterministic Engine, read-only advisory notes, personal baselines, date suggestions,
+analytics, manual workflows and optional USDA food lookup. These are real non-AI capabilities,
+not obsolete assistant infrastructure. Existing records and native/legacy backup support remain
+unchanged; future AI still requires a new owner decision.
+
 ## Focused meals — Product Experience Milestone 3, owner ruling, 2026-10-09
 
 Gavin approved the assessed bounded Protected objective: a focused meal presentation within BODY,
