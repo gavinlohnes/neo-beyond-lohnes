@@ -1,11 +1,10 @@
 # BEYOND Capability Map
 
-Repo-native navigation index into Google Drive's `BEYOND — Research & Reuse Register` and
-`BEYOND — Donor & Experience Program 1.0` (both owner-approved R&D doctrine). This file is a
-pointer/summary, per the Research-to-Build Reuse System's own rule — it does not duplicate full
-research prose, and it is not itself product authority. If this map and the Drive documents it
-points to disagree, the Drive documents (and any later direct owner ruling) win; treat the
-disagreement as something to resolve, not silently pick a side on.
+Repo-native index of prior reuse findings, including archived Google Drive research. It is a
+pointer/summary, not product authority. GitHub's current owner rulings, doctrine, UX decisions
+and approved objective govern implementation under AGENTS.md / DEV-FLOW-002. Drive is a planning
+archive, not competing authority; surface unresolved conflicts rather than silently picking a side.
+Historical capability summaries may lag production code; verify current implementation before reuse.
 
 Purpose: a Builder session should be able to answer "has this problem already been researched,
 and what did the owner already approve?" in under a minute, without searching Drive by hand.
@@ -13,9 +12,9 @@ Per the Reuse Gate this mirrors: routine work should clear in minutes — this f
 what makes that possible for BEYOND specifically, instead of requiring a fresh Drive search
 every time.
 
-Update this file when a Drop's Reuse Gate disposition produces a durable finding worth
-preserving for the next session (the "Post-Drop Reuse Harvest" step in the Research-to-Build
-Reuse System) — not on every Drop, only when it validates or changes something below.
+Use the existing AGENTS.md leverage gate. Update this index only when a useful durable finding
+changes what future Builders should know; the approved brief/PR can otherwise hold the disposition.
+No mandatory Drop harvest, fresh Drive search or parallel research process is required.
 
 ---
 

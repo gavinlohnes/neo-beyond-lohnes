@@ -54,7 +54,7 @@ const buckets = {
 // cannot silently receive Routine guidance. Checkpoint updates alone are ordinary docs.
 const governanceFiles = new Set([
   "AGENTS.md", "CLAUDE.md", "docs/OPERATOR_INTERFACE_DOCTRINE.md",
-  "docs/UX_DECISIONS.md", "docs/ROADMAP_1.0.md", "scripts/classify-risk.mjs",
+  "docs/UX_DECISIONS.md", "docs/ROADMAP_1.0.md", "docs/PRODUCT_DIRECTION.md", "scripts/classify-risk.mjs",
   "scripts/check-architecture-boundaries.mjs",
 ]);
 function isGovernance(f) {

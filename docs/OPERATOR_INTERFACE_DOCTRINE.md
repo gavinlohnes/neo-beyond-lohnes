@@ -17,8 +17,10 @@ must earn recession through evidence; it never earns authority over the operator
 
 - **INFORM → INTERPRET → RECOMMEND → USER DECIDES.** The deterministic Engine owns one primary
   Recommendation, and **NO ACTION REQUIRED** is a successful FIELD state.
-- The system reports; the Advisor interprets. Prediction is not fact, silence is valid, manual
-  operation remains available, and user authority is absolute.
+- The system reports and exposes evidence-grounded interpretations; an AI Advisor is not required.
+  Prediction is not fact, silence is valid, manual operation remains available, and user authority
+  is absolute. Owner amendment, 2026-10-09: smart by design, AI optional; Delta's active AI cleanup
+  is a separate objective. Preserve deterministic intelligence and the operator's final decision.
 - History and provenance remain inspectable. Corrections supersede rather than erase.
 
 ## Depth, attention, and control
@@ -153,6 +155,12 @@ Classify field evidence before acting:
   operator; escalate for explicit owner adjudication before changing constitutional authority.
 
 ## Adjudication and implementation authority
+
+Owner amendment, 2026-10-09: historical layouts and implementation choices may be constructively
+challenged under [`PRODUCT_DIRECTION`](PRODUCT_DIRECTION.md). Ordinary unlocked details may evolve
+within an approved objective. Changes to this doctrine or locked UX decisions require an explicit
+owner ruling and an amendment in the existing source; no separate authorization PR is required.
+This does not automatically repeal current visual rules, navigation decisions or protected behavior.
 
 This doctrine answers **what an interface is allowed to mean**. The Decision Register locks
 specific product/UX adjudications. Code and tests show **what currently exists**. A current

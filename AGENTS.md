@@ -9,13 +9,17 @@ for product/interface doctrine is `docs/OPERATOR_INTERFACE_DOCTRINE.md`; specifi
 and UX adjudications live in `docs/UX_DECISIONS.md`. Doctrine constrains implementation but does
 not itself authorize a feature, campaign, or code change.
 
+[`docs/PRODUCT_DIRECTION.md`](docs/PRODUCT_DIRECTION.md) captures the owner-approved vision and
+creative approach. Contribute research, original ideas, constructive disagreement and complete
+experiences; exercise routine design/engineering judgment within an approved objective.
+
 ## Development workflow
 
 [`docs/agent/DEV-FLOW-002.md`](docs/agent/DEV-FLOW-002.md) is the single current development
 workflow authority after its owner-approved adoption merges. It supersedes legacy procedural
 rules in Drops, Factory records, and skills; product doctrine and engineering invariants remain
-binding. This adoption PR itself is explicitly owner-authorized Protected work and must not merge
-without independent exact-head review, green required CI, and owner merge approval.
+binding. Protected work requires independent exact-head review, green required CI and owner merge
+approval; the adoption's historical brief is not the current objective.
 
 - Builders are provider-neutral: Claude Code, Codex, GPT Work, or another qualified agent may
   implement an approved objective. One active Builder owns each objective.
@@ -89,13 +93,18 @@ matching file in `.claude/rules/` (Claude loads these automatically; other agent
 by hand). The correctness-critical invariants every agent must preserve are in
 `docs/agent/BEYOND_ENGINEERING_CONTRACT.md`.
 
-## Immutable doctrine
+## Product safeguards and decision revisions
 
 Read and preserve `docs/OPERATOR_INTERFACE_DOCTRINE.md`; it is the constitutional source rather
 than this navigation file. Prefer executable/derived repository truth over duplicated manually
 maintained values. When a diagnostic, version, schema identifier, build identifier, or similar
 fact can be derived from its authoritative source, do not create another independent source of
 truth without justification.
+
+Challenge historical assumptions with evidence and a better option. Unlocked, reversible details
+may evolve within approved scope; a locked decision or Protected boundary needs Gavin's specific
+approval and an amendment in its existing source. Do not treat every routine presentation choice
+as constitutional, or use creative freedom as standing approval for protected changes.
 
 ## The leverage gate
 
@@ -107,6 +116,11 @@ problem?** Classify the decision:
 
 Do not add dependencies simply because they're convenient. Do not hand-build commodity
 infrastructure merely for purity.
+
+Research to the depth the decision warrants; reuse existing work and proven application patterns.
+Check license/attribution, privacy/security, compatibility, performance and lifetime maintenance
+cost. Respect access controls and proprietary assets. Record a useful disposition in the existing
+brief/PR; no separate research gate or mandatory report is needed.
 
 ## Commands
 
@@ -138,6 +152,7 @@ Stop on unresolved conflicts.
 
 ## Pointers
 
+- `docs/PRODUCT_DIRECTION.md` — product vision and creative approach; no implementation authority.
 - `docs/agent/DEV-FLOW-002.md` — current workflow authority; risk lanes, review, and owner control.
 - `docs/agent/CURRENT_CHECKPOINT.md` — the handoff note; read first, update last.
 - `docs/ROADMAP_1.0.md` — the build plan and the **Queue**; start here on "let's work".
