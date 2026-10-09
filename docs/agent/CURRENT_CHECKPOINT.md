@@ -39,7 +39,9 @@ Nine focused-query regressions cover empty, matching and no-result searches at 3
 closure after one press, stable trigger focus and clean reopen. Six populated cases failed before
 the fix; all 85 targeted cases now pass, with architecture/TypeScript/build and whitespace green.
 The review's unrelated meal-test readiness race is bounded to initial LOG availability: wait
-before the unchanged same-tick dispatch sequence; no meal production code or assertion changed.
+before the unchanged same-tick dispatch sequence. CI also exposed the explicit-read-retry
+test matching an earlier error while retry was pending; require its specific failure and enabled
+control before restoring successful reads. No meal production code changed or assertions weakened.
 Built PWA offline one-Escape/focus/reopen checks passed for all nine cases, alongside canonical
 logging/return, record search, water/undo and cold reload. Corrected head and required CI belong
 in PR #208. The prior BLOCK is not
