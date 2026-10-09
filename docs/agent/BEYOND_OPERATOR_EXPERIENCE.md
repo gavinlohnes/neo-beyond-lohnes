@@ -21,7 +21,7 @@ only on deliberate inspection.
   the owner-approved merge of BODY Daily Health Record PR #212.
 - **Builder:** Codex.
 - **Branch:** `codex/beyond-design-system`.
-- **Active PR:** pending.
+- **Active PR:** [#213](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/213).
 - **Overlap:** prototype PR #204 remains an isolated laboratory and is not modified or integrated.
 
 ## Experience contract
