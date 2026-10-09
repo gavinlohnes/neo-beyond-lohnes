@@ -127,6 +127,7 @@ describe("TODAY meal round trip", () => {
       await seedMeal();
       const screen = await render(<App />);
       await openMeal(screen);
+      await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeEnabled();
       const original = db.events.add.bind(db.events);
       let release!: () => void;
       const gate = new Promise<void>((resolve) => { release = resolve; });

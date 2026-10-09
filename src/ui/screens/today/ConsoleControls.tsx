@@ -49,6 +49,14 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenTools, onOpenDe
     </div>
     {open && <dialog ref={dialog} className="console-system" aria-labelledby="console-system-title" aria-describedby="console-system-description"
       onCancel={(event) => { event.preventDefault(); close(); }}
+      onKeyDownCapture={(event) => {
+        if (event.key !== "Escape") return;
+        // A populated native search consumes Escape to clear itself before
+        // dialog cancel. Dismiss the modal through its existing focus path.
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+      }}
       onKeyDown={(event) => {
         if (event.key !== "Tab") return;
         const controls = [...event.currentTarget.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled)")];

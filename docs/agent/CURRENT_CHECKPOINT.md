@@ -19,8 +19,8 @@ Acceptance: every destination and all four tabs accessible; navigation/search pe
 writes; alias/empty/clear behavior; destination/focus return; guarded cancellation and recovery;
 canonical exactly-once meal logging and workout continuity; mobile 320/360/412 px and constrained
 keyboard space; architecture, build, proportional regression and required CI. Verification: 76 targeted cases passed; final full suite 210 files / 2,201 passed / one existing
-skip; architecture, TypeScript/production build and whitespace passed. Thirty-two new tests
-(25 browser, seven discovery cases) cover the catalog and real journey safeguards. Built PWA
+skip; architecture, TypeScript/production build and whitespace passed. Forty-one new tests
+(34 browser, seven discovery cases) cover the catalog and real journey safeguards. Built PWA
 offline passed preset creation/log, cold reload, catalog/aliases, meal return, History, separate
 record search, water/undo and focus return. Ten actual synthetic-fixture screenshots are in
 `docs/screenshots/system-catalog-m2/`. A constrained-height regression failed before chrome
@@ -31,6 +31,20 @@ Required CI/exact head are recorded in the PR. Chromium-only automation, memory-
 existing undo windows and the existing bundle warning remain; no physical/Safari/screen-reader
 certification is claimed. Next: finish verification, independent exact-head review,
 then owner review. No merge or deployment authorized.
+
+Independent-review follow-up, 2026-10-09: Gavin authorized correction of the P2 BLOCK at
+`75c5b7c73a62686f26003eaf7ca372a9f89e41f8`. Dialog capture prevents native search Escape
+from clearing a populated query before dismissal; the existing close/focus path is reused.
+Nine focused-query regressions cover empty, matching and no-result searches at 320/360/412 px,
+closure after one press, stable trigger focus and clean reopen. Six populated cases failed before
+the fix; all 85 targeted cases now pass, with architecture/TypeScript/build and whitespace green.
+The review's unrelated meal-test readiness race is bounded to initial LOG availability: wait
+before the unchanged same-tick dispatch sequence; no meal production code or assertion changed.
+Built PWA offline one-Escape/focus/reopen checks passed for all nine cases, alongside canonical
+logging/return, record search, water/undo and cold reload. Corrected head and required CI belong
+in PR #208. The prior BLOCK is not
+independent approval of the corrected head; renewed exact-head review is required before owner
+approval. No further milestone, merge or deployment authorized.
 
 ## Historical objective — Command Console production milestone 1
 

@@ -150,6 +150,36 @@ describe("production SYSTEM catalog", () => {
   });
 
   for (const width of [320, 360, 412]) {
+    for (const queryText of ["", "history", "nonexistent-tool"]) {
+      it(`closes SYSTEM with one Escape from the focused ${queryText || "empty"} search at ${width}px`, async () => {
+        await page.viewport(width, 800);
+        const screen = await render(<App />);
+        await open(screen);
+        const query = screen.getByRole("searchbox", { name: "Find a capability" });
+        await query.fill(queryText);
+        await expect.element(query).toHaveValue(queryText);
+        await expect.poll(() => document.activeElement).toBe(query.element());
+        if (queryText === "history") {
+          await expect.element(screen.getByText("1 capability", { exact: true })).toBeVisible();
+        } else if (queryText) {
+          await expect.element(screen.getByText("No matching capability. Clear the search to browse.")).toBeVisible();
+        } else {
+          await expect.element(screen.getByText("18 capabilities", { exact: true })).toBeVisible();
+        }
+        // Real keyboard input exercises the native search-field Escape default.
+        await userEvent.keyboard("{Escape}");
+        await expect.poll(() => document.querySelector("dialog[open]")).toBeNull();
+        await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Open SYSTEM");
+        await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+        expect(document.activeElement?.getAttribute("aria-label")).toBe("Open SYSTEM");
+        await open(screen);
+        await expect.element(query).toHaveValue("");
+        await expect.element(screen.getByText("18 capabilities", { exact: true })).toBeVisible();
+      });
+    }
+  }
+
+  for (const width of [320, 360, 412]) {
     it(`supports touch, keyboard and readable layout at ${width}px`, async () => {
       await page.viewport(width, 800);
       const screen = await render(<App />);
