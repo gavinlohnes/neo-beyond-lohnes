@@ -1,6 +1,54 @@
 # Current checkpoint
 
-## Current objective — Command Console production milestone 1
+## Current objective — searchable SYSTEM catalog milestone 2
+
+Owner authorization: Gavin's bounded implementation instruction, 2026-10-09; Protected navigation
+integration. Starting freshly fetched master: `9b2e62417d639eb541b1de47e1b52ff9f5502845`, merged
+PR #207. Builder: Codex, sole Lead Builder; branch `codex/system-catalog-m2`; active PR [#208](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/208).
+PR #204 is the only existing open PR and remains untouched. Prior milestone handoffs below are
+historical; their pending review/merge pointers do not describe current master.
+
+Scope: the approved 18 existing destinations, browsable groups and local names/aliases in SYSTEM;
+existing App navigation handlers and MORE subviews; separate record search. BUILD OWNED small
+navigation metadata; USE PLATFORM native dialog/input/buttons. No new dependency, storage,
+commands, Engine/schema/backup changes, tab replacement, prototype integration or unrelated work.
+Keep meal drafts, synchronous guards, canonical logging/undo/correction, read recovery, explicit
+return, workout continuity, accessibility and offline behavior. VCC-001 stays paused.
+
+Acceptance: every destination and all four tabs accessible; navigation/search performs no domain
+writes; alias/empty/clear behavior; destination/focus return; guarded cancellation and recovery;
+canonical exactly-once meal logging and workout continuity; mobile 320/360/412 px and constrained
+keyboard space; architecture, build, proportional regression and required CI. Verification: 76 targeted cases passed; final full suite 210 files / 2,201 passed / one existing
+skip; architecture, TypeScript/production build and whitespace passed. Forty-one new tests
+(34 browser, seven discovery cases) cover the catalog and real journey safeguards. Built PWA
+offline passed preset creation/log, cold reload, catalog/aliases, meal return, History, separate
+record search, water/undo and focus return. Ten actual synthetic-fixture screenshots are in
+`docs/screenshots/system-catalog-m2/`. A constrained-height regression failed before chrome
+refinement and now keeps a full matching result visible at 320/360/412 px with 420px height.
+Final label audit distinguishes REVIEW's recommendation/decision/rating ledger from Weekly's
+progress views; eight affected discovery/destination cases, build and offline PWA passed again.
+Required CI/exact head are recorded in the PR. Chromium-only automation, memory-only drafts,
+existing undo windows and the existing bundle warning remain; no physical/Safari/screen-reader
+certification is claimed. Next: finish verification, independent exact-head review,
+then owner review. No merge or deployment authorized.
+
+Independent-review follow-up, 2026-10-09: Gavin authorized correction of the P2 BLOCK at
+`75c5b7c73a62686f26003eaf7ca372a9f89e41f8`. Dialog capture prevents native search Escape
+from clearing a populated query before dismissal; the existing close/focus path is reused.
+Nine focused-query regressions cover empty, matching and no-result searches at 320/360/412 px,
+closure after one press, stable trigger focus and clean reopen. Six populated cases failed before
+the fix; all 85 targeted cases now pass, with architecture/TypeScript/build and whitespace green.
+The review's unrelated meal-test readiness race is bounded to initial LOG availability: wait
+before the unchanged same-tick dispatch sequence. CI also exposed the explicit-read-retry
+test matching an earlier error while retry was pending; require its specific failure and enabled
+control before restoring successful reads. No meal production code changed or assertions weakened.
+Built PWA offline one-Escape/focus/reopen checks passed for all nine cases, alongside canonical
+logging/return, record search, water/undo and cold reload. Corrected head and required CI belong
+in PR #208. The prior BLOCK is not
+independent approval of the corrected head; renewed exact-head review is required before owner
+approval. No further milestone, merge or deployment authorized.
+
+## Historical objective — Command Console production milestone 1
 
 Gavin authorized this bounded Protected milestone and explicitly amended the placement rule for
 persistent WATER/MEAL/SYSTEM controls (UX Decision Register, 2026-10-08). Builder: Codex, sole

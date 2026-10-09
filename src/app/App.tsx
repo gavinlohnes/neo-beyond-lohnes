@@ -3,7 +3,7 @@ import { useRegisterSW } from "virtual:pwa-register/react";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import { TrainScreen, type TrainDestination } from "../ui/screens/train/TrainScreen";
 import { BodyScreen } from "../ui/screens/body/BodyScreen";
-import { MoreScreen } from "../ui/screens/more/MoreScreen";
+import { MoreScreen, type MoreView } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
@@ -140,7 +140,7 @@ export function App() {
   const [trainDestination, setTrainDestination] = useState<TrainDestination | null>(shortcut === "workout" ? "WORKOUT" : null);
   // FIND-001: a LIFT/PR search result opens TRAIN → RECORDS at that lift; the top-bar icon opens SEARCH.
   const [trainRecordsFocus, setTrainRecordsFocus] = useState<string | null>(null);
-  const [moreView, setMoreView] = useState<"MENU" | "SEARCH">("MENU");
+  const [moreView, setMoreView] = useState<MoreView>("MENU");
   const [continuityResolved, setContinuityResolved] = useState(false);
 
   useEffect(() => {
@@ -270,14 +270,15 @@ export function App() {
   }
 
   function openTrain(destination: TrainDestination) {
-    if (!leaveMealJourney()) return;
+    if (!leaveMealJourney()) return false;
     setTrainRecordsFocus(null);
     setTrainDestination(destination);
     showTab("TRAIN");
+    return true;
   }
 
   function openPrimaryTab(destination: Tab) {
-    if (!leaveMealJourney()) return;
+    if (!leaveMealJourney()) return false;
     setTrainDestination(null);
     setTrainRecordsFocus(null);
     setMoreView("MENU");
@@ -285,6 +286,7 @@ export function App() {
     setTodayToolsOpen(false);
     if (destination === "MORE" && tab === "MORE") setMoreResetKey((key) => key + 1);
     showTab(destination);
+    return true;
   }
 
   function leaveMealJourney() {
@@ -309,12 +311,13 @@ export function App() {
           window.scrollTo({ top: mealBodyPosition.current, behavior: "instant" });
           document.getElementById("meal-return")?.focus({ preventScroll: true });
         });
-        return;
+        return true;
       }
       setMealOrigin(origin);
-    } else if (!leaveMealJourney()) return;
+    } else if (!leaveMealJourney()) return false;
     setBodyFocus(target ?? null);
     showTab("BODY");
+    return true;
   }
 
   function returnFromMeal() {
@@ -387,11 +390,21 @@ export function App() {
             openToolsOnMount={todayToolsOpen}
             onOpenBody={openBody}
             onOpenSystemDestination={(destination) => {
-              openPrimaryTab(destination);
+              if (destination.kind === "body") return openBody(destination.focus);
+              if (destination.kind === "workout") return openTrain("WORKOUT");
+              if (destination.kind === "workspace") {
+                if (!openPrimaryTab(destination.tab)) return false;
+              } else {
+                if (!leaveMealJourney()) return false;
+                setMoreView(destination.view);
+                setMoreResetKey((key) => key + 1);
+                showTab("MORE");
+              }
               window.requestAnimationFrame(() => {
                 const heading = document.querySelector<HTMLElement>(".screen h1");
                 if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
               });
+              return true;
             }}
           />
           </div>

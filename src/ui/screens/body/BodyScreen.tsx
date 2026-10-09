@@ -436,7 +436,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   // DROP 0: re-read after a 16:30 rollover; form inputs are separate state and survive.
   useDayRolloverRefresh(refresh);
 
-  // Drop 7: bring a home-screen shortcut's destination into view once it
+  // Bring a shortcut/catalog destination into view once it
   // has rendered (BODY and the quit tracker load asynchronously).
   useEffect(() => {
     if (!focus || !visible || (onReturnToToday && mealPositioned.current)) return;
@@ -447,8 +447,8 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
       if (el) {
         el.scrollIntoView({ block: "start" });
         if (onReturnToToday) document.getElementById("meal-return")?.focus({ preventScroll: true });
-        else if (focus === "water" && document.activeElement === document.body) {
-          el.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus({ preventScroll: true });
+        else if (document.activeElement === document.body) {
+          el.querySelector<HTMLElement>("button:not(:disabled), input:not(:disabled)")?.focus({ preventScroll: true });
         }
         mealPositioned.current = true;
         return;

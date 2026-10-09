@@ -45,6 +45,8 @@ const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 // it can't drift again.
 const DATA_SCHEMA = db.verno;
 
+export type MoreView = "MENU" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES";
+
 export function MoreScreen({
   onOpenCapture,
   initialView = "MENU",
@@ -52,16 +54,14 @@ export function MoreScreen({
   onOpenMeal,
 }: {
   onOpenCapture?: () => void;
-  /** FIND-001: the top-bar search icon opens MORE straight at SEARCH. */
-  initialView?: "MENU" | "SEARCH";
+  /** Existing subviews can be opened by SYSTEM; the top-bar icon still opens SEARCH. */
+  initialView?: MoreView;
   /** FIND-001: a LIFT or PR result opens TRAIN → RECORDS at that lift's curve. */
   onOpenRecords?: (exerciseId: string) => void;
   /** FIND-001: a MEAL result opens BODY's meal entry. */
   onOpenMeal?: () => void;
 } = {}) {
-  const [view, setView] = useState<
-    "MENU" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES"
-  >(initialView);
+  const [view, setView] = useState<MoreView>(initialView);
   // FIND-001: a NOTE or DAY result opens HISTORY with that day open.
   const [historyFocusDayId, setHistoryFocusDayId] = useState<string | null>(null);
   // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by

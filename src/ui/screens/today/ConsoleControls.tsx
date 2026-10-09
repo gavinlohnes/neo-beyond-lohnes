@@ -1,21 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import { Droplets, Utensils, Layers, ArrowUpRight } from "lucide-react";
 import { LineIcon } from "../../icons/LineIcon";
-import { Icon } from "../../icons/Icon";
+import { findCapabilities, type SystemDestination } from "../../systemCatalog";
 import "./console.css";
 
-type Destination = "TRAIN" | "BODY" | "MORE";
 
 /** Navigation only: all logging and execution stay in existing workspaces. */
 export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenTools, onOpenDestination, busy = false, isInFlight }: {
   onOpenWater?: (() => void) | undefined;
   onOpenMeal?: (() => void) | undefined;
   onOpenTools: () => void;
-  onOpenDestination?: ((destination: Destination) => void) | undefined;
+  onOpenDestination?: ((destination: SystemDestination) => boolean) | undefined;
   busy?: boolean;
   isInFlight: () => boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const matches = findCapabilities(query);
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const restoreTrigger = useRef(true);
@@ -42,15 +43,23 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenTools, onOpenDe
       <button type="button" disabled={busy || !onOpenMeal} onClick={() => { if (!isInFlight()) onOpenMeal?.(); }} aria-label="Log a meal in BODY">
         <LineIcon icon={Utensils} /><span>MEAL</span>
       </button>
-      <button type="button" ref={trigger} disabled={busy} onClick={() => { if (!isInFlight()) setOpen(true); }} aria-label="Open SYSTEM" aria-haspopup="dialog" aria-expanded={open}>
+      <button type="button" ref={trigger} disabled={busy} onClick={() => { if (!isInFlight()) { setQuery(""); setOpen(true); } }} aria-label="Open SYSTEM" aria-haspopup="dialog" aria-expanded={open}>
         <LineIcon icon={Layers} /><span>SYSTEM</span>
       </button>
     </div>
     {open && <dialog ref={dialog} className="console-system" aria-labelledby="console-system-title" aria-describedby="console-system-description"
       onCancel={(event) => { event.preventDefault(); close(); }}
+      onKeyDownCapture={(event) => {
+        if (event.key !== "Escape") return;
+        // A populated native search consumes Escape to clear itself before
+        // dialog cancel. Dismiss the modal through its existing focus path.
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+      }}
       onKeyDown={(event) => {
         if (event.key !== "Tab") return;
-        const controls = [...event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")];
+        const controls = [...event.currentTarget.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled)")];
         const first = controls[0], last = controls.at(-1);
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
@@ -59,18 +68,36 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenTools, onOpenDe
         <h2 id="console-system-title" className="card-title">SYSTEM</h2>
         <button type="button" className="chip" onClick={() => close()} aria-label="Close SYSTEM" autoFocus>CLOSE</button>
       </header>
-      <p id="console-system-description" className="meta">Choose a workspace. Nothing starts or logs until you decide.</p>
-      <button type="button" className="console-destination" onClick={() => { close(false); onOpenTools(); }}>
-        <Icon name="mission" size={24} /><span><strong>TODAY TOOLS</strong><span>Check-in, work context and daily controls</span></span><LineIcon icon={ArrowUpRight} />
-      </button>
-      {([
-        ["TRAIN", "Workouts, recovery and records", "train"],
-        ["BODY", "Nutrition, water, sleep and bodyweight", "body"],
-        ["MORE", "History, planning, insights and backups", "more"],
-      ] as const).map(([destination, description, icon]) => <button key={destination} type="button" className="console-destination" disabled={!onOpenDestination}
-        onClick={() => { close(false); onOpenDestination?.(destination); }}>
-        <Icon name={icon} size={24} /><span><strong>{destination}</strong><span>{description}</span></span><LineIcon icon={ArrowUpRight} />
-      </button>)}
+      <p id="console-system-description" className="meta">Open existing tools. Nothing starts or logs automatically.</p>
+      <div className="console-catalog-search">
+        <label htmlFor="console-capability-query">Find a capability</label>
+        <div>
+          <input id="console-capability-query" className="input" type="search" value={query} placeholder="Water, history, schedule…"
+            onChange={(event) => setQuery(event.target.value)} />
+          <button type="button" className="chip" disabled={!query} onClick={() => {
+            setQuery(""); document.getElementById("console-capability-query")?.focus();
+          }}>CLEAR</button>
+        </div>
+      </div>
+      <p className="meta" role="status" aria-live="polite">{matches.length ? `${matches.length} ${matches.length === 1 ? "capability" : "capabilities"}` : "No matching capability. Clear the search to browse."}</p>
+      <div className="console-catalog-results">
+      {(["Workspaces", "Daily actions", "Training and planning", "Records"] as const).map((group) => {
+        const entries = matches.filter((entry) => entry.group === group);
+        if (!entries.length) return null;
+        return <section key={group} aria-label={group}>
+          <h3 className="section-label">{group}</h3>
+          {entries.map((entry) => <button key={entry.label} type="button" className="console-destination"
+            disabled={entry.destination.kind !== "tools" && !onOpenDestination}
+            onClick={() => {
+              if (isInFlight()) return;
+              if (entry.destination.kind === "tools") { close(false); onOpenTools(); }
+              else if (onOpenDestination?.(entry.destination)) close(false);
+            }}>
+            <span><strong>{entry.label}</strong><span>{entry.description}</span></span><LineIcon icon={ArrowUpRight} />
+          </button>)}
+        </section>;
+      })}
+      </div>
     </dialog>}
   </>;
 }

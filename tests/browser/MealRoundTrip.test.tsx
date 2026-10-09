@@ -127,6 +127,7 @@ describe("TODAY meal round trip", () => {
       await seedMeal();
       const screen = await render(<App />);
       await openMeal(screen);
+      await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeEnabled();
       const original = db.events.add.bind(db.events);
       let release!: () => void;
       const gate = new Promise<void>((resolve) => { release = resolve; });
@@ -264,7 +265,9 @@ describe("TODAY meal round trip", () => {
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "RETRY READINGS" })).toBeVisible();
     await screen.getByRole("button", { name: "RETRY READINGS" }).click();
-    await expect.element(screen.getByRole("alert")).toHaveTextContent("Could not refresh");
+    // Distinguish this failed retry from the earlier post-commit refresh error.
+    await expect.element(screen.getByRole("alert")).toHaveTextContent("Could not refresh the meal readings. Retry readings without saving or logging again.");
+    await expect.element(screen.getByRole("button", { name: "RETRY READINGS" })).toBeEnabled();
     read.mockRestore();
     await screen.getByRole("button", { name: "RETRY READINGS" }).click();
     await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();

@@ -59,6 +59,7 @@ import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
 import { RecommendationCard } from "./RecommendationCard";
 import { ConsoleControls } from "./ConsoleControls";
+import type { SystemDestination } from "../../systemCatalog";
 import {
   startDay,
   ensureActiveDay,
@@ -219,7 +220,7 @@ export function TodayScreen({
   onViewCommitments?: () => void;
   onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
   onOpenBody?: (target?: BodyFocus) => void;
-  onOpenSystemDestination?: (destination: "TRAIN" | "BODY" | "MORE") => void;
+  onOpenSystemDestination?: (destination: SystemDestination) => boolean;
   /** Drop 2: open with TOOLS expanded (MORE's capture link lands in it). */
   openToolsOnMount?: boolean;
   /** NOTES-HANDOFF-001: told after MARK WORK ENDED succeeds, so the shell can ask for a handoff note. */
