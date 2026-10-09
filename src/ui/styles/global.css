@@ -2749,15 +2749,14 @@ button:not(:disabled):not(.btn-primary):not(.btn-danger):active {
    using the existing neutral BODY action budget and self-hosted typography. */
 .body-field .health-overview { margin: 0 0 16px; }
 .body-field .health-day { margin: 0 0 10px; }
-.body-field .health-nutrition { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 12px 0; border-block: 1px solid var(--border-strong); }
-.body-field .health-nutrition .tool-label { margin: 0 0 4px; }
-.body-field .health-number { font-family: var(--font-display); font-size: clamp(40px, 12vw, 52px); font-weight: 700; line-height: 1.1; margin: 0 0 8px; overflow-wrap: anywhere; }
-.body-field .health-number > span:last-child { font-family: var(--font-mono); font-size: 16px; color: var(--text-2); font-weight: 400; }
-.body-field .health-nutrition .meta { margin: 0; }
-.body-field .health-readings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; padding: 12px 0; }
-.body-field .health-readings .tool-label { margin: 0 0 4px; }
-.body-field .health-readings .meta { margin: 4px 0 0; }
-.body-field .health-reading { font-family: var(--font-display); font-size: 24px; line-height: 1.25; margin: 0; font-weight: 600; }
+.readout-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; padding: 12px 0; }
+.readout-grid--primary { gap: 16px; border-block: 1px solid var(--border-strong); }
+.readout .tool-label { margin: 0 0 4px; }
+.readout__value, .body-field .health-reading { font-family: var(--font-display); font-size: 24px; line-height: 1.25; margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.readout-grid--primary .readout__value { font-size: clamp(40px, 12vw, 52px); font-weight: 700; line-height: 1.1; margin-bottom: 8px; }
+.readout-grid--primary .readout__value > span:last-child { font-family: var(--font-mono); font-size: 16px; color: var(--text-2); font-weight: 400; }
+.readout__detail { margin: 4px 0 0; }
+.readout-grid--primary .readout__detail { margin: 0; }
 .body-field .health-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0 24px; }
 .body-field .health-actions button:last-child { grid-column: 1 / -1; }
 .body-field .health-record { margin: 0 0 16px; }
@@ -2772,7 +2771,7 @@ button:not(:disabled):not(.btn-primary):not(.btn-danger):active {
 .body-field .health-progress h3 { margin: 0 0 8px; }
 .body-field .health-progress > details { margin: 8px 0; }
 @media (min-width: 600px) {
-  .body-field .health-readings { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .body-field .readout-grid:not(.readout-grid--primary) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 .body-field .health-meal-details { margin-bottom: 8px; }

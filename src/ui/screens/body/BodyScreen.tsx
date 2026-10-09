@@ -5,6 +5,7 @@ import { HoldButton } from "../../components/HoldButton";
 import { useUndoOpen, useUndoWindow } from "../../hooks/useUndoWindow";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { OperatorHeader } from "../../components/OperatorHeader";
 import { Icon } from "../../icons/Icon";
 import type { BeyondDay, HydrationEntry, NutritionTargets, SavedMeal } from "../../../domain/common/types";
 import {
@@ -1436,10 +1437,9 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
 
   return (
     <div className={`screen fade-in body-field${mealFocused ? " body-meals" : ""}`}>
-      <div className="field-header">
-        <Icon name="body" size={22} />
-        <h1 id="meal-surface-heading" tabIndex={-1} className="eyebrow">{mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // DAILY RECORD"}</h1>
-      </div>
+      <OperatorHeader destination="body" headingId="meal-surface-heading" focusable>
+        {mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // DAILY RECORD"}
+      </OperatorHeader>
       {!mealsVisible && !progressOpen && (readingsReady ? <HealthOverview day={day}
         calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries}
         weight={weightHistory} mealEntries={mealEntries}

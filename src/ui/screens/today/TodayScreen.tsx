@@ -13,6 +13,7 @@ import type {
 } from "../../../domain/common/types";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
+import { OperatorHeader } from "../../components/OperatorHeader";
 import { SignalRow } from "../../components/SignalRow";
 import { CommandSurface } from "../../components/CommandSurface";
 import { deriveAttentionPlan, isInAttention } from "./attentionPolicy";
@@ -1916,10 +1917,7 @@ export function TodayScreen({
           pilot "mission" glyph TODAY's nav tab already uses and a
           closing structural rule, so the screen opens on a real
           instrument header instead of one quiet line of text. */}
-      <div className="field-header">
-        <Icon name="mission" size={22} />
-        <h1 className="eyebrow">BEYOND // TODAY</h1>
-      </div>
+      <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
 
       <ConsoleControls
         busy={busy}

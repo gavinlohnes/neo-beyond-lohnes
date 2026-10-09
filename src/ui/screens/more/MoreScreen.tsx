@@ -26,6 +26,7 @@ import { QuitHabitSettings } from "./QuitHabitSettings";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { Icon } from "../../icons/Icon";
+import { OperatorHeader } from "../../components/OperatorHeader";
 import {
   getCheckInReminderPreference,
   requestCheckInNotificationPermission,
@@ -424,10 +425,7 @@ export function MoreScreen({
           closing structural rule, so all four destinations open the
           same way. No IA change: still the exact same MENU view, same
           heading text/class. */}
-      <div className="field-header">
-        <Icon name="more" size={22} />
-        <h1 className="eyebrow">MORE // SYSTEM</h1>
-      </div>
+      <OperatorHeader destination="more">MORE // SYSTEM</OperatorHeader>
 
       {/* FIELD ALPHA Phase 4B: reorganized by functional meaning
           (OPERATIONS / RECORDS / SYSTEM) rather than historical screen

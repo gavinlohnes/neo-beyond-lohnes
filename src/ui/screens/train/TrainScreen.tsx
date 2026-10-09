@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { haptic } from "../../feel/haptics";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
+import { OperatorHeader } from "../../components/OperatorHeader";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { RecordsList } from "./RecordsList";
 import { GymMode } from "./GymMode";
@@ -867,10 +868,7 @@ export function TrainScreen({
           tagline follows — TRAIN's identity is stable across sessions
           (unlike TODAY's own moment-to-moment Engine truth), so a fixed
           statement of what TRAIN is fits here without inventing data. */}
-      <div className="field-header">
-        <Icon name="train" size={22} />
-        <h1 ref={headingRef} tabIndex={-1} className="eyebrow">BEYOND // TRAIN</h1>
-      </div>
+      <OperatorHeader destination="train" headingRef={headingRef} focusable>BEYOND // TRAIN</OperatorHeader>
 
       <ConfirmPanel />
 

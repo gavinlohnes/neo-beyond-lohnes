@@ -97,6 +97,30 @@ Every later implementation stage must prove that it preserves:
 Each production stage receives its own bounded brief and owner-approved Protected scope before code.
 Do not treat this sequence as permission to implement all stages at once.
 
+## Active stage 2 brief — shared shell and primitives
+
+Gavin approved this bounded Protected objective on 2026-10-09 after PR #213 merged. Starting
+commit: `61b27232881f246c3e0038c9a8b1492a76b3dace`. Builder: Codex; branch
+`codex/operator-shell-primitives`; PR pending.
+
+Scope is presentation-only extraction of patterns already proven in BODY: one shared primary-
+surface identity frame and a narrowly constrained read-only fact matrix. Existing primary screens
+may adopt the identity frame only where it preserves their exact heading, glyph, focus behavior,
+order and layout. BODY's canonical daily overview may adopt the fact matrix without changing its
+queries, values, labels, state or disclosure behavior. BUILD OWNED the small connective React/CSS;
+REUSE the locked pilot glyphs, typography and existing BODY grammar; add no dependency.
+
+Excluded: redesigning TODAY, TRAIN or MORE; new navigation, context, facts, inference, ranking,
+urgency or actions; generic cards or mandatory cross-domain layouts; behavior relocation; Engine,
+application, domain, persistence, events, schemas, backup, fixtures, dependencies, CI, prototype
+integration, deployment or merge. Later stages remain separately owner-approved Protected work.
+
+Acceptance: exact presentation/accessible-name/focus parity at adopted call sites; long truthful
+values at 320/360/412 px without horizontal overflow; accessible contrast and semantics; reduced
+motion introduces no animation; BODY behavior regressions, architecture, TypeScript, production
+build, risk/whitespace checks, green required CI and independent exact-head review. Gavin retains
+final merge authority.
+
 ## Acceptance for this contract objective
 
 - Doctrine, Product Direction, UX decisions, BODY PR #212, current screen architecture and prototype
