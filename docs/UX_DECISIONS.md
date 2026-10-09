@@ -24,6 +24,22 @@ boundaries. Historical references to Drops retain their product scope and eviden
 require the legacy lifecycle for new work. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical
 evidence, not standing implementation authority.
 
+## Focused meals — Product Experience Milestone 3, owner ruling, 2026-10-09
+
+Gavin approved the assessed bounded Protected objective: a focused meal presentation within BODY,
+using the existing logger and all journey safeguards. TODAY/SYSTEM MEAL opens this surface;
+ordinary BODY retains its trackers and direct meal entry, with OPEN MEALS / ALL BODY TRACKERS
+providing local access without discarding input. Saved-meal logging leads; preset management and
+online lookup are secondary disclosures. Manual macros are directly available in focused meals,
+a narrow presentation exception to the earlier search-first BODY entry treatment. Saving a reusable
+preset and recording consumption remain separate explicit actions; no automatic save-and-log.
+
+Preserve canonical commands, immutable consumed snapshots, correction/undo, duplicate safeguards,
+in-memory drafts, read recovery and focus/return protections. Four tabs, Engine/recommendation
+meaning, schemas, persistence, backups and BODY's restrained red budget remain unchanged. No new
+food capability, dependency, hydration redesign or progress consolidation is authorized. VCC-001
+stays paused. Independent exact-head review, required CI and Gavin's merge approval remain required.
+
 ## Searchable SYSTEM catalog — owner ruling, 2026-10-09
 
 Gavin authorizes the bounded 18-entry production catalog assessed after PR #207 merged.

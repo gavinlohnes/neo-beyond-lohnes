@@ -192,11 +192,20 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 ## Queue
 
-**Current owner objective, 2026-10-09 — searchable SYSTEM catalog.** PR #207 is merged at
+**Current owner objective, 2026-10-09 — focused meals, Product Experience Milestone 3.**
+Gavin approved a focused BODY meal presentation: saved-meal LOG leads, manual entry is directly
+available, management/online lookup recede, and all meal draft/recovery/undo/correction/return
+protections remain. Preserve direct BODY logging and four tabs. No new logger, command semantics,
+Engine/storage changes, hydration redesign or progress consolidation. PR #208 merged at
+`97103b5235ff02b07fffdc7d0b5727470f2abcdb`; milestones 1 and 2 below are historical.
+VCC-001 remains paused, not canceled or superseded. Next: this bounded Protected PR and independent
+exact-head review, then owner merge decision; no merge or deployment is authorized.
+
+**Historical objective, 2026-10-09 — searchable SYSTEM catalog.** PR #207 is merged at
 `9b2e62417d639eb541b1de47e1b52ff9f5502845`. Gavin approves the bounded 18-entry catalog of
 existing destinations, with browsable groups and local name/alias filtering. Four tabs,
 canonical workflows and separate record search stay; no new commands, storage or dependencies.
-This is the current handoff objective; milestone 1 below is historical. VCC-001 remains paused.
+This objective is merged; milestone 1 below is historical. VCC-001 remains paused.
 
 **Historical owner objective, 2026-10-08 — Command Console production milestone 1.** The meal
 round trip and recovery-focus follow-up are integrated through PRs #205/#206. Gavin now authorizes

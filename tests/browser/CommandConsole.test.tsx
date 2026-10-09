@@ -143,7 +143,6 @@ describe("Production Command Console", () => {
     await startDay();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
-    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished dinner");
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);

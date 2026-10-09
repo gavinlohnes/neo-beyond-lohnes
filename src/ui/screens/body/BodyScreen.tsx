@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { TickNumber } from "../../feel/TickNumber";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
@@ -233,6 +233,17 @@ function parseMealMacros(form: MealMacroFormState): { calories: number; proteinG
   return { calories, proteinG, carbsG, fatG };
 }
 
+/** Presentation only: focused meals expose manual fields and disclose secondary tools. */
+function MealSection({ direct, summary, open, onToggle, children }: {
+  direct: boolean; summary: string; open: boolean; onToggle: (open: boolean) => void; children: ReactNode;
+}) {
+  return direct ? <div>{children}</div> : (
+    <FieldDisclosure summary={summary} open={open} onToggle={onToggle}>
+      {children}
+    </FieldDisclosure>
+  );
+}
+
 export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange }: {
   focus?: BodyFocus | null;
   visible?: boolean;
@@ -241,6 +252,19 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   /** Synchronous shell guard: publish before awaiting a command or query. */
   onMealJourneyInFlightChange?: ((busy: boolean) => void) | undefined;
 } = {}) {
+  const [mealFocused, setMealFocused] = useState(focus === "meal");
+  const [managingMealId, setManagingMealId] = useState<string | null>(null);
+  const [lookupOpen, setLookupOpen] = useState(false);
+  useEffect(() => {
+    if (visible) setMealFocused(focus === "meal");
+  }, [focus, visible]);
+  function showMealSurface(next: boolean) {
+    if (busyRef.current || foodSearchBusyRef.current) return;
+    // An explicit local choice supersedes the initial delayed shortcut handoff.
+    mealPositioned.current = true;
+    setMealFocused(next);
+    requestAnimationFrame(() => document.getElementById(next ? "meal-surface-heading" : "body-meals-entry")?.focus());
+  }
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusyState] = useState(false);
@@ -443,9 +467,11 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
     let tries = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = () => {
+      if (onReturnToToday && mealPositioned.current) return;
       const el = document.getElementById(SHORTCUT_ANCHOR_IDS[focus]);
       if (el) {
-        el.scrollIntoView({ block: "start" });
+        const surface = focus === "meal" ? el.closest(".body-meals") ?? el : el;
+        surface.scrollIntoView({ block: "start" });
         if (onReturnToToday) document.getElementById("meal-return")?.focus({ preventScroll: true });
         else if (document.activeElement === document.body) {
           el.querySelector<HTMLElement>("button:not(:disabled), input:not(:disabled)")?.focus({ preventScroll: true });
@@ -1334,7 +1360,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   );
 
   return (
-    <div className="screen fade-in body-field">
+    <div className={`screen fade-in body-field${mealFocused ? " body-meals" : ""}`}>
       {/* FIELD ALPHA Phase 3: identity zone quieted, same principle
           TODAY/TRAIN applied — freed territory belongs to the
           instrument cluster below, not screen chrome.
@@ -1345,9 +1371,18 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
           evidence, not a second recommendation authority. */}
       <div className="field-header">
         <Icon name="body" size={22} />
-        <h1 className="eyebrow">BODY // ESSENTIALS</h1>
+        <h1 id="meal-surface-heading" tabIndex={-1} className="eyebrow">{mealFocused ? "BODY // MEALS" : "BODY // ESSENTIALS"}</h1>
       </div>
 
+      <div className="meal-navigation">
+        <button id="body-meals-entry" className="btn-secondary" disabled={busy || foodSearchBusy}
+          onClick={() => showMealSurface(!mealFocused)}>
+          {mealFocused ? "ALL BODY TRACKERS" : "OPEN MEALS"}
+        </button>
+        {onReturnToToday && <button id="meal-return" className="btn-secondary"
+          disabled={busy || foodSearchBusy} onClick={onReturnToToday}>RETURN TO TODAY</button>}
+      </div>
+      <div hidden={mealFocused}>
       {/* Overdrive Phase 5: a single glanceable status strip before the
           four separate logging cards, so BODY reads as one physical-status
           subsystem at a glance instead of four unrelated forms you have to
@@ -2023,6 +2058,9 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
         <p className="meta" style={{ margin: 0 }}>Change targets in MORE → Settings.</p>
       </div>
 
+      </div>
+      </div>
+
       {/* MEAL MEMORY — NUTRITION-001 (High-Risk Drop): a small reusable
           preset library ("the sandwich I always make"), not a food
           database — no barcode, no recipe, no serving ontology, no goal.
@@ -2035,16 +2073,18 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
           PROTEIN station's own gram total above, so the two are never
           visually conflated. */}
       <div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.meal}>
-        {onReturnToToday && (
-          <div style={{ marginBottom: 16 }}>
-            <button id="meal-return" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={onReturnToToday}>
-              RETURN TO TODAY
-            </button>
-            <p className="meta" style={{ marginTop: 8 }}>
-              {mealDirty ? "Unsaved details stay here while you return to TODAY." : "Return when ready. Reopen Meal to undo or correct a log."}
-            </p>
-          </div>
-        )}
+        {mealFocused && <div className="meal-summary" role="group" aria-label="Nutrition recorded today">
+          <p className="card-title">{nutritionTargets?.calorieTargetKcal
+            ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal)
+            : `${totalMealCalories} kcal logged today`}</p>
+          <p className="meta">{effectiveProteinTargetG !== undefined
+            ? describeProteinProgress(dayProteinG, effectiveProteinTargetG)
+            : `${dayProteinG} g protein today (meals + protein logs)`}</p>
+        </div>}
+        {onReturnToToday && mealDirty && <p className="meta" style={{ marginBottom: 12 }}>
+          Unsaved details stay here while you return to TODAY.
+        </p>}
+        {mealFocused && error && <p className="meta" role="alert">{error}</p>}
         {mealError && <p className="meta" role="alert" style={{ marginBottom: 12 }}>{mealError}</p>}
         {mealReadFailed && (
           <button className="btn-secondary" disabled={busy || foodSearchBusy} onClick={() => void retryMealRead()}>
@@ -2053,12 +2093,12 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
         )}
         {mealPresetNotice && <p className="meta" role="status" style={{ marginBottom: 12 }}>{mealPresetNotice}</p>}
         <p className="tool-label" style={{ marginBottom: 4 }}>MEAL MEMORY</p>
-        <p className="recommendation-title" style={{ marginBottom: 2 }}>
+        <p className={mealFocused ? "meta" : "recommendation-title"} style={{ marginBottom: 2 }}>
           {mealEntries.length} {mealEntries.length === 1 ? "meal" : "meals"} logged today
         </p>
-        <p className="meta" style={{ marginBottom: 12 }}>
+        {!mealFocused && <p className="meta" style={{ marginBottom: 12 }}>
           Protein from meals counts toward Minimum Day, alongside protein-only logs.
-        </p>
+        </p>}
 
         {/* Drop 5: one tap logs the previous day's saved meals again. Hidden
             once today already has every one of them, so it can't double up. */}
@@ -2088,12 +2128,15 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
           </div>
         )}
 
+        {mealFocused && savedMeals.length > 0 && <h2 className="section-label">Log a saved meal</h2>}
         {savedMeals.length === 0 ? (
           <p className="card-body" style={{ marginBottom: 12 }}>{SAVED_MEALS_EMPTY}</p>
         ) : (
           savedMeals.map((meal) => (
             <div
               key={meal.id}
+              role="group"
+              aria-label={`Saved meal ${meal.name}`}
               style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
             >
               <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{meal.name}</p>
@@ -2104,6 +2147,19 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
                 <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleLogMeal(meal.id)}>
                   LOG
                 </button>
+              </div>
+              {mealConfirmation &&
+                mealConfirmation.anchor !== "REPEAT" &&
+                mealConfirmation.anchor.savedMealId === meal.id &&
+                mealBanner}
+              {renderSameFood(meal.id)}
+              {renderDuplicateMeal(meal.id)}
+              <MealSection direct={!mealFocused}
+                summary={`${managingMealId === meal.id ? "HIDE" : "SHOW"} MANAGE ${meal.name}`}
+                open={managingMealId === meal.id}
+                onToggle={(open) => setManagingMealId(open ? meal.id : null)}
+              >
+                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                 <button
                   className="btn-secondary"
                   style={{ flex: 1 }}
@@ -2115,13 +2171,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
                 <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleArchiveSavedMeal(meal.id)}>
                   ARCHIVE
                 </button>
-              </div>
-              {mealConfirmation &&
-                mealConfirmation.anchor !== "REPEAT" &&
-                mealConfirmation.anchor.savedMealId === meal.id &&
-                mealBanner}
-              {renderSameFood(meal.id)}
-              {renderDuplicateMeal(meal.id)}
+                </div>
               {editingMealId === meal.id && (
                 <div className="fade-in" style={{ marginTop: 12 }}>
                   <div className="field">
@@ -2145,6 +2195,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
                   </button>
                 </div>
               )}
+              </MealSection>
             </div>
           ))
         )}
@@ -2154,6 +2205,8 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
           open={addMealOpen}
           onToggle={setAddMealOpen}
         >
+          <MealSection direct={!mealFocused} summary={`${lookupOpen ? "HIDE" : "SHOW"} FOOD LOOKUP (ONLINE)`}
+            open={lookupOpen} onToggle={setLookupOpen}>
           <div className="field">
             <label htmlFor="food-search"><span>Search USDA food database</span></label>
             <div style={{ display: "flex", gap: 8 }}>
@@ -2202,11 +2255,9 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
               )}
             </div>
           )}
-          <FieldDisclosure
-            summary={`${manualMealEntryOpen ? "HIDE" : "SHOW"} MANUAL MACROS`}
-            open={manualMealEntryOpen}
-            onToggle={setManualMealEntryOpen}
-          >
+          </MealSection>
+          <MealSection direct={mealFocused} summary={`${manualMealEntryOpen ? "HIDE" : "SHOW"} MANUAL MACROS`}
+            open={manualMealEntryOpen} onToggle={setManualMealEntryOpen}>
             <div className="field">
               <label htmlFor="new-meal-name"><span>New meal name</span></label>
               <input
@@ -2223,10 +2274,11 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
               "new-meal",
               "New meal",
             )}
+            <p className="meta">Save a reusable meal first. Then tap LOG when you eat it.</p>
             <button className="btn-primary" disabled={busy} onClick={() => void handleCreateSavedMeal()}>
               SAVE MEAL
             </button>
-          </FieldDisclosure>
+          </MealSection>
         </FieldDisclosure>
 
         {mealConfirmation &&
@@ -2326,7 +2378,6 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
             </FieldDisclosure>
           </div>
         )}
-      </div>
       </div>
     </div>
   );
