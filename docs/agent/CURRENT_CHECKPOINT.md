@@ -6,7 +6,7 @@ Gavin explicitly approved this cohesive Protected objective on 2026-10-09, inclu
 BODY's four-tracker presentation and latest-entry sleep summary. Fresh master:
 `bb36ffbf12116cc1e29d27bac1fa549744101e8a` (#211 integrated). No overlapping Builder;
 only prototype PR #204 was open and remains untouched. Builder: Codex; branch
-`codex/body-daily-record`; active PR: pending creation.
+`codex/body-daily-record`; active PR [#212](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/212).
 
 Scope: daily calories/protein orientation, secondary nutrition details, separate main sleep/naps,
 canonical record inspection/correction, immediate meal/water entry and existing progress without a
