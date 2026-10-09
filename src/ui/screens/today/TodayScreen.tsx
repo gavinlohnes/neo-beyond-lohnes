@@ -58,6 +58,7 @@ import { HydrationOperationCard, MinimumDayCard } from "./MinimumDaySection";
 import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
 import { RecommendationCard } from "./RecommendationCard";
+import { ConsoleControls } from "./ConsoleControls";
 import {
   startDay,
   ensureActiveDay,
@@ -208,6 +209,7 @@ export function TodayScreen({
   onViewCommitments,
   onOpenTrain,
   onOpenBody,
+  onOpenSystemDestination,
   openToolsOnMount = false,
   onWorkEnded,
   onWorkContextChanged,
@@ -217,6 +219,7 @@ export function TodayScreen({
   onViewCommitments?: () => void;
   onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
   onOpenBody?: (target?: BodyFocus) => void;
+  onOpenSystemDestination?: (destination: "TRAIN" | "BODY" | "MORE") => void;
   /** Drop 2: open with TOOLS expanded (MORE's capture link lands in it). */
   openToolsOnMount?: boolean;
   /** NOTES-HANDOFF-001: told after MARK WORK ENDED succeeds, so the shell can ask for a handoff note. */
@@ -1367,6 +1370,8 @@ export function TodayScreen({
       shiftDownCompletedAt !== null && (!shiftWindow || new Date(shiftDownCompletedAt).getTime() >= shiftWindow.start.getTime()),
   });
   const phaseRows: ShiftClockRow[] = day ? shiftClock.rows : [];
+  const leadingPhaseRows = phaseRows.filter((row) => row === "WORK_QUESTION" || row === "SHIFT_DOWN");
+  const remainingPhaseRows = phaseRows.filter((row) => row !== "WORK_QUESTION" && row !== "SHIFT_DOWN");
   const toolsItems: ToolsItem[] = day ? shiftClock.tools : [...TOOLS_ORDER];
   const checkInIsRow = phaseRows.includes("CHECK_IN");
   // SLEEP DRAFT: only on the post-shift MAIN SLEEP row (Command Center rule 3).
@@ -1530,29 +1535,7 @@ export function TodayScreen({
   function renderCheckInTool() {
     return (
       <div id="today-check-in">
-      {day && recommendation && attentionPlan.recommendationPlacement === "SUPPORT" &&
-        recommendation.kind !== "NO_ACTION_REQUIRED" && (
-          <RecommendationCard
-            day={day}
-            recommendation={recommendation}
-            headlineCommitment={headlineCommitment}
-            isDominant={false}
-            decision={decision}
-            checkIn={checkIn}
-            recommendationOpen={recommendationOpen}
-            setRecommendationOpen={setRecommendationOpen}
-            recommendationHandoff={recommendationHandoff}
-            activeShiftDownId={activeShiftDownId}
-            priorOutcomeMemory={priorOutcomeMemory}
-            materiallyRepeated={materiallyRepeated}
-            busy={busy}
-            onOpenTrain={onOpenTrain}
-            onRecord={() => void handleRecord()}
-            onDecline={handleDecline}
-            onHandoff={handleRecommendationHandoff}
-            confirmPanel={<ConfirmPanel />}
-          />
-        )}
+
       {(!checkInInAttention || checkInFormOpen) && (
         <CheckInCard
           busy={busy}
@@ -1571,28 +1554,7 @@ export function TodayScreen({
           onSubmitCheckIn={() => void handleCheckIn()}
         />
       )}
-      {day && recommendation && dominant === "NONE" && recommendation.kind === "NO_ACTION_REQUIRED" && (
-        <RecommendationCard
-          day={day}
-          recommendation={recommendation}
-          headlineCommitment={headlineCommitment}
-          isDominant={false}
-          decision={decision}
-          checkIn={checkIn}
-          recommendationOpen={recommendationOpen}
-          setRecommendationOpen={setRecommendationOpen}
-          recommendationHandoff={recommendationHandoff}
-          activeShiftDownId={activeShiftDownId}
-          priorOutcomeMemory={priorOutcomeMemory}
-          materiallyRepeated={materiallyRepeated}
-          busy={busy}
-          onOpenTrain={onOpenTrain}
-          onRecord={() => void handleRecord()}
-          onDecline={handleDecline}
-          onHandoff={handleRecommendationHandoff}
-          confirmPanel={<ConfirmPanel />}
-        />
-      )}
+
       </div>
     );
   }
@@ -1780,11 +1742,6 @@ export function TodayScreen({
               <button type="button" className="chip" aria-label="Log 16 oz water" disabled={busy} onClick={() => void handleMinimumDayLogWater(16)}>
                 +16 oz
               </button>
-              {onOpenBody && (
-                <button type="button" className="chip" aria-label="Log a meal in BODY" onClick={() => onOpenBody("meal")}>
-                  MEAL
-                </button>
-              )}
               {onOpenBody && quitHabitSetUp && (
                 <button type="button" className="chip" aria-label="Log an urge in BODY" onClick={() => onOpenBody("urge")}>
                   URGE
@@ -1854,29 +1811,10 @@ export function TodayScreen({
             />
           );
         }
-        // Checked in: the row becomes the recommendation, with the check-in kept as one line under it.
+        // The console shows guidance once; the contextual row keeps the completed check-in and UPDATE.
         return (
           <>
-            <RecommendationCard
-          day={day}
-          recommendation={recommendation}
-          headlineCommitment={headlineCommitment}
-          isDominant={dominant === "RECOMMENDATION"}
-          decision={decision}
-          checkIn={checkIn}
-          recommendationOpen={recommendationOpen}
-          setRecommendationOpen={setRecommendationOpen}
-          recommendationHandoff={recommendationHandoff}
-          activeShiftDownId={activeShiftDownId}
-          priorOutcomeMemory={priorOutcomeMemory}
-          materiallyRepeated={materiallyRepeated}
-          busy={busy}
-          onOpenTrain={onOpenTrain}
-          onRecord={() => void handleRecord()}
-          onDecline={handleDecline}
-          onHandoff={handleRecommendationHandoff}
-          confirmPanel={<ConfirmPanel />}
-        />
+
             <CheckInCard
               busy={busy}
               checkIn={checkIn}
@@ -1958,7 +1896,7 @@ export function TodayScreen({
 
   return (
     <div
-      className={`screen fade-in today-field${
+      className={`screen fade-in command-console today-field${
         day && dominant === "NONE" && attentionPlan.attention.length === 0 ? " today-field--quiet" : ""
       }${justStartedDay ? " today-field--boot" : ""}`}
       data-field-state={
@@ -1981,6 +1919,22 @@ export function TodayScreen({
         <Icon name="mission" size={22} />
         <h1 className="eyebrow">BEYOND // TODAY</h1>
       </div>
+
+      <ConsoleControls
+        busy={busy}
+        isInFlight={() => busyRef.current}
+        onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
+        onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
+        onOpenDestination={onOpenSystemDestination}
+        onOpenTools={() => {
+          setToolsOpen(true);
+          window.requestAnimationFrame(() => {
+            const heading = document.getElementById("console-tools-heading");
+            heading?.focus();
+            heading?.scrollIntoView({ block: "start" });
+          });
+        }}
+      />
 
       {/* CLEANUP-002: the shell's own lines sit under the header, part of the screen. */}
       {banners && <div className="today-banners">{banners}</div>}
@@ -2260,33 +2214,41 @@ export function TodayScreen({
           }}
         />
       )}
-      {/* SHIFT CLOCK (Drop 2): where the phase has a check-in row, the
-          recommendation renders in that row instead (the check-in "becomes"
-          it), never twice. */}
-      {day && recommendation && dominant === "RECOMMENDATION" && !checkInIsRow && (
-        <RecommendationCard
-          day={day}
-          recommendation={recommendation}
-          headlineCommitment={headlineCommitment}
-          isDominant={true}
-          decision={decision}
-          checkIn={checkIn}
-          recommendationOpen={recommendationOpen}
-          setRecommendationOpen={setRecommendationOpen}
-          recommendationHandoff={recommendationHandoff}
-          activeShiftDownId={activeShiftDownId}
-          priorOutcomeMemory={priorOutcomeMemory}
-          materiallyRepeated={materiallyRepeated}
-          busy={busy}
-          onOpenTrain={onOpenTrain}
-          onRecord={() => void handleRecord()}
-          onDecline={handleDecline}
-          onHandoff={handleRecommendationHandoff}
-          confirmPanel={<ConfirmPanel />}
-        />
+      {/* Time-sensitive work controls keep their existing precedence. */}
+      {day && leadingPhaseRows.length > 0 && (
+        <section className="shift-clock-rows" aria-label={`${describePhaseHeading(shiftClock.phase, day.workContext)} work controls`}>
+          <h2 className="section-label">{describePhaseHeading(shiftClock.phase, day.workContext)}</h2>
+          {leadingPhaseRows.map((row) => <div key={row} data-shift-clock-row={row}>{renderPhaseRow(row)}</div>)}
+        </section>
       )}
-      {/* SHIFT CLOCK (Drop 2): the quiet "No action required" result now
-          renders with the check-in — its row, or TOOLS outside that phase. */}
+
+      {/* One canonical Engine result. Foreground operations above retain priority;
+          support guidance stays a disclosure rather than a competing dominant action. */}
+      {day && recommendation && (
+        <section className="console-guidance" aria-label="Current recommendation">
+          <RecommendationCard
+            day={day}
+            recommendation={recommendation}
+            headlineCommitment={headlineCommitment}
+            isDominant={dominant === "RECOMMENDATION"}
+            isAttention={recommendationInAttention}
+            decision={decision}
+            checkIn={checkIn}
+            recommendationOpen={recommendationOpen}
+            setRecommendationOpen={setRecommendationOpen}
+            recommendationHandoff={recommendationHandoff}
+            activeShiftDownId={activeShiftDownId}
+            priorOutcomeMemory={priorOutcomeMemory}
+            materiallyRepeated={materiallyRepeated}
+            busy={busy}
+            onOpenTrain={onOpenTrain}
+            onRecord={() => void handleRecord()}
+            onDecline={handleDecline}
+            onHandoff={handleRecommendationHandoff}
+            confirmPanel={<ConfirmPanel />}
+          />
+        </section>
+      )}
 
       {/* ATTENTION — earned, capped at ATTENTION_MAX, and disappears
           entirely when nothing currently qualifies (attentionPolicy.ts). */}
@@ -2294,29 +2256,7 @@ export function TodayScreen({
         <>
           <h2 className="section-label section-label--field">Attention</h2>
 
-          {recommendationInAttention && (
-            <RecommendationCard
-              day={day}
-              recommendation={recommendation}
-              headlineCommitment={headlineCommitment}
-              isDominant={false}
-              isAttention={true}
-              decision={decision}
-              checkIn={checkIn}
-              recommendationOpen={recommendationOpen}
-              setRecommendationOpen={setRecommendationOpen}
-              recommendationHandoff={recommendationHandoff}
-              activeShiftDownId={activeShiftDownId}
-              priorOutcomeMemory={priorOutcomeMemory}
-              materiallyRepeated={materiallyRepeated}
-              busy={busy}
-              onOpenTrain={onOpenTrain}
-              onRecord={() => void handleRecord()}
-              onDecline={handleDecline}
-              onHandoff={handleRecommendationHandoff}
-              confirmPanel={<ConfirmPanel />}
-            />
-          )}
+
 
           {endDayInAttention && (
             <EndDayCard
@@ -2495,8 +2435,8 @@ export function TodayScreen({
           tap away. Operate and Attention above are unchanged. */}
       {day && (
         <section className="shift-clock-rows" aria-label={`${describePhaseHeading(shiftClock.phase, day.workContext)} rows`}>
-          <h2 className="section-label">{describePhaseHeading(shiftClock.phase, day.workContext)}</h2>
-          {phaseRows.map((row) => (
+          {leadingPhaseRows.length === 0 && <h2 className="section-label">{describePhaseHeading(shiftClock.phase, day.workContext)}</h2>}
+          {remainingPhaseRows.map((row) => (
             <div key={row} data-shift-clock-row={row}>
               {renderPhaseRow(row)}
             </div>
@@ -2519,7 +2459,7 @@ export function TodayScreen({
         ) : (
           <section aria-label="TOOLS">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
-              <h2 className="section-label" style={{ margin: 0 }}>Tools</h2>
+              <h2 id="console-tools-heading" tabIndex={-1} className="section-label" style={{ margin: 0 }}>Tools</h2>
               <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} aria-label="Close TOOLS" onClick={() => setToolsOpen(false)}>
                 CLOSE
               </button>

@@ -192,6 +192,16 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 ## Queue
 
+**Current owner objective, 2026-10-08 — Command Console production milestone 1.** The meal
+round trip and recovery-focus follow-up are integrated through PRs #205/#206. Gavin now authorizes
+a compact production TODAY console inspired by PR #204 Concept A, with persistent WATER/MEAL/
+SYSTEM controls under the narrow placement exception in the UX Decision Register. Existing four
+tabs and all capabilities remain; phase meanings/timed prompts, active-operation priority,
+canonical Engine/commands, records, corrections and backups are preserved. Complete searchable
+System Launcher is Milestone 2 and is not started. VCC-001 remains paused, not canceled or
+superseded. This does not integrate the prototype PR or deploy anything. Current handoff:
+`docs/agent/CURRENT_CHECKPOINT.md`.
+
 **Owner priority 2026-10-08 — Product Unification.** The bounded first milestone is the
 existing TODAY → BODY meal-logging round trip, followed by explicit return with context and
 undo/correction access preserved. It takes priority over VCC-001, which is **paused**, not

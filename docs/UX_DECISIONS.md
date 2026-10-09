@@ -24,6 +24,30 @@ boundaries. Historical references to Drops retain their product scope and eviden
 require the legacy lifecycle for new work. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical
 evidence, not standing implementation authority.
 
+## Command Console production milestone 1 — owner ruling, 2026-10-08
+
+Gavin approves the Command Console + System Launcher hybrid direction and this bounded first
+production milestone: a compact TODAY console using Concept A from PR #204 as an interaction
+reference, genuine System Status and one canonical recommendation with reasons/operator decisions,
+work context, active-workout resumption, and existing logging workflows. The four primary tabs and
+all production capabilities remain accessible; the complete searchable launcher is deferred.
+
+**Explicit placement exception:** WATER, MEAL and SYSTEM may remain directly accessible across
+all phases, outside the four-row contextual limit. They are optional operator controls, never
+logging demands or competing recommendations. WATER and MEAL reuse canonical workflows and
+their error, correction and recovery protections; SYSTEM preserves complete existing access.
+The four-row limit still governs phase-specific content. Phase meanings, timed prompts,
+active-operation priority, System Status and recommendation authority remain unchanged.
+
+The console consolidates presentation of the existing RecommendationCard into one inspectable
+location; its dominant/attention/support weight still comes from the existing attention policy.
+Contextual check-in controls remain available, with their existing timing. This is presentation
+integration, not new Engine behavior, command semantics, persistence, schema or backup authority.
+No prototype fixture/state or synthetic production data is adopted. Small-screen accessibility,
+offline operation and workout continuity remain binding. VCC-001 remains paused; this does not
+implement its State Rail contract. Independent exact-head review and explicit owner merge approval
+are required. No Milestone 2, merge or deployment is authorized.
+
 ## ROADMAP 1.0 rulings (locked 2026-09-30, direct owner ruling, ROADMAP-1.0-001)
 
 These rulings go with [`ROADMAP_1.0.md`](ROADMAP_1.0.md). Where one overrides an older entry
