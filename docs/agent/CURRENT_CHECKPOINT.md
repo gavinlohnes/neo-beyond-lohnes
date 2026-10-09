@@ -1,6 +1,30 @@
 # Current checkpoint
 
-## Current objective — BEYOND-wide operator experience migration contract
+## Current objective — shared operator shell and primitives
+
+Gavin approved stage 2 of the BEYOND-wide operator experience migration on 2026-10-09 after PR
+#213 merged at `61b27232881f246c3e0038c9a8b1492a76b3dace`. Risk lane: PROTECTED because shared
+primary-surface presentation can affect identity, hierarchy and accessibility. Builder: Codex;
+branch `codex/operator-shell-primitives`; PR pending. PR #204 remains an isolated prototype.
+
+Scope: extract the already-common primary destination identity header and BODY's proven small
+read-only fact matrix into constrained shared components; adopt them only with exact copy, glyph,
+focus, data and layout parity. No TODAY/TRAIN/MORE redesign, behavior relocation, generic card
+system, Engine/application/domain/persistence/event/schema/backup/dependency/fixture/CI/prototype
+or deployment change. Acceptance and full brief: [BEYOND operator experience migration](BEYOND_OPERATOR_EXPERIENCE.md#active-stage-2-brief--shared-shell-and-primitives).
+
+Implementation: `OperatorHeader` now owns the already-identical destination glyph/heading/rule
+frame across the four primary screens while preserving each caller's exact copy and focus handoff.
+`ReadoutGrid`/`Readout` extract BODY's daily read-only fact matrix with an explicit non-card,
+non-action contract. Existing `health-*` hooks remain for compatibility; no query, state or control
+moved. New browser coverage checks heading semantics/focus, long values, 320/360/412 px containment,
+axe and reduced motion. Focused final sets: 46 passed before a full-gate compatibility finding;
+the preserved hooks and affected BODY/protein/primitive subset then passed 21/21. Node suite: 143
+files, 1,535 passed and one existing skip. Architecture passed (201 files); TypeScript, production
+PWA build and whitespace passed. The existing bundle-size warning remains. Required exact-head CI,
+independent review and Gavin's merge approval are pending.
+
+## Historical objective — BEYOND-wide operator experience migration contract
 
 Gavin explicitly approved evolving all of BEYOND toward the Insights Phase A prototype's
 operator-console experience and directed Codex to start on 2026-10-09. BODY Daily Health Record is

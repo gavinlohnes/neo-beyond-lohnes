@@ -6,6 +6,7 @@ import type { BodyweightEntry, ProteinEntry, SleepEntry } from "../../../applica
 import type { NutritionEntry } from "../../../application/nutritionQueries";
 import type { WeighIn } from "../../../application/bodyTrendQueries";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import { TickNumber } from "../../feel/TickNumber";
 import { formatDuration } from "./bodyScreenCopy";
 
@@ -37,16 +38,19 @@ export function HealthOverview({ day, calories, protein, water, sleep, weight, m
       <p className="meta health-day">
         {day ? `Day started ${new Date(day.startedAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : "Your day begins with your first record."}
       </p>
-      <div className="health-nutrition">
-        <div><p className="tool-label">CALORIES</p><p className="health-number"><TickNumber value={calories} /><span> kcal</span></p><p className="meta">{calorieCopy}</p></div>
-        <div><p className="tool-label">PROTEIN</p><p className="health-number"><TickNumber value={protein} /><span> g</span></p><p className="meta">{proteinCopy}</p></div>
-      </div>
-      <div className="health-readings">
-        <div><p className="tool-label">WATER</p><p className="health-reading">{water} oz</p></div>
-        <div><p className="tool-label">LAST WEIGHT</p><p className="health-reading">{lastWeight ? `${lastWeight.weightLbs} lbs` : "Not logged"}</p><p className="meta">{lastWeight ? new Date(lastWeight.recordedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : "Whenever it suits you"}</p></div>
-        <div><p className="tool-label">MAIN SLEEP</p><p className="health-reading">{main ? formatDuration(main.effectiveDurationMinutes) : "Not logged"}</p>{mains > 1 && <p className="meta">Latest of {mains} main-sleep records</p>}</div>
-        <div><p className="tool-label">NAPS</p><p className="health-reading">{naps.length ? formatDuration(naps.reduce((total, entry) => total + entry.effectiveDurationMinutes, 0)) : "Not logged"}</p>{naps.length > 1 && <p className="meta">{naps.length} naps recorded</p>}</div>
-      </div>
+      <ReadoutGrid emphasis="primary" className="health-nutrition">
+        <Readout label="CALORIES" value={<><TickNumber value={calories} /><span> kcal</span></>} detail={calorieCopy} />
+        <Readout label="PROTEIN" value={<><TickNumber value={protein} /><span> g</span></>} detail={proteinCopy} />
+      </ReadoutGrid>
+      <ReadoutGrid className="health-readings">
+        <Readout label="WATER" value={`${water} oz`} />
+        <Readout label="LAST WEIGHT" value={lastWeight ? `${lastWeight.weightLbs} lbs` : "Not logged"}
+          detail={lastWeight ? new Date(lastWeight.recordedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : "Whenever it suits you"} />
+        <Readout label="MAIN SLEEP" value={main ? formatDuration(main.effectiveDurationMinutes) : "Not logged"}
+          detail={mains > 1 ? `Latest of ${mains} main-sleep records` : undefined} />
+        <Readout label="NAPS" value={naps.length ? formatDuration(naps.reduce((total, entry) => total + entry.effectiveDurationMinutes, 0)) : "Not logged"}
+          detail={naps.length > 1 ? `${naps.length} naps recorded` : undefined} />
+      </ReadoutGrid>
       <FieldDisclosure summary={`${detailsOpen ? "HIDE" : "SHOW"} NUTRITION DETAILS`} open={detailsOpen} onToggle={setDetailsOpen}>
         <p className="meta">Carbs: {mealEntries.reduce((sum, entry) => sum + entry.effectiveCarbsG, 0)} g · Fat: {mealEntries.reduce((sum, entry) => sum + entry.effectiveFatG, 0)} g from recorded meals.</p>
         <p className="meta">Fiber is not recorded in the current meal data.</p>
