@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
 import axe from "axe-core";
+import "../../src/ui/styles/fonts";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
 import { logWater, logSleep, startDay } from "../../src/application/commands";
 import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
@@ -10,20 +11,20 @@ import { getHydrationEntries, getSleepEntries } from "../../src/application/quer
 import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
 import { db } from "../../src/persistence/db";
 
-const reads = vi.hoisted(() => ({ fail: false, dailyFail: false, timelineFail: false }));
+const reads = vi.hoisted(() => ({ fail: false, dailyFail: false, timelineFail: false, wait: null as Promise<void> | null }));
 vi.mock("../../src/application/weeklyQueries", async (original) => {
   const actual = await original<typeof import("../../src/application/weeklyQueries")>();
   return { ...actual, getWeeklySummary: async () => { if (reads.fail) throw new Error("Transient read"); return actual.getWeeklySummary(); } };
 });
 vi.mock("../../src/application/queries", async (original) => {
   const actual = await original<typeof import("../../src/application/queries")>();
-  return { ...actual, getHydrationEntries: async (...args: Parameters<typeof actual.getHydrationEntries>) => { if (reads.dailyFail) throw new Error("Transient read"); return actual.getHydrationEntries(...args); } };
+  return { ...actual, getHydrationEntries: async (...args: Parameters<typeof actual.getHydrationEntries>) => { if (reads.dailyFail) throw new Error("Transient read"); if (reads.wait) await reads.wait; return actual.getHydrationEntries(...args); } };
 });
 vi.mock("../../src/application/timelineQueries", async (original) => {
   const actual = await original<typeof import("../../src/application/timelineQueries")>();
   return { ...actual, getTimeline: async () => { if (reads.timelineFail) throw new Error("Transient timeline read"); return actual.getTimeline(); } };
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); reads.fail = false; reads.dailyFail = false; reads.timelineFail = false; window.scrollTo(0, 0); });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); reads.fail = false; reads.dailyFail = false; reads.timelineFail = false; reads.wait = null; window.scrollTo(0, 0); });
 
 function reading(label: string) {
   return [...document.querySelectorAll(".health-overview .tool-label")].find(element => element.textContent === label)?.parentElement?.textContent ?? "";
@@ -37,6 +38,7 @@ describe("BODY daily health record", () => {
       const screen = await render(<BodyScreen />);
       await expect.element(screen.getByRole("button", { name: "OPEN MEALS" })).toBeVisible();
       await expect.poll(() => reading("CALORIES")).toContain("0 kcal");
+      await document.fonts.ready;
       for (const animation of document.getAnimations()) animation.finish();
       for (const name of ["OPEN MEALS", "YOUR PROGRESS", "+8 oz", "+12 oz", "+16 oz"]) {
         const button = screen.getByRole("button", { name, exact: true }).element();
@@ -169,7 +171,11 @@ describe("BODY daily health record", () => {
     const screen = await render(<BodyScreen />);
     await expect.element(screen.getByRole("button", { name: "RETRY READINGS" })).toBeVisible();
     reads.dailyFail = false;
+    let releaseRead!: () => void;
+    reads.wait = new Promise<void>((resolve) => { releaseRead = resolve; });
     await screen.getByRole("button", { name: "RETRY READINGS" }).click();
+    await expect.element(screen.getByRole("button", { name: "OPEN MEALS" })).toBeDisabled();
+    releaseRead();
     await expect.poll(() => reading("WATER")).toContain("16 oz");
     await expect.poll(() => document.activeElement?.id).toBe("body-meals-entry");
     await expect.element(screen.getByRole("button", { name: "OPEN MEALS" })).toBeEnabled();

@@ -30,6 +30,12 @@ Engine, provenance and historical restore regressions remain. Actual synthetic b
 are in `docs/screenshots/body-daily-record/`; all quick water controls fit above navigation at
 320/360/412 px, with no horizontal overflow. Built-PWA offline preset save/log/return/reopen/undo/
 correction/cold reload passed. Required exact-head CI and independent review are pending in the PR.
+Initial independent review found one minor missing inspect glyph. It is replaced with the existing
+LineIcon/ArrowUpRight SVG, and affected real screenshots were recaptured. A subsequent manual
+read-retry timing defect is corrected with a post-commit enabled-control handoff; the regression
+uses a gated read. New layout tests load the real local production fonts before measuring rather
+than relying on platform fallback fonts. Final daily/meal/focus correction set: 41 tests passed;
+architecture/build pass. Renewed independent exact-head review and required CI are requested.
 Limitations: Chromium verification; existing memory-only drafts/undo windows; no canonical fiber
 field; existing bundle warning. No merge or deployment authorized.
 

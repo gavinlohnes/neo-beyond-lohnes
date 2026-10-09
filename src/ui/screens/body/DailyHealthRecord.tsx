@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { ArrowUpRight } from "lucide-react";
+import { LineIcon } from "../../icons/LineIcon";
 import type { BeyondDay, HydrationEntry } from "../../../domain/common/types";
 import type { BodyweightEntry, ProteinEntry, SleepEntry } from "../../../application/queries";
 import type { NutritionEntry } from "../../../application/nutritionQueries";
@@ -92,7 +94,7 @@ export function DailyHealthRecord({ water, sleep, weight, protein, meals, disabl
           <span><span className="health-record-name">{describeRecord(record)}</span>
             {record.kind === "MEAL" && <span className="meta">{record.entry.effectiveCalories} kcal · {record.entry.effectiveProteinG} g protein</span>}
             <span className="meta">{new Date(record.entry.recordedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}{record.entry.correctionCount ? ` · corrected ${record.entry.correctionCount}x` : ""}</span>
-          </span><span aria-hidden="true">↗</span>
+          </span><LineIcon icon={ArrowUpRight} />
         </button>
       ))}
       {records.length > 5 && <button className="btn-secondary" onClick={() => setAllOpen(!allOpen)}>{allOpen ? "SHOW RECENT ENTRIES" : `SHOW ALL ${records.length} ENTRIES`}</button>}

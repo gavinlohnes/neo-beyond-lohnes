@@ -255,6 +255,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   const [dataRevision, setDataRevision] = useState(0);
   const localOrigin = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
   const readRevision = useRef(0);
+  const manualReadFocusPending = useRef(false);
   function rememberOrigin() {
     localOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
   }
@@ -484,9 +485,22 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
     }
   }, [visible, busy, foodSearchBusy]);
 
+  // Retry can disable its focused button before React commits the enabled
+  // destination. Complete this handoff after that commit, never just one RAF.
+  useEffect(() => {
+    if (!visible || !manualReadFocusPending.current || busy || foodSearchBusy) return;
+    const control = mealReadFailed
+      ? [...document.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "RETRY READINGS" && button.getClientRects().length)
+      : document.getElementById(onReturnToToday ? "meal-return" : "body-meals-entry") as HTMLButtonElement | null;
+    if (!control || control.disabled) return;
+    manualReadFocusPending.current = false;
+    const active = document.activeElement;
+    if (!active || active === document.body || active.closest("[hidden]")) control.focus({ preventScroll: true });
+  }, [visible, busy, foodSearchBusy, mealReadFailed, onReturnToToday]);
+
   async function retryMealRead() {
     if (busyRef.current || foodSearchBusyRef.current) return;
-    const restoreReadFocus = document.activeElement?.textContent === "RETRY READINGS";
+    if (document.activeElement?.textContent === "RETRY READINGS") manualReadFocusPending.current = true;
     setBusy(true);
     try {
       await (mealReadRetry.current ?? refresh)();
@@ -497,9 +511,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
       setMealError("Could not refresh the meal readings. Retry readings without saving or logging again.");
     } finally {
       setBusy(false);
-      if (restoreReadFocus) requestAnimationFrame(() => {
-        if (document.activeElement === document.body) document.getElementById(onReturnToToday ? "meal-return" : "body-meals-entry")?.focus({ preventScroll: true });
-      });
+
     }
   }
   // DROP 0: re-read after a 16:30 rollover; form inputs are separate state and survive.
