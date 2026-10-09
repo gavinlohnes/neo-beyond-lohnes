@@ -4,7 +4,7 @@
 
 Owner authorization: Gavin's bounded implementation instruction, 2026-10-09; Protected navigation
 integration. Starting freshly fetched master: `9b2e62417d639eb541b1de47e1b52ff9f5502845`, merged
-PR #207. Builder: Codex, sole Lead Builder; branch `codex/system-catalog-m2`; active PR linked from this branch in GitHub.
+PR #207. Builder: Codex, sole Lead Builder; branch `codex/system-catalog-m2`; active PR [#208](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/208).
 PR #204 is the only existing open PR and remains untouched. Prior milestone handoffs below are
 historical; their pending review/merge pointers do not describe current master.
 
@@ -25,6 +25,8 @@ offline passed preset creation/log, cold reload, catalog/aliases, meal return, H
 record search, water/undo and focus return. Ten actual synthetic-fixture screenshots are in
 `docs/screenshots/system-catalog-m2/`. A constrained-height regression failed before chrome
 refinement and now keeps a full matching result visible at 320/360/412 px with 420px height.
+Final label audit distinguishes REVIEW's recommendation/decision/rating ledger from Weekly's
+progress views; eight affected discovery/destination cases, build and offline PWA passed again.
 Required CI/exact head are recorded in the PR. Chromium-only automation, memory-only drafts,
 existing undo windows and the existing bundle warning remain; no physical/Safari/screen-reader
 certification is claimed. Next: finish verification, independent exact-head review,

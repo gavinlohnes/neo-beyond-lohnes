@@ -18,6 +18,7 @@ describe("capability discovery", () => {
   });
   it("keeps record retrieval separate and does not search personal meal names", () => {
     expect(findCapabilities("Synthetic lunch")).toEqual([]);
+    expect(findCapabilities("progress").map((entry) => entry.label)).toEqual(["WEEKLY CHECK-IN"]);
     expect(findCapabilities("search records").map((entry) => entry.label)).toEqual(["SEARCH RECORDS"]);
   });
 });
