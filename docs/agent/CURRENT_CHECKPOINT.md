@@ -6,7 +6,7 @@ Gavin explicitly authorized this bounded Protected governance transition on 2026
 Freshly fetched master: `5a021de81d73520c3ed3a32d47ca5e5d85e69a76`; PR #209 is merged at
 that commit, so no active meal Builder overlaps this objective. PR #204 is the only open prototype
 PR and is untouched. Older pending meal/catalog pointers below are historical.
-Builder: Codex; branch `codex/product-direction-transition`; active PR pending.
+Builder: Codex; branch `codex/product-direction-transition`; active PR [#210](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/210).
 
 Scope: one concise Product Direction reference and necessary links/authority reconciliation;
 creative independence within approved outcomes, complete experiences, existing leverage gate,
