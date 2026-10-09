@@ -2728,3 +2728,19 @@ button:not(:disabled):not(.btn-primary):not(.btn-danger):active {
   color: var(--text-3-strong);
   font-size: 12px;
 }
+
+/* Focused meals keep BODY's neutral action budget and existing readable controls. */
+.body-meals .meal-summary {
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+.body-meals .meal-summary .meta { margin-bottom: 0; }
+.body-meals .equipment-row { margin-top: 0; padding-top: 0; }
+
+.body-field .meal-navigation {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.body-field .meal-navigation button { flex: 1; min-width: 0; padding: 10px 8px; }

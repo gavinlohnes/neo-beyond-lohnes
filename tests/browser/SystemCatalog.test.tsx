@@ -95,7 +95,6 @@ describe("production SYSTEM catalog", () => {
   it("retains meal drafts when catalog departure is canceled and reopens the same journey", async () => {
     const screen = await render(<App />);
     await open(screen); await launch(screen, "MEAL");
-    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished dinner");
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Log a meal in BODY");

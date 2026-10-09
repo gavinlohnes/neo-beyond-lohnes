@@ -31,7 +31,6 @@ async function openMeal(screen: Screen) {
   await expect.poll(() => document.activeElement?.id).toBe("meal-return");
 }
 async function fillMeal(screen: Screen, name = "Lunch") {
-  await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
   await screen.getByRole("textbox", { name: "New meal name" }).fill(name);
   for (const [field, amount] of [["calories", "600"], ["protein (g)", "45"], ["carbs (g)", "60"], ["fat (g)", "15"]]) {
     await screen.getByRole("spinbutton", { name: `New meal ${field}` }).fill(amount!);

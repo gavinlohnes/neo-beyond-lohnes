@@ -1,6 +1,33 @@
 # Current checkpoint
 
-## Current objective — searchable SYSTEM catalog milestone 2
+## Current objective — focused meals, Product Experience Milestone 3
+
+Gavin approved the read-only assessment's bounded Protected recommendation on 2026-10-09.
+Starting freshly fetched master: `97103b5235ff02b07fffdc7d0b5727470f2abcdb`; PRs #205–#208
+are merged (older pending pointers below are historical). Builder: Codex, sole Lead Builder;
+branch `codex/focused-meal-m3`; active PR [#209](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/209). PR #204 is the sole open prototype PR and stays untouched.
+
+Scope: focused meal presentation within BODY; shared existing fields/commands/state; saved LOG
+first, secondary preset management/online lookup, direct offline manual entry, local all-tracker
+access. Preserve separate preset save/consumption, direct BODY workflow, four tabs, drafts,
+synchronous guards, recovery/focus, undo/correction, canonical totals/history and workout continuity.
+No Engine, schema, persistence, backup, new dependency, hydration redesign, progress consolidation,
+VCC-001 or prototype changes. BUILD OWNED small presentation; USE PLATFORM native disclosures.
+Acceptance: actual mobile 320/360/412 px, draft/return/focus and recovery, exactly-once records,
+management snapshot integrity, existing regressions, architecture/type/build and required CI.
+Verification: full local gate 211 files / 2,218 passed / one existing skip; 31 focused meal/journey
+cases passed, including eight new presentation tests. Architecture, TypeScript/build and whitespace
+passed. Actual synthetic mobile screenshots at 320/360/412 px are in
+`docs/screenshots/focused-meals-m3/`. Built PWA offline preset save (no consumed record), exactly-once
+log, explicit return/reopen/focus, undo, correction and cold reload all passed. Local tracker choices
+supersede the delayed initial handoff. Accessibility tests finish finite entrance effects before
+contrast inspection; waiting on hidden retained-screen animations cannot settle while hidden.
+Required CI/exact head belong in the PR. Chromium-only evidence, memory-only drafts, existing undo
+windows and the existing bundle-size warning remain. Next: independent exact-head review, then
+Gavin's merge decision. No merge or deployment authorized.
+
+
+## Historical objective — searchable SYSTEM catalog milestone 2
 
 Owner authorization: Gavin's bounded implementation instruction, 2026-10-09; Protected navigation
 integration. Starting freshly fetched master: `9b2e62417d639eb541b1de47e1b52ff9f5502845`, merged
