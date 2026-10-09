@@ -1919,22 +1919,6 @@ export function TodayScreen({
           instrument header instead of one quiet line of text. */}
       <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
 
-      <ConsoleControls
-        busy={busy}
-        isInFlight={() => busyRef.current}
-        onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
-        onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
-        onOpenDestination={onOpenSystemDestination}
-        onOpenTools={() => {
-          setToolsOpen(true);
-          window.requestAnimationFrame(() => {
-            const heading = document.getElementById("console-tools-heading");
-            heading?.focus();
-            heading?.scrollIntoView({ block: "start" });
-          });
-        }}
-      />
-
       {/* CLEANUP-002: the shell's own lines sit under the header, part of the screen. */}
       {banners && <div className="today-banners">{banners}</div>}
 
@@ -2034,13 +2018,18 @@ export function TodayScreen({
           active-execution status reuses is untouched, so that usage is
           unaffected by this change. */}
       {day && (
-        <div
+        <section
+          aria-labelledby="today-current-state-heading"
           className={
             stripLevel
-              ? `status-strip status-strip--stacked status-strip--${stripLevel}`
-              : "status-strip status-strip--stacked"
+              ? `status-strip status-strip--stacked today-situation status-strip--${stripLevel}`
+              : "status-strip status-strip--stacked today-situation"
           }
         >
+          <div className="today-situation__identity">
+            <h2 id="today-current-state-heading" className="tool-label">CURRENT STATE</h2>
+            <p className="today-situation__phase">{describePhaseHeading(shiftClock.phase, day.workContext)}</p>
+          </div>
           {/* SHIFT CLOCK (Drop 2): before and during a scheduled shift the
               headline is the countdown; the work context it rests on moves to
               a quiet line under it. The "per schedule" one-tap change stays
@@ -2077,31 +2066,34 @@ export function TodayScreen({
               which carries the check-in's reading along with sleep and training load, e.g.
               "AMBER · 5h sleep, 3 hard sessions in 4 days". A text label always leads (never
               color alone). Until the status is read, the capacity sentence stays. */}
-          <p className="status-strip__detail" data-system-status={systemStatus?.level ?? undefined}>
-            {systemStatus ? (
-              <span
-                className={systemStatus.level === "AMBER" || systemStatus.level === "RED" ? "status-strip__capacity" : undefined}
-                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-              >
-                <span aria-hidden="true" className={`capacity-dot capacity-dot--${STATUS_DOT[systemStatus.level]}`} />
-                {describeSystemStatus(systemStatus)}
-              </span>
-            ) : capacityResult ? (
-              <span
-                className={capacityResult.capacity !== "GREEN" ? "status-strip__capacity" : undefined}
-                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-              >
-                <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
-                {describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}
-              </span>
-            ) : (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <span aria-hidden="true" className="capacity-dot capacity-dot--unknown" />
-                {describeCapacityUnknown()}
-              </span>
-            )}
-          </p>
-        </div>
+          <div className="today-situation__system">
+            <p className="tool-label">SYSTEM STATUS</p>
+            <p className="status-strip__detail" data-system-status={systemStatus?.level ?? undefined}>
+              {systemStatus ? (
+                <span
+                  className={systemStatus.level === "AMBER" || systemStatus.level === "RED" ? "status-strip__capacity" : undefined}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                >
+                  <span aria-hidden="true" className={`capacity-dot capacity-dot--${STATUS_DOT[systemStatus.level]}`} />
+                  {describeSystemStatus(systemStatus)}
+                </span>
+              ) : capacityResult ? (
+                <span
+                  className={capacityResult.capacity !== "GREEN" ? "status-strip__capacity" : undefined}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                >
+                  <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
+                  {describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}
+                </span>
+              ) : (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <span aria-hidden="true" className="capacity-dot capacity-dot--unknown" />
+                  {describeCapacityUnknown()}
+                </span>
+              )}
+            </p>
+          </div>
+        </section>
       )}
 
       {/* OPERATE — exactly one dominant operating surface. Multiple active
@@ -2225,6 +2217,7 @@ export function TodayScreen({
           support guidance stays a disclosure rather than a competing dominant action. */}
       {day && recommendation && (
         <section className="console-guidance" aria-label="Current recommendation">
+          <p className="tool-label console-guidance__label">PRIMARY RECOMMENDATION</p>
           <RecommendationCard
             day={day}
             recommendation={recommendation}
@@ -2248,6 +2241,25 @@ export function TodayScreen({
           />
         </section>
       )}
+
+      <section className="console-operations" aria-labelledby="console-operations-heading">
+        <h2 id="console-operations-heading" className="section-label">Immediate operations</h2>
+        <ConsoleControls
+          busy={busy}
+          isInFlight={() => busyRef.current}
+          onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
+          onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
+          onOpenDestination={onOpenSystemDestination}
+          onOpenTools={() => {
+            setToolsOpen(true);
+            window.requestAnimationFrame(() => {
+              const heading = document.getElementById("console-tools-heading");
+              heading?.focus();
+              heading?.scrollIntoView({ block: "start" });
+            });
+          }}
+        />
+      </section>
 
       {/* ATTENTION — earned, capped at ATTENTION_MAX, and disappears
           entirely when nothing currently qualifies (attentionPolicy.ts). */}

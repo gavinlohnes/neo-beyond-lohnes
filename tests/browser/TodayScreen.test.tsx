@@ -512,7 +512,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
-    expect(strip!.className).toBe("status-strip status-strip--stacked");
+    expect([...strip!.classList]).toEqual(["status-strip", "status-strip--stacked", "today-situation"]);
     expect(document.querySelector(".status-strip__capacity")).toBeNull();
   });
 
@@ -526,7 +526,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await expect.element(screen.getByText(/^AMBER · /)).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
-    expect(strip!.className).toBe("status-strip status-strip--stacked status-strip--yellow");
+    expect([...strip!.classList]).toEqual(["status-strip", "status-strip--stacked", "today-situation", "status-strip--yellow"]);
     const capacitySegment = document.querySelector(".status-strip__capacity");
     expect(capacitySegment).not.toBeNull();
     expect(capacitySegment!.textContent).toContain("AMBER");
@@ -540,7 +540,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
-    expect(strip!.className).toBe("status-strip status-strip--stacked status-strip--red");
+    expect([...strip!.classList]).toEqual(["status-strip", "status-strip--stacked", "today-situation", "status-strip--red"]);
     const capacitySegment = document.querySelector(".status-strip__capacity");
     expect(capacitySegment).not.toBeNull();
     expect(capacitySegment!.textContent).toContain("RED");
@@ -554,7 +554,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await expect.element(screen.getByText("NO READ · log sleep or check in", { exact: false })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
-    expect(strip!.className).toBe("status-strip status-strip--stacked");
+    expect([...strip!.classList]).toEqual(["status-strip", "status-strip--stacked", "today-situation"]);
     expect(strip!.textContent).toContain("NO READ · log sleep or check in");
     expect(document.querySelector(".capacity-dot--unknown")).not.toBeNull();
     // UNKNOWN is not a severity — no warning/red modifier, no bolded segment.

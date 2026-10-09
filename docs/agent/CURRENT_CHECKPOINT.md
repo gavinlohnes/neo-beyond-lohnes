@@ -1,11 +1,44 @@
 # Current checkpoint
 
+## Current objective — TODAY-OPERATOR-001 command surface transformation
+
+Gavin explicitly approved this bounded Protected objective on 2026-10-09. Freshly fetched
+`origin/master` and the starting commit are
+`1d83756b2ba971144365714d7450fb1091b9f2dc`, the verified merge of PR #214. Builder: Codex;
+branch `codex/today-operator-001`; PR pending. Public GitHub inspection shows PR #204 is the only
+other open PR; it remains an isolated interaction prototype and is neither modified nor integrated.
+
+Scope: transform TODAY's production composition into one operator command surface ordered around
+current phase/context, truthful System Status/capacity, the one canonical Engine recommendation,
+immediate existing operations, earned attention and deliberate inspection. Reuse `OperatorHeader`
+and existing application queries, commands, recommendation evidence, State/shift context and
+presentation primitives. Preserve every existing TODAY journey, manual control, confirmation,
+draft, recovery, focus, offline, exactly-once and correction path. No Engine, recommendation,
+domain, schema, persistence, backup, event, command, navigation, dependency, CI, protection or
+prototype change. Full concise brief: [BEYOND operator experience migration](BEYOND_OPERATOR_EXPERIENCE.md#active-stage-3-brief--today-operator-001).
+
+Implementation in progress: TODAY now identifies CURRENT STATE and its authoritative phase,
+separates SYSTEM STATUS from context, labels the canonical Engine result PRIMARY RECOMMENDATION,
+and places WATER / MEAL / SYSTEM after that recommendation as IMMEDIATE OPERATIONS. Foreground
+operations still retain precedence; phase rows, capped Attention and the complete TOOLS disclosure
+remain reachable below. No new inference, score, urgency, command or data path is introduced.
+
+Verification: the full real-Chromium project passes 70 files / 698 tests, including the complete
+TODAY journey, GREEN/AMBER/RED/NO READ, NO ACTION REQUIRED, recommendation/WHY, manual commands,
+confirmations, failures/retries, focus return, drafts, workout continuity, reduced motion, axe and
+320/360/412 px containment. All 143 Node files pass: 1,535 tests and one existing skip.
+Architecture passes (201 files); TypeScript, production PWA build and whitespace pass. The built
+PWA retains the synthetic day and current command surface through an offline service-worker reload
+at 360 px. Synthetic production-build captures are in `docs/screenshots/today-operator-001/`.
+The existing bundle-size warning remains. Final committed risk classification, required exact-head
+CI and independent exact-head review remain pending. No merge or deployment is authorized.
+
 ## Current objective — shared operator shell and primitives
 
 Gavin approved stage 2 of the BEYOND-wide operator experience migration on 2026-10-09 after PR
 #213 merged at `61b27232881f246c3e0038c9a8b1492a76b3dace`. Risk lane: PROTECTED because shared
 primary-surface presentation can affect identity, hierarchy and accessibility. Builder: Codex;
-branch `codex/operator-shell-primitives`; PR pending. PR #204 remains an isolated prototype.
+branch `codex/operator-shell-primitives`; merged as PR #214. PR #204 remains an isolated prototype.
 
 Scope: extract the already-common primary destination identity header and BODY's proven small
 read-only fact matrix into constrained shared components; adopt them only with exact copy, glyph,

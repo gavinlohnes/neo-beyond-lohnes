@@ -1,11 +1,46 @@
 /* Bounded production console: existing fonts, status semantics and primary-action tokens. */
 .command-console.today-field { --console-gap: 20px; }
 .command-console.today-field .field-header { margin-bottom: 16px; }
+.today-situation {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  padding-block: 4px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.today-situation__identity {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.today-situation__identity .tool-label,
+.today-situation__system .tool-label { margin: 0; }
+.today-situation__phase {
+  margin: 0;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: .08em;
+  text-align: right;
+  text-transform: uppercase;
+}
+.today-situation__system {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 2fr);
+  align-items: start;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+.today-situation__system .status-strip__detail { margin: 0; }
+.console-guidance__label { margin-bottom: 10px; }
+.console-operations { margin-bottom: var(--console-gap); }
 .console-controls {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
-  margin-bottom: var(--console-gap);
+  margin-bottom: 0;
   border-bottom: 1px solid var(--border-subtle);
 }
 .console-controls button {
@@ -80,6 +115,10 @@
 .console-destination:hover { background: var(--surface-2); }
 @media (prefers-reduced-motion: reduce) {
   .command-console.today-field *, .console-system * { scroll-behavior: auto; }
+}
+
+@media (max-width: 340px) {
+  .today-situation__system { grid-template-columns: 1fr; gap: 6px; }
 }
 
 .console-catalog-search { margin-block: 12px; }
