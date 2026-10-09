@@ -5,7 +5,8 @@
 Gavin explicitly authorized this bounded Protected cleanup on 2026-10-09. Fresh master:
 `1170a13bbbd96627665087cef203e45d662f3a86`, the verified merge of #210. The meal milestone
 #209 is already merged; only prototype PR #204 is open and stays untouched. Builder: Codex;
-branch `codex/delta-removal`; active cleanup PR will carry exact-head evidence and independent review.
+branch `codex/delta-removal`; active PR [#211](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/211)
+carries exact-head evidence and independent review.
 
 Audit: current tracked production navigation/App/MORE/SYSTEM, runtime source, package manifest and
 lockfile, Vite/PWA/deployment configuration, environment declarations, event/storage types and
