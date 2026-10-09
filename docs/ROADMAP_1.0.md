@@ -6,6 +6,14 @@ approval, build it, open a PR, and report in plain language. New work follows
 [`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
 feature history, and product rulings below are preserved.
 
+## Active priority — BODY Daily Health Record
+
+Gavin approved one cohesive Protected BODY experience transformation: daily orientation, fast
+canonical meal/water recording, inspectable entries and existing progress without a weigh-in gate.
+The authorized presentation amendments are recorded in UX_DECISIONS; engineering/data boundaries
+and four tabs remain. One-off meals and unrelated functionality are deferred. VCC-001 stays paused;
+this does not activate any later intelligence rules. See CURRENT_CHECKPOINT for the active brief.
+
 ## Goal
 
 BEYOND 1.0 means TRAIN and BODY work perfectly and the whole app feels finished, calm, and fun on

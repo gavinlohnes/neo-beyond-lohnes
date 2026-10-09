@@ -23,9 +23,11 @@ describe("CLEANUP-003", () => {
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
     await expect.element(screen.getByText(/^Logged \d{1,2}:\d{2}\s?[AP]M$/)).toBeVisible();
+    await screen.getByRole("button", { name: "DONE", exact: true }).click();
+    await screen.getByRole("button", { name: "YOUR PROGRESS" }).click();
     await expect.element(screen.getByText("Last 60 days")).toBeVisible();
 
-    await screen.getByText("SHOW TIMELINE").click();
+    await screen.getByText("SHOW ACCOMPLISHMENT TIMELINE").click();
     const chip = screen.getByRole("button", { name: "PRs", exact: true });
     await expect.element(chip).toBeVisible();
     expect(getComputedStyle(chip.element()).backgroundColor).toBe("rgba(0, 0, 0, 0)");

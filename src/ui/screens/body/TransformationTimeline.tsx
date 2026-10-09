@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getTimeline,
   TIMELINE_DAYS,
@@ -27,7 +27,7 @@ interface MarkerGroup {
 
 /**
  * BODY-TIMELINE-001 (owner brief 2026-10-04): the transformation timeline,
- * shown inside the BODYWEIGHT station. Weight over the last 90 days with
+ * shown in BODY progress. Weight over the last 90 days with
  * PRs, clean-day milestones, weight milestones and the goal date pinned on
  * it; a chip per kind filters it; tapping a marker shows its line. Read
  * only. Neutral ink; red appears only as the PR marker's outline, matching
@@ -37,22 +37,35 @@ export function TransformationTimeline() {
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [hidden, setHidden] = useState<Set<TimelineEventKind>>(new Set());
   const [selected, setSelected] = useState<number | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const retryFocus = useRef(false);
+  const retryTarget = useRef<HTMLElement | null>(null);
+  const surfaceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let current = true;
+    setFailed(false);
     void getTimeline().then((next) => {
       if (current) setTimeline(next);
-    });
+    }).catch(() => { if (current) setFailed(true); });
     return () => {
       current = false;
     };
-  }, []);
+  }, [retry]);
 
   const view = useMemo(() => (timeline ? layout(timeline, hidden) : null), [timeline, hidden]);
 
+  useEffect(() => {
+    if (!timeline || !retryFocus.current) return;
+    retryFocus.current = false;
+    if (document.activeElement === document.body) (retryTarget.current ?? surfaceRef.current?.querySelector<HTMLElement>("button") ?? surfaceRef.current)?.focus({ preventScroll: true });
+  }, [timeline]);
+
+  if (failed) return <div role="alert"><p className="meta">Could not read the timeline. Your records are unchanged.</p><button className="btn-secondary" onClick={(event) => { retryFocus.current = true; retryTarget.current = event.currentTarget.closest("details")?.querySelector("summary") ?? null; setRetry((value) => value + 1); }}>RETRY TIMELINE</button></div>;
   if (!timeline || !view) return <p className="meta">Loading…</p>;
-  if (timeline.weighIns.length === 0) {
-    return <p className="meta timeline-empty">Log a bodyweight to start your timeline.</p>;
+  if (timeline.weighIns.length === 0 && timeline.events.length === 0) {
+    return <div ref={surfaceRef} tabIndex={-1}><p className="meta timeline-empty">No accomplishments or weigh-ins recorded in these 90 days yet. A weigh-in is not required.</p></div>;
   }
 
   function toggle(kind: TimelineEventKind) {
@@ -68,9 +81,9 @@ export function TransformationTimeline() {
   const selectedGroup = selected === null ? undefined : view.groups[selected];
 
   return (
-    <div className="timeline">
+    <div ref={surfaceRef} tabIndex={-1} className="timeline">
       <div className="timeline__filters" role="group" aria-label="Show on the timeline">
-        {FILTERS.map((f) => (
+        {FILTERS.filter((f) => timeline.weighIns.length > 0 || f.kind === "PR" || f.kind === "CLEAN_DAY_MILESTONE").map((f) => (
           <button
             key={f.kind}
             type="button"
@@ -82,10 +95,15 @@ export function TransformationTimeline() {
           </button>
         ))}
       </div>
+      {timeline.weighIns.length === 0 ? <section aria-label={`Accomplishments over the last ${TIMELINE_DAYS} days`}>
+        <p className="meta">Last {TIMELINE_DAYS} days</p>
+        {timeline.events.filter((event) => !hidden.has(event.kind)).map((event, index) => <div key={index} className="health-accomplishment"><p className="meta">{shortDate(event.date)}</p><p className="health-record-name">{event.label}</p></div>)}
+        {view.groups.length === 0 && <p className="meta">Nothing to show with these filters.</p>}
+      </section> : <>
       <div className="timeline__plot">
         <svg
           role="img"
-          aria-label={`Weight over the last ${TIMELINE_DAYS} days, from ${timeline.weighIns[0]!.weightLbs} to ${timeline.weighIns.at(-1)!.weightLbs} lb`}
+          aria-label={timeline.weighIns.length ? `Weight over the last ${TIMELINE_DAYS} days, from ${timeline.weighIns[0]!.weightLbs} to ${timeline.weighIns.at(-1)!.weightLbs} lb` : `Accomplishments over the last ${TIMELINE_DAYS} days`}
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
           className="timeline__svg"
@@ -136,6 +154,7 @@ export function TransformationTimeline() {
         <span>{shortDate(timeline.windowStart)}</span>
         <span>Today</span>
       </div>
+      </>}
       {selectedGroup && (
         <div className="timeline__detail" role="status">
           {selectedGroup.events.map((e, i) => (
@@ -145,7 +164,7 @@ export function TransformationTimeline() {
           ))}
         </div>
       )}
-      {view.groups.length === 0 && <p className="meta" style={{ margin: "8px 0 0" }}>Nothing pinned in these {TIMELINE_DAYS} days yet.</p>}
+      {timeline.weighIns.length > 0 && view.groups.length === 0 && <p className="meta" style={{ margin: "8px 0 0" }}>Nothing pinned in these {TIMELINE_DAYS} days yet.</p>}
     </div>
   );
 }
@@ -157,8 +176,8 @@ function layout(timeline: Timeline, hidden: Set<TimelineEventKind>) {
   const frac = (iso: string) => Math.min(1, Math.max(0, (new Date(iso).getTime() - start) / span));
 
   const weights = timeline.weighIns.map((w) => w.weightLbs);
-  const lo = Math.min(...weights);
-  const hi = Math.max(...weights);
+  const lo = weights.length ? Math.min(...weights) : 0;
+  const hi = weights.length ? Math.max(...weights) : 1;
   const wSpan = hi - lo || 1;
   const points = timeline.weighIns.map(
     (w) => [PAD + frac(w.recordedAt) * (W - 2 * PAD), PAD + ((hi - w.weightLbs) / wSpan) * (H - 2 * PAD)] as const,

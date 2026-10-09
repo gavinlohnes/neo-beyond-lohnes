@@ -48,7 +48,7 @@ describe("Home-screen shortcuts (real browser)", () => {
   it("?go=weight opens BODY with the bodyweight entry open, and clears the URL", async () => {
     openWithShortcut("weight");
     const screen = await render(<App />);
-    await expect.element(screen.getByText("BODY // ESSENTIALS", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("BODY // DAILY RECORD", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("spinbutton", { name: "Weight (lbs)" })).toBeVisible();
     expect(new URL(window.location.href).searchParams.has("go")).toBe(false);
   });
@@ -66,7 +66,7 @@ describe("Home-screen shortcuts (real browser)", () => {
     await logSet(day.id, active.id, "machine-chest-press", 1, 135, 10);
     openWithShortcut("water");
     const screen = await render(<App />);
-    await expect.element(screen.getByText("BODY // ESSENTIALS", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("BODY // DAILY RECORD", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "+8 oz" })).toBeVisible();
     await expect.element(screen.getByText("0 oz", { exact: true }).first()).toBeVisible();
   });

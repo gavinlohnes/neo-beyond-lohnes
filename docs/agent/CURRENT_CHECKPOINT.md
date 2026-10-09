@@ -1,6 +1,45 @@
 # Current checkpoint
 
-## Current objective — Delta removal and intelligence preservation
+## Current objective — BODY Daily Health Record
+
+Gavin explicitly approved this cohesive Protected objective on 2026-10-09, including amendment of
+BODY's four-tracker presentation and latest-entry sleep summary. Fresh master:
+`bb36ffbf12116cc1e29d27bac1fa549744101e8a` (#211 integrated). No overlapping Builder;
+only prototype PR #204 was open and remains untouched. Builder: Codex; branch
+`codex/body-daily-record`; active PR [#212](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/212).
+
+Scope: daily calories/protein orientation, secondary nutrition details, separate main sleep/naps,
+canonical record inspection/correction, immediate meal/water entry and existing progress without a
+weigh-in gate. Reuse canonical forms/commands/read models; keep four tabs and all meal/undo/draft/
+recovery/offline/workout safeguards. No Engine, event, schema, persistence, backup, dependency,
+one-off meal or unrelated changes. UX amendments are in the existing Decision Register.
+Leverage: REUSE existing BEYOND tools/queries; USE PLATFORM native disclosures; BUILD OWNED the
+small connective presentation. Do not add a library or another logging architecture.
+
+Acceptance: real mobile 320/360/412 px; effective totals and corrections; main/nap and lived-day
+ownership; progress without weight; draft/focus/return/error recovery; exactly-once logging and
+existing regressions; offline built PWA; architecture/type/build; green required CI and independent
+exact-head PASS. Verification: architecture passed (199 files), TypeScript/production PWA build and whitespace passed.
+Full local suite covered 212 files: 2,220 passed / one existing skip; six legacy presentation selectors
+needed updating for the authorized layout. All affected suites were corrected and rerun successfully
+(112 tests across the final focused sets), with no assertions weakened. The 10 new daily-record cases
+cover all three phone widths with full contrast/axe checks, overnight main/nap ownership, canonical
+meal/water inspection, retained correction drafts, read-only recovery/focus, local draft/return and
+same-tick write guards. Final timeline/recovery subset: 14 passed. Existing meal/workout/rollover,
+Engine, provenance and historical restore regressions remain. Actual synthetic browser screenshots
+are in `docs/screenshots/body-daily-record/`; all quick water controls fit above navigation at
+320/360/412 px, with no horizontal overflow. Built-PWA offline preset save/log/return/reopen/undo/
+correction/cold reload passed. Required exact-head CI and independent review are pending in the PR.
+Initial independent review found one minor missing inspect glyph. It is replaced with the existing
+LineIcon/ArrowUpRight SVG, and affected real screenshots were recaptured. A subsequent manual
+read-retry timing defect is corrected with a post-commit enabled-control handoff; the regression
+uses a gated read. New layout tests load the real local production fonts before measuring rather
+than relying on platform fallback fonts. Final daily/meal/focus correction set: 41 tests passed;
+architecture/build pass. Renewed independent exact-head review and required CI are requested.
+Limitations: Chromium verification; existing memory-only drafts/undo windows; no canonical fiber
+field; existing bundle warning. No merge or deployment authorized.
+
+## Historical objective — Delta removal and intelligence preservation
 
 Gavin explicitly authorized this bounded Protected cleanup on 2026-10-09. Fresh master:
 `1170a13bbbd96627665087cef203e45d662f3a86`, the verified merge of #210. The meal milestone

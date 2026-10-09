@@ -296,6 +296,7 @@ describe("TODAY meal round trip", () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
     expect(screen.getByRole("button", { name: "RETURN TO TODAY" }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByText("Lunch logged · 600 kcal · 45g", { exact: true })).toBeVisible();
     expect(await loggedCount()).toBe(1);

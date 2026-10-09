@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { TickNumber } from "../../feel/TickNumber";
-import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { HoldButton } from "../../components/HoldButton";
 import { useUndoOpen, useUndoWindow } from "../../hooks/useUndoWindow";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { Icon } from "../../icons/Icon";
-import { LineIcon } from "../../icons/LineIcon";
-import { Drumstick, Moon, Scale } from "lucide-react";
 import type { BeyondDay, HydrationEntry, NutritionTargets, SavedMeal } from "../../../domain/common/types";
 import {
   logWater,
@@ -59,14 +56,12 @@ import { getBatchDuplicateMealCheck, getDuplicateMealCheck, getSameFoodCheck } f
 import type { DuplicateMealPair, SameFoodPair } from "../../../engine/sameFood";
 import { getEffectiveProteinTargetG, getNutritionTargets } from "../../../application/nutritionTargetQueries";
 import {
-  describeBestSince,
   formatShortDate,
   getBodyweightHistory,
-  trendDirection,
   type WeighIn,
 } from "../../../application/bodyTrendQueries";
-import { WeightTrend } from "./WeightTrend";
-import { TransformationTimeline } from "./TransformationTimeline";
+import { DailyHealthRecord, HealthOverview, type HealthRecord } from "./DailyHealthRecord";
+import { BodyProgress } from "./BodyProgress";
 import { QuitTracker } from "./QuitTracker";
 import { SHORTCUT_ANCHOR_IDS, type BodyFocus } from "../../shortcuts";
 import {
@@ -77,7 +72,6 @@ import {
   describeImplausibleProtein,
   describeImplausibleSleep,
   describeImplausibleSleepCorrection,
-  describeSleepTileNote,
   readSleepDuration,
   describeProteinLogged,
   describeSleepLogged,
@@ -253,17 +247,63 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   onMealJourneyInFlightChange?: ((busy: boolean) => void) | undefined;
 } = {}) {
   const [mealFocused, setMealFocused] = useState(focus === "meal");
+  const [bodyMealsOpen, setBodyMealsOpen] = useState(false);
+  const mealsVisible = mealFocused || bodyMealsOpen;
+  const [progressOpen, setProgressOpen] = useState(false);
+  const [otherToolsOpen, setOtherToolsOpen] = useState(focus === "urge");
+  const [readingsReady, setReadingsReady] = useState(false);
+  const [dataRevision, setDataRevision] = useState(0);
+  const localOrigin = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
+  const readRevision = useRef(0);
+  const manualReadFocusPending = useRef(false);
+  function rememberOrigin() {
+    localOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
+  }
+  function restoreOrigin() {
+    const origin = localOrigin.current;
+    localOrigin.current = null;
+    requestAnimationFrame(() => {
+      const restored = origin?.trigger?.id ? document.getElementById(origin.trigger.id) : null;
+      const target = origin?.trigger?.isConnected && origin.trigger.getClientRects().length ? origin.trigger : restored ?? document.getElementById("body-meals-entry");
+      target?.focus({ preventScroll: true });
+      window.scrollTo({ top: origin?.scrollY ?? 0, behavior: "instant" });
+    });
+  }
+  function closeTool() {
+    if (busyRef.current || foodSearchBusyRef.current) return;
+    setSleepOpen(false); setBodyweightOpen(false); setProteinOpen(false);
+    restoreOrigin();
+  }
+  function openTool(tool: "SLEEP" | "WEIGHT" | "PROTEIN") {
+    if (busyRef.current || foodSearchBusyRef.current) return;
+    rememberOrigin();
+    setSleepOpen(tool === "SLEEP"); setBodyweightOpen(tool === "WEIGHT"); setProteinOpen(tool === "PROTEIN");
+    requestAnimationFrame(() => {
+      const panel = document.getElementById(tool === "SLEEP" ? SHORTCUT_ANCHOR_IDS.sleep : tool === "WEIGHT" ? SHORTCUT_ANCHOR_IDS.weight : "body-protein");
+      const available = [...(panel?.querySelectorAll<HTMLElement>("input, button") ?? [])].filter((element) => element.getClientRects().length && !element.matches(":disabled"));
+      const control = available.find((element) => element.tagName === "INPUT") ?? available.find((element) => element.textContent !== "DONE") ?? available[0];
+      control?.focus();
+    });
+  }
+  function showProgress() {
+    if (busyRef.current || foodSearchBusyRef.current) return;
+    rememberOrigin(); setProgressOpen(true);
+    requestAnimationFrame(() => { document.getElementById("health-progress-heading")?.focus(); window.scrollTo({ top: 0, behavior: "instant" }); });
+  }
   const [managingMealId, setManagingMealId] = useState<string | null>(null);
   const [lookupOpen, setLookupOpen] = useState(false);
   useEffect(() => {
-    if (visible) setMealFocused(focus === "meal");
+    if (visible) { setMealFocused(focus === "meal"); setBodyMealsOpen(false); setProgressOpen(false); }
   }, [focus, visible]);
   function showMealSurface(next: boolean) {
     if (busyRef.current || foodSearchBusyRef.current) return;
     // An explicit local choice supersedes the initial delayed shortcut handoff.
     mealPositioned.current = true;
-    setMealFocused(next);
-    requestAnimationFrame(() => document.getElementById(next ? "meal-surface-heading" : "body-meals-entry")?.focus());
+    if (next) rememberOrigin();
+    if (next) { setBodyMealsOpen(true); setMealFocused(focus === "meal"); }
+    else { setMealFocused(false); setBodyMealsOpen(false); }
+    if (next) requestAnimationFrame(() => { document.getElementById("meal-surface-heading")?.focus(); window.scrollTo({ top: 0, behavior: "instant" }); });
+    else restoreOrigin();
   }
   const [day, setDay] = useState<BeyondDay | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -327,7 +367,6 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   const [bodyweightConfirmation, setBodyweightConfirmation] = useState<Confirmation>(null);
   const [bodyweightHistoryOpen, setBodyweightHistoryOpen] = useState(false);
   // BODY-TIMELINE-001: the transformation timeline, closed until asked for.
-  const [timelineOpen, setTimelineOpen] = useState(false);
   // Manual entry only has a real "fast path" alternative (SAME AS LAST)
   // once a prior entry exists — see the `lastBodyweightEntry ? ... : ...`
   // branch further down (FieldDisclosure vs. always-open).
@@ -420,7 +459,10 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   const [totalMealCalories, setTotalMealCalories] = useState(0);
 
   useEffect(() => {
-    void refresh();
+    void refresh().catch(() => {
+      setMealReadFailed(true);
+      setMealError("Could not read BODY. Retry readings without saving or logging anything.");
+    });
   }, []);
   // The retained BODY screen does not remount on explicit return/reopen.
   // Recover reads only; keep drafts, confirmations and canonical writes intact.
@@ -443,8 +485,22 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
     }
   }, [visible, busy, foodSearchBusy]);
 
+  // Retry can disable its focused button before React commits the enabled
+  // destination. Complete this handoff after that commit, never just one RAF.
+  useEffect(() => {
+    if (!visible || !manualReadFocusPending.current || busy || foodSearchBusy) return;
+    const control = mealReadFailed
+      ? [...document.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "RETRY READINGS" && button.getClientRects().length)
+      : document.getElementById(onReturnToToday ? "meal-return" : "body-meals-entry") as HTMLButtonElement | null;
+    if (!control || control.disabled) return;
+    manualReadFocusPending.current = false;
+    const active = document.activeElement;
+    if (!active || active === document.body || active.closest("[hidden]")) control.focus({ preventScroll: true });
+  }, [visible, busy, foodSearchBusy, mealReadFailed, onReturnToToday]);
+
   async function retryMealRead() {
     if (busyRef.current || foodSearchBusyRef.current) return;
+    if (document.activeElement?.textContent === "RETRY READINGS") manualReadFocusPending.current = true;
     setBusy(true);
     try {
       await (mealReadRetry.current ?? refresh)();
@@ -455,6 +511,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
       setMealError("Could not refresh the meal readings. Retry readings without saving or logging again.");
     } finally {
       setBusy(false);
+
     }
   }
   // DROP 0: re-read after a 16:30 rollover; form inputs are separate state and survive.
@@ -487,33 +544,51 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   }, [focus, visible]);
 
   async function refresh() {
+    const revision = ++readRevision.current;
     const activeDay = (await getActiveDay()) ?? null;
-    setDay(activeDay);
-    // SavedMeal presets are not day-scoped (same as SchedulePattern) —
-    // loaded regardless of whether a day exists yet, since creating one
-    // doesn't require ensureActiveDay (only logMeal does).
-    setSavedMeals(await getRecentSavedMeals());
-    // Nutrition targets aren't day-scoped (same as SchedulePattern) —
-    // loaded regardless of whether a day exists yet.
-    const targets = await getNutritionTargets();
-    setNutritionTargets(targets);
-    setEffectiveProteinTargetG(await getEffectiveProteinTargetG());
-    setWeightHistory(await getBodyweightHistory());
-    setRepeatMeals(await getPreviousDayMeals(activeDay?.id));
-    if (activeDay) {
-      setEntries(await getHydrationEntries(activeDay.id));
-      setTotal(await getEffectiveHydrationTotal(activeDay.id));
-      setSleepEntries(await getSleepEntries(activeDay.id));
-      setBodyweightEntries(await getBodyweightEntries(activeDay.id));
-      setProteinEntries(await getProteinEntries(activeDay.id));
-      setDayProteinG(await getDayProteinTotalG(activeDay.id));
-      setMealEntries(await getMealEntries(activeDay.id));
-      setTotalMealCalories(await getTotalMealCalories(activeDay.id));
-    } else {
-      setMealEntries([]);
-      setTotalMealCalories(0);
-      setDayProteinG(0);
+    const [nextSavedMeals, targets, targetProtein, history, previousMeals, nextWater, waterTotal,
+      nextSleep, nextWeight, nextProtein, proteinTotal, nextMeals, calories] = await Promise.all([
+      getRecentSavedMeals(), getNutritionTargets(), getEffectiveProteinTargetG(), getBodyweightHistory(),
+      getPreviousDayMeals(activeDay?.id),
+      activeDay ? getHydrationEntries(activeDay.id) : Promise.resolve([]),
+      activeDay ? getEffectiveHydrationTotal(activeDay.id) : Promise.resolve(0),
+      activeDay ? getSleepEntries(activeDay.id) : Promise.resolve([]),
+      activeDay ? getBodyweightEntries(activeDay.id) : Promise.resolve([]),
+      activeDay ? getProteinEntries(activeDay.id) : Promise.resolve([]),
+      activeDay ? getDayProteinTotalG(activeDay.id) : Promise.resolve(0),
+      activeDay ? getMealEntries(activeDay.id) : Promise.resolve([]),
+      activeDay ? getTotalMealCalories(activeDay.id) : Promise.resolve(0),
+    ]);
+    // Publish one consistent reading; a delayed older read cannot replace a newer result.
+    if (revision !== readRevision.current) return;
+    setDay(activeDay); setSavedMeals(nextSavedMeals); setNutritionTargets(targets);
+    setEffectiveProteinTargetG(targetProtein); setWeightHistory(history); setRepeatMeals(previousMeals);
+    setEntries(nextWater); setTotal(waterTotal); setSleepEntries(nextSleep); setBodyweightEntries(nextWeight);
+    setProteinEntries(nextProtein); setDayProteinG(proteinTotal); setMealEntries(nextMeals); setTotalMealCalories(calories);
+    setReadingsReady(true); setDataRevision((value) => value + 1);
+  }
+
+  function inspectRecord(record: HealthRecord) {
+    if (busyRef.current || foodSearchBusyRef.current) return;
+    rememberOrigin();
+    setSleepOpen(false); setBodyweightOpen(false); setProteinOpen(false);
+    let inputId: string;
+    switch (record.kind) {
+      case "MEAL":
+        setBodyMealsOpen(true); setMealHistoryOpen(true);
+        if (correctingMealEventId !== record.entry.headEventId) beginCorrectMeal(record.entry);
+        inputId = `correct-meal-${record.entry.headEventId}-calories`;
+        break;
+      case "WATER":
+        setWaterHistoryOpen(true);
+        if (correctingId !== record.entry.headEventId) { setCorrectingId(record.entry.headEventId); setCorrectionInput(String(record.entry.effectiveAmountOz)); setError(null); }
+        inputId = "water-correction";
+        break;
+      case "SLEEP": setSleepOpen(true); setSleepHistoryOpen(true); if (sleepCorrectingId !== record.entry.headEventId) beginCorrectSleep(record.entry); inputId = `sleep-correction-hours-${record.entry.headEventId}`; break;
+      case "WEIGHT": setBodyweightOpen(true); setBodyweightHistoryOpen(true); if (bodyweightCorrectingId !== record.entry.headEventId) beginCorrectBodyweight(record.entry); inputId = "weight-correction"; break;
+      case "PROTEIN": setProteinOpen(true); setProteinHistoryOpen(true); if (proteinCorrectingId !== record.entry.headEventId) beginCorrectProtein(record.entry); inputId = "protein-correction"; break;
     }
+    requestAnimationFrame(() => document.getElementById(inputId)?.focus());
   }
 
   /** "Same food?" — asked where the second log was made; never blocks, never deletes on its own. */
@@ -1361,89 +1436,30 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
 
   return (
     <div className={`screen fade-in body-field${mealFocused ? " body-meals" : ""}`}>
-      {/* FIELD ALPHA Phase 3: identity zone quieted, same principle
-          TODAY/TRAIN applied — freed territory belongs to the
-          instrument cluster below, not screen chrome.
-          FIELD-001: wrapped in .field-header, matching TODAY/TRAIN's own
-          identity treatment. The existing descriptive sentence becomes
-          the tagline's sub-line verbatim (reused, not duplicated) under
-          a new truthful headline stating what BODY actually is —
-          evidence, not a second recommendation authority. */}
       <div className="field-header">
         <Icon name="body" size={22} />
-        <h1 id="meal-surface-heading" tabIndex={-1} className="eyebrow">{mealFocused ? "BODY // MEALS" : "BODY // ESSENTIALS"}</h1>
+        <h1 id="meal-surface-heading" tabIndex={-1} className="eyebrow">{mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // DAILY RECORD"}</h1>
       </div>
-
+      {!mealsVisible && !progressOpen && (readingsReady ? <HealthOverview day={day}
+        calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries}
+        weight={weightHistory} mealEntries={mealEntries}
+        calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged from meals · no calorie target"}
+        proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} /> : <p className="meta" role="status">Loading recorded information…</p>)}
       <div className="meal-navigation">
         <button id="body-meals-entry" className="btn-secondary" disabled={busy || foodSearchBusy}
-          onClick={() => showMealSurface(!mealFocused)}>
-          {mealFocused ? "ALL BODY TRACKERS" : "OPEN MEALS"}
+          onClick={() => { if (progressOpen) { setProgressOpen(false); restoreOrigin(); } else showMealSurface(!mealsVisible); }}>
+          {mealsVisible || progressOpen ? "DAILY RECORD" : "OPEN MEALS"}
         </button>
+        {!mealsVisible && !progressOpen && <button id="body-progress-entry" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={showProgress}>YOUR PROGRESS</button>}
         {onReturnToToday && <button id="meal-return" className="btn-secondary"
           disabled={busy || foodSearchBusy} onClick={onReturnToToday}>RETURN TO TODAY</button>}
       </div>
-      <div hidden={mealFocused}>
-      {/* Overdrive Phase 5: a single glanceable status strip before the
-          four separate logging cards, so BODY reads as one physical-status
-          subsystem at a glance instead of four unrelated forms you have to
-          scroll through to piece together. Purely a summary of state
-          already computed below (total/proteinTotal/lastSleepEntry/
-          lastBodyweightEntry) — no new query, no new fact, nothing this
-          strip shows isn't already the source of truth for its own card.
-          FIELD ALPHA Phase 3: now .instrument-cluster (see global.css) —
-          a real orientation-layer primitive instead of a bare .card with
-          an inline CSS grid, still no corner-flag/red accent, deliberately
-          — BODY's four trackers are peer subsystems, not one leading
-          recommendation the way TODAY/TRAIN have; marking any single one
-          of them as "the leader" would manufacture a hierarchy that
-          doesn't exist in the product. */}
-      <p className="section-label section-label--field">Status</p>
-
-      {/* VISUAL-003: reordered to match the LOG section's own station
-          order (Water, Sleep, Weight, Protein) below — Status previously
-          listed Protein before Sleep/Weight, a mismatch that cost a
-          re-scan when moving from "what's recorded" to "where do I log
-          it." Same four facts, same instrument-cluster primitive, no new
-          value. */}
-      <div className="instrument-cluster">
-        <div>
-          <p className="meta" style={{ margin: 0 }}>WATER</p>
-          <p className="status-value"><TickNumber value={total} /> oz</p>
-        </div>
-        <div>
-          <p className="meta" style={{ margin: 0 }}>SLEEP</p>
-          <p className={lastSleepEntry ? "status-value" : "status-value status-value--empty"}>
-            {lastSleepEntry ? formatDuration(lastSleepEntry.effectiveDurationMinutes) : "Not logged"}
-          </p>
-          {/* DROP 3: one entry is shown; with more than one, say which (a span, not .meta — the cluster's labels are .meta). */}
-          {describeSleepTileNote(sleepEntries.length) && (
-            <span className="status-note" style={{ fontSize: 16, color: "var(--text-3-strong)" }}>{describeSleepTileNote(sleepEntries.length)}</span>
-          )}
-        </div>
-        <div>
-          <p className="meta" style={{ margin: 0 }}>WEIGHT</p>
-          <p className={lastBodyweightEntry ? "status-value" : "status-value status-value--empty"}>
-            {lastBodyweightEntry ? `${lastBodyweightEntry.effectiveWeightLbs} lbs` : "Not logged"}
-          </p>
-        </div>
-        <div>
-          <p className="meta" style={{ margin: 0 }}>PROTEIN</p>
-          <p className="status-value"><TickNumber value={dayProteinG} /> g</p>
-        </div>
-      </div>
-
-      {/* FIELD-001 (Review Correction): the owner review found the first
-          pass too incremental — a bigger STATUS plane sitting atop
-          essentially the same station stack still read as one
-          continuous scroll. .field-recede (the same structural cut
-          TODAY-006's own Support zone established, generalized —
-          see global.css) marks LOG as genuinely subordinate equipment,
-          not a second peer plane. Every station's own capability,
-          correction flow, and history disclosure is unchanged —
-          this is spatial hierarchy only, nothing hidden or removed. */}
-      <div className="field-recede">
-      <p className="section-label">Log</p>
-
+      {progressOpen && <section aria-labelledby="health-progress-heading">
+        <h2 id="health-progress-heading" tabIndex={-1} className="section-label">Your progress</h2>
+        <BodyProgress refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
+      </section>}
+      <div hidden={mealsVisible || progressOpen}>
+      {mealReadFailed && <div role="alert"><p className="meta">{mealError}</p><button className="btn-secondary" disabled={busy || foodSearchBusy} onClick={() => void retryMealRead()}>RETRY READINGS</button></div>}
       {/* WATER — one consolidated instrument row: current total, fastest
           actions, custom fallback, collapsed history. FIELD ALPHA Phase
           3: .equipment-row, not .card — a logging tool, not a floating
@@ -1557,7 +1573,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
                       <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
                         <input
                           type="number"
-                          aria-label="Corrected amount (oz)"
+                          id="water-correction" aria-label="Corrected amount (oz)"
                           value={correctionInput}
                           onChange={(e) => setCorrectionInput(e.target.value)}
                           className="input"
@@ -1576,6 +1592,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
                   </div>
                 ))}
             </FieldDisclosure>
+            {waterHistoryOpen && <button className="btn-secondary" disabled={busy} onClick={() => { setWaterHistoryOpen(false); restoreOrigin(); }}>BACK TO RECORDS</button>}
           </div>
         )}
       </div>
@@ -1590,7 +1607,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
         <div className="equipment-row">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
             <p className="tool-label" style={{ margin: 0 }}>SLEEP</p>
-            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} onClick={() => setSleepOpen(false)}>
+            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} disabled={busy} onClick={closeTool}>
               DONE
             </button>
           </div>
@@ -1793,7 +1810,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
           )}
         </div>
       ) : (
-        <CollapsibleRow name="SLEEP" icon={<LineIcon icon={Moon} />} onOpen={() => setSleepOpen(true)} />
+        null
       )}
       </div>
 
@@ -1802,7 +1819,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
         <div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.weight}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
             <p className="tool-label" style={{ margin: 0 }}>BODYWEIGHT</p>
-            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} onClick={() => setBodyweightOpen(false)}>
+            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} disabled={busy} onClick={closeTool}>
               DONE
             </button>
           </div>
@@ -1884,7 +1901,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
                       </div>
                       {bodyweightCorrectingId === entry.headEventId && (
                         <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                          <input type="number" aria-label="Corrected weight (lbs)" value={bodyweightCorrectionInput} onChange={(e) => setBodyweightCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
+                          <input type="number" id="weight-correction" aria-label="Corrected weight (lbs)" value={bodyweightCorrectionInput} onChange={(e) => setBodyweightCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
                           <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
                             SAVE
                           </button>
@@ -1895,31 +1912,20 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
               </FieldDisclosure>
             </div>
           )}
-          {/* CLEANUP-003 (walk-through finding 9): one chart at a time — the timeline replaces the 60-day line while open. */}
-          <WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} hideChart={timelineOpen} />
-          <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <FieldDisclosure summary={`${timelineOpen ? "HIDE" : "SHOW"} TIMELINE`} open={timelineOpen} onToggle={setTimelineOpen}>
-              {timelineOpen && <TransformationTimeline />}
-            </FieldDisclosure>
-          </div>
+
         </div>
       ) : (
-        <CollapsibleRow
-          name="BODYWEIGHT"
-          icon={<LineIcon icon={Scale} />}
-          summary={describeBodyweightRow(weightHistory, nutritionTargets?.goalWeightLbs)}
-          onOpen={() => setBodyweightOpen(true)}
-        />
+        null
       )}
 
       {/* PROTEIN — FIELD ALPHA Phase 3: same value-forward pattern as
           HYDRATION (a cumulative daily total, not a single point-in-time
           reading like SLEEP/BODYWEIGHT). */}
       {proteinOpen ? (
-        <div className="equipment-row">
+        <div className="equipment-row" id="body-protein">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
             <p className="tool-label" style={{ margin: 0 }}>PROTEIN</p>
-            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} onClick={() => setProteinOpen(false)}>
+            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} disabled={busy} onClick={closeTool}>
               DONE
             </button>
           </div>
@@ -1999,7 +2005,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
                           <div style={{ display: "flex", gap: 8 }}>
                             <input
                               type="number"
-                              aria-label="Corrected amount (g)"
+                              id="protein-correction" aria-label="Corrected amount (g)"
                               value={proteinCorrectionInput}
                               onChange={(e) => {
                                 setProteinCorrectionInput(e.target.value);
@@ -2034,31 +2040,20 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
           )}
         </div>
       ) : (
-        <CollapsibleRow name="PROTEIN" icon={<LineIcon icon={Drumstick} />} onOpen={() => setProteinOpen(true)} />
+        null
       )}
 
-      {/* Drop 6: the quit tracker lives on BODY (owner ruling 2026-09-30). */}
-      <QuitTracker initiallyOpen={focus === "urge"} />
-
-      {/* NUTRITION TARGETS — NUTRITION-003 (High-Risk Drop, direct owner
-          ruling reversing NUTRITION-001's "no calorie/macro goal, no
-          nutrition scoring" restriction): calorie target is set directly,
-          no formula; protein target is derived from the most recently
-          logged bodyweight × an adjustable multiplier, and stays
-          undefined — not a guessed number — until a bodyweight exists. */}
-      <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>NUTRITION TARGETS</p>
-        <p className="recommendation-title" style={{ marginBottom: 2 }}>
-          {describeCalorieProgress(totalMealCalories, nutritionTargets?.calorieTargetKcal)}
-        </p>
-        <p className="meta" style={{ marginBottom: 8 }}>
-          {describeProteinProgress(dayProteinG, effectiveProteinTargetG)}
-        </p>
-        {/* DECLUTTER Drop 3: target settings moved to MORE → Settings. */}
-        <p className="meta" style={{ margin: 0 }}>Change targets in MORE → Settings.</p>
+      <div className="health-actions" role="group" aria-label="More recording actions">
+        <button className="btn-secondary" aria-label="Open SLEEP" disabled={busy} onClick={() => openTool("SLEEP")}>SLEEP</button>
+        <button className="btn-secondary" aria-label="Open BODYWEIGHT" disabled={busy} onClick={() => openTool("WEIGHT")}>BODYWEIGHT</button>
+        <button className="btn-secondary" aria-label="Open PROTEIN ONLY" disabled={busy} onClick={() => openTool("PROTEIN")}>PROTEIN ONLY</button>
       </div>
-
-      </div>
+      {readingsReady && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries}
+        protein={proteinEntries} meals={mealEntries} disabled={busy || foodSearchBusy} onInspect={inspectRecord} />}
+      <FieldDisclosure summary={`${otherToolsOpen ? "HIDE" : "SHOW"} OTHER BODY TOOLS`} open={otherToolsOpen} onToggle={setOtherToolsOpen}>
+        <QuitTracker initiallyOpen={focus === "urge"} />
+        <p className="meta">Nutrition targets are editable in MORE → Settings.</p>
+      </FieldDisclosure>
       </div>
 
       {/* MEAL MEMORY — NUTRITION-001 (High-Risk Drop): a small reusable
@@ -2072,8 +2067,8 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
           this station's own reading stays a meal COUNT, distinct from the
           PROTEIN station's own gram total above, so the two are never
           visually conflated. */}
-      <div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.meal}>
-        {mealFocused && <div className="meal-summary" role="group" aria-label="Nutrition recorded today">
+      <div hidden={!mealsVisible || progressOpen} className="equipment-row" id={SHORTCUT_ANCHOR_IDS.meal}>
+        {mealsVisible && <div className="meal-summary" role="group" aria-label="Nutrition recorded today">
           <p className="card-title">{nutritionTargets?.calorieTargetKcal
             ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal)
             : `${totalMealCalories} kcal logged today`}</p>
@@ -2141,8 +2136,9 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
             >
               <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{meal.name}</p>
               <p className="meta" style={{ marginBottom: 8 }}>
-                {describeMacros(meal.calories, meal.proteinG, meal.carbsG, meal.fatG)}
+                {meal.calories} kcal · {meal.proteinG} g protein
               </p>
+              <details className="health-meal-details"><summary>Carbs and fat</summary><p className="meta">{meal.carbsG} g carbs · {meal.fatG} g fat</p></details>
               <div style={{ display: "flex", gap: 8 }}>
                 <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleLogMeal(meal.id)}>
                   LOG
@@ -2383,15 +2379,6 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   );
 }
 
-/** Drop 5: the collapsed BODYWEIGHT row reports live state — the latest weigh-in, plus best-since when notable. */
-function describeBodyweightRow(history: readonly WeighIn[], goalWeightLbs?: number): string | undefined {
-  const latest = history.at(-1);
-  if (!latest) return undefined;
-  const bestSince = describeBestSince(history, trendDirection(history, goalWeightLbs));
-  return bestSince ? `${latest.weightLbs} lb · ${bestSince.toLowerCase()}` : `${latest.weightLbs} lb`;
-}
-
-/** Drop 5: true when today's meals already include every meal (with repeats) from the day being offered. */
 function alreadyLoggedAll(repeat: RepeatableMeals, today: readonly NutritionEntry[]): boolean {
   const remaining = new Map<string, number>();
   for (const e of today) remaining.set(e.savedMealId, (remaining.get(e.savedMealId) ?? 0) + 1);

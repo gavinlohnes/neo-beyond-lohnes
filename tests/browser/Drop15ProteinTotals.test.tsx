@@ -18,8 +18,8 @@ import { holdToConfirm } from "./helpers/hold";
 const at = (h: number, m: number, s = 0) => new Date(2026, 9, 12, h, m, s, 0);
 
 function proteinTile(): string {
-  const cluster = document.querySelector(".instrument-cluster")!;
-  const label = [...cluster.querySelectorAll(".meta")].find((el) => el.textContent === "PROTEIN")!;
+  const cluster = document.querySelector(".health-nutrition")!;
+  const label = [...cluster.querySelectorAll(".tool-label")].find((el) => el.textContent === "PROTEIN")!;
   return label.nextElementSibling?.textContent ?? "";
 }
 
@@ -60,7 +60,7 @@ describe("one protein total on every screen", () => {
     await expect.element(body.getByText("99g protein logged today — log a bodyweight to see your target.", { exact: true })).toBeVisible();
 
     // DELETE the 49 g entry: open its correction, then hold DELETE.
-    await body.getByRole("button", { name: "Open PROTEIN" }).click();
+    await body.getByRole("button", { name: "Open PROTEIN ONLY" }).click();
     await body.getByRole("button", { name: /SHOW TODAY'S ENTRIES/ }).click();
     await body.getByRole("button", { name: "CORRECT" }).click();
     await body.getByRole("button", { name: "DELETE" }).click();
@@ -85,7 +85,7 @@ describe("correcting protein to 0", () => {
   it.each(["0", "00", "0.0"])("%s shows a clear message pointing to DELETE, right in the entry", async (typed) => {
     await seedOct3Duplicate();
     const body = await render(<BodyScreen />);
-    await body.getByRole("button", { name: "Open PROTEIN" }).click();
+    await body.getByRole("button", { name: "Open PROTEIN ONLY" }).click();
     await body.getByRole("button", { name: /SHOW TODAY'S ENTRIES/ }).click();
     await body.getByRole("button", { name: "CORRECT" }).click();
     await body.getByRole("spinbutton", { name: "Corrected amount (g)" }).fill(typed);
@@ -104,6 +104,7 @@ describe("Same food?", () => {
     await db.events.where("type").equals("MEAL_LOGGED").delete();
     vi.setSystemTime(at(20, 43, 26));
     const body = await render(<BodyScreen />);
+    await body.getByRole("button", { name: "OPEN MEALS" }).click();
     await body.getByRole("button", { name: "LOG", exact: true }).click();
 
     const prompt = body.getByRole("group", { name: "Same food?" });
@@ -114,6 +115,7 @@ describe("Same food?", () => {
 
     await prompt.getByRole("button", { name: "REMOVE ONE" }).click();
     await expect.element(body.getByText("Deleted 49 g. Protein today: 50 g.", { exact: true })).toBeVisible();
+    await body.getByRole("button", { name: "DAILY RECORD" }).click();
     await expect.poll(proteinTile).toBe("50 g");
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
   });
@@ -123,7 +125,7 @@ describe("Same food?", () => {
     await db.events.where("type").equals("PROTEIN_LOGGED").delete();
     vi.setSystemTime(at(20, 43, 40));
     const body = await render(<BodyScreen />);
-    await body.getByRole("button", { name: "Open PROTEIN" }).click();
+    await body.getByRole("button", { name: "Open PROTEIN ONLY" }).click();
     await body.getByRole("spinbutton", { name: "Protein (g)" }).fill("49");
     await body.getByRole("button", { name: "LOG PROTEIN" }).click();
 
@@ -139,7 +141,7 @@ describe("Same food?", () => {
     await seedOct3Duplicate();
     vi.setSystemTime(at(20, 44, 0));
     const body = await render(<BodyScreen />);
-    await body.getByRole("button", { name: "Open PROTEIN" }).click();
+    await body.getByRole("button", { name: "Open PROTEIN ONLY" }).click();
     // WATER has its own; PROTEIN is the last station with one.
     await body.getByRole("button", { name: "SHOW MANUAL ENTRY" }).last().click();
     await body.getByRole("spinbutton", { name: "Protein (g)" }).fill("25");
@@ -148,7 +150,9 @@ describe("Same food?", () => {
     expect(body.getByRole("group", { name: "Same food?" }).elements()).toHaveLength(0);
 
     vi.setSystemTime(at(20, 50, 0));
+    await body.getByRole("button", { name: "OPEN MEALS" }).click();
     await body.getByRole("button", { name: "LOG", exact: true }).click();
+    await body.getByRole("button", { name: "DAILY RECORD" }).click();
     await expect.poll(proteinTile).toBe("174 g");
     expect(body.getByRole("group", { name: "Same food?" }).elements()).toHaveLength(0);
   });

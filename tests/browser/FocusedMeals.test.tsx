@@ -53,7 +53,7 @@ describe("Focused BODY meals", () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished shift meal");
-    await screen.getByRole("button", { name: "ALL BODY TRACKERS" }).click();
+    await screen.getByRole("button", { name: "DAILY RECORD" }).click();
     await expect.element(screen.getByText("HYDRATION", { exact: true })).toBeVisible();
     await expect.poll(() => document.activeElement?.textContent).toBe("OPEN MEALS");
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
@@ -90,7 +90,7 @@ describe("Focused BODY meals", () => {
     const screen = await render(<BodyScreen focus="meal" />);
     await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeEnabled();
     const log = screen.getByRole("button", { name: "LOG", exact: true }).element();
-    const trackers = screen.getByRole("button", { name: "ALL BODY TRACKERS" }).element();
+    const trackers = screen.getByRole("button", { name: "DAILY RECORD" }).element();
     log.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     trackers.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await expect.element(screen.getByText("Shift dinner logged · 600 kcal · 45g", { exact: true })).toBeVisible();
@@ -112,6 +112,7 @@ describe("Focused BODY meals", () => {
   it("keeps direct BODY logging and all trackers available without requiring focused meals", async () => {
     const screen = await render(<BodyScreen />);
     await expect.element(screen.getByText("HYDRATION", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
     await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Reusable lunch");

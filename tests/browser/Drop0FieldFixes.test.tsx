@@ -105,9 +105,10 @@ describe("Fix 2 — open screens move to the new day at 16:30", () => {
     const day = await startDay();
     await logWater(day.id, 16);
     const screen = await render(<BodyScreen />);
-    const waterReading = () => document.querySelector(".instrument-cluster .status-value")?.textContent;
+    const waterReading = () => [...document.querySelectorAll(".health-overview .tool-label")].find(el => el.textContent === "WATER")?.nextElementSibling?.textContent;
     await expect.poll(waterReading).toBe("16 oz");
 
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
     await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Half-typed bowl");
@@ -119,7 +120,9 @@ describe("Fix 2 — open screens move to the new day at 16:30", () => {
     const newDay = await performDueDayRollover();
     expect(newDay).toBeDefined();
 
+    await screen.getByRole("button", { name: "DAILY RECORD" }).click();
     await expect.poll(waterReading).toBe("0 oz");
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Half-typed bowl");
     await expect.element(screen.getByRole("spinbutton", { name: "New meal calories" })).toHaveValue(640);
   });

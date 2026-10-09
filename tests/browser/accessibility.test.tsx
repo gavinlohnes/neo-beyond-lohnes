@@ -266,7 +266,7 @@ describe("accessibility (real browser, axe-core)", () => {
     await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
     await screen.getByRole("spinbutton", { name: "Weight (lbs)" }).fill("180");
     await screen.getByRole("button", { name: "LOG BODYWEIGHT" }).click();
-    await screen.getByRole("button", { name: "Open PROTEIN" }).click();
+    await screen.getByRole("button", { name: "Open PROTEIN ONLY" }).click();
     await screen.getByRole("spinbutton", { name: "Protein (g)" }).fill("30");
     await screen.getByRole("button", { name: "LOG PROTEIN" }).click();
     await expect.element(screen.getByText("30 g", { exact: true }).first()).toBeVisible();

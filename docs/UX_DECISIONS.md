@@ -52,6 +52,28 @@ analytics, manual workflows and optional USDA food lookup. These are real non-AI
 not obsolete assistant infrastructure. Existing records and native/legacy backup support remain
 unchanged; future AI still requires a new owner decision.
 
+## BODY Daily Health Record — owner-approved Protected amendment, 2026-10-09
+
+Gavin approves replacing BODY's locked four-tracker presentation and latest-entry sleep summary
+with one daily health record, immediate meal/water access, focused existing recording/correction
+forms and inspectable progress. This supersedes the conflicting BODY presentation portions of
+FIELD-PROTOTYPE-001, the later latest-sleep tile ruling and the all-trackers arrangement below;
+their history remains. It does not redefine any event, phase, recommendation or day boundary.
+
+Calories and protein lead nutrition; carbs/fat remain secondary and inspectable. Current canonical
+meal records have no fiber field: disclose that absence, never estimate it or change the schema.
+Separate the latest effective main-sleep record from summed effective naps; disclose multiple
+main-sleep records rather than pretending to combine them. The daily record uses the active
+wake-to-sleep day, including overnight work, not calendar-midnight totals. Latest weight is dated
+and is not implied to belong to the current day. Progress/accomplishments do not require a weigh-in.
+
+Records open existing canonical correction forms. Keep meal preset save and consumption separate,
+direct BODY access and TODAY return, undo, duplicate prevention, drafts, read/write recovery and
+interruption safeguards. Preserve four tabs, neutral BODY action treatments, locked identity assets,
+accessible controls, reduced motion, Engine authority, offline/privacy/data/backup safeguards.
+Reuse existing trends, ribbon, timeline and baselines without new inference or punitive scoring.
+One-off meals, new logging/storage, AI and unrelated functionality remain excluded.
+
 ## Focused meals — Product Experience Milestone 3, owner ruling, 2026-10-09
 
 Gavin approved the assessed bounded Protected objective: a focused meal presentation within BODY,
