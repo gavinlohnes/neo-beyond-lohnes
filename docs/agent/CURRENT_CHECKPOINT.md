@@ -1,6 +1,36 @@
 # Current checkpoint
 
-## Current objective — Command Console production milestone 1
+## Current objective — searchable SYSTEM catalog milestone 2
+
+Owner authorization: Gavin's bounded implementation instruction, 2026-10-09; Protected navigation
+integration. Starting freshly fetched master: `9b2e62417d639eb541b1de47e1b52ff9f5502845`, merged
+PR #207. Builder: Codex, sole Lead Builder; branch `codex/system-catalog-m2`; active PR linked from this branch in GitHub.
+PR #204 is the only existing open PR and remains untouched. Prior milestone handoffs below are
+historical; their pending review/merge pointers do not describe current master.
+
+Scope: the approved 18 existing destinations, browsable groups and local names/aliases in SYSTEM;
+existing App navigation handlers and MORE subviews; separate record search. BUILD OWNED small
+navigation metadata; USE PLATFORM native dialog/input/buttons. No new dependency, storage,
+commands, Engine/schema/backup changes, tab replacement, prototype integration or unrelated work.
+Keep meal drafts, synchronous guards, canonical logging/undo/correction, read recovery, explicit
+return, workout continuity, accessibility and offline behavior. VCC-001 stays paused.
+
+Acceptance: every destination and all four tabs accessible; navigation/search performs no domain
+writes; alias/empty/clear behavior; destination/focus return; guarded cancellation and recovery;
+canonical exactly-once meal logging and workout continuity; mobile 320/360/412 px and constrained
+keyboard space; architecture, build, proportional regression and required CI. Verification: 76 targeted cases passed; final full suite 210 files / 2,201 passed / one existing
+skip; architecture, TypeScript/production build and whitespace passed. Thirty-two new tests
+(25 browser, seven discovery cases) cover the catalog and real journey safeguards. Built PWA
+offline passed preset creation/log, cold reload, catalog/aliases, meal return, History, separate
+record search, water/undo and focus return. Ten actual synthetic-fixture screenshots are in
+`docs/screenshots/system-catalog-m2/`. A constrained-height regression failed before chrome
+refinement and now keeps a full matching result visible at 320/360/412 px with 420px height.
+Required CI/exact head are recorded in the PR. Chromium-only automation, memory-only drafts,
+existing undo windows and the existing bundle warning remain; no physical/Safari/screen-reader
+certification is claimed. Next: finish verification, independent exact-head review,
+then owner review. No merge or deployment authorized.
+
+## Historical objective — Command Console production milestone 1
 
 Gavin authorized this bounded Protected milestone and explicitly amended the placement rule for
 persistent WATER/MEAL/SYSTEM controls (UX Decision Register, 2026-10-08). Builder: Codex, sole

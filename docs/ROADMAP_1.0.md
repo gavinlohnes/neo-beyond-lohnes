@@ -192,7 +192,13 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 ## Queue
 
-**Current owner objective, 2026-10-08 — Command Console production milestone 1.** The meal
+**Current owner objective, 2026-10-09 — searchable SYSTEM catalog.** PR #207 is merged at
+`9b2e62417d639eb541b1de47e1b52ff9f5502845`. Gavin approves the bounded 18-entry catalog of
+existing destinations, with browsable groups and local name/alias filtering. Four tabs,
+canonical workflows and separate record search stay; no new commands, storage or dependencies.
+This is the current handoff objective; milestone 1 below is historical. VCC-001 remains paused.
+
+**Historical owner objective, 2026-10-08 — Command Console production milestone 1.** The meal
 round trip and recovery-focus follow-up are integrated through PRs #205/#206. Gavin now authorizes
 a compact production TODAY console inspired by PR #204 Concept A, with persistent WATER/MEAL/
 SYSTEM controls under the narrow placement exception in the UX Decision Register. Existing four

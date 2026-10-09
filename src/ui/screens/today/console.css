@@ -81,3 +81,26 @@
 @media (prefers-reduced-motion: reduce) {
   .command-console.today-field *, .console-system * { scroll-behavior: auto; }
 }
+
+.console-catalog-search { margin-block: 12px; }
+.console-catalog-search label { display: block; margin-bottom: 8px; font-size: 16px; }
+.console-catalog-search > div { display: flex; gap: 8px; }
+.console-catalog-search input { flex: 1; min-width: 0; width: 100%; min-height: 48px; font-size: 16px; }
+.console-catalog-search button, .console-system-header button { min-height: 48px; }
+.console-catalog-search button { flex: none; }
+.console-system section { margin-top: 24px; }
+.console-system section h3 { margin-bottom: 8px; }
+.console-system input:focus-visible { outline: 2px solid var(--text-1); outline-offset: 2px; }
+
+.console-system[open] { display: flex; flex-direction: column; overflow: hidden; }
+.console-system-header, .console-system > p, .console-catalog-search { flex: none; }
+.console-catalog-results { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.console-catalog-results section:first-child { margin-top: 0; }
+
+.console-system-header button { flex: none; padding-inline: 14px; }
+.console-system > p { margin: 0 0 12px; }
+/* Keep an actual launch target visible when the phone keyboard reduces usable height. */
+@media (max-height: 500px) {
+  .console-system #console-system-description { display: none; }
+  .console-catalog-search { margin-block: 8px; }
+}

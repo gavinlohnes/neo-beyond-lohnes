@@ -24,6 +24,21 @@ boundaries. Historical references to Drops retain their product scope and eviden
 require the legacy lifecycle for new work. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical
 evidence, not standing implementation authority.
 
+## Searchable SYSTEM catalog — owner ruling, 2026-10-09
+
+Gavin authorizes the bounded 18-entry production catalog assessed after PR #207 merged.
+SYSTEM remains a navigation-only native dialog over existing destinations: TODAY Tools,
+TRAIN/BODY/MORE; Water, Meal, Sleep, Bodyweight and Workout; History, Weekly Check-in, Review,
+Decision Journal, Missions & Obligations, Work Schedule, Exercise Library, Custom Programs,
+and Search Records. Browse without typing or filter names/explicit aliases locally.
+Capability discovery is separate from personal record search; the existing top-bar search and
+MORE Search remain. No automatic logging/start, personal ranking, new commands/storage/dependencies,
+primary-tab replacement, Engine changes or new product capabilities. Existing in-flight/discard,
+meal recovery/return, workout continuity, keyboard focus, mobile accessibility and offline
+protections remain binding. Independent exact-head review, green CI and owner merge approval
+are required. This ruling supersedes only milestone 1's deferral of this bounded catalog;
+VCC-001 remains paused. No merge or deployment is authorized.
+
 ## Command Console production milestone 1 — owner ruling, 2026-10-08
 
 Gavin approves the Command Console + System Launcher hybrid direction and this bounded first

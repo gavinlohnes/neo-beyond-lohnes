@@ -151,6 +151,8 @@ describe("Production Command Console", () => {
     await screen.getByRole("dialog").getByRole("button", { name: /^MORE / }).click();
     expect(confirm).toHaveBeenCalledOnce();
     await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect.element(screen.getByRole("dialog", { name: "SYSTEM", exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "Close SYSTEM" }).click();
     await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
