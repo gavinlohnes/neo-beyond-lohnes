@@ -10,6 +10,12 @@ All data lives on-device in IndexedDB. There is no backend and no
 account system; getting data off the device is an explicit, user-
 initiated backup export.
 
+**Smart by design. AI optional.** Current production has no Delta assistant, embedded language
+model, AI provider integration or AI-specific dependency. Recommendations, advisory notes,
+personal baselines and date suggestions use local rules and existing records. Optional USDA
+food lookup is a non-AI service; manual meal entry remains available offline. See
+[Product Direction](docs/PRODUCT_DIRECTION.md) for the current intelligence strategy.
+
 ## Run it
 
 ```

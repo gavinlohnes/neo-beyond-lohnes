@@ -198,15 +198,20 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 ## Queue
 
-**Current owner objective, 2026-10-09 — product direction and creative freedom transition.**
-One Protected governance PR: concise product direction, necessary authority reconciliation and
-continuity. No runtime changes or Delta removal. Smart by design, AI optional replaces the standing
-Delta-advisor requirement; cleanup is a separate future objective, not activated by this transition.
-Independent exact-head review, green required CI and Gavin's merge approval remain required.
+**Current owner objective, 2026-10-09 — Delta removal and intelligence preservation.**
+Gavin approved this Protected cleanup. Audit of fresh master found no active Delta assistant,
+model integration, AI-specific dependency or storage contract to remove. Correct misleading active
+documentation and preserve all useful deterministic intelligence, workflows and compatibility;
+no replacement AI infrastructure or runtime changes are needed. Verification and independent
+exact-head review belong in the cleanup PR; green required CI and Gavin's merge approval remain required.
+
+**Completed — product direction and creative freedom transition.** PR #210 merged at
+`1170a13bbbd96627665087cef203e45d662f3a86`. Smart by design, AI optional replaces the standing
+Delta-advisor requirement. The follow-up audit above resolves the assumed future cleanup requirement.
 
 **Completed — focused meals, Product Experience Milestone 3.** PR #209 merged at
 `5a021de81d73520c3ed3a32d47ca5e5d85e69a76`. Its scope/evidence remain in the UX register,
-checkpoint and PR; no active meal implementation overlaps this governance objective. VCC-001
+checkpoint and PR; no active meal implementation overlaps this cleanup objective. VCC-001
 stays paused, not canceled or superseded. Prototype PR #204 remains separate and untouched.
 
 **Historical objective, 2026-10-09 — searchable SYSTEM catalog.** PR #207 is merged at
