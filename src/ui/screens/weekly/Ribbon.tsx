@@ -119,7 +119,9 @@ export function Ribbon({
   days,
   templateLabels,
   proteinTargetG,
+  dayPicker = false,
 }: {
+  dayPicker?: boolean;
   days: RibbonDay[];
   templateLabels: Record<string, string>;
   proteinTargetG?: number | undefined;
@@ -144,6 +146,8 @@ export function Ribbon({
     return <p className="meta">Not enough data yet — nothing logged in the last {days.length} days.</p>;
   }
 
+  if (!visibleRows.length) return <p className="meta">No sleep, training, work, protein or habit records to show in this ribbon yet.</p>;
+
   const colW = stripWidth / days.length;
   // A surface gap between neighbouring columns, so adjacent days never merge into one block.
   const gap = Math.max(2, colW * 0.22);
@@ -153,7 +157,7 @@ export function Ribbon({
 
   return (
     <div>
-      <div role="img" aria-label={describeRibbonSummary(days)} style={{ position: "relative" }}>
+      <div role={dayPicker ? "img" : "group"} aria-label={describeRibbonSummary(days)} style={{ position: "relative" }}>
         {visibleRows.map((row) => (
           <div key={row.key} data-ribbon-row={row.key} style={{ display: "grid", gridTemplateColumns: `${LABEL_WIDTH}px 1fr`, alignItems: "end", marginBottom: 6 }}>
             <span className="meta" style={{ margin: 0, lineHeight: `${row.height}px`, fontSize: 16 }} aria-hidden="true">
@@ -175,14 +179,14 @@ export function Ribbon({
         {/* One button per day over its column: the tap target (bigger than any mark) and the
             keyboard / screen-reader path to the same per-day sentence. */}
         <div ref={stripRef} style={{ position: "absolute", top: 0, bottom: 0, left: LABEL_WIDTH, right: 0, display: "flex" }}>
-          {days.map((day, i) => (
+          {!dayPicker && days.map((day, i) => (
             <button
               key={day.livedDayStart}
               type="button"
               aria-label={describeRibbonDay(day, templateLabels)}
               aria-pressed={selected === i}
               onClick={() => setSelected((current) => (current === i ? null : i))}
-              style={{ flex: 1, minWidth: 0, height: totalHeight, padding: 0, border: 0, background: "transparent", cursor: "pointer" }}
+              style={{ flex: 1, minWidth: 0, height: Math.max(44, totalHeight), padding: 0, border: 0, background: "transparent", cursor: "pointer" }}
             />
           ))}
         </div>
@@ -191,8 +195,9 @@ export function Ribbon({
         <span className="meta" style={{ fontSize: 16 }}>{describeRibbonDate(days[0]!.livedDayStart)}</span>
         <span className="meta" style={{ fontSize: 16 }}>Today</span>
       </div>
+      {dayPicker && <div className="field"><label htmlFor="body-ribbon-day">Inspect a recorded day</label><select id="body-ribbon-day" className="input" value={selected ?? ""} onChange={(event) => setSelected(event.target.value === "" ? null : Number(event.target.value))}><option value="">Choose a day</option>{days.map((day, index) => <option key={day.livedDayStart} value={index}>{describeRibbonDay(day, templateLabels)}</option>)}</select></div>}
       <p className="meta" aria-live="polite" style={{ marginTop: 8, minHeight: 24 }}>
-        {selectedDay ? describeRibbonDay(selectedDay, templateLabels) : "Tap a day to see it."}
+        {selectedDay ? describeRibbonDay(selectedDay, templateLabels) : dayPicker ? "Choose a day to inspect it." : "Tap a day to see it."}
       </p>
       {proteinTargetG !== undefined && visibleRows.some((r) => r.key === "protein") && (
         <p className="meta" style={{ margin: 0 }}>Protein: filled at {proteinTargetG} g or more (today's target), open below it.</p>

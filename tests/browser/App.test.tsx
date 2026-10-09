@@ -185,12 +185,14 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     await logMeal(day.id, dinner.id);
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
     await screen.getByRole("button", { name: "Edit Dinner" }).click();
     await screen.getByRole("spinbutton", { name: "Corrected calories" }).fill("999");
 
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
 
     await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
     await expect.element(screen.getByRole("button", { name: "Edit Dinner" })).toHaveAttribute("aria-expanded", "false");

@@ -30,6 +30,7 @@ describe("DUP-MEAL-001 duplicate-meal prompt", () => {
   it("asks under the saved meal and REMOVE THIS ONE voids only the new log", async () => {
     const { day } = await seedDinner();
     const body = await render(<BodyScreen />);
+    await body.getByRole("button", { name: "OPEN MEALS" }).click();
     await body.getByRole("button", { name: "LOG", exact: true }).click();
 
     const prompt = body.getByRole("group", { name: "Same meal?" });
@@ -57,6 +58,7 @@ describe("DUP-MEAL-001 duplicate-meal prompt", () => {
     await seedDinner();
     const snack = await createSavedMeal({ name: "Snack", calories: 200, proteinG: 10, carbsG: 20, fatG: 5 });
     const body = await render(<BodyScreen />);
+    await body.getByRole("button", { name: "OPEN MEALS" }).click();
     await body.getByRole("button", { name: "LOG", exact: true }).first().click();
     let prompt = body.getByRole("group", { name: "Same meal?" });
     await expect.element(prompt).toBeVisible();
@@ -76,6 +78,7 @@ describe("DUP-MEAL-001 duplicate-meal prompt", () => {
     const { day } = await seedDinner();
     await logProtein(day.id, 49);
     const body = await render(<BodyScreen />);
+    await body.getByRole("button", { name: "OPEN MEALS" }).click();
     await body.getByRole("button", { name: "LOG", exact: true }).click();
 
     await expect.element(body.getByRole("group", { name: "Same meal?" })).toBeVisible();
@@ -100,6 +103,7 @@ describe("DUP-MEAL-002 SAME AS YESTERDAY repeats", () => {
   it("asks about the repeated Dinner only; REMOVE THIS ONE voids that repeat and keeps the Snack", async () => {
     const { today } = await seedYesterdayAndTodayDinner();
     const body = await render(<BodyScreen />);
+    await body.getByRole("button", { name: "OPEN MEALS" }).click();
     await body.getByRole("button", { name: /SAME AS YESTERDAY \(2 meals\)/ }).click();
 
     const prompt = body.getByRole("group", { name: "Same meal?" });
@@ -114,6 +118,7 @@ describe("DUP-MEAL-002 SAME AS YESTERDAY repeats", () => {
   it("KEEP BOTH writes nothing", async () => {
     await seedYesterdayAndTodayDinner();
     const body = await render(<BodyScreen />);
+    await body.getByRole("button", { name: "OPEN MEALS" }).click();
     await body.getByRole("button", { name: /SAME AS YESTERDAY \(2 meals\)/ }).click();
     const prompt = body.getByRole("group", { name: "Same meal?" });
     await prompt.getByRole("button", { name: "KEEP BOTH" }).click();
@@ -130,6 +135,7 @@ describe("DUP-MEAL-002 SAME AS YESTERDAY repeats", () => {
     vi.setSystemTime(NOW);
     await startDay();
     const body = await render(<BodyScreen />);
+    await body.getByRole("button", { name: "OPEN MEALS" }).click();
     await body.getByRole("button", { name: /SAME AS YESTERDAY \(2 meals\)/ }).click();
     await expect.element(body.getByText(/2 meals from .* logged/)).toBeVisible();
     expect(body.getByRole("group", { name: /Same meals?\?/ }).elements()).toHaveLength(0);

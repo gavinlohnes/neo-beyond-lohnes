@@ -16,8 +16,8 @@ afterEach(() => {
 
 async function openTimeline() {
   const screen = await render(<BodyScreen />);
-  await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
-  await screen.getByText("SHOW TIMELINE").click();
+  await screen.getByRole("button", { name: "YOUR PROGRESS" }).click();
+  await screen.getByText("SHOW ACCOMPLISHMENT TIMELINE").click();
   return screen;
 }
 
@@ -25,7 +25,7 @@ describe("BODY-TIMELINE-001 — transformation timeline", () => {
   it("with no weigh-ins it says how to start, with no empty chart", async () => {
     await startDay();
     const screen = await openTimeline();
-    await expect.element(screen.getByText("Log a bodyweight to start your timeline.")).toBeVisible();
+    await expect.element(screen.getByText("No accomplishments or weigh-ins recorded in these 90 days yet. A weigh-in is not required.")).toBeVisible();
     expect(document.querySelector(".timeline__svg")).toBeNull();
   });
 

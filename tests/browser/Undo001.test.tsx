@@ -63,7 +63,7 @@ describe("UNDO on BODY's log banners", () => {
 
   it("protein: UNDO uses the existing protein DELETE event", async () => {
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "Open PROTEIN" }).click();
+    await screen.getByRole("button", { name: "Open PROTEIN ONLY" }).click();
     await screen.getByRole("spinbutton", { name: "Protein (g)" }).fill("30");
     await screen.getByRole("button", { name: "LOG PROTEIN" }).click();
     await expect.element(screen.getByText("30 g added.", { exact: true })).toBeVisible();

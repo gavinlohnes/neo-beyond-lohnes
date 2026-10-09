@@ -73,40 +73,14 @@ describe("BodyScreen (real browser) — empty state", () => {
     await expect.element(screen.getByText("Not logged", { exact: true }).first()).toBeVisible();
     // DECLUTTER Drop 2: only the STATUS box shows "Not logged" (SLEEP and
     // WEIGHT); the trackers below no longer repeat it.
-    expect(screen.getByText("Not logged", { exact: true }).elements()).toHaveLength(2);
+    expect(screen.getByText("Not logged", { exact: true }).elements()).toHaveLength(3);
   });
 
-  it("the instrument cluster is a real .instrument-cluster, not a plain .card", async () => {
+  it("presents calories and protein first, with honest separate main-sleep and nap readings", async () => {
     await render(<BodyScreen />);
-    expect(document.querySelectorAll(".instrument-cluster")).toHaveLength(1);
-    expect(document.querySelectorAll(".instrument-cluster .card")).toHaveLength(0);
-  });
-
-  // Square corners (2026-09-30, direct owner ruling): one chamfer, the
-  // other three corners square — no inherited --radius rounding.
-  it("the instrument cluster keeps its chamfer with square uncut corners", async () => {
-    await render(<BodyScreen />);
-    const cluster = document.querySelector(".instrument-cluster")!;
-    const style = getComputedStyle(cluster);
-    expect(style.clipPath).not.toBe("none");
-    expect(style.borderTopLeftRadius).toBe("0px");
-    expect(style.borderBottomLeftRadius).toBe("0px");
-    expect(style.borderBottomRightRadius).toBe("0px");
-  });
-
-  it("no dominant .command-surface exists — BODY's four trackers are peers, not one leading recommendation", async () => {
-    await render(<BodyScreen />);
+    await expect.poll(() => document.querySelectorAll(".health-overview .tool-label").length).toBe(6);
+    expect([...document.querySelectorAll(".health-overview .tool-label")].map(el => el.textContent)).toEqual(["CALORIES", "PROTEIN", "WATER", "LAST WEIGHT", "MAIN SLEEP", "NAPS"]);
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
-  });
-
-  // VISUAL-003: Status previously listed WATER/PROTEIN/SLEEP/WEIGHT, out
-  // of step with the LOG section's own WATER/SLEEP/WEIGHT/PROTEIN order —
-  // a real re-scan cost fixed by reordering Status to match.
-  it("the instrument cluster lists stations in the same order as the LOG section below (Water, Sleep, Weight, Protein)", async () => {
-    await render(<BodyScreen />);
-    const cluster = document.querySelector(".instrument-cluster")!;
-    const labels = Array.from(cluster.querySelectorAll(".meta")).map((el) => el.textContent);
-    expect(labels).toEqual(["WATER", "SLEEP", "WEIGHT", "PROTEIN"]);
   });
 });
 
@@ -116,7 +90,7 @@ describe("BodyScreen (real browser) — WATER", () => {
     await screen.getByRole("button", { name: "+12 oz" }).click();
 
     await expect.element(screen.getByText("12 oz added.", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("12 oz", { exact: true }).first()).toBeVisible();
+    await expect.element(screen.getByRole("region", { name: "Your daily health record" }).getByText("12 oz", { exact: true })).toBeVisible();
   });
 
   it("manual entry is reachable via disclosure and its input is properly labeled", async () => {
@@ -143,8 +117,8 @@ describe("BodyScreen (real browser) — WATER", () => {
     await correctionInput.fill("10");
     await screen.getByRole("button", { name: "SAVE" }).click();
 
-    await expect.element(screen.getByText("10 oz", { exact: true }).first()).toBeVisible();
-    await expect.element(screen.getByText(/corrected 1x/)).toBeVisible();
+    await expect.element(screen.getByText("10 oz", { exact: true }).last()).toBeVisible();
+    await expect.element(screen.getByText(/corrected 1x/).last()).toBeVisible();
   });
 
   // VISUAL-003: manual entry and today's-entries now render as a real
@@ -185,8 +159,8 @@ describe("BodyScreen (real browser) — SLEEP", () => {
 
     // DECLUTTER Drop 2: the reading shows in the STATUS box only; the open
     // SLEEP form keeps the kind/time line beneath.
-    await expect.element(screen.getByText("7 hr 15 min", { exact: true }).first()).toBeVisible();
-    await expect.element(screen.getByText(/Main sleep ·/)).toBeVisible();
+    await expect.element(screen.getByText("7 hr 15 min", { exact: true }).last()).toBeVisible();
+    await expect.element(screen.getByText(/Main sleep ·/).first()).toBeVisible();
   });
 
   it("an implausible duration requires LOG ANYWAY rather than silently blocking", async () => {
@@ -197,7 +171,7 @@ describe("BodyScreen (real browser) — SLEEP", () => {
 
     await expect.element(screen.getByText(/outside the usual range/)).toBeVisible();
     await screen.getByRole("button", { name: "LOG ANYWAY" }).click();
-    await expect.element(screen.getByText("20 hr", { exact: true }).first()).toBeVisible();
+    await expect.element(screen.getByText("20 hr", { exact: true }).last()).toBeVisible();
   });
 
   it("Drop 3: minutes over 59 are refused in the form, with the message right there, and nothing saved", async () => {
@@ -216,7 +190,7 @@ describe("BodyScreen (real browser) — SLEEP", () => {
     await logSleep(day.id, 435, "PRIMARY");
     await logSleep(day.id, 30, "SUPPLEMENTAL");
     const screen = await render(<BodyScreen />);
-    await expect.element(screen.getByText("latest of 2", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("MAIN SLEEP", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "Open SLEEP" }).click();
     await screen.getByRole("button", { name: /SHOW TODAY'S SLEEP/ }).click();
@@ -266,7 +240,7 @@ describe("BodyScreen (real browser) — BODYWEIGHT", () => {
 describe("BodyScreen (real browser) — PROTEIN", () => {
   it("logs grams and reflects the running total, same value-forward pattern as HYDRATION", async () => {
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "Open PROTEIN" }).click();
+    await screen.getByRole("button", { name: "Open PROTEIN ONLY" }).click();
     await screen.getByRole("spinbutton", { name: "Protein (g)" }).fill("30");
     await screen.getByRole("button", { name: "LOG PROTEIN" }).click();
 
@@ -284,7 +258,7 @@ describe("BodyScreen (real browser) — PROTEIN", () => {
 describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
   it("shows the honest no-target/no-bodyweight defaults before any settings or bodyweight are logged", async () => {
     const screen = await render(<BodyScreen />);
-    await expect.element(screen.getByText(/no target set/)).toBeVisible();
+    await expect.element(screen.getByText(/no calorie target/)).toBeVisible();
     await expect.element(screen.getByText(/log a bodyweight to see your target/)).toBeVisible();
   });
 
@@ -292,7 +266,8 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     // DECLUTTER Drop 3: targets are set in MORE → Settings now; BODY only reads them.
     await updateNutritionTargets({ calorieTargetKcal: 2200, proteinMultiplierGPerLb: 0.9 });
     const screen = await render(<BodyScreen />);
-    await expect.element(screen.getByText("Change targets in MORE → Settings.", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
+    await expect.element(screen.getByText("Nutrition targets are editable in MORE → Settings.", { exact: true })).toBeVisible();
 
     await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
     await expect.element(screen.getByText(/log a bodyweight to see your target/)).toBeVisible();
@@ -309,6 +284,7 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     await updateNutritionTargets({ calorieTargetKcal: 2200 });
     const screen = await render(<BodyScreen />);
     await expect.element(screen.getByText(/0 \/ 2200 kcal/)).toBeVisible();
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
 
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
     await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
@@ -347,16 +323,18 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
 
   it("empty state is calm and distinguishes no-presets from no-meals-today", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await expect.element(screen.getByText("0 meals logged today", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/No saved meals yet/)).toBeVisible();
   });
 
   it("creates a saved meal via the add-meal form and shows its macro summary", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await addSavedMeal(screen);
 
     await expect.element(screen.getByText("Chicken & Rice Bowl", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("600 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("600 kcal · 45 g protein", { exact: true })).toBeVisible();
   });
 
   it("BODY-QUICK-001: orders saved-meal shortcuts by recent use", async () => {
@@ -366,9 +344,10 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     await logMeal(day.id, used.id);
 
     const screen = await render(<BodyScreen />);
-    await expect.element(screen.getByText("Used recently", { exact: true }).first()).toBeVisible();
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
+    await expect.element(screen.getByRole("group", { name: "Saved meal Used recently", exact: true }).getByText("Used recently", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("New but unused", { exact: true })).toBeVisible();
-    const shortcutNames = Array.from(document.querySelectorAll(".equipment-row .card-title"))
+    const shortcutNames = Array.from(document.querySelectorAll('[aria-label^="Saved meal "] > .card-title'))
       .map((element) => element.textContent)
       .filter((text) => text === "Used recently" || text === "New but unused");
     expect(shortcutNames).toEqual(["Used recently", "New but unused"]);
@@ -376,6 +355,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
 
   it("LOG snapshots the current macros, shows a confirmation, and updates today's count", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await addSavedMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
 
@@ -385,6 +365,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
 
   it("editing the preset after logging does not change the already-logged entry (past logs never rewritten)", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await addSavedMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
@@ -392,7 +373,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     await screen.getByRole("button", { name: "EDIT" }).click();
     await screen.getByRole("spinbutton", { name: "Edit meal calories" }).fill("900");
     await screen.getByRole("button", { name: "SAVE MEAL" }).click();
-    await expect.element(screen.getByText("900 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("900 kcal · 45 g protein", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
     await expect.element(screen.getByText("600 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
@@ -400,6 +381,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
 
   it("archiving the preset removes it from the active list but keeps its past log", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await addSavedMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await screen.getByRole("button", { name: "ARCHIVE" }).click();
@@ -417,6 +399,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
 
   it("editing a logged meal preserves history rather than deleting the original entry", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await addSavedMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByText("Chicken & Rice Bowl logged · 600 kcal · 45g", { exact: true })).toBeVisible();
@@ -426,12 +409,13 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
 
     await expect.element(screen.getByText("620 cal · 45g protein · 60g carbs · 15g fat", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText(/corrected 1x/)).toBeVisible();
+    await expect.element(screen.getByText(/corrected 1x/).last()).toBeVisible();
   });
 
   it("HOTFIX: UNDO on the logged line takes the meal back out of today's totals", async () => {
     await updateNutritionTargets({ calorieTargetKcal: 2200 });
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await addSavedMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByText(/600 \/ 2200 kcal/)).toBeVisible();
@@ -448,6 +432,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
 
   it("HOTFIX: the logged line and its UNDO clear themselves after about 5 seconds", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await addSavedMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "UNDO" })).toBeVisible();
@@ -462,6 +447,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     const dinner = await createSavedMeal({ name: "Dinner", calories: 650, proteinG: 45, carbsG: 50, fatG: 20 });
     await logMeal(day.id, dinner.id);
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
 
     const row = screen.getByRole("button", { name: "Edit Dinner" });
@@ -498,6 +484,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     await logMeal(day.id, dinner.id);
     await updateNutritionTargets({ calorieTargetKcal: 2200 });
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await expect.element(screen.getByText(/650 \/ 2200 kcal/)).toBeVisible();
     await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
     await screen.getByRole("button", { name: "Edit Dinner" }).click();
@@ -525,6 +512,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
 describe("BodyScreen (real browser) — ADD MEAL disclosure (BODY-UX-001)", () => {
   it("opening ADD MEAL with no prior search shows only the search box, not the manual macro fields", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
 
     await expect.element(screen.getByRole("textbox", { name: "Search USDA food database" })).toBeVisible();
@@ -534,6 +522,7 @@ describe("BodyScreen (real browser) — ADD MEAL disclosure (BODY-UX-001)", () =
 
   it("the manual macros toggle works independently of search state", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
     await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
 
@@ -542,6 +531,7 @@ describe("BodyScreen (real browser) — ADD MEAL disclosure (BODY-UX-001)", () =
 
   it("saving a new meal collapses the manual macros disclosure back to closed", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
     await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Oatmeal");
@@ -579,6 +569,7 @@ describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodDat
   it("selecting a result pre-fills the ADD MEAL form without saving anything", async () => {
     mockFetchOnce({ foods: [BANANA_FOOD] });
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
 
     await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("banana");
@@ -596,6 +587,7 @@ describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodDat
   it("shows a plain no-results message rather than an error for a search with no matches", async () => {
     mockFetchOnce({ foods: [] });
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
 
     await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("zzzznotafood");
@@ -610,6 +602,7 @@ describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodDat
   it("degrades gracefully to manual entry when the search request fails", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("network down"));
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
 
     await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("banana");
@@ -656,6 +649,7 @@ describe("BodyScreen (real browser) — accessibility", () => {
   it("every text input has a real accessible name (the RECOVERY-Minutes-style gap, checked across all of BODY)", async () => {
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "SHOW MANUAL ENTRY" }).click(); // reveals water's custom-oz input too
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click(); // reveals the meal form's five inputs
 
     const results = await axe.run(screen.container, { runOnly: ["label"] });
@@ -722,8 +716,8 @@ describe("BodyScreen (real browser) — Drop 5 weight trend and same-as-yesterda
     await updateNutritionTargets({ goalWeightLbs: 176 });
     const screen = await render(<BodyScreen />);
 
-    await expect.element(screen.getByText("186 lb · lowest yet", { exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
+    await expect.element(screen.getByText("186 lbs", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "YOUR PROGRESS" }).click();
     await expect.element(screen.getByRole("img", { name: /Weight over the last 60 days/ })).toBeVisible();
     await expect.element(screen.getByText("Lowest yet", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Down 10 lb since Jul 1", { exact: true })).toBeVisible();
@@ -740,7 +734,7 @@ describe("BodyScreen (real browser) — Drop 5 weight trend and same-as-yesterda
     ]);
     await updateNutritionTargets({ goalWeightLbs: 176 });
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
+    await screen.getByRole("button", { name: "YOUR PROGRESS" }).click();
     await expect.element(screen.getByRole("img", { name: /Weight over the last 60 days/ })).toBeVisible();
     expect(screen.getByText(/at this pace/).elements()).toHaveLength(0);
     expect(screen.getByText(/off track|behind|missed/i).elements()).toHaveLength(0);
@@ -758,6 +752,7 @@ describe("BodyScreen (real browser) — Drop 5 weight trend and same-as-yesterda
     await startDay();
 
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await expect.element(screen.getByText("From Sep 28: Oats, Bowl", { exact: true })).toBeVisible();
     // Sep 28 is days before today's real date, so BODY must not call it yesterday.
     expect(screen.getByRole("button", { name: /SAME AS YESTERDAY/ }).elements()).toHaveLength(0);
@@ -778,6 +773,7 @@ describe("BodyScreen (real browser) — Drop 5 weight trend and same-as-yesterda
     await startDay();
 
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SAME AS YESTERDAY (2 meals)" }).click();
 
     await expect.element(screen.getByText("2 meals logged today", { exact: true })).toBeVisible();
@@ -796,6 +792,7 @@ describe("BodyScreen (real browser) — Drop 5 weight trend and same-as-yesterda
 
     const screen = await render(<BodyScreen />);
     const date = formatShortDate(sourceStart);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await expect.element(screen.getByText(`From ${date}: Oats`, { exact: true })).toBeVisible();
     expect(screen.getByRole("button", { name: /SAME AS YESTERDAY/ }).elements()).toHaveLength(0);
     await screen.getByRole("button", { name: `REPEAT ${date.toUpperCase()} MEALS (1 meal)` }).click();
@@ -813,12 +810,14 @@ describe("BodyScreen (real browser) — Drop 6 quit tracker", () => {
 
   it("before setup, the row points to MORE → Settings", async () => {
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
     await expect.element(screen.getByText("Set it up in MORE → Settings", { exact: true })).toBeVisible();
   });
 
   it("hold logs a clean day, taps log urges with undo, and money saved adds up", async () => {
     await saveQuitHabit({ name: "Drinking", dailyCostUsd: 7 });
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
     await expect.element(screen.getByText("0 clean days this month · $0 saved", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "Open QUIT: DRINKING" }).click();
 
@@ -841,6 +840,7 @@ describe("BodyScreen (real browser) — Drop 6 quit tracker", () => {
   it("Drop 4: after an urge, the owner's own plan for that trigger shows with one optional tap", async () => {
     await saveQuitHabit({ name: "Drinking", ifThenPlans: { AFTER_SHIFT: "Shower and eat first" } });
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
     await screen.getByRole("button", { name: "Open QUIT: DRINKING" }).click();
 
     // No plan for Stress: nothing extra appears.
@@ -861,6 +861,7 @@ describe("BodyScreen (real browser) — Drop 6 quit tracker", () => {
   it("never mentions a streak, a reset, or a slip", async () => {
     await saveQuitHabit({ name: "Drinking" });
     const screen = await render(<BodyScreen />);
+    await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
     await screen.getByRole("button", { name: "Open QUIT: DRINKING" }).click();
     await expect.element(screen.getByRole("button", { name: "LOG A CLEAN DAY" })).toBeVisible();
     expect(screen.getByText(/streak|relapse|slip|reset|failed/i).elements()).toHaveLength(0);

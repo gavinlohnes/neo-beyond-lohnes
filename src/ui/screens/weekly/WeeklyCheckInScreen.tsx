@@ -5,7 +5,7 @@ import { formatShortDate } from "../../../application/bodyTrendQueries";
 import { formatUsd } from "../body/quitCopy";
 import { describeExpenditure } from "./weeklyCopy";
 import { describeBurdenLine, describeFindings, describeWaitingFindings } from "./weeklyCopy";
-import { describeBaselines, describeBaselinesQuiet } from "./weeklyCopy";
+import { PersonalBaselines } from "./PersonalBaselines";
 import { Ribbon } from "./Ribbon";
 import { HeatGrid } from "./HeatGrid";
 import { MirrorView } from "./MirrorView";
@@ -98,15 +98,7 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
 
           {/* FOUNDATION-A-F1: the last 7 finished lived days against Gavin's own usual — read-only, neutral words, no color. */}
           <Section label="YOUR USUAL">
-            {describeBaselines(summary.baselines).map((copy) => (
-              <div key={copy.key} data-baseline={copy.key} style={{ marginBottom: 8 }}>
-                <p className="meta" style={{ margin: 0, color: "var(--text-1)" }}>{copy.headline}</p>
-                <p className="meta" style={{ margin: 0 }}>{copy.basis}</p>
-              </div>
-            ))}
-            {describeBaselinesQuiet(summary.baselines) && (
-              <p className="meta" data-baseline-quiet style={{ margin: 0 }}>{describeBaselinesQuiet(summary.baselines)}</p>
-            )}
+            <PersonalBaselines baselines={summary.baselines} />
           </Section>
 
           <Section label="WEIGHT">

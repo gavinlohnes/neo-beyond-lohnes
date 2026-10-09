@@ -72,7 +72,7 @@ const stations: {
     eventType: "PROTEIN_LOGGED",
     savedText: "30 g added.",
     open: async (screen) => {
-      await screen.getByRole("button", { name: "Open PROTEIN" }).click();
+      await screen.getByRole("button", { name: "Open PROTEIN ONLY" }).click();
       await screen.getByRole("spinbutton", { name: "Protein (g)" }).fill("30");
     },
     submit: async (screen) => {
