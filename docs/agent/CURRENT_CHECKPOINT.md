@@ -5,7 +5,7 @@
 Gavin approved the read-only assessment's bounded Protected recommendation on 2026-10-09.
 Starting freshly fetched master: `97103b5235ff02b07fffdc7d0b5727470f2abcdb`; PRs #205–#208
 are merged (older pending pointers below are historical). Builder: Codex, sole Lead Builder;
-branch `codex/focused-meal-m3`; PR pending. PR #204 is the sole open prototype PR and stays untouched.
+branch `codex/focused-meal-m3`; active PR [#209](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/209). PR #204 is the sole open prototype PR and stays untouched.
 
 Scope: focused meal presentation within BODY; shared existing fields/commands/state; saved LOG
 first, secondary preset management/online lookup, direct offline manual entry, local all-tracker
