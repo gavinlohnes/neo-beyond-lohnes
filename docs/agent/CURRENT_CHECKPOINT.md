@@ -10,7 +10,7 @@ before TODAY, TRAIN or MORE changes.
 
 Risk lane: PROTECTED because the contract governs a future primary-information-architecture
 migration. Starting master: `c0f0d3c1c171aa0aac301141e3ea4c1e5e7a2d47`. Builder: Codex;
-branch `codex/beyond-design-system`; active PR pending. Prototype PR #204 remains isolated and
+branch `codex/beyond-design-system`; active PR [#213](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/213). Prototype PR #204 remains isolated and
 untouched. Full brief: [BEYOND operator experience migration](BEYOND_OPERATOR_EXPERIENCE.md).
 
 Scope is this contract and checkpoint only. No production source, runtime behavior, Engine,
