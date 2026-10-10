@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { haptic } from "../../feel/haptics";
+import { describeError } from "../../errorMessage";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
 import { OperatorHeader } from "../../components/OperatorHeader";
+import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
+import "./operator.css";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { RecordsList } from "./RecordsList";
 import { GymMode } from "./GymMode";
@@ -172,6 +175,9 @@ export function TrainScreen({
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [sets, setSets] = useState<PerformedSet[]>([]);
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(true);
+  const [readError, setReadError] = useState<string | null>(null);
+  const hasReadRef = useRef(false);
   // Drop 1.6a: "enter reps" shown under the set that was tapped.
   const [logSetNotice, setLogSetNotice] = useState<{ key: string; message: string } | null>(null);
   const [recoveryMinutes, setRecoveryMinutes] = useState(10);
@@ -242,6 +248,8 @@ export function TrainScreen({
   // free-text substitutedName field as today.
   const [customExerciseNames, setCustomExerciseNames] = useState<string[]>([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const completionHeadingRef = useRef<HTMLHeadingElement>(null);
+  const exerciseHeadingRef = useRef<HTMLHeadingElement>(null);
   const recoveryChoiceRef = useRef<HTMLButtonElement>(null);
   const destinationConsumedRef = useRef(false);
   const { guard, ConfirmPanel } = useRedCapacityOverrideGate();
@@ -276,7 +284,7 @@ export function TrainScreen({
   const sessionRecords = useMemo(() => findSessionRecords(recordHistory, sets), [recordHistory, sets]);
 
   useEffect(() => {
-    if (!destination || !destinationReady || destinationConsumedRef.current) return;
+    if (reading || readError || !destination || !destinationReady || destinationConsumedRef.current) return;
     destinationConsumedRef.current = true;
     onDestinationConsumed?.();
     if (!session && destination !== "WORKOUT") setOverridePickerOpen(true);
@@ -284,9 +292,28 @@ export function TrainScreen({
       if (session || destination === "WORKOUT") headingRef.current?.focus();
       else recoveryChoiceRef.current?.focus();
     });
-  }, [destination, destinationReady, session, onDestinationConsumed]);
+  }, [reading, readError, destination, destinationReady, session, onDestinationConsumed]);
 
-  async function refresh() {
+  useEffect(() => {
+    if (completionSummary && !reading && !readError) completionHeadingRef.current?.focus();
+  }, [completionSummary, reading, readError]);
+
+  async function refresh(preserveChoice = false) {
+    setReading(true);
+    setReadError(null);
+    try {
+      await readTrainingState(preserveChoice && hasReadRef.current);
+      hasReadRef.current = true;
+      return true;
+    } catch (error) {
+      setReadError(describeError(error, "Workout information is unavailable. Please retry."));
+      return false;
+    } finally {
+      setReading(false);
+    }
+  }
+
+  async function readTrainingState(preserveChoice: boolean) {
     // Template/variant suggestion don't require a day to already exist —
     // rotation history is global, and capacity naturally reads as "no
     // check-in yet" when there's no active day. Only an ACTIVE session
@@ -313,7 +340,7 @@ export function TrainScreen({
 
     const nextTemplate = await suggestTemplateForNextWorkout();
     setSuggestedTemplate(nextTemplate);
-    setChosenTemplate(nextTemplate);
+    if (!preserveChoice) setChosenTemplate(nextTemplate);
     setLastAdvancingTemplate(await getLastAdvancingTemplate());
 
     setShowStopConfirm(false);
@@ -326,7 +353,7 @@ export function TrainScreen({
     // original day; nothing is migrated or rewritten.
     const active = (await getActiveWorkoutSession()) ?? null;
     setSession(active);
-    setChosenVariant(
+    if (!preserveChoice) setChosenVariant(
       !active && destination === "RECOVERY"
         ? "RECOVERY"
         : suggestion.variant === "RESET"
@@ -406,6 +433,8 @@ export function TrainScreen({
       setFocusedExerciseId(null);
       setCompletionSummary(null);
       await loadExerciseAdvisory(started);
+    } catch (error) {
+      reportOperationFailure(error);
     } finally {
       setBusy(false);
     }
@@ -427,6 +456,8 @@ export function TrainScreen({
       const activeDay = await ensureActiveDay();
       await submitCheckIn(activeDay.id, quickCheckInValues);
       await refresh();
+    } catch (error) {
+      reportOperationFailure(error);
     } finally {
       setBusy(false);
     }
@@ -439,6 +470,8 @@ export function TrainScreen({
       const activeDay = await ensureActiveDay();
       await setPlannedWork(activeDay.id, planned);
       await refresh();
+    } catch (error) {
+      reportOperationFailure(error);
     } finally {
       setBusy(false);
     }
@@ -446,6 +479,12 @@ export function TrainScreen({
 
   function inputKey(exerciseId: string, setNumber: number): string {
     return `${exerciseId}#${setNumber}`;
+  }
+
+  function reportOperationFailure(error: unknown) {
+    // A command or a subsequent read may have failed. Never offer an
+    // automatic write replay: reconcile canonical state first.
+    setReadError(`The operation could not finish updating the screen. Read the saved workout before trying again. ${describeError(error, "Workout information is temporarily unavailable.")}`);
   }
 
   /**
@@ -528,12 +567,17 @@ export function TrainScreen({
     }
     setLogSetNotice(null);
     setBusy(true);
+    let committed = false;
     try {
       await logSet(session.beyondDayId, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined);
+      committed = true;
       haptic("SET_LOGGED");
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(inputKey(exerciseId, setNumber));
       await startRestAfterCommit();
+    } catch (error) {
+      if (committed) setReadError(`Your set was recorded. Refresh the workout before continuing. ${describeError(error, "Updated workout information is unavailable.")}`);
+      else setReadError(`Could not confirm set recording. Read the saved workout before trying again. ${describeError(error, "Workout information is temporarily unavailable.")}`);
     } finally {
       setBusy(false);
     }
@@ -549,6 +593,7 @@ export function TrainScreen({
   async function handleLogExactRepeat(exerciseId: string, setNumber: number, suggestion: LastSetInfo) {
     if (busy || !session) return;
     setBusy(true);
+    let committed = false;
     try {
       await logSet(
         session.beyondDayId,
@@ -559,10 +604,14 @@ export function TrainScreen({
         suggestion.reps,
         subs[exerciseId] || undefined,
       );
+      committed = true;
       haptic("SET_LOGGED");
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(inputKey(exerciseId, setNumber));
       await startRestAfterCommit();
+    } catch (error) {
+      if (committed) setReadError(`Your set was recorded. Refresh the workout before continuing. ${describeError(error, "Updated workout information is unavailable.")}`);
+      else setReadError(`Could not confirm set recording. Read the saved workout before trying again. ${describeError(error, "Workout information is temporarily unavailable.")}`);
     } finally {
       setBusy(false);
     }
@@ -588,6 +637,8 @@ export function TrainScreen({
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(null);
       await refreshSession();
+    } catch (error) {
+      reportOperationFailure(error);
     } finally {
       setBusy(false);
     }
@@ -600,14 +651,22 @@ export function TrainScreen({
   async function handleAdjustRest(deltaSeconds: number) {
     if (!session) return;
     setRestTouchedAt(Date.now());
-    await adjustRest(session.id, deltaSeconds);
-    await refreshSession();
+    try {
+      await adjustRest(session.id, deltaSeconds);
+      await refreshSession();
+    } catch (error) {
+      reportOperationFailure(error);
+    }
   }
 
   async function handleSkipRest() {
     if (!session) return;
-    await skipRest(session.id);
-    await refreshSession();
+    try {
+      await skipRest(session.id);
+      await refreshSession();
+    } catch (error) {
+      reportOperationFailure(error);
+    }
   }
 
   async function handleSkipSet(exerciseId: string, setNumber: number) {
@@ -616,6 +675,8 @@ export function TrainScreen({
     try {
       await skipSet(session.beyondDayId, session.id, exerciseId, setNumber);
       setSets(await getPerformedSets(session.id));
+    } catch (error) {
+      reportOperationFailure(error);
     } finally {
       setBusy(false);
     }
@@ -698,6 +759,8 @@ export function TrainScreen({
       // own real completion.
       await performDueDayRollover().catch(() => {});
       await refresh();
+    } catch (error) {
+      reportOperationFailure(error);
     } finally {
       setBusy(false);
     }
@@ -726,6 +789,8 @@ export function TrainScreen({
       // call site above — abandoning also legitimately ends the workout.
       await performDueDayRollover().catch(() => {});
       await refresh();
+    } catch (error) {
+      reportOperationFailure(error);
     } finally {
       setBusy(false);
     }
@@ -739,6 +804,8 @@ export function TrainScreen({
       // DAY-ROLLOVER-001: see the same comment on completeWorkout's own call site above.
       await performDueDayRollover().catch(() => {});
       await refresh();
+    } catch (error) {
+      reportOperationFailure(error);
     } finally {
       setBusy(false);
     }
@@ -814,6 +881,10 @@ export function TrainScreen({
     ? activeExercises.findIndex((ex) => ex.exerciseId === currentExercise.exerciseId)
     : -1;
   const currentSetNumber = currentExercise ? nextUnloggedSetNumber(currentExercise) : null;
+  const recordedSubstitution = currentExercise
+    ? sets.find((set) => set.exerciseId === currentExercise.exerciseId && !set.skipped && set.substitutedName)?.substitutedName
+    : undefined;
+  const displayedSubstitution = recordedSubstitution || (currentExercise && currentSetNumber !== null ? subs[currentExercise.exerciseId] : undefined);
   // DECLUTTER-001: unlogged sets after the current one, shown as one line.
   let laterOpenSetCount = 0;
   if (currentExercise && currentSetNumber !== null) {
@@ -855,7 +926,7 @@ export function TrainScreen({
   const restCompressed = isResting && nowTick - restTouchedAt > REST_COMPRESS_AFTER_MS;
 
   return (
-    <div className="screen fade-in train-field">
+    <div className="screen fade-in train-field train-operator">
       {/* FIELD ALPHA Phase 2: the identity zone is deliberately quiet, same
           principle TODAY applied (Suit Implementation 01B) for the same
           reason — freed territory belongs to whatever's actually being
@@ -869,8 +940,21 @@ export function TrainScreen({
           (unlike TODAY's own moment-to-moment Engine truth), so a fixed
           statement of what TRAIN is fits here without inventing data. */}
       <OperatorHeader destination="train" headingRef={headingRef} focusable>BEYOND // TRAIN</OperatorHeader>
+      {!session && <p className="train-purpose">{completionSummary ? "Review what you recorded." : "Prepare your workout. You choose the session."}</p>}
 
       <ConfirmPanel />
+
+      {reading && <p role="status" className="meta">Reading your workout…</p>}
+      {readError && (
+        <div role="alert" className="equipment-row">
+          <p className="card-body">Workout needs a refresh. {readError}</p>
+          <button className="btn-secondary" disabled={reading} onClick={async () => {
+            if (await refresh(true)) headingRef.current?.focus();
+          }}>RETRY WORKOUT READ</button>
+        </div>
+      )}
+
+      {!reading && !readError && <>
 
       {completionSummary && (
         <div
@@ -884,7 +968,7 @@ export function TrainScreen({
           className={`fade-in${completionSummary.status === "COMPLETED" ? " workout-secured" : ""}`}
           style={{ padding: "var(--space-6) 0", marginBottom: "var(--space-5)" }}
         >
-          <h2 className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <h2 ref={completionHeadingRef} tabIndex={-1} className="card-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {completionSummary.status === "COMPLETED" ? (
               <ConfirmIcon size={20} />
             ) : (
@@ -895,14 +979,11 @@ export function TrainScreen({
           <p className="card-body" style={{ textTransform: "capitalize", marginBottom: 8 }}>
             {completionSummary.bodyAreas || "Workout"}
           </p>
-          <p className="meta" style={{ marginBottom: 4 }}>
-            {completionSummary.exercisesTouched} of {completionSummary.totalExercises} exercises · {completionSummary.setsLogged}{" "}
-            {completionSummary.setsLogged === 1 ? "set" : "sets"} logged
-            {completionSummary.setsSkipped > 0
-              ? ` · ${completionSummary.setsSkipped} skipped`
-              : ""}
-            {completionSummary.durationMinutes !== null ? ` · ${completionSummary.durationMinutes} min` : ""}
-          </p>
+          <ReadoutGrid className="train-session-readout">
+            <Readout label="EXERCISES" value={`${completionSummary.exercisesTouched} / ${completionSummary.totalExercises}`} />
+            <Readout label="SETS LOGGED" value={completionSummary.setsLogged} detail={completionSummary.setsSkipped > 0 ? `${completionSummary.setsSkipped} skipped` : undefined} />
+            {completionSummary.durationMinutes !== null && <Readout label="MINUTES" value={completionSummary.durationMinutes} />}
+          </ReadoutGrid>
           {completionSummary.status === "PARTIAL" && (
             <p className="meta" style={{ marginBottom: 8 }}>
               {describePartialAdvancementResult(completionSummary.sessionType)}
@@ -933,7 +1014,10 @@ export function TrainScreen({
               ))}
             </div>
           )}
-          <button className="btn-secondary" style={{ marginTop: 8, width: "auto", padding: "8px 16px" }} onClick={() => setCompletionSummary(null)}>
+          <button className="btn-secondary" style={{ marginTop: 8, width: "auto", padding: "8px 16px" }} onClick={() => {
+            setCompletionSummary(null);
+            headingRef.current?.focus();
+          }}>
             DONE
           </button>
         </div>
@@ -978,7 +1062,7 @@ export function TrainScreen({
           </h2>
           {chosenVariant !== "RECOVERY" && (
             <p className="meta" style={{ marginBottom: 12 }}>
-              {suggestedSummary.exerciseNames.join(", ")}
+              {suggestedExercises.length} exercises · {suggestedExercises.reduce((total, exercise) => total + exercise.sets, 0)} prescribed sets
             </p>
           )}
 
@@ -1046,6 +1130,20 @@ export function TrainScreen({
           >
             START WORKOUT
           </button>
+
+          {chosenVariant !== "RECOVERY" && (
+            <details className="train-lift-inspect">
+              <summary className="disclosure-row">Workout prescription</summary>
+              <ol className="train-prescription">
+                {suggestedExercises.map((exercise) => (
+                  <li key={exercise.exerciseId}>
+                    <span>{exercise.name}</span>
+                    <span className="meta">{exercise.sets} sets × {exercise.repRangeLow}–{exercise.repRangeHigh} reps</span>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          )}
 
           <WhyDisclosure summary="Why this suggestion" style={{ marginTop: 12 }}>
             <div style={{ marginTop: 8 }}>
@@ -1192,24 +1290,21 @@ export function TrainScreen({
 
       {session && session.sessionType !== "RECOVERY" && !completionSummary && (
         <>
-          {/* FIELD ALPHA Phase 2B: STATUS/PROTOCOL — compact instrumentation
-              (reusing TODAY's .status-strip primitive, already documented
-              as "not TODAY-specific... intended to propagate to other
-              screens' own compact status lines"), not a card. Orients the
-              operator without competing with the execution surface below. */}
-          {(() => {
-            const summary = describeTemplateSummary(activeExercises);
-            return (
-              <p className="status-strip" style={{ textTransform: "capitalize" }}>
-                {summary.bodyAreas} — {session.sessionType} — in progress · Template {session.templateId} · Rest ~60-90s
-              </p>
-            );
-          })()}
+          {/* Canonical session orientation stays compact so recording leads.
+              Gym Mode is the same optional full-screen operating shortcut. */}
+              <section className="train-session-state" aria-label="Session progress">
+                <div className="train-session-tools">
+                  <p className="meta-strong">Template {templateLabel(session.templateId, customTemplates)} · {session.sessionType} — in progress</p>
+                  <button ref={gymModeButtonRef} type="button" className="btn-secondary" onClick={() => setGymModeOpen(true)}>GYM MODE</button>
+                </div>
+                <ReadoutGrid className="train-session-readout">
+                  <Readout label="EXERCISES DONE" value={`${activeExercises.filter(isExerciseComplete).length} / ${activeExercises.length}`} />
+                  <Readout label="SETS LOGGED" value={sets.filter((set) => !set.skipped).length} />
+                </ReadoutGrid>
+                <p className="meta">{sets.filter((set) => set.skipped).length} skipped · {activeExercises.reduce((total, exercise) => total + exercise.sets, 0)} prescribed sets</p>
+              </section>
 
           {/* GYM-001: a full-screen, one-handed view of the same session. */}
-          <button ref={gymModeButtonRef} type="button" className="btn-secondary" style={{ marginBottom: 12 }} onClick={() => setGymModeOpen(true)}>
-            GYM MODE
-          </button>
           {gymModeOpen && currentExercise && (
             <GymMode
               exercise={currentExercise}
@@ -1251,7 +1346,7 @@ export function TrainScreen({
             />
           )}
 
-          <p className="section-label section-label--field">Exercise</p>
+          <h2 className="section-label section-label--field">Current exercise</h2>
 
           {/* P4/Overdrive Phase 12, FIELD ALPHA Phase 2B: the focused
               exercise IS TRAIN's PRIMARY EXECUTION surface — the same
@@ -1264,11 +1359,16 @@ export function TrainScreen({
               <p className="meta" style={{ marginBottom: 2 }}>
                 Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>
-              <h2 className="command-title" style={{ marginBottom: 4 }}>{currentExercise.name}</h2>
+              <h2 ref={exerciseHeadingRef} tabIndex={-1} className="command-title" style={{ marginBottom: 4 }}>{currentExercise.name}</h2>
               <p className="meta-strong" style={{ marginBottom: 8 }}>
                 {currentExercise.sets} sets x {currentExercise.repRangeLow}-{currentExercise.repRangeHigh} reps
                 {currentSetNumber !== null ? ` · Set ${currentSetNumber} of ${currentExercise.sets}` : " · All sets logged"}
               </p>
+              {displayedSubstitution && (
+                <p className="meta" style={{ marginBottom: 8 }}>
+                  {recordedSubstitution ? "Recorded as" : "Recording as"}: {displayedSubstitution}
+                </p>
+              )}
               {/* FIELD ALPHA Phase 2F: previous performance is
                   machine/system-derived context, not prose directed at the
                   lifter — restrained mono (.meta) rather than .card-body. */}
@@ -1278,50 +1378,9 @@ export function TrainScreen({
                   {lastPerformedSets[currentExercise.exerciseId]!.reps}
                 </p>
               )}
-              {progressionSuggestions[currentExercise.exerciseId] &&
-                describeProgressionAdvisory(progressionSuggestions[currentExercise.exerciseId]!) && (
-                  <p className="card-body" style={{ fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
-                    {describeProgressionAdvisory(progressionSuggestions[currentExercise.exerciseId]!)}
-                  </p>
-                )}
-
-              {!loggedSetNumbers(currentExercise.exerciseId).size && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Substitute exercise (optional)"
-                    value={subs[currentExercise.exerciseId] ?? ""}
-                    onChange={(e) => setSubs((prev) => ({ ...prev, [currentExercise.exerciseId]: e.target.value }))}
-                    className="input"
-                    style={{ marginBottom: 8 }}
-                  />
-                  {(() => {
-                    // TRAIN-CREATE-003: recent-usage history takes priority
-                    // order first (genuine past behavior), then any saved
-                    // CustomExercise name not already covered — a single
-                    // merged, deduplicated suggestion row.
-                    const recent = recentSubstitutions[currentExercise.exerciseId] ?? [];
-                    const suggestions = [...recent, ...customExerciseNames.filter((n) => !recent.includes(n))];
-                    if (suggestions.length === 0) return null;
-                    return (
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-                        {suggestions.map((name) => (
-                          <button
-                            key={name}
-                            type="button"
-                            className="btn-secondary"
-                            style={{ width: "auto", padding: "4px 10px", fontSize: 16 }}
-                            onClick={() => setSubs((prev) => ({ ...prev, [currentExercise.exerciseId]: name }))}
-                          >
-                            {name}
-                          </button>
-                        ))}
-                      </div>
-                    );
-                  })()}
-                </>
+              {!lastPerformedSets[currentExercise.exerciseId] && (
+                <p className="meta" style={{ marginBottom: 4 }}>Last time: no recorded set</p>
               )}
-
               {/* DECLUTTER-001 (Drop 1): only the current set — the first one
                   not yet logged or skipped — gets the full input row. Finished
                   sets stay as one-line summaries; later sets are counted in a
@@ -1369,7 +1428,7 @@ export function TrainScreen({
                           <button
                             type="button"
                             className="btn-secondary"
-                            style={{ width: "auto", padding: "2px 10px", fontSize: 14, flex: "none" }}
+                            style={{ width: "auto", padding: "2px 10px", fontSize: 16, flex: "none" }}
                             disabled={busy}
                             onClick={() => void handleUndoLastSet()}
                           >
@@ -1513,6 +1572,64 @@ export function TrainScreen({
                   </div>
                 );
               })}
+              {currentSetNumber === null && firstIncompleteExercise && (
+                <button type="button" className="btn-primary" disabled={busy} onClick={() => {
+                  setFocusedExerciseId(null);
+                  requestAnimationFrame(() => exerciseHeadingRef.current?.focus());
+                }}>
+                  CONTINUE — {firstIncompleteExercise.name}
+                </button>
+              )}
+              <details className="train-lift-inspect">
+                <summary className="disclosure-row">Progression and substitution</summary>
+                <p className="meta">Session: {describeTemplateSummary(activeExercises).bodyAreas}.</p>
+                <p className="meta">Rest ~60-90s between sets.</p>
+              {progressionSuggestions[currentExercise.exerciseId] &&
+                describeProgressionAdvisory(progressionSuggestions[currentExercise.exerciseId]!) && (
+                  <p className="card-body" style={{ fontWeight: 600, color: "var(--text-1)", marginBottom: 8 }}>
+                    {describeProgressionAdvisory(progressionSuggestions[currentExercise.exerciseId]!)}
+                  </p>
+                )}
+
+              {!loggedSetNumbers(currentExercise.exerciseId).size && (
+                <>
+                  <input
+                    aria-label="Substitute exercise (optional)"
+                    type="text"
+                    placeholder="Substitute exercise (optional)"
+                    value={subs[currentExercise.exerciseId] ?? ""}
+                    onChange={(e) => setSubs((prev) => ({ ...prev, [currentExercise.exerciseId]: e.target.value }))}
+                    className="input"
+                    style={{ marginBottom: 8 }}
+                  />
+                  {(() => {
+                    // TRAIN-CREATE-003: recent-usage history takes priority
+                    // order first (genuine past behavior), then any saved
+                    // CustomExercise name not already covered — a single
+                    // merged, deduplicated suggestion row.
+                    const recent = recentSubstitutions[currentExercise.exerciseId] ?? [];
+                    const suggestions = [...recent, ...customExerciseNames.filter((n) => !recent.includes(n))];
+                    if (suggestions.length === 0) return null;
+                    return (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                        {suggestions.map((name) => (
+                          <button
+                            key={name}
+                            type="button"
+                            className="btn-secondary"
+                            style={{ width: "auto", padding: "4px 10px", fontSize: 16 }}
+                            onClick={() => setSubs((prev) => ({ ...prev, [currentExercise.exerciseId]: name }))}
+                          >
+                            {name}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
+
+              </details>
               {laterOpenSetCount > 0 && (
                 <p className="meta" style={{ margin: "4px 0 0" }}>
                   {laterOpenSetCount === 1 ? "1 more set" : `${laterOpenSetCount} more sets`}
@@ -1690,6 +1807,7 @@ export function TrainScreen({
           </div>
         </>
       )}
+      </>}
     </div>
   );
 }

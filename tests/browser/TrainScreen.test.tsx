@@ -584,6 +584,7 @@ describe("TrainScreen (real browser) — CustomExercise substitution suggestions
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await screen.getByText("Progression and substitution", { exact: true }).click();
     return screen;
   }
 
@@ -647,6 +648,7 @@ describe("TrainScreen (real browser) — CustomExercise substitution suggestions
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
     await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    await screen.getByText("Progression and substitution", { exact: true }).click();
     expect(screen.getByRole("button", { name: "Chest Supported Row" }).elements()).toHaveLength(1);
   });
 });
