@@ -30,8 +30,8 @@ PWA offline reload, canonical resumption, offline recording and hold-to-finish p
 px. Eighteen synthetic mobile captures and limitations are in
 [TRAIN evidence](../screenshots/train-operator-001/README.md). No physical-phone/iOS, native
 assistive-technology, hardware haptic or wake-lock acceptance is claimed. Existing bundle-size
-warning remains. Committed baseline risk classification, required exact-head CI and independent
-review are pending. PR creation is blocked by GitHub API network denial; its environment draft
+warning remains. Committed baseline risk classification reports PROTECTED; required exact-head CI
+and independent review are pending. PR creation is blocked by GitHub API network denial; its environment draft
 correction is saved, not applied or published. Next: open the focused PR when API access permits,
 then obtain independent exact-head review and successful required CI. Do not merge/deploy.
 
