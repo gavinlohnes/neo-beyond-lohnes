@@ -20,6 +20,7 @@ describe("NOTES-CAPSULE-001 — time capsule", () => {
   it("MORE: write, pick when it opens, SEAL; the list shows the date, never the text", async () => {
     await page.viewport(360, 800);
     const screen = await render(<MoreScreen />);
+    await screen.getByText("Time capsule", { exact: true }).click();
     await screen.getByRole("button", { name: "WRITE ONE" }).click();
     await screen.getByRole("textbox", { name: "Note to future you" }).fill("Did the 5 a.m. workouts stick?");
     await screen.getByRole("button", { name: "6 months" }).click();

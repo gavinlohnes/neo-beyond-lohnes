@@ -85,6 +85,7 @@ describe("BACKUP-AUTO-001 — automatic backup", () => {
 
   it("MORE → Data safety turns it on and picks the interval", async () => {
     const screen = await render(<MoreScreen />);
+    await screen.getByText("Automatic backups & file check", { exact: true }).click();
     await expect.element(screen.getByText("AUTOMATIC BACKUP", { exact: true })).toBeVisible();
     const row = screen.getByText("AUTOMATIC BACKUP", { exact: true }).element().closest(".equipment-row")!;
     (row.querySelector("button") as HTMLButtonElement).click();

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { db } from "../../../persistence/db";
 import { exportBackup, getDaysSinceLastBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
@@ -26,6 +26,7 @@ import { QuitHabitSettings } from "./QuitHabitSettings";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { Icon } from "../../icons/Icon";
+import "./operator.css";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import {
   getCheckInReminderPreference,
@@ -62,7 +63,33 @@ export function MoreScreen({
   /** FIND-001: a MEAL result opens BODY's meal entry. */
   onOpenMeal?: () => void;
 } = {}) {
-  const [view, setView] = useState<MoreView>(initialView);
+  const [view, setViewState] = useState<MoreView>(initialView);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
+  const originRef = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
+  const previousView = useRef(view);
+
+  function setView(next: MoreView) {
+    if (view === "MENU" && next !== "MENU") {
+      originRef.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
+    }
+    setViewState(next);
+  }
+
+  useLayoutEffect(() => {
+    if (previousView.current === view) return;
+    previousView.current = view;
+    if (view === "MENU") {
+      const origin = originRef.current;
+      const trigger = origin?.trigger;
+      if (trigger?.isConnected && menuRef.current?.contains(trigger)) trigger.focus({ preventScroll: true });
+      else menuRef.current?.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
+      window.scrollTo({ top: origin?.scrollY ?? 0, behavior: "instant" });
+    } else {
+      backRef.current?.focus({ preventScroll: true });
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, [view]);
   // FIND-001: a NOTE or DAY result opens HISTORY with that day open.
   const [historyFocusDayId, setHistoryFocusDayId] = useState<string | null>(null);
   // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by
@@ -112,12 +139,16 @@ export function MoreScreen({
   // never a claim, never actionable here. See advisoryQueries.ts and
   // .claude/rules/engine.md's advisory.ts entry for the one-way boundary
   // this stays behind.
+  const [readState, setReadState] = useState<"loading" | "ready" | "error">("loading");
+  const [readError, setReadError] = useState<string | null>(null);
   const [advisoryNotes, setAdvisoryNotes] = useState<AdvisoryNote[]>([]);
   const [preview, setPreview] = useState<RestorePreview | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [archiveStatus, setArchiveStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const operationInFlight = useRef(false);
+  const readSequence = useRef(0);
   // DECLUTTER Drop 3: backup status lives here now, beside EXPORT BACKUP, instead of as a TODAY reminder.
   const [daysSinceBackup, setDaysSinceBackup] = useState<number | null>(() => getDaysSinceLastBackup());
   const disposedRef = useRef(false);
@@ -140,31 +171,47 @@ export function MoreScreen({
     return () => {
       disposedRef.current = true;
     };
-  }, []);
+  }, [view]);
 
   async function refresh() {
-    const [nextDays, nextEvents, nextRecommendations, activeDay, nextAdvisoryNotes] = await Promise.all([
-      getDayCount(),
-      getEventCount(),
-      getRecommendationCount(),
-      getActiveDay(),
-      getAdvisoryNotes(),
-    ]);
-    if (disposedRef.current) return;
-    setDays(nextDays);
-    setEvents(nextEvents);
-    setRecommendations(nextRecommendations);
-    setActiveDayYes(activeDay !== undefined);
-    setAdvisoryNotes(nextAdvisoryNotes);
+    const sequence = ++readSequence.current;
+    setReadState("loading");
+    setReadError(null);
+    try {
+      const [nextDays, nextEvents, nextRecommendations, activeDay, nextAdvisoryNotes] = await Promise.all([
+        getDayCount(),
+        getEventCount(),
+        getRecommendationCount(),
+        getActiveDay(),
+        getAdvisoryNotes(),
+      ]);
+      if (disposedRef.current || sequence !== readSequence.current) return;
+      setDays(nextDays);
+      setEvents(nextEvents);
+      setRecommendations(nextRecommendations);
+      setActiveDayYes(activeDay !== undefined);
+      setAdvisoryNotes(nextAdvisoryNotes);
+      setReadState("ready");
+    } catch (error) {
+      if (disposedRef.current || sequence !== readSequence.current) return;
+      setReadState("error");
+      setReadError(describeError(error, "Could not read diagnostic information."));
+    }
   }
 
   async function handleExportBackup() {
-    if (busy) return;
+    if (operationInFlight.current) return;
+    operationInFlight.current = true;
     setBusy(true);
+    setArchiveStatus(null);
     try {
       await exportBackup();
+      setArchiveStatus("Backup file downloaded. Keep it somewhere safe.");
+    } catch (error) {
+      setArchiveStatus(describeError(error, "Could not export backup. Try again."));
     } finally {
       setDaysSinceBackup(getDaysSinceLastBackup());
+      operationInFlight.current = false;
       setBusy(false);
     }
   }
@@ -199,7 +246,8 @@ export function MoreScreen({
   }
 
   async function handleFileChosen(file: File | undefined) {
-    if (busy || !file) return;
+    if (operationInFlight.current || !file) return;
+    operationInFlight.current = true;
     setBusy(true);
     setStatus(null);
     try {
@@ -211,6 +259,7 @@ export function MoreScreen({
       setPreview(null);
       setPendingFile(null);
     } finally {
+      operationInFlight.current = false;
       setBusy(false);
     }
   }
@@ -227,7 +276,8 @@ export function MoreScreen({
    * an unhandled rejection with no feedback.
    */
   async function handleConfirmRestore() {
-    if (busy || !pendingFile) return;
+    if (operationInFlight.current || !pendingFile) return;
+    operationInFlight.current = true;
     setBusy(true);
     setStatus("Backing up current data before restoring...");
     try {
@@ -237,6 +287,7 @@ export function MoreScreen({
       window.location.reload();
     } catch (e) {
       setStatus(`Restore failed: ${describeError(e, "the backup could not be applied.")}`);
+      operationInFlight.current = false;
       setBusy(false);
     }
   }
@@ -249,7 +300,8 @@ export function MoreScreen({
   }
 
   async function handleArchive() {
-    if (busy) return;
+    if (operationInFlight.current) return;
+    operationInFlight.current = true;
     setBusy(true);
     setArchiveStatus(null);
     try {
@@ -263,159 +315,29 @@ export function MoreScreen({
       setArchiveStatus(describeError(e, "Could not start archive."));
     } finally {
       setDaysSinceBackup(getDaysSinceLastBackup());
+      operationInFlight.current = false;
       setBusy(false);
     }
   }
 
-  if (view === "HISTORY") {
-    return (
-      <div className="screen fade-in">
-        <button
-          className="btn-secondary"
-          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
-          onClick={() => {
-            setHistoryFocusDayId(null);
-            setView("MENU");
-          }}
-        >
-          ← BACK TO MORE
-        </button>
-        <HistoryScreen focusDayId={historyFocusDayId} />
-      </div>
-    );
-  }
-
-  if (view === "WEEKLY") {
-    // HUD-001: Weekly keeps its pre-HUD look until the F1 review (.hud-legacy).
-    return (
-      <div className="screen fade-in hud-legacy">
-        <button
-          className="btn-secondary"
-          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
-          onClick={() => setView("MENU")}
-        >
-          ← BACK TO MORE
-        </button>
-        <WeeklyCheckInScreen />
-      </div>
-    );
-  }
-
-  if (view === "REVIEW") {
-    return (
-      <div className="screen fade-in">
-        <button
-          className="btn-secondary"
-          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
-          onClick={() => setView("MENU")}
-        >
-          ← BACK TO MORE
-        </button>
-        <ReviewScreen />
-      </div>
-    );
-  }
-
-  if (view === "SEARCH") {
-    return (
-      <div className="screen fade-in">
-        <button
-          className="btn-secondary"
-          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
-          onClick={() => setView("MENU")}
-        >
-          ← BACK TO MORE
-        </button>
-        <SearchScreen onSelectResult={handleSelectSearchResult} />
-      </div>
-    );
-  }
-
-  if (view === "WORK_SCHEDULE") {
-    return (
-      <div className="screen fade-in">
-        <button
-          className="btn-secondary"
-          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
-          onClick={() => setView("MENU")}
-        >
-          ← BACK TO MORE
-        </button>
-        <h1 className="eyebrow">MORE // WORK SCHEDULE</h1>
-        <WorkScheduleScreen />
-      </div>
-    );
-  }
-
-  if (view === "INTENT") {
-    return (
-      <div className="screen fade-in">
-        <button
-          className="btn-secondary"
-          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
-          onClick={() => setView("MENU")}
-        >
-          ← BACK TO MORE
-        </button>
-        <h1 className="eyebrow">MORE // MISSIONS &amp; OBLIGATIONS</h1>
-        <IntentScreen
-          key={intentFocus ? `${intentFocus.kind}-${intentFocus.kind === "MISSION" ? intentFocus.missionId : intentFocus.obligationId}` : "list"}
-          {...(intentFocus ? { initialFocus: intentFocus } : {})}
-        />
-      </div>
-    );
-  }
-
-  if (view === "JOURNAL") {
-    return (
-      <div className="screen fade-in">
-        <button
-          className="btn-secondary"
-          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
-          onClick={() => setView("MENU")}
-        >
-          ← BACK TO MORE
-        </button>
-        <h1 className="eyebrow">MORE // DECISION JOURNAL</h1>
-        <JournalScreen />
-      </div>
-    );
-  }
-
-  if (view === "EXERCISE_LIBRARY") {
-    return (
-      <div className="screen fade-in">
-        <button
-          className="btn-secondary"
-          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
-          onClick={() => setView("MENU")}
-        >
-          ← BACK TO MORE
-        </button>
-        <h1 className="eyebrow">MORE // EXERCISE LIBRARY</h1>
-        <ExerciseLibraryScreen />
-      </div>
-    );
-  }
-
-  if (view === "CUSTOM_TEMPLATES") {
-    return (
-      <div className="screen fade-in">
-        <button
-          className="btn-secondary"
-          style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }}
-          onClick={() => setView("MENU")}
-        >
-          ← BACK TO MORE
-        </button>
-        <h1 className="eyebrow">MORE // CUSTOM PROGRAMS</h1>
-        <CustomTemplateScreen />
-      </div>
-    );
-  }
-
   return (
-    <div className="screen fade-in">
+    <div className="screen more-operator">
+      {view !== "MENU" && (
+        <div className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
+          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setHistoryFocusDayId(null); setView("MENU"); }}>← BACK TO MORE</button>
+          {view === "HISTORY" && <HistoryScreen focusDayId={historyFocusDayId} />}
+          {view === "WEEKLY" && <WeeklyCheckInScreen />}
+          {view === "REVIEW" && <ReviewScreen />}
+          {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} />}
+          {view === "WORK_SCHEDULE" && <><OperatorHeader destination="more">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
+          {view === "INTENT" && <><OperatorHeader destination="more">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen key={intentFocus ? JSON.stringify(intentFocus) : "list"} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}
+          {view === "JOURNAL" && <><OperatorHeader destination="more">MORE // DECISION JOURNAL</OperatorHeader><JournalScreen /></>}
+          {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="more">MORE // EXERCISE LIBRARY</OperatorHeader><ExerciseLibraryScreen /></>}
+          {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="more">MORE // CUSTOM PROGRAMS</OperatorHeader><CustomTemplateScreen /></>}
+        </div>
+      )}
+      {/* Keep local settings/disclosures/drafts mounted while inspecting a destination. */}
+      <div ref={menuRef} hidden={view !== "MENU"} className="more-control-center">
       {/* FIELD ALPHA Phase 4: identity zone quieted, same principle
           applied to TODAY/TRAIN/BODY — MORE is the SYSTEM surface, not a
           fifth destination competing for its own display title.
@@ -425,7 +347,18 @@ export function MoreScreen({
           closing structural rule, so all four destinations open the
           same way. No IA change: still the exact same MENU view, same
           heading text/class. */}
-      <OperatorHeader destination="more">MORE // SYSTEM</OperatorHeader>
+      <OperatorHeader destination="more" focusable>MORE // SYSTEM</OperatorHeader>
+      <h2 className="more-title">Control center</h2>
+      <p className="more-purpose">Your records, plans and system controls.</p>
+      <div className="more-context">
+        <p>LOCAL FIRST · OFFLINE FIRST</p>
+        <a href="#safety-heading" onClick={(event) => {
+          event.preventDefault();
+          const heading = menuRef.current?.querySelector<HTMLElement>("#safety-heading");
+          heading?.focus({ preventScroll: true });
+          heading?.scrollIntoView({ block: "start", behavior: "instant" });
+        }}>BACKUP & RECOVERY ↓</a>
+      </div>
 
       {/* FIELD ALPHA Phase 4B: reorganized by functional meaning
           (OPERATIONS / RECORDS / SYSTEM) rather than historical screen
@@ -437,6 +370,36 @@ export function MoreScreen({
           view-swap, so this is genuine reuse, not a forced fit. Backup/
           Archive/Restore are immediate actions, not navigation, so they
           use .equipment-row instead. */}
+      <section className="operational-index-zone" aria-labelledby="records-heading">
+      <h2 id="records-heading" className="section-label">Evidence</h2>
+      <p className="more-section-purpose">Search recorded truth, inspect the day trail, or review patterns and decisions.</p>
+      {/* Drop 7 (owner approval 2026-10-01): the weekly check-in leads Evidence. */}
+      <CollapsibleRow
+        name="WEEKLY CHECK-IN"
+        icon={<LineIcon icon={CalendarCheck} />}
+        onOpen={() => setView("WEEKLY")}
+      />
+      <CollapsibleRow
+        name="HISTORY"
+        icon={<Icon name="history" size={20} />}
+        onOpen={() => setView("HISTORY")}
+      />
+      <CollapsibleRow
+        name="REVIEW"
+        icon={<Icon name="review" size={20} />}
+        onOpen={() => setView("REVIEW")}
+      />
+      <CollapsibleRow
+        name="SEARCH"
+        icon={<Icon name="search" size={20} />}
+        onOpen={() => setView("SEARCH")}
+      />
+        <CollapsibleRow
+          name="DECISION JOURNAL"
+          icon={<Icon name="decisionJournal" size={20} />}
+          onOpen={() => setView("JOURNAL")}
+        />
+      </section>
       <section className="operational-index-zone" aria-labelledby="operations-heading">
         <h2 id="operations-heading" className="section-label">Direction</h2>
         <CollapsibleRow
@@ -452,11 +415,9 @@ export function MoreScreen({
           icon={<Icon name="schedule" size={20} />}
           onOpen={() => setView("WORK_SCHEDULE")}
         />
-        <CollapsibleRow
-          name="DECISION JOURNAL"
-          icon={<Icon name="decisionJournal" size={20} />}
-          onOpen={() => setView("JOURNAL")}
-        />
+      </section>
+      <section className="operational-index-zone" aria-labelledby="training-tools-heading">
+        <h2 id="training-tools-heading" className="section-label">Training tools</h2>
         <CollapsibleRow
           name="EXERCISE LIBRARY"
           icon={<Icon name="exerciseLibrary" size={20} />}
@@ -467,58 +428,9 @@ export function MoreScreen({
           icon={<Icon name="customPrograms" size={20} />}
           onOpen={() => setView("CUSTOM_TEMPLATES")}
         />
-        {/* NOTES-CAPSULE-001: a note to future you, sealed until its day. */}
-        <TimeCapsuleSettings />
       </section>
-
-      {/* REMIND-001: on-device only — no account, no push service. Fires
-          from a live check the next time you open BEYOND after your
-          chosen hour, if you haven't checked in yet that day; it cannot
-          wake the app in the background, and says so plainly rather than
-          implying always-on delivery. */}
-      <section className="operational-index-zone" aria-labelledby="reminders-heading">
-        <h2 id="reminders-heading" className="section-label">Reminders</h2>
-        <div className="equipment-row">
-          <p className="tool-label" style={{ marginBottom: 4 }}>DAILY CHECK-IN REMINDER</p>
-          <p className="card-body" style={{ marginBottom: 8 }}>
-            {reminderPreference.enabled ? `On, after ${formatReminderHour(reminderPreference.reminderHour)}.` : "Off."}
-          </p>
-          {/* DECLUTTER Drop 2: replaces the cut section intro's key fact. */}
-          <p className="meta" style={{ marginBottom: 8 }}>Checked when you open BEYOND, not a push notification.</p>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            {/* LAUNCH POLISH (owner approval 2026-10-01): MORE has no single
-                primary action, so routine settings don't wear red. */}
-            <button
-              className="btn-secondary"
-              onClick={() => void handleToggleReminder()}
-            >
-              {reminderPreference.enabled ? "TURN OFF" : "TURN ON"}
-            </button>
-            {reminderPreference.enabled && (
-              <select
-                aria-label="Reminder hour"
-                value={reminderPreference.reminderHour}
-                onChange={(e) => handleChangeReminderHour(Number(e.target.value))}
-              >
-                {REMINDER_HOUR_OPTIONS.map((h) => (
-                  <option key={h} value={h}>
-                    {formatReminderHour(h)}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-          {reminderPermissionDenied && (
-            <p className="meta" style={{ marginTop: 8 }}>
-              Notification permission was denied. Enable notifications for BEYOND in your browser/device settings to
-              use this.
-            </p>
-          )}
-        </div>
-      </section>
-
       <section className="operational-index-zone" aria-labelledby="safety-heading">
-        <h2 id="safety-heading" className="section-label">Data safety</h2>
+        <h2 id="safety-heading" tabIndex={-1} className="section-label">Data safety</h2>
         <div className="equipment-row">
         <p className="tool-label" style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
           <Icon name="backup" size={20} />BACKUP
@@ -537,10 +449,13 @@ export function MoreScreen({
           </button>
         </div>
         <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>{describeLastBackup(daysSinceBackup)}</p>
-        {archiveStatus && <p className="meta" style={{ marginTop: 8 }}>{archiveStatus}</p>}
+        {archiveStatus && <p role="status" className="meta" style={{ marginTop: 8 }}>{archiveStatus}</p>}
         </div>
 
-        <AutoBackupSettings />
+        <details className="more-inspection">
+          <summary>Automatic backups & file check</summary>
+          <AutoBackupSettings />
+        </details>
 
       {/* Restore is the one genuinely dangerous, rare action on this
           screen — replaces everything on the device. Kept functionally
@@ -625,7 +540,7 @@ export function MoreScreen({
             </div>
           </div>
         )}
-        {status && <p className="meta" style={{ marginTop: 8 }}>{status}</p>}
+        {status && <p role="status" className="meta" style={{ marginTop: 8 }}>{status}</p>}
           </div>
         </details>
       </section>
@@ -634,30 +549,7 @@ export function MoreScreen({
           distinct from OPERATIONS above. History stays a clean single
           entry point per Phase 4H — no charts/trends/summaries added,
           none existed to preserve. */}
-      <section className="operational-index-zone" aria-labelledby="records-heading">
-      <h2 id="records-heading" className="section-label">Evidence</h2>
-      {/* Drop 7 (owner approval 2026-10-01): the weekly check-in leads Evidence. */}
-      <CollapsibleRow
-        name="WEEKLY CHECK-IN"
-        icon={<LineIcon icon={CalendarCheck} />}
-        onOpen={() => setView("WEEKLY")}
-      />
-      <CollapsibleRow
-        name="HISTORY"
-        icon={<Icon name="history" size={20} />}
-        onOpen={() => setView("HISTORY")}
-      />
-      <CollapsibleRow
-        name="REVIEW"
-        icon={<Icon name="review" size={20} />}
-        onOpen={() => setView("REVIEW")}
-      />
-      <CollapsibleRow
-        name="SEARCH"
-        icon={<Icon name="search" size={20} />}
-        onOpen={() => setView("SEARCH")}
-      />
-      </section>
+
 
       {/* FIELD ALPHA Phase 4C: SYSTEM — BEYOND's own state, the first
           real proof of the SYSTEM STATE grammar outside TODAY/TRAIN's
@@ -695,6 +587,54 @@ export function MoreScreen({
       <h2 id="settings-heading" className="section-label">Settings</h2>
       <NutritionTargetsSettings />
       <QuitHabitSettings />
+      <details className="more-inspection"><summary>Time capsule</summary><TimeCapsuleSettings /></details>
+      {/* REMIND-001: on-device only — no account, no push service. Fires
+          from a live check the next time you open BEYOND after your
+          chosen hour, if you haven't checked in yet that day; it cannot
+          wake the app in the background, and says so plainly rather than
+          implying always-on delivery. */}
+      <section className="operational-index-zone" aria-labelledby="reminders-heading">
+        <h2 id="reminders-heading" className="section-label">Reminders</h2>
+        <div className="equipment-row">
+          <p className="tool-label" style={{ marginBottom: 4 }}>DAILY CHECK-IN REMINDER</p>
+          <p className="card-body" style={{ marginBottom: 8 }}>
+            {reminderPreference.enabled ? `On, after ${formatReminderHour(reminderPreference.reminderHour)}.` : "Off."}
+          </p>
+          {/* DECLUTTER Drop 2: replaces the cut section intro's key fact. */}
+          <p className="meta" style={{ marginBottom: 8 }}>Checked when you open BEYOND, not a push notification.</p>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {/* LAUNCH POLISH (owner approval 2026-10-01): MORE has no single
+                primary action, so routine settings don't wear red. */}
+            <button
+              className="btn-secondary"
+              onClick={() => void handleToggleReminder()}
+            >
+              {reminderPreference.enabled ? "TURN OFF" : "TURN ON"}
+            </button>
+            {reminderPreference.enabled && (
+              <select
+                aria-label="Reminder hour"
+                value={reminderPreference.reminderHour}
+                onChange={(e) => handleChangeReminderHour(Number(e.target.value))}
+              >
+                {REMINDER_HOUR_OPTIONS.map((h) => (
+                  <option key={h} value={h}>
+                    {formatReminderHour(h)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          {reminderPermissionDenied && (
+            <p className="meta" style={{ marginTop: 8 }}>
+              Notification permission was denied. Enable notifications for BEYOND in your browser/device settings to
+              use this.
+            </p>
+          )}
+        </div>
+      </section>
+
+
       {/* No machinery reveal here (2026-09-30, direct owner ruling): SYSTEM's
           diagnostics are plain technical readouts, so they expand inline
           only. TODAY/TRAIN's WHY disclosures keep the DEPTH-001 reveal. */}
@@ -719,10 +659,13 @@ export function MoreScreen({
             </div>
             <div>
               <p className="meta" style={{ margin: 0 }}>ACTIVE DAY</p>
-              <p className="status-value">{activeDayYes ? "YES" : "NO"}</p>
+              <p className="status-value">{readState === "ready" ? (activeDayYes ? "YES" : "NO") : "UNKNOWN"}</p>
             </div>
           </div>
           <DiagRow label="Built" value={BUILD_TIME} />
+          {readState === "loading" && <p role="status">Reading diagnostic information…</p>}
+          {readState === "error" && <div><p role="alert">{readError} These readings are unavailable.</p><button type="button" className="btn-secondary" onClick={() => void refresh()}>RETRY READINGS</button></div>}
+          {readState === "ready" && <>
           <DiagRow label="Days" value={String(days)} />
           <DiagRow label="Events" value={String(events)} />
           <DiagRow label="Recommendations" value={String(recommendations)} />
@@ -742,9 +685,11 @@ export function MoreScreen({
               ))}
             </div>
           )}
+          </>}
         </div>
       </WhyDisclosure>
       </section>
+      </div>
     </div>
   );
 }

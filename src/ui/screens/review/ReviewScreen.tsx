@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { describeError } from "../../errorMessage";
 import { getRecommendationLedger, type LedgerDay } from "../../../application/reviewQueries";
 import { describeLedgerDecision, describeLedgerDisposition, describeLedgerRating } from "./reviewCopy";
 
@@ -19,18 +20,26 @@ import { describeLedgerDecision, describeLedgerDisposition, describeLedgerRating
 export function ReviewScreen() {
   const [days, setDays] = useState<LedgerDay[]>([]);
   const [loading, setLoading] = useState(true);
+  const [readError, setReadError] = useState<string | null>(null);
+  const mounted = useRef(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
+    mounted.current = true;
     void refresh();
+    return () => { mounted.current = false; };
   }, []);
 
   async function refresh() {
     setLoading(true);
+    setReadError(null);
     try {
-      setDays(await getRecommendationLedger());
+      const nextDays = await getRecommendationLedger();
+      if (mounted.current) setDays(nextDays);
+    } catch (error) {
+      if (mounted.current) setReadError(describeError(error, "Could not read the recommendation ledger."));
     } finally {
-      setLoading(false);
+      if (mounted.current) setLoading(false);
     }
   }
 
@@ -42,8 +51,9 @@ export function ReviewScreen() {
         complete raw event log, see HISTORY.
       </p>
 
-      {loading && <p className="empty-state">Loading…</p>}
-      {!loading && days.length === 0 && (
+      {loading && <p className="empty-state" role="status">Loading…</p>}
+      {readError && <div><p role="alert">{readError} The ledger is unavailable, not empty.</p><button type="button" className="btn-secondary" onClick={() => void refresh()}>RETRY REVIEW</button></div>}
+      {!loading && !readError && days.length === 0 && (
         <p className="empty-state">
           No recommendations yet. This fills in as BEYOND recommends things and you decide on them.
         </p>

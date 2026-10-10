@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { describeError } from "../../errorMessage";
 import { getWeeklySummary, type WeeklySummary } from "../../../application/weeklyQueries";
 import { describePersonalRecord } from "../../../application/personalRecordQueries";
 import { formatShortDate } from "../../../application/bodyTrendQueries";
@@ -25,6 +26,8 @@ const MAX_RECORD_LINES = 5;
 
 export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
+  const [readError, setReadError] = useState<string | null>(null);
+  const [readKey, setReadKey] = useState(0);
   const [gridOpen, setGridOpen] = useState(false);
   const [mirrorOpen, setMirrorOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -32,22 +35,26 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
 
   useEffect(() => {
     let current = true;
+    setReadError(null);
     void getWeeklySummary(now)
       .then((next) => {
         if (current) setSummary(next);
       })
-      .catch(() => {});
+      .catch((error) => {
+        if (current) setReadError(describeError(error, "Could not read the weekly summary."));
+      });
     return () => {
       current = false;
     };
-  }, [now]);
+  }, [now, readKey]);
 
   return (
     <div className="screen">
       <h1 className="eyebrow">MORE // WEEKLY CHECK-IN</h1>
       <p className="meta" style={{ marginBottom: 16 }}>The last 7 days. LAST 28 DAYS, MIRROR, FINDINGS and YOUR USUAL look further back.</p>
+      {readError && <div><p role="alert">{readError} Weekly information is unavailable.</p><button type="button" className="btn-secondary" onClick={() => { setReadError(null); setReadKey((key) => key + 1); }}>RETRY WEEKLY</button></div>}
       {!summary ? (
-        <p className="empty-state">Loading…</p>
+        !readError && <p className="empty-state" role="status">Loading…</p>
       ) : (
         <>
           {/* The Ribbon (2026-10-03): the last 28 lived days at a glance, above the week's numbers. */}

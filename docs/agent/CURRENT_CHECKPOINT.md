@@ -1,6 +1,43 @@
 # Current checkpoint
 
-## Current objective — TRAIN-OPERATOR-001 operating surface transformation
+## Current objective — MORE-OPERATOR-001 control center
+
+Gavin approved this bounded Protected stage on 2026-10-10, with no merge/deploy authorization.
+Builder: Codex, sole implementation Builder; branch `codex/more-operator-001`; PR pending.
+Fresh baseline: `d3386f3d9901e0fa41a10f03e5dc4536578ebc96`; GitHub confirms PR #216 merged
+at exactly that commit. Clean starting worktree; sole open PR #204 remains isolated and untouched.
+Brief: [Stage 5](BEYOND_OPERATOR_EXPERIENCE.md#active-stage-5-brief--more-operator-001).
+
+Implementation: records/review lead, Direction and Training tools stay distinct, and the identity
+zone has an immediate backup/recovery jump. Existing export/share/replace-only restore remain
+visible; automatic preferences/file check and time capsules use deliberate native disclosure.
+All nine destinations, settings, Findings/Weekly depth and correction/manual routes are retained.
+The menu stays mounted during inspection, retaining local settings/capsule drafts, disclosures,
+position and focus on explicit return; primary-tab/reset semantics are unchanged. Diagnostics,
+History, Review and Weekly distinguish unavailable reads from empty/zero and provide read-only
+retry. Backup export failures are surfaced; synchronous UI guards preserve one in-flight safety
+operation and existing backup-before-replace/preview/confirmation semantics. No Engine, application,
+domain, schema, persistence, events, backup formats, dependencies, CI, protections or prototype edits.
+
+Verification: full Node suite passes 143 files / 1,535 tests, one existing skip; full Chromium
+suite passes 72 files / 736 tests. All 24 final focused operator tests pass, including added restore
+failure-ordering and computed minimum-text checks (one additional test after the full local run).
+Architecture passes (201 files); TypeScript, production PWA build and whitespace pass.
+Actual 320/360/412 px PWA offline reload, History/events, record search/result navigation, settings
+save/reload, real backup download/preview/cancel/file check and return focus pass at every width.
+[Twenty-one synthetic mobile captures](../screenshots/more-operator-001/README.md) record actual
+production behavior, not prototype sample rules. Eight local documentation links and heading
+anchors pass; committed baseline risk is checked before delivery. Exact-head CI/review results
+belong in the linked PR rather than a self-referential checkpoint SHA.
+
+Limits: Chromium-only automation, no physical-device/iOS/native-screen-reader or OS share-sheet
+certification. Draft continuity is session-local menu inspection, not new persistence or cross-tab
+draft authority. Existing bundle-size warning and excluded workout command atomicity opportunity
+remain. Environment reuses the existing setup and temporary system-Chromium browser override;
+no tracked runner changes or new configuration needed. Next: green required exact-head CI,
+independent review, then Gavin's separate merge decision. Do not merge/deploy.
+
+## Historical objective — TRAIN-OPERATOR-001 operating surface transformation (merged PR #216)
 
 Gavin approved this bounded Protected stage on 2026-10-10. Builder: Codex, sole implementation
 Builder; branch `codex/train-operator-001`; [PR #216](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/216). Starting master is the freshly verified
