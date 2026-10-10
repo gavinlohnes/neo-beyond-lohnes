@@ -160,11 +160,12 @@ exact-head PASS before Gavin's separate merge decision.
 ## Active stage 4 brief — TRAIN-OPERATOR-001
 
 Gavin explicitly approved proceeding with this bounded Protected stage on 2026-10-10. Builder:
-Codex, sole implementation Builder; branch `codex/train-operator-001`; PR pending. Fresh starting
+Codex, sole implementation Builder; branch `codex/train-operator-001`; [PR #216](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/216). Fresh starting
 master: `173b9f930764e99b7d03d36d14d21aa4f3f57a49`, the verified merge of PR #215. The initial
 working tree was clean. Public GitHub inspection showed only isolated prototype PR #204 open;
-its code and synthetic data are excluded. GitHub API inspection is currently denied by the cloud
-environment, so public inspection does not establish authenticated repository settings or CI.
+its code and synthetic data are excluded. GitHub API inspection initially failed with network
+Forbidden; subsequent live API requests and PR creation succeeded after environment draft
+network corrections. Required exact-head CI remains a separate verified delivery gate.
 
 Outcome: a cohesive mobile-first TRAIN journey from preparation through recording, continuation,
 completion, inspection and return. Prescription/action lead; canonical progress is immediately

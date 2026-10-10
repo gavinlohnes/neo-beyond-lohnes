@@ -3,11 +3,12 @@
 ## Current objective — TRAIN-OPERATOR-001 operating surface transformation
 
 Gavin approved this bounded Protected stage on 2026-10-10. Builder: Codex, sole implementation
-Builder; branch `codex/train-operator-001`; PR pending. Starting master is the freshly verified
+Builder; branch `codex/train-operator-001`; [PR #216](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/216). Starting master is the freshly verified
 `173b9f930764e99b7d03d36d14d21aa4f3f57a49`, merging PR #215. Initial working tree was clean;
-public open-PR inspection showed only isolated prototype #204. GitHub API access is denied by
-the environment (also with sandbox escalation); neither authenticated PR/settings inspection nor
-required CI is claimed. Full concise brief:
+initial public open-PR inspection showed only isolated prototype #204. GitHub API access initially
+failed with network Forbidden (including sandbox escalation); after saving missing destinations
+in the environment draft, authenticated API access and PR creation succeeded. No required CI
+success is claimed here. Full concise brief:
 [TRAIN stage 4](BEYOND_OPERATOR_EXPERIENCE.md#active-stage-4-brief--train-operator-001).
 
 Implementation: preparation leads with the chosen session, prescribed exercise/set totals and
@@ -31,9 +32,10 @@ px. Eighteen synthetic mobile captures and limitations are in
 [TRAIN evidence](../screenshots/train-operator-001/README.md). No physical-phone/iOS, native
 assistive-technology, hardware haptic or wake-lock acceptance is claimed. Existing bundle-size
 warning remains. Committed baseline risk classification reports PROTECTED; required exact-head CI
-and independent review are pending. PR creation is blocked by GitHub API network denial; its environment draft
-correction is saved, not applied or published. Next: open the focused PR when API access permits,
-then obtain independent exact-head review and successful required CI. Do not merge/deploy.
+and independent review are pending. The pushed branch is recoverable in PR #216. Environment
+network corrections are saved; successful live API requests do not establish a published setup
+snapshot. Next: obtain independent exact-head review and successful required CI, then Gavin's
+separate merge decision. Do not merge/deploy.
 
 Separate owner decision required, not implemented: existing workout commands can write a row and
 its event separately. UI recovery reconciles an uncertain result and never blindly repeats LOG;
