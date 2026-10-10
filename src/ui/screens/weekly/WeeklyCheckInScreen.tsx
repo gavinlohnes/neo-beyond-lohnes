@@ -35,6 +35,8 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
 
   useEffect(() => {
     let current = true;
+    // A previous window's figures are not evidence for an in-flight or failed read.
+    setSummary(null);
     setReadError(null);
     void getWeeklySummary(now)
       .then((next) => {

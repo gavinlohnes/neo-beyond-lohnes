@@ -5,6 +5,7 @@ import { cleanup, render } from "vitest-browser-react";
 import axe from "axe-core";
 import { exportDB } from "dexie-export-import";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
+import { WeeklyCheckInScreen } from "../../src/ui/screens/weekly/WeeklyCheckInScreen";
 import { App } from "../../src/app/App";
 import { startDay } from "../../src/application/commands";
 import { getDayCount } from "../../src/application/queries";
@@ -67,6 +68,45 @@ const destinations = [
 ] as const;
 
 describe("MORE-OPERATOR-001", () => {
+  it("Weekly hides a previous successful summary throughout failed refresh, pending retry and recovery", async () => {
+    const now = new Date(2026, 9, 10, 12);
+    const initial = await getWeeklySummary(now);
+    const first = { ...initial, weight: { ...initial.weight, avgLbs: 183.5, weighIns: 1 } };
+    const recovered = { ...initial, weight: { ...initial.weight, avgLbs: 184.5, weighIns: 1 } };
+    let failRefresh!: (error: Error) => void;
+    let finishRetry!: (summary: Awaited<ReturnType<typeof getWeeklySummary>>) => void;
+    vi.mocked(getWeeklySummary)
+      .mockResolvedValueOnce(first)
+      .mockImplementationOnce(() => new Promise((_resolve, reject) => { failRefresh = reject; }))
+      .mockImplementationOnce(() => new Promise((resolve) => { finishRetry = resolve; }));
+    const before = await db.events.toArray();
+    const screen = await render(<WeeklyCheckInScreen now={now} />);
+    await expect.element(screen.getByText("Avg 183.5 lb", { exact: true })).toBeVisible();
+
+    await screen.rerender(<WeeklyCheckInScreen now={new Date(2026, 9, 11, 12)} />);
+    await expect.element(screen.getByRole("status")).toHaveTextContent("Loading…");
+    expect(screen.getByText("Avg 183.5 lb", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("FINDINGS", { exact: true }).elements()).toHaveLength(0);
+    failRefresh(new Error("Refresh interrupted"));
+    await expect.element(screen.getByRole("alert")).toHaveTextContent("Refresh interrupted");
+    await expect.element(screen.getByRole("button", { name: "RETRY WEEKLY" })).toBeVisible();
+    expect(screen.getByRole("status").elements()).toHaveLength(0);
+    expect(screen.getByText("Avg 183.5 lb", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("FINDINGS", { exact: true }).elements()).toHaveLength(0);
+
+    await screen.getByRole("button", { name: "RETRY WEEKLY" }).click();
+    await expect.element(screen.getByRole("status")).toHaveTextContent("Loading…");
+    expect(screen.getByRole("alert").elements()).toHaveLength(0);
+    expect(screen.getByText("Avg 183.5 lb", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("FINDINGS", { exact: true }).elements()).toHaveLength(0);
+    finishRetry(recovered);
+    await expect.element(screen.getByText("Avg 184.5 lb", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("FINDINGS", { exact: true })).toBeVisible();
+    expect(screen.getByText("Avg 183.5 lb", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByRole("status").elements()).toHaveLength(0);
+    expect(screen.getByRole("alert").elements()).toHaveLength(0);
+    expect(await db.events.toArray()).toEqual(before);
+  });
   it.each(["HISTORY", "REVIEW", "WEEKLY"] as const)("%s read failure stays distinct from empty, supports retry and leaves records unchanged", async (view) => {
     await startDay();
     const before = await db.events.toArray();

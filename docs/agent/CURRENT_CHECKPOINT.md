@@ -38,6 +38,16 @@ remain. Environment reuses the existing setup and temporary system-Chromium brow
 no tracked runner changes or new configuration needed. Next: green required exact-head CI,
 independent review, then Gavin's separate merge decision. Do not merge/deploy.
 
+Owner-requested PR #217 follow-up, 2026-10-10: Weekly clears its last successful summary when
+a fresh read begins. Pending reads show Loading; failure shows the error and RETRY WEEKLY without
+old figures. A gated regression covers successful load → failed refresh → pending retry → successful
+recovery and unchanged canonical events; it failed against `a664d92c94dfdbaf532411545984e8881e83d354`
+before the correction. This is UI read-state repair only, reusing existing query/cancellation state;
+no command, domain, persistence or authority change. All 76 focused MORE/Review browser cases
+pass, including the new recovery sequence; architecture, TypeScript/build, whitespace and eight
+local documentation links/anchors pass. Corrected-head native CI and renewed
+independent exact-head review belong in PR #217; prior-head CI/review is not approval of this update.
+
 ## Historical objective — TRAIN-OPERATOR-001 operating surface transformation (merged PR #216)
 
 Gavin approved this bounded Protected stage on 2026-10-10. Builder: Codex, sole implementation
