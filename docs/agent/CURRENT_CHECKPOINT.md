@@ -3,7 +3,8 @@
 ## Current objective — MORE-OPERATOR-001 control center
 
 Gavin approved this bounded Protected stage on 2026-10-10, with no merge/deploy authorization.
-Builder: Codex, sole implementation Builder; branch `codex/more-operator-001`; PR pending.
+Builder: Codex, sole implementation Builder; branch `codex/more-operator-001`;
+[PR #217](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/217).
 Fresh baseline: `d3386f3d9901e0fa41a10f03e5dc4536578ebc96`; GitHub confirms PR #216 merged
 at exactly that commit. Clean starting worktree; sole open PR #204 remains isolated and untouched.
 Brief: [Stage 5](BEYOND_OPERATOR_EXPERIENCE.md#active-stage-5-brief--more-operator-001).
@@ -27,7 +28,7 @@ Actual 320/360/412 px PWA offline reload, History/events, record search/result n
 save/reload, real backup download/preview/cancel/file check and return focus pass at every width.
 [Twenty-one synthetic mobile captures](../screenshots/more-operator-001/README.md) record actual
 production behavior, not prototype sample rules. Eight local documentation links and heading
-anchors pass; committed baseline risk is checked before delivery. Exact-head CI/review results
+anchors pass; committed baseline risk reports PROTECTED. Exact-head CI/review results
 belong in the linked PR rather than a self-referential checkpoint SHA.
 
 Limits: Chromium-only automation, no physical-device/iOS/native-screen-reader or OS share-sheet

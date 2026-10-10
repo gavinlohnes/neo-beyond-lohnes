@@ -193,7 +193,8 @@ independent exact-head review, successful required CI and Gavin's separate merge
 ## Active stage 5 brief — MORE-OPERATOR-001
 
 Gavin approved this bounded Protected stage on 2026-10-10, without merge authorization.
-Builder: Codex, sole implementation Builder; branch `codex/more-operator-001`; PR pending.
+Builder: Codex, sole implementation Builder; branch `codex/more-operator-001`;
+[PR #217](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/217).
 Starting freshly fetched master: `d3386f3d9901e0fa41a10f03e5dc4536578ebc96`, verified
 PR #216 merge. Working tree was clean; only isolated prototype PR #204 was open, untouched.
 
