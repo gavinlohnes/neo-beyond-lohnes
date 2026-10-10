@@ -1,0 +1,35 @@
+.train-operator .field-header { margin-bottom: 12px; }
+.train-purpose { margin: 0 0 20px; color: var(--text-2); font-size: 16px; }
+.train-operator .command-surface { min-height: 0; padding: 20px 16px; }
+.train-operator .command-surface .command-title { font-size: clamp(28px, 8vw, 36px); line-height: 1.1; overflow-wrap: anywhere; }
+.train-session-state { border-block: 1px solid var(--border-subtle); padding-block: 12px; margin-bottom: 12px; }
+.train-session-state > p { margin: 0 0 8px; }
+.train-session-tools { display: flex; align-items: center; gap: 12px; }
+.train-session-tools > p { flex: 1; margin: 0; }
+.train-session-tools > button { width: auto; flex: none; padding: 8px 12px; }
+.train-session-readout { margin-block: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.train-session-readout .readout { min-width: 0; padding: 10px; }
+.train-session-readout .readout__value { font-size: 28px; }
+.train-session-state .train-session-readout { margin-block: 8px; padding-block: 0; gap: 8px; }
+.train-session-state .readout { padding: 0; }
+.train-session-state .readout .tool-label { font-size: 16px; margin-bottom: 2px; }
+.train-session-state .readout__value { font-size: 24px; margin: 0; }
+.train-operator .section-label--field { margin-top: 12px; margin-bottom: 12px; }
+.train-operator .train-lift-inspect { border-top: 1px solid var(--border-subtle); margin-top: 12px; }
+.train-lift-inspect > summary { min-height: 44px; color: var(--text-1); }
+.train-lift-inspect .input { min-width: 0; }
+.train-prescription { margin: 0; padding-left: 24px; }
+.train-prescription li { padding-block: 8px; }
+.train-prescription li > span { display: block; }
+.train-operator input { min-width: 0; }
+.train-operator .field-recede { margin-top: 20px; padding-left: 0; border-left: 0; }
+.train-operator .section-label { color: var(--text-3-strong); }
+.train-operator .disclosure-row { font-size: 16px; }
+.train-operator .meta { color: var(--text-3-strong); }
+.train-operator .btn-secondary:not(.gym-mode *) { min-height: 44px; }
+.train-operator .gym-mode__hint,
+.train-operator .gym-mode__cue-button,
+.train-operator .pr-tag { font-size: 16px; }
+@media (prefers-reduced-motion: reduce) {
+  .train-operator *, .train-operator *::before, .train-operator *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

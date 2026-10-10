@@ -126,7 +126,7 @@ final merge authority.
 Gavin explicitly approved this bounded Protected command-surface transformation on 2026-10-09.
 Starting commit: `1d83756b2ba971144365714d7450fb1091b9f2dc`, freshly fetched master and
 the verified merge of shared-primitives PR #214. Builder: Codex; branch
-`codex/today-operator-001`; PR pending. PR #204 remains an isolated prototype and supplies no
+`codex/today-operator-001`; merged as PR #215. PR #204 remains an isolated prototype and supplies no
 production architecture, records, sample values or behavioral authority.
 
 Outcome: TODAY becomes BEYOND's primary operator command surface, answering what is happening,
@@ -156,6 +156,39 @@ operation; accessible semantics/contrast, reduced motion and 320/360/412 px cont
 affected and full regression, architecture, TypeScript, production build, whitespace and risk
 checks; capture synthetic mobile evidence; require green exact-head CI and an independent
 exact-head PASS before Gavin's separate merge decision.
+
+## Active stage 4 brief — TRAIN-OPERATOR-001
+
+Gavin explicitly approved proceeding with this bounded Protected stage on 2026-10-10. Builder:
+Codex, sole implementation Builder; branch `codex/train-operator-001`; [PR #216](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/216). Fresh starting
+master: `173b9f930764e99b7d03d36d14d21aa4f3f57a49`, the verified merge of PR #215. The initial
+working tree was clean. Public GitHub inspection showed only isolated prototype PR #204 open;
+its code and synthetic data are excluded. GitHub API inspection initially failed with network
+Forbidden; subsequent live API requests and PR creation succeeded after environment draft
+network corrections. Required exact-head CI remains a separate verified delivery gate.
+
+Outcome: a cohesive mobile-first TRAIN journey from preparation through recording, continuation,
+completion, inspection and return. Prescription/action lead; canonical progress is immediately
+understandable; progression, alternatives and history stay deliberately inspectable. Reuse
+`OperatorHeader`, `CommandSurface`, `ReadoutGrid`, existing disclosure patterns and the approved
+black/charcoal/one-red grammar. BUILD OWNED the small domain-specific presentation composition;
+STANDARDIZE on native disclosures; add no dependency, design system or commodity infrastructure.
+
+Scope: reorganize existing TRAIN presentation, small scoped styles, truthful read/loading/failure
+feedback, focused regression evidence and actual synthetic mobile screenshots. Preserve A/B/C
+authority, prescribed/performed sets, progression advisories, active workout/resumption, Gym Mode,
+rest, substitution, manual controls, finish confirmation, undo/corrections, records and history.
+Do not change Engine/recommendation or command semantics, domain/schema, persistence, backup,
+events, primary navigation, dependencies, protected fixtures, CI/protections, prototype code or
+deployment. No merge is authorized. Improvements crossing those boundaries require a separate
+Gavin decision, not silent implementation.
+
+Acceptance: normal/empty/active/interrupted/resumed/completed/partial/recovery and read/write
+failure/retry states; canonical authority and exactly-once recording; keyboard/focus return,
+accessible semantics/contrast, reduced motion, offline built-PWA resumption and recording, and
+320/360/412 px containment. Run focused and full regression, architecture, TypeScript, production
+build, whitespace and baseline risk checks. Capture actual mobile evidence. Delivery stops for
+independent exact-head review, successful required CI and Gavin's separate merge decision.
 
 ## Acceptance for this contract objective
 

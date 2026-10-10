@@ -238,6 +238,7 @@ describe("Recommendation-to-Action Handoff (App shell)", () => {
     await screen.getByText("OPEN RECOVERY ON TRAIN", { exact: true }).click();
     const trainTab = screen.getByText("TRAIN", { exact: true }).element().closest("button")!;
     expect(trainTab.getAttribute("aria-current")).toBe("page");
+    await expect.element(screen.getByRole("button", { name: "RECOVERY", exact: true })).toBeVisible();
     const recovery = screen.getByRole("button", { name: "RECOVERY", exact: true }).element();
     await expect.element(recovery).toHaveAttribute("aria-pressed", "true");
     await expect.poll(() => document.activeElement).toBe(recovery);

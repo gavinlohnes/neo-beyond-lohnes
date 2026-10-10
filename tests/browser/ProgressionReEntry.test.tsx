@@ -26,6 +26,7 @@ describe("TRAIN — progression re-entry (real browser)", () => {
     const today = await startDay();
     await startWorkout(today.id, "A", "STANDARD");
     const screen = await render(<TrainScreen />);
+    await screen.getByText("Progression and substitution", { exact: true }).click();
 
     await expect
       .element(screen.getByText("20 days since you last did this — suggests easing back in at 90lb (about 90% of 100lb).", { exact: true }))

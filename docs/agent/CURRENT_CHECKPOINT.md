@@ -1,11 +1,53 @@
 # Current checkpoint
 
-## Current objective — TODAY-OPERATOR-001 command surface transformation
+## Current objective — TRAIN-OPERATOR-001 operating surface transformation
+
+Gavin approved this bounded Protected stage on 2026-10-10. Builder: Codex, sole implementation
+Builder; branch `codex/train-operator-001`; [PR #216](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/216). Starting master is the freshly verified
+`173b9f930764e99b7d03d36d14d21aa4f3f57a49`, merging PR #215. Initial working tree was clean;
+initial public open-PR inspection showed only isolated prototype #204. GitHub API access initially
+failed with network Forbidden (including sandbox escalation); after saving missing destinations
+in the environment draft, authenticated API access and PR creation succeeded. No required CI
+success is claimed here. Full concise brief:
+[TRAIN stage 4](BEYOND_OPERATOR_EXPERIENCE.md#active-stage-4-brief--train-operator-001).
+
+Implementation: preparation leads with the chosen session, prescribed exercise/set totals and
+START; the full prescription and unchanged WHY evidence remain deliberately inspectable. Active
+TRAIN shows canonical session progress, current lift/prescription, known or explicitly unknown
+last performance and current set inputs before progression/substitution. Gym Mode, rest,
+exercise navigation, undo, finish/partial/stop confirmation and all pre-session library, template,
+history and record routes remain accessible. A finished lift has an explicit CONTINUE route to
+the existing first unfinished lift; chosen substitutions remain visible outside inspection.
+Completion uses truthful recorded/skipped metrics and keyboard focus follows completion/return;
+read retry never restarts a workout, and LOG feedback distinguishes an unconfirmed command from
+a successful commit whose subsequent read failed. An uncertain command failure requires read-only
+reconciliation before another LOG is possible. No protected data/rule/command layer changes.
+
+Verification: all 143 Node files pass, 1,535 tests and one existing skip. Final full browser project
+passes 71 files / 713 tests, including 15 operator tests and a real performed-row-present/event-
+failed injection without duplicate recording. Architecture passes (201 files); TypeScript,
+production PWA build, whitespace and 25 local documentation links pass. Actual production
+PWA offline reload, canonical resumption, offline recording and hold-to-finish pass at 320/360/412
+px. Eighteen synthetic mobile captures and limitations are in
+[TRAIN evidence](../screenshots/train-operator-001/README.md). No physical-phone/iOS, native
+assistive-technology, hardware haptic or wake-lock acceptance is claimed. Existing bundle-size
+warning remains. Committed baseline risk classification reports PROTECTED; required exact-head CI
+and independent review are pending. The pushed branch is recoverable in PR #216. Environment
+network corrections are saved; successful live API requests do not establish a published setup
+snapshot. Next: obtain independent exact-head review and successful required CI, then Gavin's
+separate merge decision. Do not merge/deploy.
+
+Separate owner decision required, not implemented: existing workout commands can write a row and
+its event separately. UI recovery reconciles an uncertain result and never blindly repeats LOG;
+it cannot provide transactional row/event integrity or repair policy without crossing the
+excluded command/application boundary. Recommend a separately approved atomicity/recovery objective.
+
+## Historical objective — TODAY-OPERATOR-001 command surface transformation (merged PR #215)
 
 Gavin explicitly approved this bounded Protected objective on 2026-10-09. Freshly fetched
 `origin/master` and the starting commit are
 `1d83756b2ba971144365714d7450fb1091b9f2dc`, the verified merge of PR #214. Builder: Codex;
-branch `codex/today-operator-001`; PR pending. Public GitHub inspection shows PR #204 is the only
+branch `codex/today-operator-001`; merged as [PR #215](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/215). Public GitHub inspection showed PR #204 was the only
 other open PR; it remains an isolated interaction prototype and is neither modified nor integrated.
 
 Scope: transform TODAY's production composition into one operator command surface ordered around
@@ -17,7 +59,7 @@ draft, recovery, focus, offline, exactly-once and correction path. No Engine, re
 domain, schema, persistence, backup, event, command, navigation, dependency, CI, protection or
 prototype change. Full concise brief: [BEYOND operator experience migration](BEYOND_OPERATOR_EXPERIENCE.md#active-stage-3-brief--today-operator-001).
 
-Implementation in progress: TODAY now identifies CURRENT STATE and its authoritative phase,
+Delivered implementation: TODAY identifies CURRENT STATE and its authoritative phase,
 separates SYSTEM STATUS from context, labels the canonical Engine result PRIMARY RECOMMENDATION,
 and places WATER / MEAL / SYSTEM after that recommendation as IMMEDIATE OPERATIONS. Foreground
 operations still retain precedence; phase rows, capped Attention and the complete TOOLS disclosure
@@ -33,7 +75,7 @@ at 360 px. Synthetic production-build captures are in `docs/screenshots/today-op
 The existing bundle-size warning remains. Final committed risk classification, required exact-head
 CI and independent exact-head review remain pending. No merge or deployment is authorized.
 
-## Current objective — shared operator shell and primitives
+## Historical objective — shared operator shell and primitives
 
 Gavin approved stage 2 of the BEYOND-wide operator experience migration on 2026-10-09 after PR
 #213 merged at `61b27232881f246c3e0038c9a8b1492a76b3dace`. Risk lane: PROTECTED because shared
