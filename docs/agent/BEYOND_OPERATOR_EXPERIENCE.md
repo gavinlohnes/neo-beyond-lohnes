@@ -190,6 +190,32 @@ accessible semantics/contrast, reduced motion, offline built-PWA resumption and 
 build, whitespace and baseline risk checks. Capture actual mobile evidence. Delivery stops for
 independent exact-head review, successful required CI and Gavin's separate merge decision.
 
+## Active stage 5 brief — MORE-OPERATOR-001
+
+Gavin approved this bounded Protected stage on 2026-10-10, without merge authorization.
+Builder: Codex, sole implementation Builder; branch `codex/more-operator-001`;
+[PR #217](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/217).
+Starting freshly fetched master: `d3386f3d9901e0fa41a10f03e5dc4536578ebc96`, verified
+PR #216 merge. Working tree was clean; only isolated prototype PR #204 was open, untouched.
+
+Outcome/scope: a mobile control center over every existing MORE capability, with clear identity,
+records/planning/training groups, direct recovery access, secondary configuration disclosure,
+truthful diagnostics and retained menu context/focus on return. Reuse OperatorHeader, canonical
+queries, existing destinations/settings and command paths. BUILD OWNED domain-specific composition;
+STANDARDIZE native disclosure/focus; no dependency, generic card system or invented intelligence.
+
+Exclusions: Engine/recommendations, application commands, events, domain/schema, persistence,
+backup formats/restore semantics, primary navigation, protected decisions, dependencies, fixtures,
+CI/protections, prototype integration, deployment or merge. No capability removal; recovery,
+corrections/history, manual operation, workout continuity and offline ownership stay intact.
+
+Acceptance: all destination/settings/recovery reachability; inspection/return/focus and local draft
+continuity; missing/loading/error/read retry; backup/restore confirmations and records unchanged;
+keyboard, WCAG AA, reduced motion, 320/360/412 px and production PWA offline operation.
+Run focused/full regression, architecture, TypeScript/build, documentation links, whitespace and
+baseline risk classification; capture actual synthetic mobile evidence. Delivery stops for green
+required exact-head CI, independent review and Gavin's separate merge decision.
+
 ## Acceptance for this contract objective
 
 - Doctrine, Product Direction, UX decisions, BODY PR #212, current screen architecture and prototype

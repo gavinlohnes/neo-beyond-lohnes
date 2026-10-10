@@ -83,8 +83,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
   it("renders the Reminders section, off by default", async () => {
     const screen = await render(<MoreScreen />);
     await expect.element(screen.getByText("Reminders", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Off.", { exact: true }).first()).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "TURN ON" }).first()).toBeVisible();
+    await expect.element(screen.getByRole("region", { name: "Reminders", exact: true }).getByText("Off.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("region", { name: "Reminders", exact: true }).getByRole("button", { name: "TURN ON" })).toBeVisible();
   });
 
   it("uses semantic operational zones and keeps restore subordinate until explicitly opened", async () => {
@@ -495,7 +495,7 @@ describe("MoreScreen (real browser) — Reminders (REMIND-001)", () => {
     );
 
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "TURN ON" }).first().click();
+    await screen.getByRole("region", { name: "Reminders", exact: true }).getByRole("button", { name: "TURN ON" }).click();
     await expect.element(screen.getByText("On, after 8:00 PM.", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "TURN OFF" })).toBeVisible();
 
@@ -503,17 +503,17 @@ describe("MoreScreen (real browser) — Reminders (REMIND-001)", () => {
     await expect.element(screen.getByText("On, after 9:00 AM.", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "TURN OFF" }).click();
-    await expect.element(screen.getByText("Off.", { exact: true }).first()).toBeVisible();
+    await expect.element(screen.getByRole("region", { name: "Reminders", exact: true }).getByText("Off.", { exact: true })).toBeVisible();
   });
 
   it("denied permission keeps the preference off and surfaces a plain explanation", async () => {
     vi.stubGlobal("Notification", { permission: "denied", requestPermission: vi.fn().mockResolvedValue("denied") });
 
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "TURN ON" }).first().click();
+    await screen.getByRole("region", { name: "Reminders", exact: true }).getByRole("button", { name: "TURN ON" }).click();
 
     await expect.element(screen.getByText("Notification permission was denied.", { exact: false })).toBeVisible();
-    await expect.element(screen.getByText("Off.", { exact: true }).first()).toBeVisible();
+    await expect.element(screen.getByRole("region", { name: "Reminders", exact: true }).getByText("Off.", { exact: true })).toBeVisible();
   });
 });
 
