@@ -103,6 +103,32 @@ describe("Production Command Console", () => {
     expect(document.querySelectorAll(".today-field .command-surface").length).toBeLessThanOrEqual(1);
   });
 
+  for (const width of [320, 360, 412]) {
+    it(`presents state, recommendation, and immediate operations in operator order at ${width}px`, async () => {
+      await page.viewport(width, 800);
+      const day = await startDay();
+      await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
+      const screen = await render(<App />);
+
+      await expect.element(screen.getByText("CURRENT STATE", { exact: true })).toBeVisible();
+
+      const situation = document.querySelector<HTMLElement>(".today-situation");
+      const guidance = document.querySelector<HTMLElement>(".console-guidance");
+      const operations = document.querySelector<HTMLElement>(".console-operations");
+      expect(situation).not.toBeNull();
+      expect(guidance).not.toBeNull();
+      expect(operations).not.toBeNull();
+      expect(situation!.compareDocumentPosition(guidance!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(guidance!.compareDocumentPosition(operations!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      await expect.element(screen.getByText("SYSTEM STATUS", { exact: true })).toBeVisible();
+      await expect.element(screen.getByText("PRIMARY RECOMMENDATION", { exact: true })).toBeVisible();
+      await expect.element(screen.getByRole("heading", { name: "Immediate operations", exact: true })).toBeVisible();
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+      for (const animation of document.getAnimations()) animation.finish();
+      expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
+    });
+  }
+
   it("reflows a wider standing-context control without horizontal overflow at 320px", async () => {
     await page.viewport(320, 800);
     await startDay();

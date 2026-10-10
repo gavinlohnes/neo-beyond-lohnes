@@ -101,7 +101,7 @@ Do not treat this sequence as permission to implement all stages at once.
 
 Gavin approved this bounded Protected objective on 2026-10-09 after PR #213 merged. Starting
 commit: `61b27232881f246c3e0038c9a8b1492a76b3dace`. Builder: Codex; branch
-`codex/operator-shell-primitives`; PR pending.
+`codex/operator-shell-primitives`; merged as PR #214.
 
 Scope is presentation-only extraction of patterns already proven in BODY: one shared primary-
 surface identity frame and a narrowly constrained read-only fact matrix. Existing primary screens
@@ -120,6 +120,42 @@ values at 320/360/412 px without horizontal overflow; accessible contrast and se
 motion introduces no animation; BODY behavior regressions, architecture, TypeScript, production
 build, risk/whitespace checks, green required CI and independent exact-head review. Gavin retains
 final merge authority.
+
+## Active stage 3 brief — TODAY-OPERATOR-001
+
+Gavin explicitly approved this bounded Protected command-surface transformation on 2026-10-09.
+Starting commit: `1d83756b2ba971144365714d7450fb1091b9f2dc`, freshly fetched master and
+the verified merge of shared-primitives PR #214. Builder: Codex; branch
+`codex/today-operator-001`; PR pending. PR #204 remains an isolated prototype and supplies no
+production architecture, records, sample values or behavioral authority.
+
+Outcome: TODAY becomes BEYOND's primary operator command surface, answering what is happening,
+what BEYOND truthfully knows, what its deterministic Engine recommends, what the operator can do
+now and where supporting intelligence lives. Its conceptual order is IDENTIFY → ORIENT → KNOW →
+ACT → INSPECT → RETURN, expressed as one responsive journey rather than six mandatory panels.
+
+Scope: reorganize TODAY's existing presentation around current phase/context, System Status and
+capacity, one canonical recommendation with existing WHY/provenance, foreground operation or most
+useful existing action, earned Attention, phase rows and deliberate access to all other tools.
+Reuse `OperatorHeader`, current components, canonical application reads and commands, existing
+status/recommendation/attention rules and the approved black/charcoal/one-red grammar. BUILD OWNED
+only the connective React/CSS and focused regression evidence; add no dependency or design system.
+
+Protected exclusions: no Engine, priority, recommendation or command semantic change; no new
+score, fact, inference, urgency, event, domain model, schema, persistence, backup or fixture; no
+TODAY/TRAIN/BODY/MORE navigation change; no prototype integration; no removal of schedule/shift,
+Burden Meter, check-in, recovery, Minimum Day, workout, obligation, capture, meal, hydration,
+sleep, history, manual control, correction, undo, draft or failure-recovery access; no CI,
+protection, deployment or merge. A capability may move in the visual reading order only when its
+meaning, command, confirmation, focus/resumption and reachability remain intact.
+
+Acceptance: truthful GREEN/AMBER/RED/NO READ and missing/stale/error states; NO ACTION REQUIRED;
+active recommendation and WHY; foreground and manual actions with confirmation and duplicate
+guards; loading/failure/retry; navigation/focus return; existing records and offline built-PWA
+operation; accessible semantics/contrast, reduced motion and 320/360/412 px containment. Run
+affected and full regression, architecture, TypeScript, production build, whitespace and risk
+checks; capture synthetic mobile evidence; require green exact-head CI and an independent
+exact-head PASS before Gavin's separate merge decision.
 
 ## Acceptance for this contract objective
 
