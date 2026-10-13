@@ -1,11 +1,27 @@
 # Current checkpoint
 
-## Current objective — COMMAND-ATOMICITY-002 (issue #225)
+## Current state — no objective in flight (2026-10-13)
+
+PR #226 (COMMAND-ATOMICITY-002) merged at `e145cd1` with Gavin's approval after required CI passed
+on head `99b8f705b6507af9fa760307f93665dd0d667e92`. The brief asked for an independent Codex
+exact-head review; none is recorded on PR #226. Issue #225 is closed. No deploy. Only isolated
+prototype #204 remains open. Next action: on "let's work", propose the next owner-prioritized
+objective; none is approved.
+
+Open, unapproved: owner decision D1 (see below; merged default saves nothing and suggests
+RELEASE); an after-the-fact independent review of `99b8f70` if Gavin wants one.
+
+Carried forward, unapproved: review notes N1–N4 from PR #220 (count-start churn on re-entry,
+destination-guide descriptions, Search Capture result skipping discard confirmation, stale Capture
+message); operator stage 6 consolidation (waits for field evidence); VCC-001 stays paused; F1 field
+stop runs to about Oct 25. A reviewer once saw a non-reproducing local `MealRoundTrip.test.tsx:80`
+scroll-poll failure under combined load; watch for it in CI.
+
+## Historical objective — COMMAND-ATOMICITY-002 (issue #225, merged PR #226)
 
 Gavin explicitly approved COMMAND-ATOMICITY-002 on 2026-10-13 as a bounded PROTECTED objective;
 brief in [issue #225](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/225). Sole Builder:
-Claude Code; branch `claude/command-atomicity-002`; PR linked in GitHub. Independent Codex
-exact-head review and Gavin's separate merge approval are required; no merge/deploy. Fresh
+Claude Code; branch `claude/command-atomicity-002`; [PR #226](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/226). Fresh
 starting master: `e635643` (PR #224 merge, checkpoint already reconciled for #223; #221 closed).
 Only prototype #204 is otherwise open.
 
@@ -20,7 +36,7 @@ snapshot, tolerates null/malformed payloads, uses local dates, and adds days, ch
 recommendations, missions, obligations and journal entries; MORE shows "Record mismatches".
 Not covered (unreliable on old data): work context, outcome ratings, Capture conversion, WAITING/OPEN.
 
-Owner decision D1 (default implemented): satisfying a recurring obligation whose mission is
+Owner decision D1, still open (default implemented and merged): satisfying a recurring obligation whose mission is
 archived used to save SATISFIED, skip the next occurrence and still show a "cannot link" error;
 now nothing is saved and the error says so and suggests RELEASE. Alternative: satisfy and stop
 the recurrence silently.
@@ -36,15 +52,9 @@ reload, offline satisfy, Record mismatches 0 ([evidence](../screenshots/command-
 Limits: rolled-back writes leave `seq` gaps (ordering only). `seq` is assigned per tab in memory,
 so two tabs writing at once could still share a value (pre-existing, unchanged). Single-event
 corrections keep their read-then-append shape; UI busy guards still prevent double submits.
-Next: green required exact-head CI, independent Codex exact-head review, Gavin's merge decision.
+Merged; see the current state above.
 
 The PR #223 review notes (cold-start test, payload null guard, UTC dates) are addressed here.
-
-Carried forward, unapproved: review notes N1–N4 from PR #220 (count-start churn on re-entry,
-destination-guide descriptions, Search Capture result skipping discard confirmation, stale Capture
-message); operator stage 6 consolidation (waits for field evidence); VCC-001 stays paused; F1 field
-stop runs to about Oct 25. A reviewer once saw a non-reproducing local `MealRoundTrip.test.tsx:80`
-scroll-poll failure under combined load; watch for it in CI.
 
 ## Historical objective — WORKOUT-ATOMICITY-001 (issue #221, merged PR #223)
 
