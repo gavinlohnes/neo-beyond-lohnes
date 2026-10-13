@@ -1,6 +1,52 @@
 # Current checkpoint
 
-## Current objective — MORE-OPERATOR-001 control center
+## Current objective — BODY Insights & Progress Intelligence
+
+Gavin approved this bounded objective on 2026-10-13. Sole Builder: Codex; branch
+`codex/body-insights-progress`; PR pending. Risk: PROTECTED — meaningful BODY interpretation/
+presentation and the explicitly approved narrow chart exception recorded in the UX register.
+Fresh starting master: `ea0c26f26d05991811676378174c21b3139805fc`, verified PR #217 merge.
+Initial worktree was clean; only isolated prototype #204 is open, untouched and unintegrated.
+
+Scope: enrich existing BODY progress with read-only selectable weight, nutrition, reliable
+main-sleep and finished-workout series, useful ranges, truthful comparisons/coverage, accessible
+point inspection and supporting records. Preserve Daily Record/meal entry, drafts/focus/return,
+corrections/undo, accomplishments/ribbon/timeline/baselines and existing goals/targets.
+Reuse canonical correction-aware queries and shared operator readouts; BUILD OWNED small
+domain-specific read composition and native SVG/range/disclosure, no dependency or new chart system.
+Excluded: Engine/recommendation/medical authority, new inference/correlations, commands/events,
+domain/schema/persistence/backup formats, navigation, dependencies, CI/protections, prototype,
+merge/deploy. Fiber is absent, not estimated; missing/partial records never become zero intake.
+Acceptance: accurate window/coverage/zero/missing/comparison calculations; historical correction/
+void integrity; read/loading/failure/retry; existing journeys; 320/360/412 px, accessible keyboard/
+contrast/reduced motion, production offline PWA, architecture/type/build, regressions, mobile
+evidence and green required exact-head CI. Independent exact-head review and Gavin's separate
+merge approval remain required.
+
+Implemented: selectable 7/28/90-day weight, meal calories, protein, reliable main-sleep and
+finished-workout series; means/prior-period changes with denominators; native pointer/keyboard
+point inspection; dated records and calculation/coverage disclosures; meal carb/fat details and
+explicit unavailable fiber. Nutrition is recorded intake, not total intake; ambiguous multiple-main
+sleep days are excluded, not combined; co-recording never implies causation. Existing goal/milestone/
+projection rules remain. Daily Record/manual/meal handlers are unchanged; accomplishments, ribbon,
+timeline and baselines remain reachable. Legacy weight SVG is superseded by selectable charts,
+while its existing facts remain; timeline opening still hides the progress chart.
+
+Evidence so far: all 144 Node files pass (1,542 tests, one existing skip). All 70 targeted real-
+Chromium cases across BODY/progress/cleanup pass, including six new UI cases and seven new
+calculation/canonical-history cases in Node. Architecture (203 files), TypeScript/build and
+whitespace pass. A preservation test caught a new hint pushing water controls below the first
+viewport; it was removed, not the assertion. Existing chart tests now assert the new graph while
+retaining goal/milestone/no-warning/timeline safeguards, with deterministic dates.
+Actual 320/360/412 px PWA native restore, point inspection, offline reload/local exploration,
+return focus and manual water/undo pass. [Mobile evidence](../screenshots/body-insights-progress/README.md)
+records synthetic fixtures and limitations. Final full browser passes 73 files / 744 tests. A final
+source-date annotation distinguishes existing all-history weight facts/projection from range means;
+all 70 final focused cases pass again. Thirty-four local documentation links/anchors pass.
+Required exact-head CI is recorded in the PR. Committed baseline
+risk and independent review belong in the focused PR. No merge/deploy.
+
+## Historical objective — MORE-OPERATOR-001 control center (merged PR #217)
 
 Gavin approved this bounded Protected stage on 2026-10-10, with no merge/deploy authorization.
 Builder: Codex, sole implementation Builder; branch `codex/more-operator-001`;

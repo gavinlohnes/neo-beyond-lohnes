@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 describe("CLEANUP-003", () => {
-  it("BODY times have no seconds; the timeline's chips are outlined and replace the 60-day line (findings 7, 9)", async () => {
+  it("BODY times have no seconds; the timeline's chips are outlined and replace the progress chart (findings 7, 9)", async () => {
     const day = await startDay();
     await logBodyweight(day.id, 200);
     await logBodyweight(day.id, 194);
@@ -25,13 +25,14 @@ describe("CLEANUP-003", () => {
     await expect.element(screen.getByText(/^Logged \d{1,2}:\d{2}\s?[AP]M$/)).toBeVisible();
     await screen.getByRole("button", { name: "DONE", exact: true }).click();
     await screen.getByRole("button", { name: "YOUR PROGRESS" }).click();
-    await expect.element(screen.getByText("Last 60 days")).toBeVisible();
+    await expect.element(screen.getByRole("img", { name: /Weight: 2 recorded observations/ })).toBeVisible();
 
     await screen.getByText("SHOW ACCOMPLISHMENT TIMELINE").click();
     const chip = screen.getByRole("button", { name: "PRs", exact: true });
     await expect.element(chip).toBeVisible();
     expect(getComputedStyle(chip.element()).backgroundColor).toBe("rgba(0, 0, 0, 0)");
-    expect(screen.getByText("Last 60 days").elements()).toHaveLength(0);
+    expect(screen.getByRole("img", { name: /Weight: 2 recorded observations/ }).elements()).toHaveLength(0);
+    await expect.element(screen.getByText("The chart is hidden while your accomplishment timeline is open.")).toBeVisible();
     await expect.element(screen.getByText(/^Down 5 lb since/)).toBeVisible();
   });
 

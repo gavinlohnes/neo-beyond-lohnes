@@ -52,6 +52,18 @@ analytics, manual workflows and optional USDA food lookup. These are real non-AI
 not obsolete assistant infrastructure. Existing records and native/legacy backup support remain
 unchanged; future AI still requires a new owner decision.
 
+## BODY Insights & Progress — owner-approved bounded amendment, 2026-10-13
+
+Gavin explicitly authorizes richer read-only BODY progress graphs and historical comparisons,
+including nutrition, reliable sleep records and recorded training frequency, building on the
+existing Daily Health Record. This narrowly extends the earlier trend-chart exception to this
+BODY objective; it does not authorize a recommendation/learning engine, medical conclusions,
+new goals, schemas, logging, dependencies or automatic action. Keep calories/protein primary,
+carbs/fat secondary and fiber explicitly unavailable in current records. Missing remains missing;
+partial logging is not total intake, sparse observations are not correlations, and ambiguous
+multiple-main-sleep records must not masquerade as one night's sleep. Existing manual/correction,
+goal/target, offline, backup, navigation and operator-authority safeguards remain binding.
+
 ## BODY Daily Health Record — owner-approved Protected amendment, 2026-10-09
 
 Gavin approves replacing BODY's locked four-tracker presentation and latest-entry sleep summary
