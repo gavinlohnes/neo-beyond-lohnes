@@ -1,18 +1,44 @@
 # Current checkpoint
 
-## Current state — no objective in flight (2026-10-13)
+## Current objective — COMMAND-ATOMICITY-002 (issue #225)
 
-PR #223 (WORKOUT-ATOMICITY-001) merged at `109f652e` with Gavin's approval. An independent Claude
-Code review gave PASS on `acbea5c68f973f28a9546e9fc8ef33cf17933e44`. The merged head
-`5322bbf74f9137d88e6b219ef512e3b35043fe33` only added the master (PR #222) merge, a docs-only
-change; required CI was green on it. Issue #221 is closed. No deploy. Only isolated prototype #204
-remains open. Next action: on "let's work", propose the next owner-prioritized objective; none is
-approved.
+Gavin explicitly approved COMMAND-ATOMICITY-002 on 2026-10-13 as a bounded PROTECTED objective;
+brief in [issue #225](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/225). Sole Builder:
+Claude Code; branch `claude/command-atomicity-002`; PR linked in GitHub. Independent Codex
+exact-head review and Gavin's separate merge approval are required; no merge/deploy. Fresh
+starting master: `e635643` (PR #224 merge, checkpoint already reconciled for #223; #221 closed).
+Only prototype #204 is otherwise open.
 
-Nonblocking review notes from PR #223, unapproved: no regression test covers `nextSeq`'s
-cold-start read inside the workout transaction (dropping a table from its list would stay green);
-`workoutIntegrityQueries.ts` reads end/set event payloads without a null guard; its mismatch
-messages print UTC dates and raw exercise ids.
+Implemented: `src/application/atomicWrite.ts` is the one transaction helper (per-family table
+lists, plus events/checkIns/recommendations for `nextSeq`'s cold-start read; nested calls join the
+caller's transaction). Wrapped, with guard reads inside: `startDay`, `endDay`, rollover,
+`submitCheckIn` (check-in + recommendation + both events), `rateOutcome`, `setWorkContext`,
+`markWorkEnded`; every Mission/Obligation command incl. recurring next occurrence and Capture
+conversion; Journal create/modify/review; TRAIN now uses the same helper. Signatures, validation,
+events and payloads unchanged. Diagnostics: `recordIntegrityQueries.ts` reads one read-only
+snapshot, tolerates null/malformed payloads, uses local dates, and adds days, check-ins (row side),
+recommendations, missions, obligations and journal entries; MORE shows "Record mismatches".
+Not covered (unreliable on old data): work context, outcome ratings, Capture conversion, WAITING/OPEN.
+
+Owner decision D1 (default implemented): satisfying a recurring obligation whose mission is
+archived used to save SATISFIED, skip the next occurrence and still show a "cannot link" error;
+now nothing is saved and the error says so and suggests RELEASE. Alternative: satisfy and stop
+the recurrence silently.
+
+Evidence: 20 new Node atomicity cases (16 fail on the old commands; the 4 cold-start cases fail
+when `checkIns` is dropped from the helper), 5 new diagnostics cases (both protected backups
+clean and byte-identical), 5 new real-Chromium cases (rollback, IntentScreen failure → error →
+single retry save, D1 copy, MORE listing at 320/412 with axe, no writes). Full local suite,
+TypeScript, architecture (209 files), build and whitespace pass; counts in the PR. Production PWA
+at 320/360/412 px: day + check-in, mission, obligation satisfy, journal review, offline cold
+reload, offline satisfy, Record mismatches 0 ([evidence](../screenshots/command-atomicity-002/README.md)).
+
+Limits: rolled-back writes leave `seq` gaps (ordering only). `seq` is assigned per tab in memory,
+so two tabs writing at once could still share a value (pre-existing, unchanged). Single-event
+corrections keep their read-then-append shape; UI busy guards still prevent double submits.
+Next: green required exact-head CI, independent Codex exact-head review, Gavin's merge decision.
+
+The PR #223 review notes (cold-start test, payload null guard, UTC dates) are addressed here.
 
 Carried forward, unapproved: review notes N1–N4 from PR #220 (count-start churn on re-entry,
 destination-guide descriptions, Search Capture result skipping discard confirmation, stale Capture

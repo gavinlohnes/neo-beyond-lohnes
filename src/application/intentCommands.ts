@@ -1,5 +1,6 @@
 import { db } from "../persistence/db";
 import { newId, nextSeq, resolveCaptureItem } from "./commands";
+import { INTENT_WRITE_TABLES, writeAtomically } from "./atomicWrite";
 import type { DomainEvent } from "../domain/common/types";
 import type { Mission, Obligation } from "../domain/intent/types";
 import { deriveNextOccurrenceDate } from "../engine/recurrence";
@@ -79,50 +80,54 @@ function assertMissionActive(mission: Mission): asserts mission is Mission & { s
 
 /** Explicit operator action only (locked doctrine: "the operator retains authority over their creation"). Always source USER — Drop 01 never creates one automatically. */
 export async function createMission(input: MissionInput): Promise<Mission> {
-  const parsed = missionInputSchema.parse(input);
-  const now = new Date().toISOString();
-  const mission: Mission = {
-    id: newId(),
-    title: parsed.title,
-    ...(parsed.description ? { description: parsed.description } : {}),
-    status: "ACTIVE",
-    source: "USER",
-    seq: await nextSeq(),
-    createdAt: now,
-    updatedAt: now,
-  };
-  await db.missions.add(mission);
-  const correlationId = newId();
-  await logIntentEvent(
-    "MISSION_CREATED",
-    { commandId: correlationId, missionId: mission.id, title: mission.title },
-    "USER",
-    correlationId,
-    { missionId: mission.id },
-  );
-  return mission;
+  return writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const parsed = missionInputSchema.parse(input);
+    const now = new Date().toISOString();
+    const mission: Mission = {
+      id: newId(),
+      title: parsed.title,
+      ...(parsed.description ? { description: parsed.description } : {}),
+      status: "ACTIVE",
+      source: "USER",
+      seq: await nextSeq(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    await db.missions.add(mission);
+    const correlationId = newId();
+    await logIntentEvent(
+      "MISSION_CREATED",
+      { commandId: correlationId, missionId: mission.id, title: mission.title },
+      "USER",
+      correlationId,
+      { missionId: mission.id },
+    );
+    return mission;
+  });
 }
 
 export async function modifyMission(missionId: string, changes: MissionModifyInput): Promise<Mission> {
-  const parsed = missionModifyInputSchema.parse(changes);
-  const existing = await db.missions.get(missionId);
-  if (!existing) throw notFound("MISSION", missionId);
-  const updated: Mission = {
-    ...existing,
-    ...(parsed.title !== undefined ? { title: parsed.title } : {}),
-    ...(parsed.description !== undefined ? { description: parsed.description } : {}),
-    updatedAt: new Date().toISOString(),
-  };
-  await db.missions.put(updated);
-  const correlationId = newId();
-  await logIntentEvent(
-    "MISSION_MODIFIED",
-    { commandId: correlationId, missionId, changes: parsed },
-    "USER",
-    correlationId,
-    { missionId },
-  );
-  return updated;
+  return writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const parsed = missionModifyInputSchema.parse(changes);
+    const existing = await db.missions.get(missionId);
+    if (!existing) throw notFound("MISSION", missionId);
+    const updated: Mission = {
+      ...existing,
+      ...(parsed.title !== undefined ? { title: parsed.title } : {}),
+      ...(parsed.description !== undefined ? { description: parsed.description } : {}),
+      updatedAt: new Date().toISOString(),
+    };
+    await db.missions.put(updated);
+    const correlationId = newId();
+    await logIntentEvent(
+      "MISSION_MODIFIED",
+      { commandId: correlationId, missionId, changes: parsed },
+      "USER",
+      correlationId,
+      { missionId },
+    );
+    return updated;
+  });
 }
 
 /**
@@ -132,13 +137,15 @@ export async function modifyMission(missionId: string, changes: MissionModifyInp
  * unchanged and remain fully queryable.
  */
 export async function archiveMission(missionId: string): Promise<void> {
-  const existing = await db.missions.get(missionId);
-  if (!existing) throw notFound("MISSION", missionId);
-  if (existing.status === "ARCHIVED") return; // idempotent, matching markWorkEnded's precedent for a fact that's either already true or isn't
-  await db.missions.update(missionId, { status: "ARCHIVED", updatedAt: new Date().toISOString() });
-  const correlationId = newId();
-  await logIntentEvent("MISSION_ARCHIVED", { commandId: correlationId, missionId }, "USER", correlationId, {
-    missionId,
+  return writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const existing = await db.missions.get(missionId);
+    if (!existing) throw notFound("MISSION", missionId);
+    if (existing.status === "ARCHIVED") return; // idempotent, matching markWorkEnded's precedent for a fact that's either already true or isn't
+    await db.missions.update(missionId, { status: "ARCHIVED", updatedAt: new Date().toISOString() });
+    const correlationId = newId();
+    await logIntentEvent("MISSION_ARCHIVED", { commandId: correlationId, missionId }, "USER", correlationId, {
+      missionId,
+    });
   });
 }
 
@@ -155,43 +162,45 @@ export async function createObligation(
   input: ObligationInput,
   options?: { sourceCaptureId?: string },
 ): Promise<Obligation> {
-  const parsed = obligationInputSchema.parse(input);
-  if (parsed.missionId) {
-    const mission = await db.missions.get(parsed.missionId);
-    if (!mission) throw notFound("MISSION", parsed.missionId);
-    assertMissionActive(mission);
-  }
-  const now = new Date().toISOString();
-  const obligation: Obligation = {
-    id: newId(),
-    title: parsed.title,
-    ...(parsed.description ? { description: parsed.description } : {}),
-    status: "OPEN",
-    ...(parsed.missionId ? { missionId: parsed.missionId } : {}),
-    ...(parsed.dueAt ? { dueAt: parsed.dueAt } : {}),
-    ...(parsed.plannedAt ? { plannedAt: parsed.plannedAt } : {}),
-    ...(parsed.recurrence ? { recurrence: parsed.recurrence } : {}),
-    source: "USER",
-    seq: await nextSeq(),
-    createdAt: now,
-    updatedAt: now,
-  };
-  await db.obligations.add(obligation);
-  const correlationId = newId();
-  await logIntentEvent(
-    "OBLIGATION_CREATED",
-    {
-      commandId: correlationId,
-      obligationId: obligation.id,
-      title: obligation.title,
-      ...(obligation.missionId ? { missionId: obligation.missionId } : {}),
-      ...(options?.sourceCaptureId ? { sourceCaptureId: options.sourceCaptureId } : {}),
-    },
-    "USER",
-    correlationId,
-    { obligationId: obligation.id },
-  );
-  return obligation;
+  return writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const parsed = obligationInputSchema.parse(input);
+    if (parsed.missionId) {
+      const mission = await db.missions.get(parsed.missionId);
+      if (!mission) throw notFound("MISSION", parsed.missionId);
+      assertMissionActive(mission);
+    }
+    const now = new Date().toISOString();
+    const obligation: Obligation = {
+      id: newId(),
+      title: parsed.title,
+      ...(parsed.description ? { description: parsed.description } : {}),
+      status: "OPEN",
+      ...(parsed.missionId ? { missionId: parsed.missionId } : {}),
+      ...(parsed.dueAt ? { dueAt: parsed.dueAt } : {}),
+      ...(parsed.plannedAt ? { plannedAt: parsed.plannedAt } : {}),
+      ...(parsed.recurrence ? { recurrence: parsed.recurrence } : {}),
+      source: "USER",
+      seq: await nextSeq(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    await db.obligations.add(obligation);
+    const correlationId = newId();
+    await logIntentEvent(
+      "OBLIGATION_CREATED",
+      {
+        commandId: correlationId,
+        obligationId: obligation.id,
+        title: obligation.title,
+        ...(obligation.missionId ? { missionId: obligation.missionId } : {}),
+        ...(options?.sourceCaptureId ? { sourceCaptureId: options.sourceCaptureId } : {}),
+      },
+      "USER",
+      correlationId,
+      { obligationId: obligation.id },
+    );
+    return obligation;
+  });
 }
 
 /**
@@ -203,59 +212,61 @@ export async function createObligation(
  * — `input` carries only what the operator actually typed, same as
  * IntentScreen's own manual create form.
  *
- * Ordering is the whole safety story here, matching this codebase's
- * existing precedent for multi-write commands (submitCheckIn, RESET's
- * start/complete pair): createObligation happens FIRST and is awaited to
- * completion before the capture is ever touched, so a validation failure
- * (bad title, archived Mission) or any other createObligation error
- * leaves the CaptureItem completely untouched and still OPEN — safely
- * recoverable, nothing lost. Only on success is the originating capture
- * resolved, and by then the Obligation (with its sourceCaptureId
- * provenance) already durably exists.
+ * createObligation still runs FIRST, so a validation failure (bad title,
+ * archived Mission) leaves the CaptureItem untouched and still OPEN.
+ * COMMAND-ATOMICITY-002 (#225): the capture check, the new Obligation, its
+ * OBLIGATION_CREATED event and the capture's resolution now share one
+ * transaction, so a storage failure while resolving the capture can no
+ * longer leave a new Obligation beside a still-OPEN capture that invites
+ * converting it a second time.
  */
 export async function convertCaptureToObligation(
   captureId: string,
   input: ObligationInput,
 ): Promise<Obligation> {
-  const capture = await db.captureItems.get(captureId);
-  if (!capture) throw new Error(`CAPTURE_NOT_FOUND: no capture item with id ${captureId}`);
-  if (capture.status !== "OPEN") {
-    throw new Error(`CAPTURE_NOT_OPEN: capture ${captureId} is already ${capture.status}.`);
-  }
-  const obligation = await createObligation(input, { sourceCaptureId: captureId });
-  await resolveCaptureItem(captureId);
-  return obligation;
+  return writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const capture = await db.captureItems.get(captureId);
+    if (!capture) throw new Error(`CAPTURE_NOT_FOUND: no capture item with id ${captureId}`);
+    if (capture.status !== "OPEN") {
+      throw new Error(`CAPTURE_NOT_OPEN: capture ${captureId} is already ${capture.status}.`);
+    }
+    const obligation = await createObligation(input, { sourceCaptureId: captureId });
+    await resolveCaptureItem(captureId);
+    return obligation;
+  });
 }
 
 export async function modifyObligation(obligationId: string, changes: ObligationModifyInput): Promise<Obligation> {
-  const parsed = obligationModifyInputSchema.parse(changes);
-  const existing = await db.obligations.get(obligationId);
-  if (!existing) throw notFound("OBLIGATION", obligationId);
-  if (parsed.missionId) {
-    const mission = await db.missions.get(parsed.missionId);
-    if (!mission) throw notFound("MISSION", parsed.missionId);
-    assertMissionActive(mission);
-  }
-  const updated: Obligation = {
-    ...existing,
-    ...(parsed.title !== undefined ? { title: parsed.title } : {}),
-    ...(parsed.description !== undefined ? { description: parsed.description } : {}),
-    ...(parsed.missionId !== undefined ? { missionId: parsed.missionId } : {}),
-    ...(parsed.dueAt !== undefined ? { dueAt: parsed.dueAt } : {}),
-    ...(parsed.plannedAt !== undefined ? { plannedAt: parsed.plannedAt } : {}),
-    ...(parsed.recurrence !== undefined ? { recurrence: parsed.recurrence } : {}),
-    updatedAt: new Date().toISOString(),
-  };
-  await db.obligations.put(updated);
-  const correlationId = newId();
-  await logIntentEvent(
-    "OBLIGATION_MODIFIED",
-    { commandId: correlationId, obligationId, changes: parsed },
-    "USER",
-    correlationId,
-    { obligationId },
-  );
-  return updated;
+  return writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const parsed = obligationModifyInputSchema.parse(changes);
+    const existing = await db.obligations.get(obligationId);
+    if (!existing) throw notFound("OBLIGATION", obligationId);
+    if (parsed.missionId) {
+      const mission = await db.missions.get(parsed.missionId);
+      if (!mission) throw notFound("MISSION", parsed.missionId);
+      assertMissionActive(mission);
+    }
+    const updated: Obligation = {
+      ...existing,
+      ...(parsed.title !== undefined ? { title: parsed.title } : {}),
+      ...(parsed.description !== undefined ? { description: parsed.description } : {}),
+      ...(parsed.missionId !== undefined ? { missionId: parsed.missionId } : {}),
+      ...(parsed.dueAt !== undefined ? { dueAt: parsed.dueAt } : {}),
+      ...(parsed.plannedAt !== undefined ? { plannedAt: parsed.plannedAt } : {}),
+      ...(parsed.recurrence !== undefined ? { recurrence: parsed.recurrence } : {}),
+      updatedAt: new Date().toISOString(),
+    };
+    await db.obligations.put(updated);
+    const correlationId = newId();
+    await logIntentEvent(
+      "OBLIGATION_MODIFIED",
+      { commandId: correlationId, obligationId, changes: parsed },
+      "USER",
+      correlationId,
+      { obligationId },
+    );
+    return updated;
+  });
 }
 
 function assertObligationExists(existing: Obligation | undefined, obligationId: string): asserts existing is Obligation {
@@ -264,31 +275,35 @@ function assertObligationExists(existing: Obligation | undefined, obligationId: 
 
 /** OPEN -> WAITING only (Drop 01 section 4: "transition OPEN <-> WAITING where valid"). Throws on any other current status, matching markWorkEnded's precedent of surfacing an invalid transition immediately rather than silently no-opping. */
 export async function markObligationWaiting(obligationId: string): Promise<void> {
-  const existing = await db.obligations.get(obligationId);
-  assertObligationExists(existing, obligationId);
-  if (existing.status === "WAITING") return; // idempotent no-op for the already-true case
-  if (existing.status !== "OPEN") {
-    throw new Error(`INVALID_OBLIGATION_TRANSITION: cannot mark ${existing.status} obligation as WAITING (must be OPEN).`);
-  }
-  await db.obligations.update(obligationId, { status: "WAITING", updatedAt: new Date().toISOString() });
-  const correlationId = newId();
-  await logIntentEvent("OBLIGATION_MARKED_WAITING", { commandId: correlationId, obligationId }, "USER", correlationId, {
-    obligationId,
+  return writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const existing = await db.obligations.get(obligationId);
+    assertObligationExists(existing, obligationId);
+    if (existing.status === "WAITING") return; // idempotent no-op for the already-true case
+    if (existing.status !== "OPEN") {
+      throw new Error(`INVALID_OBLIGATION_TRANSITION: cannot mark ${existing.status} obligation as WAITING (must be OPEN).`);
+    }
+    await db.obligations.update(obligationId, { status: "WAITING", updatedAt: new Date().toISOString() });
+    const correlationId = newId();
+    await logIntentEvent("OBLIGATION_MARKED_WAITING", { commandId: correlationId, obligationId }, "USER", correlationId, {
+      obligationId,
+    });
   });
 }
 
 /** WAITING -> OPEN only. Throws on any other current status. */
 export async function markObligationOpen(obligationId: string): Promise<void> {
-  const existing = await db.obligations.get(obligationId);
-  assertObligationExists(existing, obligationId);
-  if (existing.status === "OPEN") return; // idempotent no-op for the already-true case
-  if (existing.status !== "WAITING") {
-    throw new Error(`INVALID_OBLIGATION_TRANSITION: cannot mark ${existing.status} obligation as OPEN (must be WAITING).`);
-  }
-  await db.obligations.update(obligationId, { status: "OPEN", updatedAt: new Date().toISOString() });
-  const correlationId = newId();
-  await logIntentEvent("OBLIGATION_MARKED_OPEN", { commandId: correlationId, obligationId }, "USER", correlationId, {
-    obligationId,
+  return writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const existing = await db.obligations.get(obligationId);
+    assertObligationExists(existing, obligationId);
+    if (existing.status === "OPEN") return; // idempotent no-op for the already-true case
+    if (existing.status !== "WAITING") {
+      throw new Error(`INVALID_OBLIGATION_TRANSITION: cannot mark ${existing.status} obligation as OPEN (must be WAITING).`);
+    }
+    await db.obligations.update(obligationId, { status: "OPEN", updatedAt: new Date().toISOString() });
+    const correlationId = newId();
+    await logIntentEvent("OBLIGATION_MARKED_OPEN", { commandId: correlationId, obligationId }, "USER", correlationId, {
+      obligationId,
+    });
   });
 }
 
@@ -305,12 +320,25 @@ export async function markObligationOpen(obligationId: string): Promise<void> {
  * already applies to non-recurring creates. If the rule has no further
  * occurrences (a bounded rule that has run its course), nothing is
  * created — never invented, never a guess.
+ *
+ * COMMAND-ATOMICITY-002 (#225): runs inside satisfyObligation's
+ * transaction, so the satisfied instance and its next occurrence commit
+ * together. A next occurrence under an archived Mission (which
+ * createObligation rejects) therefore now rolls the whole satisfy back,
+ * with an error that says nothing was saved; before, the instance stayed
+ * SATISFIED with no next occurrence beside a "cannot link" error. RELEASE
+ * (no next occurrence) remains available. Owner decision D1 on #225's PR.
  */
 async function materializeNextOccurrence(existing: Obligation): Promise<void> {
   if (!existing.recurrence) return;
   const after = existing.dueAt ?? formatLocalDate(new Date());
   const nextDueAt = deriveNextOccurrenceDate(existing.recurrence.rrule, after);
   if (!nextDueAt) return;
+  if (existing.missionId && (await db.missions.get(existing.missionId))?.status === "ARCHIVED") {
+    throw new Error(
+      "RECURRING_MISSION_ARCHIVED: Nothing was saved. This repeats under an archived mission, so its next occurrence can't be created. Release it instead.",
+    );
+  }
   await createObligation({
     title: existing.title,
     ...(existing.description ? { description: existing.description } : {}),
@@ -322,49 +350,53 @@ async function materializeNextOccurrence(existing: Obligation): Promise<void> {
 
 /** Valid from OPEN or WAITING only — an already-resolved (SATISFIED/RELEASED) obligation cannot be satisfied again; re-open is not a Drop 01 operation. */
 export async function satisfyObligation(obligationId: string, resolutionNote?: string): Promise<void> {
-  const existing = await db.obligations.get(obligationId);
-  assertObligationExists(existing, obligationId);
-  if (existing.status === "SATISFIED" || existing.status === "RELEASED") {
-    throw new Error(`OBLIGATION_ALREADY_RESOLVED: obligation is already ${existing.status}.`);
-  }
-  const resolvedAt = new Date().toISOString();
-  await db.obligations.update(obligationId, {
-    status: "SATISFIED",
-    resolvedAt,
-    ...(resolutionNote ? { resolutionNote } : {}),
-    updatedAt: resolvedAt,
+  return writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const existing = await db.obligations.get(obligationId);
+    assertObligationExists(existing, obligationId);
+    if (existing.status === "SATISFIED" || existing.status === "RELEASED") {
+      throw new Error(`OBLIGATION_ALREADY_RESOLVED: obligation is already ${existing.status}.`);
+    }
+    const resolvedAt = new Date().toISOString();
+    await db.obligations.update(obligationId, {
+      status: "SATISFIED",
+      resolvedAt,
+      ...(resolutionNote ? { resolutionNote } : {}),
+      updatedAt: resolvedAt,
+    });
+    const correlationId = newId();
+    await logIntentEvent(
+      "OBLIGATION_SATISFIED",
+      { commandId: correlationId, obligationId, ...(resolutionNote ? { resolutionNote } : {}) },
+      "USER",
+      correlationId,
+      { obligationId },
+    );
+    await materializeNextOccurrence(existing);
   });
-  const correlationId = newId();
-  await logIntentEvent(
-    "OBLIGATION_SATISFIED",
-    { commandId: correlationId, obligationId, ...(resolutionNote ? { resolutionNote } : {}) },
-    "USER",
-    correlationId,
-    { obligationId },
-  );
-  await materializeNextOccurrence(existing);
 }
 
 /** Valid from OPEN or WAITING only — "no longer required," distinct from SATISFIED. Same one-way-from-unresolved rule as satisfyObligation. */
 export async function releaseObligation(obligationId: string, resolutionNote?: string): Promise<void> {
-  const existing = await db.obligations.get(obligationId);
-  assertObligationExists(existing, obligationId);
-  if (existing.status === "SATISFIED" || existing.status === "RELEASED") {
-    throw new Error(`OBLIGATION_ALREADY_RESOLVED: obligation is already ${existing.status}.`);
-  }
-  const resolvedAt = new Date().toISOString();
-  await db.obligations.update(obligationId, {
-    status: "RELEASED",
-    resolvedAt,
-    ...(resolutionNote ? { resolutionNote } : {}),
-    updatedAt: resolvedAt,
+  return writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const existing = await db.obligations.get(obligationId);
+    assertObligationExists(existing, obligationId);
+    if (existing.status === "SATISFIED" || existing.status === "RELEASED") {
+      throw new Error(`OBLIGATION_ALREADY_RESOLVED: obligation is already ${existing.status}.`);
+    }
+    const resolvedAt = new Date().toISOString();
+    await db.obligations.update(obligationId, {
+      status: "RELEASED",
+      resolvedAt,
+      ...(resolutionNote ? { resolutionNote } : {}),
+      updatedAt: resolvedAt,
+    });
+    const correlationId = newId();
+    await logIntentEvent(
+      "OBLIGATION_RELEASED",
+      { commandId: correlationId, obligationId, ...(resolutionNote ? { resolutionNote } : {}) },
+      "USER",
+      correlationId,
+      { obligationId },
+    );
   });
-  const correlationId = newId();
-  await logIntentEvent(
-    "OBLIGATION_RELEASED",
-    { commandId: correlationId, obligationId, ...(resolutionNote ? { resolutionNote } : {}) },
-    "USER",
-    correlationId,
-    { obligationId },
-  );
 }

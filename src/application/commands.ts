@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { DAY_WRITE_TABLES, writeAtomically } from "./atomicWrite";
 import type { DraftDecision } from "../domain/intelligence/types";
 import { evaluate } from "../engine/evaluate";
 import { computeDueRollover } from "../engine/dayRollover";
@@ -109,41 +110,43 @@ export function newId(): string {
  * actually happened" doctrine as logEvent's `recordedAt`.
  */
 export async function startDay(startedAtOverride?: string): Promise<BeyondDay> {
-  const existingActive = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
-  if (existingActive) {
-    await endDay(existingActive.id, "AUTO_CLOSED_ON_NEW_DAY_START");
-  }
+  return writeAtomically(DAY_WRITE_TABLES, async () => {
+    const existingActive = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
+    if (existingActive) {
+      await endDay(existingActive.id, "AUTO_CLOSED_ON_NEW_DAY_START");
+    }
 
-  const now = new Date().toISOString();
-  const startedAt = startedAtOverride ?? now;
-  // DROP 0 (standing schedule, owner ruling 2026-10-03): a clear, operator-
-  // saved schedule is the operator's own declaration, so the day starts
-  // from it instead of asking. Unclear → UNKNOWN, and TODAY asks once.
-  const standing = await getStandingWorkContext(new Date(startedAt));
-  const day: BeyondDay = {
-    id: newId(),
-    startedAt,
-    timezoneId: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    workContext: standing.clear ? standing.workContext : "UNKNOWN",
-    status: "ACTIVE",
-    // createdAt/updatedAt always stay the real, unmodified row-write
-    // instant — only startedAt (the semantic "when did this lived day
-    // begin") may be stamped at a rollover's boundary instant.
-    createdAt: now,
-    updatedAt: now,
-  };
-  await db.beyondDays.add(day);
-  await logEvent(day.id, "DAY_STARTED", { dayId: day.id }, "USER", newId());
-  if (standing.clear) {
-    const correlationId = newId();
-    const payload: WorkContextSetPayload = {
-      commandId: correlationId,
-      workContext: standing.workContext,
-      source: "SCHEDULE_STANDING",
+    const now = new Date().toISOString();
+    const startedAt = startedAtOverride ?? now;
+    // DROP 0 (standing schedule, owner ruling 2026-10-03): a clear, operator-
+    // saved schedule is the operator's own declaration, so the day starts
+    // from it instead of asking. Unclear → UNKNOWN, and TODAY asks once.
+    const standing = await getStandingWorkContext(new Date(startedAt));
+    const day: BeyondDay = {
+      id: newId(),
+      startedAt,
+      timezoneId: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      workContext: standing.clear ? standing.workContext : "UNKNOWN",
+      status: "ACTIVE",
+      // createdAt/updatedAt always stay the real, unmodified row-write
+      // instant — only startedAt (the semantic "when did this lived day
+      // begin") may be stamped at a rollover's boundary instant.
+      createdAt: now,
+      updatedAt: now,
     };
-    await logEvent(day.id, "WORK_CONTEXT_SET", payload, "SYSTEM", correlationId);
-  }
-  return day;
+    await db.beyondDays.add(day);
+    await logEvent(day.id, "DAY_STARTED", { dayId: day.id }, "USER", newId());
+    if (standing.clear) {
+      const correlationId = newId();
+      const payload: WorkContextSetPayload = {
+        commandId: correlationId,
+        workContext: standing.workContext,
+        source: "SCHEDULE_STANDING",
+      };
+      await logEvent(day.id, "WORK_CONTEXT_SET", payload, "SYSTEM", correlationId);
+    }
+    return day;
+  });
 }
 
 /**
@@ -199,27 +202,29 @@ export async function endDay(
   reason: "EXPLICIT_END_DAY" | "AUTO_CLOSED_ON_NEW_DAY_START" | "AUTO_CLOSED_DAY_ROLLOVER" = "EXPLICIT_END_DAY",
   occurredAtOverride?: string,
 ): Promise<void> {
-  const activeWorkout = await db.workoutSessions
-    .where("beyondDayId")
-    .equals(beyondDayId)
-    .filter((session) => session.status === "ACTIVE")
-    .first();
-  if (activeWorkout) {
-    throw new ActiveWorkoutBlocksDayEndError(activeWorkout.id);
-  }
-  await db.beyondDays.update(beyondDayId, {
-    status: "ENDED",
-    updatedAt: new Date().toISOString(),
+  return writeAtomically(DAY_WRITE_TABLES, async () => {
+    const activeWorkout = await db.workoutSessions
+      .where("beyondDayId")
+      .equals(beyondDayId)
+      .filter((session) => session.status === "ACTIVE")
+      .first();
+    if (activeWorkout) {
+      throw new ActiveWorkoutBlocksDayEndError(activeWorkout.id);
+    }
+    await db.beyondDays.update(beyondDayId, {
+      status: "ENDED",
+      updatedAt: new Date().toISOString(),
+    });
+    await logEvent(
+      beyondDayId,
+      "DAY_ENDED",
+      { reason },
+      reason === "EXPLICIT_END_DAY" ? "USER" : "SYSTEM",
+      newId(),
+      undefined,
+      occurredAtOverride,
+    );
   });
-  await logEvent(
-    beyondDayId,
-    "DAY_ENDED",
-    { reason },
-    reason === "EXPLICIT_END_DAY" ? "USER" : "SYSTEM",
-    newId(),
-    undefined,
-    occurredAtOverride,
-  );
 }
 
 /**
@@ -335,16 +340,13 @@ export async function performDueDayRollover(now: Date = new Date()): Promise<Bey
 
       const boundaryIso = boundary.toISOString();
       try {
-        const newDay = await db.transaction(
-          "rw",
-          // schedulePatterns: startDay reads the saved schedule for the
-          // new day's standing work context (DROP 0).
-          [db.beyondDays, db.events, db.workoutSessions, db.checkIns, db.recommendations, db.schedulePatterns],
-          async () => {
-            await endDay(activeDay.id, "AUTO_CLOSED_DAY_ROLLOVER", boundaryIso);
-            return await startDay(boundaryIso);
-          },
-        );
+        // COMMAND-ATOMICITY-002: endDay/startDay each open their own
+        // transaction over the same DAY_WRITE_TABLES, so here they join
+        // this outer one and the close-and-reopen still commits as a unit.
+        const newDay = await writeAtomically(DAY_WRITE_TABLES, async () => {
+          await endDay(activeDay.id, "AUTO_CLOSED_DAY_ROLLOVER", boundaryIso);
+          return await startDay(boundaryIso);
+        });
         notifyDayRollover(newDay);
         return newDay;
       } catch (e) {
@@ -392,62 +394,64 @@ export async function submitCheckIn(
   // Check-in draft (Drop 5): how a drafted check-in was decided, when the form opened with one.
   draft?: DraftDecision,
 ): Promise<{ checkIn: StateCheckIn; recommendation: Recommendation }> {
-  const checkIn: StateCheckIn = {
-    id: newId(),
-    beyondDayId,
-    recordedAt: new Date().toISOString(),
-    seq: await nextSeq(),
-    energy: values.energy,
-    stress: values.stress,
-    mood: values.mood,
-    soreness: values.soreness,
-    alcoholUrge: values.alcoholUrge,
-    ...(draft ? { draft } : {}),
-  };
-  const correlationId = newId();
-  await db.checkIns.add(checkIn);
-  await logEvent(beyondDayId, "STATE_CHECKED_IN", checkIn, "USER", correlationId);
-
-  // Engine reassesses immediately after new evidence. Issuing a
-  // recommendation is automatic; RECORDING it (accept / no-action) is a
-  // separate, explicit user step — see recordRecommendation below.
-  // evaluate() stays pure (no I/O, no seq assignment) — seq is stamped
-  // here, at the one place its result is actually persisted.
-  // INTENT-ARBITRATION-001: same pattern as hasUnresolvedPostShift above —
-  // the application layer decides current eligibility (today's date, which
-  // obligations are unresolved) and passes the Engine only the one derived
-  // boolean it needs to arbitrate with.
-  const eligibleObligations = await getCurrentlyEligibleUnresolvedObligations();
-  const recommendation: Recommendation = {
-    ...evaluate({
+  return writeAtomically(DAY_WRITE_TABLES, async () => {
+    const checkIn: StateCheckIn = {
+      id: newId(),
       beyondDayId,
-      checkIn,
-      // PLANNED-WORK-001: derived from an explicit PLANNED_WORK_SET
-      // declaration (setPlannedWork), never inferred from capacity,
-      // schedule, or TRAIN's rotation state — see hasActivePlannedWork's
-      // own doc comment.
-      hasPlannedWork: await hasActivePlannedWork(beyondDayId),
-      // Drop 02b: derived from event history (WORK_PERIOD_ENDED, cleared by
-      // a later SHIFT_DOWN_COMPLETED), never from clock/schedule — the
-      // Engine only ever sees what queries.ts already determined is true.
-      hasUnresolvedPostShift: await hasUnresolvedPostShift(beyondDayId),
-      hasEligibleObligationDueOrOverdue: hasObligationRequiringArbitration(
-        eligibleObligations,
-        formatLocalDate(new Date()),
-      ),
-    }),
-    seq: await nextSeq(),
-  };
-  await db.recommendations.add(recommendation);
-  await logEvent(
-    beyondDayId,
-    "RECOMMENDATION_ISSUED",
-    { recommendationId: recommendation.id, kind: recommendation.kind },
-    "ENGINE",
-    correlationId,
-  );
+      recordedAt: new Date().toISOString(),
+      seq: await nextSeq(),
+      energy: values.energy,
+      stress: values.stress,
+      mood: values.mood,
+      soreness: values.soreness,
+      alcoholUrge: values.alcoholUrge,
+      ...(draft ? { draft } : {}),
+    };
+    const correlationId = newId();
+    await db.checkIns.add(checkIn);
+    await logEvent(beyondDayId, "STATE_CHECKED_IN", checkIn, "USER", correlationId);
 
-  return { checkIn, recommendation };
+    // Engine reassesses immediately after new evidence. Issuing a
+    // recommendation is automatic; RECORDING it (accept / no-action) is a
+    // separate, explicit user step — see recordRecommendation below.
+    // evaluate() stays pure (no I/O, no seq assignment) — seq is stamped
+    // here, at the one place its result is actually persisted.
+    // INTENT-ARBITRATION-001: same pattern as hasUnresolvedPostShift above —
+    // the application layer decides current eligibility (today's date, which
+    // obligations are unresolved) and passes the Engine only the one derived
+    // boolean it needs to arbitrate with.
+    const eligibleObligations = await getCurrentlyEligibleUnresolvedObligations();
+    const recommendation: Recommendation = {
+      ...evaluate({
+        beyondDayId,
+        checkIn,
+        // PLANNED-WORK-001: derived from an explicit PLANNED_WORK_SET
+        // declaration (setPlannedWork), never inferred from capacity,
+        // schedule, or TRAIN's rotation state — see hasActivePlannedWork's
+        // own doc comment.
+        hasPlannedWork: await hasActivePlannedWork(beyondDayId),
+        // Drop 02b: derived from event history (WORK_PERIOD_ENDED, cleared by
+        // a later SHIFT_DOWN_COMPLETED), never from clock/schedule — the
+        // Engine only ever sees what queries.ts already determined is true.
+        hasUnresolvedPostShift: await hasUnresolvedPostShift(beyondDayId),
+        hasEligibleObligationDueOrOverdue: hasObligationRequiringArbitration(
+          eligibleObligations,
+          formatLocalDate(new Date()),
+        ),
+      }),
+      seq: await nextSeq(),
+    };
+    await db.recommendations.add(recommendation);
+    await logEvent(
+      beyondDayId,
+      "RECOMMENDATION_ISSUED",
+      { recommendationId: recommendation.id, kind: recommendation.kind },
+      "ENGINE",
+      correlationId,
+    );
+
+    return { checkIn, recommendation };
+  });
 }
 
 /**
@@ -668,22 +672,24 @@ export async function rateOutcome(
   recommendationId: string,
   rating: "GOOD" | "NEUTRAL" | "BAD",
 ): Promise<void> {
-  const correlationId = newId();
-  await db.outcomes.add({
-    id: newId(),
-    beyondDayId,
-    recordedAt: new Date().toISOString(),
-    result: "UNKNOWN",
-    recommendationId,
-    rating,
+  return writeAtomically(DAY_WRITE_TABLES, async () => {
+    const correlationId = newId();
+    await db.outcomes.add({
+      id: newId(),
+      beyondDayId,
+      recordedAt: new Date().toISOString(),
+      result: "UNKNOWN",
+      recommendationId,
+      rating,
+    });
+    await logEvent(
+      beyondDayId,
+      "OUTCOME_RATED",
+      { commandId: correlationId, recommendationId, rating },
+      "USER",
+      correlationId,
+    );
   });
-  await logEvent(
-    beyondDayId,
-    "OUTCOME_RATED",
-    { commandId: correlationId, recommendationId, rating },
-    "USER",
-    correlationId,
-  );
 }
 
 /**
@@ -706,18 +712,20 @@ export async function setWorkContext(
   // own change is always MANUAL or an accepted suggestion.
   source: Exclude<WorkContextSource, "SCHEDULE_STANDING">,
 ): Promise<void> {
-  await db.beyondDays.update(beyondDayId, {
-    workContext,
-    updatedAt: new Date().toISOString(),
+  return writeAtomically(DAY_WRITE_TABLES, async () => {
+    await db.beyondDays.update(beyondDayId, {
+      workContext,
+      updatedAt: new Date().toISOString(),
+    });
+    const correlationId = newId();
+    await logEvent(
+      beyondDayId,
+      "WORK_CONTEXT_SET",
+      { commandId: correlationId, workContext, source },
+      "USER",
+      correlationId,
+    );
   });
-  const correlationId = newId();
-  await logEvent(
-    beyondDayId,
-    "WORK_CONTEXT_SET",
-    { commandId: correlationId, workContext, source },
-    "USER",
-    correlationId,
-  );
 }
 
 /**
@@ -742,22 +750,24 @@ export async function setWorkContext(
  * about "did the shift end," only whether it has been marked yet.
  */
 export async function markWorkEnded(beyondDayId: string): Promise<void> {
-  const day = await db.beyondDays.get(beyondDayId);
-  if (!day || day.status !== "ACTIVE" || day.workContext !== "WORK") {
-    throw new Error(
-      "NOT_AN_ACTIVE_WORK_DAY: markWorkEnded requires the active BeyondDay to have workContext WORK.",
+  return writeAtomically(DAY_WRITE_TABLES, async () => {
+    const day = await db.beyondDays.get(beyondDayId);
+    if (!day || day.status !== "ACTIVE" || day.workContext !== "WORK") {
+      throw new Error(
+        "NOT_AN_ACTIVE_WORK_DAY: markWorkEnded requires the active BeyondDay to have workContext WORK.",
+      );
+    }
+    const existing = await getWorkPeriodEnded(beyondDayId);
+    if (existing) return;
+    const correlationId = newId();
+    await logEvent(
+      beyondDayId,
+      "WORK_PERIOD_ENDED",
+      { commandId: correlationId },
+      "USER",
+      correlationId,
     );
-  }
-  const existing = await getWorkPeriodEnded(beyondDayId);
-  if (existing) return;
-  const correlationId = newId();
-  await logEvent(
-    beyondDayId,
-    "WORK_PERIOD_ENDED",
-    { commandId: correlationId },
-    "USER",
-    correlationId,
-  );
+  });
 }
 
 /**

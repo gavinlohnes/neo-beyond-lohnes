@@ -43,9 +43,9 @@ describe("WORKOUT-ATOMICITY-001 in a real browser", () => {
     await logSet(day.id, session.id, "squat", 1, 135, 5);
     const screen = await render(<MoreScreen />);
     await screen.getByText("Diagnostic detail", { exact: true }).click();
-    const label = screen.getByText("Workout record mismatches", { exact: true });
+    const label = screen.getByText("Record mismatches", { exact: true });
     await expect.element(label).toBeVisible();
-    expect(label.element().parentElement?.textContent).toBe("Workout record mismatches0");
+    expect(label.element().parentElement?.textContent).toBe("Record mismatches0");
   });
 
   it.each([320, 360, 412])("lists a split record as plain read-only text at %ipx, writing nothing", async (width) => {
@@ -68,9 +68,9 @@ describe("WORKOUT-ATOMICITY-001 in a real browser", () => {
     const message = screen.getByText("Workout from 2026-10-01 is saved without its start event.", { exact: true });
     await expect.element(message).not.toBeVisible();
     await screen.getByText("Diagnostic detail", { exact: true }).click();
-    const label = screen.getByText("Workout record mismatches", { exact: true });
+    const label = screen.getByText("Record mismatches", { exact: true });
     await expect.element(label).toBeVisible();
-    expect(label.element().parentElement?.textContent).toBe("Workout record mismatches2");
+    expect(label.element().parentElement?.textContent).toBe("Record mismatches2");
     await expect.element(message).toBeVisible();
     await expect.element(screen.getByText("Workout from 2026-10-01 is saved as COMPLETED without a matching end event.", { exact: true })).toBeVisible();
     expect(message.element().tagName).toBe("P");
