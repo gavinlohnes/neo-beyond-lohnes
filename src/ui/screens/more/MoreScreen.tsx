@@ -4,7 +4,7 @@ import { exportBackup, getDaysSinceLastBackup, shareBackup } from "../../../pers
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
 import { getActiveDay, getDayCount, getEventCount, getRecommendationCount } from "../../../application/queries";
 import { getAdvisoryNotes } from "../../../application/advisoryQueries";
-import { getWorkoutRecordMismatches, type WorkoutRecordMismatch } from "../../../application/workoutIntegrityQueries";
+import { getRecordMismatches, type RecordMismatch } from "../../../application/recordIntegrityQueries";
 import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { ENGINE_VERSION } from "../../../engine/evaluate";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../../app/buildInfo";
@@ -153,7 +153,7 @@ export function MoreScreen({
   const [readState, setReadState] = useState<"loading" | "ready" | "error">("loading");
   const [readError, setReadError] = useState<string | null>(null);
   const [advisoryNotes, setAdvisoryNotes] = useState<AdvisoryNote[]>([]);
-  const [workoutMismatches, setWorkoutMismatches] = useState<WorkoutRecordMismatch[]>([]);
+  const [recordMismatches, setRecordMismatches] = useState<RecordMismatch[]>([]);
   const [preview, setPreview] = useState<RestorePreview | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -190,13 +190,13 @@ export function MoreScreen({
     setReadState("loading");
     setReadError(null);
     try {
-      const [nextDays, nextEvents, nextRecommendations, activeDay, nextAdvisoryNotes, nextWorkoutMismatches] = await Promise.all([
+      const [nextDays, nextEvents, nextRecommendations, activeDay, nextAdvisoryNotes, nextRecordMismatches] = await Promise.all([
         getDayCount(),
         getEventCount(),
         getRecommendationCount(),
         getActiveDay(),
         getAdvisoryNotes(),
-        getWorkoutRecordMismatches(),
+        getRecordMismatches(),
       ]);
       if (disposedRef.current || sequence !== readSequence.current) return;
       setDays(nextDays);
@@ -204,7 +204,7 @@ export function MoreScreen({
       setRecommendations(nextRecommendations);
       setActiveDayYes(activeDay !== undefined);
       setAdvisoryNotes(nextAdvisoryNotes);
-      setWorkoutMismatches(nextWorkoutMismatches);
+      setRecordMismatches(nextRecordMismatches);
       setReadState("ready");
     } catch (error) {
       if (disposedRef.current || sequence !== readSequence.current) return;
@@ -717,14 +717,16 @@ export function MoreScreen({
               ))}
             </div>
           )}
-          {/* WORKOUT-ATOMICITY-001, owner option A: read-only count of workout
-              rows and events that disagree. Same technical-detail tier as the
-              readings above; reports only, nothing here repairs history. */}
-          <DiagRow label="Workout record mismatches" value={String(workoutMismatches.length)} />
-          {workoutMismatches.length > 0 && (
+          {/* WORKOUT-ATOMICITY-001 (option A) and COMMAND-ATOMICITY-002: read-only
+              count of saved records and events that disagree (workouts, days,
+              check-ins, recommendations, missions, obligations, journal). Same
+              technical-detail tier as the readings above; reports only,
+              nothing here repairs history. */}
+          <DiagRow label="Record mismatches" value={String(recordMismatches.length)} />
+          {recordMismatches.length > 0 && (
             <div style={{ marginTop: 4 }}>
-              {workoutMismatches.map((mismatch, index) => (
-                <p key={`${mismatch.kind}-${mismatch.sessionId}-${index}`} className="meta" style={{ margin: "2px 0" }}>{mismatch.message}</p>
+              {recordMismatches.map((mismatch, index) => (
+                <p key={`${mismatch.area}-${mismatch.kind}-${mismatch.recordId}-${index}`} className="meta" style={{ margin: "2px 0" }}>{mismatch.message}</p>
               ))}
             </div>
           )}

@@ -1,5 +1,6 @@
 import { db } from "../persistence/db";
 import { newId, nextSeq } from "./commands";
+import { JOURNAL_WRITE_TABLES, writeAtomically } from "./atomicWrite";
 import type { DomainEvent } from "../domain/common/types";
 import type { DecisionJournalEntry } from "../domain/journal/types";
 import {
@@ -54,61 +55,65 @@ function notFound(id: string): Error {
 
 /** Explicit operator action only (same authority doctrine as createMission/createObligation). Always source USER. */
 export async function createDecisionJournalEntry(input: DecisionJournalEntryInput): Promise<DecisionJournalEntry> {
-  const parsed = decisionJournalEntryInputSchema.parse(input);
-  const now = new Date().toISOString();
-  const entry: DecisionJournalEntry = {
-    id: newId(),
-    title: parsed.title,
-    ...(parsed.context ? { context: parsed.context } : {}),
-    ...(parsed.options ? { options: parsed.options } : {}),
-    decision: parsed.decision,
-    ...(parsed.reasoning ? { reasoning: parsed.reasoning } : {}),
-    ...(parsed.expectation ? { expectation: parsed.expectation } : {}),
-    status: "OPEN",
-    source: "USER",
-    seq: await nextSeq(),
-    createdAt: now,
-    updatedAt: now,
-  };
-  await db.decisionJournalEntries.add(entry);
-  const correlationId = newId();
-  await logJournalEvent(
-    "DECISION_JOURNAL_CREATED",
-    { commandId: correlationId, decisionJournalEntryId: entry.id, title: entry.title },
-    "USER",
-    correlationId,
-    entry.id,
-  );
-  return entry;
+  return writeAtomically(JOURNAL_WRITE_TABLES, async () => {
+    const parsed = decisionJournalEntryInputSchema.parse(input);
+    const now = new Date().toISOString();
+    const entry: DecisionJournalEntry = {
+      id: newId(),
+      title: parsed.title,
+      ...(parsed.context ? { context: parsed.context } : {}),
+      ...(parsed.options ? { options: parsed.options } : {}),
+      decision: parsed.decision,
+      ...(parsed.reasoning ? { reasoning: parsed.reasoning } : {}),
+      ...(parsed.expectation ? { expectation: parsed.expectation } : {}),
+      status: "OPEN",
+      source: "USER",
+      seq: await nextSeq(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    await db.decisionJournalEntries.add(entry);
+    const correlationId = newId();
+    await logJournalEvent(
+      "DECISION_JOURNAL_CREATED",
+      { commandId: correlationId, decisionJournalEntryId: entry.id, title: entry.title },
+      "USER",
+      correlationId,
+      entry.id,
+    );
+    return entry;
+  });
 }
 
 export async function modifyDecisionJournalEntry(
   id: string,
   changes: DecisionJournalEntryModifyInput,
 ): Promise<DecisionJournalEntry> {
-  const parsed = decisionJournalEntryModifyInputSchema.parse(changes);
-  const existing = await db.decisionJournalEntries.get(id);
-  if (!existing) throw notFound(id);
-  const updated: DecisionJournalEntry = {
-    ...existing,
-    ...(parsed.title !== undefined ? { title: parsed.title } : {}),
-    ...(parsed.context !== undefined ? { context: parsed.context } : {}),
-    ...(parsed.options !== undefined ? { options: parsed.options } : {}),
-    ...(parsed.decision !== undefined ? { decision: parsed.decision } : {}),
-    ...(parsed.reasoning !== undefined ? { reasoning: parsed.reasoning } : {}),
-    ...(parsed.expectation !== undefined ? { expectation: parsed.expectation } : {}),
-    updatedAt: new Date().toISOString(),
-  };
-  await db.decisionJournalEntries.put(updated);
-  const correlationId = newId();
-  await logJournalEvent(
-    "DECISION_JOURNAL_MODIFIED",
-    { commandId: correlationId, decisionJournalEntryId: id, changes: parsed },
-    "USER",
-    correlationId,
-    id,
-  );
-  return updated;
+  return writeAtomically(JOURNAL_WRITE_TABLES, async () => {
+    const parsed = decisionJournalEntryModifyInputSchema.parse(changes);
+    const existing = await db.decisionJournalEntries.get(id);
+    if (!existing) throw notFound(id);
+    const updated: DecisionJournalEntry = {
+      ...existing,
+      ...(parsed.title !== undefined ? { title: parsed.title } : {}),
+      ...(parsed.context !== undefined ? { context: parsed.context } : {}),
+      ...(parsed.options !== undefined ? { options: parsed.options } : {}),
+      ...(parsed.decision !== undefined ? { decision: parsed.decision } : {}),
+      ...(parsed.reasoning !== undefined ? { reasoning: parsed.reasoning } : {}),
+      ...(parsed.expectation !== undefined ? { expectation: parsed.expectation } : {}),
+      updatedAt: new Date().toISOString(),
+    };
+    await db.decisionJournalEntries.put(updated);
+    const correlationId = newId();
+    await logJournalEvent(
+      "DECISION_JOURNAL_MODIFIED",
+      { commandId: correlationId, decisionJournalEntryId: id, changes: parsed },
+      "USER",
+      correlationId,
+      id,
+    );
+    return updated;
+  });
 }
 
 /**
@@ -123,29 +128,31 @@ export async function reviewDecisionJournalEntry(
   id: string,
   input: DecisionJournalEntryReviewInput,
 ): Promise<DecisionJournalEntry> {
-  const parsed = decisionJournalEntryReviewInputSchema.parse(input);
-  const existing = await db.decisionJournalEntries.get(id);
-  if (!existing) throw notFound(id);
-  if (existing.status === "REVIEWED") {
-    throw new Error(`DECISION_JOURNAL_ALREADY_REVIEWED: entry ${id} was already reviewed.`);
-  }
-  const reviewedAt = new Date().toISOString();
-  const updated: DecisionJournalEntry = {
-    ...existing,
-    outcome: parsed.outcome,
-    ...(parsed.lesson ? { lesson: parsed.lesson } : {}),
-    status: "REVIEWED",
-    reviewedAt,
-    updatedAt: reviewedAt,
-  };
-  await db.decisionJournalEntries.put(updated);
-  const correlationId = newId();
-  await logJournalEvent(
-    "DECISION_JOURNAL_REVIEWED",
-    { commandId: correlationId, decisionJournalEntryId: id, outcome: parsed.outcome, ...(parsed.lesson ? { lesson: parsed.lesson } : {}) },
-    "USER",
-    correlationId,
-    id,
-  );
-  return updated;
+  return writeAtomically(JOURNAL_WRITE_TABLES, async () => {
+    const parsed = decisionJournalEntryReviewInputSchema.parse(input);
+    const existing = await db.decisionJournalEntries.get(id);
+    if (!existing) throw notFound(id);
+    if (existing.status === "REVIEWED") {
+      throw new Error(`DECISION_JOURNAL_ALREADY_REVIEWED: entry ${id} was already reviewed.`);
+    }
+    const reviewedAt = new Date().toISOString();
+    const updated: DecisionJournalEntry = {
+      ...existing,
+      outcome: parsed.outcome,
+      ...(parsed.lesson ? { lesson: parsed.lesson } : {}),
+      status: "REVIEWED",
+      reviewedAt,
+      updatedAt: reviewedAt,
+    };
+    await db.decisionJournalEntries.put(updated);
+    const correlationId = newId();
+    await logJournalEvent(
+      "DECISION_JOURNAL_REVIEWED",
+      { commandId: correlationId, decisionJournalEntryId: id, outcome: parsed.outcome, ...(parsed.lesson ? { lesson: parsed.lesson } : {}) },
+      "USER",
+      correlationId,
+      id,
+    );
+    return updated;
+  });
 }

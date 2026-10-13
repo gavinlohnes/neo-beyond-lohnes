@@ -3,6 +3,7 @@ import { deriveCapacity } from "../engine/capacity";
 import { assertRedOverrideConfirmed } from "../engine/redOverride";
 import { deriveRecoverySessionStatus } from "../engine/trainSuggestion";
 import { logEvent } from "./commands";
+import { WORKOUT_WRITE_TABLES, writeAtomically } from "./atomicWrite";
 import { getLatestCheckIn } from "./queries";
 import { getPerformedSets } from "./trainQueries";
 import type { Capacity, ExerciseCueSetPayload, PerformedSetRaw } from "../domain/common/types";
@@ -21,24 +22,14 @@ function newId(): string {
 
 /**
  * WORKOUT-ATOMICITY-001 (owner approval 2026-10-13, issue #221): each
- * workout command writes a row (session or performed set) and then its
- * DomainEvent. As two independent writes, a crash, closed tab or storage
- * error between them left a row without its event — e.g. a session marked
- * COMPLETED (rotation advances, it reads rows) with no WORKOUT_COMPLETED
- * (Minimum Day and the event trail never see it). One Dexie read-write
- * transaction makes the pair commit or roll back together, the same
- * mechanism performDueDayRollover uses. events/checkIns/recommendations
- * are declared because logEvent's nextSeq() cold-start read scans all three;
- * nothing may implicitly escape the transaction's scope. A rolled-back
- * write can leave a gap in seq numbering, which only orders events and was
- * already possible for the rollover transaction.
+ * workout command's row (session or performed set) and its DomainEvent
+ * commit together or roll back together — e.g. a session marked COMPLETED
+ * (rotation advances, it reads rows) can no longer exist without its
+ * WORKOUT_COMPLETED (Minimum Day and the event trail read events). The
+ * shared mechanism and its table rules live in atomicWrite.ts.
  */
 function writeWorkoutAtomically<T>(write: () => Promise<T>): Promise<T> {
-  return db.transaction(
-    "rw",
-    [db.workoutSessions, db.performedSets, db.events, db.checkIns, db.recommendations],
-    write,
-  );
+  return writeAtomically(WORKOUT_WRITE_TABLES, write);
 }
 
 /**
