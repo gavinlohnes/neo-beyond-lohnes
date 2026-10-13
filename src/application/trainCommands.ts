@@ -20,6 +20,28 @@ function newId(): string {
 }
 
 /**
+ * WORKOUT-ATOMICITY-001 (owner approval 2026-10-13, issue #221): each
+ * workout command writes a row (session or performed set) and then its
+ * DomainEvent. As two independent writes, a crash, closed tab or storage
+ * error between them left a row without its event — e.g. a session marked
+ * COMPLETED (rotation advances, it reads rows) with no WORKOUT_COMPLETED
+ * (Minimum Day and the event trail never see it). One Dexie read-write
+ * transaction makes the pair commit or roll back together, the same
+ * mechanism performDueDayRollover uses. events/checkIns/recommendations
+ * are declared because logEvent's nextSeq() cold-start read scans all three;
+ * nothing may implicitly escape the transaction's scope. A rolled-back
+ * write can leave a gap in seq numbering, which only orders events and was
+ * already possible for the rollover transaction.
+ */
+function writeWorkoutAtomically<T>(write: () => Promise<T>): Promise<T> {
+  return db.transaction(
+    "rw",
+    [db.workoutSessions, db.performedSets, db.events, db.checkIns, db.recommendations],
+    write,
+  );
+}
+
+/**
  * Single source of truth for "what is current capacity" — never trust a
  * caller-supplied value. Reuses application/queries.ts's getLatestCheckIn
  * (recordedAt + seq ordering) rather than Dexie's .last() on a non-unique
@@ -87,16 +109,18 @@ export async function startWorkout(
       status: "ACTIVE",
       startedAt: new Date().toISOString(),
     };
-    await db.workoutSessions.add(session);
+    await writeWorkoutAtomically(async () => {
+      await db.workoutSessions.add(session);
 
-    const correlationId = newId();
-    await logEvent(
-      beyondDayId,
-      "WORKOUT_STARTED",
-      { commandId: correlationId, sessionId: id, templateId: session.templateId, sessionType },
-      "USER",
-      correlationId,
-    );
+      const correlationId = newId();
+      await logEvent(
+        beyondDayId,
+        "WORKOUT_STARTED",
+        { commandId: correlationId, sessionId: id, templateId: session.templateId, sessionType },
+        "USER",
+        correlationId,
+      );
+    });
     return session;
   })();
 
@@ -139,16 +163,18 @@ export async function logSet(
     recordedAt: new Date().toISOString(),
     ...(substitutedName ? { substitutedName } : {}),
   };
-  await db.performedSets.add(set as unknown as PerformedSetRaw);
+  await writeWorkoutAtomically(async () => {
+    await db.performedSets.add(set as unknown as PerformedSetRaw);
 
-  const correlationId = newId();
-  await logEvent(
-    beyondDayId,
-    "SET_LOGGED",
-    { commandId: correlationId, sessionId, exerciseId, setNumber, weight, reps, ...(substitutedName ? { substitutedName } : {}) },
-    "USER",
-    correlationId,
-  );
+    const correlationId = newId();
+    await logEvent(
+      beyondDayId,
+      "SET_LOGGED",
+      { commandId: correlationId, sessionId, exerciseId, setNumber, weight, reps, ...(substitutedName ? { substitutedName } : {}) },
+      "USER",
+      correlationId,
+    );
+  });
 }
 
 /**
@@ -173,16 +199,18 @@ export async function skipSet(
     skipped: true,
     recordedAt: new Date().toISOString(),
   };
-  await db.performedSets.add(set as unknown as PerformedSetRaw);
+  await writeWorkoutAtomically(async () => {
+    await db.performedSets.add(set as unknown as PerformedSetRaw);
 
-  const correlationId = newId();
-  await logEvent(
-    beyondDayId,
-    "SET_SKIPPED",
-    { commandId: correlationId, sessionId, exerciseId, setNumber },
-    "USER",
-    correlationId,
-  );
+    const correlationId = newId();
+    await logEvent(
+      beyondDayId,
+      "SET_SKIPPED",
+      { commandId: correlationId, sessionId, exerciseId, setNumber },
+      "USER",
+      correlationId,
+    );
+  });
 }
 
 /**
@@ -269,28 +297,30 @@ export async function completeWorkout(
   status: "COMPLETED" | "PARTIAL",
   durationMinutes?: number,
 ): Promise<void> {
-  await db.workoutSessions
-    .where(":id")
-    .equals(sessionId)
-    .modify((session) => {
-      session.status = status;
-      session.endedAt = new Date().toISOString();
-      delete session.activeRestEndsAt;
-    });
-  const correlationId = newId();
-  await logEvent(
-    beyondDayId,
-    "WORKOUT_COMPLETED",
-    {
-      commandId: correlationId,
-      sessionId,
-      status,
-      sessionType,
-      ...(durationMinutes !== undefined ? { durationMinutes } : {}),
-    },
-    "USER",
-    correlationId,
-  );
+  await writeWorkoutAtomically(async () => {
+    await db.workoutSessions
+      .where(":id")
+      .equals(sessionId)
+      .modify((session) => {
+        session.status = status;
+        session.endedAt = new Date().toISOString();
+        delete session.activeRestEndsAt;
+      });
+    const correlationId = newId();
+    await logEvent(
+      beyondDayId,
+      "WORKOUT_COMPLETED",
+      {
+        commandId: correlationId,
+        sessionId,
+        status,
+        sessionType,
+        ...(durationMinutes !== undefined ? { durationMinutes } : {}),
+      },
+      "USER",
+      correlationId,
+    );
+  });
 }
 
 /**
@@ -304,28 +334,30 @@ export async function abandonWorkout(
   sessionType: SessionType,
   durationMinutes?: number,
 ): Promise<void> {
-  await db.workoutSessions
-    .where(":id")
-    .equals(sessionId)
-    .modify((session) => {
-      session.status = "ABANDONED" as WorkoutSessionStatus;
-      session.endedAt = new Date().toISOString();
-      delete session.activeRestEndsAt;
-    });
-  const correlationId = newId();
-  await logEvent(
-    beyondDayId,
-    "WORKOUT_ABANDONED",
-    {
-      commandId: correlationId,
-      sessionId,
-      status: "ABANDONED",
-      sessionType,
-      ...(durationMinutes !== undefined ? { durationMinutes } : {}),
-    },
-    "USER",
-    correlationId,
-  );
+  await writeWorkoutAtomically(async () => {
+    await db.workoutSessions
+      .where(":id")
+      .equals(sessionId)
+      .modify((session) => {
+        session.status = "ABANDONED" as WorkoutSessionStatus;
+        session.endedAt = new Date().toISOString();
+        delete session.activeRestEndsAt;
+      });
+    const correlationId = newId();
+    await logEvent(
+      beyondDayId,
+      "WORKOUT_ABANDONED",
+      {
+        commandId: correlationId,
+        sessionId,
+        status: "ABANDONED",
+        sessionType,
+        ...(durationMinutes !== undefined ? { durationMinutes } : {}),
+      },
+      "USER",
+      correlationId,
+    );
+  });
 }
 
 /**
