@@ -6,7 +6,8 @@ Gavin approved [issue #221](https://github.com/gavinlohnes/neo-beyond-lohnes/iss
 2026-10-13 ("Approve #221 with option A"). Sole Builder: Claude Code; branch
 `claude/workout-atomicity-001`; PR linked in GitHub. Lane: PROTECTED (command/event write
 behavior, data integrity). Fresh starting master: `a0aae6865` (PR #220 merge). Housekeeping docs PR
-#222 is open and does not overlap; only prototype #204 is otherwise open.
+#222 merged afterwards and was merged into this branch (checkpoint-only conflict); only prototype
+#204 is otherwise open.
 
 Implemented: `startWorkout`, `logSet`, `skipSet`, `completeWorkout` and `abandonWorkout` (so also
 `completeRecoverySession`) write their row and event in one Dexie read-write transaction over
@@ -29,6 +30,12 @@ COMPLETE hold, start/stop, diagnostics 0, no overflow ([evidence](../screenshots
 Limits: rolled-back writes can leave seq gaps (ordering only, as with day rollover). Non-workout
 commands that write twice are out of scope. Next: green required exact-head CI, independent
 exact-head review, then Gavin's separate merge decision. No merge/deploy.
+
+Carried forward, unapproved: review notes N1–N4 from PR #220 (count-start churn on re-entry,
+destination-guide descriptions, Search Capture result skipping discard confirmation, stale Capture
+message); operator stage 6 consolidation (waits for field evidence); VCC-001 stays paused; F1 field
+stop runs to about Oct 25. A reviewer once saw a non-reproducing local `MealRoundTrip.test.tsx:80`
+scroll-poll failure under combined load; watch for it in CI.
 
 ## Historical objective — Guided MORE + Low-Energy TODAY (issue #219, merged PR #220)
 

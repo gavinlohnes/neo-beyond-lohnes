@@ -6,13 +6,14 @@ approval, build it, open a PR, and report in plain language. New work follows
 [`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
 feature history, and product rulings below are preserved.
 
-## Active priority — BODY Daily Health Record
+## Active priority
 
-Gavin approved one cohesive Protected BODY experience transformation: daily orientation, fast
-canonical meal/water recording, inspectable entries and existing progress without a weigh-in gate.
-The authorized presentation amendments are recorded in UX_DECISIONS; engineering/data boundaries
-and four tabs remain. One-off meals and unrelated functionality are deferred. VCC-001 stays paused;
-this does not activate any later intelligence rules. See CURRENT_CHECKPOINT for the active brief.
+In progress: WORKOUT-ATOMICITY-001 ([issue #221](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/221),
+approved 2026-10-13 with option A), saving each workout row and its event together. Recently
+merged: BODY Daily Health Record (#212), the operator experience stages 2–5 for shared shell,
+TODAY, TRAIN and MORE (#214–#217), BODY Insights & Progress (#218) and Guided MORE + Low-Energy
+TODAY (#220). Operator stage 6 (consolidation) waits for field evidence; VCC-001 stays paused.
+See CURRENT_CHECKPOINT for the latest handoff.
 
 ## Goal
 
