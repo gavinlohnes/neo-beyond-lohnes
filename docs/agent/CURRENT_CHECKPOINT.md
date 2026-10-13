@@ -3,7 +3,8 @@
 ## Current objective — BODY Insights & Progress Intelligence
 
 Gavin approved this bounded objective on 2026-10-13. Sole Builder: Codex; branch
-`codex/body-insights-progress`; PR pending. Risk: PROTECTED — meaningful BODY interpretation/
+`codex/body-insights-progress`; [PR #218](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/218).
+Risk: PROTECTED — meaningful BODY interpretation/
 presentation and the explicitly approved narrow chart exception recorded in the UX register.
 Fresh starting master: `ea0c26f26d05991811676378174c21b3139805fc`, verified PR #217 merge.
 Initial worktree was clean; only isolated prototype #204 is open, untouched and unintegrated.
@@ -43,8 +44,8 @@ return focus and manual water/undo pass. [Mobile evidence](../screenshots/body-i
 records synthetic fixtures and limitations. Final full browser passes 73 files / 744 tests. A final
 source-date annotation distinguishes existing all-history weight facts/projection from range means;
 all 70 final focused cases pass again. Thirty-four local documentation links/anchors pass.
-Required exact-head CI is recorded in the PR. Committed baseline
-risk and independent review belong in the focused PR. No merge/deploy.
+Required exact-head CI is recorded in the PR. Committed baseline risk reports PROTECTED;
+independent review is required before Gavin's separate merge decision. No merge/deploy.
 
 ## Historical objective — MORE-OPERATOR-001 control center (merged PR #217)
 
