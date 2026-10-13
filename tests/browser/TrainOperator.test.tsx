@@ -200,24 +200,33 @@ describe("TRAIN-OPERATOR-001", () => {
     expect(await getPerformedSets(session!.id)).toHaveLength(1);
   });
 
-  it("reconciles a real partial command failure without duplicating the performed row or claiming it was absent", async () => {
+  it("reconciles an unconfirmed command failure without replaying it; the atomic rollback leaves the set unrecorded", async () => {
     const { session } = await ready(true);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" }).fill("100");
     await screen.getByRole("spinbutton", { name: "Set 1 repetitions" }).fill("10");
-    // Existing command has separate row/event writes. Fail the event after
-    // the real row add: UI must reconcile, not blindly replay that command.
+    // WORKOUT-ATOMICITY-001 (issue #221): the row and event now share one
+    // transaction, so failing the event after the real row add rolls the row
+    // back too. The UI still cannot know that from the error alone: it must
+    // reconcile, not blindly replay that command.
     vi.mocked(logEvent).mockRejectedValueOnce(new Error("Event write unavailable"));
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByText(/Could not confirm set recording/)).toBeVisible();
-    expect(await getPerformedSets(session!.id)).toHaveLength(1);
+    expect(await getPerformedSets(session!.id)).toHaveLength(0);
     await screen.getByRole("button", { name: "RETRY WORKOUT READ" }).click();
-    await expect.element(screen.getByText("#1 — 100 lb x 10", { exact: true })).toBeVisible();
-    await expect.element(screen.getByRole("spinbutton", { name: "Set 2 repetitions" })).toBeVisible();
-    expect(await getPerformedSets(session!.id)).toHaveLength(1);
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 repetitions" })).toBeVisible();
+    expect(screen.getByText("#1 — 100 lb x 10", { exact: true }).elements()).toHaveLength(0);
     expect(vi.mocked(logSet)).toHaveBeenCalledTimes(1);
+    expect(await getPerformedSets(session!.id)).toHaveLength(0);
     expect((await db.events.toArray()).filter((event) => event.type === "SET_LOGGED")).toHaveLength(0);
     expect(document.querySelectorAll(".set-earned")).toHaveLength(0);
+
+    await screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" }).fill("100");
+    await screen.getByRole("spinbutton", { name: "Set 1 repetitions" }).fill("10");
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByText("#1 — 100 lb x 10", { exact: true })).toBeVisible();
+    expect(await getPerformedSets(session!.id)).toHaveLength(1);
+    expect((await db.events.toArray()).filter((event) => event.type === "SET_LOGGED")).toHaveLength(1);
   });
 
   it("post-commit read failure truthfully reports success and retries reads without duplicating the set", async () => {

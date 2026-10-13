@@ -1,6 +1,36 @@
 # Current checkpoint
 
-## Current objective — Guided MORE + Low-Energy TODAY (issue #219)
+## Current objective — WORKOUT-ATOMICITY-001 (issue #221)
+
+Gavin approved [issue #221](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/221) on
+2026-10-13 ("Approve #221 with option A"). Sole Builder: Claude Code; branch
+`claude/workout-atomicity-001`; PR linked in GitHub. Lane: PROTECTED (command/event write
+behavior, data integrity). Fresh starting master: `a0aae6865` (PR #220 merge). Housekeeping docs PR
+#222 is open and does not overlap; only prototype #204 is otherwise open.
+
+Implemented: `startWorkout`, `logSet`, `skipSet`, `completeWorkout` and `abandonWorkout` (so also
+`completeRecoverySession`) write their row and event in one Dexie read-write transaction over
+workoutSessions, performedSets, events, checkIns and recommendations (`nextSeq`'s cold-start
+read). Signatures, validation, idempotency/in-flight and RED-override guards, event types and
+payloads are unchanged. Option A: read-only `getWorkoutRecordMismatches()` compares session/set
+rows with their events both ways; MORE → Diagnostic detail shows the count and plain messages.
+It writes and repairs nothing.
+
+Evidence: eight new Node cases (failure injection per command, row failure, undo pairing, every
+split kind, read-only, empty DB and protected fixture B report zero). The four rollback cases fail
+without the transaction. Five new real-Chromium cases cover rollback in real IndexedDB, readout
+0, split listing at 320/360/412 with axe and no writes. TRAIN-OPERATOR-001's partial-failure test
+asserted the old half-saved row; it now asserts the rollback, unchanged reconciliation (no replay,
+honest re-read) and a single row/event after a manual second LOG. Full local suite: 221 files,
+2,321 passed, one existing skip. TypeScript, architecture (207 files), build and whitespace pass.
+Production PWA at 320/360/412 px: start, log, skip, undo, offline cold reload, offline log,
+COMPLETE hold, start/stop, diagnostics 0, no overflow ([evidence](../screenshots/workout-atomicity-001/README.md)).
+
+Limits: rolled-back writes can leave seq gaps (ordering only, as with day rollover). Non-workout
+commands that write twice are out of scope. Next: green required exact-head CI, independent
+exact-head review, then Gavin's separate merge decision. No merge/deploy.
+
+## Historical objective — Guided MORE + Low-Energy TODAY (issue #219, merged PR #220)
 
 PR #220 review correction, 2026-10-13: an independent Claude Code review of
 `72b735082ceb39fbae1aec39743a0111f1c6f783` issued BLOCK on B1 only. The retained (hidden-mounted)
