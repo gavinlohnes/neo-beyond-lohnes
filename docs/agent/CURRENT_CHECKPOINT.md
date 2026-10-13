@@ -1,6 +1,26 @@
 # Current checkpoint
 
-## Current objective — WORKOUT-ATOMICITY-001 (issue #221)
+## Current state — no objective in flight (2026-10-13)
+
+PR #223 (WORKOUT-ATOMICITY-001) merged at `109f652e` with Gavin's approval. An independent Claude
+Code review gave PASS on `acbea5c68f973f28a9546e9fc8ef33cf17933e44`. The merged head
+`5322bbf74f9137d88e6b219ef512e3b35043fe33` only added the master (PR #222) merge, a docs-only
+change; required CI was green on it. Issue #221 is closed. No deploy. Only isolated prototype #204
+remains open. Next action: on "let's work", propose the next owner-prioritized objective; none is
+approved.
+
+Nonblocking review notes from PR #223, unapproved: no regression test covers `nextSeq`'s
+cold-start read inside the workout transaction (dropping a table from its list would stay green);
+`workoutIntegrityQueries.ts` reads end/set event payloads without a null guard; its mismatch
+messages print UTC dates and raw exercise ids.
+
+Carried forward, unapproved: review notes N1–N4 from PR #220 (count-start churn on re-entry,
+destination-guide descriptions, Search Capture result skipping discard confirmation, stale Capture
+message); operator stage 6 consolidation (waits for field evidence); VCC-001 stays paused; F1 field
+stop runs to about Oct 25. A reviewer once saw a non-reproducing local `MealRoundTrip.test.tsx:80`
+scroll-poll failure under combined load; watch for it in CI.
+
+## Historical objective — WORKOUT-ATOMICITY-001 (issue #221, merged PR #223)
 
 Gavin approved [issue #221](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/221) on
 2026-10-13 ("Approve #221 with option A"). Sole Builder: Claude Code; branch
@@ -28,14 +48,7 @@ Production PWA at 320/360/412 px: start, log, skip, undo, offline cold reload, o
 COMPLETE hold, start/stop, diagnostics 0, no overflow ([evidence](../screenshots/workout-atomicity-001/README.md)).
 
 Limits: rolled-back writes can leave seq gaps (ordering only, as with day rollover). Non-workout
-commands that write twice are out of scope. Next: green required exact-head CI, independent
-exact-head review, then Gavin's separate merge decision. No merge/deploy.
-
-Carried forward, unapproved: review notes N1–N4 from PR #220 (count-start churn on re-entry,
-destination-guide descriptions, Search Capture result skipping discard confirmation, stale Capture
-message); operator stage 6 consolidation (waits for field evidence); VCC-001 stays paused; F1 field
-stop runs to about Oct 25. A reviewer once saw a non-reproducing local `MealRoundTrip.test.tsx:80`
-scroll-poll failure under combined load; watch for it in CI.
+commands that write twice are out of scope. Merged; see the current state above.
 
 ## Historical objective — Guided MORE + Low-Energy TODAY (issue #219, merged PR #220)
 

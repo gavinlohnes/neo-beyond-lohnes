@@ -8,12 +8,11 @@ feature history, and product rulings below are preserved.
 
 ## Active priority
 
-In progress: WORKOUT-ATOMICITY-001 ([issue #221](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/221),
-approved 2026-10-13 with option A), saving each workout row and its event together. Recently
-merged: BODY Daily Health Record (#212), the operator experience stages 2–5 for shared shell,
-TODAY, TRAIN and MORE (#214–#217), BODY Insights & Progress (#218) and Guided MORE + Low-Energy
-TODAY (#220). Operator stage 6 (consolidation) waits for field evidence; VCC-001 stays paused.
-See CURRENT_CHECKPOINT for the latest handoff.
+No objective is in flight. Recently merged: BODY Daily Health Record (#212), the operator
+experience stages 2–5 for shared shell, TODAY, TRAIN and MORE (#214–#217), BODY Insights &
+Progress (#218), Guided MORE + Low-Energy TODAY (#220) and WORKOUT-ATOMICITY-001 (#223, issue #221),
+which saves each workout row and its event together. Operator stage 6 (consolidation) waits for
+field evidence; VCC-001 stays paused. See CURRENT_CHECKPOINT for the latest handoff.
 
 ## Goal
 
