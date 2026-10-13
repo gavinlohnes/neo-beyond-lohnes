@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DomainEvent } from "../../../domain/common/types";
 import type { DecisionJournalEntry } from "../../../domain/journal/types";
 import { getDecisionJournalEntries, getDecisionJournalHistory } from "../../../application/journalQueries";
@@ -69,13 +69,18 @@ function JournalItemRow({
   );
 }
 
-export function JournalScreen() {
+export function JournalScreen({ active = true, onOpenCapture, onDraftChange }: { active?: boolean; onOpenCapture?: () => void; onDraftChange?: (hasDraft: boolean) => void } = {}) {
   const [view, setView] = useState<View>({ kind: "LIST" });
   const [entries, setEntries] = useState<DecisionJournalEntry[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [guided, setGuided] = useState(false);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const readSequence = useRef(0);
+  const [readState, setReadState] = useState<"loading" | "ready" | "error">("loading");
+  const [readError, setReadError] = useState("");
 
   const [newTitle, setNewTitle] = useState("");
   const [newContext, setNewContext] = useState("");
@@ -85,12 +90,38 @@ export function JournalScreen() {
   const [newExpectation, setNewExpectation] = useState("");
 
   useEffect(() => {
-    void refreshList();
-  }, []);
+    onDraftChange?.([newTitle, newContext, newOptions, newDecision, newReasoning, newExpectation].some((value) => value.length > 0));
+  }, [onDraftChange, newTitle, newContext, newOptions, newDecision, newReasoning, newExpectation]);
+
+  // Stays mounted while hidden for draft retention; each entry starts at the list like a fresh mount.
+  useEffect(() => {
+    if (active) setView({ kind: "LIST" });
+  }, [active]);
+
+  useEffect(() => {
+    if (active) void refreshList();
+    return () => { ++readSequence.current; };
+  }, [active]);
 
   async function refreshList() {
-    setEntries(await getDecisionJournalEntries());
+    const sequence = ++readSequence.current;
+    setReadState("loading");
+    setReadError("");
+    try {
+      const next = await getDecisionJournalEntries();
+      if (sequence !== readSequence.current) return;
+      setEntries(next);
+      setReadState("ready");
+    } catch (cause) {
+      if (sequence !== readSequence.current) return;
+      setReadState("error");
+      setReadError(describeError(cause, "Could not read decisions."));
+    }
   }
+
+  useEffect(() => {
+    if (guided && createOpen && active && view.kind === "LIST") titleRef.current?.focus();
+  }, [guided, createOpen, active, view.kind]);
 
   async function withBusy(fn: () => Promise<void>) {
     if (busy) return;
@@ -150,6 +181,15 @@ export function JournalScreen() {
         </p>
       </header>
 
+      <details className="writing-start">
+        <summary>Need a starting point?</summary>
+        <p>A real choice goes in the Journal. A memory or unfinished thought can stay a plain note in Capture.</p>
+        <div className="writing-start__choices">
+          <button type="button" className="btn-secondary" disabled={busy} onClick={() => { setGuided(true); setCreateOpen(true); }}>GUIDE A DECISION</button>
+          {onOpenCapture && <button type="button" className="btn-secondary" disabled={busy} onClick={onOpenCapture}>WRITE A FREE NOTE</button>}
+        </div>
+      </details>
+
       <section aria-labelledby="journal-heading">
         <h2 id="journal-heading" className="section-label">Decisions</h2>
         <div className="intent-filter" role="group" aria-label="Decision visibility">
@@ -160,16 +200,21 @@ export function JournalScreen() {
             ALL / REVIEWED
           </button>
         </div>
-        {visible.length === 0 && <p className="empty-state">{showAll ? "No decisions recorded yet." : "Nothing awaiting review."}</p>}
-        {visible.map((entry) => (
+        {readState === "loading" && <p role="status">Reading decisions…</p>}
+        {readState === "error" && <div><p role="alert">{readError} The list is unavailable, not empty.</p><button type="button" className="btn-secondary" onClick={() => void refreshList()}>RETRY DECISIONS</button></div>}
+        {readState === "ready" && visible.length === 0 && <p className="empty-state">{showAll ? "No decisions recorded yet." : "Nothing awaiting review."}</p>}
+        {readState === "ready" && visible.map((entry) => (
           <JournalItemRow key={entry.id} entry={entry} onOpen={() => setView({ kind: "DETAIL", id: entry.id })} />
         ))}
         <div className="intent-create">
           <FieldDisclosure summary="RECORD A DECISION" open={createOpen} onToggle={setCreateOpen}>
+            <button type="button" className="btn-secondary" aria-pressed={guided} disabled={busy} onClick={() => setGuided((value) => !value)}>{guided ? "WRITE WITHOUT GUIDANCE" : "SHOW WRITING PROMPTS"}</button>
+            {guided && <div className="writing-start"><p>One choice is enough. Your words stay editable; prompts do not fill or save anything.</p><ol><li>Name the choice in the title.</li><li>Describe what you decided. Context, other options and reasoning are optional.</li><li>If useful, write what you expect. Return later for the actual outcome; no outcome is assumed now.</li></ol></div>}
             <p className="card-body" style={{ marginBottom: 12 }}>
               Any decision worth thinking through — not only BEYOND's own recommendations.
             </p>
             <input
+              ref={titleRef}
               type="text"
               className="input"
               style={{ marginBottom: 8 }}

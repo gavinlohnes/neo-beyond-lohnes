@@ -110,6 +110,7 @@ export function CaptureToolsCard({
   openCaptureItems,
   captureInAttention,
   captureText,
+  feedback,
   setCaptureText,
   busy,
   onCapture,
@@ -129,6 +130,7 @@ export function CaptureToolsCard({
   openCaptureItems: CaptureItem[];
   captureInAttention: boolean;
   captureText: string;
+  feedback?: { kind: "SUCCESS" | "ERROR"; message: string } | null;
   setCaptureText: (text: string) => void;
   busy: boolean;
   onCapture: () => void;
@@ -158,6 +160,7 @@ export function CaptureToolsCard({
           className="input"
           style={{ flex: 1 }}
           placeholder="Capture a thought..."
+          aria-label="Capture a thought"
           value={captureText}
           disabled={busy}
           onChange={(e) => setCaptureText(e.target.value)}
@@ -174,6 +177,7 @@ export function CaptureToolsCard({
           CAPTURE
         </button>
       </div>
+      {feedback && <p className="meta" role={feedback.kind === "ERROR" ? "alert" : "status"}>{feedback.message}</p>}
       {showListHere && (
         <>
           {openCaptureItems.map((item) => (

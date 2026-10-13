@@ -1,6 +1,90 @@
 # Current checkpoint
 
-## Current objective — BODY Insights & Progress Intelligence
+## Current objective — Guided MORE + Low-Energy TODAY (issue #219)
+
+PR #220 review correction, 2026-10-13: an independent Claude Code review of
+`72b735082ceb39fbae1aec39743a0111f1c6f783` issued BLOCK on B1 only. The retained (hidden-mounted)
+Journal kept its last opened entry, so re-entry from the MORE menu or a Search result showed a stale
+detail instead of the list. Builder: Claude Code (taking over from Codex). Fix: Journal resets to
+its list on each activation; creation drafts are separate state and stay retained. A new browser
+regression fails on the reviewed head and passes with the fix. Full local Node+browser suite
+(219 files, 2,308 passed, one existing skip), TypeScript, architecture (206 files), build and
+whitespace pass. Nonblocking N1–N4 are left unchanged to keep this correction bounded. Prior-head
+CI/review do not apply; corrected-head CI and renewed independent exact-head review belong in PR #220.
+
+Owner authorization: [issue #219](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/219)
+and Gavin's direct implementation assignment. Sole Builder: Codex; branch
+`codex/guided-more-low-energy`; [PR #220](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/220).
+Lane: PROTECTED — bounded MORE/TODAY presentation
+and navigation composition, not new Engine or Minimum Day behavior. Fresh starting master:
+`4b6cf819bfc494f2283270b277a504f5197e22e2`, verified merge of BODY PR #218 at corrected
+head `830dcb143815401ee6e7ff3a047cfa625868248d`. Clean worktree; only prototype #204 open,
+untouched and unintegrated. The previous BODY checkpoint below is historical, not active work.
+
+Scope: hybrid MORE index with exactly two optional record-grounded destination suggestions,
+stable reflection/direction slots and generic fallback; optional destination guide and guided
+existing Journal/Mission/Obligation starts; retain free notes in Capture and in-memory writing
+drafts across MORE inspection/return. TODAY adds user-chosen session-local Small Steps, direct
+access to existing Minimum Day/Capture, focused tool operation and explicit all-tools/return.
+Preserve status, work context, active operations, one Engine recommendation/WHY, all existing
+routes, manual entry, decisions/confirmation, correction/undo, data and offline reliability.
+
+BUILD OWNED the small read-only canonical-query composition and native React focus/disclosure;
+reuse operator components/current forms. No dependency. The locked omission of fixed summaries
+on named index rows remains; readable explanations live in a separate optional destination guide.
+No locked UX or doctrine revision is assumed. Plain memories stay Capture, not invented journal
+records; changing decision-required Journal semantics would need a separate owner ruling.
+
+Excluded: Engine/priority/capacity/Minimum Day rules, commands/events, domain/schema, persistence/
+backup formats, primary tabs, AI/diagnosis/inference, new dependencies, notifications/Pulse,
+streaks or forced check-ins, silent plans, CI/protections, prototype, merge/deploy.
+Acceptance: exactly two truthful/stable starts; archived-Mission eligibility; loading/error/retry;
+guides never write without explicit existing save; free/manual paths and draft/focus/return;
+normal/unknown/GREEN/YELLOW/RED/active operations and all essentials preserved; real offline PWA,
+320/360/412 px screenshots, accessibility/reduced motion, regression/architecture/type/build,
+whitespace/links/risk and green required CI. Independent exact-head review and Gavin's separate
+merge decision remain required.
+
+Implemented: canonical count-based reflection/direction starts, exactly two, with explicit generic
+pending/failure fallback and read-only retry. No date rotation, urgency ranking or inference. The
+full MORE index/recovery/settings remain. Optional destination descriptions and writing prompts
+reuse existing forms; free memories remain Capture. Creation drafts stay mounted across MORE
+inspection/return/search navigation; the new Capture exit explicitly asks before discarding them.
+List reads distinguish unavailable from empty and retain manual starts. Small Steps is chosen in
+the existing TOOLS toolbar, leaving closed-TOOLS TODAY's previous layout intact. Active Small Steps
+offers Minimum Day/Capture, one-tool inspection, all-tools escape and predictable focus/return.
+Essentials, active operations, phase/Attention policies, Engine guidance/WHY/decisions, Minimum Day
+rules/enable and canonical commands are unchanged. Capture failure retains input; a known committed
+save followed by failed refresh is disclosed without inviting a duplicate write.
+
+Verification: full Node, 145 files / 1,545 passed / one existing skip. Seventeen new browser cases
+cover guides/drafts/confirmation, write/read failures, explicit saves, GREEN/YELLOW/RED and unknown/
+active states, unchanged recommendation/Minimum Day authority, hydration/undo, meal round-trip,
+keyboard/focus, axe/reduced motion and mobile widths. Final affected TODAY/new/meal suites pass
+120 tests. Earlier complete browser run passed 760 and exposed two 320px toolbar overflow cases;
+the toolbar label/wrap correction passes both unchanged assertions in that final 120-case rerun.
+An earlier meal-return regression caused by the inactive entry layout was corrected by moving
+opt-in to existing TOOLS, not weakening the untouched meal suite. No final full local browser rerun
+is claimed; required native CI runs the complete final-head suite. Architecture (206 files),
+TypeScript/build, whitespace and ten local documentation links/anchors pass.
+[Thirty actual mobile captures](../screenshots/guided-more-small-steps/README.md) document canonical
+native restore, guided/free drafts/return, 320/360/412 px, real BODY water/undo, offline cold reload,
+and explicit task/Capture saves; no horizontal overflow. Exact-head risk/CI/review evidence belongs
+in the active PR. Committed baseline risk detects no automatic Protected path trigger; semantic
+judgment keeps this owner-approved objective PROTECTED, with independent review required.
+Engine/domain/persistence/commands/backup formats/dependencies/App navigation/CI/
+protections/protected fixtures/prototype are untouched.
+
+Limits: Chromium automation, not physical-device/iOS/native assistive-technology certification;
+no arbitrary-large-history or cross-tab guarantee. Draft retention is in-memory MORE inspection,
+not reload or ordinary primary-tab persistence; new guided Capture navigation confirms discard.
+Small Steps is session-local, not a stored preference/plan. Existing bundle warning and command
+integrity opportunities are unchanged. No additional owner ruling needed for implemented scope;
+general-memory Journal semantics, new persistence or Engine/Minimum Day rules remain separate
+owner decisions. Next: green required exact-head CI, independent review, then Gavin's separate
+merge decision. No merge/deployment.
+
+## Historical objective — BODY Insights & Progress Intelligence (merged PR #218)
 
 Owner-requested PR #218 review correction, 2026-10-13: Claude Code independently reviewed
 `f8274f07512895431c3d901175d6d2cfc865eb12` and issued BLOCK on B1 only. Chart extrema now

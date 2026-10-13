@@ -1,0 +1,14 @@
+.small-steps { padding-block: 16px; margin-block: 16px; border-block: 1px solid var(--border-subtle); }
+.small-steps__header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.small-steps h2 { font-family: var(--font-display); font-size: 26px; margin: 0; }
+.small-steps .meta, .small-steps__return .meta { font-size: 16px; color: var(--text-3-strong); }
+.small-steps__header button { width: auto; min-height: 48px; font-size: 16px; }
+.small-steps__choices { display: grid; gap: 8px; }
+.small-steps__choices button { text-align: left; padding: 14px; min-height: 48px; background: var(--surface-1); font-size: 16px; }
+.small-steps__choices strong, .small-steps__choices span { display: block; }
+.small-steps__choices span { margin-top: 6px; font-weight: 400; color: var(--text-2); }
+.small-steps__return { border-bottom: 1px solid var(--border-subtle); padding-block: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+.small-steps__return p { flex-basis: 100%; margin: 0; }
+.small-steps__return button { width: auto; min-height: 48px; font-size: 16px; }
+.today-field [data-tools-item][hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .small-steps *, .small-steps__return * { animation: none !important; transition: none !important; } }
