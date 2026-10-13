@@ -38,6 +38,7 @@ describe("BODY Insights & Progress", () => {
     await expect.element(screen.getByText("No weight recorded in this range.", { exact: false })).toBeVisible();
     await screen.getByText("Inspect last recorded weight window", { exact: true }).click();
     await expect.element(screen.getByRole("img", { name: /Weight over the last 60 days/ })).toBeVisible();
+    expect(screen.getByRole("img", { name: /Weight over the last 60 days/ }).element().getAttribute("aria-label")).toContain(new Date(weights.at(-1)!.recordedAt).toLocaleDateString());
     await expect.element(screen.getByText("Last recorded 60 days, ending", { exact: false })).toBeVisible();
     expect(screen.getByText(/^Down 5 lb since/).elements()).toHaveLength(1);
     await screen.getByRole("button", { name: "SHOW ACCOMPLISHMENT TIMELINE" }).click();
