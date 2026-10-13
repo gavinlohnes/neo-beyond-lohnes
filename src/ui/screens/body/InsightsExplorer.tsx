@@ -87,7 +87,7 @@ function ObservationChart({ points, metric, readAt, days }: { points: readonly I
   const y = (value: number) => 140 - ((value - lo) / span) * 116;
   const path = points.map((point, i) => `${i === 0 || (metric !== "weight" && Date.parse(point.at) - Date.parse(points[i - 1]!.at) > 1.5 * INSIGHT_DAY_MS) ? "M" : "L"}${x(point.at)},${y(point.value)}`).join(" ");
   return <div className="insights-chart">
-    <div className="insights-scale"><span>{insightValue(hi, metric)}</span><span>{insightValue(lo, metric)}</span></div>
+    <div className="insights-scale"><span>High {insightValue(hi, metric)}</span><span>Low {insightValue(lo, metric)}</span></div>
     <svg viewBox="0 0 320 160" role="img" aria-label={`${METRICS[metric].label}: ${points.length} recorded observations; values and dates can be inspected below`} onPointerDown={(event) => {
       const bounds = event.currentTarget.getBoundingClientRect();
       const target = start + (((event.clientX - bounds.left) / bounds.width * 320 - 12) / 296) * (end - start);

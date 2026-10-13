@@ -2,6 +2,17 @@
 
 ## Current objective — BODY Insights & Progress Intelligence
 
+Owner-requested PR #218 review correction, 2026-10-13: Claude Code independently reviewed
+`f8274f07512895431c3d901175d6d2cfc865eb12` and issued BLOCK on B1 only. Chart extrema now
+explicitly say High and Low, not apparent chronological endpoints. Focused assertions verify
+both labels at 320/360/412 px. No calculations, chart interactions, accessibility, history or
+other functionality changed. All 61 focused BODY/cleanup browser cases, architecture (203 files),
+TypeScript, production build and whitespace pass. Nonblocking read coupling, ribbon disclosure,
+selection retention, workout units and naming observations were reviewed and left unchanged to
+avoid expanding this correction. Existing screenshots predate the label fix. Corrected-head CI
+and renewed independent exact-head review belong in PR #218; prior-head approval does not apply.
+No merge/deploy; Gavin retains separate final merge authority.
+
 Gavin approved this bounded objective on 2026-10-13. Sole Builder: Codex; branch
 `codex/body-insights-progress`; [PR #218](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/218).
 Risk: PROTECTED — meaningful BODY interpretation/

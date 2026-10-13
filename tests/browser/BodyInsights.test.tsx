@@ -53,6 +53,8 @@ describe("BODY Insights & Progress", () => {
     const screen = await render(subject(weights));
     await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE" })).toBeVisible();
     await expect.element(screen.getByText("Existing goal: 180 lb.", { exact: false })).toBeVisible();
+    await expect.element(screen.getByText("High 190.0 lb", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Low 185.0 lb", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("All-history milestones and the existing projection use weigh-ins through", { exact: false })).toBeVisible();
     expect(screen.getByRole("img", { name: /Weight:/ }).element().querySelector("path")?.getAttribute("d")).toContain("L");
     const slider = screen.getByRole("slider", { name: "Inspect recorded observation" });
