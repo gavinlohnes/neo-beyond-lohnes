@@ -39,12 +39,16 @@ for (const width of [320,360,412]) {
  for(const [field,value] of [['calories','600'],['protein (g)','45'],['carbs (g)','60'],['fat (g)','15']]) await page.getByRole('spinbutton',{name:`New meal ${field}`,exact:true}).fill(value);
  await page.getByRole('button',{name:'MORE',exact:true}).click();
  await page.getByRole('button',{name:'BODY',exact:true}).click();
+ // Review B1: primary navigation shows the Daily Record without a stale return; the draft stays.
+ await page.getByRole('heading',{name:'BODY // DAILY RECORD',exact:true}).waitFor();
+ if(await page.getByRole('button',{name:'RETURN TO TODAY',exact:true}).count())throw Error('Stale return after primary navigation');
+ await page.getByRole('button',{name:'OPEN MEALS',exact:true}).click();
  if(await page.getByRole('textbox',{name:'New meal name',exact:true}).inputValue()!=='Synthetic lunch')throw Error('Meal draft lost');
  await page.getByRole('button',{name:'SAVE MEAL',exact:true}).click();
  await page.getByRole('button',{name:'LOG',exact:true}).click();
  await page.getByText('Synthetic lunch logged · 600 kcal · 45g',{exact:true}).waitFor();
  if(width===360)await snapshot(page, `${root}/meal-360.png`);
- await page.getByRole('button',{name:'RETURN TO TODAY',exact:true}).click();
+ await page.getByRole('button',{name:'TODAY',exact:true}).click();
  await page.getByRole('button',{name:'Open quick Capture',exact:true}).click();
  await page.getByRole('textbox',{name:'Capture a thought',exact:true}).fill('A synthetic thought to keep');
  await page.getByRole('button',{name:'BODY',exact:true}).click();
