@@ -121,7 +121,7 @@ describe("Production Command Console", () => {
       expect(situation!.compareDocumentPosition(guidance!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(guidance!.compareDocumentPosition(operations!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       await expect.element(screen.getByText("SYSTEM STATUS", { exact: true })).toBeVisible();
-      await expect.element(screen.getByText("PRIMARY RECOMMENDATION", { exact: true })).toBeVisible();
+      await expect.element(screen.getByText("GUIDANCE", { exact: true })).toBeVisible();
       await expect.element(screen.getByRole("heading", { name: "Immediate operations", exact: true })).toBeVisible();
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
       for (const animation of document.getAnimations()) animation.finish();
@@ -165,21 +165,19 @@ describe("Production Command Console", () => {
     write.mockRestore();
   });
 
-  it("keeps an unfinished meal when SYSTEM navigation's discard confirmation is canceled", async () => {
+  it("keeps an unfinished meal through SYSTEM navigation without a discard dialog", async () => {
     await startDay();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished dinner");
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const confirm = vi.spyOn(window, "confirm");
     await screen.getByRole("button", { name: "Open SYSTEM" }).click();
     await screen.getByRole("dialog").getByRole("button", { name: /^MORE / }).click();
-    expect(confirm).toHaveBeenCalledOnce();
-    await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
-    await expect.element(screen.getByRole("dialog", { name: "SYSTEM", exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "Close SYSTEM" }).click();
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
+    await screen.getByRole("button", { name: "BODY", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
+    expect(confirm).not.toHaveBeenCalled();
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
   });
 

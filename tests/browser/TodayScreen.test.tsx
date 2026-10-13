@@ -165,7 +165,7 @@ async function submitCapture(screen: Awaited<ReturnType<typeof render>>, text: s
   // Shift Clock (Drop 2): Capture lives behind TOOLS.
   if (screen.getByRole("button", { name: "Close TOOLS" }).elements().length === 0) await openTodayTools(screen);
   await screen.getByPlaceholder("Capture a thought...").fill(text);
-  await screen.getByRole("button", { name: "CAPTURE" }).click();
+  await screen.getByRole("button", { name: "CAPTURE", exact: true }).click();
 }
 
 /**
@@ -1641,7 +1641,7 @@ describe("TodayScreen (real browser) — TODAY-009 busy-guard race (residual TOD
     // dispatch — inside the same task, which is exactly the gap where a
     // stale `busy === false` closure could let a handler run twice
     // before this Drop's busyRef guard closed it.
-    const button = screen.getByRole("button", { name: "CAPTURE" }).element() as HTMLElement;
+    const button = screen.getByRole("button", { name: "CAPTURE", exact: true }).element() as HTMLElement;
     button.click();
     button.click();
 

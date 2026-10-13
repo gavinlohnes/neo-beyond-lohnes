@@ -38,6 +38,7 @@ import {
 import { formatReminderHour } from "./moreCopy";
 import { describeError } from "../../errorMessage";
 import { GuidedOverview } from "./GuidedOverview";
+import { PlanTodayScreen } from "./PlanTodayScreen";
 
 const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 
@@ -49,15 +50,21 @@ const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 // it can't drift again.
 const DATA_SCHEMA = db.verno;
 
-export type MoreView = "MENU" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES";
+export type MoreView = "MENU" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES";
 
 export function MoreScreen({
   onOpenCapture,
+  active = true,
+  navigationRequest = 0,
+  recordFocus = null,
   initialView = "MENU",
   onOpenRecords,
   onOpenMeal,
 }: {
   onOpenCapture?: () => void;
+  active?: boolean;
+  navigationRequest?: number;
+  recordFocus?: IntentFocus | null;
   /** Existing subviews can be opened by SYSTEM; the top-bar icon still opens SEARCH. */
   initialView?: MoreView;
   /** FIND-001: a LIFT or PR result opens TRAIN → RECORDS at that lift's curve. */
@@ -67,11 +74,8 @@ export function MoreScreen({
 } = {}) {
   const [view, setViewState] = useState<MoreView>(initialView);
   const [visited, setVisited] = useState(() => new Set<MoreView>([initialView]));
-  const [journalDraft, setJournalDraft] = useState(false);
-  const [intentDraft, setIntentDraft] = useState(false);
   function openGuidedCapture() {
     if (!onOpenCapture) return;
-    if ((journalDraft || intentDraft) && !window.confirm("Open Capture on TODAY? This leaves MORE and clears its unsaved writing drafts. Cancel to keep writing here; BACK TO MORE keeps drafts while you inspect other MORE destinations.")) return;
     onOpenCapture();
   }
   const menuRef = useRef<HTMLDivElement>(null);
@@ -100,14 +104,19 @@ export function MoreScreen({
       backRef.current?.focus({ preventScroll: true });
       window.scrollTo({ top: 0, behavior: "instant" });
     }
-  }, [view]);
+  }, [view, active]);
   // FIND-001: a NOTE or DAY result opens HISTORY with that day open.
+  const [journalFocus, setJournalFocus] = useState<string | undefined>(undefined);
   const [historyFocusDayId, setHistoryFocusDayId] = useState<string | null>(null);
   // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by
   // the ordinary "MISSIONS & OBLIGATIONS" menu entry point — see its onOpen below. This is what
   // lets IntentScreen open straight to a specific record from Search without a normal visit to
   // MORE's own menu ever reopening that same stale focus later.
-  const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(null);
+  const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(recordFocus);
+  useEffect(() => {
+    setIntentFocus(recordFocus);
+    setView(initialView);
+  }, [navigationRequest]);
 
   function handleSelectSearchResult(result: SearchResult) {
     // FIND-001: the new kinds open where they live.
@@ -120,6 +129,7 @@ export function MoreScreen({
       return;
     }
     if (result.domain === "JOURNAL") {
+      setJournalFocus(result.id);
       setView("JOURNAL");
       return;
     }
@@ -176,6 +186,7 @@ export function MoreScreen({
 
   useEffect(() => {
     disposedRef.current = false;
+    if (!active) return;
     void refresh().catch((error) => {
       if (disposedRef.current && isDatabaseClosedError(error)) return;
       console.error("MORE diagnostics refresh failed.", error);
@@ -183,7 +194,7 @@ export function MoreScreen({
     return () => {
       disposedRef.current = true;
     };
-  }, [view]);
+  }, [view, active]);
 
   async function refresh() {
     const sequence = ++readSequence.current;
@@ -338,13 +349,14 @@ export function MoreScreen({
     <div className="screen more-operator">
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
           <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setHistoryFocusDayId(null); setView("MENU"); }}>← BACK TO MORE</button>
+          <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
           {view === "HISTORY" && <HistoryScreen focusDayId={historyFocusDayId} />}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
           {view === "REVIEW" && <ReviewScreen />}
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} />}
           {view === "WORK_SCHEDULE" && <><OperatorHeader destination="more">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
-          <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="more">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={view === "INTENT"} navigationFocus={intentFocus} onDraftChange={setIntentDraft} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
-          <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="more">MORE // DECISION JOURNAL</OperatorHeader><JournalScreen active={view === "JOURNAL"} onDraftChange={setJournalDraft} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></>}</div>
+          <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="more">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
+          <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="more">MORE // DECISION JOURNAL</OperatorHeader><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></>}</div>
           {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="more">MORE // EXERCISE LIBRARY</OperatorHeader><ExerciseLibraryScreen /></>}
           {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="more">MORE // CUSTOM PROGRAMS</OperatorHeader><CustomTemplateScreen /></>}
         </div>
@@ -372,10 +384,17 @@ export function MoreScreen({
         }}>BACKUP & RECOVERY ↓</a>
       </div>
 
-      <GuidedOverview active={view === "MENU"} canOpenCapture={onOpenCapture !== undefined} onOpen={(destination) => {
-        if (destination === "CAPTURE") openGuidedCapture();
-        else { if (destination === "INTENT") setIntentFocus(null); setView(destination); }
-      }} />
+      <div className="more-shortcuts" aria-label="Everyday destinations">
+        <button type="button" className="btn-secondary" onClick={() => setView("PLAN")}>PLAN TODAY</button>
+        <button type="button" className="btn-secondary" onClick={openGuidedCapture} disabled={!onOpenCapture}>CAPTURE</button>
+      </div>
+      <details className="more-inspection more-help">
+        <summary>A place to start</summary>
+        <GuidedOverview active={active && view === "MENU"} canOpenCapture={onOpenCapture !== undefined} onOpen={(destination) => {
+          if (destination === "CAPTURE") openGuidedCapture();
+          else { if (destination === "INTENT") setIntentFocus(null); setView(destination); }
+        }} />
+      </details>
       <details className="more-inspection more-destination-guide">
         <summary>Find the right destination</summary>
         <p className="meta">Free notes live in TODAY → Capture. A decision belongs in the Journal; longer-term direction in Missions; a concrete commitment in Obligations.</p>
@@ -404,7 +423,7 @@ export function MoreScreen({
           use .equipment-row instead. */}
       <section className="operational-index-zone" aria-labelledby="records-heading">
       <h2 id="records-heading" className="section-label">Evidence</h2>
-      <p className="more-section-purpose">Search recorded truth, inspect the day trail, or review patterns and decisions.</p>
+
       {/* Drop 7 (owner approval 2026-10-01): the weekly check-in leads Evidence. */}
       <CollapsibleRow
         name="WEEKLY CHECK-IN"
@@ -429,7 +448,7 @@ export function MoreScreen({
         <CollapsibleRow
           name="DECISION JOURNAL"
           icon={<Icon name="decisionJournal" size={20} />}
-          onOpen={() => setView("JOURNAL")}
+          onOpen={() => { setJournalFocus(undefined); setView("JOURNAL"); }}
         />
       </section>
       <section className="operational-index-zone" aria-labelledby="operations-heading">

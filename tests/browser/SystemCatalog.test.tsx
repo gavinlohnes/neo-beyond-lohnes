@@ -33,6 +33,7 @@ async function launch(screen: Screen, label: string) {
   await screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true }).click();
 }
 const moreHeadings = {
+  PLAN: "MORE // PLAN TODAY",
   HISTORY: "MORE // HISTORY", WEEKLY: "MORE // WEEKLY CHECK-IN", REVIEW: "MORE // REVIEW",
   SEARCH: "MORE // SEARCH", JOURNAL: "MORE // DECISION JOURNAL", INTENT: "MORE // MISSIONS & OBLIGATIONS",
   WORK_SCHEDULE: "MORE // WORK SCHEDULE", EXERCISE_LIBRARY: "MORE // EXERCISE LIBRARY", CUSTOM_TEMPLATES: "MORE // CUSTOM PROGRAMS",
@@ -78,7 +79,7 @@ describe("production SYSTEM catalog", () => {
     await expect.element(screen.getByText("No matching capability. Clear the search to browse.")).toBeVisible();
     await screen.getByRole("button", { name: "CLEAR", exact: true }).click();
     await expect.element(query).toHaveValue("");
-    await expect.element(screen.getByText("18 capabilities", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("19 capabilities", { exact: true })).toBeVisible();
     await query.fill("HYDRATION");
     await expect.element(screen.getByText("1 capability", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "Close SYSTEM" }).click();
@@ -92,19 +93,19 @@ describe("production SYSTEM catalog", () => {
     await expect.element(screen.getByRole("heading", { name: "MORE // SEARCH", exact: true })).toBeVisible();
   });
 
-  it("retains meal drafts when catalog departure is canceled and reopens the same journey", async () => {
+  it("retains meal drafts through catalog departure and reopens the same input", async () => {
     const screen = await render(<App />);
     await open(screen); await launch(screen, "MEAL");
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished dinner");
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Log a meal in BODY");
     await open(screen);
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const confirm = vi.spyOn(window, "confirm");
     await launch(screen, "HISTORY");
-    expect(confirm).toHaveBeenCalledOnce();
-    await expect.element(screen.getByRole("dialog", { name: "SYSTEM", exact: true })).toBeVisible();
-    await launch(screen, "MEAL");
+    await expect.element(screen.getByRole("heading", { name: "MORE // HISTORY", exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "BODY", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
+    expect(confirm).not.toHaveBeenCalled();
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
   });
 
@@ -163,7 +164,7 @@ describe("production SYSTEM catalog", () => {
         } else if (queryText) {
           await expect.element(screen.getByText("No matching capability. Clear the search to browse.")).toBeVisible();
         } else {
-          await expect.element(screen.getByText("18 capabilities", { exact: true })).toBeVisible();
+          await expect.element(screen.getByText("19 capabilities", { exact: true })).toBeVisible();
         }
         // Real keyboard input exercises the native search-field Escape default.
         await userEvent.keyboard("{Escape}");
@@ -173,7 +174,7 @@ describe("production SYSTEM catalog", () => {
         expect(document.activeElement?.getAttribute("aria-label")).toBe("Open SYSTEM");
         await open(screen);
         await expect.element(query).toHaveValue("");
-        await expect.element(screen.getByText("18 capabilities", { exact: true })).toBeVisible();
+        await expect.element(screen.getByText("19 capabilities", { exact: true })).toBeVisible();
       });
     }
   }

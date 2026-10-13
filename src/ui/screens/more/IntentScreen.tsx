@@ -31,13 +31,13 @@ import { formatLocalDate } from "../../../engine/scheduledContext";
 import { describeError } from "../../errorMessage";
 
 /** INTENT-002: shared create/edit picker state — "" means "does not repeat". */
-interface RecurrenceFormState {
+export interface RecurrenceFormState {
   freq: "" | RecurrenceFreq;
   interval: string;
   byDay: string[];
 }
 
-const EMPTY_RECURRENCE: RecurrenceFormState = { freq: "", interval: "1", byDay: [] };
+export const EMPTY_RECURRENCE: RecurrenceFormState = { freq: "", interval: "1", byDay: [] };
 
 function recurrenceFormFor(recurrence: RecurrenceRule | undefined): RecurrenceFormState {
   if (!recurrence) return EMPTY_RECURRENCE;
@@ -47,7 +47,7 @@ function recurrenceFormFor(recurrence: RecurrenceRule | undefined): RecurrenceFo
 }
 
 /** Builds the stored RecurrenceRule from picker state, or undefined for "does not repeat". `anchor` should be the obligation's own dueAt, falling back to today when none is set. */
-function recurrenceInputFor(form: RecurrenceFormState, anchor: string): RecurrenceRule | undefined {
+export function recurrenceInputFor(form: RecurrenceFormState, anchor: string): RecurrenceRule | undefined {
   if (!form.freq) return undefined;
   const interval = Math.max(1, parseInt(form.interval, 10) || 1);
   const rrule = buildRecurrenceRule({
@@ -69,7 +69,7 @@ const WEEKDAY_OPTIONS: { code: string; label: string }[] = [
   { code: "SU", label: "Sun" },
 ];
 
-function RecurrencePicker({
+export function RecurrencePicker({
   form,
   onChange,
   idPrefix,
@@ -262,7 +262,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
   // unfinished creation text. Standalone initialFocus keeps its mount-only contract.
   useEffect(() => {
     if (active && navigationFocus !== undefined) setView(initialViewFor(navigationFocus ?? undefined));
-  }, [active, navigationFocus]);
+  }, [navigationFocus]);
 
   useEffect(() => {
     if (active) void refreshList();
@@ -349,7 +349,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
 
   if (view.kind === "MISSION_DETAIL") {
     return (
-      <MissionDetail
+      <MissionDetail key={view.missionId} active={active}
         missionId={view.missionId}
         onBack={() => {
           setView({ kind: "LIST" });
@@ -361,7 +361,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
 
   if (view.kind === "OBLIGATION_DETAIL") {
     return (
-      <ObligationDetail
+      <ObligationDetail key={view.obligationId} active={active}
         obligationId={view.obligationId}
         missions={allMissions}
         onBack={() => {
@@ -522,7 +522,7 @@ function describeObligationSummary(o: Obligation, missions: Mission[]): string {
   return parts.join(" · ");
 }
 
-function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () => void }) {
+function MissionDetail({ missionId, onBack, active }: { missionId: string; onBack: () => void; active: boolean }) {
   const [mission, setMission] = useState<Mission | null>(null);
   const [linkedObligations, setLinkedObligations] = useState<Obligation[]>([]);
   const [history, setHistory] = useState<DomainEvent[]>([]);
@@ -534,20 +534,20 @@ function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () =>
   const [archiveConfirming, setArchiveConfirming] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
+  const loadSequence = useRef(0);
   useEffect(() => {
-    void load();
-  }, [missionId]);
+    if (active) void load(editing).catch((cause) => setError(describeError(cause, "Could not read this Mission.")));
+    return () => { ++loadSequence.current; };
+  }, [missionId, active]);
 
-  async function load() {
-    const all = await getMissions();
+  async function load(keepInput = false) {
+    const sequence = ++loadSequence.current;
+    const [all, linked, trail] = await Promise.all([getMissions(), getObligationsForMission(missionId), getMissionHistory(missionId)]);
+    if (sequence !== loadSequence.current) return;
     const found = all.find((m) => m.id === missionId) ?? null;
     setMission(found);
-    if (found) {
-      setTitle(found.title);
-      setDescription(found.description ?? "");
-    }
-    setLinkedObligations(await getObligationsForMission(missionId));
-    setHistory(await getMissionHistory(missionId));
+    if (found && !keepInput) { setTitle(found.title); setDescription(found.description ?? ""); }
+    setLinkedObligations(linked); setHistory(trail);
   }
 
   async function handleSave() {
@@ -658,10 +658,12 @@ function MissionDetail({ missionId, onBack }: { missionId: string; onBack: () =>
 }
 
 function ObligationDetail({
+  active,
   obligationId,
   missions,
   onBack,
 }: {
+  active: boolean;
   obligationId: string;
   missions: Mission[];
   onBack: () => void;
@@ -679,22 +681,23 @@ function ObligationDetail({
   const [pendingResolution, setPendingResolution] = useState<"SATISFY" | "RELEASE" | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
 
+  const loadSequence = useRef(0);
   useEffect(() => {
-    void load();
-  }, [obligationId]);
+    if (active) void load(editing).catch((cause) => setError(describeError(cause, "Could not read this commitment.")));
+    return () => { ++loadSequence.current; };
+  }, [obligationId, active]);
 
-  async function load() {
-    const all = await getObligations();
+  async function load(keepInput = false) {
+    const sequence = ++loadSequence.current;
+    const [all, trail] = await Promise.all([getObligations(), getObligationHistory(obligationId)]);
+    if (sequence !== loadSequence.current) return;
     const found = all.find((o) => o.id === obligationId) ?? null;
     setObligation(found);
-    if (found) {
-      setTitle(found.title);
-      setDescription(found.description ?? "");
-      setDueAt(found.dueAt ?? "");
-      setPlannedAt(found.plannedAt ?? "");
-      setRecurrenceForm(recurrenceFormFor(found.recurrence));
+    if (found && !keepInput) {
+      setTitle(found.title); setDescription(found.description ?? ""); setDueAt(found.dueAt ?? "");
+      setPlannedAt(found.plannedAt ?? ""); setRecurrenceForm(recurrenceFormFor(found.recurrence));
     }
-    setHistory(await getObligationHistory(obligationId));
+    setHistory(trail);
   }
 
   async function handleSave() {

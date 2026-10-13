@@ -2780,3 +2780,13 @@ button:not(:disabled):not(.btn-primary):not(.btn-danger):active {
 
 .body-field .health-accomplishment { padding: 12px 0; border-bottom: 1px solid var(--border-subtle); }
 .body-field .health-accomplishment p { margin: 0 0 4px; }
+
+/* Session-local workspaces remain mounted without exposing hidden controls. */
+main [hidden] { display: none !important; }
+.skip-link { position: fixed; top: 8px; left: 8px; transform: translateY(-160%); z-index: 100; background: var(--bg); color: var(--text-1); padding: 12px; }
+.skip-link:focus { transform: none; }
+.body-water .health-actions, .body-water .health-record, .body-water .health-other-tools { display: none; }
+.water-focused-total { font-size: 24px; font-family: var(--font-display); margin: 12px 0 16px; }
+.body-water #body-hydration { padding-top: 0; }
+/* The shell owns return position. Async readings must not independently move it. */
+html { overflow-anchor: none; }

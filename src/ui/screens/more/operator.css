@@ -44,3 +44,21 @@
 @media (prefers-reduced-motion: reduce) {
   .more-operator *, .more-operator *::before, .more-operator *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* DAILY-EXPERIENCE-001: destinations lead; guidance is available on demand. */
+.more-shortcuts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-block: 16px; }
+.more-help .guided-overview { margin: 0; }
+.more-help .guided-title { display: none; }
+.more-control-center .operational-index-zone { margin-top: 16px; }
+.more-control-center .equipment-row--control { min-height: 48px; padding-block: 8px; }
+.more-control-center .more-context { padding-block: 4px; }
+.more-control-center .more-title { font-size: 30px; }
+.plan-today section { margin-block: 20px; }
+.plan-list { padding: 0; list-style: none; margin: 0; }
+.plan-task { width: 100%; min-height: 56px; text-align: left; padding: 12px 0; background: transparent; border: 0; border-bottom: 1px solid var(--border-subtle); color: var(--text-1); }
+.plan-task strong, .plan-task span { display: block; overflow-wrap: anywhere; }
+.plan-task strong { font-size: 18px; }
+.plan-task span { color: var(--text-2); font-size: 14px; margin-top: 6px; }
+.plan-composer { display: grid; gap: 10px; margin-block: 24px; }
+.plan-composer label { display: block; margin-block: 8px; }
+.plan-composer input, .plan-composer select { min-width: 0; width: 100%; }

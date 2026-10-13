@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Droplets, Utensils, Layers, ArrowUpRight } from "lucide-react";
+import { Droplets, Utensils, Layers, ArrowUpRight, NotebookPen } from "lucide-react";
 import { LineIcon } from "../../icons/LineIcon";
 import { findCapabilities, type SystemDestination } from "../../systemCatalog";
 import "./console.css";
 
 
 /** Navigation only: all logging and execution stay in existing workspaces. */
-export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenTools, onOpenDestination, busy = false, isInFlight }: {
+export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenCapture, onOpenTools, onOpenDestination, busy = false, isInFlight }: {
   onOpenWater?: (() => void) | undefined;
   onOpenMeal?: (() => void) | undefined;
+  onOpenCapture?: (() => void) | undefined;
   onOpenTools: () => void;
   onOpenDestination?: ((destination: SystemDestination) => boolean) | undefined;
   busy?: boolean;
@@ -43,6 +44,9 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenTools, onOpenDe
       <button type="button" disabled={busy || !onOpenMeal} onClick={() => { if (!isInFlight()) onOpenMeal?.(); }} aria-label="Log a meal in BODY">
         <LineIcon icon={Utensils} /><span>MEAL</span>
       </button>
+      {onOpenCapture && <button type="button" disabled={busy} onClick={() => { if (!isInFlight()) onOpenCapture(); }} aria-label="Open quick Capture">
+        <LineIcon icon={NotebookPen} /><span>CAPTURE</span>
+      </button>}
       <button type="button" ref={trigger} disabled={busy} onClick={() => { if (!isInFlight()) { setQuery(""); setOpen(true); } }} aria-label="Open SYSTEM" aria-haspopup="dialog" aria-expanded={open}>
         <LineIcon icon={Layers} /><span>SYSTEM</span>
       </button>

@@ -33,14 +33,15 @@ import { Component, type ReactNode } from "react";
  *   itself already fully solves BEYOND's actual (narrow) need.
  *
  * Deliberately minimal: no telemetry, no logging service, no automatic
- * reset-on-prop-change, no nested per-screen boundaries (this is a
- * single-purpose resilience checkpoint, not an observability project).
+ * reset of healthy children. DAILY-EXPERIENCE-001 retains one boundary per
+ * visited workspace and retries a failed workspace on explicit return.
  * `componentDidCatch` only writes to the local browser console — never
  * a network call, matching local-first/offline-first doctrine.
  */
 
 interface RootErrorBoundaryProps {
   children: ReactNode;
+  active?: boolean;
 }
 
 interface RootErrorBoundaryState {
@@ -57,6 +58,12 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
   override componentDidCatch(error: unknown, info: { componentStack?: string | null }): void {
     // Local console only — no remote telemetry, matching local-first doctrine.
     console.error("BEYOND encountered an application error:", error, info.componentStack);
+  }
+
+  override componentDidUpdate(previous: RootErrorBoundaryProps): void {
+    // Retained workspaces still get the old retry-on-return behavior. Healthy
+    // children are never reset or remounted just because the tab changes.
+    if (this.props.active && !previous.active && this.state.hasError) this.setState({ hasError: false });
   }
 
   private handleReset = (): void => {
@@ -91,8 +98,7 @@ function ErrorFallback({ onReset }: { onReset: () => void }) {
       <div className="card" style={{ borderColor: "var(--border-strong)" }}>
         <p className="card-body" style={{ marginBottom: 12 }}>
           BEYOND encountered an application error and couldn&apos;t continue showing this screen.
-          Nothing on this device has been changed or deleted — your data, backups, and offline access are exactly
-          as they were.
+          This screen error does not delete saved records or backups. Reloading clears unfinished session input.
         </p>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="btn-primary" style={{ flex: 1 }} onClick={onReset}>

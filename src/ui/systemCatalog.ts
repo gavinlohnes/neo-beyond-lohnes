@@ -17,6 +17,7 @@ type Capability = {
 };
 
 export const SYSTEM_CAPABILITIES = [
+  { label: "PLAN TODAY", description: "MORE · Your chosen tasks and recorded deadlines", aliases: ["plan", "tasks", "today plan"], group: "Training and planning", destination: { kind: "more", view: "PLAN" } },
   { label: "TODAY TOOLS", description: "Check-in, work context and daily controls", aliases: ["check in", "check-in", "capture"], group: "Workspaces", destination: { kind: "tools" } },
   { label: "TRAIN", description: "Workouts, recovery and records", aliases: ["training", "fitness", "recovery"], group: "Workspaces", destination: { kind: "workspace", tab: "TRAIN" } },
   { label: "BODY", description: "Nutrition, water, sleep and bodyweight", aliases: [], group: "Workspaces", destination: { kind: "workspace", tab: "BODY" } },

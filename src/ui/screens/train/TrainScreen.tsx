@@ -1,3 +1,4 @@
+import { useSessionDraft } from "../../sessionDrafts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { haptic } from "../../feel/haptics";
 import { describeError } from "../../errorMessage";
@@ -149,10 +150,12 @@ interface CompletionSummary {
 export type TrainDestination = "RECOVERY" | "WORKOUT";
 
 export function TrainScreen({
+  active = true,
   destination,
   recordsFocus = null,
   onDestinationConsumed,
 }: {
+  active?: boolean;
   destination?: TrainDestination | null;
   /** FIND-001: open TRAIN → RECORDS at this lift's strength curve. */
   recordsFocus?: string | null;
@@ -183,6 +186,7 @@ export function TrainScreen({
   const [recoveryMinutes, setRecoveryMinutes] = useState(10);
   const [subs, setSubs] = useState<Record<string, string>>({});
   const [inputs, setInputs] = useState<Record<string, SetInputState>>({});
+  useSessionDraft("workout-set", Object.entries(inputs).some(([key, input]) => Boolean(input.weight || input.reps) && !sets.some((set) => `${set.exerciseId}#${set.setNumber}` === key)));
   const [progressionSuggestions, setProgressionSuggestions] = useState<Record<string, ProgressionSuggestion>>({});
   const [lastPerformedSets, setLastPerformedSets] = useState<Record<string, LastSetInfo>>({});
   const [recentSubstitutions, setRecentSubstitutions] = useState<Record<string, string[]>>({});
@@ -196,6 +200,7 @@ export function TrainScreen({
   const [performanceBriefOpen, setPerformanceBriefOpen] = useState(false);
   // PR-CARDS-001: TRAIN → RECORDS, the list of personal-record cards.
   const [recordsOpen, setRecordsOpen] = useState(recordsFocus !== null);
+  useEffect(() => { if (recordsFocus) setRecordsOpen(true); }, [recordsFocus]);
   // GYM-001: the full-screen gym view over the active workout.
   const [gymModeOpen, setGymModeOpen] = useState(false);
   const gymModeButtonRef = useRef<HTMLButtonElement>(null);
@@ -261,8 +266,8 @@ export function TrainScreen({
   }, [session?.activeRestEndsAt]);
 
   useEffect(() => {
-    void refresh();
-  }, []);
+    if (active) void refresh(hasReadRef.current);
+  }, [active]);
   // DROP 0: re-read after a 16:30 rollover (never during a workout — rollover waits for it to end).
   useDayRolloverRefresh(refresh);
 
@@ -283,23 +288,25 @@ export function TrainScreen({
 
   const sessionRecords = useMemo(() => findSessionRecords(recordHistory, sets), [recordHistory, sets]);
 
+  useEffect(() => { destinationConsumedRef.current = false; }, [destination]);
+
   useEffect(() => {
-    if (reading || readError || !destination || !destinationReady || destinationConsumedRef.current) return;
+    if (!active || reading || readError || !destination || !destinationReady || destinationConsumedRef.current) return;
     destinationConsumedRef.current = true;
     onDestinationConsumed?.();
-    if (!session && destination !== "WORKOUT") setOverridePickerOpen(true);
+    if (!session && destination !== "WORKOUT") { setChosenVariant("RECOVERY"); setOverridePickerOpen(true); }
     requestAnimationFrame(() => {
       if (session || destination === "WORKOUT") headingRef.current?.focus();
       else recoveryChoiceRef.current?.focus();
     });
-  }, [reading, readError, destination, destinationReady, session, onDestinationConsumed]);
+  }, [active, reading, readError, destination, destinationReady, session, onDestinationConsumed]);
 
   useEffect(() => {
     if (completionSummary && !reading && !readError) completionHeadingRef.current?.focus();
   }, [completionSummary, reading, readError]);
 
   async function refresh(preserveChoice = false) {
-    setReading(true);
+    if (!hasReadRef.current) setReading(true);
     setReadError(null);
     try {
       await readTrainingState(preserveChoice && hasReadRef.current);

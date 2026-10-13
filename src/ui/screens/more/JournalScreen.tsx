@@ -1,3 +1,4 @@
+import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState } from "react";
 import type { DomainEvent } from "../../../domain/common/types";
 import type { DecisionJournalEntry } from "../../../domain/journal/types";
@@ -69,8 +70,20 @@ function JournalItemRow({
   );
 }
 
-export function JournalScreen({ active = true, onOpenCapture, onDraftChange }: { active?: boolean; onOpenCapture?: () => void; onDraftChange?: (hasDraft: boolean) => void } = {}) {
-  const [view, setView] = useState<View>({ kind: "LIST" });
+export function JournalScreen({ active = true, navigationEntryId, onOpenCapture, onDraftChange }: { navigationEntryId?: string | undefined; active?: boolean; onOpenCapture?: () => void; onDraftChange?: (hasDraft: boolean) => void } = {}) {
+  const [view, setViewState] = useState<View>({ kind: "LIST" });
+  const [visitedEntries, setVisitedEntries] = useState<string[]>([]);
+  const entryDrafts = useRef<Record<string, boolean>>({});
+  function setView(next: View) {
+    if (next.kind === "DETAIL") setVisitedEntries((ids) => ids.includes(next.id) ? ids : [...ids, next.id]);
+    setViewState(next);
+  }
+  useEffect(() => {
+    if (navigationEntryId) setView({ kind: "DETAIL", id: navigationEntryId });
+  }, [navigationEntryId]);
+  useEffect(() => {
+    if (active && !navigationEntryId && view.kind === "DETAIL" && !entryDrafts.current[view.id]) setView({ kind: "LIST" });
+  }, [active]);
   const [entries, setEntries] = useState<DecisionJournalEntry[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -89,14 +102,10 @@ export function JournalScreen({ active = true, onOpenCapture, onDraftChange }: {
   const [newReasoning, setNewReasoning] = useState("");
   const [newExpectation, setNewExpectation] = useState("");
 
+  useSessionDraft("journal-create", [newTitle, newContext, newOptions, newDecision, newReasoning, newExpectation].some((value) => value.length > 0));
   useEffect(() => {
     onDraftChange?.([newTitle, newContext, newOptions, newDecision, newReasoning, newExpectation].some((value) => value.length > 0));
   }, [onDraftChange, newTitle, newContext, newOptions, newDecision, newReasoning, newExpectation]);
-
-  // Stays mounted while hidden for draft retention; each entry starts at the list like a fresh mount.
-  useEffect(() => {
-    if (active) setView({ kind: "LIST" });
-  }, [active]);
 
   useEffect(() => {
     if (active) void refreshList();
@@ -158,22 +167,11 @@ export function JournalScreen({ active = true, onOpenCapture, onDraftChange }: {
     });
   }
 
-  if (view.kind === "DETAIL") {
-    return (
-      <JournalEntryDetail
-        entryId={view.id}
-        onBack={() => {
-          setView({ kind: "LIST" });
-          void refreshList();
-        }}
-      />
-    );
-  }
-
   const visible = showAll ? entries : entries.filter((e) => e.status === "OPEN");
 
   return (
     <div className="intent-field">
+      <div hidden={view.kind !== "LIST"}>
       <header className="intent-field__intro">
         <p className="tool-label">DECISION JOURNAL</p>
         <p className="card-body">
@@ -281,11 +279,17 @@ export function JournalScreen({ active = true, onOpenCapture, onDraftChange }: {
         </div>
       </section>
       {error && <p className="meta meta--error">{error}</p>}
+      </div>
+      {visitedEntries.map((id) => <div key={id} hidden={view.kind !== "DETAIL" || view.id !== id}>
+        <JournalEntryDetail entryId={id} onDraftChange={(dirty) => { entryDrafts.current[id] = dirty; }} onBack={() => {
+          setView({ kind: "LIST" }); void refreshList();
+        }} />
+      </div>)}
     </div>
   );
 }
 
-function JournalEntryDetail({ entryId, onBack }: { entryId: string; onBack: () => void }) {
+function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: string; onBack: () => void; onDraftChange: (dirty: boolean) => void }) {
   const [entry, setEntry] = useState<DecisionJournalEntry | null>(null);
   const [history, setHistory] = useState<DomainEvent[]>([]);
   const [editing, setEditing] = useState(false);
@@ -301,6 +305,11 @@ function JournalEntryDetail({ entryId, onBack }: { entryId: string; onBack: () =
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const hasDraft = (reviewing && Boolean(outcome || lesson)) || (editing && entry !== null &&
+    [title !== entry.title, context !== (entry.context ?? ""), options !== (entry.options ?? ""), decision !== entry.decision,
+      reasoning !== (entry.reasoning ?? ""), expectation !== (entry.expectation ?? "")].some(Boolean));
+  useSessionDraft(`journal-detail-${entryId}`, hasDraft);
+  useEffect(() => { onDraftChange(hasDraft); }, [hasDraft, onDraftChange]);
 
   useEffect(() => {
     void load();
@@ -429,18 +438,18 @@ function JournalEntryDetail({ entryId, onBack }: { entryId: string; onBack: () =
                   <div className="card card--warning intent-confirm" role="alert">
                     <p className="card-title">What actually happened?</p>
                     <p className="card-body" style={{ marginBottom: 8 }}>This is what the journal is for — recorded once, not revisited.</p>
-                    <label htmlFor="journal-outcome" className="meta" style={{ display: "block", marginBottom: 4 }}>Outcome</label>
+                    <label htmlFor={`journal-outcome-${entryId}`} className="meta" style={{ display: "block", marginBottom: 4 }}>Outcome</label>
                     <textarea
-                      id="journal-outcome"
+                      id={`journal-outcome-${entryId}`}
                       className="input"
                       style={{ marginBottom: 8, minHeight: 60 }}
                       value={outcome}
                       disabled={busy}
                       onChange={(e) => setOutcome(e.target.value)}
                     />
-                    <label htmlFor="journal-lesson" className="meta" style={{ display: "block", marginBottom: 4 }}>Lesson (optional)</label>
+                    <label htmlFor={`journal-lesson-${entryId}`} className="meta" style={{ display: "block", marginBottom: 4 }}>Lesson (optional)</label>
                     <textarea
-                      id="journal-lesson"
+                      id={`journal-lesson-${entryId}`}
                       className="input"
                       style={{ marginBottom: 8, minHeight: 60 }}
                       placeholder="What does this teach for next time?"
