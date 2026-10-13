@@ -1,6 +1,22 @@
 # Current checkpoint
 
-## Current objective — Guided MORE + Low-Energy TODAY (issue #219)
+## Current state — no objective in flight (2026-10-13)
+
+PR #220 (Guided MORE + Low-Energy TODAY) merged at `a0aae6865` after an independent PASS on
+`a29e3934a415ad628a98bc49320e881e733add68` and green required CI; issue #219 closed. Builder for
+this handoff: Claude Code. Only isolated prototype #204 remains open.
+
+Proposed next objective, **not approved**: [WORKOUT-ATOMICITY-001, issue #221](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/221)
+— make each workout command commit its row and event together (PROTECTED). It needs Gavin's
+bounded approval and a ruling on existing splits (A detect/report, B fix forward only, C repair).
+
+Carried forward, unapproved: review notes N1–N4 from PR #220 (count-start churn on re-entry,
+destination-guide descriptions, Search Capture result skipping discard confirmation, stale Capture
+message); operator stage 6 consolidation (waits for field evidence); VCC-001 stays paused; F1 field
+stop runs to about Oct 25. Reviewer observed one non-reproducing local `MealRoundTrip.test.tsx:80`
+scroll-poll failure under combined load; watch for it in CI.
+
+## Historical objective — Guided MORE + Low-Energy TODAY (issue #219, merged PR #220)
 
 PR #220 review correction, 2026-10-13: an independent Claude Code review of
 `72b735082ceb39fbae1aec39743a0111f1c6f783` issued BLOCK on B1 only. The retained (hidden-mounted)
