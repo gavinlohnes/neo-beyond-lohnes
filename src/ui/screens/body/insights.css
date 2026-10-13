@@ -1,0 +1,27 @@
+.body-insights { margin-block: 16px 24px; }
+.body-field .health-progress > .body-insights { padding-top: 0; border-top: 0; margin-top: 0; }
+.insights-title { font-family: var(--font-display); font-size: 32px; margin: 0 0 8px; line-height: 1.15; }
+.insights-ranges { display: flex; gap: 8px; margin-block: 16px 8px; }
+.insights-ranges .btn-secondary { flex: 1; min-width: 0; min-height: 44px; padding: 8px 4px; font-size: 16px; }
+.insights-ranges [aria-pressed="true"] { background-color: var(--text-1); color: var(--bg); }
+.insights-window, .body-insights .meta { color: var(--text-3-strong); }
+.body-field .health-progress .body-insights .insights-nutrition { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-block: 12px; }
+.insights-nutrition .readout { min-width: 0; }
+.insights-nutrition .readout__value { font-size: 28px; overflow-wrap: anywhere; }
+.insights-label { display: block; margin-top: 20px; }
+.body-insights select { width: 100%; min-height: 44px; font-size: 16px; margin-bottom: 16px; }
+.insights-measure { padding-top: 12px; border-top: 1px solid var(--border-subtle); }
+.insights-value { font-family: var(--font-display); font-size: 36px; line-height: 1.15; margin: 8px 0; }
+.insights-chart { background: var(--surface-1); border-block: 1px solid var(--border-subtle); padding: 12px; margin-block: 16px; }
+.insights-chart svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+.insights-scale { display: flex; justify-content: space-between; gap: 8px; font-size: 16px; color: var(--text-3-strong); }
+.insights-selected { font-size: 16px; color: var(--text-1); margin: 12px 0; }
+.insights-point-control { display: block; font-size: 16px; }
+.insights-point-control input { display: block; width: 100%; min-height: 44px; accent-color: var(--text-1); }
+.insights-empty { font-size: 16px; border-block: 1px solid var(--border-subtle); padding-block: 16px; color: var(--text-2); }
+.insights-inspect { border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px; }
+.insights-inspect summary { cursor: pointer; font-size: 16px; min-height: 48px; padding-block: 12px; }
+.insights-observations { padding: 0; list-style: none; }
+.insights-observations li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--border-subtle); padding-block: 12px; font-size: 16px; }
+.body-insights * { min-width: 0; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .body-insights *, .body-insights *::before, .body-insights *::after { animation: none !important; transition: none !important; } }

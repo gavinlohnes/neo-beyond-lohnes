@@ -1455,7 +1455,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
           disabled={busy || foodSearchBusy} onClick={onReturnToToday}>RETURN TO TODAY</button>}
       </div>
       {progressOpen && <section aria-labelledby="health-progress-heading">
-        <h2 id="health-progress-heading" tabIndex={-1} className="section-label">Your progress</h2>
+        <h2 id="health-progress-heading" tabIndex={-1} className="insights-title">Your progress</h2>
         <BodyProgress refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
       </section>}
       <div hidden={mealsVisible || progressOpen}>

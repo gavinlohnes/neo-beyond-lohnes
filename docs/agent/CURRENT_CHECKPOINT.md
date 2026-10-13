@@ -1,6 +1,66 @@
 # Current checkpoint
 
-## Current objective — MORE-OPERATOR-001 control center
+## Current objective — BODY Insights & Progress Intelligence
+
+Owner-requested PR #218 review correction, 2026-10-13: Claude Code independently reviewed
+`f8274f07512895431c3d901175d6d2cfc865eb12` and issued BLOCK on B1 only. Chart extrema now
+explicitly say High and Low, not apparent chronological endpoints. Focused assertions verify
+both labels at 320/360/412 px. No calculations, chart interactions, accessibility, history or
+other functionality changed. All 61 focused BODY/cleanup browser cases, architecture (203 files),
+TypeScript, production build and whitespace pass. Nonblocking read coupling, ribbon disclosure,
+selection retention, workout units and naming observations were reviewed and left unchanged to
+avoid expanding this correction. Existing screenshots predate the label fix. Corrected-head CI
+and renewed independent exact-head review belong in PR #218; prior-head approval does not apply.
+No merge/deploy; Gavin retains separate final merge authority.
+
+Gavin approved this bounded objective on 2026-10-13. Sole Builder: Codex; branch
+`codex/body-insights-progress`; [PR #218](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/218).
+Risk: PROTECTED — meaningful BODY interpretation/
+presentation and the explicitly approved narrow chart exception recorded in the UX register.
+Fresh starting master: `ea0c26f26d05991811676378174c21b3139805fc`, verified PR #217 merge.
+Initial worktree was clean; only isolated prototype #204 is open, untouched and unintegrated.
+
+Scope: enrich existing BODY progress with read-only selectable weight, nutrition, reliable
+main-sleep and finished-workout series, useful ranges, truthful comparisons/coverage, accessible
+point inspection and supporting records. Preserve Daily Record/meal entry, drafts/focus/return,
+corrections/undo, accomplishments/ribbon/timeline/baselines and existing goals/targets.
+Reuse canonical correction-aware queries and shared operator readouts; BUILD OWNED small
+domain-specific read composition and native SVG/range/disclosure, no dependency or new chart system.
+Excluded: Engine/recommendation/medical authority, new inference/correlations, commands/events,
+domain/schema/persistence/backup formats, navigation, dependencies, CI/protections, prototype,
+merge/deploy. Fiber is absent, not estimated; missing/partial records never become zero intake.
+Acceptance: accurate window/coverage/zero/missing/comparison calculations; historical correction/
+void integrity; read/loading/failure/retry; existing journeys; 320/360/412 px, accessible keyboard/
+contrast/reduced motion, production offline PWA, architecture/type/build, regressions, mobile
+evidence and green required exact-head CI. Independent exact-head review and Gavin's separate
+merge approval remain required.
+
+Implemented: selectable 7/28/90-day weight, meal calories, protein, reliable main-sleep and
+finished-workout series; means/prior-period changes with denominators; native pointer/keyboard
+point inspection; dated records and calculation/coverage disclosures; meal carb/fat details and
+explicit unavailable fiber. Nutrition is recorded intake, not total intake; ambiguous multiple-main
+sleep days are excluded, not combined; co-recording never implies causation. Existing goal/milestone/
+projection rules remain. Daily Record/manual/meal handlers are unchanged; accomplishments, ribbon,
+timeline and baselines remain reachable. Selectable charts lead, while the established last-recorded
+weight SVG remains inspectable when the latest record is older than all recent ranges. Its existing
+facts remain; timeline opening still hides both charts.
+
+Evidence so far: all 144 Node files pass (1,542 tests, one existing skip). All 70 targeted real-
+Chromium cases across BODY/progress/cleanup pass, including six new UI cases and seven new
+calculation/canonical-history cases in Node. Architecture (203 files), TypeScript/build and
+whitespace pass. A preservation test caught a new hint pushing water controls below the first
+viewport; it was removed, not the assertion. Existing chart tests now assert the new graph while
+retaining goal/milestone/no-warning/timeline safeguards, with deterministic dates.
+Actual 320/360/412 px PWA native restore, point inspection, offline reload/local exploration,
+return focus and manual water/undo pass. [Mobile evidence](../screenshots/body-insights-progress/README.md)
+records synthetic fixtures and limitations. Final full browser passes 73 files / 744 tests. A final
+source-date annotation distinguishes existing all-history weight facts/projection from range means;
+all 71 final focused cases pass, including a seventh new UI regression proving older-history graph
+access and timeline suppression. Thirty-four local documentation links/anchors pass.
+Required exact-head CI is recorded in the PR. Committed baseline risk reports PROTECTED;
+independent review is required before Gavin's separate merge decision. No merge/deploy.
+
+## Historical objective — MORE-OPERATOR-001 control center (merged PR #217)
 
 Gavin approved this bounded Protected stage on 2026-10-10, with no merge/deploy authorization.
 Builder: Codex, sole implementation Builder; branch `codex/more-operator-001`;

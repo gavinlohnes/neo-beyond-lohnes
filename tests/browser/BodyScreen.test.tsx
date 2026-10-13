@@ -714,11 +714,13 @@ describe("BodyScreen (real browser) — Drop 5 weight trend and same-as-yesterda
       ["2026-09-09T12:00:00Z", 186],
     ]);
     await updateNutritionTargets({ goalWeightLbs: 176 });
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-10T12:00:00Z"));
     const screen = await render(<BodyScreen />);
 
     await expect.element(screen.getByText("186 lbs", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "YOUR PROGRESS" }).click();
-    await expect.element(screen.getByRole("img", { name: /Weight over the last 60 days/ })).toBeVisible();
+    await expect.element(screen.getByRole("img", { name: /Weight: 5 recorded observations/ })).toBeVisible();
     await expect.element(screen.getByText("Lowest yet", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Down 10 lb since Jul 1", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/^Goal 176 lb — at this pace, about /)).toBeVisible();
@@ -733,9 +735,11 @@ describe("BodyScreen (real browser) — Drop 5 weight trend and same-as-yesterda
       ["2026-09-09T12:00:00Z", 190],
     ]);
     await updateNutritionTargets({ goalWeightLbs: 176 });
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-10T12:00:00Z"));
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "YOUR PROGRESS" }).click();
-    await expect.element(screen.getByRole("img", { name: /Weight over the last 60 days/ })).toBeVisible();
+    await expect.element(screen.getByRole("img", { name: /Weight: 5 recorded observations/ })).toBeVisible();
     expect(screen.getByText(/at this pace/).elements()).toHaveLength(0);
     expect(screen.getByText(/off track|behind|missed/i).elements()).toHaveLength(0);
   });

@@ -22,11 +22,14 @@ export function WeightTrend({
   history,
   goalWeightLbs,
   hideChart = false,
+  hideFacts = false,
 }: {
   history: readonly WeighIn[];
   goalWeightLbs?: number | undefined;
   /** CLEANUP-003: the facts stay; the 60-day line hides while the timeline is open. */
   hideChart?: boolean;
+  /** Reuse the established historical graph without repeating the visible facts. */
+  hideFacts?: boolean;
 }) {
   const latest = history.at(-1);
   if (!latest || history.length < 2) return null;
@@ -53,10 +56,10 @@ export function WeightTrend({
 
   return (
     <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-      {!hideChart && <p className="meta" style={{ marginBottom: 6 }}>Last {WINDOW_DAYS} days</p>}
+      {!hideChart && <p className="meta" style={{ marginBottom: 6 }}>Last recorded {WINDOW_DAYS} days, ending {new Date(latest.recordedAt).toLocaleDateString()}</p>}
       {!hideChart && <svg
         role="img"
-        aria-label={`Weight over the last ${WINDOW_DAYS} days, from ${shown[0]!.weightLbs} to ${latest.weightLbs} lb`}
+        aria-label={`Weight over the last ${WINDOW_DAYS} days ending ${new Date(latest.recordedAt).toLocaleDateString()}, from ${shown[0]!.weightLbs} to ${latest.weightLbs} lb`}
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
         style={{ width: "100%", height: H, display: "block" }}
@@ -85,14 +88,14 @@ export function WeightTrend({
         )}
         <circle cx={x(latest.recordedAt)} cy={y(latest.weightLbs)} r={3} fill="var(--text-1)" />
       </svg>}
-      {bestSince && <p className="meta-strong" style={{ margin: "8px 0 0" }}>{bestSince}</p>}
-      {milestone && <p className="meta" style={{ margin: "4px 0 0" }}>{milestone}</p>}
-      {projection.kind === "DATE" && (
+      {!hideFacts && bestSince && <p className="meta-strong" style={{ margin: "8px 0 0" }}>{bestSince}</p>}
+      {!hideFacts && milestone && <p className="meta" style={{ margin: "4px 0 0" }}>{milestone}</p>}
+      {!hideFacts && projection.kind === "DATE" && (
         <p className="meta" style={{ margin: "4px 0 0" }}>
           Goal {goalWeightLbs} lb — at this pace, about {formatShortDate(projection.date)}
         </p>
       )}
-      {projection.kind === "REACHED" && (
+      {!hideFacts && projection.kind === "REACHED" && (
         <p className="meta" style={{ margin: "4px 0 0" }}>At or past your goal of {goalWeightLbs} lb</p>
       )}
     </div>
