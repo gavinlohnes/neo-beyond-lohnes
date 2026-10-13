@@ -36,6 +36,7 @@ import {
 } from "../../../application/checkInReminderQueries";
 import { formatReminderHour } from "./moreCopy";
 import { describeError } from "../../errorMessage";
+import { GuidedOverview } from "./GuidedOverview";
 
 const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 
@@ -64,6 +65,14 @@ export function MoreScreen({
   onOpenMeal?: () => void;
 } = {}) {
   const [view, setViewState] = useState<MoreView>(initialView);
+  const [visited, setVisited] = useState(() => new Set<MoreView>([initialView]));
+  const [journalDraft, setJournalDraft] = useState(false);
+  const [intentDraft, setIntentDraft] = useState(false);
+  function openGuidedCapture() {
+    if (!onOpenCapture) return;
+    if ((journalDraft || intentDraft) && !window.confirm("Open Capture on TODAY? This leaves MORE and clears its unsaved writing drafts. Cancel to keep writing here; BACK TO MORE keeps drafts while you inspect other MORE destinations.")) return;
+    onOpenCapture();
+  }
   const menuRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLButtonElement>(null);
   const originRef = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
@@ -74,6 +83,7 @@ export function MoreScreen({
       originRef.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
     }
     setViewState(next);
+    setVisited((current) => new Set([...current, next]));
   }
 
   useLayoutEffect(() => {
@@ -322,20 +332,18 @@ export function MoreScreen({
 
   return (
     <div className="screen more-operator">
-      {view !== "MENU" && (
-        <div className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
+        <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
           <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setHistoryFocusDayId(null); setView("MENU"); }}>← BACK TO MORE</button>
           {view === "HISTORY" && <HistoryScreen focusDayId={historyFocusDayId} />}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
           {view === "REVIEW" && <ReviewScreen />}
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} />}
           {view === "WORK_SCHEDULE" && <><OperatorHeader destination="more">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
-          {view === "INTENT" && <><OperatorHeader destination="more">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen key={intentFocus ? JSON.stringify(intentFocus) : "list"} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}
-          {view === "JOURNAL" && <><OperatorHeader destination="more">MORE // DECISION JOURNAL</OperatorHeader><JournalScreen /></>}
+          <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="more">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={view === "INTENT"} navigationFocus={intentFocus} onDraftChange={setIntentDraft} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
+          <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="more">MORE // DECISION JOURNAL</OperatorHeader><JournalScreen active={view === "JOURNAL"} onDraftChange={setJournalDraft} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></>}</div>
           {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="more">MORE // EXERCISE LIBRARY</OperatorHeader><ExerciseLibraryScreen /></>}
           {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="more">MORE // CUSTOM PROGRAMS</OperatorHeader><CustomTemplateScreen /></>}
         </div>
-      )}
       {/* Keep local settings/disclosures/drafts mounted while inspecting a destination. */}
       <div ref={menuRef} hidden={view !== "MENU"} className="more-control-center">
       {/* FIELD ALPHA Phase 4: identity zone quieted, same principle
@@ -359,6 +367,26 @@ export function MoreScreen({
           heading?.scrollIntoView({ block: "start", behavior: "instant" });
         }}>BACKUP & RECOVERY ↓</a>
       </div>
+
+      <GuidedOverview active={view === "MENU"} canOpenCapture={onOpenCapture !== undefined} onOpen={(destination) => {
+        if (destination === "CAPTURE") openGuidedCapture();
+        else { if (destination === "INTENT") setIntentFocus(null); setView(destination); }
+      }} />
+      <details className="more-inspection more-destination-guide">
+        <summary>Find the right destination</summary>
+        <p className="meta">Free notes live in TODAY → Capture. A decision belongs in the Journal; longer-term direction in Missions; a concrete commitment in Obligations.</p>
+        <dl>
+          <dt>Weekly Check-in</dt><dd>Recorded progress, findings and the week ahead. Read-only; no grade.</dd>
+          <dt>History</dt><dd>The full chronological event trail, including corrections and undo.</dd>
+          <dt>Review</dt><dd>BEYOND’s past recommendations, your decisions and their recorded outcomes.</dd>
+          <dt>Search</dt><dd>Find existing records by words, then open where they live.</dd>
+          <dt>Decision Journal</dt><dd>Write a choice and expectation; return later for its actual outcome and lesson.</dd>
+          <dt>Missions & Obligations</dt><dd>Keep durable plans separate from tasks, dates and deliberate resolution.</dd>
+          <dt>Work Schedule</dt><dd>Inspect or change the schedule you declared.</dd>
+          <dt>Exercise Library & Custom Programs</dt><dd>Your existing movements and workout templates.</dd>
+          <dt>Data safety & Settings</dt><dd>Backups, recovery, targets, quit plans, time capsules, reminders and diagnostic detail.</dd>
+        </dl>
+      </details>
 
       {/* FIELD ALPHA Phase 4B: reorganized by functional meaning
           (OPERATIONS / RECORDS / SYSTEM) rather than historical screen

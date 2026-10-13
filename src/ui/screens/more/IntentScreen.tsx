@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DomainEvent } from "../../../domain/common/types";
 import type { Mission, Obligation, ObligationStatus, RecurrenceRule } from "../../../domain/intent/types";
 import {
-  getActiveMissions,
   getMissionHistory,
   getMissions,
   getObligationHistory,
@@ -230,7 +229,7 @@ function IntentItemRow({
   );
 }
 
-export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = {}) {
+export function IntentScreen({ initialFocus, navigationFocus, active = true, onDraftChange }: { initialFocus?: IntentFocus; navigationFocus?: IntentFocus | null; active?: boolean; onDraftChange?: (hasDraft: boolean) => void } = {}) {
   const [view, setView] = useState<View>(() => initialViewFor(initialFocus));
   const [missions, setMissions] = useState<Mission[]>([]);
   const [allMissions, setAllMissions] = useState<Mission[]>([]);
@@ -241,6 +240,12 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
   const [error, setError] = useState<string | null>(null);
   const [missionCreateOpen, setMissionCreateOpen] = useState(false);
   const [obligationCreateOpen, setObligationCreateOpen] = useState(false);
+  const [guided, setGuided] = useState<"MISSION" | "OBLIGATION" | null>(null);
+  const missionTitleRef = useRef<HTMLInputElement>(null);
+  const obligationTitleRef = useRef<HTMLInputElement>(null);
+  const readSequence = useRef(0);
+  const [readState, setReadState] = useState<"loading" | "ready" | "error">("loading");
+  const [readError, setReadError] = useState("");
 
   const [newMissionTitle, setNewMissionTitle] = useState("");
   const [newObligationTitle, setNewObligationTitle] = useState("");
@@ -250,8 +255,25 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
   const [newObligationRecurrence, setNewObligationRecurrence] = useState<RecurrenceFormState>(EMPTY_RECURRENCE);
 
   useEffect(() => {
-    void refreshList();
-  }, [showAllMissions, showAllObligations]);
+    onDraftChange?.([newMissionTitle, newObligationTitle, newObligationMissionId, newObligationDueAt, newObligationPlannedAt, newObligationRecurrence.freq].some((value) => value.length > 0));
+  }, [onDraftChange, newMissionTitle, newObligationTitle, newObligationMissionId, newObligationDueAt, newObligationPlannedAt, newObligationRecurrence.freq]);
+
+  // MORE can navigate to a record or the list without remounting and discarding
+  // unfinished creation text. Standalone initialFocus keeps its mount-only contract.
+  useEffect(() => {
+    if (active && navigationFocus !== undefined) setView(initialViewFor(navigationFocus ?? undefined));
+  }, [active, navigationFocus]);
+
+  useEffect(() => {
+    if (active) void refreshList();
+    return () => { ++readSequence.current; };
+  }, [showAllMissions, showAllObligations, active]);
+
+  useEffect(() => {
+    if (!active || view.kind !== "LIST") return;
+    if (guided === "MISSION" && missionCreateOpen) missionTitleRef.current?.focus();
+    if (guided === "OBLIGATION" && obligationCreateOpen) obligationTitleRef.current?.focus();
+  }, [guided, missionCreateOpen, obligationCreateOpen, active, view.kind]);
 
   /**
    * Drop 01 acceptance correction (real-device evidence, 2026-08-22): the
@@ -263,10 +285,21 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
    * presentation fix only.
    */
   async function refreshList() {
-    const everyMission = await getMissions();
-    setAllMissions(everyMission);
-    setMissions(showAllMissions ? everyMission : await getActiveMissions());
-    setObligations(showAllObligations ? await getObligations() : await getUnresolvedObligations());
+    const sequence = ++readSequence.current;
+    setReadState("loading");
+    setReadError("");
+    try {
+      const [everyMission, nextObligations] = await Promise.all([getMissions(), showAllObligations ? getObligations() : getUnresolvedObligations()]);
+      if (sequence !== readSequence.current) return;
+      setAllMissions(everyMission);
+      setMissions(showAllMissions ? everyMission : everyMission.filter((mission) => mission.status === "ACTIVE"));
+      setObligations(nextObligations);
+      setReadState("ready");
+    } catch (cause) {
+      if (sequence !== readSequence.current) return;
+      setReadState("error");
+      setReadError(describeError(cause, "Could not read plans."));
+    }
   }
 
   async function withBusy(fn: () => Promise<void>) {
@@ -346,6 +379,17 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
         <p className="card-body">Missions hold durable direction. Obligations hold commitments that require deliberate resolution.</p>
       </header>
 
+      <details className="writing-start">
+        <summary>Start a plan or a task</summary>
+        <p>A Mission is direction you want to keep. An Obligation is a concrete commitment you will deliberately resolve. Neither is a workout prescription.</p>
+        <div className="writing-start__choices">
+          <button type="button" className="btn-secondary" disabled={busy} onClick={() => { setGuided("MISSION"); setMissionCreateOpen(true); }}>GUIDE A MISSION</button>
+          <button type="button" className="btn-secondary" disabled={busy} onClick={() => { setGuided("OBLIGATION"); setObligationCreateOpen(true); }}>GUIDE A TASK</button>
+        </div>
+      </details>
+      {readState === "loading" && <p role="status">Reading plans…</p>}
+      {readState === "error" && <div><p role="alert">{readError} Lists are unavailable, not empty.</p><button type="button" className="btn-secondary" onClick={() => void refreshList()}>RETRY PLANS</button></div>}
+
       <section aria-labelledby="missions-heading">
       <h2 id="missions-heading" className="section-label">Missions · durable direction</h2>
       <div className="intent-filter" role="group" aria-label="Mission visibility">
@@ -356,8 +400,8 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
           ALL / ARCHIVED
         </button>
       </div>
-      {missions.length === 0 && <p className="empty-state">{showAllMissions ? "No missions yet." : "No active missions."}</p>}
-      {missions.map((m) => (
+      {readState === "ready" && missions.length === 0 && <p className="empty-state">{showAllMissions ? "No missions yet." : "No active missions."}</p>}
+      {readState === "ready" && missions.map((m) => (
         <IntentItemRow
           key={m.id}
           kind="MISSION"
@@ -370,9 +414,11 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
       ))}
       <div className="intent-create">
       <FieldDisclosure summary="CREATE MISSION" open={missionCreateOpen} onToggle={setMissionCreateOpen}>
+        {guided === "MISSION" && <div className="writing-start"><p>What direction would you like to keep returning to? Name it in your own words. No dates, tasks or plans are created automatically.</p><button type="button" className="btn-secondary" onClick={() => setGuided(null)}>WRITE WITHOUT GUIDANCE</button></div>}
         <p className="card-body" style={{ marginBottom: 12 }}>Create durable direction—not a task or recommendation.</p>
         <div style={{ display: "flex", gap: 8 }}>
           <input
+            ref={missionTitleRef}
             type="text"
             className="input"
             style={{ flex: 1 }}
@@ -403,8 +449,8 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
           ALL / RESOLVED
         </button>
       </div>
-      {obligations.length === 0 && <p className="empty-state">Nothing here.</p>}
-      {obligations.map((o) => (
+      {readState === "ready" && obligations.length === 0 && <p className="empty-state">Nothing here.</p>}
+      {readState === "ready" && obligations.map((o) => (
         <IntentItemRow
           key={o.id}
           kind="OBLIGATION"
@@ -417,8 +463,10 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
       ))}
       <div className="intent-create">
       <FieldDisclosure summary="CREATE OBLIGATION" open={obligationCreateOpen} onToggle={setObligationCreateOpen}>
+        {guided === "OBLIGATION" && <div className="writing-start"><p>Name one concrete commitment. A due date, planned date, Mission and repetition are optional—leave them blank unless they are true. Nothing is saved until CREATE OBLIGATION.</p><button type="button" className="btn-secondary" onClick={() => setGuided(null)}>WRITE WITHOUT GUIDANCE</button></div>}
         <p className="card-body" style={{ marginBottom: 12 }}>Create a commitment requiring deliberate resolution. Linking to a Mission is optional.</p>
         <input
+          ref={obligationTitleRef}
           type="text"
           className="input"
           style={{ marginBottom: 8 }}
@@ -441,12 +489,12 @@ export function IntentScreen({ initialFocus }: { initialFocus?: IntentFocus } = 
             <option key={m.id} value={m.id}>{m.title}</option>
           ))}
         </select>
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <div style={{ flex: 1 }}>
+        <div className="intent-dates">
+          <div>
             <label htmlFor="new-obligation-due" className="meta" style={{ display: "block", marginBottom: 4 }}>Due</label>
             <input id="new-obligation-due" type="date" className="input" value={newObligationDueAt} disabled={busy} onChange={(e) => setNewObligationDueAt(e.target.value)} />
           </div>
-          <div style={{ flex: 1 }}>
+          <div>
             <label htmlFor="new-obligation-planned" className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
             <input id="new-obligation-planned" type="date" className="input" value={newObligationPlannedAt} disabled={busy} onChange={(e) => setNewObligationPlannedAt(e.target.value)} />
           </div>

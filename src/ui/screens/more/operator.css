@@ -20,6 +20,27 @@
 .more-operator .disclosure-row { font-size: 16px; }
 .more-operator .instrument-cluster > div { min-width: 0; }
 .more-operator .status-value { overflow-wrap: anywhere; }
+.guided-overview { margin-block: 24px; }
+.guided-title { font-family: var(--font-display); font-size: 28px; margin: 0 0 8px; }
+.guided-starts { list-style: none; margin: 16px 0; padding: 0; border-block: 1px solid var(--border-subtle); }
+.guided-starts li { padding-block: 12px; }
+.guided-starts li + li { border-top: 1px solid var(--border-subtle); }
+.guided-starts h3 { margin: 0 0 6px; font-size: 22px; font-family: var(--font-display); }
+.guided-starts .meta { margin: 0 0 12px; }
+.guided-starts button { width: auto; min-height: 48px; }
+.more-destination-guide dl { font-size: 16px; color: var(--text-2); }
+.more-destination-guide dt { color: var(--text-1); margin-top: 16px; font-weight: 600; }
+.more-destination-guide dd { margin: 4px 0 0; }
+.writing-start { margin-block: 16px; padding-block: 12px; border-block: 1px solid var(--border-subtle); }
+.writing-start summary { cursor: pointer; min-height: 44px; font-size: 16px; }
+.writing-start p, .writing-start li { font-size: 16px; color: var(--text-2); }
+.writing-start__choices { display: flex; gap: 8px; flex-wrap: wrap; }
+.writing-start__choices button { min-height: 48px; width: auto; }
+.intent-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+.intent-dates > div, .intent-dates input { min-width: 0; }
+.intent-dates input { width: 100%; }
+.more-operator .intent-create input { min-width: 0; }
+@media (max-width: 360px) { .intent-dates { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) {
   .more-operator *, .more-operator *::before, .more-operator *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

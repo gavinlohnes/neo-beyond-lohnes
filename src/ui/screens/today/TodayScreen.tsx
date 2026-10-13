@@ -60,6 +60,8 @@ import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
 import { RecommendationCard } from "./RecommendationCard";
 import { ConsoleControls } from "./ConsoleControls";
+import { SmallSteps } from "./SmallSteps";
+import "./smallSteps.css";
 import type { SystemDestination } from "../../systemCatalog";
 import {
   startDay,
@@ -326,6 +328,7 @@ export function TodayScreen({
   const [advisoryNotes, setAdvisoryNotes] = useState<AdvisoryNote[]>([]);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [captureText, setCaptureText] = useState("");
+  const [captureFeedback, setCaptureFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
   // Overdrive Phase 17 (Capture 1.1): reopenCaptureItem already existed
   // (application/commands.ts) and was already tested
   // (captureInbox.test.ts, "reopening undoes an accidental resolve") but
@@ -433,6 +436,11 @@ export function TodayScreen({
   } | null>(null);
   const [quitHabitSetUp, setQuitHabitSetUp] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(openToolsOnMount);
+  // Optional session-local presentation, never a capacity/plan/Minimum Day write.
+  const [smallSteps, setSmallSteps] = useState(false);
+  const [smallTool, setSmallTool] = useState<"MINIMUM_DAY" | "CAPTURE" | null>(null);
+  const smallStepsRef = useRef<HTMLDivElement>(null);
+  const smallStepsEntryRef = useRef<HTMLButtonElement>(null);
 
   // ---- SLEEP DRAFT (2026-10-03) ----
   const [sleepDraftEvidence, setSleepDraftEvidence] = useState<Awaited<ReturnType<typeof getSleepDraftEvidence>> | null>(null);
@@ -1054,10 +1062,15 @@ export function TodayScreen({
     if (busy || busyRef.current || !captureText.trim()) return;
     busyRef.current = true;
     setBusy(true);
+    setCaptureFeedback(null);
     try {
       await captureItem(captureText);
       setCaptureText("");
-      await refresh();
+      setCaptureFeedback({ kind: "SUCCESS", message: "Note saved in Capture. It is also searchable in MORE." });
+      try { await refresh(); }
+      catch (cause) { setCaptureFeedback({ kind: "ERROR", message: `Note saved. ${describeError(cause, "Could not refresh the list.")} Do not save it again; inspect it in MORE → SEARCH.` }); }
+    } catch (cause) {
+      setCaptureFeedback({ kind: "ERROR", message: `${describeError(cause, "Could not save the note.")} Your text is kept; try CAPTURE again when ready.` });
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -1484,6 +1497,51 @@ export function TodayScreen({
   }
   const visibleTools = toolsItems.filter(toolHasContent);
 
+  useEffect(() => {
+    // If an existing operation takes foreground authority, exit tool isolation
+    // instead of leaving an empty selected tool or obscuring manual alternatives.
+    if (smallTool === "MINIMUM_DAY" && (minimumDayInAttention || dominant === "HYDRATION_ACTIVE")) {
+      setSmallTool(null);
+      window.requestAnimationFrame(() => {
+        const target = document.querySelector<HTMLElement>(dominant === "HYDRATION_ACTIVE" ? "[data-small-hydration]" : "[data-small-minimum]");
+        target?.querySelector<HTMLElement>("button, input")?.focus({ preventScroll: true });
+        target?.scrollIntoView({ block: "start", behavior: "instant" });
+      });
+    }
+  }, [smallTool, minimumDayInAttention, dominant]);
+
+  function openSmallTool(tool: "MINIMUM_DAY" | "CAPTURE") {
+    setToolsOpen(true);
+    if (tool === "MINIMUM_DAY") setMinimumDayOpen(true);
+    const foregroundMinimum = tool === "MINIMUM_DAY" && (minimumDayInAttention || dominant === "HYDRATION_ACTIVE");
+    setSmallTool(foregroundMinimum ? null : tool);
+    window.requestAnimationFrame(() => {
+      const target = foregroundMinimum
+        ? document.querySelector<HTMLElement>(dominant === "HYDRATION_ACTIVE" ? "[data-small-hydration]" : "[data-small-minimum]")
+        : document.querySelector<HTMLElement>(`[data-tools-item="${tool}"]`);
+      const control = target?.querySelector<HTMLElement>(tool === "CAPTURE" ? "input" : "button, input");
+      control?.focus({ preventScroll: true });
+      target?.scrollIntoView({ block: "start", behavior: "instant" });
+    });
+  }
+
+  function returnToSmallSteps() {
+    setSmallTool(null);
+    const trigger = smallStepsRef.current?.querySelector<HTMLElement>("button");
+    trigger?.focus({ preventScroll: true });
+    smallStepsRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }
+
+  function exitSmallSteps() {
+    setSmallSteps(false);
+    setSmallTool(null);
+    setToolsOpen(true);
+    window.requestAnimationFrame(() => {
+      smallStepsEntryRef.current?.focus({ preventScroll: true });
+      smallStepsEntryRef.current?.scrollIntoView({ block: "center", behavior: "instant" });
+    });
+  }
+
   function renderShiftDownTool() {
     return (
       <>
@@ -1652,6 +1710,7 @@ export function TodayScreen({
         openCaptureItems={openCaptureItems}
         captureInAttention={captureInAttention}
         captureText={captureText}
+        feedback={captureFeedback}
         setCaptureText={setCaptureText}
         busy={busy}
         onCapture={() => void handleCapture()}
@@ -2190,6 +2249,7 @@ export function TodayScreen({
       )}
       {day && dominant === "WORKOUT_ACTIVE" && <ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={true} onOpenTrain={onOpenTrain} />}
       {day && dominant === "HYDRATION_ACTIVE" && (
+        <div data-small-hydration>
         <HydrationOperationCard
           minimumDay={minimumDay}
           minimumDayHydrateOz={minimumDayHydrateOz}
@@ -2204,6 +2264,7 @@ export function TodayScreen({
             setMinimumDayOpen(true);
           }}
         />
+        </div>
       )}
       {/* Time-sensitive work controls keep their existing precedence. */}
       {day && leadingPhaseRows.length > 0 && (
@@ -2251,6 +2312,7 @@ export function TodayScreen({
           onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
           onOpenDestination={onOpenSystemDestination}
           onOpenTools={() => {
+            setSmallTool(null);
             setToolsOpen(true);
             window.requestAnimationFrame(() => {
               const heading = document.getElementById("console-tools-heading");
@@ -2260,6 +2322,8 @@ export function TodayScreen({
           }}
         />
       </section>
+
+      {day && smallSteps && <div ref={smallStepsRef}><SmallSteps enabled={true} busy={busy} onToggle={exitSmallSteps} onOpen={openSmallTool} /></div>}
 
       {/* ATTENTION — earned, capped at ATTENTION_MAX, and disappears
           entirely when nothing currently qualifies (attentionPolicy.ts). */}
@@ -2335,6 +2399,7 @@ export function TodayScreen({
           )}
 
           {minimumDayInAttention && (
+            <div data-small-minimum>
             <MinimumDayCard
               prominent={true}
               minimumDay={minimumDay}
@@ -2359,6 +2424,7 @@ export function TodayScreen({
               onLogWater={() => void handleMinimumDayLogWater()}
               onLogProtein={() => void handleMinimumDayLogProtein()}
             />
+            </div>
           )}
 
           {/* BEYOND Suit Implementation 01: relabeled from "LAST TIME" to
@@ -2466,17 +2532,23 @@ export function TodayScreen({
 
       <div className={`today-support${dominant !== "NONE" ? " today-support--subordinate" : ""}`}>
         {!toolsOpen ? (
-          <CollapsibleRow name="TOOLS" summary={describeToolsSummary(visibleTools)} onOpen={() => setToolsOpen(true)} />
+          <CollapsibleRow name="TOOLS" summary={describeToolsSummary(visibleTools)} onOpen={() => { setSmallTool(null); setToolsOpen(true); }} />
         ) : (
           <section aria-label="TOOLS">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+            {smallSteps && smallTool && <div className="small-steps__return"><p className="meta">One tool open. Your other tools and drafts are still available.</p><button type="button" className="btn-secondary" onClick={returnToSmallSteps}>BACK TO SMALL STEPS</button><button type="button" className="btn-secondary" onClick={() => { setSmallTool(null); window.requestAnimationFrame(() => document.getElementById("console-tools-heading")?.focus()); }}>SHOW ALL TOOLS</button></div>}
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
               <h2 id="console-tools-heading" tabIndex={-1} className="section-label" style={{ margin: 0 }}>Tools</h2>
-              <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} aria-label="Close TOOLS" onClick={() => setToolsOpen(false)}>
+              {day && !smallSteps && <button ref={smallStepsEntryRef} type="button" className="chip" aria-label="USE SMALL STEPS" disabled={busy} style={{ flex: "none", padding: "8px 10px" }} onClick={() => {
+                setSmallSteps(true);
+                setSmallTool(null);
+                window.requestAnimationFrame(() => { smallStepsRef.current?.querySelector<HTMLElement>("button")?.focus({ preventScroll: true }); smallStepsRef.current?.scrollIntoView({ block: "start", behavior: "instant" }); });
+              }}>SMALL STEPS</button>}
+              <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} aria-label="Close TOOLS" onClick={() => { setSmallTool(null); setToolsOpen(false); }}>
                 CLOSE
               </button>
             </div>
             {visibleTools.map((item) => (
-              <div key={item} data-tools-item={item}>
+              <div key={item} data-tools-item={item} hidden={smallSteps && smallTool !== null && item !== smallTool}>
                 {renderToolsItem(item)}
               </div>
             ))}
