@@ -35,7 +35,9 @@ recorded meal calories are not measured total intake, and active days may be par
 
 Weight lines connect observations, not measurements between dates; other series stop across
 gaps longer than 36 hours. Point/record inspection is an equivalent text route, not color-only
-meaning. Existing goal, milestone and projected-date rules remain unchanged; no recommendation,
+meaning. For records older than every recent range, the established last-recorded 60-day weight
+view remains inspectable and dated, without duplicating its visible facts. Existing goal, milestone
+and projected-date rules remain unchanged; no recommendation,
 medical advice, inferred correlation, new goal or persisted analytic record is introduced.
 
 ## Limits and useful next steps

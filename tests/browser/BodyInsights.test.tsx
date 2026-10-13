@@ -30,6 +30,19 @@ function fixture() {
 const subject = (weights: ReturnType<typeof fixture>["weights"], refreshKey = 0) => <section className="body-field"><h2 id="health-progress-heading" tabIndex={-1}>Your progress</h2><BodyProgress refreshKey={refreshKey} weightHistory={weights} goalWeightLbs={180} /></section>;
 
 describe("BODY Insights & Progress", () => {
+  it("preserves the last-recorded weight graph for history older than all recent ranges", async () => {
+    const { data } = fixture();
+    vi.mocked(getBodyInsights).mockResolvedValue(data);
+    const weights = [{ recordedAt: new Date(Date.parse(data.readAt) - 410 * INSIGHT_DAY_MS).toISOString(), weightLbs: 200 }, { recordedAt: new Date(Date.parse(data.readAt) - 400 * INSIGHT_DAY_MS).toISOString(), weightLbs: 195 }];
+    const screen = await render(subject(weights));
+    await expect.element(screen.getByText("No weight recorded in this range.", { exact: false })).toBeVisible();
+    await screen.getByText("Inspect last recorded weight window", { exact: true }).click();
+    await expect.element(screen.getByRole("img", { name: /Weight over the last 60 days/ })).toBeVisible();
+    await expect.element(screen.getByText("Last recorded 60 days, ending", { exact: false })).toBeVisible();
+    expect(screen.getByText(/^Down 5 lb since/).elements()).toHaveLength(1);
+    await screen.getByRole("button", { name: "SHOW ACCOMPLISHMENT TIMELINE" }).click();
+    await expect.poll(() => screen.getByRole("img", { name: /Weight over the last 60 days/ }).elements().length).toBe(0);
+  });
   it.each([320, 360, 412])("ranges, measures, dates and keyboard point inspection remain usable at %ipx without writes", async (width) => {
     await page.viewport(width, 800);
     await startDay();

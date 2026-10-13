@@ -30,8 +30,9 @@ point inspection; dated records and calculation/coverage disclosures; meal carb/
 explicit unavailable fiber. Nutrition is recorded intake, not total intake; ambiguous multiple-main
 sleep days are excluded, not combined; co-recording never implies causation. Existing goal/milestone/
 projection rules remain. Daily Record/manual/meal handlers are unchanged; accomplishments, ribbon,
-timeline and baselines remain reachable. Legacy weight SVG is superseded by selectable charts,
-while its existing facts remain; timeline opening still hides the progress chart.
+timeline and baselines remain reachable. Selectable charts lead, while the established last-recorded
+weight SVG remains inspectable when the latest record is older than all recent ranges. Its existing
+facts remain; timeline opening still hides both charts.
 
 Evidence so far: all 144 Node files pass (1,542 tests, one existing skip). All 70 targeted real-
 Chromium cases across BODY/progress/cleanup pass, including six new UI cases and seven new
@@ -43,7 +44,8 @@ Actual 320/360/412 px PWA native restore, point inspection, offline reload/local
 return focus and manual water/undo pass. [Mobile evidence](../screenshots/body-insights-progress/README.md)
 records synthetic fixtures and limitations. Final full browser passes 73 files / 744 tests. A final
 source-date annotation distinguishes existing all-history weight facts/projection from range means;
-all 70 final focused cases pass again. Thirty-four local documentation links/anchors pass.
+all 71 final focused cases pass, including a seventh new UI regression proving older-history graph
+access and timeline suppression. Thirty-four local documentation links/anchors pass.
 Required exact-head CI is recorded in the PR. Committed baseline risk reports PROTECTED;
 independent review is required before Gavin's separate merge decision. No merge/deploy.
 
