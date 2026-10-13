@@ -4,7 +4,8 @@
 
 Owner authorization: [issue #219](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/219)
 and Gavin's direct implementation assignment. Sole Builder: Codex; branch
-`codex/guided-more-low-energy`; PR pending. Lane: PROTECTED — bounded MORE/TODAY presentation
+`codex/guided-more-low-energy`; [PR #220](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/220).
+Lane: PROTECTED — bounded MORE/TODAY presentation
 and navigation composition, not new Engine or Minimum Day behavior. Fresh starting master:
 `4b6cf819bfc494f2283270b277a504f5197e22e2`, verified merge of BODY PR #218 at corrected
 head `830dcb143815401ee6e7ff3a047cfa625868248d`. Clean worktree; only prototype #204 open,
@@ -59,7 +60,9 @@ TypeScript/build, whitespace and ten local documentation links/anchors pass.
 [Thirty actual mobile captures](../screenshots/guided-more-small-steps/README.md) document canonical
 native restore, guided/free drafts/return, 320/360/412 px, real BODY water/undo, offline cold reload,
 and explicit task/Capture saves; no horizontal overflow. Exact-head risk/CI/review evidence belongs
-in the active PR. Engine/domain/persistence/commands/backup formats/dependencies/App navigation/CI/
+in the active PR. Committed baseline risk detects no automatic Protected path trigger; semantic
+judgment keeps this owner-approved objective PROTECTED, with independent review required.
+Engine/domain/persistence/commands/backup formats/dependencies/App navigation/CI/
 protections/protected fixtures/prototype are untouched.
 
 Limits: Chromium automation, not physical-device/iOS/native assistive-technology certification;
