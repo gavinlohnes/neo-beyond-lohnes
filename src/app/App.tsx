@@ -117,6 +117,8 @@ function AppWorkspaces() {
   const [workEndedKey, setWorkEndedKey] = useState(0);
   const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut === "workout" ? null : shortcut);
   const [bodyRequest, setBodyRequest] = useState(0);
+  // Primary navigation to BODY ends a shortcut's focused view; a BODY re-tap also returns to the Daily Record.
+  const [bodyOverviewRequest, setBodyOverviewRequest] = useState<{ key: number; retap: boolean }>({ key: 0, retap: false });
   const [mealOrigin, setMealOrigin] = useState<{ tab: Tab; scrollY: number; trigger: HTMLElement | null } | null>(null);
 
   const mealInFlight = useRef(false);
@@ -339,6 +341,13 @@ function AppWorkspaces() {
   function openPrimaryTab(destination: Tab) {
     if (!canNavigate()) return false;
     if (destination === "MORE" && tab === "MORE") return openMore("MENU");
+    if (destination === "BODY") {
+      // A shortcut's focused view and its return belong to that shortcut visit only.
+      // BODY keeps every unsaved input; only the presentation goes back to the Daily Record.
+      setMealOrigin(null);
+      setBodyFocus(null);
+      setBodyOverviewRequest(({ key }) => ({ key: key + 1, retap: tab === "BODY" }));
+    }
     showTab(destination, destination !== tab);
     return true;
   }
@@ -354,11 +363,12 @@ function AppWorkspaces() {
 
   function returnFromBody() {
     if (!canNavigate()) return;
-    // Retain the origin for another explicit return/reopen. No inputs are discarded.
+    // The origin is used once; a later shortcut records a new one. No inputs are discarded.
     const destination = mealOrigin?.tab ?? "TODAY";
     if (mealOrigin) positions.current[destination] = { ...mealOrigin, trigger: mealOrigin.trigger?.isConnected
       ? mealOrigin.trigger : destination === "TODAY" ? document.querySelector<HTMLElement>(bodyFocus === "water" ? '[aria-label="Log water in BODY"]' : '[aria-label="Log a meal in BODY"]') : taskFocus.current[destination] ?? null };
     showTab(destination);
+    setMealOrigin(null);
     setTodayRefreshKey((key) => key + 1);
   }
 
@@ -417,7 +427,7 @@ function AppWorkspaces() {
             onDestinationConsumed={() => setTrainDestination(null)} /></RootErrorBoundary>
         </div>}
         {visited.has("BODY") && <div id="workspace-BODY" className={tab === "BODY" ? "tab-enter" : undefined} hidden={tab !== "BODY"}>
-          <RootErrorBoundary active={tab === "BODY"}><BodyScreen focus={bodyFocus} focusRequest={bodyRequest} visible={tab === "BODY"}
+          <RootErrorBoundary active={tab === "BODY"}><BodyScreen focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"}
             onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `RETURN TO ${mealOrigin.tab}` : "RETURN TO TODAY"}
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}

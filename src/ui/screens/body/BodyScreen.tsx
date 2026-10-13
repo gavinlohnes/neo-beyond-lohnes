@@ -240,9 +240,14 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ focus = null, focusRequest = 0, visible = true, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange }: {
+export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange }: {
   focus?: BodyFocus | null;
   focusRequest?: number;
+  /**
+   * Primary navigation to BODY: a shortcut's focused water/meal view ends; a re-tap also closes a
+   * locally opened meals or progress view. Every unsaved input stays.
+   */
+  overviewRequest?: { key: number; retap: boolean };
   visible?: boolean;
   returnLabel?: string;
   onReturnToToday?: (() => void) | undefined;
@@ -309,6 +314,25 @@ export function BodyScreen({ focus = null, focusRequest = 0, visible = true, ret
     if (focus === "weight") setBodyweightOpen(true);
     if (focus === "urge") setOtherToolsOpen(true);
   }, [focus, focusRequest]);
+  useEffect(() => {
+    if (!overviewRequest.key) return;
+    // Supersedes any pending shortcut positioning.
+    mealPositioned.current = true;
+    const shortcutView = waterFocused || mealFocused;
+    if (!shortcutView && !(overviewRequest.retap && (bodyMealsOpen || progressOpen))) return;
+    // Only the presentation resets; meal, sleep, weight and correction input stay as typed.
+    setWaterFocused(false);
+    setMealFocused(false);
+    setBodyMealsOpen(false);
+    setProgressOpen(false);
+    // Outside the shortcut, manual macros sit behind a disclosure; keep a typed draft in view there.
+    if (Object.values(newMealForm).some((value) => value.trim())) setManualMealEntryOpen(true);
+    localOrigin.current = null;
+    requestAnimationFrame(() => {
+      document.getElementById("meal-surface-heading")?.focus({ preventScroll: true });
+      window.scrollTo({ top: 0, behavior: "instant" });
+    });
+  }, [overviewRequest.key]);
   function showMealSurface(next: boolean) {
     if (busyRef.current || foodSearchBusyRef.current) return;
     // An explicit local choice supersedes the initial delayed shortcut handoff.

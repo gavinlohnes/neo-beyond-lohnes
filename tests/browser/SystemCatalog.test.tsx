@@ -104,6 +104,9 @@ describe("production SYSTEM catalog", () => {
     await launch(screen, "HISTORY");
     await expect.element(screen.getByRole("heading", { name: "MORE // HISTORY", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
+    await expect.element(screen.getByRole("heading", { name: "BODY // DAILY RECORD" })).toBeVisible();
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
     expect(confirm).not.toHaveBeenCalled();
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);

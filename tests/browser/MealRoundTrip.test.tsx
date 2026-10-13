@@ -88,6 +88,10 @@ describe("TODAY meal round trip", () => {
     await screen.getByRole("button", { name: "MORE", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
+    await expect.element(screen.getByRole("heading", { name: "BODY // DAILY RECORD" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "RETURN TO TODAY" }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Lunch");
     await expect.element(screen.getByRole("spinbutton", { name: "New meal calories" })).toHaveValue(600);
     expect(confirm).not.toHaveBeenCalled();
