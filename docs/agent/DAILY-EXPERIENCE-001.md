@@ -3,7 +3,7 @@
 Gavin explicitly approved this complete objective on 2026-10-13 and assigned Codex as sole
 implementation Builder. Lane: PROTECTED (primary surface composition and navigation continuity).
 Starting master: `e145cd16d0323d80eb45e6920cb7fe647c3cf97d`, freshly fetched. Branch:
-`codex/daily-experience-001`. Active PR: pending creation.
+`codex/daily-experience-001`. Active PR: [#228](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/228).
 
 ## Outcome and boundaries
 

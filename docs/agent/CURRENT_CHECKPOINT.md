@@ -731,7 +731,7 @@ None. Independent Protected review and owner merge approval remain separate step
 
 Gavin authorized Codex as sole implementation Builder for the full daily-experience objective;
 PROTECTED brief in [DAILY-EXPERIENCE-001.md](DAILY-EXPERIENCE-001.md). Fresh starting master:
-`e145cd16d0323d80eb45e6920cb7fe647c3cf97d`; branch `codex/daily-experience-001`; PR pending creation.
+`e145cd16d0323d80eb45e6920cb7fe647c3cf97d`; branch `codex/daily-experience-001`; PR [#228](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/228).
 This appended handoff leaves the unrelated housekeeping PR #227's earlier checkpoint sections
 and roadmap edits alone. COMMAND-ATOMICITY-002 is merged in #226; its older status above is
 historical context, not the current assignment. Prototype PR #204 remains unchanged.
@@ -743,7 +743,8 @@ Plan Today over explicit existing dates/Missions/recurrence with canonical detai
 compact MORE with on-demand guidance, complete Backup/Recovery access and one main landmark.
 No Engine, schema, event/backup contract, historical fixture, dependency, backend or CI change.
 
-Evidence: full local gate and built-PWA 320/360/412 px journeys; results and reproduction in
+Evidence: full local gate: 226 files / 2,372 passed / one existing skip; architecture and production
+build pass. Built-PWA 320/360/412 px journeys pass; results and reproduction in
 [synthetic phone evidence](../screenshots/daily-experience-001/README.md). Verification counts and
 exact final head belong in the PR to avoid a self-referential commit hash. The full gate preserves
 its single existing skip. Early failures were corrected: exact Capture selectors, immediate
