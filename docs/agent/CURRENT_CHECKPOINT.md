@@ -2,6 +2,16 @@
 
 ## Current objective — Guided MORE + Low-Energy TODAY (issue #219)
 
+PR #220 review correction, 2026-10-13: an independent Claude Code review of
+`72b735082ceb39fbae1aec39743a0111f1c6f783` issued BLOCK on B1 only. The retained (hidden-mounted)
+Journal kept its last opened entry, so re-entry from the MORE menu or a Search result showed a stale
+detail instead of the list. Builder: Claude Code (taking over from Codex). Fix: Journal resets to
+its list on each activation; creation drafts are separate state and stay retained. A new browser
+regression fails on the reviewed head and passes with the fix. Full local Node+browser suite
+(219 files, 2,308 passed, one existing skip), TypeScript, architecture (206 files), build and
+whitespace pass. Nonblocking N1–N4 are left unchanged to keep this correction bounded. Prior-head
+CI/review do not apply; corrected-head CI and renewed independent exact-head review belong in PR #220.
+
 Owner authorization: [issue #219](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/219)
 and Gavin's direct implementation assignment. Sole Builder: Codex; branch
 `codex/guided-more-low-energy`; [PR #220](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/220).

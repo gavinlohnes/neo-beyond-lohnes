@@ -93,6 +93,11 @@ export function JournalScreen({ active = true, onOpenCapture, onDraftChange }: {
     onDraftChange?.([newTitle, newContext, newOptions, newDecision, newReasoning, newExpectation].some((value) => value.length > 0));
   }, [onDraftChange, newTitle, newContext, newOptions, newDecision, newReasoning, newExpectation]);
 
+  // Stays mounted while hidden for draft retention; each entry starts at the list like a fresh mount.
+  useEffect(() => {
+    if (active) setView({ kind: "LIST" });
+  }, [active]);
+
   useEffect(() => {
     if (active) void refreshList();
     return () => { ++readSequence.current; };

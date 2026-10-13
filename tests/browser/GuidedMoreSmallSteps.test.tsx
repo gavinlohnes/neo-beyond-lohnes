@@ -14,6 +14,7 @@ import { deriveCapacity } from "../../src/engine/capacity";
 import { JournalScreen } from "../../src/ui/screens/more/JournalScreen";
 import { IntentScreen } from "../../src/ui/screens/more/IntentScreen";
 import { getDecisionJournalEntries } from "../../src/application/journalQueries";
+import { createDecisionJournalEntry } from "../../src/application/journalCommands";
 import { getMissions } from "../../src/application/intentQueries";
 import { App } from "../../src/app/App";
 
@@ -133,6 +134,30 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     expect(obligation.recurrence).toBeUndefined();
     expect(obligation.missionId).toBeUndefined();
   });
+  it("re-entering the retained Journal, from the menu or a Search result, starts at the list, not a stale entry", async () => {
+    await createDecisionJournalEntry({ title: "Alpha decision", decision: "Pick alpha" });
+    await createDecisionJournalEntry({ title: "Bravo decision", decision: "Pick bravo" });
+    const screen = await render(<MoreScreen />);
+    const alphaDetail = screen.getByRole("heading", { name: "Alpha decision", exact: true });
+    const decisionsList = screen.getByRole("heading", { name: "Decisions", exact: true });
+    await screen.getByRole("button", { name: "Open DECISION JOURNAL", exact: true }).click();
+    await screen.getByRole("button", { name: "Open Alpha decision", exact: true }).click();
+    await expect.element(alphaDetail).toBeVisible();
+    await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
+    await screen.getByRole("button", { name: "Open DECISION JOURNAL", exact: true }).click();
+    await expect.element(decisionsList).toBeVisible();
+    expect(alphaDetail.elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "Open Alpha decision", exact: true }).click();
+    await expect.element(alphaDetail).toBeVisible();
+    await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
+    await screen.getByRole("button", { name: "Open SEARCH", exact: true }).click();
+    await screen.getByRole("textbox", { name: "Search everything" }).fill("Bravo");
+    await screen.getByRole("button", { name: /: Bravo decision$/ }).click();
+    await expect.element(decisionsList).toBeVisible();
+    expect(alphaDetail.elements()).toHaveLength(0);
+    await expect.element(screen.getByRole("button", { name: "Open Bravo decision", exact: true })).toBeVisible();
+  });
+
   it.each([320, 360, 412])("keeps exactly two starts, free/manual writing, drafts and accessible navigation at %ipx", async (width) => {
     await page.viewport(width, 800);
     const before = await db.events.toArray();
