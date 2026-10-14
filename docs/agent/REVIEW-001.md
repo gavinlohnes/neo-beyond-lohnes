@@ -1,161 +1,240 @@
-# REVIEW-001 — Data review that answers your questions (design brief, proposed)
+# REVIEW-001 — Data review that answers your questions (approved plan)
 
-**Status: design proposal for owner approval. No implementation is authorized by this file.**
-Gavin approved the design pass on 2026-10-14 ("yes, do the REVIEW-001 design pass, both weekly and
-always-on"). Builder for the design pass: Claude Code. Starting master: `53fcf68`. Implementation
-needs Gavin's separate approval of the phases below; Phase 1 is proposed as **PROTECTED** (a new MORE
-destination that changes how existing analytics are composed, and new read-only calculations).
+**Status:** plan approved by Gavin on 2026-10-14. Phase 1a implementation starts after this brief
+merges. Phases 1b and 2 each need their own go-ahead.
 
-Mockups (illustrative data, 390 px): [`docs/screenshots/review-001/`](../screenshots/review-001/).
+- **Builder:** Claude Code.
+- **Design-pass starting master:** `53fcf68`. Each implementation PR records its own exact starting commit.
+- **Lane:** **PROTECTED** for Phase 1a. It adds a new MORE destination, a quiet TODAY line, new
+  read-only calculations, and additive storage for measurements, photos and the weekly focus. That
+  storage changes the schema and the backup contract.
+
+Owner rulings (2026-10-14):
+1. **Design pass:** approved, covering both an always-on Review and a weekly review.
+2. **Weekly review on Mondays,** with a quiet visual on TODAY.
+3. **Weekly check-in stays** as its own screen alongside Review.
+4. **Progress photos: yes.**
+5. **Reference ranges:** discussed. Approved approach: targets the operator sets, informed by cited
+   guidance (option C), shipped as a follow-up (C2). Until then, Review compares against *your usual*,
+   with guidance available on request.
+6. **Revised plan approved:**
+   - baseline capture early;
+   - weekly reviews for habits, monthly reviews for the body;
+   - the focus loop early;
+   - Phase 1 split into 1a/1b;
+   - a core-six home.
+
+Mockups from the design pass (illustrative data, 390 px): [`docs/screenshots/review-001/`](../screenshots/review-001/).
+They show the layout and chart language. The home screen's question order is superseded by the core six below.
 
 ## Goal
 
-Gavin's goals are to lose weight, get stronger, and look visibly more muscular. BEYOND already
-records most of the evidence, and many of the analytics already exist. They are spread across Weekly
-(Ribbon, findings, your usual, Mirror, expenditure, heat grid), BODY (insights, weight trend, timeline),
-TRAIN (strength curves, PR cards) and MORE (Report, the Recommendation Ledger). None of these is a
-single place that answers "how am I doing?". REVIEW-001 makes one: **Review**, organized around
-questions, with two ways in.
+Gavin's goals are to lose weight, get stronger, and look visibly more muscular. His stated motivation
+is accountability and good data to review.
 
-- **Always-on.** Open any time. Each question has a one-sentence answer, a small chart, and a detail
-  view with the evidence behind it.
-- **Weekly review.** A short guided pass of 6 steps, about 3 minutes, offered once a week on a chosen
-  day off. It ends with your own notes and an optional focus for next week that you pick yourself.
+BEYOND already records most of the evidence, but its analytics are spread across several screens:
+- Weekly: Ribbon, findings, *your usual*, Mirror, expenditure, heat grid.
+- BODY: insights, weight trend, timeline.
+- TRAIN: strength curves, PR cards.
+- MORE: Report, Recommendation Ledger.
 
-## The questions
+REVIEW-001 brings them into one place, **Review**, built around questions and offering three ways in:
 
-Key: **Now** = answerable from existing records and calculations. **Derive** = needs a new read-only
-calculation over existing records. **New data** = needs something BEYOND does not record yet (Phase 2).
+- **Always-on.** Open at any time. Each question has a one-sentence answer, a small chart, and a detail
+  view with its evidence.
+- **Weekly review (Mondays).** About 3 minutes, covering habits and training for the Monday–Sunday week.
+  It ends with your notes and a focus for next week that you choose yourself.
+- **Monthly review (every 4th Monday).** Covers your body:
+  - new progress photos side by side with the last set;
+  - measurements;
+  - the 4-week weight trend and strength change.
 
-### Losing weight
+## Home: the core six
+
+Ordered by Gavin's goals:
+1. Is my weight going down, and at what rate?
+2. Am I keeping my strength while losing weight?
+3. Am I getting stronger?
+4. Is each muscle getting enough work?
+5. Am I hitting protein and calories?
+6. Am I training consistently?
+
+The remaining questions sit under "More questions".
+
+## The full question catalog
+
+Key:
+- **Now:** existing records and calculations can answer it.
+- **Derive:** needs a new read-only calculation over existing records.
+- **1a data:** the measurements, photos or weekly focus added in Phase 1a.
+
 | # | Question | Source |
 |---|---|---|
-| 1 | Is my weight actually going down (trend, not daily noise)? | Derive: 7-day average over existing weigh-ins |
-| 2 | How fast: lb per week and % of bodyweight per week? | Derive |
+| 1 | Is my weight going down (7-day trend, not daily noise)? | Derive |
+| 2 | How fast, in lb/week and % of bodyweight? | Derive |
 | 3 | When will I reach my goal weight at this pace? | Now (`projectGoalDate`) |
-| 4 | How much do I normally swing day to day? (so one bad morning isn't scary) | Derive |
-| 5 | Am I eating what I planned? Days on calorie target, average intake | Now / derive (logged days only) |
-| 6 | Am I hitting protein? Days at target, average | Now (Weekly) |
-| 7 | How much am I really burning? | Now (expenditure readout, Weekly) |
+| 4 | How much do I normally swing day to day? | Derive |
+| 5 | Am I eating what I planned (days on calorie target)? | Now / derive (logged days only) |
+| 6 | Am I hitting protein? | Now |
+| 7 | How much am I really burning? | Now (expenditure readout) |
 | 8 | Do work days and days off differ (weight, eating, sleep)? | Derive (declared work context) |
-| 9 | Is my waist getting smaller? | New data: measurements |
-
-### Getting stronger
-| # | Question | Source |
-|---|---|---|
-| 10 | Am I getting stronger overall? | Derive: strength index from estimated max |
-| 11 | Which lifts are progressing, and which have stalled? | Now (stall finding) + derive |
-| 12 | Am I keeping or gaining strength while I lose weight? | Derive: weight trend next to strength index |
-| 13 | How strong am I relative to my bodyweight? | Derive |
-| 14 | What records did I set this week or month? | Now (PR rule) |
-| 15 | Am I progressing the way my plan intends (top of rep range before adding weight)? | Now (progression) |
-
-### Looking more muscular
-| # | Question | Source |
-|---|---|---|
-| 16 | Am I losing fat and not muscle? | Derive (weight + strength); clearer with new data (waist, photos) |
-| 17 | Is each muscle group getting enough hard sets per week? | Derive: sets per muscle group (needs a muscle mapping for template exercises) |
-| 18 | Is my training balanced: push vs pull, upper vs lower, shoulders and arms? | Derive |
-| 19 | Is my weekly training volume growing over time? | Derive |
-| 20 | Do I look different? Side-by-side progress photos | New data: photos (local only) |
-| 21 | Are my chest, arms and shoulders growing? | New data: measurements |
-
-### Recovery and consistency
-| # | Question | Source |
-|---|---|---|
-| 22 | Am I training consistently? Sessions per week, longest gap | Derive |
+| 9 | Is my waist getting smaller? | 1a data |
+| 10 | Am I getting stronger overall? | Derive (1b) |
+| 11 | Which lifts are progressing, and which have stalled? | Now (stall finding) + derive (1b) |
+| 12 | Am I keeping or gaining strength while losing weight? | Derive (1b) |
+| 13 | How strong am I relative to bodyweight? | Derive (1b) |
+| 14 | What records did I set this week or month? | Now |
+| 15 | Am I progressing as my plan intends? | Now (progression) |
+| 16 | Am I losing fat, not muscle? | Derive + 1a data (waist, photos) |
+| 17 | Hard sets per muscle group per week? | Derive (1b; muscle mapping for template exercises) |
+| 18 | Is training balanced (push/pull, upper/lower, shoulders, arms)? | Derive (1b) |
+| 19 | Is weekly volume growing? | Derive (1b) |
+| 20 | Do I look different? | 1a data (photos) |
+| 21 | Are chest, arms and shoulders growing? | 1a data (measurements) |
+| 22 | Am I training consistently (sessions per week, longest gap)? | Derive |
 | 23 | How does sleep relate to my workouts? | Now (finding) |
-| 24 | How do night shifts affect training, eating and sleep? | Now (findings) + derive |
-| 25 | How have I been feeling over time? | Derive (check-in trend) |
+| 24 | How do night shifts affect training, eating and sleep? | Now + derive |
+| 25 | How have I been feeling over time? | Derive (check-ins) |
 | 26 | How complete is my logging, so I know which numbers to trust? | Derive |
+| 27 | What changed this week compared with last week? | Now (Weekly) |
+| 28 | Did I do what I chose to focus on? | 1a data (focus) |
 
-### Review and reflection
-| # | Question | Source |
-|---|---|---|
-| 27 | What happened this week, compared with last week? | Now (Weekly) |
-| 28 | What did I write, and what did I choose to focus on, and how did it go? | New data: weekly note and focus (Phase 3) |
+## Rules every answer follows (doctrine and locked decisions)
 
-## Rules every answer follows (from doctrine and locked decisions)
-
-- **Facts and patterns, never a grade.** No scores, streaks, red "bad" colors or guilt copy. Charts use
+- **Facts and patterns, never a grade.** No scores, streaks, guilt copy or red "bad" colors. Charts use
   neutral ink. Red stays reserved for earned significance (the existing PR tag) and the primary button.
-- **Confidence matches evidence.** Every answer names its window and how many records it came from.
-  Below a floor it says what is still needed ("Needs 3 sessions of the same lift. You have 0."), never
-  a guessed chart. Partial logging is never presented as total intake, and missing data stays missing.
-- **Counts, not causes.** For example: "Days off read about 1.2 lb higher than work days. That is a
-  count, not a cause." This follows the findings rule that excludes "usually", "tends to" and "because".
-- **Inspectable.** Every number can be tapped to show how it was calculated and the records behind it.
-  Charts are inline SVG with an accessible text summary, tap-to-inspect points, and a table alternative.
-- **No new authority.** Review is read-only. It does not recommend, does not feed the Engine, and does
-  not change TODAY. The weekly focus is the operator's own choice and is labeled "Your choice, not a
-  recommendation."
-- **Review is a COMMAND surface** (deliberate deep work), so TODAY stays calm. The only TODAY presence
-  would be a quiet "Weekly review ready" line on the chosen review day, which needs owner approval.
+- **Confidence matches evidence.**
+  - Every answer names its window and how many records it came from.
+  - Below a floor it says what is still needed and shows a "Building up" state, never a guessed chart.
+  - Partial logging is never treated as total intake, and missing data stays missing.
+- **Counts, not causes.** The existing findings rule applies: no "usually", "tends to" or "because".
+- **Inspectable.**
+  - Every number has "How this is calculated" and "Every record in this range".
+  - Charts are inline SVG with a text summary, tap-to-inspect points and a table alternative.
+  - Each chart has one y-axis. Weight and strength sit on stacked charts, never a dual axis.
+- **No new authority.**
+  - Review is read-only analysis. It does not recommend anything, does not feed the Engine,
+    and adds no TODAY rows.
+  - The weekly focus is the operator's choice, labeled "Your choice, not a recommendation."
+  - Next week reports how the focus went as a count.
+- **Review is a COMMAND surface.** TODAY gets only the quiet "Weekly review ready" line (rules below).
+- **Weigh-in consistency.** For shift work, a weigh-in means *after your main sleep, before eating*.
+  Review shows timing consistency, because mixed timing creates false swings.
+- **Machine lifts.** Best set and total volume are the primary strength measures. Estimated max (Epley)
+  is a secondary trend, because it is rough at the higher rep ranges these templates use.
 
-## Design (see mockups)
+## Weekly and monthly review timing
 
-1. **Review home (always-on).** A weekly-review card (shown when one is ready), two goal tiles
-   (weight trend and strength index), then question rows: question, one-sentence answer, mini chart.
-   Questions without enough data move to a "Building up" group that shows progress toward the floor
-   (mockup 8 is close to Gavin's real state today).
-2. **Question detail.** The answer sentence, range chips (4 W / 8 W / 6 M / ALL), one chart, 2–4 stat
-   tiles, a count-not-cause note, "How this is calculated", and "Every record in this range".
-3. **Weekly review.** Steps: the week → weight → strength → muscles → fuel and recovery → your notes.
-   Each step reuses the matching detail view, compared with last week. LATER keeps it ready.
+- **Weekly window:** the review covers the Monday–Sunday calendar week. Day facts use BEYOND's
+  existing lived-day rules.
+- **When it appears:** the review becomes ready on Monday and stays ready until it is done or until
+  the next one replaces it. There is no "missed" state and no streak.
+- **TODAY line:** a quiet, neutral line ("Weekly review ready"), outside the phase-row cap like the
+  existing operator controls.
+  - It is shown only when the operator is not in a pre-work or at-work phase. Gavin's rotation
+    makes every other Monday a work day.
+  - On those Mondays it appears at the next off time.
+  - It disappears once the review is done.
+- **Monthly review:** every 4th Monday, counted from the first completed weekly review. It replaces
+  that week's review and includes the weekly steps.
 
-Chart rules: one y-axis per chart. Weight and strength are two stacked charts, never a dual axis. Thin
-2 px lines, hairline grid, the latest value labeled directly, and daily points muted under the trend.
+## Phases
 
-## Proposed phases
+### Phase 1a — Review hub, reviews, baseline capture and focus (PROTECTED, approved to start after merge)
 
-**Phase 1 — Review hub and weekly review on existing data** (PROTECTED; no schema change).
-- New MORE destination "REVIEW" plus a SYSTEM catalog entry. Weekly, Mirror and findings content is
-  reused inside it, and the existing screens stay reachable until Gavin rules on consolidation.
-- New pure read-only calculations (in `engine/`, unit-tested, never used by `evaluate`):
-  - 7-day weight average and daily swing;
-  - rate per week as lb and as a percentage;
-  - estimated max (Epley) per lift and a strength index;
-  - relative strength;
-  - hard sets per muscle group per week, with a muscle-group mapping for built-in template exercises
-    and reuse of the custom exercises' existing `muscleGroup`;
-  - push/pull and upper/lower balance;
-  - consistency;
-  - logging coverage.
-- Abstain floors per question, written into tests.
-- Leverage gate: **BUILD OWNED** inline SVG, reusing the existing timeline/strength-curve pattern. No
-  charting dependency (Recharts stays eligible-but-not-adopted unless a named need appears).
-- The weekly review in Phase 1 is read-only. Notes and focus arrive in Phase 3.
+Review hub:
+- A new MORE destination, REVIEW, plus a SYSTEM catalog entry.
+- The core-six home and "More questions".
+- Weekly stays a separate screen.
 
-**Phase 2 — Body composition evidence** (PROTECTED; additive schema, backup contract).
-- Weekly measurements: waist first; chest, arms, shoulders and hips optional.
-- Optional progress photos stored only on the device. This affects backup size and privacy, and the
-  backup format needs an explicit decision.
-- Feeds questions 9, 16, 20 and 21.
+Ships with questions that work on today's data:
+- weight trend, rate, swing, goal date and timing consistency;
+- protein and calories;
+- expenditure;
+- recovery, sleep and check-ins;
+- consistency and logging coverage;
+- work days vs days off.
 
-**Phase 3 — Reflection** (PROTECTED; additive schema). This ties into JOURNAL-002.
-- A weekly note and an operator-chosen focus, stored as events.
-- Next week's review shows how the focus went, as a count.
-- Journal entries and Captures from the week appear beside the numbers.
+Strength and volume questions show "Building up" until Phase 1b.
 
-## Decisions for Gavin
+Reviews:
+- the weekly review on Mondays, with the TODAY line;
+- the monthly review every 4th Monday.
 
-1. **Approve Phase 1 implementation** as scoped above (PROTECTED: independent exact-head review, green
-   CI, your merge approval).
-2. **Reference ranges.** Show common guidance as a quiet band next to *your usual*, or show only your own
-   data? Examples: losing 0.5–1% of bodyweight per week, or 10–20 hard sets per muscle per week. These
-   are general guidance, not BEYOND's judgment, and would be labeled with their source.
-3. **Weekly review day and the TODAY line.** Which day? Should TODAY show a quiet "Weekly review ready"
-   line on that day? That is a TODAY composition change.
-4. **Consolidation.** Once Review exists, should Weekly, Mirror and findings live only inside Review
-   (simpler MORE), or stay as separate entries too?
-5. **Phase 2 photos.** Do you want progress photos at all, given they stay on the device and make
-   backups larger?
+**Measurements** (additive storage):
+- Waist is the primary measurement. Chest, arms, shoulders and hips are optional.
+- Entries are corrected like other BODY records, with no deletion.
+- Earlier values can be backdated, so tape measurements taken before launch can be entered.
 
-## Acceptance evidence (Phase 1)
+**Progress photos** (additive storage, kept on the device only):
+- Front, side and back.
+- An optional framing guide, which uses the last photo as a ghost outline.
+- A side-by-side compare.
+- Earlier photos from the phone gallery can be imported with their dates, so baseline photos taken
+  before launch count.
+- The backup handling must be decided before implementation: see Decision 2.
 
-- Unit tests for every calculation and abstain floor, including ones built from the protected fixtures,
-  read only.
-- Browser tests through `<App />` at 320/360/412 px: axe, reduced motion, tap-to-inspect, keyboard,
-  and the "Building up" states.
-- A production-build acceptance script with screenshots.
-- No Engine/`evaluate` change, no event or schema change, and no new dependency.
+**Weekly note and focus** (additive events):
+- The focus is chosen from a few neutral options built from the week's own facts, or written in.
+- Next week reports what happened, as a count.
+
+New pure read-only calculations go in `engine/`. They are unit-tested and never used by `evaluate`:
+- 7-day average, rate, swing and weigh-in timing;
+- consistency and coverage;
+- review-window bucketing.
+
+Leverage gate: **BUILD OWNED** inline SVG, reusing the timeline and strength-curve pattern. No new
+runtime dependency. Photos use the browser's own file input and canvas, with no image library.
+
+### Phase 1b — Strength and muscle analytics (PROTECTED; after about 3 weeks of real training)
+
+- Best set, volume and estimated max per lift; a strength index; relative strength.
+- Hard sets per muscle group, using a mapping for built-in template exercises and the existing
+  custom-exercise `muscleGroup`.
+- Balance views: push/pull and upper/lower.
+- The "strength while losing weight" view.
+- Designed against Gavin's first real sessions, with synthetic data used for tests only.
+
+### Follow-up (C2) — operator-set targets
+
+- Optional targets for weight-loss rate, sets per muscle and sessions per week.
+- When setting them, cited general ranges are shown for context. Examples: about 0.5–1% of bodyweight
+  per week; roughly 10–20 hard sets per muscle per week.
+- Additive settings, the same pattern as the existing goal weight.
+
+### Phase 2 — Reflection depth (JOURNAL-002)
+
+- Journal and Capture improvements, feeding into Review beside the numbers.
+- Needs its own brief.
+
+## Remaining decisions for Gavin
+
+1. **Phase 1b and Phase 2** each need a go-ahead when their time comes.
+2. **Photos in backups.** Before Phase 1a builds photo storage, choose one:
+   - **(a)** include photos in the normal backup file, which makes it much larger;
+   - **(b)** keep a separate "photos backup" file;
+   - **(c)** leave photos out of backups, so they stay only on the device and are lost if the phone is lost.
+
+   The Builder will recommend one with sizes measured before you choose.
+
+## Outside Review, flagged
+
+For "visibly more muscular", the training program matters more than analytics. Templates A, B and C
+are machine-based and fairly light on shoulders and back. A read-only look at whether the program fits
+the goal is available on request. Custom Programs already exist if it needs adjusting.
+
+## Acceptance evidence (Phase 1a)
+
+- **Unit tests** for every calculation and abstain floor, including runs over the protected fixtures
+  (read only).
+- **Schema** migration tests: additive only, so older backups restore unchanged.
+- **Backup round-trip tests,** following whatever photo-backup option Gavin chooses.
+- **Browser tests** through `<App />` at 320, 360 and 412 px:
+  - axe accessibility, reduced motion, keyboard use and tap-to-inspect;
+  - the "Building up" states;
+  - TODAY-line timing across a work Monday and an off Monday;
+  - focus recording and next week's count;
+  - photo import, compare and correction.
+- **A production-build acceptance script** with screenshots.
+- **No Engine/`evaluate` change** and no new dependency.
+- Independent exact-head review, green required CI, and Gavin's merge approval.
