@@ -181,6 +181,11 @@ export function TrainScreen({
   const [reading, setReading] = useState(true);
   const [readError, setReadError] = useState<string | null>(null);
   const hasReadRef = useRef(false);
+  // PR #228 review R1: a retained TRAIN keeps only the template/variant the operator
+  // explicitly chose; anything still at its suggested default re-derives on return,
+  // so a check-in made elsewhere updates SUGGESTED WORKOUT as a fresh visit would.
+  const templateChosenRef = useRef(false);
+  const variantChosenRef = useRef(false);
   // Drop 1.6a: "enter reps" shown under the set that was tapped.
   const [logSetNotice, setLogSetNotice] = useState<{ key: string; message: string } | null>(null);
   const [recoveryMinutes, setRecoveryMinutes] = useState(10);
@@ -294,7 +299,7 @@ export function TrainScreen({
     if (!active || reading || readError || !destination || !destinationReady || destinationConsumedRef.current) return;
     destinationConsumedRef.current = true;
     onDestinationConsumed?.();
-    if (!session && destination !== "WORKOUT") { setChosenVariant("RECOVERY"); setOverridePickerOpen(true); }
+    if (!session && destination !== "WORKOUT") { variantChosenRef.current = true; setChosenVariant("RECOVERY"); setOverridePickerOpen(true); }
     requestAnimationFrame(() => {
       if (session || destination === "WORKOUT") headingRef.current?.focus();
       else recoveryChoiceRef.current?.focus();
@@ -347,7 +352,8 @@ export function TrainScreen({
 
     const nextTemplate = await suggestTemplateForNextWorkout();
     setSuggestedTemplate(nextTemplate);
-    if (!preserveChoice) setChosenTemplate(nextTemplate);
+    if (!preserveChoice) templateChosenRef.current = false;
+    if (!templateChosenRef.current) setChosenTemplate(nextTemplate);
     setLastAdvancingTemplate(await getLastAdvancingTemplate());
 
     setShowStopConfirm(false);
@@ -360,7 +366,8 @@ export function TrainScreen({
     // original day; nothing is migrated or rewritten.
     const active = (await getActiveWorkoutSession()) ?? null;
     setSession(active);
-    if (!preserveChoice) setChosenVariant(
+    if (!preserveChoice) variantChosenRef.current = false;
+    if (!variantChosenRef.current) setChosenVariant(
       !active && destination === "RECOVERY"
         ? "RECOVERY"
         : suggestion.variant === "RESET"
@@ -1103,7 +1110,7 @@ export function TrainScreen({
                     style={{ flex: "none", padding: "8px 16px" }}
                     aria-pressed={chosenTemplate === t}
                     disabled={chosenVariant === "RECOVERY"}
-                    onClick={() => setChosenTemplate(t)}
+                    onClick={() => { templateChosenRef.current = true; setChosenTemplate(t); }}
                   >
                     {templateLabel(t, customTemplates)}
                   </button>
@@ -1120,7 +1127,7 @@ export function TrainScreen({
                     className={`chip ${chosenVariant === v ? "chip--selected" : ""}`}
                     style={{ flex: "none", padding: "8px 14px" }}
                     aria-pressed={chosenVariant === v}
-                    onClick={() => setChosenVariant(v)}
+                    onClick={() => { variantChosenRef.current = true; setChosenVariant(v); }}
                   >
                     {v}
                   </button>

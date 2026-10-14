@@ -341,6 +341,8 @@ function AppWorkspaces() {
   function openPrimaryTab(destination: Tab) {
     if (!canNavigate()) return false;
     if (destination === "MORE" && tab === "MORE") return openMore("MENU");
+    // PR #228 review R2: a Capture return belongs to that Capture visit only.
+    setCaptureOrigin(null);
     if (destination === "BODY") {
       // A shortcut's focused view and its return belong to that shortcut visit only.
       // BODY keeps every unsaved input; only the presentation goes back to the Daily Record.
