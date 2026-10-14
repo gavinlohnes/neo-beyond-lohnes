@@ -36,6 +36,11 @@ const openIntent = async (screen: Screen) => {
 };
 
 /** What a page reload or tab close would do: a prevented beforeunload asks first. */
+/** Draft registration settles through React effects; let them run before asserting "no warning". */
+async function settled() {
+  for (let i = 0; i < 3; i += 1) await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+}
+
 function reloadWouldWarn(): boolean {
   const event = new Event("beforeunload", { cancelable: true });
   window.dispatchEvent(event);
@@ -88,7 +93,7 @@ describe("blocker 1 — unfinished record edits survive cross-record navigation"
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "Unfinished renamed task", exact: true })).toBeVisible();
     expect(await db.events.where("type").equals("OBLIGATION_MODIFIED").count()).toBe(1);
-    expect(reloadWouldWarn()).toBe(false);
+    await expect.poll(reloadWouldWarn).toBe(false);
   });
 
   it("Missions list A → B → A keeps A's edited title; CANCEL is the explicit discard", async () => {
@@ -109,7 +114,7 @@ describe("blocker 1 — unfinished record edits survive cross-record navigation"
 
     await screen.getByRole("button", { name: "CANCEL", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "Mission A", exact: true })).toBeVisible();
-    expect(reloadWouldWarn()).toBe(false);
+    await expect.poll(reloadWouldWarn).toBe(false);
   });
 });
 
@@ -165,6 +170,7 @@ describe("blocker 2 — Intent drafts reach reload and update protection", () =>
   for (const [name, makeDraft] of soleDrafts) {
     it(`reload warns when ${name} is the only unfinished input`, async () => {
       const screen = await render(<App />);
+      await settled();
       expect(reloadWouldWarn()).toBe(false);
       await makeDraft(screen);
       await expect.poll(reloadWouldWarn).toBe(true);
@@ -179,11 +185,13 @@ describe("blocker 2 — Intent drafts reach reload and update protection", () =>
     await screen.getByRole("button", { name: "Open Existing task", exact: true }).click();
     await screen.getByRole("button", { name: "EDIT", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "Obligation title" })).toHaveValue("Existing task");
+    await settled();
     expect(reloadWouldWarn()).toBe(false);
     await screen.getByRole("button", { name: "← BACK", exact: true }).click();
     await screen.getByRole("button", { name: "Open Existing direction", exact: true }).click();
     await screen.getByRole("button", { name: "EDIT", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "Mission title" })).toHaveValue("Existing direction");
+    await settled();
     expect(reloadWouldWarn()).toBe(false);
   });
 
@@ -216,6 +224,7 @@ describe("blocker 2 — Intent drafts reach reload and update protection", () =>
     await expect.element(screen.getByRole("textbox", { name: "Obligation title" })).toHaveValue("Unsaved rename");
 
     await screen.getByRole("button", { name: "CANCEL", exact: true }).click();
+    await expect.poll(reloadWouldWarn).toBe(false);
     await screen.getByRole("button", { name: "UPDATE NOW", exact: true }).click();
     expect(confirm).toHaveBeenCalledOnce();
     expect(update.apply).toHaveBeenCalledOnce();
