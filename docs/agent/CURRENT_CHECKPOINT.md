@@ -1,6 +1,16 @@
 # Current checkpoint
 
-## Current state — no objective in flight (2026-10-14)
+## Current objective — PHONE-FIT-001 (2026-10-14, ROUTINE)
+
+Gavin approved fixing review leftovers R3 and R4 from PR #228 ("start option 1", 2026-10-14).
+Builder: Claude Code. Starting master `53fcf68`; branch `claude/phone-fit-001`; PR linked from the
+branch. Scope: the Obligation EDIT Due/Planned row reuses the create form's responsive
+`.intent-dates` (stacks at ≤360 px), and BODY counts an open correction or saved-meal editor as
+unsaved input only when a value differs from the saved record it opened with. UI only; no Engine,
+schema, event, backup, fixture, dependency or CI change. Evidence and verification are in the PR.
+Next action: Gavin's merge decision after green required CI.
+
+## State before PHONE-FIT-001 (2026-10-14)
 
 PR #228 (DAILY-EXPERIENCE-001) merged at `910c436` with Gavin's approval. Merged head
 `5a4c33bdd3ab3211150130b81724e5a2e22ac8a5` had green required PR Verification and an independent
@@ -12,6 +22,7 @@ Open, unapproved: owner decision D1 (see COMMAND-ATOMICITY-002 below; merged def
 and suggests RELEASE); an after-the-fact independent review of PR #226's `99b8f70` if Gavin wants one.
 
 Carried forward from the PR #228 reviews, nonblocking and unapproved:
+- R3 and R4 are being fixed by PHONE-FIT-001 above.
 - R3 (pre-existing on master): the Obligation EDIT Due/Planned row is an inline flex row; the page
   is 369 px wide at 320/360 px, and at 320 px the bottom nav is pushed below the viewport. Likely
   fix: use the create form's `.intent-dates`. Plan Today makes this editor easier to reach.
