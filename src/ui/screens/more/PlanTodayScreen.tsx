@@ -5,17 +5,18 @@ import { getTodayPlan, type TodayPlan } from "../../../application/planTodayQuer
 import type { Obligation } from "../../../domain/intent/types";
 import { describeError } from "../../errorMessage";
 import { OperatorHeader } from "../../components/OperatorHeader";
-import { EMPTY_RECURRENCE, RecurrencePicker, recurrenceInputFor } from "./IntentScreen";
+import { EMPTY_RECURRENCE, RecurrencePicker, recurrenceInputFor, sameRecurrence } from "./IntentScreen";
 import type { IntentFocus } from "./IntentScreen";
 
 export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; onOpen: (focus: IntentFocus | null) => void }) {
   const [plan, setPlan] = useState<TodayPlan | null>(null);
   const [readError, setReadError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
-  useSessionDraft("plan-create", title.length > 0);
   const [due, setDue] = useState("");
   const [mission, setMission] = useState("");
   const [recurrence, setRecurrence] = useState(EMPTY_RECURRENCE);
+  // Review blocker 2: a due date, Mission or repetition alone is unfinished input too.
+  useSessionDraft("plan-create", [title, due, mission].some((value) => value.length > 0) || !sameRecurrence(recurrence, EMPTY_RECURRENCE));
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

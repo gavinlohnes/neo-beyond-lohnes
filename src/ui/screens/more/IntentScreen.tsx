@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSessionDraft } from "../../sessionDrafts";
 import type { DomainEvent } from "../../../domain/common/types";
 import type { Mission, Obligation, ObligationStatus, RecurrenceRule } from "../../../domain/intent/types";
 import {
@@ -47,6 +48,12 @@ function recurrenceFormFor(recurrence: RecurrenceRule | undefined): RecurrenceFo
 }
 
 /** Builds the stored RecurrenceRule from picker state, or undefined for "does not repeat". `anchor` should be the obligation's own dueAt, falling back to today when none is set. */
+/** Whether two recurrence forms mean the same rule ("Does not repeat" ignores the hidden fields). */
+export function sameRecurrence(a: RecurrenceFormState, b: RecurrenceFormState): boolean {
+  if (!a.freq && !b.freq) return true;
+  return a.freq === b.freq && a.interval === b.interval && a.byDay.join(",") === b.byDay.join(",");
+}
+
 export function recurrenceInputFor(form: RecurrenceFormState, anchor: string): RecurrenceRule | undefined {
   if (!form.freq) return undefined;
   const interval = Math.max(1, parseInt(form.interval, 10) || 1);
@@ -153,10 +160,12 @@ export function RecurrencePicker({
  * writes to Dexie directly.
  */
 
-type View =
-  | { kind: "LIST" }
-  | { kind: "MISSION_DETAIL"; missionId: string }
-  | { kind: "OBLIGATION_DETAIL"; obligationId: string };
+type DetailView = { kind: "MISSION_DETAIL"; missionId: string } | { kind: "OBLIGATION_DETAIL"; obligationId: string };
+type View = { kind: "LIST" } | DetailView;
+
+function detailKey(view: DetailView): string {
+  return view.kind === "MISSION_DETAIL" ? `mission-${view.missionId}` : `obligation-${view.obligationId}`;
+}
 
 /** Search-to-navigate (2026-09-02): lets a caller (MoreScreen, from a Search result) open
  * straight to a specific Mission/Obligation's detail view instead of always starting at LIST.
@@ -254,9 +263,24 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
   const [newObligationPlannedAt, setNewObligationPlannedAt] = useState("");
   const [newObligationRecurrence, setNewObligationRecurrence] = useState<RecurrenceFormState>(EMPTY_RECURRENCE);
 
+  const missionCreateDirty = newMissionTitle.length > 0;
+  const obligationCreateDirty = [newObligationTitle, newObligationMissionId, newObligationDueAt, newObligationPlannedAt].some((value) => value.length > 0)
+    || !sameRecurrence(newObligationRecurrence, EMPTY_RECURRENCE);
+  // DAILY-EXPERIENCE-001 review blocker 2: reload/update warnings cover these drafts too.
+  useSessionDraft("intent-create-mission", missionCreateDirty);
+  useSessionDraft("intent-create-obligation", obligationCreateDirty);
   useEffect(() => {
-    onDraftChange?.([newMissionTitle, newObligationTitle, newObligationMissionId, newObligationDueAt, newObligationPlannedAt, newObligationRecurrence.freq].some((value) => value.length > 0));
-  }, [onDraftChange, newMissionTitle, newObligationTitle, newObligationMissionId, newObligationDueAt, newObligationPlannedAt, newObligationRecurrence.freq]);
+    onDraftChange?.(missionCreateDirty || obligationCreateDirty);
+  }, [onDraftChange, missionCreateDirty, obligationCreateDirty]);
+
+  // DAILY-EXPERIENCE-001 review blocker 1: every visited record detail stays mounted
+  // (hidden when not shown), as Journal entries do, so an unfinished edit on record A
+  // survives opening record B and coming back. Values are never persisted.
+  const [visitedDetails, setVisitedDetails] = useState<DetailView[]>(() => (view.kind === "LIST" ? [] : [view]));
+  useEffect(() => {
+    if (view.kind === "LIST") return;
+    setVisitedDetails((current) => (current.some((d) => detailKey(d) === detailKey(view)) ? current : [...current, view]));
+  }, [view]);
 
   // MORE can navigate to a record or the list without remounting and discarding
   // unfinished creation text. Standalone initialFocus keeps its mount-only contract.
@@ -347,33 +371,26 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
     });
   }
 
-  if (view.kind === "MISSION_DETAIL") {
-    return (
-      <MissionDetail key={view.missionId} active={active}
-        missionId={view.missionId}
-        onBack={() => {
-          setView({ kind: "LIST" });
-          void refreshList();
-        }}
-      />
-    );
-  }
-
-  if (view.kind === "OBLIGATION_DETAIL") {
-    return (
-      <ObligationDetail key={view.obligationId} active={active}
-        obligationId={view.obligationId}
-        missions={allMissions}
-        onBack={() => {
-          setView({ kind: "LIST" });
-          void refreshList();
-        }}
-      />
-    );
-  }
+  const backToList = () => {
+    setView({ kind: "LIST" });
+    void refreshList();
+  };
+  const currentKey = view.kind === "LIST" ? null : detailKey(view);
 
   return (
-    <div className="intent-field">
+    <>
+    {visitedDetails.map((detail) => {
+      const key = detailKey(detail);
+      const shown = key === currentKey;
+      return (
+        <div key={key} hidden={!shown}>
+          {detail.kind === "MISSION_DETAIL"
+            ? <MissionDetail active={active && shown} missionId={detail.missionId} onBack={backToList} />
+            : <ObligationDetail active={active && shown} obligationId={detail.obligationId} missions={allMissions} onBack={backToList} />}
+        </div>
+      );
+    })}
+    {view.kind === "LIST" && <div className="intent-field">
       <header className="intent-field__intro">
         <p className="tool-label">INTENT FIELD</p>
         <p className="card-body">Missions hold durable direction. Obligations hold commitments that require deliberate resolution.</p>
@@ -507,7 +524,8 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
       </div>
       </section>
       {error && <p className="meta meta--error">{error}</p>}
-    </div>
+    </div>}
+    </>
   );
 }
 
@@ -533,6 +551,8 @@ function MissionDetail({ missionId, onBack, active }: { missionId: string; onBac
   const [error, setError] = useState<string | null>(null);
   const [archiveConfirming, setArchiveConfirming] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  useSessionDraft(`intent-mission-edit-${missionId}`, editing && mission !== null
+    && (title !== mission.title || description !== (mission.description ?? "")));
 
   const loadSequence = useRef(0);
   useEffect(() => {
@@ -680,6 +700,9 @@ function ObligationDetail({
   const [error, setError] = useState<string | null>(null);
   const [pendingResolution, setPendingResolution] = useState<"SATISFY" | "RELEASE" | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  useSessionDraft(`intent-obligation-edit-${obligationId}`, editing && obligation !== null
+    && (title !== obligation.title || description !== (obligation.description ?? "") || dueAt !== (obligation.dueAt ?? "")
+      || plannedAt !== (obligation.plannedAt ?? "") || !sameRecurrence(recurrenceForm, recurrenceFormFor(obligation.recurrence))));
 
   const loadSequence = useRef(0);
   useEffect(() => {
@@ -813,15 +836,15 @@ function ObligationDetail({
                 <textarea className="input" style={{ marginBottom: 8, minHeight: 80 }} aria-label="Obligation description" value={description} onChange={(e) => setDescription(e.target.value)} />
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                   <div style={{ flex: 1 }}>
-                    <label htmlFor="obligation-due" className="meta" style={{ display: "block", marginBottom: 4 }}>Due</label>
-                    <input id="obligation-due" type="date" className="input" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
+                    <label htmlFor={`obligation-due-${obligationId}`} className="meta" style={{ display: "block", marginBottom: 4 }}>Due</label>
+                    <input id={`obligation-due-${obligationId}`} type="date" className="input" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label htmlFor="obligation-planned" className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
-                    <input id="obligation-planned" type="date" className="input" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} />
+                    <label htmlFor={`obligation-planned-${obligationId}`} className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
+                    <input id={`obligation-planned-${obligationId}`} type="date" className="input" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} />
                   </div>
                 </div>
-                <RecurrencePicker form={recurrenceForm} onChange={setRecurrenceForm} idPrefix="obligation-recurrence" disabled={busy} />
+                <RecurrencePicker form={recurrenceForm} onChange={setRecurrenceForm} idPrefix={`obligation-recurrence-${obligationId}`} disabled={busy} />
                 <div style={{ display: "flex", gap: 8 }}>
                   <button className="btn-primary" disabled={busy} onClick={() => void handleSave()}>
                     SAVE
