@@ -80,17 +80,21 @@ describe("TODAY meal round trip", () => {
     await expect.poll(() => window.scrollY).toBe(reopenedOrigin);
   });
 
-  it("asks before abandoning a draft through primary navigation and respects cancel", async () => {
+  it("retains a draft through primary navigation without asking to discard it", async () => {
     const screen = await render(<App />);
     await openMeal(screen);
     await fillMeal(screen);
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const confirm = vi.spyOn(window, "confirm");
     await screen.getByRole("button", { name: "MORE", exact: true }).click();
-    expect(confirm).toHaveBeenCalledOnce();
+    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
+    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
+    await expect.element(screen.getByRole("heading", { name: "BODY // DAILY RECORD" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "RETURN TO TODAY" }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Lunch");
-    confirm.mockReturnValue(true);
-    await screen.getByRole("button", { name: "MORE", exact: true }).click();
-    await expect.poll(() => screen.getByRole("button", { name: "MORE", exact: true }).element().getAttribute("aria-current")).toBe("page");
+    await expect.element(screen.getByRole("spinbutton", { name: "New meal calories" })).toHaveValue(600);
+    expect(confirm).not.toHaveBeenCalled();
     expect(await loggedCount()).toBe(0);
   });
 

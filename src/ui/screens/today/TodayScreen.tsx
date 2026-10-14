@@ -1,3 +1,4 @@
+import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
 import { describeSystemStatus } from "./statusCopy";
@@ -210,6 +211,10 @@ function writeSleepDraftDismissal(dayId: string): void {
 const STATUS_DOT: Record<SystemStatus["level"], string> = { GREEN: "green", AMBER: "yellow", RED: "red", NO_READ: "unknown" };
 
 export function TodayScreen({
+  active = true,
+  captureRequest = 0,
+  onReturnFromCapture,
+  onOpenPlan,
   onViewCommitments,
   onOpenTrain,
   onOpenBody,
@@ -220,7 +225,11 @@ export function TodayScreen({
   banners,
   mealRefreshKey = 0,
 }: {
-  onViewCommitments?: () => void;
+  active?: boolean;
+  captureRequest?: number;
+  onReturnFromCapture?: (() => void) | undefined;
+  onOpenPlan?: () => void;
+  onViewCommitments?: (id?: string) => void;
   onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
   onOpenBody?: (target?: BodyFocus) => void;
   onOpenSystemDestination?: (destination: SystemDestination) => boolean;
@@ -328,6 +337,7 @@ export function TodayScreen({
   const [advisoryNotes, setAdvisoryNotes] = useState<AdvisoryNote[]>([]);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [captureText, setCaptureText] = useState("");
+  useSessionDraft("capture", captureText.length > 0);
   const [captureFeedback, setCaptureFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
   // Overdrive Phase 17 (Capture 1.1): reopenCaptureItem already existed
   // (application/commands.ts) and was already tested
@@ -436,6 +446,25 @@ export function TodayScreen({
   } | null>(null);
   const [quitHabitSetUp, setQuitHabitSetUp] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(openToolsOnMount);
+  const [fastCaptureOpen, setFastCaptureOpen] = useState(false);
+  const fastCaptureOrigin = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
+  function openFastCapture() {
+    if (busyRef.current) return;
+    fastCaptureOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
+    setFastCaptureOpen(true);
+    requestAnimationFrame(() => document.querySelector<HTMLInputElement>('#fast-capture input[aria-label="Capture a thought"]')?.focus());
+  }
+  function closeFastCapture() {
+    if (busyRef.current) return;
+    setFastCaptureOpen(false);
+    if (onReturnFromCapture) { onReturnFromCapture(); return; }
+    const origin = fastCaptureOrigin.current;
+    requestAnimationFrame(() => {
+      origin?.trigger?.focus({ preventScroll: true });
+      window.scrollTo({ top: origin?.scrollY ?? 0, behavior: "instant" });
+    });
+  }
+  useEffect(() => { if (captureRequest > 0) openFastCapture(); }, [captureRequest]);
   // Optional session-local presentation, never a capacity/plan/Minimum Day write.
   const [smallSteps, setSmallSteps] = useState(false);
   const [smallTool, setSmallTool] = useState<"MINIMUM_DAY" | "CAPTURE" | null>(null);
@@ -463,6 +492,8 @@ export function TodayScreen({
   }, [mealRefreshKey]);
 
   useEffect(() => {
+    if (!active) return;
+    setNow(new Date());
     void refresh();
     void getScheduledContext().then(setScheduledContext);
     void loadShiftClockSetup();
@@ -473,7 +504,7 @@ export function TodayScreen({
         setQuitHabitSetUp(habit !== undefined);
       })
       .catch(() => {});
-  }, []);
+  }, [active]);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 30_000);
@@ -590,6 +621,10 @@ export function TodayScreen({
     const contextPromise = isOwner
       ? getCurrentOperationalContext(activeDay ? { id: activeDay.id, workContext: activeDay.workContext } : null)
       : null;
+    // Subscribe immediately: other canonical reads below may still be pending when
+    // this view rejects or the screen is hidden/unmounted. The owning handler below
+    // still installs the result/fallback; this prevents an unhandled-rejection gap.
+    void contextPromise?.catch(() => {});
 
     // Overdrive Phase 10: capture is deliberately not day-scoped ("inbox
     // age is not urgency," and jotting something down shouldn't require a
@@ -1741,7 +1776,7 @@ export function TodayScreen({
           headlineCommitmentMission={headlineCommitmentMission}
           commitmentConfirmation={commitmentConfirmation}
           busy={busy}
-          onViewCommitments={onViewCommitments}
+          onViewCommitments={onViewCommitments ? () => onViewCommitments(headlineCommitment?.obligation.id) : undefined}
           onRequestSatisfaction={requestCommitmentSatisfaction}
           onCancelSatisfaction={cancelCommitmentSatisfaction}
           onConfirmSatisfaction={() => void confirmCommitmentSatisfaction()}
@@ -1840,7 +1875,7 @@ export function TodayScreen({
       case "CHECK_IN":
         if (!checkIn && !checkInFormOpen) {
           return (
-            <div className="equipment-row">
+            <div className="equipment-row day-line-check-in">
               <p className="tool-label" style={{ marginBottom: 4 }}>CHECK-IN</p>
               <h2 className="card-title">Check in</h2>
               <button className="btn-secondary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
@@ -1957,7 +1992,7 @@ export function TodayScreen({
 
   return (
     <div
-      className={`screen fade-in command-console today-field${
+      className={`screen fade-in command-console day-line today-field${
         day && dominant === "NONE" && attentionPlan.attention.length === 0 ? " today-field--quiet" : ""
       }${justStartedDay ? " today-field--boot" : ""}`}
       data-field-state={
@@ -2086,7 +2121,7 @@ export function TodayScreen({
           }
         >
           <div className="today-situation__identity">
-            <h2 id="today-current-state-heading" className="tool-label">CURRENT STATE</h2>
+            <h2 id="today-current-state-heading" className="visually-hidden">CURRENT STATE</h2>
             <p className="today-situation__phase">{describePhaseHeading(shiftClock.phase, day.workContext)}</p>
           </div>
           {/* SHIFT CLOCK (Drop 2): before and during a scheduled shift the
@@ -2151,6 +2186,7 @@ export function TodayScreen({
                 </span>
               )}
             </p>
+            {systemStatus?.level === "RED" && recommendation?.kind === "NO_ACTION_REQUIRED" && <p className="day-line-evidence-note">Status reports recorded signals. “No action required” is separate guidance, not an all-clear about your sleep.</p>}
           </div>
         </section>
       )}
@@ -2278,7 +2314,7 @@ export function TodayScreen({
           support guidance stays a disclosure rather than a competing dominant action. */}
       {day && recommendation && (
         <section className="console-guidance" aria-label="Current recommendation">
-          <p className="tool-label console-guidance__label">PRIMARY RECOMMENDATION</p>
+          <p className="tool-label console-guidance__label">GUIDANCE</p>
           <RecommendationCard
             day={day}
             recommendation={recommendation}
@@ -2310,6 +2346,7 @@ export function TodayScreen({
           isInFlight={() => busyRef.current}
           onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
           onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
+          onOpenCapture={openFastCapture}
           onOpenDestination={onOpenSystemDestination}
           onOpenTools={() => {
             setSmallTool(null);
@@ -2322,6 +2359,15 @@ export function TodayScreen({
           }}
         />
       </section>
+
+      {fastCaptureOpen && <section id="fast-capture" className="fast-capture" aria-label="Quick Capture">
+        <div className="fast-capture-header"><h2 className="section-label">Put a thought down</h2><button type="button" className="btn-secondary" disabled={busy} onClick={closeFastCapture}>DONE</button></div>
+        {renderToolsItem("CAPTURE")}
+        <p className="meta">Nothing is recorded until you tap CAPTURE. Unfinished input stays here while you navigate.</p>
+      </section>}
+      {onOpenPlan && <button type="button" className="today-plan-link" onClick={onOpenPlan} disabled={busy}>
+        <span>PLAN TODAY</span><span>Your commitments & dates →</span>
+      </button>}
 
       {day && smallSteps && <div ref={smallStepsRef}><SmallSteps enabled={true} busy={busy} onToggle={exitSmallSteps} onOpen={openSmallTool} /></div>}
 
@@ -2376,7 +2422,7 @@ export function TodayScreen({
               headlineCommitmentMission={headlineCommitmentMission}
               commitmentConfirmation={commitmentConfirmation}
               busy={busy}
-              onViewCommitments={onViewCommitments}
+              onViewCommitments={onViewCommitments ? () => onViewCommitments(headlineCommitment?.obligation.id) : undefined}
               onRequestSatisfaction={requestCommitmentSatisfaction}
               onCancelSatisfaction={cancelCommitmentSatisfaction}
               onConfirmSatisfaction={() => void confirmCommitmentSatisfaction()}
@@ -2547,7 +2593,7 @@ export function TodayScreen({
                 CLOSE
               </button>
             </div>
-            {visibleTools.map((item) => (
+            {visibleTools.filter((item) => !fastCaptureOpen || item !== "CAPTURE").map((item) => (
               <div key={item} data-tools-item={item} hidden={smallSteps && smallTool !== null && item !== smallTool}>
                 {renderToolsItem(item)}
               </div>

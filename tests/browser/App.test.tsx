@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 describe("Utility Belt (App shell bottom navigation)", () => {
-  it("starts every primary destination at the top and active-tab re-taps return there predictably", async () => {
+  it("opens new destinations at the top, restores visited positions, and re-taps return to the top", async () => {
     await page.viewport(390, 844);
     await startDay();
     const screen = await render(<App />);
@@ -43,7 +43,7 @@ describe("Utility Belt (App shell bottom navigation)", () => {
       expect(window.scrollY).toBeGreaterThan(0);
       (screen.getByRole("button", { name: destination, exact: true }).element() as HTMLButtonElement).click();
       await expect.poll(() => screen.getByRole("button", { name: destination, exact: true }).element().getAttribute("aria-current")).toBe("page");
-      await expect.poll(() => window.scrollY).toBe(0);
+      await expect.poll(() => window.scrollY).toBe(destination === "TODAY" ? 1400 : 0);
     }
 
     window.scrollTo(0, 1400);
@@ -179,7 +179,7 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     expect(todayButton.getAttribute("aria-current")).toBe("page");
   });
 
-  it("HOTFIX amendment: switching tabs cancels an open meal edit", async () => {
+  it("DAILY-EXPERIENCE-001: switching tabs retains an open meal correction", async () => {
     const day = await startDay();
     const dinner = await createSavedMeal({ name: "Dinner", calories: 650, proteinG: 45, carbsG: 50, fatG: 20 });
     await logMeal(day.id, dinner.id);
@@ -192,11 +192,8 @@ describe("Utility Belt (App shell bottom navigation)", () => {
 
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
-
-    await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
-    await expect.element(screen.getByRole("button", { name: "Edit Dinner" })).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByRole("spinbutton", { name: "Corrected calories" }).elements()).toHaveLength(0);
+    await expect.element(screen.getByRole("button", { name: "Edit Dinner" })).toHaveAttribute("aria-expanded", "true");
+    await expect.element(screen.getByRole("spinbutton", { name: "Corrected calories" })).toHaveValue(999);
     expect(await db.events.where("type").equals("MEAL_LOG_CORRECTED").count()).toBe(0);
   });
 

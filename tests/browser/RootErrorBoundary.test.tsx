@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
+import { useState } from "react";
 import { RootErrorBoundary } from "../../src/ui/components/RootErrorBoundary";
 import { db } from "../../src/persistence/db";
 import { startDay } from "../../src/application/commands";
@@ -96,4 +97,23 @@ describe("RootErrorBoundary (real browser)", () => {
     await screen.getByRole("button", { name: "TRY AGAIN" }).click();
     expect(await db.beyondDays.get(day.id)).toBeDefined();
   });
+});
+
+it("retries a failed retained workspace on return without resetting healthy form state", async () => {
+  let fail = true;
+  function Form() {
+    const [text, setText] = useState("");
+    if (fail) throw new Error("Synthetic retained workspace failure");
+    return <input aria-label="Retained writing" value={text} onChange={(event) => setText(event.target.value)} />;
+  }
+  const screen = await render(<RootErrorBoundary active><Form /></RootErrorBoundary>);
+  await expect.element(screen.getByText("Something went wrong", { exact: true })).toBeVisible();
+  fail = false;
+  await screen.rerender(<RootErrorBoundary active={false}><Form /></RootErrorBoundary>);
+  await screen.rerender(<RootErrorBoundary active><Form /></RootErrorBoundary>);
+  const input = screen.getByRole("textbox", { name: "Retained writing" });
+  await input.fill("Keep this healthy input");
+  await screen.rerender(<RootErrorBoundary active={false}><Form /></RootErrorBoundary>);
+  await screen.rerender(<RootErrorBoundary active><Form /></RootErrorBoundary>);
+  await expect.element(input).toHaveValue("Keep this healthy input");
 });

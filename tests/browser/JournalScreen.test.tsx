@@ -53,7 +53,7 @@ describe("JournalScreen (real browser)", () => {
     const screen = await render(<JournalScreen />);
 
     await screen.getByRole("button", { name: "Open Try a new training split" }).click();
-    await expect.element(screen.getByText("OPEN", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("article").getByText("OPEN", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "REVIEW" }).click();
     await screen.getByLabelText("Outcome").fill("Recovered faster, hit every session");

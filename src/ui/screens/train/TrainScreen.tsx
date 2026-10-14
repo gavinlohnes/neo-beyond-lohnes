@@ -1,3 +1,4 @@
+import { useSessionDraft } from "../../sessionDrafts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { haptic } from "../../feel/haptics";
 import { describeError } from "../../errorMessage";
@@ -149,10 +150,12 @@ interface CompletionSummary {
 export type TrainDestination = "RECOVERY" | "WORKOUT";
 
 export function TrainScreen({
+  active = true,
   destination,
   recordsFocus = null,
   onDestinationConsumed,
 }: {
+  active?: boolean;
   destination?: TrainDestination | null;
   /** FIND-001: open TRAIN → RECORDS at this lift's strength curve. */
   recordsFocus?: string | null;
@@ -178,11 +181,17 @@ export function TrainScreen({
   const [reading, setReading] = useState(true);
   const [readError, setReadError] = useState<string | null>(null);
   const hasReadRef = useRef(false);
+  // PR #228 review R1: a retained TRAIN keeps only the template/variant the operator
+  // explicitly chose; anything still at its suggested default re-derives on return,
+  // so a check-in made elsewhere updates SUGGESTED WORKOUT as a fresh visit would.
+  const templateChosenRef = useRef(false);
+  const variantChosenRef = useRef(false);
   // Drop 1.6a: "enter reps" shown under the set that was tapped.
   const [logSetNotice, setLogSetNotice] = useState<{ key: string; message: string } | null>(null);
   const [recoveryMinutes, setRecoveryMinutes] = useState(10);
   const [subs, setSubs] = useState<Record<string, string>>({});
   const [inputs, setInputs] = useState<Record<string, SetInputState>>({});
+  useSessionDraft("workout-set", Object.entries(inputs).some(([key, input]) => Boolean(input.weight || input.reps) && !sets.some((set) => `${set.exerciseId}#${set.setNumber}` === key)));
   const [progressionSuggestions, setProgressionSuggestions] = useState<Record<string, ProgressionSuggestion>>({});
   const [lastPerformedSets, setLastPerformedSets] = useState<Record<string, LastSetInfo>>({});
   const [recentSubstitutions, setRecentSubstitutions] = useState<Record<string, string[]>>({});
@@ -196,6 +205,7 @@ export function TrainScreen({
   const [performanceBriefOpen, setPerformanceBriefOpen] = useState(false);
   // PR-CARDS-001: TRAIN → RECORDS, the list of personal-record cards.
   const [recordsOpen, setRecordsOpen] = useState(recordsFocus !== null);
+  useEffect(() => { if (recordsFocus) setRecordsOpen(true); }, [recordsFocus]);
   // GYM-001: the full-screen gym view over the active workout.
   const [gymModeOpen, setGymModeOpen] = useState(false);
   const gymModeButtonRef = useRef<HTMLButtonElement>(null);
@@ -261,8 +271,8 @@ export function TrainScreen({
   }, [session?.activeRestEndsAt]);
 
   useEffect(() => {
-    void refresh();
-  }, []);
+    if (active) void refresh(hasReadRef.current);
+  }, [active]);
   // DROP 0: re-read after a 16:30 rollover (never during a workout — rollover waits for it to end).
   useDayRolloverRefresh(refresh);
 
@@ -283,23 +293,25 @@ export function TrainScreen({
 
   const sessionRecords = useMemo(() => findSessionRecords(recordHistory, sets), [recordHistory, sets]);
 
+  useEffect(() => { destinationConsumedRef.current = false; }, [destination]);
+
   useEffect(() => {
-    if (reading || readError || !destination || !destinationReady || destinationConsumedRef.current) return;
+    if (!active || reading || readError || !destination || !destinationReady || destinationConsumedRef.current) return;
     destinationConsumedRef.current = true;
     onDestinationConsumed?.();
-    if (!session && destination !== "WORKOUT") setOverridePickerOpen(true);
+    if (!session && destination !== "WORKOUT") { variantChosenRef.current = true; setChosenVariant("RECOVERY"); setOverridePickerOpen(true); }
     requestAnimationFrame(() => {
       if (session || destination === "WORKOUT") headingRef.current?.focus();
       else recoveryChoiceRef.current?.focus();
     });
-  }, [reading, readError, destination, destinationReady, session, onDestinationConsumed]);
+  }, [active, reading, readError, destination, destinationReady, session, onDestinationConsumed]);
 
   useEffect(() => {
     if (completionSummary && !reading && !readError) completionHeadingRef.current?.focus();
   }, [completionSummary, reading, readError]);
 
   async function refresh(preserveChoice = false) {
-    setReading(true);
+    if (!hasReadRef.current) setReading(true);
     setReadError(null);
     try {
       await readTrainingState(preserveChoice && hasReadRef.current);
@@ -340,7 +352,8 @@ export function TrainScreen({
 
     const nextTemplate = await suggestTemplateForNextWorkout();
     setSuggestedTemplate(nextTemplate);
-    if (!preserveChoice) setChosenTemplate(nextTemplate);
+    if (!preserveChoice) templateChosenRef.current = false;
+    if (!templateChosenRef.current) setChosenTemplate(nextTemplate);
     setLastAdvancingTemplate(await getLastAdvancingTemplate());
 
     setShowStopConfirm(false);
@@ -353,7 +366,8 @@ export function TrainScreen({
     // original day; nothing is migrated or rewritten.
     const active = (await getActiveWorkoutSession()) ?? null;
     setSession(active);
-    if (!preserveChoice) setChosenVariant(
+    if (!preserveChoice) variantChosenRef.current = false;
+    if (!variantChosenRef.current) setChosenVariant(
       !active && destination === "RECOVERY"
         ? "RECOVERY"
         : suggestion.variant === "RESET"
@@ -1096,7 +1110,7 @@ export function TrainScreen({
                     style={{ flex: "none", padding: "8px 16px" }}
                     aria-pressed={chosenTemplate === t}
                     disabled={chosenVariant === "RECOVERY"}
-                    onClick={() => setChosenTemplate(t)}
+                    onClick={() => { templateChosenRef.current = true; setChosenTemplate(t); }}
                   >
                     {templateLabel(t, customTemplates)}
                   </button>
@@ -1113,7 +1127,7 @@ export function TrainScreen({
                     className={`chip ${chosenVariant === v ? "chip--selected" : ""}`}
                     style={{ flex: "none", padding: "8px 14px" }}
                     aria-pressed={chosenVariant === v}
-                    onClick={() => setChosenVariant(v)}
+                    onClick={() => { variantChosenRef.current = true; setChosenVariant(v); }}
                   >
                     {v}
                   </button>

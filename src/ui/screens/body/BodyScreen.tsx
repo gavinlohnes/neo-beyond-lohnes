@@ -1,3 +1,4 @@
+import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { TickNumber } from "../../feel/TickNumber";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
@@ -239,14 +240,22 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange }: {
+export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange }: {
   focus?: BodyFocus | null;
+  focusRequest?: number;
+  /**
+   * Primary navigation to BODY: a shortcut's focused water/meal view ends; a re-tap also closes a
+   * locally opened meals or progress view. Every unsaved input stays.
+   */
+  overviewRequest?: { key: number; retap: boolean };
   visible?: boolean;
+  returnLabel?: string;
   onReturnToToday?: (() => void) | undefined;
   onMealJourneyStateChange?: ((state: { busy: boolean; dirty: boolean }) => void) | undefined;
   /** Synchronous shell guard: publish before awaiting a command or query. */
   onMealJourneyInFlightChange?: ((busy: boolean) => void) | undefined;
 } = {}) {
+  const [waterFocused, setWaterFocused] = useState(focus === "water");
   const [mealFocused, setMealFocused] = useState(focus === "meal");
   const [bodyMealsOpen, setBodyMealsOpen] = useState(false);
   const mealsVisible = mealFocused || bodyMealsOpen;
@@ -294,12 +303,41 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   const [managingMealId, setManagingMealId] = useState<string | null>(null);
   const [lookupOpen, setLookupOpen] = useState(false);
   useEffect(() => {
-    if (visible) { setMealFocused(focus === "meal"); setBodyMealsOpen(false); setProgressOpen(false); }
-  }, [focus, visible]);
+    if (!focus) return;
+    mealPositioned.current = false;
+    setWaterFocused(focus === "water");
+    setMealFocused(focus === "meal");
+    setBodyMealsOpen(focus === "meal");
+    setProgressOpen(false);
+    if (focus === "meal") setAddMealOpen(true);
+    if (focus === "sleep") setSleepOpen(true);
+    if (focus === "weight") setBodyweightOpen(true);
+    if (focus === "urge") setOtherToolsOpen(true);
+  }, [focus, focusRequest]);
+  useEffect(() => {
+    if (!overviewRequest.key) return;
+    // Supersedes any pending shortcut positioning.
+    mealPositioned.current = true;
+    const shortcutView = waterFocused || mealFocused;
+    if (!shortcutView && !(overviewRequest.retap && (bodyMealsOpen || progressOpen))) return;
+    // Only the presentation resets; meal, sleep, weight and correction input stay as typed.
+    setWaterFocused(false);
+    setMealFocused(false);
+    setBodyMealsOpen(false);
+    setProgressOpen(false);
+    // Outside the shortcut, manual macros sit behind a disclosure; keep a typed draft in view there.
+    if (Object.values(newMealForm).some((value) => value.trim())) setManualMealEntryOpen(true);
+    localOrigin.current = null;
+    requestAnimationFrame(() => {
+      document.getElementById("meal-surface-heading")?.focus({ preventScroll: true });
+      window.scrollTo({ top: 0, behavior: "instant" });
+    });
+  }, [overviewRequest.key]);
   function showMealSurface(next: boolean) {
     if (busyRef.current || foodSearchBusyRef.current) return;
     // An explicit local choice supersedes the initial delayed shortcut handoff.
     mealPositioned.current = true;
+    if (waterFocused) { setWaterFocused(false); window.scrollTo({ top: 0, behavior: "instant" }); return; }
     if (next) rememberOrigin();
     if (next) { setBodyMealsOpen(true); setMealFocused(focus === "meal"); }
     else { setMealFocused(false); setBodyMealsOpen(false); }
@@ -446,6 +484,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   const mealPositioned = useRef(false);
   const mealRecoveryFocusPending = useRef(false);
   const mealDirty = Boolean(foodQuery.trim() || Object.values(newMealForm).some((value) => value.trim()) || editingMealId || correctingMealEventId);
+  useSessionDraft("body", mealDirty || Boolean(sleepHoursInput || sleepMinutesInput || input || correctingId || sleepCorrectingId || bodyweightCorrectingId || proteinCorrectingId));
   useEffect(() => {
     onMealJourneyStateChange?.({ busy: busy || foodSearchBusy, dirty: mealDirty });
   }, [busy, foodSearchBusy, mealDirty, onMealJourneyStateChange]);
@@ -460,11 +499,12 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   const [totalMealCalories, setTotalMealCalories] = useState(0);
 
   useEffect(() => {
+    if (!visible) return;
     void refresh().catch(() => {
       setMealReadFailed(true);
       setMealError("Could not read BODY. Retry readings without saving or logging anything.");
     });
-  }, []);
+  }, [visible]);
   // The retained BODY screen does not remount on explicit return/reopen.
   // Recover reads only; keep drafts, confirmations and canonical writes intact.
   useEffect(() => {
@@ -521,17 +561,17 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   // Bring a shortcut/catalog destination into view once it
   // has rendered (BODY and the quit tracker load asynchronously).
   useEffect(() => {
-    if (!focus || !visible || (onReturnToToday && mealPositioned.current)) return;
+    if (!focus || !visible || mealPositioned.current) return;
     let tries = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = () => {
       if (onReturnToToday && mealPositioned.current) return;
       const el = document.getElementById(SHORTCUT_ANCHOR_IDS[focus]);
       if (el) {
-        const surface = focus === "meal" ? el.closest(".body-meals") ?? el : el;
+        const surface = focus === "meal" ? el.closest(".body-meals") ?? el : focus === "water" ? el.closest(".body-water") ?? el : el;
         surface.scrollIntoView({ block: "start" });
-        if (onReturnToToday) document.getElementById("meal-return")?.focus({ preventScroll: true });
-        else if (document.activeElement === document.body) {
+        if (focus === "meal" && onReturnToToday) document.getElementById("meal-return")?.focus({ preventScroll: true });
+        else if (!el.contains(document.activeElement)) {
           el.querySelector<HTMLElement>("button:not(:disabled), input:not(:disabled)")?.focus({ preventScroll: true });
         }
         mealPositioned.current = true;
@@ -542,7 +582,7 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
     // A short head start lets the STATUS readings above settle first, so the scroll lands where it stays.
     timer = setTimeout(tick, 250);
     return () => clearTimeout(timer);
-  }, [focus, visible]);
+  }, [focus, focusRequest]);
 
   async function refresh() {
     const revision = ++readRevision.current;
@@ -1436,11 +1476,11 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
   );
 
   return (
-    <div className={`screen fade-in body-field${mealFocused ? " body-meals" : ""}`}>
+    <div className={`screen fade-in body-field${mealFocused ? " body-meals" : ""}${waterFocused ? " body-water" : ""}`}>
       <OperatorHeader destination="body" headingId="meal-surface-heading" focusable>
-        {mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // DAILY RECORD"}
+        {waterFocused ? "BODY // WATER" : mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // DAILY RECORD"}
       </OperatorHeader>
-      {!mealsVisible && !progressOpen && (readingsReady ? <HealthOverview day={day}
+      {!waterFocused && !mealsVisible && !progressOpen && (readingsReady ? <HealthOverview day={day}
         calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries}
         weight={weightHistory} mealEntries={mealEntries}
         calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged from meals · no calorie target"}
@@ -1448,17 +1488,18 @@ export function BodyScreen({ focus = null, visible = true, onReturnToToday, onMe
       <div className="meal-navigation">
         <button id="body-meals-entry" className="btn-secondary" disabled={busy || foodSearchBusy}
           onClick={() => { if (progressOpen) { setProgressOpen(false); restoreOrigin(); } else showMealSurface(!mealsVisible); }}>
-          {mealsVisible || progressOpen ? "DAILY RECORD" : "OPEN MEALS"}
+          {waterFocused || mealsVisible || progressOpen ? "DAILY RECORD" : "OPEN MEALS"}
         </button>
-        {!mealsVisible && !progressOpen && <button id="body-progress-entry" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={showProgress}>YOUR PROGRESS</button>}
+        {!waterFocused && !mealsVisible && !progressOpen && <button id="body-progress-entry" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={showProgress}>YOUR PROGRESS</button>}
         {onReturnToToday && <button id="meal-return" className="btn-secondary"
-          disabled={busy || foodSearchBusy} onClick={onReturnToToday}>RETURN TO TODAY</button>}
+          disabled={busy || foodSearchBusy} onClick={onReturnToToday}>{returnLabel}</button>}
       </div>
       {progressOpen && <section aria-labelledby="health-progress-heading">
         <h2 id="health-progress-heading" tabIndex={-1} className="insights-title">Your progress</h2>
         <BodyProgress refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
       </section>}
       <div hidden={mealsVisible || progressOpen}>
+      {waterFocused && <p className="water-focused-total" role="status">{readingsReady ? `${total} oz recorded today` : "Reading today’s water…"}</p>}
       {mealReadFailed && <div role="alert"><p className="meta">{mealError}</p><button className="btn-secondary" disabled={busy || foodSearchBusy} onClick={() => void retryMealRead()}>RETRY READINGS</button></div>}
       {/* WATER — one consolidated instrument row: current total, fastest
           actions, custom fallback, collapsed history. FIELD ALPHA Phase

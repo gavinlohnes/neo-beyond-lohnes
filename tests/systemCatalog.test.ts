@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { findCapabilities, SYSTEM_CAPABILITIES } from "../src/ui/systemCatalog";
 
 describe("capability discovery", () => {
-  it("offers exactly the approved 18 unique entries and browses without a query", () => {
-    expect(SYSTEM_CAPABILITIES).toHaveLength(18);
-    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(18);
+  it("offers exactly the approved 19 unique entries and browses without a query", () => {
+    expect(SYSTEM_CAPABILITIES).toHaveLength(19);
+    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(19);
     expect(findCapabilities("  ")).toEqual(SYSTEM_CAPABILITIES);
   });
   it.each([

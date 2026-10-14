@@ -13,8 +13,10 @@ const REVEAL_BOTTOM_INSET_PX = 88;
  */
 function usableViewportBottom() {
   const nav = document.querySelector(".shell-nav");
-  if (nav) return nav.getBoundingClientRect().top;
-  return window.innerHeight - REVEAL_BOTTOM_INSET_PX;
+  const viewport = window.visualViewport;
+  const visibleBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+  if (nav) return Math.min(nav.getBoundingClientRect().top, visibleBottom) - 4;
+  return visibleBottom - REVEAL_BOTTOM_INSET_PX;
 }
 
 /**
@@ -25,10 +27,11 @@ function usableViewportBottom() {
 export function positionRevealedSurface(element: HTMLElement) {
   const rect = element.getBoundingClientRect();
   const usableBottom = usableViewportBottom();
-  const needed = Math.min(rect.height, usableBottom - REVEAL_TOP_INSET_PX);
+  const usableTop = (window.visualViewport?.offsetTop ?? 0) + REVEAL_TOP_INSET_PX;
+  const needed = Math.min(rect.height, usableBottom - usableTop);
   let delta: number;
-  if (rect.top < REVEAL_TOP_INSET_PX) delta = rect.top - REVEAL_TOP_INSET_PX;
-  else if (rect.top + needed > usableBottom) delta = Math.min(rect.top + needed - usableBottom, rect.top - REVEAL_TOP_INSET_PX);
+  if (rect.top < usableTop) delta = rect.top - usableTop;
+  else if (rect.top + needed > usableBottom) delta = Math.min(rect.top + needed - usableBottom, rect.top - usableTop);
   else return;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   window.scrollBy({

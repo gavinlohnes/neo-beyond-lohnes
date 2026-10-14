@@ -52,6 +52,32 @@ analytics, manual workflows and optional USDA food lookup. These are real non-AI
 not obsolete assistant infrastructure. Existing records and native/legacy backup support remain
 unchanged; future AI still requires a new owner decision.
 
+## DAILY-EXPERIENCE-001 — owner-authorized daily experience, 2026-10-13
+
+Gavin approves the complete five-part objective in `agent/DAILY-EXPERIENCE-001.md`: session-local
+interruption safety, compact Day Line-inspired TODAY, canonical fast actions, Plan Today over
+existing Missions/Obligations, and compact MORE/plain language/main accessibility landmark.
+This narrowly supersedes tab-navigation rules that silently canceled BODY meal edits or discarded
+unfinished input: supported tab and cross-feature navigation now retains forms and meaningful
+position/focus. Fresh destinations and deliberate target links start at their relevant location;
+active-tab re-taps can return to the top without discarding input. Unsubmitted drafts are not
+persisted and do not survive reload/process eviction. Actual saves/corrections/undo stay canonical.
+
+WATER, MEAL, CAPTURE, SYSTEM and optional PLAN TODAY access are operator controls outside the
+phase-row limit, not additional demands or recommendations. Existing phase timing/caps, low-energy,
+Minimum Day, shift/recovery and safety behavior remain. System Status and Engine guidance retain
+separate evidence/authority; presentation never manufactures an all-clear or new recommendation.
+MORE guidance becomes on-demand; all existing capabilities and Backup/Recovery remain accessible.
+The SYSTEM catalog gains explicit Plan Today navigation, preserving its navigation-only contract.
+
+Plan Today groups explicit planned dates and due/overdue dates using the existing local-date
+semantics and canonical Mission eligibility. It never schedules automatically or grades adherence.
+The composer explicitly adds a commitment planned today; optional due date, active Mission and
+recurrence reuse existing commands. Completion and release still use the existing detail workflow.
+No Engine, schema, event/backup contract, persistent draft store, provider, subscription or dependency
+change; no historical repair, prototype integration, merge or deployment. Independent Claude Code
+exact-head review, green required CI and Gavin's separate merge approval remain required.
+
 ## BODY Insights & Progress — owner-approved bounded amendment, 2026-10-13
 
 Gavin explicitly authorizes richer read-only BODY progress graphs and historical comparisons,

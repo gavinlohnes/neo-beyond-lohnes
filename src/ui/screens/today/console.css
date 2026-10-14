@@ -143,3 +143,40 @@
   .console-system #console-system-description { display: none; }
   .console-catalog-search { margin-block: 8px; }
 }
+
+/* DAILY-EXPERIENCE-001: a Day Line, using existing facts and authority. */
+.command-console.day-line { --console-gap: 12px; }
+.day-line .today-situation { gap: 6px; padding-block: 0 10px; }
+.command-console.day-line .status-strip--stacked { padding: 0 0 10px; }
+.day-line .today-situation__identity { justify-content: flex-start; }
+.day-line .today-situation__phase { text-align: left; color: var(--text-1); }
+.day-line .today-situation__system { grid-template-columns: 1fr; padding-top: 8px; gap: 3px; }
+.day-line .today-situation__system > .tool-label { font-size: 12px; }
+.day-line-evidence-note { color: var(--text-3-strong); font-size: 12px; line-height: 1.4; margin: 4px 0 0; }
+.command-console.day-line .command-surface { padding: 14px 12px; }
+.command-console.day-line .shift-clock-rows { padding-top: 8px; }
+.command-console.day-line .shift-clock-rows .equipment-row { padding-block: 8px; }
+.day-line .console-operations > .section-label { font-size: 12px; margin-bottom: 4px; }
+.day-line .console-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+.day-line .console-controls button { flex-direction: column; font-size: 12px; gap: 4px; min-height: 56px; }
+.day-line .day-line-check-in { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.day-line-check-in > .tool-label, .day-line-check-in > .card-title { grid-column: 1 / -1; margin: 0; }
+.day-line-check-in > button { font-size: 14px; margin: 0 !important; padding-inline: 6px; }
+.today-plan-link { width: 100%; min-height: 48px; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; margin-bottom: 12px; background: transparent; border: 0; border-bottom: 1px solid var(--border-subtle); color: var(--text-1); text-align: left; }
+.today-plan-link > span:last-child { font-size: 14px; color: var(--text-2); }
+.fast-capture { margin-block: 16px; border-bottom: 1px solid var(--border-subtle); }
+.fast-capture-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.fast-capture-header h2 { margin: 0; }
+.fast-capture-header button { width: auto; padding-inline: 16px; min-height: 44px; }
+.fast-capture input { min-width: 0; }
+.day-line .shift-clock-rows > .section-label { font-size: 12px; margin: 0 0 8px; }
+.day-line [data-shift-clock-row="WORK_QUESTION"] > .equipment-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.day-line [data-shift-clock-row="WORK_QUESTION"] .tool-label { grid-column: 1 / -1; font-size: 12px; margin: 0; }
+.day-line [data-shift-clock-row="WORK_QUESTION"] h2 { margin: 0; }
+.day-line [data-shift-clock-row="WORK_QUESTION"] .equipment-row > div { margin: 0 !important; }
+.day-line [data-shift-clock-row="WORK_QUESTION"] .chip { min-width: 48px; min-height: 44px; }
+.day-line-check-in > .card-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.day-line [data-shift-clock-row="WORKOUT"] .equipment-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 8px; }
+.day-line [data-shift-clock-row="WORKOUT"] .tool-label { grid-column: 1 / -1; font-size: 12px; }
+.day-line [data-shift-clock-row="WORKOUT"] .card-title { margin: 0 !important; }
+.day-line [data-shift-clock-row="WORKOUT"] button { width: auto; min-width: 108px; padding-inline: 12px; min-height: 48px; }

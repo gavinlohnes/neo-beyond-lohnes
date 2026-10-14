@@ -16,7 +16,9 @@ import { maybeSendCheckInReminder } from "../application/checkInReminderQueries"
 import { performDueDayRollover } from "../application/commands";
 import { nextRolloverBoundaryAfter } from "../engine/dayRollover";
 import { parseShortcut, type BodyFocus } from "../ui/shortcuts";
-import { positionPrimaryDestination } from "../ui/navigationPosition";
+import { positionPrimaryDestination, positionRevealedSurface } from "../ui/navigationPosition";
+import { SessionDraftProvider, useHasSessionDrafts } from "../ui/sessionDrafts";
+import type { IntentFocus } from "../ui/screens/more/IntentScreen";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -48,6 +50,7 @@ const TAB_ICON: Record<Tab, IconName> = {
  * risk and the checkpoint doesn't ask for that toast.
  */
 function AppUpdateBanner() {
+  const hasDrafts = useHasSessionDrafts();
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
@@ -81,10 +84,10 @@ function AppUpdateBanner() {
           other utility surface's own header does. */}
       <p className="tool-label" style={{ marginBottom: 4 }}>SYSTEM UPDATE READY</p>
       <p className="card-body" style={{ marginBottom: 12 }}>
-        A newer version of BEYOND is available. Nothing in progress is lost — your data stays exactly as it is.
+        A newer version of BEYOND is available. Saved records are kept. Updating reloads the app; finish any unsaved input first.
       </p>
       <div style={{ display: "flex", gap: 8 }}>
-        <button className="btn-primary" style={{ flex: 1 }} onClick={() => void updateServiceWorker(true)}>
+        <button className="btn-primary" style={{ flex: 1 }} onClick={() => { if (!hasDrafts || window.confirm("Updating reloads BEYOND and clears unfinished input. Update now?")) void updateServiceWorker(true); }}>
           UPDATE NOW
         </button>
         <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setNeedRefresh(false)}>
@@ -99,38 +102,63 @@ function AppUpdateBanner() {
 const ROLLOVER_TIMER_MARGIN_MS = 1000;
 
 export function App() {
+  return <SessionDraftProvider><AppWorkspaces /></SessionDraftProvider>;
+}
+
+function AppWorkspaces() {
   // Drop 7: a home-screen shortcut (?go=…) opens BODY at the right control.
   // Read once, then dropped from the URL so a reload doesn't repeat it.
   const [shortcut] = useState(() => parseShortcut(window.location.search));
   // SHORTCUTS-001: START WORKOUT opens TRAIN; the others open BODY.
   const [tab, setTab] = useState<Tab>(() => (shortcut === "workout" ? "TRAIN" : shortcut ? "BODY" : "TODAY"));
-  // NOTES-SWEEP-001: bumped after a notes sweep so TODAY re-reads its capture count.
+  // Screen instances are session-local. Hiding a destination never discards its forms.
+  const [visited, setVisited] = useState(() => new Set<Tab>([tab]));
   const [todayRefreshKey, setTodayRefreshKey] = useState(0);
-  // NOTES-HANDOFF-001: bumped when TODAY ends a work period, so "Note for next shift?" appears.
   const [workEndedKey, setWorkEndedKey] = useState(0);
-  // Drop 1.6a: tapping MORE while already on MORE goes back to its menu (a fresh MoreScreen).
-  const [moreResetKey, setMoreResetKey] = useState(0);
-  // Where BODY opens: a home-screen shortcut on launch, or a Shift Clock row
-  // on TODAY (Drop 2). Cleared whenever the bottom nav is used.
   const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut === "workout" ? null : shortcut);
-  // Only the explicit TODAY meal round trip retains its two screens. Ordinary
-  // primary navigation still resets destinations as before.
-  const [mealOrigin, setMealOrigin] = useState<{ scrollY: number; trigger: HTMLElement | null } | null>(null);
-  const [mealState, setMealState] = useState({ busy: false, dirty: false });
+  const [bodyRequest, setBodyRequest] = useState(0);
+  // Primary navigation to BODY ends a shortcut's focused view; a BODY re-tap also returns to the Daily Record.
+  const [bodyOverviewRequest, setBodyOverviewRequest] = useState<{ key: number; retap: boolean }>({ key: 0, retap: false });
+  const [mealOrigin, setMealOrigin] = useState<{ tab: Tab; scrollY: number; trigger: HTMLElement | null } | null>(null);
+
   const mealInFlight = useRef(false);
   const updateMealInFlight = useCallback((busy: boolean) => { mealInFlight.current = busy; }, []);
-  const [mealRefreshKey, setMealRefreshKey] = useState(0);
-  const [mealBoundaryReset, setMealBoundaryReset] = useState(0);
-  const mealBodyPosition = useRef(0);
-  const updateMealState = useCallback((state: { busy: boolean; dirty: boolean }) => setMealState(state), []);
+
+  const positions = useRef<Partial<Record<Tab, { scrollY: number; trigger: HTMLElement | null }>>>({});
+  const navigation = useRef(0);
+  const taskFocus = useRef<Partial<Record<Tab, HTMLElement>>>({});
   useEffect(() => {
-    if (!mealOrigin || !mealState.dirty) return;
-    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [mealOrigin, mealState.dirty]);
-  // MORE's capture link opens TODAY with TOOLS expanded, where Capture lives (Drop 2).
+    function rememberFocus(event: FocusEvent) {
+      const element = event.target;
+      if (!(element instanceof HTMLElement)) return;
+      const pane = element.closest<HTMLElement>('[id^="workspace-"]');
+      if (pane) taskFocus.current[pane.id.slice("workspace-".length) as Tab] = element;
+    }
+    document.addEventListener("focusin", rememberFocus);
+    return () => document.removeEventListener("focusin", rememberFocus);
+  }, []);
+  useEffect(() => {
+    let frame = 0;
+    function revealWriting() {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const element = document.activeElement;
+        if (element instanceof HTMLElement && element.matches("input, textarea, select") && element.getClientRects().length) positionRevealedSurface(element);
+      });
+    }
+    window.addEventListener("resize", revealWriting);
+    window.visualViewport?.addEventListener("resize", revealWriting);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", revealWriting);
+      window.visualViewport?.removeEventListener("resize", revealWriting);
+    };
+  }, []);
   const [todayToolsOpen, setTodayToolsOpen] = useState(false);
+  const [captureRequest, setCaptureRequest] = useState(0);
+  const [captureOrigin, setCaptureOrigin] = useState<Tab | null>(null);
+  const [moreRequest, setMoreRequest] = useState(0);
+  const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(null);
   useEffect(() => {
     if (!shortcut) return;
     const url = new URL(window.location.href);
@@ -166,6 +194,7 @@ export function App() {
             // stays active and TRAIN still resumes it when opened.
             if (activeWorkout && !shortcut) {
               setTrainDestination("WORKOUT");
+              setVisited((current) => new Set([...current, "TRAIN"]));
               setTab("TRAIN");
             }
           })
@@ -260,76 +289,97 @@ export function App() {
     };
   }, []);
 
-  // Every in-app tab switch, from the bottom nav or from a button inside a
-  // screen, starts the destination at its top.
-  function showTab(destination: Tab) {
+  function rememberPosition() {
+    const element = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const pane = document.getElementById(`workspace-${tab}`);
+    positions.current[tab] = { scrollY: window.scrollY, trigger: element && pane?.contains(element) ? element : taskFocus.current[tab] ?? null };
+  }
+
+  function showTab(destination: Tab, restore = true) {
+    rememberPosition();
+    setVisited((current) => new Set([...current, destination]));
     setTab(destination);
-    // Wait until the destination commit so the browser cannot restore the
-    // outgoing screen's document offset onto the incoming screen.
-    window.requestAnimationFrame(positionPrimaryDestination);
+    const request = ++navigation.current;
+    const position = restore ? positions.current[destination] : undefined;
+    // Wait for the retained pane to become visible. A newer navigation owns position/focus.
+    requestAnimationFrame(() => {
+      if (request !== navigation.current) return;
+      const pane = document.getElementById(`workspace-${destination}`);
+      const target = position?.trigger;
+      if (target?.isConnected && pane?.contains(target) && target.getClientRects().length) target.focus({ preventScroll: true });
+      else (() => { const heading = [...(pane?.querySelectorAll<HTMLElement>("h1") ?? [])].find((element) => element.getClientRects().length); if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); } })();
+      if (position) window.scrollTo({ top: position.scrollY, behavior: "instant" });
+      else positionPrimaryDestination();
+    });
+  }
+
+  function canNavigate() { return !mealInFlight.current; }
+
+  function openMore(view: MoreView, focus: IntentFocus | null = null) {
+    if (!canNavigate()) return false;
+    setIntentFocus(focus);
+    setMoreView(view);
+    setMoreRequest((key) => key + 1);
+    showTab("MORE", false);
+    const request = navigation.current;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (request !== navigation.current) return;
+      const heading = [...document.querySelectorAll<HTMLElement>("#workspace-MORE h1")].find((element) => element.getClientRects().length);
+      if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
+    }));
+    return true;
   }
 
   function openTrain(destination: TrainDestination) {
-    if (!leaveMealJourney()) return false;
+    if (!canNavigate()) return false;
     setTrainRecordsFocus(null);
     setTrainDestination(destination);
-    showTab("TRAIN");
+    showTab("TRAIN", false);
     return true;
   }
 
   function openPrimaryTab(destination: Tab) {
-    if (!leaveMealJourney()) return false;
-    setTrainDestination(null);
-    setTrainRecordsFocus(null);
-    setMoreView("MENU");
-    setBodyFocus(null);
-    setTodayToolsOpen(false);
-    if (destination === "MORE" && tab === "MORE") setMoreResetKey((key) => key + 1);
-    showTab(destination);
-    return true;
-  }
-
-  function leaveMealJourney() {
-    if (!mealOrigin) return true;
-    if (mealInFlight.current) return false;
-    if (mealState.dirty && !window.confirm("Discard unsaved meal details and leave this meal entry?")) return false;
-    setMealOrigin(null);
-    setMealState({ busy: false, dirty: false });
-    // Leaving via ordinary navigation also resets a possibly failed boundary,
-    // including BODY -> TODAY (whose retained boundary otherwise shares a key).
-    setMealBoundaryReset((key) => key + 1);
+    if (!canNavigate()) return false;
+    if (destination === "MORE" && tab === "MORE") return openMore("MENU");
+    // PR #228 review R2: a Capture return belongs to that Capture visit only.
+    setCaptureOrigin(null);
+    if (destination === "BODY") {
+      // A shortcut's focused view and its return belong to that shortcut visit only.
+      // BODY keeps every unsaved input; only the presentation goes back to the Daily Record.
+      setMealOrigin(null);
+      setBodyFocus(null);
+      setBodyOverviewRequest(({ key }) => ({ key: key + 1, retap: tab === "BODY" }));
+    }
+    showTab(destination, destination !== tab);
     return true;
   }
 
   function openBody(target?: BodyFocus) {
-    if (target === "meal") {
-      const origin = { scrollY: window.scrollY, trigger: document.activeElement instanceof HTMLButtonElement ? document.activeElement : document.querySelector<HTMLElement>('[aria-label="Log a meal in BODY"]') };
-      if (mealOrigin) {
-        setMealOrigin(origin);
-        setTab("BODY");
-        window.requestAnimationFrame(() => {
-          window.scrollTo({ top: mealBodyPosition.current, behavior: "instant" });
-          document.getElementById("meal-return")?.focus({ preventScroll: true });
-        });
-        return true;
-      }
-      setMealOrigin(origin);
-    } else if (!leaveMealJourney()) return false;
+    if (!canNavigate()) return false;
+    if (tab !== "BODY") setMealOrigin({ tab, scrollY: window.scrollY, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null });
     setBodyFocus(target ?? null);
-    showTab("BODY");
+    setBodyRequest((key) => key + 1);
+    showTab("BODY", false);
     return true;
   }
 
-  function returnFromMeal() {
-    if (!mealOrigin || mealInFlight.current) return;
-    mealBodyPosition.current = window.scrollY;
-    setMealRefreshKey((key) => key + 1);
-    setTab("TODAY");
-    window.requestAnimationFrame(() => {
-      const trigger = mealOrigin.trigger?.isConnected ? mealOrigin.trigger : document.querySelector<HTMLElement>('[aria-label="Log a meal in BODY"]') ?? document.querySelector<HTMLElement>('.shell-nav__item[aria-current="page"]');
-      trigger?.focus({ preventScroll: true });
-      window.scrollTo({ top: mealOrigin.scrollY, behavior: "instant" });
-    });
+  function returnFromBody() {
+    if (!canNavigate()) return;
+    // The origin is used once; a later shortcut records a new one. No inputs are discarded.
+    const destination = mealOrigin?.tab ?? "TODAY";
+    if (mealOrigin) positions.current[destination] = { ...mealOrigin, trigger: mealOrigin.trigger?.isConnected
+      ? mealOrigin.trigger : destination === "TODAY" ? document.querySelector<HTMLElement>(bodyFocus === "water" ? '[aria-label="Log water in BODY"]' : '[aria-label="Log a meal in BODY"]') : taskFocus.current[destination] ?? null };
+    showTab(destination);
+    setMealOrigin(null);
+    setTodayRefreshKey((key) => key + 1);
+  }
+
+  function openCapture() {
+    if (!canNavigate()) return;
+    if (tab !== "TODAY") setCaptureOrigin(tab);
+    setTodayToolsOpen(true);
+    setCaptureRequest((key) => key + 1);
+    showTab("TODAY", false);
   }
 
   if (!continuityResolved) {
@@ -342,113 +392,57 @@ export function App() {
 
   return (
     <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
-      {/* Leverage Implementation 002 (root error containment): wraps only
-          the per-tab screen content, not the bottom nav — a render error
-          in one screen replaces just that screen with a recovery
-          surface, while TODAY/TRAIN/BODY/MORE navigation stays live so
-          the operator can still try a different, possibly-unaffected
-          screen. `key={tab}` resets the boundary whenever the tab
-          changes, so switching tabs is itself a natural retry, not a
-          second dead end next to a working nav. */}
-      <RootErrorBoundary key={`${mealOrigin ? "TODAY" : tab}:${mealBoundaryReset}`}>
-        {/* FEEL-001: the incoming tab arrives in 180 ms (instant with reduced motion). */}
-        <div className="tab-enter">
-        {/* Intent & Commitment Spine, Drop 02: the only cross-screen
-            navigation TODAY needs — VIEW on a surfaced commitment switches
-            to the MORE tab (where Missions & Obligations already lives),
-            rather than deep-linking to the specific Obligation, which would
-            require lifting new state through MoreScreen/IntentScreen too. */}
-        {/* BACKUP-AUTO-001: one line above TODAY when automatic backup is on and due. */}
-        {(tab === "TODAY" || mealOrigin) && (
-          <div hidden={tab !== "TODAY"}>
-          <TodayScreen
-            key={todayRefreshKey}
-            mealRefreshKey={mealRefreshKey}
-            onWorkEnded={() => setWorkEndedKey((k) => k + 1)}
-            onWorkContextChanged={() => setWorkEndedKey((k) => k + 1)}
-            // CLEANUP-002: these lines render inside TODAY, under its header.
-            banners={
-              <>
-                {/* BACKUP-AUTO-001: one line when automatic backup is on and due. */}
+      <a className="skip-link" href="#main-content">Skip to content</a>
+      <main id="main-content" tabIndex={-1}>
+        {visited.has("TODAY") && <div id="workspace-TODAY" className={tab === "TODAY" ? "tab-enter" : undefined} hidden={tab !== "TODAY"}>
+          <RootErrorBoundary active={tab === "TODAY"}>
+            <TodayScreen
+              active={tab === "TODAY"}
+              mealRefreshKey={todayRefreshKey}
+              captureRequest={captureRequest}
+              onReturnFromCapture={captureOrigin ? () => { showTab(captureOrigin); setCaptureOrigin(null); } : undefined}
+              onWorkEnded={() => setWorkEndedKey((k) => k + 1)}
+              onWorkContextChanged={() => setWorkEndedKey((k) => k + 1)}
+              banners={<>
                 <BackupDueLine />
-                {/* NOTES-SWEEP-001: on a day off, one line offers to sweep open notes; TODAY re-reads after. */}
                 <NotesSweep refreshKey={workEndedKey} onSwept={() => setTodayRefreshKey((k) => k + 1)} />
-                {/* NOTES-HANDOFF-001: "Note for next shift?" after work ends; "From last shift" on the next work day. */}
                 <ShiftHandoff refreshKey={workEndedKey} />
-                {/* NOTES-CAPSULE-001: a time capsule whose day has come, until GOT IT. */}
                 <TimeCapsuleOpened />
-                {/* REPORT-001: BRIEFING READY on a work night 0200–0500; AFTER ACTION READY on the first day off. */}
                 <ReportReadyLine />
-              </>
-            }
-            onViewCommitments={() => {
-              if (!leaveMealJourney()) return;
-              setMoreView("MENU");
-              showTab("MORE");
-            }}
-            onOpenTrain={openTrain}
-            openToolsOnMount={todayToolsOpen}
-            onOpenBody={openBody}
-            onOpenSystemDestination={(destination) => {
-              if (destination.kind === "body") return openBody(destination.focus);
-              if (destination.kind === "workout") return openTrain("WORKOUT");
-              if (destination.kind === "workspace") {
-                if (!openPrimaryTab(destination.tab)) return false;
-              } else {
-                if (!leaveMealJourney()) return false;
-                setMoreView(destination.view);
-                setMoreResetKey((key) => key + 1);
-                showTab("MORE");
-              }
-              window.requestAnimationFrame(() => {
-                const heading = document.querySelector<HTMLElement>(".screen h1");
-                if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
-              });
-              return true;
-            }}
-          />
-          </div>
-        )}
-        {tab === "TRAIN" && (
-          <TrainScreen
-            destination={trainDestination}
-            recordsFocus={trainRecordsFocus}
-            onDestinationConsumed={() => setTrainDestination(null)}
-          />
-        )}
-        {(tab === "BODY" || mealOrigin) && (
-          <div hidden={tab !== "BODY"}>
-            <BodyScreen key={mealOrigin ? "meal-round-trip" : "body"} focus={bodyFocus}
-              visible={tab === "BODY"}
-              onReturnToToday={mealOrigin ? returnFromMeal : undefined}
-              onMealJourneyInFlightChange={mealOrigin ? updateMealInFlight : undefined}
-              onMealJourneyStateChange={mealOrigin ? updateMealState : undefined} />
-          </div>
-        )}
-        {tab === "MORE" && (
-          <MoreScreen
-            key={moreResetKey}
-            initialView={moreView}
-            onOpenCapture={() => {
-              setMoreView("MENU");
-              setTodayToolsOpen(true);
-              showTab("TODAY");
-            }}
+              </>}
+              onViewCommitments={(id) => openMore("INTENT", id ? { kind: "OBLIGATION", obligationId: id } : null)}
+              onOpenPlan={() => openMore("PLAN")}
+              onOpenTrain={openTrain}
+              openToolsOnMount={todayToolsOpen}
+              onOpenBody={openBody}
+              onOpenSystemDestination={(destination) => {
+                if (destination.kind === "body") return openBody(destination.focus);
+                if (destination.kind === "workout") return openTrain("WORKOUT");
+                if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
+                return openMore(destination.view);
+              }}
+            />
+          </RootErrorBoundary>
+        </div>}
+        {visited.has("TRAIN") && <div id="workspace-TRAIN" className={tab === "TRAIN" ? "tab-enter" : undefined} hidden={tab !== "TRAIN"}>
+          <RootErrorBoundary active={tab === "TRAIN"}><TrainScreen active={tab === "TRAIN"} destination={trainDestination} recordsFocus={trainRecordsFocus}
+            onDestinationConsumed={() => setTrainDestination(null)} /></RootErrorBoundary>
+        </div>}
+        {visited.has("BODY") && <div id="workspace-BODY" className={tab === "BODY" ? "tab-enter" : undefined} hidden={tab !== "BODY"}>
+          <RootErrorBoundary active={tab === "BODY"}><BodyScreen focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"}
+            onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `RETURN TO ${mealOrigin.tab}` : "RETURN TO TODAY"}
+            onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
+        </div>}
+        {visited.has("MORE") && <div id="workspace-MORE" className={tab === "MORE" ? "tab-enter" : undefined} hidden={tab !== "MORE"}>
+          <RootErrorBoundary active={tab === "MORE"}><MoreScreen active={tab === "MORE"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus}
+            onOpenCapture={openCapture}
             onOpenRecords={(exerciseId) => {
-              setMoreView("MENU");
-              setTrainDestination(null);
-              setTrainRecordsFocus(exerciseId);
-              showTab("TRAIN");
+              if (!canNavigate()) return;
+              setTrainDestination(null); setTrainRecordsFocus(exerciseId); showTab("TRAIN", false);
             }}
-            onOpenMeal={() => {
-              setMoreView("MENU");
-              setBodyFocus("meal");
-              showTab("BODY");
-            }}
-          />
-        )}
-        </div>
-      </RootErrorBoundary>
+            onOpenMeal={() => openBody("meal")} /></RootErrorBoundary>
+        </div>}
+      </main>
 
       {/* FIND-001: search everything, one tap from the top of every primary screen. */}
       <button
@@ -456,10 +450,7 @@ export function App() {
         className="topbar-search"
         aria-label="Search everything"
         onClick={() => {
-          if (!leaveMealJourney()) return;
-          setMoreView("SEARCH");
-          setMoreResetKey((key) => key + 1);
-          showTab("MORE");
+          openMore("SEARCH");
         }}
       >
         <Icon name="search" size={20} />

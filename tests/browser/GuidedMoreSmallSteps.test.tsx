@@ -42,19 +42,20 @@ beforeEach(() => { vi.mocked(getGuidedMoreStarts).mockReset(); vi.mocked(getDeci
 afterEach(async () => { await cleanup(); await page.viewport(1280, 800); await cdp().send("Emulation.setEmulatedMedia", { features: [] }); });
 
 describe("Guided MORE + Low-Energy TODAY", () => {
-  it("new Capture navigation asks before discarding an unsaved MORE writing draft", async () => {
+  it("Capture navigation retains an unsaved MORE writing draft without a discard dialog", async () => {
     const onCapture = vi.fn();
     const confirmation = vi.spyOn(window, "confirm").mockReturnValue(false);
     try {
       const screen = await render(<MoreScreen onOpenCapture={onCapture} />);
+    await screen.getByText("A place to start", { exact: true }).first().click();
       await screen.getByRole("button", { name: "OPEN JOURNAL", exact: true }).click();
       await screen.getByText("Need a starting point?", { exact: true }).click();
       await screen.getByRole("button", { name: "GUIDE A DECISION" }).click();
       const title = screen.getByRole("textbox", { name: "Decision title", exact: true });
       await title.fill("Keep this unfinished choice");
       await screen.getByRole("button", { name: "WRITE A FREE NOTE" }).click();
-      expect(confirmation).toHaveBeenCalledOnce();
-      expect(onCapture).not.toHaveBeenCalled();
+      expect(confirmation).not.toHaveBeenCalled();
+      expect(onCapture).toHaveBeenCalledOnce();
       await expect.element(title).toHaveValue("Keep this unfinished choice");
       expect(await db.decisionJournalEntries.count()).toBe(0);
     } finally { confirmation.mockRestore(); }
@@ -106,6 +107,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
   it("guided choices only write on explicit existing saves and free notes remain Capture", async () => {
     const onCapture = vi.fn();
     const screen = await render(<MoreScreen onOpenCapture={onCapture} />);
+    await screen.getByText("A place to start", { exact: true }).first().click();
     await screen.getByRole("button", { name: "OPEN JOURNAL", exact: true }).click();
     await screen.getByText("Need a starting point?", { exact: true }).click();
     await screen.getByRole("button", { name: "WRITE A FREE NOTE" }).click();
@@ -134,10 +136,11 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     expect(obligation.recurrence).toBeUndefined();
     expect(obligation.missionId).toBeUndefined();
   });
-  it("re-entering the retained Journal, from the menu or a Search result, starts at the list, not a stale entry", async () => {
+  it("re-entering a clean Journal starts at its list; Search opens the exact recorded decision", async () => {
     await createDecisionJournalEntry({ title: "Alpha decision", decision: "Pick alpha" });
     await createDecisionJournalEntry({ title: "Bravo decision", decision: "Pick bravo" });
     const screen = await render(<MoreScreen />);
+    await screen.getByText("A place to start", { exact: true }).first().click();
     const alphaDetail = screen.getByRole("heading", { name: "Alpha decision", exact: true });
     const decisionsList = screen.getByRole("heading", { name: "Decisions", exact: true });
     await screen.getByRole("button", { name: "Open DECISION JOURNAL", exact: true }).click();
@@ -153,9 +156,9 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await screen.getByRole("button", { name: "Open SEARCH", exact: true }).click();
     await screen.getByRole("textbox", { name: "Search everything" }).fill("Bravo");
     await screen.getByRole("button", { name: /: Bravo decision$/ }).click();
-    await expect.element(decisionsList).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "Bravo decision", exact: true })).toBeVisible();
     expect(alphaDetail.elements()).toHaveLength(0);
-    await expect.element(screen.getByRole("button", { name: "Open Bravo decision", exact: true })).toBeVisible();
+    expect(await db.decisionJournalEntries.count()).toBe(2);
   });
 
   it.each([320, 360, 412])("keeps exactly two starts, free/manual writing, drafts and accessible navigation at %ipx", async (width) => {
@@ -163,6 +166,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     const before = await db.events.toArray();
     const onCapture = vi.fn();
     const screen = await render(<MoreScreen onOpenCapture={onCapture} />);
+    await screen.getByText("A place to start", { exact: true }).first().click();
     await expect.poll(() => screen.getByRole("status").elements().length).toBe(0);
     expect(screen.container.querySelectorAll(".guided-starts li")).toHaveLength(2);
     const journal = screen.getByRole("button", { name: "OPEN JOURNAL", exact: true });
@@ -210,6 +214,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
       .mockImplementationOnce(() => new Promise((_resolve, reject) => { fail = reject; }))
       .mockImplementationOnce(() => new Promise((resolve) => { recover = resolve; }));
     const screen = await render(<MoreScreen />);
+    await screen.getByText("A place to start", { exact: true }).first().click();
     await expect.element(screen.getByText("9 decisions await review.")).toBeVisible();
     await screen.getByRole("button", { name: "Open HISTORY", exact: true }).click();
     await screen.getByRole("button", { name: "← BACK TO MORE" }).click();
