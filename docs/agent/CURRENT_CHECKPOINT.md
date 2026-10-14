@@ -1,21 +1,62 @@
 # Current checkpoint
 
-## Current state — no objective in flight (2026-10-13)
+## Current state — no objective in flight (2026-10-14)
 
-PR #226 (COMMAND-ATOMICITY-002) merged at `e145cd1` with Gavin's approval after required CI passed
-on head `99b8f705b6507af9fa760307f93665dd0d667e92`. The brief asked for an independent Codex
-exact-head review; none is recorded on PR #226. Issue #225 is closed. No deploy. Only isolated
-prototype #204 remains open. Next action: on "let's work", propose the next owner-prioritized
-objective; none is approved.
+PR #228 (DAILY-EXPERIENCE-001) merged at `910c436` with Gavin's approval. Merged head
+`5a4c33bdd3ab3211150130b81724e5a2e22ac8a5` had green required PR Verification and an independent
+Claude Code exact-head PASS review recorded on PR #228. Housekeeping PR #227 merged earlier at
+`644aae5`. No deploy. Only isolated prototype #204 remains open. Next action: on "let's work",
+propose the next owner-prioritized objective; none is approved.
 
-Open, unapproved: owner decision D1 (see below; merged default saves nothing and suggests
-RELEASE); an after-the-fact independent review of `99b8f70` if Gavin wants one.
+Open, unapproved: owner decision D1 (see COMMAND-ATOMICITY-002 below; merged default saves nothing
+and suggests RELEASE); an after-the-fact independent review of PR #226's `99b8f70` if Gavin wants one.
 
-Carried forward, unapproved: review notes N1–N4 from PR #220 (count-start churn on re-entry,
+Carried forward from the PR #228 reviews, nonblocking and unapproved:
+- R3 (pre-existing on master): the Obligation EDIT Due/Planned row is an inline flex row; the page
+  is 369 px wide at 320/360 px, and at 320 px the bottom nav is pushed below the viewport. Likely
+  fix: use the create form's `.intent-dates`. Plan Today makes this editor easier to reach.
+- R4: BODY counts an open but unchanged correction editor as unsaved input, so reload/update
+  prompts can fire spuriously (Intent editors already compare against the saved record).
+- Plan Today groups by calendar date, so during an overnight shift "planned today" items move at
+  midnight, before the 16:30 BeyondDay boundary (existing semantics, not a regression).
+- Hidden retained panes keep their timers running; retained TRAIN briefly shows its previous
+  headline until its activation re-read finishes.
+
+Also carried forward, unapproved: review notes N1–N4 from PR #220 (count-start churn on re-entry,
 destination-guide descriptions, Search Capture result skipping discard confirmation, stale Capture
 message); operator stage 6 consolidation (waits for field evidence); VCC-001 stays paused; F1 field
 stop runs to about Oct 25. A reviewer once saw a non-reproducing local `MealRoundTrip.test.tsx:80`
 scroll-poll failure under combined load; watch for it in CI.
+
+## Historical objective — DAILY-EXPERIENCE-001 (merged PR #228)
+
+Gavin authorized the complete PROTECTED objective on 2026-10-13; brief in
+[DAILY-EXPERIENCE-001.md](DAILY-EXPERIENCE-001.md). Starting master `e145cd16`; branch
+`codex/daily-experience-001`; [PR #228](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/228), merged at `910c436`.
+Builder: Codex (`d962b6f`, `54aaf8a`); Gavin reassigned the review corrections to Claude Code after
+Codex ran out of usage (`73abb55`, `9cb2ace`, `4177b91`, `34a17e4`, `5a4c33b`).
+
+Implemented: session-local meal/sleep/workout-set/Journal/Capture/planning input retained across
+tabs and feature links (never persisted; drafts clear on reload/process eviction); reload and
+UPDATE NOW warnings for unfinished input; origin/position/focus return; compact Day Line TODAY with
+separate recorded Status and Engine guidance; focused canonical water/meal and quick Capture; Plan
+Today over explicit existing dates/Missions/recurrence with canonical detail resolution; compact
+MORE with on-demand guidance, complete Backup/Recovery access and one main landmark. No Engine,
+schema, event/backup contract, historical fixture, dependency, backend or CI change.
+
+Review history: Claude review of `54aaf8a` BLOCKED on B1 (a TODAY shortcut's focused BODY view and
+stale RETURN leaked into primary navigation). Codex review of `54aaf8a` BLOCKED on Plan Today A → B
+→ A edits being lost and Intent/Plan-composer drafts missing reload/update protection. Claude review
+of `34a17e4` confirmed those fixed and BLOCKED on R1 (retained TRAIN showed a stale variant under
+SUGGESTED WORKOUT after a check-in; master showed REDUCED for YELLOW). `5a4c33b` re-derives
+unchosen template/variant on return and clears a stale Capture return (R2).
+
+Evidence on merged head `5a4c33b` (independent re-review): typecheck, architecture (212 files) and
+build pass; full Node + Chromium suite 229 files / 2,393 passed / 1 existing skip; production
+acceptance (`scripts/verify-daily-experience.mjs`) passes at 320/360/412 px; required PR
+Verification green. Synthetic phone evidence: [README](../screenshots/daily-experience-001/README.md).
+Untested: physical iPhone/Safari/Android keyboards and screen readers. Existing bundle-size
+advisory and single-tab limitations remain.
 
 ## Historical objective — COMMAND-ATOMICITY-002 (issue #225, merged PR #226)
 
@@ -736,33 +777,3 @@ verify branch/PR/head/CI from Git and GitHub rather than assuming this checkpoin
 ## DECISIONS FOR GAVIN
 
 None. Independent Protected review and owner merge approval remain separate steps.
-
-## Latest authorized objective — DAILY-EXPERIENCE-001 (2026-10-13)
-
-Gavin authorized Codex as sole implementation Builder for the full daily-experience objective;
-PROTECTED brief in [DAILY-EXPERIENCE-001.md](DAILY-EXPERIENCE-001.md). Fresh starting master:
-`e145cd16d0323d80eb45e6920cb7fe647c3cf97d`; branch `codex/daily-experience-001`; PR [#228](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/228).
-This appended handoff leaves the unrelated housekeeping PR #227's earlier checkpoint sections
-and roadmap edits alone. COMMAND-ATOMICITY-002 is merged in #226; its older status above is
-historical context, not the current assignment. Prototype PR #204 remains unchanged.
-
-Implemented: session-local meal/sleep/workout-set/Journal/Capture input across tabs and feature
-links; explicit origin/position/focus return and reload warnings; compact Day Line TODAY with
-separate recorded Status and Engine guidance; focused canonical water/meal and quick Capture;
-Plan Today over explicit existing dates/Missions/recurrence with canonical detail resolution;
-compact MORE with on-demand guidance, complete Backup/Recovery access and one main landmark.
-No Engine, schema, event/backup contract, historical fixture, dependency, backend or CI change.
-
-Evidence: full local gate: 226 files / 2,372 passed / one existing skip; architecture and production
-build pass. Built-PWA 320/360/412 px journeys pass; results and reproduction in
-[synthetic phone evidence](../screenshots/daily-experience-001/README.md). Verification counts and
-exact final head belong in the PR to avoid a self-referential commit hash. The full gate preserves
-its single existing skip. Early failures were corrected: exact Capture selectors, immediate
-context-rejection handling, visible role scopes for retained lists, keyboard clearance, and
-browser scroll anchoring during return. No assertions or safeguards were weakened.
-
-Remaining: physical-device/keyboard/Safari/screen-reader assessment; existing bundle-size advisory;
-independent Claude Code exact-head review and required green exact-head CI; Gavin's separate
-merge approval. Drafts intentionally do not survive reload/process eviction. Next action: inspect
-this PR's exact head against the approved brief and evidence; record an independent PASS/BLOCK
-verdict and reviewed SHA in GitHub. No merge or deployment is authorized for Codex.
