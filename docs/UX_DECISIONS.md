@@ -62,9 +62,15 @@ Gavin approves the plan in `agent/REVIEW-001.md`:
 - A **monthly review** every 4th Monday, for body composition and photo comparison.
 - Weekly check-in stays as its own screen.
 
-TODAY may show one quiet, neutral "Weekly review ready" line, outside the phase-row cap. It appears
-only outside pre-work and at-work phases and disappears when the review is done. It is not a
-recommendation.
+Owner ruling 2026-10-15: the name stays **Review**.
+- The existing MORE → REVIEW screen (the Recommendation Ledger) becomes Review's **Recommendations**
+  section. Its read-only, no-aggregate contract is unchanged.
+- The SYSTEM catalog's REVIEW entry is re-described rather than duplicated.
+- The 2026-09-30 trend exception ("Review … may show trends") applies to this Review.
+
+TODAY may show one quiet, neutral "Weekly review ready" line, outside the phase-row cap, following the
+backup-due-line pattern. It appears only in the `OFF` phase, LATER hides it for that lived day, and it
+disappears when the review is done. It is not a recommendation.
 
 Phase 1a adds the following additive data. Each requires the Protected review and backup safeguards.
 - Body measurements, with waist primary.
@@ -72,7 +78,7 @@ Phase 1a adds the following additive data. Each requires the Protected review an
 - An operator-chosen weekly focus and note.
 
 Review remains read-only analysis. The general rules:
-- Counts, not causes.
+- Counts, not causes. No body-composition verdict: BEYOND does not measure fat or muscle.
 - Named windows and abstain floors. Missing data stays missing.
 - Neutral ink, no grades. One y-axis per chart.
 - No Engine input and no recommendation.
