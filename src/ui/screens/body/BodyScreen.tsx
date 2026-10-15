@@ -483,8 +483,29 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
   const mealWriteInFlight = useRef(false);
   const mealPositioned = useRef(false);
   const mealRecoveryFocusPending = useRef(false);
-  const mealDirty = Boolean(foodQuery.trim() || Object.values(newMealForm).some((value) => value.trim()) || editingMealId || correctingMealEventId);
-  useSessionDraft("body", mealDirty || Boolean(sleepHoursInput || sleepMinutesInput || input || correctingId || sleepCorrectingId || bodyweightCorrectingId || proteinCorrectingId));
+  // An open editor is unsaved input only once a value differs from the saved record it opened
+  // with. A record that is no longer listed keeps counting while its editor stays open.
+  const savedMealEdit = savedMeals.find((meal) => meal.id === editingMealId);
+  const mealEditChanged = editingMealId !== null && (!savedMealEdit || editMealForm.name !== savedMealEdit.name
+    || editMealForm.calories !== String(savedMealEdit.calories) || editMealForm.proteinG !== String(savedMealEdit.proteinG)
+    || editMealForm.carbsG !== String(savedMealEdit.carbsG) || editMealForm.fatG !== String(savedMealEdit.fatG));
+  const mealCorrected = mealEntries.find((entry) => entry.headEventId === correctingMealEventId);
+  const mealCorrectionChanged = correctingMealEventId !== null && (!mealCorrected
+    || mealCorrectionForm.calories !== String(mealCorrected.effectiveCalories) || mealCorrectionForm.proteinG !== String(mealCorrected.effectiveProteinG)
+    || mealCorrectionForm.carbsG !== String(mealCorrected.effectiveCarbsG) || mealCorrectionForm.fatG !== String(mealCorrected.effectiveFatG));
+  const waterCorrected = entries.find((entry) => entry.headEventId === correctingId);
+  const waterCorrectionChanged = correctingId !== null && (!waterCorrected || correctionInput !== String(waterCorrected.effectiveAmountOz));
+  const sleepCorrected = sleepEntries.find((entry) => entry.headEventId === sleepCorrectingId);
+  const sleepSaved = sleepCorrected ? totalMinutesToHoursAndMinutes(sleepCorrected.effectiveDurationMinutes) : null;
+  const sleepCorrectionChanged = sleepCorrectingId !== null && (!sleepSaved
+    || sleepCorrectionHours !== String(sleepSaved.hours) || sleepCorrectionMinutes !== String(sleepSaved.minutes));
+  const bodyweightCorrected = bodyweightEntries.find((entry) => entry.headEventId === bodyweightCorrectingId);
+  const bodyweightCorrectionChanged = bodyweightCorrectingId !== null && (!bodyweightCorrected || bodyweightCorrectionInput !== String(bodyweightCorrected.effectiveWeightLbs));
+  const proteinCorrected = proteinEntries.find((entry) => entry.headEventId === proteinCorrectingId);
+  const proteinCorrectionChanged = proteinCorrectingId !== null && (!proteinCorrected || proteinCorrectionInput !== String(proteinCorrected.effectiveGrams));
+  const mealDirty = Boolean(foodQuery.trim() || Object.values(newMealForm).some((value) => value.trim()) || mealEditChanged || mealCorrectionChanged);
+  useSessionDraft("body", mealDirty || Boolean(sleepHoursInput || sleepMinutesInput || input) || waterCorrectionChanged
+    || sleepCorrectionChanged || bodyweightCorrectionChanged || proteinCorrectionChanged);
   useEffect(() => {
     onMealJourneyStateChange?.({ busy: busy || foodSearchBusy, dirty: mealDirty });
   }, [busy, foodSearchBusy, mealDirty, onMealJourneyStateChange]);

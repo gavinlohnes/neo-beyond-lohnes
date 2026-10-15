@@ -834,12 +834,12 @@ function ObligationDetail({
                 <p className="tool-label">EDIT OBLIGATION</p>
                 <input type="text" className="input" style={{ marginBottom: 8 }} aria-label="Obligation title" value={title} onChange={(e) => setTitle(e.target.value)} />
                 <textarea className="input" style={{ marginBottom: 8, minHeight: 80 }} aria-label="Obligation description" value={description} onChange={(e) => setDescription(e.target.value)} />
-                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                  <div style={{ flex: 1 }}>
+                <div className="intent-dates">
+                  <div>
                     <label htmlFor={`obligation-due-${obligationId}`} className="meta" style={{ display: "block", marginBottom: 4 }}>Due</label>
                     <input id={`obligation-due-${obligationId}`} type="date" className="input" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div>
                     <label htmlFor={`obligation-planned-${obligationId}`} className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
                     <input id={`obligation-planned-${obligationId}`} type="date" className="input" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} />
                   </div>
