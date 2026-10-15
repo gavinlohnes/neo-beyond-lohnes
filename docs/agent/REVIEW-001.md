@@ -148,13 +148,15 @@ Key:
   (16:30 → 16:30) belongs to the calendar date it starts on, so the Sunday 16:30 → Monday 16:30 day
   belongs to the week that just ended. Weekly check-in keeps its rolling "last 7 days", and each
   surface labels its own window ("Oct 7 – 13" vs "last 7 days").
-- **When it appears:** the review becomes ready on Monday and stays ready until it is done or until
-  the next one replaces it. There is no "missed" state and no streak.
+- **When it appears:** the review becomes ready once the week's last lived day ends, at Monday 16:30.
+  That way it never shows an unfinished day, matching how *your usual* excludes the day in progress.
+  It stays ready until it is done or until the next one replaces it. There is no "missed" state and
+  no streak.
 - **TODAY line:** a quiet, neutral line ("Weekly review ready"), outside the phase-row cap. Its
   precedent is the existing backup-due line, a "ready" notice with LATER, not the operator controls.
   - It is shown only in the `OFF` phase: never in `PRE_WORK`, `SCHEDULED_SHIFT` or
     `EXPECTED_POST_WORK` (after a night shift, before sleep). Gavin's rotation makes every other
-    Monday a work day; on those Mondays it appears at the next `OFF` time.
+    Monday a work day; on those Mondays it appears at the next `OFF` time after Monday 16:30.
   - LATER hides it for the rest of that lived day.
   - It disappears once the review is done.
 - **Monthly review:** every 4th Monday, counted from the first completed weekly review. It replaces
@@ -165,7 +167,8 @@ Key:
 ### Phase 1a — Review hub, reviews, baseline capture and focus (PROTECTED, approved to start after merge)
 
 Review hub:
-- A new MORE destination, REVIEW, plus a SYSTEM catalog entry.
+- The existing MORE → REVIEW destination becomes the hub. The ledger moves into its Recommendations
+  section, and the SYSTEM catalog REVIEW entry is re-described (no new entry).
 - The core-six home and "More questions".
 - Weekly stays a separate screen.
 
