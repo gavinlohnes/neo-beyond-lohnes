@@ -8,6 +8,10 @@ import { startDay, submitCheckIn } from "../../src/application/commands";
 import { abandonWorkout, completeWorkout, logSet, skipSet, startRest, startWorkout } from "../../src/application/trainCommands";
 import { db } from "../../src/persistence/db";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
+import { getLiftRecentSessions } from "../../src/application/trainHistoryQueries";
+
+// Spied, not replaced: the real reads run, and the call count shows when lift history reads.
+vi.mock("../../src/application/trainHistoryQueries", { spy: true });
 
 /**
  * ULTIMATE-FOUNDATION-002 (Training Record): TRAIN → HISTORY, a session's
@@ -29,6 +33,7 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   await cleanup();
+  vi.mocked(getLiftRecentSessions).mockClear();
   vi.useRealTimers();
   await cdp().send("Emulation.setEmulatedMedia", { features: [] });
   window.scrollTo(0, 0);
@@ -154,5 +159,56 @@ describe("lift history during a workout", () => {
     await expect.element(screen.getByLabelText("Set 2 repetitions", { exact: true })).toHaveValue(7);
     await expect.element(screen.getByText("RESTING", { exact: true })).toBeVisible();
     expect(await writes()).toEqual(before);
+  });
+
+  it("reads once when opened, not after a set is logged with it open, and leaves Gym Mode's set as it was", async () => {
+    Object.defineProperty(navigator, "wakeLock", { value: { request: vi.fn(async () => ({ release: vi.fn(async () => {}) })) }, configurable: true });
+    const { day } = await seedHistory();
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    tick();
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "Machine Chest Press history" }).click();
+    await expect.element(screen.getByText("RECENT SESSIONS", { exact: true })).toBeVisible();
+    expect(getLiftRecentSessions).toHaveBeenCalledTimes(1);
+
+    await screen.getByLabelText("Set 1 weight in pounds", { exact: true }).fill("105");
+    await screen.getByLabelText("Set 1 repetitions", { exact: true }).fill("10");
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.poll(async () => (await db.performedSets.where("sessionId").equals(session.id).count())).toBe(1);
+    await expect.element(screen.getByLabelText("Set 2 weight in pounds", { exact: true })).toBeVisible();
+    // Still open, still the one read; the set just logged is not part of it.
+    await expect.element(screen.getByText("RECENT SESSIONS", { exact: true })).toBeVisible();
+    expect([...document.querySelectorAll(".train-lift-history li")].map((li) => li.textContent)).toEqual(["Oct 12: 100 lb × 10", "Oct 12: 90 lb × 10"]);
+    expect(getLiftRecentSessions).toHaveBeenCalledTimes(1);
+
+    await screen.getByLabelText("Set 2 weight in pounds", { exact: true }).fill("110");
+    await screen.getByLabelText("Set 2 repetitions", { exact: true }).fill("7");
+    await screen.getByRole("button", { name: "GYM MODE" }).click();
+    const gym = screen.getByRole("dialog", { name: "Gym mode" });
+    await expect.element(gym.getByLabelText("Weight", { exact: true })).toHaveValue(110);
+    await expect.element(gym.getByLabelText("Reps", { exact: true })).toHaveValue(7);
+    await gym.getByRole("button", { name: "EXIT" }).click();
+    await expect.element(screen.getByText("RECENT SESSIONS", { exact: true })).toBeVisible();
+    expect(getLiftRecentSessions).toHaveBeenCalledTimes(1);
+  });
+
+  it("closes when the current exercise changes, and coming back neither reopens it nor moves focus", async () => {
+    const { day } = await seedHistory();
+    await startWorkout(day.id, "A", "STANDARD");
+    tick();
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("button", { name: "Machine Chest Press history" }).click();
+    await expect.element(screen.getByText("RECENT SESSIONS", { exact: true })).toBeVisible();
+
+    const chips = [...document.querySelectorAll<HTMLButtonElement>("button[aria-pressed]")];
+    chips[1]!.click();
+    await expect.poll(() => document.querySelector(".train-lift-history")).toBeNull();
+    const chip = [...document.querySelectorAll<HTMLButtonElement>("button[aria-pressed]")][0]!;
+    chip.focus();
+    chip.click();
+    await expect.element(screen.getByRole("button", { name: "Machine Chest Press history" })).toBeVisible();
+    expect(document.querySelector(".train-lift-history")).toBeNull();
+    expect(document.activeElement).toBe(chip);
+    expect(getLiftRecentSessions).toHaveBeenCalledTimes(1);
   });
 });

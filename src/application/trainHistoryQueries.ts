@@ -1,7 +1,7 @@
 import { db } from "../persistence/db";
 import type { WorkoutSession } from "../domain/common/types";
 import type { PerformedSet, WorkoutTemplateId } from "../domain/workout/types";
-import { getUndoneSetIds } from "./trainQueries";
+import { getPerformedSets, getUndoneSetIds } from "./trainQueries";
 import { byLoggedOrder, getAllRecords, type PersonalRecord } from "./personalRecordQueries";
 import { getExerciseNames } from "./exerciseLibraryQueries";
 
@@ -109,7 +109,7 @@ export interface SessionRecordExercise {
 
 export interface WorkoutSessionRecord {
   entry: TrainingHistoryEntry;
-  /** In the order each exercise was first logged; sets within it by set number. */
+  /** In the order each exercise was first logged; sets within it in logged order. */
   exercises: SessionRecordExercise[];
 }
 
@@ -117,8 +117,8 @@ export interface WorkoutSessionRecord {
 export async function getWorkoutSessionRecord(sessionId: string): Promise<WorkoutSessionRecord | null> {
   const session = await db.workoutSessions.get(sessionId);
   if (!session || !isHistorySession(session)) return null;
-  const [setsBySession, records, names] = await Promise.all([countedSetsBySession(), getAllRecords(), getExerciseNames()]);
-  const sets = [...(setsBySession.get(sessionId) ?? [])].sort(byLoggedOrder);
+  const [performed, records, names] = await Promise.all([getPerformedSets(sessionId), getAllRecords(), getExerciseNames()]);
+  const sets = [...performed].sort(byLoggedOrder);
   const recordBySet = new Map(records.filter((r) => r.sessionId === sessionId).map((r) => [r.setId, r.record]));
 
   const exercises = new Map<string, SessionRecordExercise>();
@@ -136,7 +136,6 @@ export async function getWorkoutSessionRecord(sessionId: string): Promise<Workou
     });
     exercises.set(set.exerciseId, exercise);
   }
-  for (const exercise of exercises.values()) exercise.sets.sort((a, b) => a.setNumber - b.setNumber);
 
   return { entry: toEntry(session, sets, recordBySet.size), exercises: [...exercises.values()] };
 }

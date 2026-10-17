@@ -1,22 +1,39 @@
 # Current checkpoint
 
-## Current objective — ULTIMATE-FOUNDATION-002 Training Record (2026-10-17, PROTECTED)
+## Current objective — ULTIMATE-FOUNDATION-002 review follow-up (2026-10-17, ROUTINE)
+
+Gavin asked for the checkpoint update and fixes for the four nonblocking findings from #233's
+independent review ("Update the checkpoint and fix the findings", 2026-10-17). Builder: Claude
+Code. Starting master `48e7b54`; branch `ccr-f27681c1-sb8gif`; PR linked from the branch.
+Changes:
+- Lift history closes when the current exercise changes. Coming back to that lift no longer
+  reopens it or moves focus. The control now owns its state inside the per-exercise surface.
+- A session record keeps each exercise's sets in logged order, as the brief says.
+- A session record reads its own sets through `getPerformedSets` rather than the whole table.
+- New tests: lift history reads once while a set is logged with it open, and Gym Mode shows the
+  same unsaved set.
+
+TRAIN UI and read-query only. No Engine, schema, event, backup, fixture, dependency or CI change.
+Next action: Gavin's merge decision after green required CI.
+
+## Previous objective — ULTIMATE-FOUNDATION-002 Training Record (2026-10-17, PROTECTED, merged in #233)
 
 Gavin approved the Training Record slice ("approve, Protected, Claude Code, defer pause",
-2026-10-17). Builder: Claude Code. Starting master `8c8b25f`; branch `ccr-f27681c1-sb8gif`; PR
-linked from the branch. Brief: [`ULTIMATE-FOUNDATION-002.md`](ULTIMATE-FOUNDATION-002.md).
-Scope: TRAIN → HISTORY, a session record, and lift history during a workout, all read only, plus
-one shared volume rule. No Engine, schema, event, backup, fixture, dependency or CI change.
-Pause/resume is deferred.
+2026-10-17). Builder: Claude Code. Brief: [`ULTIMATE-FOUNDATION-002.md`](ULTIMATE-FOUNDATION-002.md).
+It adds TRAIN → HISTORY, a session record and lift history during a workout, all read only, plus
+one shared volume rule. Pause/resume is deferred.
+
+PR #233 merged at `48e7b54` on Gavin's instruction. Merged head
+`be49052149978b38fed9ac1a35b6c00e00750129` had green required PR Verification and an independent
+Claude Code exact-head PASS review on PR #233. Four nonblocking findings from that review are
+handled by the follow-up above. No deploy.
 
 Open work alongside it:
 - #232 (ULTIMATE-FOUNDATION-001, Codex) is blocked on review finding B1 (TODAY FUEL button
   names hide their values). Codex fixes it, then it needs a new exact-head review.
-- After #232 merges, this objective adds a session record → History day link using #232's
-  History focus plumbing.
+- After #232 merges, the session record gets a link to its History day using #232's History
+  focus plumbing.
 - #231 (REVIEW-001 plan) has a PASS review and awaits Gavin's merge decision.
-
-Next action: an independent exact-head review of this PR, then Gavin's merge decision.
 
 ## Previous objective — PHONE-FIT-001 (2026-10-14, ROUTINE, merged in #230)
 
