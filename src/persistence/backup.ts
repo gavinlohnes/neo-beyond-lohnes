@@ -118,6 +118,11 @@ export async function previewRestore(file: File): Promise<RestorePreview> {
   if (data.formatName !== "dexie" || !data.data) {
     throw new Error("INVALID_BACKUP_FILE: not a recognized BEYOND/Dexie backup.");
   }
+  if (data.data.databaseVersion > db.verno) {
+    throw new Error(
+      `BACKUP_FROM_NEWER_APP: this backup is from a newer version of BEYOND (data version ${data.data.databaseVersion}; this app reads up to ${db.verno}). Update the app, then restore. Nothing was changed.`,
+    );
+  }
   return {
     databaseName: data.data.databaseName,
     databaseVersion: data.data.databaseVersion,
@@ -125,6 +130,21 @@ export async function previewRestore(file: File): Promise<RestorePreview> {
   };
 }
 
+/**
+ * RESTORE-COMPAT (REVIEW-001 Phase 1a prerequisite, 2026-10-17): a backup
+ * records the schema version it was exported from, and dexie-export-import
+ * refuses any version other than the live one unless told otherwise — so
+ * every native backup exported before the last schema bump failed with
+ * "Database version differs". Every migration is additive-only (see db.ts),
+ * so an OLDER backup's rows are valid as they stand: its tables import, and
+ * tables it predates stay cleared, which is still replace-only. Settings
+ * rows those tables held (schedule pattern, nutrition targets) already fall
+ * back to their defaults on read when absent. A NEWER backup may hold shapes
+ * this build doesn't understand, so it is refused before anything is
+ * cleared or written — at preview, so the operator sees why before confirming.
+ */
 export async function applyRestore(file: File): Promise<void> {
-  await db.import(file, { clearTablesBeforeImport: true });
+  // previewRestore refuses a newer backup, so this never clears anything for one.
+  const { databaseVersion } = await previewRestore(file);
+  await db.import(file, { clearTablesBeforeImport: true, acceptVersionDiff: databaseVersion < db.verno });
 }

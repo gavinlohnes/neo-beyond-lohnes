@@ -1,20 +1,31 @@
 # Current checkpoint
 
-## Current objective — ULTIMATE-FOUNDATION-002 review follow-up (2026-10-17, ROUTINE)
+## Current objective — RESTORE-COMPAT, REVIEW-001 Phase 1a prerequisite (2026-10-17, PROTECTED)
 
-Gavin asked for the checkpoint update and fixes for the four nonblocking findings from #233's
-independent review ("Update the checkpoint and fix the findings", 2026-10-17). Builder: Claude
-Code. Starting master `48e7b54`; branch `ccr-f27681c1-sb8gif`; PR linked from the branch.
-Changes:
-- Lift history closes when the current exercise changes. Coming back to that lift no longer
-  reopens it or moves focus. The control now owns its state inside the per-exercise surface.
-- A session record keeps each exercise's sets in logged order, as the brief says.
-- A session record reads its own sets through `getPerformedSets` rather than the whole table.
-- New tests: lift history reads once while a set is logged with it open, and Gym Mode shows the
-  same unsaved set.
+Gavin asked to keep moving after REVIEW-001's plan (#231) and its photo-backup ruling (#235,
+option (a): photos in the normal backup) merged. Builder: Claude Code. Starting master `ca67da6`;
+branch `ccr-f27681c1-sb8gif`; PR linked from the branch.
 
-TRAIN UI and read-query only. No Engine, schema, event, backup, fixture, dependency or CI change.
-Next action: Gavin's merge decision after green required CI.
+Found while starting Phase 1a's storage slice, and fixed first on its own: restoring any native
+backup exported from an older schema failed with "Database version differs" (dexie-export-import
+refuses any version but the live one). That affects every native backup made before schema v12.
+Phase 1a's own acceptance needs older backups to restore after its schema bump.
+
+The fix is in `persistence/backup.ts`:
+- An older backup restores, still replace-only. Tables it predates are cleared, and missing
+  settings rows read as their defaults.
+- A newer backup is refused at preview with a plain message, before anything is cleared.
+
+No schema, event, Engine, fixture, dependency or CI change; the legacy `BEYOND_BACKUP` path is
+untouched. Next action: an independent exact-head review, then Gavin's merge decision. After that
+comes REVIEW-001 Phase 1a slice 1: measurement events, a progress-photo table at v13, and backup
+round trips with photos.
+
+## Previous objective — ULTIMATE-FOUNDATION-002 review follow-up (2026-10-17, ROUTINE, merged in #234)
+
+The four nonblocking findings from #233's review were fixed in #234, merged at `5e0f86d` on
+Gavin's instruction. REVIEW-001's plan merged in #231 (`69f9538`), and its Decision 2 ruling
+(photos in the normal backup) merged in #235 (`ca67da6`).
 
 ## Previous objective — ULTIMATE-FOUNDATION-002 Training Record (2026-10-17, PROTECTED, merged in #233)
 
@@ -33,7 +44,7 @@ Open work alongside it:
   names hide their values). Codex fixes it, then it needs a new exact-head review.
 - After #232 merges, the session record gets a link to its History day using #232's History
   focus plumbing.
-- #231 (REVIEW-001 plan) has a PASS review and awaits Gavin's merge decision.
+- #231 (REVIEW-001 plan) merged at `69f9538`.
 
 ## Previous objective — PHONE-FIT-001 (2026-10-14, ROUTINE, merged in #230)
 
