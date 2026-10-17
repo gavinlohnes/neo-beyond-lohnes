@@ -118,6 +118,9 @@ export async function previewRestore(file: File): Promise<RestorePreview> {
   if (data.formatName !== "dexie" || !data.data) {
     throw new Error("INVALID_BACKUP_FILE: not a recognized BEYOND/Dexie backup.");
   }
+  if (!Number.isInteger(data.data.databaseVersion) || data.data.databaseVersion < 1) {
+    throw new Error("INVALID_BACKUP_FILE: this backup doesn't say which version of BEYOND made it. Nothing was changed.");
+  }
   if (data.data.databaseVersion > db.verno) {
     throw new Error(
       `BACKUP_FROM_NEWER_APP: this backup is from a newer version of BEYOND (data version ${data.data.databaseVersion}; this app reads up to ${db.verno}). Update the app, then restore. Nothing was changed.`,

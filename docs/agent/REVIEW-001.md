@@ -302,3 +302,32 @@ Engine evaluation, plans, accounts, fixture, CI/protection, merge or deployment 
 Acceptance: pure calendar/floor/segment/abstention tests; canonical correction/void/no-write
 integration coverage; App browser source/History return at 320/360/412, keyboard-accessible
 point selector and tables, axe, read-error/retry; full verification and built-preview acceptance.
+
+## Phase 1a delivery — storage slice (2026-10-17)
+
+Builder: Claude Code, on `ccr-f27681c1-sb8gif`, after RESTORE-COMPAT (#236). Codex's read-only hub
+slice (#237) left measurements, photos, metadata stripping and backup-size evidence unclaimed;
+this slice takes exactly those, as storage and application commands/queries only. Screens for
+entering measurements and taking, importing and comparing photos come in a later slice. Lane:
+PROTECTED (schema and backup contract).
+
+- **Measurements** are events (`MEASUREMENT_LOGGED`, `_CORRECTED`, `_VOIDED`) with no BeyondDay:
+  site (waist primary; chest, arms, shoulders, hips), inches (5–100), and the date measured.
+  Earlier dates are allowed and later ones refused. Corrections chain like other BODY logs, and
+  nothing is erased.
+- **Progress photos** are a new `progressPhotos` table (schema v13, additive). Every image is
+  re-encoded through the browser's own decoder and canvas before it is stored: JPEG, at most
+  1600 px on the long edge. The original file, and its EXIF location and device data, is never
+  stored. Pose and date are corrected in place, each with an event. Events carry no image data.
+- **Hide or delete permanently** (Gavin, 2026-10-17): hide keeps the image, including in backups.
+  Delete permanently removes it from this device and from later backups. A backup exported
+  earlier still contains it, and the screen that offers delete must say so.
+- **Backups:** photos travel in the normal backup file as Blobs, which dexie-export-import already
+  handles, so the file format is unchanged. Measured with three 4032×3024 sources: each stored at
+  1600×1200 and about 200 KB, and the backup grew about 0.8 MB (1.34× the image bytes, from base64).
+  Those are synthetic images; detailed real photos may run larger. A v12 or older backup restores
+  with no photos.
+- Storage persistence is requested (`navigator.storage.persist()`) when a photo is added.
+  Whether it was granted is readable, so the later photo screen can say plainly when eviction
+  remains possible.
+

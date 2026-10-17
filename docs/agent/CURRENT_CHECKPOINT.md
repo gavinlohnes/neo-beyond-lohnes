@@ -1,6 +1,21 @@
 # Current checkpoint
 
-## Current objective — RESTORE-COMPAT, REVIEW-001 Phase 1a prerequisite (2026-10-17, PROTECTED)
+## Current objective — REVIEW-001 Phase 1a storage slice (2026-10-17, PROTECTED)
+
+Builder: Claude Code. Starting master `4404b01` (RESTORE-COMPAT #236 merged); branch
+`ccr-f27681c1-sb8gif`; PR linked from the branch. Scope and evidence are in the "storage slice"
+section of [REVIEW-001.md](REVIEW-001.md).
+- Body measurements as dated, correctable events.
+- A `progressPhotos` table at schema v13. Photos are re-encoded so their metadata is stripped,
+  and they travel in the normal backup.
+- Hide or delete a photo permanently (Gavin, 2026-10-17).
+- Measured backup sizes.
+- The #236 review's follow-ups: a pre-v4 restore test and a guard for an unversioned backup.
+
+No UI, Engine, TODAY or dependency change. Next action: an independent exact-head review, then
+Gavin's merge decision. The screens for measurements and photos are a later slice.
+
+## Previous objective — RESTORE-COMPAT (2026-10-17, PROTECTED, merged in #236 at `4404b01`)
 
 Gavin asked to keep moving after REVIEW-001's plan (#231) and its photo-backup ruling (#235,
 option (a): photos in the normal backup) merged. Builder: Claude Code. Starting master `ca67da6`;
@@ -17,12 +32,8 @@ The fix is in `persistence/backup.ts`:
 - A newer backup is refused at preview with a plain message, before anything is cleared.
 
 No schema, event, Engine, fixture, dependency or CI change; the legacy `BEYOND_BACKUP` path is
-untouched. Independent exact-head review: PASS at `a1a7408`, with green CI. Gavin approved the
-merge, but master had moved (#232 and #237 merged), so `origin/master` was merged into the branch.
-The only conflict was this checkpoint, and every entry is kept. Next action: green CI and an
-independent confirmation of the merged head, then the merge. After that comes REVIEW-001 Phase 1a
-storage: measurement events, a progress-photo table at v13 with permanent delete (Gavin,
-2026-10-17), and backup round trips with photos.
+untouched. Independent exact-head review: PASS at `a1a7408`, renewed at `4a6fd7d` after
+`origin/master` was merged in (#232 and #237). Merged on Gavin's approval at `4404b01`.
 
 
 ## Parallel objective — REVIEW-001 read-only hub slice (Codex, merged in #237) (2026-10-17, PROTECTED)
