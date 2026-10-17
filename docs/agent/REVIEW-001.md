@@ -3,7 +3,7 @@
 **Status:** plan approved by Gavin on 2026-10-14. Phase 1a implementation starts after this brief
 merges. Phase 1b, the C2 targets follow-up and Phase 2 (JOURNAL-002) each need their own go-ahead.
 
-- **Builder:** Claude Code.
+- **Builder:** Claude Code for the remaining full Phase 1a; Codex owns the read-only hub slice described below.
 - **Design-pass starting master:** `53fcf68`. Each implementation PR records its own exact starting commit.
 - **Lane:** **PROTECTED** for Phase 1a. It turns the existing MORE → REVIEW destination into the hub, adds a quiet TODAY line, new
   read-only calculations, and additive storage for measurements, photos and the weekly focus. That
@@ -271,3 +271,34 @@ the goal is available on request. Custom Programs already exist if it needs adju
 - **A production-build acceptance script** with screenshots.
 - **No Engine/`evaluate` change** and no new dependency.
 - Independent exact-head review, green required CI, and Gavin's merge approval.
+
+## Phase 1a delivery — read-only hub slice (2026-10-17)
+
+The approved Phase 1a plan is being delivered in reviewable slices. Gavin directed further major
+progress after #232's B1 repair. Codex owns this read-only hub slice on
+`codex/review-001-readonly-hub`, starting from freshly fetched master
+`ca67da629628520ab1026d9d03114648e7bcb588`; active PR linked from the branch. Lane remains
+PROTECTED (Review composition and new pure analysis), with independent exact-head review and
+Gavin's merge approval. BUILD OWNED small composition over the canonical ledger and effective
+weight queries; native disclosure/select/table/SVG, no new dependency.
+
+This slice adds the core-six question home, weight comparison, recorded protein/calories,
+training frequency, main sleep, logging presence and declared-work/off comparisons. Strength
+questions explicitly abstain until Phase 1b. The existing recommendation ledger remains a
+separate, unchanged read-only section. Source-day History links return to the same Review
+selection, disclosure, focus and position. Completed 16:30 calendar windows only; restarted-day
+segments are grouped, any unfinished segment excludes that lived day, mixed declarations stay
+unknown, and multiple main sleeps are excluded. Missing values stay missing. Daily weight means
+avoid giving multiple same-day weigh-ins extra weight; weekly comparison requires 7 weighed days
+in 14 and at least 3 in each week. Work/off averages require 3 logged days per measure per context.
+These are presentation evidence floors, never Engine inputs or health targets.
+
+Remaining Phase 1a work is not claimed complete: weekly/monthly saved reviews and focus,
+measurements, photos/metadata stripping/backup-size evidence, readiness line, goal-date/swing/
+timing analysis, expenditure and check-in questions. No storage/schema/backup/event change or
+TODAY composition change in this slice. This avoids overlap with active restore-compatibility
+PR #236. #232 and #236 remain separate PRs and are not merged by this work. No Phase 1b/C2/Phase 2,
+Engine evaluation, plans, accounts, fixture, CI/protection, merge or deployment changes.
+Acceptance: pure calendar/floor/segment/abstention tests; canonical correction/void/no-write
+integration coverage; App browser source/History return at 320/360/412, keyboard-accessible
+point selector and tables, axe, read-error/retry; full verification and built-preview acceptance.

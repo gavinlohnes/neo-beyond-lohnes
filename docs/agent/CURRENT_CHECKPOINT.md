@@ -17,9 +17,88 @@ The fix is in `persistence/backup.ts`:
 - A newer backup is refused at preview with a plain message, before anything is cleared.
 
 No schema, event, Engine, fixture, dependency or CI change; the legacy `BEYOND_BACKUP` path is
-untouched. Next action: an independent exact-head review, then Gavin's merge decision. After that
-comes REVIEW-001 Phase 1a slice 1: measurement events, a progress-photo table at v13, and backup
-round trips with photos.
+untouched. Independent exact-head review: PASS at `a1a7408`, with green CI. Gavin approved the
+merge, but master had moved (#232 and #237 merged), so `origin/master` was merged into the branch.
+The only conflict was this checkpoint, and every entry is kept. Next action: green CI and an
+independent confirmation of the merged head, then the merge. After that comes REVIEW-001 Phase 1a
+storage: measurement events, a progress-photo table at v13 with permanent delete (Gavin,
+2026-10-17), and backup round trips with photos.
+
+
+## Parallel objective — REVIEW-001 read-only hub slice (Codex, merged in #237) (2026-10-17, PROTECTED)
+
+Gavin directed major progress after #232. The approved REVIEW-001 Phase 1a plan has merged;
+Codex is building its first read-only question/evidence hub slice on `codex/review-001-readonly-hub`,
+starting master `ca67da629628520ab1026d9d03114648e7bcb588`. Scope, floors, exclusions and
+remaining Phase 1a work are recorded in the delivery section of [REVIEW-001.md](REVIEW-001.md).
+Full local verification: 235 files / 2,432 tests passed / one existing skip, architecture,
+TypeScript and production build pass. Two additional protected-fixture read-only cases and
+final-copy browser checks pass (7 focused cases). Built PWA passes at 320/360/412 including
+canonical save/rollover, source History/focus return and offline cold reload. Final head and
+independent review are tracked in the active PR linked from that branch.
+No storage/backup/TODAY change; #236 is separate. #232 now has independent exact-head PASS
+at `742a2e4` and green required CI; Gavin approved shipping it, and #232 merged at
+`fda45c2`. #237 is now reconciled with that master; independent review and CI must bind its new head. Next: verify this slice, independent exact-head review, then owner merge decision.
+## PR #232 B1 follow-up and master integration (2026-10-17)
+
+Gavin authorized fixing B1, merging latest master into #232, verification, push and a new
+independent exact-head review. Builder: Codex. Started at `aa95684`; B1 fixed in this follow-up.
+Merged `origin/master` at `ca67da629628520ab1026d9d03114648e7bcb588` with a merge commit,
+not a rebase. The only conflict was this checkpoint; both branches' entries are preserved below.
+That master includes REVIEW-001 plan #231, Training Record #233 and follow-up #234, and
+photo-backup ruling #235. #236 has not merged at the integration check. The older status notes
+below describe their original handoffs; the merged master state in this paragraph supersedes them.
+ROADMAP_1.0 and UX_DECISIONS auto-merged; #232's entries remain under Active priority and the
+Connected Health Record decision alongside the preserved REVIEW-001/photo-backup decisions.
+
+B1: FUEL button names now include the displayed protein amount/optional target and water amount,
+plus “explore records”. Visible text/layout/placement and round-trip behavior are unchanged.
+New browser coverage checks both target/no-target names and updates after canonical UI protein
+and water logging. N1–N3 remain unchanged; they are nonblocking and outside this repair.
+Verification and review request for the new head are recorded on PR #232. The prior independent
+BLOCK at `aa95684` is historical evidence, not approval of this head. Next: independent review
+of the pushed head and Gavin's separate merge decision. No merge/deployment of #232 authorized.
+
+## Previous objective — ULTIMATE-FOUNDATION-001 (2026-10-17, PROTECTED, merged in #232)
+
+Gavin approved the Connected Health Record proposal ("Approved.", 2026-10-17).
+Brief: [ULTIMATE-FOUNDATION-001.md](ULTIMATE-FOUNDATION-001.md). Sole Builder: Codex.
+Fresh starting master `8c8b25feb90fd49f30e40d283547e90a6f4dd65a` (PHONE-FIT-001 #230 merged).
+Branch: `codex/ultimate-foundation-001`; [PR #232](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/232), open, not merged.
+
+Implemented: BODY readings open their existing metric explorer; recent/older lived-day browsing
+is read-only and groups early-ended/restarted segments. A raw water series reuses ledger truth.
+Exact observation/day/root references open effective source records, existing current-day
+correction controls, and the complete History day focused on the canonical event. Return retains
+metric/range/point, position, focus and unfinished forms. TODAY's existing FUEL readings link to
+that evidence in their existing placement; no new row, guidance or recommendation.
+
+Queries are application-only, read-only and source-linked. Same-time weigh-ins retain canonical
+order/identity; missing remains missing, ambiguous main sleeps stay separate, old day ownership
+is preserved. History re-reads on re-entry and ignores superseded requests. Retained progress
+keeps exploration state but performs no hidden progress reads after quick logs.
+
+Verification: full local gate 232 files / 2,417 passed / one existing skip; architecture (215
+files), TypeScript and production build pass. The ignored local config only selects system
+Chromium; full Node/browser selection and assertions remain enabled. Final-code production PWA
+passes at 320/360/412 px: source/History focus and return, retained draft, canonical correction,
+offline exploration/writes/reload, no browsing writes, no page errors/overflow and one main.
+The 12 new browser cases also cover reduced motion/axe on sources and History, hidden-query
+cost, explicit metric entry after a retained timeline, same-head History reopening and active
+workout-deferred rollover. Required CI and independent review are tracked on the final PR head.
+Evidence: [screenshots and reproduction](../screenshots/ultimate-foundation-001/README.md).
+
+Unchanged: Engine/rules, schema/domain/events/commands, persistence/backup contracts, dependencies,
+protected fixtures, CI/protections, primary tabs, laboratory #204. REVIEW-001 #231 is separate;
+no Review hub, weekly/monthly/focus/measurement/photo or Phase 1b/C2 implementation is included.
+Its docs touch UX_DECISIONS/ROADMAP too; check the merge diff and serialize shared implementation.
+
+Limits: physical iPhone/Safari/Android keyboard and screen-reader testing unrun. Drafts remain
+session-local; browser process eviction/reload clears them under existing warnings. Existing
+single-browser-tab write limitations and bundle-size advisory remain. No historical repair.
+Next: confirm required CI on the final pushed PR head, then assign independent qualified
+exact-head review against the brief. The PR binds the exact SHA and records CI. Gavin alone approves merge/deployment;
+no merge or deployment is authorized here. Other carried-forward unapproved work below stays separate.
 
 ## Previous objective — ULTIMATE-FOUNDATION-002 review follow-up (2026-10-17, ROUTINE, merged in #234)
 

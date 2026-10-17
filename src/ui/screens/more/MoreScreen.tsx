@@ -52,6 +52,8 @@ const DATA_SCHEMA = db.verno;
 
 export type MoreView = "MENU" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES";
 
+import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
+
 export function MoreScreen({
   onOpenCapture,
   active = true,
@@ -60,7 +62,11 @@ export function MoreScreen({
   initialView = "MENU",
   onOpenRecords,
   onOpenMeal,
+  historyDestination = null, onReturnToHealth, onHistoryExit,
 }: {
+  historyDestination?: HealthHistoryDestination | null;
+  onReturnToHealth?: (() => void) | undefined;
+  onHistoryExit?: (() => void) | undefined;
   onOpenCapture?: () => void;
   active?: boolean;
   navigationRequest?: number;
@@ -82,8 +88,11 @@ export function MoreScreen({
   const backRef = useRef<HTMLButtonElement>(null);
   const originRef = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
   const previousView = useRef(view);
+  const reviewOrigin = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
+  const [reviewHistory, setReviewHistory] = useState(false);
 
   function setView(next: MoreView) {
+    if (view === "HISTORY" && next !== "HISTORY") onHistoryExit?.();
     if (view === "MENU" && next !== "MENU") {
       originRef.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
     }
@@ -100,6 +109,10 @@ export function MoreScreen({
       if (trigger?.isConnected && menuRef.current?.contains(trigger)) trigger.focus({ preventScroll: true });
       else menuRef.current?.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
       window.scrollTo({ top: origin?.scrollY ?? 0, behavior: "instant" });
+    } else if (view === "REVIEW" && reviewOrigin.current) {
+      reviewOrigin.current.trigger?.focus({ preventScroll: true });
+      window.scrollTo({ top: reviewOrigin.current.scrollY, behavior: "instant" });
+      reviewOrigin.current = null;
     } else {
       backRef.current?.focus({ preventScroll: true });
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -107,14 +120,18 @@ export function MoreScreen({
   }, [view, active]);
   // FIND-001: a NOTE or DAY result opens HISTORY with that day open.
   const [journalFocus, setJournalFocus] = useState<string | undefined>(undefined);
-  const [historyFocusDayId, setHistoryFocusDayId] = useState<string | null>(null);
+  const [historyFocusDayId, setHistoryFocusDayId] = useState<string | null>(historyDestination?.dayId ?? null);
+  const [historyFocusEventId, setHistoryFocusEventId] = useState<string | null>(historyDestination?.eventId ?? null);
   // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by
   // the ordinary "MISSIONS & OBLIGATIONS" menu entry point — see its onOpen below. This is what
   // lets IntentScreen open straight to a specific record from Search without a normal visit to
   // MORE's own menu ever reopening that same stale focus later.
   const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(recordFocus);
   useEffect(() => {
+    setReviewHistory(false); reviewOrigin.current = null;
     setIntentFocus(recordFocus);
+    setHistoryFocusDayId(historyDestination?.dayId ?? null);
+    setHistoryFocusEventId(historyDestination?.eventId ?? null);
     setView(initialView);
   }, [navigationRequest]);
 
@@ -134,7 +151,7 @@ export function MoreScreen({
       return;
     }
     if (result.domain === "NOTE" || result.domain === "DAY") {
-      setHistoryFocusDayId(result.dayId ?? null);
+      setHistoryFocusDayId(result.dayId ?? null); setHistoryFocusEventId(null);
       setView("HISTORY");
       return;
     }
@@ -348,11 +365,14 @@ export function MoreScreen({
   return (
     <div className="screen more-operator">
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
-          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setHistoryFocusDayId(null); setView("MENU"); }}>← BACK TO MORE</button>
+          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>← BACK TO MORE</button>
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
-          {view === "HISTORY" && <HistoryScreen focusDayId={historyFocusDayId} />}
+          {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>RETURN TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>RETURN TO BODY</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
-          {view === "REVIEW" && <ReviewScreen />}
+          <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} onOpenHistory={(id) => {
+            reviewOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
+            setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
+          }} />}</div>
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} />}
           {view === "WORK_SCHEDULE" && <><OperatorHeader destination="more">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
           <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="more">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
@@ -401,7 +421,7 @@ export function MoreScreen({
         <dl>
           <dt>Weekly Check-in</dt><dd>Recorded progress, findings and the week ahead. Read-only; no grade.</dd>
           <dt>History</dt><dd>The full chronological event trail, including corrections and undo.</dd>
-          <dt>Review</dt><dd>BEYOND’s past recommendations, your decisions and their recorded outcomes.</dd>
+          <dt>Review</dt><dd>Weight, nutrition, recovery and training evidence, plus past recommendations.</dd>
           <dt>Search</dt><dd>Find existing records by words, then open where they live.</dd>
           <dt>Decision Journal</dt><dd>Write a choice and expectation; return later for its actual outcome and lesson.</dd>
           <dt>Missions & Obligations</dt><dd>Keep durable plans separate from tasks, dates and deliberate resolution.</dd>

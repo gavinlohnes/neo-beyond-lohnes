@@ -63,6 +63,10 @@ import {
   type WeighIn,
 } from "../../../application/bodyTrendQueries";
 import { DailyHealthRecord, HealthOverview, type HealthRecord } from "./DailyHealthRecord";
+import type { InsightMetric } from "../../../application/bodyInsightsQueries";
+import type { HealthEvidenceRequest, HealthHistoryDestination } from "../../../application/healthRecordQueries";
+import { HealthDayBrowser } from "./HealthDayBrowser";
+import { HealthSources, type SourceSelection } from "./HealthSources";
 import { BodyProgress } from "./BodyProgress";
 import { QuitTracker } from "./QuitTracker";
 import { SHORTCUT_ANCHOR_IDS, type BodyFocus } from "../../shortcuts";
@@ -240,7 +244,9 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange }: {
+export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
+  evidenceRequest?: HealthEvidenceRequest | null;
+  onHealthHistory?: ((destination: HealthHistoryDestination) => void) | undefined;
   focus?: BodyFocus | null;
   focusRequest?: number;
   /**
@@ -260,6 +266,29 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
   const [bodyMealsOpen, setBodyMealsOpen] = useState(false);
   const mealsVisible = mealFocused || bodyMealsOpen;
   const [progressOpen, setProgressOpen] = useState(false);
+  const [progressReturnFocus, setProgressReturnFocus] = useState(0);
+  const [progressVisited, setProgressVisited] = useState(false);
+  const [healthDay, setHealthDay] = useState<string | null>(null);
+  const [progressRequest, setProgressRequest] = useState<HealthEvidenceRequest | null>(null);
+  const [sourceSelection, setSourceSelection] = useState<SourceSelection | null>(null);
+  const sourceOrigin = useRef<{ trigger: HTMLElement | null; scrollY: number; daily: boolean } | null>(null);
+  function openSources(selection: SourceSelection, daily = false) {
+    if (busyRef.current || foodSearchBusyRef.current) return;
+    sourceOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY, daily };
+    setSourceSelection(selection); setProgressOpen(true);
+    requestAnimationFrame(() => { document.getElementById("health-source-heading")?.focus(); window.scrollTo({ top: 0, behavior: "instant" }); });
+  }
+  function closeSources() {
+    const origin = sourceOrigin.current;
+    setSourceSelection(null);
+    if (origin?.daily) setProgressOpen(false);
+    else setProgressReturnFocus((key) => key + 1);
+    requestAnimationFrame(() => {
+      if (origin?.trigger?.isConnected && origin.trigger.getClientRects().length) origin.trigger.focus({ preventScroll: true });
+      else (document.getElementById("insight-view-records") ?? document.getElementById("health-progress-heading"))?.focus({ preventScroll: true });
+      window.scrollTo({ top: origin?.scrollY ?? 0, behavior: "instant" });
+    });
+  }
   const [otherToolsOpen, setOtherToolsOpen] = useState(focus === "urge");
   const [readingsReady, setReadingsReady] = useState(false);
   const [dataRevision, setDataRevision] = useState(0);
@@ -295,16 +324,23 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
       control?.focus();
     });
   }
-  function showProgress() {
+  function showProgress(metric?: InsightMetric, dayId?: string) {
     if (busyRef.current || foodSearchBusyRef.current) return;
-    rememberOrigin(); setProgressOpen(true);
+    rememberOrigin(); setSourceSelection(null); setProgressOpen(true); setProgressVisited(true);
+    if (metric) setProgressRequest((request) => ({ key: (request?.key ?? 0) + 1, metric, ...(dayId ? { dayId } : {}) }));
     requestAnimationFrame(() => { document.getElementById("health-progress-heading")?.focus(); window.scrollTo({ top: 0, behavior: "instant" }); });
   }
+  useEffect(() => {
+    if (!evidenceRequest) return;
+    setWaterFocused(false); setMealFocused(false); setBodyMealsOpen(false); setHealthDay(null);
+    showProgress(evidenceRequest.metric, evidenceRequest.dayId);
+  }, [evidenceRequest]);
   const [managingMealId, setManagingMealId] = useState<string | null>(null);
   const [lookupOpen, setLookupOpen] = useState(false);
   useEffect(() => {
     if (!focus) return;
     mealPositioned.current = false;
+    setHealthDay(null); setSourceSelection(null);
     setWaterFocused(focus === "water");
     setMealFocused(focus === "meal");
     setBodyMealsOpen(focus === "meal");
@@ -318,6 +354,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
     if (!overviewRequest.key) return;
     // Supersedes any pending shortcut positioning.
     mealPositioned.current = true;
+    if (overviewRequest.retap) { setHealthDay(null); setSourceSelection(null); }
     const shortcutView = waterFocused || mealFocused;
     if (!shortcutView && !(overviewRequest.retap && (bodyMealsOpen || progressOpen))) return;
     // Only the presentation resets; meal, sleep, weight and correction input stay as typed.
@@ -335,6 +372,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
   }, [overviewRequest.key]);
   function showMealSurface(next: boolean) {
     if (busyRef.current || foodSearchBusyRef.current) return;
+    setHealthDay(null); setSourceSelection(null);
     // An explicit local choice supersedes the initial delayed shortcut handoff.
     mealPositioned.current = true;
     if (waterFocused) { setWaterFocused(false); window.scrollTo({ top: 0, behavior: "instant" }); return; }
@@ -1501,8 +1539,13 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
       <OperatorHeader destination="body" headingId="meal-surface-heading" focusable>
         {waterFocused ? "BODY // WATER" : mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // DAILY RECORD"}
       </OperatorHeader>
-      {!waterFocused && !mealsVisible && !progressOpen && (readingsReady ? <HealthOverview day={day}
-        calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries}
+      <div hidden={waterFocused || mealsVisible || progressOpen}>
+        <HealthDayBrowser selected={healthDay} disabled={busy || foodSearchBusy} visible={visible && !waterFocused && !mealsVisible && !progressOpen}
+          refreshKey={dataRevision} onHistory={onHealthHistory} onSelect={(start) => { if (!busyRef.current && !foodSearchBusyRef.current) setHealthDay(start); }}
+          onExplore={showProgress} onInspect={(selection) => openSources(selection, true)} />
+      </div>
+      {!waterFocused && !mealsVisible && !progressOpen && !healthDay && (readingsReady ? <HealthOverview day={day}
+        onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries}
         weight={weightHistory} mealEntries={mealEntries}
         calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged from meals · no calorie target"}
         proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} /> : <p className="meta" role="status">Loading recorded information…</p>)}
@@ -1511,15 +1554,20 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
           onClick={() => { if (progressOpen) { setProgressOpen(false); restoreOrigin(); } else showMealSurface(!mealsVisible); }}>
           {waterFocused || mealsVisible || progressOpen ? "DAILY RECORD" : "OPEN MEALS"}
         </button>
-        {!waterFocused && !mealsVisible && !progressOpen && <button id="body-progress-entry" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={showProgress}>YOUR PROGRESS</button>}
+        {!waterFocused && !mealsVisible && !progressOpen && <button id="body-progress-entry" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={() => showProgress()}>YOUR PROGRESS</button>}
         {onReturnToToday && <button id="meal-return" className="btn-secondary"
           disabled={busy || foodSearchBusy} onClick={onReturnToToday}>{returnLabel}</button>}
       </div>
-      {progressOpen && <section aria-labelledby="health-progress-heading">
+      <section hidden={!progressOpen || sourceSelection !== null} aria-labelledby="health-progress-heading">
         <h2 id="health-progress-heading" tabIndex={-1} className="insights-title">Your progress</h2>
-        <BodyProgress refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
-      </section>}
-      <div hidden={mealsVisible || progressOpen}>
+        {progressVisited && <BodyProgress active={visible && progressOpen && sourceSelection === null} refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} request={progressRequest} returnFocusRequest={progressReturnFocus}
+          onSources={(selection) => openSources(selection)} />}
+      </section>
+      {sourceSelection && <div hidden={!progressOpen}><HealthSources selection={sourceSelection} revision={dataRevision} active={visible && progressOpen} activeDayId={healthDay === null ? day?.id : undefined}
+        returnLabel={sourceOrigin.current?.daily ? "BACK TO DAY" : "BACK TO TREND"}
+        onClose={closeSources} onHistory={onHealthHistory}
+        onCorrect={(record) => { setProgressOpen(false); inspectRecord(record); }} /></div>}
+      <div hidden={mealsVisible || progressOpen || healthDay !== null}>
       {waterFocused && <p className="water-focused-total" role="status">{readingsReady ? `${total} oz recorded today` : "Reading today’s water…"}</p>}
       {mealReadFailed && <div role="alert"><p className="meta">{mealError}</p><button className="btn-secondary" disabled={busy || foodSearchBusy} onClick={() => void retryMealRead()}>RETRY READINGS</button></div>}
       {/* WATER — one consolidated instrument row: current total, fastest
