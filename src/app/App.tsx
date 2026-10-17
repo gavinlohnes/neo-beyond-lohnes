@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
+import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
+import type { InsightMetric } from "../application/bodyInsightsQueries";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import { TrainScreen, type TrainDestination } from "../ui/screens/train/TrainScreen";
 import { BodyScreen } from "../ui/screens/body/BodyScreen";
@@ -117,6 +119,9 @@ function AppWorkspaces() {
   const [workEndedKey, setWorkEndedKey] = useState(0);
   const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut === "workout" ? null : shortcut);
   const [bodyRequest, setBodyRequest] = useState(0);
+  const [healthEvidence, setHealthEvidence] = useState<HealthEvidenceRequest | null>(null);
+  const [healthHistory, setHealthHistory] = useState<HealthHistoryDestination | null>(null);
+  const [healthHistoryOrigin, setHealthHistoryOrigin] = useState(false);
   // Primary navigation to BODY ends a shortcut's focused view; a BODY re-tap also returns to the Daily Record.
   const [bodyOverviewRequest, setBodyOverviewRequest] = useState<{ key: number; retap: boolean }>({ key: 0, retap: false });
   const [mealOrigin, setMealOrigin] = useState<{ tab: Tab; scrollY: number; trigger: HTMLElement | null } | null>(null);
@@ -315,15 +320,16 @@ function AppWorkspaces() {
 
   function canNavigate() { return !mealInFlight.current; }
 
-  function openMore(view: MoreView, focus: IntentFocus | null = null) {
+  function openMore(view: MoreView, focus: IntentFocus | null = null, focusHeading = true) {
     if (!canNavigate()) return false;
+    setHealthHistoryOrigin(false); setHealthHistory(null);
     setIntentFocus(focus);
     setMoreView(view);
     setMoreRequest((key) => key + 1);
     showTab("MORE", false);
     const request = navigation.current;
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      if (request !== navigation.current) return;
+      if (request !== navigation.current || !focusHeading) return;
       const heading = [...document.querySelectorAll<HTMLElement>("#workspace-MORE h1")].find((element) => element.getClientRects().length);
       if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
     }));
@@ -340,6 +346,7 @@ function AppWorkspaces() {
 
   function openPrimaryTab(destination: Tab) {
     if (!canNavigate()) return false;
+    setHealthHistoryOrigin(false); setHealthEvidence(null);
     if (destination === "MORE" && tab === "MORE") return openMore("MENU");
     // PR #228 review R2: a Capture return belongs to that Capture visit only.
     setCaptureOrigin(null);
@@ -356,11 +363,25 @@ function AppWorkspaces() {
 
   function openBody(target?: BodyFocus) {
     if (!canNavigate()) return false;
+    setHealthEvidence(null); setHealthHistoryOrigin(false);
     if (tab !== "BODY") setMealOrigin({ tab, scrollY: window.scrollY, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null });
     setBodyFocus(target ?? null);
     setBodyRequest((key) => key + 1);
     showTab("BODY", false);
     return true;
+  }
+
+  function openBodyEvidence(metric: InsightMetric) {
+    if (!canNavigate()) return;
+    setMealOrigin({ tab, scrollY: window.scrollY, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null });
+    setBodyFocus(null); setHealthEvidence((request) => ({ key: (request?.key ?? 0) + 1, metric }));
+    setHealthHistoryOrigin(false); showTab("BODY", false);
+  }
+
+  function openHealthHistory(destination: HealthHistoryDestination) {
+    if (!canNavigate()) return;
+    if (!openMore("HISTORY", null, false)) return;
+    setHealthHistory(destination); setHealthHistoryOrigin(true);
   }
 
   function returnFromBody() {
@@ -415,6 +436,7 @@ function AppWorkspaces() {
               onOpenTrain={openTrain}
               openToolsOnMount={todayToolsOpen}
               onOpenBody={openBody}
+              onOpenHealthEvidence={openBodyEvidence}
               onOpenSystemDestination={(destination) => {
                 if (destination.kind === "body") return openBody(destination.focus);
                 if (destination.kind === "workout") return openTrain("WORKOUT");
@@ -430,11 +452,14 @@ function AppWorkspaces() {
         </div>}
         {visited.has("BODY") && <div id="workspace-BODY" className={tab === "BODY" ? "tab-enter" : undefined} hidden={tab !== "BODY"}>
           <RootErrorBoundary active={tab === "BODY"}><BodyScreen focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"}
+            evidenceRequest={healthEvidence} onHealthHistory={openHealthHistory}
             onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `RETURN TO ${mealOrigin.tab}` : "RETURN TO TODAY"}
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
         {visited.has("MORE") && <div id="workspace-MORE" className={tab === "MORE" ? "tab-enter" : undefined} hidden={tab !== "MORE"}>
           <RootErrorBoundary active={tab === "MORE"}><MoreScreen active={tab === "MORE"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus}
+            historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
+            onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}
             onOpenCapture={openCapture}
             onOpenRecords={(exerciseId) => {
               if (!canNavigate()) return;

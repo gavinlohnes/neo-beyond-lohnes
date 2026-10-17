@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { LineIcon } from "../../icons/LineIcon";
 import type { BeyondDay, HydrationEntry } from "../../../domain/common/types";
@@ -10,14 +10,27 @@ import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import { TickNumber } from "../../feel/TickNumber";
 import { formatDuration } from "./bodyScreenCopy";
 
-export type HealthRecord =
-  | { kind: "WATER"; entry: HydrationEntry }
-  | { kind: "SLEEP"; entry: SleepEntry }
-  | { kind: "WEIGHT"; entry: BodyweightEntry }
-  | { kind: "PROTEIN"; entry: ProteinEntry }
-  | { kind: "MEAL"; entry: NutritionEntry };
+import type { HealthRecord } from "../../../application/healthRecordQueries";
+import type { InsightMetric } from "../../../application/bodyInsightsQueries";
+export type { HealthRecord } from "../../../application/healthRecordQueries";
+import type { ReactNode } from "react";
+import "./connectedHealth.css";
 
-export function HealthOverview({ day, calories, protein, water, sleep, weight, mealEntries, calorieCopy, proteinCopy }: {
+/** A direct evidence entry point, separate from the generic read-only Readout component. */
+export function HealthMeasure({ label, value, detail, metric, onExplore }: {
+  label: string; value: ReactNode; detail?: ReactNode; metric: InsightMetric;
+  onExplore?: ((metric: InsightMetric) => void) | undefined;
+}) {
+  const valueId = useId();
+  if (!onExplore) return <Readout label={label} value={value} detail={detail} />;
+  return <button type="button" className="readout health-metric" onClick={() => onExplore(metric)} aria-label={`Explore ${label.toLowerCase()}`} aria-describedby={valueId}>
+    <span className="tool-label">{label}</span><span id={valueId} className="readout__value" style={{ display: "block" }}>{value}</span>
+    {detail && <span className="meta readout__detail" style={{ display: "block" }}>{detail}</span>}
+  </button>;
+}
+
+export function HealthOverview({ day, calories, protein, water, sleep, weight, mealEntries, calorieCopy, proteinCopy, onExplore }: {
+  onExplore?: ((metric: InsightMetric) => void) | undefined;
   day: BeyondDay | null;
   calories: number;
   protein: number;
@@ -39,14 +52,14 @@ export function HealthOverview({ day, calories, protein, water, sleep, weight, m
         {day ? `Day started ${new Date(day.startedAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : "Your day begins with your first record."}
       </p>
       <ReadoutGrid emphasis="primary" className="health-nutrition">
-        <Readout label="CALORIES" value={<><TickNumber value={calories} /><span> kcal</span></>} detail={calorieCopy} />
-        <Readout label="PROTEIN" value={<><TickNumber value={protein} /><span> g</span></>} detail={proteinCopy} />
+        <HealthMeasure metric="calories" onExplore={onExplore} label="CALORIES" value={<><TickNumber value={calories} /><span> kcal</span></>} detail={calorieCopy} />
+        <HealthMeasure metric="protein" onExplore={onExplore} label="PROTEIN" value={<><TickNumber value={protein} /><span> g</span></>} detail={proteinCopy} />
       </ReadoutGrid>
       <ReadoutGrid className="health-readings">
-        <Readout label="WATER" value={`${water} oz`} />
-        <Readout label="LAST WEIGHT" value={lastWeight ? `${lastWeight.weightLbs} lbs` : "Not logged"}
-          detail={lastWeight ? new Date(lastWeight.recordedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : "Whenever it suits you"} />
-        <Readout label="MAIN SLEEP" value={main ? formatDuration(main.effectiveDurationMinutes) : "Not logged"}
+        <HealthMeasure metric="water" onExplore={onExplore} label="WATER" value={`${water} oz`} />
+        <HealthMeasure metric="weight" onExplore={onExplore} label="LAST WEIGHT" value={lastWeight ? `${lastWeight.weightLbs} lbs` : "Not logged"}
+          detail={lastWeight ? new Date(lastWeight.recordedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : undefined} />
+        <HealthMeasure metric="sleep" onExplore={onExplore} label="MAIN SLEEP" value={main ? formatDuration(main.effectiveDurationMinutes) : "Not logged"}
           detail={mains > 1 ? `Latest of ${mains} main-sleep records` : undefined} />
         <Readout label="NAPS" value={naps.length ? formatDuration(naps.reduce((total, entry) => total + entry.effectiveDurationMinutes, 0)) : "Not logged"}
           detail={naps.length > 1 ? `${naps.length} naps recorded` : undefined} />
@@ -59,7 +72,7 @@ export function HealthOverview({ day, calories, protein, water, sleep, weight, m
   );
 }
 
-function describeRecord(record: HealthRecord): string {
+export function describeRecord(record: HealthRecord): string {
   switch (record.kind) {
     case "WATER": return `Water · ${record.entry.effectiveAmountOz} oz`;
     case "SLEEP": return `${record.entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} · ${formatDuration(record.entry.effectiveDurationMinutes)}`;
