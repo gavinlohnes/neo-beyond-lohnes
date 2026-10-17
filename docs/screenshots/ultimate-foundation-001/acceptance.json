@@ -1,0 +1,53 @@
+[
+  {
+    "width": 320,
+    "result": "PASS",
+    "checks": [
+      "canonical UI saves",
+      "lived-day selection",
+      "source identity",
+      "History focus/return",
+      "range retention",
+      "sleep draft",
+      "no browsing writes",
+      "correction chain",
+      "offline exploration/History",
+      "offline log and reload",
+      "no overflow/page errors"
+    ]
+  },
+  {
+    "width": 360,
+    "result": "PASS",
+    "checks": [
+      "canonical UI saves",
+      "lived-day selection",
+      "source identity",
+      "History focus/return",
+      "range retention",
+      "sleep draft",
+      "no browsing writes",
+      "correction chain",
+      "offline exploration/History",
+      "offline log and reload",
+      "no overflow/page errors"
+    ]
+  },
+  {
+    "width": 412,
+    "result": "PASS",
+    "checks": [
+      "canonical UI saves",
+      "lived-day selection",
+      "source identity",
+      "History focus/return",
+      "range retention",
+      "sleep draft",
+      "no browsing writes",
+      "correction chain",
+      "offline exploration/History",
+      "offline log and reload",
+      "no overflow/page errors"
+    ]
+  }
+]

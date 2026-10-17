@@ -1,6 +1,44 @@
 # Current checkpoint
 
-## Current objective — PHONE-FIT-001 (2026-10-14, ROUTINE)
+## Current objective — ULTIMATE-FOUNDATION-001 (2026-10-17, PROTECTED)
+
+Gavin approved the Connected Health Record proposal ("Approved.", 2026-10-17).
+Brief: [ULTIMATE-FOUNDATION-001.md](ULTIMATE-FOUNDATION-001.md). Sole Builder: Codex.
+Fresh starting master `8c8b25feb90fd49f30e40d283547e90a6f4dd65a` (PHONE-FIT-001 #230 merged).
+Branch: `codex/ultimate-foundation-001`; active PR pending.
+
+Implemented: BODY readings open their existing metric explorer; recent/older lived-day browsing
+is read-only and groups early-ended/restarted segments. A raw water series reuses ledger truth.
+Exact observation/day/root references open effective source records, existing current-day
+correction controls, and the complete History day focused on the canonical event. Return retains
+metric/range/point, position, focus and unfinished forms. TODAY's existing FUEL readings link to
+that evidence in their existing placement; no new row, guidance or recommendation.
+
+Queries are application-only, read-only and source-linked. Same-time weigh-ins retain canonical
+order/identity; missing remains missing, ambiguous main sleeps stay separate, old day ownership
+is preserved. History re-reads on re-entry and ignores superseded requests. Retained progress
+keeps exploration state but performs no hidden progress reads after quick logs.
+
+Verification in progress: focused 35 tests passed, architecture/typecheck/build passed; built-PWA
+acceptance passed at 320/360/412 px, including History/focus/draft return, canonical correction,
+offline exploration/writes/reload and no browsing writes. Final full gate and final-code PWA
+repeat are running; exact outcomes and final head belong in the PR/evidence before handoff.
+Evidence: [screenshots and reproduction](../screenshots/ultimate-foundation-001/README.md).
+
+Unchanged: Engine/rules, schema/domain/events/commands, persistence/backup contracts, dependencies,
+protected fixtures, CI/protections, primary tabs, laboratory #204. REVIEW-001 #231 is separate;
+no Review hub, weekly/monthly/focus/measurement/photo or Phase 1b/C2 implementation is included.
+Its docs touch UX_DECISIONS/ROADMAP too; check the merge diff and serialize shared implementation.
+
+Limits: physical iPhone/Safari/Android keyboard and screen-reader testing unrun. Drafts remain
+session-local; browser process eviction/reload clears them under existing warnings. Existing
+single-browser-tab write limitations and bundle-size advisory remain. No historical repair.
+Next: finish verification, commit/push/open PR, bind its final exact head and required CI, then
+independent qualified exact-head review against the brief. Gavin alone approves merge/deployment;
+no merge or deployment is authorized here. Other carried-forward unapproved work below stays separate.
+
+
+## Historical objective — PHONE-FIT-001 (2026-10-14, ROUTINE)
 
 Gavin approved fixing review leftovers R3 and R4 from PR #228 ("start option 1", 2026-10-14).
 Builder: Claude Code. Starting master `53fcf68`; branch `claude/phone-fit-001`; PR linked from the

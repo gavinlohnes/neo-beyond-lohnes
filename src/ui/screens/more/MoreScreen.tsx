@@ -52,6 +52,8 @@ const DATA_SCHEMA = db.verno;
 
 export type MoreView = "MENU" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES";
 
+import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
+
 export function MoreScreen({
   onOpenCapture,
   active = true,
@@ -60,7 +62,11 @@ export function MoreScreen({
   initialView = "MENU",
   onOpenRecords,
   onOpenMeal,
+  historyDestination = null, onReturnToHealth, onHistoryExit,
 }: {
+  historyDestination?: HealthHistoryDestination | null;
+  onReturnToHealth?: (() => void) | undefined;
+  onHistoryExit?: (() => void) | undefined;
   onOpenCapture?: () => void;
   active?: boolean;
   navigationRequest?: number;
@@ -84,6 +90,7 @@ export function MoreScreen({
   const previousView = useRef(view);
 
   function setView(next: MoreView) {
+    if (view === "HISTORY" && next !== "HISTORY") onHistoryExit?.();
     if (view === "MENU" && next !== "MENU") {
       originRef.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
     }
@@ -107,7 +114,8 @@ export function MoreScreen({
   }, [view, active]);
   // FIND-001: a NOTE or DAY result opens HISTORY with that day open.
   const [journalFocus, setJournalFocus] = useState<string | undefined>(undefined);
-  const [historyFocusDayId, setHistoryFocusDayId] = useState<string | null>(null);
+  const [historyFocusDayId, setHistoryFocusDayId] = useState<string | null>(historyDestination?.dayId ?? null);
+  const [historyFocusEventId, setHistoryFocusEventId] = useState<string | null>(historyDestination?.eventId ?? null);
   // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by
   // the ordinary "MISSIONS & OBLIGATIONS" menu entry point — see its onOpen below. This is what
   // lets IntentScreen open straight to a specific record from Search without a normal visit to
@@ -115,6 +123,8 @@ export function MoreScreen({
   const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(recordFocus);
   useEffect(() => {
     setIntentFocus(recordFocus);
+    setHistoryFocusDayId(historyDestination?.dayId ?? null);
+    setHistoryFocusEventId(historyDestination?.eventId ?? null);
     setView(initialView);
   }, [navigationRequest]);
 
@@ -134,7 +144,7 @@ export function MoreScreen({
       return;
     }
     if (result.domain === "NOTE" || result.domain === "DAY") {
-      setHistoryFocusDayId(result.dayId ?? null);
+      setHistoryFocusDayId(result.dayId ?? null); setHistoryFocusEventId(null);
       setView("HISTORY");
       return;
     }
@@ -350,7 +360,7 @@ export function MoreScreen({
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
           <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setHistoryFocusDayId(null); setView("MENU"); }}>← BACK TO MORE</button>
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
-          {view === "HISTORY" && <HistoryScreen focusDayId={historyFocusDayId} />}
+          {view === "HISTORY" && <>{onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>RETURN TO BODY</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
           {view === "REVIEW" && <ReviewScreen />}
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} />}

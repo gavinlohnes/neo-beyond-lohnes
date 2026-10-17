@@ -218,6 +218,7 @@ export function TodayScreen({
   onViewCommitments,
   onOpenTrain,
   onOpenBody,
+  onOpenHealthEvidence,
   onOpenSystemDestination,
   openToolsOnMount = false,
   onWorkEnded,
@@ -231,6 +232,7 @@ export function TodayScreen({
   onOpenPlan?: () => void;
   onViewCommitments?: (id?: string) => void;
   onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
+  onOpenHealthEvidence?: (metric: "water" | "protein") => void;
   onOpenBody?: (target?: BodyFocus) => void;
   onOpenSystemDestination?: (destination: SystemDestination) => boolean;
   /** Drop 2: open with TOOLS expanded (MORE's capture link lands in it). */
@@ -1689,8 +1691,10 @@ export function TodayScreen({
         <p className="tool-label" style={{ marginBottom: 4 }}>FUEL</p>
         {/* FEEL-001: the totals count up when they change; the settled text is fuelLine's. */}
         <p className="card-body" style={{ margin: 0 }} aria-label={fuelLine}>
-          Protein <TickNumber value={minimumDayProteinG} />
-          {proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g · Water <TickNumber value={minimumDayHydrateOz} /> oz
+          {onOpenHealthEvidence ? <>
+            <button type="button" className="health-fuel-reading" disabled={busy} aria-label="Explore protein records" onClick={() => { if (!busyRef.current) onOpenHealthEvidence("protein"); }}>Protein <TickNumber value={minimumDayProteinG} />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g</button>
+            {" · "}<button type="button" className="health-fuel-reading" disabled={busy} aria-label="Explore water records" onClick={() => { if (!busyRef.current) onOpenHealthEvidence("water"); }}>Water <TickNumber value={minimumDayHydrateOz} /> oz</button>
+          </> : <>Protein <TickNumber value={minimumDayProteinG} />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g · Water <TickNumber value={minimumDayHydrateOz} /> oz</>}
         </p>
       </div>
     );

@@ -1,15 +1,16 @@
 import { getDaySummaries } from "./dayLedgerQueries";
 import { getMealEntries } from "./nutritionQueries";
 import type { DaySummary } from "../engine/dayLedger";
-import type { WeighIn } from "./bodyTrendQueries";
+import { getBodyweightHistoryWithSources, type SourceWeighIn, type WeighIn } from "./bodyTrendQueries";
 
 export const INSIGHT_DAY_MS = 24 * 60 * 60 * 1000;
-export type InsightMetric = "weight" | "calories" | "protein" | "sleep" | "workouts";
+export type InsightMetric = "weight" | "calories" | "protein" | "sleep" | "water" | "workouts";
 export interface InsightDay {
   id: string;
   at: string;
   calories?: number;
   protein?: number;
+  water?: number;
   sleep?: number;
   mainSleepEntries: number;
   workouts: number;
@@ -17,8 +18,8 @@ export interface InsightDay {
   fat?: number;
   active: boolean;
 }
-export interface InsightPoint { id: string; at: string; value: number }
-export interface BodyInsights { days: InsightDay[]; readAt: string }
+export interface InsightPoint { id: string; at: string; value: number; source?: { beyondDayId: string; rootEventId?: string } }
+export interface BodyInsights { days: InsightDay[]; readAt: string; weightSources?: SourceWeighIn[] }
 
 /** Presentation-only, existing effective ledger values; no score, inference or write. */
 export function insightDay(day: DaySummary, macros?: { carbs: number; fat: number }): InsightDay {
@@ -27,6 +28,7 @@ export function insightDay(day: DaySummary, macros?: { carbs: number; fat: numbe
     id: day.beyondDayId, at: day.startedAt, active: day.endedAt === undefined,
     ...(day.kcal !== undefined ? { calories: day.kcal } : {}),
     ...(day.proteinG !== undefined ? { protein: day.proteinG } : {}),
+    ...(day.waterOz !== undefined ? { water: day.waterOz } : {}),
     // A sum of two main-sleep entries is not one reliable sleep observation.
     ...(mainLogs.length === 1 ? { sleep: mainLogs[0]!.minutes / 60 } : {}),
     mainSleepEntries: mainLogs.length,
@@ -39,7 +41,8 @@ export function insightDay(day: DaySummary, macros?: { carbs: number; fat: numbe
 export async function getBodyInsights(now: Date = new Date()): Promise<BodyInsights> {
   const end = now.getTime();
   const start = end - 180 * INSIGHT_DAY_MS;
-  const ledger = (await getDaySummaries()).filter((day) => {
+  const [summaries, weightSources] = await Promise.all([getDaySummaries(), getBodyweightHistoryWithSources()]);
+  const ledger = summaries.filter((day) => {
     const t = Date.parse(day.startedAt);
     return t > start && t <= end;
   });
@@ -52,15 +55,17 @@ export async function getBodyInsights(now: Date = new Date()): Promise<BodyInsig
     } : undefined;
     return insightDay(day, macros);
   }));
-  return { days: days.sort((a, b) => Date.parse(a.at) - Date.parse(b.at)), readAt: now.toISOString() };
+  return { days: days.sort((a, b) => Date.parse(a.at) - Date.parse(b.at)), readAt: now.toISOString(), weightSources };
 }
 
 export function insightPoints(data: BodyInsights, weights: readonly WeighIn[], metric: InsightMetric): InsightPoint[] {
   const source: InsightPoint[] = metric === "weight"
-    ? weights.map((weight, index) => ({ id: `weight-${index}`, at: weight.recordedAt, value: weight.weightLbs }))
+    ? data.weightSources
+      ? data.weightSources.map((weight) => ({ id: weight.rootEventId, at: weight.recordedAt, value: weight.weightLbs, ...(weight.beyondDayId ? { source: { beyondDayId: weight.beyondDayId, rootEventId: weight.rootEventId } } : {}) }))
+      : weights.map((weight, index) => ({ id: `weight-${index}`, at: weight.recordedAt, value: weight.weightLbs }))
     : data.days.flatMap((day) => {
       const value = day[metric];
-      return value === undefined ? [] : [{ id: day.id, at: day.at, value }];
+      return value === undefined ? [] : [{ id: day.id, at: day.at, value, source: { beyondDayId: day.id } }];
     });
   return source.filter((point) => Number.isFinite(Date.parse(point.at)) && Number.isFinite(point.value) && point.value >= 0)
     .sort((a, b) => Date.parse(a.at) - Date.parse(b.at));

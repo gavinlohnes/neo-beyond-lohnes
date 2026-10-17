@@ -78,6 +78,18 @@ No Engine, schema, event/backup contract, persistent draft store, provider, subs
 change; no historical repair, prototype integration, merge or deployment. Independent Claude Code
 exact-head review, green required CI and Gavin's separate merge approval remain required.
 
+## ULTIMATE-FOUNDATION-001 — Connected Health Record, 2026-10-17
+
+Gavin approved the bounded Connected Health Record proposal in `agent/ULTIMATE-FOUNDATION-001.md`.
+BODY gains read-only historical lived-day selection, direct number-to-existing-trend navigation,
+a raw recorded-water trend, and exact source-record/History inspection with interruption-safe
+return. Existing TODAY FUEL may link to that evidence in its existing placement; no new phase
+row or recommendation. Historical browsing does not retarget canonical current-day saves or add
+backdated writes. Preserve existing correction/undo, missing data, separate main sleep/naps,
+dated weight, current-target labeling, rolling chart ranges and 16:30 recorded day ownership.
+This extends BODY's presentation/trend allowance only; no schema/event/backup/Engine/dependency
+change. REVIEW-001's analytics, photos, measurements, focus and readiness line remain separate.
+
 ## BODY Insights & Progress — owner-approved bounded amendment, 2026-10-13
 
 Gavin explicitly authorizes richer read-only BODY progress graphs and historical comparisons,

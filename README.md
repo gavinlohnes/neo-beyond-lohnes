@@ -137,7 +137,11 @@ corrected. HISTORY itself, its queries, and its tests are unchanged).
   reviewed), all correctable in place via a correction-chain (original
   event untouched, a `*_CORRECTED` event supersedes it, queries resolve
   the head of the chain) with on-screen confirmation and immediate
-  undo. Calorie/protein targets are configurable, advisory only.
+  undo. Calorie/protein targets are configurable, advisory only. Tap a health reading to explore
+  its trend and exact contributing records, then open the complete History day and return.
+  Browse health days offers read-only past lived days (16:30 → 16:30); historical selection
+  never changes the destination of a new log. Existing TODAY FUEL links to the same evidence.
+  Water history shows recorded ounces without a target. Drafts and exploration remain session-local.
 - **MORE** — backup export/share, restore (preview-before-write,
   replace-only), backup-reminder banner, an opt-in on-device check-in
   reminder (Web Notification, no push/backend — see Reminders below),
