@@ -178,6 +178,20 @@ describe("getWorkoutSessionRecord", () => {
     expect(press.record).toBeUndefined();
   });
 
+  it("keeps each exercise's sets in the order they were logged, not by set number", async () => {
+    const day = await startDay();
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    tick();
+    await logSet(day.id, session.id, "machine-chest-press", 2, 100, 8);
+    tick();
+    await logSet(day.id, session.id, "machine-chest-press", 1, 90, 10);
+    tick();
+    await completeWorkout(day.id, session.id, "STANDARD", "PARTIAL");
+
+    const record = await readsWriteNothing(() => getWorkoutSessionRecord(session.id));
+    expect(record!.exercises[0]!.sets.map((s) => s.setNumber)).toEqual([2, 1]);
+  });
+
   it("an undone set and the record it carried are gone on the next read", async () => {
     const day = await startDay();
     await baseline(day.id, "machine-chest-press", 90, 10);

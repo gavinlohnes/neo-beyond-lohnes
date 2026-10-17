@@ -10,7 +10,7 @@ import "./operator.css";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { RecordsList } from "./RecordsList";
 import { TrainingHistory } from "./TrainingHistory";
-import { LiftHistory } from "./LiftHistory";
+import { LiftHistoryControl } from "./LiftHistory";
 import { workoutVolumeLbs } from "../../../application/trainHistoryQueries";
 import { GymMode } from "./GymMode";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
@@ -209,10 +209,8 @@ export function TrainScreen({
   // PR-CARDS-001: TRAIN → RECORDS, the list of personal-record cards.
   const [recordsOpen, setRecordsOpen] = useState(recordsFocus !== null);
   useEffect(() => { if (recordsFocus) setRecordsOpen(true); }, [recordsFocus]);
-  // ULTIMATE-FOUNDATION-002: TRAIN → HISTORY, and the current lift's history during a workout.
+  // ULTIMATE-FOUNDATION-002: TRAIN → HISTORY (the current lift's history keeps its own state).
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [liftHistoryFor, setLiftHistoryFor] = useState<string | null>(null);
-  const liftHistoryButtonRef = useRef<HTMLButtonElement>(null);
   // GYM-001: the full-screen gym view over the active workout.
   const [gymModeOpen, setGymModeOpen] = useState(false);
   const gymModeButtonRef = useRef<HTMLButtonElement>(null);
@@ -1410,27 +1408,9 @@ export function TrainScreen({
                 <p className="meta" style={{ marginBottom: 4 }}>Last time: no recorded set</p>
               )}
               {/* ULTIMATE-FOUNDATION-002: this lift's curve and recent sessions,
-                  in place — the set inputs and rest timer below stay as they are. */}
-              {liftHistoryFor === currentExercise.exerciseId ? (
-                <LiftHistory
-                  exerciseId={currentExercise.exerciseId}
-                  exerciseName={currentExercise.name}
-                  onClose={() => {
-                    setLiftHistoryFor(null);
-                    requestAnimationFrame(() => liftHistoryButtonRef.current?.focus());
-                  }}
-                />
-              ) : (
-                <button
-                  ref={liftHistoryButtonRef}
-                  type="button"
-                  className="btn-secondary train-lift-history-open"
-                  aria-label={`${currentExercise.name} history`}
-                  onClick={() => setLiftHistoryFor(currentExercise.exerciseId)}
-                >
-                  HISTORY
-                </button>
-              )}
+                  in place — the set inputs and rest timer below stay as they are.
+                  Inside the per-exercise surface, so it closes when the exercise changes. */}
+              <LiftHistoryControl exerciseId={currentExercise.exerciseId} exerciseName={currentExercise.name} />
               {/* DECLUTTER-001 (Drop 1): only the current set — the first one
                   not yet logged or skipped — gets the full input row. Finished
                   sets stay as one-line summaries; later sets are counted in a
