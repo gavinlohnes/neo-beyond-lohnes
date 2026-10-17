@@ -1,6 +1,24 @@
 # Current checkpoint
 
-## Current objective — PHONE-FIT-001 (2026-10-14, ROUTINE)
+## Current objective — ULTIMATE-FOUNDATION-002 Training Record (2026-10-17, PROTECTED)
+
+Gavin approved the Training Record slice ("approve, Protected, Claude Code, defer pause",
+2026-10-17). Builder: Claude Code. Starting master `8c8b25f`; branch `ccr-f27681c1-sb8gif`; PR
+linked from the branch. Brief: [`ULTIMATE-FOUNDATION-002.md`](ULTIMATE-FOUNDATION-002.md).
+Scope: TRAIN → HISTORY, a session record, and lift history during a workout, all read only, plus
+one shared volume rule. No Engine, schema, event, backup, fixture, dependency or CI change.
+Pause/resume is deferred.
+
+Open work alongside it:
+- #232 (ULTIMATE-FOUNDATION-001, Codex) is blocked on review finding B1 (TODAY FUEL button
+  names hide their values). Codex fixes it, then it needs a new exact-head review.
+- After #232 merges, this objective adds a session record → History day link using #232's
+  History focus plumbing.
+- #231 (REVIEW-001 plan) has a PASS review and awaits Gavin's merge decision.
+
+Next action: an independent exact-head review of this PR, then Gavin's merge decision.
+
+## Previous objective — PHONE-FIT-001 (2026-10-14, ROUTINE, merged in #230)
 
 Gavin approved fixing review leftovers R3 and R4 from PR #228 ("start option 1", 2026-10-14).
 Builder: Claude Code. Starting master `53fcf68`; branch `claude/phone-fit-001`; PR linked from the
