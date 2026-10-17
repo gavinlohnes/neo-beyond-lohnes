@@ -74,7 +74,8 @@ disappears when the review is done. It is not a recommendation.
 
 Phase 1a adds the following additive data. Each requires the Protected review and backup safeguards.
 - Body measurements, with waist primary.
-- Progress photos, kept on the device only. Backup handling is decided before implementation.
+- Progress photos, kept on the device only and included in the normal backup file (Gavin,
+  2026-10-17: REVIEW-001 Decision 2, option (a)).
 - An operator-chosen weekly focus and note.
 
 Review remains read-only analysis. The general rules:

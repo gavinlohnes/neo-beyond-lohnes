@@ -201,7 +201,7 @@ Reviews:
   metadata, and the stripping is a tested requirement.
 - Photo storage requests persistent storage (`navigator.storage.persist()`). Wherever eviction
   remains possible, the screen says so plainly; this matters most if backup option (c) is chosen.
-- The backup handling must be decided before implementation: see Decision 2.
+- Photos go in the normal backup file (Decision 2, ruled 2026-10-17: option (a)).
 
 **Weekly note and focus** (additive events):
 - The focus is chosen from a few neutral options that restate the week's logging or consistency facts,
@@ -242,12 +242,12 @@ runtime dependency. Photos use the browser's own file input and canvas, with no 
 ## Remaining decisions for Gavin
 
 1. **Phase 1b, the C2 targets follow-up and Phase 2** each need a go-ahead when their time comes.
-2. **Photos in backups.** Before Phase 1a builds photo storage, choose one:
-   - **(a)** include photos in the normal backup file, which makes it much larger;
-   - **(b)** keep a separate "photos backup" file;
-   - **(c)** leave photos out of backups, so they stay only on the device and are lost if the phone is lost.
-
-   The Builder will recommend one with sizes measured before you choose.
+2. **Photos in backups — decided 2026-10-17: option (a).** Gavin chose to include photos in the
+   normal backup file ("Photo backup: option a, include photos in the normal backup"). The
+   alternatives were a separate photos backup (b) or no photo backup (c). Consequences for
+   Phase 1a: a full backup is noticeably larger, so the Builder measures and reports real backup
+   sizes as acceptance evidence; restore brings photos back with the rest of the data; older
+   backups without photos restore unchanged.
 
 ## Outside Review, flagged
 
@@ -260,7 +260,8 @@ the goal is available on request. Custom Programs already exist if it needs adju
 - **Unit tests** for every calculation and abstain floor, including runs over the protected fixtures
   (read only).
 - **Schema** migration tests: additive only, so older backups restore unchanged.
-- **Backup round-trip tests,** following whatever photo-backup option Gavin chooses.
+- **Backup round-trip tests** with photos included in the normal backup (Decision 2, option (a)),
+  plus measured backup sizes.
 - **Browser tests** through `<App />` at 320, 360 and 412 px:
   - axe accessibility, reduced motion, keyboard use and tap-to-inspect;
   - the "Building up" states;
