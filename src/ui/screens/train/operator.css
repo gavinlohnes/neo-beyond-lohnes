@@ -33,3 +33,6 @@
 @media (prefers-reduced-motion: reduce) {
   .train-operator *, .train-operator *::before, .train-operator *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+/* ULTIMATE-FOUNDATION-002: lift history inside the current exercise. */
+.train-operator .train-lift-history-open { width: auto; padding: 8px 14px; margin: 4px 0 8px; }
+.train-operator .train-lift-history { border-block: 1px solid var(--border-subtle); padding-block: 12px; margin: 8px 0 12px; }

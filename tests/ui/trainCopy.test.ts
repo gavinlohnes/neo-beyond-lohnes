@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
 import { doesSessionAdvanceRotation, deriveRecoverySessionStatus } from "../../src/engine/trainSuggestion";
 import {
+  describeHistoryFacts,
+  describeHistoryTitle,
   describeLastStrengthSession,
   describePartialAdvancement,
   describePartialAdvancementResult,
@@ -9,6 +11,7 @@ import {
   describeProgressionSummary,
   describeRecentStrengthEntry,
   describeRecommendationLabel,
+  describeRecordedSet,
   describeRecoveryPreview,
   describeSessionStatusLabel,
   describeStopAction,
@@ -18,6 +21,7 @@ import {
   describeVariantSuggestion,
   RECENT_STRENGTH_EMPTY,
   summarizeProgressionSuggestions,
+  TRAINING_HISTORY_EMPTY,
   VARIANT_MEANINGS,
 } from "../../src/ui/screens/train/trainCopy";
 import { evaluateProgression } from "../../src/engine/progression";
@@ -391,5 +395,44 @@ describe("TRAIN-003 — summarizeProgressionSuggestions / describeProgressionSum
     expect(text).toContain("holding");
     expect(text).toContain("reducing");
     expect(text).toContain("without history");
+  });
+});
+
+describe("ULTIMATE-FOUNDATION-002 — Training Record copy", () => {
+  const entry = {
+    id: "s1",
+    beyondDayId: "d1",
+    templateId: "A" as const,
+    sessionType: "STANDARD" as const,
+    status: "COMPLETED" as const,
+    startedAt: "2026-10-12T22:00:00.000Z",
+    durationMinutes: 41,
+    workingSetCount: 12,
+    skippedSetCount: 1,
+    volumeLbs: 14250,
+    recordCount: 2,
+  };
+
+  it("names the variant only when REDUCED", () => {
+    expect(describeHistoryTitle(entry, [])).toBe("Template A");
+    expect(describeHistoryTitle({ ...entry, sessionType: "REDUCED" }, [])).toBe("Template A · REDUCED");
+  });
+
+  it("states the real status and only what was recorded", () => {
+    expect(describeHistoryFacts(entry)).toBe("Completed · 41 min · 12 working sets · 14,250 lb volume · 2 records");
+    expect(describeHistoryFacts({ ...entry, status: "ABANDONED", durationMinutes: null, workingSetCount: 1, volumeLbs: 0, recordCount: 0 })).toBe(
+      "Abandoned · 1 working set",
+    );
+  });
+
+  it("labels skipped and substituted sets", () => {
+    expect(describeRecordedSet({ id: "x", setNumber: 2, weight: 0, reps: 0, skipped: true })).toBe("Set 2 · skipped");
+    expect(describeRecordedSet({ id: "x", setNumber: 1, weight: 50, reps: 12, skipped: false, substitutedName: "Cable fly" })).toBe(
+      "Set 1 · 50 lb × 12 · as Cable fly",
+    );
+  });
+
+  it("empty history reads as calm anticipation, not an error", () => {
+    expect(TRAINING_HISTORY_EMPTY.toLowerCase()).not.toMatch(/error|missing|fail|nothing/);
   });
 });

@@ -5,6 +5,7 @@ import type { SessionVariantSuggestion } from "../../../engine/trainSuggestion";
 import { doesSessionAdvanceRotation, deriveRecoverySessionStatus } from "../../../engine/trainSuggestion";
 import type { ProgressionSuggestion } from "../../../engine/progression";
 import type { LastStrengthSessionSummary, RecentStrengthSessionEntry } from "../../../application/trainQueries";
+import type { SessionRecordSet, TrainingHistoryEntry } from "../../../application/trainHistoryQueries";
 
 /**
  * Phase 6 (TRAIN redesign): pure copy/derivation helpers, kept separate
@@ -313,3 +314,27 @@ export function templateLabel(templateId: WorkoutTemplateId, customTemplates: re
   if (WORKOUT_TEMPLATES[templateId]) return templateId;
   return customTemplates.find((t) => t.id === templateId)?.name ?? templateId;
 }
+
+/** ULTIMATE-FOUNDATION-002: "Template A · REDUCED" — the variant only when REDUCED, as RECENT words it. */
+export function describeHistoryTitle(entry: Pick<TrainingHistoryEntry, "templateId" | "sessionType">, customTemplates: readonly CustomWorkoutTemplate[]): string {
+  return `Template ${templateLabel(entry.templateId, customTemplates)}${entry.sessionType === "REDUCED" ? " · REDUCED" : ""}`;
+}
+
+/** ULTIMATE-FOUNDATION-002: one history row's facts — real status, then only what was recorded. */
+export function describeHistoryFacts(entry: TrainingHistoryEntry): string {
+  const parts = [describeSessionStatusLabel(entry.status)];
+  if (entry.durationMinutes !== null) parts.push(`${entry.durationMinutes} min`);
+  parts.push(`${entry.workingSetCount} working ${entry.workingSetCount === 1 ? "set" : "sets"}`);
+  if (entry.volumeLbs > 0) parts.push(`${entry.volumeLbs.toLocaleString("en-US")} lb volume`);
+  if (entry.recordCount > 0) parts.push(`${entry.recordCount} ${entry.recordCount === 1 ? "record" : "records"}`);
+  return parts.join(" · ");
+}
+
+/** ULTIMATE-FOUNDATION-002: a session-record set line. */
+export function describeRecordedSet(set: SessionRecordSet): string {
+  if (set.skipped) return `Set ${set.setNumber} · skipped`;
+  const done = `Set ${set.setNumber} · ${set.weight} lb × ${set.reps}`;
+  return set.substitutedName ? `${done} · as ${set.substitutedName}` : done;
+}
+
+export const TRAINING_HISTORY_EMPTY = "Finished and stopped strength sessions will appear here.";

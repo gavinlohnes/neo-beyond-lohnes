@@ -1,0 +1,53 @@
+[
+  {
+    "width": 320,
+    "passed": true,
+    "main": 1,
+    "overflow": false,
+    "historyRows": [
+      "Template A, Tue, Oct 13, 2026. Completed · 0 min · 2 working sets · 1,770 lb volume · 2 records",
+      "Template A, Tue, Oct 13, 2026. Partial · 0 min · 1 working set · 900 lb volume"
+    ],
+    "liftHistory": [
+      "Oct 13: 90 lb × 10"
+    ],
+    "readsWroteNothing": true,
+    "unsavedSetAndRestKept": true,
+    "offlineReload": true,
+    "pageErrors": []
+  },
+  {
+    "width": 360,
+    "passed": true,
+    "main": 1,
+    "overflow": false,
+    "historyRows": [
+      "Template A, Tue, Oct 13, 2026. Completed · 0 min · 2 working sets · 1,770 lb volume · 2 records",
+      "Template A, Tue, Oct 13, 2026. Partial · 0 min · 1 working set · 900 lb volume"
+    ],
+    "liftHistory": [
+      "Oct 13: 90 lb × 10"
+    ],
+    "readsWroteNothing": true,
+    "unsavedSetAndRestKept": true,
+    "offlineReload": true,
+    "pageErrors": []
+  },
+  {
+    "width": 412,
+    "passed": true,
+    "main": 1,
+    "overflow": false,
+    "historyRows": [
+      "Template A, Tue, Oct 13, 2026. Completed · 0 min · 2 working sets · 1,770 lb volume · 2 records",
+      "Template A, Tue, Oct 13, 2026. Partial · 0 min · 1 working set · 900 lb volume"
+    ],
+    "liftHistory": [
+      "Oct 13: 90 lb × 10"
+    ],
+    "readsWroteNothing": true,
+    "unsavedSetAndRestKept": true,
+    "offlineReload": true,
+    "pageErrors": []
+  }
+]

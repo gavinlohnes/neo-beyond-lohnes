@@ -9,6 +9,9 @@ import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import "./operator.css";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { RecordsList } from "./RecordsList";
+import { TrainingHistory } from "./TrainingHistory";
+import { LiftHistory } from "./LiftHistory";
+import { workoutVolumeLbs } from "../../../application/trainHistoryQueries";
 import { GymMode } from "./GymMode";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { HoldButton } from "../../components/HoldButton";
@@ -143,7 +146,7 @@ interface CompletionSummary {
   advisoryChanges: { name: string; before: string; after: string }[];
   /** Drop 4: records set this session, in logged order, already worded for display. */
   records: string[];
-  /** Drop 4: total weight × reps across logged (non-skipped) sets. */
+  /** Drop 4: total weight × reps across logged (non-skipped) sets — workoutVolumeLbs, the one volume rule. */
   volumeLbs: number;
 }
 
@@ -206,6 +209,10 @@ export function TrainScreen({
   // PR-CARDS-001: TRAIN → RECORDS, the list of personal-record cards.
   const [recordsOpen, setRecordsOpen] = useState(recordsFocus !== null);
   useEffect(() => { if (recordsFocus) setRecordsOpen(true); }, [recordsFocus]);
+  // ULTIMATE-FOUNDATION-002: TRAIN → HISTORY, and the current lift's history during a workout.
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [liftHistoryFor, setLiftHistoryFor] = useState<string | null>(null);
+  const liftHistoryButtonRef = useRef<HTMLButtonElement>(null);
   // GYM-001: the full-screen gym view over the active workout.
   const [gymModeOpen, setGymModeOpen] = useState(false);
   const gymModeButtonRef = useRef<HTMLButtonElement>(null);
@@ -725,7 +732,7 @@ export function TrainScreen({
       const setsSkipped = sets.filter((s) => s.skipped).length;
       const bodyAreas = describeTemplateSummary(activeExercises).bodyAreas;
       const beforeSuggestions = progressionSuggestions;
-      const volumeLbs = sets.filter((s) => !s.skipped).reduce((sum, s) => sum + s.weight * s.reps, 0);
+      const volumeLbs = workoutVolumeLbs(sets);
       const exerciseName = (id: string) => activeExercises.find((ex) => ex.exerciseId === id)?.name ?? id;
       const records = [...sets]
         .sort(byLoggedOrder)
@@ -1260,6 +1267,13 @@ export function TrainScreen({
         <CollapsibleRow name="RECORDS" summary="Your personal records" onOpen={() => setRecordsOpen(true)} />
       )}
       {!session && !completionSummary && recordsOpen && <RecordsList focusExerciseId={recordsFocus} onClose={() => setRecordsOpen(false)} />}
+      {/* ULTIMATE-FOUNDATION-002: every finished or stopped strength session, each opening its own record. */}
+      {!session && !completionSummary && !historyOpen && (
+        <CollapsibleRow name="HISTORY" summary="Past sessions, sets and volume" onOpen={() => setHistoryOpen(true)} />
+      )}
+      {!session && !completionSummary && historyOpen && (
+        <TrainingHistory active={active} customTemplates={customTemplates} onClose={() => setHistoryOpen(false)} />
+      )}
 
       {session && session.sessionType === "RECOVERY" && !completionSummary && (
         <CommandSurface>
@@ -1394,6 +1408,28 @@ export function TrainScreen({
               )}
               {!lastPerformedSets[currentExercise.exerciseId] && (
                 <p className="meta" style={{ marginBottom: 4 }}>Last time: no recorded set</p>
+              )}
+              {/* ULTIMATE-FOUNDATION-002: this lift's curve and recent sessions,
+                  in place — the set inputs and rest timer below stay as they are. */}
+              {liftHistoryFor === currentExercise.exerciseId ? (
+                <LiftHistory
+                  exerciseId={currentExercise.exerciseId}
+                  exerciseName={currentExercise.name}
+                  onClose={() => {
+                    setLiftHistoryFor(null);
+                    requestAnimationFrame(() => liftHistoryButtonRef.current?.focus());
+                  }}
+                />
+              ) : (
+                <button
+                  ref={liftHistoryButtonRef}
+                  type="button"
+                  className="btn-secondary train-lift-history-open"
+                  aria-label={`${currentExercise.name} history`}
+                  onClick={() => setLiftHistoryFor(currentExercise.exerciseId)}
+                >
+                  HISTORY
+                </button>
               )}
               {/* DECLUTTER-001 (Drop 1): only the current set — the first one
                   not yet logged or skipped — gets the full input row. Finished
