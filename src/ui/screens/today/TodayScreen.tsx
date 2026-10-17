@@ -1692,8 +1692,8 @@ export function TodayScreen({
         {/* FEEL-001: the totals count up when they change; the settled text is fuelLine's. */}
         <p className="card-body" style={{ margin: 0 }} aria-label={fuelLine}>
           {onOpenHealthEvidence ? <>
-            <button type="button" className="health-fuel-reading" disabled={busy} aria-label="Explore protein records" onClick={() => { if (!busyRef.current) onOpenHealthEvidence("protein"); }}>Protein <TickNumber value={minimumDayProteinG} />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g</button>
-            {" · "}<button type="button" className="health-fuel-reading" disabled={busy} aria-label="Explore water records" onClick={() => { if (!busyRef.current) onOpenHealthEvidence("water"); }}>Water <TickNumber value={minimumDayHydrateOz} /> oz</button>
+            <button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("protein"); }}>Protein <TickNumber value={minimumDayProteinG} />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g</button>
+            {" · "}<button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Water ${minimumDayHydrateOz} oz, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("water"); }}>Water <TickNumber value={minimumDayHydrateOz} /> oz</button>
           </> : <>Protein <TickNumber value={minimumDayProteinG} />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g · Water <TickNumber value={minimumDayHydrateOz} /> oz</>}
         </p>
       </div>

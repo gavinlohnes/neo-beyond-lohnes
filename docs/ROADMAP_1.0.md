@@ -213,6 +213,13 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 ## Queue
 
+**Owner objective, 2026-10-14 — REVIEW-001 data review.** Gavin approved the plan in
+`docs/agent/REVIEW-001.md`. Phase 1a (PROTECTED) is approved to start once that brief merges. It covers
+the Review hub, Monday weekly review, monthly review, measurements, on-device progress photos and the
+weekly focus. The existing REVIEW screen (the Recommendation Ledger) becomes Review's Recommendations
+section. Phase 1b (strength and muscle analytics, after about 3 weeks of real training), the
+operator-set targets (C2) and JOURNAL-002 each need their own go-ahead.
+
 **Current owner objective, 2026-10-09 — Delta removal and intelligence preservation.**
 Gavin approved this Protected cleanup. Audit of fresh master found no active Delta assistant,
 model integration, AI-specific dependency or storage contract to remove. Correct misleading active

@@ -1,5 +1,25 @@
 # Current checkpoint
 
+## PR #232 B1 follow-up and master integration (2026-10-17)
+
+Gavin authorized fixing B1, merging latest master into #232, verification, push and a new
+independent exact-head review. Builder: Codex. Started at `aa95684`; B1 fixed in this follow-up.
+Merged `origin/master` at `ca67da629628520ab1026d9d03114648e7bcb588` with a merge commit,
+not a rebase. The only conflict was this checkpoint; both branches' entries are preserved below.
+That master includes REVIEW-001 plan #231, Training Record #233 and follow-up #234, and
+photo-backup ruling #235. #236 has not merged at the integration check. The older status notes
+below describe their original handoffs; the merged master state in this paragraph supersedes them.
+ROADMAP_1.0 and UX_DECISIONS auto-merged; #232's entries remain under Active priority and the
+Connected Health Record decision alongside the preserved REVIEW-001/photo-backup decisions.
+
+B1: FUEL button names now include the displayed protein amount/optional target and water amount,
+plus “explore records”. Visible text/layout/placement and round-trip behavior are unchanged.
+New browser coverage checks both target/no-target names and updates after canonical UI protein
+and water logging. N1–N3 remain unchanged; they are nonblocking and outside this repair.
+Verification and review request for the new head are recorded on PR #232. The prior independent
+BLOCK at `aa95684` is historical evidence, not approval of this head. Next: independent review
+of the pushed head and Gavin's separate merge decision. No merge/deployment of #232 authorized.
+
 ## Current objective — ULTIMATE-FOUNDATION-001 (2026-10-17, PROTECTED)
 
 Gavin approved the Connected Health Record proposal ("Approved.", 2026-10-17).
@@ -42,7 +62,42 @@ exact-head review against the brief. The PR binds the exact SHA and records CI. 
 no merge or deployment is authorized here. Other carried-forward unapproved work below stays separate.
 
 
-## Historical objective — PHONE-FIT-001 (2026-10-14, ROUTINE)
+## Current objective — ULTIMATE-FOUNDATION-002 review follow-up (2026-10-17, ROUTINE)
+
+Gavin asked for the checkpoint update and fixes for the four nonblocking findings from #233's
+independent review ("Update the checkpoint and fix the findings", 2026-10-17). Builder: Claude
+Code. Starting master `48e7b54`; branch `ccr-f27681c1-sb8gif`; PR linked from the branch.
+Changes:
+- Lift history closes when the current exercise changes. Coming back to that lift no longer
+  reopens it or moves focus. The control now owns its state inside the per-exercise surface.
+- A session record keeps each exercise's sets in logged order, as the brief says.
+- A session record reads its own sets through `getPerformedSets` rather than the whole table.
+- New tests: lift history reads once while a set is logged with it open, and Gym Mode shows the
+  same unsaved set.
+
+TRAIN UI and read-query only. No Engine, schema, event, backup, fixture, dependency or CI change.
+Next action: Gavin's merge decision after green required CI.
+
+## Previous objective — ULTIMATE-FOUNDATION-002 Training Record (2026-10-17, PROTECTED, merged in #233)
+
+Gavin approved the Training Record slice ("approve, Protected, Claude Code, defer pause",
+2026-10-17). Builder: Claude Code. Brief: [`ULTIMATE-FOUNDATION-002.md`](ULTIMATE-FOUNDATION-002.md).
+It adds TRAIN → HISTORY, a session record and lift history during a workout, all read only, plus
+one shared volume rule. Pause/resume is deferred.
+
+PR #233 merged at `48e7b54` on Gavin's instruction. Merged head
+`be49052149978b38fed9ac1a35b6c00e00750129` had green required PR Verification and an independent
+Claude Code exact-head PASS review on PR #233. Four nonblocking findings from that review are
+handled by the follow-up above. No deploy.
+
+Open work alongside it:
+- #232 (ULTIMATE-FOUNDATION-001, Codex) is blocked on review finding B1 (TODAY FUEL button
+  names hide their values). Codex fixes it, then it needs a new exact-head review.
+- After #232 merges, the session record gets a link to its History day using #232's History
+  focus plumbing.
+- #231 (REVIEW-001 plan) has a PASS review and awaits Gavin's merge decision.
+
+## Previous objective — PHONE-FIT-001 (2026-10-14, ROUTINE, merged in #230)
 
 Gavin approved fixing review leftovers R3 and R4 from PR #228 ("start option 1", 2026-10-14).
 Builder: Claude Code. Starting master `53fcf68`; branch `claude/phone-fit-001`; PR linked from the

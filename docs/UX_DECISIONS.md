@@ -52,6 +52,42 @@ analytics, manual workflows and optional USDA food lookup. These are real non-AI
 not obsolete assistant infrastructure. Existing records and native/legacy backup support remain
 unchanged; future AI still requires a new owner decision.
 
+## REVIEW-001 — data review, owner rulings, 2026-10-14
+
+Gavin approves the plan in `agent/REVIEW-001.md`:
+- A question-based **Review** destination in MORE. The always-on home leads with six goal-ordered
+  questions.
+- A **weekly review** on Mondays, covering the Monday–Sunday week. It stays ready until done, with no
+  missed state or streak.
+- A **monthly review** every 4th Monday, for body composition and photo comparison.
+- Weekly check-in stays as its own screen.
+
+Owner ruling 2026-10-15: the name stays **Review**.
+- The existing MORE → REVIEW screen (the Recommendation Ledger) becomes Review's **Recommendations**
+  section. Its read-only, no-aggregate contract is unchanged.
+- The SYSTEM catalog's REVIEW entry is re-described rather than duplicated.
+- The 2026-09-30 trend exception ("Review … may show trends") applies to this Review.
+
+TODAY may show one quiet, neutral "Weekly review ready" line, outside the phase-row cap, following the
+backup-due-line pattern. It appears only in the `OFF` phase, LATER hides it for that lived day, and it
+disappears when the review is done. It is not a recommendation.
+
+Phase 1a adds the following additive data. Each requires the Protected review and backup safeguards.
+- Body measurements, with waist primary.
+- Progress photos, kept on the device only and included in the normal backup file (Gavin,
+  2026-10-17: REVIEW-001 Decision 2, option (a)).
+- An operator-chosen weekly focus and note.
+
+Review remains read-only analysis. The general rules:
+- Counts, not causes. No body-composition verdict: BEYOND does not measure fat or muscle.
+- Named windows and abstain floors. Missing data stays missing.
+- Neutral ink, no grades. One y-axis per chart.
+- No Engine input and no recommendation.
+
+Reference ranges are shown only as cited context when the operator sets a target (option C, delivered
+as follow-up C2). Until then, comparisons are against the operator's own usual. Strength and muscle
+analytics (Phase 1b) wait for about 3 weeks of real training. Each later phase needs its own go-ahead.
+
 ## DAILY-EXPERIENCE-001 — owner-authorized daily experience, 2026-10-13
 
 Gavin approves the complete five-part objective in `agent/DAILY-EXPERIENCE-001.md`: session-local

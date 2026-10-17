@@ -150,15 +150,37 @@ it("opens the raw water evidence from existing TODAY FUEL and returns without ad
   const before = await db.events.toArray();
   const screen = await render(<App />);
   await screen.getByText("TOOLS", { exact: true }).click();
-  await screen.getByRole("button", { name: "Explore water records", exact: true }).click();
+  await screen.getByRole("button", { name: "Water 8 oz, explore records", exact: true }).click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("water");
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Water · 8 oz", exact: true })).toBeVisible();
   await screen.getByRole("button", { name: "RETURN TO TODAY", exact: true }).click();
-  await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Explore water records");
+  await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Water 8 oz, explore records");
   expect(document.querySelector('[data-system-status="RED"]')).not.toBeNull();
   expect(document.querySelectorAll("[data-shift-clock-row]").length).toBeLessThanOrEqual(4);
   expect(await db.events.toArray()).toEqual(before);
+});
+
+it.each([false, true])("keeps TODAY FUEL accessible values current after protein and water logs (target: %s)", async (withTarget) => {
+  clock(); const day = await startDay(); await setWorkContext(day.id, "OFF", "MANUAL");
+  await logProtein(day.id, 25); await logWater(day.id, 8);
+  if (withTarget) await logBodyweight(day.id, 160);
+  const screen = await render(<App />);
+  await screen.getByText("TOOLS", { exact: true }).click();
+  const target = withTarget ? " / 160" : "";
+  await expect.element(screen.getByRole("button", { name: `Protein 25${target} g, explore records`, exact: true })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: "Water 8 oz, explore records", exact: true })).toBeVisible();
+  await screen.getByRole("button", { name: "BODY", exact: true }).click();
+  await screen.getByRole("button", { name: "Open PROTEIN ONLY", exact: true }).click();
+  await page.elementLocator(document.getElementById("body-protein")!).getByRole("button", { name: "SHOW MANUAL ENTRY", exact: true }).click();
+  await screen.getByRole("spinbutton", { name: "Protein (g)", exact: true }).fill("30");
+  await screen.getByRole("button", { name: "LOG PROTEIN", exact: true }).click();
+  await expect.poll(() => db.events.where("type").equals("PROTEIN_LOGGED").count()).toBe(2);
+  await screen.getByRole("button", { name: "+16 oz", exact: true }).click();
+  await expect.element(screen.getByRole("button", { name: "Explore water", exact: true })).toHaveTextContent("24 oz");
+  await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+  await expect.element(screen.getByRole("button", { name: `Protein 55${target} g, explore records`, exact: true })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: "Water 24 oz, explore records", exact: true })).toBeVisible();
 });
 
 it("reopens the current correction in retained History and does not steal focus when inspecting another day", async () => {

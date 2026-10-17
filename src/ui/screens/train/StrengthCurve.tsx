@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { getStrengthCurve, type StrengthPoint } from "../../../application/viewQueries";
 import { formatShortDate } from "../../../application/bodyTrendQueries";
 
@@ -8,6 +8,10 @@ import { formatShortDate } from "../../../application/bodyTrendQueries";
  * marked (a red-outlined square, the PR tag's own language) and a text
  * summary for anyone not reading the chart. Read only; opened from a record
  * card, closed with CLOSE.
+ *
+ * ULTIMATE-FOUNDATION-002: also opens from the current exercise during a
+ * workout (LiftHistory), which adds its recent sets as `children` and takes
+ * focus on open so the panel is announced where it appears.
  */
 const W = 320;
 const H = 140;
@@ -23,8 +27,27 @@ export function describeStrengthCurve(points: readonly StrengthPoint[]): string 
   return `${first.topWeight} lb (${formatShortDate(first.at)}) → ${last.topWeight} lb (${formatShortDate(last.at)}) over ${points.length} sessions · ${prText}`;
 }
 
-export function StrengthCurve({ exerciseId, exerciseName, onClose }: { exerciseId: string; exerciseName: string; onClose: () => void }) {
+export function StrengthCurve({
+  exerciseId,
+  exerciseName,
+  onClose,
+  heading = exerciseName,
+  focusOnOpen = false,
+  children,
+}: {
+  exerciseId: string;
+  exerciseName: string;
+  onClose: () => void;
+  heading?: string;
+  focusOnOpen?: boolean;
+  children?: ReactNode;
+}) {
   const [points, setPoints] = useState<StrengthPoint[] | null>(null);
+  const headingId = useId();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (focusOnOpen) headingRef.current?.focus();
+  }, [focusOnOpen]);
   useEffect(() => {
     let current = true;
     void getStrengthCurve(exerciseId).then((next) => {
@@ -36,8 +59,8 @@ export function StrengthCurve({ exerciseId, exerciseName, onClose }: { exerciseI
   }, [exerciseId]);
 
   return (
-    <section aria-labelledby="curve-heading">
-      <h2 id="curve-heading" className="section-label">{exerciseName}</h2>
+    <section aria-labelledby={headingId}>
+      <h2 id={headingId} ref={headingRef} tabIndex={-1} className="section-label">{heading}</h2>
       {points === null ? (
         <p className="meta">Loading…</p>
       ) : (
@@ -46,6 +69,7 @@ export function StrengthCurve({ exerciseId, exerciseName, onClose }: { exerciseI
           <p className="meta" data-curve-summary style={{ margin: "8px 0 12px" }}>{describeStrengthCurve(points)}</p>
         </>
       )}
+      {children}
       <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={onClose}>
         CLOSE
       </button>
