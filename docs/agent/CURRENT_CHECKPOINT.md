@@ -1,5 +1,19 @@
 # Current checkpoint
 
+## Current objective — REVIEW-001 read-only hub slice (2026-10-17, PROTECTED)
+
+Gavin directed major progress after #232. The approved REVIEW-001 Phase 1a plan has merged;
+Codex is building its first read-only question/evidence hub slice on `codex/review-001-readonly-hub`,
+starting master `ca67da629628520ab1026d9d03114648e7bcb588`. Scope, floors, exclusions and
+remaining Phase 1a work are recorded in the delivery section of [REVIEW-001.md](REVIEW-001.md).
+Full local verification: 235 files / 2,432 tests passed / one existing skip, architecture,
+TypeScript and production build pass. Two additional protected-fixture read-only cases and
+final-copy browser checks pass (7 focused cases). Built PWA passes at 320/360/412 including
+canonical save/rollover, source History/focus return and offline cold reload. Final head and
+independent review are tracked in the active PR linked from that branch.
+No storage/backup/TODAY change; #236 is separate. #232 now has independent exact-head PASS
+at `742a2e4` and green required CI; Gavin approved shipping it, and #232 merged at
+`fda45c2`. #237 is now reconciled with that master; independent review and CI must bind its new head. Next: verify this slice, independent exact-head review, then owner merge decision.
 ## PR #232 B1 follow-up and master integration (2026-10-17)
 
 Gavin authorized fixing B1, merging latest master into #232, verification, push and a new

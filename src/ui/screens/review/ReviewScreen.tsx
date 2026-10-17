@@ -1,51 +1,43 @@
 import { useEffect, useRef, useState } from "react";
+import { ReviewAnswers } from "./ReviewAnswers";
 import { describeError } from "../../errorMessage";
 import { getRecommendationLedger, type LedgerDay } from "../../../application/reviewQueries";
 import { describeLedgerDecision, describeLedgerDisposition, describeLedgerRating } from "./reviewCopy";
 
-/**
- * REVIEW 0.1 / Recommendation Ledger (MORE // Records, sibling to
- * HISTORY, not a replacement for it). Read-only. Answers exactly one
- * question: "what did BEYOND recommend, what did I decide, and how did
- * it go?" — reusing the same day-collapsed/SHOW-HIDE pattern HISTORY
- * already established, joined by Recommendation identity (never
- * BeyondDay co-location — see getRecommendationLedger).
- *
- * Deliberately does not: show AdvisoryNotes, show TRAIN/BODY/Mission
- * evidence, aggregate/trend/count anything, or offer any write action
- * (accept/decline/rate stay exclusively on TODAY). HISTORY remains the
- * complete raw audit trail; this reduces the reconstruction work of
- * reading it, it does not replace it.
- */
-export function ReviewScreen() {
+/** REVIEW-001: read-only question hub; the Recommendations section keeps the original ledger contract. */
+export function ReviewScreen({ active = true, onOpenHistory }: { active?: boolean; onOpenHistory?: ((id: string) => void) | undefined } = {}) {
   const [days, setDays] = useState<LedgerDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [readError, setReadError] = useState<string | null>(null);
   const mounted = useRef(true);
+  const revision = useRef(0);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     mounted.current = true;
-    void refresh();
-    return () => { mounted.current = false; };
-  }, []);
+    if (active) void refresh();
+    return () => { mounted.current = false; revision.current++; };
+  }, [active]);
 
   async function refresh() {
+    const request = ++revision.current;
     setLoading(true);
     setReadError(null);
     try {
       const nextDays = await getRecommendationLedger();
-      if (mounted.current) setDays(nextDays);
+      if (mounted.current && request === revision.current) setDays(nextDays);
     } catch (error) {
-      if (mounted.current) setReadError(describeError(error, "Could not read the recommendation ledger."));
+      if (mounted.current && request === revision.current) setReadError(describeError(error, "Could not read the recommendation ledger."));
     } finally {
-      if (mounted.current) setLoading(false);
+      if (mounted.current && request === revision.current) setLoading(false);
     }
   }
 
   return (
     <div className="screen">
       <h1 className="eyebrow">MORE // REVIEW</h1>
+      <ReviewAnswers active={active} onOpenHistory={onOpenHistory} />
+      <h2 className="tool-label">RECOMMENDATIONS</h2>
       <p className="card-body" style={{ marginBottom: 16 }}>
         What BEYOND recommended, what you decided, and how you rated it — read-only. For the
         complete raw event log, see HISTORY.
