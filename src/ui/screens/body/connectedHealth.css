@@ -1,0 +1,25 @@
+.health-day-browser { margin-block: 0 8px; min-width: 0; }
+.health-day-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.health-day-heading .btn-secondary { width: auto; min-height: 44px; padding: 8px 12px; }
+.health-day-strip { display: flex; overflow-x: auto; gap: 4px; padding-block: 8px; scrollbar-width: thin; }
+.health-day-strip button { flex: 1 0 44px; display: grid; gap: 2px; min-height: 56px; padding: 4px; border: 1px solid var(--border-subtle); background: var(--surface-1); color: var(--text-2); font-size: 16px; cursor: pointer; }
+.health-day-strip button[aria-pressed="true"] { color: var(--bg); background: var(--text-1); border-color: var(--text-1); }
+.health-earlier summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-size: 16px; }
+.health-earlier input { display: block; width: 100%; min-height: 44px; margin-block: 8px; }
+.health-metric { display: block; width: 100%; text-align: left; color: inherit; background: transparent; border: 0; border-radius: 0; padding: 0; font: inherit; align-self: start; position: relative; cursor: pointer; min-height: 44px; }
+.health-metric:hover, .health-metric:active { background: var(--surface-2); }
+.health-metric .tool-label { display: block; }
+.health-metric .tool-label::after { content: "↗"; color: var(--text-2); position: absolute; right: 0; top: 0; }
+.health-metric .readout__value { margin: 0; }
+.health-past-day { border-block: 1px solid var(--border-subtle); padding-block: 12px; }
+.health-past-day .readout-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.health-past-records { padding: 0; list-style: none; }
+.health-past-records li { display: grid; gap: 8px; border-top: 1px solid var(--border-subtle); padding-block: 12px; font-size: 16px; }
+.health-source-row { border-block-end: 1px solid var(--border-subtle); padding-block: 16px; }
+.health-source-name { font-size: 20px; margin-block: 0 8px; }
+.health-source-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.health-source-actions .btn-secondary { flex: 1 1 140px; }
+.health-sources { padding-block: 8px 20px; overflow-wrap: anywhere; }
+.health-history-focus { outline: 2px solid var(--text-1); outline-offset: 4px; }
+
+.health-day-controls > summary { min-height: 44px; padding-block: 10px; cursor: pointer; font-size: 16px; color: var(--text-2); border-block-end: 1px solid var(--border-subtle); }

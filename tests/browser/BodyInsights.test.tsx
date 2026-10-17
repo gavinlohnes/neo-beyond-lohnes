@@ -72,7 +72,7 @@ describe("BODY Insights & Progress", () => {
     await screen.getByRole("combobox", { name: "EXPLORE A MEASURE" }).selectOptions("sleep");
     await expect.element(screen.getByText("1 day with multiple main-sleep entries excluded", { exact: false })).toBeVisible();
     await screen.getByRole("combobox", { name: "EXPLORE A MEASURE" }).selectOptions("workouts");
-    await expect.element(screen.getByText("1 finished workouts in 2 recorded lived days", { exact: false })).toBeVisible();
+    await expect.element(screen.getByText("1 finished workouts in 2 recorded day segments", { exact: false })).toBeVisible();
     await screen.getByText("Nutrition detail & coverage", { exact: true }).click();
     await expect.element(screen.getByText("Fiber is not recorded", { exact: false })).toBeVisible();
     await expect.element(screen.getByText("Co-recording is an observation", { exact: false })).toBeVisible();

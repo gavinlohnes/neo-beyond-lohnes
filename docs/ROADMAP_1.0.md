@@ -8,7 +8,13 @@ feature history, and product rulings below are preserved.
 
 ## Active priority
 
-No objective is in flight. Recently merged: COMMAND-ATOMICITY-002 (#226, issue #225), which
+**Current owner objective, 2026-10-17 — ULTIMATE-FOUNDATION-001: Connected Health Record.**
+Gavin approved BODY lived-day browsing, direct metric/source/History exploration, a raw water
+trend and existing TODAY FUEL evidence links, with retained input and canonical current-day writes.
+Brief: [`agent/ULTIMATE-FOUNDATION-001.md`](agent/ULTIMATE-FOUNDATION-001.md). Historical browsing
+is read-only; no Engine/schema/event/backup/dependency change. REVIEW-001 (#231) remains separate.
+
+Historical priority before this approval: Recently merged: COMMAND-ATOMICITY-002 (#226, issue #225), which
 makes the remaining compound commands atomic; BODY Daily Health Record (#212), the operator
 experience stages 2–5 for shared shell, TODAY, TRAIN and MORE (#214–#217), BODY Insights &
 Progress (#218), Guided MORE + Low-Energy TODAY (#220) and WORKOUT-ATOMICITY-001 (#223, issue #221),

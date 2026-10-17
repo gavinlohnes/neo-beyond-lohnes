@@ -8,14 +8,30 @@ import { PersonalBaselines } from "../weekly/PersonalBaselines";
 import { WeightTrend } from "./WeightTrend";
 import { TransformationTimeline } from "./TransformationTimeline";
 import { formatUsd } from "./quitCopy";
+import type { HealthEvidenceRequest } from "../../../application/healthRecordQueries";
+import type { SourceSelection } from "./HealthSources";
 import { getBodyInsights, INSIGHT_DAY_MS, type BodyInsights } from "../../../application/bodyInsightsQueries";
-import { InsightsExplorer } from "./InsightsExplorer";
+import { InsightsExplorer, type InsightExploration } from "./InsightsExplorer";
 
-export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs }: {
+export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request, onSources, returnFocusRequest = 0, active = true }: {
+  active?: boolean;
+  returnFocusRequest?: number;
+  request?: HealthEvidenceRequest | null;
+  onSources?: ((selection: SourceSelection) => void) | undefined;
   refreshKey: number;
   weightHistory: readonly WeighIn[];
   goalWeightLbs?: number | undefined;
 }) {
+  const [exploration, setExploration] = useState<InsightExploration>({ metric: "weight", range: 28, pointId: null, focusDayId: null });
+  useEffect(() => {
+    if (request) {
+      setExploration((state) => ({ ...state, metric: request.metric, pointId: null, focusDayId: request.dayId ?? null }));
+      // An explicit metric entry reveals its chart; ordinary return preserves exploration.
+      setTimelineOpen(false);
+    }
+  }, [request]);
+  const readPending = useRef(false);
+  const returnToObservation = useRef(false);
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [insights, setInsights] = useState<BodyInsights | null>(null);
   const [failed, setFailed] = useState(false);
@@ -24,24 +40,35 @@ export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs }: {
   const [usualOpen, setUsualOpen] = useState(false);
   const [timelineOpen, setTimelineOpen] = useState(false);
   useEffect(() => {
+    if (!active) return;
     let current = true;
+    readPending.current = true;
     setFailed(false);
     setSummary(null);
     setInsights(null);
     void Promise.all([getWeeklySummary(), getBodyInsights()]).then(([next, data]) => {
-      if (current) { setSummary(next); setInsights(data); }
-    }).catch(() => { if (current) setFailed(true); });
+      if (current) { readPending.current = false; setSummary(next); setInsights(data); }
+    }).catch(() => { if (current) { readPending.current = false; setFailed(true); } });
     return () => { current = false; };
-  }, [refreshKey, retry]);
+  }, [refreshKey, retry, active]);
   useEffect(() => {
     if (!summary || !restoreRetryFocus.current) return;
     restoreRetryFocus.current = false;
     if (document.activeElement === document.body) document.getElementById("health-progress-heading")?.focus({ preventScroll: true });
   }, [summary]);
+  useEffect(() => { if (returnFocusRequest) returnToObservation.current = true; }, [returnFocusRequest]);
+  useEffect(() => {
+    if (!active || readPending.current || !summary || !insights || !returnToObservation.current) return;
+    returnToObservation.current = false;
+    requestAnimationFrame(() => {
+      const focused = document.activeElement;
+      if (!focused || focused === document.body || focused.id === "health-progress-heading" || focused.closest("[hidden]")) document.getElementById("insight-view-records")?.focus({ preventScroll: true });
+    });
+  }, [summary, insights, returnFocusRequest, active]);
   if (failed) return <div role="alert"><p className="meta">Could not read your progress. Your records are unchanged.</p><button className="btn-secondary" onClick={() => { restoreRetryFocus.current = true; setRetry((value) => value + 1); }}>RETRY PROGRESS</button></div>;
   if (!summary || !insights) return <p className="meta" role="status">Loading your recorded progress…</p>;
   return <div className="health-progress">
-    <InsightsExplorer data={insights} weights={weightHistory} goalWeightLbs={goalWeightLbs} hideChart={timelineOpen} />
+    <InsightsExplorer data={insights} weights={weightHistory} goalWeightLbs={goalWeightLbs} hideChart={timelineOpen} exploration={exploration} onExploreChange={setExploration} onSources={onSources ? (point, metric) => onSources({ point, metric }) : undefined} />
     <p className="meta">Existing records, not a score. The weekly summary uses the last 7 days; the ribbon shows 28 lived days.</p>
     <section aria-label="Training accomplishments"><h3 className="tool-label">TRAINING</h3>
       <p className="health-reading">{summary.training.workouts} {summary.training.workouts === 1 ? "workout" : "workouts"} · {summary.training.records.length} {summary.training.records.length === 1 ? "PR" : "PRs"}</p>

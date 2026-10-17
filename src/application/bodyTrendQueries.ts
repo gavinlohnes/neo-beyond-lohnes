@@ -13,8 +13,19 @@ export interface WeighIn {
   weightLbs: number;
 }
 
-/** Every weigh-in across all days, oldest first, at its effective (corrected) value. Undone weigh-ins are left out. */
+export interface SourceWeighIn extends WeighIn {
+  beyondDayId: string | undefined;
+  rootEventId: string;
+  headEventId: string;
+}
+
+/** Keep the existing public value-only shape for established consumers. */
 export async function getBodyweightHistory(): Promise<WeighIn[]> {
+  return (await getBodyweightHistoryWithSources()).map(({ recordedAt, weightLbs }) => ({ recordedAt, weightLbs }));
+}
+
+/** Every weigh-in across all days, oldest first, at its effective (corrected) value. Undone weigh-ins are left out. */
+export async function getBodyweightHistoryWithSources(): Promise<SourceWeighIn[]> {
   const [logged, corrections, voids] = await Promise.all([
     db.events.where("type").equals("BODYWEIGHT_LOGGED").toArray(),
     db.events.where("type").equals("BODYWEIGHT_LOG_CORRECTED").toArray(),
@@ -27,7 +38,7 @@ export async function getBodyweightHistory(): Promise<WeighIn[]> {
     .map((root) => {
       const payload = root.payload as { weightLbs: number };
       const chain = walkCorrectionChain(corrections, root.id, payload.weightLbs, "weightLbs");
-      return { recordedAt: root.recordedAt, weightLbs: chain.effectiveValue };
+      return { recordedAt: root.recordedAt, weightLbs: chain.effectiveValue, beyondDayId: root.beyondDayId, rootEventId: root.id, headEventId: chain.headEventId };
     });
 }
 
