@@ -4,7 +4,7 @@ Gavin approved the investigation proposal and subsequent Connected Health Record
 on 2026-10-17 ("Approved."). Sole Builder: Codex. Lane: PROTECTED — bounded BODY composition,
 historical inspection, raw water trend and evidence navigation. Fresh starting master:
 `8c8b25feb90fd49f30e40d283547e90a6f4dd65a`. Branch: `codex/ultimate-foundation-001`.
-Active PR: pending. No merge or deployment authority.
+Active PR: [#232](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/232). No merge or deployment authority.
 
 ## Outcome and approved boundaries
 
@@ -63,3 +63,13 @@ merge or deployment. Rollback is a presentation/read-model revert with no data c
   event, fresh history reads, return/focus ownership; primary navigation clears obsolete returns.
 - `tests/integration/connectedHealth.test.ts`, `tests/browser/ConnectedHealth.test.tsx` and the
   production acceptance script cover the new seams; existing regressions stay enabled.
+
+## Builder verification and handoff
+
+Full local gate: 232 files passed, 2,417 tests passed, one existing skip. Architecture (215 files),
+TypeScript and production build pass. The ignored onboarding config selects installed Chromium
+only; full test selection and assertions are unchanged. Built-PWA acceptance passes at
+320/360/412 px, including offline source/History exploration, canonical writes and reload.
+Evidence and reproduction are in `docs/screenshots/ultimate-foundation-001/README.md`.
+Required CI and independent exact-head review must bind the final pushed PR head; the PR carries
+that SHA and current status. No independent review, merge or deployment is claimed by the Builder.

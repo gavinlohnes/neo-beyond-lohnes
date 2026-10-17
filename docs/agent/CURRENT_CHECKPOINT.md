@@ -5,7 +5,7 @@
 Gavin approved the Connected Health Record proposal ("Approved.", 2026-10-17).
 Brief: [ULTIMATE-FOUNDATION-001.md](ULTIMATE-FOUNDATION-001.md). Sole Builder: Codex.
 Fresh starting master `8c8b25feb90fd49f30e40d283547e90a6f4dd65a` (PHONE-FIT-001 #230 merged).
-Branch: `codex/ultimate-foundation-001`; active PR pending.
+Branch: `codex/ultimate-foundation-001`; [PR #232](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/232), open, not merged.
 
 Implemented: BODY readings open their existing metric explorer; recent/older lived-day browsing
 is read-only and groups early-ended/restarted segments. A raw water series reuses ledger truth.
@@ -19,10 +19,14 @@ order/identity; missing remains missing, ambiguous main sleeps stay separate, ol
 is preserved. History re-reads on re-entry and ignores superseded requests. Retained progress
 keeps exploration state but performs no hidden progress reads after quick logs.
 
-Verification in progress: focused 35 tests passed, architecture/typecheck/build passed; built-PWA
-acceptance passed at 320/360/412 px, including History/focus/draft return, canonical correction,
-offline exploration/writes/reload and no browsing writes. Final full gate and final-code PWA
-repeat are running; exact outcomes and final head belong in the PR/evidence before handoff.
+Verification: full local gate 232 files / 2,417 passed / one existing skip; architecture (215
+files), TypeScript and production build pass. The ignored local config only selects system
+Chromium; full Node/browser selection and assertions remain enabled. Final-code production PWA
+passes at 320/360/412 px: source/History focus and return, retained draft, canonical correction,
+offline exploration/writes/reload, no browsing writes, no page errors/overflow and one main.
+The 12 new browser cases also cover reduced motion/axe on sources and History, hidden-query
+cost, explicit metric entry after a retained timeline, same-head History reopening and active
+workout-deferred rollover. Required CI and independent review are tracked on the final PR head.
 Evidence: [screenshots and reproduction](../screenshots/ultimate-foundation-001/README.md).
 
 Unchanged: Engine/rules, schema/domain/events/commands, persistence/backup contracts, dependencies,
@@ -33,8 +37,8 @@ Its docs touch UX_DECISIONS/ROADMAP too; check the merge diff and serialize shar
 Limits: physical iPhone/Safari/Android keyboard and screen-reader testing unrun. Drafts remain
 session-local; browser process eviction/reload clears them under existing warnings. Existing
 single-browser-tab write limitations and bundle-size advisory remain. No historical repair.
-Next: finish verification, commit/push/open PR, bind its final exact head and required CI, then
-independent qualified exact-head review against the brief. Gavin alone approves merge/deployment;
+Next: confirm required CI on the final pushed PR head, then assign independent qualified
+exact-head review against the brief. The PR binds the exact SHA and records CI. Gavin alone approves merge/deployment;
 no merge or deployment is authorized here. Other carried-forward unapproved work below stays separate.
 
 
