@@ -1,0 +1,18 @@
+.review-answers { margin: 0 0 32px; }
+.review-answer { border-top: 1px solid var(--border-subtle); padding: 12px 0; }
+.review-answer > summary { cursor: pointer; padding: 8px 2px; min-height: 44px; }
+.review-answer > summary > span { font-family: var(--font-body, sans-serif); font-weight: 600; }
+.review-answer > summary > strong { display: block; font-size: 1rem; line-height: 1.6; font-weight: 400; margin: 8px 0 0 16px; }
+.review-evidence { margin: 12px 0 20px; }
+.review-evidence > details { margin: 8px 0; }
+.review-evidence summary, .review-more > summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
+.review-evidence svg { display: block; width: 100%; max-height: 180px; color: var(--text-primary, #eee); cursor: crosshair; }
+.review-select { display: block; margin: 12px 0; }
+.review-select select { display: block; width: 100%; margin-top: 8px; }
+.review-table-scroll { max-width: 100%; overflow-x: auto; }
+.review-table { width: 100%; font-size: .875rem; border-collapse: collapse; }
+.review-table th, .review-table td { text-align: left; padding: 8px 4px; border-bottom: 1px solid var(--border-subtle); vertical-align: top; overflow-wrap: anywhere; }
+.review-table caption { text-align: left; padding: 8px 0; }
+.review-table button { min-width: 64px; min-height: 44px; margin: 2px 0; }
+.review-more { margin: 16px 0; }
+@media (prefers-reduced-motion: reduce) { .review-answers * { scroll-behavior: auto; } }

@@ -33,7 +33,7 @@ export const SYSTEM_CAPABILITIES = [
   { label: "CUSTOM PROGRAMS", description: "MORE · Your workout templates", aliases: ["program", "template"], group: "Training and planning", destination: { kind: "more", view: "CUSTOM_TEMPLATES" } },
   { label: "HISTORY", description: "MORE · Complete chronological records", aliases: ["timeline", "past"], group: "Records", destination: { kind: "more", view: "HISTORY" } },
   { label: "WEEKLY CHECK-IN", description: "MORE · Weekly progress, observations and Mirror", aliases: ["week", "mirror", "progress"], group: "Records", destination: { kind: "more", view: "WEEKLY" } },
-  { label: "REVIEW", description: "MORE · Recommendations, decisions and ratings", aliases: ["review", "recommendation", "rating", "decision"], group: "Records", destination: { kind: "more", view: "REVIEW" } },
+  { label: "REVIEW", description: "MORE · Recorded evidence and recommendations", aliases: ["review", "recommendation", "rating", "decision"], group: "Records", destination: { kind: "more", view: "REVIEW" } },
   { label: "DECISION JOURNAL", description: "MORE · Decisions, outcomes and lessons", aliases: ["journal", "decision"], group: "Records", destination: { kind: "more", view: "JOURNAL" } },
   { label: "SEARCH RECORDS", description: "MORE · Find your personal records", aliases: ["search", "find records"], group: "Records", destination: { kind: "more", view: "SEARCH" } },
 ] as const satisfies readonly Capability[];

@@ -82,6 +82,8 @@ export function MoreScreen({
   const backRef = useRef<HTMLButtonElement>(null);
   const originRef = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
   const previousView = useRef(view);
+  const reviewOrigin = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
+  const [reviewHistory, setReviewHistory] = useState(false);
 
   function setView(next: MoreView) {
     if (view === "MENU" && next !== "MENU") {
@@ -100,6 +102,10 @@ export function MoreScreen({
       if (trigger?.isConnected && menuRef.current?.contains(trigger)) trigger.focus({ preventScroll: true });
       else menuRef.current?.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
       window.scrollTo({ top: origin?.scrollY ?? 0, behavior: "instant" });
+    } else if (view === "REVIEW" && reviewOrigin.current) {
+      reviewOrigin.current.trigger?.focus({ preventScroll: true });
+      window.scrollTo({ top: reviewOrigin.current.scrollY, behavior: "instant" });
+      reviewOrigin.current = null;
     } else {
       backRef.current?.focus({ preventScroll: true });
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -348,11 +354,14 @@ export function MoreScreen({
   return (
     <div className="screen more-operator">
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
-          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setHistoryFocusDayId(null); setView("MENU"); }}>← BACK TO MORE</button>
+          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setView("MENU"); }}>← BACK TO MORE</button>
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
-          {view === "HISTORY" && <HistoryScreen focusDayId={historyFocusDayId} />}
+          {view === "HISTORY" && <>{reviewHistory && <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setReviewHistory(false); setView("REVIEW"); }}>RETURN TO REVIEW</button>}<HistoryScreen focusDayId={historyFocusDayId} /></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
-          {view === "REVIEW" && <ReviewScreen />}
+          <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} onOpenHistory={(id) => {
+            reviewOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
+            setHistoryFocusDayId(id); setReviewHistory(true); setView("HISTORY");
+          }} />}</div>
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} />}
           {view === "WORK_SCHEDULE" && <><OperatorHeader destination="more">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
           <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="more">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
@@ -401,7 +410,7 @@ export function MoreScreen({
         <dl>
           <dt>Weekly Check-in</dt><dd>Recorded progress, findings and the week ahead. Read-only; no grade.</dd>
           <dt>History</dt><dd>The full chronological event trail, including corrections and undo.</dd>
-          <dt>Review</dt><dd>BEYOND’s past recommendations, your decisions and their recorded outcomes.</dd>
+          <dt>Review</dt><dd>Weight, nutrition, recovery and training evidence, plus past recommendations.</dd>
           <dt>Search</dt><dd>Find existing records by words, then open where they live.</dd>
           <dt>Decision Journal</dt><dd>Write a choice and expectation; return later for its actual outcome and lesson.</dd>
           <dt>Missions & Obligations</dt><dd>Keep durable plans separate from tasks, dates and deliberate resolution.</dd>
