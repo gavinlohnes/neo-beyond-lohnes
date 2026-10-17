@@ -1,5 +1,17 @@
 # Current checkpoint
 
+## Current objective — REVIEW-001 weekly review loop (2026-10-17, PROTECTED)
+
+Gavin authorized shipping the connected foundation, then building the weekly review loop.
+#232 merged at `fda45c2`; #237 merged at `554b557` after renewed independent PASS at `871c35b`
+and green required CI. Codex starts this slice from fresh master
+`554b55722d895c5fb6ca979bd9f08990c58ec6c1` on `codex/review-001-weekly-loop`.
+Scope, owner authority, event/backup semantics, validation and deferred work are in the weekly-loop
+delivery section of [REVIEW-001.md](REVIEW-001.md). One additive review event, no schema change.
+Implementation/testing underway; final verification, exact head and review verdict tracked in the
+new PR linked from this branch. Next: complete full gate/production acceptance, independent
+exact-head review and owner merge decision. The new weekly-loop PR is not pre-approved for merge.
+
 ## Current objective — REVIEW-001 read-only hub slice (2026-10-17, PROTECTED)
 
 Gavin directed major progress after #232. The approved REVIEW-001 Phase 1a plan has merged;

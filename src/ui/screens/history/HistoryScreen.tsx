@@ -113,7 +113,7 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
                     key={event.id} id={`history-event-${event.id}`} tabIndex={-1} className={focusEventId === event.id ? "health-history-focus" : undefined}
                     style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "4px 0" }}
                   >
-                    <span className="card-body" style={{ margin: 0 }}>{describeEvent(event, exerciseNames)}</span>
+                    <span className="card-body" style={{ margin: 0, minWidth: 0, overflowWrap: "anywhere" }}>{describeEvent(event, exerciseNames)}</span>
                     <span className="meta" style={{ whiteSpace: "nowrap" }}>
                       {new Date(event.occurredAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
                     </span>
