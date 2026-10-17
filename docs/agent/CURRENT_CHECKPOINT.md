@@ -1,6 +1,31 @@
 # Current checkpoint
 
-## Current objective — REVIEW-001 read-only hub slice (2026-10-17, PROTECTED)
+## Current objective — RESTORE-COMPAT, REVIEW-001 Phase 1a prerequisite (2026-10-17, PROTECTED)
+
+Gavin asked to keep moving after REVIEW-001's plan (#231) and its photo-backup ruling (#235,
+option (a): photos in the normal backup) merged. Builder: Claude Code. Starting master `ca67da6`;
+branch `ccr-f27681c1-sb8gif`; PR linked from the branch.
+
+Found while starting Phase 1a's storage slice, and fixed first on its own: restoring any native
+backup exported from an older schema failed with "Database version differs" (dexie-export-import
+refuses any version but the live one). That affects every native backup made before schema v12.
+Phase 1a's own acceptance needs older backups to restore after its schema bump.
+
+The fix is in `persistence/backup.ts`:
+- An older backup restores, still replace-only. Tables it predates are cleared, and missing
+  settings rows read as their defaults.
+- A newer backup is refused at preview with a plain message, before anything is cleared.
+
+No schema, event, Engine, fixture, dependency or CI change; the legacy `BEYOND_BACKUP` path is
+untouched. Independent exact-head review: PASS at `a1a7408`, with green CI. Gavin approved the
+merge, but master had moved (#232 and #237 merged), so `origin/master` was merged into the branch.
+The only conflict was this checkpoint, and every entry is kept. Next action: green CI and an
+independent confirmation of the merged head, then the merge. After that comes REVIEW-001 Phase 1a
+storage: measurement events, a progress-photo table at v13 with permanent delete (Gavin,
+2026-10-17), and backup round trips with photos.
+
+
+## Parallel objective — REVIEW-001 read-only hub slice (Codex, merged in #237) (2026-10-17, PROTECTED)
 
 Gavin directed major progress after #232. The approved REVIEW-001 Phase 1a plan has merged;
 Codex is building its first read-only question/evidence hub slice on `codex/review-001-readonly-hub`,
@@ -34,7 +59,7 @@ Verification and review request for the new head are recorded on PR #232. The pr
 BLOCK at `aa95684` is historical evidence, not approval of this head. Next: independent review
 of the pushed head and Gavin's separate merge decision. No merge/deployment of #232 authorized.
 
-## Current objective — ULTIMATE-FOUNDATION-001 (2026-10-17, PROTECTED)
+## Previous objective — ULTIMATE-FOUNDATION-001 (2026-10-17, PROTECTED, merged in #232)
 
 Gavin approved the Connected Health Record proposal ("Approved.", 2026-10-17).
 Brief: [ULTIMATE-FOUNDATION-001.md](ULTIMATE-FOUNDATION-001.md). Sole Builder: Codex.
@@ -75,22 +100,11 @@ Next: confirm required CI on the final pushed PR head, then assign independent q
 exact-head review against the brief. The PR binds the exact SHA and records CI. Gavin alone approves merge/deployment;
 no merge or deployment is authorized here. Other carried-forward unapproved work below stays separate.
 
+## Previous objective — ULTIMATE-FOUNDATION-002 review follow-up (2026-10-17, ROUTINE, merged in #234)
 
-## Current objective — ULTIMATE-FOUNDATION-002 review follow-up (2026-10-17, ROUTINE)
-
-Gavin asked for the checkpoint update and fixes for the four nonblocking findings from #233's
-independent review ("Update the checkpoint and fix the findings", 2026-10-17). Builder: Claude
-Code. Starting master `48e7b54`; branch `ccr-f27681c1-sb8gif`; PR linked from the branch.
-Changes:
-- Lift history closes when the current exercise changes. Coming back to that lift no longer
-  reopens it or moves focus. The control now owns its state inside the per-exercise surface.
-- A session record keeps each exercise's sets in logged order, as the brief says.
-- A session record reads its own sets through `getPerformedSets` rather than the whole table.
-- New tests: lift history reads once while a set is logged with it open, and Gym Mode shows the
-  same unsaved set.
-
-TRAIN UI and read-query only. No Engine, schema, event, backup, fixture, dependency or CI change.
-Next action: Gavin's merge decision after green required CI.
+The four nonblocking findings from #233's review were fixed in #234, merged at `5e0f86d` on
+Gavin's instruction. REVIEW-001's plan merged in #231 (`69f9538`), and its Decision 2 ruling
+(photos in the normal backup) merged in #235 (`ca67da6`).
 
 ## Previous objective — ULTIMATE-FOUNDATION-002 Training Record (2026-10-17, PROTECTED, merged in #233)
 
@@ -109,7 +123,7 @@ Open work alongside it:
   names hide their values). Codex fixes it, then it needs a new exact-head review.
 - After #232 merges, the session record gets a link to its History day using #232's History
   focus plumbing.
-- #231 (REVIEW-001 plan) has a PASS review and awaits Gavin's merge decision.
+- #231 (REVIEW-001 plan) merged at `69f9538`.
 
 ## Previous objective — PHONE-FIT-001 (2026-10-14, ROUTINE, merged in #230)
 
