@@ -233,7 +233,8 @@ export type DomainEventType =
   | "SHIFT_HANDOFF_NOTED"
   | "SHIFT_HANDOFF_READ"
   | "TIME_CAPSULE_SEALED"
-  | "TIME_CAPSULE_OPENED";
+  | "TIME_CAPSULE_OPENED"
+  | "WEEKLY_REVIEW_SAVED";
 
 /**
  * DERIVED, not stored. Computed by walking a WATER_LOGGED event and any

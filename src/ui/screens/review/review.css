@@ -16,3 +16,16 @@
 .review-table button { min-width: 64px; min-height: 44px; margin: 2px 0; }
 .review-more { margin: 16px 0; }
 @media (prefers-reduced-motion: reduce) { .review-answers * { scroll-behavior: auto; } }
+
+.weekly-review { border-bottom: 1px solid var(--border-subtle); margin-bottom: 28px; padding-bottom: 20px; }
+.weekly-review-facts { margin: 16px 0; }
+.weekly-review-facts > div { padding: 8px 0; border-top: 1px solid var(--border-subtle); }
+.weekly-review-facts dt { font-weight: 600; }
+.weekly-review-facts dd { margin: 4px 0 0; line-height: 1.6; }
+.weekly-review form label { display: block; margin: 16px 0 8px; }
+.weekly-review form textarea, .weekly-review form select { display: block; width: 100%; box-sizing: border-box; }
+.weekly-review form textarea { min-height: 100px; resize: vertical; }
+.weekly-review form button { margin-top: 16px; }
+.weekly-review summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
+
+.weekly-review .card-body { overflow-wrap: anywhere; white-space: pre-wrap; }

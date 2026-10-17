@@ -127,6 +127,8 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Set logged: ${exercise(p.exerciseId)}${p.substitutedName ? ` (as ${p.substitutedName})` : ""} #${p.setNumber} — ${p.weight} lb x ${p.reps}.`;
     case "SET_SKIPPED":
       return `Set skipped: ${exercise(p.exerciseId)} #${p.setNumber}.`;
+    case "WEEKLY_REVIEW_SAVED":
+      return `Weekly review ${p?.supersedes ? "revised" : "saved"} for ${String(p?.weekStart ?? "unknown week")}. Note: ${String(p?.note || "None")}. Focus: ${String((p?.focus as { text?: unknown } | null)?.text ?? "None chosen")}.`;
     case "CLEAN_DAY_LOGGED":
       return `Clean day logged${p.habitName ? `: ${p.habitName}` : ""}.`;
     case "URGE_LOGGED":

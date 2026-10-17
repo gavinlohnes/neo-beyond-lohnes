@@ -437,6 +437,7 @@ function AppWorkspaces() {
               openToolsOnMount={todayToolsOpen}
               onOpenBody={openBody}
               onOpenHealthEvidence={openBodyEvidence}
+              onOpenWeeklyReview={() => openMore("REVIEW")}
               onOpenSystemDestination={(destination) => {
                 if (destination.kind === "body") return openBody(destination.focus);
                 if (destination.kind === "workout") return openTrain("WORKOUT");
