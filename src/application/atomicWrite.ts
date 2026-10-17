@@ -49,6 +49,9 @@ export const JOURNAL_WRITE_TABLES = ["decisionJournalEntries"] as const;
 /** TRAIN start / log / skip / complete / abandon. */
 export const WORKOUT_WRITE_TABLES = ["workoutSessions", "performedSets"] as const;
 
+/** REVIEW-001 progress photos: add / correct / hide / delete permanently. */
+export const PHOTO_WRITE_TABLES = ["progressPhotos"] as const;
+
 export function writeAtomically<T>(tables: readonly string[], write: () => Promise<T>): Promise<T> {
   return db.transaction("rw", [...new Set([...tables, ...SEQ_TABLES])], write);
 }

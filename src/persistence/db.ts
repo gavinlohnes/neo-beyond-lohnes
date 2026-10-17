@@ -17,6 +17,7 @@ import type { Mission, Obligation } from "../domain/intent/types";
 import type { DecisionJournalEntry } from "../domain/journal/types";
 import type { CustomExercise } from "../domain/workout/customExercise";
 import type { CustomWorkoutTemplate } from "../domain/workout/customTemplate";
+import type { ProgressPhoto } from "../domain/body/types";
 import { DEFAULT_SCHEDULE_PATTERN } from "../engine/scheduledContext";
 import { DEFAULT_NUTRITION_TARGETS } from "../engine/nutritionTargets";
 
@@ -38,6 +39,7 @@ export class BeyondDB extends Dexie {
   customWorkoutTemplates!: Table<CustomWorkoutTemplate, string>;
   nutritionTargets!: Table<NutritionTargets, string>;
   quitHabits!: Table<QuitHabit, string>;
+  progressPhotos!: Table<ProgressPhoto, string>;
 
   constructor() {
     super("beyond");
@@ -292,6 +294,34 @@ export class BeyondDB extends Dexie {
       customWorkoutTemplates: "id, archivedAt, createdAt",
       nutritionTargets: "id",
       quitHabits: "id",
+    });
+    // v13 (REVIEW-001 Phase 1a, owner-approved plan 2026-10-14; photo
+    // backup ruling 2026-10-17): adds progressPhotos — a re-encoded image
+    // Blob plus its pose and date (see ProgressPhoto in domain/body/types.ts).
+    // Purely additive; no upgrade() callback, since there is no prior data to
+    // seed or migrate. Body measurements need no table: they are events in
+    // the existing events table. A backup from v12 or earlier restores as-is
+    // (persistence/backup.ts accepts older versions), leaving this table
+    // empty. v1-v12 tables/data untouched.
+    this.version(13).stores({
+      beyondDays: "id, status, startedAt",
+      events: "id, beyondDayId, type, occurredAt, missionId, obligationId, decisionJournalEntryId",
+      checkIns: "id, beyondDayId, recordedAt",
+      recommendations: "id, beyondDayId, issuedAt",
+      outcomes: "id, beyondDayId, recommendationId, commandExecutionId, recordedAt",
+      workoutSessions: "id, beyondDayId, templateId, status, startedAt",
+      performedSets: "id, beyondDayId, sessionId, exerciseId",
+      schedulePatterns: "id",
+      captureItems: "id, status, capturedAt",
+      missions: "id, status, createdAt",
+      obligations: "id, status, missionId, dueAt, createdAt",
+      savedMeals: "id, archivedAt, createdAt",
+      decisionJournalEntries: "id, status, createdAt",
+      customExercises: "id, archivedAt, createdAt",
+      customWorkoutTemplates: "id, archivedAt, createdAt",
+      nutritionTargets: "id",
+      quitHabits: "id",
+      progressPhotos: "id, takenOn, pose",
     });
   }
 }

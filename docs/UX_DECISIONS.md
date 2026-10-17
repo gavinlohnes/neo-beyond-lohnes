@@ -75,7 +75,10 @@ disappears when the review is done. It is not a recommendation.
 Phase 1a adds the following additive data. Each requires the Protected review and backup safeguards.
 - Body measurements, with waist primary.
 - Progress photos, kept on the device only and included in the normal backup file (Gavin,
-  2026-10-17: REVIEW-001 Decision 2, option (a)).
+  2026-10-17: REVIEW-001 Decision 2, option (a)). A photo can be hidden (kept, including in
+  backups) or deleted permanently, which removes the image from the device and from later backups
+  (Gavin, 2026-10-17). This is a deliberate exception to "undo, never erase", for privacy; the
+  deletion itself is still recorded as an event, without image data.
 - An operator-chosen weekly focus and note.
 
 Review remains read-only analysis. The general rules:
