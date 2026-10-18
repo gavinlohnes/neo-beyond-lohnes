@@ -33,10 +33,22 @@ Remaining risks: TODAY's first screen is tight at 320 px (RESUME WORKOUT ~1 px a
 slice 5 must not add height above Operate. The QUICK_LOG +8/+16 oz on shift is gone by design.
 Inside COMMAND a destination opens with focus on its BACK button (the index's existing pattern).
 Slice 4 (emblem) committed as work in progress: the header glyph is the emblem (go to TODAY
-root) via `EmblemContext`; `CommandCenterNavigation.test.tsx` passes (4/4). The full suite has
-NOT been run on this head; paused at the owner's request to save usage.
-Next action: run the full suite on the slice 4 head, then slice 5 (identity, voice, verify script,
-screenshots).
+root) via `EmblemContext`; `CommandCenterNavigation.test.tsx` passes (4/4). Full local suite at
+`6392d9e`: 250 files / 2,550 passed / 1 existing skip.
+
+**Handoff to Codex (2026-10-18, owner switching builders).** Update the brief's Handoff section
+first. Then finish slice 4 (TRAIN re-tap behaviour is unchanged existing pattern; confirm it's
+enough) and build slice 5 per the brief: identity effects, Bruce-voice display copy, extend
+`scripts/verify-daily-experience.mjs` for modes and COMMAND, screenshots in
+`docs/screenshots/command-center-001/`, then mark PR #241 ready and request the independent
+exact-head review. Also update the PR #241 checklist (slices 1–3 done, 4 in progress).
+- Browser tests here ran through an uncommitted local config (`vitest.config.local.ts`, excluded
+  via `.git/info/exclude`) that sets Playwright's `executablePath` to the container's
+  pre-installed Chromium. Tracked config and CI are unchanged; another environment needs its own
+  equivalent or a normal Playwright browser install.
+- TODAY's first screen is tight at 320 px: RESUME WORKOUT sits ~1 px above the bottom nav
+  (`CommandConsole.test.tsx`). Slice 5 effects (ruler, skyline, sky) must overlay the mode header
+  or replace existing height, not add height above Operate.
 
 ## Previous objective — REVIEW-001 Weekly Review dashboard (2026-10-18, PROTECTED, merged in #240 at `4fda717`)
 
