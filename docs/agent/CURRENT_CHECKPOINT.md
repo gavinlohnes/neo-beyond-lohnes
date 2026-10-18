@@ -33,16 +33,18 @@ master merge (both touch this file and `CommandCatalog.test.tsx`).
 Gavin granted sprint permission before sleeping ("improve or add features to BEYOND"). Scope stayed
 inside already-approved REVIEW-001 Phase 1a work that needed #244's measurements and photos. No
 Engine evaluation, schema, event, backup or dependency change, and no merges. Each item is its own
-draft PR, stacked on #244 and targeting `master` so CI runs.
+draft PR targeting `master` so CI runs; #245–#247 are stacked on #244, #248 is not.
 
 | PR | Builds | Status |
 |---|---|---|
 | [#245](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/245) | Monthly review: every 4th week from the first saved review, body composition over 28 lived days | CI green |
 | [#246](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/246) | Optional photo framing guide: in-app camera with the last same-pose photo as a ghost | CI green |
-| [#247](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/247) | Review hub Body questions: waist, chest/arms/shoulders, photos over time, "fat, not muscle?" side by side | CI pending at write time |
+| [#247](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/247) | Review hub Body questions: waist, chest/arms/shoulders, photos over time, "fat, not muscle?" side by side | CI green |
+| [#248](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/248) | Weight answer: rate (lb and %/week), usual swing, goal date, weigh-in timing after main sleep | CI pending at write time |
 
-- **Merge order:** #244, then any of #245/#246/#247. All three carry the same ported #244 focus fix
-  (identical commits), so they merge cleanly together.
+- **Merge order:** #244, then any of #245/#246/#247 (they carry the same ported #244 focus fix,
+  identical commits). #248 can merge any time. Every sprint PR appends its delivery note to the
+  end of `REVIEW-001.md`, so later merges get a doc-only conflict there: keep all sections.
 - **#244 finding:** after a measurement save, focus could fall to the body on a cold page (its
   own keyboard test fails alone). Root cause and patch are on #244; the fix rides the stacked PRs.
 - **For Gavin:** confirm the monthly cadence reading ("every 4th Monday" = four weeks after the
