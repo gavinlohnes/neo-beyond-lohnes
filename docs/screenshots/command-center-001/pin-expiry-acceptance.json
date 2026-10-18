@@ -1,0 +1,35 @@
+[
+  {
+    "width": 320,
+    "passed": true,
+    "retainedDay": true,
+    "draftAndFocusPreserved": true,
+    "canonicalExpiryWrites": 0,
+    "directOfflineExpiry": true,
+    "coldReload": true,
+    "exactlyOnce": true,
+    "pageErrors": []
+  },
+  {
+    "width": 360,
+    "passed": true,
+    "retainedDay": true,
+    "draftAndFocusPreserved": true,
+    "canonicalExpiryWrites": 0,
+    "directOfflineExpiry": true,
+    "coldReload": true,
+    "exactlyOnce": true,
+    "pageErrors": []
+  },
+  {
+    "width": 412,
+    "passed": true,
+    "retainedDay": true,
+    "draftAndFocusPreserved": true,
+    "canonicalExpiryWrites": 0,
+    "directOfflineExpiry": true,
+    "coldReload": true,
+    "exactlyOnce": true,
+    "pageErrors": []
+  }
+]

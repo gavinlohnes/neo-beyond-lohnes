@@ -10,15 +10,40 @@ Implementation: retained Trends / Measurements / Photos views; existing effectiv
 canonical saves/corrections and provenance; explicit photo capture/import/save, same-pose
 comparison, metadata correction, confirmed hide/delete. Existing trends/source navigation stay.
 No schema, Engine, event, command, backup or dependency changes. No SUIT/TODAY/global-style edits.
-Development checks: 39 focused checks passed; two additional photo failure/correction/hide cases
-passed. Built PWA passed 320/360/412 offline reload, measurement/photo saves, retained drafts,
-axe and no page errors. Final compact layout/keyboard cases and full gate are in progress.
+Development checks: 42 focused checks passed, including keyboard and photo failure/correction/hide. Built PWA passed 320/360/412 offline reload, measurement/photo saves, retained drafts,
+axe and no page errors. Final compact-layout PWA acceptance and full gate are in progress.
 Next: final verification/evidence, push PR, independent exact-head review, Gavin merge decision.
 Physical camera/Safari/screen-reader behavior remains unclaimed. No merge/deploy authorized.
-PR #243 remains complete, green CI, independently reviewable; PR #242 belongs to Claude.
+PR #243 was owner-merged at `85db25b` during this build; its changes are integrated here.
+PR #242 belongs to Claude. No SUIT implementation is included.
 
 
-## Current objective — COMMAND-CENTER-001 (2026-10-18, PROTECTED)
+
+## Merged follow-up — fix mode pin expiry at 16:30 (2026-10-18)
+
+Gavin approved the bounded follow-up to the [reproduced PR #241 finding](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241#issuecomment-6247508068).
+Brief: the follow-up section in [COMMAND-CENTER-001.md](COMMAND-CENTER-001.md).
+Builder: Codex; branch `codex/fix-mode-pin-expiry`; [PR #243](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/243). Starting master:
+`9f9100ade1d54f4f4368759fb73afcb7f1201a20`. Conservative PROTECTED review lane.
+Repair only: presentation pins reset at 16:30 even if the canonical day remains open for a
+workout. Preserve all records, Engine authority, drafts, backup contracts and manual control.
+Implemented: timestamped local UI pins with released phase-only compatibility; calendar-boundary
+expiry independent of canonical rollover; live TODAY/direct-launch/visibility/pageshow refresh; mode tokens
+published before paint; retained deadlines survive delayed renders. All forms, records and Engine authority remain.
+Verification: 254 test files / 2,570 passed / one existing skip; architecture (244 files),
+TypeScript and production build pass. Built PWA passes at 320/360/412: retained workout day,
+Capture focus/draft and set draft, zero canonical expiry writes, direct offline expiry, offline
+save and cold reload without duplicate records. Final CI and independent review bind the exact
+published head in the follow-up PR. Physical-device/Safari/screen-reader testing is not claimed.
+Next: independent exact-head review and green CI, then Gavin's merge decision. No merge,
+deployment or next implementation authorized.
+PR #242 (SUIT-001) and #204 remain separate and untouched by this Builder.
+
+The previous #241 handoff below is historical: its final implementation head `259d139` received
+independent PASS and green CI, then Gavin merged #241 at `9f9100a`. Its pending-merge lines no
+longer describe live state.
+
+## Previous objective — COMMAND-CENTER-001 (merged #241 at `9f9100a`)
 
 Gavin authorized GPT Work to complete the existing objective on branch `ccr-8a82e4b3-4ub4x2`,
 [PR #241](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241). No merge authorized.

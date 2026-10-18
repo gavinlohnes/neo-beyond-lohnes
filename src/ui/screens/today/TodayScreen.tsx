@@ -546,11 +546,18 @@ export function TodayScreen({
     return () => clearInterval(tick);
   }, []);
 
-  // COMMAND-CENTER-001: a new BeyondDay (16:30 roll, START DAY) reads its own key, so it starts on schedule.
-  const dayIdForPin = day?.id ?? null;
+  // The clock also expires a pin when a workout retains this BeyondDay past 16:30.
   useEffect(() => {
-    setModePinState(dayIdForPin ? { dayId: dayIdForPin, phase: getModePin(dayIdForPin) } : null);
-  }, [dayIdForPin]);
+    const timer = setTimeout(() => setNow(new Date()), Math.max(1, nextRolloverBoundaryAfter(now).getTime() - Date.now()));
+    return () => clearTimeout(timer);
+  }, [now]);
+
+  // Re-read at the boundary and on resume, without remounting any operation.
+  const dayIdForPin = day?.id ?? null;
+  const dayStartedAtForPin = day?.startedAt;
+  useEffect(() => {
+    setModePinState(dayIdForPin ? { dayId: dayIdForPin, phase: getModePin(dayIdForPin, dayStartedAtForPin, now) } : null);
+  }, [dayIdForPin, dayStartedAtForPin, now]);
 
   // Coming back to the foreground: re-read, so a screen left open overnight
   // sees this morning's Shift Down and its sleep draft (2026-10-03).
@@ -561,7 +568,11 @@ export function TodayScreen({
       void refresh().catch(() => {});
     }
     document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", onVisible);
+    };
   }, []);
 
   /**

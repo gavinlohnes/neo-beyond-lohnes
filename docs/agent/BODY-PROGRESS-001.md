@@ -9,7 +9,8 @@ Lane: PROTECTED, bounded BODY composition and presentation of existing private p
 BUILD OWNED the connective interface; REUSE measurement/photo commands, effective queries,
 image encoding, existing trends, local draft retention and native browser controls.
 No dependency, Engine, schema, event, correction semantics or backup-format changes.
-No TODAY/global-style/SUIT edits; #242 belongs to Claude. #243 remains independently reviewable.
+No TODAY/global-style/SUIT edits; #242 belongs to Claude. #243 was owner-merged at
+`85db25bbc9e6937007cffd88c34c74c3b197600c` during this build and is integrated before the final gate.
 
 Scope: compact recorded-progress overview, retained Trends / Measurements / Photos views;
 manual dated tape measurements, effective history and canonical correction; explicit photo
