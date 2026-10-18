@@ -417,8 +417,9 @@ PROTECTED, like the other Review slices. Merge after #244.
 
 - **Cadence:** the week of the first saved weekly review is week 0; weeks 4, 8, 12… are monthly.
   Before any review is saved there is no monthly review. Pure and unit-tested in
-  `engine/monthlyReview.ts`, never used by `evaluate`. **For Gavin to confirm:** "every 4th Monday,
-  counted from the first completed weekly review" is read as four weeks after it, not the third.
+  `engine/monthlyReview.ts`, never used by `evaluate`. **Ruled 2026-10-18:** Gavin delegated the
+  reading ("do what makes sense"). "Every 4th Monday, counted from the first completed weekly review"
+  is four weeks after it, not the third, so each monthly review covers exactly its own 28 days.
 - **It replaces that week's review:** the dashboard header reads MONTHLY REVIEW and the TODAY line
   "Monthly review ready". Every weekly step stays, and saving still uses the existing
   `WEEKLY_REVIEW_SAVED` event. Ordinary weeks say "Monthly review in N weeks".
