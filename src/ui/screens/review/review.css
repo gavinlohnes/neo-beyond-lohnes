@@ -69,3 +69,8 @@
 .weekly-dashboard__finding:first-of-type, .weekly-dashboard__listrow:first-of-type { border-top: 0; }
 .weekly-dashboard .weekly-review { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
 @media (prefers-reduced-motion: reduce) { .weekly-dashboard * { scroll-behavior: auto; transition: none !important; } }
+
+/* REVIEW-001 monthly review: body composition panel. Neutral ink; reuses the BODY photo grid. */
+.monthly-body__subhead { margin-top: 16px; }
+.monthly-body__pair { margin: 8px 0 16px; }
+.monthly-body__pair > figcaption { margin-top: 4px; }

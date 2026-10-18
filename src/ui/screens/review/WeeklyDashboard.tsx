@@ -7,6 +7,8 @@ import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import { describeFindings, describeWaitingFindings } from "../weekly/weeklyCopy";
 import { describeError } from "../../errorMessage";
 import { WeeklyReviewPanel } from "./WeeklyReviewPanel";
+import { MonthlyBodyReview } from "./MonthlyBodyReview";
+import { getMonthlyReview, type MonthlyReview } from "../../../application/monthlyReviewQueries";
 
 /**
  * REVIEW-001 Weekly Review dashboard (owner-approved 2026-10-18; Claude Code),
@@ -48,6 +50,21 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
   const [metric, setMetric] = useState<Metric>("sleepHours");
   const [reviewRequest, setReviewRequest] = useState(0);
   const version = useRef(0);
+  // REVIEW-001 monthly review: every 4th week from the first saved review adds body composition.
+  const [monthly, setMonthly] = useState<{ weekStart: string; review: MonthlyReview } | null>(null);
+  const [monthlyError, setMonthlyError] = useState(false);
+  const weekStart = data?.week.start;
+  useEffect(() => {
+    if (!active || !data) return;
+    let alive = true;
+    setMonthlyError(false);
+    void getMonthlyReview(data.week)
+      .then((review) => { if (alive) setMonthly({ weekStart: data.week.start, review }); })
+      .catch(() => { if (alive) setMonthlyError(true); });
+    return () => { alive = false; };
+    // Re-read when the shown week changes, on re-entry, and after a save changes the cadence.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, weekStart, data?.saved?.id]);
 
   useEffect(() => {
     if (!active) return;
@@ -87,12 +104,14 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
   const pattern = weekPattern(rows, mode);
   const isLatest = data.weeksBack === 0;
   const weightChange = headline.weight;
+  const monthlyReview = monthly?.weekStart === week.start ? monthly.review : null;
+  const kind = monthlyReview?.monthly ? "MONTHLY REVIEW" : "WEEKLY REVIEW";
 
   return (
     <section className="weekly-dashboard" aria-label="Weekly review">
       {/* Week and headline numbers */}
       <div className="weekly-dashboard__hero">
-        <p className="tool-label">WEEKLY REVIEW · {isLatest ? "LATEST COMPLETED WEEK" : plural(data.weeksBack, "WEEK EARLIER", "WEEKS EARLIER")}</p>
+        <p className="tool-label">{kind} · {isLatest ? "LATEST COMPLETED WEEK" : plural(data.weeksBack, "WEEK EARLIER", "WEEKS EARLIER")}</p>
         <h2 id="weekly-dashboard-heading" className="weekly-dashboard__range">{longDate(week.start)} — {longDate(lastDayOf(week))}</h2>
         <p className="meta">Lived days, 16:30 to 16:30, Monday through Sunday. {plural(headline.recordedDays, "of 7 days has", "of 7 days have")} completed records.</p>
         <div className="weekly-dashboard__nav">
@@ -127,7 +146,13 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
         ) : (
           <p className="meta">{data.saved ? "A review was saved for this week; it is shown under Carry forward." : "No review was saved for this week."}</p>
         )}
+        {isLatest && monthlyReview && !monthlyReview.monthly && monthlyReview.weeksUntil !== null && (
+          <p className="meta">Monthly review in {plural(monthlyReview.weeksUntil, "week", "weeks")}. It adds body composition: weight, measurements and photos.</p>
+        )}
       </div>
+
+      {monthlyReview?.body && <MonthlyBodyReview body={monthlyReview.body} />}
+      {monthlyError && <p className="meta" role="status">Body composition for this month couldn’t be read. The weekly review below is unaffected.</p>}
 
       {/* The seven lived days */}
       <div className="weekly-dashboard__panel">
