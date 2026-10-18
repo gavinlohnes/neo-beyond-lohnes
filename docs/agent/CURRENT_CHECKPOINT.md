@@ -32,7 +32,11 @@ through COMMAND. Test and script text renamed MORE → COMMAND mechanically; no 
 Remaining risks: TODAY's first screen is tight at 320 px (RESUME WORKOUT ~1 px above the nav);
 slice 5 must not add height above Operate. The QUICK_LOG +8/+16 oz on shift is gone by design.
 Inside COMMAND a destination opens with focus on its BACK button (the index's existing pattern).
-Next action: slice 4 (emblem to TODAY root, re-tap, back/position/focus/query/draft retention).
+Slice 4 (emblem) committed as work in progress: the header glyph is the emblem (go to TODAY
+root) via `EmblemContext`; `CommandCenterNavigation.test.tsx` passes (4/4). The full suite has
+NOT been run on this head; paused at the owner's request to save usage.
+Next action: run the full suite on the slice 4 head, then slice 5 (identity, voice, verify script,
+screenshots).
 
 ## Previous objective — REVIEW-001 Weekly Review dashboard (2026-10-18, PROTECTED, merged in #240 at `4fda717`)
 

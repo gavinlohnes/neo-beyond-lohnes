@@ -2790,3 +2790,25 @@ main [hidden] { display: none !important; }
 .body-water #body-hydration { padding-top: 0; }
 /* The shell owns return position. Async readings must not independently move it. */
 html { overflow-anchor: none; }
+
+/* COMMAND-CENTER-001: the header glyph is the emblem (go to TODAY). A 44px
+   target drawn around the 22px glyph without changing the header's height. */
+.operator-emblem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin: -11px -11px -11px -11px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+.operator-emblem:focus-visible { outline: 2px solid var(--focus); outline-offset: -4px; }

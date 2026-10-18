@@ -8,6 +8,7 @@ import { BodyScreen } from "../ui/screens/body/BodyScreen";
 import { MoreScreen, type MoreView } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
+import { EmblemContext } from "../ui/components/OperatorHeader";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
 import { NotesSweep } from "../ui/components/NotesSweep";
 import { TimeCapsuleOpened } from "../ui/components/TimeCapsuleOpened";
@@ -414,6 +415,15 @@ function AppWorkspaces() {
     return false;
   }
 
+  /** COMMAND-CENTER-001: the header emblem goes to TODAY's root, from anywhere. */
+  function goTodayRoot() {
+    if (!canNavigate()) return;
+    setCaptureOrigin(null);
+    setHealthHistoryOrigin(false);
+    setHealthEvidence(null);
+    showTab("TODAY", false);
+  }
+
   function openCapture() {
     if (!canNavigate()) return;
     if (tab !== "TODAY") setCaptureOrigin(tab);
@@ -431,6 +441,7 @@ function AppWorkspaces() {
   }
 
   return (
+    <EmblemContext.Provider value={goTodayRoot}>
     <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
       <a className="skip-link" href="#main-content">Skip to content</a>
       <main id="main-content" tabIndex={-1}>
@@ -530,5 +541,6 @@ function AppWorkspaces() {
         ))}
       </nav>
     </div>
+    </EmblemContext.Provider>
   );
 }
