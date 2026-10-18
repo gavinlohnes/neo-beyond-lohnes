@@ -52,6 +52,36 @@ analytics, manual workflows and optional USDA food lookup. These are real non-AI
 not obsolete assistant infrastructure. Existing records and native/legacy backup support remain
 unchanged; future AI still requires a new owner decision.
 
+## SUIT-001 — stealth, glitch signals, SYSTEMS, owner rulings, 2026-10-18
+
+Brief: [`agent/SUIT-001.md`](agent/SUIT-001.md). Gavin accepted the full command-center prototype on
+2026-10-18 and chose a long-press on the emblem for stealth and one SYSTEMS line on TODAY with a
+tap for the readout. COMMAND-CENTER-001's effects rule and Bruce-voice rules bind here too.
+
+- **Stealth is screen privacy only.** A ~550 ms long-press on the header emblem toggles it (a thin
+  progress line shows while held); a short tap still goes to TODAY. COMMAND's STEALTH entry is the
+  keyboard and screen-reader path; Escape or EXIT leaves. It shows the time, the mode and hidden
+  PROTEIN/WATER readings that show only while held. WATER and MEAL (saved meals only) log blind
+  through the canonical commands with their usual undo; no total appears anywhere in stealth. The
+  app behind it is inert and unchanged, an active workout included. The on/off state stays on this
+  phone across reloads (localStorage); it is not an event and not in backups. Copy never calls it
+  security: it hides the screen, not the data.
+- **Glitch is a signal vocabulary of exactly four:** stale reading (the shown day outlived its
+  16:30 boundary; REFRESH runs the existing rollover and re-read), offline (`navigator.onLine`;
+  "Offline. Logging still saves on this phone."), backup overdue (the existing BACKUP_DUE rule and
+  threshold) and save failed (existing command failure messages). Each always has plain words. The
+  glitch plays once when the signal first appears (about 2 × 0.36 s), never on a healthy screen,
+  never on the control being operated, never again on re-render, and not at all under reduced
+  motion. No new signal type without a new owner ruling.
+- **SYSTEMS replaces the System Status line on TODAY** (amends the STATUS-001 placement only):
+  one line of last main sleep, fuel (protein against target, or the total), check-in and any
+  active warning. AMBER, RED and NO READ still lead that line in words beside the existing dot, so
+  the strip's tint is never the only carrier. Tapping it, or COMMAND → SYSTEMS, opens a read-only
+  readout: BODY (each row opens the existing metric history), TRAINING, STATE (check-in, the full
+  System Status explanation, work context and mode with their sources) and DEVICE (connection,
+  last backup, records on this phone). Existing queries only; no score, no combined number, no
+  new interpretation. System Status keeps its exact meaning and evidence; it only moves.
+
 ## COMMAND-CENTER-001 — visible modes, COMMAND tab, one LOG entry, owner rulings, 2026-10-17/18
 
 Brief: [`agent/COMMAND-CENTER-001.md`](agent/COMMAND-CENTER-001.md). Gavin approved the plan on
@@ -602,6 +632,9 @@ below, this entry wins; the older entry is kept for history.
   if logged in the last 36 h. With neither sleep nor a check-in: "NO READ · log sleep or check in".
   It replaced the capacity sentence (the check-in's reasons ride inside it); the strip's edge
   follows it. Read only; never feeds the Engine.
+  **Amended 2026-10-18 (SUIT-001):** the line moves into SYSTEMS. TODAY keeps the dot and level word
+  (AMBER/RED, or the NO READ sentence); the full sentence and its facts move to SYSTEMS → STATE.
+  Thresholds, meaning and evidence are unchanged.
 - **VCC-001 authorized: TODAY State Rail (owner approval 2026-10-07).** Replace the existing
   status strip in its current position and footprint with one compact State Rail. It leads with
   the current operational state, retains System Status as an explicit subordinate reading, and
