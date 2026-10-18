@@ -2,7 +2,7 @@
 
 Gavin approved BODY Progress in this session on 2026-10-18: a coherent overview,
 dated measurements, and a progress-photo timeline using existing commands/storage.
-Builder: Codex. Branch: `codex/body-progress-001`. PR: pending publication.
+Builder: Codex. Branch: `codex/body-progress-001`. PR: [#244](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/244).
 Starting freshly fetched master: `9f9100ade1d54f4f4368759fb73afcb7f1201a20`.
 Lane: PROTECTED, bounded BODY composition and presentation of existing private photos.
 
@@ -36,3 +36,11 @@ retained drafts, correction provenance, 44 px controls, unclipped labels and zer
 [Reproduction and synthetic screenshots](../screenshots/body-progress-001/README.md).
 Full regression gate is running after integration of master `85db25b`; final results and exact
 head will be recorded in the PR/checkpoint. No physical-device or independent-review PASS claimed.
+
+Full verification also exposed an inherited meal-reopen focus race in unchanged BODY code:
+a slow read can outlast the 250 ms shortcut positioner, leaving the temporary shell heading
+focused after recovery. The existing CommandCatalog regression now holds that read past the
+positioner and reproduced the failure before correction. The BODY-only handoff completes after
+the shell landing and recognizes its placeholder heading, while leaving chosen controls alone.
+No meal data/command/undo behavior changed. All 62 related browser checks pass after the repair;
+the full gate is rerun because source changed.
