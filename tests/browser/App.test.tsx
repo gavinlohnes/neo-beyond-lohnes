@@ -32,13 +32,13 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     await page.viewport(390, 844);
     await startDay();
     const screen = await render(<App />);
-    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toBeVisible();
     const spacer = document.createElement("div");
     spacer.dataset.fieldNavSpacer = "true";
     spacer.style.height = "3000px";
     document.body.append(spacer);
 
-    for (const destination of ["MORE", "BODY", "TODAY"] as const) {
+    for (const destination of ["COMMAND", "BODY", "TODAY"] as const) {
       window.scrollTo(0, 1400);
       expect(window.scrollY).toBeGreaterThan(0);
       (screen.getByRole("button", { name: destination, exact: true }).element() as HTMLButtonElement).click();
@@ -172,7 +172,7 @@ describe("Utility Belt (App shell bottom navigation)", () => {
 
   it("shows all four stable territories, TODAY selected by default", async () => {
     const screen = await render(<App />);
-    for (const label of ["TODAY", "TRAIN", "BODY", "MORE"]) {
+    for (const label of ["TODAY", "TRAIN", "BODY", "COMMAND"]) {
       await expect.element(screen.getByText(label, { exact: true })).toBeVisible();
     }
     const todayButton = screen.getByText("TODAY", { exact: true }).element().closest("button")!;
@@ -213,7 +213,7 @@ describe("Utility Belt (App shell bottom navigation)", () => {
 
   it("every nav button meets the 44px minimum touch-target height", async () => {
     const screen = await render(<App />);
-    for (const label of ["TODAY", "TRAIN", "BODY", "MORE"]) {
+    for (const label of ["TODAY", "TRAIN", "BODY", "COMMAND"]) {
       await expect.element(screen.getByText(label, { exact: true })).toBeVisible();
       const button = screen.getByText(label, { exact: true }).element().closest("button")!;
       expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
@@ -463,11 +463,11 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
 
   it("Drop 1.6a: tapping MORE again inside Weekly goes back to the MORE menu", async () => {
     const screen = await render(<App />);
-    await screen.getByText("MORE", { exact: true }).click();
+    await screen.getByText("COMMAND", { exact: true }).click();
     await screen.getByRole("button", { name: "Open WEEKLY CHECK-IN" }).click();
-    await expect.element(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
-    await screen.getByText("MORE", { exact: true }).click();
+    await expect.element(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
+    await screen.getByText("COMMAND", { exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "Open WEEKLY CHECK-IN" })).toBeVisible();
-    expect(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true }).elements()).toHaveLength(0);
   });
 });

@@ -93,8 +93,8 @@ describe("BODY primary navigation after a TODAY shortcut", () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Draft");
-    await screen.getByRole("button", { name: "MORE", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
+    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
     await tapBody(screen);
     await expectDailyRecord(screen);
 

@@ -25,13 +25,13 @@ vi.mock("virtual:pwa-register/react", () => ({
 }));
 
 type Screen = Awaited<ReturnType<typeof render>>;
-const tab = (screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "MORE") => screen.getByRole("button", { name, exact: true }).click();
+const tab = (screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "COMMAND") => screen.getByRole("button", { name, exact: true }).click();
 const openPlan = async (screen: Screen) => {
   await tab(screen, "TODAY");
   await screen.getByRole("button", { name: /PLAN TODAY/ }).click();
 };
 const openIntent = async (screen: Screen) => {
-  await tab(screen, "MORE");
+  await tab(screen, "COMMAND");
   await screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS", exact: true }).click();
 };
 

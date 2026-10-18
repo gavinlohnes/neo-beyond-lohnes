@@ -263,11 +263,11 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
   });
 
   it("reads saved targets for calorie progress, but protein stays unresolved until a bodyweight is logged", async () => {
-    // DECLUTTER Drop 3: targets are set in MORE → Settings now; BODY only reads them.
+    // DECLUTTER Drop 3: targets are set in COMMAND → Settings now; BODY only reads them.
     await updateNutritionTargets({ calorieTargetKcal: 2200, proteinMultiplierGPerLb: 0.9 });
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
-    await expect.element(screen.getByText("Nutrition targets are editable in MORE → Settings.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nutrition targets are editable in COMMAND → Settings.", { exact: true })).toBeVisible();
 
     await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
     await expect.element(screen.getByText(/log a bodyweight to see your target/)).toBeVisible();
@@ -815,7 +815,7 @@ describe("BodyScreen (real browser) — Drop 6 quit tracker", () => {
   it("before setup, the row points to MORE → Settings", async () => {
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
-    await expect.element(screen.getByText("Set it up in MORE → Settings", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Set it up in COMMAND → Settings", { exact: true })).toBeVisible();
   });
 
   it("hold logs a clean day, taps log urges with undo, and money saved adds up", async () => {

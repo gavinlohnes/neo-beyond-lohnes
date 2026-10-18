@@ -42,7 +42,7 @@ export async function saveQuitHabit(input: QuitHabitInput): Promise<QuitHabit> {
  */
 export async function logCleanDay(beyondDayId: string): Promise<string> {
   const habit = await getQuitHabit();
-  if (!habit) throw new Error("QUIT_HABIT_NOT_SET: set up the habit in MORE → Settings first.");
+  if (!habit) throw new Error("QUIT_HABIT_NOT_SET: set up the habit in COMMAND → Settings first.");
   const existing = await db.events
     .where("beyondDayId")
     .equals(beyondDayId)

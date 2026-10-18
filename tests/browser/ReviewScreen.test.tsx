@@ -69,7 +69,7 @@ describe("ReviewScreen (real browser) — narrow phone widths", () => {
 
     await page.viewport(width, 800);
     const screen = await render(<ReviewScreen />);
-    await expect.element(screen.getByText("MORE // REVIEW", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("COMMAND // REVIEW", { exact: true })).toBeVisible();
 
     await expect.poll(() => document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   });
@@ -83,7 +83,7 @@ describe("ReviewScreen (real browser) — accessibility", () => {
     await rateOutcome(day.id, rec.recommendation.id, "GOOD");
 
     const screen = await render(<ReviewScreen />);
-    await expect.element(screen.getByText("MORE // REVIEW", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("COMMAND // REVIEW", { exact: true })).toBeVisible();
     let results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
 

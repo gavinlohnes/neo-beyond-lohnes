@@ -68,6 +68,13 @@
  * destinations); `review` is a single bold checkmark alone in the frame
  * (no ledger lines — that version is what didn't survive the 18px test).
  */
+/*
+ * COMMAND-CENTER-001 (2026-10-17, owner-approved tab rename): `command` is
+ * additive, for the COMMAND tab that replaces MORE. The shared diamond frame
+ * with a bold chevron prompt inside — a place to give an instruction — built
+ * from the family's own strokes, not a borrowed terminal or search glyph (the
+ * top-bar search keeps `search`). `more` stays frozen for history.
+ */
 import type { ReactElement } from "react";
 
 export type IconName =
@@ -85,7 +92,8 @@ export type IconName =
   | "decisionJournal"
   | "exerciseLibrary"
   | "customPrograms"
-  | "review";
+  | "review"
+  | "command";
 
 const PATHS: Record<IconName, ReactElement> = {
   mission: (
@@ -143,6 +151,13 @@ const PATHS: Record<IconName, ReactElement> = {
       <path d="M4.8 9 L7.8 12 L4.8 15 L1.8 12 Z" />
       <path d="M12 9 L15 12 L12 15 L9 12 Z" />
       <path d="M19.2 9 L22.2 12 L19.2 15 L16.2 12 Z" />
+    </g>
+  ),
+  command: (
+    <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="miter" strokeLinecap="square">
+      <path d="M12 3.5 L20.5 12 L12 20.5 L3.5 12 Z" />
+      <path d="M9.4 9.2 L12.2 12 L9.4 14.8" strokeWidth={2.1} />
+      <path d="M13.2 14.8 H15.4" strokeWidth={2.1} />
     </g>
   ),
   history: (

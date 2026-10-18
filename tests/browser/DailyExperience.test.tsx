@@ -11,7 +11,7 @@ import { db } from "../../src/persistence/db";
 import { openCaptureFromLog } from "./helpers/todayTools";
 
 type Screen = Awaited<ReturnType<typeof render>>;
-async function tab(screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "MORE") { await screen.getByRole("button", { name, exact: true }).click(); }
+async function tab(screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "COMMAND") { await screen.getByRole("button", { name, exact: true }).click(); }
 async function manualMeal(screen: Screen) {
   await tab(screen, "BODY");
   await screen.getByRole("button", { name: "OPEN MEALS", exact: true }).click();
@@ -62,15 +62,15 @@ describe("DAILY-EXPERIENCE-001 continuity", () => {
   it("keeps Journal creation and review input across tabs", async () => {
     await createDecisionJournalEntry({ title: "Training choice", decision: "Try mornings" });
     const screen = await render(<App />);
-    await tab(screen, "MORE"); await screen.getByRole("button", { name: "Open DECISION JOURNAL", exact: true }).click();
+    await tab(screen, "COMMAND"); await screen.getByRole("button", { name: "Open DECISION JOURNAL", exact: true }).click();
     await screen.getByRole("button", { name: "RECORD A DECISION", exact: true }).click();
     await screen.getByRole("textbox", { name: "Decision title", exact: true }).fill("An unfinished choice");
-    await tab(screen, "BODY"); await tab(screen, "MORE");
+    await tab(screen, "BODY"); await tab(screen, "COMMAND");
     await expect.element(screen.getByRole("textbox", { name: "Decision title", exact: true })).toHaveValue("An unfinished choice");
     await screen.getByRole("button", { name: "Open Training choice", exact: true }).click();
     await screen.getByRole("button", { name: "REVIEW", exact: true }).click();
     await screen.getByRole("textbox", { name: "Outcome", exact: true }).fill("Still considering the result");
-    await tab(screen, "TODAY"); await tab(screen, "MORE");
+    await tab(screen, "TODAY"); await tab(screen, "COMMAND");
     await expect.element(screen.getByRole("textbox", { name: "Outcome", exact: true })).toHaveValue("Still considering the result");
     expect(await db.decisionJournalEntries.count()).toBe(1);
   });
@@ -107,7 +107,7 @@ describe("Plan Today and truthful guidance", () => {
   it("keeps the task composer across navigation, then creates one explicit planned task", async () => {
     const screen = await render(<App />); await screen.getByRole("button", { name: /PLAN TODAY/ }).click();
     const title = screen.getByRole("textbox", { name: "Add a task for today" });
-    await title.fill("Book dentist"); await tab(screen, "BODY"); await tab(screen, "MORE");
+    await title.fill("Book dentist"); await tab(screen, "BODY"); await tab(screen, "COMMAND");
     await expect.element(title).toHaveValue("Book dentist");
     const add = screen.getByRole("button", { name: "ADD TO TODAY", exact: true }).element() as HTMLButtonElement;
     add.click(); add.click();
@@ -139,7 +139,7 @@ describe("Plan Today and truthful guidance", () => {
     const screen = await render(<App />);
     await expect.element(screen.getByRole("main")).toBeVisible();
     expect(screen.getByRole("main").elements()).toHaveLength(1);
-    await tab(screen, "MORE");
+    await tab(screen, "COMMAND");
     const plans = screen.getByRole("button", { name: "PLAN TODAY", exact: true }).element();
     expect(plans.getBoundingClientRect().bottom).toBeLessThan(700);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
@@ -174,7 +174,7 @@ it("refreshes a retained commitment after completion elsewhere", async () => {
   await expect.element(screen.getByRole("heading", { name: "A shared commitment", exact: true })).toBeVisible();
   await tab(screen, "BODY");
   await satisfyObligation(task.id);
-  await tab(screen, "MORE");
+  await tab(screen, "COMMAND");
   await expect.element(screen.getByText("SATISFIED", { exact: true })).toBeVisible();
   expect(screen.getByRole("button", { name: "SATISFY", exact: true }).elements()).toHaveLength(0);
 });

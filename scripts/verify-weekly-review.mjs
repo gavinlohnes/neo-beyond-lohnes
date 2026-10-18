@@ -16,7 +16,7 @@ async function protein(page, grams) {
   await page.getByRole("button", { name: "Explore protein", exact: true }).filter({ hasText: `${grams} g` }).waitFor();
 }
 async function review(page) {
-  await page.getByRole("button", { name: "MORE", exact: true }).click();
+  await page.getByRole("button", { name: "COMMAND", exact: true }).click();
   const menu = page.getByRole("button", { name: "Open REVIEW", exact: true });
   if (await menu.isVisible()) await menu.click();
   return page.getByRole("region", { name: "Weekly review", exact: true });

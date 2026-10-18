@@ -80,7 +80,7 @@ export function InsightsExplorer({ data, weights, goalWeightLbs, hideChart = fal
       <p className="meta">Read {new Date(data.readAt).toLocaleString()}. Effective corrected entries; undone/deleted entries excluded. Nutrition, sleep and workouts retain their recorded lived-day ownership, including overnight work. Weight uses each weigh-in's recording time. No goals or recommendations are changed.</p>
       <p className="meta">Early-ended and restarted day records remain separate chart observations; the day browser groups their lived window. Mean = sum ÷ available observations; change = this mean minus the preceding equal-length range's mean. Zero is included only when recorded. Weight lines connect recorded weigh-ins, not measured values between them. Other series stop across gaps longer than 36 hours; missing records are never filled. Sleep excludes days with multiple main entries.</p>
       {!window.current.length ? <p className="meta">No observations in this range.</p> : <ul className="insights-observations">{window.current.map((point) => <li key={point.id}><span>{new Date(point.at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span><strong>{insightValue(point.value, metric)}</strong></li>)}</ul>}
-      <p className="meta">Use DAILY RECORD for the existing recording/correction controls; the full event trail remains in MORE → HISTORY.</p>
+      <p className="meta">Use DAILY RECORD for the existing recording/correction controls; the full event trail remains in COMMAND → HISTORY.</p>
     </details>
   </section>;
 }
@@ -118,7 +118,7 @@ function ObservationChart({ points, metric, readAt, days, pointId, focusDayId, o
     {points.length > 1 ? <label className="insights-point-control">INSPECT AN OBSERVATION<input type="range" min="0" max={points.length - 1} value={index} aria-label="Inspect recorded observation" aria-valuetext={`${formatShortDate(selected.at)}, ${insightValue(selected.value, metric)}`} onChange={(event) => onSelect(points[Number(event.target.value)]!.id)} /></label>
       : <p className="meta">One observation is a record, not a trend.</p>}
     {onSources && <button type="button" id="insight-view-records" className="btn-secondary" disabled={!selected.source} onClick={() => onSources(selected, metric)}>VIEW RECORDS</button>}
-    {onSources && !selected.source && <p className="meta">Source ownership is unavailable for this observation. Full History remains available in MORE.</p>}
+    {onSources && !selected.source && <p className="meta">Source ownership is unavailable for this observation. Full History remains available in COMMAND.</p>}
     {focusDayId && !points.some((point) => point.source?.beyondDayId === focusDayId) && <p className="meta">The selected day's reading is not in this rolling range. These are the available observations; use the Daily Record to inspect the selected day.</p>}
     <div className="insights-scale"><span>{formatShortDate(new Date(start))}</span><span>{formatShortDate(readAt)}</span></div>
   </div>;

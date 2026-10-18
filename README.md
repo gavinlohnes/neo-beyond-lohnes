@@ -111,14 +111,14 @@ not treated as the preferred pattern for new code:
   `CommandSurface`, `RootErrorBoundary`) reused across TODAY/TRAIN/BODY
   instead of each screen hand-repeating the same confirm/disclosure/
   collapse pattern.
-- **`src/ui/screens`** — TODAY, TRAIN, BODY, MORE (primary navigation)
+- **`src/ui/screens`** — TODAY, TRAIN, BODY, COMMAND (primary navigation; COMMAND replaced MORE in COMMAND-CENTER-001)
   plus HISTORY, REVIEW, SEARCH, Missions & Obligations, Work Schedule,
   Decision Journal, Exercise Library, and Custom Programs, all nested
-  under MORE (see below).
+  under COMMAND (see below).
 
 ## Screens
 
-Primary navigation is **TODAY / TRAIN / BODY / MORE**, per the Decision
+Primary navigation is **TODAY / TRAIN / BODY / COMMAND**, per the Decision
 Register (Product Experience Sprint, P1 — an earlier build had briefly
 added HISTORY as a fifth primary tab; that was a placement error, now
 corrected. HISTORY itself, its queries, and its tests are unchanged).
@@ -142,47 +142,47 @@ corrected. HISTORY itself, its queries, and its tests are unchanged).
   Browse health days offers read-only past lived days (16:30 → 16:30); historical selection
   never changes the destination of a new log. Existing TODAY FUEL links to the same evidence.
   Water history shows recorded ounces without a target. Drafts and exploration remain session-local.
-- **MORE** — backup export/share, restore (preview-before-write,
+- **COMMAND** (was MORE) — search over every screen and action, then backup export/share, restore (preview-before-write,
   replace-only), backup-reminder banner, an opt-in on-device check-in
   reminder (Web Notification, no push/backend — see Reminders below),
   app/engine/schema diagnostics (see Versions below), and access to
   HISTORY, REVIEW, SEARCH, Missions & Obligations (Intent & Commitment
   Spine), Work Schedule, Decision Journal, Exercise Library, and Custom
   Programs.
-- **HISTORY** (nested under MORE) — read-only, complete: every
+- **HISTORY** (nested under COMMAND) — read-only, complete: every
   `BeyondDay` and every event on it, chronological within the day,
   most-recent-day-first, collapsed per day by default.
-- **REVIEW** (nested under MORE, `ReviewScreen.tsx`) — a read-only
+- **REVIEW** (nested under COMMAND, `ReviewScreen.tsx`) — a read-only
   Recommendation ledger: what BEYOND recommended, what the operator
   decided, and how it went. Sibling to HISTORY, not a replacement —
   never shows AdvisoryNotes or aggregates/trends anything.
-- **SEARCH** (nested under MORE, `SearchScreen.tsx`) — ranked
+- **SEARCH** (nested under COMMAND, `SearchScreen.tsx`) — ranked
   fuzzy/prefix lexical search (MiniSearch) over Mission/Obligation/
   Capture text, disposable and rebuilt from Dexie on every call. Tap a
   result to navigate to its management context.
-- **Missions & Obligations** (nested under MORE, `IntentScreen.tsx`) —
+- **Missions & Obligations** (nested under COMMAND, `IntentScreen.tsx`) —
   dedicated deep management for the Intent & Commitment Spine, separate
   from TODAY's own lightweight "one most-relevant commitment" surfacing.
   Obligations support RFC 5545 recurrence (`rrule.js`).
-- **Work Schedule** (nested under MORE, `WorkScheduleScreen.tsx`) —
+- **Work Schedule** (nested under COMMAND, `WorkScheduleScreen.tsx`) —
   configures the Week A/B rotation pattern `scheduledContext.ts` derives
   its (non-authoritative) work-phase suggestion from.
-- **Decision Journal** (nested under MORE, `JournalScreen.tsx`) —
+- **Decision Journal** (nested under COMMAND, `JournalScreen.tsx`) —
   Context → Options → Decision → Reasoning → Expectation, recorded now;
   Outcome → Lesson, recorded later. General-purpose, not limited to
   BEYOND's own Recommendations. A reviewed entry's Lesson may resurface
   as a read-only TODAY advisory note when its text overlaps a current
   Obligation or Mission title — informational only, never an Engine
   input.
-- **Exercise Library** (nested under MORE, `ExerciseLibraryScreen.tsx`)
+- **Exercise Library** (nested under COMMAND, `ExerciseLibraryScreen.tsx`)
   — a personal, directly-mutable exercise list (from a hand-curated
   reference set or fully custom), independent of the fixed A/B/C
   templates.
-- **Custom Programs** (nested under MORE, `CustomTemplateScreen.tsx`) —
+- **Custom Programs** (nested under COMMAND, `CustomTemplateScreen.tsx`) —
   assembles saved exercises into a selectable workout template,
   alongside the fixed A/B/C templates. Per-exercise progression
   increments derive from equipment/muscle group, not one flat number.
-- **Reminders** (a section within MORE's own menu, not a separate
+- **Reminders** (a section within COMMAND's own menu, not a separate
   screen) — an opt-in toggle + hour picker for the on-device check-in
   notification described above.
 
@@ -211,7 +211,7 @@ the whole reason a second backup format exists (see below).
 App/Engine version are deliberate, human-bumped identities — see the paragraph above on why the
 number itself carries lineage meaning. Neither is a build indicator: since this app ships as one
 atomic bundle, "what's actually deployed right now" is answered separately by **Build**, shown
-alongside App/Engine in MORE → SYSTEM (`BUILD_COMMIT`/`BUILD_TIME` in
+alongside App/Engine in COMMAND → SYSTEM (`BUILD_COMMIT`/`BUILD_TIME` in
 [buildInfo.ts](src/app/buildInfo.ts)) — the short git commit and build timestamp, both derived
 automatically at build time (`vite.config.ts`'s `define`), never hand-maintained, and immune to
 the "forgot to bump it" drift that App/Engine are inherently subject to.

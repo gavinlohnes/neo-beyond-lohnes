@@ -1,17 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { findCapabilities, SYSTEM_CAPABILITIES } from "../src/ui/systemCatalog";
+import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES } from "../src/ui/systemCatalog";
 
-describe("capability discovery", () => {
-  it("offers exactly the approved 19 unique entries and browses without a query", () => {
-    expect(SYSTEM_CAPABILITIES).toHaveLength(19);
-    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(19);
+describe("capability discovery (COMMAND search)", () => {
+  it("offers unique entries in known groups and browses without a query", () => {
+    // COMMAND-CENTER-001: the approved 19 plus Note, Urge and COMMAND's own settings; MORE's
+    // workspace entry left because COMMAND is where the search lives.
+    expect(SYSTEM_CAPABILITIES).toHaveLength(27);
+    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(27);
+    for (const entry of SYSTEM_CAPABILITIES) expect(CAPABILITY_GROUPS).toContain(entry.group);
     expect(findCapabilities("  ")).toEqual(SYSTEM_CAPABILITIES);
+  });
+  it("keeps every destination the SYSTEM dialog reached", () => {
+    const labels = SYSTEM_CAPABILITIES.map((entry) => entry.label as string);
+    for (const label of ["PLAN TODAY", "TODAY TOOLS", "TRAIN", "BODY", "WATER", "MEAL", "SLEEP", "BODYWEIGHT", "WORKOUT", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "HISTORY", "WEEKLY CHECK-IN", "REVIEW", "DECISION JOURNAL", "SEARCH RECORDS"]) {
+      expect(labels).toContain(label);
+    }
   });
   it.each([
     ["  HYDRATION ", ["WATER"]],
     ["food", ["MEAL"]],
     ["decision journal", ["DECISION JOURNAL"]],
     ["resume", ["WORKOUT"]],
+    ["restore", ["BACKUP & RECOVERY"]],
+    ["weekly review", ["REVIEW"]],
     ["nonexistent-tool", []],
   ])("matches names and explicit aliases for %s", (query, names) => {
     expect(findCapabilities(query).map((entry) => entry.label)).toEqual(names);

@@ -33,7 +33,7 @@ describe("NOTES-SWEEP-001 — day-off notes sweep", () => {
 
     await setWorkContext(day.id, "WORK", "MANUAL");
     const again = await render(<App />);
-    await expect.element(again.getByRole("button", { name: "MORE", exact: true })).toBeVisible();
+    await expect.element(again.getByRole("button", { name: "COMMAND", exact: true })).toBeVisible();
     expect(document.querySelector(".notes-sweep")).toBeNull();
   });
 

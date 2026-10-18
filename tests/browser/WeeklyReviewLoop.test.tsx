@@ -39,7 +39,7 @@ for (const width of [320, 360, 412]) it(`saves a note/focus via TODAY→Review, 
   await panel.getByRole("combobox", { name: /Your focus for the week starting/ }).selectOptions('CUSTOM');
   await panel.getByRole("textbox", { name: "Written focus", exact: true }).fill("Eat before I leave for work.");
   await screen.getByRole("button", { name: "BODY", exact: true }).click();
-  await screen.getByRole("button", { name: "MORE", exact: true }).click();
+  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
   await expect.element(panel.getByRole("textbox", { name: "Written focus", exact: true })).toHaveValue("Eat before I leave for work.");
   await panel.getByRole("button", { name: "SAVE WEEKLY REVIEW", exact: true }).click();
   await expect.element(panel.getByRole("status")).toHaveTextContent("Weekly review saved on this device");
@@ -47,7 +47,7 @@ for (const width of [320, 360, 412]) it(`saves a note/focus via TODAY→Review, 
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await expect.element(screen.getByRole("button", { name: "OPEN REVIEW", exact: true })).not.toBeInTheDocument();
   await cleanup(); screen = await render(<App />);
-  await screen.getByRole("button", { name: "MORE", exact: true }).click();
+  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
   await screen.getByRole("button", { name: "Open REVIEW", exact: true }).click();
   const reloaded = screen.getByRole("region", { name: "Weekly review", exact: true });
   await reloaded.getByText(/Saved review · starting/).click();

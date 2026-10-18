@@ -38,6 +38,7 @@ import {
 import { formatReminderHour } from "./moreCopy";
 import { describeError } from "../../errorMessage";
 import { GuidedOverview } from "./GuidedOverview";
+import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES, type CommandSection, type SystemCapability, type SystemDestination } from "../../systemCatalog";
 import { PlanTodayScreen } from "./PlanTodayScreen";
 
 const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
@@ -62,8 +63,11 @@ export function MoreScreen({
   initialView = "MENU",
   onOpenRecords,
   onOpenMeal,
+  onOpenDestination,
   historyDestination = null, onReturnToHealth, onHistoryExit,
 }: {
+  /** COMMAND-CENTER-001: search results outside COMMAND (BODY, TRAIN, TODAY) go through the shell. */
+  onOpenDestination?: (destination: Exclude<SystemDestination, { kind: "more" } | { kind: "section" }> | { kind: "tools" }) => boolean;
   historyDestination?: HealthHistoryDestination | null;
   onReturnToHealth?: (() => void) | undefined;
   onHistoryExit?: (() => void) | undefined;
@@ -79,6 +83,9 @@ export function MoreScreen({
   onOpenMeal?: () => void;
 } = {}) {
   const [view, setViewState] = useState<MoreView>(initialView);
+  // COMMAND-CENTER-001: kept while COMMAND is hidden or a destination is open, like every draft here.
+  const [query, setQuery] = useState("");
+  const matches = query.trim() ? findCapabilities(query) : [];
   const [visited, setVisited] = useState(() => new Set<MoreView>([initialView]));
   function openGuidedCapture() {
     if (!onOpenCapture) return;
@@ -362,10 +369,52 @@ export function MoreScreen({
     }
   }
 
+  const SECTION_TARGETS: Record<CommandSection, string> = {
+    BACKUP: "safety-heading",
+    NUTRITION_TARGETS: "command-nutrition-targets",
+    QUIT_TRACKER: "command-quit-tracker",
+    TIME_CAPSULE: "command-time-capsule",
+    REMINDERS: "reminders-heading",
+    DIAGNOSTICS: "command-diagnostics",
+    GUIDE: "command-guide",
+  };
+
+  /** A setting lives on this index: show it, open its disclosure, and put focus there. */
+  function revealSection(section: CommandSection) {
+    setQuery("");
+    window.requestAnimationFrame(() => {
+      const target = document.getElementById(SECTION_TARGETS[section]);
+      if (!target) return;
+      // Disclosures (guide, time capsule, diagnostics) open; their summary takes focus.
+      const details = target instanceof HTMLDetailsElement ? target : section === "DIAGNOSTICS" ? target.querySelector("details") : null;
+      if (details) details.open = true;
+      (details?.querySelector<HTMLElement>("summary") ?? target).focus({ preventScroll: true });
+      target.scrollIntoView({ block: "start", behavior: "instant" });
+    });
+  }
+
+  function runCapability(entry: SystemCapability) {
+    const destination = entry.destination;
+    if (destination.kind === "more") {
+      if (destination.view === "INTENT") setIntentFocus(null);
+      if (destination.view === "JOURNAL") setJournalFocus(undefined);
+      setView(destination.view);
+    } else if (destination.kind === "section") revealSection(destination.section);
+    else onOpenDestination?.(destination);
+  }
+
+  function renderCapability(entry: SystemCapability) {
+    const external = entry.destination.kind !== "more" && entry.destination.kind !== "section";
+    return <button key={entry.label} type="button" className="command-result" disabled={external && !onOpenDestination} onClick={() => runCapability(entry)}>
+      <span><strong>{entry.label}</strong><span>{entry.description}</span></span>
+      <span aria-hidden="true" className="command-result__go">›</span>
+    </button>;
+  }
+
   return (
     <div className="screen more-operator">
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
-          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>← BACK TO MORE</button>
+          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>← BACK TO COMMAND</button>
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
           {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>RETURN TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>RETURN TO BODY</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
@@ -374,11 +423,11 @@ export function MoreScreen({
             setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
           }} />}</div>
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} />}
-          {view === "WORK_SCHEDULE" && <><OperatorHeader destination="more">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
-          <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="more">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
-          <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="more">MORE // DECISION JOURNAL</OperatorHeader><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></>}</div>
-          {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="more">MORE // EXERCISE LIBRARY</OperatorHeader><ExerciseLibraryScreen /></>}
-          {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="more">MORE // CUSTOM PROGRAMS</OperatorHeader><CustomTemplateScreen /></>}
+          {view === "WORK_SCHEDULE" && <><OperatorHeader destination="command">COMMAND // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
+          <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="command">COMMAND // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
+          <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">COMMAND // DECISION JOURNAL</OperatorHeader><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></>}</div>
+          {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="command">COMMAND // EXERCISE LIBRARY</OperatorHeader><ExerciseLibraryScreen /></>}
+          {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="command">COMMAND // CUSTOM PROGRAMS</OperatorHeader><CustomTemplateScreen /></>}
         </div>
       {/* Keep local settings/disclosures/drafts mounted while inspecting a destination. */}
       <div ref={menuRef} hidden={view !== "MENU"} className="more-control-center">
@@ -391,9 +440,32 @@ export function MoreScreen({
           closing structural rule, so all four destinations open the
           same way. No IA change: still the exact same MENU view, same
           heading text/class. */}
-      <OperatorHeader destination="more" focusable>MORE // SYSTEM</OperatorHeader>
+      <OperatorHeader destination="command" focusable>COMMAND // SYSTEM</OperatorHeader>
+      <div className="command-search" role="search">
+        <label htmlFor="command-query" className="visually-hidden">Find a screen or action</label>
+        <Icon name="search" size={20} />
+        <input id="command-query" className="command-search__input" type="search" value={query} placeholder="Find a screen or action"
+          autoComplete="off" enterKeyHint="go"
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => { if (event.key === "Enter" && matches[0]) { event.preventDefault(); runCapability(matches[0]); } }} />
+        {query && <button type="button" className="chip command-search__clear" aria-label="Clear search" onClick={() => { setQuery(""); document.getElementById("command-query")?.focus(); }}>CLEAR</button>}
+      </div>
+      <p className="visually-hidden" aria-live="polite">{query.trim() ? (matches.length ? `${matches.length} ${matches.length === 1 ? "result" : "results"}` : "No results") : ""}</p>
+      {query.trim() ? (
+        <div className="command-results" aria-label="Results">
+          {matches.length === 0 && <p className="command-results__empty">Nothing called “{query.trim()}”. Try water, sleep, backup or schedule.</p>}
+          {CAPABILITY_GROUPS.map((group) => {
+            const entries = matches.filter((entry) => entry.group === group);
+            if (!entries.length) return null;
+            return <section key={group} aria-label={group}>
+              <h2 className="section-label">{group}</h2>
+              {entries.map((entry) => renderCapability(entry))}
+            </section>;
+          })}
+        </div>
+      ) : <>
       <h2 className="more-title">Control center</h2>
-      <p className="more-purpose">Your records, plans and system controls.</p>
+      <p className="more-purpose">Every screen, setting and backup tool. Search above, or browse.</p>
       <div className="more-context">
         <p>LOCAL FIRST · OFFLINE FIRST</p>
         <a href="#safety-heading" onClick={(event) => {
@@ -408,7 +480,7 @@ export function MoreScreen({
         <button type="button" className="btn-secondary" onClick={() => setView("PLAN")}>PLAN TODAY</button>
         <button type="button" className="btn-secondary" onClick={openGuidedCapture} disabled={!onOpenCapture}>CAPTURE</button>
       </div>
-      <details className="more-inspection more-help">
+      <details id="command-guide" className="more-inspection more-help">
         <summary>A place to start</summary>
         <GuidedOverview active={active && view === "MENU"} canOpenCapture={onOpenCapture !== undefined} onOpen={(destination) => {
           if (destination === "CAPTURE") openGuidedCapture();
@@ -441,6 +513,10 @@ export function MoreScreen({
           view-swap, so this is genuine reuse, not a forced fit. Backup/
           Archive/Restore are immediate actions, not navigation, so they
           use .equipment-row instead. */}
+      <section className="operational-index-zone" aria-labelledby="log-actions-heading">
+        <h2 id="log-actions-heading" className="section-label">Log</h2>
+        {SYSTEM_CAPABILITIES.filter((entry) => entry.group === "Log" || entry.label === "WORKOUT").map((entry) => renderCapability(entry))}
+      </section>
       <section className="operational-index-zone" aria-labelledby="records-heading">
       <h2 id="records-heading" className="section-label">Evidence</h2>
 
@@ -656,16 +732,16 @@ export function MoreScreen({
           inside Diagnostic detail so the main list stays short. */}
       <section className="operational-index-zone" aria-labelledby="settings-heading">
       <h2 id="settings-heading" className="section-label">Settings</h2>
-      <NutritionTargetsSettings />
-      <QuitHabitSettings />
-      <details className="more-inspection"><summary>Time capsule</summary><TimeCapsuleSettings /></details>
+      <div id="command-nutrition-targets" tabIndex={-1}><NutritionTargetsSettings /></div>
+      <div id="command-quit-tracker" tabIndex={-1}><QuitHabitSettings /></div>
+      <details id="command-time-capsule" className="more-inspection"><summary>Time capsule</summary><TimeCapsuleSettings /></details>
       {/* REMIND-001: on-device only — no account, no push service. Fires
           from a live check the next time you open BEYOND after your
           chosen hour, if you haven't checked in yet that day; it cannot
           wake the app in the background, and says so plainly rather than
           implying always-on delivery. */}
       <section className="operational-index-zone" aria-labelledby="reminders-heading">
-        <h2 id="reminders-heading" className="section-label">Reminders</h2>
+        <h2 id="reminders-heading" tabIndex={-1} className="section-label">Reminders</h2>
         <div className="equipment-row">
           <p className="tool-label" style={{ marginBottom: 4 }}>DAILY CHECK-IN REMINDER</p>
           <p className="card-body" style={{ marginBottom: 8 }}>
@@ -709,6 +785,7 @@ export function MoreScreen({
       {/* No machinery reveal here (2026-09-30, direct owner ruling): SYSTEM's
           diagnostics are plain technical readouts, so they expand inline
           only. TODAY/TRAIN's WHY disclosures keep the DEPTH-001 reveal. */}
+      <div id="command-diagnostics">
       <WhyDisclosure summary="Diagnostic detail" reveal={false}>
         <div style={{ marginTop: 8 }}>
           <div className="instrument-cluster">
@@ -772,7 +849,9 @@ export function MoreScreen({
           </>}
         </div>
       </WhyDisclosure>
+      </div>
       </section>
+      </>}
       </div>
     </div>
   );

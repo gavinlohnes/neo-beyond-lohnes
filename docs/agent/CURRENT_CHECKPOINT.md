@@ -7,7 +7,7 @@ and accepted the command-center prototype on 2026-10-18. SUIT-001 follows in its
 Brief: [COMMAND-CENTER-001.md](COMMAND-CENTER-001.md) (Handoff section names the Builder).
 Builder: Claude Code. Starting master `4fda717`; branch `ccr-8a82e4b3-4ub4x2`; draft
 [PR #241](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241).
-Done: slices 0–2.
+Done: slices 0–3.
 - Slice 1 (modes): TODAY's status strip opens with the mode header (mode name, "Per schedule" or
   "Pinned", lived-day strip with now marker) and a picker. The pin lives in localStorage per
   BeyondDay (`persistence/modePins.ts` via `application/modePinQueries.ts`), chooses only rows
@@ -18,15 +18,21 @@ Done: slices 0–2.
   existing form. QUICK_LOG left SCHEDULED_SHIFT; its slot shows the shift handoff note. The
   quit tracker now reopens on a repeat urge request (`openRequest`), a one-line focus fix so
   + LOG → Urge reaches it in two taps after BODY was already visited.
-Verification (slice 2 head): full local suite 249 files / 2,541 passed / 1 existing skip;
-architecture and TypeScript pass. New suites: `CommandCenterModes`, `CommandCenterLog`,
-`modePinEngineIdentity`. Updated for the spec change: Drop2ShiftClock (on-shift rows),
-CommandConsole (in-flight write now the quick check-in), DailyExperience/RetainedSuggestion and
-`verify-daily-experience.mjs` (Capture via LOG → Note).
+- Slice 3 (COMMAND): the MORE tab is COMMAND (new additive `command` glyph; every "MORE //"
+  heading is "COMMAND //"). A search at the top of the index runs `findCapabilities` over the
+  catalog, now 27 entries: the former SYSTEM destinations plus Note, Urge and every COMMAND
+  setting (backup & recovery, targets, quit tracker, time capsule, reminder, diagnostics, guide).
+  Browsing keeps every former MORE group, plus a Log group. No results says so and suggests
+  terms. The TODAY SYSTEM dialog is gone; TODAY TOOLS opens from COMMAND with its heading
+  focused. Weekly Review stays at COMMAND → REVIEW and matches "weekly review".
+Verification (slice 3 head): full local suite 249 files / 2,546 passed / 1 existing skip;
+architecture and TypeScript pass. `SystemCatalog.test.tsx` became `CommandCatalog.test.tsx`
+with the same per-destination, draft, meal-once, workout, keyboard, 44 px and axe checks run
+through COMMAND. Test and script text renamed MORE → COMMAND mechanically; no assertion removed.
 Remaining risks: TODAY's first screen is tight at 320 px (RESUME WORKOUT ~1 px above the nav);
-slice 5 must not add height above Operate. The QuickLog +8/+16 oz one-tap water on shift is gone
-by design; WATER opens BODY's existing quick-add.
-Next action: slice 3 (MORE → COMMAND with search; SYSTEM dialog retired).
+slice 5 must not add height above Operate. The QUICK_LOG +8/+16 oz on shift is gone by design.
+Inside COMMAND a destination opens with focus on its BACK button (the index's existing pattern).
+Next action: slice 4 (emblem to TODAY root, re-tap, back/position/focus/query/draft retention).
 
 ## Previous objective — REVIEW-001 Weekly Review dashboard (2026-10-18, PROTECTED, merged in #240 at `4fda717`)
 

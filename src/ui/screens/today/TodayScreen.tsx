@@ -64,7 +64,6 @@ import { RecommendationCard } from "./RecommendationCard";
 import { ConsoleControls } from "./ConsoleControls";
 import { SmallSteps } from "./SmallSteps";
 import "./smallSteps.css";
-import type { SystemDestination } from "../../systemCatalog";
 import {
   startDay,
   ensureActiveDay,
@@ -227,7 +226,7 @@ export function TodayScreen({
   onOpenBody,
   onOpenHealthEvidence,
   onOpenWeeklyReview,
-  onOpenSystemDestination,
+  toolsRequest = 0,
   openToolsOnMount = false,
   onWorkEnded,
   onWorkContextChanged,
@@ -244,7 +243,8 @@ export function TodayScreen({
   onOpenWeeklyReview?: () => void;
   onOpenHealthEvidence?: (metric: "water" | "protein") => void;
   onOpenBody?: (target?: BodyFocus) => void;
-  onOpenSystemDestination?: (destination: SystemDestination) => boolean;
+  /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
+  toolsRequest?: number;
   /** Drop 2: open with TOOLS expanded (MORE's capture link lands in it). */
   openToolsOnMount?: boolean;
   /** NOTES-HANDOFF-001: told after MARK WORK ENDED succeeds, so the shell can ask for a handoff note. */
@@ -481,6 +481,23 @@ export function TodayScreen({
     });
   }
   useEffect(() => { if (captureRequest > 0) openFastCapture(); }, [captureRequest]);
+  // Focus waits until TOOLS has rendered and TODAY is the visible workspace.
+  const toolsFocusPending = useRef(false);
+  useEffect(() => {
+    if (toolsRequest === 0) return;
+    toolsFocusPending.current = true;
+    setSmallTool(null);
+    setToolsOpen(true);
+  }, [toolsRequest]);
+  useEffect(() => {
+    if (!toolsFocusPending.current || !toolsOpen || !active) return;
+    toolsFocusPending.current = false;
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      const heading = document.getElementById("console-tools-heading");
+      heading?.focus();
+      heading?.scrollIntoView({ block: "start" });
+    }));
+  }, [toolsOpen, active, toolsRequest]);
   // Optional session-local presentation, never a capacity/plan/Minimum Day write.
   const [smallSteps, setSmallSteps] = useState(false);
   const [smallTool, setSmallTool] = useState<"MINIMUM_DAY" | "CAPTURE" | null>(null);
@@ -1124,9 +1141,9 @@ export function TodayScreen({
     try {
       await captureItem(captureText);
       setCaptureText("");
-      setCaptureFeedback({ kind: "SUCCESS", message: "Note saved in Capture. It is also searchable in MORE." });
+      setCaptureFeedback({ kind: "SUCCESS", message: "Note saved in Capture. It is also searchable in COMMAND." });
       try { await refresh(); }
-      catch (cause) { setCaptureFeedback({ kind: "ERROR", message: `Note saved. ${describeError(cause, "Could not refresh the list.")} Do not save it again; inspect it in MORE → SEARCH.` }); }
+      catch (cause) { setCaptureFeedback({ kind: "ERROR", message: `Note saved. ${describeError(cause, "Could not refresh the list.")} Do not save it again; inspect it in COMMAND → SEARCH.` }); }
     } catch (cause) {
       setCaptureFeedback({ kind: "ERROR", message: `${describeError(cause, "Could not save the note.")} Your text is kept; try CAPTURE again when ready.` });
     } finally {
@@ -2395,16 +2412,6 @@ export function TodayScreen({
             } : {}),
             note: openFastCapture,
             ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
-          }}
-          onOpenDestination={onOpenSystemDestination}
-          onOpenTools={() => {
-            setSmallTool(null);
-            setToolsOpen(true);
-            window.requestAnimationFrame(() => {
-              const heading = document.getElementById("console-tools-heading");
-              heading?.focus();
-              heading?.scrollIntoView({ block: "start" });
-            });
           }}
         />
       </section>

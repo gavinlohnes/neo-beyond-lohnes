@@ -97,7 +97,7 @@ describe("CLEANUP-002", () => {
     await setWorkContext(day.id, "WORK", "MANUAL");
     await captureItem("Call the dentist");
     const screen = await render(<App />);
-    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toBeVisible();
     expect(document.querySelector(".notes-sweep")).toBeNull();
     await screen.getByRole("button", { name: "Open TOOLS" }).click();
     await screen.getByRole("button", { name: "CHANGE WORK CONTEXT" }).click();

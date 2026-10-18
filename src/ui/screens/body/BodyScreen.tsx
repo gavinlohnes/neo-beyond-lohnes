@@ -2162,7 +2162,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
         protein={proteinEntries} meals={mealEntries} disabled={busy || foodSearchBusy} onInspect={inspectRecord} />}
       <FieldDisclosure summary={`${otherToolsOpen ? "HIDE" : "SHOW"} OTHER BODY TOOLS`} open={otherToolsOpen} onToggle={setOtherToolsOpen}>
         <QuitTracker initiallyOpen={focus === "urge"} openRequest={focus === "urge" ? focusRequest : 0} />
-        <p className="meta">Nutrition targets are editable in MORE → Settings.</p>
+        <p className="meta">Nutrition targets are editable in COMMAND → Settings.</p>
       </FieldDisclosure>
       </div>
 

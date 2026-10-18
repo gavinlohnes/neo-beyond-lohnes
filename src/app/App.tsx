@@ -20,6 +20,7 @@ import { parseShortcut, type BodyFocus } from "../ui/shortcuts";
 import { positionPrimaryDestination, positionRevealedSurface } from "../ui/navigationPosition";
 import { SessionDraftProvider, useHasSessionDrafts } from "../ui/sessionDrafts";
 import type { IntentFocus } from "../ui/screens/more/IntentScreen";
+import type { SystemDestination } from "../ui/systemCatalog";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -28,7 +29,7 @@ import type { IntentFocus } from "../ui/screens/more/IntentScreen";
  * helpers, and tests are all untouched — it's reachable from MORE
  * instead of competing for a fifth primary tab slot.
  */
-type Tab = "TODAY" | "TRAIN" | "BODY" | "MORE";
+type Tab = "TODAY" | "TRAIN" | "BODY" | "COMMAND";
 
 // Overdrive Phase 14: MORE now has its own icon ("more" — three small
 // diamonds, additive to the six locked pilot icons, not a redesign of
@@ -38,7 +39,8 @@ const TAB_ICON: Record<Tab, IconName> = {
   TODAY: "mission",
   TRAIN: "train",
   BODY: "body",
-  MORE: "more",
+  // COMMAND-CENTER-001: COMMAND replaces MORE, with its own additive glyph.
+  COMMAND: "command",
 };
 
 /**
@@ -160,6 +162,7 @@ function AppWorkspaces() {
   }, []);
   const [todayToolsOpen, setTodayToolsOpen] = useState(false);
   const [captureRequest, setCaptureRequest] = useState(0);
+  const [toolsRequest, setToolsRequest] = useState(0);
   const [captureOrigin, setCaptureOrigin] = useState<Tab | null>(null);
   const [moreRequest, setMoreRequest] = useState(0);
   const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(null);
@@ -325,11 +328,11 @@ function AppWorkspaces() {
     setIntentFocus(focus);
     setMoreView(view);
     setMoreRequest((key) => key + 1);
-    showTab("MORE", false);
+    showTab("COMMAND", false);
     const request = navigation.current;
     requestAnimationFrame(() => requestAnimationFrame(() => {
       if (request !== navigation.current || !focusHeading) return;
-      const heading = [...document.querySelectorAll<HTMLElement>("#workspace-MORE h1")].find((element) => element.getClientRects().length);
+      const heading = [...document.querySelectorAll<HTMLElement>("#workspace-COMMAND h1")].find((element) => element.getClientRects().length);
       if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
     }));
     return true;
@@ -346,7 +349,7 @@ function AppWorkspaces() {
   function openPrimaryTab(destination: Tab) {
     if (!canNavigate()) return false;
     setHealthHistoryOrigin(false); setHealthEvidence(null);
-    if (destination === "MORE" && tab === "MORE") return openMore("MENU");
+    if (destination === "COMMAND" && tab === "COMMAND") return openMore("MENU");
     // PR #228 review R2: a Capture return belongs to that Capture visit only.
     setCaptureOrigin(null);
     if (destination === "BODY") {
@@ -394,6 +397,23 @@ function AppWorkspaces() {
     setTodayRefreshKey((key) => key + 1);
   }
 
+  // COMMAND-CENTER-001: COMMAND's search reaches every catalog destination (TODAY's SYSTEM dialog is retired).
+  function openSystemDestination(destination: SystemDestination | { kind: "tools" }): boolean {
+    if (destination.kind === "body") return openBody(destination.focus);
+    if (destination.kind === "workout") return openTrain("WORKOUT");
+    if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
+    if (destination.kind === "capture") { openCapture(); return true; }
+    if (destination.kind === "tools") {
+      if (!canNavigate()) return false;
+      setTodayToolsOpen(true);
+      setToolsRequest((key) => key + 1);
+      showTab("TODAY", false);
+      return true;
+    }
+    if (destination.kind === "more") return openMore(destination.view);
+    return false;
+  }
+
   function openCapture() {
     if (!canNavigate()) return;
     if (tab !== "TODAY") setCaptureOrigin(tab);
@@ -437,12 +457,7 @@ function AppWorkspaces() {
               onOpenBody={openBody}
               onOpenHealthEvidence={openBodyEvidence}
               onOpenWeeklyReview={() => openMore("REVIEW")}
-              onOpenSystemDestination={(destination) => {
-                if (destination.kind === "body") return openBody(destination.focus);
-                if (destination.kind === "workout") return openTrain("WORKOUT");
-                if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
-                return openMore(destination.view);
-              }}
+              toolsRequest={toolsRequest}
             />
           </RootErrorBoundary>
         </div>}
@@ -456,8 +471,8 @@ function AppWorkspaces() {
             onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `RETURN TO ${mealOrigin.tab}` : "RETURN TO TODAY"}
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
-        {visited.has("MORE") && <div id="workspace-MORE" className={tab === "MORE" ? "tab-enter" : undefined} hidden={tab !== "MORE"}>
-          <RootErrorBoundary active={tab === "MORE"}><MoreScreen active={tab === "MORE"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus}
+        {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
+          <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}
             onOpenCapture={openCapture}
@@ -465,7 +480,8 @@ function AppWorkspaces() {
               if (!canNavigate()) return;
               setTrainDestination(null); setTrainRecordsFocus(exerciseId); showTab("TRAIN", false);
             }}
-            onOpenMeal={() => openBody("meal")} /></RootErrorBoundary>
+            onOpenMeal={() => openBody("meal")}
+            onOpenDestination={openSystemDestination} /></RootErrorBoundary>
         </div>}
       </main>
 
@@ -493,7 +509,7 @@ function AppWorkspaces() {
           cue, the red structural tick, aria-current) changed — only
           how it's expressed. */}
       <nav className="shell-nav">
-        {(["TODAY", "TRAIN", "BODY", "MORE"] as Tab[]).map((t) => (
+        {(["TODAY", "TRAIN", "BODY", "COMMAND"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => openPrimaryTab(t)}

@@ -109,7 +109,7 @@ try {
     await page.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
     await page.getByRole("heading", { name: "Water · 12 oz", exact: true }).waitFor();
     await page.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
-    await page.getByRole("heading", { name: "MORE // HISTORY", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "COMMAND // HISTORY", exact: true }).waitFor();
     await page.getByRole("button", { name: "RETURN TO BODY", exact: true }).click();
     await page.getByRole("button", { name: "DAILY RECORD", exact: true }).click();
     await page.getByRole("button", { name: "+8 oz", exact: true }).click();

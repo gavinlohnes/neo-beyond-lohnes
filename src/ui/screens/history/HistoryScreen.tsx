@@ -58,7 +58,7 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
       {/* FIELD ALPHA Phase 4: identity zone quieted, same principle as
           TODAY/TRAIN/BODY/MORE — HISTORY is evidence, not a destination
           that needs its own big display title. */}
-      <h1 className="eyebrow">MORE // HISTORY</h1>
+      <h1 className="eyebrow">COMMAND // HISTORY</h1>
       <p className="card-body" style={{ marginBottom: 16 }}>
         Every day and every event, exactly as it happened. Read-only.
       </p>

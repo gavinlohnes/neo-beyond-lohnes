@@ -36,7 +36,7 @@ export function ReviewScreen({ active = true, onOpenHistory }: { active?: boolea
 
   return (
     <div className="screen">
-      <h1 className="eyebrow">MORE // REVIEW</h1>
+      <h1 className="eyebrow">COMMAND // REVIEW</h1>
       <WeeklyDashboard active={active} onOpenHistory={onOpenHistory} />
       <ReviewAnswers active={active} onOpenHistory={onOpenHistory} />
       <h2 className="tool-label">RECOMMENDATIONS</h2>
