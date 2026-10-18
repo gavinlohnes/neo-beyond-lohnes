@@ -161,6 +161,7 @@ import {
   type ToolsItem,
 } from "./shiftClock";
 import { ModeHeader } from "./ModeHeader";
+import { ShiftHandoff } from "../../components/ShiftHandoff";
 import { clearModePin, getModePin, setModePin } from "../../../application/modePinQueries";
 import { mostRecentBoundaryAtOrBefore, nextRolloverBoundaryAfter } from "../../../engine/dayRollover";
 import { describeError } from "../../errorMessage";
@@ -231,6 +232,7 @@ export function TodayScreen({
   onWorkEnded,
   onWorkContextChanged,
   banners,
+  shiftHandoffRefreshKey,
   mealRefreshKey = 0,
 }: {
   active?: boolean;
@@ -251,6 +253,8 @@ export function TodayScreen({
   onWorkContextChanged?: () => void;
   /** CLEANUP-002: the shell's lines (backup, sweep, handoff, capsule), shown right under the header. */
   banners?: ReactNode;
+  /** COMMAND-CENTER-001: the shift handoff note, under the header or in ON SHIFT's row. */
+  shiftHandoffRefreshKey?: number;
   /** Re-read canonical totals after BODY without resetting TODAY's disclosures. */
   mealRefreshKey?: number;
 } = {}) {
@@ -1858,25 +1862,8 @@ export function TodayScreen({
         );
       case "FUEL":
         return renderFuel();
-      case "QUICK_LOG":
-        return (
-          <div className="equipment-row">
-            <p className="tool-label" style={{ marginBottom: 8 }}>QUICK LOG</p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button type="button" className="chip" aria-label="Log 8 oz water" disabled={busy} onClick={() => void handleMinimumDayLogWater(8)}>
-                +8 oz
-              </button>
-              <button type="button" className="chip" aria-label="Log 16 oz water" disabled={busy} onClick={() => void handleMinimumDayLogWater(16)}>
-                +16 oz
-              </button>
-              {onOpenBody && quitHabitSetUp && (
-                <button type="button" className="chip" aria-label="Log an urge in BODY" onClick={() => onOpenBody("urge")}>
-                  URGE
-                </button>
-              )}
-            </div>
-          </div>
-        );
+      case "SHIFT_HANDOFF":
+        return shiftHandoffRefreshKey !== undefined ? <ShiftHandoff refreshKey={shiftHandoffRefreshKey} /> : null;
       case "SHIFT_DOWN":
         // An in-progress SHIFT DOWN already owns Operate above.
         if (dominant === "SHIFT_DOWN_ACTIVE" || dominant === "OPERATION_CONFLICT") return null;
@@ -2045,7 +2032,10 @@ export function TodayScreen({
       <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
 
       {/* CLEANUP-002: the shell's own lines sit under the header, part of the screen. */}
-      {banners && <div className="today-banners">{banners}</div>}
+      {(banners || (shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF"))) && <div className="today-banners">
+        {banners}
+        {shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF") && <ShiftHandoff refreshKey={shiftHandoffRefreshKey} />}
+      </div>}
       {day && onOpenWeeklyReview && <WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} />}
 
       {commitmentFeedback && (
@@ -2394,7 +2384,18 @@ export function TodayScreen({
           isInFlight={() => busyRef.current}
           onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
           onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
-          onOpenCapture={openFastCapture}
+          onOpenLog={{
+            ...(onOpenBody ? {
+              water: () => onOpenBody("water"),
+              meal: () => onOpenBody("meal"),
+              sleep: () => onOpenBody("sleep"),
+              weight: () => onOpenBody("weight"),
+              // An urge is logged against a quit habit; without one there's nothing to log yet.
+              ...(quitHabitSetUp ? { urge: () => onOpenBody("urge") } : {}),
+            } : {}),
+            note: openFastCapture,
+            ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
+          }}
           onOpenDestination={onOpenSystemDestination}
           onOpenTools={() => {
             setSmallTool(null);

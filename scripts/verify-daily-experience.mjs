@@ -49,7 +49,7 @@ for (const width of [320,360,412]) {
  await page.getByText('Synthetic lunch logged · 600 kcal · 45g',{exact:true}).waitFor();
  if(width===360)await snapshot(page, `${root}/meal-360.png`);
  await page.getByRole('button',{name:'TODAY',exact:true}).click();
- await page.getByRole('button',{name:'Open quick Capture',exact:true}).click();
+ await page.getByRole('button',{name:'Open LOG',exact:true}).click(); await page.getByRole('dialog',{name:'LOG'}).getByRole('button',{name:/^Note/}).click();
  await page.getByRole('textbox',{name:'Capture a thought',exact:true}).fill('A synthetic thought to keep');
  await page.getByRole('button',{name:'BODY',exact:true}).click();
  await page.getByRole('button',{name:'DAILY RECORD',exact:true}).click();
@@ -83,7 +83,7 @@ for (const width of [320,360,412]) {
  if(await page.getByRole('spinbutton',{name:'Hours',exact:true}).inputValue()!=='6')throw Error('Sleep draft lost');
  await page.getByRole('button',{name:'LOG SLEEP',exact:true}).click();
  await page.getByRole('button',{name:'TODAY',exact:true}).click();
- await page.getByRole('button',{name:'Open quick Capture',exact:true}).click();
+ await page.getByRole('button',{name:'Open LOG',exact:true}).click(); await page.getByRole('dialog',{name:'LOG'}).getByRole('button',{name:/^Note/}).click();
  await page.getByRole('button',{name:'CAPTURE',exact:true}).click();
  await page.getByText('Note saved in Capture. It is also searchable in MORE.',{exact:true}).waitFor();
  await page.getByRole('button',{name:'DONE',exact:true}).click();

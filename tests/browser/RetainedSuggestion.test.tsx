@@ -89,7 +89,7 @@ describe("R2 — a Capture return does not outlive its visit", () => {
     await tab(screen, "BODY");
     await tab(screen, "TODAY");
     await screen.getByRole("button", { name: "DONE", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "Open quick Capture", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
     expect(document.getElementById("workspace-TODAY")?.hidden).toBe(false);
     expect(document.getElementById("workspace-MORE")?.hidden ?? true).toBe(true);
   });

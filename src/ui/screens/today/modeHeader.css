@@ -21,22 +21,22 @@
 .mode-strip__legend span { position: absolute; top: 0; transform: translateX(-50%); }
 .mode-strip__legend span:first-child { transform: none; }
 .mode-strip__legend span:last-child { transform: translateX(-100%); }
-.mode-picker {
+.today-sheet {
   width: min(100% - 24px, 456px); max-height: 86vh; padding: 0 0 12px; overflow: auto;
   border: 1px solid var(--border-strong); background: var(--surface-1); color: var(--text-1);
 }
-.mode-picker::backdrop { background: rgba(0, 0, 0, .72); }
-.mode-picker__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 8px; }
-.mode-picker__header .card-title { margin: 0; letter-spacing: .08em; }
-.mode-picker__header .chip { min-height: 44px; }
-.mode-picker__option {
+.today-sheet::backdrop { background: rgba(0, 0, 0, .72); }
+.today-sheet__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 8px; }
+.today-sheet__header .card-title { margin: 0; letter-spacing: .08em; }
+.today-sheet__header .chip { flex: none; width: auto; min-height: 44px; padding-inline: 14px; }
+.today-sheet__option {
   display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 14px;
   border: 0; border-top: 1px solid var(--border-subtle); background: transparent; color: var(--text-1); text-align: left; cursor: pointer;
 }
-.mode-picker__option[aria-pressed="true"] { background: var(--surface-active); }
-.mode-picker__option > span:first-child { display: grid; gap: 2px; flex: 1; min-width: 0; }
-.mode-picker__option strong { font-size: 17px; letter-spacing: .06em; }
-.mode-picker__option strong + span { color: var(--text-2); font-size: 14px; }
-.mode-picker__tag { flex: none; padding: 3px 7px; border: 1px solid var(--border-strong); color: var(--text-2); font-size: 12px; letter-spacing: .12em; }
-.mode-picker__note { margin: 10px 14px 0; }
-.mode-picker__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px; }
+.today-sheet__option[aria-pressed="true"] { background: var(--surface-active); }
+.today-sheet__option > span:first-child { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.today-sheet__option strong { font-size: 17px; letter-spacing: .06em; }
+.today-sheet__option strong + span { color: var(--text-2); font-size: 14px; }
+.today-sheet__tag { flex: none; padding: 3px 7px; border: 1px solid var(--border-strong); color: var(--text-2); font-size: 12px; letter-spacing: .12em; }
+.today-sheet__note { margin: 10px 14px 0; }
+.today-sheet__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px; }

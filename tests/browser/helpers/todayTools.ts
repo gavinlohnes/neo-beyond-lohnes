@@ -12,3 +12,14 @@ export async function openTodayTools(screen: { getByRole: (role: "button", optio
   await open.click();
   await expect.element(screen.getByRole("button", { name: "Close TOOLS" })).toBeVisible();
 }
+
+/**
+ * COMMAND-CENTER-001: quick Capture is TODAY's + LOG → Note (it was its own
+ * CAPTURE button). Two taps, the same as the operator.
+ */
+export async function openCaptureFromLog(screen: { getByRole: (role: "button" | "dialog", options?: { name: string | RegExp }) => Locator }): Promise<void> {
+  await screen.getByRole("button", { name: "Open LOG" }).click();
+  const sheet = screen.getByRole("dialog", { name: "LOG" });
+  await expect.element(sheet).toBeVisible();
+  await sheet.getByRole("button", { name: /^Note/ }).click();
+}

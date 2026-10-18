@@ -99,7 +99,7 @@ describe("Shift Clock — before shift (16:30 → 18:00)", () => {
 });
 
 describe("Shift Clock — on shift (18:00 → 06:00)", () => {
-  it("counts down to the shift end and logs water in one tap", async () => {
+  it("counts down to the shift end; WATER and MEAL stay one tap away and + LOG reaches the urge log", async () => {
     await saveQuitHabit({ name: "Drinking" });
     await startDayAt(at(12, 16, 30));
     setClock(at(12, 22, 0));
@@ -108,19 +108,19 @@ describe("Shift Clock — on shift (18:00 → 06:00)", () => {
 
     await expect.element(screen.getByRole("heading", { name: "On shift", exact: true })).toBeVisible();
     await expect.poll(stripHeadline).toBe("Shift ends in 8h");
-    await expect.poll(rows).toEqual(["QUICK_LOG", "FUEL"]);
+    // COMMAND-CENTER-001: QUICK_LOG gave its slot to the shift handoff note (empty without one).
+    await expect.poll(rows).toEqual(["SHIFT_HANDOFF", "FUEL"]);
     // Drop 1.6b: mid-shift, MARK WORK ENDED isn't in Attention (it waits for the last hour) — it's one
     // tap away in TOOLS for a night that ends early. The check-in still isn't prompted (ruling b).
     expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(0);
     expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
 
-    await screen.getByRole("button", { name: "Log 8 oz water" }).click();
-    await expect.element(screen.getByText("8 oz recorded.", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Protein 0 g · Water 8 oz", { exact: true })).toBeVisible();
-
+    await screen.getByRole("button", { name: "Log water in BODY" }).click();
+    expect(onOpenBody).toHaveBeenLastCalledWith("water");
     await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
     expect(onOpenBody).toHaveBeenLastCalledWith("meal");
-    await screen.getByRole("button", { name: "Log an urge in BODY" }).click();
+    await screen.getByRole("button", { name: "Open LOG" }).click();
+    await screen.getByRole("dialog", { name: "LOG" }).getByRole("button", { name: /^Urge/ }).click();
     expect(onOpenBody).toHaveBeenLastCalledWith("urge");
   });
 });

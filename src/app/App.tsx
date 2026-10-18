@@ -10,7 +10,6 @@ import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
 import { NotesSweep } from "../ui/components/NotesSweep";
-import { ShiftHandoff } from "../ui/components/ShiftHandoff";
 import { TimeCapsuleOpened } from "../ui/components/TimeCapsuleOpened";
 import { ReportReadyLine } from "../ui/components/ReportReadyLine";
 import { getActiveWorkoutSession } from "../application/trainQueries";
@@ -424,10 +423,10 @@ function AppWorkspaces() {
               onReturnFromCapture={captureOrigin ? () => { showTab(captureOrigin); setCaptureOrigin(null); } : undefined}
               onWorkEnded={() => setWorkEndedKey((k) => k + 1)}
               onWorkContextChanged={() => setWorkEndedKey((k) => k + 1)}
+              shiftHandoffRefreshKey={workEndedKey}
               banners={<>
                 <BackupDueLine />
                 <NotesSweep refreshKey={workEndedKey} onSwept={() => setTodayRefreshKey((k) => k + 1)} />
-                <ShiftHandoff refreshKey={workEndedKey} />
                 <TimeCapsuleOpened />
                 <ReportReadyLine />
               </>}

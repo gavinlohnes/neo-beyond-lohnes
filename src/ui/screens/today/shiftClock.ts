@@ -46,7 +46,7 @@ export type ShiftClockRow =
   | "WORK_QUESTION"
   | "TONIGHT"
   | "FUEL"
-  | "QUICK_LOG"
+  | "SHIFT_HANDOFF"
   | "SHIFT_DOWN"
   | "CHECK_IN"
   | "WORKOUT"
@@ -69,7 +69,9 @@ export const MAX_PHASE_ROWS = 4;
 
 const PHASE_ROWS: Record<ShiftClockPhase, readonly ShiftClockRow[]> = {
   PRE_WORK: ["TONIGHT", "FUEL"],
-  SCHEDULED_SHIFT: ["QUICK_LOG", "FUEL"],
+  // COMMAND-CENTER-001: QUICK_LOG gave way to TODAY's action row; the shift
+  // handoff note takes its slot (it renders only when it has something to say).
+  SCHEDULED_SHIFT: ["SHIFT_HANDOFF", "FUEL"],
   EXPECTED_POST_WORK: ["SHIFT_DOWN", "CHECK_IN", "WORKOUT", "MAIN_SLEEP"],
   OFF: ["CHECK_IN", "WORKOUT"],
 };

@@ -8,6 +8,7 @@ import { createMission, createObligation, satisfyObligation } from "../../src/ap
 import { createDecisionJournalEntry } from "../../src/application/journalCommands";
 import { startWorkout } from "../../src/application/trainCommands";
 import { db } from "../../src/persistence/db";
+import { openCaptureFromLog } from "./helpers/todayTools";
 
 type Screen = Awaited<ReturnType<typeof render>>;
 async function tab(screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "MORE") { await screen.getByRole("button", { name, exact: true }).click(); }
@@ -75,14 +76,14 @@ describe("DAILY-EXPERIENCE-001 continuity", () => {
   });
   it("keeps Capture text across tabs and restores its input focus", async () => {
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Open quick Capture", exact: true }).click();
+    await openCaptureFromLog(screen);
     const input = screen.getByRole("textbox", { name: "Capture a thought", exact: true });
     await input.fill("Remember this thought");
     const element = input.element();
     await tab(screen, "TRAIN"); await tab(screen, "TODAY");
     await expect.element(input).toHaveValue("Remember this thought");
     // Return to the task position; reopening the explicit action restores writing focus.
-    await screen.getByRole("button", { name: "Open quick Capture", exact: true }).click();
+    await openCaptureFromLog(screen);
     await expect.poll(() => document.activeElement).toBe(element);
     expect(await db.captureItems.count()).toBe(0);
   });
@@ -151,7 +152,7 @@ describe("Plan Today and truthful guidance", () => {
 it.each([320, 360, 412])("keeps focused Capture input clear of navigation when usable height shrinks at %ipx", async (width) => {
   await page.viewport(width, 800);
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: "Open quick Capture", exact: true }).click();
+  await openCaptureFromLog(screen);
   const input = screen.getByRole("textbox", { name: "Capture a thought", exact: true });
   await input.fill("Keep writing through keyboard changes");
   await page.viewport(width, 420);

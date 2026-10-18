@@ -27,7 +27,7 @@ describe("Production Command Console", () => {
       vi.setSystemTime(new Date(2026, 9, day, hour));
       await startDay();
       const screen = await render(<App />);
-      for (const name of ["Log water in BODY", "Log a meal in BODY", "Open SYSTEM"]) {
+      for (const name of ["Log water in BODY", "Log a meal in BODY", "Open LOG", "Open SYSTEM"]) {
         await expect.element(screen.getByRole("button", { name })).toBeVisible();
       }
       expect(document.querySelectorAll("[data-shift-clock-row]").length).toBeLessThanOrEqual(MAX_PHASE_ROWS);
@@ -143,25 +143,26 @@ describe("Production Command Console", () => {
   });
 
   it("does not abandon a TODAY write through same-tick persistent controls", async () => {
-    vi.setSystemTime(new Date(2026, 9, 12, 22));
+    // COMMAND-CENTER-001: QUICK_LOG's +8 oz is gone; TODAY's own quick check-in is the in-flight write.
     const day = await startDay();
     const screen = await render(<App />);
-    await expect.element(screen.getByRole("button", { name: "Log 8 oz water" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
     const original = db.events.add.bind(db.events);
     let release!: () => void;
     const gate = new Promise<void>((resolve) => { release = resolve; });
     const write = vi.spyOn(db.events, "add").mockImplementation((...args) => Dexie.Promise.resolve(gate).then(() => original(...args)));
     try {
-      (screen.getByRole("button", { name: "Log 8 oz water" }).element() as HTMLButtonElement).click();
+      (screen.getByRole("button", { name: "ALL GOOD" }).element() as HTMLButtonElement).click();
       (screen.getByRole("button", { name: "Log a meal in BODY" }).element() as HTMLButtonElement).click();
       (screen.getByRole("button", { name: "Log water in BODY" }).element() as HTMLButtonElement).click();
+      (screen.getByRole("button", { name: "Open LOG" }).element() as HTMLButtonElement).click();
       (screen.getByRole("button", { name: "Open SYSTEM" }).element() as HTMLButtonElement).click();
       expect(screen.getByRole("dialog").elements()).toHaveLength(0);
       await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
     } finally { release(); }
-    await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(8);
-    await expect.element(screen.getByText("8 oz recorded.", { exact: true })).toBeVisible();
-    expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
+    await expect.poll(async () => db.events.where("type").equals("STATE_CHECKED_IN").count()).toBe(1);
+    await expect.poll(() => document.querySelector('[data-shift-clock-row="CHECK_IN"]')?.textContent ?? "").toMatch(/Checked in/);
+    expect(await db.checkIns.where("beyondDayId").equals(day.id).count()).toBe(1);
     write.mockRestore();
   });
 

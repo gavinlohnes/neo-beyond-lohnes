@@ -81,7 +81,8 @@ describe("deriveShiftClockPhase — boundaries", () => {
 describe("deriveShiftClockView — rows and TOOLS", () => {
   it("lays out each phase exactly as briefed", () => {
     expect(deriveShiftClockView(input(at(12, 17))).rows).toEqual(["TONIGHT", "FUEL"]);
-    expect(deriveShiftClockView(input(at(12, 22))).rows).toEqual(["QUICK_LOG", "FUEL"]);
+    // COMMAND-CENTER-001: QUICK_LOG gave its slot to the shift handoff note.
+    expect(deriveShiftClockView(input(at(12, 22))).rows).toEqual(["SHIFT_HANDOFF", "FUEL"]);
     expect(deriveShiftClockView(input(at(13, 7))).rows).toEqual(["SHIFT_DOWN", "CHECK_IN", "WORKOUT", "MAIN_SLEEP"]);
     expect(deriveShiftClockView(input(at(14, 17), { workContext: "OFF", shiftWindow: null })).rows).toEqual(["CHECK_IN", "WORKOUT"]);
     expect(deriveShiftClockView(input(at(12, 17), { workContext: "UNKNOWN" })).rows).toEqual(["WORK_QUESTION", "CHECK_IN", "WORKOUT"]);

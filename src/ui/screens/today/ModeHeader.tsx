@@ -105,7 +105,7 @@ export function ModeHeader({
       {open && (
         <dialog
           ref={dialog}
-          className="mode-picker"
+          className="today-sheet"
           aria-labelledby="mode-picker-title"
           onCancel={(event) => { event.preventDefault(); setOpen(false); }}
           onKeyDown={(event) => {
@@ -116,35 +116,35 @@ export function ModeHeader({
             else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
           }}
         >
-          <header className="mode-picker__header">
+          <header className="today-sheet__header">
             <h2 id="mode-picker-title" className="card-title">{step === "PICK" ? "MODE" : "ON SHIFT TODAY?"}</h2>
             <button type="button" className="chip" onClick={() => setOpen(false)} aria-label="Close mode picker">CLOSE</button>
           </header>
           {step === "PICK" ? (
             <>
-              <button type="button" className="mode-picker__option" aria-pressed={pin === null} autoFocus={pin === null} onClick={() => choose(null)}>
+              <button type="button" className="today-sheet__option" aria-pressed={pin === null} autoFocus={pin === null} onClick={() => choose(null)}>
                 <span>
                   <strong>Follow schedule</strong>
                   <span>{scheduledPhase ? `Now ${MODE_NAMES[scheduledPhase]}. It moves with your day.` : "No mode until the work question is answered."}</span>
                 </span>
-                {pin === null && <span className="mode-picker__tag">ON</span>}
+                {pin === null && <span className="today-sheet__tag">ON</span>}
               </button>
               {MODE_ORDER.map((phase) => (
-                <button key={phase} type="button" className="mode-picker__option" aria-pressed={pin === phase} autoFocus={pin === phase} onClick={() => choose(phase)}>
+                <button key={phase} type="button" className="today-sheet__option" aria-pressed={pin === phase} autoFocus={pin === phase} onClick={() => choose(phase)}>
                   <span>
                     <strong>{MODE_NAMES[phase]}</strong>
                     <span>{MODE_DESCRIPTIONS[phase]}</span>
                   </span>
-                  {phase === scheduledPhase && <span className="mode-picker__tag">SCHEDULE</span>}
-                  {pin === phase && <span className="mode-picker__tag">PINNED</span>}
+                  {phase === scheduledPhase && <span className="today-sheet__tag">SCHEDULE</span>}
+                  {pin === phase && <span className="today-sheet__tag">PINNED</span>}
                 </button>
               ))}
-              <p className="meta mode-picker__note">A pin changes this screen. Nothing else. Your records and BEYOND’s advice stay the same. Back on schedule at 16:30.</p>
+              <p className="meta today-sheet__note">A pin changes this screen. Nothing else. Your records and BEYOND’s advice stay the same. Back on schedule at 16:30.</p>
             </>
           ) : (
             <>
-              <p className="card-body mode-picker__note">Today is set as a day off. The pin only changes this screen. Record today as a work day too?</p>
-              <div className="mode-picker__actions">
+              <p className="card-body today-sheet__note">Today is set as a day off. The pin only changes this screen. Record today as a work day too?</p>
+              <div className="today-sheet__actions">
                 <button type="button" className="btn-secondary" autoFocus onClick={() => setOpen(false)}>NOT NOW</button>
                 <button type="button" className="btn-secondary" disabled={busy} onClick={() => { onRecordWorkDay?.(); setOpen(false); }}>RECORD WORK DAY</button>
               </div>
