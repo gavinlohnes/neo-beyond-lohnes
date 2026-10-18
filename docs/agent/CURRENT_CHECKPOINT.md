@@ -9,9 +9,9 @@ Builder: Codex; branch `codex/fix-mode-pin-expiry`; [PR #243](https://github.com
 Repair only: presentation pins reset at 16:30 even if the canonical day remains open for a
 workout. Preserve all records, Engine authority, drafts, backup contracts and manual control.
 Implemented: timestamped local UI pins with released phase-only compatibility; calendar-boundary
-expiry independent of canonical rollover; live TODAY/direct-launch/resume refresh; mode tokens
-published before paint. All forms, records and Engine authority remain.
-Verification: 254 test files / 2,569 passed / one existing skip; architecture (244 files),
+expiry independent of canonical rollover; live TODAY/direct-launch/visibility/pageshow refresh; mode tokens
+published before paint; retained deadlines survive delayed renders. All forms, records and Engine authority remain.
+Verification: 254 test files / 2,570 passed / one existing skip; architecture (244 files),
 TypeScript and production build pass. Built PWA passes at 320/360/412: retained workout day,
 Capture focus/draft and set draft, zero canonical expiry writes, direct offline expiry, offline
 save and cold reload without duplicate records. Final CI and independent review bind the exact

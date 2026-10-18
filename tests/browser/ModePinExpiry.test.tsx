@@ -81,7 +81,7 @@ describe("16:30 mode pin expiry", () => {
     expect(document.getElementById("workspace-TODAY")).toBeNull();
     await expect.poll(suit).toBe("OFF");
     vi.setSystemTime(at(13, 16, 29, 59, 750));
-    document.dispatchEvent(new Event("visibilitychange"));
+    window.dispatchEvent(new Event("pageshow"));
     const before = await records();
     vi.setSystemTime(at(13, 16, 30));
     await expect.poll(suit).toBe("EXPECTED_POST_WORK");
@@ -92,7 +92,7 @@ describe("16:30 mode pin expiry", () => {
     await expect.poll(source).toBe("Per schedule");
   });
 
-  it("re-reads an expired pin on foreground resume without discarding Capture input", async () => {
+  for (const event of ["visibilitychange", "pageshow"]) it(`re-reads an expired pin on ${event} resume without discarding Capture input`, async () => {
     const { day } = await runningWorkout();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
@@ -101,7 +101,7 @@ describe("16:30 mode pin expiry", () => {
     const capture = screen.getByRole("textbox", { name: "Capture a thought", exact: true });
     await capture.fill("Keep this on resume");
     vi.setSystemTime(at(13, 17));
-    document.dispatchEvent(new Event("visibilitychange"));
+    (event === "pageshow" ? window : document).dispatchEvent(new Event(event));
     await expect.poll(source).toBe("Per schedule");
     await expect.element(capture).toHaveValue("Keep this on resume");
     expect((await getActiveDay())?.id).toBe(day.id);

@@ -53,7 +53,7 @@ try {
       const capture = page.getByRole("textbox", { name: "Capture a thought", exact: true });
       await capture.fill("A synthetic thought retained across 16:30");
       await page.clock.setSystemTime(new Date("2026-10-13T16:29:59.500-05:00"));
-      await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+      await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
       await waitSuit(page, "OFF");
       await capture.focus();
       const before = await records(page);

@@ -548,7 +548,7 @@ export function TodayScreen({
 
   // The clock also expires a pin when a workout retains this BeyondDay past 16:30.
   useEffect(() => {
-    const timer = setTimeout(() => setNow(new Date()), Math.max(1, nextRolloverBoundaryAfter(new Date()).getTime() - Date.now()));
+    const timer = setTimeout(() => setNow(new Date()), Math.max(1, nextRolloverBoundaryAfter(now).getTime() - Date.now()));
     return () => clearTimeout(timer);
   }, [now]);
 
@@ -568,7 +568,11 @@ export function TodayScreen({
       void refresh().catch(() => {});
     }
     document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", onVisible);
+    };
   }, []);
 
   /**
