@@ -1,29 +1,31 @@
-/**
- * COMMAND-CENTER-001: a mode pin is placement only — it picks which phase rows
- * TODAY shows, never what BEYOND recommends — so it is UI bookkeeping in
- * localStorage keyed by BeyondDay id, like shiftHandoffSkips.ts. Not an event,
- * not in backups. A new day (16:30 roll or START DAY) has its own key and so
- * starts on schedule; END DAY clears the old day's key explicitly.
- */
+/** Placement-only UI bookkeeping, keyed by BeyondDay. Never an event or backup record. */
 const PIN_KEY_PREFIX = "beyond:modePin:";
 
 export const MODE_PIN_PHASES = ["PRE_WORK", "SCHEDULED_SHIFT", "EXPECTED_POST_WORK", "OFF"] as const;
 export type ModePinPhase = (typeof MODE_PIN_PHASES)[number];
+export interface StoredModePin { phase: ModePinPhase; pinnedAt?: number; }
 
-export function readModePin(beyondDayId: string): ModePinPhase | null {
+export function readModePin(beyondDayId: string): StoredModePin | null {
   try {
-    const value = localStorage.getItem(PIN_KEY_PREFIX + beyondDayId);
-    return (MODE_PIN_PHASES as readonly string[]).includes(value ?? "") ? (value as ModePinPhase) : null;
+    const raw = localStorage.getItem(PIN_KEY_PREFIX + beyondDayId);
+    if (raw === null) return null;
+    // The released format had only a phase. Application uses the recorded
+    // day's start as its conservative expiry origin, without inventing a pick time.
+    if ((MODE_PIN_PHASES as readonly string[]).includes(raw)) return { phase: raw as ModePinPhase };
+    const value: unknown = JSON.parse(raw);
+    if (!value || typeof value !== "object" || !("phase" in value) || !("pinnedAt" in value)) return null;
+    if (!(MODE_PIN_PHASES as readonly unknown[]).includes(value.phase) || typeof value.pinnedAt !== "number" || !Number.isFinite(value.pinnedAt)) return null;
+    return { phase: value.phase as ModePinPhase, pinnedAt: value.pinnedAt };
   } catch {
     return null;
   }
 }
 
-export function writeModePin(beyondDayId: string, phase: ModePinPhase | null): void {
+export function writeModePin(beyondDayId: string, phase: ModePinPhase | null, pinnedAt?: number): void {
   try {
     if (phase === null) localStorage.removeItem(PIN_KEY_PREFIX + beyondDayId);
-    else localStorage.setItem(PIN_KEY_PREFIX + beyondDayId, phase);
+    else localStorage.setItem(PIN_KEY_PREFIX + beyondDayId, JSON.stringify({ phase, pinnedAt }));
   } catch {
-    // Storage unavailable: the pin simply doesn't hold. The schedule still drives TODAY.
+    // Storage unavailable: canonical operation remains available.
   }
 }

@@ -212,3 +212,54 @@ stored-pin shortcut regressions pass. The renewed full `npm run verify` passes (
 2,556 passed / one existing skip), and built offline cold workout/water shortcut acceptance
 passes at 320/360/412 with no duplicate workout set. The earlier exact-head review was superseded
 by its shortcut finding; the new head requires a renewed verdict recorded on PR #241.
+
+## Follow-up — mode pin expiry at 16:30 (2026-10-18)
+
+- **Authorization:** Gavin approved the bounded repair ("I approve.") after the reproduced
+  active-workout expiry finding on merged PR #241. This restores the existing reset promise.
+- **Builder / branch / PR:** Codex; `codex/fix-mode-pin-expiry`;
+  [#243](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/243).
+- **Starting master:** `9f9100ade1d54f4f4368759fb73afcb7f1201a20`, freshly fetched; #241 merged.
+- **Risk / reuse:** conservative PROTECTED review lane for the existing presentation-pin seam.
+  BUILD OWNED: timestamp the local UI pin and reuse canonical local-calendar boundary helpers.
+- **Scope:** first local 16:30 expiry independent of canonical day rollover; compatibility with
+  released phase-only pins; TODAY, boot, direct TRAIN/BODY launch, visibility and cached-page
+  (`pageshow`) resume. A deliberate new selection after expiry holds until the next boundary.
+  Follow schedule and END DAY still clear. Preserve records, guidance, task position and drafts.
+- **Exclusions:** Engine/Attention/System Status rules, canonical day/workout ownership, logging
+  commands, schema/events/backups, historical repair, dependencies, SUIT-001, merges and deployment.
+- **Coordination:** #242 and #204 remain untouched. The prior unpublished broader continuation
+  remains in its local stash; this repair starts from published master without reapplying it.
+
+Implementation: timestamped UI pins derive expiry from the existing boundary helper. Released
+phase-only pins use the recorded day's first boundary, without inventing a selection time.
+TODAY and direct-launch suit tokens refresh at the boundary and on both resume paths. The
+retained clock/deadline handles an early timer or a delayed render without skipping to tomorrow.
+Mode tokens publish before paint. No form is remounted by the pin refresh.
+
+Acceptance evidence: seven expiry integration cases plus the existing Engine-identity suite;
+seven expiry browser cases cover 320/360/412, active workout/day retention, Capture focus/draft,
+set draft, direct-launch tokens, visibility/pageshow and legacy reload. Regressions reproduced
+the original boundary and cached-page failures before their fixes. Final full local gate:
+**254 files, 2,570 tests passed / one existing skip**, architecture (244 files), TypeScript and
+production PWA build pass. Local browser verification uses installed Chromium through the
+existing ignored executable-path override; tracked CI/test config and dependencies are unchanged.
+
+Final built-PWA acceptance passes at 320/360/412 with reduced motion: cached-page resume,
+retained workout day, Capture focus/input and set draft, zero canonical expiry writes, a second
+boundary during direct offline BODY launch, offline water save and cold reload, exactly one
+saved set/note/water entry and no page errors/overflow. Results:
+[`pin-expiry-acceptance.json`](../screenshots/command-center-001/pin-expiry-acceptance.json).
+Reproduce after serving the built PWA:
+`BEYOND_BROWSER_EXECUTABLE=/usr/bin/chromium node scripts/verify-mode-pin-expiry.mjs`.
+
+Full verification exposed a mode-name/root-style passive-effect frame; publishing tokens before
+paint fixes the unchanged shortcut assertion. The workout viewport check also failed on the
+unmodified starting master while sampling its 180ms pane translation. That fixture now settles
+finite TODAY animations before measuring; all original assertions and thresholds stay.
+
+Rollback requires no data migration or historical repair. The old reader ignores timestamped
+local UI pins and follows schedule; canonical records and backups remain intact. Physical-device,
+Safari and assistive-technology testing is not claimed. Final SHA, required CI and renewed
+independent exact-head review are recorded on #243. No merge/deployment or next objective is
+approved; stop after review for Gavin's separate merge decision.

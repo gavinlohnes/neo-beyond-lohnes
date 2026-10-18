@@ -3,15 +3,38 @@
 ## Current objective — SUIT-001 stealth, glitch signals, SYSTEMS (2026-10-18, PROTECTED)
 
 Gavin authorized SUIT-001 together with COMMAND-CENTER-001 (2026-10-18). It starts after #241
-merged. Builder: Claude Code, on `claude/new-session-0xvewh` from master `9f9100a`; the draft PR
-is linked from the branch. Brief and repo mapping: [SUIT-001.md](SUIT-001.md). The only other
+merged. Builder: Claude Code, on `claude/new-session-0xvewh` from master `9f9100a`, with master
+merged in at `85db25b` (#243). Draft [PR #242](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/242). Brief and repo mapping: [SUIT-001.md](SUIT-001.md). The only other
 open PR is the isolated lab #204.
 
 **Done:** slice 0 (brief build record, this checkpoint, draft PR).
 **Next:** slice 1, SYSTEMS (the TODAY line and the readout). Then signals, stealth, rulings and
 evidence. No Engine, schema, event, command, backup or dependency change.
 
-## Previous objective — COMMAND-CENTER-001 (2026-10-18, PROTECTED, merged in #241 at `9f9100a`)
+## Previous objective — fix mode pin expiry at 16:30 (2026-10-18, merged in #243 at `85db25b`)
+
+Gavin approved the bounded follow-up to the [reproduced PR #241 finding](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241#issuecomment-6247508068).
+Brief: the follow-up section in [COMMAND-CENTER-001.md](COMMAND-CENTER-001.md).
+Builder: Codex; branch `codex/fix-mode-pin-expiry`; [PR #243](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/243). Starting master:
+`9f9100ade1d54f4f4368759fb73afcb7f1201a20`. Conservative PROTECTED review lane.
+Repair only: presentation pins reset at 16:30 even if the canonical day remains open for a
+workout. Preserve all records, Engine authority, drafts, backup contracts and manual control.
+Implemented: timestamped local UI pins with released phase-only compatibility; calendar-boundary
+expiry independent of canonical rollover; live TODAY/direct-launch/visibility/pageshow refresh; mode tokens
+published before paint; retained deadlines survive delayed renders. All forms, records and Engine authority remain.
+Verification: 254 test files / 2,570 passed / one existing skip; architecture (244 files),
+TypeScript and production build pass. Built PWA passes at 320/360/412: retained workout day,
+Capture focus/draft and set draft, zero canonical expiry writes, direct offline expiry, offline
+save and cold reload without duplicate records. Final CI and independent review bind the exact
+published head in the follow-up PR. Physical-device/Safari/screen-reader testing is not claimed.
+Next (historical): Gavin merged #243 at `85db25b`.
+PR #242 (SUIT-001) and #204 remain separate and untouched by this Builder.
+
+The previous #241 handoff below is historical: its final implementation head `259d139` received
+independent PASS and green CI, then Gavin merged #241 at `9f9100a`. Its pending-merge lines no
+longer describe live state.
+
+## Previous objective — COMMAND-CENTER-001 (merged #241 at `9f9100a`)
 
 Gavin authorized GPT Work to complete the existing objective on branch `ccr-8a82e4b3-4ub4x2`,
 [PR #241](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241). No merge authorized.

@@ -201,6 +201,12 @@ describe("Production Command Console", () => {
     await expect.element(screen.getByRole("button", { name: "RESUME WORKOUT" })).toBeVisible();
     for (const width of [320, 360, 412]) {
       await page.viewport(width, 800);
+      // Measure the resting layout, as the axe checks below already do. The
+      // 180ms tab entrance translates the whole pane by up to 6px; sampling
+      // that in flight falsely reports clipping (also reproduced on master).
+      for (const animation of document.getElementById("workspace-TODAY")!.getAnimations({ subtree: true })) {
+        if (animation.effect?.getComputedTiming().iterations !== Infinity) animation.finish();
+      }
       const resume = screen.getByRole("button", { name: "RESUME WORKOUT" }).element().getBoundingClientRect();
       expect(resume.bottom).toBeLessThanOrEqual(document.querySelector(".shell-nav")!.getBoundingClientRect().top);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
