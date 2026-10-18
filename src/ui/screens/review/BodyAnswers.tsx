@@ -79,7 +79,7 @@ export function BodyAnswers({ active, overview }: { active: boolean; overview: R
     <Answer title="Am I losing fat, not muscle?" answer="No verdict · the changes BEYOND can see, side by side">
       <p className="card-body">BEYOND does not measure fat or muscle. Here is what it can see. You draw the conclusion.</p>
       <dl className="review-side-by-side">
-        <dt>Weight</dt><dd>{overview.weight.change === undefined ? "Building up · needs 7 weighed days in the last 14, with 3 in each week" : `${overview.weight.change > 0 ? "+" : ""}${overview.weight.change.toFixed(1)} lb · latest 7-day mean versus previous 7`}</dd>
+        <dt>Weight</dt><dd>{overview.weight.change === undefined ? "Not enough weigh-ins yet for the two-week comparison" : `${overview.weight.change > 0 ? "+" : ""}${overview.weight.change.toFixed(1)} lb, latest 7-day mean versus previous 7`}</dd>
         <dt>Waist</dt><dd>{siteAnswer(waist)}</dd>
         <dt>Strength</dt><dd>{strengthLine}. Lift history is in TRAIN.</dd>
         <dt>Photos</dt><dd>{comparable.length ? `${comparable.length} ${comparable.length === 1 ? "pose" : "poses"} with 2+ photos to compare in BODY` : `Building up · needs 2 photos in the same pose`}</dd>
