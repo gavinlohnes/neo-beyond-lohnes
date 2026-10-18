@@ -36,9 +36,10 @@ it("has no monthly review until a weekly review exists, then every 4th week from
 
 it("reads body composition for the 28 lived days ending with the monthly week, writing nothing", async () => {
   clock(new Date(2026, 9, 19, 20));
-  await startDay();
+  const reviewDay = await startDay();
   await saveReview(new Date(2026, 9, 19, 20));
-  await db.beyondDays.toCollection().modify({ status: "ENDED", endedAt: new Date(2026, 9, 19, 21).toISOString() });
+  clock(new Date(2026, 9, 19, 21));
+  await endDay(reviewDay.id);
   await weighedDay(new Date(2026, 9, 10, 18), 201); // before the window
   await weighedDay(new Date(2026, 9, 20, 18), 199.5);
   await weighedDay(new Date(2026, 10, 14, 18), 197.25);
