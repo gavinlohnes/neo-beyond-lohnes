@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { readBootMode } from "../screens/today/bootMode";
+import { MODE_NAMES, type ShiftClockPhase } from "../screens/today/shiftClock";
 import { describeBootStatus, getBootStatus } from "../../application/bootQueries";
 
 /**
@@ -47,6 +49,17 @@ function stillPlaying(): boolean {
 export function BootSequence() {
   const [show, setShow] = useState(stillPlaying);
   const [elapsed, setElapsed] = useState(0);
+  const [mode, setMode] = useState<string | null>(null);
+  useEffect(() => {
+    const read = () => {
+      const phase = document.documentElement.dataset.suitMode as ShiftClockPhase | undefined;
+      setMode(phase && phase in MODE_NAMES ? MODE_NAMES[phase] : "Mode: not set");
+    };
+    let current = true;
+    void readBootMode().then((value) => { if (current) setMode(value); }).catch(() => {});
+    window.addEventListener("beyond-mode", read);
+    return () => { current = false; window.removeEventListener("beyond-mode", read); };
+  }, []);
   const [lines, setLines] = useState<string[]>([]);
 
   useEffect(() => {
@@ -88,6 +101,7 @@ export function BootSequence() {
       <span className="boot__line" aria-hidden="true" />
       <p className="boot__word">{elapsed >= TYPE_START_MS ? WORD.slice(0, typed) : ""}</p>
       <div className="boot__status">
+        {elapsed >= STATUS_START_MS && mode && <p className="boot__status-line">{mode}</p>}
         {lines.slice(0, shownLines).map((line) => (
           <p key={line} className="boot__status-line">{line}</p>
         ))}

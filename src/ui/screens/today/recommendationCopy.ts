@@ -139,3 +139,16 @@ export function describePriorOutcomeMemory(
   const recordedDate = new Date(issuedAt).toLocaleDateString();
   return `Last time this recommendation was recorded (${recordedDate}): ${decision.replaceAll("_", " ")} · ${rating}`;
 }
+
+/** Display wording only; unknown/historical rationale stays verbatim. */
+export function describeRecommendationReason(rationale: string): string {
+  const copy: Record<string, string> = {
+    "Capacity is low. Protect the basics before anything else.": "Capacity is low. Basics first. Your call.",
+    "Your shift ended and hasn't been shifted down from yet.": "Work ended. Shift down when you're ready. Your call.",
+    "Capacity is constrained.": "Capacity is constrained. Keep recovery in view. Your call.",
+    "Capacity is good and there is planned work for today.": "Capacity is good. Your plan is ready. Your call.",
+    "An obligation is overdue or due today.": "A commitment is due or overdue. Review it. Your call.",
+    "No rule requires attention right now.": "Nothing needs you right now. Your call.",
+  };
+  return copy[rationale] ?? rationale;
+}

@@ -46,7 +46,7 @@ export type ShiftClockRow =
   | "WORK_QUESTION"
   | "TONIGHT"
   | "FUEL"
-  | "QUICK_LOG"
+  | "SHIFT_HANDOFF"
   | "SHIFT_DOWN"
   | "CHECK_IN"
   | "WORKOUT"
@@ -69,7 +69,9 @@ export const MAX_PHASE_ROWS = 4;
 
 const PHASE_ROWS: Record<ShiftClockPhase, readonly ShiftClockRow[]> = {
   PRE_WORK: ["TONIGHT", "FUEL"],
-  SCHEDULED_SHIFT: ["QUICK_LOG", "FUEL"],
+  // COMMAND-CENTER-001: QUICK_LOG gave way to TODAY's action row; the shift
+  // handoff note takes its slot (it renders only when it has something to say).
+  SCHEDULED_SHIFT: ["SHIFT_HANDOFF", "FUEL"],
   EXPECTED_POST_WORK: ["SHIFT_DOWN", "CHECK_IN", "WORKOUT", "MAIN_SLEEP"],
   OFF: ["CHECK_IN", "WORKOUT"],
 };
@@ -110,8 +112,10 @@ export interface ShiftClockInput {
 }
 
 export interface ShiftClockView {
-  /** null while the work context is still unanswered — no phase is assumed. */
+  /** null while the work context is still unanswered — no phase is assumed. The schedule's phase, never the pin. */
   phase: ShiftClockPhase | null;
+  /** COMMAND-CENTER-001: the mode TODAY shows — the pin when one is set, otherwise `phase`. */
+  displayPhase: ShiftClockPhase | null;
   rows: ShiftClockRow[];
   tools: ToolsItem[];
   /** What the strip counts down to, when there's a real time to count to. */
@@ -131,20 +135,103 @@ export function deriveShiftClockPhase(input: ShiftClockInput): ShiftClockPhase |
   return "EXPECTED_POST_WORK";
 }
 
-export function deriveShiftClockView(input: ShiftClockInput): ShiftClockView {
+/**
+ * COMMAND-CENTER-001: `pin` is placement only. It selects which PHASE_ROWS TODAY
+ * shows; `phase` stays the schedule's, for every caller that decides anything
+ * else (Attention, guidance timing). An UNKNOWN day keeps its work question
+ * first. Countdowns appear only where the real shift times support them.
+ */
+export function deriveShiftClockView(input: ShiftClockInput, pin: ShiftClockPhase | null = null): ShiftClockView {
   const phase = deriveShiftClockPhase(input);
-  const rows = [...(phase === null ? UNANSWERED_ROWS : PHASE_ROWS[phase])]
+  const displayPhase = pin ?? phase;
+  const base =
+    displayPhase === null ? UNANSWERED_ROWS : phase === null ? ["WORK_QUESTION" as const, ...PHASE_ROWS[displayPhase]] : PHASE_ROWS[displayPhase];
+  const rows = [...base]
     .filter((row) => !(row === "SHIFT_DOWN" && input.shiftDownDone))
     .slice(0, MAX_PHASE_ROWS);
   const tools = TOOLS_ORDER.filter((item) => !(rows as readonly string[]).includes(item));
   const window = input.shiftWindow;
+  const now = input.now.getTime();
   const countdown =
-    window && phase === "PRE_WORK"
+    window && displayPhase === "PRE_WORK" && now < window.start.getTime()
       ? { kind: "SHIFT_STARTS" as const, at: window.start }
-      : window && phase === "SCHEDULED_SHIFT" && input.now.getTime() >= window.start.getTime()
+      : window && displayPhase === "SCHEDULED_SHIFT" && now >= window.start.getTime() && now < window.end.getTime()
         ? { kind: "SHIFT_ENDS" as const, at: window.end }
         : null;
-  return { phase, rows, tools, countdown };
+  return { phase, displayPhase, rows, tools, countdown };
+}
+
+/** COMMAND-CENTER-001: the four modes are the Shift Clock phases, with display names. */
+export const MODE_ORDER: readonly ShiftClockPhase[] = ["PRE_WORK", "SCHEDULED_SHIFT", "EXPECTED_POST_WORK", "OFF"];
+
+export const MODE_NAMES: Record<ShiftClockPhase, string> = {
+  PRE_WORK: "PREP",
+  SCHEDULED_SHIFT: "ON SHIFT",
+  EXPECTED_POST_WORK: "RECOVER",
+  OFF: "OFF DUTY",
+};
+
+/** One line per mode, in the brief's voice: terse, plain, no orders. */
+export const MODE_DESCRIPTIONS: Record<ShiftClockPhase, string> = {
+  PRE_WORK: "Shift’s coming. Fuel up. Check tonight.",
+  SCHEDULED_SHIFT: "On the clock. Log fast.",
+  EXPECTED_POST_WORK: "Shift’s done. Power down. Sleep.",
+  OFF: "Your time. Train, plan, rest.",
+};
+
+export interface LivedDayStripSegment {
+  phase: ShiftClockPhase;
+  /** 0–1 along the lived day (16:30 → 16:30). */
+  from: number;
+  to: number;
+}
+
+export interface LivedDayStrip {
+  segments: LivedDayStripSegment[];
+  /** 0–1, clamped. */
+  now: number;
+  /** The shift's end on the strip, when there is a real one to label. */
+  shiftEnd: { at: Date; position: number } | null;
+}
+
+/**
+ * The lived-day strip under the mode name: real times only. A work day with a
+ * scheduled shift shows PREP → ON SHIFT → RECOVER, and OFF DUTY once a main
+ * sleep logged after the shift ends RECOVER. A WORK day without times shows
+ * one ON SHIFT band; a day off one OFF DUTY band; an unanswered day none.
+ */
+export function deriveLivedDayStrip(input: {
+  dayStart: Date;
+  dayEnd: Date;
+  now: Date;
+  workContext: "WORK" | "OFF" | "UNKNOWN";
+  shiftWindow: { start: Date; end: Date } | null;
+  workEndedAt: string | null;
+  mainSleepRecordedAt: readonly string[];
+}): LivedDayStrip {
+  const start = input.dayStart.getTime();
+  const span = Math.max(1, input.dayEnd.getTime() - start);
+  const pos = (ms: number) => Math.min(1, Math.max(0, (ms - start) / span));
+  const now = pos(input.now.getTime());
+  if (input.workContext === "UNKNOWN") return { segments: [], now, shiftEnd: null };
+  if (input.workContext === "OFF") return { segments: [{ phase: "OFF", from: 0, to: 1 }], now, shiftEnd: null };
+  const window = input.shiftWindow;
+  if (!window) return { segments: [{ phase: "SCHEDULED_SHIFT", from: 0, to: 1 }], now, shiftEnd: null };
+  const shiftStart = pos(window.start.getTime());
+  const endedAt = input.workEndedAt ? Math.min(new Date(input.workEndedAt).getTime(), window.end.getTime()) : window.end.getTime();
+  const shiftEnd = pos(endedAt);
+  const sleptAt = input.mainSleepRecordedAt
+    .map((at) => new Date(at).getTime())
+    .filter((at) => at >= endedAt)
+    .sort((a, b) => a - b)[0];
+  const recoverEnd = sleptAt === undefined ? 1 : pos(sleptAt);
+  const segments: LivedDayStripSegment[] = [
+    { phase: "PRE_WORK" as const, from: 0, to: shiftStart },
+    { phase: "SCHEDULED_SHIFT" as const, from: shiftStart, to: shiftEnd },
+    { phase: "EXPECTED_POST_WORK" as const, from: shiftEnd, to: recoverEnd },
+    { phase: "OFF" as const, from: recoverEnd, to: 1 },
+  ].filter((segment) => segment.to > segment.from);
+  return { segments, now, shiftEnd: { at: new Date(endedAt), position: shiftEnd } };
 }
 
 /**

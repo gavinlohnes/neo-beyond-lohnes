@@ -85,8 +85,8 @@ describe("TODAY meal round trip", () => {
     await openMeal(screen);
     await fillMeal(screen);
     const confirm = vi.spyOn(window, "confirm");
-    await screen.getByRole("button", { name: "MORE", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
+    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
     // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
     await expect.element(screen.getByRole("heading", { name: "BODY // DAILY RECORD" })).toBeVisible();
@@ -125,7 +125,7 @@ describe("TODAY meal round trip", () => {
     await expect.poll(loggedCount).toBe(1);
   });
 
-  for (const destination of ["TRAIN", "TODAY", "BODY", "MORE", "Search everything", "RETURN TO TODAY"]) {
+  for (const destination of ["TRAIN", "TODAY", "BODY", "COMMAND", "Search everything", "RETURN TO TODAY"]) {
     it(`blocks LOG followed immediately by ${destination}, plus same-tick duplicate taps`, async () => {
       await seedMeal();
       const screen = await render(<App />);

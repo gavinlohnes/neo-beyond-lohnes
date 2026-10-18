@@ -1,0 +1,82 @@
+/* COMMAND-CENTER-001: the TODAY mode header. HUD tokens only; no new colors. */
+.mode-header { display: grid; gap: 4px; }
+.mode-header__name {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0;
+  border: 0; background: transparent; color: var(--text-1); text-align: left; cursor: pointer;
+}
+.mode-header__value { font-size: clamp(28px, 9vw, 34px); font-weight: 700; line-height: 1; letter-spacing: .1em; }
+.mode-header[data-mode="UNSET"] .mode-header__value { font-size: 22px; letter-spacing: .06em; }
+.mode-header__change {
+  margin-left: auto; flex: none; padding: 6px 10px; border: 1px solid var(--border-strong);
+  color: var(--text-2); font-size: 13px; letter-spacing: .12em;
+}
+.mode-header__text { display: grid; gap: 6px; flex: 1; min-width: 0; }
+.mode-header__source { color: var(--text-2); font-size: 14px; font-weight: 400; letter-spacing: .02em; }
+.mode-strip { margin-top: 4px; }
+.mode-strip__bar { position: relative; display: flex; gap: 2px; height: 10px; }
+.mode-strip__segment { min-width: 2px; height: 100%; background: var(--surface-2); border: 1px solid var(--border-subtle); }
+.mode-strip__segment--on { background: var(--text-2); border-color: var(--text-2); }
+.mode-strip__now { position: absolute; top: -5px; width: 3px; height: 20px; background: var(--text-1); box-shadow: 0 0 0 2px var(--bg); transform: translateX(-1px); }
+.mode-strip__legend { position: relative; height: 16px; margin-top: 2px; color: var(--text-3-strong); font-family: var(--font-mono); font-size: 12px; }
+.mode-strip__legend span { position: absolute; top: 0; transform: translateX(-50%); }
+.mode-strip__legend span:first-child { transform: none; }
+.mode-strip__legend span:last-child { transform: translateX(-100%); }
+.today-sheet {
+  width: min(100% - 24px, 456px); max-height: 86vh; padding: 0 0 12px; overflow: auto;
+  border: 1px solid var(--border-strong); background: var(--surface-1); color: var(--text-1);
+}
+.today-sheet::backdrop { background: rgba(0, 0, 0, .72); }
+.today-sheet__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 8px; }
+.today-sheet__header .card-title { margin: 0; letter-spacing: .08em; }
+.today-sheet__header .chip { flex: none; width: auto; min-height: 44px; padding-inline: 14px; }
+.today-sheet__option {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 14px;
+  border: 0; border-top: 1px solid var(--border-subtle); background: transparent; color: var(--text-1); text-align: left; cursor: pointer;
+}
+.today-sheet__option[aria-pressed="true"] { background: var(--surface-active); }
+.today-sheet__option > span:first-child { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.today-sheet__option strong { font-size: 17px; letter-spacing: .06em; }
+.today-sheet__option strong + span { color: var(--text-2); font-size: 14px; }
+.today-sheet__tag { flex: none; padding: 3px 7px; border: 1px solid var(--border-strong); color: var(--text-2); font-size: 12px; letter-spacing: .12em; }
+.today-sheet__note { margin: 10px 14px 0; }
+.today-sheet__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px; }
+
+/* Identity overlays add no vertical space above Operate. */
+.mode-header { position: relative; isolation: isolate; }
+.mode-header::before, .mode-header::after {
+  content: ""; position: absolute; width: var(--tick); height: var(--tick); pointer-events: none;
+  border-color: var(--text-3); border-style: solid; opacity: .6;
+}
+.mode-header::before { left: -4px; top: -3px; border-width: 1px 0 0 1px; }
+.mode-header::after { right: -4px; bottom: 0; border-width: 0 1px 1px 0; }
+.mode-header__name, .mode-strip { position: relative; z-index: 1; }
+.mode-city { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
+.mode-city__sky { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 120%, #57080d, transparent 72%); opacity: var(--sky); }
+.mode-city__buildings { position: absolute; bottom: 0; width: 100%; height: 90%; fill: #050505; stroke: #444; stroke-width: .7; opacity: .5; }
+.mode-city__windows { stroke: #aaa; stroke-width: 1.5; opacity: var(--windows); }
+.mode-city__beam { position: absolute; bottom: 0; left: 65%; width: 80px; height: 170%; background: #aaa; opacity: .045; clip-path: polygon(48% 100%, 0 0, 100% 0); transform-origin: 50% 100%; animation: city-search 18s ease-in-out infinite alternate; }
+.mode-header__sweep { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.mode-header__sweep::after { content: ""; display: block; height: 100%; width: 2px; background: var(--red); animation: mode-sweep 500ms ease-out both; }
+.mode-ruler { position: absolute; top: -2px; height: 5px; border-left: 1px solid var(--text-3); }
+.mode-ruler--major { top: -4px; height: 10px; border-color: var(--text-1); }
+.mode-ruler-label { display: none; } /* 18:00 is too near 16:30 at 320 px; its major tick remains. */
+:root[data-suit-mode="SCHEDULED_SHIFT"] { --surface-1: #030303; --surface-2: #090909; --text-1: #d6d6d6; --text-2: #a0a0a0; --red: #b51219; }
+:root[data-suit-mode="SCHEDULED_SHIFT"] .mode-city::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(transparent 0 3px, #8881 3px 4px); }
+:root[data-suit-mode="EXPECTED_POST_WORK"] { --motion-fast: 220ms; --motion-base: 350ms; --surface-1: #030303; }
+:root[data-suit-mode="EXPECTED_POST_WORK"] .mode-ruler,
+:root[data-suit-mode="EXPECTED_POST_WORK"] .mode-strip { display: none; }
+:root[data-suit-mode="OFF"] .mode-city { opacity: .55; }
+.command-console .console-controls button, .command-console .command-surface, .command-console .btn-primary { border-radius: 0; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+/* Inset focus stays inside the cut. */
+.command-console .console-controls button:focus-visible, .command-console .btn-primary:focus-visible { outline-offset: -3px; }
+@keyframes mode-sweep { from { transform: translateX(0); opacity: .7; } to { transform: translateX(450px); opacity: 0; } }
+@keyframes city-search { from { transform: rotate(-30deg); } to { transform: rotate(20deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .mode-header__sweep { display: none; }
+  .mode-city__beam { animation: none; transform: rotate(-15deg); }
+}
+
+:root[data-suit-mode="EXPECTED_POST_WORK"] .today-field .field-progress { display: none; }
+/* Retained workspaces keep drafts, but spend no animation work while hidden. */
+#workspace-TODAY[hidden] .mode-city__beam,
+#workspace-TODAY[hidden] .mode-header__sweep::after { animation: none; }

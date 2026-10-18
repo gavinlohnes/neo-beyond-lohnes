@@ -57,7 +57,10 @@ function strayReds(root: Element): string[] {
 
 async function contrastViolations(root: Element) {
   // Settle entrance animations first, so axe measures the resting colors.
-  for (const animation of document.getAnimations()) animation.finish();
+  for (const animation of document.getAnimations()) {
+    if (animation.effect?.getComputedTiming().iterations === Infinity) animation.pause();
+    else animation.finish();
+  }
   const results = await axe.run(root, { runOnly: { type: "rule", values: ["color-contrast"] } });
   return results.violations.flatMap((v) => v.nodes.map((n) => `${n.target.join(" ")} ${JSON.stringify(n.any[0]?.data)}`));
 }
@@ -131,14 +134,14 @@ describe("HUD-001 — HUD design system", () => {
   it("Weekly keeps its pre-HUD ground, faces and corners until the F1 review", async () => {
     const screen = await render(<MoreScreen />);
     await screen.getByRole("button", { name: "Open WEEKLY CHECK-IN" }).click();
-    await expect.element(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
     const weekly = document.querySelector(".hud-legacy")!;
     expect(weekly).not.toBeNull();
     expect(getComputedStyle(weekly).backgroundColor).toBe("rgb(10, 10, 10)");
     expect(getComputedStyle(document.body).backgroundColor).toBe("rgb(10, 10, 10)");
     expect(getComputedStyle(weekly.querySelector(".meta")!).fontFamily).toMatch(/IBM Plex Sans/);
     expect(getComputedStyle(weekly.querySelector(".eyebrow")!).fontFamily).toMatch(/IBM Plex Mono/);
-    const back = screen.getByRole("button", { name: "← BACK TO MORE" }).element();
+    const back = screen.getByRole("button", { name: "← BACK TO COMMAND" }).element();
     expect(getComputedStyle(back).clipPath).toBe("none");
     expect(getComputedStyle(back).borderTopLeftRadius).toBe("4px");
   });

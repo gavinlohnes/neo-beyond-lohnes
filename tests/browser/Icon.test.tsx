@@ -27,6 +27,7 @@ const ALL_ICON_NAMES: IconName[] = [
   "exerciseLibrary",
   "customPrograms",
   "review",
+  "command",
 ];
 
 describe("Icon (real browser)", () => {

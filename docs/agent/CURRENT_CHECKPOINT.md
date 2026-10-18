@@ -1,34 +1,67 @@
 # Current checkpoint
 
-## Current objective — REVIEW-001 Weekly Review dashboard (2026-10-18, PROTECTED)
+## Current objective — COMMAND-CENTER-001 (2026-10-18, PROTECTED)
+
+Gavin authorized GPT Work to complete the existing objective on branch `ccr-8a82e4b3-4ub4x2`,
+[PR #241](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241). No merge authorized.
+Brief: [COMMAND-CENTER-001.md](COMMAND-CENTER-001.md). Starting master remains `4fda717`.
+Arrival head: `c717801` (slices 0–3 done, slice 4 WIP). Only other open PR is isolated lab #204.
+
+**Implementation complete: slices 0–5.**
+- Modes, placement-only day pins, optional separate work-day record, WATER / MEAL / LOG and
+  searchable COMMAND were already implemented. Engine identity and canonical commands stay.
+- Finished navigation: retained tabs/subviews, browser Back/Forward, open-sheet dismissal on
+  Back, visible focus restoration, COMMAND query and settings-draft retention. TRAIN re-tap
+  returns to its canonical session/root without discarding workout/set input.
+- A manual pick now pins even when it currently agrees with the schedule; only Follow schedule
+  clears it. Foreground Minimum Day hydration suppresses duplicate Advisory water shortcuts,
+  while preserving the advisory evidence and existing log/undo commands.
+- Identity: one-cut action surfaces, header reticles/ruler, original gray skyline and real-time
+  windows/crimson sky, recommendation-gated searchlight, one mode-change sweep, mode tokens,
+  live-mode boot and once-per-lived-day fuel-reading decrypt. Reduced motion keeps static
+  scenery and skips animated feedback/decrypt; hidden TODAY spends no animation work.
+  RECOVER quiets ruler/bars and slows motion without hiding factual sleep guidance.
+- Display-only recommendation reason copy; WHY ends in user choice. No Engine text changed.
+
+**Verification:** `npm run verify` passes: architecture, 252 test files, 2,556 passed / one
+existing skip, TypeScript and production PWA build. Added coverage for same-as-schedule pin
+continuity, retained settings input, mode identity/contrast at 320/360/412 and clock-driven city.
+Built PWA acceptance passes at all three widths: modes, COMMAND/Weekly Review, browser Back and
+Forward, both native sheets on Back, draft continuity (meal, sleep, workout set, Capture, Journal,
+Plan Today), exactly-once writes, recurrence/release preservation, offline cold reload and writes.
+Synthetic screenshots + acceptance JSON: `docs/screenshots/command-center-001/`.
+
+**Review/CI:** independent exact-head verdict and required CI belong to PR #241 at its final
+commit. Read the live PR before integration; no self-review or merge. Publication uses connected
+GitHub tools because local Git has no push credential; published Git tree hashes are checked
+against the staged local tree. No new branch/PR, dependency, schema, backup or Engine change.
+
+**Limitations:** automated Chromium, not physical-device/Safari/screen-reader testing. The
+existing production bundle-size advisory remains. Small phones may scroll; header effects add
+no height. SUIT-001, CHRONICLE, TRAIN expansion, BODY redesign and reuse audit are not begun.
+**Next:** final exact-head review + green required CI, then Gavin's explicit merge decision.
+
+## Previous objective — REVIEW-001 Weekly Review dashboard (2026-10-18, PROTECTED, merged in #240 at `4fda717`)
 
 Gavin approved making MORE → REVIEW's weekly section match the Ultimate prototype's Weekly Review
-("approve, Claude Code builds it", 2026-10-18). Builder: Claude Code. Starting master `8e5dbab`
-(#238 weekly loop and #239 storage merged); branch `ccr-f27681c1-sb8gif`; PR linked from the
-branch. Scope and rules: "Weekly Review dashboard" in [REVIEW-001.md](REVIEW-001.md). It is read
-only apart from #238's existing save-review form, with no schema, event, backup, Engine-evaluation
-or dependency change. Next action: an independent exact-head review, then Gavin's merge decision.
+("approve, Claude Code builds it", 2026-10-18). Builder: Claude Code. Started at master `8e5dbab`.
+Scope and rules: "Weekly Review dashboard" in [REVIEW-001.md](REVIEW-001.md). Read only apart from
+#238's existing save-review form; no schema, event, backup, Engine-evaluation or dependency
+change. Merged on Gavin's approval at `4fda717`.
 
 ## Previous objective — REVIEW-001 weekly review loop (2026-10-17, PROTECTED, merged in #238 at `8e5dbab`)
 
 Gavin authorized shipping the connected foundation, then building the weekly review loop.
-#232 merged at `fda45c2`; #237 merged at `554b557` after renewed independent PASS at `871c35b`
-and green required CI. Codex starts this slice from fresh master
-`554b55722d895c5fb6ca979bd9f08990c58ec6c1` on `codex/review-001-weekly-loop`.
-Scope, owner authority, event/backup semantics, validation and deferred work are in the weekly-loop
-delivery section of [REVIEW-001.md](REVIEW-001.md). One additive review event, no schema change.
-Gavin directed finishing PR #238 on 2026-10-17. Codex resumed at `dadfd2f`, integrating fresh
-master `5a54a1f` after #239 merged. Resolved checkpoint/brief conflicts by preserving both slices,
-and combined the weekly-review and measurement/photo event types. No feature was dropped.
-Active PR: [#238](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/238).
-Independent inspection found a delayed week-refresh could overwrite a note typed after the
-request began. The panel now consults live draft state; a browser regression reproduces the old
-loss and passes with the fix. Focused weekly browser cases pass (13/13), and weekly + MORE cases
-pass together (57/57). Final full verification, production offline acceptance, remote head/CI and
-independent exact-head verdict are recorded in PR #238. Local browser launch uses a scratch-only
-Chromium executable override; tracked dependencies, test selection and CI remain unchanged.
-Next: complete these checks and review, then Gavin's separate merge decision. No merge is authorized.
+Builder: Codex, on `codex/review-001-weekly-loop` from master `554b557`. Scope, event/backup
+semantics, validation and deferred work are in the weekly-loop delivery section of
+[REVIEW-001.md](REVIEW-001.md). One additive review event, no schema change. Integrated master
+`5a54a1f` after #239; a delayed week-refresh draft-loss bug was found and fixed with a browser
+regression. Verification and independent review are recorded in
+[PR #238](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/238). Merged at `8e5dbab`.
 
+> **Status correction, 2026-10-18:** #232 (`fda45c2`), #236 (`4404b01`), #237 (`554b557`),
+> #238 (`8e5dbab`), #239 (`5a54a1f`) and #240 (`4fda717`) are all merged. "Next" lines in the
+> older sections below are historical handoffs, not open actions.
 
 ## Previous objective — REVIEW-001 Phase 1a storage slice (merged #239) (2026-10-17, PROTECTED)
 
@@ -954,3 +987,12 @@ verify branch/PR/head/CI from Git and GitHub rather than assuming this checkpoin
 ## DECISIONS FOR GAVIN
 
 None. Independent Protected review and owner merge approval remain separate steps.
+
+
+Final-review follow-up: direct installed TRAIN/BODY shortcuts now initialize the root suit from
+the same read-only phase/pin derivation used by boot. The shell refreshes it on minute/resume/
+rollover until TODAY mounts, then yields to TODAY's live state and cancels obsolete reads. Two
+stored-pin shortcut regressions pass. The renewed full `npm run verify` passes (252 files,
+2,556 passed / one existing skip), and built offline cold workout/water shortcut acceptance
+passes at 320/360/412 with no duplicate workout set. The earlier exact-head review was superseded
+by its shortcut finding; the new head requires a renewed verdict recorded on PR #241.

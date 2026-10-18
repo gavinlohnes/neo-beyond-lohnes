@@ -9,6 +9,7 @@ import { ConfirmIcon, ResolveIcon } from "../../icons/Icon";
 import { CHECK_IN_FIELDS } from "./checkInFields";
 import {
   DECLINE_LABEL,
+  describeRecommendationReason,
   describeEvidenceBasis,
   describeRecommendationAction,
   describeRecommendationEffect,
@@ -110,7 +111,7 @@ export function RecommendationCard({
       </h2>
       {/* DECLUTTER-001: the all-clear rationale ("No rule requires attention
           right now.") only repeats the title, so it isn't shown there. */}
-      {!isAllClear && <p className="card-body">{recommendation.rationale}</p>}
+      {!isAllClear && <p className="card-body">{describeRecommendationReason(recommendation.rationale)}</p>}
       {evidenceBasis && (
         <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
       )}
@@ -183,6 +184,7 @@ export function RecommendationCard({
             {new Date(recommendation.trace.evaluatedAt).toLocaleTimeString()}
           </p>
         </div>
+        <p className="meta">Your call.</p>
       </WhyDisclosure>
       <div style={{ marginTop: isDominant && !isAllClear ? 20 : 12 }}>
         {decision ? (

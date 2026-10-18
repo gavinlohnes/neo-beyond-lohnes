@@ -52,6 +52,37 @@ analytics, manual workflows and optional USDA food lookup. These are real non-AI
 not obsolete assistant infrastructure. Existing records and native/legacy backup support remain
 unchanged; future AI still requires a new owner decision.
 
+## COMMAND-CENTER-001 — visible modes, COMMAND tab, one LOG entry, owner rulings, 2026-10-17/18
+
+Brief: [`agent/COMMAND-CENTER-001.md`](agent/COMMAND-CENTER-001.md). Gavin approved the plan on
+2026-10-17 and accepted the full command-center prototype on 2026-10-18
+(`prototype/command-center/index.html`, sample data, interaction reference only).
+
+- **Four tabs are now TODAY · TRAIN · BODY · COMMAND** (amends ROADMAP Command Center Rule 2 and
+  every "four tabs" mention below). COMMAND replaces MORE: same position; every MORE view,
+  setting, backup/recovery tool, guided suggestion and the Weekly Review stay, plus a search over
+  the capability catalog and a log-actions group. Still exactly four tabs; no new tabs.
+- **Modes are the existing Shift Clock phases, made visible:** PRE_WORK = PREP,
+  SCHEDULED_SHIFT = ON SHIFT, EXPECTED_POST_WORK = RECOVER, OFF = OFF DUTY. They follow the
+  schedule automatically. A manual **pin** is placement only: it chooses which existing phase rows
+  TODAY shows and holds until the 16:30 roll or END DAY. It is stored per BeyondDay in
+  localStorage, is not an event, is not backed up, never writes work context and never feeds the
+  Engine, recommendation, Attention or System Status. Pinning ON SHIFT on a day declared OFF only
+  offers an optional, separate work-day record through the existing work-context command.
+- **The TODAY action row is + WATER · + MEAL · + LOG** in fixed positions in every mode. It
+  supersedes the Command Console milestone 1 placement exception (WATER, MEAL, SYSTEM) below.
+  + LOG routes to existing canonical forms only. The SYSTEM dialog is retired once COMMAND
+  reaches every catalog destination.
+- **Red sky over Neo-Gotham** — a bounded exception to "red never decorates": a dark crimson glow
+  behind the TODAY mode-header skyline, driven by real lived-day time (never the pin). Red is
+  otherwise still reserved for the one next step, the active tab and change feedback.
+- **The suit changes with the effective mode** (token swap; AA contrast floors hold in every mode).
+- **Bruce's voice, text only:** terse, dry, calm display copy that advises and leaves the decision
+  to Gavin. Numbers, labels, buttons and data stay literal; Engine strings are mapped in the UI
+  layer, never edited; meanings stay identical. No character names, catchphrases, sound or logo.
+- **Effects rule:** every effect is presentation only, has no animation under reduced motion,
+  keeps AA contrast in every mode and never blocks or delays logging.
+
 ## REVIEW-001 — data review, owner rulings, 2026-10-14
 
 Gavin approves the plan in `agent/REVIEW-001.md`:
@@ -181,6 +212,9 @@ stays paused. Independent exact-head review, required CI and Gavin's merge appro
 
 ## Searchable SYSTEM catalog — owner ruling, 2026-10-09
 
+**Amended 2026-10-17 (COMMAND-CENTER-001):** the catalog moves into the COMMAND tab's search;
+the SYSTEM dialog is retired once COMMAND reaches every destination. Kept below for history.
+
 Gavin authorizes the bounded 18-entry production catalog assessed after PR #207 merged.
 SYSTEM remains a navigation-only native dialog over existing destinations: TODAY Tools,
 TRAIN/BODY/MORE; Water, Meal, Sleep, Bodyweight and Workout; History, Weekly Check-in, Review,
@@ -202,7 +236,8 @@ reference, genuine System Status and one canonical recommendation with reasons/o
 work context, active-workout resumption, and existing logging workflows. The four primary tabs and
 all production capabilities remain accessible; the complete searchable launcher is deferred.
 
-**Explicit placement exception:** WATER, MEAL and SYSTEM may remain directly accessible across
+**Superseded 2026-10-17 by COMMAND-CENTER-001's action row (+ WATER, + MEAL, + LOG); kept for
+history.** **Explicit placement exception:** WATER, MEAL and SYSTEM may remain directly accessible across
 all phases, outside the four-row contextual limit. They are optional operator controls, never
 logging demands or competing recommendations. WATER and MEAL reuse canonical workflows and
 their error, correction and recovery protections; SYSTEM preserves complete existing access.
@@ -1351,6 +1386,9 @@ TODAY's separate ATTENTION budget.
 
 ## Visual system — red budget
 
+**Bounded exception, 2026-10-18 (COMMAND-CENTER-001):** the red sky behind the TODAY mode header;
+see that entry above.
+
 - **Primary CTA color, reversed (locked 2026-09-03, direct owner ruling, LAUNCH-VISION-001).**
   VISUAL-001 (Hybrid Foundation) had made `.btn-primary`'s default fill neutral (near-white on
   near-black) specifically so red stayed reserved for recommendation/active/earned/warning/
@@ -1496,7 +1534,7 @@ system-identity glyph."
   start (farthest vertex ~395.5 of a safe 409.6, in the 0–1024 viewBox, with margin). The
   manifest's icon entries now declare `purpose: "any maskable"` accordingly. See
   `docs/brand/beyond-mark/README.txt`'s EMBLEM-002 note for the numbers.
-- **GLYPHS = THE INSTRUMENTS.** TODAY/TRAIN/BODY/MORE's existing locked pilot icon family
+- **GLYPHS = THE INSTRUMENTS.** TODAY/TRAIN/BODY/COMMAND's (MORE before COMMAND-CENTER-001) existing locked pilot icon family
   ([Icon.tsx](../src/ui/icons/Icon.tsx)) remains the existing locked destination/instrument
   glyph set — unchanged geometry, unrelated to machine identity.
 

@@ -52,7 +52,7 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
 
   return (
     <div className="screen">
-      <h1 className="eyebrow">MORE // WEEKLY CHECK-IN</h1>
+      <h1 className="eyebrow">COMMAND // WEEKLY CHECK-IN</h1>
       <p className="meta" style={{ marginBottom: 16 }}>The last 7 days. LAST 28 DAYS, MIRROR, FINDINGS and YOUR USUAL look further back.</p>
       {readError && <div><p role="alert">{readError} Weekly information is unavailable.</p><button type="button" className="btn-secondary" onClick={() => { setReadError(null); setReadKey((key) => key + 1); }}>RETRY WEEKLY</button></div>}
       {!summary ? (

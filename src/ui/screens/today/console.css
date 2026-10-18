@@ -8,23 +8,7 @@
   padding-block: 4px 16px;
   border-bottom: 1px solid var(--border-subtle);
 }
-.today-situation__identity {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-.today-situation__identity .tool-label,
 .today-situation__system .tool-label { margin: 0; }
-.today-situation__phase {
-  margin: 0;
-  color: var(--text-2);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: .08em;
-  text-align: right;
-  text-transform: uppercase;
-}
 .today-situation__system {
   display: grid;
   grid-template-columns: minmax(0, .8fr) minmax(0, 2fr);
@@ -81,38 +65,7 @@
 .command-console.today-field .shift-clock-rows { border-top: 1px solid var(--border-subtle); padding-top: 16px; }
 .command-console.today-field .shift-clock-rows .equipment-row { padding-block: 12px; }
 .command-console.today-field .today-support { margin-top: 16px; }
-.console-system {
-  width: min(480px, calc(100vw - 24px));
-  max-height: calc(100dvh - 32px);
-  overflow-y: auto;
-  padding: 20px 16px;
-  border: 1px solid var(--text-3);
-  background: var(--surface-1);
-  color: var(--text-1);
-}
-.console-system::backdrop { background: rgb(0 0 0 / .8); }
-.console-system-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
-.console-system-header h2 { margin: 0; }
-.console-destination {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 72px;
-  padding: 16px 0;
-  background: transparent;
-  color: var(--text-1);
-  border: 0;
-  border-top: 1px solid var(--border-subtle);
-  text-align: left;
-  font-size: 16px;
-  cursor: pointer;
-}
-.console-destination > span { flex: 1; min-width: 0; }
-.console-destination strong, .console-destination span span { display: block; }
-.console-destination span span { margin-top: 4px; color: var(--text-2); }
-.console-system button:focus-visible, .console-controls button:focus-visible { outline: 2px solid var(--text-1); outline-offset: 2px; }
-.console-destination:hover { background: var(--surface-2); }
+.console-controls button:focus-visible { outline: 2px solid var(--text-1); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   .command-console.today-field *, .console-system * { scroll-behavior: auto; }
 }
@@ -121,35 +74,10 @@
   .today-situation__system { grid-template-columns: 1fr; gap: 6px; }
 }
 
-.console-catalog-search { margin-block: 12px; }
-.console-catalog-search label { display: block; margin-bottom: 8px; font-size: 16px; }
-.console-catalog-search > div { display: flex; gap: 8px; }
-.console-catalog-search input { flex: 1; min-width: 0; width: 100%; min-height: 48px; font-size: 16px; }
-.console-catalog-search button, .console-system-header button { min-height: 48px; }
-.console-catalog-search button { flex: none; }
-.console-system section { margin-top: 24px; }
-.console-system section h3 { margin-bottom: 8px; }
-.console-system input:focus-visible { outline: 2px solid var(--text-1); outline-offset: 2px; }
-
-.console-system[open] { display: flex; flex-direction: column; overflow: hidden; }
-.console-system-header, .console-system > p, .console-catalog-search { flex: none; }
-.console-catalog-results { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-.console-catalog-results section:first-child { margin-top: 0; }
-
-.console-system-header button { flex: none; padding-inline: 14px; }
-.console-system > p { margin: 0 0 12px; }
-/* Keep an actual launch target visible when the phone keyboard reduces usable height. */
-@media (max-height: 500px) {
-  .console-system #console-system-description { display: none; }
-  .console-catalog-search { margin-block: 8px; }
-}
-
 /* DAILY-EXPERIENCE-001: a Day Line, using existing facts and authority. */
 .command-console.day-line { --console-gap: 12px; }
 .day-line .today-situation { gap: 6px; padding-block: 0 10px; }
 .command-console.day-line .status-strip--stacked { padding: 0 0 10px; }
-.day-line .today-situation__identity { justify-content: flex-start; }
-.day-line .today-situation__phase { text-align: left; color: var(--text-1); }
 .day-line .today-situation__system { grid-template-columns: 1fr; padding-top: 8px; gap: 3px; }
 .day-line .today-situation__system > .tool-label { font-size: 12px; }
 .day-line-evidence-note { color: var(--text-3-strong); font-size: 12px; line-height: 1.4; margin: 4px 0 0; }
@@ -157,7 +85,7 @@
 .command-console.day-line .shift-clock-rows { padding-top: 8px; }
 .command-console.day-line .shift-clock-rows .equipment-row { padding-block: 8px; }
 .day-line .console-operations > .section-label { font-size: 12px; margin-bottom: 4px; }
-.day-line .console-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+.day-line .console-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
 .day-line .console-controls button { flex-direction: column; font-size: 12px; gap: 4px; min-height: 56px; }
 .day-line .day-line-check-in { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .day-line-check-in > .tool-label, .day-line-check-in > .card-title { grid-column: 1 / -1; margin: 0; }

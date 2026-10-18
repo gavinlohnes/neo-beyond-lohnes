@@ -64,7 +64,6 @@ import { RecommendationCard } from "./RecommendationCard";
 import { ConsoleControls } from "./ConsoleControls";
 import { SmallSteps } from "./SmallSteps";
 import "./smallSteps.css";
-import type { SystemDestination } from "../../systemCatalog";
 import {
   startDay,
   ensureActiveDay,
@@ -146,6 +145,7 @@ import { getCheckInDraft } from "../../../application/checkInDraftQueries";
 import { getAppOpenedAt } from "../../appSession";
 import { formatDuration } from "../body/bodyScreenCopy";
 import {
+  deriveLivedDayStrip,
   deriveShiftClockView,
   describeCountdown,
   describeFuel,
@@ -155,9 +155,16 @@ import {
   isWorkEndDue,
   mainSleepEndsPostShift,
   TOOLS_ORDER,
+  type ShiftClockPhase,
   type ShiftClockRow,
   type ToolsItem,
 } from "./shiftClock";
+import { DecryptNumber } from "./DecryptNumber";
+import { SuitMode } from "./ModeIdentity";
+import { ModeHeader } from "./ModeHeader";
+import { ShiftHandoff } from "../../components/ShiftHandoff";
+import { clearModePin, getModePin, setModePin } from "../../../application/modePinQueries";
+import { mostRecentBoundaryAtOrBefore, nextRolloverBoundaryAfter } from "../../../engine/dayRollover";
 import { describeError } from "../../errorMessage";
 
 /** UNDO-001: what a TODAY log banner needs to undo the entry it confirms. */
@@ -221,11 +228,12 @@ export function TodayScreen({
   onOpenBody,
   onOpenHealthEvidence,
   onOpenWeeklyReview,
-  onOpenSystemDestination,
+  toolsRequest = 0,
   openToolsOnMount = false,
   onWorkEnded,
   onWorkContextChanged,
   banners,
+  shiftHandoffRefreshKey,
   mealRefreshKey = 0,
 }: {
   active?: boolean;
@@ -237,7 +245,8 @@ export function TodayScreen({
   onOpenWeeklyReview?: () => void;
   onOpenHealthEvidence?: (metric: "water" | "protein") => void;
   onOpenBody?: (target?: BodyFocus) => void;
-  onOpenSystemDestination?: (destination: SystemDestination) => boolean;
+  /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
+  toolsRequest?: number;
   /** Drop 2: open with TOOLS expanded (MORE's capture link lands in it). */
   openToolsOnMount?: boolean;
   /** NOTES-HANDOFF-001: told after MARK WORK ENDED succeeds, so the shell can ask for a handoff note. */
@@ -246,6 +255,8 @@ export function TodayScreen({
   onWorkContextChanged?: () => void;
   /** CLEANUP-002: the shell's lines (backup, sweep, handoff, capsule), shown right under the header. */
   banners?: ReactNode;
+  /** COMMAND-CENTER-001: the shift handoff note, under the header or in ON SHIFT's row. */
+  shiftHandoffRefreshKey?: number;
   /** Re-read canonical totals after BODY without resetting TODAY's disclosures. */
   mealRefreshKey?: number;
 } = {}) {
@@ -443,6 +454,8 @@ export function TodayScreen({
   const [schedulePattern, setSchedulePattern] = useState<SchedulePattern | null>(null);
   // Recorded times of this day's main-sleep logs (see mainSleepEndsPostShift).
   const [mainSleepRecordedAt, setMainSleepRecordedAt] = useState<string[]>([]);
+  // COMMAND-CENTER-001: the mode pin for this BeyondDay (placement only; see modePinQueries).
+  const [modePin, setModePinState] = useState<{ dayId: string; phase: ShiftClockPhase | null } | null>(null);
   const [proteinTargetG, setProteinTargetG] = useState<number | undefined>(undefined);
   // The next workout TRAIN would suggest, with Time-Fit estimates per variant.
   const [nextWorkout, setNextWorkout] = useState<{
@@ -470,6 +483,23 @@ export function TodayScreen({
     });
   }
   useEffect(() => { if (captureRequest > 0) openFastCapture(); }, [captureRequest]);
+  // Focus waits until TOOLS has rendered and TODAY is the visible workspace.
+  const toolsFocusPending = useRef(false);
+  useEffect(() => {
+    if (toolsRequest === 0) return;
+    toolsFocusPending.current = true;
+    setSmallTool(null);
+    setToolsOpen(true);
+  }, [toolsRequest]);
+  useEffect(() => {
+    if (!toolsFocusPending.current || !toolsOpen || !active) return;
+    toolsFocusPending.current = false;
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      const heading = document.getElementById("console-tools-heading");
+      heading?.focus();
+      heading?.scrollIntoView({ block: "start" });
+    }));
+  }, [toolsOpen, active, toolsRequest]);
   // Optional session-local presentation, never a capacity/plan/Minimum Day write.
   const [smallSteps, setSmallSteps] = useState(false);
   const [smallTool, setSmallTool] = useState<"MINIMUM_DAY" | "CAPTURE" | null>(null);
@@ -515,6 +545,12 @@ export function TodayScreen({
     const tick = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(tick);
   }, []);
+
+  // COMMAND-CENTER-001: a new BeyondDay (16:30 roll, START DAY) reads its own key, so it starts on schedule.
+  const dayIdForPin = day?.id ?? null;
+  useEffect(() => {
+    setModePinState(dayIdForPin ? { dayId: dayIdForPin, phase: getModePin(dayIdForPin) } : null);
+  }, [dayIdForPin]);
 
   // Coming back to the foreground: re-read, so a screen left open overnight
   // sees this morning's Shift Down and its sleep draft (2026-10-03).
@@ -1013,6 +1049,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       await endDay(day.id, "EXPLICIT_END_DAY");
+      clearModePin(day.id);
       setEndDayBlockedByWorkout(false);
       await refresh();
     } catch (error) {
@@ -1106,9 +1143,9 @@ export function TodayScreen({
     try {
       await captureItem(captureText);
       setCaptureText("");
-      setCaptureFeedback({ kind: "SUCCESS", message: "Note saved in Capture. It is also searchable in MORE." });
+      setCaptureFeedback({ kind: "SUCCESS", message: "Note saved in Capture. It is also searchable in COMMAND." });
       try { await refresh(); }
-      catch (cause) { setCaptureFeedback({ kind: "ERROR", message: `Note saved. ${describeError(cause, "Could not refresh the list.")} Do not save it again; inspect it in MORE → SEARCH.` }); }
+      catch (cause) { setCaptureFeedback({ kind: "ERROR", message: `Note saved. ${describeError(cause, "Could not refresh the list.")} Do not save it again; inspect it in COMMAND → SEARCH.` }); }
     } catch (cause) {
       setCaptureFeedback({ kind: "ERROR", message: `${describeError(cause, "Could not save the note.")} Your text is kept; try CAPTURE again when ready.` });
     } finally {
@@ -1415,7 +1452,8 @@ export function TodayScreen({
   const workContextPerSchedule = !!day && day.workContext !== "UNKNOWN" && workContextSource === "SCHEDULE_STANDING";
   // SHIFT CLOCK (Drop 2): which rows this part of the shift shows; the rest go behind TOOLS.
   const shiftWindow = day && schedulePattern ? livedDayShiftWindow(new Date(day.startedAt), schedulePattern) : null;
-  const shiftClock = deriveShiftClockView({
+  const livedDayStart = mostRecentBoundaryAtOrBefore(new Date(day?.startedAt ?? now));
+  const shiftClockInput = {
     now,
     workContext: day?.workContext ?? "UNKNOWN",
     shiftWindow,
@@ -1423,12 +1461,21 @@ export function TodayScreen({
     mainSleepLogged: mainSleepEndsPostShift(mainSleepRecordedAt, workPeriodEndedAt, shiftWindow),
     shiftDownDone:
       shiftDownCompletedAt !== null && (!shiftWindow || new Date(shiftDownCompletedAt).getTime() >= shiftWindow.start.getTime()),
-  });
+  } as const;
+  // COMMAND-CENTER-001: the pin is placement only. `scheduledClock` (no pin)
+  // feeds every decision below — Attention eligibility, guidance timing;
+  // `shiftClock` (with the pin) only chooses which rows and countdown TODAY shows.
+  const pinnedPhase = day && modePin?.dayId === day.id ? modePin.phase : null;
+  const scheduledClock = deriveShiftClockView(shiftClockInput);
+  const shiftClock = deriveShiftClockView(shiftClockInput, pinnedPhase);
+  const scheduledRows: ShiftClockRow[] = day ? scheduledClock.rows : [];
   const phaseRows: ShiftClockRow[] = day ? shiftClock.rows : [];
   const leadingPhaseRows = phaseRows.filter((row) => row === "WORK_QUESTION" || row === "SHIFT_DOWN");
   const remainingPhaseRows = phaseRows.filter((row) => row !== "WORK_QUESTION" && row !== "SHIFT_DOWN");
   const toolsItems: ToolsItem[] = day ? shiftClock.tools : [...TOOLS_ORDER];
   const checkInIsRow = phaseRows.includes("CHECK_IN");
+  const checkInIsScheduledRow = scheduledRows.includes("CHECK_IN");
+  const shiftDownIsScheduledRow = scheduledRows.includes("SHIFT_DOWN");
   // SLEEP DRAFT: only on the post-shift MAIN SLEEP row (Command Center rule 3).
   const sleepDraft =
     day && phaseRows.includes("MAIN_SLEEP") && sleepDraftEvidence
@@ -1459,15 +1506,15 @@ export function TodayScreen({
     hasWorkEndAvailable:
       day?.workContext === "WORK" &&
       workPeriodEndedAt === null &&
-      !shiftDownIsRow &&
-      shiftClock.phase !== "PRE_WORK" &&
-      isWorkEndDue(shiftClock.phase, shiftWindow, now),
+      !shiftDownIsScheduledRow &&
+      scheduledClock.phase !== "PRE_WORK" &&
+      isWorkEndDue(scheduledClock.phase, shiftWindow, now),
     isCheckInMissing:
       day !== null &&
       checkIn === null &&
-      !checkInIsRow &&
-      shiftClock.phase !== "PRE_WORK" &&
-      shiftClock.phase !== "SCHEDULED_SHIFT",
+      !checkInIsScheduledRow &&
+      scheduledClock.phase !== "PRE_WORK" &&
+      scheduledClock.phase !== "SCHEDULED_SHIFT",
     isMinimumDayProminent: showProminentMinimumDay,
     isHydrationOperationOpen:
       hydrationOperationOpen &&
@@ -1695,9 +1742,9 @@ export function TodayScreen({
         {/* FEEL-001: the totals count up when they change; the settled text is fuelLine's. */}
         <p className="card-body" style={{ margin: 0 }} aria-label={fuelLine}>
           {onOpenHealthEvidence ? <>
-            <button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("protein"); }}>Protein <TickNumber value={minimumDayProteinG} />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g</button>
-            {" · "}<button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Water ${minimumDayHydrateOz} oz, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("water"); }}>Water <TickNumber value={minimumDayHydrateOz} /> oz</button>
-          </> : <>Protein <TickNumber value={minimumDayProteinG} />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g · Water <TickNumber value={minimumDayHydrateOz} /> oz</>}
+            <button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("protein"); }}>Protein <DecryptNumber value={minimumDayProteinG} dayId={day!.id} reading="protein" />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g</button>
+            {" · "}<button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Water ${minimumDayHydrateOz} oz, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("water"); }}>Water <DecryptNumber value={minimumDayHydrateOz} dayId={day!.id} reading="water" /> oz</button>
+          </> : <>Protein <DecryptNumber value={minimumDayProteinG} dayId={day!.id} reading="protein" />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g · Water <DecryptNumber value={minimumDayHydrateOz} dayId={day!.id} reading="water" /> oz</>}
         </p>
       </div>
     );
@@ -1813,7 +1860,7 @@ export function TodayScreen({
           <AdvisorySection
         notes={shownAdvisoryNotes}
         busy={busy}
-        onLogWater={(amountOz) => void handleMinimumDayLogWater(amountOz)}
+        {...(dominant !== "HYDRATION_ACTIVE" ? { onLogWater: (amountOz: number) => void handleMinimumDayLogWater(amountOz) } : {})}
         onOpenMinimumDay={() => setMinimumDayOpen(true)}
       />
         );
@@ -1834,25 +1881,8 @@ export function TodayScreen({
         );
       case "FUEL":
         return renderFuel();
-      case "QUICK_LOG":
-        return (
-          <div className="equipment-row">
-            <p className="tool-label" style={{ marginBottom: 8 }}>QUICK LOG</p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button type="button" className="chip" aria-label="Log 8 oz water" disabled={busy} onClick={() => void handleMinimumDayLogWater(8)}>
-                +8 oz
-              </button>
-              <button type="button" className="chip" aria-label="Log 16 oz water" disabled={busy} onClick={() => void handleMinimumDayLogWater(16)}>
-                +16 oz
-              </button>
-              {onOpenBody && quitHabitSetUp && (
-                <button type="button" className="chip" aria-label="Log an urge in BODY" onClick={() => onOpenBody("urge")}>
-                  URGE
-                </button>
-              )}
-            </div>
-          </div>
-        );
+      case "SHIFT_HANDOFF":
+        return shiftHandoffRefreshKey !== undefined ? <ShiftHandoff refreshKey={shiftHandoffRefreshKey} /> : null;
       case "SHIFT_DOWN":
         // An in-progress SHIFT DOWN already owns Operate above.
         if (dominant === "SHIFT_DOWN_ACTIVE" || dominant === "OPERATION_CONFLICT") return null;
@@ -2006,6 +2036,7 @@ export function TodayScreen({
         dominant !== "NONE" ? "earned" : attentionPlan.attention.length > 0 ? "attention" : "quiet"
       }
     >
+      <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
       {/* BEYOND Suit Implementation 01B: the identity zone is
           deliberately quiet now — a real <h1> for correct heading
           structure (Part 15), but styled with .eyebrow (small, mono)
@@ -2021,8 +2052,11 @@ export function TodayScreen({
       <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
 
       {/* CLEANUP-002: the shell's own lines sit under the header, part of the screen. */}
-      {banners && <div className="today-banners">{banners}</div>}
-      {day && onOpenWeeklyReview && <WeeklyReviewReadyLine active={active} phase={shiftClock.phase} now={now} onOpen={onOpenWeeklyReview} />}
+      {(banners || (shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF"))) && <div className="today-banners">
+        {banners}
+        {shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF") && <ShiftHandoff refreshKey={shiftHandoffRefreshKey} />}
+      </div>}
+      {day && onOpenWeeklyReview && <WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} />}
 
       {commitmentFeedback && (
         <p
@@ -2128,10 +2162,28 @@ export function TodayScreen({
               : "status-strip status-strip--stacked today-situation"
           }
         >
-          <div className="today-situation__identity">
-            <h2 id="today-current-state-heading" className="visually-hidden">CURRENT STATE</h2>
-            <p className="today-situation__phase">{describePhaseHeading(shiftClock.phase, day.workContext)}</p>
-          </div>
+          <h2 id="today-current-state-heading" className="visually-hidden">CURRENT STATE</h2>
+          {/* COMMAND-CENTER-001: the mode by name, its source, and the lived day. */}
+          <ModeHeader
+            now={now}
+            hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED"}
+            scheduledPhase={scheduledClock.phase}
+            pin={pinnedPhase}
+            dayStart={livedDayStart}
+            dayOff={day.workContext === "OFF"}
+            busy={busy}
+            strip={deriveLivedDayStrip({
+              dayStart: livedDayStart,
+              dayEnd: nextRolloverBoundaryAfter(new Date(day.startedAt)),
+              now,
+              workContext: day.workContext,
+              shiftWindow,
+              workEndedAt: workPeriodEndedAt,
+              mainSleepRecordedAt,
+            })}
+            onPin={(phase) => { setModePin(day.id, phase); setModePinState({ dayId: day.id, phase }); }}
+            onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
+          />
           {/* SHIFT CLOCK (Drop 2): before and during a scheduled shift the
               headline is the countdown; the work context it rests on moves to
               a quiet line under it. The "per schedule" one-tap change stays
@@ -2145,7 +2197,7 @@ export function TodayScreen({
                     currentContext ? currentContext.schedulePrediction : scheduledContext,
                     currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
                     workContextPerSchedule,
-                    shiftClock.phase,
+                    scheduledClock.phase,
                   )}
             </p>
             {workContextPerSchedule && day.workContext !== "UNKNOWN" && (
@@ -2354,16 +2406,17 @@ export function TodayScreen({
           isInFlight={() => busyRef.current}
           onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
           onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
-          onOpenCapture={openFastCapture}
-          onOpenDestination={onOpenSystemDestination}
-          onOpenTools={() => {
-            setSmallTool(null);
-            setToolsOpen(true);
-            window.requestAnimationFrame(() => {
-              const heading = document.getElementById("console-tools-heading");
-              heading?.focus();
-              heading?.scrollIntoView({ block: "start" });
-            });
+          onOpenLog={{
+            ...(onOpenBody ? {
+              water: () => onOpenBody("water"),
+              meal: () => onOpenBody("meal"),
+              sleep: () => onOpenBody("sleep"),
+              weight: () => onOpenBody("weight"),
+              // An urge is logged against a quit habit; without one there's nothing to log yet.
+              ...(quitHabitSetUp ? { urge: () => onOpenBody("urge") } : {}),
+            } : {}),
+            note: openFastCapture,
+            ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
           }}
         />
       </section>
@@ -2452,7 +2505,7 @@ export function TodayScreen({
             </SignalRow>
           )}
 
-          {minimumDayInAttention && (
+          {minimumDayInAttention && dominant !== "HYDRATION_ACTIVE" && (
             <div data-small-minimum>
             <MinimumDayCard
               prominent={true}

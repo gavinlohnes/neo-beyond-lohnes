@@ -11,6 +11,7 @@ import { getEffectiveHydrationTotal } from "../../src/application/queries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { MAX_PHASE_ROWS } from "../../src/ui/screens/today/shiftClock";
 import { db } from "../../src/persistence/db";
+import { searchCommand } from "./helpers/todayTools";
 
 beforeEach(async () => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -27,7 +28,7 @@ describe("Production Command Console", () => {
       vi.setSystemTime(new Date(2026, 9, day, hour));
       await startDay();
       const screen = await render(<App />);
-      for (const name of ["Log water in BODY", "Log a meal in BODY", "Open SYSTEM"]) {
+      for (const name of ["Log water in BODY", "Log a meal in BODY", "Open LOG"]) {
         await expect.element(screen.getByRole("button", { name })).toBeVisible();
       }
       expect(document.querySelectorAll("[data-shift-clock-row]").length).toBeLessThanOrEqual(MAX_PHASE_ROWS);
@@ -56,7 +57,7 @@ describe("Production Command Console", () => {
     await screen.getByRole("button", { name: "UNDO", exact: true }).click();
     await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(0);
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "Open SYSTEM" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();
   });
 
   it("retains UNKNOWN context without inferring a phase and keeps every workspace reachable", async () => {
@@ -67,11 +68,16 @@ describe("Production Command Console", () => {
     await expect.poll(() => [...document.querySelectorAll("[data-shift-clock-row]")].map((element) => element.getAttribute("data-shift-clock-row")))
       .toEqual(["WORK_QUESTION", "CHECK_IN", "WORKOUT"]);
     await expect.poll(() => document.querySelector("[data-system-status]")?.getAttribute("data-system-status")).toBe("NO_READ");
-    for (const destination of ["TRAIN", "BODY", "MORE"] as const) {
-      await screen.getByRole("button", { name: "Open SYSTEM" }).click();
-      await screen.getByRole("dialog").getByRole("button", { name: new RegExp(`^${destination} `) }).click();
+    // COMMAND-CENTER-001: TRAIN and BODY through COMMAND's search, COMMAND by its tab.
+    for (const destination of ["TRAIN", "BODY", "COMMAND"] as const) {
+      if (destination === "COMMAND") await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+      else {
+        await searchCommand(screen, destination.toLowerCase());
+        await screen.getByRole("button", { name: new RegExp(`^${destination} `) }).click();
+      }
       await expect.element(screen.getByRole("button", { name: destination, exact: true })).toHaveAttribute("aria-current", "page");
-      await expect.poll(() => document.activeElement?.tagName).toBe("H1");
+      // COMMAND's tab returns to the search that was last used there; the others land on their heading.
+      if (destination !== "COMMAND") await expect.poll(() => document.activeElement?.tagName).toBe("H1");
       await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     }
   });
@@ -143,25 +149,25 @@ describe("Production Command Console", () => {
   });
 
   it("does not abandon a TODAY write through same-tick persistent controls", async () => {
-    vi.setSystemTime(new Date(2026, 9, 12, 22));
+    // COMMAND-CENTER-001: QUICK_LOG's +8 oz is gone; TODAY's own quick check-in is the in-flight write.
     const day = await startDay();
     const screen = await render(<App />);
-    await expect.element(screen.getByRole("button", { name: "Log 8 oz water" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
     const original = db.events.add.bind(db.events);
     let release!: () => void;
     const gate = new Promise<void>((resolve) => { release = resolve; });
     const write = vi.spyOn(db.events, "add").mockImplementation((...args) => Dexie.Promise.resolve(gate).then(() => original(...args)));
     try {
-      (screen.getByRole("button", { name: "Log 8 oz water" }).element() as HTMLButtonElement).click();
+      (screen.getByRole("button", { name: "ALL GOOD" }).element() as HTMLButtonElement).click();
       (screen.getByRole("button", { name: "Log a meal in BODY" }).element() as HTMLButtonElement).click();
       (screen.getByRole("button", { name: "Log water in BODY" }).element() as HTMLButtonElement).click();
-      (screen.getByRole("button", { name: "Open SYSTEM" }).element() as HTMLButtonElement).click();
+      (screen.getByRole("button", { name: "Open LOG" }).element() as HTMLButtonElement).click();
       expect(screen.getByRole("dialog").elements()).toHaveLength(0);
       await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
     } finally { release(); }
-    await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(8);
-    await expect.element(screen.getByText("8 oz recorded.", { exact: true })).toBeVisible();
-    expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
+    await expect.poll(async () => db.events.where("type").equals("STATE_CHECKED_IN").count()).toBe(1);
+    await expect.poll(() => document.querySelector('[data-shift-clock-row="CHECK_IN"]')?.textContent ?? "").toMatch(/Checked in/);
+    expect(await db.checkIns.where("beyondDayId").equals(day.id).count()).toBe(1);
     write.mockRestore();
   });
 
@@ -172,9 +178,8 @@ describe("Production Command Console", () => {
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished dinner");
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     const confirm = vi.spyOn(window, "confirm");
-    await screen.getByRole("button", { name: "Open SYSTEM" }).click();
-    await screen.getByRole("dialog").getByRole("button", { name: /^MORE / }).click();
-    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
+    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
     // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
     await expect.element(screen.getByRole("heading", { name: "BODY // DAILY RECORD" })).toBeVisible();
@@ -200,8 +205,9 @@ describe("Production Command Console", () => {
       expect(resume.bottom).toBeLessThanOrEqual(document.querySelector(".shell-nav")!.getBoundingClientRect().top);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     }
-    await screen.getByRole("button", { name: "Open SYSTEM" }).click();
-    await screen.getByRole("button", { name: /MORE History/ }).click();
+    await searchCommand(screen, "history");
+    await screen.getByRole("button", { name: /^HISTORY COMMAND · / }).click();
+    await expect.element(screen.getByRole("heading", { name: "COMMAND // HISTORY" })).toBeVisible();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await screen.getByRole("button", { name: "RESUME WORKOUT" }).click();
     expect((await getActiveWorkoutSession())?.id).toBe(workout.id);
@@ -210,35 +216,29 @@ describe("Production Command Console", () => {
   });
 
   for (const width of [320, 360, 412]) {
-    it(`keeps SYSTEM keyboard accessible and mobile layout readable at ${width}px`, async () => {
+    it(`reaches TODAY TOOLS from COMMAND by keyboard with a readable layout at ${width}px`, async () => {
+      // COMMAND-CENTER-001: the retired SYSTEM dialog's keyboard path is COMMAND's search.
       await page.viewport(width, 800);
       await startDay();
       const screen = await render(<App />);
-      const opener = screen.getByRole("button", { name: "Open SYSTEM" });
-      await opener.click();
-      await expect.element(screen.getByRole("dialog", { name: "SYSTEM", exact: true })).toBeVisible();
-      await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Close SYSTEM");
-      for (let i = 0; i < 8; i++) {
-        await userEvent.tab();
-        expect(document.activeElement?.closest("dialog")).not.toBeNull();
-      }
+      const search = await searchCommand(screen, "tools");
+      await expect.element(screen.getByRole("button", { name: /^TODAY TOOLS / })).toBeVisible();
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
-      for (const control of document.querySelectorAll<HTMLButtonElement>(".console-controls button, .console-system button")) {
-        expect(control.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+      for (const control of document.querySelectorAll<HTMLButtonElement>(".console-controls button, .command-result, .command-search input")) {
+        if (control.getClientRects().length) expect(control.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       }
+      for (const animation of document.getAnimations()) animation.finish();
       expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
-      await userEvent.keyboard("{Escape}");
-      await expect.poll(() => document.activeElement).toBe(opener.element());
-      // The handoff must survive native close and React's effect cleanup,
-      // not merely pass while focus is transiently on the trigger.
-      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      expect(document.activeElement).toBe(opener.element());
-      await opener.click();
-      await screen.getByRole("button", { name: /TODAY TOOLS/ }).click();
+      (search.element() as HTMLInputElement).focus();
+      await userEvent.keyboard("{Enter}");
+      await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
       await expect.poll(() => document.activeElement?.id).toBe("console-tools-heading");
       await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
       expect(document.activeElement?.id).toBe("console-tools-heading");
       await expect.element(screen.getByRole("button", { name: "Close TOOLS" })).toBeVisible();
+      // The query is still there on return to COMMAND.
+      await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+      await expect.element(screen.getByRole("searchbox", { name: "Find a screen or action" })).toHaveValue("tools");
     });
   }
 });

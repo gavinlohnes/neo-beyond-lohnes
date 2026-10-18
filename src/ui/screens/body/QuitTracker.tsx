@@ -20,11 +20,13 @@ import { describeError } from "../../errorMessage";
  * clean-day log, one-tap urge logging by trigger with undo, and money saved.
  * Neutral ink only; red never decorates.
  */
-export function QuitTracker({ initiallyOpen = false }: { initiallyOpen?: boolean } = {}) {
+export function QuitTracker({ initiallyOpen = false, openRequest = 0 }: { initiallyOpen?: boolean; openRequest?: number } = {}) {
   const [summary, setSummary] = useState<QuitSummary | undefined>(undefined);
   const [loaded, setLoaded] = useState(false);
   // Drop 7: the "Urge" home-screen shortcut opens the tracker straight to its urge buttons.
   const [open, setOpen] = useState(initiallyOpen);
+  // COMMAND-CENTER-001: a later urge request (TODAY's + LOG → Urge) opens it again once BODY is mounted.
+  useEffect(() => { if (openRequest) setOpen(true); }, [openRequest]);
   const [busy, setBusy] = useState(false);
   const [lastUrge, setLastUrge] = useState<{ eventId: string; trigger: UrgeTrigger } | null>(null);
   // Drop 4: the operator's answer to their own plan for lastUrge, once given.
@@ -107,7 +109,7 @@ export function QuitTracker({ initiallyOpen = false }: { initiallyOpen?: boolean
       ? `${describeCleanDays(summary.cleanThisMonth)}${
           summary.savedThisMonthUsd !== undefined ? ` · ${formatUsd(summary.savedThisMonthUsd)} saved` : ""
         }`
-      : "Set it up in MORE → Settings";
+      : "Set it up in COMMAND → Settings";
     return (
       <CollapsibleRow
         name={summary ? `QUIT: ${summary.habit.name.toUpperCase()}` : "QUIT TRACKER"}
@@ -130,7 +132,7 @@ export function QuitTracker({ initiallyOpen = false }: { initiallyOpen?: boolean
       </div>
 
       {!summary ? (
-        <p className="card-body">Name the habit you're avoiding in MORE → Settings, and it will show up here.</p>
+        <p className="card-body">Name the habit you're avoiding in COMMAND → Settings, and it will show up here.</p>
       ) : (
         <>
           <p className="recommendation-title" style={{ marginBottom: 2 }}>{describeCleanDays(summary.cleanThisMonth)}</p>

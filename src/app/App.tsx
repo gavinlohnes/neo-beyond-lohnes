@@ -2,25 +2,27 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
 import type { InsightMetric } from "../application/bodyInsightsQueries";
+import { readBootPhase } from "../ui/screens/today/bootMode";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import { TrainScreen, type TrainDestination } from "../ui/screens/train/TrainScreen";
 import { BodyScreen } from "../ui/screens/body/BodyScreen";
 import { MoreScreen, type MoreView } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
+import { EmblemContext } from "../ui/components/OperatorHeader";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
 import { NotesSweep } from "../ui/components/NotesSweep";
-import { ShiftHandoff } from "../ui/components/ShiftHandoff";
 import { TimeCapsuleOpened } from "../ui/components/TimeCapsuleOpened";
 import { ReportReadyLine } from "../ui/components/ReportReadyLine";
 import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
-import { performDueDayRollover } from "../application/commands";
+import { performDueDayRollover, subscribeToDayRollover } from "../application/commands";
 import { nextRolloverBoundaryAfter } from "../engine/dayRollover";
 import { parseShortcut, type BodyFocus } from "../ui/shortcuts";
 import { positionPrimaryDestination, positionRevealedSurface } from "../ui/navigationPosition";
 import { SessionDraftProvider, useHasSessionDrafts } from "../ui/sessionDrafts";
 import type { IntentFocus } from "../ui/screens/more/IntentScreen";
+import type { SystemDestination } from "../ui/systemCatalog";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -29,7 +31,7 @@ import type { IntentFocus } from "../ui/screens/more/IntentScreen";
  * helpers, and tests are all untouched — it's reachable from MORE
  * instead of competing for a fifth primary tab slot.
  */
-type Tab = "TODAY" | "TRAIN" | "BODY" | "MORE";
+type Tab = "TODAY" | "TRAIN" | "BODY" | "COMMAND";
 
 // Overdrive Phase 14: MORE now has its own icon ("more" — three small
 // diamonds, additive to the six locked pilot icons, not a redesign of
@@ -39,7 +41,8 @@ const TAB_ICON: Record<Tab, IconName> = {
   TODAY: "mission",
   TRAIN: "train",
   BODY: "body",
-  MORE: "more",
+  // COMMAND-CENTER-001: COMMAND replaces MORE, with its own additive glyph.
+  COMMAND: "command",
 };
 
 /**
@@ -115,6 +118,29 @@ function AppWorkspaces() {
   const [tab, setTab] = useState<Tab>(() => (shortcut === "workout" ? "TRAIN" : shortcut ? "BODY" : "TODAY"));
   // Screen instances are session-local. Hiding a destination never discards its forms.
   const [visited, setVisited] = useState(() => new Set<Tab>([tab]));
+  // A direct TRAIN/BODY launch has no TODAY yet to publish the effective suit.
+  // Read the same phase/pin without writing any domain state. Once TODAY mounts,
+  // its live state owns the tokens; an obsolete startup read cannot overwrite it.
+  const todayVisited = visited.has("TODAY");
+  useEffect(() => {
+    if (todayVisited) return;
+    let current = true;
+    let generation = 0;
+    async function refreshSuit() {
+      const request = ++generation;
+      try {
+        const phase = await readBootPhase();
+        if (current && request === generation) document.documentElement.dataset.suitMode = phase ?? "UNSET";
+      } catch { /* Keep operation available if the optional presentation read fails. */ }
+    }
+    void refreshSuit();
+    const timer = window.setInterval(() => void refreshSuit(), 60_000);
+    const resume = () => { if (document.visibilityState === "visible") void refreshSuit(); };
+    document.addEventListener("visibilitychange", resume);
+    const unsubscribe = subscribeToDayRollover(() => void refreshSuit());
+    return () => { current = false; window.clearInterval(timer); document.removeEventListener("visibilitychange", resume); unsubscribe(); };
+  }, [todayVisited]);
+  useEffect(() => () => { delete document.documentElement.dataset.suitMode; }, []);
   const [todayRefreshKey, setTodayRefreshKey] = useState(0);
   const [workEndedKey, setWorkEndedKey] = useState(0);
   const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut === "workout" ? null : shortcut);
@@ -161,6 +187,7 @@ function AppWorkspaces() {
   }, []);
   const [todayToolsOpen, setTodayToolsOpen] = useState(false);
   const [captureRequest, setCaptureRequest] = useState(0);
+  const [toolsRequest, setToolsRequest] = useState(0);
   const [captureOrigin, setCaptureOrigin] = useState<Tab | null>(null);
   const [moreRequest, setMoreRequest] = useState(0);
   const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(null);
@@ -318,6 +345,34 @@ function AppWorkspaces() {
     });
   }
 
+  // Session navigation only: retained panes keep their own drafts and query.
+  // Browser Back/Forward restores the same destination without remounting it.
+  const historyReady = useRef(false);
+  const restoringHistory = useRef(false);
+  useEffect(() => {
+    const state = { beyondNavigation: true, tab, moreView };
+    if (!historyReady.current) {
+      window.history.replaceState(state, "");
+      historyReady.current = true;
+    } else if (restoringHistory.current) restoringHistory.current = false;
+    else if (window.history.state?.tab !== tab || window.history.state?.moreView !== moreView) window.history.pushState(state, "");
+  }, [tab, moreView]);
+  useEffect(() => {
+    function restore(event: PopStateEvent) {
+      const state = event.state;
+      // Retained panes must not leave a native modal in the top layer on Back.
+      for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog[open]")) dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
+      if (!state?.beyondNavigation || !["TODAY", "TRAIN", "BODY", "COMMAND"].includes(state.tab)) return;
+      if (mealInFlight.current) { window.history.forward(); return; }
+      restoringHistory.current = state.tab !== tab || state.moreView !== moreView;
+      setMoreView(state.moreView);
+      setMoreRequest((key) => key + 1);
+      showTab(state.tab);
+    }
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, [tab, moreView]);
+
   function canNavigate() { return !mealInFlight.current; }
 
   function openMore(view: MoreView, focus: IntentFocus | null = null, focusHeading = true) {
@@ -326,11 +381,11 @@ function AppWorkspaces() {
     setIntentFocus(focus);
     setMoreView(view);
     setMoreRequest((key) => key + 1);
-    showTab("MORE", false);
+    showTab("COMMAND", false);
     const request = navigation.current;
     requestAnimationFrame(() => requestAnimationFrame(() => {
       if (request !== navigation.current || !focusHeading) return;
-      const heading = [...document.querySelectorAll<HTMLElement>("#workspace-MORE h1")].find((element) => element.getClientRects().length);
+      const heading = [...document.querySelectorAll<HTMLElement>("#workspace-COMMAND h1")].find((element) => element.getClientRects().length);
       if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
     }));
     return true;
@@ -347,7 +402,7 @@ function AppWorkspaces() {
   function openPrimaryTab(destination: Tab) {
     if (!canNavigate()) return false;
     setHealthHistoryOrigin(false); setHealthEvidence(null);
-    if (destination === "MORE" && tab === "MORE") return openMore("MENU");
+    if (destination === "COMMAND" && tab === "COMMAND") return openMore("MENU");
     // PR #228 review R2: a Capture return belongs to that Capture visit only.
     setCaptureOrigin(null);
     if (destination === "BODY") {
@@ -395,6 +450,32 @@ function AppWorkspaces() {
     setTodayRefreshKey((key) => key + 1);
   }
 
+  // COMMAND-CENTER-001: COMMAND's search reaches every catalog destination (TODAY's SYSTEM dialog is retired).
+  function openSystemDestination(destination: SystemDestination | { kind: "tools" }): boolean {
+    if (destination.kind === "body") return openBody(destination.focus);
+    if (destination.kind === "workout") return openTrain("WORKOUT");
+    if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
+    if (destination.kind === "capture") { openCapture(); return true; }
+    if (destination.kind === "tools") {
+      if (!canNavigate()) return false;
+      setTodayToolsOpen(true);
+      setToolsRequest((key) => key + 1);
+      showTab("TODAY", false);
+      return true;
+    }
+    if (destination.kind === "more") return openMore(destination.view);
+    return false;
+  }
+
+  /** COMMAND-CENTER-001: the header emblem goes to TODAY's root, from anywhere. */
+  function goTodayRoot() {
+    if (!canNavigate()) return;
+    setCaptureOrigin(null);
+    setHealthHistoryOrigin(false);
+    setHealthEvidence(null);
+    showTab("TODAY", false);
+  }
+
   function openCapture() {
     if (!canNavigate()) return;
     if (tab !== "TODAY") setCaptureOrigin(tab);
@@ -412,6 +493,7 @@ function AppWorkspaces() {
   }
 
   return (
+    <EmblemContext.Provider value={goTodayRoot}>
     <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
       <a className="skip-link" href="#main-content">Skip to content</a>
       <main id="main-content" tabIndex={-1}>
@@ -424,10 +506,10 @@ function AppWorkspaces() {
               onReturnFromCapture={captureOrigin ? () => { showTab(captureOrigin); setCaptureOrigin(null); } : undefined}
               onWorkEnded={() => setWorkEndedKey((k) => k + 1)}
               onWorkContextChanged={() => setWorkEndedKey((k) => k + 1)}
+              shiftHandoffRefreshKey={workEndedKey}
               banners={<>
                 <BackupDueLine />
                 <NotesSweep refreshKey={workEndedKey} onSwept={() => setTodayRefreshKey((k) => k + 1)} />
-                <ShiftHandoff refreshKey={workEndedKey} />
                 <TimeCapsuleOpened />
                 <ReportReadyLine />
               </>}
@@ -438,12 +520,7 @@ function AppWorkspaces() {
               onOpenBody={openBody}
               onOpenHealthEvidence={openBodyEvidence}
               onOpenWeeklyReview={() => openMore("REVIEW")}
-              onOpenSystemDestination={(destination) => {
-                if (destination.kind === "body") return openBody(destination.focus);
-                if (destination.kind === "workout") return openTrain("WORKOUT");
-                if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
-                return openMore(destination.view);
-              }}
+              toolsRequest={toolsRequest}
             />
           </RootErrorBoundary>
         </div>}
@@ -457,8 +534,8 @@ function AppWorkspaces() {
             onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `RETURN TO ${mealOrigin.tab}` : "RETURN TO TODAY"}
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
-        {visited.has("MORE") && <div id="workspace-MORE" className={tab === "MORE" ? "tab-enter" : undefined} hidden={tab !== "MORE"}>
-          <RootErrorBoundary active={tab === "MORE"}><MoreScreen active={tab === "MORE"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus}
+        {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
+          <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}
             onOpenCapture={openCapture}
@@ -466,7 +543,8 @@ function AppWorkspaces() {
               if (!canNavigate()) return;
               setTrainDestination(null); setTrainRecordsFocus(exerciseId); showTab("TRAIN", false);
             }}
-            onOpenMeal={() => openBody("meal")} /></RootErrorBoundary>
+            onOpenMeal={() => openBody("meal")}
+            onOpenDestination={openSystemDestination} /></RootErrorBoundary>
         </div>}
       </main>
 
@@ -494,7 +572,7 @@ function AppWorkspaces() {
           cue, the red structural tick, aria-current) changed — only
           how it's expressed. */}
       <nav className="shell-nav">
-        {(["TODAY", "TRAIN", "BODY", "MORE"] as Tab[]).map((t) => (
+        {(["TODAY", "TRAIN", "BODY", "COMMAND"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => openPrimaryTab(t)}
@@ -515,5 +593,6 @@ function AppWorkspaces() {
         ))}
       </nav>
     </div>
+    </EmblemContext.Provider>
   );
 }
