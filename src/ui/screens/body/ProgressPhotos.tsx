@@ -123,7 +123,8 @@ export function ProgressPhotos({ active }: { active: boolean }) {
         <div className="progress-actions"><button className="btn-primary" disabled={busy}>{busy ? "SAVING…" : "SAVE PHOTO"}</button><button className="btn-secondary" type="button" disabled={busy} onClick={clearFile}>CLEAR SELECTED PHOTO</button></div>
       </>}
     </form>
-    {guideOpen && <FramingGuide initialPose={filter} photos={photos} onClose={() => closeGuide(false)}
+    {/* The ghost comes only from a current, successful read: a cached list can hold a photo hidden since. */}
+    {guideOpen && <FramingGuide initialPose={filter} photos={ready && !reading && !readFailed ? photos : null} onClose={() => closeGuide(false)}
       onCapture={(captured, guidePose) => { pick(captured, "CAMERA"); setPose(guidePose); closeGuide(true); }} />}
     {receipt && <p className="progress-receipt" role="status">{receipt}</p>}
     {error && <p role="alert">{error}</p>}

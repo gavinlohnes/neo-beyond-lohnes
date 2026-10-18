@@ -26,13 +26,13 @@ export function coverCrop(width: number, height: number, aspect = FRAME_ASPECT) 
  */
 export function FramingGuide({ initialPose, photos, onCapture, onClose }: {
   initialPose: PhotoPose;
-  /** Visible photos, oldest first; the latest in the chosen pose is the ghost. */
-  photos: readonly ProgressPhoto[];
+  /** Photos from a current read, oldest first; the latest visible one in the chosen pose is the ghost. Null while unread or unreadable: no ghost. */
+  photos: readonly ProgressPhoto[] | null;
   onCapture: (file: File, pose: PhotoPose) => void;
   onClose: () => void;
 }) {
   const [pose, setPose] = useState<PhotoPose>(initialPose);
-  const ghost = photos.filter((photo) => photo.pose === pose && !photo.hiddenAt).at(-1);
+  const ghost = photos?.filter((photo) => photo.pose === pose && !photo.hiddenAt).at(-1);
   const dialog = useRef<HTMLDialogElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const [state, setState] = useState<"STARTING" | "LIVE" | "UNAVAILABLE">("STARTING");
@@ -104,7 +104,9 @@ export function FramingGuide({ initialPose, photos, onCapture, onClose }: {
         {state === "UNAVAILABLE" && <p className="framing-guide__status" role="alert">Camera unavailable here. Use TAKE PHOTO or IMPORT PHOTO instead.</p>}
       </div>
       <p className="meta framing-guide__note">
-        {ghost ? `Line up with your last ${poseLabel(pose).toLowerCase()} photo. Same distance, same light.` : `No earlier ${poseLabel(pose).toLowerCase()} photo yet. This one becomes the guide next time.`}
+        {ghost ? `Line up with your last ${poseLabel(pose).toLowerCase()} photo. Same distance, same light.`
+          : photos === null ? "Earlier photos aren’t read yet, so there’s no guide image."
+          : `No earlier ${poseLabel(pose).toLowerCase()} photo yet. This one becomes the guide next time.`}
         {" "}Nothing saves until you choose SAVE PHOTO.
       </p>
       <div className="framing-guide__actions">
