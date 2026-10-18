@@ -15,7 +15,7 @@
 .systems__go { color: var(--text-3-strong); font-size: 18px; }
 
 .systems-line {
-  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; margin-top: 6px; padding: 8px 0 4px;
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 46px; margin-top: 2px; padding: 4px 0 2px;
   border: 0; border-top: 1px solid var(--border-subtle); background: transparent; color: var(--text-1); text-align: left; font: inherit; cursor: pointer;
 }
 .systems-line__key { flex: none; color: var(--text-3-strong); font-size: 12px; letter-spacing: .16em; }

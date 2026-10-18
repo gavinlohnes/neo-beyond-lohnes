@@ -11,13 +11,14 @@ import { startWorkout } from "../../src/application/trainCommands";
 import { getDayProteinTotalG, getEffectiveHydrationTotal } from "../../src/application/queries";
 import { LONG_PRESS_MS } from "../../src/ui/hooks/useLongPress";
 import { db } from "../../src/persistence/db";
+import { glitched, stopWatching, watchGlitches } from "./glitchWatch";
 
 /** SUIT-001: stealth hides the screen, not the data. */
 vi.mock("../../src/application/commands", async (original) => {
   const actual = await original<typeof import("../../src/application/commands")>();
   return { ...actual, logWater: vi.fn(actual.logWater) };
 });
-afterEach(async () => { await cleanup(); vi.mocked(commands.logWater).mockClear(); await page.viewport(1280, 800); await cdp().send("Emulation.setEmulatedMedia", { features: [] }); });
+afterEach(async () => { stopWatching(); await cleanup(); vi.mocked(commands.logWater).mockClear(); await page.viewport(1280, 800); await cdp().send("Emulation.setEmulatedMedia", { features: [] }); });
 
 const overlay = () => document.querySelector<HTMLElement>(".stealth");
 const findEmblem = () => [...document.querySelectorAll<HTMLElement>("main .operator-emblem")].find((element) => element.getClientRects().length);
@@ -137,9 +138,10 @@ it("says plainly when a save fails, glitching once, and writes nothing", async (
   const screen = await render(<App />);
   await press(await visibleEmblem(), LONG_PRESS_MS + 80);
   await screen.getByRole("button", { name: "WATER", exact: true }).click();
+  watchGlitches();
   await screen.getByRole("button", { name: "8 oz", exact: true }).click();
   await expect.element(screen.getByRole("alert")).toHaveTextContent("Water not saved. Try again.");
-  expect(document.querySelector('[data-signal="save-failed"]')?.classList.contains("signal-glitch")).toBe(true);
+  await expect.poll(() => glitched.has("save-failed")).toBe(true);
   expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(0);
 });
 

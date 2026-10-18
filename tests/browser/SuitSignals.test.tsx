@@ -9,6 +9,7 @@ import { logProtein, setWorkContext, startDay } from "../../src/application/comm
 import { completeWorkout, startWorkout } from "../../src/application/trainCommands";
 import { setAutoBackupPreferenceAndReset } from "../../src/application/autoBackupQueries";
 import { db } from "../../src/persistence/db";
+import { glitched, stopWatching, watchGlitches } from "./glitchWatch";
 
 /** SUIT-001: exactly four glitch signals, each always with plain words, glitching once. */
 let onLine = true;
@@ -19,6 +20,7 @@ function setOnline(value: boolean) {
   window.dispatchEvent(new Event(value ? "online" : "offline"));
 }
 afterEach(async () => {
+  stopWatching();
   await cleanup();
   vi.useRealTimers();
   Object.defineProperty(Navigator.prototype, "onLine", realOnLine);
@@ -27,6 +29,7 @@ afterEach(async () => {
 });
 const reduceMotion = () => cdp().send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
 const glitching = (selector: string) => document.querySelector(selector)?.classList.contains("signal-glitch") ?? false;
+
 function settle() { for (const animation of document.getAnimations()) animation.finish(); }
 
 it("glitches once on first appearance and never replays on re-render", async () => {
@@ -44,10 +47,11 @@ it("shows offline in words on TODAY and SYSTEMS, glitches once, and keeps loggin
   const screen = await render(<App />);
   await expect.element(screen.getByRole("button", { name: /^Systems: / })).toBeVisible();
   expect(document.querySelector('[data-signal="offline-line"]')).toBeNull();
+  watchGlitches();
   setOnline(false);
   await expect.element(screen.getByText("Offline. Logging still saves on this phone.", { exact: true })).toBeVisible();
   await expect.element(screen.getByRole("button", { name: /, Offline\. Open readout$/ })).toBeVisible();
-  expect(glitching('[data-signal="offline-line"]')).toBe(true);
+  await expect.poll(() => glitched.has("offline-line")).toBe(true);
   settle();
   await expect.poll(() => glitching('[data-signal="offline-line"]')).toBe(false);
   window.dispatchEvent(new Event("offline"));
@@ -66,10 +70,11 @@ it("shows offline in words on TODAY and SYSTEMS, glitches once, and keeps loggin
 it("marks a backup overdue with the existing rule, on the line and in DEVICE", async () => {
   setAutoBackupPreferenceAndReset({ enabled: true, everyDays: 7 });
   const day = await startDay(); await setWorkContext(day.id, "OFF", "MANUAL");
+  watchGlitches();
   const screen = await render(<App />);
-  await expect.element(screen.getByText("Backup due", { exact: true }).first()).toBeVisible();
-  expect(glitching('[data-signal="backup-line"]')).toBe(true);
-  await expect.element(screen.getByRole("button", { name: /, Backup due\. Open readout$/ })).toBeVisible();
+  await expect.element(screen.getByText("Backup due", { exact: true })).toBeVisible();
+  await expect.poll(() => glitched.has("backup-line")).toBe(true);
+  await expect.element(screen.getByRole("button", { name: /, No backup yet\. Open readout$/ })).toBeVisible();
   await screen.getByRole("button", { name: /^Systems: / }).click();
   const device = screen.getByRole("region", { name: "DEVICE" });
   await expect.element(device.getByText("None on record", { exact: true })).toBeVisible();
@@ -90,11 +95,12 @@ it("flags yesterday's numbers when a workout holds the day open, and REFRESH sho
   const day = await startDay(); await setWorkContext(day.id, "OFF", "MANUAL"); await logProtein(day.id, 30);
   const workout = await startWorkout(day.id, "A", "STANDARD", { overrideConfirmed: true });
   vi.setSystemTime(new Date(2026, 9, 16, 16, 45));
+  watchGlitches();
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await expect.element(screen.getByText("These are yesterday’s numbers.", { exact: true })).toBeVisible();
   await expect.element(screen.getByRole("button", { name: /Fuel 30 g, .*Yesterday’s numbers\. Open readout$/ })).toBeVisible();
-  expect(glitching('[data-signal="stale-note"]')).toBe(true);
+  await expect.poll(() => glitched.has("stale-note")).toBe(true);
   await screen.getByRole("button", { name: "REFRESH", exact: true }).click();
   await expect.element(screen.getByText("These are yesterday’s numbers. A workout in progress holds yesterday open until it ends.", { exact: true })).toBeVisible();
   // REFRESH is the control being operated: it never glitches.
@@ -116,7 +122,7 @@ for (const width of [320, 360, 412]) it(`keeps every signal's words and no anima
   const screen = await render(<App />);
   setOnline(false);
   await expect.element(screen.getByText("Offline. Logging still saves on this phone.", { exact: true })).toBeVisible();
-  await expect.element(screen.getByText("Backup due", { exact: true }).first()).toBeVisible();
+  await expect.element(screen.getByText("Backup due", { exact: true })).toBeVisible();
   expect(document.querySelectorAll(".signal-glitch")).toHaveLength(0);
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);

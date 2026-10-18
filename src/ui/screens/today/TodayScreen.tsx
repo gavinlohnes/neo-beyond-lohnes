@@ -2280,7 +2280,7 @@ export function TodayScreen({
               }}
               warnings={[
                 ...(stale ? [{ key: "stale", text: "Yesterday’s numbers", node: <Signal data-signal="stale">Yesterday’s numbers</Signal> }] : []),
-                ...(backupDue ? [{ key: "backup", text: backupDue.days === null ? "Backup due" : `Backup ${backupDue.days}d`, node: <Signal data-signal="backup">{backupDue.days === null ? "Backup due" : `Backup ${backupDue.days}d`}</Signal> }] : []),
+                ...(backupDue ? [{ key: "backup", text: backupDue.days === null ? "No backup yet" : `Backup ${backupDue.days}d`, node: <Signal data-signal="backup">{backupDue.days === null ? "No backup yet" : `Backup ${backupDue.days}d`}</Signal> }] : []),
                 ...(!online ? [{ key: "offline", text: "Offline", node: <Signal data-signal="offline">Offline</Signal> }] : []),
               ]}
               onOpen={onOpenSystems ? () => { if (!busyRef.current) onOpenSystems(); } : undefined}
