@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
 import type { InsightMetric } from "../application/bodyInsightsQueries";
+import { readBootPhase } from "../ui/screens/today/bootMode";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import { TrainScreen, type TrainDestination } from "../ui/screens/train/TrainScreen";
 import { BodyScreen } from "../ui/screens/body/BodyScreen";
@@ -15,7 +16,7 @@ import { TimeCapsuleOpened } from "../ui/components/TimeCapsuleOpened";
 import { ReportReadyLine } from "../ui/components/ReportReadyLine";
 import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
-import { performDueDayRollover } from "../application/commands";
+import { performDueDayRollover, subscribeToDayRollover } from "../application/commands";
 import { nextRolloverBoundaryAfter } from "../engine/dayRollover";
 import { parseShortcut, type BodyFocus } from "../ui/shortcuts";
 import { positionPrimaryDestination, positionRevealedSurface } from "../ui/navigationPosition";
@@ -117,6 +118,29 @@ function AppWorkspaces() {
   const [tab, setTab] = useState<Tab>(() => (shortcut === "workout" ? "TRAIN" : shortcut ? "BODY" : "TODAY"));
   // Screen instances are session-local. Hiding a destination never discards its forms.
   const [visited, setVisited] = useState(() => new Set<Tab>([tab]));
+  // A direct TRAIN/BODY launch has no TODAY yet to publish the effective suit.
+  // Read the same phase/pin without writing any domain state. Once TODAY mounts,
+  // its live state owns the tokens; an obsolete startup read cannot overwrite it.
+  const todayVisited = visited.has("TODAY");
+  useEffect(() => {
+    if (todayVisited) return;
+    let current = true;
+    let generation = 0;
+    async function refreshSuit() {
+      const request = ++generation;
+      try {
+        const phase = await readBootPhase();
+        if (current && request === generation) document.documentElement.dataset.suitMode = phase ?? "UNSET";
+      } catch { /* Keep operation available if the optional presentation read fails. */ }
+    }
+    void refreshSuit();
+    const timer = window.setInterval(() => void refreshSuit(), 60_000);
+    const resume = () => { if (document.visibilityState === "visible") void refreshSuit(); };
+    document.addEventListener("visibilitychange", resume);
+    const unsubscribe = subscribeToDayRollover(() => void refreshSuit());
+    return () => { current = false; window.clearInterval(timer); document.removeEventListener("visibilitychange", resume); unsubscribe(); };
+  }, [todayVisited]);
+  useEffect(() => () => { delete document.documentElement.dataset.suitMode; }, []);
   const [todayRefreshKey, setTodayRefreshKey] = useState(0);
   const [workEndedKey, setWorkEndedKey] = useState(0);
   const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut === "workout" ? null : shortcut);

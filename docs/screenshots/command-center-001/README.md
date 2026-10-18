@@ -13,3 +13,6 @@ reload and offline writes. `more-360.png` shows COMMAND (the filename remains fr
 verification script). Images are viewport captures; scrolling content continues below the nav.
 
 Automated Chromium evidence is not a physical-device, Safari or assistive-technology session.
+
+Final acceptance also cold-launches the installed workout/water shortcuts offline with a saved
+mode pin, verifies the root suit before TODAY mounts, and checks no workout set was duplicated.

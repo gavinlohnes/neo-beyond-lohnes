@@ -4,6 +4,8 @@ import { page } from "vitest/browser";
 import { App } from "../../src/app/App";
 import { startDay, updateSchedulePattern } from "../../src/application/commands";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
+import { getActiveDay } from "../../src/application/queries";
+import { setModePin } from "../../src/application/modePinQueries";
 import { db } from "../../src/persistence/db";
 import { openCaptureFromLog, searchCommand } from "./helpers/todayTools";
 
@@ -25,6 +27,22 @@ afterEach(() => { cleanup(); vi.useRealTimers(); window.scrollTo(0, 0); });
 const current = () => document.querySelector('.shell-nav [aria-current="page"]')?.textContent ?? "";
 const emblem = (screen: Screen, tab: string) => screen.getByRole("button", { name: "BEYOND emblem: go to TODAY" }).elements()
   .find((element) => element.closest(`#workspace-${tab}`) && element.getClientRects().length) as HTMLElement;
+
+describe("direct shortcut suit", () => {
+  it.each(["workout", "water"])("applies the stored pin before TODAY mounts for %s", async (shortcut) => {
+    const day = await getActiveDay();
+    setModePin(day!.id, "SCHEDULED_SHIFT");
+    window.history.replaceState(null, "", `${window.location.pathname}?go=${shortcut}`);
+    const screen = await render(<App />);
+    await expect.poll(current).toContain(shortcut === "workout" ? "TRAIN" : "BODY");
+    expect(document.getElementById("workspace-TODAY")).toBeNull();
+    await expect.poll(() => document.documentElement.dataset.suitMode).toBe("SCHEDULED_SHIFT");
+    expect(getComputedStyle(document.documentElement).getPropertyValue("--red").trim()).toBe("#b51219");
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: /Mode ON SHIFT, pinned/ })).toBeVisible();
+    expect(document.documentElement.dataset.suitMode).toBe("SCHEDULED_SHIFT");
+  });
+});
 
 describe("emblem", () => {
   it("goes to TODAY's root from every tab, at the top with its heading focused", async () => {

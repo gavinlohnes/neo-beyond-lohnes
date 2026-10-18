@@ -186,8 +186,22 @@ for (const width of [320,360,412]) {
  await page.getByRole('button',{name:'COMMAND',exact:true}).click();
  await page.getByRole('button',{name:'PLAN TODAY',exact:true}).click();
  await page.getByRole('button',{name:/An offline commitment.*Open task/}).waitFor();
+ // Direct installed shortcuts apply the stored suit before TODAY has ever mounted,
+ // including an offline cold launch into the active canonical workout or water form.
+ await page.getByRole('button',{name:'TODAY',exact:true}).click();
+ await page.getByRole('button',{name:/^Mode .*Change mode$/}).click();
+ await page.getByRole('dialog').getByRole('button',{name:/^ON SHIFT/}).click();
+ const declineWork=page.getByRole('button',{name:'NOT NOW',exact:true}); if(await declineWork.isVisible())await declineWork.click();
+ for(const shortcut of ['workout','water']) {
+  await page.goto(baseUrl+'?go='+shortcut);
+  await page.waitForFunction(()=>document.documentElement.dataset.suitMode==='SCHEDULED_SHIFT');
+  const active=await page.locator('.shell-nav [aria-current="page"]').textContent();
+  if(!active.includes(shortcut==='workout'?'TRAIN':'BODY'))throw Error('Shortcut destination');
+  if(await page.locator('#workspace-TODAY').count())throw Error('Shortcut mounted TODAY');
+ }
+ if((await records(page,'performedSets')).length!==1)throw Error('Shortcut duplicated workout set');
  if(errors.length)throw Error(JSON.stringify(errors));
- results.push({width,passed:true,waterWrites:water.length,offline:true,main:1,overflow:false,unfinishedInput:['meal','Capture','sleep','workout set','Journal','Plan Today'],pageErrors:errors});
+ results.push({width,passed:true,waterWrites:water.length,offline:true,directShortcuts:true,main:1,overflow:false,unfinishedInput:['meal','Capture','sleep','workout set','Journal','Plan Today'],pageErrors:errors});
  await context.close();
 }
 await writeFile(`${root}/acceptance.json`,JSON.stringify(results,null,2)+'\n');

@@ -23,7 +23,7 @@ Arrival head: `c717801` (slices 0–3 done, slice 4 WIP). Only other open PR is 
   RECOVER quiets ruler/bars and slows motion without hiding factual sleep guidance.
 - Display-only recommendation reason copy; WHY ends in user choice. No Engine text changed.
 
-**Verification:** `npm run verify` passes: architecture, 252 test files, 2,554 passed / one
+**Verification:** `npm run verify` passes: architecture, 252 test files, 2,556 passed / one
 existing skip, TypeScript and production PWA build. Added coverage for same-as-schedule pin
 continuity, retained settings input, mode identity/contrast at 320/360/412 and clock-driven city.
 Built PWA acceptance passes at all three widths: modes, COMMAND/Weekly Review, browser Back and
@@ -987,3 +987,12 @@ verify branch/PR/head/CI from Git and GitHub rather than assuming this checkpoin
 ## DECISIONS FOR GAVIN
 
 None. Independent Protected review and owner merge approval remain separate steps.
+
+
+Final-review follow-up: direct installed TRAIN/BODY shortcuts now initialize the root suit from
+the same read-only phase/pin derivation used by boot. The shell refreshes it on minute/resume/
+rollover until TODAY mounts, then yields to TODAY's live state and cancels obsolete reads. Two
+stored-pin shortcut regressions pass. The renewed full `npm run verify` passes (252 files,
+2,556 passed / one existing skip), and built offline cold workout/water shortcut acceptance
+passes at 320/360/412 with no duplicate workout set. The earlier exact-head review was superseded
+by its shortcut finding; the new head requires a renewed verdict recorded on PR #241.

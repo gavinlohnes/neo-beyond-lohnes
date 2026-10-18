@@ -185,7 +185,7 @@ that canonical operation is open, preserving advisory evidence and existing comm
 
 ### Completion evidence
 
-Slices 0–5 implemented. `npm run verify`: architecture, all 252 files / 2,554 tests pass, one
+Slices 0–5 implemented. `npm run verify`: architecture, all 252 files / 2,556 tests pass, one
 existing skip, TypeScript and production PWA build pass. Built-browser acceptance at 320/360/412
 passes, including modes, COMMAND/Weekly Review, browser Back/Forward, native-sheet cancellation,
 retained drafts, exactly-once logs and offline cold reload/writes. See
@@ -203,3 +203,12 @@ No schema, Engine, event, backup or dependency modification. No SUIT-001/reuse-r
 Final SHA, independent exact-head verdict and CI are recorded on PR #241, so review evidence
 can bind the final commit without creating another post-review documentation commit. Owner merge
 approval remains required. Physical-device/Safari/screen-reader testing is not claimed.
+
+
+Final-review follow-up: direct installed TRAIN/BODY shortcuts now initialize the root suit from
+the same read-only phase/pin derivation used by boot. The shell refreshes it on minute/resume/
+rollover until TODAY mounts, then yields to TODAY's live state and cancels obsolete reads. Two
+stored-pin shortcut regressions pass. The renewed full `npm run verify` passes (252 files,
+2,556 passed / one existing skip), and built offline cold workout/water shortcut acceptance
+passes at 320/360/412 with no duplicate workout set. The earlier exact-head review was superseded
+by its shortcut finding; the new head requires a renewed verdict recorded on PR #241.
