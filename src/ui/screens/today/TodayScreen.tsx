@@ -1,3 +1,4 @@
+import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
@@ -219,6 +220,7 @@ export function TodayScreen({
   onOpenTrain,
   onOpenBody,
   onOpenHealthEvidence,
+  onOpenWeeklyReview,
   onOpenSystemDestination,
   openToolsOnMount = false,
   onWorkEnded,
@@ -232,6 +234,7 @@ export function TodayScreen({
   onOpenPlan?: () => void;
   onViewCommitments?: (id?: string) => void;
   onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
+  onOpenWeeklyReview?: () => void;
   onOpenHealthEvidence?: (metric: "water" | "protein") => void;
   onOpenBody?: (target?: BodyFocus) => void;
   onOpenSystemDestination?: (destination: SystemDestination) => boolean;
@@ -2019,6 +2022,7 @@ export function TodayScreen({
 
       {/* CLEANUP-002: the shell's own lines sit under the header, part of the screen. */}
       {banners && <div className="today-banners">{banners}</div>}
+      {day && onOpenWeeklyReview && <WeeklyReviewReadyLine active={active} phase={shiftClock.phase} now={now} onOpen={onOpenWeeklyReview} />}
 
       {commitmentFeedback && (
         <p

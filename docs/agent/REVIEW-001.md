@@ -303,6 +303,46 @@ Acceptance: pure calendar/floor/segment/abstention tests; canonical correction/v
 integration coverage; App browser source/History return at 320/360/412, keyboard-accessible
 point selector and tables, axe, read-error/retry; full verification and built-preview acceptance.
 
+## Phase 1a delivery — weekly review loop (2026-10-17)
+
+Gavin explicitly directed: “ship the connected foundation, then build the weekly review loop”,
+then reaffirmed continuing. #232 merged at `fda45c2`; #237 was reconciled, independently reviewed at
+`871c35b`, passed required CI and merged at `554b557`. Codex owns the weekly loop on
+`codex/review-001-weekly-loop`, starting from freshly fetched master
+`554b55722d895c5fb6ca979bd9f08990c58ec6c1`. Lane: PROTECTED; new exact-head independent review,
+green required CI and Gavin's separate merge decision are required for this new PR.
+
+Scope: closed Monday–Sunday lived-day windows (ready Monday16:30), recorded weekly facts,
+optional note, optional operator-chosen focus, next closed week's counts, saved-review listing,
+append-only revisions, session draft/reload protection, and a neutral TODAY notice only in OFF.
+LATER lasts for the current lived day. Counts restate existing evidence, never grade outcomes;
+written focus has no automatic verdict. Options repeat the reviewed week's counts; program
+changes remain write-in. Focus applies to the week starting the reviewed period's end, even
+when the review is completed late; counts explicitly cover that entire named week.
+
+Implementation: one additive `WEEKLY_REVIEW_SAVED` event type in the existing events table,
+including reviewed start/end, note, chosen focus and optional superseded event ID. Existing
+atomic command helper guards active-day ownership, exact latest closed period, same-payload
+idempotency and expected prior version. No schema/table/version change, no backup-format change;
+normal native backups already include events and round-trip both original and revised reviews.
+Malformed saved review reads fail visibly, not as an empty week. This realizes the approved
+additive review-events design without commodity storage duplication. BUILD OWNED bounded
+calendar/read model and canonical UI; reuse ledger, effective records, native controls, existing
+transaction/event path, draft provider and normal backups; no dependency.
+
+Calendar math uses local 16:30 boundaries through DST. Drafts are never retargeted or overwritten
+on tab re-entry or week change; an old-week draft remains visible with an explicit current-week
+switch. Reload/process eviction still clears unsaved drafts under existing protection. Saved
+reviews collapse after a successful save and restore focus to their disclosure, keeping the
+always-on question hub accessible. Native source History/return and the separate rolling Weekly
+Check-in remain intact. No Engine evaluation/priority/plan change, schema/migration, photo or
+measurement storage, fixture, provider, dependency, CI/protection change, or unrelated #236 work.
+Monthly/body reviews, photos, measurements and the remaining Phase1a questions stay unimplemented.
+Verification: calendar/DST/count tests; revisions/concurrency/failure/idempotency, malformed data,
+active-day and ordinary backup-round-trip integration tests; App flows at320/360/412, axe,
+OFF-phase timing/LATER, saved reload, draft detours/rollover and save retry; full gate and built
+PWA acceptance with offline save/reload/next-week focus counts. Exact results/head tracked in PR.
+
 ## Phase 1a delivery — storage slice (2026-10-17)
 
 Builder: Claude Code, on `ccr-f27681c1-sb8gif`, after RESTORE-COMPAT (#236). Codex's read-only hub
@@ -330,4 +370,3 @@ PROTECTED (schema and backup contract).
 - Storage persistence is requested (`navigator.storage.persist()`) when a photo is added.
   Whether it was granted is readable, so the later photo screen can say plainly when eviction
   remains possible.
-

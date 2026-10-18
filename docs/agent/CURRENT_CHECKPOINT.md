@@ -1,6 +1,27 @@
 # Current checkpoint
 
-## Current objective — REVIEW-001 Phase 1a storage slice (2026-10-17, PROTECTED)
+## Current objective — REVIEW-001 weekly review loop (2026-10-17, PROTECTED)
+
+Gavin authorized shipping the connected foundation, then building the weekly review loop.
+#232 merged at `fda45c2`; #237 merged at `554b557` after renewed independent PASS at `871c35b`
+and green required CI. Codex starts this slice from fresh master
+`554b55722d895c5fb6ca979bd9f08990c58ec6c1` on `codex/review-001-weekly-loop`.
+Scope, owner authority, event/backup semantics, validation and deferred work are in the weekly-loop
+delivery section of [REVIEW-001.md](REVIEW-001.md). One additive review event, no schema change.
+Gavin directed finishing PR #238 on 2026-10-17. Codex resumed at `dadfd2f`, integrating fresh
+master `5a54a1f` after #239 merged. Resolved checkpoint/brief conflicts by preserving both slices,
+and combined the weekly-review and measurement/photo event types. No feature was dropped.
+Active PR: [#238](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/238).
+Independent inspection found a delayed week-refresh could overwrite a note typed after the
+request began. The panel now consults live draft state; a browser regression reproduces the old
+loss and passes with the fix. Focused weekly browser cases pass (13/13), and weekly + MORE cases
+pass together (57/57). Final full verification, production offline acceptance, remote head/CI and
+independent exact-head verdict are recorded in PR #238. Local browser launch uses a scratch-only
+Chromium executable override; tracked dependencies, test selection and CI remain unchanged.
+Next: complete these checks and review, then Gavin's separate merge decision. No merge is authorized.
+
+
+## Previous objective — REVIEW-001 Phase 1a storage slice (merged #239) (2026-10-17, PROTECTED)
 
 Builder: Claude Code. Starting master `4404b01` (RESTORE-COMPAT #236 merged); branch
 `ccr-f27681c1-sb8gif`; PR linked from the branch. Scope and evidence are in the "storage slice"
@@ -12,8 +33,8 @@ section of [REVIEW-001.md](REVIEW-001.md).
 - Measured backup sizes.
 - The #236 review's follow-ups: a pre-v4 restore test and a guard for an unversioned backup.
 
-No UI, Engine, TODAY or dependency change. Next action: an independent exact-head review, then
-Gavin's merge decision. The screens for measurements and photos are a later slice.
+No UI, Engine, TODAY or dependency change. Independent exact-head review passed at `7f2cf39`;
+Gavin merged #239 at `5a54a1f`. Measurement and photo screens remain a later slice.
 
 ## Previous objective — RESTORE-COMPAT (2026-10-17, PROTECTED, merged in #236 at `4404b01`)
 
