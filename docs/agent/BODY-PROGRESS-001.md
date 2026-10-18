@@ -30,17 +30,21 @@ Rollback: revert UI and its tests/docs; existing records remain readable with no
 
 ## Builder evidence
 
-Implementation is complete, including the photo timeline/comparison. Focused Node/browser
-verification: 42 passed. Built PWA at 320/360/412: offline reads and explicit saves, cold reloads,
-retained drafts, correction provenance, 44 px controls, unclipped labels and zero axe violations.
+Complete, including photo timeline/comparison. Source frozen at
+`21932d9f23b7a4be3682aa2f0dfa4d20cc351dac`; subsequent handoff/evidence edits change no runtime code.
+Full local gate: **255 files / 2,582 passed / one existing skip**, architecture (247 files),
+TypeScript and production build pass. Focused checks also cover stale corrections, duplicate
+taps, read/write failures, keyboard entry, retained drafts and active-workout/16:30 continuity.
+Built PWA at 320/360/412 passes offline reads/saves/cold reloads, canonical correction provenance,
+44 px controls, unclipped labels, zero axe violations and zero page errors.
 [Reproduction and synthetic screenshots](../screenshots/body-progress-001/README.md).
-Full regression gate is running after integration of master `85db25b`; final results and exact
-head will be recorded in the PR/checkpoint. No physical-device or independent-review PASS claimed.
+Required CI and independent review bind the final published PR head. No physical-device or
+independent-review PASS claimed. Existing bundle-size advisory and cleanup/act warnings remain;
+none were suppressed and the built PWA reports no page errors.
 
-Full verification also exposed an inherited meal-reopen focus race in unchanged BODY code:
-a slow read can outlast the 250 ms shortcut positioner, leaving the temporary shell heading
-focused after recovery. The existing CommandCatalog regression now holds that read past the
-positioner and reproduced the failure before correction. The BODY-only handoff completes after
-the shell landing and recognizes its placeholder heading, while leaving chosen controls alone.
-No meal data/command/undo behavior changed. All 62 related browser checks pass after the repair;
-the full gate is rerun because source changed.
+Full verification exposed an inherited meal-reopen focus race in unchanged BODY code: a slow
+read can outlast the 250 ms shortcut positioner, leaving the temporary shell heading focused.
+The strengthened CommandCatalog regression reproduced failure before correction. The BODY-only
+handoff now completes after the shell landing and recognizes the placeholder heading, leaving
+chosen controls alone. No meal data/command/undo behavior changed. All 62 related browser checks
+and the complete rerun pass; no assertion or safeguard was weakened.

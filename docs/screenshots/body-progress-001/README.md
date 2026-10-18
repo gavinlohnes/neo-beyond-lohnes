@@ -4,7 +4,10 @@ Synthetic records and abstract photo frames only. No owner data or protected fix
 The built PWA is tested at 320, 360 and 412 px, America/Chicago, reduced motion.
 `acceptance.json` is the machine result. Screens show overview, quick measurement entry,
 photo entry and a same-pose comparison. Dates below the photos remain readable independently
-of the native selects. The final PR records exact head, full verification and review status.
+of the native selects. Evidence was regenerated after the focus repair at source head `21932d9`. The final PR records
+exact published head, full verification and review status.
+
+[320 px measurement entry](measurements-320.png) · [360 px photo comparison](comparison-360.png)
 
 Reproduce with installed dependencies:
 
