@@ -67,10 +67,10 @@ try {
 
       // Offline signal, words always; logging still saves.
       await context.setOffline(true);
-      await page.getByText("Offline. Logging still saves on this phone.", { exact: true }).waitFor();
+      await page.locator("#workspace-TODAY").getByText("Offline. Logging still saves on this phone.", { exact: true }).waitFor();
       await page.screenshot({ path: `${shots}/signal-offline-${width}.png` });
       await context.setOffline(false);
-      await page.getByText("Offline. Logging still saves on this phone.", { exact: true }).waitFor({ state: "detached" });
+      await page.locator("#workspace-TODAY").getByText("Offline. Logging still saves on this phone.", { exact: true }).waitFor({ state: "detached" });
 
       // Stealth: long-press the emblem.
       const emblem = page.locator("#workspace-TODAY .operator-emblem");
@@ -100,7 +100,7 @@ try {
       assert.equal(await page.evaluate(() => !!navigator.serviceWorker.controller && !navigator.onLine), true);
       await page.keyboard.press("Escape");
       await page.getByRole("dialog", { name: "Stealth" }).waitFor({ state: "detached" });
-      await page.getByText("Offline. Logging still saves on this phone.", { exact: true }).waitFor();
+      await page.locator("#workspace-TODAY").getByText("Offline. Logging still saves on this phone.", { exact: true }).waitFor();
       await page.getByRole("button", { name: /, Offline\. Open readout$/ }).waitFor();
       const after = await records(page);
       assert.equal(count(after, "WATER_LOGGED"), 1, "Water duplicated across reload");

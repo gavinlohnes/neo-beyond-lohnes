@@ -4,12 +4,28 @@
 
 Gavin authorized SUIT-001 together with COMMAND-CENTER-001 (2026-10-18). It starts after #241
 merged. Builder: Claude Code, on `claude/new-session-0xvewh` from master `9f9100a`, with master
-merged in at `85db25b` (#243). Draft [PR #242](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/242). Brief and repo mapping: [SUIT-001.md](SUIT-001.md). The only other
-open PR is the isolated lab #204.
+merged in at `85db25b` (#243). Draft [PR #242](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/242). Brief and repo mapping: [SUIT-001.md](SUIT-001.md). Other open PRs:
+#244 (BODY-PROGRESS-001, Codex) and the isolated lab #204.
 
-**Done:** slice 0 (brief build record, this checkpoint, draft PR).
-**Next:** slice 1, SYSTEMS (the TODAY line and the readout). Then signals, stealth, rulings and
-evidence. No Engine, schema, event, command, backup or dependency change.
+**Done: slices 0–4.** SYSTEMS line and read-only readout; four glitch signals (stale, offline,
+backup overdue, save failed); stealth (long-press, COMMAND entry, peek, blind water/meal with
+undo, persistence, workout continuity); Decision Register entries (and the STATUS-001 placement
+amendment); built-PWA acceptance and screenshots in `docs/screenshots/suit-001/`.
+
+**Verification:** required CI green on `a59cdef` after fixing three CI failures from the signals
+slice (duplicate "Backup due" wording, a 1.4 px fold overrun, a test timing race). Built PWA
+passes at 320/360/412 (`scripts/verify-suit.mjs`). Local full suite: 2,604 passed, one existing
+skip, one inherited failure (below). Architecture, TypeScript and production build pass.
+
+**Inherited bug found, not fixed here:** returning from BODY's meal entry restores TODAY's scroll
+to the wrong offset. Reproduce: `MealRoundTrip` "retains a canceled draft…" at a 360×640 viewport
+lands at 150 instead of 80. It reproduces identically on master `85db25b` and on #244. At the
+test's 360×800 viewport TODAY is now only 1 px taller than the screen, so the existing test can
+flake under full-suite load. It needs its own small fix (App/BODY meal-return positioning).
+
+**Next:** independent exact-head review by a provider other than Claude, then Gavin's merge
+decision. #244 (BODY-PROGRESS-001, Codex) is review-ready too; whichever merges second needs a
+master merge (both touch this file and `CommandCatalog.test.tsx`).
 
 ## Previous objective — fix mode pin expiry at 16:30 (2026-10-18, merged in #243 at `85db25b`)
 
