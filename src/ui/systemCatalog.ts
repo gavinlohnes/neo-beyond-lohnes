@@ -13,6 +13,7 @@ export type SystemDestination =
   | { kind: "body"; focus: BodyFocus }
   | { kind: "workout" }
   | { kind: "capture" }
+  | { kind: "stealth" }
   | { kind: "more"; view: MoreView }
   | { kind: "section"; section: CommandSection };
 
@@ -34,6 +35,7 @@ export const SYSTEM_CAPABILITIES = [
   { label: "NOTE", description: "TODAY · Quick Capture", aliases: ["capture", "thought", "idea", "handoff"], group: "Log", destination: { kind: "capture" } },
   { label: "URGE", description: "BODY · Quit tracker entry", aliases: ["quit", "habit", "craving"], group: "Log", destination: { kind: "body", focus: "urge" } },
   { label: "SYSTEMS", description: "COMMAND · Sleep, fuel, training, state and device readings", aliases: ["status", "system status", "readout", "readings", "suit", "connection", "offline"], group: "Today", destination: { kind: "more", view: "SYSTEMS" } },
+  { label: "STEALTH", description: "Hide your numbers. Long-press the emblem anytime", aliases: ["hide", "privacy", "discreet", "screen"], group: "Today", destination: { kind: "stealth" } },
   { label: "TODAY TOOLS", description: "Check-in, work context and daily controls", aliases: ["check in", "check-in", "minimum day", "end day", "shift down", "reset"], group: "Today", destination: { kind: "tools" } },
   { label: "PLAN TODAY", description: "COMMAND · Your chosen tasks and recorded deadlines", aliases: ["plan", "tasks", "today plan"], group: "Today", destination: { kind: "more", view: "PLAN" } },
   { label: "TRAIN", description: "Workouts, recovery and records", aliases: ["training", "fitness", "recovery"], group: "Training and planning", destination: { kind: "workspace", tab: "TRAIN" } },

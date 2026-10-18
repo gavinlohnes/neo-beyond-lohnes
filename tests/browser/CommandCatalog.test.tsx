@@ -89,6 +89,11 @@ describe("COMMAND catalog", () => {
       } else if (destination.kind === "capture") {
         await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
         await expect.element(screen.getByRole("textbox", { name: "Capture a thought", exact: true })).toBeVisible();
+      } else if (destination.kind === "stealth") {
+        // SUIT-001: stealth covers the screen; Escape exits and nothing was written.
+        await expect.element(screen.getByRole("dialog", { name: "Stealth" })).toBeVisible();
+        await userEvent.keyboard("{Escape}");
+        await expect.poll(() => document.querySelector(".stealth")).toBeNull();
       } else {
         const tab = destination.kind === "workout" ? "TRAIN" : destination.tab;
         await expect.element(screen.getByRole("button", { name: tab, exact: true })).toHaveAttribute("aria-current", "page");
