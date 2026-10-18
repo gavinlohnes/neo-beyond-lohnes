@@ -3,6 +3,19 @@ import { PHOTO_POSES, type PhotoPose, type ProgressPhoto } from "../../../domain
 
 const poseLabel = (pose: PhotoPose) => pose.charAt(0) + pose.slice(1).toLowerCase();
 
+/** The guide's frame, width over height. Matches `.framing-guide__frame` in bodyProgress.css. */
+export const FRAME_ASPECT = 3 / 4;
+
+/**
+ * The centered part of a width × height frame that `object-fit: cover` shows
+ * at FRAME_ASPECT, so CAPTURE keeps exactly what the operator lined up.
+ */
+export function coverCrop(width: number, height: number, aspect = FRAME_ASPECT) {
+  const sw = Math.min(width, height * aspect);
+  const sh = Math.min(height, width / aspect);
+  return { sx: (width - sw) / 2, sy: (height - sh) / 2, sw, sh };
+}
+
 /**
  * REVIEW-001 Phase 1a, optional framing guide: a live in-app camera with the
  * last visible same-pose photo as a faint ghost, so progress photos line up.
@@ -62,11 +75,12 @@ export function FramingGuide({ initialPose, photos, onCapture, onClose }: {
   function capture() {
     const element = video.current;
     if (!element || state !== "LIVE" || !element.videoWidth) return;
+    const { sx, sy, sw, sh } = coverCrop(element.videoWidth, element.videoHeight);
     const canvas = document.createElement("canvas");
-    canvas.width = element.videoWidth;
-    canvas.height = element.videoHeight;
+    canvas.width = Math.round(sw);
+    canvas.height = Math.round(sh);
     const context = canvas.getContext("2d")!;
-    context.drawImage(element, 0, 0);
+    context.drawImage(element, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
       if (!blob) return;
       onCapture(new File([blob], `progress-${pose.toLowerCase()}.jpg`, { type: "image/jpeg" }), pose);

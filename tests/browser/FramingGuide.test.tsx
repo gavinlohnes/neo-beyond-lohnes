@@ -8,14 +8,20 @@ import { setWorkContext, startDay } from "../../src/application/commands";
 import { addProgressPhoto } from "../../src/application/progressPhotoCommands";
 import { getProgressPhotos } from "../../src/application/progressPhotoQueries";
 import { db } from "../../src/persistence/db";
+import { coverCrop } from "../../src/ui/screens/body/FramingGuide";
 
 /** REVIEW-001 optional framing guide: live camera + ghost of the last same-pose photo, saved through the existing flow. */
 const realGetUserMedia = navigator.mediaDevices?.getUserMedia?.bind(navigator.mediaDevices);
 let tracks: MediaStreamTrack[] = [];
-function fakeCamera() {
-  const canvas = document.createElement("canvas"); canvas.width = 240; canvas.height = 320;
+/** A width × height stream: red outside the guide's 3:4 view, blue inside it (gray when even is set). */
+function fakeCamera(width = 240, height = 320, even = true) {
+  const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
   const context = canvas.getContext("2d")!;
-  const paint = () => { context.fillStyle = "#6a6a6a"; context.fillRect(0, 0, 240, 320); };
+  const view = coverCrop(width, height);
+  const paint = () => {
+    context.fillStyle = even ? "#6a6a6a" : "#ff0000"; context.fillRect(0, 0, width, height);
+    if (!even) { context.fillStyle = "#0000ff"; context.fillRect(view.sx, view.sy, view.sw, view.sh); }
+  };
   paint(); const timer = setInterval(paint, 50);
   Object.defineProperty(navigator.mediaDevices, "getUserMedia", { configurable: true, value: vi.fn(async () => {
     const stream = canvas.captureStream(20);
@@ -85,4 +91,27 @@ it("says plainly when the camera is unavailable and stops nothing it didn't star
   await guide.getByRole("button", { name: "CLOSE", exact: true }).click();
   await expect.poll(() => document.querySelector(".framing-guide")).toBeNull();
   expect(await db.progressPhotos.count()).toBe(0);
+});
+
+for (const [width, height] of [[160, 90], [90, 200]] as const) it(`captures the framing the guide shows from a ${width}×${height} camera, not the whole frame`, async () => {
+  const stop = fakeCamera(width, height, false);
+  try {
+    const screen = await openPhotos();
+    await screen.getByRole("button", { name: "USE FRAMING GUIDE", exact: true }).click();
+    const guide = screen.getByRole("dialog", { name: /framing guide$/ });
+    await expect.element(guide.getByRole("button", { name: "CAPTURE", exact: true })).toBeEnabled();
+    await guide.getByRole("button", { name: "CAPTURE", exact: true }).click();
+    await screen.getByRole("button", { name: "SAVE PHOTO", exact: true }).click();
+    await expect.poll(async () => (await getProgressPhotos({})).length).toBe(1);
+    const bitmap = await createImageBitmap((await getProgressPhotos({}))[0]!.image);
+    expect(bitmap.width / bitmap.height).toBeCloseTo(3 / 4, 1);
+    const canvas = document.createElement("canvas"); canvas.width = bitmap.width; canvas.height = bitmap.height;
+    const context = canvas.getContext("2d")!; context.drawImage(bitmap, 0, 0);
+    // Every edge is inside the view the operator saw: blue, never the red outside it.
+    for (const [x, y] of [[1, bitmap.height / 2], [bitmap.width - 2, bitmap.height / 2], [bitmap.width / 2, 1], [bitmap.width / 2, bitmap.height - 2]]) {
+      const [r, , b] = context.getImageData(Math.floor(x!), Math.floor(y!), 1, 1).data;
+      expect(b, `pixel ${x},${y}`).toBeGreaterThan(150);
+      expect(r, `pixel ${x},${y}`).toBeLessThan(100);
+    }
+  } finally { stop(); }
 });
