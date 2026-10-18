@@ -1,6 +1,15 @@
 # Current checkpoint
 
-## Current objective — REVIEW-001 weekly review loop (2026-10-17, PROTECTED)
+## Current objective — REVIEW-001 Weekly Review dashboard (2026-10-18, PROTECTED)
+
+Gavin approved making MORE → REVIEW's weekly section match the Ultimate prototype's Weekly Review
+("approve, Claude Code builds it", 2026-10-18). Builder: Claude Code. Starting master `8e5dbab`
+(#238 weekly loop and #239 storage merged); branch `ccr-f27681c1-sb8gif`; PR linked from the
+branch. Scope and rules: "Weekly Review dashboard" in [REVIEW-001.md](REVIEW-001.md). It is read
+only apart from #238's existing save-review form, with no schema, event, backup, Engine-evaluation
+or dependency change. Next action: an independent exact-head review, then Gavin's merge decision.
+
+## Previous objective — REVIEW-001 weekly review loop (2026-10-17, PROTECTED, merged in #238 at `8e5dbab`)
 
 Gavin authorized shipping the connected foundation, then building the weekly review loop.
 #232 merged at `fda45c2`; #237 merged at `554b557` after renewed independent PASS at `871c35b`

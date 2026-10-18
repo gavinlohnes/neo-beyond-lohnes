@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { WeeklyReviewPanel } from "./WeeklyReviewPanel";
+import { WeeklyDashboard } from "./WeeklyDashboard";
 import { ReviewAnswers } from "./ReviewAnswers";
 import { describeError } from "../../errorMessage";
 import { getRecommendationLedger, type LedgerDay } from "../../../application/reviewQueries";
@@ -37,7 +37,7 @@ export function ReviewScreen({ active = true, onOpenHistory }: { active?: boolea
   return (
     <div className="screen">
       <h1 className="eyebrow">MORE // REVIEW</h1>
-      <WeeklyReviewPanel active={active} />
+      <WeeklyDashboard active={active} onOpenHistory={onOpenHistory} />
       <ReviewAnswers active={active} onOpenHistory={onOpenHistory} />
       <h2 className="tool-label">RECOMMENDATIONS</h2>
       <p className="card-body" style={{ marginBottom: 16 }}>

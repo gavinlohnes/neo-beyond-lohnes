@@ -5,6 +5,8 @@ export interface ReviewWeight { dayId: string; lbs: number; at: string; rootId: 
 export interface ReviewRow {
   start: string; dayIds: string[]; context: "WORK" | "OFF" | "UNKNOWN";
   weight?: number | undefined; weights: ReviewWeight[]; protein?: number | undefined; calories?: number | undefined;
+  /** Effective recorded water, oz (Weekly Review dashboard). Missing stays missing. */
+  water?: number | undefined;
   sleepHours?: number | undefined; ambiguousSleep: boolean; sessions: number;
 }
 export interface ReviewOverview {
@@ -22,9 +24,11 @@ function sum(values: readonly (number | undefined)[]): number | undefined {
   return known.length ? known.reduce((a, b) => a + b, 0) : undefined;
 }
 
-/** Read-only analysis. Completed local-calendar windows, never a recommendation or persisted rollup. */
-export function projectReviewOverview(summaries: readonly DaySummary[], weights: readonly ReviewWeight[], now: Date): ReviewOverview {
-  const window = finishedLivedDays(now, 0, 28);
+/**
+ * One row per lived day for `count` days from `from`. Shared by the 28-day
+ * question hub and the Weekly Review dashboard so both read days identically.
+ */
+export function projectReviewRows(summaries: readonly DaySummary[], weights: readonly ReviewWeight[], from: Date, count: number): ReviewRow[] {
   const grouped = groupLivedDays(summaries);
   const byDay = new Map<string, ReviewWeight[]>();
   for (const weight of weights) {
@@ -32,8 +36,8 @@ export function projectReviewOverview(summaries: readonly DaySummary[], weights:
     const list = byDay.get(weight.dayId) ?? []; list.push(weight); byDay.set(weight.dayId, list);
   }
   const rows: ReviewRow[] = [];
-  for (let index = 0; index < 28; index++) {
-    const start = livedDayBoundary(window.from, -index).toISOString();
+  for (let index = 0; index < count; index++) {
+    const start = livedDayBoundary(from, -index).toISOString();
     const group = grouped.get(start);
     // An old ACTIVE day can span rollover while training defers closure. Never call it complete.
     const records = group && group.records.every((day) => day.endedAt !== undefined) ? group.records : [];
@@ -44,6 +48,7 @@ export function projectReviewOverview(summaries: readonly DaySummary[], weights:
     rows.push({ start, dayIds: records.map((day) => day.beyondDayId), context,
       weights: observations, weight: reviewMean(observations.map((weight) => weight.lbs)),
       protein: sum(records.map((day) => day.proteinG)), calories: sum(records.map((day) => day.kcal)),
+      water: sum(records.map((day) => day.waterOz)),
       sleepHours: sleeps.length === 1 && numeric(sleeps[0]!.minutes) ? sleeps[0]!.minutes / 60 : undefined,
       ambiguousSleep: sleeps.length > 1,
       sessions: new Set(records.flatMap((day) => day.workouts.filter((workout) =>
@@ -52,6 +57,13 @@ export function projectReviewOverview(summaries: readonly DaySummary[], weights:
       ).map((workout) => workout.sessionId))).size,
     });
   }
+  return rows;
+}
+
+/** Read-only analysis. Completed local-calendar windows, never a recommendation or persisted rollup. */
+export function projectReviewOverview(summaries: readonly DaySummary[], weights: readonly ReviewWeight[], now: Date): ReviewOverview {
+  const window = finishedLivedDays(now, 0, 28);
+  const rows = projectReviewRows(summaries, weights, window.from, 28);
   const recent = rows.slice(-7).filter((row) => row.weight !== undefined);
   const previous = rows.slice(-14, -7).filter((row) => row.weight !== undefined);
   const recentMean = reviewMean(recent.map((row) => row.weight!));

@@ -10,7 +10,12 @@ const label = (at: string) => new Date(at).toLocaleDateString([], { month: "shor
 const focusValue = (focus: WeeklyFocus | null) => !focus ? "NONE" : focus.kind === "CUSTOM" ? "CUSTOM" : JSON.stringify(focus);
 const days = (n: number, adjective: string) => `${n} ${adjective} ${n === 1 ? "day" : "days"}`;
 const number = (n: number | undefined, suffix: string) => n === undefined ? "Not recorded" : `${n.toFixed(1)} ${suffix}`;
-export function WeeklyReviewPanel({ active = true }: { active?: boolean }) {
+/**
+ * `showFacts` and `openRequest` let the Weekly Review dashboard embed this form
+ * as Carry forward: the dashboard already shows the week's numbers, and its
+ * COMPLETE REVIEW button opens the form (each new request opens and focuses it).
+ */
+export function WeeklyReviewPanel({ active = true, showFacts = true, openRequest = 0 }: { active?: boolean; showFacts?: boolean; openRequest?: number }) {
   const [now, setNow] = useState(() => new Date());
   const weekKey = latestReviewWeek(now).start;
   useEffect(() => {
@@ -22,6 +27,14 @@ export function WeeklyReviewPanel({ active = true }: { active?: boolean }) {
   }, [active]);
   const [open, setOpen] = useState(false);
   const summaryRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (openRequest <= 0) return;
+    setOpen(true);
+    requestAnimationFrame(() => {
+      summaryRef.current?.scrollIntoView({ block: "start" });
+      summaryRef.current?.focus({ preventScroll: true });
+    });
+  }, [openRequest]);
   const readVersion = useRef(0);
   const activeRef = useRef(active);
   activeRef.current = active;
@@ -84,13 +97,13 @@ export function WeeklyReviewPanel({ active = true }: { active?: boolean }) {
   const options = new Map((data?.options ?? []).map((focus) => [focusValue(focus), focus.text]));
   if (choice !== "NONE" && choice !== "CUSTOM" && !options.has(choice)) options.set(choice, (JSON.parse(choice) as WeeklyFocus).text);
   const summary = data?.summary;
-  return <section className="weekly-review" aria-label="Weekly review">
-    <h2 className="tool-label">WEEKLY REVIEW</h2>
+  return <section className="weekly-review" aria-label={showFacts ? "Weekly review" : "Carry forward"}>
+    {showFacts && <h2 className="tool-label">WEEKLY REVIEW</h2>}
     {error && <div><p role="alert">{error} {!data ? "Saved evidence is unavailable, not empty." : "Your draft is still here."}</p><button className="btn-secondary" onClick={() => setRetry((n) => n + 1)} disabled={busy}>RETRY WEEKLY REVIEW</button></div>}
     <details open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary ref={summaryRef}>{baseline.current.id ? "Saved review" : "Review week"}{data ? ` · starting ${label(data.week.start)}` : ""}</summary>
     {data && <>
-      <p className="card-body">Lived days starting {label(data.week.start)} – {label(new Date(Date.parse(data.week.end) - 86_400_000).toISOString())}. This week closed at {new Date(data.week.end).toLocaleString()}.</p>
+      {showFacts && <><p className="card-body">Lived days starting {label(data.week.start)} – {label(new Date(Date.parse(data.week.end) - 86_400_000).toISOString())}. This week closed at {new Date(data.week.end).toLocaleString()}.</p>
       <p className="meta">Monday–Sunday, with the Sunday lived day ending Monday at 16:30. Current and unfinished days are excluded. Weekly Check-in keeps its separate rolling window.</p>
       <dl className="weekly-review-facts">
         <div><dt>Weight</dt><dd>{number(summary!.weightMean, "lb")} average · {days(summary!.weightDays, "weighed")}</dd></div>
@@ -99,7 +112,7 @@ export function WeeklyReviewPanel({ active = true }: { active?: boolean }) {
         <div><dt>Main sleep</dt><dd>{number(summary!.sleepMean, "h")} average · {days(summary!.sleepDays, "unambiguous logged")}</dd></div>
         <div><dt>Training</dt><dd>{summary!.sessions} completed or partial strength sessions</dd></div>
       </dl>
-      <p className="meta">{summary!.recordedDays} of 7 lived-day windows have completed records. Food figures describe logged amounts, not verified total intake. Missing stays missing. Use the question hub below for source-day records.</p>
+      <p className="meta">{summary!.recordedDays} of 7 lived-day windows have completed records. Food figures describe logged amounts, not verified total intake. Missing stays missing. Use the question hub below for source-day records.</p></>}
       {data.previousFocus && <div className="equipment-row"><h3>Your previous focus</h3><p className="card-body">{data.previousFocus.text}</p>
         <p className="card-body">{data.previousFocusCount === undefined ? "Written focus: reflect using the recorded evidence; no automatic verdict." : `${data.previousFocusCount} recorded in this week; your chosen count was ${"target" in data.previousFocus ? data.previousFocus.target : "not set"}.`}</p>
         <p className="meta">Counts cover the entire named week, including days before a late review.</p>

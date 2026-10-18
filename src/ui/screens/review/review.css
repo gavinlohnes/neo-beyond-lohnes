@@ -29,3 +29,43 @@
 .weekly-review summary { min-height: 44px; padding: 12px 0; cursor: pointer; }
 
 .weekly-review .card-body { overflow-wrap: anywhere; white-space: pre-wrap; }
+
+/* REVIEW-001 Weekly Review dashboard (2026-10-18). Neutral ink throughout:
+   red stays for the primary button and the earned PR tag only. */
+.weekly-dashboard { border-bottom: 1px solid var(--border-subtle); margin-bottom: 28px; padding-bottom: 8px; }
+.weekly-dashboard__range { font-size: 1.5rem; margin: 4px 0; }
+.weekly-dashboard__nav { display: flex; gap: 8px; margin: 12px 0; }
+.weekly-dashboard__nav > button { flex: 1; width: auto; min-height: 44px; }
+.weekly-dashboard__metrics { margin: 12px 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.weekly-dashboard__metrics .readout { min-width: 0; }
+.weekly-dashboard__metrics .readout__value { overflow-wrap: anywhere; }
+.weekly-dashboard__detail { margin: 8px 0 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.weekly-dashboard__status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--border-subtle); padding-top: 12px; }
+.weekly-dashboard__status > div { flex: 1 1 180px; }
+.weekly-dashboard__status > button { width: auto; flex: 0 1 auto; }
+.weekly-dashboard__panel { border-top: 1px solid var(--border-subtle); padding: 16px 0; }
+.weekly-dashboard__panel > button { width: auto; margin: 4px 8px 0 0; min-height: 44px; }
+.weekly-dashboard__strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 8px 0; }
+.weekly-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 44px; padding: 6px 0; background: var(--surface-2); color: var(--text-1); border: 1px solid var(--border-subtle); border-radius: var(--radius); cursor: pointer; font: inherit; }
+.weekly-day--selected { border-color: var(--text-1); box-shadow: inset 0 0 0 1px var(--text-1); }
+.weekly-day__name { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-2); }
+.weekly-day__date { font-weight: 700; }
+.weekly-day__bars { display: flex; align-items: flex-end; gap: 2px; height: 34px; }
+.weekly-day__bar { display: block; width: 5px; border-radius: 1px; }
+.weekly-day__bar--sleep { background: var(--text-1); }
+.weekly-day__bar--protein { background: var(--text-2); }
+.weekly-day__bar--training { background: var(--text-3, var(--text-2)); }
+.weekly-day__tag { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-2); }
+.weekly-dashboard__toggle { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.weekly-dashboard__toggle > .chip { flex: 1 1 64px; }
+.weekly-dashboard .chip--selected { background: var(--surface-2); border-color: var(--text-1); box-shadow: inset 0 0 0 1px var(--text-1); }
+.weekly-barline { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; margin: 6px 0; padding-right: 2px; }
+.weekly-barline__track { height: 8px; background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 4px; overflow: hidden; }
+.weekly-barline__fill { display: block; height: 100%; background: var(--text-2); }
+.weekly-barline__value { font-family: var(--font-mono); font-size: 0.875rem; white-space: nowrap; }
+.weekly-explorer { display: block; width: 100%; max-height: 180px; color: var(--text-1); margin: 8px 0; }
+.weekly-explorer__label { font-size: 11px; fill: var(--text-2); font-family: var(--font-mono); }
+.weekly-dashboard__finding, .weekly-dashboard__listrow { padding: 8px 0; border-top: 1px solid var(--border-subtle); }
+.weekly-dashboard__finding:first-of-type, .weekly-dashboard__listrow:first-of-type { border-top: 0; }
+.weekly-dashboard .weekly-review { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+@media (prefers-reduced-motion: reduce) { .weekly-dashboard * { scroll-behavior: auto; transition: none !important; } }
