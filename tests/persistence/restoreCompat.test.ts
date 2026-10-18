@@ -5,6 +5,8 @@ import { db } from "../../src/persistence/db";
 import { applyAnyRestore, previewAnyRestore } from "../../src/persistence/restore";
 import { logBodyweight, startDay } from "../../src/application/commands";
 import { getNutritionTargets } from "../../src/application/nutritionTargetQueries";
+import { getSchedulePattern } from "../../src/application/queries";
+import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { DEFAULT_NUTRITION_TARGETS } from "../../src/engine/nutritionTargets";
 
 /**
@@ -56,12 +58,12 @@ describe("restoring a backup from an older schema", () => {
   it("restores its rows (previously refused with 'Database version differs')", async () => {
     const day = await startDay();
     await logBodyweight(day.id, 201.4);
-    const older = asOlderSchema(await currentExport(), db.verno - 1, ["quitHabits"]);
+    const older = asOlderSchema(await currentExport(), 11, ["quitHabits", "progressPhotos"]);
 
     await db.events.clear();
     await db.beyondDays.clear();
     const preview = await previewAnyRestore(asFile(older));
-    expect(preview).toMatchObject({ format: "NATIVE", databaseVersion: db.verno - 1 });
+    expect(preview).toMatchObject({ format: "NATIVE", databaseVersion: 11 });
 
     await applyAnyRestore(asFile(older));
     expect(await db.beyondDays.count()).toBe(1);
@@ -71,17 +73,45 @@ describe("restoring a backup from an older schema", () => {
 
   it("stays replace-only: a table the older backup predates is cleared, not kept", async () => {
     await db.quitHabits.put({ id: "current", name: "Synthetic habit", startedOn: "2026-10-01" } as never);
-    const older = asOlderSchema(await currentExport(), db.verno - 1, ["quitHabits"]);
+    const older = asOlderSchema(await currentExport(), 11, ["quitHabits", "progressPhotos"]);
     await applyAnyRestore(asFile(older));
     expect(await db.quitHabits.count()).toBe(0);
   });
 
   it("a settings row an older backup lacks reads as its default", async () => {
     await db.nutritionTargets.put({ ...DEFAULT_NUTRITION_TARGETS, calorieTarget: 2100 } as never);
-    const older = asOlderSchema(await currentExport(), 10, ["nutritionTargets", "quitHabits"]);
+    const older = asOlderSchema(await currentExport(), 10, ["nutritionTargets", "quitHabits", "progressPhotos"]);
     await applyAnyRestore(asFile(older));
     expect(await db.nutritionTargets.count()).toBe(0);
     expect(await getNutritionTargets()).toEqual(DEFAULT_NUTRITION_TARGETS);
+  });
+});
+
+describe("a backup from before schema v4 (#236 review finding 2)", () => {
+  it("restores with no schedulePatterns table, and the schedule reads as its default", async () => {
+    await db.schedulePatterns.put({ ...DEFAULT_SCHEDULE_PATTERN, anchorMonday: "2026-01-05" });
+    const day = await startDay();
+    await logBodyweight(day.id, 210);
+    const v3Tables = ["beyondDays", "events", "checkIns", "recommendations", "outcomes", "workoutSessions", "performedSets"];
+    const json = await currentExport();
+    const missing = json.data.tables.map((t) => t.name).filter((name) => !v3Tables.includes(name));
+    const older = asOlderSchema(json, 3, missing);
+
+    await applyAnyRestore(asFile(older));
+    expect(await db.schedulePatterns.count()).toBe(0);
+    expect(await getSchedulePattern()).toEqual(DEFAULT_SCHEDULE_PATTERN);
+    expect(await db.events.where("type").equals("BODYWEIGHT_LOGGED").count()).toBe(1);
+  });
+});
+
+describe("a backup with no readable version (#236 review finding 3)", () => {
+  it("is refused as an invalid backup at preview and on apply, changing nothing", async () => {
+    await startDay();
+    const json = await currentExport();
+    const unversioned = { ...json, data: { ...json.data, databaseVersion: "12" as unknown as number } };
+    await expect(previewAnyRestore(asFile(unversioned))).rejects.toThrow(/^INVALID_BACKUP_FILE:/);
+    await expect(applyAnyRestore(asFile(unversioned))).rejects.toThrow(/^INVALID_BACKUP_FILE:/);
+    expect(await db.beyondDays.count()).toBe(1);
   });
 });
 

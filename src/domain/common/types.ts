@@ -233,7 +233,15 @@ export type DomainEventType =
   | "SHIFT_HANDOFF_NOTED"
   | "SHIFT_HANDOFF_READ"
   | "TIME_CAPSULE_SEALED"
-  | "TIME_CAPSULE_OPENED";
+  | "TIME_CAPSULE_OPENED"
+  // REVIEW-001 Phase 1a — not day-scoped; payloads in domain/body/types.ts.
+  | "MEASUREMENT_LOGGED"
+  | "MEASUREMENT_LOG_CORRECTED"
+  | "MEASUREMENT_LOG_VOIDED"
+  | "PROGRESS_PHOTO_ADDED"
+  | "PROGRESS_PHOTO_CORRECTED"
+  | "PROGRESS_PHOTO_HIDDEN"
+  | "PROGRESS_PHOTO_DELETED";
 
 /**
  * DERIVED, not stored. Computed by walking a WATER_LOGGED event and any
