@@ -11,6 +11,9 @@ import {
   describeToolsSummary,
   formatCountdown,
   mainSleepEndsPostShift,
+  MODE_NAMES,
+  MODE_ORDER,
+  deriveLivedDayStrip,
   type ShiftClockInput,
 } from "../../src/ui/screens/today/shiftClock";
 import { DEFAULT_SCHEDULE_PATTERN, livedDayShiftWindow } from "../../src/engine/scheduledContext";
@@ -89,8 +92,11 @@ describe("deriveShiftClockView — rows and TOOLS", () => {
       for (const workEnded of [false, true]) {
         for (const mainSleepLogged of [false, true]) {
           for (let hour = 0; hour < 48; hour++) {
-            const view = deriveShiftClockView(input(new Date(WORK_DAY_START.getTime() + hour * 30 * 60_000), { workContext, workEnded, mainSleepLogged }));
-            expect(view.rows.length).toBeLessThanOrEqual(MAX_PHASE_ROWS);
+            // COMMAND-CENTER-001: the cap holds with every mode pin too.
+            for (const pin of [null, ...MODE_ORDER]) {
+              const view = deriveShiftClockView(input(new Date(WORK_DAY_START.getTime() + hour * 30 * 60_000), { workContext, workEnded, mainSleepLogged }), pin);
+              expect(view.rows.length).toBeLessThanOrEqual(MAX_PHASE_ROWS);
+            }
           }
         }
       }
@@ -182,5 +188,65 @@ describe("Soak fix 2026-10-04: a completed SHIFT DOWN steps aside", () => {
     const after = deriveShiftClockView({ ...input(at(13, 7)), shiftDownDone: true });
     expect(after.rows).not.toContain("SHIFT_DOWN");
     expect(after.tools).toContain("SHIFT_DOWN");
+  });
+});
+
+describe("COMMAND-CENTER-001 — mode pin is placement only", () => {
+  it("names the four modes after the existing phases", () => {
+    expect(MODE_ORDER.map((phase) => MODE_NAMES[phase])).toEqual(["PREP", "ON SHIFT", "RECOVER", "OFF DUTY"]);
+  });
+
+  it("shows the pinned phase's rows but keeps the schedule's phase", () => {
+    const view = deriveShiftClockView(input(at(13, 7)), "OFF");
+    expect(view.phase).toBe("EXPECTED_POST_WORK");
+    expect(view.displayPhase).toBe("OFF");
+    expect(view.rows).toEqual(deriveShiftClockView(input(at(14, 17), { workContext: "OFF", shiftWindow: null })).rows);
+    expect(deriveShiftClockView(input(at(13, 7)), null)).toEqual(deriveShiftClockView(input(at(13, 7))));
+  });
+
+  it("an unanswered day keeps the work question first under any pin", () => {
+    for (const pin of MODE_ORDER) {
+      const view = deriveShiftClockView(input(at(12, 17), { workContext: "UNKNOWN" }), pin);
+      expect(view.phase).toBeNull();
+      expect(view.rows[0]).toBe("WORK_QUESTION");
+    }
+  });
+
+  it("counts down only where the real shift times support the pinned mode", () => {
+    expect(deriveShiftClockView(input(at(12, 17)), "PRE_WORK").countdown?.kind).toBe("SHIFT_STARTS");
+    expect(deriveShiftClockView(input(at(13, 7)), "PRE_WORK").countdown).toBeNull();
+    expect(deriveShiftClockView(input(at(12, 17)), "SCHEDULED_SHIFT").countdown).toBeNull();
+    expect(deriveShiftClockView(input(at(12, 22)), "SCHEDULED_SHIFT").countdown?.kind).toBe("SHIFT_ENDS");
+    expect(deriveShiftClockView(input(at(14, 17), { workContext: "OFF", shiftWindow: null }), "SCHEDULED_SHIFT").countdown).toBeNull();
+    expect(deriveShiftClockView(input(at(12, 22)), "OFF").countdown).toBeNull();
+  });
+});
+
+describe("COMMAND-CENTER-001 — lived-day strip", () => {
+  const base = { dayStart: at(12, 16, 30), dayEnd: at(13, 16, 30), workEndedAt: null, mainSleepRecordedAt: [] as string[] };
+
+  it("work day: PREP → ON SHIFT → RECOVER from the real shift times, with a now marker", () => {
+    const strip = deriveLivedDayStrip({ ...base, now: at(12, 22), workContext: "WORK", shiftWindow: WINDOW });
+    expect(strip.segments.map((s) => s.phase)).toEqual(["PRE_WORK", "SCHEDULED_SHIFT", "EXPECTED_POST_WORK"]);
+    expect(strip.segments[0]!.to).toBeCloseTo(1.5 / 24);
+    expect(strip.segments[1]!.to).toBeCloseTo(13.5 / 24);
+    expect(strip.now).toBeCloseTo(5.5 / 24);
+    expect(strip.shiftEnd?.at).toEqual(at(13, 6));
+  });
+
+  it("a main sleep logged after the shift ends RECOVER; MARK WORK ENDED ends the shift early", () => {
+    const strip = deriveLivedDayStrip({
+      ...base, now: at(13, 15), workContext: "WORK", shiftWindow: WINDOW,
+      workEndedAt: at(13, 4).toISOString(), mainSleepRecordedAt: [at(12, 17).toISOString(), at(13, 14).toISOString()],
+    });
+    expect(strip.segments.map((s) => s.phase)).toEqual(["PRE_WORK", "SCHEDULED_SHIFT", "EXPECTED_POST_WORK", "OFF"]);
+    expect(strip.segments[1]!.to).toBeCloseTo(11.5 / 24);
+    expect(strip.segments[2]!.to).toBeCloseTo(21.5 / 24);
+  });
+
+  it("an off day is one band; a work day without times one ON SHIFT band; an unanswered day none", () => {
+    expect(deriveLivedDayStrip({ ...base, now: at(12, 20), workContext: "OFF", shiftWindow: null }).segments).toEqual([{ phase: "OFF", from: 0, to: 1 }]);
+    expect(deriveLivedDayStrip({ ...base, now: at(12, 20), workContext: "WORK", shiftWindow: null }).segments).toEqual([{ phase: "SCHEDULED_SHIFT", from: 0, to: 1 }]);
+    expect(deriveLivedDayStrip({ ...base, now: at(12, 20), workContext: "UNKNOWN", shiftWindow: null }).segments).toEqual([]);
   });
 });

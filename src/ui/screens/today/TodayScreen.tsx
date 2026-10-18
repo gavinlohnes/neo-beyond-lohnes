@@ -146,6 +146,7 @@ import { getCheckInDraft } from "../../../application/checkInDraftQueries";
 import { getAppOpenedAt } from "../../appSession";
 import { formatDuration } from "../body/bodyScreenCopy";
 import {
+  deriveLivedDayStrip,
   deriveShiftClockView,
   describeCountdown,
   describeFuel,
@@ -155,9 +156,13 @@ import {
   isWorkEndDue,
   mainSleepEndsPostShift,
   TOOLS_ORDER,
+  type ShiftClockPhase,
   type ShiftClockRow,
   type ToolsItem,
 } from "./shiftClock";
+import { ModeHeader } from "./ModeHeader";
+import { clearModePin, getModePin, setModePin } from "../../../application/modePinQueries";
+import { mostRecentBoundaryAtOrBefore, nextRolloverBoundaryAfter } from "../../../engine/dayRollover";
 import { describeError } from "../../errorMessage";
 
 /** UNDO-001: what a TODAY log banner needs to undo the entry it confirms. */
@@ -443,6 +448,8 @@ export function TodayScreen({
   const [schedulePattern, setSchedulePattern] = useState<SchedulePattern | null>(null);
   // Recorded times of this day's main-sleep logs (see mainSleepEndsPostShift).
   const [mainSleepRecordedAt, setMainSleepRecordedAt] = useState<string[]>([]);
+  // COMMAND-CENTER-001: the mode pin for this BeyondDay (placement only; see modePinQueries).
+  const [modePin, setModePinState] = useState<{ dayId: string; phase: ShiftClockPhase | null } | null>(null);
   const [proteinTargetG, setProteinTargetG] = useState<number | undefined>(undefined);
   // The next workout TRAIN would suggest, with Time-Fit estimates per variant.
   const [nextWorkout, setNextWorkout] = useState<{
@@ -515,6 +522,12 @@ export function TodayScreen({
     const tick = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(tick);
   }, []);
+
+  // COMMAND-CENTER-001: a new BeyondDay (16:30 roll, START DAY) reads its own key, so it starts on schedule.
+  const dayIdForPin = day?.id ?? null;
+  useEffect(() => {
+    setModePinState(dayIdForPin ? { dayId: dayIdForPin, phase: getModePin(dayIdForPin) } : null);
+  }, [dayIdForPin]);
 
   // Coming back to the foreground: re-read, so a screen left open overnight
   // sees this morning's Shift Down and its sleep draft (2026-10-03).
@@ -1013,6 +1026,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       await endDay(day.id, "EXPLICIT_END_DAY");
+      clearModePin(day.id);
       setEndDayBlockedByWorkout(false);
       await refresh();
     } catch (error) {
@@ -1415,7 +1429,8 @@ export function TodayScreen({
   const workContextPerSchedule = !!day && day.workContext !== "UNKNOWN" && workContextSource === "SCHEDULE_STANDING";
   // SHIFT CLOCK (Drop 2): which rows this part of the shift shows; the rest go behind TOOLS.
   const shiftWindow = day && schedulePattern ? livedDayShiftWindow(new Date(day.startedAt), schedulePattern) : null;
-  const shiftClock = deriveShiftClockView({
+  const livedDayStart = mostRecentBoundaryAtOrBefore(new Date(day?.startedAt ?? now));
+  const shiftClockInput = {
     now,
     workContext: day?.workContext ?? "UNKNOWN",
     shiftWindow,
@@ -1423,12 +1438,21 @@ export function TodayScreen({
     mainSleepLogged: mainSleepEndsPostShift(mainSleepRecordedAt, workPeriodEndedAt, shiftWindow),
     shiftDownDone:
       shiftDownCompletedAt !== null && (!shiftWindow || new Date(shiftDownCompletedAt).getTime() >= shiftWindow.start.getTime()),
-  });
+  } as const;
+  // COMMAND-CENTER-001: the pin is placement only. `scheduledClock` (no pin)
+  // feeds every decision below — Attention eligibility, guidance timing;
+  // `shiftClock` (with the pin) only chooses which rows and countdown TODAY shows.
+  const pinnedPhase = day && modePin?.dayId === day.id ? modePin.phase : null;
+  const scheduledClock = deriveShiftClockView(shiftClockInput);
+  const shiftClock = deriveShiftClockView(shiftClockInput, pinnedPhase);
+  const scheduledRows: ShiftClockRow[] = day ? scheduledClock.rows : [];
   const phaseRows: ShiftClockRow[] = day ? shiftClock.rows : [];
   const leadingPhaseRows = phaseRows.filter((row) => row === "WORK_QUESTION" || row === "SHIFT_DOWN");
   const remainingPhaseRows = phaseRows.filter((row) => row !== "WORK_QUESTION" && row !== "SHIFT_DOWN");
   const toolsItems: ToolsItem[] = day ? shiftClock.tools : [...TOOLS_ORDER];
   const checkInIsRow = phaseRows.includes("CHECK_IN");
+  const checkInIsScheduledRow = scheduledRows.includes("CHECK_IN");
+  const shiftDownIsScheduledRow = scheduledRows.includes("SHIFT_DOWN");
   // SLEEP DRAFT: only on the post-shift MAIN SLEEP row (Command Center rule 3).
   const sleepDraft =
     day && phaseRows.includes("MAIN_SLEEP") && sleepDraftEvidence
@@ -1459,15 +1483,15 @@ export function TodayScreen({
     hasWorkEndAvailable:
       day?.workContext === "WORK" &&
       workPeriodEndedAt === null &&
-      !shiftDownIsRow &&
-      shiftClock.phase !== "PRE_WORK" &&
-      isWorkEndDue(shiftClock.phase, shiftWindow, now),
+      !shiftDownIsScheduledRow &&
+      scheduledClock.phase !== "PRE_WORK" &&
+      isWorkEndDue(scheduledClock.phase, shiftWindow, now),
     isCheckInMissing:
       day !== null &&
       checkIn === null &&
-      !checkInIsRow &&
-      shiftClock.phase !== "PRE_WORK" &&
-      shiftClock.phase !== "SCHEDULED_SHIFT",
+      !checkInIsScheduledRow &&
+      scheduledClock.phase !== "PRE_WORK" &&
+      scheduledClock.phase !== "SCHEDULED_SHIFT",
     isMinimumDayProminent: showProminentMinimumDay,
     isHydrationOperationOpen:
       hydrationOperationOpen &&
@@ -2022,7 +2046,7 @@ export function TodayScreen({
 
       {/* CLEANUP-002: the shell's own lines sit under the header, part of the screen. */}
       {banners && <div className="today-banners">{banners}</div>}
-      {day && onOpenWeeklyReview && <WeeklyReviewReadyLine active={active} phase={shiftClock.phase} now={now} onOpen={onOpenWeeklyReview} />}
+      {day && onOpenWeeklyReview && <WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} />}
 
       {commitmentFeedback && (
         <p
@@ -2128,10 +2152,26 @@ export function TodayScreen({
               : "status-strip status-strip--stacked today-situation"
           }
         >
-          <div className="today-situation__identity">
-            <h2 id="today-current-state-heading" className="visually-hidden">CURRENT STATE</h2>
-            <p className="today-situation__phase">{describePhaseHeading(shiftClock.phase, day.workContext)}</p>
-          </div>
+          <h2 id="today-current-state-heading" className="visually-hidden">CURRENT STATE</h2>
+          {/* COMMAND-CENTER-001: the mode by name, its source, and the lived day. */}
+          <ModeHeader
+            scheduledPhase={scheduledClock.phase}
+            pin={pinnedPhase}
+            dayStart={livedDayStart}
+            dayOff={day.workContext === "OFF"}
+            busy={busy}
+            strip={deriveLivedDayStrip({
+              dayStart: livedDayStart,
+              dayEnd: nextRolloverBoundaryAfter(new Date(day.startedAt)),
+              now,
+              workContext: day.workContext,
+              shiftWindow,
+              workEndedAt: workPeriodEndedAt,
+              mainSleepRecordedAt,
+            })}
+            onPin={(phase) => { setModePin(day.id, phase); setModePinState({ dayId: day.id, phase }); }}
+            onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
+          />
           {/* SHIFT CLOCK (Drop 2): before and during a scheduled shift the
               headline is the countdown; the work context it rests on moves to
               a quiet line under it. The "per schedule" one-tap change stays
@@ -2145,7 +2185,7 @@ export function TodayScreen({
                     currentContext ? currentContext.schedulePrediction : scheduledContext,
                     currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
                     workContextPerSchedule,
-                    shiftClock.phase,
+                    scheduledClock.phase,
                   )}
             </p>
             {workContextPerSchedule && day.workContext !== "UNKNOWN" && (
