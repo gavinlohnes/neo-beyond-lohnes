@@ -162,6 +162,8 @@ function AppWorkspaces() {
   }, [todayVisited]);
   useEffect(() => () => { delete document.documentElement.dataset.suitMode; }, []);
   const [todayRefreshKey, setTodayRefreshKey] = useState(0);
+  // SUIT-001: stealth writes while BODY or SYSTEMS stays shown behind it; they re-read on this.
+  const [stealthWrites, setStealthWrites] = useState(0);
   // SUIT-001: stealth hides the screen, not the data. It stays on across reloads until exited.
   const [stealthOn, setStealthOn] = useState(() => getStealth());
   const stealthOnRef = useRef(stealthOn);
@@ -571,7 +573,7 @@ function AppWorkspaces() {
             onDestinationConsumed={() => setTrainDestination(null)} /></RootErrorBoundary>
         </div>}
         {visited.has("BODY") && <div id="workspace-BODY" className={tab === "BODY" ? "tab-enter" : undefined} hidden={tab !== "BODY"}>
-          <RootErrorBoundary active={tab === "BODY"}><BodyScreen focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"}
+          <RootErrorBoundary active={tab === "BODY"}><BodyScreen focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
             evidenceRequest={healthEvidence} onHealthHistory={openHealthHistory}
             onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `RETURN TO ${mealOrigin.tab}` : "RETURN TO TODAY"}
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
@@ -587,6 +589,7 @@ function AppWorkspaces() {
             }}
             onOpenMeal={() => openBody("meal")}
             onOpenMetric={openBodyEvidence}
+            systemsRefreshKey={stealthWrites}
             onReturnToToday={systemsOrigin && moreView === "SYSTEMS" ? () => { setSystemsOrigin(false); showTab("TODAY"); } : undefined}
             onOpenDestination={openSystemDestination} /></RootErrorBoundary>
         </div>}
@@ -637,7 +640,7 @@ function AppWorkspaces() {
         ))}
       </nav>
     </div>
-    {stealthOn && <StealthOverlay onExit={() => changeStealth(false)} onLogged={() => setTodayRefreshKey((key) => key + 1)} />}
+    {stealthOn && <StealthOverlay onExit={() => changeStealth(false)} onLogged={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((n) => n + 1); }} />}
     </StealthToggleContext.Provider>
     </EmblemContext.Provider>
   );

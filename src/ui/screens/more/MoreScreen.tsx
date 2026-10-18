@@ -68,7 +68,7 @@ export function MoreScreen({
   onOpenMeal,
   onOpenDestination,
   historyDestination = null, onReturnToHealth, onHistoryExit,
-  onOpenMetric, onReturnToToday,
+  onOpenMetric, onReturnToToday, systemsRefreshKey = 0,
 }: {
   onViewChange?: (view: MoreView) => void;
   /** COMMAND-CENTER-001: search results outside COMMAND (BODY, TRAIN, TODAY) go through the shell. */
@@ -78,6 +78,8 @@ export function MoreScreen({
   onHistoryExit?: (() => void) | undefined;
   /** SUIT-001: a SYSTEMS BODY row opens that metric's existing history in BODY. */
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
+  /** SUIT-001: bumped after a stealth write, so an open SYSTEMS readout re-reads. */
+  systemsRefreshKey?: number;
   /** SUIT-001: set when TODAY's SYSTEMS line opened the readout. */
   onReturnToToday?: (() => void) | undefined;
   onOpenCapture?: () => void;
@@ -425,7 +427,7 @@ export function MoreScreen({
     <div className="screen more-operator">
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
           <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>← BACK TO COMMAND</button>
-          {view === "SYSTEMS" && <>{onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>RETURN TO TODAY</button>}<SystemsReadout active={active} onOpenMetric={onOpenMetric} /></>}
+          {view === "SYSTEMS" && <>{onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>RETURN TO TODAY</button>}<SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} /></>}
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
           {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>RETURN TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>RETURN TO BODY</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}

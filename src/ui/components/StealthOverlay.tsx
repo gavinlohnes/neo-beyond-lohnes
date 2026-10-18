@@ -141,7 +141,7 @@ export function StealthOverlay({ onExit, onLogged }: {
         <div className="stealth__top">
           <button ref={emblem} type="button" className="operator-emblem stealth__emblem" aria-label="Stealth is on. Long-press the emblem to exit"
             {...exitPress.handlers}
-            onClick={() => { if (!exitPress.swallowClick()) setHint(true); }}>
+            onClick={(event) => { if (!exitPress.swallowClick(event)) setHint(true); }}>
             <Icon name="mission" size={22} />
             {exitPress.pressing && <span aria-hidden="true" className="stealth__press" />}
           </button>

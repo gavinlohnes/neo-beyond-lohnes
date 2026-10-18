@@ -34,7 +34,7 @@ export function OperatorHeader({ destination, children, headingId, headingRef, f
         <button type="button" className="operator-emblem" aria-label="BEYOND emblem: go to TODAY"
           aria-describedby={toggleStealth ? hintId : undefined}
           {...(toggleStealth ? press.handlers : {})}
-          onClick={() => { if (!press.swallowClick()) goHome(); }}>
+          onClick={(event) => { if (!press.swallowClick(event)) goHome(); }}>
           <Icon name={destination} size={22} />
           {press.pressing && toggleStealth && <span aria-hidden="true" className="operator-emblem__press" />}
           {toggleStealth && <span id={hintId} className="visually-hidden">Long-press for stealth.</span>}

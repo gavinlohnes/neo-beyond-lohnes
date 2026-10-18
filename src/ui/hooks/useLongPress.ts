@@ -43,11 +43,15 @@ export function useLongPress(onLongPress: () => void, ms = LONG_PRESS_MS) {
       onBlur: clear,
       onContextMenu: (event: MouseEvent<HTMLElement>) => event.preventDefault(),
     },
-    /** Call first in the element's onClick: true means "this click ended a long press". */
-    swallowClick: () => {
+    /**
+     * Call first in the element's onClick: true means "this click ended a long press".
+     * A keyboard click (detail 0) is never that click, and ends any stale suppression:
+     * when the long press makes the element inert, its own pointer click never arrives.
+     */
+    swallowClick: (event?: { detail: number }) => {
       if (!fired.current) return false;
       fired.current = false;
-      return true;
+      return event?.detail !== 0;
     },
   };
 }

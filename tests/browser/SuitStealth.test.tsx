@@ -29,11 +29,15 @@ async function visibleEmblem(): Promise<HTMLElement> {
 function pointer(element: HTMLElement, type: "pointerdown" | "pointerup") {
   element.dispatchEvent(new PointerEvent(type, { bubbles: true, button: 0, pointerId: 1, isPrimary: true }));
 }
+/** The click a pointer release produces (detail 1); element.click() is a keyboard-style click (detail 0). */
+function pointerClick(element: HTMLElement) {
+  element.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0, detail: 1 }));
+}
 async function press(element: HTMLElement, ms: number) {
   pointer(element, "pointerdown");
   await new Promise((resolve) => setTimeout(resolve, ms));
   pointer(element, "pointerup");
-  element.click();
+  pointerClick(element);
 }
 async function readyDay() {
   const day = await startDay();
@@ -54,7 +58,7 @@ it("toggles on a long-press of the emblem; a short tap still goes to TODAY", asy
   await expect.poll(() => !!emblem.querySelector(".operator-emblem__press")).toBe(true);
   await new Promise((resolve) => setTimeout(resolve, LONG_PRESS_MS + 80));
   pointer(emblem, "pointerup");
-  emblem.click(); // the click that ends a long press is swallowed
+  pointerClick(emblem); // the click that ends a long press is swallowed
   await expect.element(screen.getByRole("dialog", { name: "Stealth" })).toBeVisible();
   await expect.poll(() => document.activeElement?.classList.contains("stealth__emblem")).toBe(true);
   // A long-press of stealth's own emblem exits and returns focus to the screen's emblem.
@@ -170,4 +174,52 @@ for (const width of [320, 360, 412]) it(`fits ${width}px with 44px targets, AA c
   expect(document.getAnimations().filter((animation) => animation.playState === "running")).toHaveLength(0);
   const results = await axe.run(overlay()!, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] } });
   expect(results.violations).toEqual([]);
+});
+
+it("a keyboard Enter after a real long-press and Escape still goes to TODAY the first time", async () => {
+  await readyDay();
+  const screen = await render(<App />);
+  await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
+  const emblem = await visibleEmblem();
+  // A real press: the overlay makes the emblem inert before release, so no click follows the pointerup.
+  pointer(emblem, "pointerdown");
+  await new Promise((resolve) => setTimeout(resolve, LONG_PRESS_MS + 80));
+  pointer(emblem, "pointerup");
+  await expect.element(screen.getByRole("dialog", { name: "Stealth" })).toBeVisible();
+  await userEvent.keyboard("{Escape}");
+  await expect.poll(() => overlay()).toBeNull();
+  await expect.poll(() => document.activeElement === emblem).toBe(true);
+  await userEvent.keyboard("{Enter}");
+  await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
+});
+
+it("BODY and an open SYSTEMS readout behind stealth show its logs and undos on exit", async () => {
+  const day = await readyDay();
+  await logWater(day.id, 8);
+  const screen = await render(<App />);
+  const stealthLog = async (undo: boolean) => {
+    await press(await visibleEmblem(), LONG_PRESS_MS + 80);
+    await screen.getByRole("button", { name: "WATER", exact: true }).click();
+    await screen.getByRole("button", { name: "12 oz", exact: true }).click();
+    if (undo) await screen.getByRole("button", { name: "UNDO", exact: true }).click();
+    await expect.poll(() => vi.mocked(commands.logWater).mock.calls.length).toBeGreaterThan(0);
+    await userEvent.keyboard("{Escape}");
+    await expect.poll(() => overlay()).toBeNull();
+  };
+  await screen.getByRole("button", { name: "BODY", exact: true }).click();
+  const body = () => document.querySelector('#workspace-BODY [aria-label="Explore water"] .readout__value')?.textContent;
+  await expect.poll(body).toBe("8 oz");
+  await stealthLog(false);
+  await expect.poll(body).toBe("20 oz");
+  // An undo re-reads too: without it BODY would keep the second log's 32 oz.
+  await stealthLog(true);
+  await expect.poll(() => db.events.where("type").equals("WATER_LOG_VOIDED").count()).toBe(1);
+  await expect.poll(body).toBe("20 oz");
+
+  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("systems");
+  await screen.getByRole("button", { name: /^SYSTEMS / }).click();
+  await expect.element(screen.getByRole("button", { name: "Water: 20 oz. Open history" })).toBeVisible();
+  await stealthLog(false);
+  await expect.element(screen.getByRole("button", { name: "Water: 32 oz. Open history" })).toBeVisible();
 });

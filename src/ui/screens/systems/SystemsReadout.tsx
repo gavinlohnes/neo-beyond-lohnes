@@ -32,8 +32,10 @@ import "./systems.css";
  * SUIT-001: the SYSTEMS readout. Read only, from existing queries. BODY rows
  * open the existing metric history; everything else is a plain reading.
  */
-export function SystemsReadout({ active, onOpenMetric }: {
+export function SystemsReadout({ active, refreshKey = 0, onOpenMetric }: {
   active: boolean;
+  /** Bumped after a write made while the readout stays shown (stealth). */
+  refreshKey?: number;
   /** Opens BODY's existing history for that metric; absent, the rows are plain readings. */
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
 }) {
@@ -56,7 +58,7 @@ export function SystemsReadout({ active, onOpenMetric }: {
       setError(describeError(e, "Could not read the systems."));
     }
   }
-  useEffect(() => { if (active) void refresh(); }, [active]);
+  useEffect(() => { if (active) void refresh(); }, [active, refreshKey]);
   useDayRolloverRefresh(refresh);
 
   // TRAIN's own wording: "Template A", or a custom program's name.
