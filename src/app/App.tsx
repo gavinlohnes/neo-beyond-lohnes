@@ -135,10 +135,21 @@ function AppWorkspaces() {
     }
     void refreshSuit();
     const timer = window.setInterval(() => void refreshSuit(), 60_000);
-    const resume = () => { if (document.visibilityState === "visible") void refreshSuit(); };
+    // A direct shortcut can keep TODAY unmounted while a workout defers rollover.
+    let boundaryTimer: ReturnType<typeof setTimeout>;
+    function armBoundary() {
+      boundaryTimer = setTimeout(() => { void refreshSuit(); armBoundary(); },
+        Math.max(1, nextRolloverBoundaryAfter(new Date()).getTime() - Date.now()));
+    }
+    armBoundary();
+    const resume = () => {
+      if (document.visibilityState !== "visible") return;
+      void refreshSuit();
+      clearTimeout(boundaryTimer); armBoundary();
+    };
     document.addEventListener("visibilitychange", resume);
     const unsubscribe = subscribeToDayRollover(() => void refreshSuit());
-    return () => { current = false; window.clearInterval(timer); document.removeEventListener("visibilitychange", resume); unsubscribe(); };
+    return () => { current = false; window.clearInterval(timer); clearTimeout(boundaryTimer); document.removeEventListener("visibilitychange", resume); unsubscribe(); };
   }, [todayVisited]);
   useEffect(() => () => { delete document.documentElement.dataset.suitMode; }, []);
   const [todayRefreshKey, setTodayRefreshKey] = useState(0);

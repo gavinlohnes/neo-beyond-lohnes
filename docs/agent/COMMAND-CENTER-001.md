@@ -212,3 +212,61 @@ stored-pin shortcut regressions pass. The renewed full `npm run verify` passes (
 2,556 passed / one existing skip), and built offline cold workout/water shortcut acceptance
 passes at 320/360/412 with no duplicate workout set. The earlier exact-head review was superseded
 by its shortcut finding; the new head requires a renewed verdict recorded on PR #241.
+
+## Follow-up — mode pin expiry at 16:30 (2026-10-18)
+
+- **Authorization:** Gavin approved the bounded follow-up after the reproduced active-workout
+  expiry finding on merged PR #241 ("I approve."). This repairs the existing reset promise.
+- **Builder / branch:** Codex; `codex/fix-mode-pin-expiry`. PR pending.
+- **Starting master:** `9f9100ade1d54f4f4368759fb73afcb7f1201a20`, freshly fetched; #241 merged.
+- **Risk:** conservative PROTECTED review lane for the existing mode-placement/local pin seam.
+  No new product ruling or Engine behavior. BUILD OWNED: timestamp the existing local UI pin,
+  reuse the canonical local-calendar boundary helpers, and refresh the retained presentation.
+- **Scope:** expire a pin at the first local 16:30 after selection even when a workout defers
+  canonical rollover; preserve pre-update phase-only pins until their recorded day's first
+  boundary; apply the same rule to TODAY, cold boot and direct TRAIN/BODY launches. A deliberate
+  new selection after expiry holds until the next boundary. Follow schedule and END DAY still clear.
+- **Exclusions:** canonical day/workout ownership, Engine/Attention/System Status rules, logging,
+  schema/events/backups, historical repair, new dependencies, SUIT-001, merges and deployment.
+- **Acceptance:** before/at/after boundary, reload, legacy keys, invalid/unavailable storage,
+  DST local boundaries, active-workout retained day/set draft, Capture draft, foreground and
+  direct-launch root tokens; expiration alone writes no canonical records and preserves guidance.
+  Focused regression checks during development, full gate/build and built offline acceptance at
+  320/360/412 before handoff; independent exact-head review + green CI + owner merge approval.
+- **Coordination:** #242 currently contains SUIT-001 brief/checkpoint changes only. Its work and
+  #204 remain untouched. The prior unpublished alternate continuation remains in its local stash;
+  this follow-up starts from published master and does not reapply that broader work.
+
+Implementation: timestamped pins reuse the existing local-calendar boundary helper. Released
+phase-only pins use the stored day's start only as an expiry origin; no pick time is invented.
+TODAY and direct-launch suit tokens refresh at the boundary and on foreground resume, with
+normal cleanup of timers and obsolete reads. No form is remounted by the pin refresh.
+
+Focused evidence: seven expiry integration cases and the existing two Engine-identity cases
+pass; six expiry browser cases plus fourteen existing mode/navigation cases pass. Six of the
+new Node boundary cases failed on the starting implementation. Production acceptance passes at
+320/360/412, reduced motion: exact boundary with retained workout day, Capture focus/draft and
+set draft, zero canonical expiry writes, direct offline BODY launch across a second boundary,
+offline water save, cold reload and exactly one saved set/note/water entry. Results:
+[`pin-expiry-acceptance.json`](../screenshots/command-center-001/pin-expiry-acceptance.json).
+Reproduce after serving the built PWA:
+`BEYOND_BROWSER_EXECUTABLE=/usr/bin/chromium node scripts/verify-mode-pin-expiry.mjs`.
+Full gate and exact-head CI/review are recorded on the follow-up PR.
+
+Rollback: reverting the presentation repair requires no data migration or historical repair.
+The old reader ignores the timestamped local UI pin and follows schedule; canonical records and
+backups are unaffected. Physical-device/Safari/assistive-technology testing is not claimed.
+
+The first full gate found two timing issues. The unchanged direct-shortcut assertion exposed
+one passive-effect frame between the visible mode name and root tokens; SuitMode now publishes
+before paint. The workout visibility check also failed on the unmodified starting master when
+sampling the 180ms pane translation. It now settles finite TODAY entrance animations before
+measuring; its original bottom-boundary/overflow assertions and thresholds are unchanged.
+Focused rerun: all 34 cases in the expiry, navigation, console and identity browser files pass.
+
+Final local gate: architecture passes (244 files scanned); all 254 Node/browser test files pass,
+2,569 tests passed / one existing skip; TypeScript and production PWA build pass. Local browser
+verification uses installed Chromium through the existing ignored executable-path override;
+the tracked Vitest/CI configuration and dependency files are unchanged. The final built-PWA
+expiry acceptance also passes again at all three widths. Exact-head CI and independent review
+remain separate requirements; the active follow-up PR binds them to its published commit.

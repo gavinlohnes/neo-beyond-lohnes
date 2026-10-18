@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from "react";
+import { useLayoutEffect, type CSSProperties } from "react";
 import type { ShiftClockPhase } from "./shiftClock";
 
 /** Presentation only. Real clock controls the city; a pin controls the suit only. */
@@ -9,7 +9,7 @@ export function cityLight(hour: number, workDay: boolean): { sky: number; window
 }
 
 export function SuitMode({ mode }: { mode: ShiftClockPhase | null }) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.dataset.suitMode = mode ?? "UNSET";
     window.dispatchEvent(new CustomEvent("beyond-mode", { detail: mode }));
     return () => { delete document.documentElement.dataset.suitMode; };
