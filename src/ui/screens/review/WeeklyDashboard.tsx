@@ -60,9 +60,10 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
     setMonthlyError(false);
     void getMonthlyReview(data.week)
       .then((review) => { if (alive) setMonthly({ weekStart: data.week.start, review }); })
-      // A failed re-read drops the earlier result: it may show photos hidden since.
-      .catch(() => { if (alive) { setMonthly(null); setMonthlyError(true); } });
-    return () => { alive = false; };
+      .catch(() => { if (alive) setMonthlyError(true); });
+    // Leaving, or starting another read, drops the earlier result first: it may
+    // show photos hidden since, so nothing renders until a current read lands.
+    return () => { alive = false; setMonthly(null); };
     // Re-read when the shown week changes, on re-entry, and after a save changes the cadence.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, weekStart, data?.saved?.id]);
