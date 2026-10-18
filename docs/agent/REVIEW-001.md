@@ -406,3 +406,25 @@ existing form: no schema, event, backup, Engine-evaluation or dependency change.
 water to each row; its outputs are otherwise unchanged. Neutral ink throughout: red stays for the
 primary button and the PR tag.
 
+
+## Phase 1a delivery — weight rate, usual swing, goal date and timing (2026-10-18)
+
+Builder: Claude Code, during Gavin's overnight sprint permission (2026-10-18). Builds the approved
+Phase 1a "Derive" calculations for core question 1, "Is my weight going down, and at what rate?":
+"7-day average, rate, swing and weigh-in timing", plus the existing goal date (#3). Branch
+`claude/review-001-weight-answers`, from master `85db25b` (not stacked). Lane: PROTECTED.
+
+Inside that answer, below the existing comparison (the summary line is unchanged):
+- **Rate:** the difference between the two 7-day means, per week and as % of bodyweight. Same floor.
+- **Usual swing (#4):** the median absolute change between consecutive weighed lived days (needs
+  5 pairs), so a day's change can be read against normal noise.
+- **Goal (#3):** the existing BODY `projectGoalDate`, unchanged, when a goal weight is set.
+- **Timing:** for shift work a weigh-in means after the main sleep, before eating. It counts
+  weigh-ins logged after that lived day's main-sleep log; it cannot verify eating.
+
+Pure calculations in `engine/weightAnswers.ts` (unit-tested, never used by `evaluate`); a
+read-only application query. No schema, event, backup, Engine-evaluation, dependency or TODAY
+change. Its styles live in their own file so it merges cleanly beside #247.
+
+Verification: engine unit tests; browser tests at 320/360/412 (rate, swing, goal date, timing
+before/after sleep, no goal, axe, no writes).

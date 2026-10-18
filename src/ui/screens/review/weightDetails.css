@@ -1,0 +1,5 @@
+/* REVIEW-001 weight details: labelled facts, one per line. Neutral ink. */
+.review-weight-details { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 8px 0 0; }
+.review-weight-details dt { color: var(--text-2); font-weight: 600; }
+.review-weight-details dd { margin: 0; overflow-wrap: anywhere; }
+.review-weight-details__method { grid-column: 1 / -1; }
