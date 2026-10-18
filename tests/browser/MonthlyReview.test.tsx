@@ -7,9 +7,15 @@ import { App } from "../../src/app/App";
 import { endDay, logBodyweight, setWorkContext, startDay } from "../../src/application/commands";
 import { saveWeeklyReview } from "../../src/application/weeklyReviewCommands";
 import { logMeasurement } from "../../src/application/measurementCommands";
-import { addProgressPhoto } from "../../src/application/progressPhotoCommands";
+import { addProgressPhoto, hideProgressPhoto } from "../../src/application/progressPhotoCommands";
+import { getMonthlyReview } from "../../src/application/monthlyReviewQueries";
 import { latestReviewWeek } from "../../src/engine/weeklyReview";
 import { db } from "../../src/persistence/db";
+
+vi.mock("../../src/application/monthlyReviewQueries", async (original) => {
+  const actual = await original<typeof import("../../src/application/monthlyReviewQueries")>();
+  return { ...actual, getMonthlyReview: vi.fn(actual.getMonthlyReview) };
+});
 
 /** REVIEW-001 monthly review: 4 weeks after the first saved review, the review adds body composition. */
 function clock(at: Date) { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(at); }
@@ -40,9 +46,10 @@ async function seedMonth() {
   await logMeasurement({ site: "WAIST", inches: 35.5, measuredOn: "2026-10-21" });
   await logMeasurement({ site: "WAIST", inches: 35, measuredOn: "2026-11-15" });
   await addProgressPhoto(await photoBlob("#444"), { pose: "FRONT", takenOn: "2026-10-01" }, "IMPORT");
-  await addProgressPhoto(await photoBlob("#888"), { pose: "FRONT", takenOn: "2026-11-10" }, "IMPORT");
+  const later = await addProgressPhoto(await photoBlob("#888"), { pose: "FRONT", takenOn: "2026-11-10" }, "IMPORT");
   const today = await startDay();
   await setWorkContext(today.id, "OFF", "MANUAL");
+  return { later };
 }
 
 for (const width of [320, 360, 412]) it(`opens the monthly review from TODAY with body composition at ${width}px, writing nothing`, async () => {
@@ -84,4 +91,24 @@ it("keeps ordinary weeks weekly and says when the monthly review comes", async (
   await expect.element(review.getByText("WEEKLY REVIEW · LATEST COMPLETED WEEK", { exact: true })).toBeVisible();
   await expect.element(review.getByText("Monthly review in 3 weeks. It adds body composition: weight, measurements and photos.", { exact: true })).toBeVisible();
   expect(document.querySelector(".monthly-body")).toBeNull();
+});
+
+it("drops the cached body panel when a re-read fails, so a newly hidden photo is never shown, and recovers on the next read", async () => {
+  const { later } = await seedMonth();
+  const screen = await render(<App />);
+  await screen.getByRole("button", { name: "OPEN REVIEW", exact: true }).click();
+  await expect.element(screen.getByRole("figure", { name: "Front photos, Oct 1 and Nov 10" })).toBeVisible();
+  await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+  await hideProgressPhoto(later.id);
+  vi.mocked(getMonthlyReview).mockRejectedValueOnce(new Error("read failed"));
+  await screen.getByRole("button", { name: "OPEN REVIEW", exact: true }).click();
+  await expect.element(screen.getByText("Body composition for this month couldn’t be read. The weekly review below is unaffected.", { exact: true })).toBeVisible();
+  expect(document.querySelector(".monthly-body")).toBeNull();
+  expect(document.querySelectorAll(".weekly-dashboard img").length).toBe(0);
+  await expect.element(screen.getByText("-2.5 lb", { exact: true })).not.toBeInTheDocument();
+  await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+  await screen.getByRole("button", { name: "OPEN REVIEW", exact: true }).click();
+  const body = screen.getByRole("region", { name: "BODY COMPOSITION · LAST 4 WEEKS" });
+  await expect.element(body.getByText("-2.5 lb", { exact: true })).toBeVisible();
+  expect(document.querySelector(".monthly-body figure")).toBeNull();
 });

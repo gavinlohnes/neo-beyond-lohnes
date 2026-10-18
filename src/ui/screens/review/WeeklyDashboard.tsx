@@ -60,7 +60,8 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
     setMonthlyError(false);
     void getMonthlyReview(data.week)
       .then((review) => { if (alive) setMonthly({ weekStart: data.week.start, review }); })
-      .catch(() => { if (alive) setMonthlyError(true); });
+      // A failed re-read drops the earlier result: it may show photos hidden since.
+      .catch(() => { if (alive) { setMonthly(null); setMonthlyError(true); } });
     return () => { alive = false; };
     // Re-read when the shown week changes, on re-entry, and after a save changes the cadence.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -104,7 +105,7 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
   const pattern = weekPattern(rows, mode);
   const isLatest = data.weeksBack === 0;
   const weightChange = headline.weight;
-  const monthlyReview = monthly?.weekStart === week.start ? monthly.review : null;
+  const monthlyReview = !monthlyError && monthly?.weekStart === week.start ? monthly.review : null;
   const kind = monthlyReview?.monthly ? "MONTHLY REVIEW" : "WEEKLY REVIEW";
 
   return (
