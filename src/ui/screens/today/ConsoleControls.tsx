@@ -41,7 +41,7 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, busy = fal
       element.close();
       // Native close runs during cleanup. Restore only afterwards, and
       // leave a chosen destination in charge of focus.
-      if (restoreLogTrigger.current) window.requestAnimationFrame(() => logTrigger.current?.focus({ preventScroll: true }));
+      if (restoreLogTrigger.current) window.requestAnimationFrame(() => logTrigger.current?.getClientRects().length && logTrigger.current.focus({ preventScroll: true }));
     };
   }, [logOpen]);
   function closeLog(restoreFocus = true) {

@@ -159,6 +159,8 @@ import {
   type ShiftClockRow,
   type ToolsItem,
 } from "./shiftClock";
+import { DecryptNumber } from "./DecryptNumber";
+import { SuitMode } from "./ModeIdentity";
 import { ModeHeader } from "./ModeHeader";
 import { ShiftHandoff } from "../../components/ShiftHandoff";
 import { clearModePin, getModePin, setModePin } from "../../../application/modePinQueries";
@@ -1740,9 +1742,9 @@ export function TodayScreen({
         {/* FEEL-001: the totals count up when they change; the settled text is fuelLine's. */}
         <p className="card-body" style={{ margin: 0 }} aria-label={fuelLine}>
           {onOpenHealthEvidence ? <>
-            <button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("protein"); }}>Protein <TickNumber value={minimumDayProteinG} />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g</button>
-            {" · "}<button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Water ${minimumDayHydrateOz} oz, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("water"); }}>Water <TickNumber value={minimumDayHydrateOz} /> oz</button>
-          </> : <>Protein <TickNumber value={minimumDayProteinG} />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g · Water <TickNumber value={minimumDayHydrateOz} /> oz</>}
+            <button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("protein"); }}>Protein <DecryptNumber value={minimumDayProteinG} dayId={day!.id} reading="protein" />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g</button>
+            {" · "}<button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Water ${minimumDayHydrateOz} oz, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("water"); }}>Water <DecryptNumber value={minimumDayHydrateOz} dayId={day!.id} reading="water" /> oz</button>
+          </> : <>Protein <DecryptNumber value={minimumDayProteinG} dayId={day!.id} reading="protein" />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g · Water <DecryptNumber value={minimumDayHydrateOz} dayId={day!.id} reading="water" /> oz</>}
         </p>
       </div>
     );
@@ -1858,7 +1860,7 @@ export function TodayScreen({
           <AdvisorySection
         notes={shownAdvisoryNotes}
         busy={busy}
-        onLogWater={(amountOz) => void handleMinimumDayLogWater(amountOz)}
+        {...(dominant !== "HYDRATION_ACTIVE" ? { onLogWater: (amountOz: number) => void handleMinimumDayLogWater(amountOz) } : {})}
         onOpenMinimumDay={() => setMinimumDayOpen(true)}
       />
         );
@@ -2034,6 +2036,7 @@ export function TodayScreen({
         dominant !== "NONE" ? "earned" : attentionPlan.attention.length > 0 ? "attention" : "quiet"
       }
     >
+      <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
       {/* BEYOND Suit Implementation 01B: the identity zone is
           deliberately quiet now — a real <h1> for correct heading
           structure (Part 15), but styled with .eyebrow (small, mono)
@@ -2162,6 +2165,8 @@ export function TodayScreen({
           <h2 id="today-current-state-heading" className="visually-hidden">CURRENT STATE</h2>
           {/* COMMAND-CENTER-001: the mode by name, its source, and the lived day. */}
           <ModeHeader
+            now={now}
+            hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED"}
             scheduledPhase={scheduledClock.phase}
             pin={pinnedPhase}
             dayStart={livedDayStart}
@@ -2500,7 +2505,7 @@ export function TodayScreen({
             </SignalRow>
           )}
 
-          {minimumDayInAttention && (
+          {minimumDayInAttention && dominant !== "HYDRATION_ACTIVE" && (
             <div data-small-minimum>
             <MinimumDayCard
               prominent={true}

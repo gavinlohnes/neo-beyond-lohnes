@@ -131,7 +131,7 @@ describe("mode pin — placement only", () => {
     expect(getModePin(day.id)).toBeNull();
   });
 
-  it("picking the schedule's own mode follows the schedule; focus returns to the mode button; Escape closes", async () => {
+  it("a manual pick holds even when it matches the schedule; focus returns and Escape closes", async () => {
     await startDayAt(at(12, 16, 30));
     vi.setSystemTime(at(12, 22, 0));
     const screen = await render(<TodayScreen />);
@@ -143,7 +143,14 @@ describe("mode pin — placement only", () => {
     await expect.poll(() => document.querySelector("dialog")).toBeNull();
     await expect.poll(() => document.activeElement?.className).toBe("mode-header__name");
     await pick(screen, "ON SHIFT");
-    expect(modeSource()).toMatch(/^Per schedule/);
+    expect(modeSource()).toMatch(/^Pinned/);
+    vi.setSystemTime(at(13, 7));
+    await screen.unmount();
+    const again = await render(<TodayScreen />);
+    await expect.poll(modeName).toBe("ON SHIFT");
+    expect(modeSource()).toContain("schedule says RECOVER");
+    await pick(again, "Follow schedule");
+    await expect.poll(modeName).toBe("RECOVER");
   });
 
   it("a countdown appears only where real times support it", async () => {

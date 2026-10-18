@@ -40,3 +40,43 @@
 .today-sheet__tag { flex: none; padding: 3px 7px; border: 1px solid var(--border-strong); color: var(--text-2); font-size: 12px; letter-spacing: .12em; }
 .today-sheet__note { margin: 10px 14px 0; }
 .today-sheet__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px; }
+
+/* Identity overlays add no vertical space above Operate. */
+.mode-header { position: relative; isolation: isolate; }
+.mode-header::before, .mode-header::after {
+  content: ""; position: absolute; width: var(--tick); height: var(--tick); pointer-events: none;
+  border-color: var(--text-3); border-style: solid; opacity: .6;
+}
+.mode-header::before { left: -4px; top: -3px; border-width: 1px 0 0 1px; }
+.mode-header::after { right: -4px; bottom: 0; border-width: 0 1px 1px 0; }
+.mode-header__name, .mode-strip { position: relative; z-index: 1; }
+.mode-city { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
+.mode-city__sky { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 120%, #57080d, transparent 72%); opacity: var(--sky); }
+.mode-city__buildings { position: absolute; bottom: 0; width: 100%; height: 90%; fill: #050505; stroke: #444; stroke-width: .7; opacity: .5; }
+.mode-city__windows { stroke: #aaa; stroke-width: 1.5; opacity: var(--windows); }
+.mode-city__beam { position: absolute; bottom: 0; left: 65%; width: 80px; height: 170%; background: #aaa; opacity: .045; clip-path: polygon(48% 100%, 0 0, 100% 0); transform-origin: 50% 100%; animation: city-search 18s ease-in-out infinite alternate; }
+.mode-header__sweep { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.mode-header__sweep::after { content: ""; display: block; height: 100%; width: 2px; background: var(--red); animation: mode-sweep 500ms ease-out both; }
+.mode-ruler { position: absolute; top: -2px; height: 5px; border-left: 1px solid var(--text-3); }
+.mode-ruler--major { top: -4px; height: 10px; border-color: var(--text-1); }
+.mode-ruler-label { display: none; } /* 18:00 is too near 16:30 at 320 px; its major tick remains. */
+:root[data-suit-mode="SCHEDULED_SHIFT"] { --surface-1: #030303; --surface-2: #090909; --text-1: #d6d6d6; --text-2: #a0a0a0; --red: #b51219; }
+:root[data-suit-mode="SCHEDULED_SHIFT"] .mode-city::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(transparent 0 3px, #8881 3px 4px); }
+:root[data-suit-mode="EXPECTED_POST_WORK"] { --motion-fast: 220ms; --motion-base: 350ms; --surface-1: #030303; }
+:root[data-suit-mode="EXPECTED_POST_WORK"] .mode-ruler,
+:root[data-suit-mode="EXPECTED_POST_WORK"] .mode-strip { display: none; }
+:root[data-suit-mode="OFF"] .mode-city { opacity: .55; }
+.command-console .console-controls button, .command-console .command-surface, .command-console .btn-primary { border-radius: 0; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+/* Inset focus stays inside the cut. */
+.command-console .console-controls button:focus-visible, .command-console .btn-primary:focus-visible { outline-offset: -3px; }
+@keyframes mode-sweep { from { transform: translateX(0); opacity: .7; } to { transform: translateX(450px); opacity: 0; } }
+@keyframes city-search { from { transform: rotate(-30deg); } to { transform: rotate(20deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .mode-header__sweep { display: none; }
+  .mode-city__beam { animation: none; transform: rotate(-15deg); }
+}
+
+:root[data-suit-mode="EXPECTED_POST_WORK"] .today-field .field-progress { display: none; }
+/* Retained workspaces keep drafts, but spend no animation work while hidden. */
+#workspace-TODAY[hidden] .mode-city__beam,
+#workspace-TODAY[hidden] .mode-header__sweep::after { animation: none; }

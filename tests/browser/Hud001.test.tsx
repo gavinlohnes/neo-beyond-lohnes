@@ -57,7 +57,10 @@ function strayReds(root: Element): string[] {
 
 async function contrastViolations(root: Element) {
   // Settle entrance animations first, so axe measures the resting colors.
-  for (const animation of document.getAnimations()) animation.finish();
+  for (const animation of document.getAnimations()) {
+    if (animation.effect?.getComputedTiming().iterations === Infinity) animation.pause();
+    else animation.finish();
+  }
   const results = await axe.run(root, { runOnly: { type: "rule", values: ["color-contrast"] } });
   return results.violations.flatMap((v) => v.nodes.map((n) => `${n.target.join(" ")} ${JSON.stringify(n.any[0]?.data)}`));
 }

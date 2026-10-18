@@ -2,53 +2,44 @@
 
 ## Current objective — COMMAND-CENTER-001 (2026-10-18, PROTECTED)
 
-Gavin approved visible modes, the COMMAND tab (replacing MORE) and one LOG entry on 2026-10-17,
-and accepted the command-center prototype on 2026-10-18. SUIT-001 follows in its own PR.
-Brief: [COMMAND-CENTER-001.md](COMMAND-CENTER-001.md) (Handoff section names the Builder).
-Builder: Claude Code. Starting master `4fda717`; branch `ccr-8a82e4b3-4ub4x2`; draft
-[PR #241](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241).
-Done: slices 0–3.
-- Slice 1 (modes): TODAY's status strip opens with the mode header (mode name, "Per schedule" or
-  "Pinned", lived-day strip with now marker) and a picker. The pin lives in localStorage per
-  BeyondDay (`persistence/modePins.ts` via `application/modePinQueries.ts`), chooses only rows
-  and countdown, and clears at END DAY; Attention and guidance timing read the schedule's phase.
-  Pinning ON SHIFT on an off day offers an optional RECORD WORK DAY via `setWorkContext`.
-- Slice 2 (action row): WATER · MEAL · LOG (+ SYSTEM until slice 3). LOG lists water, meal,
-  sleep, bodyweight, note, urge (only with a quit habit) and workout set, each routed to its
-  existing form. QUICK_LOG left SCHEDULED_SHIFT; its slot shows the shift handoff note. The
-  quit tracker now reopens on a repeat urge request (`openRequest`), a one-line focus fix so
-  + LOG → Urge reaches it in two taps after BODY was already visited.
-- Slice 3 (COMMAND): the MORE tab is COMMAND (new additive `command` glyph; every "MORE //"
-  heading is "COMMAND //"). A search at the top of the index runs `findCapabilities` over the
-  catalog, now 27 entries: the former SYSTEM destinations plus Note, Urge and every COMMAND
-  setting (backup & recovery, targets, quit tracker, time capsule, reminder, diagnostics, guide).
-  Browsing keeps every former MORE group, plus a Log group. No results says so and suggests
-  terms. The TODAY SYSTEM dialog is gone; TODAY TOOLS opens from COMMAND with its heading
-  focused. Weekly Review stays at COMMAND → REVIEW and matches "weekly review".
-Verification (slice 3 head): full local suite 249 files / 2,546 passed / 1 existing skip;
-architecture and TypeScript pass. `SystemCatalog.test.tsx` became `CommandCatalog.test.tsx`
-with the same per-destination, draft, meal-once, workout, keyboard, 44 px and axe checks run
-through COMMAND. Test and script text renamed MORE → COMMAND mechanically; no assertion removed.
-Remaining risks: TODAY's first screen is tight at 320 px (RESUME WORKOUT ~1 px above the nav);
-slice 5 must not add height above Operate. The QUICK_LOG +8/+16 oz on shift is gone by design.
-Inside COMMAND a destination opens with focus on its BACK button (the index's existing pattern).
-Slice 4 (emblem) committed as work in progress: the header glyph is the emblem (go to TODAY
-root) via `EmblemContext`; `CommandCenterNavigation.test.tsx` passes (4/4). Full local suite at
-`6392d9e`: 250 files / 2,550 passed / 1 existing skip.
+Gavin authorized GPT Work to complete the existing objective on branch `ccr-8a82e4b3-4ub4x2`,
+[PR #241](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241). No merge authorized.
+Brief: [COMMAND-CENTER-001.md](COMMAND-CENTER-001.md). Starting master remains `4fda717`.
+Arrival head: `c717801` (slices 0–3 done, slice 4 WIP). Only other open PR is isolated lab #204.
 
-**Handoff to Codex (2026-10-18, owner switching builders).** Update the brief's Handoff section
-first. Then finish slice 4 (TRAIN re-tap behaviour is unchanged existing pattern; confirm it's
-enough) and build slice 5 per the brief: identity effects, Bruce-voice display copy, extend
-`scripts/verify-daily-experience.mjs` for modes and COMMAND, screenshots in
-`docs/screenshots/command-center-001/`, then mark PR #241 ready and request the independent
-exact-head review. Also update the PR #241 checklist (slices 1–3 done, 4 in progress).
-- Browser tests here ran through an uncommitted local config (`vitest.config.local.ts`, excluded
-  via `.git/info/exclude`) that sets Playwright's `executablePath` to the container's
-  pre-installed Chromium. Tracked config and CI are unchanged; another environment needs its own
-  equivalent or a normal Playwright browser install.
-- TODAY's first screen is tight at 320 px: RESUME WORKOUT sits ~1 px above the bottom nav
-  (`CommandConsole.test.tsx`). Slice 5 effects (ruler, skyline, sky) must overlay the mode header
-  or replace existing height, not add height above Operate.
+**Implementation complete: slices 0–5.**
+- Modes, placement-only day pins, optional separate work-day record, WATER / MEAL / LOG and
+  searchable COMMAND were already implemented. Engine identity and canonical commands stay.
+- Finished navigation: retained tabs/subviews, browser Back/Forward, open-sheet dismissal on
+  Back, visible focus restoration, COMMAND query and settings-draft retention. TRAIN re-tap
+  returns to its canonical session/root without discarding workout/set input.
+- A manual pick now pins even when it currently agrees with the schedule; only Follow schedule
+  clears it. Foreground Minimum Day hydration suppresses duplicate Advisory water shortcuts,
+  while preserving the advisory evidence and existing log/undo commands.
+- Identity: one-cut action surfaces, header reticles/ruler, original gray skyline and real-time
+  windows/crimson sky, recommendation-gated searchlight, one mode-change sweep, mode tokens,
+  live-mode boot and once-per-lived-day fuel-reading decrypt. Reduced motion keeps static
+  scenery and skips animated feedback/decrypt; hidden TODAY spends no animation work.
+  RECOVER quiets ruler/bars and slows motion without hiding factual sleep guidance.
+- Display-only recommendation reason copy; WHY ends in user choice. No Engine text changed.
+
+**Verification:** `npm run verify` passes: architecture, 252 test files, 2,554 passed / one
+existing skip, TypeScript and production PWA build. Added coverage for same-as-schedule pin
+continuity, retained settings input, mode identity/contrast at 320/360/412 and clock-driven city.
+Built PWA acceptance passes at all three widths: modes, COMMAND/Weekly Review, browser Back and
+Forward, both native sheets on Back, draft continuity (meal, sleep, workout set, Capture, Journal,
+Plan Today), exactly-once writes, recurrence/release preservation, offline cold reload and writes.
+Synthetic screenshots + acceptance JSON: `docs/screenshots/command-center-001/`.
+
+**Review/CI:** independent exact-head verdict and required CI belong to PR #241 at its final
+commit. Read the live PR before integration; no self-review or merge. Publication uses connected
+GitHub tools because local Git has no push credential; published Git tree hashes are checked
+against the staged local tree. No new branch/PR, dependency, schema, backup or Engine change.
+
+**Limitations:** automated Chromium, not physical-device/Safari/screen-reader testing. The
+existing production bundle-size advisory remains. Small phones may scroll; header effects add
+no height. SUIT-001, CHRONICLE, TRAIN expansion, BODY redesign and reuse audit are not begun.
+**Next:** final exact-head review + green required CI, then Gavin's explicit merge decision.
 
 ## Previous objective — REVIEW-001 Weekly Review dashboard (2026-10-18, PROTECTED, merged in #240 at `4fda717`)
 

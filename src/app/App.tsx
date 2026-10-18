@@ -336,6 +336,8 @@ function AppWorkspaces() {
   useEffect(() => {
     function restore(event: PopStateEvent) {
       const state = event.state;
+      // Retained panes must not leave a native modal in the top layer on Back.
+      for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog[open]")) dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
       if (!state?.beyondNavigation || !["TODAY", "TRAIN", "BODY", "COMMAND"].includes(state.tab)) return;
       if (mealInFlight.current) { window.history.forward(); return; }
       restoringHistory.current = state.tab !== tab || state.moreView !== moreView;

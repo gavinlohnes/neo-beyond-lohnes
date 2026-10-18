@@ -1,0 +1,53 @@
+[
+  {
+    "width": 320,
+    "passed": true,
+    "waterWrites": 2,
+    "offline": true,
+    "main": 1,
+    "overflow": false,
+    "unfinishedInput": [
+      "meal",
+      "Capture",
+      "sleep",
+      "workout set",
+      "Journal",
+      "Plan Today"
+    ],
+    "pageErrors": []
+  },
+  {
+    "width": 360,
+    "passed": true,
+    "waterWrites": 2,
+    "offline": true,
+    "main": 1,
+    "overflow": false,
+    "unfinishedInput": [
+      "meal",
+      "Capture",
+      "sleep",
+      "workout set",
+      "Journal",
+      "Plan Today"
+    ],
+    "pageErrors": []
+  },
+  {
+    "width": 412,
+    "passed": true,
+    "waterWrites": 2,
+    "offline": true,
+    "main": 1,
+    "overflow": false,
+    "unfinishedInput": [
+      "meal",
+      "Capture",
+      "sleep",
+      "workout set",
+      "Journal",
+      "Plan Today"
+    ],
+    "pageErrors": []
+  }
+]

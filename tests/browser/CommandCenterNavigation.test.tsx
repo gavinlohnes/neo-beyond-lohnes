@@ -77,6 +77,16 @@ describe("re-tap, back and retention", () => {
     expect(await db.captureItems.count()).toBe(0);
   });
 
+  it("keeps an unsaved settings draft through COMMAND search", async () => {
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await screen.getByRole("button", { name: "Open NUTRITION TARGETS", exact: true }).click();
+    await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("1875");
+    await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("history");
+    await screen.getByRole("button", { name: "Clear search" }).click();
+    await expect.element(screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" })).toHaveValue(1875);
+  });
+
   it("returns to TODAY's place and focus after a LOG trip to BODY", async () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Log water in BODY" }).click();

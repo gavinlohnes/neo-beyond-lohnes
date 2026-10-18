@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MODE_DESCRIPTIONS, MODE_NAMES, MODE_ORDER, type LivedDayStrip, type ShiftClockPhase } from "./shiftClock";
 import "./modeHeader.css";
+import { ModeCity } from "./ModeIdentity";
 
 function clock(at: Date): string {
   return `${String(at.getHours()).padStart(2, "0")}:${String(at.getMinutes()).padStart(2, "0")}`;
@@ -14,6 +15,8 @@ function clock(at: Date): string {
  * through the existing work-context command the caller supplies.
  */
 export function ModeHeader({
+  now,
+  hasAction,
   scheduledPhase,
   pin,
   strip,
@@ -23,6 +26,8 @@ export function ModeHeader({
   onPin,
   onRecordWorkDay,
 }: {
+  now: Date;
+  hasAction: boolean;
   /** The schedule's phase; null while the work question is unanswered. */
   scheduledPhase: ShiftClockPhase | null;
   pin: ShiftClockPhase | null;
@@ -47,14 +52,13 @@ export function ModeHeader({
     element.showModal();
     return () => {
       element.close();
-      window.requestAnimationFrame(() => trigger.current?.focus({ preventScroll: true }));
+      window.requestAnimationFrame(() => trigger.current?.getClientRects().length && trigger.current.focus({ preventScroll: true }));
     };
   }, [open]);
 
   function choose(phase: ShiftClockPhase | null) {
-    // Picking the schedule's own mode is the same as following it.
-    const next = phase === scheduledPhase ? null : phase;
-    onPin(next);
+    // Every manual pick holds, even when it agrees with the schedule now.
+    onPin(phase);
     if (phase === "SCHEDULED_SHIFT" && dayOff && onRecordWorkDay) setStep("WORK_DAY");
     else setOpen(false);
   }
@@ -68,6 +72,8 @@ export function ModeHeader({
 
   return (
     <div className="mode-header" data-mode={mode ?? "UNSET"}>
+      <ModeCity now={now} workDay={!dayOff} hasAction={hasAction} />
+      <span key={mode} className="mode-header__sweep" aria-hidden="true" />
       <button
         ref={trigger}
         type="button"
@@ -85,6 +91,7 @@ export function ModeHeader({
       </button>
       <div className="mode-strip" aria-hidden="true">
         <div className="mode-strip__bar">
+          {Array.from({ length: 24 }, (_, i) => <i key={i} className={`mode-ruler${i === 1 || i === 13 ? " mode-ruler--major" : ""}`} style={{ left: `${((i + .5) / 24) * 100}%` }} />)}
           {strip.segments.map((segment) => (
             <span
               key={segment.phase}
@@ -96,9 +103,8 @@ export function ModeHeader({
         </div>
         <div className="mode-strip__legend">
           <span style={{ left: 0 }}>{clock(dayStart)}</span>
-          {strip.shiftEnd && strip.shiftEnd.position > 0.15 && strip.shiftEnd.position < 0.85 && (
-            <span style={{ left: `${(strip.shiftEnd.position * 100).toFixed(2)}%` }}>{clock(strip.shiftEnd.at)}</span>
-          )}
+          <span style={{ left: "6.25%" }} className="mode-ruler-label">18</span>
+          <span style={{ left: "56.25%" }}>06:00</span>
           <span style={{ left: "100%" }}>{clock(dayStart)}</span>
         </div>
       </div>

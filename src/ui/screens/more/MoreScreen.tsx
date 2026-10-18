@@ -454,7 +454,7 @@ export function MoreScreen({
         {query && <button type="button" className="chip command-search__clear" aria-label="Clear search" onClick={() => { setQuery(""); document.getElementById("command-query")?.focus(); }}>CLEAR</button>}
       </div>
       <p className="visually-hidden" aria-live="polite">{query.trim() ? (matches.length ? `${matches.length} ${matches.length === 1 ? "result" : "results"}` : "No results") : ""}</p>
-      {query.trim() ? (
+      {query.trim() && (
         <div className="command-results" aria-label="Results">
           {matches.length === 0 && <p className="command-results__empty">Nothing called “{query.trim()}”. Try water, sleep, backup or schedule.</p>}
           {CAPABILITY_GROUPS.map((group) => {
@@ -466,7 +466,8 @@ export function MoreScreen({
             </section>;
           })}
         </div>
-      ) : <>
+      )}
+      <div hidden={!!query.trim()}>
       <h2 className="more-title">Control center</h2>
       <p className="more-purpose">Every screen, setting and backup tool. Search above, or browse.</p>
       <div className="more-context">
@@ -854,7 +855,7 @@ export function MoreScreen({
       </WhyDisclosure>
       </div>
       </section>
-      </>}
+      </div>
       </div>
     </div>
   );

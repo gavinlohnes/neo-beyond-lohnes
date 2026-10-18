@@ -169,7 +169,7 @@ The current Builder is named here. Whoever takes over updates this section first
 
 - **Builder:** GPT Work, sole builder from 2026-10-18; Gavin authorized completing PR #241.
 - **Arrival:** `c717801c5d59fef9250fe58f4af6c88c71e6cfb2`; master `4fda7177dbf11c5699331243e6feaa460dae08bd`. Slices 0–3 complete; slice 4 WIP.
-- **Branch:** `ccr-8a82e4b3-4ub4x2`. **PR:** linked from the branch (draft until slice 5).
+- **Branch:** `ccr-8a82e4b3-4ub4x2`. **PR:** [#241](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241).
 - **State:** see `docs/agent/CURRENT_CHECKPOINT.md`.
 
 ### Takeover progress (2026-10-18)
@@ -181,3 +181,25 @@ Leverage disposition: ADAPT UPSTREAM — browser History API plus existing retai
 or dependency. Initial full gate found a duplicated hydration shortcut during a foreground
 Minimum Day operation; the final slice suppresses only the redundant Advisory water buttons while
 that canonical operation is open, preserving advisory evidence and existing commands.
+
+
+### Completion evidence
+
+Slices 0–5 implemented. `npm run verify`: architecture, all 252 files / 2,554 tests pass, one
+existing skip, TypeScript and production PWA build pass. Built-browser acceptance at 320/360/412
+passes, including modes, COMMAND/Weekly Review, browser Back/Forward, native-sheet cancellation,
+retained drafts, exactly-once logs and offline cold reload/writes. See
+`docs/screenshots/command-center-001/acceptance.json` and synthetic screenshots in that folder.
+
+Review preparation found and fixed two acceptance gaps: selecting the currently scheduled mode
+must still pin, and searching COMMAND must retain mounted settings drafts. The final browser
+suite also guards valid accessible decrypt text and preserves factual sleep guidance in RECOVER.
+Its UI colors pass AA; on-shift primary text/fill is 4.71:1. Existing screenshot helpers settle
+finite animations and pause the newly authorized infinite searchlight, without relaxing axe.
+The catalog hit-target query measures the actual search-result controls while grouped browsing
+is intentionally retained hidden; the same 44px/16px assertions stay.
+
+No schema, Engine, event, backup or dependency modification. No SUIT-001/reuse-roadmap work.
+Final SHA, independent exact-head verdict and CI are recorded on PR #241, so review evidence
+can bind the final commit without creating another post-review documentation commit. Owner merge
+approval remains required. Physical-device/Safari/screen-reader testing is not claimed.

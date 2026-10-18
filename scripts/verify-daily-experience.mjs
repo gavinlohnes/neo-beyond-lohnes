@@ -2,10 +2,10 @@ import { chromium } from "playwright";
 import { fileURLToPath } from "node:url";
 import { mkdir, writeFile } from 'node:fs/promises';
 const browser = await chromium.launch({ headless: true, ...(process.env.BEYOND_BROWSER_EXECUTABLE ? { executablePath: process.env.BEYOND_BROWSER_EXECUTABLE } : {}) });
-const root = fileURLToPath(new URL("../docs/screenshots/daily-experience-001/", import.meta.url));
+const root = fileURLToPath(new URL("../docs/screenshots/command-center-001/", import.meta.url));
 const baseUrl = process.env.BEYOND_ACCEPTANCE_URL ?? "http://127.0.0.1:5174/neo-beyond-lohnes/";
 async function snapshot(page, path) {
- await page.evaluate(() => { for (const animation of document.getAnimations()) animation.finish(); });
+ await page.evaluate(() => { for (const animation of document.getAnimations()) if (animation.effect?.getComputedTiming().iterations === Infinity) animation.pause(); else animation.finish(); });
  await page.screenshot({ path });
 }
 await mkdir(root,{recursive:true});
@@ -19,7 +19,7 @@ async function records(page, store){return page.evaluate(name=>new Promise((reso
 try {
 for (const width of [320,360,412]) {
  const context=await browser.newContext({viewport:{width,height:800},isMobile:true,hasTouch:true,timezoneId:'America/Chicago',reducedMotion:'reduce'});
- const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const page=await context.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.clock.install({time:new Date('2026-10-13T22:00:00-05:00')});
  await page.goto(baseUrl);
  await page.getByRole('button',{name:'START DAY',exact:true}).click();
@@ -29,6 +29,42 @@ for (const width of [320,360,412]) {
  if(await page.getByRole('main').count()!==1)throw Error('Main landmark');
  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Horizontal overflow');
  await snapshot(page, `${root}/today-${width}.png`);
+ // Pins change presentation only, including at the smallest phone width.
+ for (const mode of ['PREP','ON SHIFT','RECOVER','OFF DUTY']) {
+  await page.getByRole('button',{name:/^Mode .*Change mode$/}).click();
+  await page.getByRole('dialog').getByRole('button',{name:new RegExp('^'+mode)}).click();
+  const notNow=page.getByRole('button',{name:'NOT NOW',exact:true}); if(await notNow.isVisible())await notNow.click();
+  await page.locator('.mode-header__value').filter({hasText:mode}).waitFor();
+  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Mode overflow '+mode);
+  await snapshot(page, `${root}/mode-${mode.toLowerCase().replaceAll(' ','-')}-${width}.png`);
+ }
+ await page.getByRole('button',{name:/^Mode .*Change mode$/}).click();
+ await page.getByRole('dialog').getByRole('button',{name:/^Follow schedule/}).click();
+ await page.getByRole('button',{name:'COMMAND',exact:true}).click();
+ await page.getByRole('searchbox',{name:'Find a screen or action'}).fill('weekly review');
+ await page.getByRole('button',{name:/^REVIEW COMMAND/}).click();
+ await page.getByRole('heading',{name:'COMMAND // REVIEW',exact:true}).waitFor();
+ await page.evaluate(()=>history.back());
+ await page.getByRole('searchbox',{name:'Find a screen or action'}).waitFor();
+ if(await page.getByRole('searchbox',{name:'Find a screen or action'}).inputValue()!=='weekly review')throw Error('Browser Back lost query');
+ await page.evaluate(()=>history.forward());
+ await page.getByRole('heading',{name:'COMMAND // REVIEW',exact:true}).waitFor();
+ await page.getByRole('button',{name:'COMMAND',exact:true}).click();
+ await page.getByRole('searchbox',{name:'Find a screen or action'}).fill('');
+ await page.getByRole('button',{name:'TODAY',exact:true}).click();
+ // Browser Back dismisses native sheets before restoring a retained workspace.
+ for(const name of ['Open LOG', /^Mode .*Change mode$/]) {
+  await page.getByRole('button',{name:'COMMAND',exact:true}).click();
+  await page.getByRole('button',{name:'TODAY',exact:true}).click();
+  await page.getByRole('button',{name,exact:typeof name==='string'}).click();
+  await page.getByRole('dialog').waitFor();
+  await page.evaluate(()=>history.back());
+  await page.getByRole('searchbox',{name:'Find a screen or action'}).waitFor();
+  await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
+  await page.getByRole('button',{name:'TODAY',exact:true}).click();
+ }
+ const modeMotion=await page.evaluate(()=>document.getAnimations().filter(animation=>animation.playState==='running' && ['city-search','mode-sweep'].includes(animation.animationName)).map(animation=>animation.animationName));
+ if(modeMotion.length)throw Error('Mode animation under reduced motion: '+modeMotion.join(','));
  await page.getByRole('button',{name:'Log water in BODY',exact:true}).click();
  await page.getByRole('button',{name:'+8 oz',exact:true}).click();
  await page.getByText('8 oz recorded today',{exact:true}).waitFor();
@@ -80,7 +116,7 @@ for (const width of [320,360,412]) {
  if(await page.getByRole('textbox',{name:'Decision title',exact:true}).inputValue()!=='A synthetic decision')throw Error('Journal draft lost');
  await page.getByRole('button',{name:'RECORD DECISION',exact:true}).click();
  await page.getByRole('button',{name:'BODY',exact:true}).click();
- if(await page.getByRole('spinbutton',{name:'Hours',exact:true}).inputValue()!=='6')throw Error('Sleep draft lost');
+ if(await page.getByRole('spinbutton',{name:'Hours',exact:true}).inputValue()!=='6')throw Error('Sleep draft lost: '+JSON.stringify({width,hours:await page.getByRole('spinbutton',{name:'Hours',exact:true}).inputValue(),events:await records(page,'events'),errors}));
  await page.getByRole('button',{name:'LOG SLEEP',exact:true}).click();
  await page.getByRole('button',{name:'TODAY',exact:true}).click();
  await page.getByRole('button',{name:'Open LOG',exact:true}).click(); await page.getByRole('dialog',{name:'LOG'}).getByRole('button',{name:/^Note/}).click();
@@ -134,8 +170,12 @@ for (const width of [320,360,412]) {
  await page.reload();
  await page.getByRole('button',{name:'BODY',exact:true}).click();
  await page.getByRole('button',{name:'+12 oz',exact:true}).click();
- const eventRows=await records(page,'events');
- const water=eventRows.filter(e=>e.type==='WATER_LOGGED');
+ let water=[];
+ for(let attempt=0;attempt<50;attempt++){
+  water=(await records(page,'events')).filter(e=>e.type==='WATER_LOGGED');
+  if(water.length>=2)break;
+  await new Promise(resolve=>setTimeout(resolve,100));
+ }
  if(water.length!==2)throw Error('Offline water writes');
  await page.getByRole('button',{name:'COMMAND',exact:true}).click();
  await page.getByRole('button',{name:'PLAN TODAY',exact:true}).click();
