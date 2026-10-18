@@ -217,6 +217,8 @@ function AppWorkspaces() {
   // FIND-001: a LIFT/PR search result opens TRAIN → RECORDS at that lift; the top-bar icon opens SEARCH.
   const [trainRecordsFocus, setTrainRecordsFocus] = useState<string | null>(null);
   const [moreView, setMoreView] = useState<MoreView>("MENU");
+  // SUIT-001: the readout was opened from TODAY's SYSTEMS line, so it offers the way back.
+  const [systemsOrigin, setSystemsOrigin] = useState(false);
   const [continuityResolved, setContinuityResolved] = useState(false);
 
   useEffect(() => {
@@ -393,6 +395,7 @@ function AppWorkspaces() {
 
   function openMore(view: MoreView, focus: IntentFocus | null = null, focusHeading = true) {
     if (!canNavigate()) return false;
+    setSystemsOrigin(false);
     setHealthHistoryOrigin(false); setHealthHistory(null);
     setIntentFocus(focus);
     setMoreView(view);
@@ -536,6 +539,7 @@ function AppWorkspaces() {
               onOpenBody={openBody}
               onOpenHealthEvidence={openBodyEvidence}
               onOpenWeeklyReview={() => openMore("REVIEW")}
+              onOpenSystems={() => { if (openMore("SYSTEMS")) setSystemsOrigin(true); }}
               toolsRequest={toolsRequest}
             />
           </RootErrorBoundary>
@@ -560,6 +564,8 @@ function AppWorkspaces() {
               setTrainDestination(null); setTrainRecordsFocus(exerciseId); showTab("TRAIN", false);
             }}
             onOpenMeal={() => openBody("meal")}
+            onOpenMetric={openBodyEvidence}
+            onReturnToToday={systemsOrigin && moreView === "SYSTEMS" ? () => { setSystemsOrigin(false); showTab("TODAY"); } : undefined}
             onOpenDestination={openSystemDestination} /></RootErrorBoundary>
         </div>}
       </main>

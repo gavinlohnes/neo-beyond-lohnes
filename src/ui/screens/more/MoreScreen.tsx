@@ -40,6 +40,8 @@ import { describeError } from "../../errorMessage";
 import { GuidedOverview } from "./GuidedOverview";
 import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES, type CommandSection, type SystemCapability, type SystemDestination } from "../../systemCatalog";
 import { PlanTodayScreen } from "./PlanTodayScreen";
+import { SystemsReadout } from "../systems/SystemsReadout";
+import type { InsightMetric } from "../../../application/bodyInsightsQueries";
 
 const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 
@@ -51,7 +53,7 @@ const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 // it can't drift again.
 const DATA_SCHEMA = db.verno;
 
-export type MoreView = "MENU" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES";
+export type MoreView = "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES";
 
 import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
 
@@ -66,6 +68,7 @@ export function MoreScreen({
   onOpenMeal,
   onOpenDestination,
   historyDestination = null, onReturnToHealth, onHistoryExit,
+  onOpenMetric, onReturnToToday,
 }: {
   onViewChange?: (view: MoreView) => void;
   /** COMMAND-CENTER-001: search results outside COMMAND (BODY, TRAIN, TODAY) go through the shell. */
@@ -73,6 +76,10 @@ export function MoreScreen({
   historyDestination?: HealthHistoryDestination | null;
   onReturnToHealth?: (() => void) | undefined;
   onHistoryExit?: (() => void) | undefined;
+  /** SUIT-001: a SYSTEMS BODY row opens that metric's existing history in BODY. */
+  onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
+  /** SUIT-001: set when TODAY's SYSTEMS line opened the readout. */
+  onReturnToToday?: (() => void) | undefined;
   onOpenCapture?: () => void;
   active?: boolean;
   navigationRequest?: number;
@@ -418,6 +425,7 @@ export function MoreScreen({
     <div className="screen more-operator">
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
           <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>← BACK TO COMMAND</button>
+          {view === "SYSTEMS" && <>{onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>RETURN TO TODAY</button>}<SystemsReadout active={active} onOpenMetric={onOpenMetric} /></>}
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
           {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>RETURN TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>RETURN TO BODY</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
@@ -520,6 +528,10 @@ export function MoreScreen({
       <section className="operational-index-zone" aria-labelledby="log-actions-heading">
         <h2 id="log-actions-heading" className="section-label">Log</h2>
         {SYSTEM_CAPABILITIES.filter((entry) => entry.group === "Log" || entry.label === "WORKOUT").map((entry) => renderCapability(entry))}
+      </section>
+      <section className="operational-index-zone" aria-labelledby="command-today-heading">
+        <h2 id="command-today-heading" className="section-label">Today</h2>
+        {SYSTEM_CAPABILITIES.filter((entry) => entry.group === "Today").map((entry) => renderCapability(entry))}
       </section>
       <section className="operational-index-zone" aria-labelledby="records-heading">
       <h2 id="records-heading" className="section-label">Evidence</h2>

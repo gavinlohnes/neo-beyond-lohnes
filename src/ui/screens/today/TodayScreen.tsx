@@ -1,7 +1,8 @@
 import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
+import { getLastMainSleep, getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
+import { SystemsLine } from "../systems/SystemsLine";
 import { describeSystemStatus } from "./statusCopy";
 import { describePlainRecommendationTitle } from "./recommendationCopy";
 import { TickNumber } from "../../feel/TickNumber";
@@ -228,6 +229,7 @@ export function TodayScreen({
   onOpenBody,
   onOpenHealthEvidence,
   onOpenWeeklyReview,
+  onOpenSystems,
   toolsRequest = 0,
   openToolsOnMount = false,
   onWorkEnded,
@@ -243,6 +245,8 @@ export function TodayScreen({
   onViewCommitments?: (id?: string) => void;
   onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
   onOpenWeeklyReview?: () => void;
+  /** SUIT-001: the SYSTEMS line opens the readout in COMMAND. */
+  onOpenSystems?: () => void;
   onOpenHealthEvidence?: (metric: "water" | "protein") => void;
   onOpenBody?: (target?: BodyFocus) => void;
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
@@ -352,6 +356,8 @@ export function TodayScreen({
   const [openCaptureItems, setOpenCaptureItems] = useState<CaptureItem[]>([]);
   const [advisoryNotes, setAdvisoryNotes] = useState<AdvisoryNote[]>([]);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
+  // SUIT-001: the SYSTEMS line's sleep reading — System Status's own last-main-sleep rule.
+  const [lastMainSleepMinutes, setLastMainSleepMinutes] = useState<number | null>(null);
   const [captureText, setCaptureText] = useState("");
   useSessionDraft("capture", captureText.length > 0);
   const [captureFeedback, setCaptureFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
@@ -743,6 +749,7 @@ export function TodayScreen({
     // STATUS-001: the one System Status line (read only; never reaches the Engine), composed from
     // THIS refresh's own activeDay and installed only by the refresh that owns the screen.
     const nextSystemStatus = await getSystemStatus(activeDay ?? null).catch(() => null);
+    const nextLastMainSleep = activeDay ? await getLastMainSleep(activeDay.id).catch(() => null) : null;
     const effectiveProteinTarget = await getEffectiveProteinTargetG();
 
     // Everything on the active-day/context path is gated on this single
@@ -814,7 +821,7 @@ export function TodayScreen({
       setRecommendationHandoff(null);
     }
     setAdvisoryNotes(advisoryNotes);
-    if (isOwner) setSystemStatus(nextSystemStatus);
+    if (isOwner) { setSystemStatus(nextSystemStatus); setLastMainSleepMinutes(nextLastMainSleep?.minutes ?? null); }
     setProteinTargetG(effectiveProteinTarget);
 
     // A fresh, independently-composed view each refresh — never memoized
@@ -2226,37 +2233,20 @@ export function TodayScreen({
           {shiftClock.countdown && (
             <p className="status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>
           )}
-          {/* STATUS-001 (owner brief 2026-10-05; approved merge: System Status is one line on
-              TODAY): this line was the check-in's capacity sentence; it is now the System Status,
-              which carries the check-in's reading along with sleep and training load, e.g.
-              "AMBER · 5h sleep, 3 hard sessions in 4 days". A text label always leads (never
-              color alone). Until the status is read, the capacity sentence stays. */}
+          {/* SUIT-001 (owner choice 2026-10-18): SYSTEMS replaces the System Status line. The status
+              keeps its exact meaning and evidence; it moves to the readout's STATE section, and AMBER
+              or RED still lead this line in words (never the strip's tint alone). */}
           <div className="today-situation__system">
-            <p className="tool-label">SYSTEM STATUS</p>
-            <p className="status-strip__detail" data-system-status={systemStatus?.level ?? undefined}>
-              {systemStatus ? (
-                <span
-                  className={systemStatus.level === "AMBER" || systemStatus.level === "RED" ? "status-strip__capacity" : undefined}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-                >
-                  <span aria-hidden="true" className={`capacity-dot capacity-dot--${STATUS_DOT[systemStatus.level]}`} />
-                  {describeSystemStatus(systemStatus)}
-                </span>
-              ) : capacityResult ? (
-                <span
-                  className={capacityResult.capacity !== "GREEN" ? "status-strip__capacity" : undefined}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-                >
-                  <span aria-hidden="true" className={`capacity-dot capacity-dot--${capacityResult.capacity.toLowerCase()}`} />
-                  {describeCapacity(capacityResult.capacity, capacityResult.reasonCodes)}
-                </span>
-              ) : (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <span aria-hidden="true" className="capacity-dot capacity-dot--unknown" />
-                  {describeCapacityUnknown()}
-                </span>
-              )}
-            </p>
+            <SystemsLine
+              input={{
+                sleepMinutes: lastMainSleepMinutes,
+                proteinG: minimumDayProteinG,
+                proteinTargetG: proteinTargetG,
+                checkIn: capacityResult?.capacity ?? null,
+                statusLevel: systemStatus?.level ?? null,
+              }}
+              onOpen={onOpenSystems ? () => { if (!busyRef.current) onOpenSystems(); } : undefined}
+            />
             {systemStatus?.level === "RED" && recommendation?.kind === "NO_ACTION_REQUIRED" && <p className="day-line-evidence-note">Status reports recorded signals. “No action required” is separate guidance, not an all-clear about your sleep.</p>}
           </div>
         </section>
