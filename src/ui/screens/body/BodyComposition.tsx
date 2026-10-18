@@ -81,6 +81,14 @@ function Measurements({ entries, ready, reading, failed, onRefresh }: {
   const [receipt, setReceipt] = useState<string | null>(null);
   const [filter, setFilter] = useState<MeasurementSite | "ALL">("ALL");
   const restoreRetryFocus = useRef(false);
+  // Focus after a save waits for busy=false to commit; a disabled input can't take focus,
+  // and a frame callback can run before that commit on a cold page.
+  const [focusAfterSave, setFocusAfterSave] = useState<string | null>(null);
+  useEffect(() => {
+    if (busy || !focusAfterSave) return;
+    document.getElementById(focusAfterSave)?.focus();
+    setFocusAfterSave(null);
+  }, [busy, focusAfterSave]);
   useEffect(() => {
     if (!ready || reading || !restoreRetryFocus.current) return;
     restoreRetryFocus.current = false;
@@ -101,12 +109,12 @@ function Measurements({ entries, ready, reading, failed, onRefresh }: {
         await correctMeasurement(editing.headEventId, { inches: value, measuredOn: correction.date });
         setReceipt(`${siteLabel(editing.site)} corrected to ${value} in · ${progressDate(correction.date)}. Original record retained.`);
         const root = editing.rootEventId; setEditing(null);
-        requestAnimationFrame(() => document.getElementById(`measurement-edit-${root}`)?.focus());
+        setFocusAfterSave(`measurement-edit-${root}`);
       } else {
         await logMeasurement({ site, inches: value, measuredOn: date });
         setReceipt(`${siteLabel(site)} saved · ${value} in · ${progressDate(date)}.`);
         setInches("");
-        requestAnimationFrame(() => document.getElementById("measurement-inches")?.focus());
+        setFocusAfterSave("measurement-inches");
       }
       onRefresh();
     } catch (cause) { setError(describeError(cause, "Could not save the measurement. Your input is still here.")); }
