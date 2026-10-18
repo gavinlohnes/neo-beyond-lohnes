@@ -44,7 +44,7 @@ async function launch(screen: Screen, label: string) {
   await screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true }).click();
 }
 const commandHeadings = {
-  PLAN: "COMMAND // PLAN TODAY",
+  PLAN: "COMMAND // PLAN TODAY", SYSTEMS: "COMMAND // SYSTEMS",
   HISTORY: "COMMAND // HISTORY", WEEKLY: "COMMAND // WEEKLY CHECK-IN", REVIEW: "COMMAND // REVIEW",
   SEARCH: "COMMAND // SEARCH", JOURNAL: "COMMAND // DECISION JOURNAL", INTENT: "COMMAND // MISSIONS & OBLIGATIONS",
   WORK_SCHEDULE: "COMMAND // WORK SCHEDULE", EXERCISE_LIBRARY: "COMMAND // EXERCISE LIBRARY", CUSTOM_TEMPLATES: "COMMAND // CUSTOM PROGRAMS",
