@@ -4,7 +4,7 @@
 
 Gavin approved the bounded follow-up to the [reproduced PR #241 finding](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241#issuecomment-6247508068).
 Brief: the follow-up section in [COMMAND-CENTER-001.md](COMMAND-CENTER-001.md).
-Builder: Codex; branch `codex/fix-mode-pin-expiry`; PR pending. Starting master:
+Builder: Codex; branch `codex/fix-mode-pin-expiry`; [PR #243](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/243). Starting master:
 `9f9100ade1d54f4f4368759fb73afcb7f1201a20`. Conservative PROTECTED review lane.
 Repair only: presentation pins reset at 16:30 even if the canonical day remains open for a
 workout. Preserve all records, Engine authority, drafts, backup contracts and manual control.

@@ -217,7 +217,7 @@ by its shortcut finding; the new head requires a renewed verdict recorded on PR 
 
 - **Authorization:** Gavin approved the bounded follow-up after the reproduced active-workout
   expiry finding on merged PR #241 ("I approve."). This repairs the existing reset promise.
-- **Builder / branch:** Codex; `codex/fix-mode-pin-expiry`. PR pending.
+- **Builder / branch:** Codex; `codex/fix-mode-pin-expiry`; [PR #243](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/243).
 - **Starting master:** `9f9100ade1d54f4f4368759fb73afcb7f1201a20`, freshly fetched; #241 merged.
 - **Risk:** conservative PROTECTED review lane for the existing mode-placement/local pin seam.
   No new product ruling or Engine behavior. BUILD OWNED: timestamp the existing local UI pin,
