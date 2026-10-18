@@ -130,3 +130,22 @@ it("ignores an old post-save read after a newer week read has completed", async 
   await expect.element(screen.getByRole("textbox", { name: "What stood out? (optional)", exact: true })).toHaveValue("");
   expect((await getWeeklyReviewRecords())[0]!.note).toBe("Persist this before the boundary.");
 });
+
+// A refresh must consult the live form, not the clean state captured before typing.
+it("keeps a draft typed while a new-week refresh is pending", async () => {
+  await seed(); const screen = await render(<WeeklyReviewPanel />);
+  const note = screen.getByRole("textbox", { name: "What stood out? (optional)", exact: true });
+  await expect.element(note).toHaveValue("");
+  let finish!: (state: WeeklyReviewState) => void;
+  const delayed = new Promise<WeeklyReviewState>((resolve) => { finish = resolve; });
+  vi.mocked(getWeeklyReviewState).mockReturnValueOnce(delayed);
+  clock(new Date(2026, 9, 26, 17)); document.dispatchEvent(new Event("visibilitychange"));
+  await expect.poll(() => vi.mocked(getWeeklyReviewState).mock.results.some((result) => result.value === delayed)).toBe(true);
+  await note.fill("Typed during refresh; keep this draft.");
+  const next = await vi.mocked(getWeeklyReviewState).getMockImplementation()!();
+  finish(next);
+  await expect.element(screen.getByRole("button", { name: "OPEN CURRENT WEEK", exact: true })).toBeVisible();
+  await expect.element(note).toHaveValue("Typed during refresh; keep this draft.");
+  await expect.element(screen.getByRole("button", { name: "SAVE WEEKLY REVIEW", exact: true })).toBeDisabled();
+  expect(await getWeeklyReviewRecords()).toHaveLength(0);
+});

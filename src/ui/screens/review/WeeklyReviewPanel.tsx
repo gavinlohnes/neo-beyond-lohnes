@@ -37,6 +37,8 @@ export function WeeklyReviewPanel({ active = true }: { active?: boolean }) {
   const [receipt, setReceipt] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   const dirty = note !== baseline.current.note || choice !== baseline.current.choice || writtenFocus !== baseline.current.written;
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
   useSessionDraft("weekly-review", dirty);
   function loadForm(next: WeeklyReviewState) {
     const record = next.saved;
@@ -52,7 +54,7 @@ export function WeeklyReviewPanel({ active = true }: { active?: boolean }) {
       if (!alive || request !== readVersion.current) return;
       setData(next);
       // Never overwrite a note or choice on re-entry, including week rollover.
-      if (!draftWeek || (!inFlight.current && !dirty && draftWeek.start !== next.week.start)) { loadForm(next); setOpen(!next.saved && next.summary.recordedDays > 0); }
+      if (!draftWeek || (!inFlight.current && !dirtyRef.current && draftWeek.start !== next.week.start)) { loadForm(next); setOpen(!next.saved && next.summary.recordedDays > 0); }
     }).catch((cause: unknown) => { if (alive && request === readVersion.current) setError(describeError(cause, "Could not read your weekly review.")); });
     return () => { alive = false; readVersion.current++; };
   }, [active, retry, weekKey]);
