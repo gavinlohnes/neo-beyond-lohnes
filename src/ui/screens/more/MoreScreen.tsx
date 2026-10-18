@@ -56,6 +56,7 @@ export type MoreView = "MENU" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEAR
 import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
 
 export function MoreScreen({
+  onViewChange,
   onOpenCapture,
   active = true,
   navigationRequest = 0,
@@ -66,6 +67,7 @@ export function MoreScreen({
   onOpenDestination,
   historyDestination = null, onReturnToHealth, onHistoryExit,
 }: {
+  onViewChange?: (view: MoreView) => void;
   /** COMMAND-CENTER-001: search results outside COMMAND (BODY, TRAIN, TODAY) go through the shell. */
   onOpenDestination?: (destination: Exclude<SystemDestination, { kind: "more" } | { kind: "section" }> | { kind: "tools" }) => boolean;
   historyDestination?: HealthHistoryDestination | null;
@@ -104,6 +106,7 @@ export function MoreScreen({
       originRef.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
     }
     setViewState(next);
+    if (next !== view) onViewChange?.(next);
     setVisited((current) => new Set([...current, next]));
   }
 

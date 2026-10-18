@@ -7,7 +7,7 @@ approved and accepted the full prototype ("change BEYOND to be more like that pr
 This objective and SUIT-001 are both authorized. Build them in order, one PR each. Merges still
 need his approval.
 **Lane:** PROTECTED. This changes primary information architecture and amends a locked rule.
-**Builder:** Claude Code. **Starting commit:** fresh `origin/master` after #238 merges. #238 touches
+**Builder:** GPT Work (owner-authorized takeover, 2026-10-18). **Starting commit:** fresh `origin/master` after #238 merges. #238 touches
 `TodayScreen.tsx` and `App.tsx`. Check #239 and any other open PR for overlap before editing.
 **Interaction reference:** `prototype/command-center/index.html` (commit the supplied file
 there unchanged). It uses sample data. It is a reference for interaction, look and copy voice,
@@ -167,6 +167,17 @@ One branch and one PR; push after each slice.
 
 The current Builder is named here. Whoever takes over updates this section first.
 
-- **Builder:** Claude Code (session started 2026-10-18).
+- **Builder:** GPT Work, sole builder from 2026-10-18; Gavin authorized completing PR #241.
+- **Arrival:** `c717801c5d59fef9250fe58f4af6c88c71e6cfb2`; master `4fda7177dbf11c5699331243e6feaa460dae08bd`. Slices 0–3 complete; slice 4 WIP.
 - **Branch:** `ccr-8a82e4b3-4ub4x2`. **PR:** linked from the branch (draft until slice 5).
 - **State:** see `docs/agent/CURRENT_CHECKPOINT.md`.
+
+### Takeover progress (2026-10-18)
+
+Slice 4: retained panes and existing root navigation inspected. TRAIN re-tap focuses its canonical
+root without discarding the in-progress session or set input. Browser Back/Forward now restores
+tabs and COMMAND subviews; COMMAND keeps its search query and existing focus/scroll return.
+Leverage disposition: ADAPT UPSTREAM — browser History API plus existing retained panes; no router
+or dependency. Initial full gate found a duplicated hydration shortcut during a foreground
+Minimum Day operation; the final slice suppresses only the redundant Advisory water buttons while
+that canonical operation is open, preserving advisory evidence and existing commands.

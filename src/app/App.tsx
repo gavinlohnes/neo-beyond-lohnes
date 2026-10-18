@@ -321,6 +321,32 @@ function AppWorkspaces() {
     });
   }
 
+  // Session navigation only: retained panes keep their own drafts and query.
+  // Browser Back/Forward restores the same destination without remounting it.
+  const historyReady = useRef(false);
+  const restoringHistory = useRef(false);
+  useEffect(() => {
+    const state = { beyondNavigation: true, tab, moreView };
+    if (!historyReady.current) {
+      window.history.replaceState(state, "");
+      historyReady.current = true;
+    } else if (restoringHistory.current) restoringHistory.current = false;
+    else if (window.history.state?.tab !== tab || window.history.state?.moreView !== moreView) window.history.pushState(state, "");
+  }, [tab, moreView]);
+  useEffect(() => {
+    function restore(event: PopStateEvent) {
+      const state = event.state;
+      if (!state?.beyondNavigation || !["TODAY", "TRAIN", "BODY", "COMMAND"].includes(state.tab)) return;
+      if (mealInFlight.current) { window.history.forward(); return; }
+      restoringHistory.current = state.tab !== tab || state.moreView !== moreView;
+      setMoreView(state.moreView);
+      setMoreRequest((key) => key + 1);
+      showTab(state.tab);
+    }
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, [tab, moreView]);
+
   function canNavigate() { return !mealInFlight.current; }
 
   function openMore(view: MoreView, focus: IntentFocus | null = null, focusHeading = true) {
@@ -483,7 +509,7 @@ function AppWorkspaces() {
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
         {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
-          <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus}
+          <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}
             onOpenCapture={openCapture}
