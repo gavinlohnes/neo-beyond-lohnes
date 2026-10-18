@@ -4,8 +4,8 @@
 
 Gavin authorized SUIT-001 together with COMMAND-CENTER-001 (2026-10-18). It starts after #241
 merged. Builder: Claude Code, on `claude/new-session-0xvewh` from master `9f9100a`, with master
-merged in at `85db25b` (#243). Draft [PR #242](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/242). Brief and repo mapping: [SUIT-001.md](SUIT-001.md). Other open PRs:
-#244 (BODY-PROGRESS-001, Codex) and the isolated lab #204.
+merged in at `85db25b` (#243). Draft [PR #242](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/242). Brief and repo mapping: [SUIT-001.md](SUIT-001.md). #244 merged at `118bd89` and is merged in here. Other open PRs:
+the sprint PRs below and the isolated lab #204.
 
 **Done: slices 0–4.** SYSTEMS line and read-only readout; four glitch signals (stale, offline,
 backup overdue, save failed); stealth (long-press, COMMAND entry, peek, blind water/meal with
@@ -37,21 +37,47 @@ draft PR targeting `master` so CI runs; #245–#247 are stacked on #244, #248 is
 
 | PR | Builds | Status |
 |---|---|---|
-| [#245](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/245) | Monthly review: every 4th week from the first saved review, body composition over 28 lived days | CI green |
-| [#246](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/246) | Optional photo framing guide: in-app camera with the last same-pose photo as a ghost | CI green |
-| [#247](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/247) | Review hub Body questions: waist, chest/arms/shoulders, photos over time, "fat, not muscle?" side by side | CI green |
-| [#248](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/248) | Weight answer: rate (lb and %/week), usual swing, goal date, weigh-in timing after main sleep | CI pending at write time |
+| [#245](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/245) | Monthly review: every 4th week from the first saved review, body composition over 28 lived days | Master merged in after #244 |
+| [#246](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/246) | Optional photo framing guide: in-app camera with the last same-pose photo as a ghost | Master merged in after #244 |
+| [#247](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/247) | Review hub Body questions: waist, chest/arms/shoulders, photos over time, "fat, not muscle?" side by side | Master merged in after #244 |
+| [#248](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/248) | Weight answer: rate (lb and %/week), usual swing, goal date, weigh-in timing after main sleep | CI green |
 
 - **Merge order:** #244, then any of #245/#246/#247 (they carry the same ported #244 focus fix,
   identical commits). #248 can merge any time. Every sprint PR appends its delivery note to the
   end of `REVIEW-001.md`, so later merges get a doc-only conflict there: keep all sections.
 - **#244 finding:** after a measurement save, focus could fall to the body on a cold page (its
   own keyboard test fails alone). Root cause and patch are on #244; the fix rides the stacked PRs.
-- **For Gavin:** confirm the monthly cadence reading ("every 4th Monday" = four weeks after the
-  first saved review, see #245).
+- **#244 merged** at `118bd89` on Gavin's approval (Claude's independent review PASS, green CI).
+  Master is merged into #245–#247; their remaining diff is their own work plus the focus fix.
+- **Cadence ruled (2026-10-18):** Gavin delegated it; four weeks after the first saved review.
 - **Known flake, not fixed here:** `ModePinExpiry` (#243's test) failed once at 412 px under
   full-suite load; it passes alone and in the clean rerun.
 - Each needs independent exact-head review by a non-Claude provider, then Gavin's merge decision.
+
+## Previous objective — BODY-PROGRESS-001 (2026-10-18, merged in #244 at `118bd89`)
+
+Gavin approved BODY Progress: clearer overview, dated measurements, and progress photos.
+Builder: Codex; branch `codex/body-progress-001`; [PR #244](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/244).
+Brief: [BODY-PROGRESS-001.md](BODY-PROGRESS-001.md). PROTECTED. Starting master `9f9100a`;
+reconciled with owner-merged #243 at `85db25bbc9e6937007cffd88c34c74c3b197600c`.
+Complete: recorded overview; retained Trends / Measurements / Photos; canonical dated saves,
+measurement correction provenance, explicit photo capture/import/save, same-pose comparison,
+metadata correction and confirmed hide/delete. Existing trends/source navigation stay.
+Full verification exposed and repaired the inherited slow meal-read focus handoff; the existing
+regression now reproduces its failing ordering deterministically. Saves and undo are unchanged.
+Verified source head: `21932d9f23b7a4be3682aa2f0dfa4d20cc351dac`. Full gate: 255 files,
+2,582 tests passed, one existing skip; architecture (247 files), TypeScript and production build
+pass. Built PWA passes 320/360/412: keyboard/focus, retained measurement/photo drafts, canonical
+writes/corrections, offline cold reload/reads/saves, 44 px controls, unclipped labels, zero axe
+violations and page errors. [Reproduction/screenshots](../screenshots/body-progress-001/README.md).
+No Engine, schema, command/event semantics, backup or dependency change. No SUIT/TODAY/global
+style edit. PR #242 stays with Claude. Physical camera/iOS/Safari/virtual-keyboard/screen-reader
+and large-library checks are unclaimed; the existing bundle-size advisory remains.
+Next (historical): Claude's independent exact-head review passed at `14f3c1c` with green CI;
+Gavin approved and it merged at `118bd89` (2026-10-18).
+
+The #243 handoff below is historical: Gavin merged it at `85db25b`; its pending-review/merge
+lines are superseded. This objective changes BODY only and includes that released fix as base.
 
 ## Previous objective — fix mode pin expiry at 16:30 (2026-10-18, merged in #243 at `85db25b`)
 

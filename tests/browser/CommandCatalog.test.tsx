@@ -187,6 +187,11 @@ describe("COMMAND catalog", () => {
     try {
       await launch(screen, "MEAL");
       await expect.element(screen.getByRole("button", { name: "RETURN TO COMMAND" })).toBeDisabled();
+      // Keep the read gated beyond BODY's 250 ms shortcut positioning; the shell's
+      // temporary heading is then the landing point while RETURN is disabled.
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      document.getElementById("meal-surface-heading")!.focus();
+      expect(document.activeElement?.id).toBe("meal-surface-heading");
     } finally { release(); }
     await expect.poll(() => document.activeElement?.id).toBe("meal-return");
     await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();

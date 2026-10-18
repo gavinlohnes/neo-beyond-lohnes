@@ -576,13 +576,18 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
   // control the operator has chosen in the meantime.
   useEffect(() => {
     if (!visible || !mealRecoveryFocusPending.current || busyRef.current || foodSearchBusyRef.current) return;
-    const control = document.getElementById("meal-return") as HTMLButtonElement | null;
-    if (!control || control.disabled) return;
-    mealRecoveryFocusPending.current = false;
-    const active = document.activeElement;
-    if (!active || active === document.body || active.closest("[hidden]")) {
-      control.focus({ preventScroll: true });
-    }
+    // Let the shell finish its heading landing before completing the task handoff.
+    // A slow read can outlast the shortcut's positioning timer while RETURN is disabled.
+    const frame = requestAnimationFrame(() => {
+      const control = document.getElementById("meal-return") as HTMLButtonElement | null;
+      if (!control || control.disabled || !control.getClientRects().length || busyRef.current || foodSearchBusyRef.current) return;
+      mealRecoveryFocusPending.current = false;
+      const active = document.activeElement;
+      if (!active || active === document.body || active.id === "meal-surface-heading" || active.closest("[hidden]")) {
+        control.focus({ preventScroll: true });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
   }, [visible, busy, foodSearchBusy]);
 
   // Retry can disable its focused button before React commits the enabled
