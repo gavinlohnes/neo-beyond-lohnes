@@ -28,6 +28,29 @@ and clicks through the DOM, so it verifies an exact restore to 80.
 decision. #244 (BODY-PROGRESS-001, Codex) has an independent exact-head PASS from Claude at `14f3c1c`; whichever merges second needs a
 master merge (both touch this file and `CommandCatalog.test.tsx`).
 
+## Overnight sprint — REVIEW-001 Phase 1a remainder (2026-10-18, Claude Code)
+
+Gavin granted sprint permission before sleeping ("improve or add features to BEYOND"). Scope stayed
+inside already-approved REVIEW-001 Phase 1a work that needed #244's measurements and photos. No
+Engine evaluation, schema, event, backup or dependency change, and no merges. Each item is its own
+draft PR, stacked on #244 and targeting `master` so CI runs.
+
+| PR | Builds | Status |
+|---|---|---|
+| [#245](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/245) | Monthly review: every 4th week from the first saved review, body composition over 28 lived days | CI green |
+| [#246](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/246) | Optional photo framing guide: in-app camera with the last same-pose photo as a ghost | CI green |
+| [#247](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/247) | Review hub Body questions: waist, chest/arms/shoulders, photos over time, "fat, not muscle?" side by side | CI pending at write time |
+
+- **Merge order:** #244, then any of #245/#246/#247. All three carry the same ported #244 focus fix
+  (identical commits), so they merge cleanly together.
+- **#244 finding:** after a measurement save, focus could fall to the body on a cold page (its
+  own keyboard test fails alone). Root cause and patch are on #244; the fix rides the stacked PRs.
+- **For Gavin:** confirm the monthly cadence reading ("every 4th Monday" = four weeks after the
+  first saved review, see #245).
+- **Known flake, not fixed here:** `ModePinExpiry` (#243's test) failed once at 412 px under
+  full-suite load; it passes alone and in the clean rerun.
+- Each needs independent exact-head review by a non-Claude provider, then Gavin's merge decision.
+
 ## Previous objective — fix mode pin expiry at 16:30 (2026-10-18, merged in #243 at `85db25b`)
 
 Gavin approved the bounded follow-up to the [reproduced PR #241 finding](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241#issuecomment-6247508068).
