@@ -1,6 +1,31 @@
 # Current checkpoint
 
-## Current objective — fix mode pin expiry at 16:30 (2026-10-18)
+## Current objective — BODY-PROGRESS-001 (2026-10-18)
+
+Gavin approved BODY Progress: clearer overview, dated measurements, and progress photos.
+Builder: Codex; branch `codex/body-progress-001`; [PR #244](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/244).
+Brief: [BODY-PROGRESS-001.md](BODY-PROGRESS-001.md). PROTECTED. Starting master `9f9100a`;
+reconciled with owner-merged #243 at `85db25bbc9e6937007cffd88c34c74c3b197600c`.
+Complete: recorded overview; retained Trends / Measurements / Photos; canonical dated saves,
+measurement correction provenance, explicit photo capture/import/save, same-pose comparison,
+metadata correction and confirmed hide/delete. Existing trends/source navigation stay.
+Full verification exposed and repaired the inherited slow meal-read focus handoff; the existing
+regression now reproduces its failing ordering deterministically. Saves and undo are unchanged.
+Verified source head: `21932d9f23b7a4be3682aa2f0dfa4d20cc351dac`. Full gate: 255 files,
+2,582 tests passed, one existing skip; architecture (247 files), TypeScript and production build
+pass. Built PWA passes 320/360/412: keyboard/focus, retained measurement/photo drafts, canonical
+writes/corrections, offline cold reload/reads/saves, 44 px controls, unclipped labels, zero axe
+violations and page errors. [Reproduction/screenshots](../screenshots/body-progress-001/README.md).
+No Engine, schema, command/event semantics, backup or dependency change. No SUIT/TODAY/global
+style edit. PR #242 stays with Claude. Physical camera/iOS/Safari/virtual-keyboard/screen-reader
+and large-library checks are unclaimed; the existing bundle-size advisory remains.
+Next: independent exact-head review, required CI at the final published head (status in PR),
+then Gavin's separate merge decision. No merge or deployment authorized.
+
+The #243 handoff below is historical: Gavin merged it at `85db25b`; its pending-review/merge
+lines are superseded. This objective changes BODY only and includes that released fix as base.
+
+## Merged follow-up — fix mode pin expiry at 16:30 (2026-10-18)
 
 Gavin approved the bounded follow-up to the [reproduced PR #241 finding](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241#issuecomment-6247508068).
 Brief: the follow-up section in [COMMAND-CENTER-001.md](COMMAND-CENTER-001.md).
