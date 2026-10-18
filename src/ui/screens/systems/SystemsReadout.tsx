@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getSystemsReadout, SESSIONS_WINDOW_DAYS, type SystemsReadout as Readout } from "../../../application/systemsReadoutQueries";
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
 import { getModePin } from "../../../application/modePinQueries";
+import { getBackupPrompt } from "../../../application/autoBackupQueries";
+import { Signal } from "../../components/Signal";
 import type { InsightMetric } from "../../../application/bodyInsightsQueries";
 import type { WorkoutTemplateId } from "../../../domain/workout/types";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
@@ -36,7 +38,7 @@ export function SystemsReadout({ active, onOpenMetric }: {
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
 }) {
   const online = useOnline();
-  const [state, setState] = useState<{ readout: Readout; mode: ShiftClockPhase | null; pinned: boolean; templates: CustomWorkoutTemplate[]; now: Date } | null>(null);
+  const [state, setState] = useState<{ readout: Readout; mode: ShiftClockPhase | null; pinned: boolean; templates: CustomWorkoutTemplate[]; now: Date; backupDue: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const sequence = useRef(0);
 
@@ -47,7 +49,7 @@ export function SystemsReadout({ active, onOpenMetric }: {
       const [readout, mode, templates] = await Promise.all([getSystemsReadout(now), readBootPhase(now), getCustomTemplates({ includeArchived: true })]);
       if (request !== sequence.current) return;
       const pinned = !!readout.day && getModePin(readout.day.id, readout.day.startedAt, now) !== null;
-      setState({ readout, mode, pinned, templates, now });
+      setState({ readout, mode, pinned, templates, now, backupDue: getBackupPrompt(now)?.kind === "BACKUP_DUE" });
       setError(null);
     } catch (e) {
       if (request !== sequence.current) return;
@@ -99,8 +101,9 @@ export function SystemsReadout({ active, onOpenMetric }: {
               detail={state.pinned ? "Pinned until 16:30" : state.mode ? "Per schedule" : "Answer the work question and the mode follows."} />
           </Group>
           <Group title="DEVICE">
-            <Reading label="Connection" value={online ? "Online" : "Offline"} tone={online ? undefined : "warn"} detail={online ? "" : "Logging still saves on this phone."} />
-            <Reading label="Last backup" value={describeBackupAge(r.daysSinceLastBackup)} detail="Export or share a backup from COMMAND." />
+            <Reading label="Connection" value={online ? "Online" : <Signal data-signal="offline">Offline</Signal>} tone={online ? undefined : "warn"} detail={online ? "" : "Offline. Logging still saves on this phone."} />
+            <Reading label="Last backup" value={state.backupDue ? <Signal data-signal="backup">{describeBackupAge(r.daysSinceLastBackup)}</Signal> : describeBackupAge(r.daysSinceLastBackup)}
+              tone={state.backupDue ? "warn" : undefined} detail={state.backupDue ? "Backup due. Export or share one from COMMAND." : "Export or share a backup from COMMAND."} />
             <Reading label="Records" value="On this phone" detail="No account. Nothing leaves unless you share a backup." />
           </Group>
         </>;
@@ -114,7 +117,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   return <section className="systems__group" aria-labelledby={id}><h2 id={id} className="section-label">{title}</h2>{children}</section>;
 }
 
-function Reading({ label, value, detail, tone, children }: { label: string; value: string; detail?: string; tone?: "warn" | undefined; children?: ReactNode }) {
+function Reading({ label, value, detail, tone, children }: { label: string; value: ReactNode; detail?: string; tone?: "warn" | undefined; children?: ReactNode }) {
   return <div className="systems__row">
     <span className="systems__text"><span className="systems__label">{label}</span>{detail && <span className="systems__detail">{detail}</span>}{children}</span>
     <span className={`systems__value${tone ? ` systems__value--${tone}` : ""}`}>{value}</span>

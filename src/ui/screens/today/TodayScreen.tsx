@@ -3,6 +3,10 @@ import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getLastMainSleep, getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
 import { SystemsLine } from "../systems/SystemsLine";
+import { Signal } from "../../components/Signal";
+import { useOnline } from "../../hooks/useOnline";
+import { getBackupPrompt } from "../../../application/autoBackupQueries";
+import { performDueDayRollover } from "../../../application/commands";
 import { describeSystemStatus } from "./statusCopy";
 import { describePlainRecommendationTitle } from "./recommendationCopy";
 import { TickNumber } from "../../feel/TickNumber";
@@ -358,6 +362,11 @@ export function TodayScreen({
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   // SUIT-001: the SYSTEMS line's sleep reading — System Status's own last-main-sleep rule.
   const [lastMainSleepMinutes, setLastMainSleepMinutes] = useState<number | null>(null);
+  // SUIT-001 signals: the browser's connection flag and the existing backup-due rule (same
+  // setting and threshold as BackupDueLine), re-read whenever TODAY refreshes.
+  const online = useOnline();
+  const [backupDue, setBackupDue] = useState<{ days: number | null } | null>(null);
+  const [staleRefresh, setStaleRefresh] = useState<"IDLE" | "RUNNING" | "HELD" | "FAILED">("IDLE");
   const [captureText, setCaptureText] = useState("");
   useSessionDraft("capture", captureText.length > 0);
   const [captureFeedback, setCaptureFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
@@ -822,6 +831,8 @@ export function TodayScreen({
     }
     setAdvisoryNotes(advisoryNotes);
     if (isOwner) { setSystemStatus(nextSystemStatus); setLastMainSleepMinutes(nextLastMainSleep?.minutes ?? null); }
+    const prompt = getBackupPrompt();
+    setBackupDue(prompt?.kind === "BACKUP_DUE" ? { days: prompt.daysSinceLastBackup } : null);
     setProteinTargetG(effectiveProteinTarget);
 
     // A fresh, independently-composed view each refresh — never memoized
@@ -1417,6 +1428,26 @@ export function TodayScreen({
   }
 
   const capacityResult = checkIn ? deriveCapacity(checkIn) : null;
+  // SUIT-001 stale reading: the shown BeyondDay's lived day has ended but the 16:30 roll hasn't
+  // been applied (a workout holds it open, or a re-read hasn't landed). Values are yesterday's.
+  const stale = !!day && now.getTime() >= nextRolloverBoundaryAfter(new Date(day.startedAt)).getTime();
+
+  /** REFRESH: the existing rollover check, then TODAY's own re-read. The new day plays the decrypt. */
+  async function handleStaleRefresh() {
+    if (busyRef.current || staleRefresh === "RUNNING") return;
+    setStaleRefresh("RUNNING");
+    try {
+      await performDueDayRollover().catch(() => undefined);
+      await refresh();
+      const current = await getActiveDay();
+      const at = new Date();
+      setNow(at);
+      const stillStale = !!current && at.getTime() >= nextRolloverBoundaryAfter(new Date(current.startedAt)).getTime();
+      setStaleRefresh(!stillStale ? "IDLE" : (await getActiveWorkoutSession()) ? "HELD" : "FAILED");
+    } catch {
+      setStaleRefresh("FAILED");
+    }
+  }
   // STATUS-001: the strip's edge follows the System Status once it's read (AMBER uses the yellow edge).
   const stripLevel: "yellow" | "red" | null = systemStatus
     ? systemStatus.level === "RED"
@@ -2070,7 +2101,9 @@ export function TodayScreen({
       <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
 
       {/* CLEANUP-002: the shell's own lines sit under the header, part of the screen. */}
-      {(banners || (shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF"))) && <div className="today-banners">
+      {(banners || !online || (shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF"))) && <div className="today-banners">
+        {/* SUIT-001 offline signal: words always; the glitch plays once when it first appears. */}
+        {!online && <Signal as="p" className="meta signal-line" role="status" data-signal="offline-line">Offline. Logging still saves on this phone.</Signal>}
         {banners}
         {shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF") && <ShiftHandoff refreshKey={shiftHandoffRefreshKey} />}
       </div>}
@@ -2086,7 +2119,7 @@ export function TodayScreen({
           style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}
         >
           {commitmentFeedback.kind === "SUCCESS" && <ConfirmIcon size={20} />}
-          {commitmentFeedback.message}
+          {commitmentFeedback.kind === "ERROR" ? <Signal key={commitmentFeedback.message} data-signal="save-failed">{commitmentFeedback.message}</Signal> : commitmentFeedback.message}
         </p>
       )}
 
@@ -2098,7 +2131,7 @@ export function TodayScreen({
           style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}
         >
           {captureConversionFeedback.kind === "SUCCESS" && <ConfirmIcon size={20} />}
-          {captureConversionFeedback.message}
+          {captureConversionFeedback.kind === "ERROR" ? <Signal key={captureConversionFeedback.message} data-signal="save-failed">{captureConversionFeedback.message}</Signal> : captureConversionFeedback.message}
         </p>
       )}
 
@@ -2112,7 +2145,7 @@ export function TodayScreen({
         renderLoggedBanner(`${proteinConfirmation.amount} g protein recorded.`, proteinUndoOpen, "PROTEIN")}
 
       {undoFailure && (
-        <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>{undoFailure}</p>
+        <Signal key={undoFailure} as="p" className="meta meta--error" role="alert" style={{ marginTop: 8 }} data-signal="save-failed">{undoFailure}</Signal>
       )}
 
       {/* FIELD-ARCH-001: before a day exists, START DAY is the one
@@ -2245,8 +2278,19 @@ export function TodayScreen({
                 checkIn: capacityResult?.capacity ?? null,
                 statusLevel: systemStatus?.level ?? null,
               }}
+              warnings={[
+                ...(stale ? [{ key: "stale", text: "Yesterday’s numbers", node: <Signal data-signal="stale">Yesterday’s numbers</Signal> }] : []),
+                ...(backupDue ? [{ key: "backup", text: backupDue.days === null ? "Backup due" : `Backup ${backupDue.days}d`, node: <Signal data-signal="backup">{backupDue.days === null ? "Backup due" : `Backup ${backupDue.days}d`}</Signal> }] : []),
+                ...(!online ? [{ key: "offline", text: "Offline", node: <Signal data-signal="offline">Offline</Signal> }] : []),
+              ]}
               onOpen={onOpenSystems ? () => { if (!busyRef.current) onOpenSystems(); } : undefined}
             />
+            {stale && <div className="signal-stale" role="status">
+              <Signal data-signal="stale-note">{staleRefresh === "HELD"
+                ? "These are yesterday’s numbers. A workout in progress holds yesterday open until it ends."
+                : staleRefresh === "FAILED" ? "These are yesterday’s numbers. Today didn’t load. Try again." : "These are yesterday’s numbers."}</Signal>
+              <button type="button" className="chip" disabled={busy || staleRefresh === "RUNNING"} onClick={() => void handleStaleRefresh()}>REFRESH</button>
+            </div>}
             {systemStatus?.level === "RED" && recommendation?.kind === "NO_ACTION_REQUIRED" && <p className="day-line-evidence-note">Status reports recorded signals. “No action required” is separate guidance, not an all-clear about your sleep.</p>}
           </div>
         </section>
