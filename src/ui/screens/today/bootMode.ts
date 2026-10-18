@@ -11,7 +11,7 @@ export async function readBootPhase(now = new Date()): Promise<ShiftClockPhase |
     getSchedulePattern(), getWorkPeriodEnded(day.id), getSleepEntries(day.id), getLastShiftDownCompletedAt(day.id),
   ]);
   const window = livedDayShiftWindow(new Date(day.startedAt), schedule);
-  const phase = getModePin(day.id) ?? deriveShiftClockPhase({ now, workContext: day.workContext, shiftWindow: window, workEnded: !!ended,
+  const phase = getModePin(day.id, day.startedAt, now) ?? deriveShiftClockPhase({ now, workContext: day.workContext, shiftWindow: window, workEnded: !!ended,
     mainSleepLogged: mainSleepEndsPostShift(sleep.filter((entry) => entry.kind === "PRIMARY").map((entry) => entry.recordedAt), ended?.occurredAt ?? null, window),
     shiftDownDone: !!shiftDown && (!window || new Date(shiftDown).getTime() >= window.start.getTime()),
   });

@@ -1,6 +1,30 @@
 # Current checkpoint
 
-## Current objective — COMMAND-CENTER-001 (2026-10-18, PROTECTED)
+## Current objective — fix mode pin expiry at 16:30 (2026-10-18)
+
+Gavin approved the bounded follow-up to the [reproduced PR #241 finding](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241#issuecomment-6247508068).
+Brief: the follow-up section in [COMMAND-CENTER-001.md](COMMAND-CENTER-001.md).
+Builder: Codex; branch `codex/fix-mode-pin-expiry`; [PR #243](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/243). Starting master:
+`9f9100ade1d54f4f4368759fb73afcb7f1201a20`. Conservative PROTECTED review lane.
+Repair only: presentation pins reset at 16:30 even if the canonical day remains open for a
+workout. Preserve all records, Engine authority, drafts, backup contracts and manual control.
+Implemented: timestamped local UI pins with released phase-only compatibility; calendar-boundary
+expiry independent of canonical rollover; live TODAY/direct-launch/visibility/pageshow refresh; mode tokens
+published before paint; retained deadlines survive delayed renders. All forms, records and Engine authority remain.
+Verification: 254 test files / 2,570 passed / one existing skip; architecture (244 files),
+TypeScript and production build pass. Built PWA passes at 320/360/412: retained workout day,
+Capture focus/draft and set draft, zero canonical expiry writes, direct offline expiry, offline
+save and cold reload without duplicate records. Final CI and independent review bind the exact
+published head in the follow-up PR. Physical-device/Safari/screen-reader testing is not claimed.
+Next: independent exact-head review and green CI, then Gavin's merge decision. No merge,
+deployment or next implementation authorized.
+PR #242 (SUIT-001) and #204 remain separate and untouched by this Builder.
+
+The previous #241 handoff below is historical: its final implementation head `259d139` received
+independent PASS and green CI, then Gavin merged #241 at `9f9100a`. Its pending-merge lines no
+longer describe live state.
+
+## Previous objective — COMMAND-CENTER-001 (merged #241 at `9f9100a`)
 
 Gavin authorized GPT Work to complete the existing objective on branch `ccr-8a82e4b3-4ub4x2`,
 [PR #241](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241). No merge authorized.
