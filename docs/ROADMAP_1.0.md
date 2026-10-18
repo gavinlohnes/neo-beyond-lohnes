@@ -8,7 +8,13 @@ feature history, and product rulings below are preserved.
 
 ## Active priority
 
-**Current owner objective, 2026-10-17 — ULTIMATE-FOUNDATION-001: Connected Health Record.**
+**Current owner objective, 2026-10-18 — COMMAND-CENTER-001, then SUIT-001.** Gavin approved
+visible modes, the COMMAND tab and one LOG entry (2026-10-17) and accepted the command-center
+prototype (2026-10-18). Briefs: [`agent/COMMAND-CENTER-001.md`](agent/COMMAND-CENTER-001.md) and
+[`agent/SUIT-001.md`](agent/SUIT-001.md); one PR each, in order. BODY overview follows SUIT-001
+as a separate objective.
+
+Previous: **Current owner objective, 2026-10-17 — ULTIMATE-FOUNDATION-001: Connected Health Record.**
 Gavin approved BODY lived-day browsing, direct metric/source/History exploration, a raw water
 trend and existing TODAY FUEL evidence links, with retained input and canonical current-day writes.
 Brief: [`agent/ULTIMATE-FOUNDATION-001.md`](agent/ULTIMATE-FOUNDATION-001.md). Historical browsing
@@ -41,7 +47,8 @@ rather than automatic micro-milestones; no standing authority to begin unrelated
 Owner rulings, 2026-10-03.
 
 1. Replace an app's core job, not all its features.
-2. Four tabs are fixed: TODAY, TRAIN, BODY, MORE. No new tabs.
+2. Four tabs are fixed: TODAY, TRAIN, BODY, COMMAND. No new tabs. (Amended 2026-10-17,
+   COMMAND-CENTER-001: COMMAND replaces MORE; was TODAY, TRAIN, BODY, MORE.)
 3. Every new feature must state when it surfaces. Default home is Tools; it appears on TODAY only in
    the phase where it matters.
 4. The per-phase row cap is enforced by test. A new item on TODAY must replace an existing one.

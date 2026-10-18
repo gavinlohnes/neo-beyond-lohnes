@@ -1,34 +1,38 @@
 # Current checkpoint
 
-## Current objective — REVIEW-001 Weekly Review dashboard (2026-10-18, PROTECTED)
+## Current objective — COMMAND-CENTER-001 (2026-10-18, PROTECTED)
+
+Gavin approved visible modes, the COMMAND tab (replacing MORE) and one LOG entry on 2026-10-17,
+and accepted the command-center prototype on 2026-10-18. SUIT-001 follows in its own PR.
+Brief: [COMMAND-CENTER-001.md](COMMAND-CENTER-001.md) (Handoff section names the Builder).
+Builder: Claude Code. Starting master `4fda717`; branch `ccr-8a82e4b3-4ub4x2`; draft PR linked
+from the branch. Slice 0 (docs only): briefs, prototype at `prototype/command-center/`, Decision
+Register and ROADMAP Rule 2 amendments, this checkpoint.
+Verification: slice 0 is documentation only. Remaining risks: primary-IA change across TODAY and
+MORE; Weekly Review must stay reachable from COMMAND.
+Next action: slice 1 (modes, pin, header) per the brief's Slices section.
+
+## Previous objective — REVIEW-001 Weekly Review dashboard (2026-10-18, PROTECTED, merged in #240 at `4fda717`)
 
 Gavin approved making MORE → REVIEW's weekly section match the Ultimate prototype's Weekly Review
-("approve, Claude Code builds it", 2026-10-18). Builder: Claude Code. Starting master `8e5dbab`
-(#238 weekly loop and #239 storage merged); branch `ccr-f27681c1-sb8gif`; PR linked from the
-branch. Scope and rules: "Weekly Review dashboard" in [REVIEW-001.md](REVIEW-001.md). It is read
-only apart from #238's existing save-review form, with no schema, event, backup, Engine-evaluation
-or dependency change. Next action: an independent exact-head review, then Gavin's merge decision.
+("approve, Claude Code builds it", 2026-10-18). Builder: Claude Code. Started at master `8e5dbab`.
+Scope and rules: "Weekly Review dashboard" in [REVIEW-001.md](REVIEW-001.md). Read only apart from
+#238's existing save-review form; no schema, event, backup, Engine-evaluation or dependency
+change. Merged on Gavin's approval at `4fda717`.
 
 ## Previous objective — REVIEW-001 weekly review loop (2026-10-17, PROTECTED, merged in #238 at `8e5dbab`)
 
 Gavin authorized shipping the connected foundation, then building the weekly review loop.
-#232 merged at `fda45c2`; #237 merged at `554b557` after renewed independent PASS at `871c35b`
-and green required CI. Codex starts this slice from fresh master
-`554b55722d895c5fb6ca979bd9f08990c58ec6c1` on `codex/review-001-weekly-loop`.
-Scope, owner authority, event/backup semantics, validation and deferred work are in the weekly-loop
-delivery section of [REVIEW-001.md](REVIEW-001.md). One additive review event, no schema change.
-Gavin directed finishing PR #238 on 2026-10-17. Codex resumed at `dadfd2f`, integrating fresh
-master `5a54a1f` after #239 merged. Resolved checkpoint/brief conflicts by preserving both slices,
-and combined the weekly-review and measurement/photo event types. No feature was dropped.
-Active PR: [#238](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/238).
-Independent inspection found a delayed week-refresh could overwrite a note typed after the
-request began. The panel now consults live draft state; a browser regression reproduces the old
-loss and passes with the fix. Focused weekly browser cases pass (13/13), and weekly + MORE cases
-pass together (57/57). Final full verification, production offline acceptance, remote head/CI and
-independent exact-head verdict are recorded in PR #238. Local browser launch uses a scratch-only
-Chromium executable override; tracked dependencies, test selection and CI remain unchanged.
-Next: complete these checks and review, then Gavin's separate merge decision. No merge is authorized.
+Builder: Codex, on `codex/review-001-weekly-loop` from master `554b557`. Scope, event/backup
+semantics, validation and deferred work are in the weekly-loop delivery section of
+[REVIEW-001.md](REVIEW-001.md). One additive review event, no schema change. Integrated master
+`5a54a1f` after #239; a delayed week-refresh draft-loss bug was found and fixed with a browser
+regression. Verification and independent review are recorded in
+[PR #238](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/238). Merged at `8e5dbab`.
 
+> **Status correction, 2026-10-18:** #232 (`fda45c2`), #236 (`4404b01`), #237 (`554b557`),
+> #238 (`8e5dbab`), #239 (`5a54a1f`) and #240 (`4fda717`) are all merged. "Next" lines in the
+> older sections below are historical handoffs, not open actions.
 
 ## Previous objective — REVIEW-001 Phase 1a storage slice (merged #239) (2026-10-17, PROTECTED)
 
