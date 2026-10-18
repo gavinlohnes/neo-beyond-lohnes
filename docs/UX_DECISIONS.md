@@ -83,6 +83,14 @@ Brief: [`agent/COMMAND-CENTER-001.md`](agent/COMMAND-CENTER-001.md). Gavin appro
 - **Effects rule:** every effect is presentation only, has no animation under reduced motion,
   keeps AA contrast in every mode and never blocks or delays logging.
 
+## BODY-PROGRESS-001 — owner approval, 2026-10-18
+
+Gavin approved a connected BODY Progress overview with dated measurements and a photo timeline.
+Trends, Measurements and Photos share the existing progress destination. Reuse the released
+measurement/photo records and commands; measurements retain correction provenance. Photo
+comparison is same-pose and makes no body-composition verdict. Existing hide/permanent-delete
+and backup rulings below remain unchanged. Brief: [`agent/BODY-PROGRESS-001.md`](agent/BODY-PROGRESS-001.md).
+
 ## REVIEW-001 — data review, owner rulings, 2026-10-14
 
 Gavin approves the plan in `agent/REVIEW-001.md`:

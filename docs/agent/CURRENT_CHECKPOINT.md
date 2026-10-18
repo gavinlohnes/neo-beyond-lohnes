@@ -1,5 +1,23 @@
 # Current checkpoint
 
+## Current objective — BODY-PROGRESS-001 (2026-10-18)
+
+Gavin approved BODY Progress: clearer overview, usable dated measurements, and progress photos.
+Builder: Codex; branch `codex/body-progress-001`; PR pending. Fresh starting master:
+`9f9100ade1d54f4f4368759fb73afcb7f1201a20`. Bounded PROTECTED objective;
+brief: [BODY-PROGRESS-001.md](BODY-PROGRESS-001.md).
+Implementation: retained Trends / Measurements / Photos views; existing effective measurements,
+canonical saves/corrections and provenance; explicit photo capture/import/save, same-pose
+comparison, metadata correction, confirmed hide/delete. Existing trends/source navigation stay.
+No schema, Engine, event, command, backup or dependency changes. No SUIT/TODAY/global-style edits.
+Development checks: 39 focused checks passed; two additional photo failure/correction/hide cases
+passed. Built PWA passed 320/360/412 offline reload, measurement/photo saves, retained drafts,
+axe and no page errors. Final compact layout/keyboard cases and full gate are in progress.
+Next: final verification/evidence, push PR, independent exact-head review, Gavin merge decision.
+Physical camera/Safari/screen-reader behavior remains unclaimed. No merge/deploy authorized.
+PR #243 remains complete, green CI, independently reviewable; PR #242 belongs to Claude.
+
+
 ## Current objective — COMMAND-CENTER-001 (2026-10-18, PROTECTED)
 
 Gavin authorized GPT Work to complete the existing objective on branch `ccr-8a82e4b3-4ub4x2`,
