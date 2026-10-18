@@ -2,7 +2,7 @@
 
 Gavin approved BODY Progress in this session on 2026-10-18: a coherent overview,
 dated measurements, and a progress-photo timeline using existing commands/storage.
-Builder: Codex. Branch: `codex/body-progress-001`. PR: pending.
+Builder: Codex. Branch: `codex/body-progress-001`. PR: pending publication.
 Starting freshly fetched master: `9f9100ade1d54f4f4368759fb73afcb7f1201a20`.
 Lane: PROTECTED, bounded BODY composition and presentation of existing private photos.
 
@@ -27,3 +27,12 @@ existing metadata stripping and backup regressions; built-PWA offline reload/exp
 Focused checks during development, full gate at final implementation, green required CI and
 independent exact-head review before Gavin's merge decision. No merge/deploy authorized.
 Rollback: revert UI and its tests/docs; existing records remain readable with no conversion.
+
+## Builder evidence
+
+Implementation is complete, including the photo timeline/comparison. Focused Node/browser
+verification: 42 passed. Built PWA at 320/360/412: offline reads and explicit saves, cold reloads,
+retained drafts, correction provenance, 44 px controls, unclipped labels and zero axe violations.
+[Reproduction and synthetic screenshots](../screenshots/body-progress-001/README.md).
+Full regression gate is running after integration of master `85db25b`; final results and exact
+head will be recorded in the PR/checkpoint. No physical-device or independent-review PASS claimed.

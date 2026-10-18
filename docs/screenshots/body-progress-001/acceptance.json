@@ -1,0 +1,38 @@
+{
+  "recordedAt": "2026-10-18T09:13:18.505Z",
+  "results": [
+    {
+      "width": 320,
+      "passed": true,
+      "accessibility": "axe: zero violations in overview, measurements and photos",
+      "offline": "cold reload, reads, measurement/photo saves, second reload",
+      "drafts": "measurement and selected photo retained across navigation",
+      "measurements": 4,
+      "corrections": 1,
+      "photos": 3,
+      "pageErrors": []
+    },
+    {
+      "width": 360,
+      "passed": true,
+      "accessibility": "axe: zero violations in overview, measurements and photos",
+      "offline": "cold reload, reads, measurement/photo saves, second reload",
+      "drafts": "measurement and selected photo retained across navigation",
+      "measurements": 4,
+      "corrections": 1,
+      "photos": 3,
+      "pageErrors": []
+    },
+    {
+      "width": 412,
+      "passed": true,
+      "accessibility": "axe: zero violations in overview, measurements and photos",
+      "offline": "cold reload, reads, measurement/photo saves, second reload",
+      "drafts": "measurement and selected photo retained across navigation",
+      "measurements": 4,
+      "corrections": 1,
+      "photos": 3,
+      "pageErrors": []
+    }
+  ]
+}
