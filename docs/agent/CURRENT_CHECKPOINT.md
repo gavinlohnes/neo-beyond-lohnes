@@ -15,16 +15,17 @@ amendment); built-PWA acceptance and screenshots in `docs/screenshots/suit-001/`
 **Verification:** required CI green on `a59cdef` after fixing three CI failures from the signals
 slice (duplicate "Backup due" wording, a 1.4 px fold overrun, a test timing race). Built PWA
 passes at 320/360/412 (`scripts/verify-suit.mjs`). Local full suite: 2,604 passed, one existing
-skip, one inherited failure (below). Architecture, TypeScript and production build pass.
+skip, one flake since fixed (below). Architecture, TypeScript and production build pass.
 
-**Inherited bug found, not fixed here:** returning from BODY's meal entry restores TODAY's scroll
-to the wrong offset. Reproduce: `MealRoundTrip` "retains a canceled draft…" at a 360×640 viewport
-lands at 150 instead of 80. It reproduces identically on master `85db25b` and on #244. At the
-test's 360×800 viewport TODAY is now only 1 px taller than the screen, so the existing test can
-flake under full-suite load. It needs its own small fix (App/BODY meal-return positioning).
+**MealRoundTrip flake, resolved (test premise, no product bug):** at 360×800 TODAY is now only
+1 px taller than the screen, so "retains a canceled draft…" checked a 1 px scroll restore and
+could flake under load. A trace showed the 80 → 161 jump that looked like a restore bug was the
+test's locator click scrolling its target into view; BEYOND restored the recorded origin
+correctly (same on master and #244). The test now runs at 360×640, asserts a real 80 px origin
+and clicks through the DOM, so it verifies an exact restore to 80.
 
 **Next:** independent exact-head review by a provider other than Claude, then Gavin's merge
-decision. #244 (BODY-PROGRESS-001, Codex) is review-ready too; whichever merges second needs a
+decision. #244 (BODY-PROGRESS-001, Codex) has an independent exact-head PASS from Claude at `14f3c1c`; whichever merges second needs a
 master merge (both touch this file and `CommandCatalog.test.tsx`).
 
 ## Previous objective — fix mode pin expiry at 16:30 (2026-10-18, merged in #243 at `85db25b`)
