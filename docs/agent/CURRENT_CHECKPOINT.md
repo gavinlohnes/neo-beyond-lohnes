@@ -1,6 +1,17 @@
 # Current checkpoint
 
-## Current objective — COMMAND-CENTER-001 (2026-10-18, PROTECTED)
+## Current objective — SUIT-001 stealth, glitch signals, SYSTEMS (2026-10-18, PROTECTED)
+
+Gavin authorized SUIT-001 together with COMMAND-CENTER-001 (2026-10-18). It starts after #241
+merged. Builder: Claude Code, on `claude/new-session-0xvewh` from master `9f9100a`; the draft PR
+is linked from the branch. Brief and repo mapping: [SUIT-001.md](SUIT-001.md). The only other
+open PR is the isolated lab #204.
+
+**Done:** slice 0 (brief build record, this checkpoint, draft PR).
+**Next:** slice 1, SYSTEMS (the TODAY line and the readout). Then signals, stealth, rulings and
+evidence. No Engine, schema, event, command, backup or dependency change.
+
+## Previous objective — COMMAND-CENTER-001 (2026-10-18, PROTECTED, merged in #241 at `9f9100a`)
 
 Gavin authorized GPT Work to complete the existing objective on branch `ccr-8a82e4b3-4ub4x2`,
 [PR #241](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/241). No merge authorized.
@@ -39,7 +50,7 @@ against the staged local tree. No new branch/PR, dependency, schema, backup or E
 **Limitations:** automated Chromium, not physical-device/Safari/screen-reader testing. The
 existing production bundle-size advisory remains. Small phones may scroll; header effects add
 no height. SUIT-001, CHRONICLE, TRAIN expansion, BODY redesign and reuse audit are not begun.
-**Next:** final exact-head review + green required CI, then Gavin's explicit merge decision.
+**Next (historical):** Gavin merged #241 at `9f9100a` on 2026-10-18.
 
 ## Previous objective — REVIEW-001 Weekly Review dashboard (2026-10-18, PROTECTED, merged in #240 at `4fda717`)
 
