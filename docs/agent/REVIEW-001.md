@@ -370,3 +370,39 @@ PROTECTED (schema and backup contract).
 - Storage persistence is requested (`navigator.storage.persist()`) when a photo is added.
   Whether it was granted is readable, so the later photo screen can say plainly when eviction
   remains possible.
+
+## Phase 1a delivery — Weekly Review dashboard (2026-10-18)
+
+Gavin approved this objective after a side-by-side comparison with the owner-frozen Ultimate
+prototype ("approve, Claude Code builds it", 2026-10-18). Builder: Claude Code, on
+`ccr-f27681c1-sb8gif`, from master `8e5dbab`. Codex stays off `src/ui/screens/review/**` and
+`src/engine/weeklyDashboard.ts` until it merges. Lane: PROTECTED, like the other Review slices.
+
+It turns MORE → REVIEW's weekly section into the prototype's Weekly Review, in the prototype's
+order:
+- **Week header:** the closed Monday–Sunday week, with ← PREVIOUS / NEXT → to step through closed
+  weeks (PREVIOUS stops at the first recorded day).
+- **Headline numbers:** sleep average with its work/off split; recorded protein average; strength
+  sessions; weight change from the week's first to last recorded weigh-in (needs two weighed
+  days).
+- **Review status:** COMPLETE REVIEW opens Carry forward.
+- **The seven lived days:** neutral mini bars for sleep, protein and training, plus a work/off tag.
+  Selecting a day shows its detail (sleep, protein, water, weight, session), and INSPECT DAY
+  EVENTS opens that day in History.
+- **Patterns:** an ALL / WORK / OFF switch over the week, and sleep by context. Work/off averages
+  keep the hub's floor of 3 logged days per measure. The prototype's "energy / 5" is left out
+  because energy is not stored per day.
+- **Metric explorer:** sleep, protein, water or weight across the week. Missing days are left out,
+  never drawn as zero.
+- **Findings:** the existing read-only findings, as they stood at the end of the week (45 days).
+- **Accomplishments:** counts only — sessions, personal records set that week, and the weight
+  observation.
+- **Carry forward:** #238's save-review form, unchanged in behaviour, for the latest week only.
+  Earlier weeks show their saved review read only.
+
+The 28-day question hub and Recommendations stay below it. Read only apart from #238's
+existing form: no schema, event, backup, Engine-evaluation or dependency change.
+`engine/reviewOverview.ts` shares its per-day row builder (`projectReviewRows`) and adds recorded
+water to each row; its outputs are otherwise unchanged. Neutral ink throughout: red stays for the
+primary button and the PR tag.
+
