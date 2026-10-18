@@ -406,3 +406,25 @@ existing form: no schema, event, backup, Engine-evaluation or dependency change.
 water to each row; its outputs are otherwise unchanged. Neutral ink throughout: red stays for the
 primary button and the PR tag.
 
+
+## Phase 1a delivery — optional photo framing guide (2026-10-18)
+
+Builder: Claude Code, during Gavin's overnight sprint permission (2026-10-18). This builds the
+approved Phase 1a item "an optional framing guide, which uses the last photo as a ghost outline".
+Branch `claude/review-001-framing-guide`, stacked on #244 (head `14f3c1c`). Lane: PROTECTED.
+
+- **Why an in-app camera:** #244's TAKE PHOTO opens the phone's native camera through a file input,
+  and nothing can be drawn over it. USE FRAMING GUIDE opens a live preview through the browser's own
+  camera API (`getUserMedia`, front camera; no dependency), with the latest visible photo of the
+  chosen pose overlaid at 35% opacity. FRONT / SIDE / BACK switch the ghost; HIDE GUIDE removes it.
+- **Same canonical save path:** CAPTURE draws the frame to a canvas and hands it to the existing
+  `pick()` flow as a CAMERA photo, with the pose preset. The existing preview, date, SAVE PHOTO,
+  re-encoding and metadata stripping then apply unchanged. Nothing is saved inside the guide, and
+  the camera stops when it closes. When the camera is unavailable or denied, it says so and points
+  to TAKE PHOTO / IMPORT PHOTO.
+- Hidden photos are never a ghost. No schema, event, backup, Engine or dependency change.
+
+Verification: browser tests at 320/360/412 with a canvas-backed fake camera (ghost shown,
+44 px targets, axe, capture → existing preview with the pose preset → explicit save as CAMERA,
+tracks stopped, nothing saved before SAVE PHOTO) and the denied-camera path. Screenshots in
+`docs/screenshots/review-001-framing/`. A real phone camera is not exercised by automation.
