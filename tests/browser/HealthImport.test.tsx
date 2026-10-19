@@ -3,6 +3,8 @@ import { page } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
 import axe from "axe-core";
 import { db } from "../../src/persistence/db";
+import { applyRestore } from "../../src/persistence/backup";
+import { importSleepSnapshot } from "../../src/application/externalSleepCommands";
 import { HealthImportScreen } from "../../src/ui/screens/health/HealthImportScreen";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { ImportedSleepEvidence } from "../../src/ui/screens/health/ImportedSleepEvidence";
@@ -19,6 +21,21 @@ function chooseFile(input: HTMLInputElement, content = JSON.stringify(syntheticS
   input.files = transfer.files; input.dispatchEvent(new Event("change", { bubbles: true }));
 }
 describe("Health Connect sleep import", () => {
+  it("round-trips imported evidence in a real browser and rolls back a failed replacement", async () => {
+    await importSleepSnapshot(syntheticSleep());
+    const before = await db.externalSleepRevisions.toArray(), receipt = await db.healthImportReceipts.toArray();
+    const file = new File([await db.export()], "synthetic-backup.json");
+    await db.externalSleepRecords.clear(); await db.externalSleepRevisions.clear(); await db.healthImportReceipts.clear();
+    await applyRestore(file);
+    expect(await db.externalSleepRevisions.toArray()).toEqual(before); expect(await db.healthImportReceipts.toArray()).toEqual(receipt);
+    expect((await importSleepSnapshot(syntheticSleep())).skipped).toBe(1);
+    const malformed = JSON.parse(await file.text());
+    malformed.data.tables.push({ name: "not-a-live-table", schema: "id", rowCount: 1 });
+    malformed.data.data.push({ tableName: "not-a-live-table", inbound: true, rows: [{ id: "invalid" }] });
+    await expect(applyRestore(new File([JSON.stringify(malformed)], "invalid-backup.json"))).rejects.toThrow();
+    expect(await db.externalSleepRevisions.toArray()).toEqual(before); expect(await db.healthImportReceipts.toArray()).toEqual(receipt);
+    expect(await db.externalSleepRecords.count()).toBe(1);
+  });
   it.each([320, 360, 390, 412])("previews accessibly at %i px; cancel writes nothing", async (width) => {
     await page.viewport(width, 844);
     const screen = await render(<HealthImportScreen />);
