@@ -526,6 +526,8 @@ export function TodayScreen({
   // ---- SLEEP DRAFT (2026-10-03) ----
   const [sleepDraftEvidence, setSleepDraftEvidence] = useState<Awaited<ReturnType<typeof getSleepDraftEvidence>> | null>(null);
   // ±15-minute nudges applied to the draft before logging it.
+  const [recoverSleepOpen, setRecoverSleepOpen] = useState(false);
+  const [sleepNotYetDay, setSleepNotYetDay] = useState<string | null>(null);
   const [sleepDraftAdjust, setSleepDraftAdjust] = useState(0);
   // NOT NOW: remembered on this phone only, for that day (per-device convenience).
   const [sleepDraftDismissedDayId, setSleepDraftDismissedDayId] = useState<string | null>(() => readSleepDraftDismissal());
@@ -1542,6 +1544,7 @@ export function TodayScreen({
         })
       : null;
   const shiftDownIsRow = phaseRows.includes("SHIFT_DOWN");
+  const lateRecoverWithoutSleep = !!day && scheduledClock.phase === "EXPECTED_POST_WORK" && shiftClock.phase === "EXPECTED_POST_WORK" && now.getHours() >= 13 && mainSleepRecordedAt.length === 0;
   const attentionPlan = deriveAttentionPlan({
     activeWorkoutId: activeWorkout?.id ?? null,
     activeWorkoutType: activeWorkout?.sessionType ?? null,
@@ -1685,7 +1688,20 @@ export function TodayScreen({
     });
   }
 
+  function renderRecoverSleepPrompt() {
+    if (!day) return null;
+    return <div className="equipment-row" data-recover-sleep-prompt>
+      <h2 className="card-title">Did you sleep?</h2>
+      {sleepNotYetDay === day.id && <p className="meta">Log main sleep when you're ready.</p>}
+      {recoverSleepOpen && sleepDraft ? renderPhaseRow("MAIN_SLEEP") : <>
+        <button type="button" className="btn-secondary" disabled={busy} onClick={() => sleepDraft ? setRecoverSleepOpen(true) : onOpenBody?.("sleep")}>LOG MAIN SLEEP</button>
+        {sleepNotYetDay !== day.id && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setSleepNotYetDay(day.id)}>NOT YET</button>}
+      </>}
+    </div>;
+  }
+
   function renderShiftDownTool() {
+    if (lateRecoverWithoutSleep && !activeShiftDownId) return renderRecoverSleepPrompt();
     return (
       <>
       {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
@@ -1940,6 +1956,7 @@ export function TodayScreen({
       case "SHIFT_HANDOFF":
         return shiftHandoffRefreshKey !== undefined ? <ShiftHandoff refreshKey={shiftHandoffRefreshKey} /> : null;
       case "SHIFT_DOWN":
+        if (lateRecoverWithoutSleep && !activeShiftDownId) return renderRecoverSleepPrompt();
         // An in-progress SHIFT DOWN already owns Operate above.
         if (dominant === "SHIFT_DOWN_ACTIVE" || dominant === "OPERATION_CONFLICT") return null;
         return (
@@ -2678,7 +2695,7 @@ export function TodayScreen({
       {day && (
         <section className="shift-clock-rows" aria-label={`${describePhaseHeading(shiftClock.phase, day.workContext)} rows`}>
           {leadingPhaseRows.length === 0 && <h2 className="section-label">{describePhaseHeading(shiftClock.phase, day.workContext)}</h2>}
-          {remainingPhaseRows.map((row) => (
+          {remainingPhaseRows.filter((row) => !(lateRecoverWithoutSleep && shiftDownIsRow && row === "MAIN_SLEEP")).map((row) => (
             <div key={row} data-shift-clock-row={row}>
               {renderPhaseRow(row)}
             </div>
