@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
         val padding = (16 * resources.displayMetrics.density).toInt()
         val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(padding, padding, padding, padding) }
         fun paragraph(text: String) = TextView(this).apply { this.text = text; textSize = 18f; setPadding(0, 12, 0, 12); layout.addView(this) }
-        paragraph("BEYOND Health Bridge").apply { textSize = 26f; accessibilityHeading = true }
+        paragraph("BEYOND Health Bridge").apply { textSize = 26f; ViewCompat.setAccessibilityHeading(this, true) }
         paragraph("Read Garmin sleep from the last 7 days. Save a file, then review and confirm it in BEYOND. This helper does not sync automatically.")
         paragraph("Privacy and permission use: sleep access only, read only. Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages go into your chosen file. No account, server, Internet permission or other health categories. Your Health Connect data is never changed. Files may be private health information; choose a local folder and delete the file after importing.")
         status = paragraph("Ready. Complete Garmin's sync before reading. Sessions crossing the 7-day window edges are excluded.").apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }
