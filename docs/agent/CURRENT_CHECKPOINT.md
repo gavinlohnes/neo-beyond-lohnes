@@ -1,58 +1,34 @@
 # Current checkpoint
 
-## Current objective — SUIT-001 stealth, glitch signals, SYSTEMS (2026-10-18, PROTECTED)
+## Current state — no objective in flight (2026-10-19)
 
-Gavin authorized SUIT-001 together with COMMAND-CENTER-001 (2026-10-18). It starts after #241
-merged. Builder: Claude Code, on `claude/new-session-0xvewh` from master `9f9100a`, with master
-merged in at `85db25b` (#243). Draft [PR #242](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/242). Brief and repo mapping: [SUIT-001.md](SUIT-001.md). #244 merged at `118bd89` and is merged in here. Other open PRs:
-the sprint PRs below and the isolated lab #204.
+Everything from the 2026-10-18 session is merged on Gavin's approval ("Merge all 6"), in this
+order. Each Protected PR had an independent exact-head PASS from Codex and green required CI.
+After each merge the next branch took master in; the only conflicts were append-only
+(`REVIEW-001.md` delivery notes, one CSS block), resolved by keeping every section, then the full
+gate ran on the combined tree before pushing.
 
-**Done: slices 0–4.** SYSTEMS line and read-only readout; four glitch signals (stale, offline,
-backup overdue, save failed); stealth (long-press, COMMAND entry, peek, blind water/meal with
-undo, persistence, workout continuity); Decision Register entries (and the STATUS-001 placement
-amendment); built-PWA acceptance and screenshots in `docs/screenshots/suit-001/`.
+| PR | What | Lane | Review |
+|---|---|---|---|
+| [#242](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/242) | SUIT-001: stealth, four glitch signals, SYSTEMS line and readout ([SUIT-001.md](SUIT-001.md)) | PROTECTED | Codex PASS at `9501e30` after one BLOCK round (stealth writes left BODY/SYSTEMS stale; a keyboard Enter after a real long-press was swallowed) |
+| [#245](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/245) | REVIEW-001 monthly review (every 4th week from the first saved review; 28-lived-day body composition) | PROTECTED | Codex PASS at `569badf` after two BLOCK rounds (a hidden photo could show after a failed, then a pending, re-read) |
+| [#246](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/246) | REVIEW-001 optional photo framing guide (in-app camera, last same-pose photo as a ghost) | PROTECTED | Codex PASS at `d88b85a` after two BLOCK rounds (capture didn't match the 3:4 preview crop; a just-hidden photo could be the ghost during a pending/failed read) |
+| [#247](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/247) | REVIEW-001 Body questions in the Review hub (#9, #16, #20, #21) | PROTECTED | Codex PASS at `2181a48` |
+| [#248](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/248) | REVIEW-001 weight answer: rate, usual swing, goal date, weigh-in timing | PROTECTED | Codex PASS at `ffd1584` |
+| [#249](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/249) | BODY hold-to-DELETE on water, sleep and bodyweight entries (field report: three accidental 16 oz logs; correcting to 0 silently failed) | FEATURE | Owner merge; existing void commands, no event/schema change |
 
-**Verification:** required CI green on `a59cdef` after fixing three CI failures from the signals
-slice (duplicate "Backup due" wording, a 1.4 px fold overrun, a test timing race). Built PWA
-passes at 320/360/412 (`scripts/verify-suit.mjs`). Local full suite: 2,604 passed, one existing
-skip, one flake since fixed (below). Architecture, TypeScript and production build pass.
+**Verification:** full local gate on all six combined: 268 files, 2,663 passed, one existing
+skip; architecture, TypeScript and production build pass. Required CI green on every merged head.
 
-**MealRoundTrip flake, resolved (test premise, no product bug):** at 360×800 TODAY is now only
-1 px taller than the screen, so "retains a canceled draft…" checked a 1 px scroll restore and
-could flake under load. A trace showed the 80 → 161 jump that looked like a restore bug was the
-test's locator click scrolling its target into view; BEYOND restored the recorded origin
-correctly (same on master and #244). The test now runs at 360×640, asserts a real 80 px origin
-and clicks through the DOM, so it verifies an exact restore to 80.
+**Remaining risks / unclaimed:** physical-device, Safari and screen-reader checks for all of the
+above, including a real phone camera for the framing guide. `scripts/verify-suit.mjs`'s offline
+step depends on the runtime reporting `navigator.onLine` false after an emulated offline reload;
+some Chromium runtimes don't (Codex's network-blocked checks covered the same ground).
+`ModePinExpiry` (#243's test) flaked once at 412 px under full-suite load.
 
-**Next:** independent exact-head review by a provider other than Claude, then Gavin's merge
-decision. #244 (BODY-PROGRESS-001, Codex) has an independent exact-head PASS from Claude at `14f3c1c`; whichever merges second needs a
-master merge (both touch this file and `CommandCatalog.test.tsx`).
-
-## Overnight sprint — REVIEW-001 Phase 1a remainder (2026-10-18, Claude Code)
-
-Gavin granted sprint permission before sleeping ("improve or add features to BEYOND"). Scope stayed
-inside already-approved REVIEW-001 Phase 1a work that needed #244's measurements and photos. No
-Engine evaluation, schema, event, backup or dependency change, and no merges. Each item is its own
-draft PR targeting `master` so CI runs; #245–#247 are stacked on #244, #248 is not.
-
-| PR | Builds | Status |
-|---|---|---|
-| [#245](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/245) | Monthly review: every 4th week from the first saved review, body composition over 28 lived days | Master merged in after #244 |
-| [#246](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/246) | Optional photo framing guide: in-app camera with the last same-pose photo as a ghost | Master merged in after #244 |
-| [#247](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/247) | Review hub Body questions: waist, chest/arms/shoulders, photos over time, "fat, not muscle?" side by side | Master merged in after #244 |
-| [#248](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/248) | Weight answer: rate (lb and %/week), usual swing, goal date, weigh-in timing after main sleep | CI green |
-
-- **Merge order:** #244, then any of #245/#246/#247 (they carry the same ported #244 focus fix,
-  identical commits). #248 can merge any time. Every sprint PR appends its delivery note to the
-  end of `REVIEW-001.md`, so later merges get a doc-only conflict there: keep all sections.
-- **#244 finding:** after a measurement save, focus could fall to the body on a cold page (its
-  own keyboard test fails alone). Root cause and patch are on #244; the fix rides the stacked PRs.
-- **#244 merged** at `118bd89` on Gavin's approval (Claude's independent review PASS, green CI).
-  Master is merged into #245–#247; their remaining diff is their own work plus the focus fix.
-- **Cadence ruled (2026-10-18):** Gavin delegated it; four weeks after the first saved review.
-- **Known flake, not fixed here:** `ModePinExpiry` (#243's test) failed once at 412 px under
-  full-suite load; it passes alone and in the clean rerun.
-- Each needs independent exact-head review by a non-Claude provider, then Gavin's merge decision.
+**Next:** Gavin picks the next objective. Suggested: a field pass on the phone through a real
+shift using SYSTEMS, stealth, BODY delete and the review hub, then fix what it finds. The first
+monthly review lands four weeks after the first saved weekly review.
 
 ## Previous objective — BODY-PROGRESS-001 (2026-10-18, merged in #244 at `118bd89`)
 
