@@ -1,6 +1,33 @@
 # Current checkpoint
 
-## Current objective — POLISH-001 (2026-10-18, PROTECTED)
+## Current objective — ADVANCE-BEYOND command (2026-10-19, PROTECTED)
+
+Gavin approved the bounded workflow implementation ("Let's work and make it happen") after
+reviewing the reuse recommendation. Builder: Codex. Branch `codex/advance-beyond-command`;
+[PR #254](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/254) is the durable objective brief
+and exact-head review/CI handoff. Starting master: `d042a1f7c54a8e50dcf045a76f62a4a819d00504`.
+Live GitHub returned no open PRs at the start; master includes merged #253. The older POLISH-001
+pending-review pointer below is historical, not a new assignment. Claude's separately requested
+product-discovery work is not taken over or authorized for implementation by this objective.
+
+Done: one command definition in DEV-FLOW-002; AGENTS and roadmap routing; thin Claude/Codex skills
+and Codex metadata; chat-project instruction with missing-access fallback; `.agents/` governance
+classification and focused regressions. No app, user data, dependency, CI, protection or Factory
+change. Existing approval/review/merge boundaries remain; no chat account settings configured.
+
+Verification: both skill structural validators passed; 29 risk CLI regressions passed;
+architecture passed (269 files); TypeScript/production PWA build passed. A separate read-only
+skill validation session exercised six ownership/approval/access scenarios without a blocking
+contradiction. Existing bundle-size advisory remains. No local full browser suite or actual
+Claude Code/Codex command-discovery test is claimed. Required CI belongs to the final PR head.
+
+Next: independent Protected exact-head review and green required CI on PR #254, then Gavin's
+separate merge decision. Reviewer findings/results belong in the PR; Builder cannot self-review
+or merge. This checkpoint and PR do not authorize unrelated product work or import context seeds.
+
+## Previous objective — POLISH-001 (historical checkpoint)
+
+
 
 Gavin approved the attached brief, committed unchanged as [POLISH-001.md](POLISH-001.md).
 Builder: Codex. Branch `codex/polish-001`; [PR #251](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/251).
