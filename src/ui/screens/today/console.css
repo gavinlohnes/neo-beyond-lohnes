@@ -126,7 +126,7 @@
 .today-field > :not(.cc-hero-wrap):not(.console-guidance):not(.today-numbers) .card-body { font-size: 14px; color: var(--p-t2); }
 .today-field .btn-secondary, .today-field .btn-primary:not(.cc-cta) {
   min-height: 44px; border: 1px solid var(--p-line-2); border-radius: 0; background: none; color: var(--p-t1);
-  font-family: var(--p-display); font-size: 13px; font-weight: 500; letter-spacing: .1em; clip-path: none; box-shadow: none;
+  font-family: var(--p-display); font-size: 13px; font-weight: 500; letter-spacing: .1em; box-shadow: none;
 }
 .today-field .section-label--field, .today-field .today-support > .section-label {
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
@@ -160,3 +160,4 @@
 .command-console.today-field .next-action-card.command-surface, .next-action-card { padding: 13px 14px 12px; }
 .today-numbers .cc-lbl { margin-bottom: 6px; }
 .today-field .next-action-card .btn-secondary.cc-decline { width: auto; min-height: 44px; border: 0; padding: 0 2px 0 12px; background: none; color: var(--p-t2); font-size: 13px; letter-spacing: .1em; }
+.command-console.today-field .next-action-card h2.command-title { margin: 0; font-size: 22px; line-height: 1.25; font-weight: 600; letter-spacing: .02em; color: var(--p-t1); }

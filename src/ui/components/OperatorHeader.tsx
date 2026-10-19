@@ -52,13 +52,14 @@ export function OperatorHeader({ destination: _destination, children, headingId,
             {toggleStealth && <span id={hintId} className="visually-hidden">Long-press for stealth.</span>}
           </button>
         ) : (
-          <span className="cc-emblem cc-emblem--mark"><CcIcon.emblem /></span>
+          <span className="cc-emblem cc-emblem--mark" aria-hidden="true"><CcIcon.emblem /></span>
         )}
         <h1 id={headingId} ref={headingRef} tabIndex={focusable ? -1 : undefined} className="eyebrow cc-title">
           {lead}{where && <span className="cc-where">{where}</span>}
         </h1>
         {search && <button type="button" className="cc-search-btn" aria-label="Search everything" onClick={search}><CcIcon.command /></button>}
-        <span className="cc-clock" aria-hidden="true">{clock}</span>
+        {/* Decorative: it repeats the phone's own clock, so it stays out of text and the a11y tree. */}
+        <span className="cc-clock" aria-hidden="true" data-clock={clock} />
       </div>
     </div>
   );

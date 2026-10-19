@@ -51,7 +51,7 @@
 .status-strip.status-strip--stacked.cc-hero-wrap { display: block; border-left: 0; padding-left: 0; margin: -14px -14px 0; padding: 0; border: 0; background: none; box-shadow: none; }
 .status-strip.cc-hero-wrap::before, .status-strip.cc-hero-wrap::after { display: none; }
 /* The work-context chip rides the meta line (floated right): a 44px target around a 26px face. */
-.cc-mode .cc-mode-context { float: right; position: relative; margin: -14px 0 -14px 10px; }
+.cc-mode .cc-mode-context { float: right; position: relative; z-index: 2; margin: -14px 0 -14px 10px; }
 .cc-mode .cc-mode-context .cc-tag { display: flex; align-items: center; min-height: 46px; padding: 0; border: 0; background: none; }
 .cc-mode .cc-tag-face { display: flex; align-items: center; min-height: 26px; padding: 0 8px; border: 1px solid var(--p-line-2); color: var(--p-t2); font-size: 11px; letter-spacing: .12em; }
 .cc-mode .cc-timeline { clear: both; }
@@ -64,5 +64,5 @@
   .cc-mode .cc-timeline { margin-top: 8px; }
   .cc-mode .cc-scene { height: 18px; }
   .cc-mode .cc-skyline { height: 70px; }
-  .cc-mode .systems-line { min-height: 44px; margin-top: 8px; padding-block: 6px; }
+  .cc-mode .systems-line { min-height: 46px; margin-top: 8px; padding-block: 6px; }
 }

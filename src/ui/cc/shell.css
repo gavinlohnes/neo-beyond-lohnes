@@ -31,3 +31,4 @@
 /* FIND-001: record search stays one tap from every screen, beside the clock. */
 .cc-hdr .cc-search-btn { margin-left: auto; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--p-t2); cursor: pointer; }
 .cc-hdr .cc-search-btn + .cc-clock { margin-left: 0; }
+.cc-hdr .cc-clock::before { content: attr(data-clock); }

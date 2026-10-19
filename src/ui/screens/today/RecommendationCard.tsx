@@ -111,7 +111,7 @@ export function RecommendationCard({
     <>
       {nextAction && <p className="cc-lbl">NEXT USEFUL ACTION</p>}
       {!nextAction && (isAttention || isDominant) && !isAllClear && <p className="tool-label">ENGINE GUIDANCE</p>}
-      {nextAction ? <h2>{isAllClear ? "Nothing needs you right now." : title}</h2> : (
+      {nextAction ? <h2 className={isAllClear ? undefined : "command-title"}>{isAllClear ? "Nothing needs you right now." : title}</h2> : (
       <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
         {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
         {title}

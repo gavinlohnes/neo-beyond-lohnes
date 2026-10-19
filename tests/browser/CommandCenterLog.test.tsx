@@ -58,6 +58,8 @@ describe("TODAY action row", () => {
     let sheet = await openLog(screen);
     expect([...sheet.element().querySelectorAll(".today-sheet__option strong")].map((el) => el.textContent))
       .toEqual(["Water", "Meal", "Sleep", "Bodyweight", "Note", "Urge", "Workout set"]);
+    // POLISH-002: the sheet rises in (0.22 s); measure it settled, as the other axe checks do.
+    for (const animation of document.getAnimations()) animation.finish();
     expect((await axe.run(sheet.element())).violations).toEqual([]);
     await sheet.getByRole("button", { name: "Close LOG" }).click();
 
