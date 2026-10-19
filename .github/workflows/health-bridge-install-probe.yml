@@ -36,11 +36,12 @@ jobs:
       - name: Boot Android 16
         run: |
           mkdir -p probe/results
+          trap 'tail -n 120 probe/results/emulator.log || true' EXIT
           sudo chmod 666 /dev/kvm
           printf 'no\n' | avdmanager create avd --force --name beyond36 --package 'system-images;android-36;google_apis;x86_64'
           emulator -avd beyond36 -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader -memory 2048 -cores 2 > probe/results/emulator.log 2>&1 &
-          timeout 300 adb wait-for-device
-          timeout 300 bash -c 'until [ "$(adb shell getprop sys.boot_completed | tr -d "\r")" = "1" ]; do sleep 2; done'
+          timeout 180 adb wait-for-device
+          timeout 180 bash -c 'until [ "$(adb shell getprop sys.boot_completed | tr -d "\r")" = "1" ]; do sleep 2; done'
           adb shell input keyevent 82
           adb shell getprop ro.build.version.release > probe/results/android-version.txt
       - name: Install and launch the original APK
@@ -63,7 +64,10 @@ jobs:
           PY
       - name: Collect Android logs
         if: always()
-        run: adb logcat -d > probe/results/logcat.txt || true
+        run: |
+          mkdir -p probe/results
+          timeout 10 adb logcat -d > probe/results/logcat.txt || true
+          tail -n 120 probe/results/emulator.log || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
