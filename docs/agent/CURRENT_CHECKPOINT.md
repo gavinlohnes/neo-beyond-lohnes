@@ -1,5 +1,20 @@
 # Current checkpoint
 
+## Current objective — POLISH-001 (2026-10-18, PROTECTED)
+
+Gavin approved the attached brief, committed unchanged as [POLISH-001.md](POLISH-001.md).
+Builder: Codex. Branch `codex/polish-001`; [PR #251](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/251).
+Fresh starting master: `82e923453e8634e89fccf7feee02edb6ad0eb161`; #250 was open (checkpoint only).
+Items 1–12 implemented and pushed individually. Rulings recorded in UX_DECISIONS.
+TypeScript and the existing mode-header contrast/layout test pass. Acceptance/regressions
+are in progress; do not treat implementation as complete or reviewed.
+No Engine, phase derivation, schema, command/event semantics, backup or dependency changes.
+Next: verify logging failure recovery, mode/phone matrix, back/focus/drafts/offline, full
+`npm run verify`, screenshots, then stop for Claude Code’s independent exact-head review.
+Never merge; Gavin controls the merge decision.
+
+The sections below are historical starting-checkpoint content. Read live PRs for status.
+
 ## Current objective — SUIT-001 stealth, glitch signals, SYSTEMS (2026-10-18, PROTECTED)
 
 Gavin authorized SUIT-001 together with COMMAND-CENTER-001 (2026-10-18). It starts after #241
