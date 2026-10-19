@@ -30,6 +30,8 @@ async function runningWorkout() {
   const day = await startDay();
   await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
   const workout = await startWorkout(day.id, "A", "STANDARD");
+  // In use at the 16:30 boundary: TONIGHT-001 only lets an idle workout (2 h without a set) release the day.
+  await db.workoutSessions.update(workout.id, { startedAt: at(13, 16, 0).toISOString() });
   setModePin(day.id, "OFF");
   return { day, workout };
 }

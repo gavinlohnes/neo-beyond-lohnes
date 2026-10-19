@@ -10,10 +10,13 @@ import { CommandSurface } from "../../components/CommandSurface";
 export function ActiveWorkoutCard({
   activeWorkout,
   isDominant,
+  fromEarlierDay = false,
   onOpenTrain,
 }: {
   activeWorkout: WorkoutSession | null;
   isDominant: boolean;
+  /** TONIGHT-001: the workout outlived its own BeyondDay (an idle workout no longer holds the 16:30 roll). */
+  fromEarlierDay?: boolean;
   onOpenTrain?: ((destination: "RECOVERY" | "WORKOUT") => void) | undefined;
 }) {
   if (!activeWorkout) return null;
@@ -21,13 +24,22 @@ export function ActiveWorkoutCard({
     activeWorkout.sessionType === "RECOVERY"
       ? "Recovery session"
       : `${activeWorkout.templateId} · ${activeWorkout.sessionType.toLowerCase()}`;
+  const startedAt = new Date(activeWorkout.startedAt);
+  const startedTime = startedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const startedDay = startedAt.toLocaleDateString("en-US", { weekday: "short" });
   const content = (
     <>
-      <p className="tool-label">WORKOUT IN PROGRESS</p>
+      <p className="tool-label">{fromEarlierDay ? "WORKOUT STILL OPEN" : "WORKOUT IN PROGRESS"}</p>
       <h2 className={isDominant ? "command-title" : "card-title"}>Resume your active workout</h2>
-      <p className={isDominant ? "card-body" : "visually-hidden"} style={{ marginBottom: 4 }}>
-        {sessionLabel} · started {new Date(activeWorkout.startedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}. Sets and position stay in TRAIN.
-      </p>
+      {fromEarlierDay ? (
+        <p className="card-body" style={{ marginBottom: 4 }}>
+          {sessionLabel} · started {startedDay} {startedTime}. It stays on that day. Finish or resume it in TRAIN.
+        </p>
+      ) : (
+        <p className={isDominant ? "card-body" : "visually-hidden"} style={{ marginBottom: 4 }}>
+          {sessionLabel} · started {startedTime}. Sets and position stay in TRAIN.
+        </p>
+      )}
       <button className="btn-primary" onClick={() => onOpenTrain?.("WORKOUT")}>
         RESUME WORKOUT
       </button>

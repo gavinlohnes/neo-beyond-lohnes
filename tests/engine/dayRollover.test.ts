@@ -4,6 +4,8 @@ import {
   evaluateDayRolloverAmbiguity,
   DAY_ROLLOVER_HOUR,
   DAY_ROLLOVER_MINUTE,
+  IDLE_WORKOUT_RELEASE_MS,
+  workoutHoldsRollover,
 } from "../../src/engine/dayRollover";
 
 /**
@@ -147,5 +149,23 @@ describe("evaluateDayRolloverAmbiguity", () => {
 
   it("does not flag when neither is true", () => {
     expect(evaluateDayRolloverAmbiguity({ dayWasRolloverCreated: false, hasPrimarySleepLogged: false })).toBeNull();
+  });
+});
+
+/** TONIGHT-001 (owner ruling, 2026-10-19): only a workout in use holds the 16:30 roll. */
+describe("workoutHoldsRollover", () => {
+  const now = new Date(2026, 9, 22, 16, 41, 0, 0);
+
+  it("holds while the last activity is under two hours old", () => {
+    expect(workoutHoldsRollover(new Date(now.getTime() - IDLE_WORKOUT_RELEASE_MS + 1), now)).toBe(true);
+  });
+
+  it("releases at exactly two hours without activity, and after", () => {
+    expect(workoutHoldsRollover(new Date(now.getTime() - IDLE_WORKOUT_RELEASE_MS), now)).toBe(false);
+    expect(workoutHoldsRollover(new Date(2026, 9, 22, 6, 52, 0, 0), now)).toBe(false);
+  });
+
+  it("holds when the activity is stamped after now (clock skew)", () => {
+    expect(workoutHoldsRollover(new Date(now.getTime() + 60_000), now)).toBe(true);
   });
 });

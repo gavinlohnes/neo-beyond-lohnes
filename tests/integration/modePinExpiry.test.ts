@@ -21,6 +21,8 @@ describe("mode pin expiry — presentation only", () => {
     const day = await startDay();
     await submitCheckIn(day.id, { energy: 2, stress: 3, mood: 3, soreness: 2, alcoholUrge: 0 });
     const workout = await startWorkout(day.id, "A", "STANDARD");
+    // In use at 16:30: TONIGHT-001 only lets an idle workout release the day.
+    await db.workoutSessions.update(workout.id, { startedAt: at(13, 16, 0).toISOString() });
     setModePin(day.id, "OFF");
     vi.setSystemTime(at(13, 16, 29));
     expect(getModePin(day.id)).toBe("OFF");

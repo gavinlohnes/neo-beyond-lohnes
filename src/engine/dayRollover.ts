@@ -70,6 +70,24 @@ export function computeDueRollover(dayStartedAt: Date, now: Date): Date | null {
 }
 
 /**
+ * TONIGHT-001 (owner ruling, 2026-10-19): amends DAY-ROLLOVER-001's "an
+ * in-progress workout is never interrupted". Only a workout the operator is
+ * actually using holds the day open. Once nothing has been recorded in it
+ * for this long, a due rollover goes ahead; the workout itself stays ACTIVE
+ * and resumable on its original day, never closed or rewritten.
+ */
+export const IDLE_WORKOUT_RELEASE_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * Pure: true while the workout's latest recorded activity (its start, or
+ * its most recent logged/skipped set) is less than IDLE_WORKOUT_RELEASE_MS
+ * before `now`. Activity stamped after `now` (clock skew) still holds.
+ */
+export function workoutHoldsRollover(lastActivityAt: Date, now: Date): boolean {
+  return now.getTime() - lastActivityAt.getTime() < IDLE_WORKOUT_RELEASE_MS;
+}
+
+/**
  * Sleep/Day-Ownership Model doctrine ("lived days, not calendar days")
  * exists specifically so an overnight shift worker's PRIMARY sleep still
  * correctly closes out one lived day. An automatic 16:30 rollover can now

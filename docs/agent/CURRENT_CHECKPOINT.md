@@ -1,6 +1,50 @@
 # Current checkpoint
 
-## Current objective — POLISH-001 (2026-10-18, PROTECTED)
+## Current objective — TONIGHT-001 (2026-10-19, PROTECTED)
+
+Gavin approved TONIGHT after the product discovery proposal. Brief: [TONIGHT-001.md](TONIGHT-001.md);
+rulings in UX_DECISIONS → TONIGHT-001. Builder: Claude Code. Branch `ccr-83cf6ed8-ug1ym9`; [PR #255](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/255).
+Starting master: `d042a1f7c54a8e50dcf045a76f62a4a819d00504` (the #253 merge; no open PRs).
+POLISH-001 and POLISH-002 are merged (#251, #252, #253). The POLISH-001 handoff below is history.
+
+**PR 1 — no frozen days (this branch).** A due 16:30 rollover no longer waits on a workout with
+nothing recorded for 2 hours. The workout stays ACTIVE and resumable on its own day, and TODAY
+labels it "WORKOUT STILL OPEN · started Thu 06:52". A workout in use, explicit END DAY and the
+new-day-start fallback keep the CONTINUITY-001 guard. No schema, event type/payload, dependency or
+recommendation change. Files: `engine/dayRollover.ts` (pure `workoutHoldsRollover`),
+`application/commands.ts` (rollover reads the workout's sets in its transaction),
+`ui/screens/today/ActiveWorkoutCard.tsx`, the TODAY stale note copy.
+
+**Verification:** full suite 270 files: 2,683 passed and 1 existing skip. The two failures it found
+were tests whose setup needed a workout to defer the rollover: `modePinExpiry` and
+`ConnectedHealth`'s read-only browsing test. Their workouts sat idle for hours, so I made them
+recently active and kept the assertions unchanged. The browser `ModePinExpiry` test has the
+same premise and failed under full-suite load (a rollover timing race); its workout is now in use
+at 16:30 too. Both pass. Architecture (269 files),
+TypeScript and the production build pass. The three new idle-release integration tests fail on
+the old code and pass with the fix. `check:risk` confirms the change is PROTECTED.
+
+**Remaining risks:** physical-device, Safari and screen-reader checks are unclaimed. A workout
+that started before a rollover still records its completion on its original day. That's
+intended: day-scoped readers of workout events count that completion on the old day.
+
+**Next:** independent exact-head review of PR 1, green CI, Gavin's merge. Then PR 2 (morning
+call, wake card, quick log, night closed, briefing, honest headline, Week Ahead and declutter
+rulings). After TONIGHT: Gavin's 5-minute Health Connect check, then a Garmin brief.
+
+**Review fixes (2026-10-19, Codex; owner: "Fix them"):** Codex takes the bounded
+follow-up implementation after reviewing Claude's handoff. #255 now schedules a held rollover
+at the workout's two-hour idle deadline. Each firing revalidates activity in the existing
+transaction; another logged/skipped set postpones release. Async scheduling is guarded across
+resume/unmount. Added integration scheduling cases and mounted-App browser regressions with
+and without later activity. #256's separate question/headline fix follows on its branch.
+Previous head `5056e3e` had green required CI (2,685 passed, 1 skipped); this changed head
+requires fresh CI and independent exact-head review. Local dependency/browser execution is
+unavailable because the configured workspace proxy is unreachable; syntax and isolated
+source checks are supplementary only. No self-review PASS, merge or deployment.
+#254 remains untouched.
+
+## Previous objective — POLISH-001 (2026-10-18, PROTECTED, merged)
 
 Gavin approved the attached brief, committed unchanged as [POLISH-001.md](POLISH-001.md).
 Builder: Codex. Branch `codex/polish-001`; [PR #251](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/251).

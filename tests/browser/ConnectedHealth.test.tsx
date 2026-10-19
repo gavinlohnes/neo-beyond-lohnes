@@ -246,6 +246,8 @@ it("reveals an explicitly requested metric after a retained timeline and exposes
 it("keeps explicit historical browsing read-only when an active workout defers rollover", async () => {
   clock(new Date(2026, 9, 15, 20)); const day = await startDay(); await logWater(day.id, 8);
   const session = await startWorkout(day.id, "A", "STANDARD");
+  // In use 30 minutes before the view: TONIGHT-001 only lets an idle workout release the day.
+  await db.workoutSessions.update(session.id, { startedAt: new Date(2026, 9, 16, 19, 30).toISOString() });
   clock(); const before = await db.events.toArray();
   const screen = await render(<App />);
   await expect.element(screen.getByRole("spinbutton", { name: "Set 1 repetitions", exact: true })).toBeVisible();

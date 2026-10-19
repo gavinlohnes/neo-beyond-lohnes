@@ -2289,7 +2289,7 @@ export function TodayScreen({
           </ModeHeader>
           {stale && <div className="signal-stale cc-stale-note" role="status">
             <Signal data-signal="stale-note">{staleRefresh === "HELD"
-              ? "These are yesterday’s numbers. Your active workout holds yesterday open."
+              ? "These are yesterday’s numbers. Today starts when you finish your workout, or 2 hours after your last set."
               : staleRefresh === "FAILED" ? "These are yesterday’s numbers. Today didn’t load. Try again." : "These are yesterday’s numbers."}</Signal>
             <button type="button" disabled={busy || staleRefresh === "RUNNING"} onClick={() => void handleStaleRefresh()}>REFRESH</button>
           </div>}
@@ -2330,7 +2330,7 @@ export function TodayScreen({
       )}
 
       {/* An active workout resumes from right under the card, above the fold. */}
-      {day && dominant === "WORKOUT_ACTIVE" && <div className="today-resume-line"><ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} onOpenTrain={onOpenTrain} /></div>}
+      {day && dominant === "WORKOUT_ACTIVE" && <div className="today-resume-line"><ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} fromEarlierDay={!!activeWorkout && activeWorkout.beyondDayId !== day.id} onOpenTrain={onOpenTrain} /></div>}
       {day && onOpenWeeklyReview && <div className="today-review-line"><WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} /></div>}
       {day && <section className="today-numbers" aria-label="Today's numbers">{renderFuel()}</section>}
       <section className="console-operations" aria-labelledby="console-operations-heading">
@@ -2377,7 +2377,7 @@ export function TodayScreen({
           </p>
         </div>
       )}
-      {day && dominant === "OPERATION_CONFLICT" && <ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} onOpenTrain={onOpenTrain} />}
+      {day && dominant === "OPERATION_CONFLICT" && <ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} fromEarlierDay={!!activeWorkout && activeWorkout.beyondDayId !== day.id} onOpenTrain={onOpenTrain} />}
       {day && dominant === "OPERATION_CONFLICT" && (
         <ResetCard
           prominent={false}
