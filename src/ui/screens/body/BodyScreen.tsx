@@ -1141,7 +1141,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
     setManualMealEntryOpen(true);
   }
 
-  async function handleCreateSavedMeal() {
+  async function handleCreateSavedMeal(logToday: boolean) {
     if (busyRef.current || mealWriteInFlight.current) return;
     const name = newMealForm.name.trim();
     const macros = parseMealMacros(newMealForm);
@@ -1156,14 +1156,22 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
     setBusy(true);
     mealWriteInFlight.current = true;
     setMealError(null);
+    let saved: SavedMeal | null = null;
     try {
-      await createSavedMeal({ name, ...macros });
-      setMealPresetNotice("Meal saved for reuse. Tap LOG to record it today.");
+      saved = await createSavedMeal({ name, ...macros });
+      const meal = saved;
+      setSavedMeals((meals) => [...meals.filter((item) => item.id !== meal.id), meal]);
+      setMealPresetNotice("Meal saved. Use LOG when you eat it.");
       setNewMealForm(EMPTY_MEAL_FORM);
       setAddMealOpen(false);
       setManualMealEntryOpen(false);
       setFoodQuery("");
       setFoodResults(null);
+      if (logToday) {
+        await logSavedMealToday(saved.id);
+        setMealPresetNotice(null);
+        return;
+      }
       mealReadRetry.current = refresh;
       try {
         await refresh();
@@ -1174,7 +1182,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
         setMealError("Meal saved for reuse. Could not refresh the readings; retry readings or reopen Meal to refresh them.");
       }
     } catch (e) {
-      setMealError(describeError(e, "Could not save meal."));
+      setMealError(saved ? "Meal saved. Logging failed. Use LOG on the saved meal to retry." : describeError(e, "Could not save meal."));
     } finally {
       setBusy(false);
       mealWriteInFlight.current = false;
@@ -1231,17 +1239,8 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
     }
   }
 
-  async function handleLogMeal(mealId: string) {
-    if (busyRef.current || mealWriteInFlight.current) return;
-    mealWriteInFlight.current = true;
-    setBusy(true);
-    setMealError(null);
-    setMealPresetNotice(null);
-    setDuplicateMeal(null);
-    setDuplicateMealNotice(null);
-    setRepeatDuplicates(null);
-    setRepeatDuplicatesNotice(null);
-    try {
+  /** Shared continuation; the caller owns the synchronous write guard. */
+  async function logSavedMealToday(mealId: string) {
       const activeDay = await ensureActiveDay();
       const result = await logMeal(activeDay.id, mealId);
       setMealConfirmation({
@@ -1271,6 +1270,20 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
         setMealReadFailed(true);
         setMealError("Meal logged. Could not refresh the readings; retry readings or reopen Meal to refresh them.");
       }
+  }
+
+  async function handleLogMeal(mealId: string) {
+    if (busyRef.current || mealWriteInFlight.current) return;
+    mealWriteInFlight.current = true;
+    setBusy(true);
+    setMealError(null);
+    setMealPresetNotice(null);
+    setDuplicateMeal(null);
+    setDuplicateMealNotice(null);
+    setRepeatDuplicates(null);
+    setRepeatDuplicatesNotice(null);
+    try {
+      await logSavedMealToday(mealId);
     } catch (e) {
       setMealError(describeError(e, "Could not log meal."));
     } finally {
@@ -2466,10 +2479,11 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
               "new-meal",
               "New meal",
             )}
-            <p className="meta">Save a reusable meal first. Then tap LOG when you eat it.</p>
-            <button className="btn-primary" disabled={busy} onClick={() => void handleCreateSavedMeal()}>
-              SAVE MEAL
+            <p className="meta">Save this meal and record it today, or keep it for later.</p>
+            <button className="btn-primary" disabled={busy} onClick={() => void handleCreateSavedMeal(true)}>
+              SAVE &amp; LOG
             </button>
+            <button className="btn-secondary" disabled={busy} onClick={() => void handleCreateSavedMeal(false)}>SAVE ONLY</button>
           </MealSection>
         </FieldDisclosure>
 
