@@ -8,7 +8,7 @@ worker, health write permission, analytics or third-party exporter.
 
 ## Build and provenance
 
-Java 17, Gradle 8.11.1, Android SDK 35. Run:
+Java 17, Gradle 8.11.1, Android compile SDK 36 (target 35; minimum 28). Run:
 
 ```sh
 gradle -p android/health-bridge testDebugUnitTest lintDebug assembleDebug

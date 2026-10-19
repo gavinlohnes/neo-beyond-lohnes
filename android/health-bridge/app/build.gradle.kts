@@ -1,7 +1,7 @@
 plugins { id("com.android.application"); id("org.jetbrains.kotlin.android") }
 android {
     namespace = "app.beyond.healthbridge"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "app.beyond.healthbridge"
         minSdk = 28
