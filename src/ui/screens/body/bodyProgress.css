@@ -44,3 +44,19 @@
 
 .progress-storage-details { margin-block: 8px 12px; }
 .progress-storage-details summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-2); }
+
+/* REVIEW-001 framing guide: live camera with a faint ghost of the last same-pose photo. */
+.framing-guide { width: min(100% - 16px, 480px); max-height: 94vh; padding: 0 0 12px; overflow: auto; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-1); }
+.framing-guide::backdrop { background: rgba(0, 0, 0, .85); }
+.framing-guide__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 8px; }
+.framing-guide__header .card-title { margin: 0; }
+.framing-guide__header .chip { flex: none; width: auto; min-height: 44px; padding-inline: 14px; }
+.framing-guide__poses { display: flex; gap: 8px; padding: 0 14px 10px; }
+.framing-guide__poses .chip { flex: 1; min-height: 44px; }
+/* aspect-ratio matches FRAME_ASPECT in FramingGuide.tsx: CAPTURE crops to it. */
+.framing-guide__frame { position: relative; aspect-ratio: 3 / 4; background: var(--surface-2); overflow: hidden; }
+.framing-guide__video, .framing-guide__ghost { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.framing-guide__ghost { opacity: .35; pointer-events: none; }
+.framing-guide__status { position: absolute; inset: auto 12px 12px; margin: 0; padding: 8px 10px; background: rgba(0, 0, 0, .75); color: var(--text-1); }
+.framing-guide__note { margin: 10px 14px 0; }
+.framing-guide__actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; padding: 12px 14px 0; }

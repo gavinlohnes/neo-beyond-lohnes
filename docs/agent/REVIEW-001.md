@@ -407,6 +407,55 @@ water to each row; its outputs are otherwise unchanged. Neutral ink throughout: 
 primary button and the PR tag.
 
 
+## Phase 1a delivery — monthly review (2026-10-18)
+
+Builder: Claude Code, during Gavin's overnight sprint permission (2026-10-18: "improve or add
+features to BEYOND"). This builds the approved Phase 1a monthly review; no new authorization was
+needed for the scope itself. Branch `claude/review-001-monthly`, stacked on #244
+(BODY-PROGRESS-001, head `14f3c1c`) because it reads that PR's measurement and photo UI. Lane:
+PROTECTED, like the other Review slices. Merge after #244.
+
+- **Cadence:** the week of the first saved weekly review is week 0; weeks 4, 8, 12… are monthly.
+  Before any review is saved there is no monthly review. Pure and unit-tested in
+  `engine/monthlyReview.ts`, never used by `evaluate`. **Ruled 2026-10-18:** Gavin delegated the
+  reading ("do what makes sense"). "Every 4th Monday, counted from the first completed weekly review"
+  is four weeks after it, not the third, so each monthly review covers exactly its own 28 days.
+- **It replaces that week's review:** the dashboard header reads MONTHLY REVIEW and the TODAY line
+  "Monthly review ready". Every weekly step stays, and saving still uses the existing
+  `WEEKLY_REVIEW_SAVED` event. Ordinary weeks say "Monthly review in N weeks".
+- **Body composition, last 4 weeks** (the 28 lived days ending with the reviewed week): weight
+  from the first to the last weighed day (two needed), each tape-measured site's first and last
+  reading (one reading gives no change), and same-pose photo pairs. A pair is the earliest and
+  latest visible photo in the window, or the latest one before it when the window holds one.
+  Hidden photos are never shown. Differences only, no verdict, no score; missing stays missing.
+- No Engine evaluation, schema, event type, backup, dependency or TODAY-row change. Read only.
+
+Verification: engine unit tests (cadence across DST, window, measurement and photo pairing),
+integration tests against the real commands (cadence, body figures, no writes), and browser
+acceptance at 320/360/412 (TODAY line → monthly review, photo pair rendered, axe, no writes).
+
+## Phase 1a delivery — optional photo framing guide (2026-10-18)
+
+Builder: Claude Code, during Gavin's overnight sprint permission (2026-10-18). This builds the
+approved Phase 1a item "an optional framing guide, which uses the last photo as a ghost outline".
+Branch `claude/review-001-framing-guide`, stacked on #244 (head `14f3c1c`). Lane: PROTECTED.
+
+- **Why an in-app camera:** #244's TAKE PHOTO opens the phone's native camera through a file input,
+  and nothing can be drawn over it. USE FRAMING GUIDE opens a live preview through the browser's own
+  camera API (`getUserMedia`, front camera; no dependency), with the latest visible photo of the
+  chosen pose overlaid at 35% opacity. FRONT / SIDE / BACK switch the ghost; HIDE GUIDE removes it.
+- **Same canonical save path:** CAPTURE draws the frame to a canvas and hands it to the existing
+  `pick()` flow as a CAMERA photo, with the pose preset. The existing preview, date, SAVE PHOTO,
+  re-encoding and metadata stripping then apply unchanged. Nothing is saved inside the guide, and
+  the camera stops when it closes. When the camera is unavailable or denied, it says so and points
+  to TAKE PHOTO / IMPORT PHOTO.
+- Hidden photos are never a ghost. No schema, event, backup, Engine or dependency change.
+
+Verification: browser tests at 320/360/412 with a canvas-backed fake camera (ghost shown,
+44 px targets, axe, capture → existing preview with the pose preset → explicit save as CAMERA,
+tracks stopped, nothing saved before SAVE PHOTO) and the denied-camera path. Screenshots in
+`docs/screenshots/review-001-framing/`. A real phone camera is not exercised by automation.
+
 ## Phase 1a delivery — Body questions in the Review hub (2026-10-18)
 
 Builder: Claude Code, during Gavin's overnight sprint permission (2026-10-18). Builds catalog

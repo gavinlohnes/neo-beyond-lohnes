@@ -70,6 +70,11 @@
 .weekly-dashboard .weekly-review { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
 @media (prefers-reduced-motion: reduce) { .weekly-dashboard * { scroll-behavior: auto; transition: none !important; } }
 
+/* REVIEW-001 monthly review: body composition panel. Neutral ink; reuses the BODY photo grid. */
+.monthly-body__subhead { margin-top: 16px; }
+.monthly-body__pair { margin: 8px 0 16px; }
+.monthly-body__pair > figcaption { margin-top: 4px; }
+
 /* REVIEW-001 Body questions: "fat, not muscle?" as plain facts side by side. */
 .review-side-by-side { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 8px 0 0; }
 .review-side-by-side dt { color: var(--text-2); font-weight: 600; }
