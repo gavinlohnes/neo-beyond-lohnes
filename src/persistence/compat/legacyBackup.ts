@@ -221,6 +221,7 @@ export async function importLegacyBackup(
       db.outcomes,
       db.workoutSessions,
       db.performedSets,
+      db.externalSleepRecords, db.externalSleepRevisions, db.healthImportReceipts,
     ],
     async () => {
       if (clear) {
@@ -232,6 +233,7 @@ export async function importLegacyBackup(
           db.outcomes.clear(),
           db.workoutSessions.clear(),
           db.performedSets.clear(),
+          db.externalSleepRecords.clear(), db.externalSleepRevisions.clear(), db.healthImportReceipts.clear(),
         ]);
       }
       await db.beyondDays.bulkAdd(p.beyondDays as unknown as BeyondDay[]);
@@ -254,3 +256,4 @@ export async function importLegacyBackup(
     performedSets: p.performedSets.length,
   };
 }
+

@@ -1,6 +1,6 @@
 import { db } from "./db";
 // Side-effect import: extends Dexie/Dexie.prototype with export()/import().
-import "dexie-export-import";
+import { importInto } from "dexie-export-import";
 
 /**
  * Backup reminder (BODY & Backup Decisions, 2026-08-19, locked): a weekly
@@ -149,5 +149,17 @@ export async function previewRestore(file: File): Promise<RestorePreview> {
 export async function applyRestore(file: File): Promise<void> {
   // previewRestore refuses a newer backup, so this never clears anything for one.
   const { databaseVersion } = await previewRestore(file);
-  await db.import(file, { clearTablesBeforeImport: true, acceptVersionDiff: databaseVersion < db.verno });
+  // The library clears before opening its own transaction. Preload its public
+  // JsonStream input BEFORE opening ours: file I/O inside an IndexedDB transaction
+  // can make it inactive in Chromium. The library still handles TSON/blob revival;
+  // every clear/insert now runs within one live transaction, with no file reads.
+  const result = JSON.parse(await file.text());
+  const stream = {
+    result, eof: () => true, done: () => true,
+    pullAsync: async () => result, pullSync: () => result,
+  };
+  await db.transaction("rw", db.tables, () => importInto(db, stream, {
+    clearTablesBeforeImport: true, acceptVersionDiff: databaseVersion < db.verno, noTransaction: true,
+  }));
 }
+

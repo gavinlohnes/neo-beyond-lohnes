@@ -21,7 +21,12 @@ import type { ProgressPhoto } from "../domain/body/types";
 import { DEFAULT_SCHEDULE_PATTERN } from "../engine/scheduledContext";
 import { DEFAULT_NUTRITION_TARGETS } from "../engine/nutritionTargets";
 
+import type { ExternalSleepRecord, ExternalSleepRevision, HealthImportReceipt } from "../domain/health/sleepImport";
+
 export class BeyondDB extends Dexie {
+  externalSleepRecords!: Table<ExternalSleepRecord, string>;
+  externalSleepRevisions!: Table<ExternalSleepRevision, string>;
+  healthImportReceipts!: Table<HealthImportReceipt, string>;
   beyondDays!: Table<BeyondDay, string>;
   events!: Table<DomainEvent, string>;
   checkIns!: Table<StateCheckIn, string>;
@@ -323,7 +328,14 @@ export class BeyondDB extends Dexie {
       quitHabits: "id",
       progressPhotos: "id, takenOn, pose",
     });
+    // GARMIN-001: owner-approved additive evidence stores. Canonical tables are untouched.
+    this.version(14).stores({
+      externalSleepRecords: "id, revisionId, startTime",
+      externalSleepRevisions: "id, recordKey, receiptId",
+      healthImportReceipts: "id, importedAt",
+    });
   }
 }
 
 export const db = new BeyondDB();
+

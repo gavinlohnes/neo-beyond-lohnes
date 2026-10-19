@@ -1,0 +1,59 @@
+name: Health Bridge
+on:
+  pull_request:
+    branches: [master]
+    paths: ['android/health-bridge/**', '.github/workflows/health-bridge.yml', 'src/domain/health/sleepImport.ts']
+permissions:
+  contents: read
+concurrency:
+  group: health-bridge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;35.0.0'
+          log-accepted-android-sdk-licenses: 'false'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - run: gradle -p android/health-bridge testDebugUnitTest lintDebug assembleDebug --no-daemon
+      - name: Check packaged permissions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          paths = list(Path('android/health-bridge/app/build/intermediates/merged_manifests/debug').rglob('AndroidManifest.xml'))
+          assert len(paths) == 1, paths
+          root = ET.parse(paths[0]).getroot()
+          key = '{http://schemas.android.com/apk/res/android}name'
+          permissions = {e.attrib[key] for e in root.findall('uses-permission')}
+          health = {p for p in permissions if p.startswith('android.permission.health.')}
+          assert health == {'android.permission.health.READ_SLEEP'}, permissions
+          assert 'android.permission.INTERNET' not in permissions, permissions
+          services = {e.attrib[key] for e in root.findall('application/service')}
+          # Official Health Connect bound IPC service; not a scheduled sync worker.
+          allowed = {'androidx.health.platform.client.impl.sdkservice.HealthDataSdkService'}
+          assert services <= allowed, services
+          print('Packaged manifest: sleep read only; no Internet; SDK IPC service only')
+          PY
+      - name: Record build identity
+        run: |
+          cd android/health-bridge/app/build/outputs/apk/debug
+          printf '%s\n' '${{ github.event.pull_request.head.sha }}' > SOURCE_COMMIT.txt
+          sha256sum app-debug.apk > SHA256SUMS.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs app-debug.apk > SIGNING_CERTIFICATE.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BEYOND-Health-Bridge-test-${{ github.event.pull_request.head.sha }}
+          path: android/health-bridge/app/build/outputs/apk/debug/
+          retention-days: 14

@@ -1,3 +1,44 @@
+# GARMIN-001 — local sleep import, PR #258
+
+Owner authorized the sleep-only implementation in [#257](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/257).
+Builder: Codex. Protected. Starting master: a6d315dd83f7f540782a540d37a32c9a5224a1f2.
+Branch: `codex/garmin-001-sleep-import`. [PR #258](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/258)
+is the active review/delivery record. [Bounded brief](GARMIN-001.md).
+
+Built: foreground READ_SLEEP-only Android helper, local file transfer, COMMAND preview and
+explicit confirmation, BODY source evidence. Additive v14 stores latest pointers, immutable
+source revisions and atomic receipts. Source timestamps retain nanosecond revision order.
+Optional explicit existing-day association; no automatic day assignment, canonical events,
+manual log changes or Engine input. Native backup roundtrip; old native/legacy replacements
+clear external evidence; failed replacements roll back. No other health categories/sync.
+
+Verification: parser/source/limit/stage tests; import duplicate/concurrent/revision/rollback
+and canonical primary/supplemental preservation; old database upgrade; native and legacy
+restore tests; browser preview/cancel/confirm/focus/retained navigation/axe/320–412 px.
+The isolated Android workflow runs unit tests, lint, APK build, packaged permission checks,
+and emits source SHA/checksum/signing identity. Existing required PR Verification is unchanged.
+Check [the PR's live checks and final review](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/258)
+for execution results and exact current head; this checkpoint is committed before final CI.
+
+Independent source review at 0e915fac found no blocking findings after fixing the source
+version precision issue. The final Android compile correction uses AndroidX's heading API;
+final exact-head review and green app/Android checks remain the delivery gate. The local
+managed proxy is unreachable and dependencies are absent: GitHub CI supplies execution
+proof. Never infer a pass from a cancelled or superseded run.
+
+APK and phone steps: [android/health-bridge/README.md](../../android/health-bridge/README.md).
+The phone-test artifact is attached to the passing Health Bridge run for the exact reviewed
+PR head. It is debug-signed; later builds may require uninstalling the helper only before
+installing again. No production signing keys are stored in Git. Real phone, Health Connect
+permission/save behavior, Safari and a screen reader remain unclaimed until tested.
+
+Next: resolve any final CI/review findings, deliver the verified artifact, obtain this PR's
+owner merge approval, then run the brief phone smoke test. Implementation authorization is
+not merge approval. #254 remains separate; TONIGHT #255/#256 are already merged.
+
+---
+Previous checkpoint (retained):
+
 # Current checkpoint
 
 ## Current objective — TONIGHT-001 (2026-10-19, PROTECTED)

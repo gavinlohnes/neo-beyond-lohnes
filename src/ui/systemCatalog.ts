@@ -45,6 +45,7 @@ export const SYSTEM_CAPABILITIES = [
   { label: "CUSTOM PROGRAMS", description: "COMMAND · Your workout templates", aliases: ["program", "template"], group: "Training and planning", destination: { kind: "more", view: "CUSTOM_TEMPLATES" } },
   { label: "MISSIONS & OBLIGATIONS", description: "COMMAND · Commitments and intent", aliases: ["mission", "obligation", "commitment", "goal"], group: "Training and planning", destination: { kind: "more", view: "INTENT" } },
   { label: "WORK SCHEDULE", description: "COMMAND · Your standing schedule", aliases: ["shift", "schedule", "rotation"], group: "Training and planning", destination: { kind: "more", view: "WORK_SCHEDULE" } },
+  { label: "IMPORT HEALTH DATA", description: "COMMAND · Preview Garmin sleep from Health Connect", aliases: ["import", "health connect", "garmin"], group: "Records", destination: { kind: "more", view: "HEALTH_IMPORT" } },
   { label: "BODY", description: "Nutrition, water, sleep and bodyweight", aliases: ["daily record", "health"], group: "Records", destination: { kind: "workspace", tab: "BODY" } },
   { label: "WEEKLY CHECK-IN", description: "COMMAND · Weekly progress, observations and Mirror", aliases: ["week", "mirror", "progress"], group: "Records", destination: { kind: "more", view: "WEEKLY" } },
   { label: "REVIEW", description: "COMMAND · Weekly review, recorded evidence and recommendations", aliases: ["review", "weekly review", "recommendation", "rating", "decision", "evidence"], group: "Records", destination: { kind: "more", view: "REVIEW" } },
@@ -69,3 +70,4 @@ export function findCapabilities(query: string) {
     return words.every((word) => text.includes(word));
   });
 }
+
