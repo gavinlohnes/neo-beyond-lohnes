@@ -8,6 +8,8 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
@@ -36,6 +38,7 @@ class MainActivity : ComponentActivity() {
     private val saveFile = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         val text = prepared
         if (uri == null) { status.text = "Save cancelled. No data was imported into BEYOND." }
+        else if (text == null) { clear("The prepared export was discarded when the helper restarted. Read again and save a new file. The selected file has no sleep data.") }
         else if (text != null) lifecycleScope.launch {
             setWorking(true)
             try {
@@ -54,7 +57,8 @@ class MainActivity : ComponentActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(32, 48, 32, 32) }
+        val padding = (16 * resources.displayMetrics.density).toInt()
+        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(padding, padding, padding, padding) }
         fun paragraph(text: String) = TextView(this).apply { this.text = text; textSize = 18f; setPadding(0, 12, 0, 12); layout.addView(this) }
         paragraph("BEYOND Health Bridge").apply { textSize = 26f; accessibilityHeading = true }
         paragraph("Read Garmin sleep from the last 7 days. Save a file, then review and confirm it in BEYOND. This helper does not sync automatically.")
@@ -76,7 +80,14 @@ class MainActivity : ComponentActivity() {
         layout.addView(read)
         save = Button(this).apply { text = "SAVE SLEEP FILE"; isEnabled = false; setOnClickListener { saveFile.launch("beyond-sleep-${Instant.now().toString().replace(':', '-')}.json") } }
         layout.addView(save)
-        setContentView(ScrollView(this).apply { addView(layout) })
+        val scroll = ScrollView(this).apply { addView(layout) }
+        ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
+        setContentView(scroll)
+        ViewCompat.requestApplyInsets(scroll)
     }
     override fun onResume() {
         super.onResume()

@@ -1,7 +1,8 @@
 # GARMIN-001 — implementation in progress
 
 Owner approved the sleep-only Android helper and explicit PWA import in issue #257.
-Builder Codex; Protected; branch `codex/garmin-001-sleep-import` from master
+Builder Codex; Protected; draft [PR #258](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/258),
+branch `codex/garmin-001-sleep-import` from master
 `a6d315dd83f7f540782a540d37a32c9a5224a1f2`. Brief: [GARMIN-001.md](GARMIN-001.md).
 
 Implemented: isolated READ_SLEEP-only/no-Internet Android helper and artifact CI; strict
@@ -9,8 +10,10 @@ versioned preview/import; additive v14 source records, retained revisions and re
 COMMAND entry, optional explicit lived-day association, BODY source evidence; native/legacy
 backup integration and native replace rollback protection. Manual logs/Engine untouched.
 
-Validation pending: full PR CI, Android build/lint/unit tests, browser acceptance,
-independent exact-head review. Local dependency runs unavailable because the configured
+Validation in progress: full PR CI, Android build/lint/unit tests, browser acceptance.
+Independent source review found a timestamp precision bug; it is fixed with sub-millisecond
+revision tests. The re-review at e28ab706 found no remaining blocking source findings;
+final exact-head review and passing CI are still required. Local dependency runs unavailable because the configured
 proxy is unreachable. Do not install an unverified artifact or claim device validation.
 Next: finish acceptance tests, resolve CI/review findings, provide reviewed APK and phone steps.
 No merge approval has been requested for this new implementation. #254 remains separate.

@@ -12,6 +12,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
   const [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
   const locked = useRef(false), selection = useRef(0), result = useRef<HTMLParagraphElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => () => { selection.current++; }, []);
   async function choose(file?: File) {
     const request = ++selection.current;
@@ -20,7 +21,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
     setBusy(true);
     try {
       const [next, choices] = await Promise.all([previewSleepImport(file), getSleepImportDays()]);
-      if (request === selection.current) { setSnapshot(next); setDays(choices); }
+      if (request === selection.current) { setSnapshot(next); setDays(choices); setMessage(`Preview ready: ${next.records.length} Garmin sleep records. Nothing has been imported.`); }
     } catch (e) { if (request === selection.current) setError(e instanceof Error ? e.message : "This file could not be read. Nothing was imported."); }
     finally { if (request === selection.current) setBusy(false); }
   }
@@ -39,7 +40,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
     <h2>IMPORT HEALTH DATA</h2>
     <p>Choose a sleep export from BEYOND Health Bridge. Review it before saving. This imports Garmin sleep evidence only, on this device.</p>
     <p>No account or upload. Other health data, automatic sync and changes to TODAY guidance are outside this first version.</p>
-    <label>Sleep export file<input type="file" disabled={busy} onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} /></label>
+    <label>Sleep export file<input ref={fileInput} type="file" disabled={busy} onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} /></label>
     {busy && <p role="status">Working…</p>}
     {error && <p role="alert">{error}</p>}
     <p ref={result} tabIndex={-1} role="status">{message}</p>
@@ -64,7 +65,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
       })}
       {!snapshot.records.length && <p>No Garmin sleep records in this export. Nothing will be saved.</p>}
       <button type="button" disabled={busy || !snapshot.records.length} onClick={() => void confirm()}>CONFIRM SLEEP IMPORT</button>
-      <button type="button" disabled={busy} onClick={() => { selection.current++; setSnapshot(null); setAssociations({}); }}>CANCEL PREVIEW</button>
+      <button type="button" disabled={busy} onClick={() => { selection.current++; setSnapshot(null); setAssociations({}); setMessage("Preview cancelled. Nothing was imported."); fileInput.current?.focus(); }}>CANCEL PREVIEW</button>
     </section>}
     <ImportedSleepEvidence active={active} refreshKey={refresh} />
   </section>;

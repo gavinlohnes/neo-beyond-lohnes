@@ -4,6 +4,7 @@ import { db } from "../../src/persistence/db";
 import "dexie-export-import";
 import { applyRestore } from "../../src/persistence/backup";
 import { applyAnyRestore } from "../../src/persistence/restore";
+import { logSleep } from "../../src/application/commands";
 import { importSleepSnapshot, previewSleepImport } from "../../src/application/externalSleepCommands";
 import { getImportedSleep, getSleepRevisionHistory } from "../../src/application/externalSleepQueries";
 import { BeyondDB } from "../../src/persistence/db";
@@ -16,6 +17,8 @@ const manualDay = { id: "existing-day", startedAt: "2026-10-17T20:00:00Z", timez
 describe("evidence-only sleep import", () => {
   it("previews without writes and leaves every existing table unchanged on import", async () => {
     await db.beyondDays.add(manualDay);
+    await logSleep(manualDay.id, 240, "PRIMARY");
+    await logSleep(manualDay.id, 30, "SUPPLEMENTAL");
     const before = await allTables();
     const json = JSON.stringify(syntheticSleep());
     const file = { size: json.length, text: async () => json };
