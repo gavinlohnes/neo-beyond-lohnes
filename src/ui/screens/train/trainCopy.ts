@@ -72,7 +72,7 @@ export const VARIANT_MEANINGS =
 /** Item 2: plain-language explanation for the suggested variant, same spirit as TODAY's capacity sentence. */
 export function describeVariantSuggestion(suggestion: SessionVariantSuggestion): string {
   if (suggestion.noCheckIn) {
-    return "There's no check-in yet today, so nothing here is really \"suggested\" — STANDARD is just the default until you check in.";
+    return "No check-in yet. STANDARD is the default, not a suggestion.";
   }
   if (suggestion.variant === "RESET") {
     return "Capacity is RED, so training itself isn't suggested right now — RESET on TODAY comes first.";

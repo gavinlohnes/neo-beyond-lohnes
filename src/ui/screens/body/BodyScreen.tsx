@@ -1179,7 +1179,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
         setMealReadFailed(false);
       } catch {
         setMealReadFailed(true);
-        setMealError("Meal saved for reuse. Could not refresh the readings; retry readings or reopen Meal to refresh them.");
+        setMealError("Meal saved. Readings didn’t refresh. Retry readings or reopen Meal.");
       }
     } catch (e) {
       setMealError(saved ? "Meal saved. Logging failed. Use LOG on the saved meal to retry." : describeError(e, "Could not save meal."));
@@ -1268,7 +1268,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
         setMealReadFailed(false);
       } catch {
         setMealReadFailed(true);
-        setMealError("Meal logged. Could not refresh the readings; retry readings or reopen Meal to refresh them.");
+        setMealError("Meal logged. Readings didn’t refresh. Retry readings or reopen Meal.");
       }
   }
 

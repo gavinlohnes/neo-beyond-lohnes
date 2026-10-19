@@ -1052,7 +1052,7 @@ export function TrainScreen({
         <div className="card card--caution">
           <p className="eyebrow" style={{ color: "var(--warning)", marginBottom: 4 }}>NO CHECK-IN YET</p>
           <p className="card-body" style={{ marginBottom: 12 }}>
-            There's no check-in yet today, so TRAIN has nothing real to base a suggestion on below.
+            No check-in yet. TRAIN needs one to suggest a session.
           </p>
           <button className="btn-primary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
             QUICK CHECK-IN (ALL GOOD)

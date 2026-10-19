@@ -2311,11 +2311,11 @@ export function TodayScreen({
             />
             {stale && <div className="signal-stale" role="status">
               <Signal data-signal="stale-note">{staleRefresh === "HELD"
-                ? "These are yesterday’s numbers. A workout in progress holds yesterday open until it ends."
+                ? "These are yesterday’s numbers. Your active workout holds yesterday open."
                 : staleRefresh === "FAILED" ? "These are yesterday’s numbers. Today didn’t load. Try again." : "These are yesterday’s numbers."}</Signal>
               <button type="button" className="chip" disabled={busy || staleRefresh === "RUNNING"} onClick={() => void handleStaleRefresh()}>REFRESH</button>
             </div>}
-            {systemStatus?.level === "RED" && recommendation?.kind === "NO_ACTION_REQUIRED" && <p className="day-line-evidence-note">Status reports recorded signals. “No action required” is separate guidance, not an all-clear about your sleep.</p>}
+            {systemStatus?.level === "RED" && recommendation?.kind === "NO_ACTION_REQUIRED" && <p className="day-line-evidence-note">Status reports recorded signals. Guidance doesn’t clear those sleep signals.</p>}
           </div>
         </section>
       )}
