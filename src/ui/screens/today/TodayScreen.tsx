@@ -2234,7 +2234,7 @@ export function TodayScreen({
             })}
             onPin={(phase) => { setModePin(day.id, phase); setModePinState({ dayId: day.id, phase }); }}
             onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
-          />
+          >
           {/* SHIFT CLOCK (Drop 2): before and during a scheduled shift the
               headline is the countdown; the work context it rests on moves to
               a quiet line under it. The "per schedule" one-tap change stays
@@ -2266,6 +2266,7 @@ export function TodayScreen({
           {shiftClock.countdown && (
             <p className="status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>
           )}
+          </ModeHeader>
           {/* SUIT-001 (owner choice 2026-10-18): SYSTEMS replaces the System Status line. The status
               keeps its exact meaning and evidence; it moves to the readout's STATE section, and AMBER
               or RED still lead this line in words (never the strip's tint alone). */}

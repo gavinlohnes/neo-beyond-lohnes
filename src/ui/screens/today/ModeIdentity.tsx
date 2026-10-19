@@ -17,14 +17,39 @@ export function SuitMode({ mode }: { mode: ShiftClockPhase | null }) {
   return null;
 }
 
+/** Stable original buildings; clock changes only the fraction of lit windows. */
+const CITY = (() => {
+  let seed = 7;
+  const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  let x = 0, path = "M0 92";
+  const windows: { x: number; y: number }[] = [];
+  while (x < 400) {
+    const width = 10 + Math.round(random() * 22);
+    const height = 18 + Math.round(Math.pow(random(), 1.6) * 62);
+    const top = 92 - height;
+    const cut = random() > .7 ? Math.min(8, width / 2) : 0;
+    path += ` L${x} ${top + cut} L${x + cut} ${top} L${x + width} ${top}`;
+    for (let y = top + cut + 6; y < 88; y += 6)
+      for (let wx = x + 3; wx < x + width - 3; wx += 5) windows.push({ x: wx, y });
+    x += width;
+    path += ` L${x} ${92 - (8 + Math.round(random() * 10))}`;
+  }
+  for (let i = windows.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [windows[i], windows[j]] = [windows[j]!, windows[i]!];
+  }
+  return { path: path + " L400 92 Z", windows };
+})();
+
 export function ModeCity({ now, workDay, hasAction }: { now: Date; workDay: boolean; hasAction: boolean }) {
   const light = cityLight(now.getHours() + now.getMinutes() / 60, workDay);
-  return <div className="mode-city" aria-hidden="true" style={{ "--sky": light.sky, "--windows": light.windows } as CSSProperties}>
+  return <div className="mode-city" aria-hidden="true" style={{ "--sky": light.sky } as CSSProperties}>
     <div className="mode-city__sky" />
     {hasAction && <div className="mode-city__beam" />}
-    <svg viewBox="0 0 400 90" preserveAspectRatio="none" className="mode-city__buildings">
-      <path d="M0 90V65H18V40H35V64H48V29H58V19H64V29H76V70H91V48H110V22H122V7H125V22H139V58H153V40H176V65H188V30H200V16H205V30H220V55H242V37H257V62H274V20H292V10H296V20H310V67H329V46H347V61H360V34H378V55H400V90" />
-      <g className="mode-city__windows">{Array.from({ length: 34 }, (_, i) => <path key={i} d={`M${22 + i * 11} ${68 - (i % 3) * 9}h3m-3 7h3`} />)}</g>
+    <svg viewBox="0 0 400 92" preserveAspectRatio="none" className="mode-city__buildings">
+      <path d={CITY.path} />
+      <g className="mode-city__windows">{CITY.windows.slice(0, Math.round(CITY.windows.length * light.windows * .35)).map((window, i) =>
+        <rect key={i} x={window.x} y={window.y} width="1.6" height="2" />)}</g>
     </svg>
   </div>;
 }
