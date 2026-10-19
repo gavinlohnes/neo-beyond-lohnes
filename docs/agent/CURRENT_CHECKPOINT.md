@@ -52,21 +52,13 @@ cap, no stray writes). A shared `helpers/mealSheet.ts` opens BODY through the ME
 errors. The capture found focus dropping to the page after a QUICK LOG tap; it's fixed and
 covered by a test.
 
-**HANDOFF (2026-10-19, paused for usage):** PR 2 is pushed on `claude/tonight-001-pr2` but **no PR is
-open yet**. Last full run: 2,693 passed, 1 skip; the only failure was OperatorPrimitives (below).
-Architecture, TypeScript and build pass; acceptance captures are clean.
-- **CI on #255 is red** (`PR Verification`). The cause is a pre-existing order-dependent test bug,
-  reproduced on master `d042a1f` by running `SuitSignals` + `OperatorPrimitives` together.
-  OperatorPrimitives renders three unlabelled `<main>` landmarks, and axe flags them depending
-  on file order. The new test files changed CI's order.
-- **Fixture fix:** three labelled `<section>`s, assertions unchanged. It's committed on the PR 2
-  branch only, and passes alone, paired and filtered. **Gavin hasn't decided** whether it goes into
-  #255 or its own PR.
-- **To resume:** get that decision and apply it. Open PR 2 against #255's branch. Independent
-  exact-head review of each. Optional cleanup: move `LEADING_ROWS` in TodayScreen to module scope.
-
-**Next:** independent exact-head review of #255, then of PR 2. Then green CI and Gavin's merges,
-#255 first. After TONIGHT: Gavin's 5-minute Health Connect check, then a Garmin brief.
+**RESUMED (2026-10-19, Codex):** PR 2 is open as [#256](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/256), targeting #255's branch `ccr-83cf6ed8-ug1ym9`.
+- Copied Claude's existing OperatorPrimitives fixture repair into #255 at `5056e3ecc6c07c6b6702c19aa5f36f8e391dd576`; assertions unchanged. The failed CI log confirms duplicate-main and non-unique-landmark violations as the sole failed test.
+- PR 2 incorporates that base commit; the fixture repair is identical on both branches.
+- Builder evidence remains: 2,693 passed, 1 skipped; architecture/typecheck/build and Chromium acceptance clean. Current-head CI and independent exact-head reviews are pending.
+- This managed environment supplied no checkout. Git clone failed because the configured proxy is unreachable; CLI authentication is also unavailable. Connected GitHub tools work. No local test rerun is claimed.
+- Next: independently review the exact heads of #255 and #256, resolve findings and obtain green required CI. Gavin's merge decision remains separate; #255 first, then retarget/reverify #256 against master. #254 remains separate and untouched.
+- Physical phone, Safari and screen-reader checks remain unclaimed. After TONIGHT: Gavin's 5-minute Health Connect check, then a Garmin brief.
 
 ## Previous objective — POLISH-001 (2026-10-18, PROTECTED, merged)
 
