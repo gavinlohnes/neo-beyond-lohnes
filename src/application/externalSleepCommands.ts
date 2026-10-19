@@ -1,5 +1,5 @@
 import { db } from "../persistence/db";
-import { MAX_SLEEP_FILE_BYTES, parseSleepSnapshot, sleepRecordKey } from "../domain/health/sleepImport";
+import { compareSleepInstants, MAX_SLEEP_FILE_BYTES, parseSleepSnapshot, sleepRecordKey } from "../domain/health/sleepImport";
 import type { ExternalSleepRevision, HealthImportReceipt, SleepSnapshot } from "../domain/health/sleepImport";
 
 export async function previewSleepImport(file: Pick<File, "size" | "text">): Promise<SleepSnapshot> {
@@ -18,7 +18,7 @@ export async function importSleepSnapshot(input: unknown, associations: Readonly
       const prior = existing ? await db.externalSleepRevisions.get(existing.revisionId) : undefined;
       if (existing && !prior) throw new Error("Imported sleep history is incomplete. Restore a verified backup before importing again.");
       if (prior) {
-        const age = Date.parse(evidence.lastModifiedTime) - Date.parse(prior.sourceVersion);
+        const age = compareSleepInstants(evidence.lastModifiedTime, prior.sourceVersion);
         if (age < 0) { result.skipped++; continue; }
         if (age === 0) {
           if (JSON.stringify(prior.evidence) !== JSON.stringify(evidence)) throw new Error("A source record changed without a newer source version. Nothing was imported. Export again from Health Connect.");

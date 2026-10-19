@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { compareSleepInstants } from "../domain/health/sleepImport";
 import type { ExternalSleepRevision } from "../domain/health/sleepImport";
 
 export async function getImportedSleep(): Promise<ExternalSleepRevision[]> {
@@ -11,7 +12,7 @@ export async function getImportedSleep(): Promise<ExternalSleepRevision[]> {
 }
 export async function getSleepRevisionHistory(recordKey: string): Promise<ExternalSleepRevision[]> {
   return (await db.externalSleepRevisions.where("recordKey").equals(recordKey).toArray())
-    .sort((a, b) => Date.parse(b.sourceVersion) - Date.parse(a.sourceVersion));
+    .sort((a, b) => compareSleepInstants(b.sourceVersion, a.sourceVersion));
 }
 /** Only existing days are offered. Importing never creates a lived day. */
 export async function getSleepImportDays() {

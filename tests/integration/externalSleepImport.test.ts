@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
 import "dexie-export-import";
 import { applyRestore } from "../../src/persistence/backup";
+import { applyAnyRestore } from "../../src/persistence/restore";
 import { importSleepSnapshot, previewSleepImport } from "../../src/application/externalSleepCommands";
 import { getImportedSleep, getSleepRevisionHistory } from "../../src/application/externalSleepQueries";
 import { BeyondDB } from "../../src/persistence/db";
@@ -47,6 +48,15 @@ describe("evidence-only sleep import", () => {
   it("rejects missing lived days without creating them", async () => {
     await expect(importSleepSnapshot(syntheticSleep(), { "synthetic-sleep": "missing" })).rejects.toThrow("no longer exists");
     expect(await db.externalSleepRecords.count()).toBe(0); expect(await db.beyondDays.count()).toBe(0);
+  });
+  it("orders sub-millisecond source revisions without false conflicts", async () => {
+    const first = syntheticSleep(); first.records[0]!.lastModifiedTime = "2026-10-18T12:00:00.123456700Z";
+    await importSleepSnapshot(first);
+    const next = syntheticSleep(); next.records[0]!.lastModifiedTime = "2026-10-18T12:00:00.123456789Z"; next.records[0]!.stages = [];
+    expect((await importSleepSnapshot(next)).revised).toBe(1);
+    expect((await importSleepSnapshot(first)).skipped).toBe(1);
+    const row = (await getImportedSleep())[0]!;
+    expect((await getSleepRevisionHistory(row.recordKey)).map((r) => r.sourceVersion)).toEqual([next.records[0]!.lastModifiedTime, first.records[0]!.lastModifiedTime]);
   });
   it("rolls back earlier records if a later source version conflicts", async () => {
     await importSleepSnapshot(syntheticSleep()); const before = await allTables();
@@ -93,6 +103,21 @@ describe("evidence-only sleep import", () => {
     bad.data.data.push({ tableName: "nonexistent", inbound: true, rows: [{ id: "bad" }] });
     bad.data.tables.push({ name: "nonexistent", schema: "id", rowCount: 1 });
     await expect(applyRestore(new File([JSON.stringify(bad)], "invalid.json"))).rejects.toThrow();
+    expect(await allTables()).toEqual(before);
+  });
+  it("clears external evidence when replacing with a legacy backup", async () => {
+    await importSleepSnapshot(syntheticSleep());
+    const legacy = { format: "BEYOND_BACKUP", formatVersion: 1, exportedAt: "2026-10-19T00:00:00Z", appVersion: "synthetic", dataSchemaVersion: 3,
+      payload: { meta: [], beyondDays: [manualDay], events: [], recommendations: [], outcomes: [], workoutSessions: [], performedSets: [] } };
+    await applyAnyRestore(new File([JSON.stringify(legacy)], "synthetic-legacy.json"));
+    expect(await db.externalSleepRecords.count()).toBe(0); expect(await db.externalSleepRevisions.count()).toBe(0); expect(await db.healthImportReceipts.count()).toBe(0);
+    expect(await db.beyondDays.get(manualDay.id)).toEqual(manualDay);
+  });
+  it("rolls legacy replacement back including external evidence if a later insert fails", async () => {
+    await importSleepSnapshot(syntheticSleep()); const before = await allTables();
+    const legacy = { format: "BEYOND_BACKUP", formatVersion: 1, exportedAt: "2026-10-19T00:00:00Z", appVersion: "synthetic", dataSchemaVersion: 3,
+      payload: { meta: [], beyondDays: [manualDay, manualDay], events: [], recommendations: [], outcomes: [], workoutSessions: [], performedSets: [] } };
+    await expect(applyAnyRestore(new File([JSON.stringify(legacy)], "synthetic-bad-legacy.json"))).rejects.toThrow();
     expect(await allTables()).toEqual(before);
   });
 });

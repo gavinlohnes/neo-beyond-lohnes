@@ -3,7 +3,7 @@
 Authorization: Gavin explicitly approved the first-release proposal in issue #257: “I absolutely
 approve. It looks like Health Connect can get us a lot of good data.” Builder: Codex.
 Lane: PROTECTED. Starting master: a6d315dd83f7f540782a540d37a32c9a5224a1f2.
-Branch: codex/garmin-001-sleep-import. Active PR: pending.
+Branch: codex/garmin-001-sleep-import. Active PR: [#258](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/258) (draft).
 
 Scope: a foreground Android helper with READ_SLEEP only and no Internet/write/background/history
 permissions; latest seven days of Garmin-origin SleepSessionRecord; versioned JSON through the

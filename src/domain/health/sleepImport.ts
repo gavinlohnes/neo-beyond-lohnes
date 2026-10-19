@@ -30,6 +30,12 @@ export interface HealthImportReceipt {
 export function sleepRecordKey(record: Pick<ExternalSleep, "dataOriginPackage" | "id">): string {
   return JSON.stringify([record.dataOriginPackage, record.id]);
 }
+/** Validated UTC instants, including Health Connect's nanosecond source versions. */
+export function compareSleepInstants(a: string, b: string): number {
+  const nanos = (s: string) => BigInt(Date.parse(s.slice(0, 19) + "Z")) * 1000000n + BigInt((s.match(/\.(\d+)Z$/)?.[1] ?? "").padEnd(9, "0"));
+  const left = nanos(a), right = nanos(b);
+  return left < right ? -1 : left > right ? 1 : 0;
+}
 function fail(): never { throw new Error("This is not a supported BEYOND sleep export. Nothing was imported."); }
 function object(value: unknown, keys: string[]): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return fail();

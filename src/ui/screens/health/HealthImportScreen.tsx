@@ -39,7 +39,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
     <h2>IMPORT HEALTH DATA</h2>
     <p>Choose a sleep export from BEYOND Health Bridge. Review it before saving. This imports Garmin sleep evidence only, on this device.</p>
     <p>No account or upload. Other health data, automatic sync and changes to TODAY guidance are outside this first version.</p>
-    <label>Sleep export file<input type="file" accept="application/json,text/json,.json" disabled={busy} onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} /></label>
+    <label>Sleep export file<input type="file" disabled={busy} onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} /></label>
     {busy && <p role="status">Working…</p>}
     {error && <p role="alert">{error}</p>}
     <p ref={result} tabIndex={-1} role="status">{message}</p>
