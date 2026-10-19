@@ -63,16 +63,16 @@ Codex owns only the bounded follow-up repairs to Claude's implementation.
   CHANGE reopens both together; LATER updates both immediately. Editing/deferment does not
   rewrite the canonical plan. Added after-shift change/re-answer and day-off change/LATER
   regressions, retaining the existing no-write assertions.
-- The prior #255 head had green required CI (2,685 passed, 1 skipped). New-head CI is pending.
-  #256's required workflow only runs once it targets master; keep the stack until #255 merges.
+- #255 head `20c0427442bc3c00a709a73f6eea2cf4c85f92f3` has green required CI:
+  2,690 passed, 1 skipped; architecture, TypeScript and production build pass. #256 now targets
+  master so required CI can verify the combined tree before integration.
 - Local dependency/browser runs remain unavailable (configured proxy unreachable, no supplied
   checkout). Node syntax checks and isolated checks of the actual scheduling query/shared
   state hook pass with in-memory dependencies; these are not browser/Dexie verification.
-- Both repaired exact heads need independent review from another qualified agent/session:
-  this Codex session implemented the fixes and cannot provide its own PASS. Current findings
-  remain awaiting independent disposition. #254 remains untouched; no merge or deployment.
-- Next: green CI and independent review, Gavin's merge decision on #255 first, then retarget and
-  verify #256 against master. Physical phone, Safari and screen reader are unclaimed.
+- Gavin authorized integration if ready: "Just merge it you think it\'s ready". A separate
+  Reviewer is assigned to the exact repaired heads; the implementing session supplies no
+  self-review PASS. Merge #255 first, then #256, only after independent review and green CI.
+  #254 remains untouched. Physical phone, Safari and screen reader are unclaimed.
   After TONIGHT: Gavin's 5-minute Health Connect check, then a Garmin brief.
 
 ## Previous objective — POLISH-001 (2026-10-18, PROTECTED, merged)
