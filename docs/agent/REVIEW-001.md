@@ -406,3 +406,30 @@ existing form: no schema, event, backup, Engine-evaluation or dependency change.
 water to each row; its outputs are otherwise unchanged. Neutral ink throughout: red stays for the
 primary button and the PR tag.
 
+
+## Phase 1a delivery — monthly review (2026-10-18)
+
+Builder: Claude Code, during Gavin's overnight sprint permission (2026-10-18: "improve or add
+features to BEYOND"). This builds the approved Phase 1a monthly review; no new authorization was
+needed for the scope itself. Branch `claude/review-001-monthly`, stacked on #244
+(BODY-PROGRESS-001, head `14f3c1c`) because it reads that PR's measurement and photo UI. Lane:
+PROTECTED, like the other Review slices. Merge after #244.
+
+- **Cadence:** the week of the first saved weekly review is week 0; weeks 4, 8, 12… are monthly.
+  Before any review is saved there is no monthly review. Pure and unit-tested in
+  `engine/monthlyReview.ts`, never used by `evaluate`. **Ruled 2026-10-18:** Gavin delegated the
+  reading ("do what makes sense"). "Every 4th Monday, counted from the first completed weekly review"
+  is four weeks after it, not the third, so each monthly review covers exactly its own 28 days.
+- **It replaces that week's review:** the dashboard header reads MONTHLY REVIEW and the TODAY line
+  "Monthly review ready". Every weekly step stays, and saving still uses the existing
+  `WEEKLY_REVIEW_SAVED` event. Ordinary weeks say "Monthly review in N weeks".
+- **Body composition, last 4 weeks** (the 28 lived days ending with the reviewed week): weight
+  from the first to the last weighed day (two needed), each tape-measured site's first and last
+  reading (one reading gives no change), and same-pose photo pairs. A pair is the earliest and
+  latest visible photo in the window, or the latest one before it when the window holds one.
+  Hidden photos are never shown. Differences only, no verdict, no score; missing stays missing.
+- No Engine evaluation, schema, event type, backup, dependency or TODAY-row change. Read only.
+
+Verification: engine unit tests (cadence across DST, window, measurement and photo pairing),
+integration tests against the real commands (cadence, body figures, no writes), and browser
+acceptance at 320/360/412 (TODAY line → monthly review, photo pair rendered, axe, no writes).

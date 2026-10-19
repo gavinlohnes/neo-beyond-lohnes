@@ -9,7 +9,7 @@ import { localProgressDate, progressDate } from "./progressCopy";
 const poseLabel = (pose: PhotoPose) => pose.charAt(0) + pose.slice(1).toLowerCase();
 
 /** Object URLs belong only to mounted images, never to records or backup data. */
-function PhotoImage({ image, alt }: { image: Blob; alt: string }) {
+export function PhotoImage({ image, alt }: { image: Blob; alt: string }) {
   const [url, setUrl] = useState("");
   useEffect(() => {
     const next = URL.createObjectURL(image); setUrl(next);
