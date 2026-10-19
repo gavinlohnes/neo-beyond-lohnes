@@ -11,6 +11,7 @@ import { markAppOpened } from "../../src/ui/appSession";
 import { setModePin } from "../../src/application/modePinQueries";
 import { MODE_ORDER } from "../../src/ui/screens/today/shiftClock";
 import { ModeCity } from "../../src/ui/screens/today/ModeIdentity";
+import { openMealInBody } from "./helpers/mealSheet";
 
 let dayId: string;
 beforeEach(async () => {
@@ -64,7 +65,7 @@ it("keeps a failed water sheet open for one safe retry", async () => {
 });
 
 async function fillMeal(screen: Awaited<ReturnType<typeof render>>) {
-  await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+  await openMealInBody(screen);
   await screen.getByRole("textbox", { name: "New meal name" }).fill("Shift dinner");
   for (const [field, value] of [["calories", "600"], ["protein (g)", "45"], ["carbs (g)", "60"], ["fat (g)", "15"]])
     await screen.getByRole("spinbutton", { name: `New meal ${field}` }).fill(value!);

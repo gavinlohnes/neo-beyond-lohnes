@@ -10,6 +10,7 @@ import { getMealEntries, getTotalMealCalories } from "../../src/application/nutr
 import { getHistoryDays } from "../../src/application/historyQueries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
+import { openMealInBody } from "./helpers/mealSheet";
 
 let dayId: string;
 beforeEach(async () => {
@@ -28,12 +29,13 @@ describe("Focused BODY meals", () => {
       await page.viewport(width, 800);
       await createSavedMeal({ name: "Shift dinner", calories: 600, proteinG: 45, carbsG: 60, fatG: 15 });
       const screen = await render(<App />);
-      await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+      await openMealInBody(screen);
       await expect.element(screen.getByRole("heading", { name: "BODY // MEALS" })).toBeVisible();
       await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toBeVisible();
       await expect.element(screen.getByText("HYDRATION", { exact: true })).not.toBeVisible();
       await expect.element(screen.getByRole("button", { name: "EDIT", exact: true, includeHidden: true })).not.toBeVisible();
-      await expect.element(screen.getByRole("textbox", { name: "Search USDA food database", includeHidden: true })).not.toBeVisible();
+      // TONIGHT-001: the online lookup isn't on the meal screen; COMMAND → FOOD LOOKUP opens it.
+      expect(screen.getByRole("textbox", { name: "Search USDA food database", includeHidden: true }).elements()).toHaveLength(0);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
       const log = screen.getByRole("button", { name: "LOG", exact: true }).element();
       expect(log.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
@@ -51,7 +53,7 @@ describe("Focused BODY meals", () => {
 
   it("retains a draft and focus across all trackers, focused meals and explicit TODAY return", async () => {
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished shift meal");
     await screen.getByRole("button", { name: "DAILY RECORD" }).click();
     await expect.element(screen.getByText("HYDRATION", { exact: true })).toBeVisible();
@@ -60,7 +62,7 @@ describe("Focused BODY meals", () => {
     await expect.poll(() => document.activeElement?.id).toBe("meal-surface-heading");
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished shift meal");
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     await expect.element(screen.getByRole("heading", { name: "BODY // MEALS" })).toBeVisible();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished shift meal");
     expect(await db.savedMeals.count()).toBe(0);
@@ -98,11 +100,11 @@ describe("Focused BODY meals", () => {
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
   });
 
-  it("keeps optional online lookup accessible without hiding or clearing manual input", async () => {
-    const screen = await render(<BodyScreen focus="meal" />);
-    await screen.getByRole("textbox", { name: "New meal name" }).fill("Offline draft");
-    await screen.getByRole("button", { name: "SHOW FOOD LOOKUP (ONLINE)" }).click();
+  it("keeps optional online lookup accessible from its own route without hiding or clearing manual input", async () => {
+    // TONIGHT-001: COMMAND → FOOD LOOKUP opens BODY's meals with the lookup open.
+    const screen = await render(<BodyScreen focus="foodLookup" />);
     await expect.element(screen.getByRole("textbox", { name: "Search USDA food database" })).toBeVisible();
+    await screen.getByRole("textbox", { name: "New meal name" }).fill("Offline draft");
     await screen.getByRole("button", { name: "HIDE FOOD LOOKUP (ONLINE)" }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Offline draft");
     expect(await db.savedMeals.count()).toBe(0);
@@ -114,7 +116,6 @@ describe("Focused BODY meals", () => {
     await expect.element(screen.getByText("HYDRATION", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
-    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Reusable lunch");
     await screen.getByRole("button", { name: "SAVE ONLY", exact: true }).click();
     await expect.element(screen.getByText("Meal saved. Use LOG when you eat it.")).toBeVisible();

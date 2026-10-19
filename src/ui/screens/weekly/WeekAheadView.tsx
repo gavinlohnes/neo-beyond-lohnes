@@ -43,7 +43,7 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
           <p className="meta-strong" style={{ margin: 0, color: "var(--text-1)" }}>{dayLabel(day.date)}</p>
           <p className="meta" style={{ margin: "2px 0 0" }}>
             {day.work === "WORK" ? shiftLabel(day.shiftStartHour!) : "OFF"}
-            {day.suggestedTemplate ? ` · Suggested workout ${day.suggestedTemplate}` : " · Rest"}
+            {day.suggestedTemplate ? ` · Suggested workout ${day.suggestedTemplate}${day.afterShift ? " after shift" : ""}` : " · Rest"}
           </p>
         </div>
       ))}

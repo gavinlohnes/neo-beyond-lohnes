@@ -1,33 +1,79 @@
-# Current checkpoint
+NaN## Previous objective — TONIGHT-001 (merged 2026-10-19)
 
-## Current objective — ADVANCE-BEYOND command (2026-10-19, PROTECTED)
+Gavin approved TONIGHT after the product discovery proposal. Brief: [TONIGHT-001.md](TONIGHT-001.md);
+rulings in UX_DECISIONS → TONIGHT-001. Builder: Claude Code. Branch `ccr-83cf6ed8-ug1ym9`; [PR #255](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/255).
+Starting master: `d042a1f7c54a8e50dcf045a76f62a4a819d00504` (the #253 merge; no open PRs).
+POLISH-001 and POLISH-002 are merged (#251, #252, #253). The POLISH-001 handoff below is history.
 
-Gavin approved the bounded workflow implementation ("Let's work and make it happen") after
-reviewing the reuse recommendation. Builder: Codex. Branch `codex/advance-beyond-command`;
-[PR #254](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/254) is the durable objective brief
-and exact-head review/CI handoff. Starting master: `d042a1f7c54a8e50dcf045a76f62a4a819d00504`.
-Live GitHub returned no open PRs at the start; master includes merged #253. The older POLISH-001
-pending-review pointer below is historical, not a new assignment. Claude's separately requested
-product-discovery work is not taken over or authorized for implementation by this objective.
+**PR 1 — no frozen days (this branch).** A due 16:30 rollover no longer waits on a workout with
+nothing recorded for 2 hours. The workout stays ACTIVE and resumable on its own day, and TODAY
+labels it "WORKOUT STILL OPEN · started Thu 06:52". A workout in use, explicit END DAY and the
+new-day-start fallback keep the CONTINUITY-001 guard. No schema, event type/payload, dependency or
+recommendation change. Files: `engine/dayRollover.ts` (pure `workoutHoldsRollover`),
+`application/commands.ts` (rollover reads the workout's sets in its transaction),
+`ui/screens/today/ActiveWorkoutCard.tsx`, the TODAY stale note copy.
 
-Done: one command definition in DEV-FLOW-002; AGENTS and roadmap routing; thin Claude/Codex skills
-and Codex metadata; chat-project instruction with missing-access fallback; `.agents/` governance
-classification and focused regressions. No app, user data, dependency, CI, protection or Factory
-change. Existing approval/review/merge boundaries remain; no chat account settings configured.
+**Verification:** full suite 270 files: 2,683 passed and 1 existing skip. The two failures it found
+were tests whose setup needed a workout to defer the rollover: `modePinExpiry` and
+`ConnectedHealth`'s read-only browsing test. Their workouts sat idle for hours, so I made them
+recently active and kept the assertions unchanged. The browser `ModePinExpiry` test has the
+same premise and failed under full-suite load (a rollover timing race); its workout is now in use
+at 16:30 too. Both pass. Architecture (269 files),
+TypeScript and the production build pass. The three new idle-release integration tests fail on
+the old code and pass with the fix. `check:risk` confirms the change is PROTECTED.
 
-Verification: both skill structural validators passed; 29 risk CLI regressions passed;
-architecture passed (269 files); TypeScript/production PWA build passed. A separate read-only
-skill validation session exercised six ownership/approval/access scenarios without a blocking
-contradiction. Existing bundle-size advisory remains. No local full browser suite or actual
-Claude Code/Codex command-discovery test is claimed. Required CI belongs to the final PR head.
+**Remaining risks:** physical-device, Safari and screen-reader checks are unclaimed. A workout
+that started before a rollover still records its completion on its original day. That's
+intended: day-scoped readers of workout events count that completion on the old day.
 
-Next: independent Protected exact-head review and green required CI on PR #254, then Gavin's
-separate merge decision. Reviewer findings/results belong in the PR; Builder cannot self-review
-or merge. This checkpoint and PR do not authorize unrelated product work or import context seeds.
+**PR 2 — the shift loop on TODAY** (branch `claude/tonight-001-pr2`, stacked on #255; Gavin
+approved starting it on 2026-10-19).
+- **Morning call:** RECOVER asks one question: train / short / sleep first. On a day off the wake
+  card asks start / later / not today. Answers go through the existing PLANNED_WORK_SET, and TRAIN
+  opens with the chosen variant.
+- **QUICK LOG and the MEAL sheet:** recent saved meals and the last water amount, each one tap
+  through the canonical commands with UNDO. MEAL opens a searchable sheet on TODAY.
+- **Night closed, briefing, headline, protein:** the night's totals; the briefing's "Tonight so
+  far"; the honest all-clear headline; ADD WEIGHT instead of NO TARGET.
+- **Week Ahead:** off days plus the morning after a block's last shift.
+- **Declutter:** online food lookup, Minimum Day and Small Steps reached through COMMAND.
+- **Rulings:** all recorded in UX_DECISIONS → TONIGHT-001.
+- **Unchanged:** no schema, event type, Engine rule or dependency change.
 
-## Previous objective — POLISH-001 (historical checkpoint)
+New: `application/tonightQueries.ts` (read-only) and `today/WorkoutCall.tsx`, `QuickLog.tsx`,
+`NightClosed.tsx`. TRAIN gains the `WORKOUT_STANDARD` / `WORKOUT_REDUCED` destinations.
+**Tests changed:** about 20 existing browser files encoded the old TODAY layout. They're updated
+to the approved behavior and keep their guarantees (single guidance, focus return, drafts, row
+cap, no stray writes). A shared `helpers/mealSheet.ts` opens BODY through the MEAL sheet.
+**Acceptance:** [`screenshots/tonight-001`](../screenshots/tonight-001/README.md),
+`scripts/verify-tonight-001.mjs`; 320/360/390/412 px with no overflow, axe violations or page
+errors. The capture found focus dropping to the page after a QUICK LOG tap; it's fixed and
+covered by a test.
 
+**Review fixes (2026-10-19, Codex; owner: "Fix them"):** PR 2 is
+[#256](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/256), stacked on #255.
+Codex owns only the bounded follow-up repairs to Claude's implementation.
+- #255 includes the existing labelled-section fixture repair and now schedules the held day's
+  next check at the workout's idle deadline. The existing transaction revalidates any later
+  activity; a new logged/skipped set postpones release. Added integration and mounted-App
+  regressions. This branch incorporates #255's fix commit `20c0427442bc3c00a709a73f6eea2cf4c85f92f3`.
+- #256 now shares day-keyed reactive question state between TODAY's headline and WorkoutCall.
+  CHANGE reopens both together; LATER updates both immediately. Editing/deferment does not
+  rewrite the canonical plan. Added after-shift change/re-answer and day-off change/LATER
+  regressions, retaining the existing no-write assertions.
+- #255 head `20c0427442bc3c00a709a73f6eea2cf4c85f92f3` has green required CI:
+  2,690 passed, 1 skipped; architecture, TypeScript and production build pass. #256 now targets
+  master so required CI can verify the combined tree before integration.
+- Local dependency/browser runs remain unavailable (configured proxy unreachable, no supplied
+  checkout). Node syntax checks and isolated checks of the actual scheduling query/shared
+  state hook pass with in-memory dependencies; these are not browser/Dexie verification.
+- Gavin authorized integration if ready: "Just merge it you think it\'s ready". A separate
+  Reviewer is assigned to the exact repaired heads; the implementing session supplies no
+  self-review PASS. Merge #255 first, then #256, only after independent review and green CI.
+  #254 remains untouched. Physical phone, Safari and screen reader are unclaimed.
+  After TONIGHT: Gavin's 5-minute Health Connect check, then a Garmin brief.
 
+## Previous objective — POLISH-001 (2026-10-18, PROTECTED, merged)
 
 Gavin approved the attached brief, committed unchanged as [POLISH-001.md](POLISH-001.md).
 Builder: Codex. Branch `codex/polish-001`; [PR #251](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/251).

@@ -17,6 +17,8 @@ import { getDecisionJournalEntries } from "../../src/application/journalQueries"
 import { createDecisionJournalEntry } from "../../src/application/journalCommands";
 import { getMissions } from "../../src/application/intentQueries";
 import { App } from "../../src/app/App";
+import { mealButton, openMealInBody } from "./helpers/mealSheet";
+import { searchCommand } from "./helpers/todayTools";
 
 vi.mock("../../src/application/guidedMoreQueries", async (original) => {
   const actual = await original<typeof import("../../src/application/guidedMoreQueries")>();
@@ -63,8 +65,8 @@ describe("Guided MORE + Low-Energy TODAY", () => {
 
   it("Capture failures keep text; a committed save with failed refresh is never blindly repeated", async () => {
     const day = await startDay();
-    const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "Open TOOLS", exact: true }).click();
+    // TONIGHT-001: Small Steps sits in TOOLS opened from COMMAND → Today tools.
+    const screen = await render(<TodayScreen openToolsOnMount />);
     await screen.getByRole("button", { name: "USE SMALL STEPS" }).click();
     await screen.getByRole("button", { name: "Put a thought down", exact: false }).click();
     const input = screen.getByRole("textbox", { name: "Capture a thought" });
@@ -238,8 +240,8 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     expect(deriveCapacity(issued.checkIn).capacity).toBe(capacity);
     const before = await db.events.toArray();
     const rec = await db.recommendations.toArray();
-    const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "Open TOOLS", exact: true }).click();
+    // TONIGHT-001: Small Steps sits in TOOLS opened from COMMAND → Today tools.
+    const screen = await render(<TodayScreen openToolsOnMount />);
     await expect.element(screen.getByRole("button", { name: "USE SMALL STEPS" })).toBeVisible();
     const system = screen.container.querySelector("[data-system-status]")?.textContent;
     const guidance = screen.container.querySelector(".console-guidance")?.textContent;
@@ -252,7 +254,8 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await screen.getByRole("button", { name: "BACK TO SMALL STEPS" }).click();
     expect(document.activeElement).toBe(screen.getByRole("button", { name: "USE FULL VIEW" }).element());
     await screen.getByRole("button", { name: "Inspect Minimum Day", exact: false }).click();
-    await expect.element(screen.getByRole("button", { name: capacity === "RED" ? "TURN ON" : "ENABLE MINIMUM DAY", exact: true })).toBeVisible();
+    // TONIGHT-001: TODAY no longer lifts a RED day's Minimum Day offer; it's the same TOOLS row at every capacity.
+    await expect.element(screen.getByRole("button", { name: "ENABLE MINIMUM DAY", exact: true })).toBeVisible();
     expect((await getMinimumDayStatus(day.id)).enabled).toBe(false);
     await screen.getByRole("button", { name: "USE FULL VIEW" }).click();
     expect(document.activeElement).toBe(screen.getByRole("button", { name: "USE SMALL STEPS", exact: true }).element());
@@ -270,15 +273,17 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await setWorkContext(day.id, "OFF", "MANUAL");
     await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Open TOOLS", exact: true }).click();
+    // TONIGHT-001: Small Steps is reached through COMMAND → Today tools.
+    await searchCommand(screen, "today tools");
+    await screen.getByRole("button", { name: /^TODAY TOOLS / }).click();
     await screen.getByRole("button", { name: "USE SMALL STEPS", exact: true }).click();
     await screen.getByRole("button", { name: "Put a thought down", exact: false }).click();
     await screen.getByRole("textbox", { name: "Capture a thought" }).fill("Keep my unfinished thought");
-    const meal = screen.getByRole("button", { name: "Log a meal in BODY" }).element() as HTMLButtonElement;
+    const meal = mealButton(screen).element() as HTMLButtonElement;
     meal.focus();
     meal.scrollIntoView({ block: "center" });
     const origin = window.scrollY;
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished meal");
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     await expect.poll(() => document.activeElement).toBe(meal);
@@ -295,8 +300,8 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
     await logWater(day.id, 8);
     const rec = await db.recommendations.toArray();
-    const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "Open TOOLS", exact: true }).click();
+    // TONIGHT-001: Small Steps sits in TOOLS opened from COMMAND → Today tools.
+    const screen = await render(<TodayScreen openToolsOnMount />);
     await screen.getByRole("button", { name: "USE SMALL STEPS" }).click();
     await screen.getByRole("button", { name: "Inspect Minimum Day", exact: false }).click();
     expect((await getMinimumDayStatus(day.id)).enabled).toBe(false);
@@ -322,8 +327,8 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     const day = await startDay();
     const session = await startWorkout(day.id, "A", "STANDARD");
     const before = await db.events.toArray();
-    const screen = await render(<TodayScreen onOpenTrain={vi.fn()} />);
-    await screen.getByRole("button", { name: "Open TOOLS", exact: true }).click();
+    // TONIGHT-001: Small Steps sits in TOOLS opened from COMMAND → Today tools.
+    const screen = await render(<TodayScreen openToolsOnMount onOpenTrain={vi.fn()} />);
     await expect.element(screen.getByRole("button", { name: "USE SMALL STEPS" })).toBeVisible();
     await screen.getByRole("button", { name: "USE SMALL STEPS" }).click();
     await expect.element(screen.getByRole("button", { name: /RESUME WORKOUT/ })).toBeVisible();

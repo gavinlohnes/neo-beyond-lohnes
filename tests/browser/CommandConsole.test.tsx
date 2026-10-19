@@ -12,6 +12,7 @@ import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { MAX_PHASE_ROWS } from "../../src/ui/screens/today/shiftClock";
 import { db } from "../../src/persistence/db";
 import { searchCommand } from "./helpers/todayTools";
+import { mealButton, openMealInBody } from "./helpers/mealSheet";
 
 beforeEach(async () => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -28,7 +29,7 @@ describe("Production Command Console", () => {
       vi.setSystemTime(new Date(2026, 9, day, hour));
       await startDay();
       const screen = await render(<App />);
-      for (const name of ["Log water", "Log a meal in BODY", "Open LOG"]) {
+      for (const name of ["Log water", "Log a meal", "Open LOG"]) {
         await expect.element(screen.getByRole("button", { name })).toBeVisible();
       }
       expect(document.querySelectorAll("[data-shift-clock-row]").length).toBeLessThanOrEqual(MAX_PHASE_ROWS);
@@ -106,7 +107,8 @@ describe("Production Command Console", () => {
     await screen.getByText("How BEYOND decided", { exact: true }).click();
     await screen.getByRole("button", { name: "Open TOOLS" }).click();
     expect(document.querySelectorAll(".console-guidance")).toHaveLength(1);
-    expect(screen.getByRole("heading", { name: "Nothing needs you right now.", exact: true }).elements()).toHaveLength(1);
+    // TONIGHT-001: the day-off workout question sits below, so the all-clear says so.
+    expect(screen.getByRole("heading", { name: "Nothing urgent. One question below.", exact: true }).elements()).toHaveLength(1);
     expect(document.querySelectorAll(".today-field .command-surface").length).toBeLessThanOrEqual(1);
   });
 
@@ -154,6 +156,8 @@ describe("Production Command Console", () => {
     // COMMAND-CENTER-001: QUICK_LOG's +8 oz is gone; TODAY's own quick check-in is the in-flight write.
     const day = await startDay();
     const screen = await render(<App />);
+    // TONIGHT-001: on a day off the check-in opens from the wake card.
+    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
     await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
     const original = db.events.add.bind(db.events);
     let release!: () => void;
@@ -161,14 +165,15 @@ describe("Production Command Console", () => {
     const write = vi.spyOn(db.events, "add").mockImplementation((...args) => Dexie.Promise.resolve(gate).then(() => original(...args)));
     try {
       (screen.getByRole("button", { name: "ALL GOOD" }).element() as HTMLButtonElement).click();
-      (screen.getByRole("button", { name: "Log a meal in BODY" }).element() as HTMLButtonElement).click();
+      (mealButton(screen).element() as HTMLButtonElement).click();
       (screen.getByRole("button", { name: "Log water" }).element() as HTMLButtonElement).click();
       (screen.getByRole("button", { name: "Open LOG" }).element() as HTMLButtonElement).click();
       expect(screen.getByRole("dialog").elements()).toHaveLength(0);
       await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
     } finally { release(); }
     await expect.poll(async () => db.events.where("type").equals("STATE_CHECKED_IN").count()).toBe(1);
-    await expect.poll(() => document.querySelector('[data-shift-clock-row="CHECK_IN"]')?.textContent ?? "").toMatch(/Checked in/);
+    // TONIGHT-001: on a day off the check-in lives in TOOLS; the wake card shows it as evidence.
+    await expect.poll(() => document.querySelector(".workout-call")?.textContent ?? "").toMatch(/Check-in GREEN/);
     expect(await db.checkIns.where("beyondDayId").equals(day.id).count()).toBe(1);
     write.mockRestore();
   });
@@ -176,7 +181,7 @@ describe("Production Command Console", () => {
   it("keeps an unfinished meal through SYSTEM navigation without a discard dialog", async () => {
     await startDay();
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished dinner");
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     const confirm = vi.spyOn(window, "confirm");

@@ -30,7 +30,8 @@ describe("TODAY // ALL CLEAR", () => {
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    // TONIGHT-001: the day is unanswered, so the work question sits below and the all-clear says so.
+    await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
 
     // ConfirmIcon's mount animation targets .icon-confirm-diamond /
     // .icon-confirm-check; ResolveIcon's targets .icon-resolve-core.
@@ -60,13 +61,12 @@ describe("TODAY // Minimum Day access", () => {
   it("is reachable and offers ENABLE MINIMUM DAY", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
-    const screen = await render(<TodayScreen />);
-
     // FIELD ALPHA Gate A correction: Minimum Day now defaults to a
     // compact GLANCE-depth CollapsibleRow when it isn't the operator's
     // primary concern — open it to reach the enable offer. Shift Clock
-    // (Drop 2): that row lives behind TOOLS.
-    await openTodayTools(screen);
+    // (Drop 2): that row lives behind TOOLS; TONIGHT-001: the TOOLS that
+    // COMMAND → Today tools opens.
+    const screen = await render(<TodayScreen openToolsOnMount />);
     await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY" })).toBeVisible();
     await screen.getByRole("button", { name: "Open MINIMUM DAY" }).click();
 

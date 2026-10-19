@@ -65,6 +65,52 @@ boundaries. Historical references to Drops retain their product scope and eviden
 require the legacy lifecycle for new work. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical
 evidence, not standing implementation authority.
 
+## TONIGHT-001 — owner rulings, 2026-10-19
+
+Brief: [`agent/TONIGHT-001.md`](agent/TONIGHT-001.md). Gavin approved the TONIGHT release from the
+product discovery proposal and answered three questions the same day.
+
+- **An idle workout no longer holds the 16:30 roll** (amends DAY-ROLLOVER-001's "an in-progress
+  workout is never interrupted"). Gavin chose this option, "Idle workouts don't block", over
+  "always roll" and "keep the rule, just prompt". At a due rollover, a workout with nothing
+  recorded for 2 hours (`IDLE_WORKOUT_RELEASE_MS`; no set logged or skipped since the later of its
+  start and its last set) no longer blocks the close. The workout stays ACTIVE and resumable on its
+  original day, and every later write still uses its own `beyondDayId`. Nothing is closed,
+  migrated or rewritten for the operator. A workout in use still holds the day. Explicit END DAY
+  and the new-day-start fallback keep the CONTINUITY-001 guard. TODAY labels such a workout
+  "WORKOUT STILL OPEN" with its start day and time.
+- **Week Ahead may place a workout on a post-shift morning** (amends WEEKAHEAD-001 rule A, "a
+  workout on each day off, none on a work day"). The morning after a shift belongs to a work lived
+  day, so rule A could never suggest the post-shift workouts Gavin wants. Gavin chose "off days +
+  last shift": every day off, plus the morning after the last shift of a work block (a work day
+  whose next lived day is off). Other work days rest, and "at most 2 days in a row" stays. Week
+  Ahead labels that suggestion "after shift".
+- **Online food lookup, Minimum Day and Small Steps leave TODAY and the meal screen.** Nothing is
+  deleted. COMMAND → FOOD LOOKUP opens BODY's meals with the lookup open. Minimum Day and Small
+  Steps appear in TOOLS when it's opened from COMMAND → Today tools, and Minimum Day stays visible
+  while it's on. TODAY no longer offers Minimum Day after a constrained check-in (amends the Phase 3
+  "Item 1" offer and Drop 1.6b's one-line offer). With the lookup gone from ADD MEAL, manual macros
+  are its direct path (amends BODY-UX-001's search-first disclosure).
+- **TODAY asks one question per mode** (TONIGHT-001 PR 2, within the approved release):
+  - PREP and ON SHIFT lead with QUICK LOG: up to three saved meals by recent use and water at the
+    last amount, each one tap through the canonical commands with UNDO. Nothing is pre-checked.
+  - MEAL opens a sheet on TODAY: every saved meal with a name filter, plus "New meal or manual
+    entry", which opens BODY.
+  - RECOVER asks the morning call (train / short / sleep first), then shows the night's totals and
+    main sleep. On a day off, the same call (start / later / not today) waits for the first open.
+    An answer is the existing PLANNED_WORK_SET; LATER is placement-only localStorage for that
+    BeyondDay. The SUGGESTED tag is TRAIN's existing session-variant suggestion; the Engine's
+    recommendation stays in its own card, unchanged.
+  - SHIFT DOWN (with MARK WORK ENDED) and the check-in wait in TOOLS behind the call, which offers
+    CHECK IN FIRST. Neither is repeated in Attention while the call's row is scheduled.
+  - The all-clear reads "Nothing urgent. One question below." while the work question or an
+    unanswered workout call is on screen; its meaning is unchanged.
+  - The protein tile reads ADD WEIGHT instead of NO TARGET when no weigh-in exists.
+  - The 03:00 briefing opens with "Tonight so far" in place of the block comparison, which the
+    After Action report keeps.
+- **Garmin:** Gavin wants his watch connected. A Health Connect bridge is a separate, later
+  Protected objective, not part of TONIGHT-001.
+
 ## Product direction and creative freedom — owner ruling, 2026-10-09
 
 [`PRODUCT_DIRECTION`](PRODUCT_DIRECTION.md) records Gavin's current vision and creative approach.
@@ -1072,7 +1118,9 @@ USER_DECIDES remaining authoritative.
   `engine/dayRollover.ts`/`engine/advisory.ts`) and left to the operator.
   An in-progress workout is never interrupted — rollover happens once it
   ends. See `docs/agent/drops/DAY-ROLLOVER-001.md` for the full
-  contract.
+  contract. **Amended by TONIGHT-001 (2026-10-19):** only a workout in
+  use holds the roll; one with nothing recorded for 2 hours no longer
+  does. See the TONIGHT-001 entry at the top of this register.
 
 ## RED / capacity override
 

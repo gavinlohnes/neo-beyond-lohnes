@@ -2,7 +2,7 @@ import { db } from "../persistence/db";
 import { DAY_WRITE_TABLES, writeAtomically } from "./atomicWrite";
 import type { DraftDecision } from "../domain/intelligence/types";
 import { evaluate } from "../engine/evaluate";
-import { computeDueRollover } from "../engine/dayRollover";
+import { computeDueRollover, workoutHoldsRollover } from "../engine/dayRollover";
 import { assertRedOverrideConfirmed } from "../engine/redOverride";
 import { formatLocalDate } from "../engine/scheduledContext";
 import { hasObligationRequiringArbitration } from "../engine/obligationRelevance";
@@ -23,6 +23,7 @@ import type {
   ShiftHandoffReadPayload,
 } from "../domain/common/types";
 import { SHIFT_HANDOFF_MAX_LENGTH } from "../domain/common/types";
+import type { PerformedSet } from "../domain/workout/types";
 import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
 import { getStandingWorkContext, getWorkPeriodEnded, hasActivePlannedWork, hasUnresolvedPostShift } from "./queries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
@@ -202,11 +203,26 @@ export async function endDay(
   reason: "EXPLICIT_END_DAY" | "AUTO_CLOSED_ON_NEW_DAY_START" | "AUTO_CLOSED_DAY_ROLLOVER" = "EXPLICIT_END_DAY",
   occurredAtOverride?: string,
 ): Promise<void> {
+  return closeDay(beyondDayId, reason, occurredAtOverride);
+}
+
+/**
+ * endDay's body. `releasedWorkoutId` is passed only by the 16:30 rollover
+ * (TONIGHT-001) for a workout it has just confirmed idle, inside the same
+ * transaction; that one session may stay ACTIVE on the closing day. Every
+ * other caller, and any other active session, keeps the CONTINUITY-001 guard.
+ */
+async function closeDay(
+  beyondDayId: string,
+  reason: "EXPLICIT_END_DAY" | "AUTO_CLOSED_ON_NEW_DAY_START" | "AUTO_CLOSED_DAY_ROLLOVER",
+  occurredAtOverride?: string,
+  releasedWorkoutId?: string,
+): Promise<void> {
   return writeAtomically(DAY_WRITE_TABLES, async () => {
     const activeWorkout = await db.workoutSessions
       .where("beyondDayId")
       .equals(beyondDayId)
-      .filter((session) => session.status === "ACTIVE")
+      .filter((session) => session.status === "ACTIVE" && session.id !== releasedWorkoutId)
       .first();
     if (activeWorkout) {
       throw new ActiveWorkoutBlocksDayEndError(activeWorkout.id);
@@ -328,6 +344,26 @@ function notifyDayRollover(newDay: BeyondDay): void {
   }
 }
 
+/** The rollover also reads the active workout's sets for its idle check. */
+const ROLLOVER_TABLES = [...DAY_WRITE_TABLES, "performedSets"] as const;
+
+/**
+ * TONIGHT-001: the id of this day's ACTIVE workout when nothing has been
+ * recorded in it for IDLE_WORKOUT_RELEASE_MS before `now`, else undefined
+ * (no workout, or one still in use, which keeps blocking as before).
+ */
+async function idleWorkoutOnDay(beyondDayId: string, now: Date): Promise<string | undefined> {
+  const active = await db.workoutSessions
+    .where("beyondDayId")
+    .equals(beyondDayId)
+    .filter((session) => session.status === "ACTIVE")
+    .first();
+  if (!active) return undefined;
+  const sets = (await db.performedSets.where("sessionId").equals(active.id).toArray()) as unknown as PerformedSet[];
+  const lastActivityAt = sets.reduce((latest, set) => (set.recordedAt > latest ? set.recordedAt : latest), active.startedAt);
+  return workoutHoldsRollover(new Date(lastActivityAt), now) ? undefined : active.id;
+}
+
 export async function performDueDayRollover(now: Date = new Date()): Promise<BeyondDay | undefined> {
   if (performDueDayRolloverInFlight) return performDueDayRolloverInFlight;
   performDueDayRolloverInFlight = (async () => {
@@ -343,8 +379,12 @@ export async function performDueDayRollover(now: Date = new Date()): Promise<Bey
         // COMMAND-ATOMICITY-002: endDay/startDay each open their own
         // transaction over the same DAY_WRITE_TABLES, so here they join
         // this outer one and the close-and-reopen still commits as a unit.
-        const newDay = await writeAtomically(DAY_WRITE_TABLES, async () => {
-          await endDay(activeDay.id, "AUTO_CLOSED_DAY_ROLLOVER", boundaryIso);
+        // TONIGHT-001: an idle workout no longer holds the day; the check
+        // reads its sets inside this transaction, so a set logged in the
+        // same instant can't slip between the check and the close.
+        const newDay = await writeAtomically(ROLLOVER_TABLES, async () => {
+          const releasedWorkoutId = await idleWorkoutOnDay(activeDay.id, now);
+          await closeDay(activeDay.id, "AUTO_CLOSED_DAY_ROLLOVER", boundaryIso, releasedWorkoutId);
           return await startDay(boundaryIso);
         });
         notifyDayRollover(newDay);

@@ -9,6 +9,14 @@ feature history, and product rulings below are preserved.
 
 ## Active priority
 
+**Completed, 2026-10-19 — TONIGHT-001 (#255, #256).** Gavin approved the TONIGHT release from the product
+discovery proposal: no frozen days (PR 1), then the morning call, wake card, quick log, night-closed
+summary, briefing and honest headline on TODAY (PR 2). Builder: Claude Code.
+[Brief](agent/TONIGHT-001.md). Both PRs are merged; final CI: 2,700 passed, 1 skipped.
+Next preparation: [GARMIN-001 discovery](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/257),
+starting with phone/watch compatibility and the Health Connect check. Integration implementation
+has not been approved.
+
 **Owner approval, 2026-10-18 — BODY-PROGRESS-001.** Gavin approved Codex building the BODY
 Progress overview, dated measurement interface and photo timeline/comparison using existing
 storage/commands. [Brief](agent/BODY-PROGRESS-001.md). It stays separate from Claude's SUIT-001

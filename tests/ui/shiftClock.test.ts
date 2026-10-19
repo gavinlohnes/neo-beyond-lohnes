@@ -80,11 +80,11 @@ describe("deriveShiftClockPhase — boundaries", () => {
 
 describe("deriveShiftClockView — rows and TOOLS", () => {
   it("lays out each phase exactly as briefed", () => {
-    expect(deriveShiftClockView(input(at(12, 17))).rows).toEqual(["TONIGHT", "FUEL"]);
-    // COMMAND-CENTER-001: QUICK_LOG gave its slot to the shift handoff note.
-    expect(deriveShiftClockView(input(at(12, 22))).rows).toEqual(["SHIFT_HANDOFF", "FUEL"]);
-    expect(deriveShiftClockView(input(at(13, 7))).rows).toEqual(["SHIFT_DOWN", "CHECK_IN", "WORKOUT", "MAIN_SLEEP"]);
-    expect(deriveShiftClockView(input(at(14, 17), { workContext: "OFF", shiftWindow: null })).rows).toEqual(["CHECK_IN", "WORKOUT"]);
+    // TONIGHT-001: one question per mode; work nights lead with QUICK LOG.
+    expect(deriveShiftClockView(input(at(12, 17))).rows).toEqual(["QUICK_LOG", "TONIGHT"]);
+    expect(deriveShiftClockView(input(at(12, 22))).rows).toEqual(["QUICK_LOG", "SHIFT_HANDOFF"]);
+    expect(deriveShiftClockView(input(at(13, 7))).rows).toEqual(["WORKOUT_CALL", "NIGHT_CLOSED", "MAIN_SLEEP"]);
+    expect(deriveShiftClockView(input(at(14, 17), { workContext: "OFF", shiftWindow: null })).rows).toEqual(["WORKOUT_CALL", "QUICK_LOG"]);
     expect(deriveShiftClockView(input(at(12, 17), { workContext: "UNKNOWN" })).rows).toEqual(["WORK_QUESTION", "CHECK_IN", "WORKOUT"]);
   });
 
@@ -114,7 +114,8 @@ describe("deriveShiftClockView — rows and TOOLS", () => {
     // Fuel lives in TOOLS on a day off; check-in lives there before and during the shift.
     expect(deriveShiftClockView(input(at(14, 17), { workContext: "OFF", shiftWindow: null })).tools).toContain("FUEL");
     expect(deriveShiftClockView(input(at(12, 17))).tools).toContain("CHECK_IN");
-    expect(deriveShiftClockView(input(at(13, 7))).tools).not.toContain("SHIFT_DOWN");
+    // TONIGHT-001: after the shift, SHIFT DOWN and the check-in wait in TOOLS behind the morning call.
+    expect(deriveShiftClockView(input(at(13, 7))).tools).toEqual(expect.arrayContaining(["SHIFT_DOWN", "CHECK_IN"]));
   });
 });
 
@@ -183,12 +184,13 @@ describe("copy", () => {
 });
 
 describe("Soak fix 2026-10-04: a completed SHIFT DOWN steps aside", () => {
-  it("after the shift, a done SHIFT DOWN leaves the rows and is still in TOOLS", () => {
-    const before = deriveShiftClockView(input(at(13, 7)));
-    expect(before.rows[0]).toBe("SHIFT_DOWN");
-    const after = deriveShiftClockView({ ...input(at(13, 7)), shiftDownDone: true });
-    expect(after.rows).not.toContain("SHIFT_DOWN");
-    expect(after.tools).toContain("SHIFT_DOWN");
+  it("after the shift, SHIFT DOWN stays in TOOLS whether or not it's done (TONIGHT-001)", () => {
+    for (const shiftDownDone of [false, true]) {
+      const view = deriveShiftClockView({ ...input(at(13, 7)), shiftDownDone });
+      expect(view.rows[0]).toBe("WORKOUT_CALL");
+      expect(view.rows).not.toContain("SHIFT_DOWN");
+      expect(view.tools).toContain("SHIFT_DOWN");
+    }
   });
 });
 

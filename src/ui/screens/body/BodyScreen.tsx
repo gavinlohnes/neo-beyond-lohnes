@@ -343,16 +343,20 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
     showProgress(evidenceRequest.metric, evidenceRequest.dayId);
   }, [evidenceRequest]);
   const [managingMealId, setManagingMealId] = useState<string | null>(null);
-  const [lookupOpen, setLookupOpen] = useState(false);
+  const [lookupOpen, setLookupOpen] = useState(focus === "foodLookup");
+  // TONIGHT-001 (owner ruling, 2026-10-19): the online lookup isn't on the meal screen;
+  // COMMAND → FOOD LOOKUP opens it here.
+  const [lookupReachable, setLookupReachable] = useState(focus === "foodLookup");
   useEffect(() => {
     if (!focus) return;
     mealPositioned.current = false;
     setHealthDay(null); setSourceSelection(null);
     setWaterFocused(focus === "water");
-    setMealFocused(focus === "meal");
-    setBodyMealsOpen(focus === "meal");
+    setMealFocused(focus === "meal" || focus === "foodLookup");
+    setBodyMealsOpen(focus === "meal" || focus === "foodLookup");
     setProgressOpen(false);
-    if (focus === "meal") setAddMealOpen(true);
+    if (focus === "meal" || focus === "foodLookup") setAddMealOpen(true);
+    if (focus === "foodLookup") { setLookupReachable(true); setLookupOpen(true); }
     if (focus === "sleep") setSleepOpen(true);
     if (focus === "weight") setBodyweightOpen(true);
     if (focus === "urge") setOtherToolsOpen(true);
@@ -650,9 +654,11 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
       if (onReturnToToday && mealPositioned.current) return;
       const el = document.getElementById(SHORTCUT_ANCHOR_IDS[focus]);
       if (el) {
-        const surface = focus === "meal" ? el.closest(".body-meals") ?? el : focus === "water" ? el.closest(".body-water") ?? el : el;
+        const surface = focus === "meal" || focus === "foodLookup" ? el.closest(".body-meals") ?? el : focus === "water" ? el.closest(".body-water") ?? el : el;
         surface.scrollIntoView({ block: "start" });
-        if (focus === "meal" && onReturnToToday) document.getElementById("meal-return")?.focus({ preventScroll: true });
+        // TONIGHT-001: COMMAND → FOOD LOOKUP lands in the search field.
+        if (focus === "foodLookup" && document.getElementById("food-search")) document.getElementById("food-search")!.focus({ preventScroll: true });
+        else if (focus === "meal" && onReturnToToday) document.getElementById("meal-return")?.focus({ preventScroll: true });
         else if (!el.contains(document.activeElement)) {
           el.querySelector<HTMLElement>("button:not(:disabled), input:not(:disabled)")?.focus({ preventScroll: true });
         }
@@ -2410,7 +2416,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
           open={addMealOpen}
           onToggle={setAddMealOpen}
         >
-          <MealSection direct={!mealFocused} summary={`${lookupOpen ? "HIDE" : "SHOW"} FOOD LOOKUP (ONLINE)`}
+          {lookupReachable && <MealSection direct={!mealFocused} summary={`${lookupOpen ? "HIDE" : "SHOW"} FOOD LOOKUP (ONLINE)`}
             open={lookupOpen} onToggle={setLookupOpen}>
           <div className="field">
             <label htmlFor="food-search"><span>Search USDA food database</span></label>
@@ -2460,8 +2466,9 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
               )}
             </div>
           )}
-          </MealSection>
-          <MealSection direct={mealFocused} summary={`${manualMealEntryOpen ? "HIDE" : "SHOW"} MANUAL MACROS`}
+          </MealSection>}
+          {/* TONIGHT-001: with the lookup off this screen, manual macros are the direct path (amends BODY-UX-001). */}
+          <MealSection direct={mealFocused || !lookupReachable} summary={`${manualMealEntryOpen ? "HIDE" : "SHOW"} MANUAL MACROS`}
             open={manualMealEntryOpen} onToggle={setManualMealEntryOpen}>
             <div className="field">
               <label htmlFor="new-meal-name"><span>New meal name</span></label>

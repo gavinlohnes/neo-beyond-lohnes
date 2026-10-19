@@ -102,7 +102,7 @@ it("flags yesterday's numbers when a workout holds the day open, and REFRESH sho
   await expect.element(screen.getByRole("button", { name: /Fuel 30g, .*Yesterday’s numbers\. Open readout$/ })).toBeVisible();
   await expect.poll(() => glitched.has("stale-note")).toBe(true);
   await screen.getByRole("button", { name: "REFRESH", exact: true }).click();
-  await expect.element(screen.getByText("These are yesterday’s numbers. Your active workout holds yesterday open.", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("These are yesterday’s numbers. Today starts when you finish your workout, or 2 hours after your last set.", { exact: true })).toBeVisible();
   // REFRESH is the control being operated: it never glitches.
   expect(screen.getByRole("button", { name: "REFRESH", exact: true }).element().classList.contains("signal-glitch")).toBe(false);
   await completeWorkout(day.id, workout.id, "STANDARD", "COMPLETED", 40);

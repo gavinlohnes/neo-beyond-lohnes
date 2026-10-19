@@ -19,9 +19,10 @@ export function parseShortcut(search: string): ShortcutTarget | null {
 /**
  * Where BODY can be opened to: the home-screen shortcuts, plus "sleep",
  * which only TODAY's Shift Clock uses (its MAIN SLEEP row, Drop 2) — it is
- * deliberately not a ?go= shortcut, so the manifest is unchanged.
+ * deliberately not a ?go= shortcut, so the manifest is unchanged — and
+ * "foodLookup", COMMAND's route to the online lookup (TONIGHT-001).
  */
-export type BodyFocus = Exclude<ShortcutTarget, "workout"> | "sleep";
+export type BodyFocus = Exclude<ShortcutTarget, "workout"> | "sleep" | "foodLookup";
 
 /** Element id BODY gives each destination, so it can be scrolled into view. */
 export const SHORTCUT_ANCHOR_IDS: Record<BodyFocus, string> = {
@@ -30,4 +31,6 @@ export const SHORTCUT_ANCHOR_IDS: Record<BodyFocus, string> = {
   meal: "body-meal-memory",
   urge: "body-quit",
   sleep: "body-sleep",
+  // TONIGHT-001: online food lookup left the meal screen; COMMAND opens it here.
+  foodLookup: "body-meal-memory",
 };

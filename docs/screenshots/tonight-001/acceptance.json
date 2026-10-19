@@ -1,0 +1,186 @@
+[
+  {
+    "width": 320,
+    "name": "prep-quick-log",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 320,
+    "name": "shift-quick-log-undo",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 320,
+    "name": "shift-meal-sheet",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 320,
+    "name": "briefing",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 320,
+    "name": "recover-morning-call",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 320,
+    "name": "recover-answered",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 320,
+    "name": "off-wake-card",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 320,
+    "errors": []
+  },
+  {
+    "width": 360,
+    "name": "prep-quick-log",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 360,
+    "name": "shift-quick-log-undo",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 360,
+    "name": "shift-meal-sheet",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 360,
+    "name": "briefing",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 360,
+    "name": "recover-morning-call",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 360,
+    "name": "recover-answered",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 360,
+    "name": "off-wake-card",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 360,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "name": "prep-quick-log",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 390,
+    "name": "shift-quick-log-undo",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 390,
+    "name": "shift-meal-sheet",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 390,
+    "name": "briefing",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 390,
+    "name": "recover-morning-call",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 390,
+    "name": "recover-answered",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 390,
+    "name": "off-wake-card",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 390,
+    "errors": []
+  },
+  {
+    "width": 412,
+    "name": "prep-quick-log",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 412,
+    "name": "shift-quick-log-undo",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 412,
+    "name": "shift-meal-sheet",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 412,
+    "name": "briefing",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 412,
+    "name": "recover-morning-call",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 412,
+    "name": "recover-answered",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 412,
+    "name": "off-wake-card",
+    "overflow": false,
+    "axe": []
+  },
+  {
+    "width": 412,
+    "errors": []
+  }
+]

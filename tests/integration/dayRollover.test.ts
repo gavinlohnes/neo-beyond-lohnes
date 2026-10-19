@@ -1,13 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
 import {
+  ActiveWorkoutBlocksDayEndError,
   endDay,
   logBodyweight,
   logSleep,
   performDueDayRollover,
   startDay,
 } from "../../src/application/commands";
-import { abandonWorkout, completeWorkout, startWorkout } from "../../src/application/trainCommands";
+import { abandonWorkout, completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
+import { getActiveWorkoutSession } from "../../src/application/trainQueries";
 import { getActiveDay, getMinimumDayStatus, getMostRecentBodyweight } from "../../src/application/queries";
 import { getAdvisoryNotes } from "../../src/application/advisoryQueries";
 import { DAY_ROLLOVER_HOUR, DAY_ROLLOVER_MINUTE } from "../../src/engine/dayRollover";
@@ -118,6 +120,8 @@ describe("performDueDayRollover", () => {
     const day = await startDay();
     await backdateDayBeforeBoundary(day.id);
     const session = await startWorkout(day.id, "A", "STANDARD");
+    // In use: started 20 minutes before the check (TONIGHT-001 only releases idle workouts).
+    await db.workoutSessions.update(session.id, { startedAt: new Date(2026, 8, 21, 16, 10, 0, 0).toISOString() });
 
     const blockedResult = await performDueDayRollover(JUST_AFTER_BOUNDARY);
     expect(blockedResult).toBeUndefined();
@@ -139,6 +143,76 @@ describe("performDueDayRollover", () => {
 
     const result = await performDueDayRollover(JUST_AFTER_BOUNDARY);
     expect(result).toBeDefined();
+  });
+
+  describe("TONIGHT-001: an idle workout no longer freezes the day", () => {
+    async function workoutStartedAt(dayId: string, startedAt: Date) {
+      const session = await startWorkout(dayId, "A", "STANDARD");
+      await db.workoutSessions.update(session.id, { startedAt: startedAt.toISOString() });
+      return session;
+    }
+
+    it("rolls over past a workout untouched for two hours; the workout stays ACTIVE and resumable on its own day", async () => {
+      const day = await startDay();
+      await backdateDayBeforeBoundary(day.id);
+      const session = await workoutStartedAt(day.id, new Date(2026, 8, 21, 6, 52, 0, 0));
+
+      const newDay = await performDueDayRollover(JUST_AFTER_BOUNDARY);
+      expect(newDay).toBeDefined();
+      expect(newDay!.id).not.toBe(day.id);
+
+      const days = await db.beyondDays.toArray();
+      expect(days.filter((d) => d.status === "ACTIVE").map((d) => d.id)).toEqual([newDay!.id]);
+      const closingEvent = (await db.events.where("beyondDayId").equals(day.id).toArray()).find((e) => e.type === "DAY_ENDED");
+      expect((closingEvent!.payload as { reason: string }).reason).toBe("AUTO_CLOSED_DAY_ROLLOVER");
+
+      const kept = await db.workoutSessions.get(session.id);
+      expect(kept).toMatchObject({ status: "ACTIVE", beyondDayId: day.id });
+      expect((await getActiveWorkoutSession())?.id).toBe(session.id);
+    });
+
+    it("judges idleness by the latest logged set, not the start time", async () => {
+      const day = await startDay();
+      await backdateDayBeforeBoundary(day.id);
+      const session = await workoutStartedAt(day.id, new Date(2026, 8, 21, 13, 0, 0, 0));
+      await logSet(day.id, session.id, "machine-chest-press", 1, 120, 10);
+      const [set] = await db.performedSets.where("sessionId").equals(session.id).toArray();
+      await db.performedSets.update(set!.id, { recordedAt: new Date(2026, 8, 21, 15, 45, 0, 0).toISOString() });
+
+      expect(await performDueDayRollover(JUST_AFTER_BOUNDARY)).toBeUndefined();
+      expect((await getActiveDay())?.id).toBe(day.id);
+
+      // Two hours after that set, the same workout no longer holds the day.
+      const later = new Date(2026, 8, 21, 17, 45, 0, 0);
+      const newDay = await performDueDayRollover(later);
+      expect(newDay).toBeDefined();
+      expect(newDay!.startedAt).toBe(BOUNDARY_DAY.toISOString());
+    });
+
+    it("finishing the carried-over workout writes to its original day and leaves the new day alone", async () => {
+      const day = await startDay();
+      await backdateDayBeforeBoundary(day.id);
+      const session = await workoutStartedAt(day.id, new Date(2026, 8, 21, 6, 52, 0, 0));
+      const newDay = await performDueDayRollover(JUST_AFTER_BOUNDARY);
+
+      // A start on the new day resumes the same session instead of opening a second one.
+      expect((await startWorkout(newDay!.id, "B", "STANDARD")).id).toBe(session.id);
+      await completeWorkout(day.id, session.id, "STANDARD", "PARTIAL");
+
+      expect((await db.workoutSessions.toArray()).filter((s) => s.status === "ACTIVE")).toHaveLength(0);
+      const completed = (await db.events.where("type").equals("WORKOUT_COMPLETED").toArray())[0];
+      expect(completed!.beyondDayId).toBe(day.id);
+      expect((await getActiveDay())?.id).toBe(newDay!.id);
+      expect(await performDueDayRollover(JUST_AFTER_BOUNDARY)).toBeUndefined();
+    });
+
+    it("explicit END DAY still refuses while any workout is active, idle or not", async () => {
+      const day = await startDay();
+      await backdateDayBeforeBoundary(day.id);
+      await workoutStartedAt(day.id, new Date(2026, 8, 21, 6, 52, 0, 0));
+      await expect(endDay(day.id, "EXPLICIT_END_DAY")).rejects.toBeInstanceOf(ActiveWorkoutBlocksDayEndError);
+      expect((await getActiveDay())?.id).toBe(day.id);
+    });
   });
 
   it("a day manually ended before the boundary is not double-closed by a later rollover check", async () => {
