@@ -116,8 +116,8 @@ describe("Focused BODY meals", () => {
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
     await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Reusable lunch");
-    await screen.getByRole("button", { name: "SAVE MEAL", exact: true }).click();
-    await expect.element(screen.getByText("Meal saved for reuse. Tap LOG to record it today.")).toBeVisible();
+    await screen.getByRole("button", { name: "SAVE ONLY", exact: true }).click();
+    await expect.element(screen.getByText("Meal saved. Use LOG when you eat it.")).toBeVisible();
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();

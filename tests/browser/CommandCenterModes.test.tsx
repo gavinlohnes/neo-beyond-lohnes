@@ -55,7 +55,7 @@ describe("mode header", () => {
   it("names each scheduled mode, its source and the lived day", async () => {
     await startDayAt(at(12, 16, 30));
     for (const [when, name, phaseRows] of [
-      [at(12, 16, 40), "PREP", ["TONIGHT", "FUEL"]],
+      [at(12, 16, 40), "PREP", ["TONIGHT"]],
       [at(12, 22, 0), "ON SHIFT", null],
       [at(13, 7, 0), "RECOVER", ["SHIFT_DOWN", "CHECK_IN", "WORKOUT", "MAIN_SLEEP"]],
     ] as const) {
@@ -92,7 +92,7 @@ describe("mode header", () => {
     expect(dialog.getByText("SCHEDULE", { exact: true }).elements()).toHaveLength(0);
     await dialog.getByRole("button", { name: /^PREP/ }).click();
     // The work question still leads; no phase is assumed for the day.
-    await expect.poll(rows).toEqual(["WORK_QUESTION", "TONIGHT", "FUEL"]);
+    await expect.poll(rows).toEqual(["WORK_QUESTION", "TONIGHT"]);
     expect((await getActiveDay())!.workContext).toBe("UNKNOWN");
   });
 });
@@ -159,7 +159,7 @@ describe("mode pin — placement only", () => {
     const screen = await render(<TodayScreen />);
     await expect.poll(modeName).toBe("RECOVER");
     await pick(screen, "PREP");
-    await expect.poll(rows).toEqual(["TONIGHT", "FUEL"]);
+    await expect.poll(rows).toEqual(["TONIGHT"]);
     // 07:00 is after the shift began: no "Shift in" countdown for a pinned PREP.
     expect(document.querySelector(".status-strip__headline")?.textContent).not.toMatch(/^Shift in/);
   });

@@ -56,6 +56,7 @@ describe("Sleep draft (real browser)", () => {
     openAt(at(13, 14, 20));
     const onOpenBody = vi.fn();
     const screen = await render(<TodayScreen onOpenBody={onOpenBody} />);
+    await screen.getByRole("button", { name: "LOG MAIN SLEEP", exact: true }).click();
 
     await expect.element(screen.getByRole("heading", { name: "Slept up to 7 hr 15 min?" })).toBeVisible();
     await expect.element(screen.getByText("Shift Down 07:05 → opened 14:20", { exact: true })).toBeVisible();
@@ -81,13 +82,15 @@ describe("Sleep draft (real browser)", () => {
     await workNightThenShiftDown();
     openAt(at(13, 14, 20));
     const first = await render(<TodayScreen />);
+    await first.getByRole("button", { name: "LOG MAIN SLEEP", exact: true }).click();
     await first.getByRole("button", { name: "NOT NOW" }).click();
     const mainSleepRow = () => document.querySelector('[data-shift-clock-row="MAIN_SLEEP"]')?.textContent ?? "";
     await expect.poll(mainSleepRow, { timeout: 10_000 }).toContain("Log it when you wake.");
     expect(mainSleepRow()).not.toContain("Slept up to");
     await cleanup();
 
-    await render(<TodayScreen />);
+    const reopened = await render(<TodayScreen />);
+    await reopened.getByRole("button", { name: "LOG MAIN SLEEP", exact: true }).click();
     await expect.poll(mainSleepRow, { timeout: 10_000 }).toContain("Log it when you wake.");
     expect(mainSleepRow()).not.toContain("Slept up to");
   });
@@ -97,7 +100,8 @@ describe("Sleep draft (real browser)", () => {
     vi.setSystemTime(at(13, 9, 0));
     await logWater(day.id, 16);
     openAt(at(13, 14, 20));
-    await render(<TodayScreen />);
+    const screen = await render(<TodayScreen />);
+    await screen.getByRole("button", { name: "LOG MAIN SLEEP", exact: true }).click();
 
     const mainSleepRow = () => document.querySelector('[data-shift-clock-row="MAIN_SLEEP"]')?.textContent ?? "";
     await expect.poll(mainSleepRow, { timeout: 10_000 }).toContain("Slept up to 5 hr 20 min?");

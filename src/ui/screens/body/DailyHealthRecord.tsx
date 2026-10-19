@@ -49,7 +49,7 @@ export function HealthOverview({ day, calories, protein, water, sleep, weight, m
   return (
     <section className="health-overview" aria-label="Your daily health record">
       <p className="meta health-day">
-        {day ? `Day started ${new Date(day.startedAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : "Your day begins with your first record."}
+        {day ? `Day started ${new Date(day.startedAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}` : "Your day begins with your first record."}
       </p>
       <ReadoutGrid emphasis="primary" className="health-nutrition">
         <HealthMeasure metric="calories" onExplore={onExplore} label="CALORIES" value={<><TickNumber value={calories} /><span> kcal</span></>} detail={calorieCopy} />
@@ -110,7 +110,7 @@ export function DailyHealthRecord({ water, sleep, weight, protein, meals, disabl
           aria-label={`Inspect ${describeRecord(record)}`} onClick={() => onInspect(record)}>
           <span><span className="health-record-name">{describeRecord(record)}</span>
             {record.kind === "MEAL" && <span className="meta">{record.entry.effectiveCalories} kcal · {record.entry.effectiveProteinG} g protein</span>}
-            <span className="meta">{new Date(record.entry.recordedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}{record.entry.correctionCount ? ` · corrected ${record.entry.correctionCount}x` : ""}</span>
+            <span className="meta">{new Date(record.entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}{record.entry.correctionCount ? ` · corrected ${record.entry.correctionCount}x` : ""}</span>
           </span><LineIcon icon={ArrowUpRight} />
         </button>
       ))}

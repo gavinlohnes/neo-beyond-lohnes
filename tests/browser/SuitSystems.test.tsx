@@ -34,7 +34,7 @@ for (const width of [320, 360, 412]) it(`shows the SYSTEMS line and opens the re
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   for (const animation of document.getAnimations()) animation.finish();
   expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
-  await screen.getByRole("button", { name: "RETURN TO TODAY", exact: true }).click();
+  await screen.getByRole("button", { name: "← TODAY", exact: true }).click();
   await expect.poll(() => document.activeElement?.getAttribute("aria-label") ?? "").toMatch(/^Systems: /);
   expect(await db.events.toArray()).toEqual(before);
 });

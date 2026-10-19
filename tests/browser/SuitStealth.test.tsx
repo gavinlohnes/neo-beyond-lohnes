@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cdp, page, userEvent } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
 import axe from "axe-core";
@@ -18,7 +18,13 @@ vi.mock("../../src/application/commands", async (original) => {
   const actual = await original<typeof import("../../src/application/commands")>();
   return { ...actual, logWater: vi.fn(actual.logWater) };
 });
-afterEach(async () => { stopWatching(); await cleanup(); vi.mocked(commands.logWater).mockClear(); await page.viewport(1280, 800); await cdp().send("Emulation.setEmulatedMedia", { features: [] }); });
+// The visible clock must not accidentally match the hidden totals (42 / 45).
+// Keep real timers for long presses and holds; only Date is deterministic.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 9, 14, 20, 10));
+});
+afterEach(async () => { stopWatching(); await cleanup(); vi.useRealTimers(); vi.mocked(commands.logWater).mockClear(); await page.viewport(1280, 800); await cdp().send("Emulation.setEmulatedMedia", { features: [] }); });
 
 const overlay = () => document.querySelector<HTMLElement>(".stealth");
 const findEmblem = () => [...document.querySelectorAll<HTMLElement>("main .operator-emblem")].find((element) => element.getClientRects().length);

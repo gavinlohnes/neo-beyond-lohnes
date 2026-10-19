@@ -14,10 +14,10 @@ import type { Recommendation } from "../../../domain/common/types";
  * understand what it actually means and how to use it.
  */
 export const RESET_EXPLANATION =
-  "RESET is a short, body-first grounding routine — settle your body before untangling whatever story your mind is telling about right now. Choose how much you need: 1 is a light touch, 5 is fully immersive.";
+  "Settle your body first. Choose intensity: 1 is light; 5 is immersive.";
 
 export const SHIFT_DOWN_EXPLANATION =
-  "SHIFT DOWN is a deliberate, timed wind-down — a stretch of minutes to come down out of high alert before doing anything else. Pick how long, then start when you're ready.";
+  "Come down from high alert before anything else. Choose minutes, then start when you’re ready.";
 
 /** Common duration choices, offered as taps; a custom value is still available for anything else. */
 export const SHIFT_DOWN_DURATION_PRESETS = [5, 10, 15, 20, 30] as const;

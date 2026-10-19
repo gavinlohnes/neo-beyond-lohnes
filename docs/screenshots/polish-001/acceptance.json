@@ -1,0 +1,642 @@
+[
+  {
+    "width": 320,
+    "mode": "PREP",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 238.25,
+        "bottom": 278.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 352.25
+      },
+      "card": {
+        "top": 364.25,
+        "bottom": 541.84375
+      },
+      "numbers": {
+        "top": 553.84375,
+        "bottom": 605.84375
+      },
+      "actions": {
+        "top": 625.84375,
+        "bottom": 682.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 320,
+    "mode": "ON SHIFT",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 214.25,
+        "bottom": 254.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 328.25
+      },
+      "card": {
+        "top": 340.25,
+        "bottom": 517.84375
+      },
+      "numbers": {
+        "top": 529.84375,
+        "bottom": 581.84375
+      },
+      "actions": {
+        "top": 601.84375,
+        "bottom": 658.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 320,
+    "mode": "RECOVER",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 178.25,
+        "bottom": 218.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 292.25
+      },
+      "card": {
+        "top": 304.25,
+        "bottom": 481.84375
+      },
+      "numbers": {
+        "top": 493.84375,
+        "bottom": 545.84375
+      },
+      "actions": {
+        "top": 565.84375,
+        "bottom": 622.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 320,
+    "mode": "OFF DUTY",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 214.25,
+        "bottom": 254.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 328.25
+      },
+      "card": {
+        "top": 340.25,
+        "bottom": 517.84375
+      },
+      "numbers": {
+        "top": 529.84375,
+        "bottom": 581.84375
+      },
+      "actions": {
+        "top": 601.84375,
+        "bottom": 658.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 360,
+    "mode": "PREP",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 238.25,
+        "bottom": 278.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 352.25
+      },
+      "card": {
+        "top": 364.25,
+        "bottom": 541.84375
+      },
+      "numbers": {
+        "top": 553.84375,
+        "bottom": 605.84375
+      },
+      "actions": {
+        "top": 625.84375,
+        "bottom": 682.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 360,
+    "mode": "ON SHIFT",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 214.25,
+        "bottom": 254.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 328.25
+      },
+      "card": {
+        "top": 340.25,
+        "bottom": 517.84375
+      },
+      "numbers": {
+        "top": 529.84375,
+        "bottom": 581.84375
+      },
+      "actions": {
+        "top": 601.84375,
+        "bottom": 658.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 360,
+    "mode": "RECOVER",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 178.25,
+        "bottom": 218.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 292.25
+      },
+      "card": {
+        "top": 304.25,
+        "bottom": 481.84375
+      },
+      "numbers": {
+        "top": 493.84375,
+        "bottom": 545.84375
+      },
+      "actions": {
+        "top": 565.84375,
+        "bottom": 622.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 360,
+    "mode": "OFF DUTY",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 214.25,
+        "bottom": 254.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 328.25
+      },
+      "card": {
+        "top": 340.25,
+        "bottom": 517.84375
+      },
+      "numbers": {
+        "top": 529.84375,
+        "bottom": 581.84375
+      },
+      "actions": {
+        "top": 601.84375,
+        "bottom": 658.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 390,
+    "mode": "PREP",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 238.25,
+        "bottom": 278.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 352.25
+      },
+      "card": {
+        "top": 364.25,
+        "bottom": 541.84375
+      },
+      "numbers": {
+        "top": 553.84375,
+        "bottom": 605.84375
+      },
+      "actions": {
+        "top": 625.84375,
+        "bottom": 682.84375
+      },
+      "nav": {
+        "top": 769,
+        "bottom": 844
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 390,
+    "mode": "ON SHIFT",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 214.25,
+        "bottom": 254.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 328.25
+      },
+      "card": {
+        "top": 340.25,
+        "bottom": 517.84375
+      },
+      "numbers": {
+        "top": 529.84375,
+        "bottom": 581.84375
+      },
+      "actions": {
+        "top": 601.84375,
+        "bottom": 658.84375
+      },
+      "nav": {
+        "top": 769,
+        "bottom": 844
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 390,
+    "mode": "RECOVER",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 178.25,
+        "bottom": 218.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 292.25
+      },
+      "card": {
+        "top": 304.25,
+        "bottom": 481.84375
+      },
+      "numbers": {
+        "top": 493.84375,
+        "bottom": 545.84375
+      },
+      "actions": {
+        "top": 565.84375,
+        "bottom": 622.84375
+      },
+      "nav": {
+        "top": 769,
+        "bottom": 844
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 390,
+    "mode": "OFF DUTY",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 214.25,
+        "bottom": 254.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 328.25
+      },
+      "card": {
+        "top": 340.25,
+        "bottom": 517.84375
+      },
+      "numbers": {
+        "top": 529.84375,
+        "bottom": 581.84375
+      },
+      "actions": {
+        "top": 601.84375,
+        "bottom": 658.84375
+      },
+      "nav": {
+        "top": 769,
+        "bottom": 844
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 412,
+    "mode": "PREP",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 238.25,
+        "bottom": 278.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 352.25
+      },
+      "card": {
+        "top": 364.25,
+        "bottom": 541.84375
+      },
+      "numbers": {
+        "top": 553.84375,
+        "bottom": 605.84375
+      },
+      "actions": {
+        "top": 625.84375,
+        "bottom": 682.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 412,
+    "mode": "ON SHIFT",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 214.25,
+        "bottom": 254.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 328.25
+      },
+      "card": {
+        "top": 340.25,
+        "bottom": 517.84375
+      },
+      "numbers": {
+        "top": 529.84375,
+        "bottom": 581.84375
+      },
+      "actions": {
+        "top": 601.84375,
+        "bottom": 658.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 412,
+    "mode": "RECOVER",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 178.25,
+        "bottom": 218.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 292.25
+      },
+      "card": {
+        "top": 304.25,
+        "bottom": 481.84375
+      },
+      "numbers": {
+        "top": 493.84375,
+        "bottom": 545.84375
+      },
+      "actions": {
+        "top": 565.84375,
+        "bottom": 622.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  },
+  {
+    "width": 412,
+    "mode": "OFF DUTY",
+    "bounds": {
+      "name": {
+        "top": 79,
+        "bottom": 127
+      },
+      "source": {
+        "top": 131,
+        "bottom": 149
+      },
+      "city": {
+        "top": 214.25,
+        "bottom": 254.25
+      },
+      "header": {
+        "top": 79,
+        "bottom": 328.25
+      },
+      "card": {
+        "top": 340.25,
+        "bottom": 517.84375
+      },
+      "numbers": {
+        "top": 529.84375,
+        "bottom": 581.84375
+      },
+      "actions": {
+        "top": 601.84375,
+        "bottom": 658.84375
+      },
+      "nav": {
+        "top": 725,
+        "bottom": 800
+      },
+      "overflow": false
+    },
+    "redActions": 1
+  }
+]

@@ -60,15 +60,15 @@ export function describeRecommendationHandoff(target: RecommendationHandoffTarge
 export function describeRecommendationEffect(kind: RecommendationKind): string {
   switch (kind) {
     case "STABILIZE":
-      return "Records your decision — it doesn't start SHIFT DOWN for you, and it won't change what BEYOND recommends next time. Use SHIFT DOWN below when you're ready.";
+      return "Records your decision. It doesn't start SHIFT DOWN or change future advice. Start SHIFT DOWN below.";
     case "POST_SHIFT_TRANSITION":
-      return "Records your decision — it doesn't start SHIFT DOWN for you, and it won't change what BEYOND recommends next time. Use SHIFT DOWN below when you're ready.";
+      return "Records your decision. It doesn't start SHIFT DOWN or change future advice. Start SHIFT DOWN below.";
     case "RECOVER":
-      return "Records your decision — it doesn't start a session for you, and it won't change what BEYOND recommends next time. Start it on TRAIN when you're ready.";
+      return "Records your decision. It doesn't start a session or change future advice. Start it on TRAIN.";
     case "EXECUTE_PLANNED_WORK":
-      return "Records your decision — it doesn't start your workout for you, and it won't change what BEYOND recommends next time. Start it on TRAIN when you're ready.";
+      return "Records your decision. It doesn't start your workout or change future advice. Start it on TRAIN.";
     case "OBLIGATION_DUE":
-      return "Records your decision — it doesn't resolve the obligation for you, and it won't change what BEYOND recommends next time. Review it on the Commitments card when you're ready.";
+      return "Records your decision. It doesn't resolve the commitment or change future advice. Review Commitments below.";
     case "NO_ACTION_REQUIRED":
       return "Just records that you saw this. Nothing to start.";
   }

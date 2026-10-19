@@ -30,7 +30,7 @@ describe("TODAY // ALL CLEAR", () => {
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
 
     // ConfirmIcon's mount animation targets .icon-confirm-diamond /
     // .icon-confirm-check; ResolveIcon's targets .icon-resolve-core.

@@ -34,9 +34,7 @@ const DAYS: { label: string; value: number }[] = [
 ];
 
 function formatHour(hour: number): string {
-  const period = hour < 12 ? "AM" : "PM";
-  const twelve = hour % 12 === 0 ? 12 : hour % 12;
-  return `${twelve}:00 ${period}`;
+  return `${String(hour).padStart(2, "0")}:00`;
 }
 
 function toggled(set: number[], value: number): number[] {

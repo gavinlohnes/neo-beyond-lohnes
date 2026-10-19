@@ -117,7 +117,7 @@ function AdvisoryRowView({
       )}
       {row.lead ? (
         <>
-          <p className="card-body" style={{ margin: 0 }}>{row.lead.message}</p>
+          <p className="card-body" style={{ margin: 0 }}>{row.lead.sourceModule === "shiftProtection" ? "Shift starts soon. Check water and protein before you go." : row.lead.message}</p>
           <QuickActions note={row.lead} busy={busy} onLogWater={onLogWater} onOpenMinimumDay={onOpenMinimumDay} />
         </>
       ) : (
@@ -127,9 +127,11 @@ function AdvisoryRowView({
         {row.items.map((item) => (
           <div key={item.note.id} style={{ padding: "4px 0" }}>
             {!row.lead && <p className="card-body" style={{ margin: 0 }}>{item.name}</p>}
+            {row.lead && <p className="meta">{item.note.message}</p>}
             {item.why && <p className="meta" style={{ margin: 0 }}>{item.why}</p>}
           </div>
         ))}
+        <p className="meta">Your call.</p>
       </FieldDisclosure>
     </div>
   );
@@ -137,11 +139,13 @@ function AdvisoryRowView({
 
 export function AdvisorySection({
   notes,
+  waterControlVisible = false,
   busy = false,
   onLogWater,
   onOpenMinimumDay,
 }: {
   notes: AdvisoryNote[];
+  waterControlVisible?: boolean;
   busy?: boolean;
   onLogWater?: (amountOz: number) => void;
   onOpenMinimumDay?: () => void;
@@ -158,6 +162,7 @@ export function AdvisorySection({
   return (
     <div className="equipment-row">
       <p className="tool-label" style={{ marginBottom: 4 }}>ADVISORY</p>
+      {waterControlVisible && notes.some((note) => unmetItems(note).includes("HYDRATE")) && <p className="meta">Water: use WATER above.</p>}
       {rows.map((row) => (
         <AdvisoryRowView key={row.key} row={row} busy={busy} onLogWater={onLogWater} onOpenMinimumDay={onOpenMinimumDay} />
       ))}

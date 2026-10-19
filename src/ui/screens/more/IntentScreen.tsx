@@ -194,7 +194,7 @@ function HistoryList({ events }: { events: DomainEvent[] }) {
       {events.map((e) => (
         <div key={e.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "4px 0", borderTop: "1px solid var(--border-subtle)" }}>
           <span className="meta">{formatEventType(e.type)}</span>
-          <span className="meta">{new Date(e.occurredAt).toLocaleString()}</span>
+          <span className="meta">{new Date(e.occurredAt).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</span>
         </div>
       ))}
     </>
@@ -787,7 +787,7 @@ function ObligationDetail({
                 {obligation.recurrence && <p className="meta">Repeats: {describeRecurrence(obligation.recurrence.rrule)}</p>}
                 {obligation.resolvedAt && (
                   <p className="meta">
-                    Resolved {new Date(obligation.resolvedAt).toLocaleString()}
+                    Resolved {new Date(obligation.resolvedAt).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                     {obligation.resolutionNote ? ` — ${obligation.resolutionNote}` : ""}
                   </p>
                 )}

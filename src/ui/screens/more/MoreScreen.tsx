@@ -426,8 +426,8 @@ export function MoreScreen({
   return (
     <div className="screen more-operator">
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
-          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>← BACK TO COMMAND</button>
-          {view === "SYSTEMS" && <>{onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>RETURN TO TODAY</button>}<SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} /></>}
+          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { if (onReturnToToday) { onReturnToToday(); return; } setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>{onReturnToToday ? "← TODAY" : "← BACK TO COMMAND"}</button>
+          {view === "SYSTEMS" && <><SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} /></>}
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
           {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>RETURN TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>RETURN TO BODY</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
@@ -453,7 +453,7 @@ export function MoreScreen({
           closing structural rule, so all four destinations open the
           same way. No IA change: still the exact same MENU view, same
           heading text/class. */}
-      <OperatorHeader destination="command" focusable>COMMAND // SYSTEM</OperatorHeader>
+      <OperatorHeader destination="command" focusable>COMMAND</OperatorHeader>
       <div className="command-search" role="search">
         <label htmlFor="command-query" className="visually-hidden">Find a screen or action</label>
         <Icon name="search" size={20} />
@@ -675,7 +675,7 @@ export function MoreScreen({
             </p>
             <p className="meta" style={{ marginTop: 8, marginBottom: 8 }}>
               {preview.format === "LEGACY"
-                ? `From a historical backup — app ${preview.appVersion}, data schema ${preview.dataSchemaVersion}, exported ${new Date(preview.exportedAt).toLocaleString()}.`
+                ? `From a historical backup — app ${preview.appVersion}, data schema ${preview.dataSchemaVersion}, exported ${new Date(preview.exportedAt).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}.`
                 : `From this app's own backup — database "${preview.databaseName}" version ${preview.databaseVersion}.`}
             </p>
             <p className="meta" style={{ marginBottom: 4 }}>

@@ -48,6 +48,7 @@ function isRed(rgb: string): boolean {
 function strayReds(root: Element): string[] {
   const stray: string[] = [];
   for (const el of [root, ...root.querySelectorAll("*")]) {
+    if (el.classList.contains("mode-city__sky")) continue; // Approved real-clock crimson sky exception.
     for (const rgb of paintedColors(el)) {
       if (isRed(rgb) && rgb !== ONE_RED) stray.push(`${el.tagName}.${el.getAttribute("class") ?? ""}: ${rgb}`);
     }
@@ -67,10 +68,12 @@ async function contrastViolations(root: Element) {
 
 describe("HUD-001 — HUD design system", () => {
   it("the ground is black and the primary action is the one red", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, RED);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("button", { name: "START DAY", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "I'll do this", exact: true })).toBeVisible();
     expect(getComputedStyle(document.body).backgroundColor).toBe("rgb(0, 0, 0)");
-    const start = screen.getByRole("button", { name: "START DAY", exact: true }).element();
+    const start = screen.getByRole("button", { name: "I'll do this", exact: true }).element();
     expect(getComputedStyle(start).backgroundColor).toBe(`rgb(${ONE_RED.replace(/,/g, ", ")})`);
   });
 

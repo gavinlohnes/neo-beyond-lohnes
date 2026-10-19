@@ -113,6 +113,7 @@ import {
   getScheduledContext,
   getMinimumDayStatus,
   getEffectiveHydrationTotal,
+  getHydrationEntries,
   getDayProteinTotalG,
   getOpenReset,
   getOpenShiftDown,
@@ -435,6 +436,8 @@ export function TodayScreen({
   const [hydrationOperationOpen, setHydrationOperationOpen] = useState(false);
   const [hydrationManualOpen, setHydrationManualOpen] = useState(false);
   // UNDO-001: a just-logged entry, UNDO for its first UNDO_WINDOW_MS, then CORRECT IN BODY.
+  const [waterControlsVisible, setWaterControlsVisible] = useState(true);
+  const [lastWaterAmount, setLastWaterAmount] = useState<number | null>(null);
   const [hydrationConfirmation, setHydrationConfirmation] = useState<LoggedEntry | null>(null);
   const [proteinConfirmation, setProteinConfirmation] = useState<LoggedEntry | null>(null);
   const hydrationUndoOpen = useUndoOpen(hydrationConfirmation);
@@ -524,6 +527,8 @@ export function TodayScreen({
   // ---- SLEEP DRAFT (2026-10-03) ----
   const [sleepDraftEvidence, setSleepDraftEvidence] = useState<Awaited<ReturnType<typeof getSleepDraftEvidence>> | null>(null);
   // ±15-minute nudges applied to the draft before logging it.
+  const [recoverSleepOpen, setRecoverSleepOpen] = useState(false);
+  const [sleepNotYetDay, setSleepNotYetDay] = useState<string | null>(null);
   const [sleepDraftAdjust, setSleepDraftAdjust] = useState(0);
   // NOT NOW: remembered on this phone only, for that day (per-device convenience).
   const [sleepDraftDismissedDayId, setSleepDraftDismissedDayId] = useState<string | null>(() => readSleepDraftDismissal());
@@ -714,6 +719,7 @@ export function TodayScreen({
     let pendingOutcome: Awaited<ReturnType<typeof getPendingOutcomeRating>> | null = null;
     let minimumDay: MinimumDayStatus | null = null;
     let minimumDayHydrateOz = 0;
+    let lastWater: number | null = null;
     let minimumDayProteinG = 0;
     let openReset: Awaited<ReturnType<typeof getOpenReset>> | undefined;
     let openShiftDown: Awaited<ReturnType<typeof getOpenShiftDown>> | undefined;
@@ -737,6 +743,7 @@ export function TodayScreen({
       pendingOutcome = rec ? (await getPendingOutcomeRating(rec)) ?? null : null;
       minimumDay = await getMinimumDayStatus(activeDay.id);
       minimumDayHydrateOz = await getEffectiveHydrationTotal(activeDay.id);
+      lastWater = (await getHydrationEntries(activeDay.id)).at(-1)?.effectiveAmountOz ?? null;
       // DROP 1.5: the one shared day total (protein-only logs + meals), same as BODY and Nutrition Targets.
       minimumDayProteinG = await getDayProteinTotalG(activeDay.id);
       openReset = await getOpenReset(activeDay.id);
@@ -830,6 +837,7 @@ export function TodayScreen({
       setRecommendationHandoff(null);
     }
     setAdvisoryNotes(advisoryNotes);
+    setLastWaterAmount(lastWater);
     if (isOwner) { setSystemStatus(nextSystemStatus); setLastMainSleepMinutes(nextLastMainSleep?.minutes ?? null); }
     const prompt = getBackupPrompt();
     setBackupDue(prompt?.kind === "BACKUP_DUE" ? { days: prompt.daysSinceLastBackup } : null);
@@ -1371,19 +1379,21 @@ export function TodayScreen({
    * there's no way for this to create a duplicate of a BODY-side log.
    */
   async function handleMinimumDayLogWater(amountOverride?: number) {
-    if (busy || busyRef.current) return;
+    if (busy || busyRef.current) return false;
     const amount = amountOverride ?? Number(mdWaterInput);
-    if (!Number.isFinite(amount) || amount <= 0) return;
+    if (!Number.isFinite(amount) || amount <= 0) return false;
     busyRef.current = true;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
       const eventId = await logWater(activeDay.id, amount);
       setMdWaterInput("");
-      await refresh();
+      setLastWaterAmount(amount);
+      try { await refresh(); } catch { setUndoFailure("Water saved. Readings didn’t refresh. Reopen TODAY."); }
       setHydrationConfirmation({ amount, eventId, dayId: activeDay.id });
       setHydrationOperationOpen(false);
       setHydrationManualOpen(false);
+      return true;
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -1520,7 +1530,7 @@ export function TodayScreen({
   const scheduledRows: ShiftClockRow[] = day ? scheduledClock.rows : [];
   const phaseRows: ShiftClockRow[] = day ? shiftClock.rows : [];
   const leadingPhaseRows = phaseRows.filter((row) => row === "WORK_QUESTION" || row === "SHIFT_DOWN");
-  const remainingPhaseRows = phaseRows.filter((row) => row !== "WORK_QUESTION" && row !== "SHIFT_DOWN");
+  const remainingPhaseRows = phaseRows.filter((row) => row !== "WORK_QUESTION" && row !== "SHIFT_DOWN" && row !== "FUEL");
   const toolsItems: ToolsItem[] = day ? shiftClock.tools : [...TOOLS_ORDER];
   const checkInIsRow = phaseRows.includes("CHECK_IN");
   const checkInIsScheduledRow = scheduledRows.includes("CHECK_IN");
@@ -1535,6 +1545,7 @@ export function TodayScreen({
         })
       : null;
   const shiftDownIsRow = phaseRows.includes("SHIFT_DOWN");
+  const lateRecoverWithoutSleep = !!day && scheduledClock.phase === "EXPECTED_POST_WORK" && shiftClock.phase === "EXPECTED_POST_WORK" && now.getHours() >= 13 && mainSleepRecordedAt.length === 0;
   const attentionPlan = deriveAttentionPlan({
     activeWorkoutId: activeWorkout?.id ?? null,
     activeWorkoutType: activeWorkout?.sessionType ?? null,
@@ -1618,7 +1629,7 @@ export function TodayScreen({
       case "WORK_CONTEXT":
         return !liftedWorkContext && !!day && !!scheduledContext && (!workEndInAttention || workContextOpen);
       case "FUEL":
-        return !!day;
+        return false;
       case "MINIMUM_DAY":
         return !!day && !!minimumDay && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE";
       case "CAPTURE":
@@ -1678,7 +1689,20 @@ export function TodayScreen({
     });
   }
 
+  function renderRecoverSleepPrompt() {
+    if (!day) return null;
+    return <div className="equipment-row" data-recover-sleep-prompt>
+      <h2 className="card-title">Did you sleep?</h2>
+      {sleepNotYetDay === day.id && <p className="meta">Log main sleep when you're ready.</p>}
+      {recoverSleepOpen && sleepDraft ? renderPhaseRow("MAIN_SLEEP", true) : <>
+        <button type="button" className="btn-secondary" disabled={busy} onClick={() => sleepDraft ? setRecoverSleepOpen(true) : onOpenBody?.("sleep")}>LOG MAIN SLEEP</button>
+        {sleepNotYetDay !== day.id && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setSleepNotYetDay(day.id)}>NOT YET</button>}
+      </>}
+    </div>;
+  }
+
   function renderShiftDownTool() {
+    if (lateRecoverWithoutSleep && !activeShiftDownId) return shiftDownIsRow ? renderRecoverSleepPrompt() : null;
     return (
       <>
       {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
@@ -1909,14 +1933,15 @@ export function TodayScreen({
           <AdvisorySection
         notes={shownAdvisoryNotes}
         busy={busy}
-        {...(dominant !== "HYDRATION_ACTIVE" ? { onLogWater: (amountOz: number) => void handleMinimumDayLogWater(amountOz) } : {})}
+        waterControlVisible={waterControlsVisible}
+        {...(!waterControlsVisible && dominant !== "HYDRATION_ACTIVE" ? { onLogWater: (amountOz: number) => void handleMinimumDayLogWater(amountOz) } : {})}
         onOpenMinimumDay={() => setMinimumDayOpen(true)}
       />
         );
     }
   }
 
-  function renderPhaseRow(row: ShiftClockRow) {
+  function renderPhaseRow(row: ShiftClockRow, sleepPromptBody = false) {
     if (!day) return null;
     switch (row) {
       case "WORK_QUESTION":
@@ -1933,6 +1958,7 @@ export function TodayScreen({
       case "SHIFT_HANDOFF":
         return shiftHandoffRefreshKey !== undefined ? <ShiftHandoff refreshKey={shiftHandoffRefreshKey} /> : null;
       case "SHIFT_DOWN":
+        if (lateRecoverWithoutSleep && !activeShiftDownId) return renderRecoverSleepPrompt();
         // An in-progress SHIFT DOWN already owns Operate above.
         if (dominant === "SHIFT_DOWN_ACTIVE" || dominant === "OPERATION_CONFLICT") return null;
         return (
@@ -2030,6 +2056,7 @@ export function TodayScreen({
           </div>
         );
       case "MAIN_SLEEP":
+        if (lateRecoverWithoutSleep && (!shiftDownIsRow || activeShiftDownId !== null) && !sleepPromptBody) return renderRecoverSleepPrompt();
         if (sleepDraft && sleepDraftDismissedDayId !== day.id) {
           const minutes = Math.min(SLEEP_DRAFT_ADJUST_MAX, Math.max(SLEEP_DRAFT_ADJUST_MIN, sleepDraft.value + sleepDraftAdjust));
           return (
@@ -2099,54 +2126,6 @@ export function TodayScreen({
           closing structural rule, so the screen opens on a real
           instrument header instead of one quiet line of text. */}
       <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
-
-      {/* CLEANUP-002: the shell's own lines sit under the header, part of the screen. */}
-      {(banners || !online || (shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF"))) && <div className="today-banners">
-        {/* SUIT-001 offline signal: words always; the glitch plays once when it first appears. */}
-        {!online && <Signal as="p" className="meta signal-line" role="status" data-signal="offline-line">Offline. Logging still saves on this phone.</Signal>}
-        {banners}
-        {shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF") && <ShiftHandoff refreshKey={shiftHandoffRefreshKey} />}
-      </div>}
-      {day && onOpenWeeklyReview && <WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} />}
-
-      {commitmentFeedback && (
-        <p
-          ref={commitmentFeedbackRef}
-          role={commitmentFeedback.kind === "ERROR" ? "alert" : "status"}
-          aria-live={commitmentFeedback.kind === "ERROR" ? "assertive" : "polite"}
-          tabIndex={-1}
-          className="meta fade-in"
-          style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}
-        >
-          {commitmentFeedback.kind === "SUCCESS" && <ConfirmIcon size={20} />}
-          {commitmentFeedback.kind === "ERROR" ? <Signal key={commitmentFeedback.message} data-signal="save-failed">{commitmentFeedback.message}</Signal> : commitmentFeedback.message}
-        </p>
-      )}
-
-      {captureConversionFeedback && (
-        <p
-          role={captureConversionFeedback.kind === "ERROR" ? "alert" : "status"}
-          aria-live={captureConversionFeedback.kind === "ERROR" ? "assertive" : "polite"}
-          className="meta fade-in"
-          style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}
-        >
-          {captureConversionFeedback.kind === "SUCCESS" && <ConfirmIcon size={20} />}
-          {captureConversionFeedback.kind === "ERROR" ? <Signal key={captureConversionFeedback.message} data-signal="save-failed">{captureConversionFeedback.message}</Signal> : captureConversionFeedback.message}
-        </p>
-      )}
-
-      {hydrationConfirmation !== null &&
-        renderLoggedBanner(`${hydrationConfirmation.amount} oz recorded.`, hydrationUndoOpen, "WATER", "water")}
-
-      {sleepConfirmation !== null &&
-        renderLoggedBanner(`Main sleep logged · ${formatDuration(sleepConfirmation.amount)}`, sleepUndoOpen, "SLEEP", "sleep")}
-
-      {proteinConfirmation !== null &&
-        renderLoggedBanner(`${proteinConfirmation.amount} g protein recorded.`, proteinUndoOpen, "PROTEIN")}
-
-      {undoFailure && (
-        <Signal key={undoFailure} as="p" className="meta meta--error" role="alert" style={{ marginTop: 8 }} data-signal="save-failed">{undoFailure}</Signal>
-      )}
 
       {/* FIELD-ARCH-001: before a day exists, START DAY is the one
           available action — nothing else on this screen can compete for
@@ -2234,7 +2213,7 @@ export function TodayScreen({
             })}
             onPin={(phase) => { setModePin(day.id, phase); setModePinState({ dayId: day.id, phase }); }}
             onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
-          />
+          >
           {/* SHIFT CLOCK (Drop 2): before and during a scheduled shift the
               headline is the countdown; the work context it rests on moves to
               a quiet line under it. The "per schedule" one-tap change stays
@@ -2249,7 +2228,7 @@ export function TodayScreen({
                     currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
                     workContextPerSchedule,
                     scheduledClock.phase,
-                  )}
+                  ).replace(" — shift ended, not yet shifted down", " · shift down pending").replace(" — after your shift", " · after shift")}
             </p>
             {workContextPerSchedule && day.workContext !== "UNKNOWN" && (
               <button
@@ -2257,15 +2236,17 @@ export function TodayScreen({
                 className="chip"
                 style={{ flex: "none", padding: "8px 14px" }}
                 disabled={busy}
+                aria-label={describeStandingChange(day.workContext)}
                 onClick={() => void handleChangeStandingWorkContext()}
               >
-                {describeStandingChange(day.workContext)}
+                {day.workContext === "WORK" ? "OFF TODAY" : "WORK TODAY"}
               </button>
             )}
           </div>
           {shiftClock.countdown && (
             <p className="status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>
           )}
+          </ModeHeader>
           {/* SUIT-001 (owner choice 2026-10-18): SYSTEMS replaces the System Status line. The status
               keeps its exact meaning and evidence; it moves to the readout's STATE section, and AMBER
               or RED still lead this line in words (never the strip's tint alone). */}
@@ -2287,19 +2268,77 @@ export function TodayScreen({
             />
             {stale && <div className="signal-stale" role="status">
               <Signal data-signal="stale-note">{staleRefresh === "HELD"
-                ? "These are yesterday’s numbers. A workout in progress holds yesterday open until it ends."
+                ? "These are yesterday’s numbers. Your active workout holds yesterday open."
                 : staleRefresh === "FAILED" ? "These are yesterday’s numbers. Today didn’t load. Try again." : "These are yesterday’s numbers."}</Signal>
               <button type="button" className="chip" disabled={busy || staleRefresh === "RUNNING"} onClick={() => void handleStaleRefresh()}>REFRESH</button>
             </div>}
-            {systemStatus?.level === "RED" && recommendation?.kind === "NO_ACTION_REQUIRED" && <p className="day-line-evidence-note">Status reports recorded signals. “No action required” is separate guidance, not an all-clear about your sleep.</p>}
+            {systemStatus?.level === "RED" && recommendation?.kind === "NO_ACTION_REQUIRED" && <p className="day-line-evidence-note">Status reports recorded signals. Guidance doesn’t clear those sleep signals.</p>}
           </div>
         </section>
       )}
 
+      {/* One canonical Engine result. Foreground operations above retain priority;
+          support guidance stays a disclosure rather than a competing dominant action. */}
+      {day && !recommendation && <section className="console-guidance next-action-card" aria-label="Current recommendation"><h2 className="command-title">Nothing needs you right now.</h2><p className="meta">No guidance recorded yet.</p></section>}
+      {day && recommendation && (
+        <section className="console-guidance" aria-label="Current recommendation">
+          <p className="tool-label console-guidance__label">GUIDANCE</p>
+          <RecommendationCard
+            nextAction
+            day={day}
+            recommendation={recommendation}
+            headlineCommitment={headlineCommitment}
+            isDominant={dominant === "RECOMMENDATION"}
+            isAttention={recommendationInAttention}
+            decision={decision}
+            checkIn={checkIn}
+            recommendationOpen={recommendationOpen}
+            setRecommendationOpen={setRecommendationOpen}
+            recommendationHandoff={recommendationHandoff}
+            activeShiftDownId={activeShiftDownId}
+            priorOutcomeMemory={priorOutcomeMemory}
+            materiallyRepeated={materiallyRepeated}
+            busy={busy}
+            onOpenTrain={onOpenTrain}
+            onRecord={() => void handleRecord()}
+            onDecline={handleDecline}
+            onHandoff={handleRecommendationHandoff}
+            confirmPanel={<ConfirmPanel />}
+          />
+        </section>
+      )}
+
+      {day && onOpenWeeklyReview && <div className="today-review-line"><WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} /></div>}
+      {day && <section className="today-numbers" aria-label="Today's numbers">{renderFuel()}</section>}
+      <section className="console-operations" aria-labelledby="console-operations-heading">
+        <h2 id="console-operations-heading" className="section-label">Immediate operations</h2>
+        <ConsoleControls
+          onWaterVisibilityChange={setWaterControlsVisible}
+          onLogWater={handleMinimumDayLogWater}
+          lastWaterAmount={lastWaterAmount}
+          busy={busy}
+          isInFlight={() => busyRef.current}
+          onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
+          onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
+          onOpenLog={{
+            ...(onOpenBody ? {
+              water: () => onOpenBody("water"),
+              meal: () => onOpenBody("meal"),
+              sleep: () => onOpenBody("sleep"),
+              weight: () => onOpenBody("weight"),
+              // An urge is logged against a quit habit; without one there's nothing to log yet.
+              ...(quitHabitSetUp ? { urge: () => onOpenBody("urge") } : {}),
+            } : {}),
+            note: openFastCapture,
+            ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
+          }}
+        />
+      </section>
+
       {/* OPERATE — exactly one dominant operating surface. Multiple active
           operation state is named explicitly rather than
           silently allowing JSX order to choose a winner. */}
-      {day && dominant !== "NONE" && !(dominant === "RECOMMENDATION" && checkInIsRow) && (
+      {day && dominant !== "NONE" && dominant !== "WORKOUT_ACTIVE" && !(dominant === "RECOMMENDATION" && checkInIsRow) && (
         <h2 className="section-label section-label--field">Operate</h2>
       )}
       {day && dominant === "OPERATION_CONFLICT" && (
@@ -2355,7 +2394,7 @@ export function TodayScreen({
       {day && dominant === "SHIFT_DOWN_ACTIVE" && (
         <ShiftDownCard
           prominent={shiftDownIsPrimary}
-          isDominant={true}
+          isDominant={false}
           activeShiftDownId={activeShiftDownId}
           shiftDownDuration={shiftDownDuration}
           setShiftDownDuration={setShiftDownDuration}
@@ -2374,7 +2413,7 @@ export function TodayScreen({
       {day && dominant === "RESET_ACTIVE" && (
         <ResetCard
           prominent={resetIsPrimary}
-          isDominant={true}
+          isDominant={false}
           activeResetId={activeResetId}
           resetIntensity={resetIntensity}
           setResetIntensity={setResetIntensity}
@@ -2388,7 +2427,7 @@ export function TodayScreen({
           onCancelReset={() => void handleCancelReset()}
         />
       )}
-      {day && dominant === "WORKOUT_ACTIVE" && <ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={true} onOpenTrain={onOpenTrain} />}
+      {day && dominant === "WORKOUT_ACTIVE" && <ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} onOpenTrain={onOpenTrain} />}
       {day && dominant === "HYDRATION_ACTIVE" && (
         <div data-small-hydration>
         <HydrationOperationCard
@@ -2407,6 +2446,53 @@ export function TodayScreen({
         />
         </div>
       )}
+      {/* CLEANUP-002: the shell's own lines sit under the header, part of the screen. */}
+      {(banners || !online || (shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF"))) && <div className="today-banners">
+        {/* SUIT-001 offline signal: words always; the glitch plays once when it first appears. */}
+        {!online && <Signal as="p" className="meta signal-line" role="status" data-signal="offline-line">Offline. Logging still saves on this phone.</Signal>}
+        {banners}
+        {shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF") && <ShiftHandoff refreshKey={shiftHandoffRefreshKey} />}
+      </div>}
+
+      {commitmentFeedback && (
+        <p
+          ref={commitmentFeedbackRef}
+          role={commitmentFeedback.kind === "ERROR" ? "alert" : "status"}
+          aria-live={commitmentFeedback.kind === "ERROR" ? "assertive" : "polite"}
+          tabIndex={-1}
+          className="meta fade-in"
+          style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}
+        >
+          {commitmentFeedback.kind === "SUCCESS" && <ConfirmIcon size={20} />}
+          {commitmentFeedback.kind === "ERROR" ? <Signal key={commitmentFeedback.message} data-signal="save-failed">{commitmentFeedback.message}</Signal> : commitmentFeedback.message}
+        </p>
+      )}
+
+      {captureConversionFeedback && (
+        <p
+          role={captureConversionFeedback.kind === "ERROR" ? "alert" : "status"}
+          aria-live={captureConversionFeedback.kind === "ERROR" ? "assertive" : "polite"}
+          className="meta fade-in"
+          style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}
+        >
+          {captureConversionFeedback.kind === "SUCCESS" && <ConfirmIcon size={20} />}
+          {captureConversionFeedback.kind === "ERROR" ? <Signal key={captureConversionFeedback.message} data-signal="save-failed">{captureConversionFeedback.message}</Signal> : captureConversionFeedback.message}
+        </p>
+      )}
+
+      {hydrationConfirmation !== null &&
+        renderLoggedBanner(`${hydrationConfirmation.amount} oz recorded.`, hydrationUndoOpen, "WATER", "water")}
+
+      {sleepConfirmation !== null &&
+        renderLoggedBanner(`Main sleep logged · ${formatDuration(sleepConfirmation.amount)}`, sleepUndoOpen, "SLEEP", "sleep")}
+
+      {proteinConfirmation !== null &&
+        renderLoggedBanner(`${proteinConfirmation.amount} g protein recorded.`, proteinUndoOpen, "PROTEIN")}
+
+      {undoFailure && (
+        <Signal key={undoFailure} as="p" className="meta meta--error" role="alert" style={{ marginTop: 8 }} data-signal="save-failed">{undoFailure}</Signal>
+      )}
+
       {/* Time-sensitive work controls keep their existing precedence. */}
       {day && leadingPhaseRows.length > 0 && (
         <section className="shift-clock-rows" aria-label={`${describePhaseHeading(shiftClock.phase, day.workContext)} work controls`}>
@@ -2414,57 +2500,6 @@ export function TodayScreen({
           {leadingPhaseRows.map((row) => <div key={row} data-shift-clock-row={row}>{renderPhaseRow(row)}</div>)}
         </section>
       )}
-
-      {/* One canonical Engine result. Foreground operations above retain priority;
-          support guidance stays a disclosure rather than a competing dominant action. */}
-      {day && recommendation && (
-        <section className="console-guidance" aria-label="Current recommendation">
-          <p className="tool-label console-guidance__label">GUIDANCE</p>
-          <RecommendationCard
-            day={day}
-            recommendation={recommendation}
-            headlineCommitment={headlineCommitment}
-            isDominant={dominant === "RECOMMENDATION"}
-            isAttention={recommendationInAttention}
-            decision={decision}
-            checkIn={checkIn}
-            recommendationOpen={recommendationOpen}
-            setRecommendationOpen={setRecommendationOpen}
-            recommendationHandoff={recommendationHandoff}
-            activeShiftDownId={activeShiftDownId}
-            priorOutcomeMemory={priorOutcomeMemory}
-            materiallyRepeated={materiallyRepeated}
-            busy={busy}
-            onOpenTrain={onOpenTrain}
-            onRecord={() => void handleRecord()}
-            onDecline={handleDecline}
-            onHandoff={handleRecommendationHandoff}
-            confirmPanel={<ConfirmPanel />}
-          />
-        </section>
-      )}
-
-      <section className="console-operations" aria-labelledby="console-operations-heading">
-        <h2 id="console-operations-heading" className="section-label">Immediate operations</h2>
-        <ConsoleControls
-          busy={busy}
-          isInFlight={() => busyRef.current}
-          onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
-          onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
-          onOpenLog={{
-            ...(onOpenBody ? {
-              water: () => onOpenBody("water"),
-              meal: () => onOpenBody("meal"),
-              sleep: () => onOpenBody("sleep"),
-              weight: () => onOpenBody("weight"),
-              // An urge is logged against a quit habit; without one there's nothing to log yet.
-              ...(quitHabitSetUp ? { urge: () => onOpenBody("urge") } : {}),
-            } : {}),
-            note: openFastCapture,
-            ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
-          }}
-        />
-      </section>
 
       {fastCaptureOpen && <section id="fast-capture" className="fast-capture" aria-label="Quick Capture">
         <div className="fast-capture-header"><h2 className="section-label">Put a thought down</h2><button type="button" className="btn-secondary" disabled={busy} onClick={closeFastCapture}>DONE</button></div>
@@ -2665,7 +2700,7 @@ export function TodayScreen({
       {day && (
         <section className="shift-clock-rows" aria-label={`${describePhaseHeading(shiftClock.phase, day.workContext)} rows`}>
           {leadingPhaseRows.length === 0 && <h2 className="section-label">{describePhaseHeading(shiftClock.phase, day.workContext)}</h2>}
-          {remainingPhaseRows.map((row) => (
+          {remainingPhaseRows.filter((row) => !(lateRecoverWithoutSleep && shiftDownIsRow && !activeShiftDownId && row === "MAIN_SLEEP")).map((row) => (
             <div key={row} data-shift-clock-row={row}>
               {renderPhaseRow(row)}
             </div>

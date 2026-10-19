@@ -43,7 +43,8 @@ describe("BODY primary navigation after a TODAY shortcut", () => {
   it("shows the Daily Record after water and meal round trips, keeping the meal draft", async () => {
     const screen = await render(<App />);
 
-    await screen.getByRole("button", { name: "Log water in BODY" }).click();
+    await screen.getByRole("button", { name: "Log water" }).click();
+    await screen.getByRole("button", { name: "More → BODY water" }).click();
     await expect.element(screen.getByRole("heading", { name: "BODY // WATER" })).toBeVisible();
     await screen.getByRole("button", { name: "+8 oz", exact: true }).click();
     await expect.poll(() => getEffectiveHydrationTotal(dayId)).toBe(8);

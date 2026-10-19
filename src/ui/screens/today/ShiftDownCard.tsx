@@ -88,8 +88,9 @@ export function ShiftDownCard({
         {active ? "SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
       </p>
       <p className="card-body" style={{ marginBottom: 12 }}>{SHIFT_DOWN_EXPLANATION}</p>
+      {!active && <p className="meta">{onMarkWorkEnded ? "First, mark work ended. Then choose minutes and start SHIFT DOWN." : "Choose minutes. Then start SHIFT DOWN."}</p>}
       {onMarkWorkEnded && !active && (
-        <button className="btn-primary" style={{ marginBottom: 12 }} disabled={busy} onClick={onMarkWorkEnded}>
+        <button className="btn-secondary" style={{ marginBottom: 12 }} disabled={busy} onClick={onMarkWorkEnded}>
           MARK WORK ENDED
         </button>
       )}
@@ -102,7 +103,7 @@ export function ShiftDownCard({
         <>
           <p className="card-body" style={{ marginBottom: 12 }}>
             {describeShiftDownInProgress(shiftDownDuration)}
-            {openShiftDownStartedAt ? ` Started ${new Date(openShiftDownStartedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.` : ""}
+            {openShiftDownStartedAt ? ` Started ${new Date(openShiftDownStartedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}.` : ""}
           </p>
           {isCommand ? (
             <>

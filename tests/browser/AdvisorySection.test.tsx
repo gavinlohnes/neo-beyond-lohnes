@@ -30,6 +30,8 @@ describe("AdvisorySection (real browser) — PROTECT quick actions", () => {
     const screen = await render(<AdvisorySection notes={[protectNote]} />);
 
     await expect.element(screen.getByText("PROTECT", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Shift starts soon. Check water and protein before you go.")).toBeVisible();
+    await screen.getByText("WHY", { exact: true }).click();
     await expect.element(screen.getByText(protectNote.message)).toBeVisible();
   });
 

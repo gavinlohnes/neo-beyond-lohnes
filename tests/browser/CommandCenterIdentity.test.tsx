@@ -21,6 +21,7 @@ describe("Command Center identity", () => {
         expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
         expect(screen.container.querySelector(".mode-city")?.getAttribute("style")).toContain("--sky: 1");
         expect(screen.container.querySelector(".mode-city__beam")).toBeNull();
+        expect(getComputedStyle(screen.container.querySelector(".mode-city")!).opacity).toBe("1");
         const target = screen.getByRole("button", { name: /Change mode/ }).element().getBoundingClientRect();
         expect(target.height).toBeGreaterThanOrEqual(44);
         const result = await axe.run(screen.container, { runOnly: { type: "rule", values: ["color-contrast", "button-name"] } });

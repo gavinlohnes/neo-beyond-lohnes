@@ -74,7 +74,7 @@ export function describeProteinDeleted(grams: number, dayTotalG: number): string
 }
 
 function clock(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 }
 
 export function describeDuplicateMealQuestion(meal: { name: string }, earlier: { at: string }): string {

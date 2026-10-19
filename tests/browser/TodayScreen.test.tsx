@@ -201,7 +201,7 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
 
     await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open TOOLS" })).toBeVisible();
-    await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
     expect(screen.getByText("Operate", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
     expect(document.querySelector(".today-field")?.getAttribute("data-field-state")).toBe("quiet");
@@ -236,7 +236,7 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
 
     await expect.element(screen.getByText("12 oz recorded.", { exact: true })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Record what you drank" }).elements()).toHaveLength(0);
-    await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
     expect(document.querySelector(".today-field")?.getAttribute("data-field-state")).toBe("quiet");
     const waterEvents = (await db.events.where("beyondDayId").equals(day.id).toArray())
       .filter((event) => event.type === "WATER_LOGGED")
@@ -289,13 +289,13 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
 
     await screen.getByRole("button", { name: "MANUAL CHECK-IN" }).click();
     expect(screen.getByRole("button", { name: "ALL GOOD" }).elements()).toHaveLength(1);
-    await expect.element(screen.getByText(/nothing here is filled in for you/i)).toBeVisible();
+    await expect.element(screen.getByText(/Nothing is prefilled/i)).toBeVisible();
 
     await screen.getByRole("button", { name: "ALL GOOD" }).click();
     // DECLUTTER-001: a finished check-in collapses to one line with UPDATE.
     await expect.element(screen.getByText(/^Checked in .* · all good$/)).toBeVisible();
     expect(screen.getByRole("button", { name: "ALL GOOD" }).elements()).toHaveLength(0);
-    expect(screen.getByText(/nothing here is filled in for you/i).elements()).toHaveLength(0);
+    expect(screen.getByText(/Nothing is prefilled/i).elements()).toHaveLength(0);
     expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
   });
 });
@@ -634,7 +634,7 @@ describe("TodayScreen // Current Operational Context V1 — context-strip wordin
     await expect.element(screen.getByText("Start your BEYOND Day", { exact: true })).not.toBeInTheDocument();
     await vi.waitFor(() => {
       const strip = document.querySelector(".status-strip");
-      expect(strip?.textContent).toContain("Working today — shift ended, not yet shifted down");
+      expect(strip?.textContent).toContain("Working today · shift down pending");
     });
   });
 });
@@ -809,7 +809,7 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
 
     await vi.waitFor(() => {
       const strip = document.querySelector(".status-strip");
-      expect(strip?.textContent).toContain("Working today — shift ended, not yet shifted down");
+      expect(strip?.textContent).toContain("Working today · shift down pending");
     });
   });
 
@@ -838,7 +838,7 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
     await new Promise((r) => setTimeout(r, 50));
     const strip = document.querySelector(".status-strip");
     expect(strip?.textContent).toContain("Off today");
-    expect(strip?.textContent).not.toContain("shift ended, not yet shifted down");
+    expect(strip?.textContent).not.toContain("shift down pending");
   });
 
   it("produces no unhandled rejection when a context request fails, and clears a stale successful context rather than continuing to show it", async () => {
@@ -910,7 +910,7 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
 });
 
 describe("TodayScreen (real browser) — active mode dominance", () => {
-  it("makes an active SHIFT DOWN the dominant NOW surface, demoting the recommendation to a collapsed Tools row", async () => {
+  it("makes an active SHIFT DOWN the dominant NOW surface, while retaining the Engine next-action card", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, RED); // STABILIZE -> suggestedCommand START_SHIFT_DOWN
     await startShiftDown(day.id, 10);
@@ -920,7 +920,7 @@ describe("TodayScreen (real browser) — active mode dominance", () => {
     await expect.element(screen.getByText("SHIFT DOWN IN PROGRESS", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "COMPLETE SHIFT DOWN" })).toBeVisible();
     // The recommendation stepped back to a quiet, reopenable Tools row.
-    await expect.element(screen.getByRole("button", { name: "Open RECOMMENDATION" })).toBeVisible();
+    await expect.element(screen.getByRole("region", { name: "Current recommendation" })).toBeVisible();
   });
 
   it("keeps unrelated Engine guidance in Attention while RESET owns Operate", async () => {
@@ -931,7 +931,7 @@ describe("TodayScreen (real browser) — active mode dominance", () => {
     const screen = await render(<TodayScreen />);
 
     await expect.element(screen.getByText("RESET IN PROGRESS", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("ENGINE GUIDANCE", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("region", { name: "Current recommendation" })).toBeVisible();
     await expect.element(screen.getByText("Stabilize first", { exact: true })).toBeVisible();
   });
 
@@ -1498,10 +1498,12 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     // DECLUTTER Drop 2: "No action needed" is neutral now, and Shift Clock
     // (Drop 2) keeps the check-in row's ALL GOOD neutral too, so this uses the
     // pre-day state, whose START DAY is a real .btn-primary.
+    const day = await startDay();
+    await submitCheckIn(day.id, RED);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("button", { name: "START DAY", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "I'll do this", exact: true })).toBeVisible();
 
-    const el = screen.getByRole("button", { name: "START DAY", exact: true }).element();
+    const el = screen.getByRole("button", { name: "I'll do this", exact: true }).element();
     expect(el.className).toContain("btn-primary");
     const bg = getComputedStyle(el).backgroundColor;
     // --action-primary-bg is var(--accent) again as of LAUNCH-VISION-001
@@ -1602,7 +1604,7 @@ describe("TodayScreen (real browser) — TODAY-008 day-transition refresh (resid
     await submitCheckIn(dayA.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
 
     // End day A through the real UI (handleEndDay already calls refresh()),
     // then start day B through the real START DAY button — the exact
@@ -1614,11 +1616,12 @@ describe("TodayScreen (real browser) — TODAY-008 day-transition refresh (resid
 
     await screen.getByRole("button", { name: "START DAY", exact: true }).click();
 
-    // Day B has no check-in yet, so day A's "No action required"
+    // Day B has no check-in yet, so day A's "Nothing needs you right now."
     // recommendation must not still be showing, and the real check-in
     // prompt for a fresh day must be — without a reload.
     await vi.waitFor(() => {
-      expect(screen.getByText("No action required", { exact: true }).elements()).toHaveLength(0);
+      expect(screen.getByRole("button", { name: "GOT IT", exact: true }).elements()).toHaveLength(0);
+      expect(screen.getByText("No guidance recorded yet.", { exact: true }).elements()).toHaveLength(1);
     });
     // Shift Clock (Drop 2): the fresh, unanswered day asks for its check-in in its own row.
     await expect.element(screen.getByRole("heading", { name: "Check in", exact: true })).toBeVisible();

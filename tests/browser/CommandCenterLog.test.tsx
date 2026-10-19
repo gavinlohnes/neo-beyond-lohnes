@@ -40,7 +40,7 @@ describe("TODAY action row", () => {
       const screen = await render(<App />);
       await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();
       const labels = [...document.querySelectorAll(".console-controls button")].map((button) => button.getAttribute("aria-label"));
-      expect(labels.slice(0, 3)).toEqual(["Log water in BODY", "Log a meal in BODY", "Open LOG"]);
+      expect(labels.slice(0, 3)).toEqual(["Log water", "Log a meal in BODY", "Open LOG"]);
       for (const button of document.querySelectorAll<HTMLElement>(".console-controls button")) {
         expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       }
@@ -110,7 +110,7 @@ describe("TODAY action row", () => {
   it("+ WATER keeps exactly-once logging and undo through the existing BODY flow", async () => {
     const day = await startDay();
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Log water in BODY" }).click();
+    await screen.getByRole("button", { name: "Log water" }).click();
     await screen.getByRole("button", { name: "+8 oz" }).click();
     await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(8);
     expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);

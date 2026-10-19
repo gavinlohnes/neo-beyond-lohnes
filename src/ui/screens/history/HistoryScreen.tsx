@@ -115,7 +115,7 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
                   >
                     <span className="card-body" style={{ margin: 0, minWidth: 0, overflowWrap: "anywhere" }}>{describeEvent(event, exerciseNames)}</span>
                     <span className="meta" style={{ whiteSpace: "nowrap" }}>
-                      {new Date(event.occurredAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(event.occurredAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                     </span>
                   </div>
                 ))}

@@ -92,7 +92,7 @@ describe("check-in draft", () => {
     await screen.getByRole("button", { name: "MANUAL CHECK-IN" }).click();
     await screen.getByRole("button", { name: "START BLANK" }).click();
 
-    await expect.element(screen.getByText(/nothing here is filled in for you/)).toBeVisible();
+    await expect.element(screen.getByText(/Nothing is prefilled/)).toBeVisible();
     expect(pressed()).toEqual([]);
     for (const [label, n] of [["Energy", 4], ["Stress", 2], ["Mood", 4], ["Soreness", 1], ["Alcohol urge", 0]] as const) chip(label, n).click();
     await screen.getByRole("button", { name: "SUBMIT CHECK-IN" }).click();
@@ -107,7 +107,7 @@ describe("check-in draft", () => {
     vi.setSystemTime(at(15, 20, 0));
     const screen = await render(<TodayScreen />);
     await screen.getByRole("button", { name: "MANUAL CHECK-IN" }).click();
-    await expect.element(screen.getByText(/nothing here is filled in for you/)).toBeVisible();
+    await expect.element(screen.getByText(/Nothing is prefilled/)).toBeVisible();
     expect(screen.getByText(/^Draft:/).elements()).toHaveLength(0);
   });
 });

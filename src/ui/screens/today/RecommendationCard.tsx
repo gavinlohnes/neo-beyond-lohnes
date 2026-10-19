@@ -35,6 +35,7 @@ import {
  */
 export function RecommendationCard({
   day,
+  nextAction = false,
   recommendation,
   headlineCommitment = null,
   isDominant,
@@ -55,6 +56,7 @@ export function RecommendationCard({
   confirmPanel,
 }: {
   day: BeyondDay | null;
+  nextAction?: boolean;
   recommendation: Recommendation | null;
   /** ADVISORY-002: an OBLIGATION_DUE recommendation is titled with the real commitment, not "An obligation needs attention". */
   headlineCommitment?: ObligationRelevance | null;
@@ -87,7 +89,7 @@ export function RecommendationCard({
   const evidenceBasis = describeEvidenceBasis(checkIn !== null);
   const title = describeRecommendationTitle(recommendation, headlineCommitment);
   const isAllClear = recommendation.kind === "NO_ACTION_REQUIRED";
-  const open = isDominant || isAttention || isAllClear || recommendationOpen;
+  const open = nextAction || isDominant || isAttention || isAllClear || recommendationOpen;
   if (!open) {
     return (
       <CollapsibleRow
@@ -105,20 +107,21 @@ export function RecommendationCard({
   const cardContent = (
     <>
       {(isAttention || isDominant) && !isAllClear && <p className="tool-label">ENGINE GUIDANCE</p>}
-      <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+      <h2 className={nextAction || isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
         {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
-        {title}
+        {nextAction && isAllClear ? "Nothing needs you right now." : title}
       </h2>
       {/* DECLUTTER-001: the all-clear rationale ("No rule requires attention
           right now.") only repeats the title, so it isn't shown there. */}
-      {!isAllClear && <p className="card-body">{describeRecommendationReason(recommendation.rationale)}</p>}
-      {evidenceBasis && (
+      {!nextAction && !isAllClear && <p className="card-body">{describeRecommendationReason(recommendation.rationale)}</p>}
+      {!nextAction && evidenceBasis && (
         <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
       )}
       {materiallyRepeated && (
         <p className="meta" style={{ marginTop: 8 }}>Same as before — you already said not now.</p>
       )}
       <WhyDisclosure summary="How BEYOND decided" style={{ marginTop: 12 }}>
+        {nextAction && <><p className="card-body">{describeRecommendationReason(recommendation.rationale)}</p>{evidenceBasis && <p className="meta">{evidenceBasis}</p>}<p className="meta">{describeRecommendationEffect(recommendation.kind)}</p></>}
         <div className="machinery-panel">
           {checkIn && (
             <>
@@ -176,17 +179,28 @@ export function RecommendationCard({
               </p>
             </div>
           )}
-          {isAllClear && (
+          {isAllClear && !nextAction && (
             <p className="card-body" style={{ marginTop: 12 }}>{describeRecommendationEffect(recommendation.kind)}</p>
           )}
           <p className="meta" style={{ marginTop: 8 }}>
             ENGINE {recommendation.trace.engineVersion} · EVALUATED{" "}
-            {new Date(recommendation.trace.evaluatedAt).toLocaleTimeString()}
+            {new Date(recommendation.trace.evaluatedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
           </p>
         </div>
         <p className="meta">Your call.</p>
       </WhyDisclosure>
       <div style={{ marginTop: isDominant && !isAllClear ? 20 : 12 }}>
+        {nextAction ? (
+          decision ? <>
+            <p className="meta">{describeRecordedDecision(decision)}</p>
+            {recommendationHandoff && !(recommendationHandoff === "SHIFT_DOWN" && activeShiftDownId !== null) &&
+              (recommendationHandoff === "SHIFT_DOWN" || onOpenTrain) &&
+              <button type="button" className="btn-primary" disabled={busy} onClick={() => onHandoff(recommendationHandoff)}>{describeRecommendationHandoff(recommendationHandoff)}</button>}
+          </> : <>
+            <button className={isAllClear ? "btn-secondary" : "btn-primary"} disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>
+            {!isAllClear && <button className="btn-secondary" disabled={busy} onClick={onDecline}>{DECLINE_LABEL}</button>}
+          </>
+        ) : <>
         {decision ? (
           <>
             {/* DECLUTTER Drop 2 (owner ruling 2026-09-30): the all-clear
@@ -251,10 +265,12 @@ export function RecommendationCard({
             )}
           </>
         )}
+        </>}
         {confirmPanel}
       </div>
     </>
   );
+  if (nextAction) return <div key={recommendation.id} className={isAllClear ? "next-action-card all-clear" : "next-action-card command-surface"}>{cardContent}</div>;
   if (isDominant && !isAllClear) {
     return (
       <CommandSurface key={recommendation.id}>

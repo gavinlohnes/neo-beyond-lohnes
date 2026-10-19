@@ -64,14 +64,14 @@ export function HealthSources({ selection, revision, active, activeDayId, onCorr
       {data.records.map(({ beyondDayId, record }) => <article key={record.entry.rootEventId} className="health-source-row" data-source-root={record.entry.rootEventId}>
         <h3 className="health-source-name">{describeRecord(record)}</h3>
         {record.kind === "MEAL" && <p className="meta">{record.entry.effectiveCalories} kcal · {record.entry.effectiveProteinG} g protein · consumed snapshot</p>}
-        <p className="meta">Recorded {new Date(record.entry.recordedAt).toLocaleString()}</p>
+        <p className="meta">Recorded {new Date(record.entry.recordedAt).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</p>
         <p className="meta">{record.entry.correctionCount ? `Original: ${originalValue(record)} · ${record.entry.correctionCount} corrections; effective value shown above.` : "Original recorded value · no corrections"}</p>
         <div className="health-source-actions">
           {onHistory && <button type="button" className="btn-secondary" onClick={() => openHistory({ dayId: beyondDayId, eventId: record.entry.headEventId }, record.entry.rootEventId)}>FULL HISTORY</button>}
           {beyondDayId === activeDayId && <button type="button" className="btn-secondary" disabled={refreshing} onClick={() => onCorrect(record)}>CORRECT IN DAILY RECORD</button>}
         </div>
       </article>)}
-      {data.workouts.map((session) => <article className="health-source-row" key={session.id}><h3 className="health-source-name">{session.templateId} · {session.sessionType}</h3><p className="meta">{session.status} · {new Date(session.startedAt).toLocaleString()}</p></article>)}
+      {data.workouts.map((session) => <article className="health-source-row" key={session.id}><h3 className="health-source-name">{session.templateId} · {session.sessionType}</h3><p className="meta">{session.status} · {new Date(session.startedAt).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</p></article>)}
       {onHistory && data.days.map((day) => <button type="button" className="btn-secondary" key={day.id} onClick={() => openHistory({ dayId: day.id }, null)}>COMPLETE DAY HISTORY</button>)}
     </>}
   </section>;

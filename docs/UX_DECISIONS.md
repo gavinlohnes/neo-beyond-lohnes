@@ -12,6 +12,28 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## POLISH-001 — production command center (owner approved 2026-10-18)
+
+This bounded ruling supersedes conflicting TODAY placement and red-button details below.
+Brief: [POLISH-001](agent/POLISH-001.md). Engine and canonical semantics remain unchanged.
+
+- TODAY order in every mode: mode header, one Engine next-action card, today's numbers,
+  WATER · MEAL · LOG, existing mode rows, Tools. Keep the action row above the fold at
+  390×844 and 360×800. Review readiness is a compact line under the card.
+- TODAY's only action red belongs to the next-action card. Other actions and selected
+  duration chips are neutral; selection uses an ivory border. Existing authorized sky,
+  mode-change feedback, navigation and SUIT signals retain their bounded meanings.
+- WATER opens an amount sheet on TODAY: +8/+12/+16 oz, Repeat last, canonical log and undo.
+  More opens BODY water. Suppress Advisory's redundant water chips while the row is visible.
+- New BODY meals offer SAVE & LOG first and SAVE ONLY second. A successful save survives a
+  failed log; LOG retries that saved meal, never creates another preset. No unsaved log command.
+- From 13:00 in actual post-shift RECOVER, without main sleep, replace idle SHIFT DOWN with
+  “Did you sleep?”, LOG MAIN SLEEP and NOT YET. Existing sleep drafts remain proposals.
+  No phase or Engine change; active operations remain available.
+- All human-readable times use local HH:MM without seconds. Stored timestamps are unchanged.
+- A COMMAND destination opened from TODAY returns with “← TODAY”; COMMAND browsing keeps
+  its COMMAND return. The COMMAND index header reads “COMMAND”.
+
 ## Constitutional adjudication
 
 Locked 2026-08-29: [`OPERATOR_INTERFACE_DOCTRINE.md`](OPERATOR_INTERFACE_DOCTRINE.md) is the

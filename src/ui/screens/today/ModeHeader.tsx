@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { MODE_DESCRIPTIONS, MODE_NAMES, MODE_ORDER, type LivedDayStrip, type ShiftClockPhase } from "./shiftClock";
 import "./modeHeader.css";
 import { ModeCity } from "./ModeIdentity";
@@ -16,6 +16,7 @@ function clock(at: Date): string {
  */
 export function ModeHeader({
   now,
+  children,
   hasAction,
   scheduledPhase,
   pin,
@@ -27,6 +28,7 @@ export function ModeHeader({
   onRecordWorkDay,
 }: {
   now: Date;
+  children?: ReactNode;
   hasAction: boolean;
   /** The schedule's phase; null while the work question is unanswered. */
   scheduledPhase: ShiftClockPhase | null;
@@ -72,7 +74,6 @@ export function ModeHeader({
 
   return (
     <div className="mode-header" data-mode={mode ?? "UNSET"}>
-      <ModeCity now={now} workDay={!dayOff} hasAction={hasAction} />
       <span key={mode} className="mode-header__sweep" aria-hidden="true" />
       <button
         ref={trigger}
@@ -85,10 +86,11 @@ export function ModeHeader({
       >
         <span className="mode-header__text">
           <span className="mode-header__value">{mode ? MODE_NAMES[mode] : "Mode: not set"}</span>
-          <span className="mode-header__source">{source}</span>
         </span>
         <span className="mode-header__change" aria-hidden="true">CHANGE</span>
       </button>
+      <span className="mode-header__source">{source}</span>
+      {children}
       <div className="mode-strip" aria-hidden="true">
         <div className="mode-strip__bar">
           {Array.from({ length: 24 }, (_, i) => <i key={i} className={`mode-ruler${i === 1 || i === 13 ? " mode-ruler--major" : ""}`} style={{ left: `${((i + .5) / 24) * 100}%` }} />)}
@@ -108,6 +110,7 @@ export function ModeHeader({
           <span style={{ left: "100%" }}>{clock(dayStart)}</span>
         </div>
       </div>
+      <ModeCity now={now} workDay={!dayOff} hasAction={hasAction} />
       {open && (
         <dialog
           ref={dialog}

@@ -239,7 +239,7 @@ function AppWorkspaces() {
   const [trainRecordsFocus, setTrainRecordsFocus] = useState<string | null>(null);
   const [moreView, setMoreView] = useState<MoreView>("MENU");
   // SUIT-001: the readout was opened from TODAY's SYSTEMS line, so it offers the way back.
-  const [systemsOrigin, setSystemsOrigin] = useState(false);
+  const [commandTodayOrigin, setCommandTodayOrigin] = useState(false);
   const [continuityResolved, setContinuityResolved] = useState(false);
 
   useEffect(() => {
@@ -389,13 +389,13 @@ function AppWorkspaces() {
   const historyReady = useRef(false);
   const restoringHistory = useRef(false);
   useEffect(() => {
-    const state = { beyondNavigation: true, tab, moreView };
+    const state = { beyondNavigation: true, tab, moreView, commandTodayOrigin };
     if (!historyReady.current) {
       window.history.replaceState(state, "");
       historyReady.current = true;
     } else if (restoringHistory.current) restoringHistory.current = false;
     else if (window.history.state?.tab !== tab || window.history.state?.moreView !== moreView) window.history.pushState(state, "");
-  }, [tab, moreView]);
+  }, [tab, moreView, commandTodayOrigin]);
   useEffect(() => {
     function restore(event: PopStateEvent) {
       const state = event.state;
@@ -404,6 +404,7 @@ function AppWorkspaces() {
       if (!state?.beyondNavigation || !["TODAY", "TRAIN", "BODY", "COMMAND"].includes(state.tab)) return;
       if (mealInFlight.current) { window.history.forward(); return; }
       restoringHistory.current = state.tab !== tab || state.moreView !== moreView;
+      setCommandTodayOrigin(state.commandTodayOrigin === true);
       setMoreView(state.moreView);
       setMoreRequest((key) => key + 1);
       showTab(state.tab);
@@ -416,7 +417,7 @@ function AppWorkspaces() {
 
   function openMore(view: MoreView, focus: IntentFocus | null = null, focusHeading = true) {
     if (!canNavigate()) return false;
-    setSystemsOrigin(false);
+    setCommandTodayOrigin(tab === "TODAY" && view !== "MENU");
     setHealthHistoryOrigin(false); setHealthHistory(null);
     setIntentFocus(focus);
     setMoreView(view);
@@ -563,7 +564,7 @@ function AppWorkspaces() {
               onOpenBody={openBody}
               onOpenHealthEvidence={openBodyEvidence}
               onOpenWeeklyReview={() => openMore("REVIEW")}
-              onOpenSystems={() => { if (openMore("SYSTEMS")) setSystemsOrigin(true); }}
+              onOpenSystems={() => { openMore("SYSTEMS"); }}
               toolsRequest={toolsRequest}
             />
           </RootErrorBoundary>
@@ -590,7 +591,7 @@ function AppWorkspaces() {
             onOpenMeal={() => openBody("meal")}
             onOpenMetric={openBodyEvidence}
             systemsRefreshKey={stealthWrites}
-            onReturnToToday={systemsOrigin && moreView === "SYSTEMS" ? () => { setSystemsOrigin(false); showTab("TODAY"); } : undefined}
+            onReturnToToday={commandTodayOrigin && moreView !== "MENU" ? () => { setCommandTodayOrigin(false); showTab("TODAY"); } : undefined}
             onOpenDestination={openSystemDestination} /></RootErrorBoundary>
         </div>}
       </main>

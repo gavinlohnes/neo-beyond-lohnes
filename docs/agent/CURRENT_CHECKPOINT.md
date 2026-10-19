@@ -1,6 +1,45 @@
 # Current checkpoint
 
-## Current state — no objective in flight (2026-10-19)
+## Current objective — POLISH-001 (2026-10-18, PROTECTED)
+
+Gavin approved the attached brief, committed unchanged as [POLISH-001.md](POLISH-001.md).
+Builder: Codex. Branch `codex/polish-001`; [PR #251](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/251).
+Fresh starting master: `82e923453e8634e89fccf7feee02edb6ad0eb161`; #250 was open (checkpoint only).
+Master `b293472b0d7a839bc5b1d7c799592fcfefb9f2ea` (including #250) is now merged into this
+branch; the checkpoint preserves its merged-session history below.
+All 13 items implemented; the brief and each item were pushed separately. Rulings are in
+UX_DECISIONS. Acceptance fixes preserve the water More-route focus and active-workout fold.
+The skyline has its own band, real-clock sky/windows, and recommendation-gated beam.
+TODAY has one persistent Engine card, numbers, action row, mode rows and Tools. Water logs
+in place with canonical undo. SAVE & LOG retains the saved meal on log failure. Late RECOVER
+asks about main sleep using the existing draft. Copy, return context and HH:MM are updated.
+
+**Verification:** `npm run verify` passes: architecture, 269 test files / 2,676 tests passed,
+one existing skip, TypeScript and production PWA build. Thirteen new browser cases cover
+canonical log/undo double taps, water retry/repeat, SAVE & LOG failure recovery, late sleep
+prompt/draft boundaries and no-write NOT YET, scene gating, order and fold. Existing navigation,
+focus/drafts, browser Back, privacy, backup and protected-fixture regressions pass.
+Built PWA passes 320/360/390/412: four modes, source/name separation, one action-red button,
+390×844/360×800 fold, 23:40/11:00 sky, water/undo, offline save and cold reload. Synthetic
+screenshots and reproduction: [polish-001/README.md](../screenshots/polish-001/README.md).
+The inherited stealth test used the real clock; minute 42 falsely matched the hidden total.
+Only Date is pinned in that test fixture; its privacy assertions and production stealth stay.
+No Engine, phase derivation, schema, command/event semantics, backup or dependency changes.
+Chromium automation only; physical-device/Safari/screen-reader checks are unclaimed. The
+existing bundle-size advisory remains. The final PR Handoff binds published SHA and CI.
+
+**Review follow-up (2026-10-19):** Claude blocked `57631dba553f6355d3bf581dcdb98558a2bb7bde`
+on two test-only P2 timing races; no product defects were found. The sleep-prompt test now
+awaits the pinned header mode, then polls for prompt absence. Water double-undo now awaits
+the visible UNDO button before taking its DOM element and clicking twice. Assertions and
+production behavior are unchanged. The focused POLISH browser suite passes all 13 cases.
+
+**Next:** stop for Claude Code’s renewed independent exact-head review against POLISH-001, then
+Gavin’s separate merge decision after green required CI. No merge or deployment by Builder.
+
+The sections below are historical starting-checkpoint content. Read live PRs for status.
+
+## Previous state — merged session work (2026-10-19)
 
 Everything from the 2026-10-18 session is merged on Gavin's approval ("Merge all 6"), in this
 order. Each Protected PR had an independent exact-head PASS from Codex and green required CI.
@@ -26,7 +65,7 @@ step depends on the runtime reporting `navigator.onLine` false after an emulated
 some Chromium runtimes don't (Codex's network-blocked checks covered the same ground).
 `ModePinExpiry` (#243's test) flaked once at 412 px under full-suite load.
 
-**Next:** Gavin picks the next objective. Suggested: a field pass on the phone through a real
+**Next (historical, before POLISH-001):** Gavin picks the next objective. Suggested: a field pass on the phone through a real
 shift using SYSTEMS, stealth, BODY delete and the review hub, then fix what it finds. The first
 monthly review lands four weeks after the first saved weekly review.
 

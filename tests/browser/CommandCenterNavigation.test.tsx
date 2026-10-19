@@ -73,7 +73,7 @@ describe("re-tap, back and retention", () => {
     await screen.getByRole("button", { name: /^HISTORY COMMAND · / }).click();
     await expect.element(screen.getByRole("heading", { name: "COMMAND // HISTORY" })).toBeVisible();
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await expect.element(screen.getByRole("heading", { name: "COMMAND // SYSTEM" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "COMMAND" })).toBeVisible();
     await expect.element(screen.getByRole("searchbox", { name: "Find a screen or action" })).toHaveValue("history");
   });
 
@@ -107,10 +107,11 @@ describe("re-tap, back and retention", () => {
 
   it("returns to TODAY's place and focus after a LOG trip to BODY", async () => {
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Log water in BODY" }).click();
+    await screen.getByRole("button", { name: "Log water" }).click();
+    await screen.getByRole("button", { name: "More → BODY water" }).click();
     await expect.poll(current).toContain("BODY");
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     await expect.poll(current).toContain("TODAY");
-    await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Log water in BODY");
+    await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Log water");
   });
 });
