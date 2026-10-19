@@ -52,7 +52,7 @@ export function CheckInCard({
   // was the quick check-in — with UPDATE to reopen ALL GOOD and the form.
   if (checkIn && !checkInFormOpen) {
     const isQuick = CHECK_IN_FIELDS.every((field) => checkIn[field.key] === quickCheckInValues[field.key]);
-    const time = new Date(checkIn.recordedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const time = new Date(checkIn.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
     return (
       <div className="equipment-row fade-in" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
         <p className="card-body" style={{ margin: 0 }} title={describeCheckInValues(checkIn)}>
@@ -150,7 +150,7 @@ export function CheckInCard({
         )}
         {checkIn && (
           <p className="meta" style={{ marginTop: 8 }}>
-            last recorded {new Date(checkIn.recordedAt).toLocaleTimeString()}
+            last recorded {new Date(checkIn.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
           </p>
         )}
       </div>

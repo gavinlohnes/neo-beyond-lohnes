@@ -84,7 +84,7 @@ export function WorkContextCard({
     const summary =
       day.workContext === "OFF"
         ? "Off today."
-        : `${standing ? WORKING_PER_SCHEDULE : "Working today"} — ended ${new Date(workPeriodEndedAt!).toLocaleTimeString()}.`;
+        : `${standing ? WORKING_PER_SCHEDULE : "Working today"} — ended ${new Date(workPeriodEndedAt!).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}.`;
     return <CollapsibleRow name="WORK CONTEXT" summary={summary} onOpen={() => setWorkContextOpen(true)} />;
   }
   return (
@@ -128,7 +128,7 @@ export function WorkContextCard({
           {workPeriodEndedAt ? (
             <p className="meta" style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <ConfirmIcon size={20} />
-              Work ended at {new Date(workPeriodEndedAt).toLocaleTimeString()}.
+              Work ended at {new Date(workPeriodEndedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}.
             </p>
           ) : (
             <>

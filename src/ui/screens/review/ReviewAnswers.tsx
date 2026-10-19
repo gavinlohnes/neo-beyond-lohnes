@@ -48,7 +48,7 @@ function Evidence({ data, metric, unit, method, onOpenHistory }: { data: ReviewO
           <thead><tr><th scope="col">Day starts</th><th scope="col">Recorded value</th><th scope="col">Sources</th></tr></thead>
           <tbody>{data.rows.filter((row) => row.dayIds.length).map((row) => <tr key={row.start}>
             <th scope="row">{date(row.start)}</th><td>{value(row[metric], unit)}{metric === "sleepHours" && row.ambiguousSleep ? " · Multiple main sleeps; excluded" : ""}
-              {metric === "weight" && row.weights.map((weight) => <div className="meta" key={weight.rootId}>{value(weight.lbs, "lb")} · {new Date(weight.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>)}</td>
+              {metric === "weight" && row.weights.map((weight) => <div className="meta" key={weight.rootId}>{value(weight.lbs, "lb")} · {new Date(weight.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</div>)}</td>
             <td>{row.dayIds.map((id, index) => onOpenHistory ? <button key={id} type="button" className="btn-secondary" aria-label={`Open source day ${date(row.start)}, segment ${index + 1}`} onClick={() => onOpenHistory(id)}>DAY {index + 1}</button> : <span key={id}>Segment {index + 1}</span>)}</td>
           </tr>)}</tbody></table></div>}
     </details>

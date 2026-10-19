@@ -1739,7 +1739,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
                       <div>
                         <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveAmountOz} oz</p>
                         <p className="meta">
-                          {new Date(entry.recordedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                          {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                           {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
                         </p>
                       </div>
@@ -1807,7 +1807,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
           </div>
           {lastSleepEntry && (
             <p className="meta" style={{ marginBottom: 12 }}>
-              {`${lastSleepEntry.kind === "PRIMARY" ? "Main sleep" : "Nap"} · ${new Date(lastSleepEntry.recordedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}
+              {`${lastSleepEntry.kind === "PRIMARY" ? "Main sleep" : "Nap"} · ${new Date(lastSleepEntry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}`}
             </p>
           )}
           <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
@@ -1934,7 +1934,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
                             {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}
                           </p>
                           <p className="meta">
-                            {new Date(entry.recordedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                             {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
                           </p>
                         </div>
@@ -2026,7 +2026,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
           </div>
           {lastBodyweightEntry && (
             <p className="meta" style={{ marginBottom: 12 }}>
-              Logged {new Date(lastBodyweightEntry.recordedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+              Logged {new Date(lastBodyweightEntry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
             </p>
           )}
           {/* Overdrive Phase 18 (BODY GLANCEABILITY): manual entry only has
@@ -2093,7 +2093,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
                         <div>
                           <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveWeightLbs} lbs</p>
                           <p className="meta">
-                            {new Date(entry.recordedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                             {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
                           </p>
                         </div>
@@ -2201,7 +2201,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
                         <div>
                           <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveGrams} g</p>
                           <p className="meta">
-                            {new Date(entry.recordedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                             {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
                           </p>
                         </div>
@@ -2536,7 +2536,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
                           {describeMacros(entry.effectiveCalories, entry.effectiveProteinG, entry.effectiveCarbsG, entry.effectiveFatG)}
                         </span>
                         <span className="meta" style={{ display: "block" }}>
-                          {new Date(entry.recordedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                          {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                           {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
                         </span>
                       </span>

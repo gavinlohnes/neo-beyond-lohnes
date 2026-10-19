@@ -26,7 +26,7 @@ export function ActiveWorkoutCard({
       <p className="tool-label">WORKOUT IN PROGRESS</p>
       <h2 className={isDominant ? "command-title" : "card-title"}>Resume your active workout</h2>
       <p className="card-body" style={{ marginBottom: 12 }}>
-        {sessionLabel} · started {new Date(activeWorkout.startedAt).toLocaleTimeString()}. Your logged sets and exact position remain in TRAIN.
+        {sessionLabel} · started {new Date(activeWorkout.startedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}. Your logged sets and exact position remain in TRAIN.
       </p>
       <button className="btn-primary" onClick={() => onOpenTrain?.("WORKOUT")}>
         RESUME WORKOUT

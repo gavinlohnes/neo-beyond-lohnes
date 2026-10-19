@@ -675,7 +675,7 @@ export function MoreScreen({
             </p>
             <p className="meta" style={{ marginTop: 8, marginBottom: 8 }}>
               {preview.format === "LEGACY"
-                ? `From a historical backup — app ${preview.appVersion}, data schema ${preview.dataSchemaVersion}, exported ${new Date(preview.exportedAt).toLocaleString()}.`
+                ? `From a historical backup — app ${preview.appVersion}, data schema ${preview.dataSchemaVersion}, exported ${new Date(preview.exportedAt).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}.`
                 : `From this app's own backup — database "${preview.databaseName}" version ${preview.databaseVersion}.`}
             </p>
             <p className="meta" style={{ marginBottom: 4 }}>

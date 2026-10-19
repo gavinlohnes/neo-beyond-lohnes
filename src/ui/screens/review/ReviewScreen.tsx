@@ -94,10 +94,7 @@ export function ReviewScreen({ active = true, onOpenHistory }: { active?: boolea
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                       <span className="card-body" style={{ margin: 0 }}>{recommendation.title}</span>
                       <span className="meta" style={{ whiteSpace: "nowrap" }}>
-                        {new Date(recommendation.issuedAt).toLocaleTimeString(undefined, {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {new Date(recommendation.issuedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                       </span>
                     </div>
                     <p className="meta" style={{ marginTop: 2 }}>

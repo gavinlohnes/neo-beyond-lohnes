@@ -103,7 +103,7 @@ export function WeeklyReviewPanel({ active = true, showFacts = true, openRequest
     <details open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary ref={summaryRef}>{baseline.current.id ? "Saved review" : "Review week"}{data ? ` · starting ${label(data.week.start)}` : ""}</summary>
     {data && <>
-      {showFacts && <><p className="card-body">Lived days starting {label(data.week.start)} – {label(new Date(Date.parse(data.week.end) - 86_400_000).toISOString())}. This week closed at {new Date(data.week.end).toLocaleString()}.</p>
+      {showFacts && <><p className="card-body">Lived days starting {label(data.week.start)} – {label(new Date(Date.parse(data.week.end) - 86_400_000).toISOString())}. This week closed at {new Date(data.week.end).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}.</p>
       <p className="meta">Monday–Sunday, with the Sunday lived day ending Monday at 16:30. Current and unfinished days are excluded. Weekly Check-in keeps its separate rolling window.</p>
       <dl className="weekly-review-facts">
         <div><dt>Weight</dt><dd>{number(summary!.weightMean, "lb")} average · {days(summary!.weightDays, "weighed")}</dd></div>
@@ -136,7 +136,7 @@ export function WeeklyReviewPanel({ active = true, showFacts = true, openRequest
         <p className="meta">Changes append a new version; prior notes and choices remain in History and normal backups. Unsaved drafts stay in this session and clear on reload.</p>
       </form>}
       <details><summary>Saved weekly reviews ({data.history.length})</summary>
-        {data.history.length ? data.history.map((record) => <article key={record.id} className="equipment-row"><h3>Week starting {label(record.weekStart)}</h3><p className="card-body">{record.note || "No note recorded."}</p><p className="card-body">Focus: {record.focus?.text ?? "None chosen"}</p><p className="meta">Saved {new Date(record.recordedAt).toLocaleString()}. Original versions remain in History.</p></article>) : <p>No saved weekly reviews yet.</p>}
+        {data.history.length ? data.history.map((record) => <article key={record.id} className="equipment-row"><h3>Week starting {label(record.weekStart)}</h3><p className="card-body">{record.note || "No note recorded."}</p><p className="card-body">Focus: {record.focus?.text ?? "None chosen"}</p><p className="meta">Saved {new Date(record.recordedAt).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}. Original versions remain in History.</p></article>) : <p>No saved weekly reviews yet.</p>}
       </details>
     </>}
     </details>

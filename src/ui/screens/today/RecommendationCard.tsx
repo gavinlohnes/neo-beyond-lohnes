@@ -184,7 +184,7 @@ export function RecommendationCard({
           )}
           <p className="meta" style={{ marginTop: 8 }}>
             ENGINE {recommendation.trace.engineVersion} · EVALUATED{" "}
-            {new Date(recommendation.trace.evaluatedAt).toLocaleTimeString()}
+            {new Date(recommendation.trace.evaluatedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
           </p>
         </div>
         <p className="meta">Your call.</p>

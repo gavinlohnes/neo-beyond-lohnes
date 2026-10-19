@@ -281,7 +281,7 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
           <div>
             <p className="card-title">{data.saved.focus?.text ?? "No focus chosen"}</p>
             <p className="card-body">{data.saved.note || "No note recorded."}</p>
-            <p className="meta">Saved {new Date(data.saved.recordedAt).toLocaleString()}. Earlier versions remain in History.</p>
+            <p className="meta">Saved {new Date(data.saved.recordedAt).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}. Earlier versions remain in History.</p>
           </div>
         ) : (
           <p className="card-body">No review was saved for this week. Reviews are saved for the latest completed week.</p>

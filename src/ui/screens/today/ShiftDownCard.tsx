@@ -103,7 +103,7 @@ export function ShiftDownCard({
         <>
           <p className="card-body" style={{ marginBottom: 12 }}>
             {describeShiftDownInProgress(shiftDownDuration)}
-            {openShiftDownStartedAt ? ` Started ${new Date(openShiftDownStartedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.` : ""}
+            {openShiftDownStartedAt ? ` Started ${new Date(openShiftDownStartedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}.` : ""}
           </p>
           {isCommand ? (
             <>
