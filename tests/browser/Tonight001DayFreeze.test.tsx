@@ -56,8 +56,8 @@ for (const newActivity of [false, true]) it(`rechecks an idle deadline while App
   // Keep real browser/IndexedDB/locator timers. Capture App's real deadlines
   // and dispatch their callbacks after advancing Date, without waiting hours.
   const scheduled: { at: number; fire: () => void }[] = [];
-  const realSetTimeout = window.setTimeout.bind(window);
-  vi.spyOn(window, "setTimeout").mockImplementation((handler, delay = 0, ...args) => {
+  const realSetTimeout = globalThis.setTimeout.bind(globalThis);
+  vi.spyOn(globalThis, "setTimeout").mockImplementation((handler, delay = 0, ...args) => {
     const id = realSetTimeout(handler, delay, ...args);
     if (typeof handler === "function") {
       scheduled.push({ at: Date.now() + delay, fire: () => { clearTimeout(id); handler(...args); } });

@@ -1,3 +1,4 @@
+import type { PerformedSet } from "../domain/workout/types";
 import { db } from "../persistence/db";
 import { computeDueRollover, IDLE_WORKOUT_RELEASE_MS, nextRolloverBoundaryAfter } from "../engine/dayRollover";
 
@@ -14,7 +15,7 @@ export async function getNextDayRolloverCheckAt(now: Date = new Date()): Promise
   const workout = await db.workoutSessions.where("beyondDayId").equals(day.id)
     .filter((session) => session.status === "ACTIVE").first();
   if (!workout) return now;
-  const sets = await db.performedSets.where("sessionId").equals(workout.id).toArray();
+  const sets = (await db.performedSets.where("sessionId").equals(workout.id).toArray()) as unknown as PerformedSet[];
   const lastActivityAt = sets.reduce(
     (latest, set) => Math.max(latest, new Date(set.recordedAt).getTime()),
     new Date(workout.startedAt).getTime(),
