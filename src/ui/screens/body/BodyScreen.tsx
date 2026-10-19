@@ -73,7 +73,12 @@ import { SHORTCUT_ANCHOR_IDS, type BodyFocus } from "../../shortcuts";
 import {
   BODY_WRITE_FAILED,
   BODYWEIGHT_PLAUSIBLE_RANGE,
+  BODY_LOG_DELETE_HINT,
+  describeBodyweightDeleted,
   describeBodyweightLogged,
+  describeCorrectToZero,
+  describeSleepDeleted,
+  describeWaterDeleted,
   describeImplausibleBodyweight,
   describeImplausibleProtein,
   describeImplausibleSleep,
@@ -434,6 +439,10 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
   // DROP 3: messages shown inside the sleep form / the entry being corrected, never up at the water card.
   const [sleepNotice, setSleepNotice] = useState<string | null>(null);
   const [sleepCorrectionNotice, setSleepCorrectionNotice] = useState<string | null>(null);
+  // DELETE on water/sleep/bodyweight: a correction's problem is said inside the entry, next to SAVE/DELETE;
+  // what DELETE did is said under that log's entries.
+  const [bodyLogNotice, setBodyLogNotice] = useState<{ log: "WATER" | "BODYWEIGHT"; message: string } | null>(null);
+  const [bodyLogDeleted, setBodyLogDeleted] = useState<{ log: "WATER" | "SLEEP" | "BODYWEIGHT"; message: string } | null>(null);
   const [sleepCorrectionPendingConfirm, setSleepCorrectionPendingConfirm] = useState(false);
   const [sleepHistoryOpen, setSleepHistoryOpen] = useState(false);
 
@@ -826,8 +835,10 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
   async function handleSaveSleepCorrection(skipConfirm = false) {
     if (busyRef.current || !day || !sleepCorrectingId) return;
     const reading = readSleepDuration(sleepCorrectionHours, sleepCorrectionMinutes);
+    const typedZero = `${sleepCorrectionHours}${sleepCorrectionMinutes}`.trim() !== ""
+      && Number(sleepCorrectionHours || 0) === 0 && Number(sleepCorrectionMinutes || 0) === 0;
     if (!reading.ok) {
-      setSleepCorrectionNotice(reading.message);
+      setSleepCorrectionNotice(typedZero ? describeCorrectToZero("0 min") : reading.message);
       return;
     }
     const { totalMinutes } = reading;
@@ -900,25 +911,31 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
     setBodyweightCorrectingId(entry.headEventId);
     setBodyweightCorrectionInput(String(entry.effectiveWeightLbs));
     setError(null);
+    setBodyLogNotice(null);
     setBodyweightHistoryOpen(true);
   }
 
   async function handleSaveBodyweightCorrection() {
     if (busyRef.current || !day || !bodyweightCorrectingId) return;
     const weight = Number(bodyweightCorrectionInput);
+    if (bodyweightCorrectionInput.trim() !== "" && weight === 0) {
+      setBodyLogNotice({ log: "BODYWEIGHT", message: describeCorrectToZero("0 lbs") });
+      return;
+    }
     if (!Number.isFinite(weight) || weight <= 0) {
-      setError("Enter a positive weight in lbs.");
+      setBodyLogNotice({ log: "BODYWEIGHT", message: "Enter a positive weight in lbs." });
       return;
     }
     setBusy(true);
     setError(null);
+    setBodyLogNotice(null);
     try {
       await correctBodyweight(day.id, bodyweightCorrectingId, weight);
       setBodyweightCorrectingId(null);
       if (bodyweightConfirmation?.headEventId === bodyweightCorrectingId) setBodyweightConfirmation(null);
       await refresh();
     } catch (e) {
-      setError(describeError(e, "Correction failed."));
+      setBodyLogNotice({ log: "BODYWEIGHT", message: describeError(e, "Correction failed.") });
     } finally {
       setBusy(false);
     }
@@ -1456,12 +1473,17 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
   async function handleCorrect(entry: HydrationEntry) {
     if (busyRef.current || !day) return;
     const amount = Number(correctionInput);
+    if (correctionInput.trim() !== "" && amount === 0) {
+      setBodyLogNotice({ log: "WATER", message: describeCorrectToZero("0 oz") });
+      return;
+    }
     if (!Number.isFinite(amount) || amount <= 0) {
-      setError("Enter a positive number of ounces.");
+      setBodyLogNotice({ log: "WATER", message: "Enter a positive number of ounces." });
       return;
     }
     setBusy(true);
     setError(null);
+    setBodyLogNotice(null);
     try {
       await correctWater(day.id, entry.headEventId, amount);
       setCorrectingId(null);
@@ -1469,7 +1491,33 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
       if (waterConfirmation?.headEventId === entry.headEventId) setWaterConfirmation(null);
       await refresh();
     } catch (e) {
-      setError(describeError(e, "Correction failed."));
+      setBodyLogNotice({ log: "WATER", message: describeError(e, "Correction failed.") });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** DELETE (hold-to-confirm) on a water, sleep or bodyweight entry: a void event, never an erase. */
+  async function handleDeleteBodyLog(log: "WATER" | "SLEEP" | "BODYWEIGHT", rootEventId: string, deleted: (dayId: string) => Promise<string>) {
+    if (busyRef.current || !day) return;
+    const voidLog = { WATER: voidWaterLog, SLEEP: voidSleepLog, BODYWEIGHT: voidBodyweightLog }[log];
+    const confirmation = { WATER: waterConfirmation, SLEEP: sleepConfirmation, BODYWEIGHT: bodyweightConfirmation }[log];
+    const clearConfirmation = { WATER: setWaterConfirmation, SLEEP: setSleepConfirmation, BODYWEIGHT: setBodyweightConfirmation }[log];
+    setBusy(true);
+    setBodyLogDeleted(null);
+    try {
+      await voidLog(day.id, rootEventId);
+      if (log === "WATER") setCorrectingId(null);
+      if (log === "SLEEP") setSleepCorrectingId(null);
+      if (log === "BODYWEIGHT") setBodyweightCorrectingId(null);
+      setBodyLogNotice(null);
+      if (confirmation && confirmation.dayId === day.id) clearConfirmation(null);
+      await refresh();
+      setBodyLogDeleted({ log, message: await deleted(day.id) });
+    } catch (e) {
+      const message = describeError(e, "Could not delete this entry.");
+      if (log === "SLEEP") setSleepCorrectionNotice(message);
+      else setBodyLogNotice({ log, message });
     } finally {
       setBusy(false);
     }
@@ -1656,6 +1704,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
           />
         )}
         {renderUndoFailure("WATER")}
+        {bodyLogDeleted?.log === "WATER" && <p className="meta" role="status">{bodyLogDeleted.message}</p>}
         {error && <p className="meta meta--error" style={{ marginTop: 8 }}>{error}</p>}
 
         {entries.length > 0 && (
@@ -1666,7 +1715,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
               onToggle={setWaterHistoryOpen}
             >
                 <p className="card-body" style={{ marginBottom: 12 }}>
-                  Correcting an entry keeps the original and shows the corrected number — nothing is deleted.
+                  Correcting or deleting an entry keeps the original on record — nothing is erased.
                 </p>
                 {entries.map((entry) => (
                   <div
@@ -1688,6 +1737,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
                           setCorrectingId(entry.headEventId);
                           setCorrectionInput(String(entry.effectiveAmountOz));
                           setError(null);
+                          setBodyLogNotice(null);
                         }}
                       >
                         CORRECT
@@ -1699,7 +1749,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
                           type="number"
                           id="water-correction" aria-label="Corrected amount (oz)"
                           value={correctionInput}
-                          onChange={(e) => setCorrectionInput(e.target.value)}
+                          onChange={(e) => { setCorrectionInput(e.target.value); setBodyLogNotice(null); }}
                           className="input"
                           style={{ flex: 1 }}
                         />
@@ -1713,6 +1763,13 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
                         </button>
                       </div>
                     )}
+                    {correctingId === entry.headEventId && <>
+                      {bodyLogNotice?.log === "WATER" && <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{bodyLogNotice.message}</p>}
+                      <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
+                        onConfirm={() => void handleDeleteBodyLog("WATER", entry.rootEventId, async (dayId) => describeWaterDeleted(entry.effectiveAmountOz, await getEffectiveHydrationTotal(dayId)))}>
+                        DELETE
+                      </HoldButton>
+                    </>}
                   </div>
                 ))}
             </FieldDisclosure>
@@ -1844,6 +1901,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
             />
           )}
           {renderUndoFailure("SLEEP")}
+          {bodyLogDeleted?.log === "SLEEP" && <p className="meta" role="status">{bodyLogDeleted.message}</p>}
 
           {sleepEntries.length > 0 && (
             <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
@@ -1927,6 +1985,12 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
                           </button>
                         </div>
                       )}
+                      {sleepCorrectingId === entry.headEventId && (
+                        <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
+                          onConfirm={() => void handleDeleteBodyLog("SLEEP", entry.rootEventId, async () => describeSleepDeleted(entry.effectiveDurationMinutes))}>
+                          DELETE
+                        </HoldButton>
+                      )}
                     </div>
                   ))}
               </FieldDisclosure>
@@ -1998,6 +2062,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
             />
           )}
           {renderUndoFailure("BODYWEIGHT")}
+          {bodyLogDeleted?.log === "BODYWEIGHT" && <p className="meta" role="status">{bodyLogDeleted.message}</p>}
 
           {bodyweightEntries.length > 0 && (
             <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
@@ -2025,12 +2090,19 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
                       </div>
                       {bodyweightCorrectingId === entry.headEventId && (
                         <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                          <input type="number" id="weight-correction" aria-label="Corrected weight (lbs)" value={bodyweightCorrectionInput} onChange={(e) => setBodyweightCorrectionInput(e.target.value)} className="input" style={{ flex: 1 }} />
+                          <input type="number" id="weight-correction" aria-label="Corrected weight (lbs)" value={bodyweightCorrectionInput} onChange={(e) => { setBodyweightCorrectionInput(e.target.value); setBodyLogNotice(null); }} className="input" style={{ flex: 1 }} />
                           <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
                             SAVE
                           </button>
                         </div>
                       )}
+                      {bodyweightCorrectingId === entry.headEventId && <>
+                        {bodyLogNotice?.log === "BODYWEIGHT" && <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{bodyLogNotice.message}</p>}
+                        <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
+                          onConfirm={() => void handleDeleteBodyLog("BODYWEIGHT", entry.rootEventId, async () => describeBodyweightDeleted(entry.effectiveWeightLbs))}>
+                          DELETE
+                        </HoldButton>
+                      </>}
                     </div>
                   ))}
               </FieldDisclosure>
