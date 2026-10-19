@@ -7,6 +7,7 @@ import {
   type BackupPrompt,
 } from "../../application/autoBackupQueries";
 import { describeError } from "../errorMessage";
+import { Signal } from "./Signal";
 import { describeRestoreCheck } from "./restoreCheckCopy";
 
 /**
@@ -62,9 +63,10 @@ export function BackupDueLine() {
     <section className="backup-due" aria-label="Backup">
       {prompt?.kind === "BACKUP_DUE" && (
         <div className="backup-due__row">
-          <p className="meta backup-due__text">
+          {/* SUIT-001: backup overdue is one of the four glitch signals. */}
+          <Signal as="p" className="meta backup-due__text" data-signal="backup-line">
             Backup due{describeOverdue(prompt.daysSinceLastBackup)}
-          </p>
+          </Signal>
           <button className="btn-secondary backup-due__action" disabled={busy} onClick={() => void handleBackUp()}>
             BACK UP NOW
           </button>

@@ -9,7 +9,9 @@ import { BodyScreen } from "../ui/screens/body/BodyScreen";
 import { MoreScreen, type MoreView } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
-import { EmblemContext } from "../ui/components/OperatorHeader";
+import { EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
+import { StealthOverlay } from "../ui/components/StealthOverlay";
+import { getStealth, setStealth } from "../application/stealthQueries";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
 import { NotesSweep } from "../ui/components/NotesSweep";
 import { TimeCapsuleOpened } from "../ui/components/TimeCapsuleOpened";
@@ -116,6 +118,8 @@ function AppWorkspaces() {
   const [shortcut] = useState(() => parseShortcut(window.location.search));
   // SHORTCUTS-001: START WORKOUT opens TRAIN; the others open BODY.
   const [tab, setTab] = useState<Tab>(() => (shortcut === "workout" ? "TRAIN" : shortcut ? "BODY" : "TODAY"));
+  const tabRef = useRef(tab);
+  tabRef.current = tab;
   // Screen instances are session-local. Hiding a destination never discards its forms.
   const [visited, setVisited] = useState(() => new Set<Tab>([tab]));
   // A direct TRAIN/BODY launch has no TODAY yet to publish the effective suit.
@@ -158,6 +162,23 @@ function AppWorkspaces() {
   }, [todayVisited]);
   useEffect(() => () => { delete document.documentElement.dataset.suitMode; }, []);
   const [todayRefreshKey, setTodayRefreshKey] = useState(0);
+  // SUIT-001: stealth writes while BODY or SYSTEMS stays shown behind it; they re-read on this.
+  const [stealthWrites, setStealthWrites] = useState(0);
+  // SUIT-001: stealth hides the screen, not the data. It stays on across reloads until exited.
+  const [stealthOn, setStealthOn] = useState(() => getStealth());
+  const stealthOnRef = useRef(stealthOn);
+  function changeStealth(on: boolean) {
+    if (on === stealthOnRef.current) return;
+    stealthOnRef.current = on;
+    setStealth(on);
+    setStealthOn(on);
+    // Close any open sheet behind it; the screens and their drafts stay as they were.
+    if (on) for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog[open]")) dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
+    else requestAnimationFrame(() => {
+      const emblem = [...document.querySelectorAll<HTMLElement>(`#workspace-${tabRef.current} .operator-emblem`)].find((element) => element.getClientRects().length);
+      emblem?.focus({ preventScroll: true });
+    });
+  }
   const [workEndedKey, setWorkEndedKey] = useState(0);
   const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut === "workout" ? null : shortcut);
   const [bodyRequest, setBodyRequest] = useState(0);
@@ -217,6 +238,8 @@ function AppWorkspaces() {
   // FIND-001: a LIFT/PR search result opens TRAIN → RECORDS at that lift; the top-bar icon opens SEARCH.
   const [trainRecordsFocus, setTrainRecordsFocus] = useState<string | null>(null);
   const [moreView, setMoreView] = useState<MoreView>("MENU");
+  // SUIT-001: the readout was opened from TODAY's SYSTEMS line, so it offers the way back.
+  const [systemsOrigin, setSystemsOrigin] = useState(false);
   const [continuityResolved, setContinuityResolved] = useState(false);
 
   useEffect(() => {
@@ -393,6 +416,7 @@ function AppWorkspaces() {
 
   function openMore(view: MoreView, focus: IntentFocus | null = null, focusHeading = true) {
     if (!canNavigate()) return false;
+    setSystemsOrigin(false);
     setHealthHistoryOrigin(false); setHealthHistory(null);
     setIntentFocus(focus);
     setMoreView(view);
@@ -472,6 +496,7 @@ function AppWorkspaces() {
     if (destination.kind === "workout") return openTrain("WORKOUT");
     if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
     if (destination.kind === "capture") { openCapture(); return true; }
+    if (destination.kind === "stealth") { changeStealth(true); return true; }
     if (destination.kind === "tools") {
       if (!canNavigate()) return false;
       setTodayToolsOpen(true);
@@ -510,7 +535,9 @@ function AppWorkspaces() {
 
   return (
     <EmblemContext.Provider value={goTodayRoot}>
-    <div style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
+    <StealthToggleContext.Provider value={() => changeStealth(!stealthOnRef.current)}>
+    {/* Everything behind stealth is inert: not focusable, not read, not tappable. */}
+    <div inert={stealthOn} style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
       <a className="skip-link" href="#main-content">Skip to content</a>
       <main id="main-content" tabIndex={-1}>
         {visited.has("TODAY") && <div id="workspace-TODAY" className={tab === "TODAY" ? "tab-enter" : undefined} hidden={tab !== "TODAY"}>
@@ -536,6 +563,7 @@ function AppWorkspaces() {
               onOpenBody={openBody}
               onOpenHealthEvidence={openBodyEvidence}
               onOpenWeeklyReview={() => openMore("REVIEW")}
+              onOpenSystems={() => { if (openMore("SYSTEMS")) setSystemsOrigin(true); }}
               toolsRequest={toolsRequest}
             />
           </RootErrorBoundary>
@@ -545,7 +573,7 @@ function AppWorkspaces() {
             onDestinationConsumed={() => setTrainDestination(null)} /></RootErrorBoundary>
         </div>}
         {visited.has("BODY") && <div id="workspace-BODY" className={tab === "BODY" ? "tab-enter" : undefined} hidden={tab !== "BODY"}>
-          <RootErrorBoundary active={tab === "BODY"}><BodyScreen focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"}
+          <RootErrorBoundary active={tab === "BODY"}><BodyScreen focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
             evidenceRequest={healthEvidence} onHealthHistory={openHealthHistory}
             onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `RETURN TO ${mealOrigin.tab}` : "RETURN TO TODAY"}
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
@@ -560,6 +588,9 @@ function AppWorkspaces() {
               setTrainDestination(null); setTrainRecordsFocus(exerciseId); showTab("TRAIN", false);
             }}
             onOpenMeal={() => openBody("meal")}
+            onOpenMetric={openBodyEvidence}
+            systemsRefreshKey={stealthWrites}
+            onReturnToToday={systemsOrigin && moreView === "SYSTEMS" ? () => { setSystemsOrigin(false); showTab("TODAY"); } : undefined}
             onOpenDestination={openSystemDestination} /></RootErrorBoundary>
         </div>}
       </main>
@@ -609,6 +640,8 @@ function AppWorkspaces() {
         ))}
       </nav>
     </div>
+    {stealthOn && <StealthOverlay onExit={() => changeStealth(false)} onLogged={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((n) => n + 1); }} />}
+    </StealthToggleContext.Provider>
     </EmblemContext.Provider>
   );
 }
