@@ -66,3 +66,7 @@
   .cc-mode .cc-skyline { height: 70px; }
   .cc-mode .systems-line { min-height: 46px; margin-top: 8px; padding-block: 6px; }
 }
+/* POLISH-002: WATER sheet amount tiles (prototype .amounts). */
+.today-sheet .cc-amounts { grid-template-columns: repeat(3, 1fr); padding: 8px 14px 12px; }
+.today-sheet .cc-amounts button { color: var(--p-t1); cursor: pointer; }
+.today-sheet .cc-amounts button small { font-size: 12px; color: var(--p-t3); margin-left: 2px; }

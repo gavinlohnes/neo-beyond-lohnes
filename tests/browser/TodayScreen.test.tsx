@@ -1335,7 +1335,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     await screen.getByRole("button", { name: "CONFIRM SATISFACTION" }).click();
 
     await expect.element(screen.getByRole("alert")).toHaveTextContent("the commitment no longer exists");
-    expect(document.activeElement).toBe(screen.getByRole("alert").element());
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole("alert").element());
     expect(screen.getByText(/Commitment satisfied:/).elements()).toHaveLength(0);
     // The refresh that removes the row runs after the alert; wait for it rather than racing it.
     await expect.poll(() => screen.getByRole("button", { name: "Open COMMITMENT" }).elements().length).toBe(0);

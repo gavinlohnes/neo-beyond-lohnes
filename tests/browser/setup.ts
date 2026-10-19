@@ -12,6 +12,7 @@ import "../../src/ui/styles/global.css";
 // POLISH-002: the ported command-center prototype, as index.html links it.
 import "../../src/ui/cc/cc.css";
 import "../../src/ui/cc/shell.css";
+import "../../src/ui/cc/skin.css";
 import "../../src/ui/styles/fonts.ts";
 
 import Dexie from "dexie";

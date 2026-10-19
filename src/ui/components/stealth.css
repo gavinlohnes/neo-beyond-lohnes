@@ -56,3 +56,14 @@
   .stealth { animation: none; }
   .stealth__press, .operator-emblem__press { animation: none; transform: none; }
 }
+
+/* POLISH-002: the prototype's stealth controls (.st-actions .act) — dim ghost tiles in the display
+   face. Text colors stay SUIT-001's AA tokens rather than the prototype's darker greys. */
+.stealth :is(.stealth__label, .stealth__mode, .stealth__peek-label) { font-family: var(--p-display); }
+.stealth__actions .btn-secondary, .stealth__exit {
+  border: 1px solid #262626; border-radius: 0; background: #050505; color: var(--text-2);
+  font-family: var(--p-display); font-weight: 500; letter-spacing: .1em; box-shadow: none;
+}
+.stealth__actions .btn-secondary:active, .stealth__exit:active { background: #0d0d0d; }
+.stealth__peek, .stealth__meal { border-color: #1e1e1e; }
+.stealth__amounts button { border-radius: 0; }

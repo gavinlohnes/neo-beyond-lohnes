@@ -1,0 +1,70 @@
+/* POLISH-002 PR B: the prototype's building blocks applied app-wide (TRAIN, BODY, COMMAND and
+   their sub-views). Values come from the prototype (cc.css): display-face labels, ghost buttons,
+   the red CTA, quiet panels, fields and disclosures. TODAY's own rules live in console.css.
+   Gym readability (TRAIN-OPERATOR-001: 16 px in the workout) keeps its larger sizes. */
+
+/* The skin never overrides BEYOND's own guarantees: 16 px readable text outside TODAY, BODY's
+   neutral primary buttons (red-budget carve-out), gym-sized controls, and Weekly's pre-HUD look. */
+
+/* Labels: the prototype's .lbl — display face, quiet, spaced (16 px floor). */
+.screen :is(.tool-label, .section-label):not(.hud-legacy *) {
+  font-family: var(--p-display); font-weight: 500; letter-spacing: .14em; color: var(--p-t3); text-transform: uppercase;
+}
+.screen .section-label:not(.hud-legacy *)::after { background: var(--p-line); }
+
+/* Buttons: the prototype's ghost and CTA geometry and type; colors stay each screen's own. */
+.screen .btn-secondary:not(.hud-legacy *) {
+  border: 1px solid var(--p-line-2); border-radius: 0; background: none; color: var(--p-t1);
+  font-family: var(--p-display); font-weight: 500; letter-spacing: .1em; box-shadow: none;
+}
+.screen .btn-secondary:not(.hud-legacy *):active { background: var(--p-s3); }
+.screen .btn-primary:not(.hud-legacy *) {
+  border-radius: 0; font-family: var(--p-display); font-weight: 600; letter-spacing: .14em;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); box-shadow: none;
+}
+.screen .btn-primary:not(.hud-legacy *):active { transform: scale(.985); }
+
+/* Panels: the earned dominant surface becomes the prototype's panel. */
+.screen .command-surface:not(.hud-legacy *) {
+  position: relative; padding: 14px; margin-bottom: 12px; border: 1px solid var(--p-line); border-left-width: 1px; box-shadow: none;
+  background: linear-gradient(225deg, transparent 9.9px, var(--p-line) 9.9px, var(--p-line) 11.1px, var(--p-s1) 11.1px);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+}
+.screen .command-surface:not(.hud-legacy *) .command-title { font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: .02em; color: var(--p-t1); margin: 0 0 6px; }
+.screen :is(.card, .equipment-row):not(.hud-legacy *) { border-radius: 0; box-shadow: none; }
+.screen .card-title:not(.hud-legacy *) { font-family: var(--p-display); font-weight: 600; letter-spacing: .03em; color: var(--p-t1); }
+.screen .card-body:not(.hud-legacy *), .screen .meta:not(.hud-legacy *) { color: var(--p-t2); }
+
+/* Fields and chips. */
+.screen .input:not(.hud-legacy *) { border: 1px solid var(--p-line-2); border-radius: 0; background: var(--p-s2); color: var(--p-t1); }
+.screen .input:not(.hud-legacy *):focus-visible { outline: none; border-color: var(--p-t1); }
+.screen .chip:not(.hud-legacy *) { border-radius: 0; border-color: var(--p-line); color: var(--p-t2); font-family: var(--p-display); letter-spacing: .06em; }
+.screen :is(.chip--selected, .chip[aria-pressed="true"]):not(.hud-legacy *) { color: var(--p-t1); border-color: var(--p-t1); background: none; }
+
+/* Disclosures: the prototype's quiet summaries. */
+.screen .disclosure-row:not(.hud-legacy *) { font-family: var(--p-display); font-weight: 500; letter-spacing: .06em; color: var(--p-t2); }
+
+/* Header: tighter type so long destination titles fit beside search and the clock. */
+.cc-hdr .cc-title { font-size: 16px; letter-spacing: .1em; }
+.cc-hdr .cc-emblem.operator-emblem { margin-right: -10px; }
+
+/* COMMAND: the prototype's .row list — sentence-case title, quiet description, ›. */
+.screen .command-result { min-height: 60px; padding: 10px 0; border-bottom: 1px solid var(--p-line); color: var(--p-t1); }
+.screen .command-result strong { display: block; font-family: var(--p-display); font-size: 16px; font-weight: 600; letter-spacing: .03em; text-transform: lowercase; }
+.screen .command-result strong::first-letter { text-transform: uppercase; }
+.screen .command-result strong + span { color: var(--p-t2); }
+.screen .command-result__go { color: var(--p-t3); }
+.screen .command-search { min-height: 52px; border: 1px solid var(--p-line-2); background: var(--p-s1); border-radius: 0; }
+
+/* Sub-view return: the prototype's quiet back control ("‹ TODAY"), not a boxed button. */
+.screen .more-return { width: auto; min-height: 44px; padding: 0 4px; margin: 4px 0 0; border: 0; background: none; clip-path: none; color: var(--p-t2); letter-spacing: .06em; }
+
+/* BODY: the prototype's number tiles (renderBody) for the daily overview. */
+.screen .health-overview .readout-grid { gap: 1px; padding: 0; background: var(--p-line); border: 1px solid var(--p-line); }
+.screen .health-overview .readout-grid + .readout-grid { border-top: 0; }
+.screen .health-overview .readout { background: var(--p-s1); padding: 10px 8px 9px; min-height: 76px; display: flex; flex-direction: column; justify-content: space-between; text-align: left; border: 0; color: var(--p-t1); }
+.screen .health-overview .readout .tool-label { letter-spacing: .12em; margin: 0; }
+.screen .health-overview .readout__value { font-family: var(--p-mono); font-weight: 600; font-size: 20px; letter-spacing: -.02em; line-height: 1.2; margin: 0; }
+.screen .health-overview .readout-grid--primary .readout__value { font-size: 20px; font-weight: 600; }
+.screen .health-overview .readout-grid--primary .readout__value > span:last-child { color: var(--p-t3); }
+.screen .health-overview .readout__detail { letter-spacing: .02em; color: var(--p-t3); margin: 0; }
