@@ -15,8 +15,12 @@ recommendation change. Files: `engine/dayRollover.ts` (pure `workoutHoldsRollove
 `application/commands.ts` (rollover reads the workout's sets in its transaction),
 `ui/screens/today/ActiveWorkoutCard.tsx`, the TODAY stale note copy.
 
-**Verification:** recorded in the PR. The three new idle-release integration tests fail on the old
-code and pass with the fix.
+**Verification:** full suite 270 files: 2,683 passed and 1 existing skip. The two failures it found
+were tests whose setup needed a workout to defer the rollover: `modePinExpiry` and
+`ConnectedHealth`'s read-only browsing test. Their workouts sat idle for hours, so I made them
+recently active and kept the assertions unchanged. Both pass. Architecture (269 files),
+TypeScript and the production build pass. The three new idle-release integration tests fail on
+the old code and pass with the fix. `check:risk` confirms the change is PROTECTED.
 
 **Remaining risks:** physical-device, Safari and screen-reader checks are unclaimed. A workout
 that started before a rollover still records its completion on its original day. That's
