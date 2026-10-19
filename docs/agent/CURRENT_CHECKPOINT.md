@@ -5,13 +5,29 @@
 Gavin approved the attached brief, committed unchanged as [POLISH-001.md](POLISH-001.md).
 Builder: Codex. Branch `codex/polish-001`; [PR #251](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/251).
 Fresh starting master: `82e923453e8634e89fccf7feee02edb6ad0eb161`; #250 was open (checkpoint only).
-Items 1–12 implemented and pushed individually. Rulings recorded in UX_DECISIONS.
-TypeScript and the existing mode-header contrast/layout test pass. Acceptance/regressions
-are in progress; do not treat implementation as complete or reviewed.
+All 13 items implemented; the brief and each item were pushed separately. Rulings are in
+UX_DECISIONS. Acceptance fixes preserve the water More-route focus and active-workout fold.
+The skyline has its own band, real-clock sky/windows, and recommendation-gated beam.
+TODAY has one persistent Engine card, numbers, action row, mode rows and Tools. Water logs
+in place with canonical undo. SAVE & LOG retains the saved meal on log failure. Late RECOVER
+asks about main sleep using the existing draft. Copy, return context and HH:MM are updated.
+
+**Verification:** `npm run verify` passes: architecture, 269 test files / 2,676 tests passed,
+one existing skip, TypeScript and production PWA build. Thirteen new browser cases cover
+canonical log/undo double taps, water retry/repeat, SAVE & LOG failure recovery, late sleep
+prompt/draft boundaries and no-write NOT YET, scene gating, order and fold. Existing navigation,
+focus/drafts, browser Back, privacy, backup and protected-fixture regressions pass.
+Built PWA passes 320/360/390/412: four modes, source/name separation, one action-red button,
+390×844/360×800 fold, 23:40/11:00 sky, water/undo, offline save and cold reload. Synthetic
+screenshots and reproduction: [polish-001/README.md](../screenshots/polish-001/README.md).
+The inherited stealth test used the real clock; minute 42 falsely matched the hidden total.
+Only Date is pinned in that test fixture; its privacy assertions and production stealth stay.
 No Engine, phase derivation, schema, command/event semantics, backup or dependency changes.
-Next: verify logging failure recovery, mode/phone matrix, back/focus/drafts/offline, full
-`npm run verify`, screenshots, then stop for Claude Code’s independent exact-head review.
-Never merge; Gavin controls the merge decision.
+Chromium automation only; physical-device/Safari/screen-reader checks are unclaimed. The
+existing bundle-size advisory remains. The final PR Handoff binds published SHA and CI.
+
+**Next:** stop for Claude Code’s independent exact-head review against POLISH-001, then
+Gavin’s separate merge decision after green required CI. No merge or deployment by Builder.
 
 The sections below are historical starting-checkpoint content. Read live PRs for status.
 
