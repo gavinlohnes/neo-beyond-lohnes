@@ -3,6 +3,7 @@ import { getReviewOverview } from "../../../application/reviewOverviewQueries";
 import { reviewMean, type ReviewOverview, type ReviewRow } from "../../../engine/reviewOverview";
 import { describeError } from "../../errorMessage";
 import "./review.css";
+import { BodyAnswers } from "./BodyAnswers";
 
 type Measure = "weight" | "protein" | "calories" | "sleepHours" | "sessions";
 const date = (at: string) => new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -103,6 +104,8 @@ export function ReviewAnswers({ active = true, onOpenHistory }: { active?: boole
       {evidence("sessions", "sessions", "Count distinct COMPLETED or PARTIAL STANDARD/REDUCED sessions owned by completed lived days starting in this window. Active, stopped/abandoned and recovery sessions are excluded. A recorded day with no qualifying session is zero; a day with no record is missing. This reports frequency, not adherence to a plan.")}
     </Answer>
     <details className="review-more"><summary>More questions</summary>
+      {/* REVIEW-001 Phase 1a data: measurements and photos (#9, #21, #20, #16). */}
+      <BodyAnswers active={active} overview={data} />
       <Answer title="What main sleep have I recorded?" answer={`${value(data.sleep.mean, "h")} average across ${data.sleep.days} unambiguous sleep-logged days`}>
         {evidence("sleepHours", "h", "Use the effective duration when exactly one main-sleep entry exists across a lived day's recorded segments. Naps and days with multiple main sleeps are excluded. Logging date is not proof of sleep timing or quality.")}
       </Answer>

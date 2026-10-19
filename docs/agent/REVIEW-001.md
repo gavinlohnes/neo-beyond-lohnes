@@ -455,3 +455,28 @@ Verification: browser tests at 320/360/412 with a canvas-backed fake camera (gho
 44 px targets, axe, capture → existing preview with the pose preset → explicit save as CAMERA,
 tracks stopped, nothing saved before SAVE PHOTO) and the denied-camera path. Screenshots in
 `docs/screenshots/review-001-framing/`. A real phone camera is not exercised by automation.
+
+## Phase 1a delivery — Body questions in the Review hub (2026-10-18)
+
+Builder: Claude Code, during Gavin's overnight sprint permission (2026-10-18). Builds catalog
+questions #9, #16, #20 and #21, which the plan sources from Phase 1a data (measurements and photos)
+and which #244 now records. Branch `claude/review-001-body-questions`, stacked on #244 (head
+`14f3c1c`) and carrying the same ported focus fix as #245/#246. Lane: PROTECTED.
+
+Under "More questions" (the core six are unchanged):
+- **Is my waist getting smaller? (#9)** The latest reading, its change since the previous and
+  since the first. Below 2 readings it says "Building up". It names the number of readings and
+  shows every waist measurement with corrections noted, plus "How this is calculated".
+- **Are chest, arms and shoulders growing? (#21)** The same per site. Missing sites stay
+  missing.
+- **Do I look different? (#20)** Per-pose photo counts and date span. It points to BODY → Your
+  progress → Photos to compare; only Gavin can judge. Hidden photos are left out.
+- **Am I losing fat, not muscle? (#16)** "No verdict." Weight, waist, strength (still Building up
+  until Phase 1b) and photos side by side under the rule "BEYOND does not measure fat or muscle."
+
+Pure summaries in `engine/bodyReview.ts` (unit-tested, never used by `evaluate`); a read-only
+application query over the existing BODY queries. No schema, event, backup, Engine-evaluation,
+dependency or TODAY change.
+
+Verification: engine unit tests; browser tests at 320/360/412 (values including a corrected
+waist reading, hidden photo excluded, axe, no writes) and the nothing-recorded state.
