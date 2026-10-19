@@ -206,9 +206,18 @@ it("BODY and an open SYSTEMS readout behind stealth show its logs and undos on e
   const stealthLog = async (undo: boolean) => {
     await press(await visibleEmblem(), LONG_PRESS_MS + 80);
     await screen.getByRole("button", { name: "WATER", exact: true }).click();
+    const before = vi.mocked(commands.logWater).mock.calls.length;
     await screen.getByRole("button", { name: "12 oz", exact: true }).click();
-    if (undo) await screen.getByRole("button", { name: "UNDO", exact: true }).click();
-    await expect.poll(() => vi.mocked(commands.logWater).mock.calls.length).toBeGreaterThan(0);
+    await expect.poll(() => vi.mocked(commands.logWater).mock.calls.length).toBe(before + 1);
+    // Escape closes an open panel before it exits Stealth. Wait for the real
+    // save to close the panel and finish refreshing, not merely invoke a command.
+    const water = screen.getByRole("button", { name: "WATER", exact: true });
+    await expect.element(water).toHaveAttribute("aria-expanded", "false");
+    await expect.element(water).toBeEnabled();
+    if (undo) {
+      await screen.getByRole("button", { name: "UNDO", exact: true }).click();
+      await expect.element(water).toBeEnabled();
+    }
     await userEvent.keyboard("{Escape}");
     await expect.poll(() => overlay()).toBeNull();
   };
@@ -229,3 +238,4 @@ it("BODY and an open SYSTEMS readout behind stealth show its logs and undos on e
   await stealthLog(false);
   await expect.element(screen.getByRole("button", { name: "Water: 32 oz. Open history" })).toBeVisible();
 });
+

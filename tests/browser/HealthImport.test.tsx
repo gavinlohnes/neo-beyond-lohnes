@@ -15,7 +15,7 @@ vi.mock("../../src/application/advisoryQueries", async (original) => {
   const actual = await original<typeof import("../../src/application/advisoryQueries")>();
   return { ...actual, getAdvisoryNotes: vi.fn(actual.getAdvisoryNotes) };
 });
-afterEach(() => { cleanup(); });
+afterEach(async () => { await cleanup(); });
 function chooseFile(input: HTMLInputElement, content = JSON.stringify(syntheticSleep())) {
   const transfer = new DataTransfer(); transfer.items.add(new File([content], "synthetic-sleep.json", { type: "application/json" }));
   input.files = transfer.files; input.dispatchEvent(new Event("change", { bubbles: true }));
@@ -64,7 +64,7 @@ describe("Health Connect sleep import", () => {
     await screen.getByRole("button", { name: "CONFIRM SLEEP IMPORT" }).click();
     await expect.element(screen.getByText(/^Imported 0 new, 0 revised; 1 unchanged/)).toBeVisible();
     expect(await db.externalSleepRevisions.count()).toBe(1); expect(await db.healthImportReceipts.count()).toBe(1);
-    cleanup();
+    await cleanup();
     const evidence = await render(<ImportedSleepEvidence />);
     await expect.element(evidence.getByRole("heading", { name: "Garmin Connect · sleep" })).toBeVisible();
     await expect.element(evidence.getByText("Source dates only · no lived day assigned")).toBeVisible();

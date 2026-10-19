@@ -6,6 +6,10 @@ official AndroidX Health Connect client, then saves a versioned JSON file for an
 explicit BEYOND preview/import. No Internet permission, account, server, background
 worker, health write permission, analytics or third-party exporter.
 
+The packaged manifest allows the official Health Connect SDK's bound
+`HealthDataSdkService`, used for platform/client IPC. It is not a scheduled sync
+worker. CI rejects other services, other health permissions and Internet access.
+
 ## Build and provenance
 
 Java 17, Gradle 8.11.1, Android compile SDK 36 (target 35; minimum 28). Run:
