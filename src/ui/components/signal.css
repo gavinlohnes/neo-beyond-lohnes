@@ -1,0 +1,16 @@
+/* SUIT-001: glitch only ever marks a true signal. Presentation only; never on a control. */
+.signal-glitch { animation: signal-glitch .36s steps(1) 2; }
+span.signal-glitch { display: inline-block; }
+@keyframes signal-glitch {
+  0% { transform: none; clip-path: none; text-shadow: none; }
+  20% { transform: translateX(-2px); clip-path: inset(8% 0 55% 0); text-shadow: 2px 0 var(--red), -2px 0 rgba(255, 255, 255, .25); }
+  40% { transform: translateX(2px); clip-path: inset(58% 0 6% 0); text-shadow: -2px 0 var(--red); }
+  60% { transform: translateX(-1px); clip-path: inset(30% 0 32% 0); text-shadow: 1px 0 var(--red); }
+  80% { transform: none; clip-path: none; text-shadow: 1px 0 var(--red); }
+  100% { transform: none; clip-path: none; text-shadow: none; }
+}
+@media (prefers-reduced-motion: reduce) { .signal-glitch { animation: none; } }
+.signal-stale { display: flex; align-items: center; gap: 10px; margin-top: 6px; color: var(--warning); font-size: 14px; }
+.signal-stale > span:first-child { flex: 1; min-width: 0; }
+.signal-stale .chip { flex: none; width: auto; min-height: 44px; padding-inline: 14px; }
+.signal-line { margin: 0; color: var(--warning); }

@@ -1,3 +1,4 @@
+import { Signal } from "../../components/Signal";
 import type { CaptureItem } from "../../../domain/common/types";
 import type { CaptureDateSuggestion } from "../../../domain/capture/types";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
@@ -177,7 +178,7 @@ export function CaptureToolsCard({
           CAPTURE
         </button>
       </div>
-      {feedback && <p className="meta" role={feedback.kind === "ERROR" ? "alert" : "status"}>{feedback.message}</p>}
+      {feedback && <p className="meta" role={feedback.kind === "ERROR" ? "alert" : "status"}>{feedback.kind === "ERROR" ? <Signal key={feedback.message} data-signal="save-failed">{feedback.message}</Signal> : feedback.message}</p>}
       {showListHere && (
         <>
           {openCaptureItems.map((item) => (

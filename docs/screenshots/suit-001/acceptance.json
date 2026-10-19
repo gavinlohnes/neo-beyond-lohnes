@@ -1,0 +1,47 @@
+[
+  {
+    "width": 320,
+    "passed": true,
+    "systemsLine": true,
+    "readoutReadOnly": true,
+    "focusReturn": true,
+    "offlineSignal": true,
+    "stealthLongPress": true,
+    "blindWaterExactlyOnce": true,
+    "noTotalsInStealth": true,
+    "peekWhileHeld": true,
+    "stealthPersistsReload": true,
+    "offlineColdReload": true,
+    "pageErrors": []
+  },
+  {
+    "width": 360,
+    "passed": true,
+    "systemsLine": true,
+    "readoutReadOnly": true,
+    "focusReturn": true,
+    "offlineSignal": true,
+    "stealthLongPress": true,
+    "blindWaterExactlyOnce": true,
+    "noTotalsInStealth": true,
+    "peekWhileHeld": true,
+    "stealthPersistsReload": true,
+    "offlineColdReload": true,
+    "pageErrors": []
+  },
+  {
+    "width": 412,
+    "passed": true,
+    "systemsLine": true,
+    "readoutReadOnly": true,
+    "focusReturn": true,
+    "offlineSignal": true,
+    "stealthLongPress": true,
+    "blindWaterExactlyOnce": true,
+    "noTotalsInStealth": true,
+    "peekWhileHeld": true,
+    "stealthPersistsReload": true,
+    "offlineColdReload": true,
+    "pageErrors": []
+  }
+]

@@ -5,11 +5,12 @@ import { PHOTO_POSES, type PhotoPose, type PhotoSource, type ProgressPhoto } fro
 import { describeError } from "../../errorMessage";
 import { useSessionDraft } from "../../sessionDrafts";
 import { localProgressDate, progressDate } from "./progressCopy";
+import { FramingGuide } from "./FramingGuide";
 
 const poseLabel = (pose: PhotoPose) => pose.charAt(0) + pose.slice(1).toLowerCase();
 
 /** Object URLs belong only to mounted images, never to records or backup data. */
-function PhotoImage({ image, alt }: { image: Blob; alt: string }) {
+export function PhotoImage({ image, alt }: { image: Blob; alt: string }) {
   const [url, setUrl] = useState("");
   useEffect(() => {
     const next = URL.createObjectURL(image); setUrl(next);
@@ -53,6 +54,13 @@ export function ProgressPhotos({ active }: { active: boolean }) {
   }, [ready, reading, readFailed]);
   const importRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  // REVIEW-001 optional framing guide: in-app camera with the last same-pose photo as a ghost.
+  const [guideOpen, setGuideOpen] = useState(false);
+  const guideButton = useRef<HTMLButtonElement>(null);
+  function closeGuide(captured: boolean) {
+    setGuideOpen(false);
+    requestAnimationFrame(() => (captured ? document.getElementById("photo-pose") : guideButton.current)?.focus());
+  }
   useSessionDraft("body-progress-photos", file !== null || editing !== null);
   useEffect(() => {
     if (!active) return;
@@ -105,6 +113,7 @@ export function ProgressPhotos({ active }: { active: boolean }) {
       <div className="progress-actions">
         <button type="button" className="btn-secondary" disabled={busy} onClick={() => cameraRef.current?.click()}>TAKE PHOTO</button>
         <button id="photo-import-button" type="button" className="btn-secondary" disabled={busy} onClick={() => importRef.current?.click()}>IMPORT PHOTO</button>
+        <button ref={guideButton} type="button" className="btn-secondary" disabled={busy} aria-haspopup="dialog" onClick={() => setGuideOpen(true)}>USE FRAMING GUIDE</button>
       </div>
       <input ref={cameraRef} type="file" accept="image/*" capture="user" aria-label="Take progress photo" hidden disabled={busy} onChange={(event) => pick(event.target.files?.[0], "CAMERA")} />
       <input ref={importRef} type="file" accept="image/*" aria-label="Import progress photo" hidden disabled={busy} onChange={(event) => pick(event.target.files?.[0], "IMPORT")} />
@@ -114,6 +123,9 @@ export function ProgressPhotos({ active }: { active: boolean }) {
         <div className="progress-actions"><button className="btn-primary" disabled={busy}>{busy ? "SAVING…" : "SAVE PHOTO"}</button><button className="btn-secondary" type="button" disabled={busy} onClick={clearFile}>CLEAR SELECTED PHOTO</button></div>
       </>}
     </form>
+    {/* The ghost comes only from a current, successful read: a cached list can hold a photo hidden since. */}
+    {guideOpen && <FramingGuide initialPose={filter} photos={ready && !reading && !readFailed ? photos : null} onClose={() => closeGuide(false)}
+      onCapture={(captured, guidePose) => { pick(captured, "CAMERA"); setPose(guidePose); closeGuide(true); }} />}
     {receipt && <p className="progress-receipt" role="status">{receipt}</p>}
     {error && <p role="alert">{error}</p>}
     {readFailed && <div role="alert"><p>Could not read photos. Your stored photos are unchanged.</p><button className="btn-secondary" disabled={reading} onClick={() => { restoreRetryFocus.current = true; setRevision((value) => value + 1); }}>RETRY PHOTOS</button></div>}

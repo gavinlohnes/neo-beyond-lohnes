@@ -1,0 +1,58 @@
+/* SUIT-001: stealth. Dim, but every text token stays WCAG AA on black. */
+.stealth {
+  position: fixed; inset: 0; z-index: 80; display: flex; justify-content: center; overflow-y: auto;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  background: #000; color: var(--text-2);
+}
+.stealth::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .028) 0 1px, transparent 1px 3px); }
+.stealth { animation: stealth-in .34s steps(1) both; }
+@keyframes stealth-in {
+  0% { opacity: 0; }
+  15% { opacity: 1; clip-path: inset(0 0 70% 0); transform: translateX(-4px); }
+  35% { clip-path: inset(40% 0 20% 0); transform: translateX(3px); }
+  55% { clip-path: inset(10% 0 45% 0); transform: none; }
+  100% { opacity: 1; clip-path: none; transform: none; }
+}
+.stealth__inner { position: relative; display: flex; flex-direction: column; width: 100%; max-width: 430px; min-height: 100%; padding: 10px var(--gutter, 16px) 24px; }
+.stealth__top { display: flex; align-items: center; gap: 10px; }
+.stealth__emblem { position: relative; color: var(--text-3-strong); -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+.stealth__press { position: absolute; left: 4px; right: 4px; bottom: 4px; height: 2px; background: var(--text-2); transform-origin: left; animation: emblem-press 550ms linear both; }
+.stealth__label { margin-left: auto; color: var(--text-3-strong); font-size: 12px; letter-spacing: .24em; }
+.stealth__exit { flex: none; width: auto; min-height: 44px; padding-inline: 14px; }
+.stealth__time { margin: 18vh 0 0; color: var(--text-2); font-family: var(--font-mono); font-size: 64px; font-weight: 600; line-height: 1; letter-spacing: -.03em; }
+.stealth__mode { margin: 8px 0 0; color: var(--text-3-strong); font-size: 14px; letter-spacing: .24em; }
+.stealth__workout { margin: 14px 0 0; color: var(--text-2); font-size: 14px; }
+.stealth__peeks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 28px; }
+.stealth__peek {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-height: 64px; padding: 10px 12px;
+  border: 1px solid var(--border-subtle); background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer;
+  -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: none;
+}
+.stealth__peek-label { color: var(--text-3-strong); font-size: 12px; letter-spacing: .12em; }
+.stealth__peek-value { color: var(--text-3-strong); font-family: var(--font-mono); font-size: 18px; letter-spacing: .1em; }
+.stealth__peek--showing .stealth__peek-value { color: var(--text-1); letter-spacing: 0; }
+.stealth__panel { display: grid; gap: 8px; margin-top: 16px; }
+.stealth__amounts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stealth__meal {
+  display: grid; gap: 2px; width: 100%; min-height: 56px; padding: 10px 12px; border: 1px solid var(--border-subtle);
+  background: transparent; color: var(--text-1); text-align: left; font: inherit; cursor: pointer;
+}
+.stealth__meal span { color: var(--text-2); font-size: 14px; }
+.stealth__note, .stealth__hint { margin: 0; color: var(--text-3-strong); font-size: 13px; }
+.stealth__feedback { display: grid; gap: 6px; margin-top: 14px; min-height: 44px; }
+.stealth__confirm { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; color: var(--text-1); font-size: 15px; }
+.stealth__confirm .chip { flex: none; width: auto; min-height: 44px; padding-inline: 14px; }
+.stealth__failure { margin: 0; color: var(--warning); font-size: 15px; }
+.stealth__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; padding-top: 16px; }
+.stealth__actions .btn-secondary { min-height: 52px; }
+.stealth__hint { margin-top: 12px; }
+.stealth__hint + .stealth__hint { margin-top: 4px; }
+
+/* The header emblem's long-press: a thin progress line while held. */
+.operator-emblem { position: relative; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.operator-emblem__press { position: absolute; left: 4px; right: 4px; bottom: 4px; height: 2px; background: var(--text-2); transform-origin: left; animation: emblem-press 550ms linear both; }
+@keyframes emblem-press { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .stealth { animation: none; }
+  .stealth__press, .operator-emblem__press { animation: none; transform: none; }
+}

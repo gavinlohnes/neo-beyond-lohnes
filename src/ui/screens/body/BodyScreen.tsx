@@ -249,7 +249,7 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
+export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
   evidenceRequest?: HealthEvidenceRequest | null;
   onHealthHistory?: ((destination: HealthHistoryDestination) => void) | undefined;
   focus?: BodyFocus | null;
@@ -260,6 +260,8 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
    */
   overviewRequest?: { key: number; retap: boolean };
   visible?: boolean;
+  /** Bumped after a write made elsewhere while BODY stays shown (stealth): re-read, keeping every draft. */
+  refreshKey?: number;
   returnLabel?: string;
   onReturnToToday?: (() => void) | undefined;
   onMealJourneyStateChange?: ((state: { busy: boolean; dirty: boolean }) => void) | undefined;
@@ -573,6 +575,13 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
       setMealError("Could not read BODY. Retry readings without saving or logging anything.");
     });
   }, [visible]);
+  useEffect(() => {
+    if (!visible || refreshKey === 0) return;
+    void refresh().catch(() => {
+      setMealReadFailed(true);
+      setMealError("Could not read BODY. Retry readings without saving or logging anything.");
+    });
+  }, [refreshKey]);
   // The retained BODY screen does not remount on explicit return/reopen.
   // Recover reads only; keep drafts, confirmations and canonical writes intact.
   useEffect(() => {
