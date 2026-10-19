@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { setPlannedWork } from "../../../application/commands";
 import type { TonightState } from "../../../application/tonightQueries";
 import type { BeyondDay } from "../../../domain/common/types";
@@ -36,15 +36,38 @@ function writeLater(dayId: string, value: boolean) {
   }
 }
 
-/** True while the workout call would show its question: unanswered, not deferred, nothing trained. */
-export function workoutCallIsOpen(dayId: string, tonight: TonightState | null): boolean {
-  return !!tonight && !tonight.trained && tonight.planned === undefined && !readLater(dayId);
+/**
+ * TODAY owns this presentation state so the card and headline always read the
+ * same question visibility. Day keys prevent an editing/deferred choice from
+ * leaking into the next lived day, even before an effect could reset it.
+ */
+export function useWorkoutCallQuestion(dayId: string | undefined, tonight: TonightState | null) {
+  type Choice = { dayId: string | undefined; later: boolean; changing: boolean };
+  const [choice, setChoice] = useState<Choice | null>(null);
+  const initial = (): Choice => ({ dayId, later: dayId ? readLater(dayId) : false, changing: false });
+  const current = choice && choice.dayId === dayId ? choice : initial();
+  const update = (patch: Partial<Pick<Choice, "later" | "changing">>) =>
+    setChoice((previous) => ({ ...(previous && previous.dayId === dayId ? previous : initial()), ...patch }));
+  return {
+    open: !!tonight && !tonight.trained &&
+      (current.changing || (tonight.planned === undefined && !current.later)),
+    change: () => update({ changing: true }),
+    defer: () => {
+      if (dayId) writeLater(dayId, true);
+      update({ later: true, changing: false });
+    },
+    answered: () => {
+      if (dayId) writeLater(dayId, false);
+      update({ later: false, changing: false });
+    },
+  };
 }
 
 export function WorkoutCall({
   phase,
   day,
   tonight,
+  question,
   workoutLabel,
   minutes,
   suggestedVariant,
@@ -58,6 +81,7 @@ export function WorkoutCall({
   phase: "EXPECTED_POST_WORK" | "OFF";
   day: BeyondDay;
   tonight: TonightState | null;
+  question: ReturnType<typeof useWorkoutCallQuestion>;
   /** "A", or a custom program's name; null while it loads. */
   workoutLabel: string | null;
   minutes: Partial<Record<"STANDARD" | "REDUCED", number>>;
@@ -71,11 +95,8 @@ export function WorkoutCall({
   /** Re-read TODAY after an answer is recorded. */
   onAnswered: () => void;
 }) {
-  const [later, setLater] = useState(() => readLater(day.id));
-  const [changing, setChanging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const writing = useRef(false);
-  useEffect(() => { setLater(readLater(day.id)); setChanging(false); }, [day.id]);
 
   if (!tonight || tonight.trained) return null;
   const label = workoutLabel ?? "Workout";
@@ -87,9 +108,7 @@ export function WorkoutCall({
     setError(null);
     try {
       await setPlannedWork(day.id, planned);
-      writeLater(day.id, false);
-      setLater(false);
-      setChanging(false);
+      question.answered();
       onAnswered();
       if (destination) onOpenTrain?.(destination);
     } catch {
@@ -99,22 +118,17 @@ export function WorkoutCall({
     }
   }
 
-  function chooseLater() {
-    writeLater(day.id, true);
-    setLater(true);
-  }
-
   // Answered: one quiet line, still one tap from TRAIN or a change of mind.
-  if (!changing && tonight.planned === false) {
+  if (!question.open && tonight.planned === false) {
     return (
       <div className="equipment-row workout-call workout-call--quiet">
         <p className="tool-label" style={{ marginBottom: 4 }}>WORKOUT</p>
         <p className="card-title" style={{ margin: 0 }}>Not today. {label} stays next.</p>
-        <button type="button" className="btn-secondary" disabled={busy} onClick={() => setChanging(true)}>CHANGE</button>
+        <button type="button" className="btn-secondary" disabled={busy} onClick={question.change}>CHANGE</button>
       </div>
     );
   }
-  if (!changing && (tonight.planned === true || later)) {
+  if (!question.open) {
     const variant = suggestedVariant === "REDUCED" ? "REDUCED" : "STANDARD";
     const time = minutesText(variant);
     return (
@@ -163,7 +177,7 @@ export function WorkoutCall({
             <button type="button" className="today-sheet__option" disabled={busy} onClick={() => void answer(true, suggestedVariant === "REDUCED" ? "WORKOUT_REDUCED" : "WORKOUT")}>
               <span><strong>START · {label}{suggestedVariant === "REDUCED" ? " REDUCED" : ""}</strong><span>Opens TRAIN{minutesText(suggestedVariant === "REDUCED" ? "REDUCED" : "STANDARD") ? ` · ${minutesText(suggestedVariant === "REDUCED" ? "REDUCED" : "STANDARD")}` : ""}</span></span>
             </button>
-            <button type="button" className="today-sheet__option" disabled={busy} onClick={chooseLater}>
+            <button type="button" className="today-sheet__option" disabled={busy} onClick={question.defer}>
               <span><strong>LATER</strong><span>Keeps a quiet row here.</span></span>
             </button>
             <button type="button" className="today-sheet__option" disabled={busy} onClick={() => void answer(false)}>

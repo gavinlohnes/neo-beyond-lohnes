@@ -21,6 +21,7 @@ import { getActiveWorkoutSession } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
 import { performDueDayRollover, subscribeToDayRollover } from "../application/commands";
 import { nextRolloverBoundaryAfter } from "../engine/dayRollover";
+import { getNextDayRolloverCheckAt } from "../application/dayRolloverQueries";
 import { parseShortcut, type BodyFocus } from "../ui/shortcuts";
 import { positionPrimaryDestination, positionRevealedSurface } from "../ui/navigationPosition";
 import { SessionDraftProvider, useHasSessionDrafts } from "../ui/sessionDrafts";
@@ -341,21 +342,33 @@ function AppWorkspaces() {
    */
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
-    function arm() {
+    let current = true;
+    let generation = 0;
+    async function arm() {
+      const request = ++generation;
       clearTimeout(timer);
-      const delay = nextRolloverBoundaryAfter(new Date()).getTime() - Date.now() + ROLLOVER_TIMER_MARGIN_MS;
+      const now = new Date();
+      // Once 16:30 is held, wake at the workout's idle deadline instead of
+      // tomorrow. New sets are rechecked atomically by the command, and a
+      // held check then schedules the new deadline.
+      const checkAt = await getNextDayRolloverCheckAt(now)
+        .catch(() => new Date(now.getTime() + 30_000));
+      if (!current || request !== generation) return;
+      const delay = Math.max(1, checkAt.getTime() - Date.now() + ROLLOVER_TIMER_MARGIN_MS);
       timer = setTimeout(() => {
         void performDueDayRollover()
           .catch(() => {})
-          .finally(arm);
+          .finally(() => { if (current && request === generation) void arm(); });
       }, delay);
     }
     function handleVisible() {
-      if (document.visibilityState === "visible") arm();
+      if (document.visibilityState === "visible") void arm();
     }
-    arm();
+    void arm();
     document.addEventListener("visibilitychange", handleVisible);
     return () => {
+      current = false;
+      generation += 1;
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", handleVisible);
     };

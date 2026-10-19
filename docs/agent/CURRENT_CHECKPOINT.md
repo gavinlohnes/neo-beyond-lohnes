@@ -52,13 +52,28 @@ cap, no stray writes). A shared `helpers/mealSheet.ts` opens BODY through the ME
 errors. The capture found focus dropping to the page after a QUICK LOG tap; it's fixed and
 covered by a test.
 
-**RESUMED (2026-10-19, Codex):** PR 2 is open as [#256](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/256), targeting #255's branch `ccr-83cf6ed8-ug1ym9`.
-- Copied Claude's existing OperatorPrimitives fixture repair into #255 at `5056e3ecc6c07c6b6702c19aa5f36f8e391dd576`; assertions unchanged. The failed CI log confirms duplicate-main and non-unique-landmark violations as the sole failed test.
-- PR 2 incorporates that base commit; the fixture repair is identical on both branches.
-- Builder evidence remains: 2,693 passed, 1 skipped; architecture/typecheck/build and Chromium acceptance clean. Current-head CI and independent exact-head reviews are pending.
-- This managed environment supplied no checkout. Git clone failed because the configured proxy is unreachable; CLI authentication is also unavailable. Connected GitHub tools work. No local test rerun is claimed.
-- Next: independently review the exact heads of #255 and #256, resolve findings and obtain green required CI. Gavin's merge decision remains separate; #255 first, then retarget/reverify #256 against master. #254 remains separate and untouched.
-- Physical phone, Safari and screen-reader checks remain unclaimed. After TONIGHT: Gavin's 5-minute Health Connect check, then a Garmin brief.
+**Review fixes (2026-10-19, Codex; owner: "Fix them"):** PR 2 is
+[#256](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/256), stacked on #255.
+Codex owns only the bounded follow-up repairs to Claude's implementation.
+- #255 includes the existing labelled-section fixture repair and now schedules the held day's
+  next check at the workout's idle deadline. The existing transaction revalidates any later
+  activity; a new logged/skipped set postpones release. Added integration and mounted-App
+  regressions. This branch incorporates #255's fix commit `20c0427442bc3c00a709a73f6eea2cf4c85f92f3`.
+- #256 now shares day-keyed reactive question state between TODAY's headline and WorkoutCall.
+  CHANGE reopens both together; LATER updates both immediately. Editing/deferment does not
+  rewrite the canonical plan. Added after-shift change/re-answer and day-off change/LATER
+  regressions, retaining the existing no-write assertions.
+- The prior #255 head had green required CI (2,685 passed, 1 skipped). New-head CI is pending.
+  #256's required workflow only runs once it targets master; keep the stack until #255 merges.
+- Local dependency/browser runs remain unavailable (configured proxy unreachable, no supplied
+  checkout). Node syntax checks and isolated checks of the actual scheduling query/shared
+  state hook pass with in-memory dependencies; these are not browser/Dexie verification.
+- Both repaired exact heads need independent review from another qualified agent/session:
+  this Codex session implemented the fixes and cannot provide its own PASS. Current findings
+  remain awaiting independent disposition. #254 remains untouched; no merge or deployment.
+- Next: green CI and independent review, Gavin's merge decision on #255 first, then retarget and
+  verify #256 against master. Physical phone, Safari and screen reader are unclaimed.
+  After TONIGHT: Gavin's 5-minute Health Connect check, then a Garmin brief.
 
 ## Previous objective — POLISH-001 (2026-10-18, PROTECTED, merged)
 

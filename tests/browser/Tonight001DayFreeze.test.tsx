@@ -3,7 +3,8 @@ import { cleanup, render } from "vitest-browser-react";
 import "../../src/ui/styles/fonts";
 import { App } from "../../src/app/App";
 import { logProtein, setWorkContext, startDay } from "../../src/application/commands";
-import { startWorkout } from "../../src/application/trainCommands";
+import { logSet, startWorkout } from "../../src/application/trainCommands";
+import { getActiveDay } from "../../src/application/queries";
 import { db } from "../../src/persistence/db";
 
 /**
@@ -15,6 +16,7 @@ import { db } from "../../src/persistence/db";
 afterEach(async () => {
   await cleanup();
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 it("an idle workout from the morning no longer freezes TODAY at 16:30, and it says which day it's from", async () => {
@@ -41,4 +43,53 @@ it("an idle workout from the morning no longer freezes TODAY at 16:30, and it sa
 
   await screen.getByRole("button", { name: "RESUME WORKOUT", exact: true }).click();
   await expect.element(screen.getByText("Template A · REDUCED — in progress", { exact: true })).toBeVisible();
+});
+
+for (const newActivity of [false, true]) it(`rechecks an idle deadline while App stays mounted${newActivity ? ", and a new set moves the deadline" : ""}`, async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  const at = (hour: number, minute = 0, second = 0) => new Date(2026, 9, 22, hour, minute, second);
+  vi.setSystemTime(at(15));
+  const day = await startDay();
+  vi.setSystemTime(at(16));
+  const workout = await startWorkout(day.id, "A", "REDUCED");
+
+  // Keep real browser/IndexedDB/locator timers. Capture App's real deadlines
+  // and dispatch their callbacks after advancing Date, without waiting hours.
+  const scheduled: { at: number; fire: () => void }[] = [];
+  const realSetTimeout = globalThis.setTimeout.bind(globalThis);
+  vi.spyOn(globalThis, "setTimeout").mockImplementation((handler, delay = 0, ...args) => {
+    const id = realSetTimeout(handler, delay, ...args);
+    if (typeof handler === "function") {
+      scheduled.push({ at: Date.now() + delay, fire: () => { clearTimeout(id); handler(...args); } });
+    }
+    return id;
+  });
+  async function fireAt(time: Date) {
+    await expect.poll(() => scheduled.some((entry) => entry.at === time.getTime())).toBe(true);
+    const index = scheduled.findIndex((entry) => entry.at === time.getTime());
+    const [timer] = scheduled.splice(index, 1);
+    vi.setSystemTime(time);
+    timer!.fire();
+  }
+
+  vi.setSystemTime(at(16, 29, 59));
+  const screen = await render(<App />);
+  await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+  await fireAt(at(16, 30, 1));
+  await expect.poll(() => scheduled.some((entry) => entry.at === at(18, 0, 1).getTime())).toBe(true);
+  expect((await getActiveDay())?.id).toBe(day.id);
+  if (newActivity) {
+    vi.setSystemTime(at(17));
+    await logSet(day.id, workout.id, "machine-chest-press", 1, 100, 8);
+  }
+  await fireAt(at(18, 0, 1));
+  if (newActivity) {
+    await expect.poll(() => scheduled.some((entry) => entry.at === at(19, 0, 1).getTime())).toBe(true);
+    expect((await getActiveDay())?.id).toBe(day.id);
+    await fireAt(at(19, 0, 1));
+  }
+  await expect.poll(async () => (await getActiveDay())?.id).not.toBe(day.id);
+  await expect.element(screen.getByText("WORKOUT STILL OPEN", { exact: true })).toBeVisible();
+  expect(await db.workoutSessions.get(workout.id)).toMatchObject({ status: "ACTIVE", beyondDayId: day.id });
+  expect((await db.beyondDays.toArray()).filter((row) => row.status === "ACTIVE")).toHaveLength(1);
 });

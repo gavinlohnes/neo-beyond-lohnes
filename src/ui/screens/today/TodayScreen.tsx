@@ -54,7 +54,7 @@ import { useUndoOpen } from "../../hooks/useUndoWindow";
 import type { BodyFocus } from "../../shortcuts";
 import { isPrimaryReset, isPrimaryShiftDown, type SessionOutcome } from "./resetShiftDownCopy";
 import { ActiveWorkoutCard } from "./ActiveWorkoutCard";
-import { WorkoutCall, workoutCallIsOpen } from "./WorkoutCall";
+import { WorkoutCall, useWorkoutCallQuestion } from "./WorkoutCall";
 import { QuickLog } from "./QuickLog";
 import { NightClosed } from "./NightClosed";
 import type { TrainDestination } from "../train/TrainScreen";
@@ -454,6 +454,7 @@ export function TodayScreen({
   // TONIGHT-001: a meal logged from QUICK LOG or the MEAL sheet, with the same UNDO window.
   const [mealConfirmation, setMealConfirmation] = useState<(LoggedEntry & { message: string }) | null>(null);
   const [tonight, setTonight] = useState<TonightState | null>(null);
+  const workoutQuestion = useWorkoutCallQuestion(day?.id, tonight);
   const hydrationUndoOpen = useUndoOpen(hydrationConfirmation);
   const proteinUndoOpen = useUndoOpen(proteinConfirmation);
   const mealUndoOpen = useUndoOpen(mealConfirmation);
@@ -1592,7 +1593,7 @@ export function TodayScreen({
   const questionBelow =
     !!day &&
     (phaseRows.includes("WORK_QUESTION") ||
-      (phaseRows.includes("WORKOUT_CALL") && !activeWorkout && workoutCallIsOpen(day.id, tonight)));
+      (phaseRows.includes("WORKOUT_CALL") && !activeWorkout && workoutQuestion.open));
   const leadingPhaseRows = phaseRows.filter((row) => LEADING_ROWS.includes(row));
   const remainingPhaseRows = phaseRows.filter((row) => !LEADING_ROWS.includes(row) && row !== "FUEL");
   const toolsItems: ToolsItem[] = day ? shiftClock.tools : [...TOOLS_ORDER];
@@ -2060,6 +2061,7 @@ export function TodayScreen({
             phase={shiftClock.displayPhase}
             day={day}
             tonight={tonight}
+            question={workoutQuestion}
             workoutLabel={nextWorkout?.label ?? null}
             minutes={nextWorkout?.minutes ?? {}}
             suggestedVariant={suggestedVariant}

@@ -68,6 +68,17 @@ describe("the morning call", () => {
     expect(await db.events.count()).toBe(before + 1);
     expect(onOpenTrain).not.toHaveBeenCalled();
     await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    // Editing the answer is presentation-only, but the headline must follow it.
+    const afterAnswer = await db.events.count();
+    await screen.getByRole("button", { name: "CHANGE", exact: true }).click();
+    await expect.element(screen.getByRole("heading", { name: "Train or sleep?" })).toBeVisible();
+    await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
+    expect(await db.events.count()).toBe(afterAnswer);
+    expect(await plannedWork()).toEqual([false]);
+    await screen.getByRole("button", { name: /^SHORT · A REDUCED/ }).click();
+    await expect.poll(() => onOpenTrain.mock.calls.at(-1)?.[0]).toBe("WORKOUT_REDUCED");
+    expect(await plannedWork()).toEqual([false, true]);
+    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
     expect(day.id).toBeTruthy();
   });
 
@@ -108,6 +119,27 @@ describe("the morning call", () => {
     await screen.getByRole("button", { name: /^LATER/ }).click();
     await expect.element(screen.getByText(/^Later · A/)).toBeVisible();
     expect(await db.events.count()).toBe(before);
+    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+  });
+
+  it("keeps a day-off change of mind and its headline together without rewriting the saved answer", async () => {
+    const day = await startDayAt(at(14, 16, 30));
+    await setWorkContext(day.id, "OFF", "MANUAL");
+    vi.setSystemTime(at(15, 9, 5));
+    const screen = await render(<TodayScreen />);
+    await screen.getByRole("button", { name: /^NOT TODAY/ }).click();
+    await expect.element(screen.getByText(/^Not today\. A stays next\./)).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    const before = await db.events.count();
+    await screen.getByRole("button", { name: "CHANGE", exact: true }).click();
+    await expect.element(screen.getByRole("heading", { name: "A today?" })).toBeVisible();
+    await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
+    expect(await db.events.count()).toBe(before);
+    expect(await plannedWork()).toEqual([false]);
+    await screen.getByRole("button", { name: /^LATER/ }).click();
+    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    expect(await db.events.count()).toBe(before);
+    expect(await plannedWork()).toEqual([false]);
   });
 });
 
