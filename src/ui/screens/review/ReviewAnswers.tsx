@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getReviewOverview } from "../../../application/reviewOverviewQueries";
+import { WeightDetails } from "./WeightDetails";
 import { reviewMean, type ReviewOverview, type ReviewRow } from "../../../engine/reviewOverview";
 import { describeError } from "../../errorMessage";
 import "./review.css";
@@ -84,6 +85,8 @@ export function ReviewAnswers({ active = true, onOpenHistory }: { active?: boole
     <Answer title="Is my weight going down?" answer={weightAnswer}>
       <p className="meta">Last 14 days: {data.weight.recentDays} weighed days in the latest week, {data.weight.previousDays} in the previous week. Weigh after your main sleep, before eating; the records do not verify those conditions.</p>
       {data.weight.change !== undefined && <p className="card-body">Latest mean {value(data.weight.recentMean, "lb")} · Previous mean {value(data.weight.previousMean, "lb")}</p>}
+      {/* REVIEW-001 Phase 1a: rate, usual swing, goal date and weigh-in timing. */}
+      <WeightDetails active={active} overview={data} />
       {evidence("weight", "lb", "Average effective weigh-ins within each completed lived day, then average those daily means for each of the last two 7-day windows. Comparison requires 7 weighed days in 14, with at least 3 in each week. This is a difference between sampled weekly means, not a prediction or a body-composition verdict. The chart places observations on their lived-day positions; connecting lines are visual guides, not inferred records for missing days.")}
     </Answer>
     <Answer title="Am I keeping my strength while losing weight?" answer="Building up · no overall strength comparison yet">
