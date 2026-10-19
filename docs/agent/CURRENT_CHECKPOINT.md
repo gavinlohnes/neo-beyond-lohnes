@@ -3,7 +3,7 @@
 ## Current objective — TONIGHT-001 (2026-10-19, PROTECTED)
 
 Gavin approved TONIGHT after the product discovery proposal. Brief: [TONIGHT-001.md](TONIGHT-001.md);
-rulings in UX_DECISIONS → TONIGHT-001. Builder: Claude Code. Branch `ccr-83cf6ed8-ug1ym9`.
+rulings in UX_DECISIONS → TONIGHT-001. Builder: Claude Code. Branch `ccr-83cf6ed8-ug1ym9`; [PR #255](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/255).
 Starting master: `d042a1f7c54a8e50dcf045a76f62a4a819d00504` (the #253 merge; no open PRs).
 POLISH-001 and POLISH-002 are merged (#251, #252, #253). The POLISH-001 handoff below is history.
 
