@@ -436,6 +436,7 @@ export function TodayScreen({
   const [hydrationOperationOpen, setHydrationOperationOpen] = useState(false);
   const [hydrationManualOpen, setHydrationManualOpen] = useState(false);
   // UNDO-001: a just-logged entry, UNDO for its first UNDO_WINDOW_MS, then CORRECT IN BODY.
+  const [waterControlsVisible, setWaterControlsVisible] = useState(true);
   const [lastWaterAmount, setLastWaterAmount] = useState<number | null>(null);
   const [hydrationConfirmation, setHydrationConfirmation] = useState<LoggedEntry | null>(null);
   const [proteinConfirmation, setProteinConfirmation] = useState<LoggedEntry | null>(null);
@@ -1932,7 +1933,8 @@ export function TodayScreen({
           <AdvisorySection
         notes={shownAdvisoryNotes}
         busy={busy}
-        {...(dominant !== "HYDRATION_ACTIVE" ? { onLogWater: (amountOz: number) => void handleMinimumDayLogWater(amountOz) } : {})}
+        waterControlVisible={waterControlsVisible}
+        {...(!waterControlsVisible && dominant !== "HYDRATION_ACTIVE" ? { onLogWater: (amountOz: number) => void handleMinimumDayLogWater(amountOz) } : {})}
         onOpenMinimumDay={() => setMinimumDayOpen(true)}
       />
         );
@@ -2356,6 +2358,7 @@ export function TodayScreen({
       <section className="console-operations" aria-labelledby="console-operations-heading">
         <h2 id="console-operations-heading" className="section-label">Immediate operations</h2>
         <ConsoleControls
+          onWaterVisibilityChange={setWaterControlsVisible}
           onLogWater={handleMinimumDayLogWater}
           lastWaterAmount={lastWaterAmount}
           busy={busy}

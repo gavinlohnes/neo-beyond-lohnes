@@ -21,7 +21,8 @@ export type LogEntryKey = (typeof LOG_ENTRIES)[number]["key"];
  * COMMAND-CENTER-001: WATER · MEAL · LOG in fixed positions. The SYSTEM dialog
  * that sat here is retired; its catalog is COMMAND's search.
  */
-export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, onLogWater, lastWaterAmount = null, busy = false, isInFlight }: {
+export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, onWaterVisibilityChange, onLogWater, lastWaterAmount = null, busy = false, isInFlight }: {
+  onWaterVisibilityChange?: ((visible: boolean) => void) | undefined;
   onLogWater?: ((amount: number) => Promise<boolean>) | undefined;
   lastWaterAmount?: number | null;
   onOpenWater?: (() => void) | undefined;
@@ -31,6 +32,12 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, onLogWater
   busy?: boolean;
   isInFlight: () => boolean;
 }) {
+  const controlsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => onWaterVisibilityChange?.(entry?.isIntersecting ?? false));
+    if (controlsRef.current) observer.observe(controlsRef.current);
+    return () => { observer.disconnect(); onWaterVisibilityChange?.(false); };
+  }, [onWaterVisibilityChange]);
   const [waterOpen, setWaterOpen] = useState(false);
   const [waterError, setWaterError] = useState<string | null>(null);
   const waterDialog = useRef<HTMLDialogElement>(null);
@@ -75,7 +82,7 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, onLogWater
   }
   const logEntries = LOG_ENTRIES.filter((entry) => onOpenLog?.[entry.key]);
   return <>
-    <div className="console-controls" role="group" aria-label="Optional operator controls">
+    <div ref={controlsRef} className="console-controls" role="group" aria-label="Optional operator controls">
       <button type="button" ref={waterTrigger} disabled={busy || (!onOpenWater && !onLogWater)} onClick={() => { if (isInFlight()) return; if (onLogWater) { restoreWaterTrigger.current = true; setWaterError(null); setWaterOpen(true); } else onOpenWater?.(); }} aria-label="Log water" aria-haspopup={onLogWater ? "dialog" : undefined} aria-expanded={onLogWater ? waterOpen : undefined}>
         <LineIcon icon={Droplets} /><span>WATER</span>
       </button>

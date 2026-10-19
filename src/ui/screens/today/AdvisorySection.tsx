@@ -138,11 +138,13 @@ function AdvisoryRowView({
 
 export function AdvisorySection({
   notes,
+  waterControlVisible = false,
   busy = false,
   onLogWater,
   onOpenMinimumDay,
 }: {
   notes: AdvisoryNote[];
+  waterControlVisible?: boolean;
   busy?: boolean;
   onLogWater?: (amountOz: number) => void;
   onOpenMinimumDay?: () => void;
@@ -159,6 +161,7 @@ export function AdvisorySection({
   return (
     <div className="equipment-row">
       <p className="tool-label" style={{ marginBottom: 4 }}>ADVISORY</p>
+      {waterControlVisible && notes.some((note) => unmetItems(note).includes("HYDRATE")) && <p className="meta">Water: use WATER above.</p>}
       {rows.map((row) => (
         <AdvisoryRowView key={row.key} row={row} busy={busy} onLogWater={onLogWater} onOpenMinimumDay={onOpenMinimumDay} />
       ))}
