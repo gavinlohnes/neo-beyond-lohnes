@@ -453,7 +453,7 @@ export function MoreScreen({
           closing structural rule, so all four destinations open the
           same way. No IA change: still the exact same MENU view, same
           heading text/class. */}
-      <OperatorHeader destination="command" focusable>COMMAND // SYSTEM</OperatorHeader>
+      <OperatorHeader destination="command" focusable>COMMAND</OperatorHeader>
       <div className="command-search" role="search">
         <label htmlFor="command-query" className="visually-hidden">Find a screen or action</label>
         <Icon name="search" size={20} />
