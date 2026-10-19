@@ -2297,6 +2297,37 @@ export function TodayScreen({
         </section>
       )}
 
+      {/* One canonical Engine result. Foreground operations above retain priority;
+          support guidance stays a disclosure rather than a competing dominant action. */}
+      {day && !recommendation && <section className="console-guidance next-action-card" aria-label="Current recommendation"><h2 className="command-title">Nothing needs you right now.</h2><p className="meta">No guidance recorded yet.</p></section>}
+      {day && recommendation && (
+        <section className="console-guidance" aria-label="Current recommendation">
+          <p className="tool-label console-guidance__label">GUIDANCE</p>
+          <RecommendationCard
+            nextAction
+            day={day}
+            recommendation={recommendation}
+            headlineCommitment={headlineCommitment}
+            isDominant={dominant === "RECOMMENDATION"}
+            isAttention={recommendationInAttention}
+            decision={decision}
+            checkIn={checkIn}
+            recommendationOpen={recommendationOpen}
+            setRecommendationOpen={setRecommendationOpen}
+            recommendationHandoff={recommendationHandoff}
+            activeShiftDownId={activeShiftDownId}
+            priorOutcomeMemory={priorOutcomeMemory}
+            materiallyRepeated={materiallyRepeated}
+            busy={busy}
+            onOpenTrain={onOpenTrain}
+            onRecord={() => void handleRecord()}
+            onDecline={handleDecline}
+            onHandoff={handleRecommendationHandoff}
+            confirmPanel={<ConfirmPanel />}
+          />
+        </section>
+      )}
+
       {/* OPERATE — exactly one dominant operating surface. Multiple active
           operation state is named explicitly rather than
           silently allowing JSX order to choose a winner. */}
@@ -2413,35 +2444,6 @@ export function TodayScreen({
         <section className="shift-clock-rows" aria-label={`${describePhaseHeading(shiftClock.phase, day.workContext)} work controls`}>
           <h2 className="section-label">{describePhaseHeading(shiftClock.phase, day.workContext)}</h2>
           {leadingPhaseRows.map((row) => <div key={row} data-shift-clock-row={row}>{renderPhaseRow(row)}</div>)}
-        </section>
-      )}
-
-      {/* One canonical Engine result. Foreground operations above retain priority;
-          support guidance stays a disclosure rather than a competing dominant action. */}
-      {day && recommendation && (
-        <section className="console-guidance" aria-label="Current recommendation">
-          <p className="tool-label console-guidance__label">GUIDANCE</p>
-          <RecommendationCard
-            day={day}
-            recommendation={recommendation}
-            headlineCommitment={headlineCommitment}
-            isDominant={dominant === "RECOMMENDATION"}
-            isAttention={recommendationInAttention}
-            decision={decision}
-            checkIn={checkIn}
-            recommendationOpen={recommendationOpen}
-            setRecommendationOpen={setRecommendationOpen}
-            recommendationHandoff={recommendationHandoff}
-            activeShiftDownId={activeShiftDownId}
-            priorOutcomeMemory={priorOutcomeMemory}
-            materiallyRepeated={materiallyRepeated}
-            busy={busy}
-            onOpenTrain={onOpenTrain}
-            onRecord={() => void handleRecord()}
-            onDecline={handleDecline}
-            onHandoff={handleRecommendationHandoff}
-            confirmPanel={<ConfirmPanel />}
-          />
         </section>
       )}
 

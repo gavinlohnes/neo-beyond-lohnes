@@ -112,3 +112,11 @@
 /* Existing FUEL readings are optional evidence links, never new phase rows. */
 .health-fuel-reading { display: inline-block; font: inherit; color: var(--text-1); text-align: left; background: none; border: 0; border-bottom: 1px solid var(--border-strong); padding: 6px 0; min-height: 44px; cursor: pointer; }
 .health-fuel-reading::after { content: " ↗"; }
+
+/* One Engine result, always in the same position. Detail stays one tap down. */
+.next-action-card { padding: 12px; border: 1px solid var(--border-strong); background: var(--surface-1); }
+.next-action-card > .command-title { font-size: 26px; line-height: 1.1; margin-bottom: 4px; }
+.next-action-card > .tool-label, .console-guidance__label { display: none; }
+.next-action-card > div:last-child { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px !important; }
+.next-action-card > div:last-child > button { flex: 1; min-height: 44px; padding: 8px; }
+.next-action-card > details { margin-top: 4px !important; }
