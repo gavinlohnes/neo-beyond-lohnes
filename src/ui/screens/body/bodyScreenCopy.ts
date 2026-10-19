@@ -41,6 +41,28 @@ export function describeBodyweightLogged(weightLbs: number): string {
   return `${weightLbs} lbs logged.`;
 }
 
+// ---- DELETE on water, sleep and bodyweight entries (owner request 2026-10-18) ----
+// The same hold-to-confirm DELETE protein and meals have: a void event, never an erase.
+
+export const BODY_LOG_DELETE_HINT = "Hold to delete.";
+
+/** Correcting to 0 isn't a deletion; point at the one control that is. */
+export function describeCorrectToZero(zero: "0 oz" | "0 lbs" | "0 min"): string {
+  return `${zero} can't be saved as a correction. To remove this entry, hold DELETE.`;
+}
+
+export function describeWaterDeleted(amountOz: number, dayTotalOz: number): string {
+  return `Deleted ${amountOz} oz. Water today: ${dayTotalOz} oz.`;
+}
+
+export function describeSleepDeleted(totalMinutes: number): string {
+  return `Deleted ${formatDuration(totalMinutes)} of sleep.`;
+}
+
+export function describeBodyweightDeleted(weightLbs: number): string {
+  return `Deleted ${weightLbs} lbs.`;
+}
+
 /**
  * Plausible ranges are a soft check, not a hard rule — deliberately wide
  * enough to rarely fire for a genuine value, catching the realistic slip
