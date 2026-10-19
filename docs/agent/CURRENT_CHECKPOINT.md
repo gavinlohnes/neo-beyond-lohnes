@@ -32,6 +32,18 @@ intended: day-scoped readers of workout events count that completion on the old 
 call, wake card, quick log, night closed, briefing, honest headline, Week Ahead and declutter
 rulings). After TONIGHT: Gavin's 5-minute Health Connect check, then a Garmin brief.
 
+**Review fixes (2026-10-19, Codex; owner: "Fix them"):** Codex takes the bounded
+follow-up implementation after reviewing Claude's handoff. #255 now schedules a held rollover
+at the workout's two-hour idle deadline. Each firing revalidates activity in the existing
+transaction; another logged/skipped set postpones release. Async scheduling is guarded across
+resume/unmount. Added integration scheduling cases and mounted-App browser regressions with
+and without later activity. #256's separate question/headline fix follows on its branch.
+Previous head `5056e3e` had green required CI (2,685 passed, 1 skipped); this changed head
+requires fresh CI and independent exact-head review. Local dependency/browser execution is
+unavailable because the configured workspace proxy is unreachable; syntax and isolated
+source checks are supplementary only. No self-review PASS, merge or deployment.
+#254 remains untouched.
+
 ## Previous objective — POLISH-001 (2026-10-18, PROTECTED, merged)
 
 Gavin approved the attached brief, committed unchanged as [POLISH-001.md](POLISH-001.md).
