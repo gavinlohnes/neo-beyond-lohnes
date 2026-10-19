@@ -49,8 +49,8 @@ describe("TODAY meal round trip", () => {
     const originY = window.scrollY;
     await openMeal(screen);
     await fillMeal(screen);
-    await screen.getByRole("button", { name: "SAVE MEAL", exact: true }).click();
-    await expect.element(screen.getByText("Meal saved for reuse. Tap LOG to record it today.")).toBeVisible();
+    await screen.getByRole("button", { name: "SAVE ONLY", exact: true }).click();
+    await expect.element(screen.getByText("Meal saved. Use LOG when you eat it.")).toBeVisible();
     expect(await loggedCount()).toBe(0);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByText("Lunch logged · 600 kcal · 45g", { exact: true })).toBeVisible();
@@ -107,12 +107,12 @@ describe("TODAY meal round trip", () => {
     await openMeal(screen);
     await fillMeal(screen);
     const failure = vi.spyOn(db.savedMeals, "add").mockRejectedValue(new Error("Disk full"));
-    await screen.getByRole("button", { name: "SAVE MEAL", exact: true }).click();
+    await screen.getByRole("button", { name: "SAVE ONLY", exact: true }).click();
     await expect.element(screen.getByRole("alert")).toHaveTextContent("Disk full");
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Lunch");
     expect(await loggedCount()).toBe(0);
     failure.mockRestore();
-    await screen.getByRole("button", { name: "SAVE MEAL", exact: true }).click();
+    await screen.getByRole("button", { name: "SAVE ONLY", exact: true }).click();
     await expect.poll(() => db.savedMeals.count()).toBe(1);
   });
 
@@ -249,8 +249,8 @@ describe("TODAY meal round trip", () => {
     await openMeal(screen);
     await fillMeal(screen);
     const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
-    await screen.getByRole("button", { name: "SAVE MEAL", exact: true }).click();
-    await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal saved for reuse.");
+    await screen.getByRole("button", { name: "SAVE ONLY", exact: true }).click();
+    await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal saved.");
     expect(await db.savedMeals.count()).toBe(1);
     expect(screen.getByRole("button", { name: "LOG", exact: true }).elements()).toHaveLength(0);
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();

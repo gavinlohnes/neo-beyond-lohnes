@@ -463,10 +463,10 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
 
   it("Drop 1.6a: tapping MORE again inside Weekly goes back to the MORE menu", async () => {
     const screen = await render(<App />);
-    await screen.getByText("COMMAND", { exact: true }).click();
+    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
     await screen.getByRole("button", { name: "Open WEEKLY CHECK-IN" }).click();
     await expect.element(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
-    await screen.getByText("COMMAND", { exact: true }).click();
+    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "Open WEEKLY CHECK-IN" })).toBeVisible();
     expect(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true }).elements()).toHaveLength(0);
   });

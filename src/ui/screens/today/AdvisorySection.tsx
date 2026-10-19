@@ -131,6 +131,7 @@ function AdvisoryRowView({
             {item.why && <p className="meta" style={{ margin: 0 }}>{item.why}</p>}
           </div>
         ))}
+        <p className="meta">Your call.</p>
       </FieldDisclosure>
     </div>
   );

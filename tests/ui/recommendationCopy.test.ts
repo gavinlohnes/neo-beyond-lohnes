@@ -61,7 +61,7 @@ describe("describeRecommendationEffect", () => {
 
   it("tells the user recording OBLIGATION_DUE does not itself resolve the obligation", () => {
     const text = describeRecommendationEffect("OBLIGATION_DUE");
-    expect(text).toContain("doesn't resolve the obligation");
+    expect(text).toContain("doesn't resolve the commitment");
   });
 
   it("makes clear NO_ACTION_REQUIRED has nothing to start", () => {
@@ -70,7 +70,7 @@ describe("describeRecommendationEffect", () => {
 
   it("tells the user recording an action-kind decision won't change future recommendations", () => {
     for (const kind of actionKinds) {
-      expect(describeRecommendationEffect(kind)).toContain("won't change what BEYOND recommends next time");
+      expect(describeRecommendationEffect(kind)).toContain("change future advice");
     }
   });
 });

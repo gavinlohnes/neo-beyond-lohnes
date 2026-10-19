@@ -59,7 +59,7 @@ it("shows offline in words on TODAY and SYSTEMS, glitches once, and keeps loggin
   await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   expect(glitching('[data-signal="offline-line"]')).toBe(false);
-  await expect.element(screen.getByRole("button", { name: "Log water in BODY" })).toBeEnabled();
+  await expect.element(screen.getByRole("button", { name: "Log water" })).toBeEnabled();
   await screen.getByRole("button", { name: /^Systems: / }).click();
   const device = screen.getByRole("region", { name: "DEVICE" });
   await expect.element(device.getByText("Offline. Logging still saves on this phone.", { exact: true })).toBeVisible();
@@ -102,7 +102,7 @@ it("flags yesterday's numbers when a workout holds the day open, and REFRESH sho
   await expect.element(screen.getByRole("button", { name: /Fuel 30 g, .*Yesterday’s numbers\. Open readout$/ })).toBeVisible();
   await expect.poll(() => glitched.has("stale-note")).toBe(true);
   await screen.getByRole("button", { name: "REFRESH", exact: true }).click();
-  await expect.element(screen.getByText("These are yesterday’s numbers. A workout in progress holds yesterday open until it ends.", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("These are yesterday’s numbers. Your active workout holds yesterday open.", { exact: true })).toBeVisible();
   // REFRESH is the control being operated: it never glitches.
   expect(screen.getByRole("button", { name: "REFRESH", exact: true }).element().classList.contains("signal-glitch")).toBe(false);
   await completeWorkout(day.id, workout.id, "STANDARD", "COMPLETED", 40);

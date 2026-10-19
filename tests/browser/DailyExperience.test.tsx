@@ -132,7 +132,7 @@ describe("Plan Today and truthful guidance", () => {
     const screen = await render(<App />);
     // SUIT-001: SYSTEMS carries the level and the sleep fact on TODAY; STATE keeps the full sentence.
     await expect.element(screen.getByRole("button", { name: /^Systems: RED, Sleep 3h, Fuel 0 g, Check-in GREEN\. Open readout$/ })).toBeVisible();
-    await expect.element(screen.getByText("No action required", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/Status reports recorded signals/)).toBeVisible();
   });
   for (const width of [320, 360, 412]) it(`has one main landmark, compact destination access and accessible controls at ${width}px`, async () => {

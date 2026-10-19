@@ -293,7 +293,7 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill("45");
     await screen.getByRole("spinbutton", { name: "New meal carbs (g)" }).fill("60");
     await screen.getByRole("spinbutton", { name: "New meal fat (g)" }).fill("15");
-    await screen.getByRole("button", { name: "SAVE MEAL" }).click();
+    await screen.getByRole("button", { name: "SAVE ONLY" }).click();
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByText("Chicken & Rice Bowl logged · 600 kcal · 45g", { exact: true })).toBeVisible();
 
@@ -318,7 +318,7 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill(protein);
     await screen.getByRole("spinbutton", { name: "New meal carbs (g)" }).fill(carbs);
     await screen.getByRole("spinbutton", { name: "New meal fat (g)" }).fill(fat);
-    await screen.getByRole("button", { name: "SAVE MEAL" }).click();
+    await screen.getByRole("button", { name: "SAVE ONLY" }).click();
   }
 
   it("empty state is calm and distinguishes no-presets from no-meals-today", async () => {
@@ -539,7 +539,7 @@ describe("BodyScreen (real browser) — ADD MEAL disclosure (BODY-UX-001)", () =
     await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill("10");
     await screen.getByRole("spinbutton", { name: "New meal carbs (g)" }).fill("50");
     await screen.getByRole("spinbutton", { name: "New meal fat (g)" }).fill("5");
-    await screen.getByRole("button", { name: "SAVE MEAL" }).click();
+    await screen.getByRole("button", { name: "SAVE ONLY" }).click();
     await expect.element(screen.getByText("Oatmeal", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
@@ -615,7 +615,7 @@ describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodDat
     await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill("30");
     await screen.getByRole("spinbutton", { name: "New meal carbs (g)" }).fill("50");
     await screen.getByRole("spinbutton", { name: "New meal fat (g)" }).fill("10");
-    await screen.getByRole("button", { name: "SAVE MEAL" }).click();
+    await screen.getByRole("button", { name: "SAVE ONLY" }).click();
     await expect.element(screen.getByText("Manual Meal", { exact: true })).toBeVisible();
   });
 });

@@ -22,7 +22,7 @@ describe("CLEANUP-003", () => {
     await logBodyweight(day.id, 194);
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
-    await expect.element(screen.getByText(/^Logged \d{1,2}:\d{2}\s?[AP]M$/)).toBeVisible();
+    await expect.element(screen.getByText(/^Logged \d{2}:\d{2}$/)).toBeVisible();
     await screen.getByRole("button", { name: "DONE", exact: true }).click();
     await screen.getByRole("button", { name: "YOUR PROGRESS" }).click();
     await expect.element(screen.getByRole("img", { name: /Weight: 2 recorded observations/ })).toBeVisible();

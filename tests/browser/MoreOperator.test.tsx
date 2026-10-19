@@ -266,11 +266,11 @@ describe("MORE-OPERATOR-001", () => {
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
     await screen.getByRole("button", { name: "Open HISTORY" }).click();
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await expect.element(screen.getByRole("heading", { name: "COMMAND // SYSTEM" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "COMMAND" })).toBeVisible();
     await screen.getByRole("button", { name: "Search everything", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "Search everything" })).toBeVisible();
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
-    await expect.element(screen.getByRole("heading", { name: "COMMAND // SYSTEM" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "COMMAND" })).toBeVisible();
     for (const name of ["TODAY", "TRAIN", "BODY", "COMMAND"]) {
       await expect.element(screen.getByRole("button", { name, exact: true })).toBeVisible();
     }

@@ -107,7 +107,7 @@ export function RecommendationCard({
   const cardContent = (
     <>
       {(isAttention || isDominant) && !isAllClear && <p className="tool-label">ENGINE GUIDANCE</p>}
-      <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+      <h2 className={nextAction || isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
         {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
         {nextAction && isAllClear ? "Nothing needs you right now." : title}
       </h2>
@@ -179,7 +179,7 @@ export function RecommendationCard({
               </p>
             </div>
           )}
-          {isAllClear && (
+          {isAllClear && !nextAction && (
             <p className="card-body" style={{ marginTop: 12 }}>{describeRecommendationEffect(recommendation.kind)}</p>
           )}
           <p className="meta" style={{ marginTop: 8 }}>
@@ -270,7 +270,7 @@ export function RecommendationCard({
       </div>
     </>
   );
-  if (nextAction) return <div key={recommendation.id} className="next-action-card">{cardContent}</div>;
+  if (nextAction) return <div key={recommendation.id} className={isAllClear ? "next-action-card all-clear" : "next-action-card command-surface"}>{cardContent}</div>;
   if (isDominant && !isAllClear) {
     return (
       <CommandSurface key={recommendation.id}>

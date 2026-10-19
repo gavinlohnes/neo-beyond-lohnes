@@ -65,7 +65,7 @@
 :root[data-suit-mode="EXPECTED_POST_WORK"] { --motion-fast: 220ms; --motion-base: 350ms; --surface-1: #030303; }
 :root[data-suit-mode="EXPECTED_POST_WORK"] .mode-ruler,
 :root[data-suit-mode="EXPECTED_POST_WORK"] .mode-strip { display: none; }
-:root[data-suit-mode="OFF"] .mode-city { opacity: .55; }
+/* The real clock, never a suit pin, controls scene intensity. */
 .command-console .console-controls button, .command-console .command-surface, .command-console .btn-primary { border-radius: 0; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
 /* Inset focus stays inside the cut. */
 .command-console .console-controls button:focus-visible, .command-console .btn-primary:focus-visible { outline-offset: -3px; }
@@ -80,3 +80,7 @@
 /* Retained workspaces keep drafts, but spend no animation work while hidden. */
 #workspace-TODAY[hidden] .mode-city__beam,
 #workspace-TODAY[hidden] .mode-header__sweep::after { animation: none; }
+
+.mode-header .status-strip__headline { min-width: 0; flex: 1 1 120px; }
+.mode-header > div[style] { flex-wrap: wrap; }
+.mode-header .chip { max-width: 100%; }

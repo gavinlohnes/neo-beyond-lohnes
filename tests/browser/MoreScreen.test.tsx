@@ -496,11 +496,11 @@ describe("MoreScreen (real browser) — Reminders (REMIND-001)", () => {
 
     const screen = await render(<MoreScreen />);
     await screen.getByRole("region", { name: "Reminders", exact: true }).getByRole("button", { name: "TURN ON" }).click();
-    await expect.element(screen.getByText("On, after 8:00 PM.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("On, after 20:00.", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "TURN OFF" })).toBeVisible();
 
     await screen.getByRole("combobox", { name: "Reminder hour" }).selectOptions("9");
-    await expect.element(screen.getByText("On, after 9:00 AM.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("On, after 09:00.", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "TURN OFF" }).click();
     await expect.element(screen.getByRole("region", { name: "Reminders", exact: true }).getByText("Off.", { exact: true })).toBeVisible();

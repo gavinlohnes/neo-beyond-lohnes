@@ -106,7 +106,7 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, onWaterVis
       <header className="today-sheet__header"><h2 id="water-sheet-title" className="card-title">WATER</h2><button type="button" className="chip" disabled={busy} onClick={() => setWaterOpen(false)}>CLOSE</button></header>
       {[8, 12, 16].map((amount, i) => <button key={amount} type="button" className="today-sheet__option" autoFocus={i === 0} disabled={busy} onClick={() => void addWater(amount)}>+{amount} oz</button>)}
       <button type="button" className="today-sheet__option" disabled={busy || lastWaterAmount === null} onClick={() => lastWaterAmount !== null && void addWater(lastWaterAmount)}>{lastWaterAmount === null ? "Repeat last" : `Repeat last (${lastWaterAmount} oz)`}</button>
-      {onOpenWater && <button type="button" className="today-sheet__option" disabled={busy} onClick={() => { if (isInFlight()) return; restoreWaterTrigger.current = false; setWaterOpen(false); onOpenWater(); }}>More → BODY water</button>}
+      {onOpenWater && <button type="button" className="today-sheet__option" disabled={busy} onClick={() => { if (isInFlight()) return; restoreWaterTrigger.current = false; waterDialog.current?.close(); waterTrigger.current?.focus({ preventScroll: true }); setWaterOpen(false); onOpenWater(); }}>More → BODY water</button>}
       {waterError && <p className="meta today-sheet__note" role="alert">{waterError}</p>}
     </dialog>}
     {logOpen && <dialog ref={logDialog} className="today-sheet" aria-labelledby="console-log-title"

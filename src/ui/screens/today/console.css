@@ -134,3 +134,26 @@
 .today-field .command-surface { background: var(--surface-1); border-color: var(--border-strong); box-shadow: none; }
 .today-field .command-surface::before, .today-field .command-surface::after { display: none; }
 .today-field .command-surface .command-title { color: var(--text-1); }
+
+.command-console.today-field .next-action-card.command-surface { padding: 12px; display: block; margin-bottom: 0; }
+.command-console.today-field .next-action-card .command-title { font-size: 26px; line-height: 1.1; }
+.active-workout-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; padding-block: 8px; }
+.active-workout-row .tool-label { grid-column: 1 / -1; margin: 0; }
+.active-workout-row .card-title { margin: 0; font-size: 18px; }
+.active-workout-row .card-body { grid-column: 1; margin: 0; }
+.active-workout-row .btn-primary { grid-column: 2; grid-row: 2 / 4; width: auto; max-width: 130px; padding: 8px; }
+
+.next-action-card.all-clear { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; }
+.next-action-card.all-clear > h2 { grid-column: 1 / -1; }
+.next-action-card.all-clear > details { grid-column: 1; align-self: center; min-width: 0; }
+.next-action-card.all-clear > div:last-child { grid-column: 2; margin: 0 !important; }
+.next-action-card.all-clear:has(details[open]) > details { grid-column: 1 / -1; }
+.next-action-card.all-clear:has(details[open]) > div:last-child { grid-column: 1 / -1; }
+
+.today-field .active-workout-row { margin: 0; padding: 0; gap: 0 8px; }
+.today-field .active-workout-row .tool-label { display: none; }
+.today-field .active-workout-row .card-title { grid-column: 1; grid-row: 1; align-self: center; }
+.today-field .active-workout-row .btn-primary { grid-column: 2; grid-row: 1; max-width: 140px; }
+.today-banners .backup-due__row { padding-block: 4px; }
+
+.today-field .signal-row, .today-field .today-situation { border-left-color: var(--border-strong); }

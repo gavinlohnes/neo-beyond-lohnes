@@ -112,7 +112,7 @@ export function CheckInCard({
           </div>
         ) : (
           <p className="card-body" style={{ marginBottom: 12 }}>
-            How are you doing right now? Tap a number for each — nothing here is filled in for you.
+            How are you doing? Pick one number for each field. Nothing is prefilled.
           </p>
         )}
         {CHECK_IN_FIELDS.map((field) => (

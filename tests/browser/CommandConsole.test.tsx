@@ -28,7 +28,7 @@ describe("Production Command Console", () => {
       vi.setSystemTime(new Date(2026, 9, day, hour));
       await startDay();
       const screen = await render(<App />);
-      for (const name of ["Log water in BODY", "Log a meal in BODY", "Open LOG"]) {
+      for (const name of ["Log water", "Log a meal in BODY", "Open LOG"]) {
         await expect.element(screen.getByRole("button", { name })).toBeVisible();
       }
       expect(document.querySelectorAll("[data-shift-clock-row]").length).toBeLessThanOrEqual(MAX_PHASE_ROWS);
@@ -41,7 +41,8 @@ describe("Production Command Console", () => {
   it("uses the existing water workflow, preserves failed input and undo, then returns through existing navigation", async () => {
     const day = await startDay();
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Log water in BODY" }).click();
+    await screen.getByRole("button", { name: "Log water" }).click();
+    await screen.getByRole("button", { name: "More → BODY water" }).click();
     await expect.poll(() => document.activeElement?.textContent).toBe("+8 oz");
     await screen.getByRole("button", { name: "SHOW MANUAL ENTRY", exact: true }).click();
     await screen.getByRole("spinbutton", { name: "Custom (oz)" }).fill("11");
@@ -105,7 +106,7 @@ describe("Production Command Console", () => {
     await screen.getByText("How BEYOND decided", { exact: true }).click();
     await screen.getByRole("button", { name: "Open TOOLS" }).click();
     expect(document.querySelectorAll(".console-guidance")).toHaveLength(1);
-    expect(screen.getByRole("heading", { name: "No action required", exact: true }).elements()).toHaveLength(1);
+    expect(screen.getByRole("heading", { name: "Nothing needs you right now.", exact: true }).elements()).toHaveLength(1);
     expect(document.querySelectorAll(".today-field .command-surface").length).toBeLessThanOrEqual(1);
   });
 
@@ -128,7 +129,7 @@ describe("Production Command Console", () => {
       expect(guidance!.compareDocumentPosition(operations!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       // SUIT-001: SYSTEMS replaces the System Status line in the same place.
       await expect.element(screen.getByText("SYSTEMS", { exact: true })).toBeVisible();
-      await expect.element(screen.getByText("GUIDANCE", { exact: true })).toBeVisible();
+      await expect.element(screen.getByRole("region", { name: "Current recommendation" })).toBeVisible();
       await expect.element(screen.getByRole("heading", { name: "Immediate operations", exact: true })).toBeVisible();
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
       for (const animation of document.getAnimations()) animation.finish();
@@ -161,7 +162,7 @@ describe("Production Command Console", () => {
     try {
       (screen.getByRole("button", { name: "ALL GOOD" }).element() as HTMLButtonElement).click();
       (screen.getByRole("button", { name: "Log a meal in BODY" }).element() as HTMLButtonElement).click();
-      (screen.getByRole("button", { name: "Log water in BODY" }).element() as HTMLButtonElement).click();
+      (screen.getByRole("button", { name: "Log water" }).element() as HTMLButtonElement).click();
       (screen.getByRole("button", { name: "Open LOG" }).element() as HTMLButtonElement).click();
       expect(screen.getByRole("dialog").elements()).toHaveLength(0);
       await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");

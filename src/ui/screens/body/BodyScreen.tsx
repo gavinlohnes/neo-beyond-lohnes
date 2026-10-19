@@ -1160,7 +1160,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
     try {
       saved = await createSavedMeal({ name, ...macros });
       const meal = saved;
-      setSavedMeals((meals) => [...meals.filter((item) => item.id !== meal.id), meal]);
+      if (logToday) setSavedMeals((meals) => [...meals.filter((item) => item.id !== meal.id), meal]);
       setMealPresetNotice("Meal saved. Use LOG when you eat it.");
       setNewMealForm(EMPTY_MEAL_FORM);
       setAddMealOpen(false);

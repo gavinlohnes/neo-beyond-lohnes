@@ -71,7 +71,7 @@ describe("COMMAND catalog", () => {
         // Inside COMMAND, a destination opens with focus on its way back, like every index row.
         await expect.poll(() => document.activeElement?.textContent).toBe("← BACK TO COMMAND");
         await screen.getByRole("button", { name: "← BACK TO COMMAND", exact: true }).click();
-        await expect.element(screen.getByRole("heading", { name: "COMMAND // SYSTEM", exact: true })).toBeVisible();
+        await expect.element(screen.getByRole("heading", { name: "COMMAND", exact: true })).toBeVisible();
         // Back returns to the result that was used, with the query kept.
         await expect.element(searchbox(screen)).toHaveValue(entry.label.toLowerCase());
         await expect.poll(() => document.activeElement?.textContent ?? "").toContain(entry.label);
