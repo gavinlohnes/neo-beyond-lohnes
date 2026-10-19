@@ -9,7 +9,9 @@ describe("clock-driven identity", () => {
     expect(cityLight(7, true).windows).toBeLessThan(.1);
     expect(cityLight(22, false).windows).toBeLessThan(.1);
     expect(cityLight(22, true).sky).toBe(1);
-    expect(cityLight(7, true).sky).toBe(.5);
+    // POLISH-002: the curves pass through the prototype's scenes (07:30 sky .2, 17:10 sky .55).
+    expect(cityLight(7.5, true).sky).toBeCloseTo(.2);
+    expect(cityLight(17 + 10 / 60, true).sky).toBeCloseTo(.55, 1);
     expect(cityLight(12, true).sky).toBe(0);
   });
   it("leaves unfamiliar Engine evidence intact", () => {

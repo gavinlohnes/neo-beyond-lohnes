@@ -57,7 +57,7 @@ describe("16:30 mode pin expiry", () => {
     const before = await records();
     vi.setSystemTime(at(13, 16, 30));
     // No resume/navigation event: the short boundary timer must refresh the visible screen.
-    await expect.poll(source).toBe("Per schedule");
+    await expect.poll(source).toMatch(/^(Per schedule|Shift (in|ends in) .+?) · /);
     await expect.poll(suit).toBe("EXPECTED_POST_WORK");
     await expect.element(capture).toHaveValue("Keep this thought through 16:30");
     expect(document.activeElement).toBe(focused);
@@ -89,7 +89,7 @@ describe("16:30 mode pin expiry", () => {
     expect(await records()).toEqual(before);
     expect((await getActiveDay())?.id).toBe(day.id);
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-    await expect.poll(source).toBe("Per schedule");
+    await expect.poll(source).toMatch(/^(Per schedule|Shift (in|ends in) .+?) · /);
   });
 
   for (const event of ["visibilitychange", "pageshow"]) it(`re-reads an expired pin on ${event} resume without discarding Capture input`, async () => {
@@ -102,7 +102,7 @@ describe("16:30 mode pin expiry", () => {
     await capture.fill("Keep this on resume");
     vi.setSystemTime(at(13, 17));
     (event === "pageshow" ? window : document).dispatchEvent(new Event(event));
-    await expect.poll(source).toBe("Per schedule");
+    await expect.poll(source).toMatch(/^(Per schedule|Shift (in|ends in) .+?) · /);
     await expect.element(capture).toHaveValue("Keep this on resume");
     expect((await getActiveDay())?.id).toBe(day.id);
     expect(await db.captureItems.count()).toBe(0);
@@ -116,7 +116,7 @@ describe("16:30 mode pin expiry", () => {
     await first.unmount();
     vi.setSystemTime(at(13, 16, 30));
     await render(<TodayScreen />);
-    await expect.poll(source).toBe("Per schedule");
+    await expect.poll(source).toMatch(/^(Per schedule|Shift (in|ends in) .+?) · /);
     expect(getModePin(day.id, day.startedAt)).toBeNull();
     expect((await getActiveDay())?.id).toBe(day.id);
   });

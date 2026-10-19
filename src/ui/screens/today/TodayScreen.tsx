@@ -1556,14 +1556,14 @@ export function TodayScreen({
         })
       : null;
   const shiftDownIsRow = phaseRows.includes("SHIFT_DOWN");
-  // POLISH-002: the all-clear card says what's next, in the prototype's voice. Presentation only.
-  const displayedPhase = pinnedPhase ?? scheduledClock.phase;
-  const nextActionContext = shiftClock.countdown
-    ? shiftClock.countdown.kind === "SHIFT_STARTS"
-      ? `${describeCountdown(shiftClock.countdown, now)}. Eat and drink before you go.`
-      : `${describeCountdown(shiftClock.countdown, now).replace("Shift ends in ", "")} left. Log as you go.`
-    : displayedPhase === "EXPECTED_POST_WORK" ? "Shift’s done. Power down. Sleep."
-    : displayedPhase === "OFF" ? "Your time. Train, plan or rest. Nothing’s waiting."
+  // POLISH-002: the all-clear card says what's next, in the prototype's voice. Presentation only,
+  // and from the schedule, never a pin: a pin never changes guidance.
+  const nextActionContext = scheduledClock.countdown
+    ? scheduledClock.countdown.kind === "SHIFT_STARTS"
+      ? `${describeCountdown(scheduledClock.countdown, now)}. Eat and drink before you go.`
+      : `${describeCountdown(scheduledClock.countdown, now).replace("Shift ends in ", "")} left. Log as you go.`
+    : scheduledClock.phase === "EXPECTED_POST_WORK" ? "Shift’s done. Power down. Sleep."
+    : scheduledClock.phase === "OFF" ? "Your time. Train, plan or rest. Nothing’s waiting."
     : undefined;
   const lateRecoverWithoutSleep = !!day && scheduledClock.phase === "EXPECTED_POST_WORK" && shiftClock.phase === "EXPECTED_POST_WORK" && now.getHours() >= 13 && mainSleepRecordedAt.length === 0;
   const attentionPlan = deriveAttentionPlan({
@@ -1834,22 +1834,22 @@ export function TodayScreen({
     const pct = proteinTargetG ? Math.min(100, Math.round((minimumDayProteinG / proteinTargetG) * 100)) : null;
     const sleep = lastMainSleepMinutes === null ? null : `${Math.floor(lastMainSleepMinutes / 60)}:${String(Math.round(lastMainSleepMinutes % 60)).padStart(2, "0")}`;
     const tile = (metric: "water" | "protein" | "weight" | "sleep", label: string, value: ReactNode, below: ReactNode, spoken: string) =>
-      <button type="button" disabled={busy || !onOpenHealthEvidence} aria-label={`${spoken}. Open history`} onClick={open(metric)}>
+      <button type="button" disabled={busy || !onOpenHealthEvidence} aria-label={`${spoken}, explore records`} onClick={open(metric)}>
         <span className="cc-flab">{label}</span><span className="cc-num">{value}</span>{below}
       </button>;
     return (
       <>
         <p className="cc-lbl cc-numbers-head"><span>TODAY’S NUMBERS</span><span className="cc-hint">Tap a number for its history.</span></p>
-        <div className="cc-fuel" aria-label={fuelLine}>
+        <div className="cc-fuel" role="group" aria-label={fuelLine}>
           {tile("protein", "PROTEIN", <><b><DecryptNumber value={minimumDayProteinG} dayId={day!.id} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
             pct === null ? <span className="cc-flab">NO TARGET</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
-            `Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` of ${proteinTargetG}` : ""} grams`)}
+            `Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g`)}
           {tile("water", "WATER", <><b><DecryptNumber value={minimumDayHydrateOz} dayId={day!.id} reading="water" /></b><small>oz</small></>,
-            <span className="cc-flab">{waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>, `Water ${minimumDayHydrateOz} ounces`)}
+            <span className="cc-flab">{waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>, `Water ${minimumDayHydrateOz} oz`)}
           {tile("weight", "WEIGHT", <b>{latestWeightLbs === undefined ? "—" : latestWeightLbs.toFixed(1)}</b>,
-            <span className="cc-flab">{latestWeightLbs === undefined ? "NOT LOGGED" : "LATEST"}</span>, latestWeightLbs === undefined ? "Bodyweight not logged" : `Bodyweight ${latestWeightLbs} pounds`)}
+            <span className="cc-flab">{latestWeightLbs === undefined ? "NOT LOGGED" : "LATEST"}</span>, latestWeightLbs === undefined ? "Weight not logged" : `Weight ${latestWeightLbs} lb`)}
           {tile("sleep", "SLEEP", <b>{sleep ?? "—"}</b>, <span className="cc-flab">{sleep ? "LAST MAIN" : "NOT LOGGED"}</span>,
-            sleep ? `Main sleep ${Math.floor(lastMainSleepMinutes! / 60)} hours ${Math.round(lastMainSleepMinutes! % 60)} minutes` : "Main sleep not logged")}
+            sleep ? `Main sleep ${sleep}` : "Main sleep not logged")}
         </div>
       </>
     );
@@ -1866,7 +1866,8 @@ export function TodayScreen({
       case "WORK_CONTEXT":
         return liftedWorkContext ? null : renderWorkContextTool();
       case "FUEL":
-        return day ? renderFuel() : null;
+        // The tiles above own the history links; TOOLS repeats the totals as one line.
+        return day ? <div className="equipment-row"><p className="tool-label" style={{ marginBottom: 4 }}>FUEL</p><p className="card-body" style={{ margin: 0 }}>{fuelLine}</p></div> : null;
       case "MINIMUM_DAY":
         return (
           <>
@@ -1986,7 +1987,7 @@ export function TodayScreen({
           </div>
         );
       case "FUEL":
-        return renderFuel();
+        return <div className="equipment-row"><p className="card-body" style={{ margin: 0 }}>{fuelLine}</p></div>;
       case "SHIFT_HANDOFF":
         return shiftHandoffRefreshKey !== undefined ? <ShiftHandoff refreshKey={shiftHandoffRefreshKey} /> : null;
       case "SHIFT_DOWN":

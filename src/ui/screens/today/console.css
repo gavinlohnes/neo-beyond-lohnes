@@ -134,7 +134,8 @@
 .today-field .chip { border-radius: 0; border-color: var(--p-line); color: var(--p-t2); font-family: var(--p-display); letter-spacing: .06em; }
 .today-field .chip--selected { color: var(--p-t1); border-color: var(--p-t1); }
 .today-field .signal-row, .today-field .card { border-radius: 0; background: none; box-shadow: none; }
-.today-field .next-action-card .cc-cta::after { content: "›"; margin-left: 12px; }
+/* The prototype's › on the CTA, drawn as an image so it never joins the button's name. */
+.today-field .next-action-card .cc-cta { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='12' viewBox='0 0 8 12'%3E%3Cpath d='M1.5 1.5 6 6l-4.5 4.5' fill='none' stroke='%23fff' stroke-width='1.6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 18px center; padding-right: 36px; }
 /* The next-action panel is the one dominant surface; it keeps the prototype's panel, not the old command surface. */
 .command-console.today-field .next-action-card.command-surface { padding: 14px; min-height: 0; margin: 0;
   background: linear-gradient(225deg, transparent 9.9px, var(--p-line) 9.9px, var(--p-line) 11.1px, var(--p-s1) 11.1px);
@@ -158,3 +159,4 @@
 .today-resume-line { margin-top: 10px; }
 .command-console.today-field .next-action-card.command-surface, .next-action-card { padding: 13px 14px 12px; }
 .today-numbers .cc-lbl { margin-bottom: 6px; }
+.today-field .next-action-card .btn-secondary.cc-decline { width: auto; min-height: 44px; border: 0; padding: 0 2px 0 12px; background: none; color: var(--p-t2); font-size: 13px; letter-spacing: .1em; }

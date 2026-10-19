@@ -61,7 +61,7 @@ describe("Shift Clock — before shift (16:30 → 18:00)", () => {
     await expect.poll(rows).toEqual(["TONIGHT"]);
     // No finished sessions yet: no Time-Fit duration, never a guess.
     await expect.element(screen.getByText("A · STANDARD", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Protein 0 g · Water 0 oz", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("group", { name: "Protein 0 g · Water 0 oz", exact: true })).toBeVisible();
     // The per-schedule one-tap change stays visible.
     await expect.element(screen.getByRole("button", { name: "CHANGE TO OFF" })).toBeVisible();
     // An INTERRUPT-tier advisory (shift protection) is never folded into TOOLS.
@@ -246,8 +246,9 @@ describe("Shift Clock — day off", () => {
 
     await expect.element(screen.getByRole("heading", { name: "Day off", exact: true })).toBeVisible();
     await expect.poll(rows).toEqual(["CHECK_IN", "WORKOUT"]);
-    await expect.element(screen.getByText("Off · per schedule", { exact: true })).toBeVisible();
-    expect(screen.getByText(/^Protein .* · Water/).elements()).toHaveLength(1);
+    // POLISH-002: the context sentence stays for screen readers; the hero's meta line shows the mode.
+    await expect.poll(() => document.querySelector(".status-strip__headline")?.textContent).toBe("Off · per schedule");
+    expect(screen.getByRole("group", { name: /^Protein .* · Water/ }).elements()).toHaveLength(1);
 
     await screen.getByRole("button", { name: "ALL GOOD" }).click();
     const checkInRow = document.querySelector('[data-shift-clock-row="CHECK_IN"]') as HTMLElement;
@@ -256,7 +257,7 @@ describe("Shift Clock — day off", () => {
 
     // Every tool is one tap away.
     await openTodayTools(screen);
-    await expect.element(screen.getByText(/^Protein 0 g · Water 0 oz$/)).toBeVisible();
+    await expect.element(screen.getByRole("group", { name: "Protein 0 g · Water 0 oz", exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open SHIFT DOWN" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open RESET" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open WORK CONTEXT" })).toBeVisible();

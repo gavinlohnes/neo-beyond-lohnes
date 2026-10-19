@@ -131,7 +131,7 @@ describe("Plan Today and truthful guidance", () => {
     await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
     const screen = await render(<App />);
     // SUIT-001: SYSTEMS carries the level and the sleep fact on TODAY; STATE keeps the full sentence.
-    await expect.element(screen.getByRole("button", { name: /^Systems: RED, Sleep 3h, Fuel 0 g, Check-in GREEN\. Open readout$/ })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: /^Systems: RED, Sleep 3:00, Fuel 0g, Check-in GREEN\. Open readout$/ })).toBeVisible();
     await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/Status reports recorded signals/)).toBeVisible();
   });

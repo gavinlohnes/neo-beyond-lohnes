@@ -19,7 +19,7 @@ for (const width of [320, 360, 412]) it(`shows the SYSTEMS line and opens the re
   await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
   const before = await db.events.toArray();
   const screen = await render(<App />);
-  const line = screen.getByRole("button", { name: /^Systems: Sleep 6h 50m, Fuel 40 g, Check-in GREEN\. Open readout$/ });
+  const line = screen.getByRole("button", { name: /^Systems: Sleep 6:50, Fuel 40g, Check-in GREEN\. Open readout$/ });
   await expect.element(line).toBeVisible();
   expect(line.element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
   await line.click();
@@ -74,7 +74,7 @@ for (const [level, values, words] of [
 it("explains NO READ and missing readings plainly", async () => {
   await startDay();
   const screen = await render(<App />);
-  await expect.element(screen.getByRole("button", { name: /^Systems: NO READ · log sleep or check in, Fuel 0 g\. Open readout$/ })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: /^Systems: NO READ · log sleep or check in, Fuel 0g\. Open readout$/ })).toBeVisible();
   await screen.getByRole("button", { name: /^Systems: / }).click();
   await expect.element(screen.getByText("NO READ", { exact: true })).toBeVisible();
   await expect.element(screen.getByText("Log sleep or check in.", { exact: true })).toBeVisible();

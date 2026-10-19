@@ -62,7 +62,7 @@ describe("TODAY meal round trip", () => {
     await expect.element(screen.getByRole("button", { name: "Close TOOLS" })).toBeVisible();
     await expect.poll(() => document.activeElement).toBe(trigger);
     await expect.poll(() => Math.abs(window.scrollY - originY)).toBeLessThanOrEqual(2);
-    await expect.element(screen.getByText("Protein 45 g · Water 0 oz", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("group", { name: "Protein 45 g · Water 0 oz", exact: true })).toBeVisible();
   });
 
   it("retains a canceled draft across explicit return without creating a record", async () => {
@@ -186,7 +186,7 @@ describe("TODAY meal round trip", () => {
     expect(await db.events.where("type").equals("MEAL_LOG_CORRECTED").count()).toBe(1);
     expect((await db.events.get(original!.rootEventId))?.payload).toMatchObject({ proteinG: 45 });
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
-    await expect.element(screen.getByText("Protein 30 g · Water 0 oz", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("group", { name: "Protein 30 g · Water 0 oz", exact: true })).toBeVisible();
   });
 
   it("distinguishes a committed log from a subsequent read failure", async () => {

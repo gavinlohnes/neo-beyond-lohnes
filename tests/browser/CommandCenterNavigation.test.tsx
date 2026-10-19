@@ -37,7 +37,7 @@ describe("direct shortcut suit", () => {
     await expect.poll(current).toContain(shortcut === "workout" ? "TRAIN" : "BODY");
     expect(document.getElementById("workspace-TODAY")).toBeNull();
     await expect.poll(() => document.documentElement.dataset.suitMode).toBe("SCHEDULED_SHIFT");
-    expect(getComputedStyle(document.documentElement).getPropertyValue("--red").trim()).toBe("#b51219");
+    expect(getComputedStyle(document.documentElement).getPropertyValue("--red").trim()).toBe("#9f1117");
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: /Mode ON SHIFT, pinned/ })).toBeVisible();
     expect(document.documentElement.dataset.suitMode).toBe("SCHEDULED_SHIFT");
@@ -61,7 +61,8 @@ describe("emblem", () => {
     const box = emblem(screen, "TODAY").getBoundingClientRect();
     expect(box.width).toBeGreaterThanOrEqual(44);
     expect(box.height).toBeGreaterThanOrEqual(44);
-    expect(emblem(screen, "TODAY").closest(".field-header")!.getBoundingClientRect().height).toBeLessThan(56);
+    // POLISH-002: the prototype's one-row header (52 px row + padding), never a second row.
+    expect(emblem(screen, "TODAY").closest(".field-header")!.getBoundingClientRect().height).toBeLessThan(70);
     expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(0);
   });
 });

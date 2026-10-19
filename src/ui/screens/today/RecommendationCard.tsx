@@ -127,10 +127,12 @@ export function RecommendationCard({
       {materiallyRepeated && (
         <p className="meta" style={{ marginTop: 8 }}>Same as before — you already said not now.</p>
       )}
-      {nextAction && !decision && !isAllClear && <button type="button" className="cc-decline" disabled={busy} onClick={onDecline}>{DECLINE_LABEL}</button>}
+      {nextAction && !decision && (isAllClear
+        ? <button type="button" className="btn-secondary cc-decline" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>
+        : <button type="button" className="cc-decline" disabled={busy} onClick={onDecline}>{DECLINE_LABEL}</button>)}
       <WhyDisclosure summary="How BEYOND decided" style={{ marginTop: 12 }}>
         {nextAction && <>{evidenceBasis && <p className="meta">{evidenceBasis}</p>}<p className="meta">{describeRecommendationEffect(recommendation.kind)}</p>
-          {isAllClear && !decision && <button type="button" className="cc-ghost" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>}</>}
+</>}
         <div className="machinery-panel">
           {checkIn && (
             <>
