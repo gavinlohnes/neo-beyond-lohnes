@@ -144,7 +144,7 @@ describe("mode pin — placement only", () => {
     await expect.poll(() => document.querySelector("dialog")).toBeNull();
     await expect.poll(() => document.activeElement?.classList.contains("mode-header__name")).toBe(true);
     await pick(screen, "ON SHIFT");
-    expect(modeSource()).toMatch(/^Pinned/);
+    expect(modeSource()).toMatch(/^Shift ends in 8h · Pinned/);
     vi.setSystemTime(at(13, 7));
     await screen.unmount();
     const again = await render(<TodayScreen />);
@@ -163,6 +163,19 @@ describe("mode pin — placement only", () => {
     await expect.poll(rows).toEqual(["TONIGHT"]);
     // 07:00 is after the shift began: no "Shift in" countdown for a pinned PREP.
     expect(document.querySelector(".status-strip__headline")?.textContent).not.toMatch(/^Shift in/);
+  });
+
+  it("a pin keeps the schedule's countdown leading the meta line, and unpinning keeps it too", async () => {
+    await startDayAt(at(12, 16, 30));
+    vi.setSystemTime(at(12, 17, 10));
+    const screen = await render(<TodayScreen />);
+    await expect.poll(modeName).toBe("PREP");
+    await expect.poll(modeSource).toMatch(/^Shift in 50m · /);
+    await pick(screen, "OFF DUTY");
+    await expect.poll(modeName).toBe("OFF DUTY");
+    expect(modeSource()).toBe("Shift in 50m · Pinned · schedule says PREP · resets 16:30");
+    await pick(screen, "PREP");
+    await expect.poll(modeSource).toMatch(/^Shift in 50m · Pinned · schedule says PREP/);
   });
 
   it("pinning ON SHIFT on a day off only offers a separate, optional work-day record", async () => {

@@ -130,7 +130,7 @@ export function RecommendationCard({
       {nextAction && !decision && (isAllClear
         ? <button type="button" className="btn-secondary cc-decline" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>
         : <button type="button" className="cc-decline" disabled={busy} onClick={onDecline}>{DECLINE_LABEL}</button>)}
-      <WhyDisclosure summary="How BEYOND decided" style={{ marginTop: 12 }}>
+      <WhyDisclosure summary="How BEYOND decided" style={{ marginTop: nextAction ? 2 : 12 }}>
         {nextAction && <>{evidenceBasis && <p className="meta">{evidenceBasis}</p>}<p className="meta">{describeRecommendationEffect(recommendation.kind)}</p>
 </>}
         <div className="machinery-panel">
@@ -200,7 +200,7 @@ export function RecommendationCard({
         </div>
         <p className="meta">Your call.</p>
       </WhyDisclosure>
-      <div style={{ marginTop: isDominant && !isAllClear ? 20 : 12 }}>
+      <div style={{ marginTop: nextAction ? 0 : isDominant && !isAllClear ? 20 : 12 }}>
         {nextAction ? (
           decision ? <>
             <p className="meta">{describeRecordedDecision(decision)}</p>

@@ -131,6 +131,7 @@ it("holds header/card/numbers/actions order and the phone fold in every pinned m
       setModePin(dayId, mode);
       const screen = await render(<TodayScreen />);
       await expect.poll(() => document.querySelector(".mode-header")?.getAttribute("data-mode")).toBe(mode);
+      await document.fonts.ready;
       const header = document.querySelector(".today-situation")!.getBoundingClientRect();
       const card = document.querySelector(".console-guidance")!.getBoundingClientRect();
       const numbers = document.querySelector(".today-numbers")!.getBoundingClientRect();
@@ -139,6 +140,8 @@ it("holds header/card/numbers/actions order and the phone fold in every pinned m
       expect(card.bottom).toBeLessThanOrEqual(numbers.top);
       expect(numbers.bottom).toBeLessThanOrEqual(actions.top);
       expect(actions.bottom).toBeLessThanOrEqual(height! - 64);
+      // POLISH-002 review: "How BEYOND decided" keeps a full 44px target while the fold holds.
+      expect(document.querySelector(".console-guidance .why > summary")!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       // POLISH-002: buildings stand below the mode name and meta, as in the prototype; the beam
       // marks a real action, and goes dark ON SHIFT.
       const meta = document.querySelector(".cc-mode-meta")!.getBoundingClientRect();

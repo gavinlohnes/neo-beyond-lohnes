@@ -2223,7 +2223,7 @@ export function TodayScreen({
               its frame. AMBER or RED still lead the SYSTEMS line in words (SUIT-001). */}
           <ModeHeader
             now={now}
-            countdown={shiftClock.countdown ? describeCountdown(shiftClock.countdown, now) : undefined}
+            countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
             hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
             scheduledPhase={scheduledClock.phase}
             pin={pinnedPhase}

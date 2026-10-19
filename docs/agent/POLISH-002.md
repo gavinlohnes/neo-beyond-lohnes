@@ -168,3 +168,18 @@ in `docs/screenshots/polish-002/` at 360 and 390. Rulings are recorded in `docs/
 3. Builder starts PR B (items 14–21: BODY tiles, History, COMMAND, SYSTEMS look, TRAIN entry,
    forms, stealth) on a branch from PR A. Use the same method: port the prototype's markup and
    cc- classes onto the existing components, keep behavior, and keep accessible names.
+
+**Codex BLOCK on 090f6a9 (three P2 findings), fixed:**
+1. Fold at 390×844. The tests never loaded the self-hosted fonts, so they measured fallback
+   text. `tests/browser/setup.ts` now imports `fonts.ts`, the fold tests await
+   `document.fonts.ready`, and the stacked margins around the CTA are removed (inline 20px / 12px
+   in `RecommendationCard` for the next-action card). Built PWA action-row bottom: 765.5 at 390
+   (nav 779) and 697.5 at 360 (nav 735) in every pinned mode.
+2. A pin hid the countdown. The hero meta now uses the schedule's countdown in both branches:
+   "Shift in 50m · Pinned · schedule says PREP · resets 16:30". There's a regression test for
+   pin and unpin in `CommandCenterModes`.
+3. "How BEYOND decided" is a 44px target again, and the fold test asserts it. "Not now"
+   shares that row.
+- Nonblocking: `scripts/verify-polish-001.mjs` follows the ported markup (`.cc-skyline`,
+  `.cc-beam` dark ON SHIFT, `.cc-sky` opacity). `OUTPUT=` keeps POLISH-001's evidence intact. It
+  passes at 320/360/390/412, including water/undo, offline save and cold reload.

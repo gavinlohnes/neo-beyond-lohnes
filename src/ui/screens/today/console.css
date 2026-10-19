@@ -154,7 +154,10 @@
 }
 .today-numbers .cc-fuel button { min-height: 72px; }
 .next-action-card > p { margin-bottom: 10px; }
-.next-action-card > .why > summary { min-height: 30px; }
+/* POLISH-002 review: the disclosure keeps a full 44px target; the fold is met by dropping the
+   stacked margins around the CTA instead. "Not now" shares the same 44px row. */
+.next-action-card > .why > summary { min-height: 44px; }
+.next-action-card .cc-decline { margin-top: -44px; }
 @media (max-width: 370px) { .today-numbers .cc-fuel button { min-height: 64px; } }
 .today-resume-line { margin-top: 10px; }
 .command-console.today-field .next-action-card.command-surface, .next-action-card { padding: 13px 14px 12px; }
