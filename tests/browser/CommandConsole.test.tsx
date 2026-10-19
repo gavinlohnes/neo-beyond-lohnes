@@ -126,7 +126,8 @@ describe("Production Command Console", () => {
       expect(operations).not.toBeNull();
       expect(situation!.compareDocumentPosition(guidance!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(guidance!.compareDocumentPosition(operations!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      await expect.element(screen.getByText("SYSTEM STATUS", { exact: true })).toBeVisible();
+      // SUIT-001: SYSTEMS replaces the System Status line in the same place.
+      await expect.element(screen.getByText("SYSTEMS", { exact: true })).toBeVisible();
       await expect.element(screen.getByText("GUIDANCE", { exact: true })).toBeVisible();
       await expect.element(screen.getByRole("heading", { name: "Immediate operations", exact: true })).toBeVisible();
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);

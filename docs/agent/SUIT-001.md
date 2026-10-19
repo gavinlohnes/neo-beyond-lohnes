@@ -90,3 +90,28 @@ change. No new dependency. No health scoring or inference. No new signal types b
 The effects rule in COMMAND-CENTER-001 binds here too: glitch, stealth transitions and peek are
 presentation only, have no animation under reduced motion, keep WCAG AA contrast in every mode,
 and never block or delay logging.
+
+## Build record (added 2026-10-18)
+
+**Builder:** Claude Code. **Branch:** `claude/new-session-0xvewh`. **Active PR:** the draft PR
+linked from that branch. **Starting commit:** `origin/master` at `9f9100a` (#241,
+COMMAND-CENTER-001, merged). The only other open PR is the isolated lab #204, so nothing overlaps.
+
+**Slices.** Commit and push after each one.
+0. Brief, checkpoint and draft PR. No app code.
+1. **SYSTEMS:** the TODAY line in place of the System Status line, and the readout reachable
+   from the line and from COMMAND.
+2. **Signals:** stale, offline, backup overdue and save failed, plus the once-only glitch.
+3. **Stealth:** long-press, the COMMAND entry, the overlay, peek, blind logging, workout
+   continuity and persistence.
+4. Decision Register entries, the evidence set and screenshots.
+
+**Repo mapping (verified at `9f9100a`):**
+- *Stale reading* uses the existing rollover machinery. TODAY's day is stale when its lived
+  day has ended (`now ≥ nextRolloverBoundaryAfter(day.startedAt)`) but the roll has not been
+  applied, for example while a workout blocks it. REFRESH runs the existing
+  `performDueDayRollover` and then TODAY's own `refresh()`.
+- *Backup overdue* uses `getBackupPrompt()`'s `BACKUP_DUE`, with the same setting and threshold.
+- *Save failed* uses the error states TODAY and stealth already show for a failed command.
+- *Stealth meal* uses the existing saved-meal log command and its undo. *Stealth water* uses
+  the existing `logWater` and `voidWaterLog`.

@@ -1,0 +1,25 @@
+/* SUIT-001: SYSTEMS line and readout. HUD tokens only; no new colors. */
+.systems__purpose { margin: 4px 0 12px; color: var(--text-2); font-size: 15px; }
+.systems__group { margin-top: 16px; }
+.systems__row {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 0;
+  border: 0; border-bottom: 1px solid var(--border-subtle); background: transparent; color: var(--text-1); text-align: left; font: inherit;
+}
+.systems__row--link { cursor: pointer; }
+.systems__text { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.systems__label { font-size: 16px; font-weight: 600; letter-spacing: .03em; }
+.systems__detail, .systems__note { color: var(--text-2); font-size: 14px; }
+.systems__note { margin: 4px 0 0; }
+.systems__value { flex: none; max-width: 48%; font-family: var(--font-mono); font-size: 15px; text-align: right; overflow-wrap: anywhere; }
+.systems__value--warn { color: var(--warning); }
+.systems__go { color: var(--text-3-strong); font-size: 18px; }
+
+.systems-line {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 46px; margin-top: 2px; padding: 4px 0 2px;
+  border: 0; border-top: 1px solid var(--border-subtle); background: transparent; color: var(--text-1); text-align: left; font: inherit; cursor: pointer;
+}
+.systems-line__key { flex: none; color: var(--text-3-strong); font-size: 12px; letter-spacing: .16em; }
+.systems-line__value { flex: 1; min-width: 0; color: var(--text-2); font-size: 14px; }
+.systems-line__warn { color: var(--warning); }
+.systems-line__go { flex: none; color: var(--text-3-strong); font-size: 18px; }
+.systems-line .capacity-dot { margin-right: 6px; vertical-align: middle; }
