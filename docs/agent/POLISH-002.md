@@ -157,9 +157,14 @@ Each PR gets `npm run verify`, Codex's exact-head review, green CI and Gavin's m
 - Phase rows and Tools: restyled in `console.css` (POLISH-002 sections), behavior unchanged.
 - `scripts/compare-prototype.mjs`: side-by-side harness, output in `docs/screenshots/polish-002/`.
 
+**Status:** PR A ready for review. The full local gate passes: architecture, TypeScript, 269
+test files with 2,676 passing and 1 existing skip, and the build. Side-by-side screenshots are
+in `docs/screenshots/polish-002/` at 360 and 390. Rulings are recorded in `docs/UX_DECISIONS.md`
+(POLISH-002).
+
 **Next:**
-1. Update the ~88 tests that assert old markup/copy. Never weaken a behavior assertion; only move
-   selectors and copy.
-2. Run `npm run verify`.
-3. Re-run the harness at 360 and 390; open PR A for Codex review.
-4. Then PR B (items 14–21).
+1. Codex reviews PR A's exact head.
+2. Gavin merges #251, then PR A.
+3. Builder starts PR B (items 14–21: BODY tiles, History, COMMAND, SYSTEMS look, TRAIN entry,
+   forms, stealth) on a branch from PR A. Use the same method: port the prototype's markup and
+   cc- classes onto the existing components, keep behavior, and keep accessible names.
