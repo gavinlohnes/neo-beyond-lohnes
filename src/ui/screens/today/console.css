@@ -28,8 +28,6 @@
 
 /* DAILY-EXPERIENCE-001: a Day Line, using existing facts and authority. */
 .command-console.day-line { --console-gap: 12px; }
-.day-line .today-situation { gap: 6px; padding-block: 0 10px; }
-.command-console.day-line .status-strip--stacked { padding: 0 0 10px; }
 .day-line .today-situation__system { grid-template-columns: 1fr; padding-top: 8px; gap: 3px; }
 .day-line .today-situation__system > .tool-label { font-size: 12px; }
 .day-line-evidence-note { color: var(--text-3-strong); font-size: 12px; line-height: 1.4; margin: 4px 0 0; }
@@ -136,3 +134,27 @@
 .today-field .chip { border-radius: 0; border-color: var(--p-line); color: var(--p-t2); font-family: var(--p-display); letter-spacing: .06em; }
 .today-field .chip--selected { color: var(--p-t1); border-color: var(--p-t1); }
 .today-field .signal-row, .today-field .card { border-radius: 0; background: none; box-shadow: none; }
+.today-field .next-action-card .cc-cta::after { content: "›"; margin-left: 12px; }
+/* The next-action panel is the one dominant surface; it keeps the prototype's panel, not the old command surface. */
+.command-console.today-field .next-action-card.command-surface { padding: 14px; min-height: 0; margin: 0;
+  background: linear-gradient(225deg, transparent 9.9px, var(--p-line) 9.9px, var(--p-line) 11.1px, var(--p-s1) 11.1px);
+  border: 1px solid var(--p-line); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+/* Fold: "Not now" shares the "How BEYOND decided" row; the numbers hint shares the label row. */
+.next-action-card .cc-decline { order: 11; align-self: flex-end; margin: -40px 0 0; min-height: 44px; padding: 0 2px 0 12px; border: 0; background: none; color: var(--p-t2); font: inherit; font-size: 13px; letter-spacing: .1em; cursor: pointer; }
+.cc-numbers-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.cc-numbers-head .cc-hint { margin: 0; font-size: 11px; letter-spacing: .04em; text-transform: none; }
+:root[data-suit-mode="EXPECTED_POST_WORK"] .cc-numbers-head .cc-hint { display: inline; }
+.next-action-card > .why { margin-top: 4px; }
+.next-action-card > .why > summary { min-height: 32px; }
+@media (max-width: 370px) {
+  .today-numbers .cc-fuel button { min-height: 64px; padding-block: 8px 7px; }
+  .today-field > .console-guidance, .today-field > .today-numbers, .today-field > .console-operations { margin-top: 10px; }
+  .next-action-card > p { margin: 4px 0 10px; }
+}
+.today-numbers .cc-fuel button { min-height: 72px; }
+.next-action-card > p { margin-bottom: 10px; }
+.next-action-card > .why > summary { min-height: 30px; }
+@media (max-width: 370px) { .today-numbers .cc-fuel button { min-height: 64px; } }
+.today-resume-line { margin-top: 10px; }
+.command-console.today-field .next-action-card.command-surface, .next-action-card { padding: 13px 14px 12px; }
+.today-numbers .cc-lbl { margin-bottom: 6px; }

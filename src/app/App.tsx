@@ -10,7 +10,7 @@ import { MoreScreen, type MoreView } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { CcIcon } from "../ui/cc/ccIcons";
-import { EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
+import { HeaderSearchContext, EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
 import { StealthOverlay } from "../ui/components/StealthOverlay";
 import { getStealth, setStealth } from "../application/stealthQueries";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
@@ -537,6 +537,7 @@ function AppWorkspaces() {
 
   return (
     <EmblemContext.Provider value={goTodayRoot}>
+    <HeaderSearchContext.Provider value={() => { openMore("SEARCH"); }}>
     <StealthToggleContext.Provider value={() => changeStealth(!stealthOnRef.current)}>
     {/* Everything behind stealth is inert: not focusable, not read, not tappable. */}
     <div inert={stealthOn} style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
@@ -631,6 +632,7 @@ function AppWorkspaces() {
     </div>
     {stealthOn && <StealthOverlay onExit={() => changeStealth(false)} onLogged={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((n) => n + 1); }} />}
     </StealthToggleContext.Provider>
+    </HeaderSearchContext.Provider>
     </EmblemContext.Provider>
   );
 }

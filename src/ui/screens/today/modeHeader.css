@@ -47,3 +47,22 @@
 :root[data-suit-mode="EXPECTED_POST_WORK"] { --motion-fast: 220ms; --motion-base: 350ms; --text-2: #9a9a9a; }
 /* Retained workspaces keep drafts, but spend no animation work while hidden. */
 #workspace-TODAY[hidden] .cc-beam, #workspace-TODAY[hidden] .cc-sweep { animation: none; }
+/* The hero keeps the status-strip semantics (severity classes) without the old strip's box. */
+.status-strip.status-strip--stacked.cc-hero-wrap { display: block; border-left: 0; padding-left: 0; margin: -14px -14px 0; padding: 0; border: 0; background: none; box-shadow: none; }
+.status-strip.cc-hero-wrap::before, .status-strip.cc-hero-wrap::after { display: none; }
+/* The work-context chip rides the meta line (floated right): a 44px target around a 26px face. */
+.cc-mode .cc-mode-context { float: right; position: relative; margin: -14px 0 -14px 10px; }
+.cc-mode .cc-mode-context .cc-tag { display: flex; align-items: center; min-height: 46px; padding: 0; border: 0; background: none; }
+.cc-mode .cc-tag-face { display: flex; align-items: center; min-height: 26px; padding: 0 8px; border: 1px solid var(--p-line-2); color: var(--p-t2); font-size: 11px; letter-spacing: .12em; }
+.cc-mode .cc-timeline { clear: both; }
+/* POLISH-002, narrow phones: the same hero, compacted so TODAY's action row stays above the fold
+   (POLISH-001 acceptance at 360×800). */
+@media (max-width: 370px) {
+  .cc-mode { padding-top: 12px; }
+  .cc-mode .cc-mode-btn { min-height: 46px; }
+  .cc-mode .cc-mode-name { font-size: 30px; }
+  .cc-mode .cc-timeline { margin-top: 8px; }
+  .cc-mode .cc-scene { height: 18px; }
+  .cc-mode .cc-skyline { height: 70px; }
+  .cc-mode .systems-line { min-height: 44px; margin-top: 8px; padding-block: 6px; }
+}

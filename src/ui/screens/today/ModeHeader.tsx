@@ -18,6 +18,7 @@ export function ModeHeader({
   now,
   children,
   systems,
+  countdown,
   hasAction,
   scheduledPhase,
   pin,
@@ -32,6 +33,8 @@ export function ModeHeader({
   children?: ReactNode;
   /** POLISH-002: the SYSTEMS line, inside the hero's frame as in the prototype. */
   systems?: ReactNode;
+  /** Drop 2: before and during a shift, the countdown leads the meta line ("Shift in 50m"). */
+  countdown?: string | undefined;
   hasAction: boolean;
   /** The schedule's phase; null while the work question is unanswered. */
   scheduledPhase: ShiftClockPhase | null;
@@ -72,7 +75,7 @@ export function ModeHeader({
   const source = pin
     ? <><span className="cc-pin">Pinned</span> · schedule says {scheduledPhase ? MODE_NAMES[scheduledPhase] : "nothing yet"} · resets 16:30</>
     : mode
-      ? `Per schedule · ${MODE_DESCRIPTIONS[mode]}`
+      ? `${countdown ?? "Per schedule"} · ${MODE_DESCRIPTIONS[mode]}`
       : "Answer the work question and the mode follows.";
 
   // The sweep plays once when the mode changes, never on first paint.
@@ -97,8 +100,8 @@ export function ModeHeader({
         <span className="mode-header__value cc-mode-name">{mode ? MODE_NAMES[mode] : "Mode: not set"}</span>
         <span className="mode-header__change cc-mode-chev" aria-hidden="true">CHANGE</span>
       </button>
-      <div className="mode-header__source cc-mode-meta">{source}</div>
       {children}
+      <div className="mode-header__source cc-mode-meta">{source}</div>
       <div className="cc-timeline mode-strip" aria-hidden="true">
         <div className="cc-tl-bar">
           {strip.segments.map((segment) => (

@@ -1839,7 +1839,7 @@ export function TodayScreen({
       </button>;
     return (
       <>
-        <p className="cc-lbl">TODAY’S NUMBERS</p>
+        <p className="cc-lbl cc-numbers-head"><span>TODAY’S NUMBERS</span><span className="cc-hint">Tap a number for its history.</span></p>
         <div className="cc-fuel" aria-label={fuelLine}>
           {tile("protein", "PROTEIN", <><b><DecryptNumber value={minimumDayProteinG} dayId={day!.id} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
             pct === null ? <span className="cc-flab">NO TARGET</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
@@ -1851,7 +1851,6 @@ export function TodayScreen({
           {tile("sleep", "SLEEP", <b>{sleep ?? "—"}</b>, <span className="cc-flab">{sleep ? "LAST MAIN" : "NOT LOGGED"}</span>,
             sleep ? `Main sleep ${Math.floor(lastMainSleepMinutes! / 60)} hours ${Math.round(lastMainSleepMinutes! % 60)} minutes` : "Main sleep not logged")}
         </div>
-        <p className="cc-hint">Tap a number for its history.</p>
       </>
     );
   }
@@ -2217,12 +2216,13 @@ export function TodayScreen({
           active-execution status reuses is untouched, so that usage is
           unaffected by this change. */}
       {day && (
-        <section aria-labelledby="today-current-state-heading" className="today-situation cc-hero-wrap" data-strip-level={stripLevel ?? undefined}>
+        <section aria-labelledby="today-current-state-heading" className={`status-strip status-strip--stacked today-situation cc-hero-wrap${stripLevel ? ` status-strip--${stripLevel}` : ""}`}>
           <h2 id="today-current-state-heading" className="visually-hidden">CURRENT STATE</h2>
           {/* POLISH-002: the prototype's mode hero — mode, meta, timeline, scene, and SYSTEMS inside
               its frame. AMBER or RED still lead the SYSTEMS line in words (SUIT-001). */}
           <ModeHeader
             now={now}
+            countdown={shiftClock.countdown ? describeCountdown(shiftClock.countdown, now) : undefined}
             hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
             scheduledPhase={scheduledClock.phase}
             pin={pinnedPhase}
@@ -2258,16 +2258,22 @@ export function TodayScreen({
               />
             }
           >
+            {/* The context sentence (or the countdown) stays for screen readers; the meta line shows it. */}
+            <p className="visually-hidden status-strip__headline">
+              {shiftClock.countdown
+                ? describeCountdown(shiftClock.countdown, now)
+                : describeContextStrip(
+                    currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
+                    currentContext ? currentContext.schedulePrediction : scheduledContext,
+                    currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
+                    workContextPerSchedule,
+                    scheduledClock.phase,
+                  ).replace(" — shift ended, not yet shifted down", " · shift down pending").replace(" — after your shift", " · after shift")}
+            </p>
+            {shiftClock.countdown && <p className="visually-hidden status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>}
             {/* The "per schedule" one-tap change stays in the hero in every phase, never behind TOOLS. */}
             {workContextPerSchedule && day.workContext !== "UNKNOWN" && (
               <div className="cc-mode-context">
-                <span className="visually-hidden status-strip__headline">{describeContextStrip(
-                  currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
-                  currentContext ? currentContext.schedulePrediction : scheduledContext,
-                  currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
-                  workContextPerSchedule,
-                  scheduledClock.phase,
-                )}</span>
                 <button
                   type="button"
                   className="cc-tag cc-context-change"
@@ -2275,7 +2281,7 @@ export function TodayScreen({
                   aria-label={describeStandingChange(day.workContext)}
                   onClick={() => void handleChangeStandingWorkContext()}
                 >
-                  {day.workContext === "WORK" ? "OFF TODAY" : "WORK TODAY"}
+                  <span className="cc-tag-face">{day.workContext === "WORK" ? "OFF TODAY" : "WORK TODAY"}</span>
                 </button>
               </div>
             )}
@@ -2322,6 +2328,8 @@ export function TodayScreen({
         </section>
       )}
 
+      {/* An active workout resumes from right under the card, above the fold. */}
+      {day && dominant === "WORKOUT_ACTIVE" && <div className="today-resume-line"><ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} onOpenTrain={onOpenTrain} /></div>}
       {day && onOpenWeeklyReview && <div className="today-review-line"><WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} /></div>}
       {day && <section className="today-numbers" aria-label="Today's numbers">{renderFuel()}</section>}
       <section className="console-operations" aria-labelledby="console-operations-heading">
@@ -2441,7 +2449,6 @@ export function TodayScreen({
           onCancelReset={() => void handleCancelReset()}
         />
       )}
-      {day && dominant === "WORKOUT_ACTIVE" && <ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} onOpenTrain={onOpenTrain} />}
       {day && dominant === "HYDRATION_ACTIVE" && (
         <div data-small-hydration>
         <HydrationOperationCard

@@ -25,3 +25,9 @@
 }
 .cc-nav .shell-nav__item--active { color: var(--p-t1); background: var(--p-s1); font-weight: 500; }
 .cc-nav .shell-nav__item--active::before { content: ""; position: absolute; top: 0; left: 22%; right: 22%; height: 2px; background: var(--p-red); }
+.cc-hdr .cc-emblem.operator-emblem { min-width: 44px; min-height: 44px; }
+.cc-hdr .cc-title { font-size: 16px; }
+.cc-nav .shell-nav__item--active { font-weight: 700; }
+/* FIND-001: record search stays one tap from every screen, beside the clock. */
+.cc-hdr .cc-search-btn { margin-left: auto; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--p-t2); cursor: pointer; }
+.cc-hdr .cc-search-btn + .cc-clock { margin-left: 0; }

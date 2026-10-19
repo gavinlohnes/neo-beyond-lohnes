@@ -127,6 +127,7 @@ export function RecommendationCard({
       {materiallyRepeated && (
         <p className="meta" style={{ marginTop: 8 }}>Same as before — you already said not now.</p>
       )}
+      {nextAction && !decision && !isAllClear && <button type="button" className="cc-decline" disabled={busy} onClick={onDecline}>{DECLINE_LABEL}</button>}
       <WhyDisclosure summary="How BEYOND decided" style={{ marginTop: 12 }}>
         {nextAction && <>{evidenceBasis && <p className="meta">{evidenceBasis}</p>}<p className="meta">{describeRecommendationEffect(recommendation.kind)}</p>
           {isAllClear && !decision && <button type="button" className="cc-ghost" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>}</>}
@@ -203,10 +204,10 @@ export function RecommendationCard({
             <p className="meta">{describeRecordedDecision(decision)}</p>
             {recommendationHandoff && !(recommendationHandoff === "SHIFT_DOWN" && activeShiftDownId !== null) &&
               (recommendationHandoff === "SHIFT_DOWN" || onOpenTrain) &&
-              <button type="button" className="btn-primary cc-cta" disabled={busy} onClick={() => onHandoff(recommendationHandoff)}>{describeRecommendationHandoff(recommendationHandoff)}<span aria-hidden="true">›</span></button>}
+              <button type="button" className="btn-primary cc-cta" disabled={busy} onClick={() => onHandoff(recommendationHandoff)}>{describeRecommendationHandoff(recommendationHandoff)}</button>}
           </> : !isAllClear && <>
-            <button className="btn-primary cc-cta" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}<span aria-hidden="true">›</span></button>
-            <button className="cc-ghost cc-decline" disabled={busy} onClick={onDecline}>{DECLINE_LABEL}</button>
+            <button className="btn-primary cc-cta" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>
+
           </>
         ) : <>
         {decision ? (
@@ -278,7 +279,7 @@ export function RecommendationCard({
       </div>
     </>
   );
-  if (nextAction) return <div key={recommendation.id} className={`cc-panel cc-rec next-action-card${isAllClear ? " all-clear" : ""}`}>{cardContent}</div>;
+  if (nextAction) return <div key={recommendation.id} className={`cc-panel cc-rec next-action-card${isAllClear ? " all-clear" : " command-surface"}`}>{cardContent}</div>;
   if (isDominant && !isAllClear) {
     return (
       <CommandSurface key={recommendation.id}>

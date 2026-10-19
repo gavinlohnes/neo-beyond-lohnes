@@ -13,6 +13,9 @@ import "./stealth.css";
  */
 export const EmblemContext = createContext<(() => void) | null>(null);
 
+/** FIND-001 → POLISH-002: record search, one tap from every primary screen, beside the header clock. */
+export const HeaderSearchContext = createContext<(() => void) | null>(null);
+
 /** SUIT-001: a long-press on the emblem toggles stealth. Absent, the emblem only goes home. */
 export const StealthToggleContext = createContext<(() => void) | null>(null);
 
@@ -31,6 +34,7 @@ export function OperatorHeader({ destination: _destination, children, headingId,
   const press = useLongPress(() => toggleStealth?.());
   const hintId = useId();
   const clock = useMinuteClock();
+  const search = useContext(HeaderSearchContext);
   // POLISH-002: the prototype's header row — emblem, BEYOND // WHERE, the clock on the right.
   const split = children.indexOf(" // ");
   const lead = split < 0 ? children : children.slice(0, split);
@@ -53,6 +57,7 @@ export function OperatorHeader({ destination: _destination, children, headingId,
         <h1 id={headingId} ref={headingRef} tabIndex={focusable ? -1 : undefined} className="eyebrow cc-title">
           {lead}{where && <span className="cc-where">{where}</span>}
         </h1>
+        {search && <button type="button" className="cc-search-btn" aria-label="Search everything" onClick={search}><CcIcon.command /></button>}
         <span className="cc-clock" aria-hidden="true">{clock}</span>
       </div>
     </div>
