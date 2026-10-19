@@ -12,6 +12,7 @@ import type { HealthEvidenceRequest } from "../../../application/healthRecordQue
 import type { SourceSelection } from "./HealthSources";
 import { getBodyInsights, INSIGHT_DAY_MS, type BodyInsights } from "../../../application/bodyInsightsQueries";
 import { InsightsExplorer, type InsightExploration } from "./InsightsExplorer";
+import { BodyComposition } from "./BodyComposition";
 
 export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request, onSources, returnFocusRequest = 0, active = true }: {
   active?: boolean;
@@ -65,9 +66,10 @@ export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request
       if (!focused || focused === document.body || focused.id === "health-progress-heading" || focused.closest("[hidden]")) document.getElementById("insight-view-records")?.focus({ preventScroll: true });
     });
   }, [summary, insights, returnFocusRequest, active]);
-  if (failed) return <div role="alert"><p className="meta">Could not read your progress. Your records are unchanged.</p><button className="btn-secondary" onClick={() => { restoreRetryFocus.current = true; setRetry((value) => value + 1); }}>RETRY PROGRESS</button></div>;
-  if (!summary || !insights) return <p className="meta" role="status">Loading your recorded progress…</p>;
-  return <div className="health-progress">
+  return <BodyComposition active={active} refreshKey={refreshKey} metricRequest={request} weights={weightHistory} onWeight={() => { setExploration((state) => ({ ...state, metric: "weight", pointId: null, focusDayId: null })); setTimelineOpen(false); }}>
+    {failed && <div role="alert"><p className="meta">Could not read your progress. Your records are unchanged.</p><button className="btn-secondary" onClick={() => { restoreRetryFocus.current = true; setRetry((value) => value + 1); }}>RETRY PROGRESS</button></div>}
+    {!failed && (!summary || !insights) && <p className="meta" role="status">Loading your recorded progress…</p>}
+    {!failed && summary && insights && <div className="health-progress">
     <InsightsExplorer data={insights} weights={weightHistory} goalWeightLbs={goalWeightLbs} hideChart={timelineOpen} exploration={exploration} onExploreChange={setExploration} onSources={onSources ? (point, metric) => onSources({ point, metric }) : undefined} />
     <p className="meta">Existing records, not a score. The weekly summary uses the last 7 days; the ribbon shows 28 lived days.</p>
     <section aria-label="Training accomplishments"><h3 className="tool-label">TRAINING</h3>
@@ -80,5 +82,6 @@ export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request
     {weightHistory.length >= 2 && Date.parse(weightHistory.at(-1)!.recordedAt) <= Date.parse(insights.readAt) - 90 * INSIGHT_DAY_MS && <details className="insights-inspect"><summary>Inspect last recorded weight window</summary><WeightTrend history={weightHistory} goalWeightLbs={goalWeightLbs} hideChart={timelineOpen} hideFacts /></details>}
     <FieldDisclosure summary={`${timelineOpen ? "HIDE" : "SHOW"} ACCOMPLISHMENT TIMELINE`} open={timelineOpen} onToggle={setTimelineOpen}>{timelineOpen && <TransformationTimeline />}</FieldDisclosure>
     <FieldDisclosure summary={`${usualOpen ? "HIDE" : "SHOW"} YOUR USUAL`} open={usualOpen} onToggle={setUsualOpen}><PersonalBaselines baselines={summary.baselines} /></FieldDisclosure>
-  </div>;
+  </div>}
+  </BodyComposition>;
 }

@@ -244,7 +244,7 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
+export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
   evidenceRequest?: HealthEvidenceRequest | null;
   onHealthHistory?: ((destination: HealthHistoryDestination) => void) | undefined;
   focus?: BodyFocus | null;
@@ -255,6 +255,8 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
    */
   overviewRequest?: { key: number; retap: boolean };
   visible?: boolean;
+  /** Bumped after a write made elsewhere while BODY stays shown (stealth): re-read, keeping every draft. */
+  refreshKey?: number;
   returnLabel?: string;
   onReturnToToday?: (() => void) | undefined;
   onMealJourneyStateChange?: ((state: { busy: boolean; dirty: boolean }) => void) | undefined;
@@ -564,6 +566,13 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
       setMealError("Could not read BODY. Retry readings without saving or logging anything.");
     });
   }, [visible]);
+  useEffect(() => {
+    if (!visible || refreshKey === 0) return;
+    void refresh().catch(() => {
+      setMealReadFailed(true);
+      setMealError("Could not read BODY. Retry readings without saving or logging anything.");
+    });
+  }, [refreshKey]);
   // The retained BODY screen does not remount on explicit return/reopen.
   // Recover reads only; keep drafts, confirmations and canonical writes intact.
   useEffect(() => {
@@ -576,13 +585,18 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
   // control the operator has chosen in the meantime.
   useEffect(() => {
     if (!visible || !mealRecoveryFocusPending.current || busyRef.current || foodSearchBusyRef.current) return;
-    const control = document.getElementById("meal-return") as HTMLButtonElement | null;
-    if (!control || control.disabled) return;
-    mealRecoveryFocusPending.current = false;
-    const active = document.activeElement;
-    if (!active || active === document.body || active.closest("[hidden]")) {
-      control.focus({ preventScroll: true });
-    }
+    // Let the shell finish its heading landing before completing the task handoff.
+    // A slow read can outlast the shortcut's positioning timer while RETURN is disabled.
+    const frame = requestAnimationFrame(() => {
+      const control = document.getElementById("meal-return") as HTMLButtonElement | null;
+      if (!control || control.disabled || !control.getClientRects().length || busyRef.current || foodSearchBusyRef.current) return;
+      mealRecoveryFocusPending.current = false;
+      const active = document.activeElement;
+      if (!active || active === document.body || active.id === "meal-surface-heading" || active.closest("[hidden]")) {
+        control.focus({ preventScroll: true });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
   }, [visible, busy, foodSearchBusy]);
 
   // Retry can disable its focused button before React commits the enabled

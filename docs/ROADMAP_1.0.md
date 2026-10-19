@@ -8,6 +8,12 @@ feature history, and product rulings below are preserved.
 
 ## Active priority
 
+**Owner approval, 2026-10-18 — BODY-PROGRESS-001.** Gavin approved Codex building the BODY
+Progress overview, dated measurement interface and photo timeline/comparison using existing
+storage/commands. [Brief](agent/BODY-PROGRESS-001.md). It stays separate from Claude's SUIT-001
+(#242) and the merged pin-expiry repair (#243); no shared TODAY/global-style implementation.
+
+
 **Current owner objective, 2026-10-18 — COMMAND-CENTER-001, then SUIT-001.** Gavin approved
 visible modes, the COMMAND tab and one LOG entry (2026-10-17) and accepted the command-center
 prototype (2026-10-18). Briefs: [`agent/COMMAND-CENTER-001.md`](agent/COMMAND-CENTER-001.md) and

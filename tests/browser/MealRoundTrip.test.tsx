@@ -66,6 +66,8 @@ describe("TODAY meal round trip", () => {
   });
 
   it("retains a canceled draft across explicit return without creating a record", async () => {
+    // A shorter phone keeps a real scroll offset available for the restore check below.
+    await page.viewport(360, 640);
     const screen = await render(<App />);
     await openMeal(screen);
     await fillMeal(screen, "Unfinished dinner");
@@ -74,7 +76,9 @@ describe("TODAY meal round trip", () => {
     expect(await loggedCount()).toBe(0);
     window.scrollTo(0, 80);
     const reopenedOrigin = window.scrollY;
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    expect(reopenedOrigin).toBe(80);
+    // A DOM click: a locator click first scrolls its target into view, which would move the origin under test.
+    (screen.getByRole("button", { name: "Log a meal in BODY" }).element() as HTMLElement).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     await expect.poll(() => window.scrollY).toBe(reopenedOrigin);

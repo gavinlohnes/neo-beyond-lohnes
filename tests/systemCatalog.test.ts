@@ -4,9 +4,9 @@ import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES } from "../src
 describe("capability discovery (COMMAND search)", () => {
   it("offers unique entries in known groups and browses without a query", () => {
     // COMMAND-CENTER-001: the approved 19 plus Note, Urge and COMMAND's own settings; MORE's
-    // workspace entry left because COMMAND is where the search lives.
-    expect(SYSTEM_CAPABILITIES).toHaveLength(27);
-    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(27);
+    // workspace entry left because COMMAND is where the search lives. SUIT-001 adds SYSTEMS and STEALTH.
+    expect(SYSTEM_CAPABILITIES).toHaveLength(29);
+    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(29);
     for (const entry of SYSTEM_CAPABILITIES) expect(CAPABILITY_GROUPS).toContain(entry.group);
     expect(findCapabilities("  ")).toEqual(SYSTEM_CAPABILITIES);
   });
@@ -23,6 +23,8 @@ describe("capability discovery (COMMAND search)", () => {
     ["resume", ["WORKOUT"]],
     ["restore", ["BACKUP & RECOVERY"]],
     ["weekly review", ["REVIEW"]],
+    ["system status", ["SYSTEMS"]],
+    ["privacy", ["STEALTH"]],
     ["nonexistent-tool", []],
   ])("matches names and explicit aliases for %s", (query, names) => {
     expect(findCapabilities(query).map((entry) => entry.label)).toEqual(names);

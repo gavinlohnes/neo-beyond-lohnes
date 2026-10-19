@@ -1,0 +1,62 @@
+.body-progress-shell [hidden] { display: none !important; }
+.body-progress-shell { min-width: 0; }
+.progress-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-block: 1px solid var(--border-strong); margin: 12px 0 16px; }
+.progress-overview > button { min-width: 0; min-height: 96px; padding: 12px 8px; background: var(--surface-1); border: 0; color: var(--text-1); text-align: left; cursor: pointer; }
+.progress-overview > button + button { border-left: 1px solid var(--border-subtle); }
+.progress-overview strong { display: block; font: 600 clamp(19px, 5.5vw, 25px)/1.3 var(--font-display); margin-block: 5px; overflow-wrap: anywhere; }
+.progress-overview .meta { display: block; font-size: 12px; margin: 0; }
+.progress-nav { display: flex; gap: 4px; margin-block: 12px 20px; }
+.progress-nav button { flex: 1; min-width: 0; min-height: 44px; padding: 8px 3px; border: 1px solid var(--border-strong); background: var(--surface-1); color: var(--text-2); font: 600 13px var(--font-body); cursor: pointer; }
+.progress-nav button:nth-child(2) { flex-grow: 1.5; }
+.progress-nav button[aria-pressed="true"] { background: var(--text-1); border-color: var(--text-1); color: var(--bg); }
+.progress-section-title { font: 600 24px var(--font-display); margin: 0 0 8px; }
+.progress-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 12px; }
+.progress-actions > button { flex: 1 1 110px; }
+.progress-form { border-block: 1px solid var(--border-subtle); padding-block: 16px; margin-block: 16px; }
+.progress-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.progress-fields .field { min-width: 0; }
+.progress-fields input, .progress-fields select { width: 100%; min-width: 0; min-height: 44px; }
+.progress-form select { width: 100%; min-height: 44px; }
+.progress-receipt { border-left: 2px solid var(--text-2); padding: 10px 12px; color: var(--text-1); margin-block: 12px; }
+.measurement-overview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--border-subtle); border: 1px solid var(--border-subtle); }
+.measurement-overview > div { background: var(--surface-1); padding: 12px; min-width: 0; }
+.measurement-overview > div:first-child { grid-column: 1 / -1; }
+.measurement-overview strong { display: block; font: 600 27px var(--font-display); margin-block: 4px; }
+.progress-records { list-style: none; padding: 0; }
+.progress-records > li { border-top: 1px solid var(--border-subtle); padding-block: 12px; overflow-wrap: anywhere; }
+.progress-record-heading { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+.progress-record-heading .btn-secondary { width: auto; flex-shrink: 0; }
+.progress-record-heading p { margin: 0; }
+.progress-preview { margin: 12px 0; }
+.progress-preview img { display: block; max-width: 100%; max-height: 300px; object-fit: contain; background: var(--surface-1); }
+.progress-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.progress-photos figure { margin: 0; min-width: 0; }
+.progress-photos img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: contain; background: var(--surface-2); }
+.progress-photos figcaption { padding-block: 8px; font-size: 14px; overflow-wrap: anywhere; }
+.progress-photo-card { border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; }
+.progress-photo-card button { width: 100%; }
+.progress-compare { margin-block: 20px; }
+.progress-compare label { display: block; margin-bottom: 8px; }
+.progress-compare select { width: 100%; min-height: 44px; margin-bottom: 8px; }
+.progress-confirm { border: 1px solid var(--border-strong); padding: 12px; margin-block: 12px; }
+.body-progress-shell button:focus-visible, .body-progress-shell input:focus-visible, .body-progress-shell select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .body-progress-shell *, .body-progress-shell *::before, .body-progress-shell *::after { animation: none !important; transition: none !important; } }
+
+.progress-storage-details { margin-block: 8px 12px; }
+.progress-storage-details summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-2); }
+
+/* REVIEW-001 framing guide: live camera with a faint ghost of the last same-pose photo. */
+.framing-guide { width: min(100% - 16px, 480px); max-height: 94vh; padding: 0 0 12px; overflow: auto; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text-1); }
+.framing-guide::backdrop { background: rgba(0, 0, 0, .85); }
+.framing-guide__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 8px; }
+.framing-guide__header .card-title { margin: 0; }
+.framing-guide__header .chip { flex: none; width: auto; min-height: 44px; padding-inline: 14px; }
+.framing-guide__poses { display: flex; gap: 8px; padding: 0 14px 10px; }
+.framing-guide__poses .chip { flex: 1; min-height: 44px; }
+/* aspect-ratio matches FRAME_ASPECT in FramingGuide.tsx: CAPTURE crops to it. */
+.framing-guide__frame { position: relative; aspect-ratio: 3 / 4; background: var(--surface-2); overflow: hidden; }
+.framing-guide__video, .framing-guide__ghost { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.framing-guide__ghost { opacity: .35; pointer-events: none; }
+.framing-guide__status { position: absolute; inset: auto 12px 12px; margin: 0; padding: 8px 10px; background: rgba(0, 0, 0, .75); color: var(--text-1); }
+.framing-guide__note { margin: 10px 14px 0; }
+.framing-guide__actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; padding: 12px 14px 0; }
