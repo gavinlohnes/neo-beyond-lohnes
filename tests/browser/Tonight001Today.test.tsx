@@ -9,6 +9,7 @@ import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { ReportView } from "../../src/ui/screens/report/ReportView";
 import { db } from "../../src/persistence/db";
+import { byTimeThenSeq } from "../../src/application/queries";
 import type { BeyondDay } from "../../src/domain/common/types";
 
 /**
@@ -18,7 +19,9 @@ import type { BeyondDay } from "../../src/domain/common/types";
 const at = (d: number, h: number, min = 0) => new Date(2026, 9, d, h, min, 0, 0);
 const rows = () => [...document.querySelectorAll("[data-shift-clock-row]")].map((el) => el.getAttribute("data-shift-clock-row")!);
 const plannedWork = async () =>
-  (await db.events.where("type").equals("PLANNED_WORK_SET").toArray()).map((e) => (e.payload as { planned: boolean }).planned);
+  (await db.events.where("type").equals("PLANNED_WORK_SET").toArray())
+    .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
+    .map((e) => (e.payload as { planned: boolean }).planned);
 
 async function saveOwnersSchedule() {
   const { id: _id, createdAt: _c, updatedAt: _u, ...fields } = DEFAULT_SCHEDULE_PATTERN;
