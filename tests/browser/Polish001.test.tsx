@@ -32,6 +32,7 @@ it("logs water in two taps, stays on TODAY, and guards duplicate log/undo taps",
   await expect.poll(() => getEffectiveHydrationTotal(dayId)).toBe(12);
   await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
   await expect.poll(() => document.querySelector("dialog[open]")).toBeNull();
+  await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
   const undo = screen.getByRole("button", { name: "UNDO", exact: true }).element() as HTMLButtonElement;
   undo.click(); undo.click();
   await expect.poll(() => getEffectiveHydrationTotal(dayId)).toBe(0);
@@ -108,7 +109,8 @@ for (const [hour, minute, pin] of [[7, 30, null], [12, 59, null], [13, 0, "OFF"]
     if (pin) setModePin(dayId, pin);
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByRole("button", { name: /Mode .*Change mode/ })).toBeVisible();
-    expect(document.querySelectorAll("[data-recover-sleep-prompt]")).toHaveLength(0);
+    if (pin) await expect.poll(() => document.querySelector(".mode-header")?.getAttribute("data-mode")).toBe(pin);
+    await expect.poll(() => document.querySelectorAll("[data-recover-sleep-prompt]").length).toBe(0);
   });
 
 it("NOT YET records no sleep or other domain event", async () => {

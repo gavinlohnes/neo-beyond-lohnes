@@ -5,6 +5,8 @@
 Gavin approved the attached brief, committed unchanged as [POLISH-001.md](POLISH-001.md).
 Builder: Codex. Branch `codex/polish-001`; [PR #251](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/251).
 Fresh starting master: `82e923453e8634e89fccf7feee02edb6ad0eb161`; #250 was open (checkpoint only).
+Master `b293472b0d7a839bc5b1d7c799592fcfefb9f2ea` (including #250) is now merged into this
+branch; the checkpoint preserves its merged-session history below.
 All 13 items implemented; the brief and each item were pushed separately. Rulings are in
 UX_DECISIONS. Acceptance fixes preserve the water More-route focus and active-workout fold.
 The skyline has its own band, real-clock sky/windows, and recommendation-gated beam.
@@ -26,7 +28,13 @@ No Engine, phase derivation, schema, command/event semantics, backup or dependen
 Chromium automation only; physical-device/Safari/screen-reader checks are unclaimed. The
 existing bundle-size advisory remains. The final PR Handoff binds published SHA and CI.
 
-**Next:** stop for Claude Code’s independent exact-head review against POLISH-001, then
+**Review follow-up (2026-10-19):** Claude blocked `57631dba553f6355d3bf581dcdb98558a2bb7bde`
+on two test-only P2 timing races; no product defects were found. The sleep-prompt test now
+awaits the pinned header mode, then polls for prompt absence. Water double-undo now awaits
+the visible UNDO button before taking its DOM element and clicking twice. Assertions and
+production behavior are unchanged. The focused POLISH browser suite passes all 13 cases.
+
+**Next:** stop for Claude Code’s renewed independent exact-head review against POLISH-001, then
 Gavin’s separate merge decision after green required CI. No merge or deployment by Builder.
 
 The sections below are historical starting-checkpoint content. Read live PRs for status.
