@@ -1,9 +1,10 @@
 # BEYOND 1.0 Roadmap
 
 Owner rulings, 2026-09-30 (ROADMAP-1.0-001). This is the build plan for BEYOND 1.0. When the
-owner says "let's work", start here: propose the next unfinished objective, obtain any missing
-approval, build it, open a PR, and report in plain language. New work follows
-[`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
+owner says "Advance BEYOND" or "let's work", follow the
+[`Advance BEYOND` protocol](agent/DEV-FLOW-002.md#advance-beyond): verify live work and completion,
+resume authorized work when ownership permits, or recommend one next objective for approval.
+New work follows [`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
 feature history, and product rulings below are preserved.
 
 ## Active priority

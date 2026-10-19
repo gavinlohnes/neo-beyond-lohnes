@@ -1,0 +1,4 @@
+interface:
+  display_name: "Advance BEYOND"
+  short_description: "Move BEYOND forward with owner control"
+  default_prompt: "Use $advance-beyond to establish current project truth and take the next authorized step."
