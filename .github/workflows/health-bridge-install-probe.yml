@@ -10,8 +10,6 @@ jobs:
   install-original-apk:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      ANDROID_AVD_HOME: ${{ runner.temp }}/beyond-avd
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -36,6 +34,8 @@ jobs:
           sha256sum --check SHA256SUMS.txt
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs app-debug.apk
       - name: Boot Android 16
+        env:
+          ANDROID_AVD_HOME: ${{ runner.temp }}/beyond-avd
         run: |
           mkdir -p probe/results "$ANDROID_AVD_HOME"
           trap 'tail -n 120 probe/results/emulator.log || true' EXIT
