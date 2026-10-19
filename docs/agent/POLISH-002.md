@@ -168,3 +168,30 @@ in `docs/screenshots/polish-002/` at 360 and 390. Rulings are recorded in `docs/
 3. Builder starts PR B (items 14–21: BODY tiles, History, COMMAND, SYSTEMS look, TRAIN entry,
    forms, stealth) on a branch from PR A. Use the same method: port the prototype's markup and
    cc- classes onto the existing components, keep behavior, and keep accessible names.
+
+### PR B (`claude/polish-002b`, stacked on PR A)
+
+**Done:**
+- `src/ui/cc/skin.css` applies the prototype's building blocks to TRAIN, BODY, COMMAND and the
+  sub-views: display-face labels, ghost `.btn-secondary`, a clipped `.btn-primary` (each
+  screen keeps its own colors), `.command-surface` as a prototype panel, and square fields,
+  chips and disclosures. Every rule skips `.hud-legacy` (Weekly) and keeps the 16px floor, BODY's
+  neutral primaries and the 56px gym controls.
+- COMMAND rows use the prototype's `.row` treatment. Sub-view return is a quiet back control.
+- BODY's daily overview uses the prototype's number tiles.
+- WATER sheet: the prototype's 8/12/16 oz amount tiles. Accessible names are unchanged
+  ("+N oz").
+- Stealth: the prototype's dim ghost controls. SUIT-001's AA text tokens stay; the prototype's
+  #5e5e5e greys fail contrast.
+- The full local gate passes: 269 files, 2,676 passing, 1 existing skip, and the build.
+
+**Remaining differences, for a later pass (small, visual only):**
+- The COMMAND intro sits between search and the list; the prototype puts the list first.
+- The back control is a restyled button below the header, not an in-header back arrow.
+- BODY's "Browse health days" link sits above the tiles.
+- History keeps production's richer Trends view rather than the prototype's single chart.
+- The meal form is not yet one-tap presets. That would change behavior, so it needs Gavin's
+  call.
+- `compare-prototype.mjs` covers TODAY only. Extend it to BODY, COMMAND and stealth.
+
+**Next:** Codex reviews PR A, then PR B, at exact heads. Gavin merges #251, then A, then B.
