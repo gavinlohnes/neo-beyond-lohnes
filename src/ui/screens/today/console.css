@@ -120,3 +120,9 @@
 .next-action-card > div:last-child { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px !important; }
 .next-action-card > div:last-child > button { flex: 1; min-height: 44px; padding: 8px; }
 .next-action-card > details { margin-top: 4px !important; }
+
+.today-numbers .equipment-row { padding-block: 4px; }
+.today-numbers .tool-label { display: none; }
+.today-review-line .backup-due { margin: 0; }
+.today-review-line .backup-due__row { display: flex; align-items: center; border: 0; padding: 0; font-size: 16px; }
+.today-review-line .btn-secondary { width: auto; padding: 4px 8px; min-height: 44px; }

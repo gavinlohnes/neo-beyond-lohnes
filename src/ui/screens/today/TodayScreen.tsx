@@ -1520,7 +1520,7 @@ export function TodayScreen({
   const scheduledRows: ShiftClockRow[] = day ? scheduledClock.rows : [];
   const phaseRows: ShiftClockRow[] = day ? shiftClock.rows : [];
   const leadingPhaseRows = phaseRows.filter((row) => row === "WORK_QUESTION" || row === "SHIFT_DOWN");
-  const remainingPhaseRows = phaseRows.filter((row) => row !== "WORK_QUESTION" && row !== "SHIFT_DOWN");
+  const remainingPhaseRows = phaseRows.filter((row) => row !== "WORK_QUESTION" && row !== "SHIFT_DOWN" && row !== "FUEL");
   const toolsItems: ToolsItem[] = day ? shiftClock.tools : [...TOOLS_ORDER];
   const checkInIsRow = phaseRows.includes("CHECK_IN");
   const checkInIsScheduledRow = scheduledRows.includes("CHECK_IN");
@@ -1618,7 +1618,7 @@ export function TodayScreen({
       case "WORK_CONTEXT":
         return !liftedWorkContext && !!day && !!scheduledContext && (!workEndInAttention || workContextOpen);
       case "FUEL":
-        return !!day;
+        return false;
       case "MINIMUM_DAY":
         return !!day && !!minimumDay && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE";
       case "CAPTURE":
@@ -2107,7 +2107,6 @@ export function TodayScreen({
         {banners}
         {shiftHandoffRefreshKey !== undefined && !phaseRows.includes("SHIFT_HANDOFF") && <ShiftHandoff refreshKey={shiftHandoffRefreshKey} />}
       </div>}
-      {day && onOpenWeeklyReview && <WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} />}
 
       {commitmentFeedback && (
         <p
@@ -2328,6 +2327,30 @@ export function TodayScreen({
         </section>
       )}
 
+      {day && onOpenWeeklyReview && <div className="today-review-line"><WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} /></div>}
+      {day && <section className="today-numbers" aria-label="Today's numbers">{renderFuel()}</section>}
+      <section className="console-operations" aria-labelledby="console-operations-heading">
+        <h2 id="console-operations-heading" className="section-label">Immediate operations</h2>
+        <ConsoleControls
+          busy={busy}
+          isInFlight={() => busyRef.current}
+          onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
+          onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
+          onOpenLog={{
+            ...(onOpenBody ? {
+              water: () => onOpenBody("water"),
+              meal: () => onOpenBody("meal"),
+              sleep: () => onOpenBody("sleep"),
+              weight: () => onOpenBody("weight"),
+              // An urge is logged against a quit habit; without one there's nothing to log yet.
+              ...(quitHabitSetUp ? { urge: () => onOpenBody("urge") } : {}),
+            } : {}),
+            note: openFastCapture,
+            ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
+          }}
+        />
+      </section>
+
       {/* OPERATE — exactly one dominant operating surface. Multiple active
           operation state is named explicitly rather than
           silently allowing JSX order to choose a winner. */}
@@ -2446,28 +2469,6 @@ export function TodayScreen({
           {leadingPhaseRows.map((row) => <div key={row} data-shift-clock-row={row}>{renderPhaseRow(row)}</div>)}
         </section>
       )}
-
-      <section className="console-operations" aria-labelledby="console-operations-heading">
-        <h2 id="console-operations-heading" className="section-label">Immediate operations</h2>
-        <ConsoleControls
-          busy={busy}
-          isInFlight={() => busyRef.current}
-          onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
-          onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
-          onOpenLog={{
-            ...(onOpenBody ? {
-              water: () => onOpenBody("water"),
-              meal: () => onOpenBody("meal"),
-              sleep: () => onOpenBody("sleep"),
-              weight: () => onOpenBody("weight"),
-              // An urge is logged against a quit habit; without one there's nothing to log yet.
-              ...(quitHabitSetUp ? { urge: () => onOpenBody("urge") } : {}),
-            } : {}),
-            note: openFastCapture,
-            ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
-          }}
-        />
-      </section>
 
       {fastCaptureOpen && <section id="fast-capture" className="fast-capture" aria-label="Quick Capture">
         <div className="fast-capture-header"><h2 className="section-label">Put a thought down</h2><button type="button" className="btn-secondary" disabled={busy} onClick={closeFastCapture}>DONE</button></div>
