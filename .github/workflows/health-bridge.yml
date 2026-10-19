@@ -1,0 +1,35 @@
+name: Health Bridge
+on:
+  pull_request:
+    branches: [master]
+    paths: ['android/health-bridge/**', '.github/workflows/health-bridge.yml', 'src/domain/health/sleepImport.ts']
+permissions:
+  contents: read
+concurrency:
+  group: health-bridge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - run: gradle -p android/health-bridge testDebugUnitTest lintDebug assembleDebug --no-daemon
+      - name: Record build identity
+        run: |
+          cd android/health-bridge/app/build/outputs/apk/debug
+          printf '%s\n' '${{ github.event.pull_request.head.sha }}' > SOURCE_COMMIT.txt
+          sha256sum app-debug.apk > SHA256SUMS.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs app-debug.apk > SIGNING_CERTIFICATE.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BEYOND-Health-Bridge-test-${{ github.event.pull_request.head.sha }}
+          path: android/health-bridge/app/build/outputs/apk/debug/
+          retention-days: 14

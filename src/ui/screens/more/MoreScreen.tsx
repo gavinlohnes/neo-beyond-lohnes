@@ -1,3 +1,4 @@
+import { HealthImportScreen } from "../health/HealthImportScreen";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { db } from "../../../persistence/db";
 import { exportBackup, getDaysSinceLastBackup, shareBackup } from "../../../persistence/backup";
@@ -53,7 +54,7 @@ const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 // it can't drift again.
 const DATA_SCHEMA = db.verno;
 
-export type MoreView = "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES";
+export type MoreView = "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT";
 
 import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
 
@@ -440,6 +441,7 @@ export function MoreScreen({
           <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="command">COMMAND // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
           <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">COMMAND // DECISION JOURNAL</OperatorHeader><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></>}</div>
           {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="command">COMMAND // EXERCISE LIBRARY</OperatorHeader><ExerciseLibraryScreen /></>}
+          <div hidden={view !== "HEALTH_IMPORT"}>{visited.has("HEALTH_IMPORT") && <HealthImportScreen active={active && view === "HEALTH_IMPORT"} />}</div>
           {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="command">COMMAND // CUSTOM PROGRAMS</OperatorHeader><CustomTemplateScreen /></>}
         </div>
       {/* Keep local settings/disclosures/drafts mounted while inspecting a destination. */}
@@ -894,3 +896,4 @@ function describeLastBackup(days: number | null): string {
 function isDatabaseClosedError(error: unknown): error is Error {
   return error instanceof Error && error.name === "DatabaseClosedError";
 }
+

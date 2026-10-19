@@ -1,3 +1,4 @@
+import Dexie from "dexie";
 import { db } from "./db";
 // Side-effect import: extends Dexie/Dexie.prototype with export()/import().
 import "dexie-export-import";
@@ -149,5 +150,10 @@ export async function previewRestore(file: File): Promise<RestorePreview> {
 export async function applyRestore(file: File): Promise<void> {
   // previewRestore refuses a newer backup, so this never clears anything for one.
   const { databaseVersion } = await previewRestore(file);
-  await db.import(file, { clearTablesBeforeImport: true, acceptVersionDiff: databaseVersion < db.verno });
+  // The library clears before opening its own transaction. Own the entire replace,
+  // including file reads, so a failure restores all old tables and evidence.
+  await db.transaction("rw", db.tables, () => Dexie.waitFor(db.import(file, {
+    clearTablesBeforeImport: true, acceptVersionDiff: databaseVersion < db.verno, noTransaction: true,
+  })));
 }
+

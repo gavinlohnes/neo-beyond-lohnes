@@ -15,7 +15,7 @@ import { DEFAULT_NUTRITION_TARGETS } from "../../src/engine/nutritionTargets";
  */
 
 const DB_NAME = "beyond";
-const CURRENT_SCHEMA_VERSION = 13;
+const CURRENT_SCHEMA_VERSION = 14;
 
 afterEach(async () => {
   await Dexie.delete(DB_NAME);
@@ -1039,3 +1039,4 @@ describe("Dexie v3 -> v4 migration (Drop 02a: schedulePatterns)", () => {
     expect(after).toEqual(before);
   });
 });
+
