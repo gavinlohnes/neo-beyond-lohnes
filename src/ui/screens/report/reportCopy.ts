@@ -83,3 +83,27 @@ export function describeReportItem(item: ReportItem): { heading: string; lines: 
       };
   }
 }
+
+/**
+ * TONIGHT-001: the briefing opens with where tonight stands, in place of the
+ * block comparison (which the After Action report keeps). Read only, no grade.
+ */
+export function describeTonightPosition(position: {
+  proteinG: number;
+  proteinTargetG: number | undefined;
+  waterOz: number;
+  lastMealAt: string | null;
+  nextWorkoutLabel: string;
+}): { heading: string; lines: string[] } {
+  const lastMeal = position.lastMealAt
+    ? `Last meal ${new Date(position.lastMealAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}`
+    : "No meal logged yet";
+  return {
+    heading: "Tonight so far",
+    lines: [
+      `Protein ${position.proteinG}${position.proteinTargetG !== undefined ? ` of ${position.proteinTargetG}` : ""} g · Water ${position.waterOz} oz`,
+      lastMeal,
+      `After shift: workout ${position.nextWorkoutLabel} is next. Your call then.`,
+    ],
+  };
+}

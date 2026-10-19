@@ -343,16 +343,20 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
     showProgress(evidenceRequest.metric, evidenceRequest.dayId);
   }, [evidenceRequest]);
   const [managingMealId, setManagingMealId] = useState<string | null>(null);
-  const [lookupOpen, setLookupOpen] = useState(false);
+  const [lookupOpen, setLookupOpen] = useState(focus === "foodLookup");
+  // TONIGHT-001 (owner ruling, 2026-10-19): the online lookup isn't on the meal screen;
+  // COMMAND → FOOD LOOKUP opens it here.
+  const [lookupReachable, setLookupReachable] = useState(focus === "foodLookup");
   useEffect(() => {
     if (!focus) return;
     mealPositioned.current = false;
     setHealthDay(null); setSourceSelection(null);
     setWaterFocused(focus === "water");
-    setMealFocused(focus === "meal");
-    setBodyMealsOpen(focus === "meal");
+    setMealFocused(focus === "meal" || focus === "foodLookup");
+    setBodyMealsOpen(focus === "meal" || focus === "foodLookup");
     setProgressOpen(false);
-    if (focus === "meal") setAddMealOpen(true);
+    if (focus === "meal" || focus === "foodLookup") setAddMealOpen(true);
+    if (focus === "foodLookup") { setLookupReachable(true); setLookupOpen(true); }
     if (focus === "sleep") setSleepOpen(true);
     if (focus === "weight") setBodyweightOpen(true);
     if (focus === "urge") setOtherToolsOpen(true);
@@ -2410,7 +2414,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
           open={addMealOpen}
           onToggle={setAddMealOpen}
         >
-          <MealSection direct={!mealFocused} summary={`${lookupOpen ? "HIDE" : "SHOW"} FOOD LOOKUP (ONLINE)`}
+          {lookupReachable && <MealSection direct={!mealFocused} summary={`${lookupOpen ? "HIDE" : "SHOW"} FOOD LOOKUP (ONLINE)`}
             open={lookupOpen} onToggle={setLookupOpen}>
           <div className="field">
             <label htmlFor="food-search"><span>Search USDA food database</span></label>
@@ -2460,7 +2464,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
               )}
             </div>
           )}
-          </MealSection>
+          </MealSection>}
           <MealSection direct={mealFocused} summary={`${manualMealEntryOpen ? "HIDE" : "SHOW"} MANUAL MACROS`}
             open={manualMealEntryOpen} onToggle={setManualMealEntryOpen}>
             <div className="field">

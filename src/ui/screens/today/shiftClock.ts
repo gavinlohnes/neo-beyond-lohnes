@@ -50,7 +50,11 @@ export type ShiftClockRow =
   | "SHIFT_DOWN"
   | "CHECK_IN"
   | "WORKOUT"
-  | "MAIN_SLEEP";
+  | "MAIN_SLEEP"
+  // TONIGHT-001: the after-shift / day-off workout question, recent one-tap logs, and the night's totals.
+  | "WORKOUT_CALL"
+  | "QUICK_LOG"
+  | "NIGHT_CLOSED";
 
 /** Everything that lives behind the TOOLS row when it isn't one of the phase's rows. */
 export type ToolsItem =
@@ -67,13 +71,19 @@ export type ToolsItem =
 
 export const MAX_PHASE_ROWS = 4;
 
+/**
+ * TONIGHT-001 (owner approval, 2026-10-19): at most one question per mode.
+ * Work nights lead with QUICK LOG (recent meals and water, one tap each);
+ * RECOVER asks the one workout question and closes the night, with SHIFT DOWN
+ * and the check-in one tap away in TOOLS; a day off asks the same question
+ * when you're up. FUEL stays in TOOLS: TODAY's numbers already show it.
+ */
 const PHASE_ROWS: Record<ShiftClockPhase, readonly ShiftClockRow[]> = {
-  PRE_WORK: ["TONIGHT", "FUEL"],
-  // COMMAND-CENTER-001: QUICK_LOG gave way to TODAY's action row; the shift
-  // handoff note takes its slot (it renders only when it has something to say).
-  SCHEDULED_SHIFT: ["SHIFT_HANDOFF", "FUEL"],
-  EXPECTED_POST_WORK: ["SHIFT_DOWN", "CHECK_IN", "WORKOUT", "MAIN_SLEEP"],
-  OFF: ["CHECK_IN", "WORKOUT"],
+  PRE_WORK: ["QUICK_LOG", "TONIGHT"],
+  // COMMAND-CENTER-001: the shift handoff note renders only when it has something to say.
+  SCHEDULED_SHIFT: ["QUICK_LOG", "SHIFT_HANDOFF"],
+  EXPECTED_POST_WORK: ["WORKOUT_CALL", "NIGHT_CLOSED", "MAIN_SLEEP"],
+  OFF: ["WORKOUT_CALL", "QUICK_LOG"],
 };
 
 const UNANSWERED_ROWS: readonly ShiftClockRow[] = ["WORK_QUESTION", "CHECK_IN", "WORKOUT"];

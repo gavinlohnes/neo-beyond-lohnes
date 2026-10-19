@@ -49,6 +49,7 @@ export function RecommendationCard({
   activeShiftDownId,
   priorOutcomeMemory,
   materiallyRepeated = false,
+  questionBelow = false,
   busy,
   onOpenTrain,
   onRecord,
@@ -81,6 +82,12 @@ export function RecommendationCard({
    * suppresses issuing the real Recommendation record.
    */
   materiallyRepeated?: boolean;
+  /**
+   * TONIGHT-001: TODAY is showing an unanswered question (the work question or the
+   * workout call). The all-clear keeps its meaning (nothing is required) but no longer
+   * reads "Nothing needs you" above a question.
+   */
+  questionBelow?: boolean;
   busy: boolean;
   onOpenTrain?: ((destination: "RECOVERY" | "WORKOUT") => void) | undefined;
   onRecord: () => void;
@@ -111,7 +118,7 @@ export function RecommendationCard({
     <>
       {nextAction && <p className="cc-lbl">NEXT USEFUL ACTION</p>}
       {!nextAction && (isAttention || isDominant) && !isAllClear && <p className="tool-label">ENGINE GUIDANCE</p>}
-      {nextAction ? <h2 className={isAllClear ? undefined : "command-title"}>{isAllClear ? "Nothing needs you right now." : title}</h2> : (
+      {nextAction ? <h2 className={isAllClear ? undefined : "command-title"}>{isAllClear ? describeAllClearHeadline(questionBelow) : title}</h2> : (
       <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
         {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
         {title}
@@ -294,4 +301,9 @@ export function RecommendationCard({
       {cardContent}
     </div>
   );
+}
+
+/** TONIGHT-001: the all-clear headline, honest about a question shown below it. */
+export function describeAllClearHeadline(questionBelow = false): string {
+  return questionBelow ? "Nothing urgent. One question below." : "Nothing needs you right now.";
 }

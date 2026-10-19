@@ -150,7 +150,12 @@ interface CompletionSummary {
   volumeLbs: number;
 }
 
-export type TrainDestination = "RECOVERY" | "WORKOUT";
+/**
+ * TONIGHT-001: TODAY's morning call opens TRAIN with the operator's choice already
+ * made: the full session (STANDARD) or the short one (REDUCED). TRAIN's own flow,
+ * including the RED override, still governs the start.
+ */
+export type TrainDestination = "RECOVERY" | "WORKOUT" | "WORKOUT_STANDARD" | "WORKOUT_REDUCED";
 
 export function TrainScreen({
   active = true,
@@ -304,9 +309,13 @@ export function TrainScreen({
     if (!active || reading || readError || !destination || !destinationReady || destinationConsumedRef.current) return;
     destinationConsumedRef.current = true;
     onDestinationConsumed?.();
-    if (!session && destination !== "WORKOUT") { variantChosenRef.current = true; setChosenVariant("RECOVERY"); setOverridePickerOpen(true); }
+    if (!session && destination === "RECOVERY") { variantChosenRef.current = true; setChosenVariant("RECOVERY"); setOverridePickerOpen(true); }
+    if (!session && (destination === "WORKOUT_STANDARD" || destination === "WORKOUT_REDUCED")) {
+      variantChosenRef.current = true;
+      setChosenVariant(destination === "WORKOUT_STANDARD" ? "STANDARD" : "REDUCED");
+    }
     requestAnimationFrame(() => {
-      if (session || destination === "WORKOUT") headingRef.current?.focus();
+      if (session || destination !== "RECOVERY") headingRef.current?.focus();
       else recoveryChoiceRef.current?.focus();
     });
   }, [active, reading, readError, destination, destinationReady, session, onDestinationConsumed]);
