@@ -114,6 +114,7 @@ import {
   getMinimumDayStatus,
   getEffectiveHydrationTotal,
   getHydrationEntries,
+  getMostRecentBodyweight,
   getDayProteinTotalG,
   getOpenReset,
   getOpenShiftDown,
@@ -252,7 +253,7 @@ export function TodayScreen({
   onOpenWeeklyReview?: () => void;
   /** SUIT-001: the SYSTEMS line opens the readout in COMMAND. */
   onOpenSystems?: () => void;
-  onOpenHealthEvidence?: (metric: "water" | "protein") => void;
+  onOpenHealthEvidence?: (metric: "water" | "protein" | "weight" | "sleep") => void;
   onOpenBody?: (target?: BodyFocus) => void;
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
   toolsRequest?: number;
@@ -438,6 +439,9 @@ export function TodayScreen({
   // UNDO-001: a just-logged entry, UNDO for its first UNDO_WINDOW_MS, then CORRECT IN BODY.
   const [waterControlsVisible, setWaterControlsVisible] = useState(true);
   const [lastWaterAmount, setLastWaterAmount] = useState<number | null>(null);
+  // POLISH-002: TODAY's four number tiles — the latest weigh-in and today's water-log count.
+  const [latestWeightLbs, setLatestWeightLbs] = useState<number | undefined>(undefined);
+  const [waterLogCount, setWaterLogCount] = useState(0);
   const [hydrationConfirmation, setHydrationConfirmation] = useState<LoggedEntry | null>(null);
   const [proteinConfirmation, setProteinConfirmation] = useState<LoggedEntry | null>(null);
   const hydrationUndoOpen = useUndoOpen(hydrationConfirmation);
@@ -720,6 +724,8 @@ export function TodayScreen({
     let minimumDay: MinimumDayStatus | null = null;
     let minimumDayHydrateOz = 0;
     let lastWater: number | null = null;
+    let waterLogs = 0;
+    let latestWeight: number | undefined;
     let minimumDayProteinG = 0;
     let openReset: Awaited<ReturnType<typeof getOpenReset>> | undefined;
     let openShiftDown: Awaited<ReturnType<typeof getOpenShiftDown>> | undefined;
@@ -743,7 +749,10 @@ export function TodayScreen({
       pendingOutcome = rec ? (await getPendingOutcomeRating(rec)) ?? null : null;
       minimumDay = await getMinimumDayStatus(activeDay.id);
       minimumDayHydrateOz = await getEffectiveHydrationTotal(activeDay.id);
-      lastWater = (await getHydrationEntries(activeDay.id)).at(-1)?.effectiveAmountOz ?? null;
+      const waterEntries = await getHydrationEntries(activeDay.id);
+      lastWater = waterEntries.at(-1)?.effectiveAmountOz ?? null;
+      waterLogs = waterEntries.length;
+      latestWeight = await getMostRecentBodyweight();
       // DROP 1.5: the one shared day total (protein-only logs + meals), same as BODY and Nutrition Targets.
       minimumDayProteinG = await getDayProteinTotalG(activeDay.id);
       openReset = await getOpenReset(activeDay.id);
@@ -838,6 +847,8 @@ export function TodayScreen({
     }
     setAdvisoryNotes(advisoryNotes);
     setLastWaterAmount(lastWater);
+    setWaterLogCount(waterLogs);
+    setLatestWeightLbs(latestWeight);
     if (isOwner) { setSystemStatus(nextSystemStatus); setLastMainSleepMinutes(nextLastMainSleep?.minutes ?? null); }
     const prompt = getBackupPrompt();
     setBackupDue(prompt?.kind === "BACKUP_DUE" ? { days: prompt.daysSinceLastBackup } : null);
@@ -1545,6 +1556,15 @@ export function TodayScreen({
         })
       : null;
   const shiftDownIsRow = phaseRows.includes("SHIFT_DOWN");
+  // POLISH-002: the all-clear card says what's next, in the prototype's voice. Presentation only,
+  // and from the schedule, never a pin: a pin never changes guidance.
+  const nextActionContext = scheduledClock.countdown
+    ? scheduledClock.countdown.kind === "SHIFT_STARTS"
+      ? `${describeCountdown(scheduledClock.countdown, now)}. Eat and drink before you go.`
+      : `${describeCountdown(scheduledClock.countdown, now).replace("Shift ends in ", "")} left. Log as you go.`
+    : scheduledClock.phase === "EXPECTED_POST_WORK" ? "Shift’s done. Power down. Sleep."
+    : scheduledClock.phase === "OFF" ? "Your time. Train, plan or rest. Nothing’s waiting."
+    : undefined;
   const lateRecoverWithoutSleep = !!day && scheduledClock.phase === "EXPECTED_POST_WORK" && shiftClock.phase === "EXPECTED_POST_WORK" && now.getHours() >= 13 && mainSleepRecordedAt.length === 0;
   const attentionPlan = deriveAttentionPlan({
     activeWorkoutId: activeWorkout?.id ?? null,
@@ -1808,18 +1828,30 @@ export function TodayScreen({
     );
   }
 
+  /** POLISH-002: the prototype's four number tiles. Missing stays "—"; each opens its history. */
   function renderFuel() {
+    const open = (metric: "water" | "protein" | "weight" | "sleep") => () => { if (!busyRef.current) onOpenHealthEvidence?.(metric); };
+    const pct = proteinTargetG ? Math.min(100, Math.round((minimumDayProteinG / proteinTargetG) * 100)) : null;
+    const sleep = lastMainSleepMinutes === null ? null : `${Math.floor(lastMainSleepMinutes / 60)}:${String(Math.round(lastMainSleepMinutes % 60)).padStart(2, "0")}`;
+    const tile = (metric: "water" | "protein" | "weight" | "sleep", label: string, value: ReactNode, below: ReactNode, spoken: string) =>
+      <button type="button" disabled={busy || !onOpenHealthEvidence} aria-label={`${spoken}, explore records`} onClick={open(metric)}>
+        <span className="cc-flab">{label}</span><span className="cc-num">{value}</span>{below}
+      </button>;
     return (
-      <div className="equipment-row">
-        <p className="tool-label" style={{ marginBottom: 4 }}>FUEL</p>
-        {/* FEEL-001: the totals count up when they change; the settled text is fuelLine's. */}
-        <p className="card-body" style={{ margin: 0 }} aria-label={fuelLine}>
-          {onOpenHealthEvidence ? <>
-            <button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("protein"); }}>Protein <DecryptNumber value={minimumDayProteinG} dayId={day!.id} reading="protein" />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g</button>
-            {" · "}<button type="button" className="health-fuel-reading" disabled={busy} aria-label={`Water ${minimumDayHydrateOz} oz, explore records`} onClick={() => { if (!busyRef.current) onOpenHealthEvidence("water"); }}>Water <DecryptNumber value={minimumDayHydrateOz} dayId={day!.id} reading="water" /> oz</button>
-          </> : <>Protein <DecryptNumber value={minimumDayProteinG} dayId={day!.id} reading="protein" />{proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g · Water <DecryptNumber value={minimumDayHydrateOz} dayId={day!.id} reading="water" /> oz</>}
-        </p>
-      </div>
+      <>
+        <p className="cc-lbl cc-numbers-head"><span>TODAY’S NUMBERS</span><span className="cc-hint">Tap a number for its history.</span></p>
+        <div className="cc-fuel" role="group" aria-label={fuelLine}>
+          {tile("protein", "PROTEIN", <><b><DecryptNumber value={minimumDayProteinG} dayId={day!.id} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
+            pct === null ? <span className="cc-flab">NO TARGET</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
+            `Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g`)}
+          {tile("water", "WATER", <><b><DecryptNumber value={minimumDayHydrateOz} dayId={day!.id} reading="water" /></b><small>oz</small></>,
+            <span className="cc-flab">{waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>, `Water ${minimumDayHydrateOz} oz`)}
+          {tile("weight", "WEIGHT", <b>{latestWeightLbs === undefined ? "—" : latestWeightLbs.toFixed(1)}</b>,
+            <span className="cc-flab">{latestWeightLbs === undefined ? "NOT LOGGED" : "LATEST"}</span>, latestWeightLbs === undefined ? "Weight not logged" : `Weight ${latestWeightLbs} lb`)}
+          {tile("sleep", "SLEEP", <b>{sleep ?? "—"}</b>, <span className="cc-flab">{sleep ? "LAST MAIN" : "NOT LOGGED"}</span>,
+            sleep ? `Main sleep ${sleep}` : "Main sleep not logged")}
+        </div>
+      </>
     );
   }
 
@@ -1834,7 +1866,8 @@ export function TodayScreen({
       case "WORK_CONTEXT":
         return liftedWorkContext ? null : renderWorkContextTool();
       case "FUEL":
-        return day ? renderFuel() : null;
+        // The tiles above own the history links; TOOLS repeats the totals as one line.
+        return day ? <div className="equipment-row"><p className="tool-label" style={{ marginBottom: 4 }}>FUEL</p><p className="card-body" style={{ margin: 0 }}>{fuelLine}</p></div> : null;
       case "MINIMUM_DAY":
         return (
           <>
@@ -1954,7 +1987,7 @@ export function TodayScreen({
           </div>
         );
       case "FUEL":
-        return renderFuel();
+        return <div className="equipment-row"><p className="card-body" style={{ margin: 0 }}>{fuelLine}</p></div>;
       case "SHIFT_HANDOFF":
         return shiftHandoffRefreshKey !== undefined ? <ShiftHandoff refreshKey={shiftHandoffRefreshKey} /> : null;
       case "SHIFT_DOWN":
@@ -2184,19 +2217,14 @@ export function TodayScreen({
           active-execution status reuses is untouched, so that usage is
           unaffected by this change. */}
       {day && (
-        <section
-          aria-labelledby="today-current-state-heading"
-          className={
-            stripLevel
-              ? `status-strip status-strip--stacked today-situation status-strip--${stripLevel}`
-              : "status-strip status-strip--stacked today-situation"
-          }
-        >
+        <section aria-labelledby="today-current-state-heading" className={`status-strip status-strip--stacked today-situation cc-hero-wrap${stripLevel ? ` status-strip--${stripLevel}` : ""}`}>
           <h2 id="today-current-state-heading" className="visually-hidden">CURRENT STATE</h2>
-          {/* COMMAND-CENTER-001: the mode by name, its source, and the lived day. */}
+          {/* POLISH-002: the prototype's mode hero — mode, meta, timeline, scene, and SYSTEMS inside
+              its frame. AMBER or RED still lead the SYSTEMS line in words (SUIT-001). */}
           <ModeHeader
             now={now}
-            hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED"}
+            countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
+            hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
             scheduledPhase={scheduledClock.phase}
             pin={pinnedPhase}
             dayStart={livedDayStart}
@@ -2213,13 +2241,26 @@ export function TodayScreen({
             })}
             onPin={(phase) => { setModePin(day.id, phase); setModePinState({ dayId: day.id, phase }); }}
             onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
+            systems={
+              <SystemsLine
+                input={{
+                  sleepMinutes: lastMainSleepMinutes,
+                  proteinG: minimumDayProteinG,
+                  proteinTargetG: proteinTargetG,
+                  checkIn: capacityResult?.capacity ?? null,
+                  statusLevel: systemStatus?.level ?? null,
+                }}
+                warnings={[
+                  ...(stale ? [{ key: "stale", text: "Yesterday’s numbers", node: <Signal data-signal="stale">Yesterday’s numbers</Signal> }] : []),
+                  ...(backupDue ? [{ key: "backup", text: backupDue.days === null ? "No backup yet" : `Backup ${backupDue.days}d`, node: <Signal data-signal="backup">{backupDue.days === null ? "No backup yet" : `Backup ${backupDue.days}d`}</Signal> }] : []),
+                  ...(!online ? [{ key: "offline", text: "Offline", node: <Signal data-signal="offline">Offline</Signal> }] : []),
+                ]}
+                onOpen={onOpenSystems ? () => { if (!busyRef.current) onOpenSystems(); } : undefined}
+              />
+            }
           >
-          {/* SHIFT CLOCK (Drop 2): before and during a scheduled shift the
-              headline is the countdown; the work context it rests on moves to
-              a quiet line under it. The "per schedule" one-tap change stays
-              here in every phase, so it's never behind TOOLS. */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <p className="status-strip__headline" style={{ margin: 0 }}>
+            {/* The context sentence (or the countdown) stays for screen readers; the meta line shows it. */}
+            <p className="visually-hidden status-strip__headline">
               {shiftClock.countdown
                 ? describeCountdown(shiftClock.countdown, now)
                 : describeContextStrip(
@@ -2230,61 +2271,41 @@ export function TodayScreen({
                     scheduledClock.phase,
                   ).replace(" — shift ended, not yet shifted down", " · shift down pending").replace(" — after your shift", " · after shift")}
             </p>
+            {shiftClock.countdown && <p className="visually-hidden status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>}
+            {/* The "per schedule" one-tap change stays in the hero in every phase, never behind TOOLS. */}
             {workContextPerSchedule && day.workContext !== "UNKNOWN" && (
-              <button
-                type="button"
-                className="chip"
-                style={{ flex: "none", padding: "8px 14px" }}
-                disabled={busy}
-                aria-label={describeStandingChange(day.workContext)}
-                onClick={() => void handleChangeStandingWorkContext()}
-              >
-                {day.workContext === "WORK" ? "OFF TODAY" : "WORK TODAY"}
-              </button>
+              <div className="cc-mode-context">
+                <button
+                  type="button"
+                  className="cc-tag cc-context-change"
+                  disabled={busy}
+                  aria-label={describeStandingChange(day.workContext)}
+                  onClick={() => void handleChangeStandingWorkContext()}
+                >
+                  <span className="cc-tag-face">{day.workContext === "WORK" ? "OFF TODAY" : "WORK TODAY"}</span>
+                </button>
+              </div>
             )}
-          </div>
-          {shiftClock.countdown && (
-            <p className="status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>
-          )}
           </ModeHeader>
-          {/* SUIT-001 (owner choice 2026-10-18): SYSTEMS replaces the System Status line. The status
-              keeps its exact meaning and evidence; it moves to the readout's STATE section, and AMBER
-              or RED still lead this line in words (never the strip's tint alone). */}
-          <div className="today-situation__system">
-            <SystemsLine
-              input={{
-                sleepMinutes: lastMainSleepMinutes,
-                proteinG: minimumDayProteinG,
-                proteinTargetG: proteinTargetG,
-                checkIn: capacityResult?.capacity ?? null,
-                statusLevel: systemStatus?.level ?? null,
-              }}
-              warnings={[
-                ...(stale ? [{ key: "stale", text: "Yesterday’s numbers", node: <Signal data-signal="stale">Yesterday’s numbers</Signal> }] : []),
-                ...(backupDue ? [{ key: "backup", text: backupDue.days === null ? "No backup yet" : `Backup ${backupDue.days}d`, node: <Signal data-signal="backup">{backupDue.days === null ? "No backup yet" : `Backup ${backupDue.days}d`}</Signal> }] : []),
-                ...(!online ? [{ key: "offline", text: "Offline", node: <Signal data-signal="offline">Offline</Signal> }] : []),
-              ]}
-              onOpen={onOpenSystems ? () => { if (!busyRef.current) onOpenSystems(); } : undefined}
-            />
-            {stale && <div className="signal-stale" role="status">
-              <Signal data-signal="stale-note">{staleRefresh === "HELD"
-                ? "These are yesterday’s numbers. Your active workout holds yesterday open."
-                : staleRefresh === "FAILED" ? "These are yesterday’s numbers. Today didn’t load. Try again." : "These are yesterday’s numbers."}</Signal>
-              <button type="button" className="chip" disabled={busy || staleRefresh === "RUNNING"} onClick={() => void handleStaleRefresh()}>REFRESH</button>
-            </div>}
-            {systemStatus?.level === "RED" && recommendation?.kind === "NO_ACTION_REQUIRED" && <p className="day-line-evidence-note">Status reports recorded signals. Guidance doesn’t clear those sleep signals.</p>}
-          </div>
+          {stale && <div className="signal-stale cc-stale-note" role="status">
+            <Signal data-signal="stale-note">{staleRefresh === "HELD"
+              ? "These are yesterday’s numbers. Your active workout holds yesterday open."
+              : staleRefresh === "FAILED" ? "These are yesterday’s numbers. Today didn’t load. Try again." : "These are yesterday’s numbers."}</Signal>
+            <button type="button" disabled={busy || staleRefresh === "RUNNING"} onClick={() => void handleStaleRefresh()}>REFRESH</button>
+          </div>}
+          {systemStatus?.level === "RED" && recommendation?.kind === "NO_ACTION_REQUIRED" && <p className="day-line-evidence-note">Status reports recorded signals. Guidance doesn’t clear those sleep signals.</p>}
         </section>
       )}
 
       {/* One canonical Engine result. Foreground operations above retain priority;
           support guidance stays a disclosure rather than a competing dominant action. */}
-      {day && !recommendation && <section className="console-guidance next-action-card" aria-label="Current recommendation"><h2 className="command-title">Nothing needs you right now.</h2><p className="meta">No guidance recorded yet.</p></section>}
+      {day && !recommendation && <section className="console-guidance" aria-label="Current recommendation"><div className="cc-panel cc-rec next-action-card all-clear"><p className="cc-lbl">NEXT USEFUL ACTION</p><h2>Nothing needs you right now.</h2>{nextActionContext && <p>{nextActionContext}</p>}</div></section>}
       {day && recommendation && (
         <section className="console-guidance" aria-label="Current recommendation">
           <p className="tool-label console-guidance__label">GUIDANCE</p>
           <RecommendationCard
             nextAction
+            context={nextActionContext}
             day={day}
             recommendation={recommendation}
             headlineCommitment={headlineCommitment}
@@ -2308,10 +2329,12 @@ export function TodayScreen({
         </section>
       )}
 
+      {/* An active workout resumes from right under the card, above the fold. */}
+      {day && dominant === "WORKOUT_ACTIVE" && <div className="today-resume-line"><ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} onOpenTrain={onOpenTrain} /></div>}
       {day && onOpenWeeklyReview && <div className="today-review-line"><WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} /></div>}
       {day && <section className="today-numbers" aria-label="Today's numbers">{renderFuel()}</section>}
       <section className="console-operations" aria-labelledby="console-operations-heading">
-        <h2 id="console-operations-heading" className="section-label">Immediate operations</h2>
+        <h2 id="console-operations-heading" className="visually-hidden">Immediate operations</h2>
         <ConsoleControls
           onWaterVisibilityChange={setWaterControlsVisible}
           onLogWater={handleMinimumDayLogWater}
@@ -2427,7 +2450,6 @@ export function TodayScreen({
           onCancelReset={() => void handleCancelReset()}
         />
       )}
-      {day && dominant === "WORKOUT_ACTIVE" && <ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} onOpenTrain={onOpenTrain} />}
       {day && dominant === "HYDRATION_ACTIVE" && (
         <div data-small-hydration>
         <HydrationOperationCard

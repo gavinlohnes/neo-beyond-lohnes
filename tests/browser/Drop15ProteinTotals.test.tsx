@@ -52,7 +52,7 @@ describe("one protein total on every screen", () => {
     await seedOct3Duplicate();
 
     let today = await render(<TodayScreen />);
-    await expect.element(today.getByText("Protein 99 g · Water 0 oz", { exact: true })).toBeVisible();
+    await expect.element(today.getByRole("group", { name: "Protein 99 g · Water 0 oz", exact: true })).toBeVisible();
     await cleanup();
 
     const body = await render(<BodyScreen />);
@@ -76,7 +76,7 @@ describe("one protein total on every screen", () => {
     await cleanup();
 
     today = await render(<TodayScreen />);
-    await expect.element(today.getByText("Protein 50 g · Water 0 oz", { exact: true })).toBeVisible();
+    await expect.element(today.getByRole("group", { name: "Protein 50 g · Water 0 oz", exact: true })).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
   });
 });

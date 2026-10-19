@@ -30,7 +30,7 @@ const rows = () => [...document.querySelectorAll("[data-shift-clock-row]")].map(
 const modeName = () => document.querySelector(".mode-header__value")?.textContent ?? "";
 const modeSource = () => document.querySelector(".mode-header__source")?.textContent ?? "";
 const guidance = () => document.querySelector(".console-guidance")?.textContent ?? "";
-const systemStatus = () => document.querySelector(".today-situation__system")?.textContent ?? "";
+const systemStatus = () => document.querySelector(".systems-line")?.getAttribute("aria-label") ?? "";
 const attention = () => [...document.querySelectorAll(".signal-row")].map((el) => el.textContent ?? "");
 
 async function pick(screen: Awaited<ReturnType<typeof render>>, name: string) {
@@ -62,11 +62,12 @@ describe("mode header", () => {
       vi.setSystemTime(when);
       const screen = await render(<TodayScreen />);
       await expect.poll(modeName).toBe(name);
-      expect(modeSource()).toBe("Per schedule");
+      // POLISH-002: the prototype's meta line — per schedule (or the Drop 2 countdown), then the mode's sentence.
+      expect(modeSource()).toMatch(/^(Per schedule|Shift (in|ends in) .+?) · /);
       if (phaseRows) await expect.poll(rows).toEqual(phaseRows);
-      expect(document.querySelectorAll(".mode-strip__segment").length).toBe(3);
-      expect(document.querySelector(".mode-strip__segment--on")).not.toBeNull();
-      expect(document.querySelector(".mode-strip__legend")?.textContent).toContain("06:00");
+      expect(document.querySelectorAll(".cc-tl-seg").length).toBe(3);
+      expect(document.querySelector(".cc-tl-seg.cc-on")).not.toBeNull();
+      expect(document.querySelector(".cc-tl-legend")?.textContent).toContain("06:00");
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
       await screen.unmount();
     }
@@ -77,7 +78,7 @@ describe("mode header", () => {
     vi.setSystemTime(at(14, 17, 0));
     let screen = await render(<TodayScreen />);
     await expect.poll(modeName).toBe("OFF DUTY");
-    expect(document.querySelectorAll(".mode-strip__segment").length).toBe(1);
+    expect(document.querySelectorAll(".cc-tl-seg").length).toBe(1);
     await screen.unmount();
 
     await db.schedulePatterns.clear();
@@ -141,9 +142,9 @@ describe("mode pin — placement only", () => {
     await expect.element(dialog.getByText("SCHEDULE", { exact: true })).toBeVisible();
     await userEvent.keyboard("{Escape}");
     await expect.poll(() => document.querySelector("dialog")).toBeNull();
-    await expect.poll(() => document.activeElement?.className).toBe("mode-header__name");
+    await expect.poll(() => document.activeElement?.classList.contains("mode-header__name")).toBe(true);
     await pick(screen, "ON SHIFT");
-    expect(modeSource()).toMatch(/^Pinned/);
+    expect(modeSource()).toMatch(/^Shift ends in 8h · Pinned/);
     vi.setSystemTime(at(13, 7));
     await screen.unmount();
     const again = await render(<TodayScreen />);
@@ -162,6 +163,19 @@ describe("mode pin — placement only", () => {
     await expect.poll(rows).toEqual(["TONIGHT"]);
     // 07:00 is after the shift began: no "Shift in" countdown for a pinned PREP.
     expect(document.querySelector(".status-strip__headline")?.textContent).not.toMatch(/^Shift in/);
+  });
+
+  it("a pin keeps the schedule's countdown leading the meta line, and unpinning keeps it too", async () => {
+    await startDayAt(at(12, 16, 30));
+    vi.setSystemTime(at(12, 17, 10));
+    const screen = await render(<TodayScreen />);
+    await expect.poll(modeName).toBe("PREP");
+    await expect.poll(modeSource).toMatch(/^Shift in 50m · /);
+    await pick(screen, "OFF DUTY");
+    await expect.poll(modeName).toBe("OFF DUTY");
+    expect(modeSource()).toBe("Shift in 50m · Pinned · schedule says PREP · resets 16:30");
+    await pick(screen, "PREP");
+    await expect.poll(modeSource).toMatch(/^Shift in 50m · Pinned · schedule says PREP/);
   });
 
   it("pinning ON SHIFT on a day off only offers a separate, optional work-day record", async () => {

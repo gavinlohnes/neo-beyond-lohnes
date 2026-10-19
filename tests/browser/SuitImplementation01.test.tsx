@@ -36,7 +36,8 @@ describe("TODAY // ALL CLEAR", () => {
     // .icon-confirm-check; ResolveIcon's targets .icon-resolve-core.
     // Confirming the ALL CLEAR icon rendered means confirming the other
     // one did not.
-    expect(document.querySelector(".icon-confirm-check")).not.toBeNull();
+    // POLISH-002: the all-clear is the prototype's quiet panel (no glyph); never the resolve mark.
+    expect(document.querySelector(".next-action-card.all-clear")).not.toBeNull();
     expect(document.querySelector(".icon-resolve-core")).toBeNull();
   });
 });

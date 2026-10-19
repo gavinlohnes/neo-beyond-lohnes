@@ -131,6 +131,7 @@ it("holds header/card/numbers/actions order and the phone fold in every pinned m
       setModePin(dayId, mode);
       const screen = await render(<TodayScreen />);
       await expect.poll(() => document.querySelector(".mode-header")?.getAttribute("data-mode")).toBe(mode);
+      await document.fonts.ready;
       const header = document.querySelector(".today-situation")!.getBoundingClientRect();
       const card = document.querySelector(".console-guidance")!.getBoundingClientRect();
       const numbers = document.querySelector(".today-numbers")!.getBoundingClientRect();
@@ -139,10 +140,15 @@ it("holds header/card/numbers/actions order and the phone fold in every pinned m
       expect(card.bottom).toBeLessThanOrEqual(numbers.top);
       expect(numbers.bottom).toBeLessThanOrEqual(actions.top);
       expect(actions.bottom).toBeLessThanOrEqual(height! - 64);
-      const name = document.querySelector(".mode-header__name")!.getBoundingClientRect();
-      const city = document.querySelector(".mode-city")!.getBoundingClientRect();
-      expect(city.top).toBeGreaterThanOrEqual(name.bottom);
-      expect(document.querySelectorAll(".mode-city__beam")).toHaveLength(1);
+      // POLISH-002 review: "How BEYOND decided" keeps a full 44px target while the fold holds.
+      expect(document.querySelector(".console-guidance .why > summary")!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+      // POLISH-002: buildings stand below the mode name and meta, as in the prototype; the beam
+      // marks a real action, and goes dark ON SHIFT.
+      const meta = document.querySelector(".cc-mode-meta")!.getBoundingClientRect();
+      const city = document.querySelector(".cc-skyline")!.getBoundingClientRect();
+      const tallest = Math.min(...[...document.querySelectorAll(".cc-skyline .cc-city")].map((path) => path.getBoundingClientRect().top));
+      expect(Math.max(city.top, tallest)).toBeGreaterThanOrEqual(meta.bottom);
+      expect(document.querySelectorAll(".cc-beam")).toHaveLength(mode === "SCHEDULED_SHIFT" ? 0 : 1);
       await screen.unmount();
     }
   }
@@ -150,11 +156,11 @@ it("holds header/card/numbers/actions order and the phone fold in every pinned m
 
 it("lights a fraction of building windows and gates the beam on Engine action", async () => {
   const night = await render(<ModeCity now={new Date(2026, 9, 12, 23, 40)} workDay hasAction />);
-  expect(night.container.querySelector(".mode-city")?.getAttribute("style")).toContain("--sky: 1");
+  expect((night.container.querySelector(".cc-sky") as HTMLElement).style.opacity).toBe("1");
   expect(night.container.querySelectorAll("rect").length).toBeGreaterThan(0);
-  expect(night.container.querySelector(".mode-city__beam")).not.toBeNull();
+  expect(night.container.querySelector(".cc-beam")).not.toBeNull();
   await night.unmount();
   const day = await render(<ModeCity now={new Date(2026, 9, 13, 11)} workDay hasAction={false} />);
-  expect(day.container.querySelector(".mode-city")?.getAttribute("style")).toContain("--sky: 0");
-  expect(day.container.querySelector(".mode-city__beam")).toBeNull();
+  expect((day.container.querySelector(".cc-sky") as HTMLElement).style.opacity).toBe("0");
+  expect(day.container.querySelector(".cc-beam")).toBeNull();
 });

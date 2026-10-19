@@ -1,67 +1,19 @@
 /* Bounded production console: existing fonts, status semantics and primary-action tokens. */
 .command-console.today-field { --console-gap: 20px; }
-.command-console.today-field .field-header { margin-bottom: 16px; }
-.today-situation {
-  position: relative;
-  display: grid;
-  gap: 12px;
-  padding-block: 4px 16px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-.today-situation__system .tool-label { margin: 0; }
-.today-situation__system {
-  display: grid;
-  grid-template-columns: minmax(0, .8fr) minmax(0, 2fr);
-  align-items: start;
-  gap: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-subtle);
-}
-.today-situation__system .status-strip__detail { margin: 0; }
-.console-guidance__label { margin-bottom: 10px; }
 .console-operations { margin-bottom: var(--console-gap); }
-.console-controls {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-  margin-bottom: 0;
-  border-bottom: 1px solid var(--border-subtle);
+/* POLISH-002: the prototype's action row (cc.css .cc-actions / .cc-act). */
+.today-field .cc-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.today-field .cc-actions button.cc-act {
+  min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0; border: 1px solid var(--p-line-2); border-radius: 0;
+  color: var(--p-t1); font-family: var(--p-display); font-weight: 600; letter-spacing: .12em; font-size: 14px; cursor: pointer;
+  --p-bd: var(--p-line-2); --p-fill: var(--p-s2);
+  background: linear-gradient(225deg, transparent 7.07px, var(--p-bd) 7.07px, var(--p-bd) 8.3px, var(--p-fill) 8.3px);
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
 }
-.console-controls button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-width: 0;
-  min-height: 52px;
-  padding: 8px 2px;
-  border: 0;
-  background: transparent;
-  color: var(--text-1);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.console-controls button:hover, .console-controls button:active { background: var(--surface-2); }
-.console-controls button:disabled { opacity: .5; cursor: default; }
-.command-console.today-field .status-strip--stacked {
-  margin-bottom: var(--console-gap);
-  padding: 12px 0 12px 12px;
-  background: transparent;
-}
-.command-console.today-field .status-strip--stacked > div { flex-wrap: wrap; }
-.command-console.today-field .status-strip--stacked .chip { min-height: 48px; }
-.command-console.today-field .console-guidance { margin-bottom: var(--console-gap); }
-.command-console.today-field .command-surface {
-  min-height: 0;
-  padding: 20px 16px;
-  margin-bottom: 0;
-}
-.command-console.today-field .command-surface .command-title {
-  font-size: clamp(28px, 8vw, 36px);
-  line-height: 1.08;
-  letter-spacing: .01em;
-}
+.today-field .cc-actions button.cc-act.cc-log { border-color: var(--p-t2); --p-bd: var(--p-t2); }
+.today-field .cc-actions button.cc-act:active { --p-fill: var(--p-s3); }
+.today-field .cc-actions button.cc-act:focus-visible { outline: 2px solid var(--p-t1); outline-offset: -5px; }
+.today-field .cc-actions button.cc-act:disabled { opacity: .5; cursor: default; }
 .command-console.today-field .shift-clock-rows { border-top: 1px solid var(--border-subtle); padding-top: 16px; }
 .command-console.today-field .shift-clock-rows .equipment-row { padding-block: 12px; }
 .command-console.today-field .today-support { margin-top: 16px; }
@@ -76,8 +28,6 @@
 
 /* DAILY-EXPERIENCE-001: a Day Line, using existing facts and authority. */
 .command-console.day-line { --console-gap: 12px; }
-.day-line .today-situation { gap: 6px; padding-block: 0 10px; }
-.command-console.day-line .status-strip--stacked { padding: 0 0 10px; }
 .day-line .today-situation__system { grid-template-columns: 1fr; padding-top: 8px; gap: 3px; }
 .day-line .today-situation__system > .tool-label { font-size: 12px; }
 .day-line-evidence-note { color: var(--text-3-strong); font-size: 12px; line-height: 1.4; margin: 4px 0 0; }
@@ -85,8 +35,6 @@
 .command-console.day-line .shift-clock-rows { padding-top: 8px; }
 .command-console.day-line .shift-clock-rows .equipment-row { padding-block: 8px; }
 .day-line .console-operations > .section-label { font-size: 12px; margin-bottom: 4px; }
-.day-line .console-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
-.day-line .console-controls button { flex-direction: column; font-size: 12px; gap: 4px; min-height: 56px; }
 .day-line .day-line-check-in { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .day-line-check-in > .tool-label, .day-line-check-in > .card-title { grid-column: 1 / -1; margin: 0; }
 .day-line-check-in > button { font-size: 14px; margin: 0 !important; padding-inline: 6px; }
@@ -113,47 +61,106 @@
 .health-fuel-reading { display: inline-block; font: inherit; color: var(--text-1); text-align: left; background: none; border: 0; border-bottom: 1px solid var(--border-strong); padding: 6px 0; min-height: 44px; cursor: pointer; }
 .health-fuel-reading::after { content: " ↗"; }
 
-/* One Engine result, always in the same position. Detail stays one tap down. */
-.next-action-card { padding: 12px; border: 1px solid var(--border-strong); background: var(--surface-1); }
-.next-action-card > .command-title { font-size: 26px; line-height: 1.1; margin-bottom: 4px; }
-.next-action-card > .tool-label, .console-guidance__label { display: none; }
-.next-action-card > div:last-child { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px !important; }
-.next-action-card > div:last-child > button { flex: 1; min-height: 44px; padding: 8px; }
-.next-action-card > details { margin-top: 4px !important; }
+/* POLISH-002: TODAY in the prototype's order and look — the hero (modeHeader.css), then a
+   padded stack of the next-action panel, the numbers and the action row (cc.css values). */
+.today-field > .console-guidance, .today-field > .today-numbers, .today-field > .console-operations { margin-top: 12px; }
+.console-guidance__label { display: none; }
+.next-action-card { display: flex; flex-direction: column; }
+.next-action-card > details, .next-action-card > .why-disclosure { order: 10; margin-top: 10px; font-size: 13px; color: var(--p-t2); }
+.next-action-card .cc-lbl { margin-bottom: 8px; }
+.next-action-card h2 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: .02em; color: var(--p-t1); }
+.next-action-card > p { margin: 6px 0 12px; color: var(--p-t2); font-size: 14px; }
+.next-action-card.all-clear > p:last-child { margin-bottom: 0; }
+.next-action-card > div:last-of-type { display: grid; gap: 8px; }
+.today-field .next-action-card .cc-cta { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 48px; padding: 0 16px; border: 0; border-radius: 0; background: var(--p-red); color: var(--p-cta-t); font-family: var(--p-display); font-weight: 600; letter-spacing: .14em; font-size: 15px; text-transform: uppercase; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+.next-action-card .cc-ghost { background: none; color: var(--p-t1); font: inherit; font-size: 13px; letter-spacing: .1em; width: 100%; }
+.today-numbers .cc-num b { font-weight: 600; }
+.today-numbers .cc-fuel button { border: 0; color: var(--p-t1); font: inherit; cursor: pointer; }
+.today-numbers .cc-fuel button:disabled { cursor: default; opacity: 1; }
 
-.today-numbers .equipment-row { padding-block: 4px; }
-.today-numbers .tool-label { display: none; }
-.today-review-line .backup-due { margin: 0; }
-.today-review-line .backup-due__row { display: flex; align-items: center; border: 0; padding: 0; font-size: 16px; }
-.today-review-line .btn-secondary { width: auto; padding: 4px 8px; min-height: 44px; }
-
-/* POLISH-001: the next-action button owns TODAY's action red. */
-.today-field .btn-primary { background: var(--surface-2); color: var(--text-1); border: 1px solid var(--border-strong); }
-.today-field .next-action-card .btn-primary { background: var(--action-primary-bg); color: var(--action-primary-text); border-color: var(--action-primary-bg); }
+/* POLISH-001: the next-action button owns TODAY's action red; other actions are neutral. */
+.today-field .btn-primary:not(.cc-cta) { background: var(--surface-2); color: var(--text-1); border: 1px solid var(--border-strong); }
 .today-field .chip--selected { background: var(--surface-2); color: var(--text-1); border-color: var(--text-1); }
 .today-field .command-surface { background: var(--surface-1); border-color: var(--border-strong); box-shadow: none; }
 .today-field .command-surface::before, .today-field .command-surface::after { display: none; }
 .today-field .command-surface .command-title { color: var(--text-1); }
-
-.command-console.today-field .next-action-card.command-surface { padding: 12px; display: block; margin-bottom: 0; }
-.command-console.today-field .next-action-card .command-title { font-size: 26px; line-height: 1.1; }
 .active-workout-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; padding-block: 8px; }
 .active-workout-row .tool-label { grid-column: 1 / -1; margin: 0; }
 .active-workout-row .card-title { margin: 0; font-size: 18px; }
 .active-workout-row .card-body { grid-column: 1; margin: 0; }
-.active-workout-row .btn-primary { grid-column: 2; grid-row: 2 / 4; width: auto; max-width: 130px; padding: 8px; }
-
-.next-action-card.all-clear { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; }
-.next-action-card.all-clear > h2 { grid-column: 1 / -1; }
-.next-action-card.all-clear > details { grid-column: 1; align-self: center; min-width: 0; }
-.next-action-card.all-clear > div:last-child { grid-column: 2; margin: 0 !important; }
-.next-action-card.all-clear:has(details[open]) > details { grid-column: 1 / -1; }
-.next-action-card.all-clear:has(details[open]) > div:last-child { grid-column: 1 / -1; }
-
-.today-field .active-workout-row { margin: 0; padding: 0; gap: 0 8px; }
-.today-field .active-workout-row .tool-label { display: none; }
-.today-field .active-workout-row .card-title { grid-column: 1; grid-row: 1; align-self: center; }
-.today-field .active-workout-row .btn-primary { grid-column: 2; grid-row: 1; max-width: 140px; }
+.active-workout-row .btn-primary { grid-column: 2; grid-row: 2 / 4; width: auto; max-width: 140px; padding: 8px; }
+.today-review-line .backup-due { margin: 0; }
+.today-review-line .backup-due__row { display: flex; align-items: center; border: 0; padding: 0; font-size: 16px; }
+.today-review-line .btn-secondary { width: auto; padding: 4px 8px; min-height: 44px; }
 .today-banners .backup-due__row { padding-block: 4px; }
-
 .today-field .signal-row, .today-field .today-situation { border-left-color: var(--border-strong); }
+
+/* POLISH-002: "How BEYOND decided" in the prototype's quiet style. */
+.next-action-card > .why { margin-top: 10px; padding-top: 0; border-top: 0; font-size: 13px; color: var(--p-t2); }
+.next-action-card > .why > summary { min-height: 36px; display: flex; align-items: center; list-style: none; font-size: 13px; letter-spacing: .06em; color: var(--p-t2); }
+.next-action-card > .why > summary::-webkit-details-marker { display: none; }
+.next-action-card > div:last-of-type:empty { display: none; }
+
+/* POLISH-002: phase rows and Tools as the prototype's full-width .row list. */
+.command-console.today-field .shift-clock-rows { margin: 12px -14px 0; padding: 0; border-top: 1px solid var(--p-line); }
+.today-field .shift-clock-rows > .section-label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.today-field .shift-clock-rows .equipment-row, .today-field .today-support .equipment-row {
+  margin: 0; padding: 10px 14px; border: 0; border-bottom: 1px solid var(--p-line); border-radius: 0; background: none; box-shadow: none;
+}
+.today-field .equipment-row--control { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; text-align: left; color: var(--p-t1); }
+.today-field .equipment-row--control .tool-label { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: .03em; color: var(--p-t1); font-family: var(--p-display); }
+.today-field .equipment-row--control .tool-icon { width: 28px; display: flex; justify-content: center; color: var(--p-t2); }
+.today-field .equipment-row--control .meta { font-size: 13px; color: var(--p-t2); }
+.today-field .equipment-row--control .disclosure-chevron { margin-left: auto; color: var(--p-t3); }
+.today-field .today-support { margin: 0 -14px; border-top: 1px solid var(--p-line); }
+.today-field .today-plan-link { margin: 0; padding: 10px 14px; min-height: 60px; border-bottom: 1px solid var(--p-line); font-size: 16px; font-weight: 600; letter-spacing: .03em; }
+.today-field .today-plan-link > span:last-child { font-size: 13px; font-weight: 400; color: var(--p-t2); }
+
+/* POLISH-002: TODAY's operating cards keep their controls, in the prototype's language —
+   row titles in the display face, ghost buttons, quiet section labels. */
+.today-field > :not(.cc-hero-wrap):not(.console-guidance):not(.today-numbers) :is(.tool-label, .card-title, .command-title) {
+  font-family: var(--p-display); font-size: 16px; font-weight: 600; letter-spacing: .03em; color: var(--p-t1); text-transform: none;
+}
+.today-field > :not(.cc-hero-wrap):not(.console-guidance):not(.today-numbers) .card-body { font-size: 14px; color: var(--p-t2); }
+.today-field .btn-secondary, .today-field .btn-primary:not(.cc-cta) {
+  min-height: 44px; border: 1px solid var(--p-line-2); border-radius: 0; background: none; color: var(--p-t1);
+  font-family: var(--p-display); font-size: 13px; font-weight: 500; letter-spacing: .1em; box-shadow: none;
+}
+.today-field .section-label--field, .today-field .today-support > .section-label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.today-field .chip { border-radius: 0; border-color: var(--p-line); color: var(--p-t2); font-family: var(--p-display); letter-spacing: .06em; }
+.today-field .chip--selected { color: var(--p-t1); border-color: var(--p-t1); }
+.today-field .signal-row, .today-field .card { border-radius: 0; background: none; box-shadow: none; }
+/* The prototype's › on the CTA, drawn as an image so it never joins the button's name. */
+.today-field .next-action-card .cc-cta { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='12' viewBox='0 0 8 12'%3E%3Cpath d='M1.5 1.5 6 6l-4.5 4.5' fill='none' stroke='%23fff' stroke-width='1.6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 18px center; padding-right: 36px; }
+/* The next-action panel is the one dominant surface; it keeps the prototype's panel, not the old command surface. */
+.command-console.today-field .next-action-card.command-surface { padding: 14px; min-height: 0; margin: 0;
+  background: linear-gradient(225deg, transparent 9.9px, var(--p-line) 9.9px, var(--p-line) 11.1px, var(--p-s1) 11.1px);
+  border: 1px solid var(--p-line); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+/* Fold: "Not now" shares the "How BEYOND decided" row; the numbers hint shares the label row. */
+.next-action-card .cc-decline { order: 11; align-self: flex-end; margin: -40px 0 0; min-height: 44px; padding: 0 2px 0 12px; border: 0; background: none; color: var(--p-t2); font: inherit; font-size: 13px; letter-spacing: .1em; cursor: pointer; }
+.cc-numbers-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.cc-numbers-head .cc-hint { margin: 0; font-size: 11px; letter-spacing: .04em; text-transform: none; }
+:root[data-suit-mode="EXPECTED_POST_WORK"] .cc-numbers-head .cc-hint { display: inline; }
+.next-action-card > .why { margin-top: 4px; }
+.next-action-card > .why > summary { min-height: 32px; }
+@media (max-width: 370px) {
+  .today-numbers .cc-fuel button { min-height: 64px; padding-block: 8px 7px; }
+  .today-field > .console-guidance, .today-field > .today-numbers, .today-field > .console-operations { margin-top: 10px; }
+  .next-action-card > p { margin: 4px 0 10px; }
+}
+.today-numbers .cc-fuel button { min-height: 72px; }
+.next-action-card > p { margin-bottom: 10px; }
+/* POLISH-002 review: the disclosure keeps a full 44px target; the fold is met by dropping the
+   stacked margins around the CTA instead. "Not now" shares the same 44px row. */
+.next-action-card > .why > summary { min-height: 44px; }
+.next-action-card .cc-decline { margin-top: -44px; }
+@media (max-width: 370px) { .today-numbers .cc-fuel button { min-height: 64px; } }
+.today-resume-line { margin-top: 10px; }
+.command-console.today-field .next-action-card.command-surface, .next-action-card { padding: 13px 14px 12px; }
+.today-numbers .cc-lbl { margin-bottom: 6px; }
+.today-field .next-action-card .btn-secondary.cc-decline { width: auto; min-height: 44px; border: 0; padding: 0 2px 0 12px; background: none; color: var(--p-t2); font-size: 13px; letter-spacing: .1em; }
+.command-console.today-field .next-action-card h2.command-title { margin: 0; font-size: 22px; line-height: 1.25; font-weight: 600; letter-spacing: .02em; color: var(--p-t1); }

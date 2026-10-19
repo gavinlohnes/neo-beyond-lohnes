@@ -32,13 +32,16 @@ describe("Launch polish (real browser)", () => {
     expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
   });
 
-  it("sentences use the body face; labels keep the mono face", async () => {
+  it("sentences use the body face; labels use the display face and numbers the mono face (POLISH-002)", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     await render(<TodayScreen />);
     await expect.poll(() => document.querySelector(".meta")).not.toBeNull();
     expect(getComputedStyle(document.querySelector(".meta")!).fontFamily).toMatch(/Chakra Petch/); // HUD-001
-    expect(getComputedStyle(document.querySelector(".tool-label, .section-label")!).fontFamily).toMatch(/JetBrains Mono/); // HUD-001
+    // POLISH-002: the prototype sets labels in the display face and readings in the mono face.
+    await expect.poll(() => document.querySelector(".cc-num")).not.toBeNull();
+    expect(getComputedStyle(document.querySelector(".cc-lbl")!).fontFamily).toMatch(/Chakra Petch/);
+    expect(getComputedStyle(document.querySelector(".cc-num")!).fontFamily).toMatch(/JetBrains Mono/);
   });
 
   it("a suggested day end is a neutral row, not a red signal row", async () => {

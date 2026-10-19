@@ -12,6 +12,25 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## POLISH-002 — the whole prototype, ported (owner approved 2026-10-19)
+
+Brief: [POLISH-002](agent/POLISH-002.md). The approved prototype is the visual source: its CSS
+values, markup structure, city generator and copy are ported (`src/ui/cc/cc.css`), not
+reinterpreted. Where the prototype conflicts with an earlier ruling, the earlier ruling holds
+and the prototype supplies the look:
+
+- **FIND-001 search:** stays one tap from every screen, as a search glyph beside the header
+  clock.
+- **Drop 2 countdown:** leads the hero's meta line ("Shift in 50m · Shift's coming…").
+- **POLISH-001 fold:** the action row stays above the fold at 390×844 and 360×800. The card
+  folds "Not now" / "GOT IT" into its "How BEYOND decided" row, and narrow phones get a
+  compacted hero.
+- **The standing work-context change:** stays in the hero, as a chip on the meta line.
+- **The header clock:** decorative (it repeats the phone's clock), so it stays out of the
+  accessibility tree.
+- **Guidance and pins:** the all-clear card's "what's next" line follows the schedule, never a
+  pin, so a pin still changes no guidance.
+
 ## POLISH-001 — production command center (owner approved 2026-10-18)
 
 This bounded ruling supersedes conflicting TODAY placement and red-button details below.

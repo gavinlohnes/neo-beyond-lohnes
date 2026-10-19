@@ -1,0 +1,34 @@
+/* POLISH-002: the prototype's shell (header row, tab bar, page padding) applied to the app's
+   existing elements. Values come from cc.css's port of the prototype. */
+
+.screen { max-width: 430px; padding: 0 14px calc(var(--p-nav-h) + 24px); }
+
+/* Header: full-bleed, sticky, one 52px row. */
+.field-header.cc-hdr {
+  display: block; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  margin: 0 -14px 14px; padding: 0; background: var(--p-bg); color: var(--p-t1);
+  border-bottom: 1px solid var(--p-line);
+}
+.cc-hdr .cc-emblem.operator-emblem { width: auto; height: auto; margin: 0; padding: 0 6px 0 0; color: var(--p-t1); justify-content: flex-start; }
+.cc-hdr .cc-emblem--mark { display: flex; align-items: center; min-height: 44px; padding-right: 6px; }
+.cc-hdr .cc-title { margin: 0; font-family: var(--p-display); font-size: 15px; font-weight: 600; letter-spacing: .18em; color: var(--p-t1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.cc-hdr .cc-title .cc-where { color: var(--p-t3); letter-spacing: .12em; font-weight: 500; }
+.cc-hdr .cc-clock { flex: none; }
+.cc-hdr .cc-hdr-row { gap: 9px; }
+
+/* Tab bar. */
+.shell-nav.cc-nav { display: block; z-index: 30; background: var(--p-bg); border-top: 1px solid var(--p-line); }
+.cc-nav .shell-nav__item {
+  flex: none; min-height: var(--p-nav-h); padding: 0; gap: 5px; justify-content: center;
+  border: 0; background: none; color: var(--p-t3);
+  font-family: var(--p-display); font-size: 11px; font-weight: 500; letter-spacing: .14em;
+}
+.cc-nav .shell-nav__item--active { color: var(--p-t1); background: var(--p-s1); font-weight: 500; }
+.cc-nav .shell-nav__item--active::before { content: ""; position: absolute; top: 0; left: 22%; right: 22%; height: 2px; background: var(--p-red); }
+.cc-hdr .cc-emblem.operator-emblem { min-width: 44px; min-height: 44px; }
+.cc-hdr .cc-title { font-size: 16px; }
+.cc-nav .shell-nav__item--active { font-weight: 700; }
+/* FIND-001: record search stays one tap from every screen, beside the clock. */
+.cc-hdr .cc-search-btn { margin-left: auto; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--p-t2); cursor: pointer; }
+.cc-hdr .cc-search-btn + .cc-clock { margin-left: 0; }
+.cc-hdr .cc-clock::before { content: attr(data-clock); }

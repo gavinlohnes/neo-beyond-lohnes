@@ -99,7 +99,7 @@ it("flags yesterday's numbers when a workout holds the day open, and REFRESH sho
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await expect.element(screen.getByText("These are yesterday’s numbers.", { exact: true })).toBeVisible();
-  await expect.element(screen.getByRole("button", { name: /Fuel 30 g, .*Yesterday’s numbers\. Open readout$/ })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: /Fuel 30g, .*Yesterday’s numbers\. Open readout$/ })).toBeVisible();
   await expect.poll(() => glitched.has("stale-note")).toBe(true);
   await screen.getByRole("button", { name: "REFRESH", exact: true }).click();
   await expect.element(screen.getByText("These are yesterday’s numbers. Your active workout holds yesterday open.", { exact: true })).toBeVisible();
@@ -108,7 +108,7 @@ it("flags yesterday's numbers when a workout holds the day open, and REFRESH sho
   await completeWorkout(day.id, workout.id, "STANDARD", "COMPLETED", 40);
   await screen.getByRole("button", { name: "REFRESH", exact: true }).click();
   await expect.poll(() => document.querySelector('[data-signal="stale-note"]')).toBeNull();
-  await expect.element(screen.getByRole("button", { name: /^Systems: .*Fuel 0 g/ })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: /^Systems: .*Fuel 0g/ })).toBeVisible();
   const days = await db.beyondDays.toArray();
   expect(days.filter((d) => d.status === "ACTIVE")).toHaveLength(1);
   expect(days.find((d) => d.status === "ACTIVE")!.id).not.toBe(day.id);

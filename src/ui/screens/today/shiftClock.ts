@@ -174,7 +174,7 @@ export const MODE_NAMES: Record<ShiftClockPhase, string> = {
 /** One line per mode, in the brief's voice: terse, plain, no orders. */
 export const MODE_DESCRIPTIONS: Record<ShiftClockPhase, string> = {
   PRE_WORK: "Shift’s coming. Fuel up. Check tonight.",
-  SCHEDULED_SHIFT: "On the clock. Log fast.",
+  SCHEDULED_SHIFT: "On the clock. Screen goes dark. Log fast.",
   EXPECTED_POST_WORK: "Shift’s done. Power down. Sleep.",
   OFF: "Your time. Train, plan, rest.",
 };

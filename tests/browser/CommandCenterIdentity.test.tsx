@@ -19,9 +19,9 @@ describe("Command Center identity", () => {
         const screen = await render(<div className="screen"><SuitMode mode={mode} /><ModeHeader now={now} hasAction={false} scheduledPhase="SCHEDULED_SHIFT" pin={mode} strip={strip} dayStart={start} dayOff={false} busy={false} onPin={() => {}} /></div>);
         await expect.poll(() => document.documentElement.dataset.suitMode).toBe(mode);
         expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
-        expect(screen.container.querySelector(".mode-city")?.getAttribute("style")).toContain("--sky: 1");
-        expect(screen.container.querySelector(".mode-city__beam")).toBeNull();
-        expect(getComputedStyle(screen.container.querySelector(".mode-city")!).opacity).toBe("1");
+        // The real clock (22:00) sets the sky; the pin only changes the suit around it.
+        expect(getComputedStyle(screen.container.querySelector(".cc-sky")!).opacity).toBe("1");
+        expect(screen.container.querySelector(".cc-beam")).toBeNull();
         const target = screen.getByRole("button", { name: /Change mode/ }).element().getBoundingClientRect();
         expect(target.height).toBeGreaterThanOrEqual(44);
         const result = await axe.run(screen.container, { runOnly: { type: "rule", values: ["color-contrast", "button-name"] } });
