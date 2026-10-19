@@ -1,0 +1,72 @@
+name: Health Bridge Android 16 install probe
+on:
+  pull_request:
+    branches: [master]
+    paths: ['.github/workflows/health-bridge-install-probe.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  install-original-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools emulator platforms;android-36 build-tools;35.0.0 system-images;android-36;google_apis;x86_64'
+          log-accepted-android-sdk-licenses: 'false'
+      - name: Download the exact phone-test artifact
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 39262505666
+          name: BEYOND-Health-Bridge-test-3d73cdeb7d96532b876fd1cb05099b1b2c226d70
+          path: probe/apk
+      - name: Verify the original APK
+        working-directory: probe/apk
+        run: |
+          test "$(cat SOURCE_COMMIT.txt)" = "3d73cdeb7d96532b876fd1cb05099b1b2c226d70"
+          sha256sum --check SHA256SUMS.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs app-debug.apk
+      - name: Boot Android 16
+        run: |
+          mkdir -p probe/results
+          sudo chmod 666 /dev/kvm
+          printf 'no\n' | avdmanager create avd --force --name beyond36 --package 'system-images;android-36;google_apis;x86_64'
+          emulator -avd beyond36 -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader -memory 2048 -cores 2 > probe/results/emulator.log 2>&1 &
+          timeout 300 adb wait-for-device
+          timeout 300 bash -c 'until [ "$(adb shell getprop sys.boot_completed | tr -d "\r")" = "1" ]; do sleep 2; done'
+          adb shell input keyevent 82
+          adb shell getprop ro.build.version.release > probe/results/android-version.txt
+      - name: Install and launch the original APK
+        run: |
+          set -o pipefail
+          adb logcat -c
+          adb install --no-streaming probe/apk/app-debug.apk 2>&1 | tee probe/results/install.txt
+          adb shell am start -W -n app.beyond.healthbridge/.MainActivity | tee probe/results/launch.txt
+          sleep 3
+          adb shell uiautomator dump /sdcard/bridge-screen.xml
+          adb pull /sdcard/bridge-screen.xml probe/results/screen.xml
+          adb shell screencap -p /sdcard/bridge.png
+          adb pull /sdcard/bridge.png probe/results/screen.png
+          python - <<'PY'
+          from pathlib import Path
+          screen = Path('probe/results/screen.xml').read_text()
+          assert 'BEYOND Health Bridge' in screen, screen
+          assert 'ALLOW SLEEP ACCESS AND READ' in screen, screen
+          print('Original APK installed and opened on Android 16; no health permission granted')
+          PY
+      - name: Collect Android logs
+        if: always()
+        run: adb logcat -d > probe/results/logcat.txt || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Android16-original-apk-install-probe
+          path: probe/results
+          retention-days: 7

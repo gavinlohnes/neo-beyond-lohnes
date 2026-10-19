@@ -3,7 +3,7 @@
 Authorization: Gavin explicitly approved the first-release proposal in issue #257: “I absolutely
 approve. It looks like Health Connect can get us a lot of good data.” Builder: Codex.
 Lane: PROTECTED. Starting master: a6d315dd83f7f540782a540d37a32c9a5224a1f2.
-Branch: codex/garmin-001-sleep-import. Active PR: [#258](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/258) (draft).
+Branch: codex/garmin-001-sleep-import. PR [#258](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/258) merged with owner approval; installation follow-up below.
 
 Scope: a foreground Android helper with READ_SLEEP only and no Internet/write/background/history
 permissions; latest seven days of Garmin-origin SleepSessionRecord; versioned JSON through the
@@ -42,3 +42,26 @@ the PWA, proprietary Garmin metrics, paid services, Engine use of imports. Futur
 its own approval.
 
 Research, device observations and primary-source links: https://github.com/gavinlohnes/neo-beyond-lohnes/issues/257
+
+
+## Phone installation follow-up (2026-10-19)
+
+Owner reports the delivered APK is rejected with the generic “The app wasn't installed”
+message on Android 16 / Nothing OS 4.1. Chrome and Files by Google already have install
+permission. APK checksum, ZIP integrity, SDK bounds and absence of testOnly/native ABI
+restrictions were checked; the actual package-manager rejection remains unknown.
+
+Builder: Codex. Starting master: 8581af586facf1b08a29347c28787b5e4810db3a. Branch: codex/garmin-001-install-diagnosis.
+Authorization: continuation of the approved helper delivery and owner's installation-failure
+reports. This diagnostic patch adds CI verification only: download the exact original
+artifact from run 39262505666, verify its source/checksum/signature, install it on an empty
+Android 16 emulator, launch it, and retain package-manager/logcat/UI evidence. No phone
+identifiers/screenshots are committed. No health permission is granted, no source records
+read, no application/runtime/Engine/storage/permission change, and no security restriction
+on the owner's phone is disabled. Keep #257 open pending successful physical phone test.
+
+Leverage: use the official Android SDK emulator/adb and GitHub's official artifact action;
+no new runtime dependency. The source artifact expires 2026-11-02, so this is a time-bounded
+probe rather than permanent release CI. Acceptance: capture actual install/launch result,
+inspect the evidence, then choose a correction supported by that result. ADB success alone
+does not prove the owner's normal installer flow or Nothing-specific policy works.
