@@ -1,86 +1,49 @@
-/* COMMAND-CENTER-001: the TODAY mode header. HUD tokens only; no new colors. */
-.mode-header { display: grid; gap: 4px; }
-.mode-header__name {
-  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0;
-  border: 0; background: transparent; color: var(--text-1); text-align: left; cursor: pointer;
-}
-.mode-header__value { font-size: clamp(28px, 9vw, 34px); font-weight: 700; line-height: 1; letter-spacing: .1em; }
-.mode-header[data-mode="UNSET"] .mode-header__value { font-size: 22px; letter-spacing: .06em; }
-.mode-header__change {
-  margin-left: auto; flex: none; padding: 6px 10px; border: 1px solid var(--border-strong);
-  color: var(--text-2); font-size: 13px; letter-spacing: .12em;
-}
-.mode-header__text { display: grid; gap: 6px; flex: 1; min-width: 0; }
-.mode-header__source { color: var(--text-2); font-size: 14px; font-weight: 400; letter-spacing: .02em; }
-.mode-strip { margin-top: 4px; }
-.mode-strip__bar { position: relative; display: flex; gap: 2px; height: 10px; }
-.mode-strip__segment { min-width: 2px; height: 100%; background: var(--surface-2); border: 1px solid var(--border-subtle); }
-.mode-strip__segment--on { background: var(--text-2); border-color: var(--text-2); }
-.mode-strip__now { position: absolute; top: -5px; width: 3px; height: 20px; background: var(--text-1); box-shadow: 0 0 0 2px var(--bg); transform: translateX(-1px); }
-.mode-strip__legend { position: relative; height: 16px; margin-top: 2px; color: var(--text-3-strong); font-family: var(--font-mono); font-size: 12px; }
-.mode-strip__legend span { position: absolute; top: 0; transform: translateX(-50%); }
-.mode-strip__legend span:first-child { transform: none; }
-.mode-strip__legend span:last-child { transform: translateX(-100%); }
+/* COMMAND-CENTER-001 → POLISH-002: TODAY's mode hero and sheets. The hero's look lives in
+   src/ui/cc/cc.css (ported from the approved prototype); this file keeps only what the app adds:
+   the sheet as a <dialog>, the work-context chip, and the suit's app-wide tokens per mode. */
+
+/* Sheets: the prototype's bottom sheet, as a modal <dialog>. */
 .today-sheet {
-  width: min(100% - 24px, 456px); max-height: 86vh; padding: 0 0 12px; overflow: auto;
-  border: 1px solid var(--border-strong); background: var(--surface-1); color: var(--text-1);
+  position: fixed; inset: auto 0 0; margin: auto auto 0; width: 100%; max-width: 430px; max-height: 86vh;
+  padding: 6px 0 calc(16px + env(safe-area-inset-bottom, 0px)); overflow: auto;
+  border: 0; border-top: 1px solid var(--p-line-2); background: var(--p-s1); color: var(--p-t1);
+  animation: cc-up .22s var(--p-ease);
 }
 .today-sheet::backdrop { background: rgba(0, 0, 0, .72); }
-.today-sheet__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 8px; }
-.today-sheet__header .card-title { margin: 0; letter-spacing: .08em; }
-.today-sheet__header .chip { flex: none; width: auto; min-height: 44px; padding-inline: 14px; }
+.today-sheet__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 14px 6px; }
+.today-sheet__header .card-title { margin: 0; font-size: 20px; letter-spacing: .08em; }
+.today-sheet__header .chip { flex: none; width: auto; min-height: 44px; padding-inline: 12px; border: 0; color: var(--p-t2); }
 .today-sheet__option {
   display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 14px;
-  border: 0; border-top: 1px solid var(--border-subtle); background: transparent; color: var(--text-1); text-align: left; cursor: pointer;
+  border: 0; border-top: 1px solid var(--p-line); background: transparent; color: var(--p-t1); text-align: left; cursor: pointer; font: inherit;
 }
-.today-sheet__option[aria-pressed="true"] { background: var(--surface-active); }
+.today-sheet__option[aria-pressed="true"] { background: var(--p-red-soft); }
 .today-sheet__option > span:first-child { display: grid; gap: 2px; flex: 1; min-width: 0; }
-.today-sheet__option strong { font-size: 17px; letter-spacing: .06em; }
-.today-sheet__option strong + span { color: var(--text-2); font-size: 14px; }
-.today-sheet__tag { flex: none; padding: 3px 7px; border: 1px solid var(--border-strong); color: var(--text-2); font-size: 12px; letter-spacing: .12em; }
-.today-sheet__note { margin: 10px 14px 0; }
+.today-sheet__option strong { font-size: 17px; font-weight: 600; letter-spacing: .06em; }
+.today-sheet__option strong + span { color: var(--p-t2); font-size: 13px; }
+.today-sheet__tag { flex: none; margin-left: auto; padding: 3px 7px; border: 1px solid var(--p-line-2); color: var(--p-t2); font-size: 11px; letter-spacing: .12em; white-space: nowrap; }
+.today-sheet__note { margin: 10px 14px 0; font-size: 13px; color: var(--p-t2); }
 .today-sheet__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px; }
 
-/* POLISH-001: scenery owns a band below all mode text and the timeline. */
-.mode-header { position: relative; isolation: isolate; }
-.mode-header::before, .mode-header::after {
-  content: ""; position: absolute; width: var(--tick); height: var(--tick); pointer-events: none;
-  border-color: var(--text-3); border-style: solid; opacity: .6;
-}
-.mode-header::before { left: -4px; top: -3px; border-width: 1px 0 0 1px; }
-.mode-header::after { right: -4px; bottom: 0; border-width: 0 1px 1px 0; }
-.mode-header__name, .mode-strip { position: relative; z-index: 1; }
-.mode-city { position: relative; height: 40px; overflow: hidden; pointer-events: none; }
-.mode-city__sky { position: absolute; inset: 0; background: radial-gradient(140% 100% at 50% 100%, rgba(150,10,16,.5) 0%, rgba(90,5,9,.28) 38%, rgba(40,2,4,.1) 62%, transparent 80%); opacity: var(--sky); }
-.mode-city__buildings { position: absolute; bottom: 0; width: 100%; height: 100%; fill: #050505; stroke: #444; stroke-width: .7; }
-.mode-city__windows { fill: #aaa; stroke: none; }
-.mode-city__beam { position: absolute; bottom: 0; left: 65%; width: 80px; height: 170%; background: linear-gradient(to top, rgba(255,236,220,.18), rgba(255,236,220,.06) 60%, transparent); filter: blur(1.5px); clip-path: polygon(48% 100%, 0 0, 100% 0); transform-origin: 50% 100%; animation: city-search 18s ease-in-out infinite alternate; }
-.mode-header__sweep { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.mode-header__sweep::after { content: ""; display: block; height: 100%; width: 2px; background: var(--red); animation: mode-sweep 500ms ease-out both; }
-.mode-ruler { position: absolute; top: -2px; height: 5px; border-left: 1px solid var(--text-3); }
-.mode-ruler--major { top: -4px; height: 10px; border-color: var(--text-1); }
-.mode-ruler-label { display: none; } /* 18:00 is too near 16:30 at 320 px; its major tick remains. */
-:root[data-suit-mode="SCHEDULED_SHIFT"] { --surface-1: #030303; --surface-2: #090909; --text-1: #d6d6d6; --text-2: #a0a0a0; --red: #b51219; }
-:root[data-suit-mode="SCHEDULED_SHIFT"] .mode-city::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(transparent 0 3px, #8881 3px 4px); }
-:root[data-suit-mode="EXPECTED_POST_WORK"] { --motion-fast: 220ms; --motion-base: 350ms; --surface-1: #030303; }
-:root[data-suit-mode="EXPECTED_POST_WORK"] .mode-ruler,
-:root[data-suit-mode="EXPECTED_POST_WORK"] .mode-strip { display: none; }
-/* The real clock, never a suit pin, controls scene intensity. */
-.command-console .console-controls button, .command-console .command-surface, .command-console .btn-primary { border-radius: 0; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
-/* Inset focus stays inside the cut. */
-.command-console .console-controls button:focus-visible, .command-console .btn-primary:focus-visible { outline-offset: -3px; }
-@keyframes mode-sweep { from { transform: translateX(0); opacity: .7; } to { transform: translateX(450px); opacity: 0; } }
-@keyframes city-search { from { transform: rotate(-30deg); } to { transform: rotate(20deg); } }
-@media (prefers-reduced-motion: reduce) {
-  .mode-header__sweep { display: none; }
-  .mode-city__beam { animation: none; transform: rotate(-15deg); }
-}
+/* The hero spans the screen under the header, as in the prototype. */
+.today-situation.cc-hero-wrap { margin: -14px -14px 0; padding: 0; border: 0; background: none; }
+.cc-mode .mode-header__name { color: var(--p-t1); background: none; border: 0; padding: 0; cursor: pointer; font: inherit; }
+.cc-mode[data-mode="UNSET"] .cc-mode-name { font-size: 22px; letter-spacing: .06em; }
+.cc-mode .cc-mode-name { font-family: var(--p-display); }
+.cc-mode-context { display: flex; justify-content: flex-end; margin-top: 6px; }
+.cc-mode-context .cc-tag { min-height: 44px; padding: 0 12px; margin: 0; background: none; color: var(--p-t2); font: inherit; font-size: 12px; letter-spacing: .12em; border: 1px solid var(--p-line-2); }
+.cc-mode .systems-line { min-height: 48px; width: calc(100% + 32px); margin: 12px -16px -16px; padding: 8px 16px 10px; gap: 10px; border-top: 1px solid var(--p-line); background: var(--p-bg); position: relative; z-index: 1; }
+.cc-mode .systems-line__key { font-size: 11px; letter-spacing: .16em; color: var(--p-t3); }
+.cc-mode .systems-line__value { font-size: 13px; color: var(--p-t2); }
+.cc-mode .systems-line__go { color: var(--p-t3); }
+.cc-stale-note { margin: 8px 14px 0; }
+.cc-stale-note button { background: none; color: inherit; font: inherit; }
 
-:root[data-suit-mode="EXPECTED_POST_WORK"] .today-field .field-progress { display: none; }
+/* The suit: app-wide tokens follow the displayed mode, with the prototype's values. */
+:root[data-suit-mode="SCHEDULED_SHIFT"] {
+  --surface-1: #030303; --surface-2: #080808; --border-subtle: #1b1b1b; --border-strong: #292929;
+  --text-1: #b6b6b6; --text-2: #8a8a8a; --text-3: #767676; --red: #9f1117;
+}
+:root[data-suit-mode="EXPECTED_POST_WORK"] { --motion-fast: 220ms; --motion-base: 350ms; --text-2: #9a9a9a; }
 /* Retained workspaces keep drafts, but spend no animation work while hidden. */
-#workspace-TODAY[hidden] .mode-city__beam,
-#workspace-TODAY[hidden] .mode-header__sweep::after { animation: none; }
-
-.mode-header .status-strip__headline { min-width: 0; flex: 1 1 120px; }
-.mode-header > div[style] { flex-wrap: wrap; }
-.mode-header .chip { max-width: 100%; }
+#workspace-TODAY[hidden] .cc-beam, #workspace-TODAY[hidden] .cc-sweep { animation: none; }

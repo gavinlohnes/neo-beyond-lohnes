@@ -1,5 +1,7 @@
 import { createContext, useContext, useId, type ComponentProps, type Ref } from "react";
-import { Icon } from "../icons/Icon";
+import type { Icon } from "../icons/Icon";
+import { CcIcon } from "../cc/ccIcons";
+import { useMinuteClock } from "../cc/useMinuteClock";
 import { useLongPress } from "../hooks/useLongPress";
 import "./stealth.css";
 
@@ -23,28 +25,36 @@ type OperatorHeaderProps = {
 };
 
 /** Shared presentation-only identity frame for a primary operating surface. */
-export function OperatorHeader({ destination, children, headingId, headingRef, focusable = false }: OperatorHeaderProps) {
+export function OperatorHeader({ destination: _destination, children, headingId, headingRef, focusable = false }: OperatorHeaderProps) {
   const goHome = useContext(EmblemContext);
   const toggleStealth = useContext(StealthToggleContext);
   const press = useLongPress(() => toggleStealth?.());
   const hintId = useId();
+  const clock = useMinuteClock();
+  // POLISH-002: the prototype's header row — emblem, BEYOND // WHERE, the clock on the right.
+  const split = children.indexOf(" // ");
+  const lead = split < 0 ? children : children.slice(0, split);
+  const where = split < 0 ? "" : children.slice(split);
   return (
-    <div className="field-header">
-      {goHome ? (
-        <button type="button" className="operator-emblem" aria-label="BEYOND emblem: go to TODAY"
-          aria-describedby={toggleStealth ? hintId : undefined}
-          {...(toggleStealth ? press.handlers : {})}
-          onClick={(event) => { if (!press.swallowClick(event)) goHome(); }}>
-          <Icon name={destination} size={22} />
-          {press.pressing && toggleStealth && <span aria-hidden="true" className="operator-emblem__press" />}
-          {toggleStealth && <span id={hintId} className="visually-hidden">Long-press for stealth.</span>}
-        </button>
-      ) : (
-        <Icon name={destination} size={22} />
-      )}
-      <h1 id={headingId} ref={headingRef} tabIndex={focusable ? -1 : undefined} className="eyebrow">
-        {children}
-      </h1>
+    <div className="field-header cc-hdr">
+      <div className="cc-hdr-row">
+        {goHome ? (
+          <button type="button" className={`operator-emblem cc-emblem${press.pressing && toggleStealth ? " cc-pressing" : ""}`} aria-label="BEYOND emblem: go to TODAY"
+            aria-describedby={toggleStealth ? hintId : undefined}
+            {...(toggleStealth ? press.handlers : {})}
+            onClick={(event) => { if (!press.swallowClick(event)) goHome(); }}>
+            <CcIcon.emblem />
+            {press.pressing && toggleStealth && <span aria-hidden="true" className="operator-emblem__press" />}
+            {toggleStealth && <span id={hintId} className="visually-hidden">Long-press for stealth.</span>}
+          </button>
+        ) : (
+          <span className="cc-emblem cc-emblem--mark"><CcIcon.emblem /></span>
+        )}
+        <h1 id={headingId} ref={headingRef} tabIndex={focusable ? -1 : undefined} className="eyebrow cc-title">
+          {lead}{where && <span className="cc-where">{where}</span>}
+        </h1>
+        <span className="cc-clock" aria-hidden="true">{clock}</span>
+      </div>
     </div>
   );
 }

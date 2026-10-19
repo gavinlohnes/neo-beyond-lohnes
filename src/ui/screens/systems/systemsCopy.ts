@@ -16,6 +16,14 @@ export function formatFuelReading(proteinG: number, targetG: number | undefined)
   return targetG !== undefined ? `${proteinG}/${targetG} g` : `${proteinG} g`;
 }
 
+/** POLISH-002: the TODAY line's compact readings, as in the prototype ("Sleep 6:50 · Fuel 92/170g"). */
+export function formatSleepClock(minutes: number): string {
+  return `${Math.floor(minutes / 60)}:${String(Math.round(minutes % 60)).padStart(2, "0")}`;
+}
+function formatFuelCompact(proteinG: number, targetG: number | undefined): string {
+  return targetG !== undefined ? `${proteinG}/${targetG}g` : `${proteinG}g`;
+}
+
 export function describeStatusLevel(level: SystemStatusLevel): string {
   return level === "NO_READ" ? "NO READ" : level;
 }
@@ -45,8 +53,8 @@ export function describeSystemsStatus(level: SystemStatusLevel | null): string |
 export function describeSystemsLine(input: SystemsLineInput): string[] {
   const status = describeSystemsStatus(input.statusLevel);
   const bits: string[] = status ? [status] : [];
-  if (input.statusLevel !== "NO_READ") bits.push(input.sleepMinutes !== null ? `Sleep ${formatSleepReading(input.sleepMinutes)}` : "Sleep not logged");
-  bits.push(`Fuel ${formatFuelReading(input.proteinG, input.proteinTargetG)}`);
+  if (input.statusLevel !== "NO_READ") bits.push(input.sleepMinutes !== null ? `Sleep ${formatSleepClock(input.sleepMinutes)}` : "Sleep not logged");
+  bits.push(`Fuel ${formatFuelCompact(input.proteinG, input.proteinTargetG)}`);
   if (input.statusLevel !== "NO_READ") bits.push(input.checkIn ? `Check-in ${input.checkIn}` : "No check-in");
   return [...bits, ...input.warnings];
 }

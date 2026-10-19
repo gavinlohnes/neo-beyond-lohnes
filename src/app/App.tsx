@@ -9,6 +9,7 @@ import { BodyScreen } from "../ui/screens/body/BodyScreen";
 import { MoreScreen, type MoreView } from "../ui/screens/more/MoreScreen";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
+import { CcIcon } from "../ui/cc/ccIcons";
 import { EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
 import { StealthOverlay } from "../ui/components/StealthOverlay";
 import { getStealth, setStealth } from "../application/stealthQueries";
@@ -39,12 +40,12 @@ type Tab = "TODAY" | "TRAIN" | "BODY" | "COMMAND";
 // diamonds, additive to the six locked pilot icons, not a redesign of
 // any of them) — see Icon.tsx. All four primary destinations have a
 // real glyph now, so this is a complete Record, not Partial.
-const TAB_ICON: Record<Tab, IconName> = {
-  TODAY: "mission",
-  TRAIN: "train",
-  BODY: "body",
-  // COMMAND-CENTER-001: COMMAND replaces MORE, with its own additive glyph.
-  COMMAND: "command",
+// POLISH-002: the prototype's tab glyphs.
+const CC_TAB_ICON: Record<Tab, () => React.ReactNode> = {
+  TODAY: CcIcon.today,
+  TRAIN: CcIcon.train,
+  BODY: CcIcon.body,
+  COMMAND: CcIcon.command,
 };
 
 /**
@@ -596,18 +597,6 @@ function AppWorkspaces() {
         </div>}
       </main>
 
-      {/* FIND-001: search everything, one tap from the top of every primary screen. */}
-      <button
-        type="button"
-        className="topbar-search"
-        aria-label="Search everything"
-        onClick={() => {
-          openMore("SEARCH");
-        }}
-      >
-        <Icon name="search" size={20} />
-      </button>
-
       <AppUpdateBanner />
 
       {/* SHELL-001: extracted from per-render inline style objects into
@@ -619,26 +608,25 @@ function AppWorkspaces() {
           already locks in (44px touch targets, 700-weight selected
           cue, the red structural tick, aria-current) changed — only
           how it's expressed. */}
-      <nav className="shell-nav">
-        {(["TODAY", "TRAIN", "BODY", "COMMAND"] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => openPrimaryTab(t)}
-            aria-current={tab === t ? "page" : undefined}
-            className={`shell-nav__item${tab === t ? " shell-nav__item--active" : ""}`}
-          >
-            {/* BEYOND Suit Implementation 01 — Utility Belt (Part 11),
-                widened in 01B (directive 8): a LEVEL 1 / STRUCTURAL red
-                cue for the selected territory, in addition to the
-                existing color+weight change — selection must communicate
-                through more than color alone. A thin directional tick,
-                not a pill or glow; aria-hidden since aria-current on the
-                button already carries this for assistive tech. */}
-            {tab === t && <span aria-hidden="true" className="shell-nav__indicator" />}
-            <Icon name={TAB_ICON[t]} size={24} />
-            {t}
-          </button>
-        ))}
+      {/* POLISH-002: the prototype's tab bar — a 2 px red top indicator on the current tab. */}
+      <nav className="shell-nav cc-nav" aria-label="Primary">
+        <div className="cc-nav-in">
+          {(["TODAY", "TRAIN", "BODY", "COMMAND"] as Tab[]).map((t) => {
+            const TabIcon = CC_TAB_ICON[t];
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => openPrimaryTab(t)}
+                aria-current={tab === t ? "page" : undefined}
+                className={`shell-nav__item${tab === t ? " shell-nav__item--active" : ""}`}
+              >
+                <TabIcon />
+                <span>{t}</span>
+              </button>
+            );
+          })}
+        </div>
       </nav>
     </div>
     {stealthOn && <StealthOverlay onExit={() => changeStealth(false)} onLogged={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((n) => n + 1); }} />}

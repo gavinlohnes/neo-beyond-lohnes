@@ -17,6 +17,7 @@ function clock(at: Date): string {
 export function ModeHeader({
   now,
   children,
+  systems,
   hasAction,
   scheduledPhase,
   pin,
@@ -29,6 +30,8 @@ export function ModeHeader({
 }: {
   now: Date;
   children?: ReactNode;
+  /** POLISH-002: the SYSTEMS line, inside the hero's frame as in the prototype. */
+  systems?: ReactNode;
   hasAction: boolean;
   /** The schedule's phase; null while the work question is unanswered. */
   scheduledPhase: ShiftClockPhase | null;
@@ -65,52 +68,64 @@ export function ModeHeader({
     else setOpen(false);
   }
 
-  // Kept to one line at 320 px: the mode's description lives in the picker.
+  // POLISH-002: the prototype's meta line — the mode's own sentence, or the pin and when it resets.
   const source = pin
-    ? `Pinned · schedule says ${scheduledPhase ? MODE_NAMES[scheduledPhase] : "nothing yet"} · resets 16:30`
+    ? <><span className="cc-pin">Pinned</span> · schedule says {scheduledPhase ? MODE_NAMES[scheduledPhase] : "nothing yet"} · resets 16:30</>
     : mode
-      ? "Per schedule"
+      ? `Per schedule · ${MODE_DESCRIPTIONS[mode]}`
       : "Answer the work question and the mode follows.";
 
+  // The sweep plays once when the mode changes, never on first paint.
+  const lastMode = useRef(mode);
+  const [sweep, setSweep] = useState(0);
+  useEffect(() => {
+    if (lastMode.current !== mode) setSweep((n) => n + 1);
+    lastMode.current = mode;
+  }, [mode]);
+
   return (
-    <div className="mode-header" data-mode={mode ?? "UNSET"}>
-      <span key={mode} className="mode-header__sweep" aria-hidden="true" />
+    <section className="mode-header cc-mode" data-mode={mode ?? "UNSET"} aria-label="Mode">
       <button
         ref={trigger}
         type="button"
-        className="mode-header__name"
+        className="mode-header__name cc-mode-btn"
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={`Mode ${mode ? MODE_NAMES[mode] : "not set"}${pin ? ", pinned" : mode ? ", per schedule" : ""}. Change mode`}
         onClick={() => { setStep("PICK"); setOpen(true); }}
       >
-        <span className="mode-header__text">
-          <span className="mode-header__value">{mode ? MODE_NAMES[mode] : "Mode: not set"}</span>
-        </span>
-        <span className="mode-header__change" aria-hidden="true">CHANGE</span>
+        <span className="mode-header__value cc-mode-name">{mode ? MODE_NAMES[mode] : "Mode: not set"}</span>
+        <span className="mode-header__change cc-mode-chev" aria-hidden="true">CHANGE</span>
       </button>
-      <span className="mode-header__source">{source}</span>
+      <div className="mode-header__source cc-mode-meta">{source}</div>
       {children}
-      <div className="mode-strip" aria-hidden="true">
-        <div className="mode-strip__bar">
-          {Array.from({ length: 24 }, (_, i) => <i key={i} className={`mode-ruler${i === 1 || i === 13 ? " mode-ruler--major" : ""}`} style={{ left: `${((i + .5) / 24) * 100}%` }} />)}
+      <div className="cc-timeline mode-strip" aria-hidden="true">
+        <div className="cc-tl-bar">
           {strip.segments.map((segment) => (
-            <span
-              key={segment.phase}
-              className={`mode-strip__segment${segment.phase === mode ? " mode-strip__segment--on" : ""}`}
-              style={{ flexGrow: segment.to - segment.from }}
-            />
+            <div key={segment.phase} className={`cc-tl-seg${segment.phase === mode ? " cc-on" : ""}`} style={{ flex: (segment.to - segment.from).toFixed(4) }} />
           ))}
-          <span className="mode-strip__now" style={{ left: `${(strip.now * 100).toFixed(2)}%` }} />
+          <div className="cc-tl-now mode-strip__now" style={{ left: `${(strip.now * 100).toFixed(1)}%` }} />
         </div>
-        <div className="mode-strip__legend">
+        <div className="cc-tl-ruler">
+          {Array.from({ length: 24 }, (_, i) => <i key={i} className={i === 1 || i === 13 ? "cc-maj" : undefined} style={{ left: `${(((i + .5) / 24) * 100).toFixed(2)}%` }} />)}
+        </div>
+        <div className="cc-tl-names">
+          {strip.segments.map((segment) => (
+            <span key={segment.phase} className={segment.phase === mode ? "cc-on" : undefined} style={{ flex: (segment.to - segment.from).toFixed(4) }}>
+              {segment.to - segment.from > 0.12 ? MODE_NAMES[segment.phase] : ""}
+            </span>
+          ))}
+        </div>
+        <div className="cc-tl-legend">
           <span style={{ left: 0 }}>{clock(dayStart)}</span>
-          <span style={{ left: "6.25%" }} className="mode-ruler-label">18</span>
-          <span style={{ left: "56.25%" }}>06:00</span>
+          {!dayOff && <span style={{ left: "56.25%" }}>06:00</span>}
           <span style={{ left: "100%" }}>{clock(dayStart)}</span>
         </div>
       </div>
-      <ModeCity now={now} workDay={!dayOff} hasAction={hasAction} />
+      <div className="cc-scene" aria-hidden="true" />
+      {systems}
+      <ModeCity now={now} workDay={!dayOff} hasAction={hasAction} onShift={mode === "SCHEDULED_SHIFT"} />
+      {sweep > 0 && <div key={sweep} className="cc-sweep cc-go mode-header__sweep" aria-hidden="true" />}
       {open && (
         <dialog
           ref={dialog}
@@ -161,6 +176,6 @@ export function ModeHeader({
           )}
         </dialog>
       )}
-    </div>
+    </section>
   );
 }

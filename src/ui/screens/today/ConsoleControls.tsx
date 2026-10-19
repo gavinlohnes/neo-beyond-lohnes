@@ -1,5 +1,6 @@
+import { CcIcon } from "../../cc/ccIcons";
 import { useEffect, useRef, useState } from "react";
-import { Droplets, Utensils, ArrowUpRight, Plus } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { LineIcon } from "../../icons/LineIcon";
 import type { BodyFocus } from "../../shortcuts";
 import "./console.css";
@@ -82,16 +83,16 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, onWaterVis
   }
   const logEntries = LOG_ENTRIES.filter((entry) => onOpenLog?.[entry.key]);
   return <>
-    <div ref={controlsRef} className="console-controls" role="group" aria-label="Optional operator controls">
-      <button type="button" ref={waterTrigger} disabled={busy || (!onOpenWater && !onLogWater)} onClick={() => { if (isInFlight()) return; if (onLogWater) { restoreWaterTrigger.current = true; setWaterError(null); setWaterOpen(true); } else onOpenWater?.(); }} aria-label="Log water" aria-haspopup={onLogWater ? "dialog" : undefined} aria-expanded={onLogWater ? waterOpen : undefined}>
-        <LineIcon icon={Droplets} /><span>WATER</span>
+    <div ref={controlsRef} className="console-controls cc-actions" role="group" aria-label="Optional operator controls">
+      <button type="button" ref={waterTrigger} disabled={busy || (!onOpenWater && !onLogWater)} onClick={() => { if (isInFlight()) return; if (onLogWater) { restoreWaterTrigger.current = true; setWaterError(null); setWaterOpen(true); } else onOpenWater?.(); }} className="cc-act" aria-label="Log water" aria-haspopup={onLogWater ? "dialog" : undefined} aria-expanded={onLogWater ? waterOpen : undefined}>
+        <CcIcon.water /><span>WATER</span>
       </button>
-      <button type="button" disabled={busy || !onOpenMeal} onClick={() => { if (!isInFlight()) onOpenMeal?.(); }} aria-label="Log a meal in BODY">
-        <LineIcon icon={Utensils} /><span>MEAL</span>
+      <button type="button" className="cc-act" disabled={busy || !onOpenMeal} onClick={() => { if (!isInFlight()) onOpenMeal?.(); }} aria-label="Log a meal in BODY">
+        <CcIcon.meal /><span>MEAL</span>
       </button>
-      <button type="button" ref={logTrigger} className="console-controls__log" disabled={busy || logEntries.length === 0}
+      <button type="button" ref={logTrigger} className="console-controls__log cc-act cc-log" disabled={busy || logEntries.length === 0}
         onClick={() => { if (!isInFlight()) setLogOpen(true); }} aria-label="Open LOG" aria-haspopup="dialog" aria-expanded={logOpen}>
-        <LineIcon icon={Plus} /><span>LOG</span>
+        <CcIcon.plus /><span>LOG</span>
       </button>
     </div>
     {waterOpen && <dialog ref={waterDialog} className="today-sheet" aria-labelledby="water-sheet-title"
