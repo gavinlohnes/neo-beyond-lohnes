@@ -48,7 +48,7 @@ describe("16:30 mode pin expiry", () => {
     await screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" }).fill("85");
     await screen.getByRole("spinbutton", { name: "Set 1 repetitions" }).fill("9");
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-    await expect.poll(source).toMatch(/^Pinned/);
+    await expect.poll(source).toMatch(/(^| · )Pinned · /);
     await expect.poll(suit).toBe("OFF");
     await openCapture(screen);
     const capture = screen.getByRole("textbox", { name: "Capture a thought", exact: true });
@@ -96,7 +96,7 @@ describe("16:30 mode pin expiry", () => {
     const { day } = await runningWorkout();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-    await expect.poll(source).toMatch(/^Pinned/);
+    await expect.poll(source).toMatch(/(^| · )Pinned · /);
     await openCapture(screen);
     const capture = screen.getByRole("textbox", { name: "Capture a thought", exact: true });
     await capture.fill("Keep this on resume");
@@ -112,7 +112,7 @@ describe("16:30 mode pin expiry", () => {
     const { day } = await runningWorkout();
     localStorage.setItem(`beyond:modePin:${day.id}`, "OFF");
     const first = await render(<TodayScreen />);
-    await expect.poll(source).toMatch(/^Pinned/);
+    await expect.poll(source).toMatch(/(^| · )Pinned · /);
     await first.unmount();
     vi.setSystemTime(at(13, 16, 30));
     await render(<TodayScreen />);

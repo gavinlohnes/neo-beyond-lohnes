@@ -13,6 +13,7 @@ import "../../src/ui/styles/global.css";
 import "../../src/ui/cc/cc.css";
 import "../../src/ui/cc/shell.css";
 import "../../src/ui/cc/skin.css";
+import "../../src/ui/styles/fonts.ts";
 
 import Dexie from "dexie";
 import { afterEach } from "vitest";

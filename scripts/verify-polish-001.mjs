@@ -4,7 +4,8 @@ import { preview } from "vite";
 import { chromium } from "playwright";
 
 // Run after npm run build. Fixtures are entered through the production UI.
-const output = "docs/screenshots/polish-001";
+// OUTPUT redirects the evidence (POLISH-002 reruns it without replacing the POLISH-001 record).
+const output = process.env.OUTPUT ?? "docs/screenshots/polish-001";
 await mkdir(output, { recursive: true });
 const server = await preview({ preview: { host: "127.0.0.1", port: 5177, strictPort: true } });
 const url = "http://127.0.0.1:5177/neo-beyond-lohnes/";
@@ -64,13 +65,14 @@ try {
         await settle(page);
         const bounds = await page.evaluate(() => {
           const rect = (selector) => { const { top, bottom } = document.querySelector(selector).getBoundingClientRect(); return { top, bottom }; };
-          return { name: rect(".mode-header__name"), source: rect(".mode-header__source"), city: rect(".mode-city"), header: rect(".today-situation"), card: rect(".console-guidance"), numbers: rect(".today-numbers"), actions: rect(".console-controls"), nav: rect(".shell-nav"), overflow: document.documentElement.scrollWidth > innerWidth };
+          return { name: rect(".mode-header__name"), source: rect(".mode-header__source"), city: rect(".cc-skyline"), header: rect(".today-situation"), card: rect(".console-guidance"), numbers: rect(".today-numbers"), actions: rect(".console-controls"), nav: rect(".shell-nav"), overflow: document.documentElement.scrollWidth > innerWidth };
         });
         assert.ok(bounds.name.bottom <= bounds.city.top && bounds.source.bottom <= bounds.city.top);
         assert.ok(bounds.header.bottom <= bounds.card.top && bounds.card.bottom <= bounds.numbers.top && bounds.numbers.bottom <= bounds.actions.top);
         assert.equal(bounds.overflow, false);
         if (width === 360 || width === 390) assert.ok(bounds.actions.bottom <= bounds.nav.top, `${width} ${name}: action row ${bounds.actions.bottom} below ${bounds.nav.top}`);
-        assert.equal(await page.locator(".mode-city__beam").count(), 1);
+        // POLISH-002: the beam marks a real action and goes dark ON SHIFT, as in the prototype.
+        assert.equal(await page.locator(".cc-beam").count(), phase === "SCHEDULED_SHIFT" ? 0 : 1);
         const redActions = await page.locator(".today-field button").evaluateAll((buttons) => buttons.filter((button) => {
           if (!button.getClientRects().length) return false;
           const [r, g, b] = getComputedStyle(button).backgroundColor.match(/[\d.]+/g).map(Number);
@@ -82,11 +84,11 @@ try {
       }
       await page.clock.setSystemTime(new Date("2026-10-12T23:40:00-05:00"));
       await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
-      await page.waitForFunction(() => document.querySelector(".mode-city").style.getPropertyValue("--sky") === "1");
+      await page.waitForFunction(() => document.querySelector(".cc-sky").style.opacity === "1");
       await settle(page); await page.screenshot({ path: `${output}/${width}-night.png` });
       await page.clock.setSystemTime(new Date("2026-10-13T11:00:00-05:00"));
       await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
-      await page.waitForFunction(() => document.querySelector(".mode-city").style.getPropertyValue("--sky") === "0");
+      await page.waitForFunction(() => document.querySelector(".cc-sky").style.opacity === "0");
       await page.getByRole("button", { name: "Log water", exact: true }).click();
       await page.getByRole("dialog", { name: "WATER", exact: true }).getByRole("button", { name: "+8 oz", exact: true }).click();
       await page.getByText("8 oz recorded.", { exact: true }).waitFor();

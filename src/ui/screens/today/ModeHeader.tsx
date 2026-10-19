@@ -72,8 +72,9 @@ export function ModeHeader({
   }
 
   // POLISH-002: the prototype's meta line — the mode's own sentence, or the pin and when it resets.
+  // The schedule's countdown leads either way (Drop 2): a pin never hides when the shift starts.
   const source = pin
-    ? <><span className="cc-pin">Pinned</span> · schedule says {scheduledPhase ? MODE_NAMES[scheduledPhase] : "nothing yet"} · resets 16:30</>
+    ? <>{countdown && `${countdown} · `}<span className="cc-pin">Pinned</span> · schedule says {scheduledPhase ? MODE_NAMES[scheduledPhase] : "nothing yet"} · resets 16:30</>
     : mode
       ? `${countdown ?? "Per schedule"} · ${MODE_DESCRIPTIONS[mode]}`
       : "Answer the work question and the mode follows.";

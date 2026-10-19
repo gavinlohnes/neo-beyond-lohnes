@@ -229,6 +229,7 @@ describe("Minimum Day offer after a YELLOW check-in (Drop 1.6b)", () => {
     // entirely below the fold, under a full-screen Minimum Day offer).
     const offer = screen.getByText("Minimum Day is available if it helps.", { exact: true }).element().closest(".signal-row")!;
     expect(offer.getBoundingClientRect().height).toBeLessThan(160);
+    await document.fonts.ready;
     const actions = document.querySelector(".console-controls") as HTMLElement;
     expect(actions.getBoundingClientRect().bottom).toBeLessThanOrEqual(736);
 
