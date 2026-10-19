@@ -1,6 +1,32 @@
 # Current checkpoint
 
-## Current objective — POLISH-001 (2026-10-18, PROTECTED)
+## Current objective — TONIGHT-001 (2026-10-19, PROTECTED)
+
+Gavin approved TONIGHT after the product discovery proposal. Brief: [TONIGHT-001.md](TONIGHT-001.md);
+rulings in UX_DECISIONS → TONIGHT-001. Builder: Claude Code. Branch `ccr-83cf6ed8-ug1ym9`.
+Starting master: `d042a1f7c54a8e50dcf045a76f62a4a819d00504` (the #253 merge; no open PRs).
+POLISH-001 and POLISH-002 are merged (#251, #252, #253). The POLISH-001 handoff below is history.
+
+**PR 1 — no frozen days (this branch).** A due 16:30 rollover no longer waits on a workout with
+nothing recorded for 2 hours. The workout stays ACTIVE and resumable on its own day, and TODAY
+labels it "WORKOUT STILL OPEN · started Thu 06:52". A workout in use, explicit END DAY and the
+new-day-start fallback keep the CONTINUITY-001 guard. No schema, event type/payload, dependency or
+recommendation change. Files: `engine/dayRollover.ts` (pure `workoutHoldsRollover`),
+`application/commands.ts` (rollover reads the workout's sets in its transaction),
+`ui/screens/today/ActiveWorkoutCard.tsx`, the TODAY stale note copy.
+
+**Verification:** recorded in the PR. The three new idle-release integration tests fail on the old
+code and pass with the fix.
+
+**Remaining risks:** physical-device, Safari and screen-reader checks are unclaimed. A workout
+that started before a rollover still records its completion on its original day. That's
+intended: day-scoped readers of workout events count that completion on the old day.
+
+**Next:** independent exact-head review of PR 1, green CI, Gavin's merge. Then PR 2 (morning
+call, wake card, quick log, night closed, briefing, honest headline, Week Ahead and declutter
+rulings). After TONIGHT: Gavin's 5-minute Health Connect check, then a Garmin brief.
+
+## Previous objective — POLISH-001 (2026-10-18, PROTECTED, merged)
 
 Gavin approved the attached brief, committed unchanged as [POLISH-001.md](POLISH-001.md).
 Builder: Codex. Branch `codex/polish-001`; [PR #251](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/251).

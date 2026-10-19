@@ -65,6 +65,29 @@ boundaries. Historical references to Drops retain their product scope and eviden
 require the legacy lifecycle for new work. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical
 evidence, not standing implementation authority.
 
+## TONIGHT-001 — owner rulings, 2026-10-19
+
+Brief: [`agent/TONIGHT-001.md`](agent/TONIGHT-001.md). Gavin approved the TONIGHT release from the
+product discovery proposal and answered three questions the same day.
+
+- **An idle workout no longer holds the 16:30 roll** (amends DAY-ROLLOVER-001's "an in-progress
+  workout is never interrupted"). Gavin chose this option, "Idle workouts don't block", over
+  "always roll" and "keep the rule, just prompt". At a due rollover, a workout with nothing
+  recorded for 2 hours (`IDLE_WORKOUT_RELEASE_MS`; no set logged or skipped since the later of its
+  start and its last set) no longer blocks the close. The workout stays ACTIVE and resumable on its
+  original day, and every later write still uses its own `beyondDayId`. Nothing is closed,
+  migrated or rewritten for the operator. A workout in use still holds the day. Explicit END DAY
+  and the new-day-start fallback keep the CONTINUITY-001 guard. TODAY labels such a workout
+  "WORKOUT STILL OPEN" with its start day and time.
+- **Week Ahead may place a workout on a post-shift morning** (amends WEEKAHEAD-001 rule A, "a
+  workout on each day off, none on a work day"). The morning after a shift belongs to a work lived
+  day, so rule A could never suggest the post-shift workouts Gavin wants. "At most 2 days in a row"
+  stays. Implemented in TONIGHT-001 PR 2.
+- **Online food lookup, Minimum Day and Small Steps leave TODAY and the meal screen.** They stay
+  reachable in COMMAND, and nothing is deleted. Implemented in TONIGHT-001 PR 2.
+- **Garmin:** Gavin wants his watch connected. A Health Connect bridge is a separate, later
+  Protected objective, not part of TONIGHT-001.
+
 ## Product direction and creative freedom — owner ruling, 2026-10-09
 
 [`PRODUCT_DIRECTION`](PRODUCT_DIRECTION.md) records Gavin's current vision and creative approach.
@@ -1072,7 +1095,9 @@ USER_DECIDES remaining authoritative.
   `engine/dayRollover.ts`/`engine/advisory.ts`) and left to the operator.
   An in-progress workout is never interrupted — rollover happens once it
   ends. See `docs/agent/drops/DAY-ROLLOVER-001.md` for the full
-  contract.
+  contract. **Amended by TONIGHT-001 (2026-10-19):** only a workout in
+  use holds the roll; one with nothing recorded for 2 hours no longer
+  does. See the TONIGHT-001 entry at the top of this register.
 
 ## RED / capacity override
 
