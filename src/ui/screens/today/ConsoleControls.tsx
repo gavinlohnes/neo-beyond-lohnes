@@ -21,7 +21,9 @@ export type LogEntryKey = (typeof LOG_ENTRIES)[number]["key"];
  * COMMAND-CENTER-001: WATER · MEAL · LOG in fixed positions. The SYSTEM dialog
  * that sat here is retired; its catalog is COMMAND's search.
  */
-export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, busy = false, isInFlight }: {
+export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, onLogWater, lastWaterAmount = null, busy = false, isInFlight }: {
+  onLogWater?: ((amount: number) => Promise<boolean>) | undefined;
+  lastWaterAmount?: number | null;
   onOpenWater?: (() => void) | undefined;
   onOpenMeal?: (() => void) | undefined;
   /** + LOG's destinations; an entry whose route is missing is left out. */
@@ -29,6 +31,29 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, busy = fal
   busy?: boolean;
   isInFlight: () => boolean;
 }) {
+  const [waterOpen, setWaterOpen] = useState(false);
+  const [waterError, setWaterError] = useState<string | null>(null);
+  const waterDialog = useRef<HTMLDialogElement>(null);
+  const waterTrigger = useRef<HTMLButtonElement>(null);
+  const restoreWaterTrigger = useRef(true);
+  const waterWrite = useRef(false);
+  useEffect(() => {
+    if (!waterOpen) return;
+    const element = waterDialog.current!;
+    element.showModal();
+    return () => {
+      element.close();
+      if (restoreWaterTrigger.current) requestAnimationFrame(() => waterTrigger.current?.getClientRects().length && waterTrigger.current.focus({ preventScroll: true }));
+    };
+  }, [waterOpen]);
+  async function addWater(amount: number) {
+    if (waterWrite.current || isInFlight()) return;
+    waterWrite.current = true;
+    setWaterError(null);
+    try { if (await onLogWater?.(amount)) setWaterOpen(false); }
+    catch { setWaterError("Water didn't save. Try again."); }
+    finally { waterWrite.current = false; }
+  }
   const [logOpen, setLogOpen] = useState(false);
   const logDialog = useRef<HTMLDialogElement>(null);
   const logTrigger = useRef<HTMLButtonElement>(null);
@@ -51,7 +76,7 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, busy = fal
   const logEntries = LOG_ENTRIES.filter((entry) => onOpenLog?.[entry.key]);
   return <>
     <div className="console-controls" role="group" aria-label="Optional operator controls">
-      <button type="button" disabled={busy || !onOpenWater} onClick={() => { if (!isInFlight()) onOpenWater?.(); }} aria-label="Log water in BODY">
+      <button type="button" ref={waterTrigger} disabled={busy || (!onOpenWater && !onLogWater)} onClick={() => { if (isInFlight()) return; if (onLogWater) { restoreWaterTrigger.current = true; setWaterError(null); setWaterOpen(true); } else onOpenWater?.(); }} aria-label="Log water" aria-haspopup={onLogWater ? "dialog" : undefined} aria-expanded={onLogWater ? waterOpen : undefined}>
         <LineIcon icon={Droplets} /><span>WATER</span>
       </button>
       <button type="button" disabled={busy || !onOpenMeal} onClick={() => { if (!isInFlight()) onOpenMeal?.(); }} aria-label="Log a meal in BODY">
@@ -62,6 +87,21 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, busy = fal
         <LineIcon icon={Plus} /><span>LOG</span>
       </button>
     </div>
+    {waterOpen && <dialog ref={waterDialog} className="today-sheet" aria-labelledby="water-sheet-title"
+      onCancel={(event) => { event.preventDefault(); if (!waterWrite.current) setWaterOpen(false); }}
+      onKeyDown={(event) => {
+        if (event.key !== "Tab") return;
+        const controls = [...event.currentTarget.querySelectorAll<HTMLElement>("button:not(:disabled)")];
+        const first = controls[0], last = controls.at(-1);
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }}>
+      <header className="today-sheet__header"><h2 id="water-sheet-title" className="card-title">WATER</h2><button type="button" className="chip" disabled={busy} onClick={() => setWaterOpen(false)}>CLOSE</button></header>
+      {[8, 12, 16].map((amount, i) => <button key={amount} type="button" className="today-sheet__option" autoFocus={i === 0} disabled={busy} onClick={() => void addWater(amount)}>+{amount} oz</button>)}
+      <button type="button" className="today-sheet__option" disabled={busy || lastWaterAmount === null} onClick={() => lastWaterAmount !== null && void addWater(lastWaterAmount)}>{lastWaterAmount === null ? "Repeat last" : `Repeat last (${lastWaterAmount} oz)`}</button>
+      {onOpenWater && <button type="button" className="today-sheet__option" disabled={busy} onClick={() => { if (isInFlight()) return; restoreWaterTrigger.current = false; setWaterOpen(false); onOpenWater(); }}>More → BODY water</button>}
+      {waterError && <p className="meta today-sheet__note" role="alert">{waterError}</p>}
+    </dialog>}
     {logOpen && <dialog ref={logDialog} className="today-sheet" aria-labelledby="console-log-title"
       onCancel={(event) => { event.preventDefault(); closeLog(); }}
       onKeyDown={(event) => {

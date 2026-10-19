@@ -113,6 +113,7 @@ import {
   getScheduledContext,
   getMinimumDayStatus,
   getEffectiveHydrationTotal,
+  getHydrationEntries,
   getDayProteinTotalG,
   getOpenReset,
   getOpenShiftDown,
@@ -435,6 +436,7 @@ export function TodayScreen({
   const [hydrationOperationOpen, setHydrationOperationOpen] = useState(false);
   const [hydrationManualOpen, setHydrationManualOpen] = useState(false);
   // UNDO-001: a just-logged entry, UNDO for its first UNDO_WINDOW_MS, then CORRECT IN BODY.
+  const [lastWaterAmount, setLastWaterAmount] = useState<number | null>(null);
   const [hydrationConfirmation, setHydrationConfirmation] = useState<LoggedEntry | null>(null);
   const [proteinConfirmation, setProteinConfirmation] = useState<LoggedEntry | null>(null);
   const hydrationUndoOpen = useUndoOpen(hydrationConfirmation);
@@ -714,6 +716,7 @@ export function TodayScreen({
     let pendingOutcome: Awaited<ReturnType<typeof getPendingOutcomeRating>> | null = null;
     let minimumDay: MinimumDayStatus | null = null;
     let minimumDayHydrateOz = 0;
+    let lastWater: number | null = null;
     let minimumDayProteinG = 0;
     let openReset: Awaited<ReturnType<typeof getOpenReset>> | undefined;
     let openShiftDown: Awaited<ReturnType<typeof getOpenShiftDown>> | undefined;
@@ -737,6 +740,7 @@ export function TodayScreen({
       pendingOutcome = rec ? (await getPendingOutcomeRating(rec)) ?? null : null;
       minimumDay = await getMinimumDayStatus(activeDay.id);
       minimumDayHydrateOz = await getEffectiveHydrationTotal(activeDay.id);
+      lastWater = (await getHydrationEntries(activeDay.id)).at(-1)?.effectiveAmountOz ?? null;
       // DROP 1.5: the one shared day total (protein-only logs + meals), same as BODY and Nutrition Targets.
       minimumDayProteinG = await getDayProteinTotalG(activeDay.id);
       openReset = await getOpenReset(activeDay.id);
@@ -830,6 +834,7 @@ export function TodayScreen({
       setRecommendationHandoff(null);
     }
     setAdvisoryNotes(advisoryNotes);
+    setLastWaterAmount(lastWater);
     if (isOwner) { setSystemStatus(nextSystemStatus); setLastMainSleepMinutes(nextLastMainSleep?.minutes ?? null); }
     const prompt = getBackupPrompt();
     setBackupDue(prompt?.kind === "BACKUP_DUE" ? { days: prompt.daysSinceLastBackup } : null);
@@ -1371,19 +1376,21 @@ export function TodayScreen({
    * there's no way for this to create a duplicate of a BODY-side log.
    */
   async function handleMinimumDayLogWater(amountOverride?: number) {
-    if (busy || busyRef.current) return;
+    if (busy || busyRef.current) return false;
     const amount = amountOverride ?? Number(mdWaterInput);
-    if (!Number.isFinite(amount) || amount <= 0) return;
+    if (!Number.isFinite(amount) || amount <= 0) return false;
     busyRef.current = true;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
       const eventId = await logWater(activeDay.id, amount);
       setMdWaterInput("");
-      await refresh();
       setHydrationConfirmation({ amount, eventId, dayId: activeDay.id });
+      setLastWaterAmount(amount);
+      try { await refresh(); } catch { setUndoFailure("Water saved. Readings didn’t refresh. Reopen TODAY."); }
       setHydrationOperationOpen(false);
       setHydrationManualOpen(false);
+      return true;
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -2332,6 +2339,8 @@ export function TodayScreen({
       <section className="console-operations" aria-labelledby="console-operations-heading">
         <h2 id="console-operations-heading" className="section-label">Immediate operations</h2>
         <ConsoleControls
+          onLogWater={handleMinimumDayLogWater}
+          lastWaterAmount={lastWaterAmount}
           busy={busy}
           isInFlight={() => busyRef.current}
           onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
