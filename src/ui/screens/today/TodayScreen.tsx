@@ -1599,6 +1599,7 @@ export function TodayScreen({
   const checkInIsRow = phaseRows.includes("CHECK_IN");
   const checkInIsScheduledRow = scheduledRows.includes("CHECK_IN");
   const shiftDownIsScheduledRow = scheduledRows.includes("SHIFT_DOWN");
+  const workoutCallIsScheduledRow = scheduledRows.includes("WORKOUT_CALL");
   // SLEEP DRAFT: only on the post-shift MAIN SLEEP row (Command Center rule 3).
   const sleepDraft =
     day && phaseRows.includes("MAIN_SLEEP") && sleepDraftEvidence
@@ -1640,12 +1641,17 @@ export function TodayScreen({
       day?.workContext === "WORK" &&
       workPeriodEndedAt === null &&
       !shiftDownIsScheduledRow &&
+      // TONIGHT-001: after the shift the workout call is RECOVER's one question; MARK WORK ENDED
+      // stays one tap away inside SHIFT DOWN in TOOLS.
+      !workoutCallIsScheduledRow &&
       scheduledClock.phase !== "PRE_WORK" &&
       isWorkEndDue(scheduledClock.phase, shiftWindow, now),
     isCheckInMissing:
       day !== null &&
       checkIn === null &&
       !checkInIsScheduledRow &&
+      // TONIGHT-001: the workout call carries CHECK IN FIRST; the check-in itself waits in TOOLS.
+      !workoutCallIsScheduledRow &&
       scheduledClock.phase !== "PRE_WORK" &&
       scheduledClock.phase !== "SCHEDULED_SHIFT",
     isMinimumDayProminent: showProminentMinimumDay,
@@ -1696,7 +1702,8 @@ export function TodayScreen({
             (!!recommendation && attentionPlan.recommendationPlacement === "SUPPORT"))
         );
       case "SHIFT_DOWN":
-        return !liftedShiftDown && !!day && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT";
+        // TONIGHT-001: after the shift SHIFT DOWN waits here (no longer a RECOVER row), with or without a check-in.
+        return !liftedShiftDown && !!day && (!!recommendation || shiftClock.displayPhase === "EXPECTED_POST_WORK") && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT";
       case "RESET":
         return !liftedReset && !!day && !!recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT";
       case "WORK_CONTEXT":
@@ -1778,7 +1785,7 @@ export function TodayScreen({
     if (lateRecoverWithoutSleep && !activeShiftDownId) return shiftDownIsRow ? renderRecoverSleepPrompt() : null;
     return (
       <>
-      {day && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
+      {day && (!!recommendation || shiftClock.displayPhase === "EXPECTED_POST_WORK") && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
         <ShiftDownCard
           prominent={shiftDownIsPrimary}
           isDominant={false}
@@ -2462,7 +2469,7 @@ export function TodayScreen({
       {/* OPERATE — exactly one dominant operating surface. Multiple active
           operation state is named explicitly rather than
           silently allowing JSX order to choose a winner. */}
-      {day && dominant !== "NONE" && dominant !== "WORKOUT_ACTIVE" && !(dominant === "RECOMMENDATION" && checkInIsRow) && (
+      {day && dominant !== "NONE" && dominant !== "WORKOUT_ACTIVE" && !(dominant === "RECOMMENDATION" && (checkInIsRow || phaseRows.includes("WORKOUT_CALL"))) && (
         <h2 className="section-label section-label--field">Operate</h2>
       )}
       {day && dominant === "OPERATION_CONFLICT" && (

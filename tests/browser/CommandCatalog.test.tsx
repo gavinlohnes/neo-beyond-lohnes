@@ -83,8 +83,10 @@ describe("COMMAND catalog", () => {
       } else if (destination.kind === "body") {
         if (destination.focus === "urge") await expect.element(screen.getByRole("button", { name: "Log urge: Stress" })).toBeVisible();
         else {
-          const target = destination.focus === "meal" ? "meal-return" : destination.focus === "weight" ? "body-bodyweight" : destination.focus === "water" ? "body-hydration" : "body-sleep";
-          await expect.poll(() => destination.focus === "meal" ? document.activeElement?.id === target : !!document.activeElement?.closest(`#${target}`)).toBe(true);
+          // TONIGHT-001: FOOD LOOKUP opens the same focused meal view, with the lookup open.
+          const exact = destination.focus === "meal" || destination.focus === "foodLookup";
+          const target = destination.focus === "meal" ? "meal-return" : destination.focus === "foodLookup" ? "food-search" : destination.focus === "weight" ? "body-bodyweight" : destination.focus === "water" ? "body-hydration" : "body-sleep";
+          await expect.poll(() => exact ? document.activeElement?.id === target : !!document.activeElement?.closest(`#${target}`)).toBe(true);
         }
       } else if (destination.kind === "capture") {
         await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");

@@ -123,6 +123,8 @@ describe("quick log", () => {
     await screen.getByRole("button", { name: "Log Turkey wrap", exact: true }).click();
     await expect.element(screen.getByText("Turkey wrap logged · 420 kcal · 38 g.", { exact: true })).toBeVisible();
     expect((await db.events.where("type").equals("MEAL_LOGGED").toArray())).toHaveLength(3);
+    // Focus stays on the logged item (it moves to the front), never dropped to the page.
+    await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Log Turkey wrap");
     await screen.getByRole("button", { name: "UNDO", exact: true }).click();
     await expect.poll(async () => (await db.events.where("type").equals("MEAL_LOG_VOIDED").toArray()).length).toBe(1);
   });

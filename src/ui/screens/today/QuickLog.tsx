@@ -37,28 +37,37 @@ export function QuickLog({
     return () => { cancelled = true; };
   }, [refreshKey]);
 
-  async function run(write: () => Promise<boolean>) {
+  const group = useRef<HTMLDivElement>(null);
+  async function run(key: string, write: () => Promise<boolean>) {
     if (writing.current || busy) return;
     writing.current = true;
-    try { await write(); } finally { writing.current = false; }
+    try { await write(); } finally {
+      writing.current = false;
+      // The tapped row is disabled while it saves, which drops focus to the page; put it back
+      // on the same item (it may have moved to the front) once TODAY has re-rendered.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (document.activeElement && document.activeElement !== document.body) return;
+        group.current?.querySelector<HTMLButtonElement>(`[data-quick-log="${key}"]`)?.focus({ preventScroll: true });
+      }));
+    }
   }
 
   if (meals === null) return null;
   if (meals.length === 0 && lastWaterAmount === null) return null;
   return (
-    <div className="equipment-row quick-log" role="group" aria-labelledby="quick-log-heading">
+    <div ref={group} className="equipment-row quick-log" role="group" aria-labelledby="quick-log-heading">
       <p id="quick-log-heading" className="tool-label" style={{ marginBottom: 4 }}>QUICK LOG</p>
       <div className="quick-log__items">
         {meals.map((meal) => (
           <button key={meal.id} type="button" className="today-sheet__option" disabled={busy} aria-label={`Log ${meal.name}`}
-            onClick={() => void run(() => onLogMeal(meal))}>
+            data-quick-log={meal.id} onClick={() => void run(meal.id, () => onLogMeal(meal))}>
             <span><strong>{meal.name}</strong><span>{meal.calories} kcal · {meal.proteinG} g protein</span></span>
             <span className="today-sheet__tag" aria-hidden="true">LOG</span>
           </button>
         ))}
         {lastWaterAmount !== null && (
           <button type="button" className="today-sheet__option" disabled={busy} aria-label={`Log ${lastWaterAmount} oz water`}
-            onClick={() => void run(() => onLogWater(lastWaterAmount))}>
+            data-quick-log="water" onClick={() => void run("water", () => onLogWater(lastWaterAmount))}>
             <span><strong>Water</strong><span>Your last amount</span></span>
             <span className="today-sheet__tag" aria-hidden="true">+{lastWaterAmount} OZ</span>
           </button>

@@ -31,7 +31,9 @@ describe.sequential("shared operator presentation primitives", () => {
   it("keeps long truthful readouts readable without horizontal overflow at 320/360/412px", async () => {
     await render(
       <>
-        {[320, 360, 412].map((width) => <main className="screen test-width" style={{ width }} key={width}>
+        {/* One labelled region per width: a page has one main landmark, so three <main>s were an
+            invalid fixture that axe flagged whenever its landmark rules applied (order-dependent). */}
+        {[320, 360, 412].map((width) => <section className="screen test-width" aria-label={`${width}px surface`} style={{ width }} key={width}>
           <OperatorHeader destination="body">BODY // DAILY RECORD</OperatorHeader>
           <ReadoutGrid emphasis="primary">
             <Readout label="CALORIES" value={<>2,450<span> kcal</span></>} detail="Logged from meals · no calorie target" />
@@ -41,7 +43,7 @@ describe.sequential("shared operator presentation primitives", () => {
             <Readout label="LAST WEIGHT" value="Not logged" detail="Whenever it suits you" />
             <Readout label="MAIN SLEEP" value="10 hr 59 min" detail="Latest of 12 main-sleep records" />
           </ReadoutGrid>
-        </main>)}
+        </section>)}
       </>,
     );
     await document.fonts.ready;

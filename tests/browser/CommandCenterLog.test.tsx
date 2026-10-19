@@ -40,7 +40,7 @@ describe("TODAY action row", () => {
       const screen = await render(<App />);
       await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();
       const labels = [...document.querySelectorAll(".console-controls button")].map((button) => button.getAttribute("aria-label"));
-      expect(labels.slice(0, 3)).toEqual(["Log water", "Log a meal in BODY", "Open LOG"]);
+      expect(labels.slice(0, 3)).toEqual(["Log water", "Log a meal", "Open LOG"]);
       for (const button of document.querySelectorAll<HTMLElement>(".console-controls button")) {
         expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       }

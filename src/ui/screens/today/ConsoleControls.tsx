@@ -170,7 +170,7 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, onWaterVis
             <span><strong>{meal.name}</strong><span>{meal.calories} kcal · {meal.proteinG} g protein</span></span>
           </button>)}
       </div>
-      {onOpenMeal && <button type="button" className="today-sheet__option" disabled={busy} onClick={() => { if (isInFlight()) return; restoreMealTrigger.current = false; setMealOpen(false); onOpenMeal(); }}>
+      {onOpenMeal && <button type="button" className="today-sheet__option" disabled={busy} onClick={() => { if (isInFlight()) return; restoreMealTrigger.current = false; mealDialog.current?.close(); mealTrigger.current?.focus({ preventScroll: true }); setMealOpen(false); onOpenMeal(); }}>
         <span><strong>New meal or manual entry</strong><span>Opens BODY</span></span><LineIcon icon={ArrowUpRight} />
       </button>}
       {mealError && <p className="meta today-sheet__note" role="alert">{mealError}</p>}

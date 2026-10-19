@@ -81,10 +81,33 @@ product discovery proposal and answered three questions the same day.
   "WORKOUT STILL OPEN" with its start day and time.
 - **Week Ahead may place a workout on a post-shift morning** (amends WEEKAHEAD-001 rule A, "a
   workout on each day off, none on a work day"). The morning after a shift belongs to a work lived
-  day, so rule A could never suggest the post-shift workouts Gavin wants. "At most 2 days in a row"
-  stays. Implemented in TONIGHT-001 PR 2.
-- **Online food lookup, Minimum Day and Small Steps leave TODAY and the meal screen.** They stay
-  reachable in COMMAND, and nothing is deleted. Implemented in TONIGHT-001 PR 2.
+  day, so rule A could never suggest the post-shift workouts Gavin wants. Gavin chose "off days +
+  last shift": every day off, plus the morning after the last shift of a work block (a work day
+  whose next lived day is off). Other work days rest, and "at most 2 days in a row" stays. Week
+  Ahead labels that suggestion "after shift".
+- **Online food lookup, Minimum Day and Small Steps leave TODAY and the meal screen.** Nothing is
+  deleted. COMMAND → FOOD LOOKUP opens BODY's meals with the lookup open. Minimum Day and Small
+  Steps appear in TOOLS when it's opened from COMMAND → Today tools, and Minimum Day stays visible
+  while it's on. TODAY no longer offers Minimum Day after a constrained check-in (amends the Phase 3
+  "Item 1" offer and Drop 1.6b's one-line offer). With the lookup gone from ADD MEAL, manual macros
+  are its direct path (amends BODY-UX-001's search-first disclosure).
+- **TODAY asks one question per mode** (TONIGHT-001 PR 2, within the approved release):
+  - PREP and ON SHIFT lead with QUICK LOG: up to three saved meals by recent use and water at the
+    last amount, each one tap through the canonical commands with UNDO. Nothing is pre-checked.
+  - MEAL opens a sheet on TODAY: every saved meal with a name filter, plus "New meal or manual
+    entry", which opens BODY.
+  - RECOVER asks the morning call (train / short / sleep first), then shows the night's totals and
+    main sleep. On a day off, the same call (start / later / not today) waits for the first open.
+    An answer is the existing PLANNED_WORK_SET; LATER is placement-only localStorage for that
+    BeyondDay. The SUGGESTED tag is TRAIN's existing session-variant suggestion; the Engine's
+    recommendation stays in its own card, unchanged.
+  - SHIFT DOWN (with MARK WORK ENDED) and the check-in wait in TOOLS behind the call, which offers
+    CHECK IN FIRST. Neither is repeated in Attention while the call's row is scheduled.
+  - The all-clear reads "Nothing urgent. One question below." while the work question or an
+    unanswered workout call is on screen; its meaning is unchanged.
+  - The protein tile reads ADD WEIGHT instead of NO TARGET when no weigh-in exists.
+  - The 03:00 briefing opens with "Tonight so far" in place of the block comparison, which the
+    After Action report keeps.
 - **Garmin:** Gavin wants his watch connected. A Health Connect bridge is a separate, later
   Protected objective, not part of TONIGHT-001.
 

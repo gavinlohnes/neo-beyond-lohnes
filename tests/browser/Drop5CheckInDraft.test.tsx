@@ -31,7 +31,9 @@ async function seed() {
 }
 
 function pressed(): string[] {
-  return [...document.querySelectorAll('[data-shift-clock-row="CHECK_IN"] button[aria-pressed="true"]')].map((b) => b.textContent ?? "");
+  // TONIGHT-001: on a day off the check-in opens from TOOLS / the wake card, not a CHECK_IN row.
+  const form = [...document.querySelectorAll(".equipment-row")].find((row) => row.querySelector(".tool-label")?.textContent === "CHECK-IN");
+  return [...(form?.querySelectorAll('button[aria-pressed="true"]') ?? [])].map((b) => b.textContent ?? "");
 }
 
 function chip(label: string, n: number): HTMLButtonElement {
@@ -59,7 +61,7 @@ describe("check-in draft", () => {
   it("opens with the last answers and what's been logged since; CONFIRM records CONFIRMED", async () => {
     await seed();
     const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "MANUAL CHECK-IN" }).click();
+    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
 
     await expect.element(screen.getByText(/^Draft: your check-in Wed 07:00\. Change anything that's different now\.$/)).toBeVisible();
     await expect.element(screen.getByText("Since then: main sleep 7 hr", { exact: true })).toBeVisible();
@@ -76,7 +78,7 @@ describe("check-in draft", () => {
   it("changing any value turns it into SUBMIT and records ADJUSTED", async () => {
     await seed();
     const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "MANUAL CHECK-IN" }).click();
+    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
     await expect.poll(pressed).toEqual(["2", "4", "3", "2", "1"]);
 
     chip("Soreness", 4).click();
@@ -89,7 +91,7 @@ describe("check-in draft", () => {
   it("START BLANK escapes the draft: an empty form, and no draft recorded", async () => {
     await seed();
     const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "MANUAL CHECK-IN" }).click();
+    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
     await screen.getByRole("button", { name: "START BLANK" }).click();
 
     await expect.element(screen.getByText(/Nothing is prefilled/)).toBeVisible();
@@ -106,7 +108,7 @@ describe("check-in draft", () => {
     await seed();
     vi.setSystemTime(at(15, 20, 0));
     const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "MANUAL CHECK-IN" }).click();
+    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
     await expect.element(screen.getByText(/Nothing is prefilled/)).toBeVisible();
     expect(screen.getByText(/^Draft:/).elements()).toHaveLength(0);
   });

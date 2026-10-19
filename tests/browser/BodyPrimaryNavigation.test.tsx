@@ -6,6 +6,7 @@ import { startDay, updateSchedulePattern } from "../../src/application/commands"
 import { getEffectiveHydrationTotal } from "../../src/application/queries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
+import { openMealInBody } from "./helpers/mealSheet";
 
 /**
  * DAILY-EXPERIENCE-001 review B1: a TODAY shortcut's focused BODY view and its
@@ -57,7 +58,7 @@ describe("BODY primary navigation after a TODAY shortcut", () => {
     await expectDailyRecord(screen);
 
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     await expect.element(screen.getByRole("heading", { name: "BODY // MEALS" })).toBeVisible();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished shift meal");
     await screen.getByRole("spinbutton", { name: "New meal calories" }).fill("640");
@@ -92,7 +93,7 @@ describe("BODY primary navigation after a TODAY shortcut", () => {
 
   it("leaves a shortcut visit to BODY by primary navigation without a stale return", async () => {
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Draft");
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
@@ -101,7 +102,7 @@ describe("BODY primary navigation after a TODAY shortcut", () => {
 
     // A deliberate shortcut still opens its focused view with its return.
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     await expect.element(screen.getByRole("heading", { name: "BODY // MEALS" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "RETURN TO TODAY" })).toBeVisible();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Draft");

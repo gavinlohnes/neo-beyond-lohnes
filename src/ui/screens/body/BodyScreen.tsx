@@ -654,9 +654,11 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
       if (onReturnToToday && mealPositioned.current) return;
       const el = document.getElementById(SHORTCUT_ANCHOR_IDS[focus]);
       if (el) {
-        const surface = focus === "meal" ? el.closest(".body-meals") ?? el : focus === "water" ? el.closest(".body-water") ?? el : el;
+        const surface = focus === "meal" || focus === "foodLookup" ? el.closest(".body-meals") ?? el : focus === "water" ? el.closest(".body-water") ?? el : el;
         surface.scrollIntoView({ block: "start" });
-        if (focus === "meal" && onReturnToToday) document.getElementById("meal-return")?.focus({ preventScroll: true });
+        // TONIGHT-001: COMMAND → FOOD LOOKUP lands in the search field.
+        if (focus === "foodLookup" && document.getElementById("food-search")) document.getElementById("food-search")!.focus({ preventScroll: true });
+        else if (focus === "meal" && onReturnToToday) document.getElementById("meal-return")?.focus({ preventScroll: true });
         else if (!el.contains(document.activeElement)) {
           el.querySelector<HTMLElement>("button:not(:disabled), input:not(:disabled)")?.focus({ preventScroll: true });
         }
@@ -2465,7 +2467,8 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
             </div>
           )}
           </MealSection>}
-          <MealSection direct={mealFocused} summary={`${manualMealEntryOpen ? "HIDE" : "SHOW"} MANUAL MACROS`}
+          {/* TONIGHT-001: with the lookup off this screen, manual macros are the direct path (amends BODY-UX-001). */}
+          <MealSection direct={mealFocused || !lookupReachable} summary={`${manualMealEntryOpen ? "HIDE" : "SHOW"} MANUAL MACROS`}
             open={manualMealEntryOpen} onToggle={setManualMealEntryOpen}>
             <div className="field">
               <label htmlFor="new-meal-name"><span>New meal name</span></label>

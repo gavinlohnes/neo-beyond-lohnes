@@ -287,7 +287,6 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
 
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
-    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Chicken & Rice Bowl");
     await screen.getByRole("spinbutton", { name: "New meal calories" }).fill("600");
     await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill("45");
@@ -312,7 +311,6 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
     { name = "Chicken & Rice Bowl", calories = "600", protein = "45", carbs = "60", fat = "15" } = {},
   ) {
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
-    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill(name);
     await screen.getByRole("spinbutton", { name: "New meal calories" }).fill(calories);
     await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill(protein);
@@ -509,31 +507,23 @@ describe("BodyScreen (real browser) — MEAL MEMORY", () => {
  * together as confusing clutter on a real phone screen. Search stays the
  * one visible action until the operator actually needs manual entry.
  */
-describe("BodyScreen (real browser) — ADD MEAL disclosure (BODY-UX-001)", () => {
-  it("opening ADD MEAL with no prior search shows only the search box, not the manual macro fields", async () => {
+describe("BodyScreen (real browser) — ADD MEAL (BODY-UX-001, amended by TONIGHT-001)", () => {
+  // TONIGHT-001 (owner ruling, 2026-10-19): the online lookup left the meal screen, so
+  // manual macros are ADD MEAL's direct path; COMMAND → FOOD LOOKUP opens the lookup.
+  it("opening ADD MEAL shows the manual macro fields directly, with no online lookup", async () => {
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
-
-    await expect.element(screen.getByRole("textbox", { name: "Search USDA food database" })).toBeVisible();
-    expect(screen.getByRole("textbox", { name: "New meal name" }).elements()).toHaveLength(0);
-    await expect.element(screen.getByRole("button", { name: "SHOW MANUAL MACROS" })).toBeVisible();
-  });
-
-  it("the manual macros toggle works independently of search state", async () => {
-    const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
-    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
-    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
 
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "Search USDA food database", includeHidden: true }).elements()).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "SHOW FOOD LOOKUP (ONLINE)" }).elements()).toHaveLength(0);
   });
 
-  it("saving a new meal collapses the manual macros disclosure back to closed", async () => {
+  it("saving a new meal clears the form for the next one", async () => {
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
-    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Oatmeal");
     await screen.getByRole("spinbutton", { name: "New meal calories" }).fill("300");
     await screen.getByRole("spinbutton", { name: "New meal protein (g)" }).fill("10");
@@ -541,10 +531,7 @@ describe("BodyScreen (real browser) — ADD MEAL disclosure (BODY-UX-001)", () =
     await screen.getByRole("spinbutton", { name: "New meal fat (g)" }).fill("5");
     await screen.getByRole("button", { name: "SAVE ONLY" }).click();
     await expect.element(screen.getByText("Oatmeal", { exact: true })).toBeVisible();
-
-    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
-    expect(screen.getByRole("textbox", { name: "New meal name" }).elements()).toHaveLength(0);
-    await expect.element(screen.getByRole("button", { name: "SHOW MANUAL MACROS" })).toBeVisible();
+    expect(await db.savedMeals.count()).toBe(1);
   });
 });
 
@@ -568,9 +555,7 @@ describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodDat
 
   it("selecting a result pre-fills the ADD MEAL form without saving anything", async () => {
     mockFetchOnce({ foods: [BANANA_FOOD] });
-    const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
-    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+    const screen = await render(<BodyScreen focus="foodLookup" />);
 
     await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("banana");
     await screen.getByRole("button", { name: "SEARCH" }).click();
@@ -586,9 +571,7 @@ describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodDat
 
   it("shows a plain no-results message rather than an error for a search with no matches", async () => {
     mockFetchOnce({ foods: [] });
-    const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
-    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+    const screen = await render(<BodyScreen focus="foodLookup" />);
 
     await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("zzzznotafood");
     await screen.getByRole("button", { name: "SEARCH" }).click();
@@ -601,9 +584,7 @@ describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodDat
 
   it("degrades gracefully to manual entry when the search request fails", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("network down"));
-    const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
-    await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
+    const screen = await render(<BodyScreen focus="foodLookup" />);
 
     await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("banana");
     await screen.getByRole("button", { name: "SEARCH" }).click();

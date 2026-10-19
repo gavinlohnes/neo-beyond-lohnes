@@ -11,6 +11,7 @@ import { getDayProteinTotalG } from "../../src/application/queries";
 import { getHistoryDays } from "../../src/application/historyQueries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
+import { mealButton, openMealInBody, openMealInBodyDom } from "./helpers/mealSheet";
 
 type Screen = Awaited<ReturnType<typeof render>>;
 let dayId: string;
@@ -26,7 +27,7 @@ beforeEach(async () => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo(0, 0); });
 
 async function openMeal(screen: Screen) {
-  await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+  await openMealInBody(screen);
   await expect.element(screen.getByRole("button", { name: "RETURN TO TODAY" })).toBeVisible();
   await expect.poll(() => document.activeElement?.id).toBe("meal-return");
 }
@@ -43,7 +44,7 @@ describe("TODAY meal round trip", () => {
   it("uses canonical preset creation and logging once, then restores TODAY's disclosure, position, focus and totals", async () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Open TOOLS" }).click();
-    const trigger = screen.getByRole("button", { name: "Log a meal in BODY" }).element() as HTMLButtonElement;
+    const trigger = mealButton(screen).element() as HTMLButtonElement;
     trigger.focus();
     trigger.scrollIntoView({ block: "center" });
     const originY = window.scrollY;
@@ -78,7 +79,7 @@ describe("TODAY meal round trip", () => {
     const reopenedOrigin = window.scrollY;
     expect(reopenedOrigin).toBe(80);
     // A DOM click: a locator click first scrolls its target into view, which would move the origin under test.
-    (screen.getByRole("button", { name: "Log a meal in BODY" }).element() as HTMLElement).click();
+    await openMealInBodyDom(screen);
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     await expect.poll(() => window.scrollY).toBe(reopenedOrigin);
@@ -160,7 +161,7 @@ describe("TODAY meal round trip", () => {
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     await screen.getByRole("button", { name: "UNDO", exact: true }).click();
     await expect.poll(() => getMealEntries(dayId)).toHaveLength(0);
     expect(await loggedCount()).toBe(1);
@@ -176,7 +177,7 @@ describe("TODAY meal round trip", () => {
     await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
     const [original] = await getMealEntries(dayId);
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     await screen.getByRole("button", { name: "SHOW TODAY'S MEALS (1)" }).click();
     await screen.getByRole("button", { name: "Edit Lunch" }).click();
     await screen.getByRole("spinbutton", { name: "Corrected protein (g)" }).fill("30");
@@ -201,7 +202,7 @@ describe("TODAY meal round trip", () => {
     expect(await getMealEntries(dayId)).toHaveLength(1);
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     read.mockRestore();
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "SHOW TODAY'S MEALS (1)" }).click();
@@ -225,7 +226,7 @@ describe("TODAY meal round trip", () => {
     read.mockImplementation(() => Dexie.Promise.resolve(gate).then(originalRead));
     const returnButton = screen.getByRole("button", { name: "RETURN TO TODAY" });
     try {
-      await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+      await openMealInBody(screen);
       await expect.element(returnButton).toBeDisabled();
       // Let App's one-shot animation-frame handoff encounter the disabled control.
       await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
@@ -255,7 +256,7 @@ describe("TODAY meal round trip", () => {
     expect(screen.getByRole("button", { name: "LOG", exact: true }).elements()).toHaveLength(0);
     await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
     read.mockRestore();
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeVisible();
     expect(await db.savedMeals.count()).toBe(1);
     expect(await loggedCount()).toBe(0);

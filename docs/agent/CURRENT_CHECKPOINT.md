@@ -28,9 +28,45 @@ the old code and pass with the fix. `check:risk` confirms the change is PROTECTE
 that started before a rollover still records its completion on its original day. That's
 intended: day-scoped readers of workout events count that completion on the old day.
 
-**Next:** independent exact-head review of PR 1, green CI, Gavin's merge. Then PR 2 (morning
-call, wake card, quick log, night closed, briefing, honest headline, Week Ahead and declutter
-rulings). After TONIGHT: Gavin's 5-minute Health Connect check, then a Garmin brief.
+**PR 2 — the shift loop on TODAY** (branch `claude/tonight-001-pr2`, stacked on #255; Gavin
+approved starting it on 2026-10-19).
+- **Morning call:** RECOVER asks one question: train / short / sleep first. On a day off the wake
+  card asks start / later / not today. Answers go through the existing PLANNED_WORK_SET, and TRAIN
+  opens with the chosen variant.
+- **QUICK LOG and the MEAL sheet:** recent saved meals and the last water amount, each one tap
+  through the canonical commands with UNDO. MEAL opens a searchable sheet on TODAY.
+- **Night closed, briefing, headline, protein:** the night's totals; the briefing's "Tonight so
+  far"; the honest all-clear headline; ADD WEIGHT instead of NO TARGET.
+- **Week Ahead:** off days plus the morning after a block's last shift.
+- **Declutter:** online food lookup, Minimum Day and Small Steps reached through COMMAND.
+- **Rulings:** all recorded in UX_DECISIONS → TONIGHT-001.
+- **Unchanged:** no schema, event type, Engine rule or dependency change.
+
+New: `application/tonightQueries.ts` (read-only) and `today/WorkoutCall.tsx`, `QuickLog.tsx`,
+`NightClosed.tsx`. TRAIN gains the `WORKOUT_STANDARD` / `WORKOUT_REDUCED` destinations.
+**Tests changed:** about 20 existing browser files encoded the old TODAY layout. They're updated
+to the approved behavior and keep their guarantees (single guidance, focus return, drafts, row
+cap, no stray writes). A shared `helpers/mealSheet.ts` opens BODY through the MEAL sheet.
+**Acceptance:** [`screenshots/tonight-001`](../screenshots/tonight-001/README.md),
+`scripts/verify-tonight-001.mjs`; 320/360/390/412 px with no overflow, axe violations or page
+errors. The capture found focus dropping to the page after a QUICK LOG tap; it's fixed and
+covered by a test.
+
+**HANDOFF (2026-10-19, paused for usage):** PR 2 is pushed on `claude/tonight-001-pr2` but **no PR is
+open yet**. Last full run: 2,693 passed, 1 skip; the only failure was OperatorPrimitives (below).
+Architecture, TypeScript and build pass; acceptance captures are clean.
+- **CI on #255 is red** (`PR Verification`). The cause is a pre-existing order-dependent test bug,
+  reproduced on master `d042a1f` by running `SuitSignals` + `OperatorPrimitives` together.
+  OperatorPrimitives renders three unlabelled `<main>` landmarks, and axe flags them depending
+  on file order. The new test files changed CI's order.
+- **Fixture fix:** three labelled `<section>`s, assertions unchanged. It's committed on the PR 2
+  branch only, and passes alone, paired and filtered. **Gavin hasn't decided** whether it goes into
+  #255 or its own PR.
+- **To resume:** get that decision and apply it. Open PR 2 against #255's branch. Independent
+  exact-head review of each. Optional cleanup: move `LEADING_ROWS` in TodayScreen to module scope.
+
+**Next:** independent exact-head review of #255, then of PR 2. Then green CI and Gavin's merges,
+#255 first. After TONIGHT: Gavin's 5-minute Health Connect check, then a Garmin brief.
 
 ## Previous objective — POLISH-001 (2026-10-18, PROTECTED, merged)
 
