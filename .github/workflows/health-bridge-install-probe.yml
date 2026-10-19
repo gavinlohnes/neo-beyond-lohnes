@@ -10,6 +10,8 @@ jobs:
   install-original-apk:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      ANDROID_AVD_HOME: ${{ runner.temp }}/beyond-avd
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -35,10 +37,13 @@ jobs:
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs app-debug.apk
       - name: Boot Android 16
         run: |
-          mkdir -p probe/results
+          mkdir -p probe/results "$ANDROID_AVD_HOME"
           trap 'tail -n 120 probe/results/emulator.log || true' EXIT
           sudo chmod 666 /dev/kvm
-          printf 'no\n' | avdmanager create avd --force --name beyond36 --package 'system-images;android-36;google_apis;x86_64'
+          printf 'no\n' | avdmanager create avd --force --name beyond36 --path "$ANDROID_AVD_HOME/beyond36.avd" --package 'system-images;android-36;google_apis;x86_64'
+          avdmanager list avd
+          "$ANDROID_HOME/emulator/emulator" -list-avds
+          test -f "$ANDROID_AVD_HOME/beyond36.ini"
           "$ANDROID_HOME/emulator/emulator" -avd beyond36 -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader -memory 2048 -cores 2 > probe/results/emulator.log 2>&1 &
           emulator_pid=$!
           sleep 2
@@ -62,7 +67,16 @@ jobs:
           from pathlib import Path
           screen = Path('probe/results/screen.xml').read_text()
           assert 'BEYOND Health Bridge' in screen, screen
-          assert 'ALLOW SLEEP ACCESS AND READ' in screen, screen
+          import re, subprocess
+          dimensions = subprocess.check_output(['adb', 'shell', 'wm', 'size'], text=True)
+          width, height = map(int, re.findall(r'(\d+)x(\d+)', dimensions)[-1])
+          for _ in range(2):
+              subprocess.run(['adb', 'shell', 'input', 'swipe', str(width//2), str(height*4//5), str(width//2), str(height//5), '350'], check=True)
+          subprocess.run(['adb', 'shell', 'uiautomator', 'dump', '/sdcard/bridge-scrolled.xml'], check=True)
+          subprocess.run(['adb', 'pull', '/sdcard/bridge-scrolled.xml', 'probe/results/scrolled.xml'], check=True)
+          assert 'ALLOW SLEEP ACCESS AND READ' in Path('probe/results/scrolled.xml').read_text()
+          subprocess.run(['adb', 'shell', 'screencap', '-p', '/sdcard/bridge-scrolled.png'], check=True)
+          subprocess.run(['adb', 'pull', '/sdcard/bridge-scrolled.png', 'probe/results/scrolled.png'], check=True)
           print('Original APK installed and opened on Android 16; no health permission granted')
           PY
       - name: Collect Android logs
