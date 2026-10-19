@@ -30,6 +30,7 @@ type Capability = {
 export const SYSTEM_CAPABILITIES = [
   { label: "WATER", description: "BODY · Add water to today", aliases: ["drink", "hydration"], group: "Log", destination: { kind: "body", focus: "water" } },
   { label: "MEAL", description: "BODY · Saved meals or manual entry", aliases: ["food", "nutrition", "protein", "eat"], group: "Log", destination: { kind: "body", focus: "meal" } },
+  { label: "FOOD LOOKUP", description: "BODY · Search the online USDA food database", aliases: ["usda", "food search", "lookup", "macros"], group: "Log", destination: { kind: "body", focus: "foodLookup" } },
   { label: "SLEEP", description: "BODY · Main sleep and naps", aliases: ["nap", "rest", "bed"], group: "Log", destination: { kind: "body", focus: "sleep" } },
   { label: "BODYWEIGHT", description: "BODY · Weight logging and trends", aliases: ["weigh in", "weigh-in", "weight", "scale"], group: "Log", destination: { kind: "body", focus: "weight" } },
   { label: "NOTE", description: "TODAY · Quick Capture", aliases: ["capture", "thought", "idea", "handoff"], group: "Log", destination: { kind: "capture" } },

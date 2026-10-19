@@ -164,3 +164,17 @@
 .today-numbers .cc-lbl { margin-bottom: 6px; }
 .today-field .next-action-card .btn-secondary.cc-decline { width: auto; min-height: 44px; border: 0; padding: 0 2px 0 12px; background: none; color: var(--p-t2); font-size: 13px; letter-spacing: .1em; }
 .command-console.today-field .next-action-card h2.command-title { margin: 0; font-size: 22px; line-height: 1.25; font-weight: 600; letter-spacing: .02em; color: var(--p-t1); }
+/* TONIGHT-001: the morning call, QUICK LOG and the night's totals reuse the sheet's option rows. */
+.workout-call__options, .quick-log__items { display: grid; margin-inline: -14px; border-bottom: 1px solid var(--p-line); }
+.workout-call__options .today-sheet__option, .quick-log__items .today-sheet__option { min-height: 56px; }
+.quick-log__items .today-sheet__option strong { font-size: 15px; letter-spacing: .02em; }
+.workout-call__check-in { margin-top: 10px; width: auto; min-height: 44px; padding-inline: 14px; }
+.workout-call--quiet { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 8px; }
+.workout-call--quiet .tool-label { grid-column: 1 / -1; }
+.workout-call--quiet .btn-secondary { width: auto; min-height: 44px; padding-inline: 14px; }
+.night-closed__rows { display: grid; gap: 0; margin: 0; }
+.night-closed__rows > div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--p-line); }
+.night-closed__rows dt { color: var(--p-t2); }
+.night-closed__rows dd { margin: 0; font-family: var(--p-mono); text-align: right; }
+.today-sheet__search { margin: 4px 14px 8px; }
+.today-sheet__list { max-height: 46vh; overflow: auto; border-bottom: 1px solid var(--p-line); }

@@ -9,6 +9,7 @@ import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { db } from "../../src/persistence/db";
 import { openTodayTools } from "./helpers/todayTools";
 import type { BeyondDay } from "../../src/domain/common/types";
+import { openMealInBody } from "./helpers/mealSheet";
 
 /**
  * Drop 2 — Shift Clock, one real-browser pass per phase. The clock (Date
@@ -58,7 +59,7 @@ describe("Shift Clock — before shift (16:30 → 18:00)", () => {
 
     await expect.element(screen.getByRole("heading", { name: "Before shift", exact: true })).toBeVisible();
     await expect.poll(stripHeadline).toBe("Shift in 1h 20m");
-    await expect.poll(rows).toEqual(["TONIGHT"]);
+    await expect.poll(rows).toEqual(["QUICK_LOG", "TONIGHT"]);
     // No finished sessions yet: no Time-Fit duration, never a guess.
     await expect.element(screen.getByText("A · STANDARD", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("group", { name: "Protein 0 g · Water 0 oz", exact: true })).toBeVisible();
@@ -108,8 +109,8 @@ describe("Shift Clock — on shift (18:00 → 06:00)", () => {
 
     await expect.element(screen.getByRole("heading", { name: "On shift", exact: true })).toBeVisible();
     await expect.poll(stripHeadline).toBe("Shift ends in 8h");
-    // COMMAND-CENTER-001: QUICK_LOG gave its slot to the shift handoff note (empty without one).
-    await expect.poll(rows).toEqual(["SHIFT_HANDOFF"]);
+    // TONIGHT-001: QUICK LOG leads (empty until there's a meal or water to repeat); the handoff note follows.
+    await expect.poll(rows).toEqual(["QUICK_LOG", "SHIFT_HANDOFF"]);
     // Drop 1.6b: mid-shift, MARK WORK ENDED isn't in Attention (it waits for the last hour) — it's one
     // tap away in TOOLS for a night that ends early. The check-in still isn't prompted (ruling b).
     expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(0);
@@ -118,7 +119,7 @@ describe("Shift Clock — on shift (18:00 → 06:00)", () => {
     await screen.getByRole("button", { name: "Log water" }).click();
     await screen.getByRole("button", { name: "More → BODY water" }).click();
     expect(onOpenBody).toHaveBeenLastCalledWith("water");
-    await screen.getByRole("button", { name: "Log a meal in BODY" }).click();
+    await openMealInBody(screen);
     expect(onOpenBody).toHaveBeenLastCalledWith("meal");
     await screen.getByRole("button", { name: "Open LOG" }).click();
     await screen.getByRole("dialog", { name: "LOG" }).getByRole("button", { name: /^Urge/ }).click();
@@ -151,14 +152,15 @@ describe("Shift Clock — MARK WORK ENDED timing (Drop 1.6b)", () => {
 });
 
 describe("Shift Clock — after shift (06:00 → main sleep)", () => {
-  it("leads with SHIFT DOWN (MARK WORK ENDED folded in, with the plan), then check-in, workout and main sleep", async () => {
+  it("asks one workout question, closes the night, and keeps SHIFT DOWN (MARK WORK ENDED, the plan) and the check-in in TOOLS", async () => {
     await saveQuitHabit({ name: "Drinking", postShiftPlan: "Shower, eat, bed by 9" });
     const day = await startDayAt(at(12, 16, 30));
     // Time-Fit: three finished C sessions (47/48/49 min), then a finished B — so C is next, at ~48 min.
     const session = (id: string, templateId: string, d: number, minutes: number) => ({
       id,
       schemaVersion: 1,
-      beyondDayId: day.id,
+      // Earlier lived days: a session finished today would answer the workout call (TONIGHT-001).
+      beyondDayId: `earlier-${d}`,
       templateId,
       sessionType: "STANDARD",
       status: "COMPLETED",
@@ -173,32 +175,42 @@ describe("Shift Clock — after shift (06:00 → main sleep)", () => {
     const screen = await render(<TodayScreen onOpenBody={onOpenBody} onOpenTrain={onOpenTrain} />);
 
     await expect.element(screen.getByRole("heading", { name: "After shift", exact: true })).toBeVisible();
-    await expect.poll(rows).toEqual(["SHIFT_DOWN", "CHECK_IN", "WORKOUT", "MAIN_SLEEP"]);
-    await expect.element(screen.getByText("Your plan: Shower, eat, bed by 9", { exact: true })).toBeVisible();
-    // MARK WORK ENDED appears once — folded into SHIFT DOWN, not repeated in Attention.
-    expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(1);
+    // TONIGHT-001: RECOVER asks one question; SHIFT DOWN (with MARK WORK ENDED and the plan) and the
+    // check-in wait one tap away in TOOLS, and neither is repeated in Attention.
+    await expect.poll(rows).toEqual(["WORKOUT_CALL", "NIGHT_CLOSED", "MAIN_SLEEP"]);
+    expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(0);
     expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
-    await expect.element(screen.getByText("C · STANDARD · ~48 min", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Full session · ~48 min", { exact: true })).toBeVisible();
 
-    await screen.getByRole("button", { name: "OPEN TRAIN" }).click();
-    expect(onOpenTrain).toHaveBeenCalledWith("WORKOUT");
     await screen.getByRole("button", { name: "LOG MAIN SLEEP" }).click();
     expect(onOpenBody).toHaveBeenCalledWith("sleep");
 
-    // Check-in produces the same guidance; the console renders it once outside the contextual row.
-    await screen.getByRole("button", { name: "MARK WORK ENDED" }).click();
+    await openTodayTools(screen);
+    await screen.getByRole("button", { name: "Open SHIFT DOWN" }).click();
+    await expect.element(screen.getByText("Your plan: Shower, eat, bed by 9", { exact: true })).toBeVisible();
+    // SHIFT DOWN folds MARK WORK ENDED in (TOOLS' WORK CONTEXT card offers it too, as before).
+    const shiftDown = screen.getByText("Your plan: Shower, eat, bed by 9", { exact: true }).element().closest("[data-tools-item]") as HTMLElement;
+    const markEnded = [...shiftDown.querySelectorAll("button")].filter((button) => button.textContent === "MARK WORK ENDED");
+    expect(markEnded).toHaveLength(1);
+    markEnded[0]!.click();
     await expect.poll(() => screen.getByRole("button", { name: "MARK WORK ENDED" }).elements().length).toBe(0);
+
+    // Check-in produces the same guidance; the console renders it once.
+    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
     await screen.getByRole("button", { name: "ALL GOOD" }).click();
-    const checkInRow = document.querySelector('[data-shift-clock-row="CHECK_IN"]') as HTMLElement;
     await expect.poll(() => document.querySelector(".console-guidance")?.textContent ?? "").toContain("Shift down after work");
     expect(document.querySelectorAll(".console-guidance")).toHaveLength(1);
-    await expect.poll(() => checkInRow.textContent ?? "").toMatch(/Checked in/);
+    await expect.poll(() => document.querySelector(".workout-call")?.textContent ?? "").toMatch(/Check-in GREEN/);
+
+    // The answer opens TRAIN with the chosen session.
+    await screen.getByRole("button", { name: /^TRAIN · C/ }).click();
+    await expect.poll(() => onOpenTrain.mock.calls.at(-1)?.[0]).toBe("WORKOUT_STANDARD");
     expect(screen.getByText("Operate", { exact: true }).elements()).toHaveLength(0);
     expect(rows().length).toBeLessThanOrEqual(MAX_PHASE_ROWS);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
   });
 
-  it("ends when main sleep is logged: the rest of the day shows check-in and workout", async () => {
+  it("ends when main sleep is logged: the rest of the day asks the workout question and offers quick log", async () => {
     const day = await startDayAt(at(12, 16, 30));
     await markWorkEnded(day.id);
     setClock(at(13, 14, 0));
@@ -206,12 +218,12 @@ describe("Shift Clock — after shift (06:00 → main sleep)", () => {
     const screen = await render(<TodayScreen />);
 
     await expect.element(screen.getByRole("heading", { name: "After sleep", exact: true })).toBeVisible();
-    await expect.poll(rows).toEqual(["CHECK_IN", "WORKOUT"]);
+    await expect.poll(rows).toEqual(["WORKOUT_CALL", "QUICK_LOG"]);
   });
 });
 
-describe("Minimum Day offer after a YELLOW check-in (Drop 1.6b)", () => {
-  it("is one line with a neutral TURN ON, while WATER stays on the first screen", async () => {
+describe("Minimum Day after a YELLOW check-in (Drop 1.6b, amended by TONIGHT-001)", () => {
+  it("is no longer offered on TODAY; WATER stays on the first screen", async () => {
     const day = await startDayAt(at(12, 16, 30));
     setClock(at(13, 6, 10));
     await markWorkEnded(day.id);
@@ -219,23 +231,15 @@ describe("Minimum Day offer after a YELLOW check-in (Drop 1.6b)", () => {
     await submitCheckIn(day.id, { energy: 2, stress: 3, mood: 3, soreness: 2, alcoholUrge: 2 });
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("Minimum Day is available if it helps.", { exact: true })).toBeVisible();
-    const turnOn = screen.getByRole("button", { name: "TURN ON" });
-    expect(turnOn.element().className).toContain("btn-secondary");
-    expect(screen.getByRole("button", { name: "ENABLE MINIMUM DAY" }).elements()).toHaveLength(0);
-    // The explanation is behind WHY, not on the screen.
-    expect(screen.getByText(/The same six basics/).element().closest("details")).not.toBeNull();
-    // The offer is a small row now, and the SHIFT DOWN card starts on the first screen (it used to sit
-    // entirely below the fold, under a full-screen Minimum Day offer).
-    const offer = screen.getByText("Minimum Day is available if it helps.", { exact: true }).element().closest(".signal-row")!;
-    expect(offer.getBoundingClientRect().height).toBeLessThan(160);
+    await expect.element(screen.getByRole("heading", { name: "Train or sleep?" })).toBeVisible();
+    // Owner ruling 2026-10-19: Gavin never uses Minimum Day; it stays reachable in COMMAND → Today tools.
+    expect(screen.getByText("Minimum Day is available if it helps.", { exact: true }).elements()).toHaveLength(0);
+    await openTodayTools(screen);
+    expect(screen.getByRole("button", { name: "Open MINIMUM DAY" }).elements()).toHaveLength(0);
     await document.fonts.ready;
     const actions = document.querySelector(".console-controls") as HTMLElement;
     expect(actions.getBoundingClientRect().bottom).toBeLessThanOrEqual(736);
-
-    await turnOn.click();
-    await expect.poll(() => screen.getByRole("button", { name: "TURN ON" }).elements().length).toBe(0);
-    expect(await db.events.where("type").equals("MINIMUM_DAY_ENABLED").count()).toBe(1);
+    expect(await db.events.where("type").equals("MINIMUM_DAY_ENABLED").count()).toBe(0);
   });
 });
 
@@ -246,15 +250,17 @@ describe("Shift Clock — day off", () => {
     const screen = await render(<TodayScreen />);
 
     await expect.element(screen.getByRole("heading", { name: "Day off", exact: true })).toBeVisible();
-    await expect.poll(rows).toEqual(["CHECK_IN", "WORKOUT"]);
+    await expect.poll(rows).toEqual(["WORKOUT_CALL", "QUICK_LOG"]);
     // POLISH-002: the context sentence stays for screen readers; the hero's meta line shows the mode.
     await expect.poll(() => document.querySelector(".status-strip__headline")?.textContent).toBe("Off · per schedule");
     expect(screen.getByRole("group", { name: /^Protein .* · Water/ }).elements()).toHaveLength(1);
 
+    // TONIGHT-001: the check-in waits behind the wake card's CHECK IN FIRST, and guidance shows once.
+    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
     await screen.getByRole("button", { name: "ALL GOOD" }).click();
-    const checkInRow = document.querySelector('[data-shift-clock-row="CHECK_IN"]') as HTMLElement;
-    await expect.poll(() => document.querySelector(".console-guidance")?.textContent ?? "").toContain("Nothing needs you right now.");
-    await expect.poll(() => checkInRow.textContent ?? "").toMatch(/Checked in/);
+    await expect.poll(() => document.querySelector(".console-guidance")?.textContent ?? "").toContain("Nothing urgent. One question below.");
+    expect(document.querySelectorAll(".console-guidance")).toHaveLength(1);
+    await expect.poll(() => document.querySelector(".workout-call")?.textContent ?? "").toMatch(/Check-in GREEN/);
 
     // Every tool is one tap away.
     await openTodayTools(screen);
@@ -262,7 +268,8 @@ describe("Shift Clock — day off", () => {
     await expect.element(screen.getByRole("button", { name: "Open SHIFT DOWN" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open RESET" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open WORK CONTEXT" })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY" })).toBeVisible();
+    // TONIGHT-001: Minimum Day is reachable from COMMAND → Today tools, not TODAY's own TOOLS.
+    expect(screen.getByRole("button", { name: "Open MINIMUM DAY" }).elements()).toHaveLength(0);
     await expect.element(screen.getByPlaceholder("Capture a thought...")).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open END DAY" })).toBeVisible();
     // The strip's one-tap change is the only one, even with TOOLS open.

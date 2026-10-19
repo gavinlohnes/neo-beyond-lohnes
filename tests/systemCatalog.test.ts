@@ -5,8 +5,9 @@ describe("capability discovery (COMMAND search)", () => {
   it("offers unique entries in known groups and browses without a query", () => {
     // COMMAND-CENTER-001: the approved 19 plus Note, Urge and COMMAND's own settings; MORE's
     // workspace entry left because COMMAND is where the search lives. SUIT-001 adds SYSTEMS and STEALTH.
-    expect(SYSTEM_CAPABILITIES).toHaveLength(29);
-    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(29);
+    // TONIGHT-001: FOOD LOOKUP left the meal screen for its own COMMAND entry.
+    expect(SYSTEM_CAPABILITIES).toHaveLength(30);
+    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(30);
     for (const entry of SYSTEM_CAPABILITIES) expect(CAPABILITY_GROUPS).toContain(entry.group);
     expect(findCapabilities("  ")).toEqual(SYSTEM_CAPABILITIES);
   });
@@ -18,7 +19,7 @@ describe("capability discovery (COMMAND search)", () => {
   });
   it.each([
     ["  HYDRATION ", ["WATER"]],
-    ["food", ["MEAL"]],
+    ["food", ["MEAL", "FOOD LOOKUP"]],
     ["decision journal", ["DECISION JOURNAL"]],
     ["resume", ["WORKOUT"]],
     ["restore", ["BACKUP & RECOVERY"]],

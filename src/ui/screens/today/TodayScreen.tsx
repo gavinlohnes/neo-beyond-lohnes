@@ -52,9 +52,16 @@ import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGa
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { useUndoOpen } from "../../hooks/useUndoWindow";
 import type { BodyFocus } from "../../shortcuts";
-import { isSeriouslyConstrained } from "./minimumDayCopy";
 import { isPrimaryReset, isPrimaryShiftDown, type SessionOutcome } from "./resetShiftDownCopy";
 import { ActiveWorkoutCard } from "./ActiveWorkoutCard";
+import { WorkoutCall, useWorkoutCallQuestion } from "./WorkoutCall";
+import { QuickLog } from "./QuickLog";
+import { NightClosed } from "./NightClosed";
+import type { TrainDestination } from "../train/TrainScreen";
+import { getTonightState, type TonightState } from "../../../application/tonightQueries";
+import { logMeal, voidMealLog } from "../../../application/nutritionCommands";
+import { getRecentSavedMeals } from "../../../application/nutritionQueries";
+import type { SavedMeal } from "../../../domain/common/types";
 import { ResetCard } from "./ResetCard";
 import { ShiftDownCard } from "./ShiftDownCard";
 import { EndDayCard } from "./EndDayCard";
@@ -65,7 +72,7 @@ import type { CaptureDateSuggestion } from "../../../domain/capture/types";
 import { HydrationOperationCard, MinimumDayCard } from "./MinimumDaySection";
 import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
-import { RecommendationCard } from "./RecommendationCard";
+import { RecommendationCard, describeAllClearHeadline } from "./RecommendationCard";
 import { ConsoleControls } from "./ConsoleControls";
 import { SmallSteps } from "./SmallSteps";
 import "./smallSteps.css";
@@ -249,7 +256,7 @@ export function TodayScreen({
   onReturnFromCapture?: (() => void) | undefined;
   onOpenPlan?: () => void;
   onViewCommitments?: (id?: string) => void;
-  onOpenTrain?: (destination: "RECOVERY" | "WORKOUT") => void;
+  onOpenTrain?: (destination: TrainDestination) => void;
   onOpenWeeklyReview?: () => void;
   /** SUIT-001: the SYSTEMS line opens the readout in COMMAND. */
   onOpenSystems?: () => void;
@@ -444,8 +451,13 @@ export function TodayScreen({
   const [waterLogCount, setWaterLogCount] = useState(0);
   const [hydrationConfirmation, setHydrationConfirmation] = useState<LoggedEntry | null>(null);
   const [proteinConfirmation, setProteinConfirmation] = useState<LoggedEntry | null>(null);
+  // TONIGHT-001: a meal logged from QUICK LOG or the MEAL sheet, with the same UNDO window.
+  const [mealConfirmation, setMealConfirmation] = useState<(LoggedEntry & { message: string }) | null>(null);
+  const [tonight, setTonight] = useState<TonightState | null>(null);
+  const workoutQuestion = useWorkoutCallQuestion(day?.id, tonight);
   const hydrationUndoOpen = useUndoOpen(hydrationConfirmation);
   const proteinUndoOpen = useUndoOpen(proteinConfirmation);
+  const mealUndoOpen = useUndoOpen(mealConfirmation);
   const [undoFailure, setUndoFailure] = useState<string | null>(null);
   // Intent & Commitment Spine, Drop 02: currently-eligible unresolved
   // Obligations, fetched unconditionally like openCaptureItems above —
@@ -484,8 +496,11 @@ export function TodayScreen({
     label: string;
     minutes: Partial<Record<"STANDARD" | "REDUCED", number>>;
   } | null>(null);
+  const [customTemplateList, setCustomTemplateList] = useState<Parameters<typeof templateLabel>[1]>([]);
   const [quitHabitSetUp, setQuitHabitSetUp] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(openToolsOnMount);
+  // TONIGHT-001: TOOLS opened from COMMAND → Today tools also lists Minimum Day and Small Steps.
+  const [commandTools, setCommandTools] = useState(openToolsOnMount);
   const [fastCaptureOpen, setFastCaptureOpen] = useState(false);
   const fastCaptureOrigin = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
   function openFastCapture() {
@@ -511,6 +526,7 @@ export function TodayScreen({
     if (toolsRequest === 0) return;
     toolsFocusPending.current = true;
     setSmallTool(null);
+    setCommandTools(true);
     setToolsOpen(true);
   }, [toolsRequest]);
   useEffect(() => {
@@ -609,6 +625,7 @@ export function TodayScreen({
     try {
       setSchedulePattern(await getSchedulePattern());
       const [templateId, customTemplates] = await Promise.all([suggestTemplateForNextWorkout(), getCustomTemplates()]);
+      setCustomTemplateList(customTemplates);
       const [standard, reduced] = await Promise.all([
         getSessionMinutesEstimate(templateId, "STANDARD"),
         getSessionMinutesEstimate(templateId, "REDUCED"),
@@ -776,6 +793,8 @@ export function TodayScreen({
     const nextSystemStatus = await getSystemStatus(activeDay ?? null).catch(() => null);
     const nextLastMainSleep = activeDay ? await getLastMainSleep(activeDay.id).catch(() => null) : null;
     const effectiveProteinTarget = await getEffectiveProteinTargetG();
+    // TONIGHT-001: the morning call, wake card and night summary read one small fact set.
+    const tonightState = activeDay ? await getTonightState(activeDay.id).catch(() => null) : null;
 
     // Everything on the active-day/context path is gated on this single
     // ownership check: a refresh superseded by the time its getActiveDay()
@@ -853,6 +872,7 @@ export function TodayScreen({
     const prompt = getBackupPrompt();
     setBackupDue(prompt?.kind === "BACKUP_DUE" ? { days: prompt.daysSinceLastBackup } : null);
     setProteinTargetG(effectiveProteinTarget);
+    setTonight(tonightState);
 
     // A fresh, independently-composed view each refresh — never memoized
     // across calls, matching every other piece of state in this function.
@@ -1350,11 +1370,16 @@ export function TodayScreen({
   }
 
   /** UNDO-001: UNDO on a just-logged banner voids that entry — never an erase. */
-  async function handleUndoLog(log: "WATER" | "SLEEP" | "PROTEIN") {
-    const confirmation = { WATER: hydrationConfirmation, SLEEP: sleepConfirmation, PROTEIN: proteinConfirmation }[log];
+  async function handleUndoLog(log: "WATER" | "SLEEP" | "PROTEIN" | "MEAL") {
+    const confirmation = { WATER: hydrationConfirmation, SLEEP: sleepConfirmation, PROTEIN: proteinConfirmation, MEAL: mealConfirmation }[log];
     if (busy || busyRef.current || !confirmation) return;
-    const voidLog = { WATER: voidWaterLog, SLEEP: voidSleepLog, PROTEIN: voidProteinLog }[log];
-    const clear = { WATER: setHydrationConfirmation, SLEEP: setSleepConfirmation, PROTEIN: setProteinConfirmation }[log];
+    const voidLog = { WATER: voidWaterLog, SLEEP: voidSleepLog, PROTEIN: voidProteinLog, MEAL: voidMealLog }[log];
+    const clear = {
+      WATER: setHydrationConfirmation,
+      SLEEP: setSleepConfirmation,
+      PROTEIN: setProteinConfirmation,
+      MEAL: () => setMealConfirmation(null),
+    }[log];
     busyRef.current = true;
     setBusy(true);
     setUndoFailure(null);
@@ -1371,7 +1396,32 @@ export function TodayScreen({
     }
   }
 
-  function renderLoggedBanner(message: string, undoOpen: boolean, log: "WATER" | "SLEEP" | "PROTEIN", focus?: BodyFocus) {
+  /**
+   * TONIGHT-001: QUICK LOG and the MEAL sheet log a saved meal through the
+   * same canonical command BODY uses, then show TODAY's usual confirmation
+   * with UNDO (a MEAL_LOG_VOIDED, never a deletion).
+   */
+  async function handleLogSavedMeal(meal: SavedMeal): Promise<boolean> {
+    if (busy || busyRef.current) return false;
+    busyRef.current = true;
+    setBusy(true);
+    setUndoFailure(null);
+    try {
+      const activeDay = await ensureActiveDay();
+      const { eventId } = await logMeal(activeDay.id, meal.id);
+      setMealConfirmation({ amount: meal.calories, eventId, dayId: activeDay.id, message: `${meal.name} logged · ${meal.calories} kcal · ${meal.proteinG} g.` });
+      try { await refresh(); } catch { setUndoFailure("Meal saved. Readings didn’t refresh. Reopen TODAY."); }
+      return true;
+    } catch (e) {
+      setUndoFailure(describeError(e, "Meal not saved. Try again."));
+      return false;
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  }
+
+  function renderLoggedBanner(message: string, undoOpen: boolean, log: "WATER" | "SLEEP" | "PROTEIN" | "MEAL", focus?: BodyFocus) {
     if (undoOpen) {
       return <ConfirmBanner message={message} actionLabel="UNDO" disabled={busy} onAction={() => void handleUndoLog(log)} />;
     }
@@ -1479,13 +1529,10 @@ export function TodayScreen({
     : capacityResult && capacityResult.capacity !== "GREEN"
       ? (capacityResult.capacity.toLowerCase() as "yellow" | "red")
       : null;
-  // Item 1 (Phase 3): RED or multi-factor YELLOW offers Minimum Day
-  // prominently, but only while it isn't already enabled — once it's on,
-  // there's nothing left to "offer."
-  const seriouslyConstrained = capacityResult
-    ? isSeriouslyConstrained(capacityResult.capacity, capacityResult.reasonCodes.length)
-    : false;
-  const showProminentMinimumDay = seriouslyConstrained && !!minimumDay && !minimumDay.enabled;
+  // TONIGHT-001 (owner ruling, 2026-10-19): Gavin never uses Minimum Day, so TODAY no longer
+  // offers it after a constrained check-in (Item 1, Phase 3). It stays one tap away in
+  // COMMAND → Today tools, and its TOOLS row shows while it's on.
+  const showProminentMinimumDay = false;
 
   // Item 6 (Phase 4): when a tool IS the actual Engine recommendation
   // (Recommendation.suggestedCommand), it shouldn't read as an "override"
@@ -1540,12 +1587,20 @@ export function TodayScreen({
   const shiftClock = deriveShiftClockView(shiftClockInput, pinnedPhase);
   const scheduledRows: ShiftClockRow[] = day ? scheduledClock.rows : [];
   const phaseRows: ShiftClockRow[] = day ? shiftClock.rows : [];
-  const leadingPhaseRows = phaseRows.filter((row) => row === "WORK_QUESTION" || row === "SHIFT_DOWN");
-  const remainingPhaseRows = phaseRows.filter((row) => row !== "WORK_QUESTION" && row !== "SHIFT_DOWN" && row !== "FUEL");
+  // TONIGHT-001: the mode's one question and its one-tap logs sit right under the action row.
+  const LEADING_ROWS: readonly ShiftClockRow[] = ["WORK_QUESTION", "SHIFT_DOWN", "WORKOUT_CALL", "QUICK_LOG"];
+  // TONIGHT-001: an all-clear never reads "Nothing needs you" above an unanswered question.
+  const questionBelow =
+    !!day &&
+    (phaseRows.includes("WORK_QUESTION") ||
+      (phaseRows.includes("WORKOUT_CALL") && !activeWorkout && workoutQuestion.open));
+  const leadingPhaseRows = phaseRows.filter((row) => LEADING_ROWS.includes(row));
+  const remainingPhaseRows = phaseRows.filter((row) => !LEADING_ROWS.includes(row) && row !== "FUEL");
   const toolsItems: ToolsItem[] = day ? shiftClock.tools : [...TOOLS_ORDER];
   const checkInIsRow = phaseRows.includes("CHECK_IN");
   const checkInIsScheduledRow = scheduledRows.includes("CHECK_IN");
   const shiftDownIsScheduledRow = scheduledRows.includes("SHIFT_DOWN");
+  const workoutCallIsScheduledRow = scheduledRows.includes("WORKOUT_CALL");
   // SLEEP DRAFT: only on the post-shift MAIN SLEEP row (Command Center rule 3).
   const sleepDraft =
     day && phaseRows.includes("MAIN_SLEEP") && sleepDraftEvidence
@@ -1587,12 +1642,17 @@ export function TodayScreen({
       day?.workContext === "WORK" &&
       workPeriodEndedAt === null &&
       !shiftDownIsScheduledRow &&
+      // TONIGHT-001: after the shift the workout call is RECOVER's one question; MARK WORK ENDED
+      // stays one tap away inside SHIFT DOWN in TOOLS.
+      !workoutCallIsScheduledRow &&
       scheduledClock.phase !== "PRE_WORK" &&
       isWorkEndDue(scheduledClock.phase, shiftWindow, now),
     isCheckInMissing:
       day !== null &&
       checkIn === null &&
       !checkInIsScheduledRow &&
+      // TONIGHT-001: the workout call carries CHECK IN FIRST; the check-in itself waits in TOOLS.
+      !workoutCallIsScheduledRow &&
       scheduledClock.phase !== "PRE_WORK" &&
       scheduledClock.phase !== "SCHEDULED_SHIFT",
     isMinimumDayProminent: showProminentMinimumDay,
@@ -1643,7 +1703,8 @@ export function TodayScreen({
             (!!recommendation && attentionPlan.recommendationPlacement === "SUPPORT"))
         );
       case "SHIFT_DOWN":
-        return !liftedShiftDown && !!day && !!recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT";
+        // TONIGHT-001: after the shift SHIFT DOWN waits here (no longer a RECOVER row), with or without a check-in.
+        return !liftedShiftDown && !!day && (!!recommendation || shiftClock.displayPhase === "EXPECTED_POST_WORK") && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT";
       case "RESET":
         return !liftedReset && !!day && !!recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT";
       case "WORK_CONTEXT":
@@ -1651,7 +1712,7 @@ export function TodayScreen({
       case "FUEL":
         return false;
       case "MINIMUM_DAY":
-        return !!day && !!minimumDay && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE";
+        return !!day && !!minimumDay && (commandTools || minimumDay.enabled) && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE";
       case "CAPTURE":
         return true;
       case "COMMITMENTS":
@@ -1725,7 +1786,7 @@ export function TodayScreen({
     if (lateRecoverWithoutSleep && !activeShiftDownId) return shiftDownIsRow ? renderRecoverSleepPrompt() : null;
     return (
       <>
-      {day && recommendation && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
+      {day && (!!recommendation || shiftClock.displayPhase === "EXPECTED_POST_WORK") && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
         <ShiftDownCard
           prominent={shiftDownIsPrimary}
           isDominant={false}
@@ -1742,6 +1803,9 @@ export function TodayScreen({
           onCancelShiftDown={() => void handleCancelShiftDown()}
           startButtonRef={shiftDownStartRef}
           postShiftPlan={postShiftPlan}
+          onMarkWorkEnded={
+            day.workContext === "WORK" && workPeriodEndedAt === null ? () => void handleMarkWorkEnded() : undefined
+          }
         />
       )}
       </>
@@ -1842,7 +1906,8 @@ export function TodayScreen({
         <p className="cc-lbl cc-numbers-head"><span>TODAY’S NUMBERS</span><span className="cc-hint">Tap a number for its history.</span></p>
         <div className="cc-fuel" role="group" aria-label={fuelLine}>
           {tile("protein", "PROTEIN", <><b><DecryptNumber value={minimumDayProteinG} dayId={day!.id} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
-            pct === null ? <span className="cc-flab">NO TARGET</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
+            // TONIGHT-001: the target comes from the latest weigh-in, so say what sets it.
+            pct === null ? <span className="cc-flab">{latestWeightLbs === undefined ? "ADD WEIGHT" : "NO TARGET"}</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
             `Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g`)}
           {tile("water", "WATER", <><b><DecryptNumber value={minimumDayHydrateOz} dayId={day!.id} reading="water" /></b><small>oz</small></>,
             <span className="cc-flab">{waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>, `Water ${minimumDayHydrateOz} oz`)}
@@ -1988,6 +2053,48 @@ export function TodayScreen({
         );
       case "FUEL":
         return <div className="equipment-row"><p className="card-body" style={{ margin: 0 }}>{fuelLine}</p></div>;
+      case "WORKOUT_CALL":
+        // An active workout already owns Operate above.
+        if (activeWorkout || (shiftClock.displayPhase !== "EXPECTED_POST_WORK" && shiftClock.displayPhase !== "OFF")) return null;
+        return (
+          <WorkoutCall
+            phase={shiftClock.displayPhase}
+            day={day}
+            tonight={tonight}
+            question={workoutQuestion}
+            workoutLabel={nextWorkout?.label ?? null}
+            minutes={nextWorkout?.minutes ?? {}}
+            suggestedVariant={suggestedVariant}
+            lastMainSleepMinutes={lastMainSleepMinutes}
+            checkInLevel={checkIn && capacityResult ? capacityResult.capacity : null}
+            busy={busy}
+            onCheckIn={() => setCheckInFormOpen(true)}
+            onOpenTrain={onOpenTrain}
+            onAnswered={() => void refresh()}
+          />
+        );
+      case "QUICK_LOG":
+        return (
+          <QuickLog
+            refreshKey={tonight}
+            lastWaterAmount={lastWaterAmount}
+            busy={busy}
+            onLogMeal={handleLogSavedMeal}
+            onLogWater={(amount) => handleMinimumDayLogWater(amount)}
+          />
+        );
+      case "NIGHT_CLOSED":
+        return (
+          <NightClosed
+            tonight={tonight}
+            proteinG={minimumDayProteinG}
+            proteinTargetG={proteinTargetG}
+            waterOz={minimumDayHydrateOz}
+            trainedLabel={tonight?.trained
+              ? `${templateLabel(tonight.trained.templateId as Parameters<typeof templateLabel>[0], customTemplateList)} · ${tonight.trained.sessionType.toLowerCase()}, ${tonight.trained.status.toLowerCase()}`
+              : null}
+          />
+        );
       case "SHIFT_HANDOFF":
         return shiftHandoffRefreshKey !== undefined ? <ShiftHandoff refreshKey={shiftHandoffRefreshKey} /> : null;
       case "SHIFT_DOWN":
@@ -2299,12 +2406,13 @@ export function TodayScreen({
 
       {/* One canonical Engine result. Foreground operations above retain priority;
           support guidance stays a disclosure rather than a competing dominant action. */}
-      {day && !recommendation && <section className="console-guidance" aria-label="Current recommendation"><div className="cc-panel cc-rec next-action-card all-clear"><p className="cc-lbl">NEXT USEFUL ACTION</p><h2>Nothing needs you right now.</h2>{nextActionContext && <p>{nextActionContext}</p>}</div></section>}
+      {day && !recommendation && <section className="console-guidance" aria-label="Current recommendation"><div className="cc-panel cc-rec next-action-card all-clear"><p className="cc-lbl">NEXT USEFUL ACTION</p><h2>{describeAllClearHeadline(questionBelow)}</h2>{nextActionContext && <p>{nextActionContext}</p>}</div></section>}
       {day && recommendation && (
         <section className="console-guidance" aria-label="Current recommendation">
           <p className="tool-label console-guidance__label">GUIDANCE</p>
           <RecommendationCard
             nextAction
+            questionBelow={questionBelow}
             context={nextActionContext}
             day={day}
             recommendation={recommendation}
@@ -2343,6 +2451,8 @@ export function TodayScreen({
           isInFlight={() => busyRef.current}
           onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
           onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
+          loadMeals={getRecentSavedMeals}
+          onLogMeal={handleLogSavedMeal}
           onOpenLog={{
             ...(onOpenBody ? {
               water: () => onOpenBody("water"),
@@ -2361,7 +2471,7 @@ export function TodayScreen({
       {/* OPERATE — exactly one dominant operating surface. Multiple active
           operation state is named explicitly rather than
           silently allowing JSX order to choose a winner. */}
-      {day && dominant !== "NONE" && dominant !== "WORKOUT_ACTIVE" && !(dominant === "RECOMMENDATION" && checkInIsRow) && (
+      {day && dominant !== "NONE" && dominant !== "WORKOUT_ACTIVE" && !(dominant === "RECOMMENDATION" && (checkInIsRow || phaseRows.includes("WORKOUT_CALL"))) && (
         <h2 className="section-label section-label--field">Operate</h2>
       )}
       {day && dominant === "OPERATION_CONFLICT" && (
@@ -2510,6 +2620,9 @@ export function TodayScreen({
 
       {proteinConfirmation !== null &&
         renderLoggedBanner(`${proteinConfirmation.amount} g protein recorded.`, proteinUndoOpen, "PROTEIN")}
+
+      {mealConfirmation !== null &&
+        renderLoggedBanner(mealConfirmation.message, mealUndoOpen, "MEAL", "meal")}
 
       {undoFailure && (
         <Signal key={undoFailure} as="p" className="meta meta--error" role="alert" style={{ marginTop: 8 }} data-signal="save-failed">{undoFailure}</Signal>
@@ -2747,12 +2860,12 @@ export function TodayScreen({
             {smallSteps && smallTool && <div className="small-steps__return"><p className="meta">One tool open. Your other tools and drafts are still available.</p><button type="button" className="btn-secondary" onClick={returnToSmallSteps}>BACK TO SMALL STEPS</button><button type="button" className="btn-secondary" onClick={() => { setSmallTool(null); window.requestAnimationFrame(() => document.getElementById("console-tools-heading")?.focus()); }}>SHOW ALL TOOLS</button></div>}
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
               <h2 id="console-tools-heading" tabIndex={-1} className="section-label" style={{ margin: 0 }}>Tools</h2>
-              {day && !smallSteps && <button ref={smallStepsEntryRef} type="button" className="chip" aria-label="USE SMALL STEPS" disabled={busy} style={{ flex: "none", padding: "8px 10px" }} onClick={() => {
+              {day && !smallSteps && commandTools && <button ref={smallStepsEntryRef} type="button" className="chip" aria-label="USE SMALL STEPS" disabled={busy} style={{ flex: "none", padding: "8px 10px" }} onClick={() => {
                 setSmallSteps(true);
                 setSmallTool(null);
                 window.requestAnimationFrame(() => { smallStepsRef.current?.querySelector<HTMLElement>("button")?.focus({ preventScroll: true }); smallStepsRef.current?.scrollIntoView({ block: "start", behavior: "instant" }); });
               }}>SMALL STEPS</button>}
-              <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} aria-label="Close TOOLS" onClick={() => { setSmallTool(null); setToolsOpen(false); }}>
+              <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} aria-label="Close TOOLS" onClick={() => { setSmallTool(null); setCommandTools(false); setToolsOpen(false); }}>
                 CLOSE
               </button>
             </div>

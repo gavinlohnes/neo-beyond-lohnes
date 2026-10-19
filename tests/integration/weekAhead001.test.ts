@@ -15,20 +15,36 @@ const TWO_ON_FIVE_OFF: SchedulePattern = {
 };
 
 describe("WEEKAHEAD-001", () => {
-  it("shows seven days, keeps work days free, caps suggestions at two in a row, and preserves A → B → C", () => {
+  it("shows seven days, trains on days off and after a block's last shift, caps suggestions at two in a row, and preserves A → B → C", () => {
     const result = deriveWeekAhead(new Date(2026, 9, 5, 9), TWO_ON_FIVE_OFF, "C");
 
     expect(result.days).toHaveLength(7);
-    expect(result.days.map((day) => [day.work, day.suggestedTemplate])).toEqual([
-      ["WORK", null],
-      ["WORK", null],
-      ["OFF", "C"],
-      ["OFF", "A"],
-      ["OFF", null],
-      ["OFF", "B"],
-      ["OFF", "C"],
+    // TONIGHT-001: Tuesday's shift is the last of the block, so its post-shift morning is a training window.
+    expect(result.days.map((day) => [day.work, day.suggestedTemplate, day.afterShift])).toEqual([
+      ["WORK", null, false],
+      ["WORK", "C", true],
+      ["OFF", "A", false],
+      ["OFF", null, false],
+      ["OFF", "B", false],
+      ["OFF", "C", false],
+      ["OFF", null, false],
     ]);
     expect(result.days.filter((day) => day.work === "WORK").every((day) => day.shiftStartHour === 18)).toBe(true);
+  });
+
+  it("never trains after a shift that the next day's shift follows", () => {
+    // Gavin's rotation, Week A (Mon Oct 26): Mon, Tue work; Wed, Thu off; Fri–Sun work; then Week B Mon off.
+    const rotation: SchedulePattern = { ...TWO_ON_FIVE_OFF, anchorMonday: "2026-08-17", weeks: [{ workdays: [1, 2, 5, 6, 0] }, { workdays: [3, 4] }] };
+    const result = deriveWeekAhead(new Date(2026, 9, 26, 9), rotation, "A");
+    expect(result.days.map((day) => [day.work, day.suggestedTemplate, day.afterShift])).toEqual([
+      ["WORK", null, false],
+      ["WORK", "A", true],
+      ["OFF", "B", false],
+      ["OFF", null, false],
+      ["WORK", null, false],
+      ["WORK", null, false],
+      ["WORK", "C", true],
+    ]);
   });
 
   it("is deterministic and read only", async () => {

@@ -35,8 +35,8 @@ describe("Gate A correction — Minimum Day GLANCE-depth compaction", () => {
   it("presents a compact row, not the full six-item enable offer, when it isn't the operator's primary concern", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
-    const screen = await render(<TodayScreen />);
-    await openTodayTools(screen);
+    // TONIGHT-001: Minimum Day is reached through COMMAND → Today tools, which opens TOOLS like this.
+    const screen = await render(<TodayScreen openToolsOnMount />);
 
     await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY" })).toBeVisible();
     expect(screen.getByRole("button", { name: "ENABLE MINIMUM DAY" }).elements()).toHaveLength(0);
@@ -46,8 +46,8 @@ describe("Gate A correction — Minimum Day GLANCE-depth compaction", () => {
   it("expanding it reveals the existing enable offer when not yet enabled", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
-    const screen = await render(<TodayScreen />);
-    await openTodayTools(screen);
+    // TONIGHT-001: Minimum Day is reached through COMMAND → Today tools, which opens TOOLS like this.
+    const screen = await render(<TodayScreen openToolsOnMount />);
 
     await screen.getByRole("button", { name: "Open MINIMUM DAY" }).click();
     await expect.element(screen.getByRole("button", { name: "ENABLE MINIMUM DAY" })).toBeVisible();
@@ -166,8 +166,8 @@ describe("Gate A correction — accessibility", () => {
   it("the collapsed MINIMUM DAY row passes real WCAG AA color-contrast", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
-    const screen = await render(<TodayScreen />);
-    await openTodayTools(screen);
+    // TONIGHT-001: Minimum Day is reached through COMMAND → Today tools, which opens TOOLS like this.
+    const screen = await render(<TodayScreen openToolsOnMount />);
 
     // minimumDay loads asynchronously after mount — wait for the row to
     // actually exist before grabbing its element synchronously.

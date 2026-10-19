@@ -39,7 +39,8 @@ describe("Suit Implementation 01B — dominant surface grammar", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    // TONIGHT-001: the day is unanswered, so the work question sits below and the all-clear says so.
+    await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
 
     expect(document.querySelectorAll(".all-clear")).toHaveLength(1);
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);

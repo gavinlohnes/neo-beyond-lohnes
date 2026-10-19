@@ -16,7 +16,6 @@ async function manualMeal(screen: Screen) {
   await tab(screen, "BODY");
   await screen.getByRole("button", { name: "OPEN MEALS", exact: true }).click();
   await screen.getByText("SHOW ADD MEAL", { exact: true }).click();
-  await screen.getByText("SHOW MANUAL MACROS", { exact: true }).click();
 }
 beforeEach(async () => { await page.viewport(360, 800); vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 9, 13, 22)); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo(0, 0); });
@@ -132,7 +131,8 @@ describe("Plan Today and truthful guidance", () => {
     const screen = await render(<App />);
     // SUIT-001: SYSTEMS carries the level and the sleep fact on TODAY; STATE keeps the full sentence.
     await expect.element(screen.getByRole("button", { name: /^Systems: RED, Sleep 3:00, Fuel 0g, Check-in GREEN\. Open readout$/ })).toBeVisible();
-    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    // TONIGHT-001: a day off asks its workout question below, so the all-clear says so.
+    await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/Status reports recorded signals/)).toBeVisible();
   });
   for (const width of [320, 360, 412]) it(`has one main landmark, compact destination access and accessible controls at ${width}px`, async () => {

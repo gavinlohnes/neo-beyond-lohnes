@@ -110,7 +110,6 @@ describe("Fix 2 — open screens move to the new day at 16:30", () => {
 
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
-    await screen.getByRole("button", { name: "SHOW MANUAL MACROS" }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Half-typed bowl");
     await screen.getByRole("spinbutton", { name: "New meal calories" }).fill("640");
 

@@ -201,7 +201,8 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
 
     await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open TOOLS" })).toBeVisible();
-    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    // TONIGHT-001: the day is unanswered, so the work question sits below and the all-clear says so.
+    await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
     expect(screen.getByText("Operate", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
     expect(document.querySelector(".today-field")?.getAttribute("data-field-state")).toBe("quiet");
@@ -236,7 +237,8 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
 
     await expect.element(screen.getByText("12 oz recorded.", { exact: true })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Record what you drank" }).elements()).toHaveLength(0);
-    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    // TONIGHT-001: the day is unanswered, so the work question sits below and the all-clear says so.
+    await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
     expect(document.querySelector(".today-field")?.getAttribute("data-field-state")).toBe("quiet");
     const waterEvents = (await db.events.where("beyondDayId").equals(day.id).toArray())
       .filter((event) => event.type === "WATER_LOGGED")
@@ -306,6 +308,8 @@ describe("TodayScreen (real browser) — plain words (owner ruling 2026-10-04)",
     await startDay();
     const screen = await render(<TodayScreen />);
 
+    // TONIGHT-001: on a day off the check-in lives in TOOLS.
+    await openTodayTools(screen);
     await expect.element(screen.getByText("CHECK-IN", { exact: true })).toBeVisible();
     expect(document.body.textContent).not.toMatch(/BeyondDay|deterministic|STATE INPUT|state input/);
   });
@@ -1604,7 +1608,8 @@ describe("TodayScreen (real browser) — TODAY-008 day-transition refresh (resid
     await submitCheckIn(dayA.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    // TONIGHT-001: the day is unanswered, so the work question sits below and the all-clear says so.
+    await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
 
     // End day A through the real UI (handleEndDay already calls refresh()),
     // then start day B through the real START DAY button — the exact

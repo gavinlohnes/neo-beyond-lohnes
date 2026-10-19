@@ -10,6 +10,8 @@ export interface WeekAheadDay {
   work: "WORK" | "OFF";
   shiftStartHour: number | null;
   suggestedTemplate: WorkoutTemplateId | null;
+  /** TONIGHT-001: the suggestion sits on this work day's post-shift morning, not on a day off. */
+  afterShift: boolean;
 }
 
 export interface WeekAhead {
@@ -26,10 +28,12 @@ function nextTemplate(template: WorkoutTemplateId): WorkoutTemplateId {
 }
 
 /**
- * Pure projection used by tests and the application query. Work days are always rest days.
- * During a longer off stretch, every third day is left unsuggested so the projection never
- * prescribes more than two workout days in a row. The A → B → C sequence advances only when a
- * workout is actually suggested.
+ * Pure projection used by tests and the application query. Days off are training days, and
+ * so is the morning after the last shift of a work block (TONIGHT-001, owner ruling
+ * 2026-10-19, amending rule A's "none on a work day"); other work days rest. Every third
+ * eligible day in a row is left unsuggested so the projection never prescribes more than two
+ * workout days in a row. The A → B → C sequence advances only when a workout is actually
+ * suggested.
  */
 export function deriveWeekAhead(
   now: Date,
@@ -40,18 +44,22 @@ export function deriveWeekAhead(
   let consecutiveSuggestions = 0;
   let template = WORKOUT_TEMPLATE_ORDER.includes(firstTemplate) ? firstTemplate : WORKOUT_TEMPLATE_ORDER[0]!;
 
+  const workFor = (offset: number) => {
+    const date = localNoon(now, offset);
+    return scheduledWorkContextForLivedDay(new Date(date.getFullYear(), date.getMonth(), date.getDate(), 17), pattern);
+  };
+
   for (let offset = 0; offset < 7; offset++) {
     const date = localNoon(now, offset);
-    const work = scheduledWorkContextForLivedDay(
-      new Date(date.getFullYear(), date.getMonth(), date.getDate(), 17),
-      pattern,
-    );
-    const shouldSuggest = work === "OFF" && consecutiveSuggestions < 2;
+    const work = workFor(offset);
+    const afterLastShift = work === "WORK" && workFor(offset + 1) === "OFF";
+    const shouldSuggest = (work === "OFF" || afterLastShift) && consecutiveSuggestions < 2;
     days.push({
       date: formatLocalDate(date),
       work,
       shiftStartHour: work === "WORK" ? pattern.shiftStartHour : null,
       suggestedTemplate: shouldSuggest ? template : null,
+      afterShift: shouldSuggest && work === "WORK",
     });
 
     if (shouldSuggest) {
