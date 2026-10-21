@@ -65,3 +65,25 @@ no new runtime dependency. The source artifact expires 2026-11-02, so this is a 
 probe rather than permanent release CI. Acceptance: capture actual install/launch result,
 inspect the evidence, then choose a correction supported by that result. ADB success alone
 does not prove the owner's normal installer flow or Nothing-specific policy works.
+
+### Probe result (2026-10-21)
+
+Run 39274986894 at a21675fa passed: the exact original APK (source 3d73cdeb, checksum and
+signature verified) installed with plain `adb install`, without `-t`, on a clean Android 16
+emulator. It opened to "BEYOND Health Bridge", and the "ALLOW SLEEP ACCESS AND READ" control
+was present. The APK is not malformed, test-only or incompatible with Android 16.
+
+The rejection is therefore on the phone side. The leading hypothesis is a signature conflict.
+Every CI run builds with that runner's own throwaway debug key. If any earlier helper build is
+present on the phone, including in another user profile, Private Space, or as a leftover from
+a failed install, Android refuses the new APK with the same generic message. Next owner step:
+- Settings → Apps → show system apps → search "Health Bridge" or `app.beyond.healthbridge`.
+  Uninstall any match, including "for all users".
+- Extract `app-debug.apk` from the downloaded ZIP and open the APK, not the ZIP.
+- If it still fails, note any Play Protect prompt. If a computer is available, run
+  `adb install app-debug.apk`; it prints the exact `INSTALL_FAILED_*` reason, which decides the
+  correction.
+
+A stable signing key is the durable fix if a conflict is confirmed. It is a separate,
+owner-approved change: no keys in Git, and it needs CI secret setup. Do not change it on a
+hypothesis.

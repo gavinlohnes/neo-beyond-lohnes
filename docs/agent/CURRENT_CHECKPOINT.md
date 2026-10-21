@@ -11,8 +11,10 @@ Do not repeat the same install instructions or claim the physical phone is valid
 Builder Codex; branch codex/garmin-001-install-diagnosis from 8581af586facf1b08a29347c28787b5e4810db3a. The branch's draft PR
 adds a time-bounded Android 16 emulator probe of the exact original APK. No app/data/
 permission changes. [Current bounded brief](GARMIN-001.md), phone follow-up section.
-Verification pending: emulator install/launch plus captured package-manager/logcat/UI evidence.
-Next: inspect those results and correct the demonstrated failure. ADB success cannot validate
+Verified (run 39274986894): the original APK installs and opens on a clean Android 16 emulator, so the
+file is sound and the rejection is phone-side; signature conflict with an earlier helper build is
+the leading hypothesis. Next: owner runs the uninstall/extract/adb steps in GARMIN-001.md
+("Probe result"); correct only what that demonstrates. ADB success cannot validate
 Nothing's user-facing installer/security policy. #257 remains open; every new PR still needs
 owner merge approval. #254 remains separate.
 
