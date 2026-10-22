@@ -1,23 +1,27 @@
 import { expect } from "vitest";
 import type { render } from "vitest-browser-react";
-
 type Screen = Awaited<ReturnType<typeof render>>;
+export function mealButton(screen: Screen) { return screen.getByRole("button", { name: "Log a meal", exact: true }); }
 
-/** TONIGHT-001: TODAY's MEAL opens a sheet; its last option opens BODY's meal entry. */
-export function mealButton(screen: Screen) {
-  return screen.getByRole("button", { name: "Log a meal", exact: true });
-}
-
+/** Existing preset management/correction form, now behind the production meal sheet. */
 export async function openMealInBody(screen: Screen) {
   await mealButton(screen).click();
-  await screen.getByRole("button", { name: /^New meal or manual entry/ }).click();
+  // Wait for the sheet's contents first; checking synchronously can run before it renders and skip the route.
+  await expect.poll(() => document.querySelector("dialog[open] button") !== null).toBe(true);
+  const oldRoute = screen.getByRole("button", { name: /^New meal or manual entry/ });
+  if (oldRoute.elements().length) await oldRoute.click();
+  const tools = screen.getByRole("dialog").getByRole("button", { name: "More meal tools & corrections", exact: true });
+  if (tools.elements().length) await tools.click();
 }
-
-/** The same, through DOM clicks, for tests that must not let a locator scroll the page. */
+/** DOM clicks avoid a locator scrolling away the origin under test. */
 export async function openMealInBodyDom(screen: Screen) {
   (mealButton(screen).element() as HTMLElement).click();
-  await expect.poll(() => document.querySelector("dialog[aria-labelledby='meal-sheet-title']")).not.toBeNull();
-  const option = [...document.querySelectorAll<HTMLButtonElement>("dialog[aria-labelledby='meal-sheet-title'] button")]
-    .find((button) => button.textContent?.startsWith("New meal or manual entry"));
+  await expect.poll(() => document.querySelector("dialog[open]")).not.toBeNull();
+  const option = [...document.querySelectorAll<HTMLButtonElement>("dialog[open] button")]
+    .find((button) => button.textContent?.startsWith("More meal tools & corrections") || button.textContent?.startsWith("New meal or manual entry"));
   option!.click();
+}
+export async function closeMealSheet(screen: Screen) {
+  await screen.getByRole('dialog').getByRole('button', { name: 'CLOSE', exact: true }).click();
+  await expect.poll(() => document.querySelector('dialog[open]')).toBeNull();
 }

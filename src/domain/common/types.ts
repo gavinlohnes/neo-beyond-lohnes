@@ -395,7 +395,10 @@ export interface ProteinLogCorrectedPayload {
  */
 export interface MealLoggedPayload {
   commandId: string;
-  savedMealId: string;
+  /** null is an explicitly manual meal, never a fabricated preset reference. */
+  savedMealId: string | null;
+  /** Absent in older logs means one serving; macros always describe the consumed total. */
+  servings?: number;
   name: string;
   calories: number;
   proteinG: number;

@@ -42,7 +42,7 @@ it("an idle workout from the morning no longer freezes TODAY at 16:30, and it sa
   expect(await db.workoutSessions.get(workout.id)).toMatchObject({ status: "ACTIVE", beyondDayId: day.id });
 
   await screen.getByRole("button", { name: "RESUME WORKOUT", exact: true }).click();
-  await expect.element(screen.getByText("Template A · REDUCED — in progress", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("WORKOUT A · REDUCED — in progress", { exact: true })).toBeVisible();
 });
 
 for (const newActivity of [false, true]) it(`rechecks an idle deadline while App stays mounted${newActivity ? ", and a new set moves the deadline" : ""}`, async () => {

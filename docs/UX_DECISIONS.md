@@ -12,7 +12,57 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## REDESIGN-001 — one job, one home (owner approved 2026-10-19)
+
+Gavin approved [the frozen brief](agent/REDESIGN-001.md) and
+[unchanged prototype](../prototype/redesign/index.html), then explicitly authorized Codex to
+build it. This bounded Protected amendment supersedes conflicting placement, label and default
+presentation rulings below; it does not authorize Engine, phase, rotation, status or scoring changes.
+
+- **TODAY:** full mode scene → WATER / MEAL / LOG → one NEXT surface → today's numbers →
+  check-in until complete, plus a compact truthful signal when active. Existing authoritative
+  guidance, active-operation continuation, recovery and safety behavior remain. Other controls,
+  prompts and outcome ratings remain available on demand in COMMAND → TODAY TOOLS.
+- **Check-in:** manual entry opens a stable sheet, initially blank. All five answers are required.
+  Anchors: Energy Drained–Sharp, Stress Calm–Maxed, Mood Low–Good, Soreness None–Wrecked,
+  Urge None–Strong. ALL GOOD remains explicit, secondary and disclosed before submission.
+  Previous answers and subsequent facts are reference only; they never fill or confirm today's
+  answers. This replaces Drop 5's automatic carried-answer presentation; historical CONFIRMED /
+  ADJUSTED provenance and commands remain compatible. Partial manual input stays session-local.
+- **Logging:** sheets overlay the current tab; selecting an amount or serving does not remount
+  the modal. No inferred quantity or silent submit. Existing canonical commands, undo, corrections,
+  duplicate safeguards, Back and focus return remain. Saved meals log one serving explicitly;
+  name opens supported portions. New meals are saved as presets only when explicitly selected.
+- **Bounded meal extension, separately approved 2026-10-22:** Gavin replied “Yes, I approve” to
+  canonical unsaved meals and portions ([ruling](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/261#issuecomment-6330409263)).
+  A one-off has `savedMealId: null`; optional `servings` preserves the explicit multiplier while
+  consumed macros remain immutable snapshots. Old absent servings mean one. Optional preset save
+  and log are atomic. This supersedes the brief's event/command exclusion only for these paths;
+  no schema, migration, backup format, historical repair or Engine-rule change. Corrections/voids
+  keep original provenance. This is a bounded portion control, not a serving ontology.
+- **BODY:** numbers → progress (existing weight/goal date, TRAIN records, photos/measurements) →
+  days/history and source detail. Main entry forms move into sheets. Hold to open existing
+  correction/delete controls; edits target the actual source day and preserve originals.
+  Protein-only logging stays available independently of the optional Minimum Day screen.
+- **TRAIN:** top WORKOUT / HISTORY / RECORDS switcher. A workout and its inputs remain mounted
+  across views. Existing records/queries power history and each exercise's best, newest PR first;
+  every previous PR remains accessible. LAST TIME / BEST include dates. Typed fields clear on
+  focus, show the old value as placeholder, and restore an empty blur. Gym, holds and rotation stay.
+- **COMMAND:** one searchable catalog for screens, log actions, saved meals and exercises; Search
+  all records retains FIND-001. Today / Review / Plan / Notes / Systems / Settings & backup groups
+  preserve every destination, including backup/restore, help, reports, Mirror and existing prompts.
+  NEW on the report uses existing timing/seen evidence, never a fabricated readiness claim.
+- **Optional tools:** Minimum Day's screen/tool, Small Steps and online food lookup start hidden;
+  COMMAND → Hidden features can restore each. Browser-local presentation preferences do not change
+  data, canonical commands, Engine Minimum Day logic, backup formats or recommendations.
+- **Display:** black/charcoal, restrained meaningful red, strong typography, four existing tabs.
+  TODAY, MY MEALS, HISTORY/open, NOT CHECKED IN, WORKOUT A and TRAINING SUMMARY replace older labels.
+  Guidance avoids the internal Minimum Day name; mapping is UI-only. Literal facts, 24-hour time,
+  provenance, accessibility/reduced motion and manual authority remain binding.
+
 ## POLISH-002 — the whole prototype, ported (owner approved 2026-10-19)
+
+**REDESIGN-001 amendment:** conflicting placement/default/copy rules below are superseded by the bounded entry above. Canonical behavior remains except the separately approved meal extension.
 
 Brief: [POLISH-002](agent/POLISH-002.md). The approved prototype is the visual source: its CSS
 values, markup structure, city generator and copy are ported (`src/ui/cc/cc.css`), not
@@ -32,6 +82,8 @@ and the prototype supplies the look:
   pin, so a pin still changes no guidance.
 
 ## POLISH-001 — production command center (owner approved 2026-10-18)
+
+**REDESIGN-001 amendment:** conflicting placement/default/copy rules below are superseded by the bounded entry above. Canonical behavior remains except the separately approved meal extension.
 
 This bounded ruling supersedes conflicting TODAY placement and red-button details below.
 Brief: [POLISH-001](agent/POLISH-001.md). Engine and canonical semantics remain unchanged.
@@ -615,7 +667,7 @@ below, this entry wins; the older entry is kept for history.
   Adopting a finding as a rule, deload/stall *suggestions*, and any Engine use wait for separate
   sign-off. The Day Ledger's sleep gains `primaryLogs` (each main-sleep log's time and minutes) so a
   sleep can be placed before a workout by time.
-- **As built: check-in draft (Drop 5, owner approval 2026-10-03 — "Never auto-confirm. Record
+- **Historical presentation; superseded by REDESIGN-001 above. As built: check-in draft (Drop 5, owner approval 2026-10-03 — "Never auto-confirm. Record
   whether each draft was confirmed unchanged or adjusted.").** The check-in form (MANUAL CHECK-IN,
   or UPDATE) opens pre-set to the operator's own latest check-in, when it's no more than 36 hours
   old (`engine/checkInDraft.ts`): "Draft: your check-in Wed 07:00. Change anything that's different
@@ -1232,6 +1284,8 @@ USER_DECIDES remaining authoritative.
 
 ## BODY
 
+**REDESIGN-001 amendment:** conflicting placement/default/copy rules below are superseded by the bounded entry above. Canonical behavior remains except the separately approved meal extension.
+
 - **Sleep entry guardrails (Drop 3, owner approval 2026-10-03).** Field use found a 14 hr 30 min
   sleep reading. BODY's SLEEP tile shows one entry (the latest, main sleep or nap) and never adds
   entries up, so it was one stored entry; the likeliest way in was the Minutes box, which accepted
@@ -1283,6 +1337,8 @@ enter Engine recommendation arbitration" further below).
   was asked and answered directly, not merely undecided.
 
 ## NUTRITION (Meal Memory — NUTRITION-001, locked)
+
+**REDESIGN-001 amendment:** conflicting placement/default/copy rules below are superseded by the bounded entry above. Canonical behavior remains except the separately approved meal extension.
 
 - **SavedMeal is a preset, not history.** A SavedMeal (name + calories/
   protein/carbs/fat) is a small, directly-mutable reusable record — same

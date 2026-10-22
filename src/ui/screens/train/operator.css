@@ -36,3 +36,8 @@
 /* ULTIMATE-FOUNDATION-002: lift history inside the current exercise. */
 .train-operator .train-lift-history-open { width: auto; padding: 8px 14px; margin: 4px 0 8px; }
 .train-operator .train-lift-history { border-block: 1px solid var(--border-subtle); padding-block: 12px; margin: 8px 0 12px; }
+
+.train-switcher { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-block: 12px 20px; }
+.train-switcher button { min-height: 44px; padding-inline: 2px; }
+.train-switcher button[aria-pressed="true"] { border-bottom: 2px solid var(--text-1); background: var(--surface-2); color: var(--text-1); }
+.train-planned-work > summary { min-height: 44px; }

@@ -17,7 +17,11 @@ const YELLOW = { energy: 2, stress: 2, mood: 3, soreness: 1, alcoholUrge: 0 } as
 const GREEN = { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 } as const;
 
 type Screen = Awaited<ReturnType<typeof render>>;
-const tab = (screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "COMMAND") => screen.getByRole("button", { name, exact: true }).click();
+const tab = async (screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "COMMAND") => {
+  const close = screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true });
+  if (close.elements().length) await close.click();
+  await screen.getByRole("button", { name, exact: true }).click();
+};
 const choice = (screen: Screen, text: string) => screen.getByText(text, { exact: true });
 
 beforeEach(async () => {
@@ -38,13 +42,13 @@ describe("R1 — retained TRAIN follows the current suggestion", () => {
     const screen = await render(<App />);
     await tab(screen, "TRAIN");
     await expect.element(screen.getByText("DEFAULT WORKOUT", { exact: true })).toBeVisible();
-    await expect.element(choice(screen, "Template A · STANDARD")).toBeVisible();
+    await expect.element(choice(screen, "WORKOUT A")).toBeVisible();
 
     await tab(screen, "TODAY");
     await submitCheckIn(day.id, YELLOW);
     await tab(screen, "TRAIN");
     await expect.element(screen.getByText("SUGGESTED WORKOUT", { exact: true })).toBeVisible();
-    await expect.element(choice(screen, "Template A · REDUCED")).toBeVisible();
+    await expect.element(choice(screen, "WORKOUT A · REDUCED")).toBeVisible();
     expect(await db.workoutSessions.count()).toBe(0);
   });
 
@@ -53,11 +57,11 @@ describe("R1 — retained TRAIN follows the current suggestion", () => {
     await submitCheckIn(day.id, YELLOW);
     const screen = await render(<App />);
     await tab(screen, "TRAIN");
-    await expect.element(choice(screen, "Template A · REDUCED")).toBeVisible();
+    await expect.element(choice(screen, "WORKOUT A · REDUCED")).toBeVisible();
     await tab(screen, "BODY");
     await submitCheckIn(day.id, GREEN);
     await tab(screen, "TRAIN");
-    await expect.element(choice(screen, "Template A · STANDARD")).toBeVisible();
+    await expect.element(choice(screen, "WORKOUT A")).toBeVisible();
   });
 
   it("an explicit variant and template choice survives a tab round trip and a new check-in", async () => {
@@ -65,22 +69,22 @@ describe("R1 — retained TRAIN follows the current suggestion", () => {
     await submitCheckIn(day.id, YELLOW);
     const screen = await render(<App />);
     await tab(screen, "TRAIN");
-    await expect.element(choice(screen, "Template A · REDUCED")).toBeVisible();
+    await expect.element(choice(screen, "WORKOUT A · REDUCED")).toBeVisible();
     await screen.getByRole("button", { name: "CHANGE", exact: true }).click();
     await screen.getByRole("button", { name: "B", exact: true }).click();
     await screen.getByRole("button", { name: "STANDARD", exact: true }).click();
-    await expect.element(choice(screen, "Template B · STANDARD")).toBeVisible();
+    await expect.element(choice(screen, "WORKOUT B")).toBeVisible();
 
     await tab(screen, "TODAY");
     await submitCheckIn(day.id, GREEN);
     await submitCheckIn(day.id, YELLOW);
     await tab(screen, "TRAIN");
-    await expect.element(choice(screen, "Template B · STANDARD")).toBeVisible();
+    await expect.element(choice(screen, "WORKOUT B")).toBeVisible();
   });
 });
 
 describe("R2 — a Capture return does not outlive its visit", () => {
-  it("MORE → CAPTURE, then leaving by primary nav: DONE on TODAY stays on TODAY", async () => {
+  it("MORE → CAPTURE, then leaving by primary nav: closing a new note on TODAY stays on TODAY", async () => {
     const screen = await render(<App />);
     await tab(screen, "COMMAND");
     await screen.getByRole("button", { name: "CAPTURE", exact: true }).first().click();
@@ -88,18 +92,20 @@ describe("R2 — a Capture return does not outlive its visit", () => {
 
     await tab(screen, "BODY");
     await tab(screen, "TODAY");
-    await screen.getByRole("button", { name: "DONE", exact: true }).click();
+    await screen.getByRole("button", { name: "Open LOG", exact: true }).click();
+    await screen.getByRole("dialog").getByRole("button", { name: "NOTE", exact: true }).click();
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
     expect(document.getElementById("workspace-TODAY")?.hidden).toBe(false);
     expect(document.getElementById("workspace-COMMAND")?.hidden ?? true).toBe(true);
   });
 
-  it("MORE → CAPTURE → DONE still returns to MORE", async () => {
+  it("COMMAND → CAPTURE → CLOSE returns to COMMAND", async () => {
     const screen = await render(<App />);
     await tab(screen, "COMMAND");
     await screen.getByRole("button", { name: "CAPTURE", exact: true }).first().click();
     await expect.element(screen.getByRole("textbox", { name: "Capture a thought", exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "DONE", exact: true }).click();
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.poll(() => document.getElementById("workspace-COMMAND")?.hidden).toBe(false);
   });
 });

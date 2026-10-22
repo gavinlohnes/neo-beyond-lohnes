@@ -125,6 +125,7 @@ describe("TrainScreen (real browser) — no active session", () => {
 describe("TrainScreen (real browser) — PLANNED WORK (TODAY-QUICKACTIONS-001)", () => {
   it("renders the PLANNED WORK toggle pre-session, unanswered, with no day/check-in yet", async () => {
     const screen = await render(<TrainScreen />);
+    await screen.getByText("PLANNED WORK", { exact: true }).first().click();
 
     await expect.element(screen.getByText("Planning to train today?", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "TRAIN TODAY" })).toBeVisible();
@@ -133,6 +134,7 @@ describe("TrainScreen (real browser) — PLANNED WORK (TODAY-QUICKACTIONS-001)",
 
   it("declaring TRAIN TODAY from TRAIN (never having visited TODAY) records the same PLANNED_WORK_SET fact TODAY's own toggle would", async () => {
     const screen = await render(<TrainScreen />);
+    await screen.getByText("PLANNED WORK", { exact: true }).first().click();
 
     await screen.getByRole("button", { name: "TRAIN TODAY" }).click();
     // Answered -> the toggle collapses to its settled-state summary row.
@@ -146,6 +148,7 @@ describe("TrainScreen (real browser) — PLANNED WORK (TODAY-QUICKACTIONS-001)",
 
   it("declaring NOT TODAY from TRAIN means a subsequent GREEN check-in does not resolve EXECUTE_PLANNED_WORK", async () => {
     const screen = await render(<TrainScreen />);
+    await screen.getByText("PLANNED WORK", { exact: true }).first().click();
 
     await screen.getByRole("button", { name: "NOT TODAY" }).click();
     await expect.element(screen.getByText("Not training today.", { exact: true })).toBeVisible();
@@ -162,6 +165,7 @@ describe("TrainScreen (real browser) — PLANNED WORK (TODAY-QUICKACTIONS-001)",
     await setPlannedWork(day.id, true);
 
     const screen = await render(<TrainScreen />);
+    await screen.getByText("PLANNED WORK", { exact: true }).first().click();
     await expect.element(screen.getByText("Training today.", { exact: true })).toBeVisible();
     expect(screen.getByText("Planning to train today?", { exact: true }).elements()).toHaveLength(0);
   });
@@ -177,11 +181,11 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     // by default behind the same CollapsibleRow primitive RESET/SHIFT
     // DOWN already use — it does not compete with the dominant picker's
     // own footprint until explicitly opened.
-    await expect.element(screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open TRAINING SUMMARY" })).toBeVisible();
     expect(document.querySelectorAll(".command-surface")).toHaveLength(1);
 
-    await screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" }).click();
-    await expect.element(screen.getByText("Performance Brief", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).click();
+    await expect.element(screen.getByText("TRAINING SUMMARY", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/Training history will appear here/)).toBeVisible();
     await expect.element(screen.getByText(/Recent training will appear here/)).toBeVisible();
     await expect.element(screen.getByText(/No exercise history yet/)).toBeVisible();
@@ -208,7 +212,7 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     await completeRecoverySession(day.id, recovery.id, 15);
 
     const screen = await render(<TrainScreen />);
-    await screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" }).click();
+    await screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).click();
     await expect.element(screen.getByText(/Training history will appear here/)).toBeVisible();
     await expect.element(screen.getByText(/Recent training will appear here/)).toBeVisible();
   });
@@ -220,7 +224,7 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     await abandonWorkout(day.id, session.id, "STANDARD");
 
     const screen = await render(<TrainScreen />);
-    await screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" }).click();
+    await screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).click();
     // Not eligible as LAST — still the calm empty-history copy.
     await expect.element(screen.getByText(/Training history will appear here/)).toBeVisible();
     // But visible, honestly, in RECENT.
@@ -236,7 +240,7 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
 
     const screen = await render(<TrainScreen />);
-    await screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" }).click();
+    await screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).click();
     await expect.element(screen.getByText("Template A", { exact: true })).not.toBeVisible();
     await screen.getByText("Exercise detail", { exact: true }).click();
 
@@ -254,8 +258,8 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
     await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
 
-    expect(screen.getByText("Performance Brief", { exact: true }).elements()).toHaveLength(0);
-    expect(screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" }).elements()).toHaveLength(0);
+    expect(screen.getByText("TRAINING SUMMARY", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).elements()).toHaveLength(0);
   });
 });
 
@@ -811,7 +815,7 @@ describe("TrainScreen (real browser) — DECLUTTER-001 override picker behind CH
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
 
-    await expect.element(screen.getByText("Template A · STANDARD", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("WORKOUT A", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
     const change = screen.getByRole("button", { name: "CHANGE", exact: true });
     await expect.element(change).toHaveAttribute("aria-expanded", "false");
@@ -835,7 +839,7 @@ describe("TrainScreen (real browser) — DECLUTTER-001 override picker behind CH
     await screen.getByRole("button", { name: "REDUCED", exact: true }).click();
     await screen.getByRole("button", { name: "DONE", exact: true }).click();
 
-    await expect.element(screen.getByText("Template B · REDUCED", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("WORKOUT B · REDUCED", { exact: true })).toBeVisible();
     expect(screen.getByRole("button", { name: "REDUCED", exact: true }).elements()).toHaveLength(0);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
     await expect.element(screen.getByText(/REDUCED — in progress/i)).toBeVisible();
@@ -1039,7 +1043,7 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
     await expect.element(screen.getByText("Machine Chest Press: heaviest yet (145 lb)", { exact: true })).toBeVisible();
   });
 
-  it("PR-CARDS-001: TRAIN → RECORDS keeps each PR as a card, newest first, without overflow", async () => {
+  it("REDESIGN-001: TRAIN → RECORDS leads with each exercise best and retains every PR in history", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     for (const [weight, reps] of [[135, 10], [145, 6], [145, 8]] as const) {
@@ -1048,18 +1052,20 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
       await completeWorkout(day.id, s.id, "STANDARD", "COMPLETED");
     }
     const screen = await render(<TrainScreen />);
-    await screen.getByRole("button", { name: "Open RECORDS" }).click();
+    await screen.getByRole("button", { name: "RECORDS", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "Records" })).toBeVisible();
     await expect
       .poll(() => [...document.querySelectorAll(".record-card .card-body")].map((el) => el.textContent))
-      .toEqual(["Most reps at 145 lb: 8", "Heaviest: 145 lb × 6"]);
-    expect(document.querySelectorAll(".record-card .pr-tag")).toHaveLength(2);
+      .toEqual(["Most reps at 145 lb: 8"]);
+    await screen.getByText("Every personal record · 2", { exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: /Machine Chest Press · Heaviest: 145 lb × 6/ })).toBeVisible();
+    expect(document.querySelectorAll(".record-card .pr-tag")).toHaveLength(1);
     for (const width of [320, 360, 412]) {
       await page.viewport(width, 800);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     }
     await screen.getByRole("button", { name: "BACK" }).click();
-    await expect.element(screen.getByRole("button", { name: "Open RECORDS" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "RECORDS", exact: true })).toBeVisible();
   });
 
   it("Drop 1.6a: LOG with empty boxes asks for reps and saves nothing", async () => {

@@ -30,13 +30,14 @@ describe("Focused BODY meals", () => {
       await createSavedMeal({ name: "Shift dinner", calories: 600, proteinG: 45, carbsG: 60, fatG: 15 });
       const screen = await render(<App />);
       await openMealInBody(screen);
-      await expect.element(screen.getByRole("heading", { name: "BODY // MEALS" })).toBeVisible();
+      await expect.element(screen.getByRole("dialog", { name: "MEAL TOOLS", exact: true })).toBeVisible();
       await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toBeVisible();
-      await expect.element(screen.getByText("HYDRATION", { exact: true })).not.toBeVisible();
-      await expect.element(screen.getByRole("button", { name: "EDIT", exact: true, includeHidden: true })).not.toBeVisible();
+      expect(screen.getByText("HYDRATION", { exact: true }).elements()).toHaveLength(0);
+      expect(screen.getByRole("button", { name: "EDIT", exact: true, includeHidden: true }).elements().filter(el => el.checkVisibility())).toHaveLength(0);
       // TONIGHT-001: the online lookup isn't on the meal screen; COMMAND → FOOD LOOKUP opens it.
       expect(screen.getByRole("textbox", { name: "Search USDA food database", includeHidden: true }).elements()).toHaveLength(0);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+      await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeVisible();
       const log = screen.getByRole("button", { name: "LOG", exact: true }).element();
       expect(log.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       expect(parseFloat(getComputedStyle(log).fontSize)).toBeGreaterThanOrEqual(16);
@@ -55,15 +56,12 @@ describe("Focused BODY meals", () => {
     const screen = await render(<App />);
     await openMealInBody(screen);
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished shift meal");
-    await screen.getByRole("button", { name: "DAILY RECORD" }).click();
-    await expect.element(screen.getByText("HYDRATION", { exact: true })).toBeVisible();
-    await expect.poll(() => document.activeElement?.textContent).toBe("OPEN MEALS");
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
-    await expect.poll(() => document.activeElement?.id).toBe("meal-surface-heading");
-    await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished shift meal");
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
+    await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Log a meal");
+    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await expect.element(screen.getByRole("heading", { name: "BODY", exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await openMealInBody(screen);
-    await expect.element(screen.getByRole("heading", { name: "BODY // MEALS" })).toBeVisible();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished shift meal");
     expect(await db.savedMeals.count()).toBe(0);
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
@@ -92,7 +90,7 @@ describe("Focused BODY meals", () => {
     const screen = await render(<BodyScreen focus="meal" />);
     await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeEnabled();
     const log = screen.getByRole("button", { name: "LOG", exact: true }).element();
-    const trackers = screen.getByRole("button", { name: "DAILY RECORD" }).element();
+    const trackers = screen.getByRole("button", { name: "TODAY" }).element();
     log.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     trackers.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await expect.element(screen.getByText("Shift dinner logged · 600 kcal · 45g", { exact: true })).toBeVisible();

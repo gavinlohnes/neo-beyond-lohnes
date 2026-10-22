@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
@@ -26,12 +27,12 @@ for (const width of [320, 360, 412]) it(`connects Review answers to source Histo
   await page.viewport(width, 800); await seed(); const before = await db.events.toArray();
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-  await screen.getByRole("button", { name: "Open REVIEW", exact: true }).click();
+  await (await commandResult(screen, "REVIEW")).click();
   await expect.element(screen.getByText("2.0 lb lower · latest 7-day mean versus previous 7", { exact: true })).toBeVisible();
   await screen.getByText("Is my weight going down?", { exact: true }).click();
   await screen.getByText("How this is calculated", { exact: true }).first().click();
   await expect.element(screen.getByText(/Average effective weigh-ins within each completed lived day/)).toBeVisible();
-  await screen.getByRole("combobox", { name: "Inspect recorded day", exact: true }).selectOptions(new Date(2026, 9, 6, 16, 30).toISOString());
+  await screen.getByRole("combobox", { name: "Open recorded day", exact: true }).selectOptions(new Date(2026, 9, 6, 16, 30).toISOString());
   await expect.element(screen.getByText("Oct 6 · 182.0 lb · 1 recorded day segment", { exact: true })).toBeVisible();
   await screen.getByText("Every record in this range", { exact: true }).first().click();
   const source = screen.getByRole("button", { name: "Open source day Oct 6, segment 1", exact: true });

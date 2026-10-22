@@ -6,7 +6,7 @@ import { getModePin } from "../../src/application/modePinQueries";
 import { getActiveDay } from "../../src/application/queries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { MAX_PHASE_ROWS } from "../../src/ui/screens/today/shiftClock";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { TodayScreen, DailyControls } from "../../src/ui/screens/today/TodayScreen";
 import { db } from "../../src/persistence/db";
 import type { BeyondDay } from "../../src/domain/common/types";
 
@@ -30,7 +30,7 @@ const rows = () => [...document.querySelectorAll("[data-shift-clock-row]")].map(
 const modeName = () => document.querySelector(".mode-header__value")?.textContent ?? "";
 const modeSource = () => document.querySelector(".mode-header__source")?.textContent ?? "";
 const guidance = () => document.querySelector(".console-guidance")?.textContent ?? "";
-const systemStatus = () => document.querySelector(".systems-line")?.getAttribute("aria-label") ?? "";
+const systemStatus = () => document.querySelector(".today-system-signal")?.textContent ?? "";
 const attention = () => [...document.querySelectorAll(".signal-row")].map((el) => el.textContent ?? "");
 
 async function pick(screen: Awaited<ReturnType<typeof render>>, name: string) {
@@ -64,7 +64,7 @@ describe("mode header", () => {
       await expect.poll(modeName).toBe(name);
       // POLISH-002: the prototype's meta line — per schedule (or the Drop 2 countdown), then the mode's sentence.
       expect(modeSource()).toMatch(/^(Per schedule|Shift (in|ends in) .+?) · /);
-      if (phaseRows) await expect.poll(rows).toEqual(phaseRows);
+      if (phaseRows) await expect.poll(rows).toEqual([]);
       expect(document.querySelectorAll(".cc-tl-seg").length).toBe(3);
       expect(document.querySelector(".cc-tl-seg.cc-on")).not.toBeNull();
       expect(document.querySelector(".cc-tl-legend")?.textContent).toContain("06:00");
@@ -86,14 +86,14 @@ describe("mode header", () => {
     vi.setSystemTime(at(15, 17, 0));
     screen = await render(<TodayScreen />);
     await expect.poll(modeName).toBe("Mode: not set");
-    await expect.poll(rows).toEqual(["WORK_QUESTION", "CHECK_IN", "WORKOUT"]);
+    await expect.poll(rows).toEqual([]);
     await screen.getByRole("button", { name: "Mode not set. Change mode" }).click();
     const dialog = screen.getByRole("dialog");
     await expect.element(dialog.getByText("No mode until the work question is answered.")).toBeVisible();
     expect(dialog.getByText("SCHEDULE", { exact: true }).elements()).toHaveLength(0);
     await dialog.getByRole("button", { name: /^PREP/ }).click();
     // The work question still leads; no phase is assumed for the day.
-    await expect.poll(rows).toEqual(["WORK_QUESTION", "QUICK_LOG", "TONIGHT"]);
+    await expect.poll(rows).toEqual([]);
     expect((await getActiveDay())!.workContext).toBe("UNKNOWN");
   });
 });
@@ -106,7 +106,7 @@ describe("mode pin — placement only", () => {
     const screen = await render(<TodayScreen />);
     await expect.poll(modeName).toBe("RECOVER");
     await expect.poll(guidance).not.toBe("");
-    await expect.poll(systemStatus).not.toBe("");
+    await expect.poll(() => document.querySelector(".today-numbers")).not.toBeNull();
     const before = { guidance: guidance(), status: systemStatus(), attention: attention() };
     const events = await db.events.count();
     const recommendations = await db.recommendations.count();
@@ -114,7 +114,7 @@ describe("mode pin — placement only", () => {
     await pick(screen, "OFF DUTY");
     await expect.poll(modeName).toBe("OFF DUTY");
     expect(modeSource()).toBe("Pinned · schedule says RECOVER · resets 16:30");
-    await expect.poll(rows).toEqual(["WORKOUT_CALL", "QUICK_LOG"]);
+    await expect.poll(rows).toEqual([]);
     expect(rows().length).toBeLessThanOrEqual(MAX_PHASE_ROWS);
     expect(getModePin(day.id)).toBe("OFF");
 
@@ -141,7 +141,7 @@ describe("mode pin — placement only", () => {
     const dialog = screen.getByRole("dialog");
     await expect.element(dialog.getByText("SCHEDULE", { exact: true })).toBeVisible();
     await userEvent.keyboard("{Escape}");
-    await expect.poll(() => document.querySelector("dialog")).toBeNull();
+    await expect.poll(() => document.querySelector("dialog[open]")).toBeNull();
     await expect.poll(() => document.activeElement?.classList.contains("mode-header__name")).toBe(true);
     await pick(screen, "ON SHIFT");
     expect(modeSource()).toMatch(/^Shift ends in 8h · Pinned/);
@@ -160,7 +160,7 @@ describe("mode pin — placement only", () => {
     const screen = await render(<TodayScreen />);
     await expect.poll(modeName).toBe("RECOVER");
     await pick(screen, "PREP");
-    await expect.poll(rows).toEqual(["QUICK_LOG", "TONIGHT"]);
+    await expect.poll(rows).toEqual([]);
     // 07:00 is after the shift began: no "Shift in" countdown for a pinned PREP.
     expect(document.querySelector(".status-strip__headline")?.textContent).not.toMatch(/^Shift in/);
   });
@@ -208,8 +208,8 @@ describe("mode pin — placement only", () => {
     await screen.unmount();
 
     // END DAY from TODAY's own control clears the pin.
-    const today = await render(<TodayScreen />);
-    await expect.poll(modeName).toBe("PREP");
+    const today = await render(<DailyControls />);
+    expect(getModePin(day.id)).toBe("PRE_WORK");
     const endDayRow = today.getByRole("button", { name: "Open END DAY" });
     if (endDayRow.elements().length === 0) await today.getByRole("button", { name: "Open TOOLS" }).click();
     await today.getByRole("button", { name: "Open END DAY" }).click();

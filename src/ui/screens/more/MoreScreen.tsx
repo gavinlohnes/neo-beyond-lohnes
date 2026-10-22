@@ -1,3 +1,13 @@
+import { useHiddenFeatures, setHiddenFeature, type HiddenFeature } from "../../hiddenFeatures";
+import { getExerciseNames } from "../../../application/exerciseLibraryQueries";
+import { getSavedMeals } from "../../../application/nutritionQueries";
+import type { SavedMeal } from "../../../domain/common/types";
+import type { ToolsItem } from "../today/shiftClock";
+import { ReportView } from "../report/ReportView";
+import { MirrorView } from "../weekly/MirrorView";
+import { getReportTiming } from "../../../application/reportQueries";
+import { wasSeen, seenKey, markSeen } from "../../components/ReportReadyLine";
+import { DailyControls } from "../today/TodayScreen";
 import { HealthImportScreen } from "../health/HealthImportScreen";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { db } from "../../../persistence/db";
@@ -54,13 +64,15 @@ const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 // it can't drift again.
 const DATA_SCHEMA = db.verno;
 
-export type MoreView = "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT";
+export type MoreView = "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT";
 
 import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
 
 export function MoreScreen({
   onViewChange,
   onOpenCapture,
+  captureRequest = 0,
+  dailyBanners, dailyRefreshKey = 0, onDailyContextChanged,
   active = true,
   navigationRequest = 0,
   recordFocus = null,
@@ -84,6 +96,10 @@ export function MoreScreen({
   /** SUIT-001: set when TODAY's SYSTEMS line opened the readout. */
   onReturnToToday?: (() => void) | undefined;
   onOpenCapture?: () => void;
+  captureRequest?: number;
+  dailyBanners?: import("react").ReactNode;
+  dailyRefreshKey?: number;
+  onDailyContextChanged?: () => void;
   active?: boolean;
   navigationRequest?: number;
   recordFocus?: IntentFocus | null;
@@ -97,7 +113,31 @@ export function MoreScreen({
   const [view, setViewState] = useState<MoreView>(initialView);
   // COMMAND-CENTER-001: kept while COMMAND is hidden or a destination is open, like every draft here.
   const [query, setQuery] = useState("");
-  const matches = query.trim() ? findCapabilities(query) : [];
+  const hiddenFeatures = useHiddenFeatures();
+  const [hiddenError, setHiddenError] = useState(false);
+  const visibleCapabilities = SYSTEM_CAPABILITIES.filter((entry) => !("hiddenFeature" in entry) || hiddenFeatures[entry.hiddenFeature]);
+  const matches = query.trim() ? findCapabilities(query).filter((entry) => !("hiddenFeature" in entry) || hiddenFeatures[entry.hiddenFeature]) : [];
+  const [dailyFocus, setDailyFocus] = useState<ToolsItem | "SHIFT_HANDOFF" | "SMALL_STEPS" | null>(captureRequest ? "CAPTURE" : null);
+  const [namedMeals, setNamedMeals] = useState<SavedMeal[]>([]);
+  const [namedExercises, setNamedExercises] = useState<Record<string, string>>({});
+  const [namedReadError, setNamedReadError] = useState(false);
+  const [namedRetry, setNamedRetry] = useState(0);
+  const [reportNew, setReportNew] = useState(false);
+  useEffect(() => { if (captureRequest) setDailyFocus("CAPTURE"); }, [captureRequest]);
+  useEffect(() => {
+    if (!active || view !== "MENU") return;
+    let current = true; setNamedReadError(false);
+    void Promise.all([getSavedMeals(), getExerciseNames()]).then(([meals, exercises]) => {
+      if (current) { setNamedMeals(meals); setNamedExercises(exercises); }
+    }, () => { if (current) setNamedReadError(true); });
+    const readReport = () => void getReportTiming().then((timing) => { if (current) setReportNew(!!timing && !wasSeen(seenKey(timing, new Date()))); }, () => { if (current) setReportNew(false); });
+    readReport(); const timer = setInterval(readReport, 60_000);
+    return () => { current = false; clearInterval(timer); };
+  }, [active, view, systemsRefreshKey, namedRetry]);
+  const namedMatches = query.trim() ? [
+    ...namedMeals.filter((meal) => meal.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).map((meal): SystemCapability => ({ label: meal.name, description: "Saved meal · choose servings", aliases: [], group: "Log", destination: { kind: "record", target: "meal", mealId: meal.id } })),
+    ...Object.entries(namedExercises).filter(([, name]) => name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).map(([exerciseId, name]): SystemCapability => ({ label: name, description: "Exercise · history and sets", aliases: [], group: "Plan", destination: { kind: "exercise", exerciseId } })),
+  ] : [];
   const [visited, setVisited] = useState(() => new Set<MoreView>([initialView]));
   function openGuidedCapture() {
     if (!onOpenCapture) return;
@@ -390,6 +430,7 @@ export function MoreScreen({
     REMINDERS: "reminders-heading",
     DIAGNOSTICS: "command-diagnostics",
     GUIDE: "command-guide",
+    HIDDEN_FEATURES: "command-hidden-features",
   };
 
   /** A setting lives on this index: show it, open its disclosure, and put focus there. */
@@ -398,6 +439,7 @@ export function MoreScreen({
     window.requestAnimationFrame(() => {
       const target = document.getElementById(SECTION_TARGETS[section]);
       if (!target) return;
+      for (let parent = target.parentElement; parent; parent = parent.parentElement) if (parent instanceof HTMLDetailsElement) parent.open = true;
       // Disclosures (guide, time capsule, diagnostics) open; their summary takes focus.
       const details = target instanceof HTMLDetailsElement ? target : section === "DIAGNOSTICS" ? target.querySelector("details") : null;
       if (details) details.open = true;
@@ -408,9 +450,12 @@ export function MoreScreen({
 
   function runCapability(entry: SystemCapability) {
     const destination = entry.destination;
-    if (destination.kind === "more") {
+    if (destination.kind === "daily") { setDailyFocus(destination.tool); setView("DAILY_CONTROLS"); }
+    else if (destination.kind === "tools") { setDailyFocus(null); setView("DAILY_CONTROLS"); }
+    else if (destination.kind === "more") {
       if (destination.view === "INTENT") setIntentFocus(null);
       if (destination.view === "JOURNAL") setJournalFocus(undefined);
+      if (destination.view === "REPORT") void getReportTiming().then((timing) => { if (timing) markSeen(seenKey(timing, new Date())); setReportNew(false); }, () => {});
       setView(destination.view);
     } else if (destination.kind === "section") revealSection(destination.section);
     else onOpenDestination?.(destination);
@@ -418,8 +463,8 @@ export function MoreScreen({
 
   function renderCapability(entry: SystemCapability) {
     const external = entry.destination.kind !== "more" && entry.destination.kind !== "section";
-    return <button key={entry.label} type="button" className="command-result" disabled={external && !onOpenDestination} onClick={() => runCapability(entry)}>
-      <span><strong>{entry.label}</strong><span>{entry.description}</span></span>
+    return <button key={entry.label} type="button" className="command-result" aria-label={`${entry.label} ${entry.description}`} disabled={external && !onOpenDestination} onClick={() => runCapability(entry)}>
+      <span><strong>{entry.label}{entry.label === "AFTER ACTION REPORT" && reportNew && <small className="pr-tag"> NEW</small>}</strong><span>{entry.description}</span></span>
       <span aria-hidden="true" className="command-result__go">›</span>
     </button>;
   }
@@ -428,10 +473,13 @@ export function MoreScreen({
     <div className="screen more-operator">
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
           <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { if (onReturnToToday) { onReturnToToday(); return; } setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>{onReturnToToday ? "← TODAY" : "← BACK TO COMMAND"}</button>
+          <div hidden={view !== "DAILY_CONTROLS"}>{visited.has("DAILY_CONTROLS") && <DailyControls onReturnToFullTools={() => setDailyFocus(null)} commandFocus={dailyFocus} banners={dailyFocus === null ? dailyBanners : undefined} shiftHandoffRefreshKey={dailyRefreshKey} onWorkEnded={() => onDailyContextChanged?.()} onWorkContextChanged={() => onDailyContextChanged?.()} captureRequest={captureRequest} active={active && view === "DAILY_CONTROLS"} openToolsOnMount onOpenBody={(focus) => { if (focus) onOpenDestination?.({ kind: "body", focus }); }} onOpenTrain={() => { onOpenDestination?.({ kind: "workout" }); }} onOpenSystems={() => setView("SYSTEMS")} />}</div>
           {view === "SYSTEMS" && <><SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} /></>}
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
           {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>RETURN TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>RETURN TO BODY</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
+          {view === "REPORT" && <><OperatorHeader destination="command">AFTER ACTION REPORT</OperatorHeader><ReportView /></>}
+          {view === "MIRROR" && <><OperatorHeader destination="command">MIRROR</OperatorHeader><MirrorView /></>}
           <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} onOpenHistory={(id) => {
             reviewOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
             setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
@@ -462,21 +510,23 @@ export function MoreScreen({
         <input id="command-query" className="command-search__input" type="search" value={query} placeholder="Find a screen or action"
           autoComplete="off" enterKeyHint="go"
           onChange={(event) => setQuery(event.target.value)}
-          onKeyDown={(event) => { if (event.key === "Enter" && matches[0]) { event.preventDefault(); runCapability(matches[0]); } }} />
+          onKeyDown={(event) => { if (event.key === "Enter" && [...matches, ...namedMatches][0]) { event.preventDefault(); runCapability([...matches, ...namedMatches][0]!); } }} />
         {query && <button type="button" className="chip command-search__clear" aria-label="Clear search" onClick={() => { setQuery(""); document.getElementById("command-query")?.focus(); }}>CLEAR</button>}
       </div>
-      <p className="visually-hidden" aria-live="polite">{query.trim() ? (matches.length ? `${matches.length} ${matches.length === 1 ? "result" : "results"}` : "No results") : ""}</p>
+      {query.trim() && namedReadError && <p role="alert">Meals and exercises could not be read. <button className="btn-secondary" onClick={() => setNamedRetry((n) => n + 1)}>RETRY NAMES</button></p>}
+      <p className="visually-hidden" aria-live="polite">{query.trim() ? (matches.length + namedMatches.length ? `${matches.length + namedMatches.length} ${matches.length + namedMatches.length === 1 ? "result" : "results"}` : "No results") : ""}</p>
       {query.trim() && (
         <div className="command-results" aria-label="Results">
-          {matches.length === 0 && <p className="command-results__empty">Nothing called “{query.trim()}”. Try water, sleep, backup or schedule.</p>}
+          {matches.length === 0 && namedMatches.length === 0 && <p className="command-results__empty">Nothing called “{query.trim()}”. Try water, sleep, backup or schedule.</p>}
           {CAPABILITY_GROUPS.map((group) => {
-            const entries = matches.filter((entry) => entry.group === group);
+            const entries = [...matches, ...namedMatches].filter((entry) => entry.group === group);
             if (!entries.length) return null;
             return <section key={group} aria-label={group}>
               <h2 className="section-label">{group}</h2>
               {entries.map((entry) => renderCapability(entry))}
             </section>;
           })}
+          <button type="button" className="btn-secondary" onClick={() => setView("SEARCH")}>Search all records</button>
         </div>
       )}
       <div hidden={!!query.trim()}>
@@ -487,6 +537,7 @@ export function MoreScreen({
         <a href="#safety-heading" onClick={(event) => {
           event.preventDefault();
           const heading = menuRef.current?.querySelector<HTMLElement>("#safety-heading");
+          const panel = document.getElementById("command-backup-panel"); if (panel instanceof HTMLDetailsElement) panel.open = true;
           heading?.focus({ preventScroll: true });
           heading?.scrollIntoView({ block: "start", behavior: "instant" });
         }}>BACKUP & RECOVERY ↓</a>
@@ -505,7 +556,7 @@ export function MoreScreen({
       </details>
       <details className="more-inspection more-destination-guide">
         <summary>Find the right destination</summary>
-        <p className="meta">Free notes live in TODAY → Capture. A decision belongs in the Journal; longer-term direction in Missions; a concrete commitment in Obligations.</p>
+        <p className="meta">Write a note from LOG → NOTE. Your inbox is in COMMAND → Capture. A decision belongs in the Journal; longer-term direction in Missions; a concrete commitment in Obligations.</p>
         <dl>
           <dt>Weekly Check-in</dt><dd>Recorded progress, findings and the week ahead. Read-only; no grade.</dd>
           <dt>History</dt><dd>The full chronological event trail, including corrections and undo.</dd>
@@ -513,7 +564,7 @@ export function MoreScreen({
           <dt>Search</dt><dd>Find existing records by words, then open where they live.</dd>
           <dt>Decision Journal</dt><dd>Write a choice and expectation; return later for its actual outcome and lesson.</dd>
           <dt>Missions & Obligations</dt><dd>Keep durable plans separate from tasks, dates and deliberate resolution.</dd>
-          <dt>Work Schedule</dt><dd>Inspect or change the schedule you declared.</dd>
+          <dt>Work Schedule</dt><dd>Open or change the schedule you declared.</dd>
           <dt>Exercise Library & Custom Programs</dt><dd>Your existing movements and workout templates.</dd>
           <dt>Data safety & Settings</dt><dd>Backups, recovery, targets, quit plans, time capsules, reminders and diagnostic detail.</dd>
         </dl>
@@ -529,73 +580,10 @@ export function MoreScreen({
           view-swap, so this is genuine reuse, not a forced fit. Backup/
           Archive/Restore are immediate actions, not navigation, so they
           use .equipment-row instead. */}
-      <section className="operational-index-zone" aria-labelledby="log-actions-heading">
-        <h2 id="log-actions-heading" className="section-label">Log</h2>
-        {SYSTEM_CAPABILITIES.filter((entry) => entry.group === "Log" || entry.label === "WORKOUT").map((entry) => renderCapability(entry))}
-      </section>
-      <section className="operational-index-zone" aria-labelledby="command-today-heading">
-        <h2 id="command-today-heading" className="section-label">Today</h2>
-        {SYSTEM_CAPABILITIES.filter((entry) => entry.group === "Today").map((entry) => renderCapability(entry))}
-      </section>
-      <section className="operational-index-zone" aria-labelledby="records-heading">
-      <h2 id="records-heading" className="section-label">Evidence</h2>
-
-      {/* Drop 7 (owner approval 2026-10-01): the weekly check-in leads Evidence. */}
-      <CollapsibleRow
-        name="WEEKLY CHECK-IN"
-        icon={<LineIcon icon={CalendarCheck} />}
-        onOpen={() => setView("WEEKLY")}
-      />
-      <CollapsibleRow
-        name="HISTORY"
-        icon={<Icon name="history" size={20} />}
-        onOpen={() => setView("HISTORY")}
-      />
-      <CollapsibleRow
-        name="REVIEW"
-        icon={<Icon name="review" size={20} />}
-        onOpen={() => setView("REVIEW")}
-      />
-      <CollapsibleRow
-        name="SEARCH"
-        icon={<Icon name="search" size={20} />}
-        onOpen={() => setView("SEARCH")}
-      />
-        <CollapsibleRow
-          name="DECISION JOURNAL"
-          icon={<Icon name="decisionJournal" size={20} />}
-          onOpen={() => { setJournalFocus(undefined); setView("JOURNAL"); }}
-        />
-      </section>
-      <section className="operational-index-zone" aria-labelledby="operations-heading">
-        <h2 id="operations-heading" className="section-label">Direction</h2>
-        <CollapsibleRow
-          name="MISSIONS & OBLIGATIONS"
-          icon={<Icon name="mission" size={20} />}
-          onOpen={() => {
-            setIntentFocus(null);
-            setView("INTENT");
-          }}
-        />
-        <CollapsibleRow
-          name="WORK SCHEDULE"
-          icon={<Icon name="schedule" size={20} />}
-          onOpen={() => setView("WORK_SCHEDULE")}
-        />
-      </section>
-      <section className="operational-index-zone" aria-labelledby="training-tools-heading">
-        <h2 id="training-tools-heading" className="section-label">Training tools</h2>
-        <CollapsibleRow
-          name="EXERCISE LIBRARY"
-          icon={<Icon name="exerciseLibrary" size={20} />}
-          onOpen={() => setView("EXERCISE_LIBRARY")}
-        />
-        <CollapsibleRow
-          name="CUSTOM PROGRAMS"
-          icon={<Icon name="customPrograms" size={20} />}
-          onOpen={() => setView("CUSTOM_TEMPLATES")}
-        />
-      </section>
+      {CAPABILITY_GROUPS.map((group) => <details className="command-group" key={group}><summary className="disclosure-row">{group}</summary>
+        {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry))}
+      </details>)}
+      <details className="command-group" id="command-backup-panel"><summary className="disclosure-row">Backup & recovery tools</summary>
       <section className="operational-index-zone" aria-labelledby="safety-heading">
         <h2 id="safety-heading" tabIndex={-1} className="section-label">Data safety</h2>
         <div className="equipment-row">
@@ -711,6 +699,7 @@ export function MoreScreen({
           </div>
         </details>
       </section>
+      </details>
 
       {/* FIELD ALPHA Phase 4B/4H: RECORDS — historical/review-oriented,
           distinct from OPERATIONS above. History stays a clean single
@@ -750,8 +739,16 @@ export function MoreScreen({
       {/* DECLUTTER Drop 3 (owner ruling 2026-09-30): a Settings group.
           Nutrition Targets moved here from BODY; the SYSTEM readings moved
           inside Diagnostic detail so the main list stays short. */}
+      <details className="command-group" id="command-settings-panel"><summary className="disclosure-row">Settings tools</summary>
       <section className="operational-index-zone" aria-labelledby="settings-heading">
       <h2 id="settings-heading" className="section-label">Settings</h2>
+      <details id="command-hidden-features" className="more-inspection"><summary>Hidden features</summary>
+        <p className="meta">These optional tools start hidden. Showing or hiding them never changes records or Engine guidance. This preference stays on this browser.</p>
+        {([ ["minimumDay", "Minimum Day"], ["smallSteps", "Small Steps"], ["foodLookup", "Online food lookup"] ] as [HiddenFeature, string][]).map(([feature, label]) => <label key={feature} className="hidden-feature-choice">
+          <input type="checkbox" checked={hiddenFeatures[feature]} onChange={(event) => setHiddenError(!setHiddenFeature(feature, event.target.checked))} />Show {label}
+        </label>)}
+        {hiddenError && <p role="alert">Preference could not be saved. Try again.</p>}
+      </details>
       <div id="command-nutrition-targets" tabIndex={-1}><NutritionTargetsSettings /></div>
       <div id="command-quit-tracker" tabIndex={-1}><QuitHabitSettings /></div>
       <details id="command-time-capsule" className="more-inspection"><summary>Time capsule</summary><TimeCapsuleSettings /></details>
@@ -871,6 +868,7 @@ export function MoreScreen({
       </WhyDisclosure>
       </div>
       </section>
+      </details>
       </div>
       </div>
     </div>

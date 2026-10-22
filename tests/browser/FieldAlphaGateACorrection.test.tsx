@@ -1,10 +1,13 @@
+import { beforeEach as optionalToolFixture } from "vitest";
+import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
+optionalToolFixture(() => { for (const feature of ["minimumDay", "smallSteps", "foodLookup"] as const) setHiddenFeature(feature, true); });
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn, enableMinimumDay, markMedsCompleted, markHygieneCompleted } from "../../src/application/commands";
 import { createObligation } from "../../src/application/intentCommands";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 import { openTodayTools } from "./helpers/todayTools";
 
@@ -17,7 +20,7 @@ import { openTodayTools } from "./helpers/todayTools";
  * covers the three corrections that followed: Minimum Day's GLANCE-
  * depth compaction, State Input's red-authority reduction, and the
  * commitment row's label clarity (no longer duplicating TODAY's own
- * "Orient" section label). Behavioral coverage for the underlying
+ * "DAY CONTEXT" section label). Behavioral coverage for the underlying
  * capabilities (Minimum Day semantics, check-in semantics, Obligation
  * relevance/ranking) is unchanged and already exists elsewhere
  * (tests/integration/minimumDay.test.ts, tests/ui/checkInFields.test.ts,
@@ -118,10 +121,10 @@ describe("Gate A correction — State Input red-authority reduction", () => {
     // DECLUTTER-001: the finished check-in is one line; UPDATE reopens the
     // full form (ALL GOOD + the manual fields).
     await screen.getByRole("button", { name: "Update check-in" }).click();
-    // Drop 5: the form opens with the previous answers as a draft; START BLANK is the one-tap way out.
-    await expect.element(screen.getByText(/^Draft: your check-in/)).toBeVisible();
-    await screen.getByRole("button", { name: "START BLANK" }).click();
-    await expect.element(screen.getByText(/Nothing is prefilled/i)).toBeVisible();
+    // REDESIGN-001: previous answers are optional reference, never filled input.
+    const sheet = screen.getByRole("dialog", { name: "CHECK IN", exact: true });
+    expect(sheet.element().querySelectorAll('[aria-pressed="true"]')).toHaveLength(0);
+    await expect.element(sheet.getByRole("button", { name: "SUBMIT CHECK-IN" })).toBeDisabled();
     await expect.element(screen.getByRole("button", { name: "SUBMIT CHECK-IN" })).toBeVisible();
   });
 });
@@ -133,11 +136,11 @@ describe("Gate A correction — commitment label clarity", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("DAY CONTEXT", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
-    // Exactly one "Orient" on the whole screen — the section header, not
+    // Exactly one "DAY CONTEXT" on the whole screen — the section header, not
     // also the commitment row underneath it.
-    expect(screen.getByText("Orient", { exact: true }).elements()).toHaveLength(1);
+    expect(screen.getByText("DAY CONTEXT", { exact: true }).elements()).toHaveLength(1);
   });
 
   it("the obligation's own title still appears, in the row's summary line, once role-labeled as COMMITMENT", async () => {

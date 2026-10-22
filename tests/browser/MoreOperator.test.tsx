@@ -1,3 +1,4 @@
+import { commandResult, openCommandPanel } from "./helpers/command";
 /// <reference types="@vitest/browser-playwright" />
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cdp, page, userEvent } from "vitest/browser";
@@ -128,13 +129,15 @@ describe("MORE-OPERATOR-001", () => {
     await logSet(day.id, session.id, "machine-chest-press", 1, 100, 8);
     const before = await db.events.toArray();
     const screen = await render(<MoreScreen />);
-    const trigger = screen.getByRole("button", { name: `Open ${name}` });
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    const trigger = await commandResult(screen, name);
     trigger.element().focus();
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByRole("heading", { name: heading, exact: true })).toBeVisible();
     const back = screen.getByRole("button", { name: "← BACK TO COMMAND" });
     expect(document.activeElement).toBe(back.element());
-    expect(screen.getByRole("button", { name: "Open HISTORY" }).elements()).toHaveLength(0);
+    expect(screen.getByRole("searchbox", { name: "Find a screen or action" }).elements()).toHaveLength(0);
     await userEvent.keyboard("{Enter}");
     await expect.element(trigger).toBeVisible();
     expect(document.activeElement).toBe(trigger.element());
@@ -145,12 +148,14 @@ describe("MORE-OPERATOR-001", () => {
 
   it("retains unsaved settings/capsule text, disclosure and scroll on inspection/return", async () => {
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "NUTRITION TARGETS")).click();
     await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2345");
     await screen.getByText("Time capsule", { exact: true }).click();
     await screen.getByRole("button", { name: "WRITE ONE" }).click();
     await screen.getByRole("textbox", { name: "Note to future you" }).fill("Unsaved private draft");
-    const trigger = screen.getByRole("button", { name: "Open HISTORY" });
+    const trigger = (await commandResult(screen, "HISTORY"));
     trigger.element().scrollIntoView();
     trigger.element().focus();
     const origin = window.scrollY;
@@ -168,6 +173,8 @@ describe("MORE-OPERATOR-001", () => {
   it.each([320, 360, 412])("provides immediate recovery access and usable controls at %ipx", async (width) => {
     await page.viewport(width, 800);
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     const link = screen.getByRole("link", { name: "BACKUP & RECOVERY ↓" });
     expect(link.element().getBoundingClientRect().bottom).toBeLessThan(400);
     link.element().focus();
@@ -196,6 +203,8 @@ describe("MORE-OPERATOR-001", () => {
     let reject!: (error: Error) => void;
     vi.mocked(getDayCount).mockImplementationOnce(() => new Promise((_resolve, fail) => { reject = fail; }));
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("Diagnostic detail", { exact: true }).click();
     await expect.element(screen.getByRole("status")).toHaveTextContent("Reading diagnostic information…");
     await expect.element(screen.getByText("UNKNOWN", { exact: true })).toBeVisible();
@@ -214,6 +223,8 @@ describe("MORE-OPERATOR-001", () => {
     const before = await db.events.toArray();
     vi.mocked(exportBackup).mockRejectedValueOnce(new Error("Export interrupted"));
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByRole("button", { name: "EXPORT BACKUP" }).click();
     await expect.element(screen.getByRole("status")).toHaveTextContent("Export interrupted");
     await expect.element(screen.getByRole("button", { name: "EXPORT BACKUP" })).toBeEnabled();
@@ -227,6 +238,8 @@ describe("MORE-OPERATOR-001", () => {
     let release!: () => void;
     vi.mocked(exportBackup).mockImplementationOnce(() => new Promise<void>((resolve) => { release = resolve; }));
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     const button = screen.getByRole("button", { name: "EXPORT BACKUP" }).element();
     button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -240,6 +253,8 @@ describe("MORE-OPERATOR-001", () => {
     const before = await db.events.toArray();
     const blob = await exportDB(db);
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).click();
     const input = screen.getByLabelText("Choose a backup file to restore").element() as HTMLInputElement;
     const choose = (file: File) => {
@@ -264,7 +279,7 @@ describe("MORE-OPERATOR-001", () => {
     await startDay();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await screen.getByRole("button", { name: "Open HISTORY" }).click();
+    await (await commandResult(screen, "HISTORY")).click();
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "COMMAND" })).toBeVisible();
     await screen.getByRole("button", { name: "Search everything", exact: true }).click();
@@ -281,6 +296,8 @@ describe("MORE-OPERATOR-001", () => {
     const before = await db.events.toArray();
     const file = new File([await exportDB(db)], "confirmed-backup.json");
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).click();
     const input = screen.getByLabelText("Choose a backup file to restore").element() as HTMLInputElement;
     const transfer = new DataTransfer();
@@ -306,6 +323,8 @@ describe("MORE-OPERATOR-001", () => {
 
   it("has no decorative/recommendation surface; settled and expanded controls pass full axe contrast", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).click();
     await screen.getByText("Automatic backups & file check", { exact: true }).click();
     await screen.getByText("Diagnostic detail", { exact: true }).click();
@@ -319,9 +338,11 @@ describe("MORE-OPERATOR-001", () => {
   it("reduced motion suppresses inherited animation during disclosure and navigation", async () => {
     await cdp().send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).click();
     expect(document.getAnimations()).toHaveLength(0);
-    await screen.getByRole("button", { name: "Open SEARCH" }).click();
+    await (await commandResult(screen, "SEARCH")).click();
     await expect.element(screen.getByRole("textbox", { name: "Search everything" })).toBeVisible();
     expect(document.getAnimations()).toHaveLength(0);
   });

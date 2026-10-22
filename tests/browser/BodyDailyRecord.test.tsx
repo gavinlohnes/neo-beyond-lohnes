@@ -55,7 +55,7 @@ describe("BODY daily health record", () => {
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
       for (const animation of document.getAnimations()) animation.finish();
       expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
-      await screen.getByRole("button", { name: "DAILY RECORD" }).click();
+      await screen.getByRole("button", { name: "TODAY", exact: true }).click();
       await expect.poll(() => document.activeElement?.textContent).toBe("YOUR PROGRESS");
     });
   }
@@ -72,7 +72,7 @@ describe("BODY daily health record", () => {
     await expect.poll(() => reading("MAIN SLEEP")).toContain("6 hr 40 min");
     expect(reading("NAPS")).toContain("20 min");
     expect(reading("WATER")).toContain("16 oz");
-    await screen.getByRole("button", { name: "Inspect Nap · 20 min" }).click();
+    await screen.getByRole("button", { name: "Open Nap · 20 min" }).click();
     const hours = screen.getByRole("spinbutton", { name: "Hours" }).last();
     await expect.poll(() => document.activeElement).toBe(hours.element());
     await hours.fill("1");
@@ -87,7 +87,7 @@ describe("BODY daily health record", () => {
   it("opens canonical water correction from the record and updates orientation without rewriting history", async () => {
     const day = await startDay(); await logWater(day.id, 16);
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "Inspect Water · 16 oz" }).click();
+    await screen.getByRole("button", { name: "Open Water · 16 oz" }).click();
     const input = screen.getByRole("spinbutton", { name: "Corrected amount (oz)" });
     await expect.poll(() => document.activeElement).toBe(input.element());
     await input.fill("12"); await screen.getByRole("button", { name: "SAVE", exact: true }).click();
@@ -101,16 +101,16 @@ describe("BODY daily health record", () => {
     const meal = await createSavedMeal({ name: "Dinner", calories: 600, proteinG: 45, carbsG: 60, fatG: 15 });
     await logMeal(day.id, meal.id);
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "Inspect Dinner" }).click();
+    await screen.getByRole("button", { name: "Open Dinner" }).click();
     const input = screen.getByRole("spinbutton", { name: "Corrected calories" });
     await expect.poll(() => document.activeElement).toBe(input.element());
     await input.fill("550");
-    await screen.getByRole("button", { name: "DAILY RECORD" }).click();
-    await screen.getByRole("button", { name: "Inspect Dinner" }).click();
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+    await screen.getByRole("button", { name: "Open Dinner" }).click();
     await expect.element(input).toHaveValue(550);
     await expect.poll(() => document.activeElement).toBe(input.element());
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
-    await screen.getByRole("button", { name: "DAILY RECORD" }).click();
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await expect.poll(() => reading("CALORIES")).toContain("550 kcal");
     expect(await getTotalMealCalories(day.id)).toBe(550);
     expect((await getMealEntries(day.id))[0]?.correctionCount).toBe(1);
@@ -155,9 +155,9 @@ describe("BODY daily health record", () => {
     await screen.getByRole("button", { name: "DONE", exact: true }).click();
     await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Open SLEEP");
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
-    await screen.getByRole("button", { name: "DAILY RECORD" }).click();
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await screen.getByRole("button", { name: "YOUR PROGRESS" }).click();
-    await screen.getByRole("button", { name: "DAILY RECORD" }).click();
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await screen.getByRole("button", { name: "Open SLEEP" }).click();
     await expect.element(screen.getByRole("spinbutton", { name: "Hours" })).toHaveValue(7);
     expect(await db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(0);
@@ -189,7 +189,7 @@ describe("BODY daily health record", () => {
     screen.getByRole("button", { name: "+8 oz" }).element().dispatchEvent(new MouseEvent("click", { bubbles: true }));
     screen.getByRole("button", { name: "YOUR PROGRESS" }).element().dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await expect.element(screen.getByText("8 oz added.", { exact: true })).toBeVisible();
-    await expect.element(screen.getByRole("heading", { name: "BODY // DAILY RECORD" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "BODY // TODAY" })).toBeVisible();
     expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
   });
 

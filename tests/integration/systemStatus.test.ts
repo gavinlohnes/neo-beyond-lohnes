@@ -43,7 +43,7 @@ describe("deriveSystemStatus", () => {
       "GREEN · 7h sleep, check-in clear, 1 hard session in 4 days",
     );
     expect(describeSystemStatus(deriveSystemStatus({ mainSleepMinutes: null, checkIn: null, hardSessions: 5 }))).toBe(
-      "NO READ · log sleep or check in",
+      "NOT CHECKED IN · log sleep or check in",
     );
   });
 });

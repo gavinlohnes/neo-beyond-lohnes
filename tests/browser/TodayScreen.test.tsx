@@ -1,3 +1,6 @@
+import { beforeEach as optionalToolFixture } from "vitest";
+import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
+optionalToolFixture(() => { for (const feature of ["minimumDay", "smallSteps", "foodLookup"] as const) setHiddenFeature(feature, true); });
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
@@ -22,7 +25,7 @@ import { archiveMission, createMission, createObligation, markObligationWaiting 
 import { getObligation } from "../../src/application/intentQueries";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
 import type { ScheduledContext } from "../../src/engine/scheduledContext";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 import { db } from "../../src/persistence/db";
 import {
@@ -199,7 +202,7 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
 
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("DAY CONTEXT", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open TOOLS" })).toBeVisible();
     // TONIGHT-001: the day is unanswered, so the work question sits below and the all-clear says so.
     await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
@@ -290,8 +293,11 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     const screen = await render(<TodayScreen />);
 
     await screen.getByRole("button", { name: "MANUAL CHECK-IN" }).click();
-    expect(screen.getByRole("button", { name: "ALL GOOD" }).elements()).toHaveLength(1);
-    await expect.element(screen.getByText(/Nothing is prefilled/i)).toBeVisible();
+    const sheet = screen.getByRole("dialog", { name: "CHECK IN", exact: true });
+    await expect.element(sheet).toBeVisible();
+    expect(sheet.element().querySelectorAll("[aria-pressed=true]")).toHaveLength(0);
+    await sheet.getByText("ALL GOOD", { exact: true }).first().click();
+    await expect.element(sheet.getByRole("button", { name: "ALL GOOD", exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "ALL GOOD" }).click();
     // DECLUTTER-001: a finished check-in collapses to one line with UPDATE.
@@ -310,7 +316,7 @@ describe("TodayScreen (real browser) — plain words (owner ruling 2026-10-04)",
 
     // TONIGHT-001: on a day off the check-in lives in TOOLS.
     await openTodayTools(screen);
-    await expect.element(screen.getByText("CHECK-IN", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "CHECK IN", exact: true })).toBeVisible();
     expect(document.body.textContent).not.toMatch(/BeyondDay|deterministic|STATE INPUT|state input/);
   });
 });
@@ -376,7 +382,7 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — WHY machinery panel", () =>
 
     // Real deterministic inputs — the exact values just submitted, not manufactured.
     await expect.element(screen.getByText("State input", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Energy", { exact: true })).toBeVisible();
+    await expect.element(page.elementLocator(document.querySelector(".machinery-panel")!).getByText("Energy", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("4", { exact: true }).first()).toBeVisible();
 
     // Real derived facts already computed by engine/capacity.ts.
@@ -499,7 +505,7 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — STATUS operational readout"
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("DAY CONTEXT", { exact: true })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect(strip).not.toBeNull();
@@ -513,7 +519,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("DAY CONTEXT", { exact: true })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect([...strip!.classList]).toEqual(["status-strip", "status-strip--stacked", "today-situation", "cc-hero-wrap"]);
@@ -525,7 +531,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await submitCheckIn(day.id, YELLOW);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("DAY CONTEXT", { exact: true })).toBeVisible();
     // STATUS-001: the strip's line is the System Status; a YELLOW check-in reads AMBER, with its reasons.
     await expect.element(screen.getByText(/^AMBER · /)).toBeVisible();
 
@@ -541,7 +547,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
     await submitCheckIn(day.id, RED);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("DAY CONTEXT", { exact: true })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect([...strip!.classList]).toEqual(["status-strip", "status-strip--stacked", "today-situation", "cc-hero-wrap", "status-strip--red"]);
@@ -555,11 +561,11 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — STATUS severity and UNK
 
     const screen = await render(<TodayScreen />);
     // STATUS-001: with neither sleep nor a check-in, the System Status says so — never a guessed color.
-    await expect.element(screen.getByText("NO READ · log sleep or check in", { exact: false })).toBeVisible();
+    await expect.element(screen.getByText("NOT CHECKED IN · log sleep or check in", { exact: false })).toBeVisible();
 
     const strip = document.querySelector(".status-strip");
     expect([...strip!.classList]).toEqual(["status-strip", "status-strip--stacked", "today-situation", "cc-hero-wrap"]);
-    expect(strip!.textContent).toContain("NO READ · log sleep or check in");
+    expect(strip!.textContent).toContain("NOT CHECKED IN · log sleep or check in");
     expect(document.querySelector(".capacity-dot--unknown")).not.toBeNull();
     // UNKNOWN is not a severity — no warning/red modifier, no bolded segment.
     expect(document.querySelector(".status-strip__capacity")).toBeNull();
@@ -572,7 +578,7 @@ describe("TodayScreen // SUIT-001 (COMMAND PRESENCE) — section headings and pr
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("heading", { level: 2, name: "Orient", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { level: 2, name: "DAY CONTEXT", exact: true })).toBeVisible();
     // An unanswered day takes no phase from the schedule's guess: its rows sit under "Today".
     await expect.element(screen.getByRole("heading", { level: 2, name: "Today", exact: true })).toBeVisible();
   });
@@ -1218,7 +1224,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
 
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("DAY CONTEXT", { exact: true })).toBeVisible();
     expect(screen.getByText("COMMITMENT", { exact: true }).elements()).toHaveLength(0);
   });
 
@@ -1232,7 +1238,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     // FIELD ALPHA Gate A correction: the collapsed row's accessible
     // name is the fixed role "COMMITMENT" (it used to be the
     // obligation's own title, which could visually collide with
-    // TODAY's "Orient" section header) — the title itself still shows, in
+    // TODAY's "DAY CONTEXT" section header) — the title itself still shows, in
     // the summary line. Shift Clock (Drop 2): that quiet row lives in TOOLS.
     await openTodayTools(screen);
     await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
@@ -1317,7 +1323,8 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
     await screen.getByRole("button", { name: "SATISFY COMMITMENT" }).click();
     const confirm = screen.getByRole("button", { name: "CONFIRM SATISFACTION" });
-    await Promise.allSettled([confirm.click(), confirm.click()]);
+    const confirmNode = confirm.element() as HTMLButtonElement;
+    confirmNode.click(); confirmNode.click();
 
     await expect.element(screen.getByRole("status")).toHaveTextContent("Commitment satisfied: Renew passport.");
     expect(screen.getByRole("alert").elements()).toHaveLength(0);
@@ -1361,7 +1368,7 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
 
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("DAY CONTEXT", { exact: true })).toBeVisible();
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByText("COMMITMENT", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByText(/Renew passport/).elements()).toHaveLength(0);
@@ -1517,14 +1524,14 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     expect(bg).toBe("rgb(208, 20, 27)");
   });
 
-  it("DECLUTTER Drop 2: the all-clear \"No action needed\" button is neutral, not red", async () => {
+  it("REDESIGN-001: the all-clear acknowledgement is the single NEXT action", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByRole("button", { name: "GOT IT" })).toBeVisible();
     const el = screen.getByRole("button", { name: "GOT IT" }).element();
-    expect(el.className).toContain("btn-secondary");
-    expect(getComputedStyle(el).backgroundColor).not.toBe("rgb(208, 20, 27)");
+    expect(el.className).toContain("btn-primary");
+    expect(getComputedStyle(el).backgroundColor).toBe("rgb(208, 20, 27)");
   });
 
   it("Drop 6: SHIFT DOWN shows the quit tracker's post-shift plan", async () => {

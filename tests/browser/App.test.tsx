@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { page } from "vitest/browser";
@@ -57,7 +58,8 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     const day = await startDay();
     await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
     const screen = await render(<App />);
-    const updateLocator = screen.getByRole("button", { name: "Update check-in" });
+    await (await commandResult(screen, "CHECK IN")).click();
+    const updateLocator = screen.getByRole("button", { name: "CHECK IN", exact: true });
     await expect.element(updateLocator).toBeVisible();
     const update = updateLocator.element();
     const spacer = document.createElement("div");
@@ -68,10 +70,10 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     expect(update.getBoundingClientRect().bottom).toBeLessThan(0);
 
     (update as HTMLButtonElement).click();
-    const formLocator = screen.getByRole("group", { name: "Check-in" });
+    const formLocator = screen.getByRole("dialog", { name: "CHECK IN", exact: true });
     await expect.element(formLocator).toBeVisible();
     const form = formLocator.element();
-    await expect.poll(() => document.activeElement).toBe(form);
+    await expect.poll(() => form.contains(document.activeElement)).toBe(true);
     await expect.poll(() => form.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
     const navTop = document.querySelector(".shell-nav")!.getBoundingClientRect().top;
     expect(form.getBoundingClientRect().top).toBeLessThan(navTop);
@@ -137,7 +139,7 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     await expect.element(screen.getByText("BEYOND // TRAIN", { exact: true })).toBeVisible();
 
     await screen.getByText("BODY", { exact: true }).click();
-    await expect.poll(() => screen.getByText("BODY", { exact: true }).element().closest("button")?.getAttribute("aria-current")).toBe("page");
+    await expect.poll(() => screen.getByRole("button", { name: "BODY", exact: true }).element().getAttribute("aria-current")).toBe("page");
     await screen.getByText("TRAIN", { exact: true }).click();
 
     await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
@@ -185,14 +187,12 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     await logMeal(day.id, dinner.id);
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
-    await screen.getByRole("button", { name: /SHOW TODAY'S MEALS/ }).click();
-    await screen.getByRole("button", { name: "Edit Dinner" }).click();
+    await holdToConfirm(screen.getByRole("button", { name: /^Dinner/ }));
     await screen.getByRole("spinbutton", { name: "Corrected calories" }).fill("999");
-
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "Edit Dinner" })).toHaveAttribute("aria-expanded", "true");
+    await holdToConfirm(screen.getByRole("button", { name: /^Dinner/ }));
     await expect.element(screen.getByRole("spinbutton", { name: "Corrected calories" })).toHaveValue(999);
     expect(await db.events.where("type").equals("MEAL_LOG_CORRECTED").count()).toBe(0);
   });
@@ -348,7 +348,7 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
   it("resuming (visibilitychange) when the active day hasn't crossed its own boundary yet leaves it unchanged", async () => {
     const day = await startDay();
     const screen = await render(<App />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
 
     document.dispatchEvent(new Event("visibilitychange"));
     // No expected state change to poll toward — settle past any async
@@ -363,7 +363,7 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
   it("resuming (visibilitychange) after the boundary has elapsed since mount rolls the day over, even though the mount-time check found nothing due", async () => {
     const day = await startDay();
     const screen = await render(<App />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
     // Confirms the mount-time check genuinely found nothing due — this
     // rollover, once it happens below, is provably the resume listener's
     // own doing, not a residual effect from mount.
@@ -388,7 +388,7 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
   it("resuming via pageshow (not only visibilitychange) also rolls an elapsed day over", async () => {
     const day = await startDay();
     const screen = await render(<App />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
     await db.beyondDays.update(day.id, { startedAt: new Date(Date.now() - TWO_DAYS_MS).toISOString() });
 
     window.dispatchEvent(new Event("pageshow"));
@@ -398,7 +398,7 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
   it("two resume events firing together (visibilitychange and pageshow, as a real browser can for one resume) still produce only one rollover", async () => {
     const day = await startDay();
     const screen = await render(<App />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
     await db.beyondDays.update(day.id, { startedAt: new Date(Date.now() - TWO_DAYS_MS).toISOString() });
 
     document.dispatchEvent(new Event("visibilitychange"));
@@ -414,7 +414,7 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
   it("a later, separate resume after a rollover already happened does nothing — the same boundary never fires twice", async () => {
     const day = await startDay();
     const screen = await render(<App />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
     await db.beyondDays.update(day.id, { startedAt: new Date(Date.now() - TWO_DAYS_MS).toISOString() });
 
     document.dispatchEvent(new Event("visibilitychange"));
@@ -464,10 +464,10 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
   it("Drop 1.6a: tapping MORE again inside Weekly goes back to the MORE menu", async () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await screen.getByRole("button", { name: "Open WEEKLY CHECK-IN" }).click();
+    await (await commandResult(screen, "WEEKLY CHECK-IN")).click();
     await expect.element(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "Open WEEKLY CHECK-IN" })).toBeVisible();
+    await expect.element((await commandResult(screen, "WEEKLY CHECK-IN"))).toBeVisible();
     expect(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true }).elements()).toHaveLength(0);
   });
 });

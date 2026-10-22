@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 /// <reference types="@vitest/browser-playwright" />
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
@@ -27,12 +28,11 @@ vi.mock("virtual:pwa-register/react", () => ({
 type Screen = Awaited<ReturnType<typeof render>>;
 const tab = (screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "COMMAND") => screen.getByRole("button", { name, exact: true }).click();
 const openPlan = async (screen: Screen) => {
-  await tab(screen, "TODAY");
-  await screen.getByRole("button", { name: /PLAN TODAY/ }).click();
+  await (await commandResult(screen, "PLAN TODAY")).click();
 };
 const openIntent = async (screen: Screen) => {
   await tab(screen, "COMMAND");
-  await screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS", exact: true }).click();
+  await (await commandResult(screen, "MISSIONS & OBLIGATIONS")).click();
 };
 
 /** What a page reload or tab close would do: a prevented beforeunload asks first. */

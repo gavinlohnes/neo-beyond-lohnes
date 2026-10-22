@@ -99,6 +99,7 @@ export function RecommendationCard({
   const evidenceBasis = describeEvidenceBasis(checkIn !== null);
   const title = describeRecommendationTitle(recommendation, headlineCommitment);
   const isAllClear = recommendation.kind === "NO_ACTION_REQUIRED";
+  const canHandoff = !!recommendationHandoff && !(recommendationHandoff === "SHIFT_DOWN" && activeShiftDownId !== null) && (recommendationHandoff === "SHIFT_DOWN" || !!onOpenTrain);
   const open = nextAction || isDominant || isAttention || isAllClear || recommendationOpen;
   if (!open) {
     return (
@@ -135,7 +136,7 @@ export function RecommendationCard({
         <p className="meta" style={{ marginTop: 8 }}>Same as before — you already said not now.</p>
       )}
       {nextAction && !decision && (isAllClear
-        ? <button type="button" className="btn-secondary cc-decline" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>
+        ? <button type="button" className="btn-primary cc-cta" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>
         : <button type="button" className="cc-decline" disabled={busy} onClick={onDecline}>{DECLINE_LABEL}</button>)}
       <WhyDisclosure summary="How BEYOND decided" style={{ marginTop: nextAction ? 2 : 12 }}>
         {nextAction && <>{evidenceBasis && <p className="meta">{evidenceBasis}</p>}<p className="meta">{describeRecommendationEffect(recommendation.kind)}</p>
@@ -211,9 +212,8 @@ export function RecommendationCard({
         {nextAction ? (
           decision ? <>
             <p className="meta">{describeRecordedDecision(decision)}</p>
-            {recommendationHandoff && !(recommendationHandoff === "SHIFT_DOWN" && activeShiftDownId !== null) &&
-              (recommendationHandoff === "SHIFT_DOWN" || onOpenTrain) &&
-              <button type="button" className="btn-primary cc-cta" disabled={busy} onClick={() => onHandoff(recommendationHandoff)}>{describeRecommendationHandoff(recommendationHandoff)}</button>}
+            {canHandoff ? <button type="button" className="btn-primary cc-cta" disabled={busy} onClick={() => onHandoff(recommendationHandoff!)}>{describeRecommendationHandoff(recommendationHandoff!)}</button>
+              : <button type="button" className="btn-primary cc-cta" disabled>{describeRecordedDecision(decision)}</button>}
           </> : !isAllClear && <>
             <button className="btn-primary cc-cta" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>
 

@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
@@ -11,11 +12,15 @@ import { db } from "../../src/persistence/db";
 import { openCaptureFromLog } from "./helpers/todayTools";
 
 type Screen = Awaited<ReturnType<typeof render>>;
-async function tab(screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "COMMAND") { await screen.getByRole("button", { name, exact: true }).click(); }
+async function tab(screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "COMMAND") {
+  const close = screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true });
+  if (close.elements().length) await close.click();
+  await screen.getByRole("button", { name, exact: true }).click();
+}
 async function manualMeal(screen: Screen) {
-  await tab(screen, "BODY");
-  await screen.getByRole("button", { name: "OPEN MEALS", exact: true }).click();
-  await screen.getByText("SHOW ADD MEAL", { exact: true }).click();
+  await tab(screen, "TODAY");
+  await screen.getByRole("button", { name: "Log a meal", exact: true }).click();
+  await screen.getByRole("dialog").getByRole("button", { name: "New meal", exact: true }).click();
 }
 beforeEach(async () => { await page.viewport(360, 800); vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 9, 13, 22)); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo(0, 0); });
@@ -26,23 +31,26 @@ describe("DAILY-EXPERIENCE-001 continuity", () => {
     await manualMeal(screen);
     const input = screen.getByRole("textbox", { name: "New meal name" });
     await input.fill("Unfinished dinner");
-    await screen.getByRole("spinbutton", { name: "New meal calories" }).fill("625");
+    await screen.getByRole("spinbutton", { name: "New meal Calories" }).fill("625");
     const confirm = vi.spyOn(window, "confirm");
     await tab(screen, "TODAY");
     await screen.getByRole("button", { name: "Search everything", exact: true }).click();
     await tab(screen, "BODY");
+    await manualMeal(screen);
     await expect.element(input).toHaveValue("Unfinished dinner");
-    await expect.element(screen.getByRole("spinbutton", { name: "New meal calories" })).toHaveValue(625);
+    await expect.element(screen.getByRole("spinbutton", { name: "New meal Calories" })).toHaveValue(625);
     expect(confirm).not.toHaveBeenCalled();
     expect(await db.savedMeals.count()).toBe(0); expect(await db.events.count()).toBe(0);
   });
   it("keeps sleep input and its open form across a planning detour", async () => {
     const screen = await render(<App />);
-    await tab(screen, "BODY"); await screen.getByRole("button", { name: "Open SLEEP", exact: true }).click();
+    await tab(screen, "TODAY"); await screen.getByRole("button", { name: "Open LOG", exact: true }).click();
+    await screen.getByRole("dialog").getByRole("button", { name: "SLEEP", exact: true }).click();
     await screen.getByRole("spinbutton", { name: "Hours", exact: true }).fill("7");
     await screen.getByRole("spinbutton", { name: "Minutes", exact: true }).fill("25");
-    await tab(screen, "TODAY"); await screen.getByRole("button", { name: /PLAN TODAY/ }).click();
-    await tab(screen, "BODY");
+    await tab(screen, "TODAY"); await (await commandResult(screen, "PLAN TODAY")).click();
+    await tab(screen, "TODAY"); await screen.getByRole("button", { name: "Open LOG", exact: true }).click();
+    await screen.getByRole("dialog").getByRole("button", { name: "SLEEP", exact: true }).click();
     await expect.element(screen.getByRole("spinbutton", { name: "Hours", exact: true })).toHaveValue(7);
     await expect.element(screen.getByRole("spinbutton", { name: "Minutes", exact: true })).toHaveValue(25);
     expect(await db.events.count()).toBe(0);
@@ -55,13 +63,15 @@ describe("DAILY-EXPERIENCE-001 continuity", () => {
     await screen.getByRole("spinbutton", { name: "Set 1 weight in pounds", exact: true }).fill("85");
     await tab(screen, "BODY"); await tab(screen, "TRAIN");
     await expect.element(reps).toHaveValue(9);
-    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds", exact: true })).toHaveValue(85);
+    const weight = screen.getByRole("spinbutton", { name: "Set 1 weight in pounds", exact: true });
+    if (document.activeElement === weight.element()) { await expect.element(weight).toHaveAttribute("placeholder", "85"); (weight.element() as HTMLInputElement).blur(); }
+    await expect.element(weight).toHaveValue(85);
     expect(await db.performedSets.count()).toBe(0);
   });
   it("keeps Journal creation and review input across tabs", async () => {
     await createDecisionJournalEntry({ title: "Training choice", decision: "Try mornings" });
     const screen = await render(<App />);
-    await tab(screen, "COMMAND"); await screen.getByRole("button", { name: "Open DECISION JOURNAL", exact: true }).click();
+    await tab(screen, "COMMAND"); await (await commandResult(screen, "DECISION JOURNAL")).click();
     await screen.getByRole("button", { name: "RECORD A DECISION", exact: true }).click();
     await screen.getByRole("textbox", { name: "Decision title", exact: true }).fill("An unfinished choice");
     await tab(screen, "BODY"); await tab(screen, "COMMAND");
@@ -78,12 +88,11 @@ describe("DAILY-EXPERIENCE-001 continuity", () => {
     await openCaptureFromLog(screen);
     const input = screen.getByRole("textbox", { name: "Capture a thought", exact: true });
     await input.fill("Remember this thought");
-    const element = input.element();
     await tab(screen, "TRAIN"); await tab(screen, "TODAY");
+    await openCaptureFromLog(screen);
     await expect.element(input).toHaveValue("Remember this thought");
     // Return to the task position; reopening the explicit action restores writing focus.
-    await openCaptureFromLog(screen);
-    await expect.poll(() => document.activeElement).toBe(element);
+    await expect.poll(() => document.activeElement).toBe(input.element());
     expect(await db.captureItems.count()).toBe(0);
   });
 });
@@ -95,7 +104,7 @@ describe("Plan Today and truthful guidance", () => {
     await createObligation({ title: "Overdue call", dueAt: "2026-10-12" });
     await createObligation({ title: "Later task", plannedAt: "2026-10-14" });
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: /PLAN TODAY/ }).click();
+    await (await commandResult(screen, "PLAN TODAY")).click();
     await expect.element(screen.getByRole("button", { name: /Planned appointment/ })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: /Overdue call/ })).toBeVisible();
     expect(screen.getByRole("button", { name: /Later task/ }).elements()).toHaveLength(0);
@@ -104,7 +113,7 @@ describe("Plan Today and truthful guidance", () => {
     await expect.element(screen.getByRole("heading", { name: "Planned appointment", exact: true })).toBeVisible();
   });
   it("keeps the task composer across navigation, then creates one explicit planned task", async () => {
-    const screen = await render(<App />); await screen.getByRole("button", { name: /PLAN TODAY/ }).click();
+    const screen = await render(<App />); await (await commandResult(screen, "PLAN TODAY")).click();
     const title = screen.getByRole("textbox", { name: "Add a task for today" });
     await title.fill("Book dentist"); await tab(screen, "BODY"); await tab(screen, "COMMAND");
     await expect.element(title).toHaveValue("Book dentist");
@@ -115,7 +124,7 @@ describe("Plan Today and truthful guidance", () => {
     expect(await db.events.where("type").equals("OBLIGATION_CREATED").count()).toBe(1);
   });
   it("retains composer input after a canonical write failure and retries once", async () => {
-    const screen = await render(<App />); await screen.getByRole("button", { name: /PLAN TODAY/ }).click();
+    const screen = await render(<App />); await (await commandResult(screen, "PLAN TODAY")).click();
     await screen.getByRole("textbox", { name: "Add a task for today" }).fill("Call home");
     const failure = vi.spyOn(db.obligations, "add").mockRejectedValue(new Error("Storage full"));
     await screen.getByRole("button", { name: "ADD TO TODAY", exact: true }).click();
@@ -130,10 +139,11 @@ describe("Plan Today and truthful guidance", () => {
     await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
     const screen = await render(<App />);
     // SUIT-001: SYSTEMS carries the level and the sleep fact on TODAY; STATE keeps the full sentence.
-    await expect.element(screen.getByRole("button", { name: /^Systems: RED, Sleep 3:00, Fuel 0g, Check-in GREEN\. Open readout$/ })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: /STATUS · RED · 3h sleep/ })).toBeVisible();
     // TONIGHT-001: a day off asks its workout question below, so the all-clear says so.
     await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText(/Status reports recorded signals/)).toBeVisible();
+    expect(await db.recommendations.count()).toBe(1);
+    expect(await db.events.where("type").equals("STATE_CHECKED_IN").count()).toBe(1);
   });
   for (const width of [320, 360, 412]) it(`has one main landmark, compact destination access and accessible controls at ${width}px`, async () => {
     await page.viewport(width, 800);
@@ -170,7 +180,7 @@ it.each([320, 360, 412])("keeps focused Capture input clear of navigation when u
 it("refreshes a retained commitment after completion elsewhere", async () => {
   const task = await createObligation({ title: "A shared commitment", plannedAt: "2026-10-13" });
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: /PLAN TODAY/ }).click();
+  await (await commandResult(screen, "PLAN TODAY")).click();
   await screen.getByRole("button", { name: /A shared commitment/ }).click();
   await expect.element(screen.getByRole("heading", { name: "A shared commitment", exact: true })).toBeVisible();
   await tab(screen, "BODY");

@@ -9,7 +9,7 @@
 .health-metric { display: block; width: 100%; text-align: left; color: inherit; background: transparent; border: 0; border-radius: 0; padding: 0; font: inherit; align-self: start; position: relative; cursor: pointer; min-height: 44px; }
 .health-metric:hover, .health-metric:active { background: var(--surface-2); }
 .health-metric .tool-label { display: block; }
-.health-metric .tool-label::after { content: "↗"; color: var(--text-2); position: absolute; right: 0; top: 0; }
+.health-metric .tool-label::after { content: ""; position: absolute; right: 4px; top: 6px; width: 7px; height: 7px; border-top: 1px solid var(--text-2); border-right: 1px solid var(--text-2); }
 .health-metric .readout__value { margin: 0; }
 .health-past-day { border-block: 1px solid var(--border-subtle); padding-block: 12px; }
 .health-past-day .readout-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -23,3 +23,7 @@
 .health-history-focus { outline: 2px solid var(--text-1); outline-offset: 4px; }
 
 .health-day-controls > summary { min-height: 44px; padding-block: 10px; cursor: pointer; font-size: 16px; color: var(--text-2); border-block-end: 1px solid var(--border-subtle); }
+.body-home > div > section { margin-bottom: 24px; }
+.body-home .body-progress-card { border: 1px solid var(--border-strong); padding: 14px; margin-bottom: 12px; }
+.body-home .body-progress-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.body-home .health-record-row { min-height: 56px; width: 100%; text-align: left; }

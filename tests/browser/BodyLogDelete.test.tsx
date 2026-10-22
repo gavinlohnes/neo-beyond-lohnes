@@ -86,7 +86,7 @@ describe("bodyweight", () => {
     const day = await startDay();
     await logBodyweight(day.id, 182);
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
+    await screen.getByRole("button", { name: "Open BODYWEIGHT", exact: true }).click();
     await screen.getByRole("button", { name: /SHOW TODAY'S ENTRIES \(1\)/ }).last().click();
     await screen.getByRole("button", { name: "CORRECT", exact: true }).last().click();
     await screen.getByRole("spinbutton", { name: "Corrected weight (lbs)" }).fill("0");

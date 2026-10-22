@@ -1,3 +1,4 @@
+import { openCommandPanel, commandResult } from "./helpers/command";
 import { afterEach, describe, expect, it } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
@@ -20,6 +21,8 @@ describe("NOTES-CAPSULE-001 — time capsule", () => {
   it("MORE: write, pick when it opens, SEAL; the list shows the date, never the text", async () => {
     await page.viewport(360, 800);
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("Time capsule", { exact: true }).click();
     await screen.getByRole("button", { name: "WRITE ONE" }).click();
     await screen.getByRole("textbox", { name: "Note to future you" }).fill("Did the 5 a.m. workouts stick?");
@@ -38,10 +41,11 @@ describe("NOTES-CAPSULE-001 — time capsule", () => {
     await sealTimeCapsule("Three months ago you started this. Keep going.", 3, new Date(2026, 0, 2));
     await sealTimeCapsule("Not yet", 12, new Date());
     const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     await expect.element(screen.getByText("Three months ago you started this. Keep going.")).toBeVisible();
     await expect.element(screen.getByText(/^TIME CAPSULE · A NOTE FROM /)).toBeVisible();
     expect(document.body.textContent).not.toContain("Not yet");
-    await screen.getByRole("button", { name: "GOT IT", exact: true }).click();
+    await screen.getByRole("region", { name: "Time capsule", exact: true }).getByRole("button", { name: "GOT IT", exact: true }).click();
     await expect.poll(() => document.body.textContent?.includes("Keep going.")).toBe(false);
     expect(await db.events.where("type").equals("TIME_CAPSULE_OPENED").count()).toBe(1);
   });

@@ -91,7 +91,7 @@ describe("TRAIN-OPERATOR-001", () => {
       expect(log.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     }
-    await expect.element(screen.getByText("Last time: no recorded set", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("LAST TIME: no recorded set", { exact: true })).toBeVisible();
     // Measure settled colors, not composited opacity during finite mount motion.
     await Promise.all(document.getAnimations().map((animation) => animation.finished));
     const results = await axe.run(document.querySelector(".train-operator")!);
@@ -267,7 +267,7 @@ describe("TRAIN-OPERATOR-001", () => {
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
     await expect.element(screen.getByRole("alert")).toBeVisible();
     await screen.getByRole("button", { name: "RETRY WORKOUT READ" }).click();
-    await expect.element(screen.getByText("Template B · REDUCED", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("WORKOUT B · REDUCED", { exact: true })).toBeVisible();
     expect(await getActiveWorkoutSession()).toBeUndefined();
     await expect.poll(() => document.activeElement?.tagName).toBe("H1");
     await screen.getByRole("button", { name: "START WORKOUT" }).click();

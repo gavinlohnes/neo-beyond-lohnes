@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
@@ -57,8 +58,8 @@ for (const width of [320, 360, 412]) it(`opens the monthly review from TODAY wit
   await seedMonth();
   const before = await db.events.count();
   const screen = await render(<App />);
-  await expect.element(screen.getByText("Monthly review ready", { exact: true })).toBeVisible();
-  await screen.getByRole("button", { name: "OPEN REVIEW", exact: true }).click();
+  expect(screen.getByText("Monthly review ready", { exact: true }).elements()).toHaveLength(0);
+  await (await commandResult(screen, "REVIEW")).click();
   const review = screen.getByRole("region", { name: "Weekly review", exact: true });
   await expect.element(review.getByText("MONTHLY REVIEW · LATEST COMPLETED WEEK", { exact: true })).toBeVisible();
   const body = screen.getByRole("region", { name: "BODY COMPOSITION · LAST 4 WEEKS" });
@@ -85,8 +86,8 @@ it("keeps ordinary weeks weekly and says when the monthly review comes", async (
   clock(new Date(2026, 9, 26, 20));
   const today = await startDay(); await setWorkContext(today.id, "OFF", "MANUAL");
   const screen = await render(<App />);
-  await expect.element(screen.getByText("Weekly review ready", { exact: true })).toBeVisible();
-  await screen.getByRole("button", { name: "OPEN REVIEW", exact: true }).click();
+  expect(screen.getByText("Weekly review ready", { exact: true }).elements()).toHaveLength(0);
+  await (await commandResult(screen, "REVIEW")).click();
   const review = screen.getByRole("region", { name: "Weekly review", exact: true });
   await expect.element(review.getByText("WEEKLY REVIEW · LATEST COMPLETED WEEK", { exact: true })).toBeVisible();
   await expect.element(review.getByText("Monthly review in 3 weeks. It adds body composition: weight, measurements and photos.", { exact: true })).toBeVisible();
@@ -96,7 +97,7 @@ it("keeps ordinary weeks weekly and says when the monthly review comes", async (
 it("never shows a newly hidden photo while the re-read is pending, then shows only fresh evidence", async () => {
   const { later } = await seedMonth();
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: "OPEN REVIEW", exact: true }).click();
+  await (await commandResult(screen, "REVIEW")).click();
   await expect.element(screen.getByRole("figure", { name: "Front photos, Oct 1 and Nov 10" })).toBeVisible();
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await hideProgressPhoto(later.id);
@@ -104,7 +105,7 @@ it("never shows a newly hidden photo while the re-read is pending, then shows on
   const held = new Promise<void>((resolve) => { release = resolve; });
   const actual = (await vi.importActual<typeof import("../../src/application/monthlyReviewQueries")>("../../src/application/monthlyReviewQueries")).getMonthlyReview;
   vi.mocked(getMonthlyReview).mockImplementationOnce(async (week) => { await held; return actual(week); });
-  await screen.getByRole("button", { name: "OPEN REVIEW", exact: true }).click();
+  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
   await expect.element(screen.getByRole("region", { name: "Weekly review", exact: true })).toBeVisible();
   await new Promise((resolve) => setTimeout(resolve, 250));
   expect(document.querySelector(".monthly-body")).toBeNull();
@@ -118,18 +119,18 @@ it("never shows a newly hidden photo while the re-read is pending, then shows on
 it("drops the cached body panel when a re-read fails, so a newly hidden photo is never shown, and recovers on the next read", async () => {
   const { later } = await seedMonth();
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: "OPEN REVIEW", exact: true }).click();
+  await (await commandResult(screen, "REVIEW")).click();
   await expect.element(screen.getByRole("figure", { name: "Front photos, Oct 1 and Nov 10" })).toBeVisible();
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await hideProgressPhoto(later.id);
   vi.mocked(getMonthlyReview).mockRejectedValueOnce(new Error("read failed"));
-  await screen.getByRole("button", { name: "OPEN REVIEW", exact: true }).click();
+  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
   await expect.element(screen.getByText("Body composition for this month couldn’t be read. The weekly review below is unaffected.", { exact: true })).toBeVisible();
   expect(document.querySelector(".monthly-body")).toBeNull();
   expect(document.querySelectorAll(".weekly-dashboard img").length).toBe(0);
   await expect.element(screen.getByText("-2.5 lb", { exact: true })).not.toBeInTheDocument();
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-  await screen.getByRole("button", { name: "OPEN REVIEW", exact: true }).click();
+  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
   const body = screen.getByRole("region", { name: "BODY COMPOSITION · LAST 4 WEEKS" });
   await expect.element(body.getByText("-2.5 lb", { exact: true })).toBeVisible();
   expect(document.querySelector(".monthly-body figure")).toBeNull();

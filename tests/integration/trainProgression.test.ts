@@ -4,6 +4,7 @@ import { startDay } from "../../src/application/commands";
 import { completeWorkout, logSet, skipSet, startWorkout } from "../../src/application/trainCommands";
 import {
   getLastPerformedSetForExercise,
+  getPerformedSets,
   getProgressionSuggestion,
   getRecentSubstitutions,
 } from "../../src/application/trainQueries";
@@ -132,7 +133,7 @@ describe("getLastPerformedSetForExercise — pre-fill source for a new set", () 
     await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
 
     const result = await getLastPerformedSetForExercise("A", "STANDARD", "machine-chest-press");
-    expect(result).toEqual({ weight: 135, reps: 10 });
+    expect(result).toEqual({ weight: 135, reps: 10, recordedAt: (await getPerformedSets(session.id)).find((s) => s.setNumber === 1)!.recordedAt });
   });
 
   it("uses the MOST RECENT matching session, not an older one", async () => {
@@ -146,7 +147,7 @@ describe("getLastPerformedSetForExercise — pre-fill source for a new set", () 
     await completeWorkout(day.id, second.id, "STANDARD", "PARTIAL");
 
     const result = await getLastPerformedSetForExercise("A", "STANDARD", "machine-chest-press");
-    expect(result).toEqual({ weight: 130, reps: 8 });
+    expect(result).toEqual({ weight: 130, reps: 8, recordedAt: (await getPerformedSets(second.id))[0]!.recordedAt });
   });
 
   it("skips over a skipped set number 1 and returns the first actually-performed set", async () => {
@@ -157,7 +158,7 @@ describe("getLastPerformedSetForExercise — pre-fill source for a new set", () 
     await completeWorkout(day.id, session.id, "STANDARD", "PARTIAL");
 
     const result = await getLastPerformedSetForExercise("A", "STANDARD", "machine-chest-press");
-    expect(result).toEqual({ weight: 125, reps: 11 });
+    expect(result).toEqual({ weight: 125, reps: 11, recordedAt: (await getPerformedSets(session.id)).find((s) => !s.skipped)!.recordedAt });
   });
 
   it("does not cross-contaminate between different (templateId, sessionType) contexts, same as progression", async () => {
@@ -169,6 +170,7 @@ describe("getLastPerformedSetForExercise — pre-fill source for a new set", () 
     expect(await getLastPerformedSetForExercise("A", "REDUCED", "machine-chest-press")).toEqual({
       weight: 135,
       reps: 12,
+      recordedAt: (await getPerformedSets(session.id))[0]!.recordedAt,
     });
     expect(await getLastPerformedSetForExercise("A", "STANDARD", "machine-chest-press")).toBeUndefined();
   });

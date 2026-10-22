@@ -30,18 +30,6 @@ async function seed() {
   vi.setSystemTime(at(14, 17, 0));
 }
 
-function pressed(): string[] {
-  // TONIGHT-001: on a day off the check-in opens from TOOLS / the wake card, not a CHECK_IN row.
-  const form = [...document.querySelectorAll(".equipment-row")].find((row) => row.querySelector(".tool-label")?.textContent === "CHECK-IN");
-  return [...(form?.querySelectorAll('button[aria-pressed="true"]') ?? [])].map((b) => b.textContent ?? "");
-}
-
-function chip(label: string, n: number): HTMLButtonElement {
-  const name = [...document.querySelectorAll("span")].find((s) => s.textContent === label)!;
-  const row = name.parentElement!.nextElementSibling!;
-  return [...row.querySelectorAll("button")].find((b) => b.textContent === String(n)) as HTMLButtonElement;
-}
-
 async function latestCheckIn(): Promise<StateCheckIn> {
   const all = (await db.checkIns.toArray()) as StateCheckIn[];
   return all.sort((a, b) => a.recordedAt.localeCompare(b.recordedAt)).at(-1)!;
@@ -57,59 +45,41 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
-describe("check-in draft", () => {
-  it("opens with the last answers and what's been logged since; CONFIRM records CONFIRMED", async () => {
-    await seed();
+describe("REDESIGN-001 — previous check-in is reference only", () => {
+  async function open() {
     const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
-
-    await expect.element(screen.getByText(/^Draft: your check-in Wed 07:00\. Change anything that's different now\.$/)).toBeVisible();
-    await expect.element(screen.getByText("Since then: main sleep 7 hr", { exact: true })).toBeVisible();
-    await expect.poll(pressed).toEqual(["2", "4", "3", "2", "1"]);
-    // Never auto-confirmed: nothing is written until the tap.
+    await screen.getByRole("button", { name: "CHECK IN", exact: true }).click();
+    return { screen, sheet: screen.getByRole("dialog", { name: "CHECK IN", exact: true }) };
+  }
+  it("starts blank despite a recent previous check-in and retains its source/since evidence on demand", async () => {
+    await seed(); const { screen, sheet } = await open();
+    expect(sheet.element().querySelectorAll('[aria-pressed=true]')).toHaveLength(0);
+    await expect.element(sheet.getByRole("button", { name: "SUBMIT CHECK-IN" })).toBeDisabled();
+    await screen.getByText("Previous check-in · reference", { exact: true }).click();
+    await expect.element(sheet.getByText(/Your check-in Wed 07:00/i)).toBeVisible();
+    await expect.element(sheet.getByText("Since then: main sleep 7 hr", { exact: true })).toBeVisible();
     expect(await db.checkIns.count()).toBe(1);
-
-    await screen.getByRole("button", { name: "CONFIRM CHECK-IN" }).click();
-    await expect.poll(() => db.checkIns.count()).toBe(2);
-    expect(await latestCheckIn()).toMatchObject({ ...LAST, draft: "CONFIRMED" });
-    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
   });
-
-  it("changing any value turns it into SUBMIT and records ADJUSTED", async () => {
-    await seed();
-    const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
-    await expect.poll(pressed).toEqual(["2", "4", "3", "2", "1"]);
-
-    chip("Soreness", 4).click();
-    await expect.poll(pressed).toEqual(["2", "4", "3", "4", "1"]);
-    await screen.getByRole("button", { name: "SUBMIT CHECK-IN" }).click();
+  it("records explicit current answers without fabricating confirmation of an automatically applied draft", async () => {
+    await seed(); const { sheet } = await open();
+    for (const label of ["Energy", "Stress", "Mood", "Soreness", "Alcohol urge"]) await sheet.getByRole("group", { name: label, exact: true }).getByRole("button", { name: "3", exact: true }).click();
+    await sheet.getByRole("button", { name: "SUBMIT CHECK-IN" }).click();
     await expect.poll(() => db.checkIns.count()).toBe(2);
-    expect(await latestCheckIn()).toMatchObject({ ...LAST, soreness: 4, draft: "ADJUSTED" });
+    expect(await latestCheckIn()).toMatchObject({ energy: 3, stress: 3, mood: 3, soreness: 3, alcoholUrge: 3 });
+    expect((await latestCheckIn()).draft).toBeUndefined();
+    const [original] = await db.checkIns.orderBy("recordedAt").toArray(); expect(original).toMatchObject(LAST);
   });
-
-  it("START BLANK escapes the draft: an empty form, and no draft recorded", async () => {
-    await seed();
-    const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
-    await screen.getByRole("button", { name: "START BLANK" }).click();
-
-    await expect.element(screen.getByText(/Nothing is prefilled/)).toBeVisible();
-    expect(pressed()).toEqual([]);
-    for (const [label, n] of [["Energy", 4], ["Stress", 2], ["Mood", 4], ["Soreness", 1], ["Alcohol urge", 0]] as const) chip(label, n).click();
-    await screen.getByRole("button", { name: "SUBMIT CHECK-IN" }).click();
-    await expect.poll(() => db.checkIns.count()).toBe(2);
-    const saved = await latestCheckIn();
-    expect(saved).toMatchObject({ energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
-    expect(saved.draft).toBeUndefined();
+  it("keeps a partial manual answer on dismissal and never fills the remaining answers from history", async () => {
+    await seed(); const { screen, sheet } = await open();
+    await sheet.getByRole("group", { name: "Energy", exact: true }).getByRole("button", { name: "5", exact: true }).click();
+    await sheet.getByRole("button", { name: "CLOSE", exact: true }).click(); await screen.getByRole("button", { name: "CHECK IN", exact: true }).click();
+    expect(sheet.element().querySelectorAll('[aria-pressed=true]')).toHaveLength(1);
+    await expect.element(sheet.getByRole("button", { name: "SUBMIT CHECK-IN" })).toBeDisabled(); expect(await db.checkIns.count()).toBe(1);
   });
-
-  it("offers no draft when the last check-in is more than 36 hours old", async () => {
-    await seed();
-    vi.setSystemTime(at(15, 20, 0));
-    const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
-    await expect.element(screen.getByText(/Nothing is prefilled/)).toBeVisible();
-    expect(screen.getByText(/^Draft:/).elements()).toHaveLength(0);
+  it("does not offer stale previous answers older than 36 hours", async () => {
+    await seed(); vi.setSystemTime(at(16, 10)); const { sheet } = await open();
+    expect(sheet.element().querySelectorAll('[aria-pressed=true]')).toHaveLength(0);
+    expect(sheet.getByText("Previous check-in · reference", { exact: true }).elements()).toHaveLength(0);
+    expect(await db.checkIns.count()).toBe(1);
   });
 });

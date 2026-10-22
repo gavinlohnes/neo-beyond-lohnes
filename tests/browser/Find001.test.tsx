@@ -1,3 +1,4 @@
+import { db } from "../../src/persistence/db";
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { App } from "../../src/app/App";
@@ -61,6 +62,7 @@ describe("FIND-001", () => {
     const screen = await render(<App />);
     await searchFromTopBar(screen, "oats");
     await screen.getByRole("button", { name: "Open MEAL: Overnight oats" }).click();
-    await expect.element(screen.getByText("HIDE ADD MEAL")).toBeVisible();
+    await expect.element(screen.getByRole("dialog", { name: "MEAL", exact: true })).toBeVisible();
+    expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
   });
 });

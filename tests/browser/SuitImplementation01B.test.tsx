@@ -38,7 +38,7 @@ describe("Suit Implementation 01B — dominant surface grammar", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
     // TONIGHT-001: the day is unanswered, so the work question sits below and the all-clear says so.
     await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
 
@@ -53,7 +53,8 @@ describe("Suit Implementation 01B — dominant surface grammar", () => {
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByText("SHIFT DOWN IN PROGRESS", { exact: true })).toBeVisible();
 
-    expect(document.querySelectorAll(".command-surface")).toHaveLength(1);
+    expect(document.querySelectorAll('.console-guidance[aria-label="Next action"]')).toHaveLength(1);
+    expect([...document.querySelectorAll<HTMLElement>(".today-field .btn-primary")].filter(el => el.getClientRects().length)).toHaveLength(1);
   });
 
   it("ordinary TOOLS-tier surfaces (STATE INPUT, WORK CONTEXT, CAPTURE) use .equipment-row, not a bare .card", async () => {

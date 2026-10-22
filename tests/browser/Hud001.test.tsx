@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
@@ -81,7 +82,7 @@ describe("HUD-001 — HUD design system", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
     for (const sel of [".btn-secondary", ".btn-primary"]) {
       const el = document.querySelector(sel);
       if (el) expect(getComputedStyle(el).clipPath, sel).toMatch(/^polygon/);
@@ -90,7 +91,8 @@ describe("HUD-001 — HUD design system", () => {
     // check-in parent. Verify the same shared frame geometry on MORE's
     // actual consecutive capability rows, not accidental TODAY siblings.
     const system = await render(<MoreScreen />);
-    await expect.element(system.getByRole("button", { name: "Open HISTORY" })).toBeVisible();
+    await expect.element(await commandResult(system, "HISTORY")).toBeVisible();
+    await system.getByRole("link", { name: "BACKUP & RECOVERY ↓" }).click();
     const rows = system.container.querySelectorAll(".equipment-row:not(:first-child)");
     const row = rows[0];
     expect(row).toBeDefined();
@@ -104,7 +106,7 @@ describe("HUD-001 — HUD design system", () => {
       await submitCheckIn(day.id, values);
       const screen = await render(<TodayScreen />);
       await expect.element(screen.getByRole("heading", { level: 1 }).first()).toBeInTheDocument();
-      await expect.poll(() => document.querySelector(".status-strip")).not.toBeNull();
+      await expect.poll(() => document.querySelector(".mode-header")).not.toBeNull();
       expect(strayReds(screen.container)).toEqual([]);
       expect(await contrastViolations(screen.container)).toEqual([]);
       cleanup();
@@ -129,14 +131,14 @@ describe("HUD-001 — HUD design system", () => {
 
   it("MORE uses only the one red and passes AA contrast", async () => {
     const screen = await render(<MoreScreen />);
-    await expect.element(screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" })).toBeVisible();
+    await expect.element((await commandResult(screen, "MISSIONS & OBLIGATIONS"))).toBeVisible();
     expect(strayReds(screen.container)).toEqual([]);
     expect(await contrastViolations(screen.container)).toEqual([]);
   });
 
   it("Weekly keeps its pre-HUD ground, faces and corners until the F1 review", async () => {
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open WEEKLY CHECK-IN" }).click();
+    await (await commandResult(screen, "WEEKLY CHECK-IN")).click();
     await expect.element(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
     const weekly = document.querySelector(".hud-legacy")!;
     expect(weekly).not.toBeNull();

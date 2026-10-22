@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, expect, it, vi } from "vitest";
 import { cdp, page } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
@@ -19,7 +20,7 @@ for (const width of [320, 360, 412]) it(`shows the SYSTEMS line and opens the re
   await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
   const before = await db.events.toArray();
   const screen = await render(<App />);
-  const line = screen.getByRole("button", { name: /^Systems: Sleep 6:50, Fuel 40g, Check-in GREEN\. Open readout$/ });
+  const line = await commandResult(screen, "SYSTEMS");
   await expect.element(line).toBeVisible();
   expect(line.element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
   await line.click();
@@ -34,8 +35,8 @@ for (const width of [320, 360, 412]) it(`shows the SYSTEMS line and opens the re
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   for (const animation of document.getAnimations()) animation.finish();
   expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
-  await screen.getByRole("button", { name: "← TODAY", exact: true }).click();
-  await expect.poll(() => document.activeElement?.getAttribute("aria-label") ?? "").toMatch(/^Systems: /);
+  await screen.getByRole("button", { name: "← BACK TO COMMAND", exact: true }).click();
+  await expect.poll(() => document.activeElement?.getAttribute("aria-label") ?? "").toMatch(/^SYSTEMS /);
   expect(await db.events.toArray()).toEqual(before);
 });
 
@@ -61,11 +62,10 @@ for (const [level, values, words] of [
   const day = await startDay();
   await submitCheckIn(day.id, values);
   const screen = await render(<App />);
-  await expect.poll(() => document.querySelector("[data-system-status]")?.getAttribute("data-system-status")).toBe(level);
-  const line = document.querySelector<HTMLElement>(".systems-line")!;
-  if (level === "GREEN") expect(line.querySelector(".status-strip__capacity")).toBeNull();
-  else expect(line.querySelector(".status-strip__capacity")?.textContent).toContain(level);
-  await screen.getByRole("button", { name: /^Systems: / }).click();
+  await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
+  if (level === "GREEN") expect(document.querySelector(".today-system-signal [data-system-status]")).toBeNull();
+  else await expect.poll(() => document.querySelector(".today-system-signal [data-system-status]")?.textContent).toContain(level);
+  await (await commandResult(screen, "SYSTEMS")).click();
   const state = screen.getByRole("region", { name: "STATE" });
   await expect.element(state.getByText(level, { exact: true }).first()).toBeVisible();
   if (words) await expect.element(state.getByText(words, { exact: true })).toBeVisible();
@@ -74,9 +74,9 @@ for (const [level, values, words] of [
 it("explains NO READ and missing readings plainly", async () => {
   await startDay();
   const screen = await render(<App />);
-  await expect.element(screen.getByRole("button", { name: /^Systems: NO READ · log sleep or check in, Fuel 0g\. Open readout$/ })).toBeVisible();
-  await screen.getByRole("button", { name: /^Systems: / }).click();
-  await expect.element(screen.getByText("NO READ", { exact: true })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: /STATUS · NOT CHECKED IN/ })).toBeVisible();
+  await screen.getByRole("button", { name: /STATUS · NOT CHECKED IN/ }).click();
+  await expect.element(screen.getByText("NOT CHECKED IN", { exact: true })).toBeVisible();
   await expect.element(screen.getByText("Log sleep or check in.", { exact: true })).toBeVisible();
   await expect.element(screen.getByText("Not logged", { exact: true }).first()).toBeVisible();
   await expect.element(screen.getByText("None yet", { exact: true })).toBeVisible();

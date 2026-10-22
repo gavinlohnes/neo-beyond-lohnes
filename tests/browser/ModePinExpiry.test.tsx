@@ -38,7 +38,7 @@ async function runningWorkout() {
 
 async function openCapture(screen: Awaited<ReturnType<typeof render>>) {
   await screen.getByRole("button", { name: "Open LOG", exact: true }).click();
-  await screen.getByRole("dialog", { name: "LOG" }).getByRole("button", { name: /^Note/ }).click();
+  await screen.getByRole("dialog", { name: "LOG" }).getByRole("button", { name: /^Note/i }).click();
 }
 
 describe("16:30 mode pin expiry", () => {
@@ -68,9 +68,12 @@ describe("16:30 mode pin expiry", () => {
     expect((await db.workoutSessions.get(workout.id))?.status).toBe("ACTIVE");
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     expect(screen.getByRole("main").elements()).toHaveLength(1);
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
     await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toHaveValue(85);
-    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 repetitions" })).toHaveValue(9);
+    const reps = screen.getByRole("spinbutton", { name: "Set 1 repetitions" });
+    if (document.activeElement === reps.element()) { await expect.element(reps).toHaveAttribute("placeholder", "9"); (reps.element() as HTMLInputElement).blur(); }
+    await expect.element(reps).toHaveValue(9);
     expect(await db.performedSets.count()).toBe(0);
   });
 
@@ -79,17 +82,18 @@ describe("16:30 mode pin expiry", () => {
     const { day } = await runningWorkout();
     history.replaceState(null, "", "?go=water");
     const screen = await render(<App />);
-    await expect.element(screen.getByRole("heading", { name: "BODY // WATER" })).toBeVisible();
-    expect(document.getElementById("workspace-TODAY")).toBeNull();
+    await expect.element(screen.getByRole("dialog", { name: "WATER", exact: true })).toBeVisible();
+    expect(document.getElementById("workspace-TODAY")).not.toBeNull();
     await expect.poll(suit).toBe("OFF");
     vi.setSystemTime(at(13, 16, 29, 59, 750));
     window.dispatchEvent(new Event("pageshow"));
     const before = await records();
     vi.setSystemTime(at(13, 16, 30));
     await expect.poll(suit).toBe("EXPECTED_POST_WORK");
-    expect(document.getElementById("workspace-TODAY")).toBeNull();
+    expect(document.getElementById("workspace-TODAY")).not.toBeNull();
     expect(await records()).toEqual(before);
     expect((await getActiveDay())?.id).toBe(day.id);
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await expect.poll(source).toMatch(/^(Per schedule|Shift (in|ends in) .+?) · /);
   });

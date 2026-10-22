@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
@@ -28,11 +29,13 @@ describe("NOTES-SWEEP-001 — day-off notes sweep", () => {
   it("shows on a day off with notes, not on a work day", async () => {
     const day = await dayOffWithNotes(["Call the dentist"]);
     const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     await expect.element(screen.getByText("Sweep your notes · 1 waiting")).toBeVisible();
     cleanup();
 
     await setWorkContext(day.id, "WORK", "MANUAL");
     const again = await render(<App />);
+    await (await commandResult(again, "TODAY TOOLS")).click();
     await expect.element(again.getByRole("button", { name: "COMMAND", exact: true })).toBeVisible();
     expect(document.querySelector(".notes-sweep")).toBeNull();
   });

@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { App } from "../../src/app/App";
@@ -49,7 +50,8 @@ describe("CLEANUP-002", () => {
   it("TODAY's own lines sit under the header (finding 3)", async () => {
     localStorage.setItem("beyond:autoBackupPreference", JSON.stringify({ enabled: true, everyDays: 7 }));
     await startDay();
-    await render(<App />);
+    const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     await expect.poll(() => document.querySelector(".today-banners .backup-due")).not.toBeNull();
     const header = document.querySelector(".field-header")!;
     const banners = document.querySelector(".today-banners")!;
@@ -62,13 +64,16 @@ describe("CLEANUP-002", () => {
     await captureItem("Call the dentist");
     await captureItem("Renew truck registration");
     const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     await expect.element(screen.getByText("Sweep your notes · 2 waiting")).toBeVisible();
     await expect.element(screen.getByText(/2 notes waiting\. SWEEP above/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "→ TASK" }).elements()).toHaveLength(0);
+    const attention = screen.getByText(/2 notes waiting\. SWEEP above/).element().closest(".signal-row")!;
+    expect([...attention.querySelectorAll("button")].filter(button => button.textContent === "→ TASK")).toHaveLength(0);
     cleanup();
 
     await setWorkContext(day.id, "WORK", "MANUAL");
     const work = await render(<App />);
+    await (await commandResult(work, "TODAY TOOLS")).click();
     await expect.element(work.getByRole("button", { name: "→ TASK" }).first()).toBeVisible();
     expect(document.querySelector(".notes-sweep")).toBeNull();
   });
@@ -76,8 +81,10 @@ describe("CLEANUP-002", () => {
   it("the start card centers its contents (finding 11)", async () => {
     const screen = await render(<App />);
     await expect.element(screen.getByRole("button", { name: "START DAY" })).toBeVisible();
-    const surface = document.querySelector(".today-field .command-surface")!;
-    expect(getComputedStyle(surface).justifyContent).toBe("center");
+    const surface = document.querySelector('.redesign-today > section[aria-label="Next action"]')!;
+    const buttons = [...surface.querySelectorAll<HTMLElement>(".btn-primary")].filter(el => el.getClientRects().length);
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]?.textContent).toBe("START DAY");
   });
 
   it("the sweep line re-reads when the day's context changes (finding 13)", async () => {
@@ -99,7 +106,7 @@ describe("CLEANUP-002", () => {
     const screen = await render(<App />);
     await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toBeVisible();
     expect(document.querySelector(".notes-sweep")).toBeNull();
-    await screen.getByRole("button", { name: "Open TOOLS" }).click();
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     await screen.getByRole("button", { name: "CHANGE WORK CONTEXT" }).click();
     await screen.getByRole("button", { name: "NO", exact: true }).click();
     await expect.element(screen.getByText("Sweep your notes · 1 waiting")).toBeVisible();

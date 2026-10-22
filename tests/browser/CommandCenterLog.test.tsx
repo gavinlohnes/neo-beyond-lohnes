@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page, userEvent } from "vitest/browser";
@@ -57,38 +58,33 @@ describe("TODAY action row", () => {
     const screen = await render(<App />);
     const events = await db.events.count();
     let sheet = await openLog(screen);
-    expect([...sheet.element().querySelectorAll(".today-sheet__option strong")].map((el) => el.textContent))
-      .toEqual(["Water", "Meal", "Sleep", "Bodyweight", "Note", "Urge", "Workout set"]);
+    expect([...sheet.element().querySelectorAll(".today-sheet__option")].map((el) => el.textContent))
+      .toEqual(["WATER", "MEAL", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "WORKOUT SET → TRAIN"]);
     // POLISH-002: the sheet rises in (0.22 s); measure it settled, as the other axe checks do.
     for (const animation of document.getAnimations()) animation.finish();
     expect((await axe.run(sheet.element())).violations).toEqual([]);
-    await sheet.getByRole("button", { name: "Close LOG" }).click();
+    await sheet.getByRole("button", { name: "CLOSE", exact: true }).click();
 
-    // Same arrival checks as the SYSTEM catalog: focus lands inside the existing control.
-    const focusedIn = (id: string) => async () => { await expect.poll(() => !!document.activeElement?.closest(`#${id}`)).toBe(true); };
-    const destinations: [RegExp, () => Promise<void>][] = [
-      [/^Water/, focusedIn("body-hydration")],
-      [/^Meal/, async () => { await expect.poll(() => document.activeElement?.id).toBe("meal-return"); }],
-      [/^Sleep/, focusedIn("body-sleep")],
-      [/^Bodyweight/, focusedIn("body-bodyweight")],
-      [/^Urge/, async () => { await expect.element(screen.getByRole("button", { name: "Log urge: Stress" })).toBeVisible(); }],
-    ];
+    const destinations = [
+      ["WATER", () => expect.element(screen.getByRole("button", { name: "+8 oz", exact: true })).toBeVisible()],
+      ["MEAL", () => expect.element(screen.getByRole("searchbox", { name: "Search your meals" })).toBeVisible()],
+      ["SLEEP", () => expect.element(screen.getByRole("spinbutton", { name: "Hours", exact: true })).toBeVisible()],
+      ["BODYWEIGHT", () => expect.element(screen.getByRole("spinbutton", { name: "Weight (lbs)", exact: true })).toBeVisible()],
+      ["URGE", () => expect.element(screen.getByRole("button", { name: "Log urge: Stress" })).toBeVisible()],
+      ["NOTE", () => expect.element(screen.getByRole("textbox", { name: "Capture a thought", exact: true })).toBeVisible()],
+    ] as const;
     for (const [name, check] of destinations) {
-      await screen.getByRole("button", { name: "TODAY", exact: true }).click();
       sheet = await openLog(screen);
-      await sheet.getByRole("button", { name }).click();
-      await expect.poll(current).toContain("BODY");
+      const node = sheet.element();
+      await sheet.getByRole("button", { name, exact: true }).click();
+      await expect.poll(current).toContain("TODAY");
       await check();
+      expect(screen.getByRole("dialog").element()).toBe(node);
+      await expect.poll(() => node.contains(document.activeElement)).toBe(true);
+      await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     }
-
-    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     sheet = await openLog(screen);
-    await sheet.getByRole("button", { name: /^Note/ }).click();
-    await expect.poll(current).toContain("TODAY");
-    await expect.element(screen.getByRole("textbox", { name: "Capture a thought", exact: true })).toBeVisible();
-
-    sheet = await openLog(screen);
-    await sheet.getByRole("button", { name: /^Workout set/ }).click();
+    await sheet.getByRole("button", { name: "WORKOUT SET → TRAIN", exact: true }).click();
     await expect.poll(current).toContain("TRAIN");
     await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
 
@@ -100,8 +96,9 @@ describe("TODAY action row", () => {
     await startDay();
     const screen = await render(<App />);
     const sheet = await openLog(screen);
-    expect(sheet.getByRole("button", { name: /^Urge/ }).elements()).toHaveLength(0);
-    const buttons = sheet.element().querySelectorAll("button");
+    await expect.element(sheet.getByRole("button", { name: "URGE", exact: true })).toBeVisible();
+    expect(await db.events.where("type").equals("URGE_LOGGED").count()).toBe(0);
+    const buttons = [...sheet.element().querySelectorAll<HTMLButtonElement>("button")].filter(button => button.checkVisibility() && !button.disabled);
     (buttons[buttons.length - 1] as HTMLElement).focus();
     await userEvent.keyboard("{Tab}");
     expect(sheet.element().contains(document.activeElement)).toBe(true);
@@ -132,8 +129,9 @@ describe("TODAY action row", () => {
     await startDay();
     vi.setSystemTime(new Date(2026, 9, 13, 22));
     const screen = await render(<App />);
+    await (await commandResult(screen, "SHIFT HANDOFF NOTES")).click();
     await expect.element(screen.getByText("Truck 12 brakes still soft")).toBeVisible();
-    await expect.poll(() => document.querySelector('[data-shift-clock-row="SHIFT_HANDOFF"]')?.textContent ?? "").toContain("Truck 12 brakes still soft");
+    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
     expect(document.querySelectorAll(".shift-handoff")).toHaveLength(1);
   });
 });

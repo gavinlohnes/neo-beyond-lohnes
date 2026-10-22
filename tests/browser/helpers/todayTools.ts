@@ -1,3 +1,6 @@
+import { commandResult } from "./command";
+import type { render } from "vitest-browser-react";
+type Screen = Awaited<ReturnType<typeof render>>;
 import { expect } from "vitest";
 import type { Locator } from "vitest/browser";
 
@@ -6,11 +9,13 @@ import type { Locator } from "vitest/browser";
  * phase's rows lives behind one TOOLS row. Tests that reach for one of those
  * capabilities open TOOLS first — one tap, the same as the operator.
  */
-export async function openTodayTools(screen: { getByRole: (role: "button", options: { name: string }) => Locator }): Promise<void> {
-  const open = screen.getByRole("button", { name: "Open TOOLS" });
-  await expect.element(open).toBeVisible();
-  await open.click();
-  await expect.element(screen.getByRole("button", { name: "Close TOOLS" })).toBeVisible();
+export async function openTodayTools(screen: Screen): Promise<void> {
+  if (!screen.getByRole("button", { name: "Open TOOLS" }).elements().length && !screen.getByRole("button", { name: "Close TOOLS" }).elements().length) {
+    await (await commandResult(screen, "TODAY TOOLS")).click();
+  }
+  const close = screen.getByRole("button", { name: "Close TOOLS" });
+  if (!close.elements().length) await screen.getByRole("button", { name: "Open TOOLS" }).click();
+  await expect.element(close).toBeVisible();
 }
 
 /**
@@ -21,7 +26,7 @@ export async function openCaptureFromLog(screen: { getByRole: (role: "button" | 
   await screen.getByRole("button", { name: "Open LOG" }).click();
   const sheet = screen.getByRole("dialog", { name: "LOG" });
   await expect.element(sheet).toBeVisible();
-  await sheet.getByRole("button", { name: /^Note/ }).click();
+  await sheet.getByRole("button", { name: /^Note/i }).click();
 }
 
 /**
@@ -36,4 +41,12 @@ export async function searchCommand(screen: { getByRole: (role: "button" | "sear
   await expect.element(search).toBeVisible();
   await search.fill(query);
   return search;
+}
+
+export async function revealAllGood(screen: { getByRole: (role: "button" | "dialog", options?: { name: string | RegExp; exact?: boolean }) => Locator }): Promise<void> {
+  const sheet = screen.getByRole("dialog", { name: "CHECK IN", exact: true });
+  if (!sheet.elements().length) await screen.getByRole("button", { name: "CHECK IN", exact: true }).click();
+  const summary = sheet.element().querySelector("details:last-child > summary") as HTMLElement;
+  if (!(summary.parentElement as HTMLDetailsElement).open) summary.click();
+  await expect.element(sheet.getByRole("button", { name: "ALL GOOD", exact: true })).toBeVisible();
 }

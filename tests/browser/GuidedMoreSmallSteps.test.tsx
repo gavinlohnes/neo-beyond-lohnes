@@ -1,10 +1,14 @@
+import { commandResult } from "./helpers/command";
+import { beforeEach as optionalToolFixture } from "vitest";
+import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
+optionalToolFixture(() => { for (const feature of ["minimumDay", "smallSteps", "foodLookup"] as const) setHiddenFeature(feature, true); });
 /// <reference types="@vitest/browser-playwright" />
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cdp, page, userEvent } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
 import axe from "axe-core";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { getGuidedMoreStarts, GENERIC_MORE_STARTS } from "../../src/application/guidedMoreQueries";
 import { startDay, setWorkContext, submitCheckIn, logWater, captureItem } from "../../src/application/commands";
 import { getMinimumDayStatus, getEffectiveHydrationTotal, getOpenCaptureItems } from "../../src/application/queries";
@@ -145,17 +149,17 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await screen.getByText("A place to start", { exact: true }).first().click();
     const alphaDetail = screen.getByRole("heading", { name: "Alpha decision", exact: true });
     const decisionsList = screen.getByRole("heading", { name: "Decisions", exact: true });
-    await screen.getByRole("button", { name: "Open DECISION JOURNAL", exact: true }).click();
+    await (await commandResult(screen, "DECISION JOURNAL")).click();
     await screen.getByRole("button", { name: "Open Alpha decision", exact: true }).click();
     await expect.element(alphaDetail).toBeVisible();
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
-    await screen.getByRole("button", { name: "Open DECISION JOURNAL", exact: true }).click();
+    await (await commandResult(screen, "DECISION JOURNAL")).click();
     await expect.element(decisionsList).toBeVisible();
     expect(alphaDetail.elements()).toHaveLength(0);
     await screen.getByRole("button", { name: "Open Alpha decision", exact: true }).click();
     await expect.element(alphaDetail).toBeVisible();
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
-    await screen.getByRole("button", { name: "Open SEARCH", exact: true }).click();
+    await (await commandResult(screen, "SEARCH")).click();
     await screen.getByRole("textbox", { name: "Search everything" }).fill("Bravo");
     await screen.getByRole("button", { name: /: Bravo decision$/ }).click();
     await expect.element(screen.getByRole("heading", { name: "Bravo decision", exact: true })).toBeVisible();
@@ -218,7 +222,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     const screen = await render(<MoreScreen />);
     await screen.getByText("A place to start", { exact: true }).first().click();
     await expect.element(screen.getByText("9 decisions await review.")).toBeVisible();
-    await screen.getByRole("button", { name: "Open HISTORY", exact: true }).click();
+    await (await commandResult(screen, "HISTORY")).click();
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
     await expect.element(screen.getByText("Reading context…", { exact: false })).toBeVisible();
     expect(screen.getByText("9 decisions await review.").elements()).toHaveLength(0);
@@ -253,7 +257,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await input.fill("An interrupted free thought");
     await screen.getByRole("button", { name: "BACK TO SMALL STEPS" }).click();
     expect(document.activeElement).toBe(screen.getByRole("button", { name: "USE FULL VIEW" }).element());
-    await screen.getByRole("button", { name: "Inspect Minimum Day", exact: false }).click();
+    await screen.getByRole("button", { name: "Open Minimum Day", exact: false }).click();
     // TONIGHT-001: TODAY no longer lifts a RED day's Minimum Day offer; it's the same TOOLS row at every capacity.
     await expect.element(screen.getByRole("button", { name: "ENABLE MINIMUM DAY", exact: true })).toBeVisible();
     expect((await getMinimumDayStatus(day.id)).enabled).toBe(false);
@@ -285,7 +289,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     const origin = window.scrollY;
     await openMealInBody(screen);
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished meal");
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.poll(() => document.activeElement).toBe(meal);
     await expect.poll(() => Math.abs(window.scrollY - origin)).toBeLessThanOrEqual(2);
     await expect.element(screen.getByRole("button", { name: "USE FULL VIEW" })).toBeVisible();
@@ -303,7 +307,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     // TONIGHT-001: Small Steps sits in TOOLS opened from COMMAND → Today tools.
     const screen = await render(<TodayScreen openToolsOnMount />);
     await screen.getByRole("button", { name: "USE SMALL STEPS" }).click();
-    await screen.getByRole("button", { name: "Inspect Minimum Day", exact: false }).click();
+    await screen.getByRole("button", { name: "Open Minimum Day", exact: false }).click();
     expect((await getMinimumDayStatus(day.id)).enabled).toBe(false);
     await screen.getByRole("button", { name: "ENABLE MINIMUM DAY", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY", exact: true })).toBeVisible();

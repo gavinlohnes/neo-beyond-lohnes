@@ -174,7 +174,7 @@ export function ShiftDownCard({
           </div>
           <button
             ref={startButtonRef}
-            className={onMarkWorkEnded ? "btn-secondary" : "btn-primary"}
+            className="btn-primary"
             disabled={busy}
             onClick={onStartShiftDown}
           >

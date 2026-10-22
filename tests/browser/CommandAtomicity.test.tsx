@@ -1,3 +1,4 @@
+import { openCommandPanel } from "./helpers/command";
 /// <reference types="@vitest/browser-playwright" />
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
@@ -99,6 +100,8 @@ describe("COMMAND-ATOMICITY-002 in a real browser", () => {
     const eventsBefore = await db.events.toArray();
 
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("Diagnostic detail", { exact: true }).click();
     const label = screen.getByText("Record mismatches", { exact: true });
     await expect.element(label).toBeVisible();

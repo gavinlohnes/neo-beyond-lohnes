@@ -1,3 +1,34 @@
+# REDESIGN-001 — acceptance complete; awaiting independent review
+
+- **Builder / objective:** owner-approved PROTECTED [REDESIGN-001](REDESIGN-001.md).
+  Branch `codex/redesign-001`; [PR #261](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/261).
+  Codex built items 1–8. On 2026-10-22 Gavin asked Claude Code to finish it; Claude Code
+  completed the final gate with a single test-only fix.
+- **Baseline:** started at master `9f0f2c23efadb7925051172e5eeac48f5882f70f`; integrates master
+  `cb4f0df7f1c35843f7aa8d5dc53b42050fd4969e` with its Garmin import/share-target/source behavior.
+- **Done:** frozen attachments committed unchanged; items 1–8 implemented, with the locked
+  rulings recorded in UX_DECISIONS.
+- **Approved exception:** Gavin's “Yes, I approve” on 2026-10-22 authorizes the bounded canonical
+  meal/provenance extension for one-off meals and fractional servings. [Ruling](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/261#issuecomment-6330409263).
+  No schema, backup format, migration, Engine rule, dependency or protected-fixture change.
+- **Final fix:** CI at `4d26418` had one failure (2,851 passed). The LAST TIME `recordedAt` test
+  read `getPerformedSets(...)[0]`, which comes back in random id order, instead of set 1. The
+  test now selects set 1. CI at `74b44c1` then hit two meal-test races (route checked before the
+  sheet rendered; axe mid entry animation; a read failure injected before the sheet's own
+  saved-meal read finished). Each now waits for its precondition. Test-only.
+- **Verified:** `npm run verify` passes locally: architecture OK, 286 files / 2,852 passed /
+  one existing skip, build OK. Built production acceptance (`scripts/verify-redesign-001.mjs`)
+  passes at 320/360/390/412 px with offline cold reload; screenshots and
+  `final-acceptance.json` refreshed in `docs/screenshots/redesign-001/`.
+- **Next:** green required CI on the final head, then an independent exact-head review by a
+  reviewer that did not build this PR. Gavin alone decides merge.
+- **Preservation / limits:** unrelated daily-operations work remains in stash
+  `e1396c8e7ab549dec117e0f631a0c7e1144af309` (Codex's machine); do not apply it here. Synthetic
+  test data only. Physical phones, Safari and screen-reader/device-keyboard testing remain
+  unverified; the existing bundle-size warning remains.
+
+---
+Previous checkpoint (historical; Garmin is not this objective):
 # GARMIN-003 — Garmin fills in your record
 
 The owner approved this on 2026-10-22: brief [GARMIN-003.md](GARMIN-003.md), rulings in

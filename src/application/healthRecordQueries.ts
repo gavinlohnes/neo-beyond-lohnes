@@ -81,3 +81,8 @@ export async function getHealthSources(point: InsightPoint, metric: InsightMetri
     return { records: sortSources(records), workouts, days: [day] };
   });
 }
+
+/** Explicit source-day lookup for the existing manual correction forms. */
+export async function getRecordedHealthDay(dayId: string): Promise<BeyondDay | undefined> {
+  return db.beyondDays.get(dayId);
+}

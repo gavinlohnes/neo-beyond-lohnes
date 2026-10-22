@@ -19,7 +19,9 @@ export async function getSameFoodCheck(
 
 const toSameFoodMeal = (meal: Awaited<ReturnType<typeof getMealEntries>>[number]) => ({
   id: meal.rootEventId,
-  savedMealId: meal.savedMealId,
+  // The existing pure detector needs an identity comparison key. A one-off gets its
+  // unique event identity here only; persisted preset provenance remains null.
+  savedMealId: meal.savedMealId ?? `manual:${meal.rootEventId}`,
   name: meal.name,
   calories: meal.effectiveCalories,
   proteinG: meal.effectiveProteinG,

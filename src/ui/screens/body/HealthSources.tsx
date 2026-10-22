@@ -1,3 +1,4 @@
+import { HoldButton } from "../../components/HoldButton";
 import { useEffect, useRef, useState } from "react";
 import { getHealthSources, type HealthHistoryDestination, type HealthRecord, type HealthSources as Sources } from "../../../application/healthRecordQueries";
 import type { InsightMetric, InsightPoint } from "../../../application/bodyInsightsQueries";
@@ -16,10 +17,11 @@ function originalValue(record: HealthRecord) {
 }
 
 /** Inspection never writes. A current-day correction explicitly returns to its existing form. */
-export function HealthSources({ selection, revision, active, activeDayId, onCorrect, onHistory, onClose, returnLabel = "BACK TO TREND" }: {
+export function HealthSources({ selection, revision, active, activeDayId, onCorrect, onHistory, onClose, allowHistoricalCorrection = false, returnLabel = "BACK TO TREND" }: {
   returnLabel?: string;
   selection: SourceSelection; revision: number; active: boolean; activeDayId: string | undefined;
-  onCorrect: (record: HealthRecord) => void;
+  onCorrect: (record: HealthRecord, sourceDayId?: string) => void;
+  allowHistoricalCorrection?: boolean;
   onHistory?: ((destination: HealthHistoryDestination) => void) | undefined;
   onClose: () => void;
 }) {
@@ -57,7 +59,7 @@ export function HealthSources({ selection, revision, active, activeDayId, onCorr
   }, [data, failed, active]);
   return <section className="health-sources" aria-labelledby="health-source-heading">
     <div className="health-day-heading"><h2 id="health-source-heading" tabIndex={-1} className="insights-title">Source records</h2><button type="button" className="btn-secondary" onClick={onClose}>{returnLabel}</button></div>
-    <p className="meta">{selection.metric === "workouts" ? "Finished sessions" : "Effective recorded entries"} behind the selected observation. Historical records are read-only here.</p>
+    <p className="meta">{selection.metric === "workouts" ? "Finished sessions" : "Effective recorded entries"} behind the selected observation. {allowHistoricalCorrection ? "Corrections preserve original records." : "Historical records are read-only here."}</p>
     {refreshing && data && <p className="meta" role="status">Refreshing source records…</p>}
     {failed ? <div role="alert"><p>Could not read the source records. Your data is unchanged.</p><button type="button" className="btn-secondary" id="health-source-retry" onClick={() => setRetry((n) => n + 1)}>RETRY SOURCES</button></div> : !data ? <p className="meta" role="status">Reading source records…</p> : <>
       {data.records.length === 0 && data.workouts.length === 0 && <p className="meta">{selection.metric === "workouts" ? "No finished sessions in this recorded day." : "No standing entries for this observation now. It may have been undone; reopen the trend to refresh."}</p>}
@@ -68,7 +70,7 @@ export function HealthSources({ selection, revision, active, activeDayId, onCorr
         <p className="meta">{record.entry.correctionCount ? `Original: ${originalValue(record)} · ${record.entry.correctionCount} corrections; effective value shown above.` : "Original recorded value · no corrections"}</p>
         <div className="health-source-actions">
           {onHistory && <button type="button" className="btn-secondary" onClick={() => openHistory({ dayId: beyondDayId, eventId: record.entry.headEventId }, record.entry.rootEventId)}>FULL HISTORY</button>}
-          {beyondDayId === activeDayId && <button type="button" className="btn-secondary" disabled={refreshing} onClick={() => onCorrect(record)}>CORRECT IN DAILY RECORD</button>}
+          {allowHistoricalCorrection ? <HoldButton className="btn-secondary" disabled={refreshing} hint="Hold to open correction or deletion. Original records stay." onConfirm={() => onCorrect(record, beyondDayId)}>CORRECT / DELETE</HoldButton> : beyondDayId === activeDayId && <button type="button" className="btn-secondary" disabled={refreshing} onClick={() => onCorrect(record, beyondDayId)}>CORRECT ENTRY</button>}
         </div>
       </article>)}
       {data.workouts.map((session) => <article className="health-source-row" key={session.id}><h3 className="health-source-name">{session.templateId} · {session.sessionType}</h3><p className="meta">{session.status} · {new Date(session.startedAt).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</p></article>)}

@@ -89,3 +89,15 @@ export function describeRecordCard(record: PersonalRecord): string {
     ? `Heaviest: ${record.weight} lb × ${record.reps}`
     : `Most reps at ${record.weight} lb: ${record.reps}`;
 }
+
+/** Read-only presentation: each exercise's heaviest record, then most reps at that weight.
+ * Reuses counted finished-session PRs; it does not introduce a new performance score. */
+export async function getBestRecords(records?: readonly RecordCard[]): Promise<RecordCard[]> {
+  const best = new Map<string, RecordCard>();
+  for (const card of records ?? await getAllRecords()) {
+    const prior = best.get(card.exerciseId);
+    if (!prior || card.record.weight > prior.record.weight ||
+        (card.record.weight === prior.record.weight && card.record.reps > prior.record.reps)) best.set(card.exerciseId, card);
+  }
+  return [...best.values()].sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
+}

@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
@@ -30,7 +31,7 @@ async function seed({ sleepFirst }: { sleepFirst: boolean }) {
 async function openWeight() {
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-  await screen.getByRole("button", { name: "Open REVIEW", exact: true }).click();
+  await (await commandResult(screen, "REVIEW")).click();
   await screen.getByText("Is my weight going down?", { exact: true }).click();
   return screen;
 }

@@ -1,3 +1,5 @@
+import { RecordSheets } from "../ui/components/RecordSheets";
+import type { RecordCorrectionRequest, RecordSheetTarget } from "../ui/recordSheets";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
@@ -121,7 +123,7 @@ function AppWorkspaces() {
   // GARMIN-002 SEND TO BEYOND: the service worker parks shared Health Bridge files and opens ?share=health.
   const [sharedHealth] = useState(() => new URLSearchParams(window.location.search).get("share") === "health");
   // SHORTCUTS-001: START WORKOUT opens TRAIN; the others open BODY.
-  const [tab, setTab] = useState<Tab>(() => (sharedHealth ? "COMMAND" : shortcut === "workout" ? "TRAIN" : shortcut ? "BODY" : "TODAY"));
+  const [tab, setTab] = useState<Tab>(() => (sharedHealth ? "COMMAND" : shortcut === "workout" ? "TRAIN" : "TODAY"));
   const tabRef = useRef(tab);
   tabRef.current = tab;
   // Screen instances are session-local. Hiding a destination never discards its forms.
@@ -171,20 +173,34 @@ function AppWorkspaces() {
   // SUIT-001: stealth hides the screen, not the data. It stays on across reloads until exited.
   const [stealthOn, setStealthOn] = useState(() => getStealth());
   const stealthOnRef = useRef(stealthOn);
+  const restoreStealthFocus = useRef(false);
   function changeStealth(on: boolean) {
     if (on === stealthOnRef.current) return;
     stealthOnRef.current = on;
+    restoreStealthFocus.current = !on;
     setStealth(on);
     setStealthOn(on);
     // Close any open sheet behind it; the screens and their drafts stay as they were.
     if (on) for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog[open]")) dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
-    else requestAnimationFrame(() => {
+  }
+  useEffect(() => {
+    if (stealthOn || !restoreStealthFocus.current) return;
+    restoreStealthFocus.current = false;
+    // React has removed inert before we return focus to the retained workspace.
+    const frame = requestAnimationFrame(() => {
       const emblem = [...document.querySelectorAll<HTMLElement>(`#workspace-${tabRef.current} .operator-emblem`)].find((element) => element.getClientRects().length);
       emblem?.focus({ preventScroll: true });
     });
-  }
+    return () => cancelAnimationFrame(frame);
+  }, [stealthOn]);
   const [workEndedKey, setWorkEndedKey] = useState(0);
-  const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(shortcut === "workout" ? null : shortcut);
+  const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(null);
+  const closingRecordSheet = useRef(false);
+  const recordOrigin = useRef<HTMLElement | null>(null);
+  const correctionKey = useRef(0);
+  const [recordMealRequest, setRecordMealRequest] = useState<{ id: string; key: number } | null>(null);
+  const [recordCorrection, setRecordCorrection] = useState<RecordCorrectionRequest | null>(null);
+  const [recordSheet, setRecordSheet] = useState<RecordSheetTarget | null>(shortcut === "workout" ? null : shortcut);
   const [bodyRequest, setBodyRequest] = useState(0);
   const [healthEvidence, setHealthEvidence] = useState<HealthEvidenceRequest | null>(null);
   const [healthHistory, setHealthHistory] = useState<HealthHistoryDestination | null>(null);
@@ -421,6 +437,12 @@ function AppWorkspaces() {
   useEffect(() => {
     function restore(event: PopStateEvent) {
       const state = event.state;
+      if (closingRecordSheet.current) { closingRecordSheet.current = false; return; }
+      if (recordSheet || state?.recordSheet) {
+        if (mealInFlight.current) { window.history.forward(); return; }
+        setRecordSheet(state?.recordSheet ?? null);
+        return;
+      }
       // Retained panes must not leave a native modal in the top layer on Back.
       for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog[open]")) dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
       if (!state?.beyondNavigation || !["TODAY", "TRAIN", "BODY", "COMMAND"].includes(state.tab)) return;
@@ -433,7 +455,7 @@ function AppWorkspaces() {
     }
     window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
-  }, [tab, moreView]);
+  }, [tab, moreView, recordSheet]);
 
   function canNavigate() { return !mealInFlight.current; }
 
@@ -479,8 +501,30 @@ function AppWorkspaces() {
     return true;
   }
 
+  function openRecordSheet(target: RecordSheetTarget) {
+    if (!canNavigate()) return;
+    if (!recordSheet) recordOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    if (target !== "record") setRecordCorrection(null);
+    const next = { ...window.history.state, recordSheet: target };
+    if (recordSheet) window.history.replaceState(next, "");
+    else window.history.pushState(next, "");
+    setRecordSheet(target);
+  }
+  function closeRecordSheet() {
+    if (!canNavigate()) return;
+    setRecordSheet(null);
+    if (window.history.state?.recordSheet) { closingRecordSheet.current = true; window.history.back(); }
+  }
+  function leaveRecordSheet(action: () => void) {
+    if (!canNavigate()) return;
+    setRecordSheet(null);
+    window.history.replaceState({ ...window.history.state, recordSheet: null }, "");
+    action();
+  }
+
   function openBody(target?: BodyFocus) {
     if (!canNavigate()) return false;
+    if (target) { openRecordSheet(target); return true; }
     setHealthEvidence(null); setHealthHistoryOrigin(false);
     if (tab !== "BODY") setMealOrigin({ tab, scrollY: window.scrollY, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null });
     setBodyFocus(target ?? null);
@@ -515,18 +559,17 @@ function AppWorkspaces() {
 
   // COMMAND-CENTER-001: COMMAND's search reaches every catalog destination (TODAY's SYSTEM dialog is retired).
   function openSystemDestination(destination: SystemDestination | { kind: "tools" }): boolean {
+    if (destination.kind === "record") {
+      setRecordMealRequest(destination.mealId ? { id: destination.mealId, key: ++correctionKey.current } : null);
+      openRecordSheet(destination.target); return true;
+    }
+    if (destination.kind === "exercise") { if (!openTrain("RECORDS")) return false; setTrainRecordsFocus(destination.exerciseId); return true; }
     if (destination.kind === "body") return openBody(destination.focus);
     if (destination.kind === "workout") return openTrain("WORKOUT");
     if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
     if (destination.kind === "capture") { openCapture(); return true; }
     if (destination.kind === "stealth") { changeStealth(true); return true; }
-    if (destination.kind === "tools") {
-      if (!canNavigate()) return false;
-      setTodayToolsOpen(true);
-      setToolsRequest((key) => key + 1);
-      showTab("TODAY", false);
-      return true;
-    }
+    if (destination.kind === "tools") return openMore("DAILY_CONTROLS");
     if (destination.kind === "more") return openMore(destination.view);
     return false;
   }
@@ -540,13 +583,7 @@ function AppWorkspaces() {
     showTab("TODAY", false);
   }
 
-  function openCapture() {
-    if (!canNavigate()) return;
-    if (tab !== "TODAY") setCaptureOrigin(tab);
-    setTodayToolsOpen(true);
-    setCaptureRequest((key) => key + 1);
-    showTab("TODAY", false);
-  }
+  function openCapture() { openRecordSheet("note"); }
 
   if (!continuityResolved) {
     return (
@@ -568,18 +605,12 @@ function AppWorkspaces() {
           <RootErrorBoundary active={tab === "TODAY"}>
             <TodayScreen
               active={tab === "TODAY"}
+              onOpenRecordSheet={openRecordSheet}
               mealRefreshKey={todayRefreshKey}
-              captureRequest={captureRequest}
               onReturnFromCapture={captureOrigin ? () => { showTab(captureOrigin); setCaptureOrigin(null); } : undefined}
               onWorkEnded={() => setWorkEndedKey((k) => k + 1)}
               onWorkContextChanged={() => setWorkEndedKey((k) => k + 1)}
               shiftHandoffRefreshKey={workEndedKey}
-              banners={<>
-                <BackupDueLine />
-                <NotesSweep refreshKey={workEndedKey} onSwept={() => setTodayRefreshKey((k) => k + 1)} />
-                <TimeCapsuleOpened />
-                <ReportReadyLine />
-              </>}
               onViewCommitments={(id) => openMore("INTENT", id ? { kind: "OBLIGATION", obligationId: id } : null)}
               onOpenPlan={() => openMore("PLAN")}
               onOpenTrain={openTrain}
@@ -597,7 +628,7 @@ function AppWorkspaces() {
             onDestinationConsumed={() => setTrainDestination(null)} /></RootErrorBoundary>
         </div>}
         {visited.has("BODY") && <div id="workspace-BODY" className={tab === "BODY" ? "tab-enter" : undefined} hidden={tab !== "BODY"}>
-          <RootErrorBoundary active={tab === "BODY"}><BodyScreen focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
+          <RootErrorBoundary active={tab === "BODY"}><BodyScreen overviewOnly onOpenTrainingRecords={() => openTrain("RECORDS")} onEditRecord={(record, dayId) => { setRecordCorrection({ key: ++correctionKey.current, record, dayId }); openRecordSheet("record"); }} focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
             evidenceRequest={healthEvidence} onHealthHistory={openHealthHistory}
             onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `RETURN TO ${mealOrigin.tab}` : "RETURN TO TODAY"}
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
@@ -606,7 +637,12 @@ function AppWorkspaces() {
           <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}
-            onOpenCapture={openCapture}
+            onOpenCapture={openCapture} captureRequest={captureRequest} dailyRefreshKey={workEndedKey} onDailyContextChanged={() => setWorkEndedKey((key) => key + 1)} dailyBanners={<>
+                <BackupDueLine />
+                <NotesSweep refreshKey={workEndedKey} onSwept={() => setTodayRefreshKey((k) => k + 1)} />
+                <TimeCapsuleOpened />
+                <ReportReadyLine />
+              </>}
             onOpenRecords={(exerciseId) => {
               if (!canNavigate()) return;
               setTrainDestination(null); setTrainRecordsFocus(exerciseId); showTab("TRAIN", false);
@@ -619,6 +655,11 @@ function AppWorkspaces() {
         </div>}
       </main>
 
+      <RecordSheets mealRequest={recordMealRequest} correctionRequest={recordCorrection} target={recordSheet} open={openRecordSheet} close={closeRecordSheet} onBusy={updateMealInFlight}
+        onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); }}
+        onHistory={(metric) => leaveRecordSheet(() => { openBodyEvidence(metric); setMealOrigin((origin) => origin ? { ...origin, trigger: recordOrigin.current } : null); })}
+        onWorkout={() => leaveRecordSheet(() => openTrain("WORKOUT"))}
+        onNotes={() => leaveRecordSheet(() => { setCaptureRequest((key) => key + 1); openMore("DAILY_CONTROLS"); })} />
       <AppUpdateBanner />
 
       {/* SHELL-001: extracted from per-render inline style objects into

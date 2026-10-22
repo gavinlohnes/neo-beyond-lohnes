@@ -14,10 +14,11 @@ import { getBodyInsights, INSIGHT_DAY_MS, type BodyInsights } from "../../../app
 import { InsightsExplorer, type InsightExploration } from "./InsightsExplorer";
 import { BodyComposition } from "./BodyComposition";
 
-export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request, onSources, returnFocusRequest = 0, active = true }: {
+export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request, compositionRequest, onSources, returnFocusRequest = 0, active = true }: {
   active?: boolean;
   returnFocusRequest?: number;
   request?: HealthEvidenceRequest | null;
+  compositionRequest?: { key: number; view: "photos" | "measurements" } | null | undefined;
   onSources?: ((selection: SourceSelection) => void) | undefined;
   refreshKey: number;
   weightHistory: readonly WeighIn[];
@@ -66,7 +67,7 @@ export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request
       if (!focused || focused === document.body || focused.id === "health-progress-heading" || focused.closest("[hidden]")) document.getElementById("insight-view-records")?.focus({ preventScroll: true });
     });
   }, [summary, insights, returnFocusRequest, active]);
-  return <BodyComposition active={active} refreshKey={refreshKey} metricRequest={request} weights={weightHistory} onWeight={() => { setExploration((state) => ({ ...state, metric: "weight", pointId: null, focusDayId: null })); setTimelineOpen(false); }}>
+  return <BodyComposition viewRequest={compositionRequest} active={active} refreshKey={refreshKey} metricRequest={request} weights={weightHistory} onWeight={() => { setExploration((state) => ({ ...state, metric: "weight", pointId: null, focusDayId: null })); setTimelineOpen(false); }}>
     {failed && <div role="alert"><p className="meta">Could not read your progress. Your records are unchanged.</p><button className="btn-secondary" onClick={() => { restoreRetryFocus.current = true; setRetry((value) => value + 1); }}>RETRY PROGRESS</button></div>}
     {!failed && (!summary || !insights) && <p className="meta" role="status">Loading your recorded progress…</p>}
     {!failed && summary && insights && <div className="health-progress">
@@ -79,7 +80,7 @@ export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request
     {summary.quit && <section aria-label="Recorded clean days"><h3 className="tool-label">{summary.quit.habitName}</h3><p className="health-reading">{summary.quit.cleanDays} clean days recorded this week</p>{summary.quit.savedUsd !== undefined && <p className="meta">{formatUsd(summary.quit.savedUsd)} saved</p>}</section>}
     <details className="insights-inspect"><summary>Recent lived days · LAST 28 DAYS</summary><section aria-label="Recent lived days"><Ribbon dayPicker days={summary.ribbon.days} templateLabels={summary.ribbon.templateLabels} proteinTargetG={summary.ribbon.proteinTargetG} /></section></details>
     <section aria-label="Weight progress"><h3 className="tool-label">WEIGHT</h3>{weightHistory.length < 2 ? <p className="meta">{weightHistory.length ? "One weigh-in recorded. A trend needs more than one." : "No weigh-ins recorded. Your other progress is still available."}</p> : <><p className="meta">All-history milestones and the existing projection use weigh-ins through {new Date(weightHistory.at(-1)!.recordedAt).toLocaleDateString()}; they are not the selected-range average.</p><WeightTrend history={weightHistory} goalWeightLbs={goalWeightLbs} hideChart /></>}</section>
-    {weightHistory.length >= 2 && Date.parse(weightHistory.at(-1)!.recordedAt) <= Date.parse(insights.readAt) - 90 * INSIGHT_DAY_MS && <details className="insights-inspect"><summary>Inspect last recorded weight window</summary><WeightTrend history={weightHistory} goalWeightLbs={goalWeightLbs} hideChart={timelineOpen} hideFacts /></details>}
+    {weightHistory.length >= 2 && Date.parse(weightHistory.at(-1)!.recordedAt) <= Date.parse(insights.readAt) - 90 * INSIGHT_DAY_MS && <details className="insights-inspect"><summary>Last recorded weight window</summary><WeightTrend history={weightHistory} goalWeightLbs={goalWeightLbs} hideChart={timelineOpen} hideFacts /></details>}
     <FieldDisclosure summary={`${timelineOpen ? "HIDE" : "SHOW"} ACCOMPLISHMENT TIMELINE`} open={timelineOpen} onToggle={setTimelineOpen}>{timelineOpen && <TransformationTimeline />}</FieldDisclosure>
     <FieldDisclosure summary={`${usualOpen ? "HIDE" : "SHOW"} YOUR USUAL`} open={usualOpen} onToggle={setUsualOpen}><PersonalBaselines baselines={summary.baselines} /></FieldDisclosure>
   </div>}

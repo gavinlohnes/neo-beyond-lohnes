@@ -1,3 +1,4 @@
+import { openCommandPanel } from "./helpers/command";
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
@@ -21,7 +22,7 @@ describe("CLEANUP-003", () => {
     await logBodyweight(day.id, 200);
     await logBodyweight(day.id, 194);
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
+    await screen.getByRole("button", { name: "Open BODYWEIGHT", exact: true }).click();
     await expect.element(screen.getByText(/^Logged \d{2}:\d{2}$/)).toBeVisible();
     await screen.getByRole("button", { name: "DONE", exact: true }).click();
     await screen.getByRole("button", { name: "YOUR PROGRESS" }).click();
@@ -40,6 +41,8 @@ describe("CLEANUP-003", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const before = await render(<TrainScreen />);
+    await expect.element(before.getByText("Planning to train today?")).not.toBeVisible();
+    (document.querySelector(".train-planned-work > summary") as HTMLElement).click();
     await expect.element(before.getByText("Planning to train today?")).toBeVisible();
     cleanup();
 
@@ -53,6 +56,8 @@ describe("CLEANUP-003", () => {
 
   it("MORE has one backup row with both EXPORT and SHARE, and no separate ARCHIVE row (finding 12)", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await expect.element(screen.getByRole("button", { name: "EXPORT BACKUP" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "SHARE BACKUP" })).toBeVisible();
     expect([...document.querySelectorAll(".tool-label")].map((l) => l.textContent?.trim())).not.toContain("ARCHIVE");
