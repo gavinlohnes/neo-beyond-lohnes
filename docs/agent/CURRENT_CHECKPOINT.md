@@ -1,11 +1,11 @@
 # FRICTION-001 — slice 3: COMMAND in plain words
 
 - **Objective / authority:** [FRICTION-001](FRICTION-001.md); Gavin: "We have work to do".
-  Builder: Claude Code, branch `claude/friction-3`, stacked on slice 2 (#276) until it merges.
+  Builder: Claude Code, branch `claude/friction-3`; slice 2 (#276) merged and is merged in.
 - **Built:** COMMAND descriptions rewritten in plain words (no "existing …", no "COMMAND ·" self-tag;
   IMPORT HEALTH DATA no longer says sleep only); workout-complete sentence-case test. Copy only.
-- **Verified:** `npm run verify` green: architecture OK, 2,891 passed / one skip, build OK.
-- **Next:** after #276 merges, merge master, PR, green CI, independent review, Gavin's merge.
+- **Verified:** `npm run verify` green: architecture OK, 2,892 passed / one skip, build OK.
+- **Next:** PR, green CI, independent review, Gavin's merge.
 
 ---
 Previous checkpoint:
