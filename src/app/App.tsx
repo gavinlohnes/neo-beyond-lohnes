@@ -118,8 +118,10 @@ function AppWorkspaces() {
   // Drop 7: a home-screen shortcut (?go=…) opens BODY at the right control.
   // Read once, then dropped from the URL so a reload doesn't repeat it.
   const [shortcut] = useState(() => parseShortcut(window.location.search));
+  // GARMIN-002 SEND TO BEYOND: the service worker parks shared Health Bridge files and opens ?share=health.
+  const [sharedHealth] = useState(() => new URLSearchParams(window.location.search).get("share") === "health");
   // SHORTCUTS-001: START WORKOUT opens TRAIN; the others open BODY.
-  const [tab, setTab] = useState<Tab>(() => (shortcut === "workout" ? "TRAIN" : shortcut ? "BODY" : "TODAY"));
+  const [tab, setTab] = useState<Tab>(() => (sharedHealth ? "COMMAND" : shortcut === "workout" ? "TRAIN" : shortcut ? "BODY" : "TODAY"));
   const tabRef = useRef(tab);
   tabRef.current = tab;
   // Screen instances are session-local. Hiding a destination never discards its forms.
@@ -239,7 +241,13 @@ function AppWorkspaces() {
   const [trainDestination, setTrainDestination] = useState<TrainDestination | null>(shortcut === "workout" ? "WORKOUT" : null);
   // FIND-001: a LIFT/PR search result opens TRAIN → RECORDS at that lift; the top-bar icon opens SEARCH.
   const [trainRecordsFocus, setTrainRecordsFocus] = useState<string | null>(null);
-  const [moreView, setMoreView] = useState<MoreView>("MENU");
+  const [moreView, setMoreView] = useState<MoreView>(sharedHealth ? "HEALTH_IMPORT" : "MENU");
+  useEffect(() => {
+    if (!sharedHealth) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("share");
+    window.history.replaceState(null, "", url.toString());
+  }, [sharedHealth]);
   // SUIT-001: the readout was opened from TODAY's SYSTEMS line, so it offers the way back.
   const [commandTodayOrigin, setCommandTodayOrigin] = useState(false);
   const [continuityResolved, setContinuityResolved] = useState(false);

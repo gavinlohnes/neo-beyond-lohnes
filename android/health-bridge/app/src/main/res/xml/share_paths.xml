@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GARMIN-002 SEND TO BEYOND: only the helper's private share folder is exposed, read-only, per send. -->
+<paths><cache-path name="share" path="share/" /></paths>
