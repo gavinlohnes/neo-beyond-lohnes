@@ -325,6 +325,9 @@ describe("TODAY meal round trip", () => {
       await fillMeal(screen);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
       expect(screen.getByRole("button", { name: "CLOSE" }).element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+      // Contrast is measured on the settled sheet, not mid entry animation on a slow runner.
+      for (const animation of document.getAnimations()) if (animation.effect?.getComputedTiming().iterations !== Infinity) animation.finish();
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
       const result = await axe.run(document.body, { rules: { "region": { enabled: false } } });
       expect(result.violations).toEqual([]);
     });

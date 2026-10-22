@@ -13,7 +13,8 @@
   No schema, backup format, migration, Engine rule, dependency or protected-fixture change.
 - **Final fix:** CI at `4d26418` had one failure (2,851 passed). The LAST TIME `recordedAt` test
   read `getPerformedSets(...)[0]`, which comes back in random id order, instead of set 1. The
-  test now selects set 1. No product code changed.
+  test now selects set 1. CI at `74b44c1` then hit two meal-test races (route checked before the
+  sheet rendered; axe mid entry animation); the helper and axe case now wait. Test-only.
 - **Verified:** `npm run verify` passes locally: architecture OK, 286 files / 2,852 passed /
   one existing skip, build OK. Built production acceptance (`scripts/verify-redesign-001.mjs`)
   passes at 320/360/390/412 px with offline cold reload; screenshots and

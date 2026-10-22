@@ -6,6 +6,8 @@ export function mealButton(screen: Screen) { return screen.getByRole("button", {
 /** Existing preset management/correction form, now behind the production meal sheet. */
 export async function openMealInBody(screen: Screen) {
   await mealButton(screen).click();
+  // Wait for the sheet's contents first; checking synchronously can run before it renders and skip the route.
+  await expect.poll(() => document.querySelector("dialog[open] button") !== null).toBe(true);
   const oldRoute = screen.getByRole("button", { name: /^New meal or manual entry/ });
   if (oldRoute.elements().length) await oldRoute.click();
   const tools = screen.getByRole("dialog").getByRole("button", { name: "More meal tools & corrections", exact: true });
