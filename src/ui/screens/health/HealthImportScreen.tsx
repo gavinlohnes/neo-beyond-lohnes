@@ -71,7 +71,11 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
     try {
       const counts = await importSleepSnapshot(snapshot, associations);
       setSnapshot(null); setRefresh((n) => n + 1);
-      setMessage(`Imported ${counts.inserted} new, ${counts.revised} revised; ${counts.skipped} unchanged or older. Manual logs and guidance are unchanged.`);
+      // GARMIN-003: say what Garmin filled in; the owner's own entries are never replaced.
+      const filled = counts.logged || counts.corrected
+        ? ` Sleep filled in from Garmin: ${counts.logged} new, ${counts.corrected} updated. Your own sleep entries always win.`
+        : " Your own sleep entries are unchanged.";
+      setMessage(`Imported ${counts.inserted} new, ${counts.revised} revised; ${counts.skipped} unchanged or older.${filled}`);
       requestAnimationFrame(() => result.current?.focus());
     } catch (e) { setError(e instanceof Error ? e.message : "Import failed. Nothing was changed."); }
     finally { locked.current = false; setBusy(false); }

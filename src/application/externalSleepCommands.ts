@@ -1,4 +1,6 @@
 import { db } from "../persistence/db";
+import { writeAtomically } from "./atomicWrite";
+import { applyGarminSleep, GARMIN_SLEEP_TABLES } from "./garminSleep";
 import { compareSleepInstants, MAX_SLEEP_FILE_BYTES, parseSleepSnapshot, sleepRecordKey } from "../domain/health/sleepImport";
 import type { ExternalSleepRevision, HealthImportReceipt, SleepSnapshot } from "../domain/health/sleepImport";
 
@@ -6,10 +8,13 @@ export async function previewSleepImport(file: Pick<File, "size" | "text">): Pro
   if (file.size > MAX_SLEEP_FILE_BYTES) throw new Error("Sleep export is too large. Export a smaller window.");
   return parseSleepSnapshot(await file.text());
 }
-/** Atomic evidence-only import. No day creation, canonical events, or Engine calls. */
-export async function importSleepSnapshot(input: unknown, associations: Readonly<Record<string, string | null>> = {}): Promise<{ inserted: number; revised: number; skipped: number }> {
+/**
+ * Atomic import. No day creation or Engine calls. GARMIN-003 (owner ruling 2026-10-22): in the same
+ * transaction, Garmin sleep that belongs to a lived day fills in that day's sleep entries.
+ */
+export async function importSleepSnapshot(input: unknown, associations: Readonly<Record<string, string | null>> = {}): Promise<{ inserted: number; revised: number; skipped: number; logged: number; corrected: number }> {
   const snapshot = parseSleepSnapshot(JSON.stringify(input));
-  return db.transaction("rw", [db.externalSleepRecords, db.externalSleepRevisions, db.healthImportReceipts, db.beyondDays], async () => {
+  return writeAtomically([...GARMIN_SLEEP_TABLES, "healthImportReceipts"], async () => {
     const receiptId = crypto.randomUUID(), importedAt = new Date().toISOString();
     const result = { inserted: 0, revised: 0, skipped: 0 };
     for (const evidence of snapshot.records) {
@@ -37,6 +42,6 @@ export async function importSleepSnapshot(input: unknown, associations: Readonly
       const receipt: HealthImportReceipt = { id: receiptId, importedAt, exportedAt: snapshot.exportedAt, producerVersion: snapshot.producer.version, ...result };
       await db.healthImportReceipts.add(receipt);
     }
-    return result;
+    return { ...result, ...(await applyGarminSleep()) };
   });
 }

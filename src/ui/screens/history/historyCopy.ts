@@ -45,7 +45,7 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Day ended (${p.reason === "EXPLICIT_END_DAY" ? "explicit" : "auto-closed"}).`;
     case "SLEEP_LOGGED":
       return `Sleep logged: ${formatDuration(Number(p.durationMinutes))} (${p.kind === "SUPPLEMENTAL" ? "nap" : "main sleep"}${
-        p.draft === "CONFIRMED" ? ", BEYOND's draft as proposed" : p.draft === "ADJUSTED" ? ", BEYOND's draft, adjusted" : ""
+        p.draft === "CONFIRMED" ? ", BEYOND's draft as proposed" : p.draft === "ADJUSTED" ? ", BEYOND's draft, adjusted" : (p.source as { kind?: string } | undefined)?.kind === "GARMIN" ? ", from Garmin" : ""
       }).`;
     case "SLEEP_LOG_CORRECTED":
       return `Sleep corrected to ${formatDuration(Number(p.durationMinutes))}.`;

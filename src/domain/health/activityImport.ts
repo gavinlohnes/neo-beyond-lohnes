@@ -127,20 +127,17 @@ export function summarizeActivity(hours: readonly ActivityHour[], from: number, 
 }
 
 const DAY_MS = 24 * HOUR_MS;
-export interface MeasuredPeriod {
-  /** The lived day this period belongs to, or null for a stretch BEYOND has no day for. */
-  dayId: string | null; from: number; to: number;
+export interface MeasuredPeriod extends Period {
   measured: MeasuredActivity; restingHeartRateBpm: number | null;
 }
+export interface Period { dayId: string | null; from: number; to: number }
 /**
- * Splits measurements into lived days, each capped at 24 hours. Hours BEYOND has no day for get
- * their own 24-hour periods, stepped from the nearest day start, so they keep the same 16:30 edges
- * instead of piling into the previous day. Newest first.
+ * The period a moment belongs to: its lived day (at most 24 hours), or, with no BEYOND day, a 24-hour
+ * period stepped from the nearest day start so the 16:30 edges hold. Shared by BODY and baselines.
  */
-export function measuredPeriods(days: readonly { id: string; startedAt: string }[], hours: readonly ActivityHour[],
-  resting: readonly RestingHeartRate[], now: number): MeasuredPeriod[] {
+export function periodLocator(days: readonly { id: string; startedAt: string }[]): (t: number) => Period {
   const starts = days.map((d) => ({ id: d.id, at: Date.parse(d.startedAt) })).sort((a, b) => a.at - b.at);
-  function periodOf(t: number): { dayId: string | null; from: number; to: number } {
+  return (t) => {
     let i = -1;
     for (let j = 0; j < starts.length && starts[j]!.at <= t; j++) i = j;
     if (i === -1) {
@@ -151,8 +148,18 @@ export function measuredPeriods(days: readonly { id: string; startedAt: string }
     const start = starts[i]!.at, next = starts[i + 1]?.at ?? Infinity;
     const k = Math.floor((t - start) / DAY_MS), from = start + k * DAY_MS;
     return { dayId: k === 0 ? starts[i]!.id : null, from, to: Math.min(from + DAY_MS, next) };
-  }
-  const periods = new Map<number, { dayId: string | null; from: number; to: number }>();
+  };
+}
+
+/**
+ * Splits measurements into lived days, each capped at 24 hours. Hours BEYOND has no day for get
+ * their own 24-hour periods, stepped from the nearest day start, so they keep the same 16:30 edges
+ * instead of piling into the previous day. Newest first.
+ */
+export function measuredPeriods(days: readonly { id: string; startedAt: string }[], hours: readonly ActivityHour[],
+  resting: readonly RestingHeartRate[], now: number): MeasuredPeriod[] {
+  const periodOf = periodLocator(days);
+  const periods = new Map<number, Period>();
   for (const t of [...hours.map((h) => Date.parse(h.startTime)), ...resting.map((r) => Date.parse(r.time))]) {
     const p = periodOf(t); periods.set(p.from, p);
   }

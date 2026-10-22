@@ -21,25 +21,37 @@ exact-head review and the owner's merge.
 - BEYOND's validation, size checks and the SEND TO BEYOND handler accept the same limits.
 - Nothing else changes: same preview, confirm, and storage semantics.
 
-## PR 2 — Garmin sleep becomes a sleep entry (approach A)
+## PR 2 — Garmin sleep becomes a sleep entry, plus baselines
 
-- On a confirmed import, each Garmin sleep is assigned to the existing lived day it starts in
-  (day start ≤ sleep start < next day start, within 24 hours).
-  - The longest in that day is PRIMARY; others are SUPPLEMENTAL.
-  - A new `SLEEP_LOGGED` entry carries `source: { kind: "GARMIN", recordKey }`.
-- Skipped when the day already has a manual entry of that kind, or when no lived day contains it.
-- A manual sleep log voids Garmin entries of the same kind on that day, so the owner's entry wins.
-- A newer Garmin version corrects the entry (`SLEEP_LOG_CORRECTED`), unless the owner has
-  corrected it.
-- Closed-day writes follow the existing correction rules in BEYOND_ENGINEERING_CONTRACT. Any
-  conflict with them is surfaced before building.
+Baselines are folded into this PR to save a review round. They have no consumer yet.
 
-## PR 3 — baselines
+**Sleep entries**
+- **Where:** `applyGarminSleep` runs inside the confirmed sleep import's transaction. It is
+  idempotent and reconciles every stored Garmin sleep.
+- **Day assignment:** `assignGarminSleep` (pure) uses the lived day the sleep starts in, capped at 24
+  hours.
+  - The longest sleep in that day is PRIMARY; the rest are SUPPLEMENTAL.
+  - Minutes are the asleep total when the stages are complete, otherwise the session span.
+  - Sessions under 10 minutes and sleep with no day stay as evidence only.
+- **New entry:** a `SLEEP_LOGGED` with event source `SYSTEM`, payload
+  `source: { kind: "GARMIN", recordKey, sourceVersion }`, `occurredAt` at wake time (the Garmin end
+  time).
+  - Skipped if the owner has an active entry of that kind on that day.
+- **Updates:** while the owner hasn't touched the entry, a newer Garmin value becomes a `SYSTEM`
+  `SLEEP_LOG_CORRECTED`. A change between main sleep and nap voids the entry and logs it again.
+- **The owner wins:**
+  - An entry the owner corrected is never overwritten.
+  - An entry that was deleted or replaced is never added again.
+  - `logSleep` voids active Garmin entries of the same kind on that day, atomically, with the
+    owner's entry as the cause.
+- **Labels:** BODY's sleep list, the MAIN SLEEP tile and History label Garmin-filled entries. The
+  import confirmation says what Garmin filled in.
 
-- A pure domain function gives personal rolling 28-day medians from measured data: main sleep,
-  resting heart rate, and steps on work vs off days.
-- A minimum of 14 days of data is needed; otherwise "not enough data".
-- No consumer in this PR.
+**Baselines**
+- `personalBaselines` (pure) gives rolling 28-day medians by lived period.
+- The measures are: the longest sleep per period, the lowest resting heart rate per period, and
+  steps per finished lived day, split work vs off.
+- A baseline needs at least 14 samples; until then it is `null` with its sample count.
 
 ## Later, after #261 merges and with wording shown to Gavin first
 

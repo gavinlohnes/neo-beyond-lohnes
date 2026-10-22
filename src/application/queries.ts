@@ -431,6 +431,8 @@ export interface SleepEntry {
   correctionCount: number;
   recordedAt: string;
   kind: "PRIMARY" | "SUPPLEMENTAL";
+  /** GARMIN-003: Garmin filled this entry in from a confirmed import. */
+  fromGarmin: boolean;
 }
 
 /** Every sleep log for the day (PRIMARY and SUPPLEMENTAL), with corrections resolved to each entry's effective value. Undone entries are left out. */
@@ -442,7 +444,7 @@ export async function getSleepEntries(beyondDayId: string): Promise<SleepEntry[]
   return logged
     .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
     .map((root): SleepEntry => {
-      const payload = root.payload as { durationMinutes: number; kind?: "PRIMARY" | "SUPPLEMENTAL" };
+      const payload = root.payload as { durationMinutes: number; kind?: "PRIMARY" | "SUPPLEMENTAL"; source?: { kind: string } };
       const chain = walkCorrectionChain(corrections, root.id, payload.durationMinutes, "durationMinutes");
       return {
         rootEventId: root.id,
@@ -452,6 +454,7 @@ export async function getSleepEntries(beyondDayId: string): Promise<SleepEntry[]
         correctionCount: chain.correctionCount,
         recordedAt: root.recordedAt,
         kind: payload.kind ?? "PRIMARY",
+        fromGarmin: payload.source?.kind === "GARMIN",
       };
     });
 }

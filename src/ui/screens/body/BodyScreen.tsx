@@ -1940,7 +1940,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
                           <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>
-                            {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}
+                            {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}{entry.fromGarmin ? " · Garmin" : ""}
                           </p>
                           <p className="meta">
                             {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}

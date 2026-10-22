@@ -40,12 +40,12 @@ describe("evidence-only sleep import", () => {
     await db.beyondDays.add(manualDay);
     const first = syntheticSleep(); await importSleepSnapshot(first, { "synthetic-sleep": manualDay.id });
     const newer = syntheticSleep(); newer.records[0]!.lastModifiedTime = "2026-10-18T13:00:00Z"; newer.records[0]!.stages = [];
-    expect(await importSleepSnapshot(newer)).toEqual({ inserted: 0, revised: 1, skipped: 0 });
+    expect(await importSleepSnapshot(newer)).toMatchObject({ inserted: 0, revised: 1, skipped: 0 });
     const current = (await getImportedSleep())[0]!;
     expect(current.associatedDayId).toBe(manualDay.id);
     expect(current.evidence.stages).toEqual([]);
     expect((await getSleepRevisionHistory(current.recordKey)).map((r) => r.evidence)).toEqual([newer.records[0], first.records[0]]);
-    expect(await importSleepSnapshot(first)).toEqual({ inserted: 0, revised: 0, skipped: 1 });
+    expect(await importSleepSnapshot(first)).toMatchObject({ inserted: 0, revised: 0, skipped: 1 });
     expect(await db.healthImportReceipts.count()).toBe(2);
   });
   it("rejects missing lived days without creating them", async () => {
@@ -76,7 +76,7 @@ describe("evidence-only sleep import", () => {
   it("does not infer deletions from an empty later snapshot", async () => {
     await importSleepSnapshot(syntheticSleep()); const before = await allTables();
     const empty = syntheticSleep(); empty.records = [];
-    expect(await importSleepSnapshot(empty)).toEqual({ inserted: 0, revised: 0, skipped: 0 });
+    expect(await importSleepSnapshot(empty)).toMatchObject({ inserted: 0, revised: 0, skipped: 0 });
     expect(await allTables()).toEqual(before);
   });
   it("round-trips evidence, revision history, receipts and deduplication through native backup", async () => {
@@ -87,7 +87,7 @@ describe("evidence-only sleep import", () => {
     await db.externalSleepRecords.clear(); await db.externalSleepRevisions.clear(); await db.healthImportReceipts.clear();
     await applyRestore(new File([blob], "synthetic.json", { type: "application/json" }));
     expect(await allTables()).toEqual(before);
-    expect(await importSleepSnapshot(newer)).toEqual({ inserted: 0, revised: 0, skipped: 1 });
+    expect(await importSleepSnapshot(newer)).toMatchObject({ inserted: 0, revised: 0, skipped: 1 });
   });
   it("clears imported evidence when replacing with a pre-feature native backup", async () => {
     await db.beyondDays.add(manualDay);
