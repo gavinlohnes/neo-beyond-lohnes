@@ -11,7 +11,7 @@ import { ImportedSleepEvidence } from "../health/ImportedSleepEvidence";
  */
 export function HealthHistory({ open, onOpenChange, active, days }: {
   open: boolean; onOpenChange: (open: boolean) => void; active: boolean;
-  days: Omit<ComponentProps<typeof HealthDayBrowser>, "embedded" | "visible">;
+  days: Omit<ComponentProps<typeof HealthDayBrowser>, "visible">;
 }) {
   const [view, setView] = useState<"DAYS" | "GARMIN">("DAYS");
   return <details className="health-history" open={open} onToggle={(event) => {
@@ -26,7 +26,7 @@ export function HealthHistory({ open, onOpenChange, active, days }: {
         {(["DAYS", "GARMIN"] as const).map((id) => <button key={id} type="button" className="btn-secondary" aria-pressed={view === id} disabled={days.disabled}
           onClick={() => { if (id === "GARMIN" && days.selected) days.onSelect(null); setView(id); }}>{id === "DAYS" ? "DAYS" : "GARMIN"}</button>)}
       </div>
-      {view === "DAYS" ? <HealthDayBrowser {...days} embedded visible={active} />
+      {view === "DAYS" ? <HealthDayBrowser {...days} visible={active} />
         : <><ImportedActivityEvidence active={active} /><ImportedSleepEvidence active={active} /></>}
     </>}
   </details>;
