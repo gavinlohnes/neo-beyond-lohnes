@@ -540,17 +540,21 @@ export function TrainScreen({
     return lastPerformedSets[exerciseId];
   }
 
-  function getInputDisplay(exerciseId: string, setNumber: number): SetInputState {
-    const key = inputKey(exerciseId, setNumber);
-    if (inputs[key]) return inputs[key]!;
+  function suggestedDisplay(exerciseId: string, setNumber: number): SetInputState {
     const suggestion = suggestedInputFor(exerciseId, setNumber);
     return suggestion ? { weight: String(suggestion.weight), reps: String(suggestion.reps) } : { weight: "", reps: "" };
   }
 
+  function getInputDisplay(exerciseId: string, setNumber: number): SetInputState {
+    return inputs[inputKey(exerciseId, setNumber)] ?? suggestedDisplay(exerciseId, setNumber);
+  }
+
+  // Merge into the latest state, not this render's copy: focusing REPS right after typing a weight
+  // could otherwise write the weight from before the typing back over it (it logged 0 lb).
   function patchInput(exerciseId: string, setNumber: number, patch: Partial<SetInputState>) {
     const key = inputKey(exerciseId, setNumber);
-    const current = getInputDisplay(exerciseId, setNumber);
-    setInputs((prev) => ({ ...prev, [key]: { ...current, ...patch } }));
+    const fallback = suggestedDisplay(exerciseId, setNumber);
+    setInputs((prev) => ({ ...prev, [key]: { ...(prev[key] ?? fallback), ...patch } }));
   }
 
   function adjustWeight(exerciseId: string, setNumber: number, deltaLbs: number) {
@@ -1556,7 +1560,7 @@ export function TrainScreen({
                           focusValues.current[`${ex.exerciseId}#${setNumber}:weight`] = display.weight;
                           patchInput(ex.exerciseId, setNumber, { weight: "" });
                         }}
-                        onBlur={() => { if (!display.weight) patchInput(ex.exerciseId, setNumber, { weight: focusValues.current[`${ex.exerciseId}#${setNumber}:weight`] ?? "" }); }}
+                        onBlur={(e) => { if (!e.currentTarget.value) patchInput(ex.exerciseId, setNumber, { weight: focusValues.current[`${ex.exerciseId}#${setNumber}:weight`] ?? "" }); }}
                         onChange={(e) => patchInput(ex.exerciseId, setNumber, { weight: e.target.value })}
                         className="input"
                         style={{ flex: 1, textAlign: "center", fontSize: 20, fontWeight: 700 }}
@@ -1590,7 +1594,7 @@ export function TrainScreen({
                           focusValues.current[`${ex.exerciseId}#${setNumber}:reps`] = display.reps;
                           patchInput(ex.exerciseId, setNumber, { reps: "" });
                         }}
-                        onBlur={() => { if (!display.reps) patchInput(ex.exerciseId, setNumber, { reps: focusValues.current[`${ex.exerciseId}#${setNumber}:reps`] ?? "" }); }}
+                        onBlur={(e) => { if (!e.currentTarget.value) patchInput(ex.exerciseId, setNumber, { reps: focusValues.current[`${ex.exerciseId}#${setNumber}:reps`] ?? "" }); }}
                         onChange={(e) => patchInput(ex.exerciseId, setNumber, { reps: e.target.value })}
                         className="input"
                         style={{ flex: 1, textAlign: "center", fontSize: 20, fontWeight: 700 }}
