@@ -117,6 +117,29 @@ boundaries. Historical references to Drops retain their product scope and eviden
 require the legacy lifecycle for new work. `FIELD_ALPHA_CAMPAIGN.md` remains unchanged historical
 evidence, not standing implementation authority.
 
+## GARMIN-003 — owner rulings, 2026-10-22
+
+Brief: [`agent/GARMIN-003.md`](agent/GARMIN-003.md). Gavin reviewed the scope after using
+GARMIN-002 on the phone. He said: "the watch does a good enough job of tracking a lot of my
+stuff. If I have less to log that's a good thing."
+
+- **Garmin fills in your record** (replaces GARMIN-002's "Garmin data never silently becomes a
+  manual log", and the earlier choice to log sleep by hand rather than add Garmin).
+  - Confirming a Garmin import writes that lived day's sleep as an ordinary sleep entry marked
+    **source: Garmin** (approach A, chosen over deriving it in every reader).
+  - Your own entry for that day and kind replaces Garmin's; nothing is counted twice.
+  - A newer Garmin version updates the entry with a correction, unless you have corrected it
+    yourself.
+  - Sleep with no BEYOND day stays Garmin evidence and is not logged.
+- **Garmin may only soften advice.** Short sleep or a high resting heart rate can lower a
+  suggestion, for example to SHORT or rest. Good numbers never raise it above what BEYOND would
+  otherwise suggest.
+- **Your check-in wins.** When Garmin and how you say you feel disagree, advice follows the
+  check-in, and a quiet line shows what Garmin measured.
+- **Compare against your own baselines**, rolling 28 days, not fixed thresholds.
+- Display changes and advice wording wait for REDESIGN-001 (#261). They will be shown to Gavin
+  before they are built.
+
 ## TONIGHT-001 — owner rulings, 2026-10-19
 
 Brief: [`agent/TONIGHT-001.md`](agent/TONIGHT-001.md). Gavin approved the TONIGHT release from the

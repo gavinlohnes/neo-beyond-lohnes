@@ -4,7 +4,10 @@ Owner-approved PROTECTED objective: [frozen brief](REDESIGN-001.md), frozen refe
 `prototype/redesign/index.html`. Builder Codex. Branch `codex/redesign-001`;
 [draft PR #261](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/261).
 Fresh starting master `9f0f2c23efadb7925051172e5eeac48f5882f70f` (includes #251).
-No Garmin work, Engine/schema changes, merge or deployment authorized here.
+No new Garmin work, Engine/schema changes, production merge or deployment authorized here.
+Master `cb4f0df7f1c35843f7aa8d5dc53b42050fd4969e` is integrated for final verification;
+its already-approved Garmin/Share Target behavior and source labels are preserved. No new
+Garmin advice or display specification is implemented by REDESIGN-001.
 
 **Done:** attachment files committed unchanged. Item 1: TODAY scene → logging → NEXT → numbers
 → unfinished check-in. Canonical operations and safety gate retained in NEXT; active operation
@@ -100,11 +103,48 @@ and update PR Handoff after each item. Full final verify and acceptance evidence
 and stop for independent Claude exact-head review. Never merge.
 
 **Preserved unrelated work:** unfinished local daily-operations sprint is in stash
-`e1396c8e7ab549dec117e0f631a0c7e1144af309`; do not apply to this branch. #254 stays separate.
+`e1396c8e7ab549dec117e0f631a0c7e1144af309`; do not apply to this branch. #254 is now merged into master.
 Physical devices/Safari/screen readers remain untested; existing bundle advisory remains.
 
 ---
 Previous checkpoint (historical; Garmin is not this objective):
+# GARMIN-003 — Garmin fills in your record
+
+The owner approved this on 2026-10-22: brief [GARMIN-003.md](GARMIN-003.md), rulings in
+UX_DECISIONS → GARMIN-003. GARMIN-002 is complete (#262, #263, #264), with SEND TO BEYOND
+verified on the phone.
+
+Current: PR 1 (history) on `ccr-83cf6ed8-ug1ym9` from master:
+- the helper's READ FULL HISTORY with "Access past data" (0.5.0);
+- both file formats and SEND TO BEYOND accept up to 366 days / 8 MiB.
+
+PR 1 is #265. PR 2 (Garmin sleep becomes a sleep entry, approach A, plus baselines) is stacked on it. Display
+changes and advice wording wait for #261 (REDESIGN-001, Codex). Each PR needs an independent
+review and the owner's merge.
+
+---
+Previous checkpoint:
+
+# GARMIN-002 — Garmin steps and heart rate in BEYOND
+
+Owner-approved PROTECTED objective; brief [GARMIN-002.md](GARMIN-002.md). Builder: Claude Code.
+#262 merged at 0f288f9 after two independent exact-head PASS reviews. The owner verified it on
+the phone: helper 0.3.0 installs, reads 73 hours of steps/heart rate plus sleep, and BEYOND
+(schema 15) imports both files and shows them under BODY → MEASURED · GARMIN.
+
+Follow-up A (#263) merged at 614ed17: lived-day cards are capped at 24 hours, stretches with no
+BEYOND day show separately, sleep times are readable, and heart rate never shows "?".
+
+Current: follow-up B, **SEND TO BEYOND**, on branch `ccr-83cf6ed8-ug1ym9` from 614ed17:
+- The helper shares its files to the installed BEYOND app through Android's share sheet (0.4.0).
+- BEYOND is a Web Share Target; a small handler loaded into the service worker parks the files.
+- COMMAND → IMPORT HEALTH DATA previews both; nothing imports until each is confirmed.
+
+Phone check after merge: if BEYOND doesn't appear in the share sheet, re-add it to the home
+screen. #261 (REDESIGN-001, Codex) is still open. Every PR needs owner merge approval.
+
+---
+Previous checkpoint:
 
 # GARMIN-001 — physical-phone installation diagnosis
 
@@ -172,7 +212,41 @@ Previous checkpoint (retained):
 
 # Current checkpoint
 
-## Current objective — TONIGHT-001 (2026-10-19, PROTECTED)
+## Current preparation — workflow command and Garmin discovery
+
+Owner instruction, 2026-10-19: "Lets get to a good point to start work". Codex is preparing
+the existing approved workflow PR #254 and the next discovery brief.
+
+**Released:** master a6d315dd83f7f540782a540d37a32c9a5224a1f2.
+- #255 merged at ea03c7266157f60c3bcc13f80063323a0df9259b: idle rollover plus deadline retry.
+- #256 merged at a6d315dd83f7f540782a540d37a32c9a5224a1f2: the TODAY shift loop and headline fixes.
+- Both have independent exact-head PASS. Final required CI [39250635029](https://github.com/gavinlohnes/neo-beyond-lohnes/actions/runs/39250635029):
+  272 files, 2,700 passed, 1 skipped; architecture, TypeScript and production build pass.
+- Physical-device, Safari and screen-reader checks remain unclaimed.
+
+**Current PR:** [#254](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/254),
+codex/advance-beyond-command. Original owner-approved PROTECTED workflow objective, Builder Codex.
+One shared DEV-FLOW-002 protocol, thin Claude/Codex skills, AGENTS/roadmap routing and governance
+classification for .agents/. No application, dependency, CI or protection change.
+Reconciled with released TONIGHT master, preserving both histories. The prior reviewed head
+78650e7 is historical; the current head needs fresh independent review and green required CI.
+Then it awaits owner merge approval. This preparation instruction does not authorize that merge.
+
+**Next discovery:** [GARMIN-001 proposal, #257](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/257).
+Prepared for review; integration implementation is not approved. First collect phone model/OS,
+Garmin watch model, and actual Garmin Connect permissions/recent records in Health Connect.
+Verify current official support and the deployed PWA's access constraints, then recommend one
+route and present a bounded implementation brief. No native wrapper/backend/provider/schema
+or Engine integration has started.
+
+**Environment:** connected GitHub tools work. The local workspace has partial review-fix files,
+no complete checkout or app dependencies, and its configured proxy was unreachable. Do not
+treat those partial files as a fresh checkout or claim local full verification.
+
+The sections below preserve the previous checkpoint. This summary and live PR evidence
+supersede their pending-review/merge wording.
+
+## Previous objective — TONIGHT-001 (merged 2026-10-19)
 
 Gavin approved TONIGHT after the product discovery proposal. Brief: [TONIGHT-001.md](TONIGHT-001.md);
 rulings in UX_DECISIONS → TONIGHT-001. Builder: Claude Code. Branch `ccr-83cf6ed8-ug1ym9`; [PR #255](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/255).

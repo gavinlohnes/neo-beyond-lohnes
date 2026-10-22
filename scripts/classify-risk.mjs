@@ -60,7 +60,7 @@ const governanceFiles = new Set([
 function isGovernance(f) {
   return governanceFiles.has(f) ||
     (f.startsWith("docs/agent/") && f !== "docs/agent/CURRENT_CHECKPOINT.md") ||
-    f.startsWith(".claude/") || f.startsWith(".github/workflows/") ||
+    f.startsWith(".claude/") || f.startsWith(".agents/") || f.startsWith(".github/workflows/") ||
     f.startsWith("scripts/factory-");
 }
 

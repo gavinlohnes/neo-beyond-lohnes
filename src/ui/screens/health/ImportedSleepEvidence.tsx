@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import { getImportedSleep, getSleepRevisionHistory } from "../../../application/externalSleepQueries";
 import { sleepDurations, type ExternalSleepRevision } from "../../../domain/health/sleepImport";
+import { hoursMinutes, localDayTime, localTime } from "./healthFormat";
 
 export function SleepEvidence({ revision }: { revision: ExternalSleepRevision }) {
   const [history, setHistory] = useState<ExternalSleepRevision[] | null>(null);
   const [error, setError] = useState(false);
   const r = revision.evidence, duration = sleepDurations(r);
   return <article aria-label="Imported Garmin sleep">
-    <h3>Garmin Connect · sleep</h3>
-    <p>{r.startTime} → {r.endTime} (UTC)</p>
-    <p>{Math.round(duration.spanMinutes)} minutes in session. {duration.asleepMinutes === null ? "Asleep total unavailable: stages are missing or incomplete." : `${Math.round(duration.asleepMinutes)} minutes asleep from complete stages.`}</p>
+    <h3>Garmin sleep · {localDayTime(r.startTime)} → {localTime(r.endTime)}</h3>
+    <p>{duration.asleepMinutes === null ? `${hoursMinutes(duration.spanMinutes)} in session · asleep total unavailable (stages missing or incomplete)` : `${hoursMinutes(duration.asleepMinutes)} asleep · ${hoursMinutes(duration.spanMinutes)} in session`}</p>
     <p>{revision.associatedDayId ? `Linked to lived day ${revision.associatedDayId}` : "Source dates only · no lived day assigned"}</p>
     <details><summary>Source details and revisions</summary>
+      <p>Source times (UTC): {r.startTime} → {r.endTime}</p>
       <p>Source: {r.dataOriginPackage}</p><p>Record: {r.id}</p>
       <p>Source modified: {r.lastModifiedTime}</p><p>Imported: {revision.importedAt}</p>
       <p>Source UTC offsets (seconds): start {r.startZoneOffsetSeconds ?? "unavailable"}, end {r.endZoneOffsetSeconds ?? "unavailable"}.</p>

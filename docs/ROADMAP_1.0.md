@@ -1,17 +1,21 @@
 # BEYOND 1.0 Roadmap
 
 Owner rulings, 2026-09-30 (ROADMAP-1.0-001). This is the build plan for BEYOND 1.0. When the
-owner says "let's work", start here: propose the next unfinished objective, obtain any missing
-approval, build it, open a PR, and report in plain language. New work follows
-[`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
+owner says "Advance BEYOND" or "let's work", follow the
+[`Advance BEYOND` protocol](agent/DEV-FLOW-002.md#advance-beyond): verify live work and completion,
+resume authorized work when ownership permits, or recommend one next objective for approval.
+New work follows [`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
 feature history, and product rulings below are preserved.
 
 ## Active priority
 
-**Owner approval, 2026-10-19 — TONIGHT-001.** Gavin approved the TONIGHT release from the product
+**Completed, 2026-10-19 — TONIGHT-001 (#255, #256).** Gavin approved the TONIGHT release from the product
 discovery proposal: no frozen days (PR 1), then the morning call, wake card, quick log, night-closed
 summary, briefing and honest headline on TODAY (PR 2). Builder: Claude Code.
-[Brief](agent/TONIGHT-001.md). Next after it: a Garmin/Health Connect bridge (needs its own brief).
+[Brief](agent/TONIGHT-001.md). Both PRs are merged; final CI: 2,700 passed, 1 skipped.
+Next preparation: [GARMIN-001 discovery](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/257),
+starting with phone/watch compatibility and the Health Connect check. Integration implementation
+has not been approved.
 
 **Owner approval, 2026-10-18 — BODY-PROGRESS-001.** Gavin approved Codex building the BODY
 Progress overview, dated measurement interface and photo timeline/comparison using existing

@@ -322,6 +322,11 @@ export interface SleepLoggedPayload {
    * typed in BODY. Additive; older logs simply don't have it.
    */
   draft?: DraftDecision;
+  /**
+   * GARMIN-003 (owner ruling 2026-10-22): present only when Garmin filled this entry in from a
+   * confirmed import. The owner's own entry of the same kind replaces it. Additive.
+   */
+  source?: { kind: "GARMIN"; recordKey: string; sourceVersion: string };
 }
 
 /**

@@ -61,7 +61,7 @@ export function HealthOverview({ day, calories, protein, water, sleep, weight, m
         <HealthMeasure metric="weight" onExplore={onExplore} label="LAST WEIGHT" value={lastWeight ? `${lastWeight.weightLbs} lbs` : "Not logged"}
           detail={lastWeight ? new Date(lastWeight.recordedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : undefined} />
         <HealthMeasure metric="sleep" onExplore={onExplore} label="MAIN SLEEP" value={main ? formatDuration(main.effectiveDurationMinutes) : "Not logged"}
-          detail={mains > 1 ? `Latest of ${mains} main-sleep records` : undefined} />
+          detail={mains > 1 ? `Latest of ${mains} main-sleep records` : main?.fromGarmin ? "Garmin" : undefined} />
         <Readout label="NAPS" value={naps.length ? formatDuration(naps.reduce((total, entry) => total + entry.effectiveDurationMinutes, 0)) : "Not logged"}
           detail={naps.length > 1 ? `${naps.length} naps recorded` : undefined} />
       </ReadoutGrid>

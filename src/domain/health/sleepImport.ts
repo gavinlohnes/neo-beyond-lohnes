@@ -1,9 +1,10 @@
 /** GARMIN-001: portable evidence, never a canonical sleep log or Engine input. */
 export const SLEEP_IMPORT_FORMAT = "BEYOND_HEALTH_CONNECT_SLEEP";
 export const GARMIN_ORIGIN = "com.garmin.android.apps.connectmobile";
-export const MAX_SLEEP_FILE_BYTES = 2 * 1024 * 1024;
-export const MAX_SLEEP_RECORDS = 500;
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+// GARMIN-003: a full-history export covers up to 366 days; the daily read still covers 7.
+export const MAX_SLEEP_FILE_BYTES = 8 * 1024 * 1024;
+export const MAX_SLEEP_RECORDS = 2000;
+export const MAX_EXPORT_WINDOW_MS = 366 * 24 * 60 * 60 * 1000;
 export const SLEEP_STAGES = ["AWAKE", "SLEEPING", "OUT_OF_BED", "LIGHT", "DEEP", "REM", "AWAKE_IN_BED", "UNKNOWN"] as const;
 export interface SleepStage { startTime: string; endTime: string; type: (typeof SLEEP_STAGES)[number] }
 export interface ExternalSleep {
@@ -70,7 +71,7 @@ export function validateSleepSnapshot(value: unknown): SleepSnapshot {
   const window = object(root.window, ["startTime", "endTime"]);
   const startTime = instant(window.startTime), endTime = instant(window.endTime);
   const from = Date.parse(startTime), to = Date.parse(endTime);
-  if (to <= from || to - from > WEEK_MS || to > Date.parse(exportedAt)) return fail();
+  if (to <= from || to - from > MAX_EXPORT_WINDOW_MS || to > Date.parse(exportedAt)) return fail();
   if (!Array.isArray(root.records) || root.records.length > MAX_SLEEP_RECORDS) return fail();
   const seen = new Set<string>(); let stageCount = 0;
   const records = root.records.map((input): ExternalSleep => {
@@ -81,7 +82,7 @@ export function validateSleepSnapshot(value: unknown): SleepSnapshot {
     const start = instant(r.startTime), end = instant(r.endTime), modified = instant(r.lastModifiedTime);
     const begin = Date.parse(start), finish = Date.parse(end);
     if (finish <= begin || begin < from || finish > to) return fail();
-    if (!Array.isArray(r.stages) || r.stages.length > 1500 || (stageCount += r.stages.length) > 15000) return fail();
+    if (!Array.isArray(r.stages) || r.stages.length > 1500 || (stageCount += r.stages.length) > 60000) return fail();
     let previous = begin;
     const stages = r.stages.map((input): SleepStage => {
       const s = object(input, ["startTime", "endTime", "type"]);
@@ -111,4 +112,49 @@ export function sleepDurations(record: ExternalSleep): { spanMinutes: number; as
     if (["SLEEPING", "LIGHT", "DEEP", "REM"].includes(stage.type)) asleep += length;
   }
   return { spanMinutes: span / 60000, asleepMinutes: covered === span ? asleep / 60000 : null };
+}
+
+/** GARMIN-003: provenance on a sleep entry that Garmin filled in. */
+export interface GarminSleepSource { kind: "GARMIN"; recordKey: string; sourceVersion: string }
+export interface GarminSleepAssignment {
+  dayId: string; recordKey: string; kind: "PRIMARY" | "SUPPLEMENTAL"; minutes: number; endTime: string; sourceVersion: string;
+}
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** Shorter sessions are left as evidence only. */
+export const MIN_GARMIN_SLEEP_MINUTES = 10;
+/**
+ * GARMIN-003 (owner ruling, approach A): which lived day each Garmin sleep belongs to and whether it
+ * is that day's main sleep. A sleep belongs to the day the owner explicitly linked it to in the import
+ * preview; otherwise to the existing day it starts in (day start ≤ sleep start < next day start, at most
+ * 24 hours); with no such day it stays evidence. The longest sleep in a day
+ * is PRIMARY; the rest are SUPPLEMENTAL. Minutes are the asleep total when the stages are complete,
+ * otherwise the session span.
+ */
+export function assignGarminSleep(days: readonly { id: string; startedAt: string }[],
+  records: readonly { recordKey: string; sourceVersion: string; evidence: ExternalSleep; associatedDayId?: string | null }[]): GarminSleepAssignment[] {
+  const starts = days.map((d) => ({ id: d.id, at: Date.parse(d.startedAt) })).sort((a, b) => a.at - b.at);
+  const byDay = new Map<string, Omit<GarminSleepAssignment, "kind">[]>();
+  const known = new Set(starts.map((s) => s.id));
+  for (const r of records) {
+    // The owner's explicit link from the import preview wins over the automatic rule.
+    let dayId: string | null = r.associatedDayId && known.has(r.associatedDayId) ? r.associatedDayId : null;
+    if (!dayId) {
+      const t = Date.parse(r.evidence.startTime);
+      let i = -1;
+      for (let j = 0; j < starts.length && starts[j]!.at <= t; j++) i = j;
+      if (i === -1) continue;
+      const limit = Math.min(starts[i]!.at + DAY_MS, starts[i + 1]?.at ?? Infinity);
+      if (t >= limit) continue;
+      dayId = starts[i]!.id;
+    }
+    const { spanMinutes, asleepMinutes } = sleepDurations(r.evidence);
+    const minutes = Math.round(asleepMinutes ?? spanMinutes);
+    if (minutes < MIN_GARMIN_SLEEP_MINUTES) continue;
+    const list = byDay.get(dayId) ?? [];
+    list.push({ dayId, recordKey: r.recordKey, minutes, endTime: r.evidence.endTime, sourceVersion: r.sourceVersion });
+    byDay.set(dayId, list);
+  }
+  return [...byDay.values()].flatMap((list) => list
+    .sort((a, b) => b.minutes - a.minutes || a.endTime.localeCompare(b.endTime))
+    .map((a, i) => ({ ...a, kind: i === 0 ? "PRIMARY" as const : "SUPPLEMENTAL" as const })));
 }

@@ -2,6 +2,7 @@ import { WeightTrend } from "./WeightTrend";
 import { getRecordedHealthDay } from "../../../application/healthRecordQueries";
 import type { RecordCorrectionRequest } from "../../recordSheets";
 import { ImportedSleepEvidence } from "../health/ImportedSleepEvidence";
+import { ImportedActivityEvidence } from "../health/ImportedActivityEvidence";
 import "../health/healthImport.css";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -1865,7 +1866,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
                           <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>
-                            {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}
+                            {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}{entry.fromGarmin ? " · Garmin" : ""}
                           </p>
                           <p className="meta">
                             {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
@@ -2495,6 +2496,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       <section aria-label="History"><h2 className="section-label">HISTORY</h2>
         <HealthDayBrowser selected={healthDay} disabled={busy} visible={visible && !progressOpen} refreshKey={dataRevision} onHistory={onHealthHistory} onSelect={setHealthDay} onExplore={showProgress} onInspect={(selection) => openSources(selection, true)} />
         {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} holdToInspect onInspect={(record) => onEditRecord?.(record, day.id)} />}
+        {!healthDay && <ImportedActivityEvidence active={visible && !progressOpen} />}
         <details><summary>Imported source evidence</summary><ImportedSleepEvidence active={visible && !progressOpen} /></details>
       </section>
     </div>
@@ -2651,6 +2653,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       </div>
       {readingsReady && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries}
         protein={proteinEntries} meals={mealEntries} disabled={busy || foodSearchBusy} onInspect={inspectRecord} />}
+      {!waterFocused && <ImportedActivityEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} />}
       {!waterFocused && <ImportedSleepEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} />}
       <FieldDisclosure summary={`${otherToolsOpen ? "HIDE" : "SHOW"} OTHER BODY TOOLS`} open={otherToolsOpen} onToggle={setOtherToolsOpen}>
         <QuitTracker initiallyOpen={focus === "urge"} openRequest={focus === "urge" ? focusRequest : 0} />

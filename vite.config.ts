@@ -31,6 +31,8 @@ export default defineConfig({
       // requirement this checkpoint set out to fix, not a nice-to-have.
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // GARMIN-002 SEND TO BEYOND: receives Health Bridge files shared to the installed app.
+        importScripts: ["share-target-sw.js"],
       },
       manifest: {
         name: "BEYOND",
@@ -46,6 +48,14 @@ export default defineConfig({
         // SHORTCUTS-001 (owner brief 2026-10-05): long-press the icon for
         // START WORKOUT, +WATER and LOG MEAL. Each opens straight to that
         // control (src/ui/shortcuts.ts) — none logs or starts anything by itself.
+        // GARMIN-002: BEYOND appears in Android's share sheet for Health Bridge files. The service
+        // worker (public/share-target-sw.js) parks them and opens the import preview; nothing imports by itself.
+        share_target: {
+          action: "./share-target",
+          method: "POST",
+          enctype: "multipart/form-data",
+          params: { files: [{ name: "health", accept: ["application/json", ".json"] }] },
+        },
         shortcuts: [
           { name: "START WORKOUT", short_name: "START WORKOUT", url: "./?go=workout", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
           { name: "+WATER", short_name: "+WATER", url: "./?go=water", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
