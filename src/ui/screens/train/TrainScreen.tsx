@@ -549,8 +549,8 @@ export function TrainScreen({
     return inputs[inputKey(exerciseId, setNumber)] ?? suggestedDisplay(exerciseId, setNumber);
   }
 
-  // Merge into the latest state, not this render's copy: focusing REPS right after typing a weight
-  // could otherwise write the weight from before the typing back over it (it logged 0 lb).
+  // Merge into the latest state, not this render's copy, so a late handler (a blur from a focus
+  // change, for one) never writes an older copy of the other field back.
   function patchInput(exerciseId: string, setNumber: number, patch: Partial<SetInputState>) {
     const key = inputKey(exerciseId, setNumber);
     const fallback = suggestedDisplay(exerciseId, setNumber);
@@ -996,8 +996,11 @@ export function TrainScreen({
       {readError && (
         <div role="alert" className="equipment-row">
           <p className="card-body">Workout needs a refresh. {readError}</p>
-          <button className="btn-secondary" disabled={reading} onClick={async () => {
-            if (await refresh(true)) headingRef.current?.focus();
+          <button className="btn-secondary" disabled={reading} onClick={async (event) => {
+            const button = event.currentTarget;
+            // The set inputs return before the re-read settles; if the operator has already moved
+            // into one, taking focus away mid-typing loses their selection (it logged 100100 lb).
+            if (await refresh(true) && (document.activeElement === button || document.activeElement === document.body || !document.activeElement)) headingRef.current?.focus();
           }}>RETRY WORKOUT READ</button>
         </div>
       )}
