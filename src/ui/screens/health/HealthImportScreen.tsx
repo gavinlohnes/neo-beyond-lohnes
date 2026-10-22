@@ -8,6 +8,9 @@ import { ImportedActivityEvidence } from "./ImportedActivityEvidence";
 import { importActivitySnapshot, previewActivityImport } from "../../../application/externalActivityCommands";
 import { ACTIVITY_IMPORT_FORMAT, MAX_ACTIVITY_FILE_BYTES, summarizeActivity, type ActivitySnapshot } from "../../../domain/health/activityImport";
 import { heartRateLine, hoursMinutes, localDayTime, localTime } from "./healthFormat";
+
+/** GARMIN-005: how many previewed hours carry calories (schema 2 files only). */
+const calorieHours = (snapshot: ActivitySnapshot) => snapshot.hours.filter((h) => h.totalCaloriesKcal != null || h.activeCaloriesKcal != null).length;
 import { takeSharedHealthFiles } from "./sharedHealthFiles";
 import "./healthImport.css";
 
@@ -117,7 +120,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
         <h3>REVIEW STEPS AND HEART RATE</h3>
         <p>Garmin Connect · exported {activity.exportedAt}</p>
         <p>Window: {activity.window.startTime} → {activity.window.endTime} (UTC)</p>
-        <p>{activity.hours.length} measured hours · {total.steps === null ? "no steps" : `${total.steps.toLocaleString("en-US")} steps`} · {heartRateLine(total.heartRateMinBpm, total.heartRateAvgBpm, total.heartRateMaxBpm).replace(/^Heart rate/, "heart rate")} · {activity.restingHeartRate.length} resting heart rate readings</p>
+        <p>{activity.hours.length} measured hours · {total.steps === null ? "no steps" : `${total.steps.toLocaleString("en-US")} steps`} · {heartRateLine(total.heartRateMinBpm, total.heartRateAvgBpm, total.heartRateMaxBpm).replace(/^Heart rate/, "heart rate")} · {activity.restingHeartRate.length} resting heart rate readings{calorieHours(activity) ? ` · ${calorieHours(activity)} hours with calories burned` : ""}</p>
         <p>A newer export replaces the same hour. Older or repeated files change nothing.</p>
         {!activity.hours.length && !activity.restingHeartRate.length && <p>No Garmin steps or heart rate in this export. Nothing will be saved.</p>}
         <button type="button" disabled={busy || (!activity.hours.length && !activity.restingHeartRate.length)} onClick={() => void confirmActivity()}>CONFIRM STEPS AND HEART RATE IMPORT</button>

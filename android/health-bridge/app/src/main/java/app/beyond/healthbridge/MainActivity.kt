@@ -18,10 +18,12 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.HealthConnectFeatures
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.request.AggregateGroupByDurationRequest
 import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.request.ReadRecordsRequest
@@ -40,7 +42,10 @@ class MainActivity : ComponentActivity() {
     private val stepsPermission = HealthPermission.getReadPermission(StepsRecord::class)
     private val heartRatePermission = HealthPermission.getReadPermission(HeartRateRecord::class)
     private val restingPermission = HealthPermission.getReadPermission(RestingHeartRateRecord::class)
-    private val activityPermissions = setOf(stepsPermission, heartRatePermission, restingPermission)
+    // GARMIN-005: optional calories burned (Garmin's total and active), read by the hour like steps.
+    private val totalCaloriesPermission = HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
+    private val activeCaloriesPermission = HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class)
+    private val activityPermissions = setOf(stepsPermission, heartRatePermission, restingPermission, totalCaloriesPermission, activeCaloriesPermission)
     // GARMIN-003: optional "Access past data" for READ FULL HISTORY. Without it Health Connect returns about 30 days.
     private val historyPermission = HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY
     /** 7 for the daily read; MAX_EXPORT_DAYS for READ FULL HISTORY. */
@@ -90,8 +95,8 @@ class MainActivity : ComponentActivity() {
         val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(padding, padding, padding, padding) }
         fun paragraph(text: String) = TextView(this).apply { this.text = text; textSize = 18f; setPadding(0, 12, 0, 12); layout.addView(this) }
         paragraph("BEYOND Health Bridge").apply { textSize = 26f; ViewCompat.setAccessibilityHeading(this, true) }
-        paragraph("Read Garmin sleep, steps and heart rate from the last 7 days, or everything Health Connect has with READ FULL HISTORY. Save a file, then review and confirm it in BEYOND. This helper does not sync automatically.")
-        paragraph("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps and heart rate (optional): hourly step totals, hourly heart-rate low/average/high and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. READ FULL HISTORY reads up to a year and asks for the optional “Access past data” permission; without it, Health Connect only returns data from up to 30 days before you first granted access. Each goes into its own file you save, or is sent straight to BEYOND through Android's share sheet. No account, server, Internet permission or other health categories. Your Health Connect data is never changed. Files may be private health information; choose a local folder and delete the file after importing.")
+        paragraph("Read Garmin sleep, steps, heart rate and calories burned from the last 7 days, or everything Health Connect has with READ FULL HISTORY. Save a file, then review and confirm it in BEYOND. This helper does not sync automatically.")
+        paragraph("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps, heart rate and calories (optional): hourly step totals, hourly heart-rate low/average/high, hourly total and active calories burned and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. READ FULL HISTORY reads up to a year and asks for the optional “Access past data” permission; without it, Health Connect only returns data from up to 30 days before you first granted access. Each goes into its own file you save, or is sent straight to BEYOND through Android's share sheet. No account, server, Internet permission or other health categories. Your Health Connect data is never changed. Files may be private health information; choose a local folder and delete the file after importing.")
         status = paragraph("Ready. Complete Garmin's sync before reading. Sessions crossing the 7-day window edges are excluded.").apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }
         read = Button(this).apply {
             text = "ALLOW ACCESS AND READ"
@@ -242,16 +247,19 @@ class MainActivity : ComponentActivity() {
     /** Hourly Garmin steps and heart rate, plus resting heart rate, for whichever of them were granted. */
     private suspend fun readActivity(): String {
         val granted = client.permissionController.getGrantedPermissions()
-        if (granted.intersect(activityPermissions).isEmpty()) return "Steps and heart rate were not allowed; only sleep was read."
+        if (granted.intersect(activityPermissions).isEmpty()) return "Steps, heart rate and calories were not allowed; only sleep was read."
         val end = Instant.now().truncatedTo(ChronoUnit.HOURS)
         val start = end.minus(windowDays, ChronoUnit.DAYS)
         val garmin = setOf(DataOrigin(GARMIN_PACKAGE))
         val metrics = buildSet {
             if (stepsPermission in granted) add(StepsRecord.COUNT_TOTAL)
             if (heartRatePermission in granted) { add(HeartRateRecord.BPM_MIN); add(HeartRateRecord.BPM_AVG); add(HeartRateRecord.BPM_MAX) }
+            if (totalCaloriesPermission in granted) add(TotalCaloriesBurnedRecord.ENERGY_TOTAL)
+            if (activeCaloriesPermission in granted) add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL)
         }
         // An implausible value is dropped on its own instead of failing the whole file.
         fun bpm(value: Long?) = value?.takeIf { it in 20..300 }
+        fun kcal(value: androidx.health.connect.client.units.Energy?) = value?.inKilocalories?.let { Math.round(it) }?.takeIf { it in 0..MAX_HOUR_KCAL }
         // Health Connect aggregates in 30-day slices so a full-history read stays within its query limits.
         val hours = mutableListOf<ExportHour>()
         var sliceStart = start
@@ -261,8 +269,9 @@ class MainActivity : ComponentActivity() {
                 TimeRangeFilter.between(sliceStart, sliceEnd), Duration.ofHours(1), garmin)).forEach { bucket ->
                 val r = bucket.result
                 val hour = ExportHour(bucket.startTime, bucket.zoneOffset.totalSeconds, r[StepsRecord.COUNT_TOTAL]?.takeIf { it in 0..100_000 },
-                    bpm(r[HeartRateRecord.BPM_MIN]), bpm(r[HeartRateRecord.BPM_AVG]), bpm(r[HeartRateRecord.BPM_MAX]))
-                if (hour.steps != null || hour.heartRateAvg != null) hours.add(hour)
+                    bpm(r[HeartRateRecord.BPM_MIN]), bpm(r[HeartRateRecord.BPM_AVG]), bpm(r[HeartRateRecord.BPM_MAX]),
+                    kcal(r[TotalCaloriesBurnedRecord.ENERGY_TOTAL]), kcal(r[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]))
+                if (hour.steps != null || hour.heartRateAvg != null || hour.totalCalories != null || hour.activeCalories != null) hours.add(hour)
             }
             sliceStart = sliceEnd
         }
@@ -284,6 +293,7 @@ class MainActivity : ComponentActivity() {
         }
         preparedActivity = activityExport(hours, resting, start, end, Instant.now(), BuildConfig.VERSION_NAME)
         activityGranted = granted.intersect(activityPermissions)
-        return "${hours.size} hours of steps/heart rate and ${resting.size} resting heart rate readings ready."
+        val calorieHours = hours.count { it.totalCalories != null || it.activeCalories != null }
+        return "${hours.size} hours of steps/heart rate, $calorieHours with calories, and ${resting.size} resting heart rate readings ready."
     }
 }

@@ -1,3 +1,34 @@
+# GARMIN-005 — eaten vs burned
+
+- **Objective / authority:** Gavin approved [GARMIN-005](GARMIN-005.md) on 2026-10-22 ("Approved.
+  Make it amazing"). PROTECTED: new Health Connect read permissions and new TODAY numbers. Builder
+  Claude Code handed the objective to Codex to finish.
+- **Branch:** `claude/garmin-005`, [PR #271](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/271)
+  against master. GARMIN-004 PR #269 merged with owner approval as `35c9f17` after its exact-head
+  CI passed; this branch includes that master integration.
+- **Built:** helper 0.6.0 exports hourly total/active calories in compatible activity format 2;
+  BEYOND accepts formats 1 and 2 without old imports erasing calories. TODAY shows a conditional
+  CALORIES tile, eaten-vs-burned sheet, Garmin freshness/stale notice, 7D/4W/1Y comparisons and
+  Weekly's measured Garmin average. No Engine, target, advice, net/remaining or schema change.
+- **Finished in handoff:** corrected the 4W expectation to 27 completed measured days; 5/5 focused
+  browser tests pass at 320/390 px; refreshed four screenshots; added the brief/wording table and
+  UX_DECISIONS ruling. Independent review then found that a newer export with calorie access denied
+  could erase stored values or make them look fresh, and active-only data could expose an unusable
+  tile. Codex fixed the import to preserve each calorie field with its actual source-export time;
+  the tile and its freshness now require total calories. Focused import tests pass 14/14 and focused
+  browser tests pass 5/5. The renewed full gate passed architecture and 2,870 tests / one skip, then
+  failed six legacy `classifyRisk` subprocess cases at their 5-second limit plus one unrelated
+  mode-pin browser timing assertion; earlier attempts likewise timed out only under full-suite load,
+  while the affected risk group passed 18/18 in isolation. The production build passes. Required PR
+  CI is the clean full gate.
+- **Limits:** no Android SDK here, so helper compilation/permission packaging awaits CI. Physical
+  phone permission/export, Safari and screen readers remain unverified.
+- **Next:** run the renewed full gate and exact-head CI, then renew independent exact-head review.
+  Gavin alone decides merge.
+
+---
+Previous checkpoint:
+
 # GARMIN-004 — Garmin numbers you can see
 
 - **Objective:** [GARMIN-004](GARMIN-004.md), approved 2026-10-22. Builder: Claude Code. Branch

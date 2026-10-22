@@ -276,3 +276,8 @@ export function describeBaselinesQuiet(baselines: readonly PersonalBaseline[]): 
   ];
   return parts.length ? parts.join(" ") : undefined;
 }
+
+/** GARMIN-005: Garmin's own figure beside the weight-trend estimate — a comparison, never a target. */
+export function describeGarminBurned(garmin: { averageKcal: number; days: number }): string {
+  return `Garmin says about ${garmin.averageKcal.toLocaleString("en-US")} kcal a day (${garmin.days} measured ${garmin.days === 1 ? "day" : "days"}). Watch estimates can be off by 10–20%.`;
+}

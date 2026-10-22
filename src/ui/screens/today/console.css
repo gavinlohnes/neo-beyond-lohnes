@@ -186,3 +186,5 @@
 
 /* GARMIN-004: six numbers (with Garmin) sit three across. */
 .today-numbers .cc-fuel.cc-fuel--six { grid-template-columns: repeat(3, 1fr); }
+/* GARMIN-005: with calories, CALORIES and STEPS span two columns so the three rows stay full. */
+.today-numbers .cc-fuel.cc-fuel--calories .cc-fuel-wide { grid-column: span 2; }

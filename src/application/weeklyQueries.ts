@@ -15,6 +15,7 @@ import { projectFindings, type FindingsResult } from "../engine/findings";
 import { projectExpenditure, type ExpenditureReadout } from "../engine/expenditure";
 import { projectPersonalBaselines, type PersonalBaseline } from "../engine/personalBaselines";
 import { getCustomTemplates } from "./customTemplateQueries";
+import { burnedByPeriod, recentPeriods } from "../domain/health/measuredSeries";
 
 /**
  * Drop 7 (weekly check-in, owner approval 2026-10-01). One read-only summary
@@ -69,6 +70,11 @@ export interface WeeklySummary {
    * it's still waiting for. Feeds nothing.
    */
   expenditure: ExpenditureReadout;
+  /**
+   * GARMIN-005: Garmin's average total burned per finished lived day over the same 28 days, shown
+   * beside the weight-trend estimate so the two can be compared. Null without Garmin calories.
+   */
+  garminBurned: { averageKcal: number; days: number } | null;
   /**
    * YOUR USUAL (FOUNDATION-A-F1, 2026-10-04): the last 7 finished lived days
    * against Gavin's own usual range for main sleep, water and protein, per
@@ -206,6 +212,15 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
     },
     findings: { ...findings, exerciseNames },
     expenditure: projectExpenditure(daySummaries, history, now),
+    garminBurned: await getGarminBurned(end),
     baselines: projectPersonalBaselines(daySummaries, now),
   };
+}
+
+async function getGarminBurned(now: number): Promise<WeeklySummary["garminBurned"]> {
+  const [days, hours] = await Promise.all([db.beyondDays.toArray(), db.externalActivityHours.toArray()]);
+  if (!hours.some((h) => h.totalCaloriesKcal != null)) return null;
+  const finished = burnedByPeriod(recentPeriods(days, now, 29), hours, now).filter((p) => !p.partial && p.value !== null);
+  const averageKcal = average(finished.map((p) => p.value!));
+  return averageKcal === undefined ? null : { averageKcal: Math.round(averageKcal), days: finished.length };
 }

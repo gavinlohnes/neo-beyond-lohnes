@@ -27,7 +27,20 @@ export async function importActivitySnapshot(input: unknown): Promise<{ inserted
     snapshot.hours.forEach((hour, i) => {
       const existing = existingHours[i];
       if (existing && compareSleepInstants(snapshot.exportedAt, existing.exportedAt) <= 0) { result.skipped++; return; }
-      rows.push({ ...hour, id: hour.startTime, exportedAt: snapshot.exportedAt, receiptId });
+      // GARMIN-005: null means the helper could not read that field (including revoked permission),
+      // not that an earlier measurement became zero or disappeared. Preserve each field separately
+      // and retain the export that actually supplied it so stale calories never look newly refreshed.
+      const total = hour.totalCaloriesKcal != null
+        ? { totalCaloriesKcal: hour.totalCaloriesKcal, totalCaloriesExportedAt: snapshot.exportedAt }
+        : existing?.totalCaloriesKcal != null
+          ? { totalCaloriesKcal: existing.totalCaloriesKcal, totalCaloriesExportedAt: existing.totalCaloriesExportedAt ?? existing.exportedAt }
+          : snapshot.schemaVersion === 2 ? { totalCaloriesKcal: null } : {};
+      const active = hour.activeCaloriesKcal != null
+        ? { activeCaloriesKcal: hour.activeCaloriesKcal, activeCaloriesExportedAt: snapshot.exportedAt }
+        : existing?.activeCaloriesKcal != null
+          ? { activeCaloriesKcal: existing.activeCaloriesKcal, activeCaloriesExportedAt: existing.activeCaloriesExportedAt ?? existing.exportedAt }
+          : snapshot.schemaVersion === 2 ? { activeCaloriesKcal: null } : {};
+      rows.push({ ...hour, ...total, ...active, id: hour.startTime, exportedAt: snapshot.exportedAt, receiptId });
       if (existing) result.revised++; else result.inserted++;
     });
     await db.externalActivityHours.bulkPut(rows);

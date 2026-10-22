@@ -16,7 +16,7 @@ class ActivityExportTest {
     @Test fun writesHourlyMeasurementsAndRestingHeartRateWithProvenance() {
         val json = export()
         assertEquals("BEYOND_HEALTH_CONNECT_ACTIVITY", json.getString("format"))
-        assertEquals(1, json.getInt("schemaVersion"))
+        assertEquals(2, json.getInt("schemaVersion"))
         assertEquals(GARMIN_PACKAGE, json.getString("source"))
         val h = json.getJSONArray("hours").getJSONObject(0)
         assertEquals("2026-10-12T00:00:00Z", h.getString("startTime"))
@@ -35,6 +35,20 @@ class ActivityExportTest {
         assertTrue(s.isNull("heartRateAvgBpm"))
         assertEquals(812, s.getInt("steps"))
     }
+    @Test fun writesCaloriesAndKeepsMissingOnesNull() {
+        val h = export(listOf(hour().copy(totalCalories = 112, activeCalories = 31))).getJSONArray("hours").getJSONObject(0)
+        assertEquals(112, h.getInt("totalCaloriesKcal"))
+        assertEquals(31, h.getInt("activeCaloriesKcal"))
+        val none = export().getJSONArray("hours").getJSONObject(0)
+        assertTrue(none.isNull("totalCaloriesKcal"))
+        assertTrue(none.isNull("activeCaloriesKcal"))
+    }
+    @Test fun acceptsAnHourWithOnlyCalories() {
+        val h = export(listOf(hour().copy(steps = null, heartRateMin = null, heartRateAvg = null, heartRateMax = null, totalCalories = 88))).getJSONArray("hours").getJSONObject(0)
+        assertEquals(88, h.getInt("totalCaloriesKcal"))
+        assertTrue(h.isNull("steps"))
+    }
+    @Test(expected = IllegalArgumentException::class) fun refusesImplausibleCalories() { export(listOf(hour().copy(totalCalories = 9000))) }
     @Test fun allowsEmptyExports() { assertEquals(0, export(emptyList(), emptyList()).getJSONArray("hours").length()) }
     @Test fun sortsHours() {
         val hours = export(listOf(hour(5), hour(2))).getJSONArray("hours")

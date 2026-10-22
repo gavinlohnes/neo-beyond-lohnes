@@ -79,7 +79,7 @@ import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
 import { RecommendationCard, describeAllClearHeadline } from "./RecommendationCard";
 import { getMeasuredSnapshot, type MeasuredSnapshot } from "../../../application/measuredQueries";
-import { MeasuredSheet, measuredClock, type MeasuredMetric } from "./MeasuredSheet";
+import { MeasuredSheet, describeGarminAsOf, measuredClock, type MeasuredMetric } from "./MeasuredSheet";
 import { ConsoleControls } from "./ConsoleControls";
 import { SmallSteps } from "./SmallSteps";
 import "./smallSteps.css";
@@ -1917,6 +1917,10 @@ export function TodayScreen({
     // GARMIN-004: with Garmin data, STEPS and RESTING HR join the numbers and SLEEP shows your usual.
     const garminTiles = !operationsOnly && !!measured?.any;
     const stepsToday = measured?.steps.at(-1)?.value ?? null;
+    // GARMIN-005: eaten (logged meals) next to burned (Garmin) once any calorie data has arrived.
+    const calorieTile = garminTiles && !!measured?.anyCalories;
+    const eatenToday = measured?.eaten.at(-1)?.value ?? null, burnedToday = measured?.burned.at(-1)?.value ?? null;
+    const garminStale = calorieTile && measured!.caloriesAsOf !== null && measured!.readAt - measured!.caloriesAsOf > 12 * 3600_000;
     // Garmin publishes resting heart rate once a day, so the tile shows the latest from today or yesterday.
     const restingToday = measured?.resting.at(-1)?.value ?? measured?.resting.at(-2)?.value ?? null;
     const openMeasured = (metric: MeasuredMetric | null) => () => { if (busyRef.current) return; if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); };
@@ -1927,11 +1931,16 @@ export function TodayScreen({
     return (
       <>
         <p className="cc-lbl cc-numbers-head"><span>TODAY’S NUMBERS</span></p>
-        <div className={`cc-fuel${garminTiles ? " cc-fuel--six" : ""}`} role="group" aria-label={fuelLine}>
+        <div className={`cc-fuel${garminTiles ? " cc-fuel--six" : ""}${calorieTile ? " cc-fuel--calories" : ""}`} role="group" aria-label={fuelLine}>
           {tile("protein", "PROTEIN", <><b><DecryptNumber value={minimumDayProteinG} dayId={day?.id ?? "unstarted"} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
             // FIELD-AUTHORITY-001: a tile states facts; how the target is set lives in its history.
             pct === null ? <span className="cc-flab">NO TARGET</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
             `Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g`)}
+          {calorieTile && <button type="button" className="cc-fuel-wide" disabled={busy}
+            aria-label={`Calories eaten ${eatenToday === null ? "not logged" : eatenToday.toLocaleString("en-US")}, burned ${burnedToday === null ? "not measured" : `${burnedToday.toLocaleString("en-US")} so far`}, open calories`} onClick={openMeasured("calories")}>
+            <span className="cc-flab">CALORIES</span><span className="cc-num"><b>{eatenToday === null ? "—" : eatenToday.toLocaleString("en-US")}</b><small>eaten</small></span>
+            <span className="cc-flab">{burnedToday === null ? "BURNED —" : `BURNED ${burnedToday.toLocaleString("en-US")}`}</span>
+          </button>}
           {tile("water", "WATER", <><b><DecryptNumber value={minimumDayHydrateOz} dayId={day?.id ?? "unstarted"} reading="water" /></b><small>oz</small></>,
             <span className="cc-flab">{waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>, `Water ${minimumDayHydrateOz} oz`)}
           {tile("weight", "WEIGHT", <b>{latestWeightLbs === undefined ? "—" : latestWeightLbs.toFixed(1)}</b>,
@@ -1941,7 +1950,7 @@ export function TodayScreen({
           </button> : tile("sleep", "SLEEP", <b>{sleep ?? "—"}</b>, <span className="cc-flab">{sleep ? "LAST MAIN" : "NOT LOGGED"}</span>,
             sleep ? `Main sleep ${sleep}` : "Main sleep not logged")}
           {garminTiles && <>
-            <button type="button" disabled={busy} aria-label={`Steps ${stepsToday === null ? "not measured today" : stepsToday.toLocaleString("en-US")}${measured!.usual.steps.value !== null ? `, usual ${measured!.usual.steps.value.toLocaleString("en-US")}` : ""}, open steps`} onClick={openMeasured("steps")}>
+            <button type="button" className={calorieTile ? "cc-fuel-wide" : undefined} disabled={busy} aria-label={`Steps ${stepsToday === null ? "not measured today" : stepsToday.toLocaleString("en-US")}${measured!.usual.steps.value !== null ? `, usual ${measured!.usual.steps.value.toLocaleString("en-US")}` : ""}, open steps`} onClick={openMeasured("steps")}>
               <span className="cc-flab">STEPS</span><span className="cc-num"><b>{stepsToday === null ? "—" : stepsToday.toLocaleString("en-US")}</b></span>
               <span className="cc-flab">{measured!.usual.steps.value !== null ? `USUAL ${measured!.usual.steps.value.toLocaleString("en-US")}` : stepsToday === null ? "NOT MEASURED" : "GARMIN"}</span>
             </button>
@@ -1953,6 +1962,8 @@ export function TodayScreen({
         </div>
         {/* FIELD-AUTHORITY-001: TONIGHT-001's "a weigh-in sets the target" moves out of the tile. */}
         {pct === null && latestWeightLbs === undefined && <p className="meta cc-numbers-note">A weigh-in sets the protein target.</p>}
+        {/* GARMIN-005: Garmin numbers only move when the helper sends; say so when they are old. */}
+        {garminStale && <p className="meta cc-numbers-note">{describeGarminAsOf(measured!.caloriesAsOf!, measured!.readAt).replace(/\.$/, "")}. Send from the helper to update.</p>}
       </>
     );
   }

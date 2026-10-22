@@ -7,23 +7,34 @@ import { GARMIN_ORIGIN, MAX_EXPORT_WINDOW_MS } from "./sleepImport";
  */
 export const ACTIVITY_IMPORT_FORMAT = "BEYOND_HEALTH_CONNECT_ACTIVITY";
 export const MAX_ACTIVITY_FILE_BYTES = 8 * 1024 * 1024;
+/** GARMIN-005: the most energy one hour can plausibly carry, kcal (matches the helper). */
+export const MAX_HOUR_KCAL = 5000;
 const HOUR_MS = 60 * 60 * 1000;
 
 export interface ActivityHour {
   startTime: string; endTime: string; zoneOffsetSeconds: number | null; steps: number | null;
   heartRateMinBpm: number | null; heartRateAvgBpm: number | null; heartRateMaxBpm: number | null;
+  /**
+   * GARMIN-005: Garmin's total (resting + active) and active energy for the hour, kcal. Schema 2 files
+   * only; rows from schema 1 files and earlier imports have no such fields and read as not measured.
+   */
+  totalCaloriesKcal?: number | null; activeCaloriesKcal?: number | null;
 }
 export interface RestingHeartRate {
   id: string; dataOriginPackage: string; lastModifiedTime: string; time: string; zoneOffsetSeconds: number | null; bpm: number;
 }
 export interface ActivitySnapshot {
-  format: typeof ACTIVITY_IMPORT_FORMAT; schemaVersion: 1;
+  format: typeof ACTIVITY_IMPORT_FORMAT; schemaVersion: 1 | 2;
   producer: { name: "BEYOND Health Bridge"; version: string }; source: typeof GARMIN_ORIGIN;
   exportedAt: string; window: { startTime: string; endTime: string };
   hours: ActivityHour[]; restingHeartRate: RestingHeartRate[];
 }
 /** Stored hour, keyed by its UTC start. `exportedAt` decides which export is newer. */
-export interface ExternalActivityHour extends ActivityHour { id: string; exportedAt: string; receiptId: string }
+export interface ExternalActivityHour extends ActivityHour {
+  id: string; exportedAt: string; receiptId: string;
+  /** Export that actually supplied each calorie field; later exports may lack calorie permission. */
+  totalCaloriesExportedAt?: string; activeCaloriesExportedAt?: string;
+}
 export interface ExternalRestingHeartRate extends RestingHeartRate { key: string; importedAt: string; receiptId: string }
 
 function fail(): never { throw new Error("This is not a supported BEYOND steps and heart rate export. Nothing was imported."); }
@@ -57,7 +68,9 @@ function count(value: unknown, min: number, max: number): number | null {
 /** Full validation/copy at both preview and command boundary. Unknown fields are refused. */
 export function validateActivitySnapshot(value: unknown): ActivitySnapshot {
   const root = object(value, ["format", "schemaVersion", "producer", "source", "exportedAt", "window", "hours", "restingHeartRate"]);
-  if (root.format !== ACTIVITY_IMPORT_FORMAT || root.schemaVersion !== 1 || root.source !== GARMIN_ORIGIN) return fail();
+  // GARMIN-005: schema 2 adds hourly calories; schema 1 files from older helpers still import.
+  if (root.format !== ACTIVITY_IMPORT_FORMAT || (root.schemaVersion !== 1 && root.schemaVersion !== 2) || root.source !== GARMIN_ORIGIN) return fail();
+  const schemaVersion = root.schemaVersion as 1 | 2;
   const producer = object(root.producer, ["name", "version"]);
   if (producer.name !== "BEYOND Health Bridge") return fail();
   const version = text(producer.version, 40);
@@ -69,15 +82,19 @@ export function validateActivitySnapshot(value: unknown): ActivitySnapshot {
   if (!Array.isArray(root.hours) || root.hours.length > 366 * 24) return fail();
   const seenHours = new Set<string>();
   const hours = root.hours.map((input): ActivityHour => {
-    const h = object(input, ["startTime", "endTime", "zoneOffsetSeconds", "steps", "heartRateMinBpm", "heartRateAvgBpm", "heartRateMaxBpm"]);
+    const h = object(input, ["startTime", "endTime", "zoneOffsetSeconds", "steps", "heartRateMinBpm", "heartRateAvgBpm", "heartRateMaxBpm",
+      ...(schemaVersion === 2 ? ["totalCaloriesKcal", "activeCaloriesKcal"] : [])]);
     const start = instant(h.startTime), end = instant(h.endTime);
     const begin = Date.parse(start);
     if (begin % HOUR_MS !== 0 || Date.parse(end) !== begin + HOUR_MS || begin < from || begin + HOUR_MS > to || seenHours.has(start)) return fail();
     seenHours.add(start);
     const steps = count(h.steps, 0, 100_000);
     const min = count(h.heartRateMinBpm, 20, 300), avg = count(h.heartRateAvgBpm, 20, 300), max = count(h.heartRateMaxBpm, 20, 300);
-    if (steps === null && avg === null) return fail();
-    return { startTime: start, endTime: end, zoneOffsetSeconds: offset(h.zoneOffsetSeconds), steps, heartRateMinBpm: min, heartRateAvgBpm: avg, heartRateMaxBpm: max };
+    const total = schemaVersion === 2 ? count(h.totalCaloriesKcal, 0, MAX_HOUR_KCAL) : null;
+    const active = schemaVersion === 2 ? count(h.activeCaloriesKcal, 0, MAX_HOUR_KCAL) : null;
+    if (steps === null && avg === null && total === null && active === null) return fail();
+    return { startTime: start, endTime: end, zoneOffsetSeconds: offset(h.zoneOffsetSeconds), steps, heartRateMinBpm: min, heartRateAvgBpm: avg, heartRateMaxBpm: max,
+      ...(schemaVersion === 2 ? { totalCaloriesKcal: total, activeCaloriesKcal: active } : {}) };
   });
   if (!Array.isArray(root.restingHeartRate) || root.restingHeartRate.length > 1000) return fail();
   const seenIds = new Set<string>();
@@ -92,7 +109,7 @@ export function validateActivitySnapshot(value: unknown): ActivitySnapshot {
     if (bpm === null) return fail();
     return { id, dataOriginPackage: GARMIN_ORIGIN, lastModifiedTime: instant(r.lastModifiedTime), time, zoneOffsetSeconds: offset(r.zoneOffsetSeconds), bpm };
   });
-  return { format: ACTIVITY_IMPORT_FORMAT, schemaVersion: 1, producer: { name: "BEYOND Health Bridge", version }, source: GARMIN_ORIGIN,
+  return { format: ACTIVITY_IMPORT_FORMAT, schemaVersion, producer: { name: "BEYOND Health Bridge", version }, source: GARMIN_ORIGIN,
     exportedAt, window: { startTime, endTime }, hours, restingHeartRate };
 }
 export function parseActivitySnapshot(input: string): ActivitySnapshot {

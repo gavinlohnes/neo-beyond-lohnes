@@ -22,3 +22,10 @@
 .measured-table th, .measured-table td { text-align: left; padding: 6px 0; border-bottom: 1px solid var(--p-line, #1b1b1b); font-weight: 400; }
 .measured-table td { text-align: right; }
 .measured-table summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+/* GARMIN-005: eaten vs burned. */
+.measured-pair { display: flex; gap: 18px; flex-wrap: wrap; }
+.measured-pair span { white-space: nowrap; }
+.measured-legend { display: flex; gap: 16px; margin: 0; font-size: 13px; color: var(--p-t2, var(--text-2)); }
+.measured-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.measured-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.measured-table thead td, .measured-table thead th { color: var(--p-t2, var(--text-2)); font-size: 12px; }
