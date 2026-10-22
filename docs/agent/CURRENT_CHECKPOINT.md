@@ -1,3 +1,16 @@
+# FRICTION-001 — slice 2: weight in one place, honest last-night sleep
+
+- **Objective / authority:** [FRICTION-001](FRICTION-001.md); #275 (slice 1) merged as 7f11f20;
+  Gavin: "We have work to do" (continue). Builder: Claude Code, branch `claude/friction-2`.
+- **Built:** BODY home's WEIGHT card is the one weight surface, with LOG WEIGHT opening the existing
+  bodyweight sheet; the readout grid drops LAST WEIGHT there. A day-before sleep reads "Garmin ·
+  last main sleep" and opens all sleep history. Display/navigation only.
+- **Verified:** `npm run verify` green: architecture OK, 2,890 passed / one skip, build OK.
+- **Next:** PR, green CI, independent review, Gavin's merge.
+
+---
+Previous checkpoint:
+
 # FRICTION-001 — slice 1: the 2:30 AM operator pass
 
 - **Objective / authority:** [FRICTION-001](FRICTION-001.md); Gavin said "start the friction pass

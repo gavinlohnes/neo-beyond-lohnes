@@ -50,6 +50,10 @@ history was overwhelming routine mobile screens.
 - **Copy says what's missing, once (FRICTION-001):** with no weigh-in, BODY's protein line reads
   "No target yet · a weigh-in sets it." instead of repeating the gram total. Workout titles are
   sentence case ("Chest, legs, and triceps").
+- **Weight lives in one place on BODY home (FRICTION-001 slice 2):** the WEIGHT card is the weight
+  surface (latest value, trend, LOG WEIGHT, WEIGHT HISTORY); the readout grid no longer repeats it.
+  LOG WEIGHT opens the existing bodyweight sheet. A sleep shown from the day before says so
+  ("Garmin · last main sleep") and opens all sleep history rather than an empty day.
 
 ## GARMIN-005 — eaten vs burned (owner approved 2026-10-22)
 

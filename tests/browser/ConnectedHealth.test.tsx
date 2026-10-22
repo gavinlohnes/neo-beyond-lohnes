@@ -77,7 +77,7 @@ it("retains range, exact same-time weight selection and source focus through the
   const before = await db.events.toArray();
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "BODY", exact: true }).click();
-  await screen.getByRole("button", { name: "last weight history", exact: true }).click();
+  await screen.getByRole("button", { name: "WEIGHT HISTORY", exact: true }).click();
   await screen.getByRole("button", { name: "7 DAYS", exact: true }).click();
   const slider = screen.getByRole("slider", { name: "Open recorded observation" });
   slider.element().focus(); await userEvent.keyboard("{Home}");

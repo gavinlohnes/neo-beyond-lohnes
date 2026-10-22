@@ -21,11 +21,22 @@ Walked TODAY, TRAIN, BODY and COMMAND at 390 px, 02:30 on a work day, with a mon
 | TRAIN title "Chest, Legs, And Triceps" (CSS capitalize) | Sentence case: "Chest, legs, and triceps" |
 | #274 review nit: WeightTrend duplicated `formatShortDate` | Reuses it |
 
-## Seen, not fixed here (candidates; bigger ones need Gavin)
+## Slice 2
 
-- BODY shows weight twice (LAST WEIGHT tile and the PROGRESS weight card). With no weight, WEIGHT
-  HISTORY opens an empty history rather than offering to log one.
-- TODAY repeats the protein-target hint: tile "NO TARGET" plus the line below the numbers.
+Gavin, 2026-10-22: "We have work to do" — continue the pass.
+
+| Seen | Fix |
+| --- | --- |
+| BODY home shows weight twice (LAST WEIGHT readout and the WEIGHT card) | The card is the one weight surface; the readout is left out on BODY home only |
+| Logging a weigh-in from BODY meant going back to TODAY → LOG → BODYWEIGHT | LOG WEIGHT on the WEIGHT card opens the same sheet (one tap) |
+| The card said "184.6 lb · latest recorded" | Value only; a lone weigh-in shows its date (the trend line dates two or more) |
+| A Garmin sleep from the day before was labelled just "Garmin" | "Garmin · last main sleep" |
+| Tapping that sleep opened today's empty day with "not in this rolling range" | Opens all sleep history |
+
+## Seen, not fixed (candidates)
+
+- TODAY's tile "NO TARGET" plus the line "A weigh-in sets the protein target." is a deliberate
+  FIELD-AUTHORITY-001 split (state in the tile, action below); left as is.
 - "DONE" closes several inline tool panels; fine as "finished", but not the sheet grammar's CLOSE.
 
 ## Screen ownership / architecture notes (for ARCH-001)

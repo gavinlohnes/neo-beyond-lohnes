@@ -254,8 +254,10 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onOpenTrainingRecords, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "BACK TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
+export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onOpenTrainingRecords, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "BACK TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory, onLogWeight }: {
   overviewOnly?: boolean;
+  /** FRICTION-001: BODY home's WEIGHT card opens the weight log directly. */
+  onLogWeight?: () => void;
   foodLookupEnabled?: boolean;
   onOpenTrainingRecords?: (() => void) | undefined;
   onEditRecord?: ((record: HealthRecord, dayId: string) => void) | undefined;
@@ -344,6 +346,11 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       const control = available.find((element) => element.tagName === "INPUT") ?? available.find((element) => element.textContent !== "DONE") ?? available[0];
       control?.focus();
     });
+  }
+  /** Weight is a cross-day trend; sleep shown from the day before (FRICTION-001) opens all sleep, not an empty day. */
+  function exploreOverview(metric: InsightMetric) {
+    const dayWide = metric === "weight" || (metric === "sleep" && !sleepEntries.some((entry) => entry.kind === "PRIMARY"));
+    showProgress(metric, dayWide ? undefined : day?.id);
   }
   function showProgress(metric?: InsightMetric, dayId?: string) {
     if (busyRef.current || foodSearchBusyRef.current) return;
@@ -2488,11 +2495,12 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     {onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>{returnLabel}</button>}
     <div hidden={progressOpen}>
       <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
-        {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} /> : <p role="status">Reading recorded information…</p>}
+        {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} showWeight={false} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={exploreOverview} /> : <p role="status">Reading recorded information…</p>}
         {mealReadFailed && <p role="alert">Could not refresh BODY.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
       </section>
       <section aria-label="Progress"><h2 className="section-label">PROGRESS</h2>
-        <div className="body-progress-card"><h3>WEIGHT</h3><p>{weightHistory.at(-1) ? `${weightHistory.at(-1)!.weightLbs} lb · latest recorded` : "No weight recorded yet."}</p><WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} /><button type="button" className="btn-secondary" onClick={() => showProgress("weight")}>WEIGHT HISTORY</button></div>
+        <div className="body-progress-card"><h3>WEIGHT</h3><p>{weightHistory.at(-1) ? `${weightHistory.at(-1)!.weightLbs} lb${weightHistory.length < 2 ? ` · ${formatShortDate(weightHistory.at(-1)!.recordedAt)}` : ""}` : "No weight recorded yet."}</p><WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
+          <div className="body-progress-pair">{onLogWeight && <button type="button" className="btn-secondary" disabled={busy} onClick={onLogWeight}>LOG WEIGHT</button>}<button type="button" className="btn-secondary" onClick={() => showProgress("weight")}>WEIGHT HISTORY</button></div></div>
         <button type="button" className="btn-secondary body-progress-card" onClick={onOpenTrainingRecords}>TRAINING · RECORDS</button>
         <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); }}>{label}</button>)}</div>
       </section>
@@ -2537,7 +2545,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
             onSelect: (start) => { if (start === null || (!busyRef.current && !foodSearchBusyRef.current)) setHealthDay(start); }, onExplore: showProgress, onInspect: (selection) => openSources(selection, true) }} />
       </div>
       {!waterFocused && !mealsVisible && !progressOpen && !healthDay && (readingsReady ? <HealthOverview day={day}
-        onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep}
+        onExplore={exploreOverview} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep}
         weight={weightHistory} mealEntries={mealEntries}
         calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged from meals · no calorie target"}
         proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} /> : <p className="meta" role="status">Loading recorded information…</p>)}

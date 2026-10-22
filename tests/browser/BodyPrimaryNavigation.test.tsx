@@ -109,3 +109,21 @@ describe("BODY primary navigation after a TODAY shortcut", () => {
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Draft");
   });
 });
+
+describe("FRICTION-001 slice 2 — BODY home", () => {
+  it("shows weight once, logs a weigh-in from the WEIGHT card in one tap, and dates a lone weigh-in", async () => {
+    const screen = await render(<App />);
+    await tapBody(screen);
+    await expectDailyRecord(screen);
+    // The WEIGHT card is the one weight surface on BODY home; the readout grid no longer repeats it.
+    expect([...document.querySelectorAll(".body-home .health-overview .tool-label")].map((el) => el.textContent)).not.toContain("LAST WEIGHT");
+    await screen.getByRole("button", { name: "LOG WEIGHT", exact: true }).click();
+    const weight = screen.getByRole("dialog", { name: "BODYWEIGHT", exact: true });
+    await weight.getByRole("spinbutton", { name: "Weight (lbs)", exact: true }).fill("181");
+    await weight.getByRole("button", { name: "LOG BODYWEIGHT", exact: true }).click();
+    await expect.poll(() => db.events.where("type").equals("BODYWEIGHT_LOGGED").count()).toBe(1);
+    await weight.getByRole("button", { name: "CLOSE", exact: true }).click();
+    // One weigh-in has no trend line yet, so the card carries its date (the trend line does once there are two).
+    await expect.element(screen.getByText(/^181 lb · [A-Z][a-z]{2} \d{1,2}$/)).toBeVisible();
+  });
+});
