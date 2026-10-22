@@ -1920,7 +1920,7 @@ export function TodayScreen({
     // GARMIN-005: eaten (logged meals) next to burned (Garmin) once any calorie data has arrived.
     const calorieTile = garminTiles && !!measured?.anyCalories;
     const eatenToday = measured?.eaten.at(-1)?.value ?? null, burnedToday = measured?.burned.at(-1)?.value ?? null;
-    const garminStale = garminTiles && measured!.garminAsOf !== null && measured!.readAt - measured!.garminAsOf > 12 * 3600_000;
+    const garminStale = calorieTile && measured!.caloriesAsOf !== null && measured!.readAt - measured!.caloriesAsOf > 12 * 3600_000;
     // Garmin publishes resting heart rate once a day, so the tile shows the latest from today or yesterday.
     const restingToday = measured?.resting.at(-1)?.value ?? measured?.resting.at(-2)?.value ?? null;
     const openMeasured = (metric: MeasuredMetric | null) => () => { if (busyRef.current) return; if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); };
@@ -1963,7 +1963,7 @@ export function TodayScreen({
         {/* FIELD-AUTHORITY-001: TONIGHT-001's "a weigh-in sets the target" moves out of the tile. */}
         {pct === null && latestWeightLbs === undefined && <p className="meta cc-numbers-note">A weigh-in sets the protein target.</p>}
         {/* GARMIN-005: Garmin numbers only move when the helper sends; say so when they are old. */}
-        {garminStale && <p className="meta cc-numbers-note">{describeGarminAsOf(measured!.garminAsOf!, measured!.readAt).replace(/\.$/, "")}. Send from the helper to update.</p>}
+        {garminStale && <p className="meta cc-numbers-note">{describeGarminAsOf(measured!.caloriesAsOf!, measured!.readAt).replace(/\.$/, "")}. Send from the helper to update.</p>}
       </>
     );
   }

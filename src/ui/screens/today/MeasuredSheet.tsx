@@ -159,7 +159,7 @@ export function MeasuredSheet({ open, metric, snapshot, onClose, onAllRecords }:
       </>}
 
       {usual && <p className="meta measured-usual-line">{metric === "calories" ? describeUsual(metric, usual).replace("Usual:", "Usual burned:") : describeUsual(metric, usual)}</p>}
-      {snapshot.garminAsOf !== null && <p className="meta measured-asof">{describeGarminAsOf(snapshot.garminAsOf, snapshot.readAt)}</p>}
+      {(metric === "calories" ? snapshot.caloriesAsOf : snapshot.garminAsOf) !== null && <p className="meta measured-asof">{describeGarminAsOf((metric === "calories" ? snapshot.caloriesAsOf : snapshot.garminAsOf)!, snapshot.readAt)}</p>}
       {metric === "calories" && <p className="meta">Burned is Garmin’s estimate, resting plus active; watch estimates can be off by 10–20%. Eaten is what you logged.</p>}
       <p className="meta">Measured by Garmin. A day with no measurement is missing, not zero. Nothing here changes BEYOND’s advice.</p>
       {metric === "sleep" && onAllRecords && <button type="button" className="btn-secondary" onClick={onAllRecords}>ALL SLEEP RECORDS</button>}

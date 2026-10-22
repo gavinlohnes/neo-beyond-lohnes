@@ -31,6 +31,8 @@ export interface MeasuredSnapshot {
   eatenToday: { t: number; total: number }[];
   /** Any calorie hour at all; without one, TODAY shows no CALORIES tile. */
   anyCalories: boolean;
+  /** Export that actually supplied the newest total-calorie measurement, or null. */
+  caloriesAsOf: number | null;
   /** When the newest Garmin data was read on the phone (the latest export), or null. */
   garminAsOf: number | null;
   usual: {
@@ -61,6 +63,8 @@ export async function getMeasuredSnapshot(now = Date.now()): Promise<MeasuredSna
     const dayKind = today?.workContext === "WORK" || today?.workContext === "OFF" ? today.workContext : null;
     const burned = burnedByPeriod(periods, hours, now);
     const exports = [...receipts.map((r) => Date.parse(r.exportedAt)), ...hours.map((h) => Date.parse(h.exportedAt))].filter(Number.isFinite);
+    const calorieExports = hours.flatMap((h) => h.totalCaloriesKcal == null ? []
+      : [Date.parse(h.totalCaloriesExportedAt ?? h.exportedAt)]).filter(Number.isFinite);
     // Only finished days count toward the usual, so a day in progress never lowers it.
     const finishedBurned = burned.filter((p) => !p.partial && p.value !== null && p.from >= now - 28 * 24 * 3600_000).map((p) => p.value!);
     return {
@@ -75,7 +79,8 @@ export async function getMeasuredSnapshot(now = Date.now()): Promise<MeasuredSna
       lastNight: lastNight(sleeps, now),
       activeBurned: burnedByPeriod(periods, hours, now, "active"),
       burnedToday: cumulativeBurned(current, hours, now),
-      anyCalories: hours.some((h) => h.totalCaloriesKcal != null || h.activeCaloriesKcal != null),
+      anyCalories: hours.some((h) => h.totalCaloriesKcal != null),
+      caloriesAsOf: calorieExports.length ? Math.max(...calorieExports) : null,
       garminAsOf: exports.length ? Math.max(...exports) : null,
       usual: {
         steps: dayKind === "OFF" ? { ...baselines.offDaySteps, dayKind } : dayKind === "WORK" ? { ...baselines.workDaySteps, dayKind } : { value: null, samples: 0, dayKind: null },

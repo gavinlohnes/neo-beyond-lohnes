@@ -30,7 +30,11 @@ export interface ActivitySnapshot {
   hours: ActivityHour[]; restingHeartRate: RestingHeartRate[];
 }
 /** Stored hour, keyed by its UTC start. `exportedAt` decides which export is newer. */
-export interface ExternalActivityHour extends ActivityHour { id: string; exportedAt: string; receiptId: string }
+export interface ExternalActivityHour extends ActivityHour {
+  id: string; exportedAt: string; receiptId: string;
+  /** Export that actually supplied each calorie field; later exports may lack calorie permission. */
+  totalCaloriesExportedAt?: string; activeCaloriesExportedAt?: string;
+}
 export interface ExternalRestingHeartRate extends RestingHeartRate { key: string; importedAt: string; receiptId: string }
 
 function fail(): never { throw new Error("This is not a supported BEYOND steps and heart rate export. Nothing was imported."); }

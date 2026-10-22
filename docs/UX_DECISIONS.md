@@ -25,7 +25,9 @@ Gavin approved [the brief](agent/GARMIN-005.md), including the defaults below an
   existing weight-trend estimate rather than replacing it.
 - **Trust:** every sheet shows `Garmin as of …`; TODAY calls out data older than 12 hours. Copy says
   burned is a watch estimate that can be off by 10–20%. Older helper files remain compatible and
-  cannot erase already imported calorie values.
+  cannot erase already imported calorie values. If a later export cannot read calories, the prior
+  value keeps the timestamp of the export that actually supplied it; active-only data does not
+  expose the total-calorie comparison.
 
 ## GARMIN-004 — Garmin numbers you can see (owner approved 2026-10-22)
 

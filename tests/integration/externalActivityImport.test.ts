@@ -5,6 +5,7 @@ import "dexie-export-import";
 import { applyRestore } from "../../src/persistence/backup";
 import { applyAnyRestore } from "../../src/persistence/restore";
 import { getMeasuredActivityByDay, importActivitySnapshot, previewActivityImport } from "../../src/application/externalActivityCommands";
+import { getMeasuredSnapshot } from "../../src/application/measuredQueries";
 import { parseActivitySnapshot } from "../../src/domain/health/activityImport";
 import { syntheticActivity } from "../helpers/syntheticActivity";
 
@@ -139,6 +140,36 @@ describe("GARMIN-005 calories burned (activity schema 2)", () => {
     const older = syntheticActivity("2026-10-20T00:00:00Z"); older.hours[0]!.steps = 1500;
     await importActivitySnapshot(older);
     expect(await db.externalActivityHours.get("2026-10-17T22:00:00Z")).toMatchObject({ steps: 1500, totalCaloriesKcal: 100, activeCaloriesKcal: 20 });
+  });
+  it("preserves calories and their real freshness when a newer schema 2 export cannot read them", async () => {
+    const first = v2();
+    await importActivitySnapshot(first);
+    const denied = v2("2026-10-20T00:00:00Z");
+    denied.hours[0]!.steps = 1500;
+    for (const hour of denied.hours) {
+      hour.totalCaloriesKcal = null;
+      hour.activeCaloriesKcal = null;
+    }
+    await importActivitySnapshot(denied);
+    const row = await db.externalActivityHours.get("2026-10-17T22:00:00Z");
+    expect(row).toMatchObject({
+      steps: 1500, totalCaloriesKcal: 100, activeCaloriesKcal: 20,
+      exportedAt: "2026-10-20T00:00:00Z",
+      totalCaloriesExportedAt: "2026-10-19T00:00:00Z",
+      activeCaloriesExportedAt: "2026-10-19T00:00:00Z",
+    });
+    const measured = await getMeasuredSnapshot(Date.parse("2026-10-20T06:00:00Z"));
+    expect(measured.anyCalories).toBe(true);
+    expect(measured.caloriesAsOf).toBe(Date.parse("2026-10-19T00:00:00Z"));
+    expect(measured.garminAsOf).toBe(Date.parse("2026-10-20T00:00:00Z"));
+  });
+  it("does not advertise a total-calorie comparison when only active calories are readable", async () => {
+    const activeOnly = v2();
+    for (const hour of activeOnly.hours) hour.totalCaloriesKcal = null;
+    await importActivitySnapshot(activeOnly);
+    const measured = await getMeasuredSnapshot(Date.parse("2026-10-20T06:00:00Z"));
+    expect(measured.anyCalories).toBe(false);
+    expect(measured.caloriesAsOf).toBeNull();
   });
   it("accepts an hour with only calories, and refuses implausible or misplaced calorie fields", async () => {
     const onlyCalories = v2(); onlyCalories.hours = [{ ...onlyCalories.hours[0]!, steps: null, heartRateMinBpm: null, heartRateAvgBpm: null, heartRateMaxBpm: null }];

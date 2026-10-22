@@ -12,14 +12,19 @@
   Weekly's measured Garmin average. No Engine, target, advice, net/remaining or schema change.
 - **Finished in handoff:** corrected the 4W expectation to 27 completed measured days; 5/5 focused
   browser tests pass at 320/390 px; refreshed four screenshots; added the brief/wording table and
-  UX_DECISIONS ruling. Two full gate attempts passed architecture and all product/browser work
-  (2,871+ tests / one skip each), but the Windows host timed out only in legacy `classifyRisk`
-  subprocess tests at their 5-second limit; the affected group passed 18/18 in isolation. Required
-  PR CI is the clean full gate.
+  UX_DECISIONS ruling. Independent review then found that a newer export with calorie access denied
+  could erase stored values or make them look fresh, and active-only data could expose an unusable
+  tile. Codex fixed the import to preserve each calorie field with its actual source-export time;
+  the tile and its freshness now require total calories. Focused import tests pass 14/14 and focused
+  browser tests pass 5/5. The renewed full gate passed architecture and 2,870 tests / one skip, then
+  failed six legacy `classifyRisk` subprocess cases at their 5-second limit plus one unrelated
+  mode-pin browser timing assertion; earlier attempts likewise timed out only under full-suite load,
+  while the affected risk group passed 18/18 in isolation. The production build passes. Required PR
+  CI is the clean full gate.
 - **Limits:** no Android SDK here, so helper compilation/permission packaging awaits CI. Physical
   phone permission/export, Safari and screen readers remain unverified.
-- **Next:** obtain green required PR/helper CI, then independent exact-head review. Gavin alone
-  decides merge.
+- **Next:** run the renewed full gate and exact-head CI, then renew independent exact-head review.
+  Gavin alone decides merge.
 
 ---
 Previous checkpoint:

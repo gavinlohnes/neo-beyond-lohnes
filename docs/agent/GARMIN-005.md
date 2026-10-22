@@ -5,7 +5,7 @@ with these defaults: put CALORIES next to PROTEIN; burned means Garmin total cal
 active); do not show an eaten-minus-burned number; show Garmin freshness and call out data older
 than 12 hours. **Lane:** PROTECTED because it adds a Health Connect permission and changes TODAY's
 numbers. **Builder:** Claude Code, handed off to Codex to finish. **Start:** `8a4b80d`, stacked on
-GARMIN-004 PR #269. **Branch:** `claude/garmin-005`; PR pending.
+GARMIN-004 PR #269. **Branch:** `claude/garmin-005`; **PR:** #271.
 
 **Leverage gate:** INTEGRATE PROVIDER. Use Health Connect's existing total- and active-calorie
 records through the existing local helper/export/import path. No dependency, account, server,
@@ -15,7 +15,8 @@ subscription, schema migration or backup-format change.
 
 - Health Bridge 0.6.0 requests read access for total and active calories burned and exports hourly
   totals in activity format 2. BEYOND continues to accept format 1; importing an older file never
-  erases previously stored calorie values.
+  erases previously stored calorie values. A newer export with calorie access unavailable preserves
+  each earlier value and its original freshness timestamp rather than presenting it as newly read.
 - TODAY adds a CALORIES tile only when Garmin supplied calories. It shows calories eaten from
   BEYOND meal logs beside total calories burned from Garmin. STEPS and CALORIES each span two
   columns so the grid remains balanced.
@@ -50,7 +51,8 @@ Garmin values remain display-only estimates; meal logging remains the source of 
 
 ## Acceptance
 
-Both activity formats import without losing data; the helper permission/export contract is tested;
+Both activity formats import without losing data, including a format-2 export after permission is
+revoked; the helper permission/export contract is tested;
 the tile is absent without Garmin calories; tile and sheet values, completed-period counts,
 freshness, missing values, focus return, read-only behavior, 320/390 px fit and axe checks pass;
 Weekly shows the measured comparison; `npm run verify` and the helper CI workflow pass. Screenshots
