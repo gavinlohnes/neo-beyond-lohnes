@@ -21,8 +21,7 @@ export async function commandResult(screen: Screen, label: string) {
   if ((search.element() as HTMLInputElement).value) await search.fill('');
   const sectionForm = label === 'NUTRITION TARGETS' || label === 'QUIT TRACKER';
   if (sectionForm) {
-    const summary = screen.getByText('Settings tools', { exact: true });
-    if (!(summary.element().parentElement as HTMLDetailsElement).open) await summary.click();
+    await openCommandPanel(screen, 'settings');
     return screen.getByRole('button', { name: `Open ${label}`, exact: true });
   }
   const canonical = label === 'SEARCH' ? 'SEARCH RECORDS' : label;
@@ -39,6 +38,8 @@ export async function openCommandDestination(screen: Screen, label: string) {
   await (await commandResult(screen, label)).click();
 }
 export async function openCommandPanel(screen: Screen, panel: 'backup' | 'settings') {
-  const summary = screen.getByText(panel === 'backup' ? 'Backup & recovery tools' : 'Settings tools', { exact: true });
-  if (!(summary.element().parentElement as HTMLDetailsElement).open) await summary.click();
+  // FIELD-AUTHORITY-001: the job rows "Backup & recovery" and "Settings" hold their tool panels.
+  const summary = screen.getByText(panel === 'backup' ? 'Backup & recovery' : 'Settings', { exact: true }).elements().find((element) => element.tagName === 'SUMMARY');
+  if (!summary) throw new Error(`Missing COMMAND panel: ${panel}`);
+  if (!(summary.parentElement as HTMLDetailsElement).open) await page.elementLocator(summary).click();
 }

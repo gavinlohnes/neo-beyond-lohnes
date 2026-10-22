@@ -22,3 +22,7 @@
 .log-sheet .cc-amounts button { min-width: 0; padding-inline: 4px; }
 .redesign-toast { max-height: 38dvh; overflow-y: auto; }
 .record-receipt + .record-receipt { border-top: 1px solid var(--border-strong); margin-top: 8px; }
+/* FIELD-AUTHORITY-001: the one quiet "not checked in" line under the next card. */
+.redesign-today .today-check-in { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0 0; color: var(--p-t2, var(--text-2)); }
+.redesign-today .today-check-in .btn-secondary { width: auto; min-height: 44px; padding-inline: 18px; }
+.cc-numbers-note { margin: 8px 0 0; }

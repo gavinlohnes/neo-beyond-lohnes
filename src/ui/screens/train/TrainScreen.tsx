@@ -1067,22 +1067,15 @@ export function TrainScreen({
         </div>
       )}
 
-      {/* FIELD-ARCH-001: was a plain .card plus an inline
-          style={{ borderColor: "var(--warning)" }} override — the same
-          "ad hoc card with a color hack" gap VISUAL-002 already found and
-          fixed for the danger/red tier (.card--warning); .card--caution
-          is that same fix for the warning/yellow tier this call site
-          actually needs. Same visible color/box, a real semantic class. */}
+      {/* FIELD-AUTHORITY-001: the check-in gate is one short line and one neutral control.
+          START WORKOUT below stays the screen's only red. */}
       {!session && !completionSummary && noCheckIn && (
-        <div className="card card--caution">
-          <p className="eyebrow" style={{ color: "var(--warning)", marginBottom: 4 }}>NO CHECK-IN YET</p>
-          <p className="card-body" style={{ marginBottom: 12 }}>
-            No check-in yet. TRAIN needs one to suggest a session.
-          </p>
-          <button className="btn-primary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
+        <p className="train-check-in-gate">
+          <span>Check in for a suggested session.</span>
+          <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
             QUICK CHECK-IN (ALL GOOD)
           </button>
-        </div>
+        </p>
       )}
 
       {/* FIELD ALPHA Phase 2B: the pre-session picker IS the one decision

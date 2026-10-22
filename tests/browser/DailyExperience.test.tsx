@@ -141,7 +141,7 @@ describe("Plan Today and truthful guidance", () => {
     // SUIT-001: SYSTEMS carries the level and the sleep fact on TODAY; STATE keeps the full sentence.
     await expect.element(screen.getByRole("button", { name: /STATUS · RED · 3h sleep/ })).toBeVisible();
     // TONIGHT-001: a day off asks its workout question below, so the all-clear says so.
-    await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you.", { exact: true })).toBeVisible();
     expect(await db.recommendations.count()).toBe(1);
     expect(await db.events.where("type").equals("STATE_CHECKED_IN").count()).toBe(1);
   });
@@ -151,7 +151,8 @@ describe("Plan Today and truthful guidance", () => {
     await expect.element(screen.getByRole("main")).toBeVisible();
     expect(screen.getByRole("main").elements()).toHaveLength(1);
     await tab(screen, "COMMAND");
-    const plans = screen.getByRole("button", { name: "PLAN TODAY", exact: true }).element();
+    // FIELD-AUTHORITY-001: Plan is a top-level job row.
+    const plans = [...document.querySelectorAll<HTMLElement>("summary")].find((element) => element.textContent === "Plan")!;
     expect(plans.getBoundingClientRect().bottom).toBeLessThan(700);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     for (const animation of document.getAnimations()) animation.finish();

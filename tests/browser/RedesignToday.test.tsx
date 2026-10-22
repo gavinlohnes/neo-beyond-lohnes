@@ -27,7 +27,12 @@ for (const width of [320, 360, 390, 412]) it(`keeps five TODAY sections, blank s
     const screen = await render(<App />);
     await expect.poll(() => document.querySelector('.mode-header')?.getAttribute('data-mode')).toBe(mode);
     const main = document.querySelector('.redesign-today')!;
-    expect([...main.children].filter((node) => node.tagName === 'SECTION').map((node) => node.getAttribute('aria-label'))).toEqual(['Day mode', 'Log', 'Next action', "Today's numbers", 'Check-in']);
+    // FIELD-AUTHORITY-001: with no Engine guidance a pin changes no priority: logging leads, no red,
+    // and the next card's one quiet line owns "not checked in" (no separate check-in section).
+    expect([...main.children].filter((node) => node.tagName === 'SECTION').map((node) => node.getAttribute('aria-label'))).toEqual(['Day mode', 'Log', 'Next action', "Today's numbers"]);
+    expect([...main.querySelectorAll<HTMLElement>('.btn-primary')].filter((el) => el.getClientRects().length)).toHaveLength(0);
+    expect(screen.getByRole('button', { name: 'CHECK IN', exact: true }).elements()).toHaveLength(1);
+    expect(document.body.textContent).not.toContain('NOT CHECKED IN');
     expect(main.querySelector('.cc-systems')).toBeNull();
     expect(main.querySelector('.console-tools')).toBeNull();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
@@ -121,16 +126,43 @@ it('keeps displaced daily controls reachable in COMMAND without rendering them o
   await expect.element(screen.getByRole('button', { name: 'COMMAND', exact: true })).toHaveAttribute('aria-current', 'page');
 });
 
-it('names missing guidance truthfully and opens manual actions without inventing an Engine record', async () => {
+it('FIELD-AUTHORITY-001: missing guidance is calm, log-first, with one quiet check-in and no red', async () => {
   await startDay(); const screen = await render(<App />);
-  await expect.element(screen.getByRole('heading', { name: 'No guidance recorded yet.', exact: true })).toBeVisible();
+  await expect.element(screen.getByRole('heading', { name: 'Log when you want.', exact: true })).toBeVisible();
   const root = document.querySelector('.redesign-today')!;
-  expect([...root.querySelectorAll<HTMLElement>('.btn-primary')].filter(el => el.getClientRects().length)).toHaveLength(1);
-  expect(getComputedStyle(screen.getByRole('button', { name: 'CHOOSE AN ACTION', exact: true }).element()).backgroundColor).toBe('rgb(208, 20, 27)');
+  expect([...root.querySelectorAll<HTMLElement>('.btn-primary')].filter(el => el.getClientRects().length)).toHaveLength(0);
+  for (const gone of ['No guidance recorded yet', 'Your tools are ready', 'CHOOSE AN ACTION', 'NOT CHECKED IN']) expect(document.body.textContent).not.toContain(gone);
+  const sections = [...root.children].filter((node) => node.tagName === 'SECTION').map((node) => node.getAttribute('aria-label'));
+  expect(sections.indexOf('Log')).toBeLessThan(sections.indexOf('Next action'));
+  const checkIn = screen.getByRole('button', { name: 'CHECK IN', exact: true });
+  expect(checkIn.elements()).toHaveLength(1);
+  expect(checkIn.element().className).toContain('btn-secondary');
   const before = await db.events.toArray();
-  await screen.getByRole('button', { name: 'CHOOSE AN ACTION', exact: true }).click();
-  await expect.element(screen.getByRole('dialog', { name: 'LOG', exact: true })).toBeVisible();
+  await checkIn.click();
+  await expect.element(screen.getByRole('dialog', { name: 'CHECK IN', exact: true })).toBeVisible();
   expect(await db.recommendations.count()).toBe(0); expect(await db.events.toArray()).toEqual(before);
+});
+
+it('FIELD-AUTHORITY-001: a fresh install has one red START DAY and nothing else asking', async () => {
+  const screen = await render(<App />);
+  await expect.element(screen.getByRole('button', { name: 'START DAY', exact: true })).toBeVisible();
+  const root = document.querySelector('.redesign-today')!;
+  const reds = [...root.querySelectorAll<HTMLElement>('.btn-primary')].filter(el => el.getClientRects().length);
+  expect(reds.map((el) => el.textContent)).toEqual(['START DAY']);
+  expect(screen.getByRole('button', { name: 'CHECK IN', exact: true }).elements()).toHaveLength(0);
+  expect(document.body.textContent).not.toContain('CHOOSE AN ACTION');
+  const sections = [...root.children].filter((node) => node.tagName === 'SECTION').map((node) => node.getAttribute('aria-label'));
+  expect(sections).toEqual(['Day mode', 'Next action', 'Log', "Today's numbers"]);
+});
+
+it('FIELD-AUTHORITY-001: an all-clear wears no red', async () => {
+  const { submitCheckIn } = await import('../../src/application/commands');
+  const day = await startDay(); await submitCheckIn(day.id, { energy: 4, stress: 1, mood: 4, soreness: 0, alcoholUrge: 0 });
+  const screen = await render(<App />);
+  await expect.element(screen.getByRole('heading', { name: 'Nothing needs you.', exact: true })).toBeVisible();
+  const root = document.querySelector('.redesign-today')!;
+  expect([...root.querySelectorAll<HTMLElement>('.btn-primary')].filter(el => el.getClientRects().length)).toHaveLength(0);
+  expect(screen.getByRole('button', { name: 'CHECK IN', exact: true }).elements()).toHaveLength(0);
 });
 
 it('keeps RED Engine guidance and the explicit decline guard on the compact TODAY path', async () => {

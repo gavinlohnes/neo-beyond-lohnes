@@ -12,6 +12,35 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## FIELD-AUTHORITY-001 — one next thing, one red (owner approved 2026-10-22)
+
+Gavin wrote and approved [the brief](agent/FIELD-AUTHORITY-001.md). It amends REDESIGN-001's
+TODAY, check-in placement and COMMAND groups below; destinations, sheets, tabs, Engine rules,
+recommendation selection, schema, events and Garmin semantics are unchanged.
+
+- **TODAY priority:** a real next thing leads — START DAY, an active operation, shift-down, the
+  late sleep prompt, or an Engine recommendation that asks for something — with WATER · MEAL · LOG
+  right under it. Otherwise logging leads and the card is a calm line: "Log when you want." before
+  any guidance, "Nothing needs you." for an all-clear. No "CHOOSE AN ACTION", "No guidance recorded
+  yet" or "Your tools are ready". The two sections reorder without remounting.
+- **One red:** at most one filled red action on TODAY; none in calm states. The all-clear's GOT IT
+  is neutral (supersedes REDESIGN-001's red all-clear acknowledgement). TRAIN's check-in gate is one
+  line with a neutral QUICK CHECK-IN; START WORKOUT stays its only red.
+- **Check-in, said once:** no separate CHECK-IN section. TODAY's single surface is "Not checked in."
+  with a neutral CHECK IN under the next card, absent while an operation or the sleep prompt owns
+  the card. NOT CHECKED IN never repeats as STATUS on the signal line.
+- **Signal line:** save failed, offline and backup due, plus System Status only when no real
+  recommendation is already speaking. SYSTEMS keeps the full readout.
+- **Honest headline:** the redesigned TODAY never says "One question below"; it renders no question.
+- **Numbers:** tiles show value, unit and a factual meta (NO TARGET, NOT LOGGED, counts). "A weigh-in
+  sets the protein target." moves to one line under the grid (supersedes TONIGHT-001's ADD WEIGHT).
+- **Mode band:** when the schedule says nothing (or no day is set) the scene compacts; Gotham and the
+  timeline stay.
+- **COMMAND:** search, then eight job rows — Log, On shift, Review, Plan, Notes, Systems, Backup &
+  recovery, Settings. The last two hold their tool panels; "A place to start" lives under Settings.
+  The Control center blurb, shortcuts and the destination glossary are removed. Every destination
+  stays reachable.
+
 ## REDESIGN-001 — one job, one home (owner approved 2026-10-19)
 
 Gavin approved [the frozen brief](agent/REDESIGN-001.md) and
@@ -20,7 +49,8 @@ build it. This bounded Protected amendment supersedes conflicting placement, lab
 presentation rulings below; it does not authorize Engine, phase, rotation, status or scoring changes.
 
 - **TODAY:** full mode scene → WATER / MEAL / LOG → one NEXT surface → today's numbers →
-  check-in until complete, plus a compact truthful signal when active. Existing authoritative
+  check-in until complete, plus a compact truthful signal when active. *(Order, check-in placement
+  and red rules amended by FIELD-AUTHORITY-001 above.)* Existing authoritative
   guidance, active-operation continuation, recovery and safety behavior remain. Other controls,
   prompts and outcome ratings remain available on demand in COMMAND → TODAY TOOLS.
 - **Check-in:** manual entry opens a stable sheet, initially blank. All five answers are required.
@@ -49,7 +79,7 @@ presentation rulings below; it does not authorize Engine, phase, rotation, statu
   every previous PR remains accessible. LAST TIME / BEST include dates. Typed fields clear on
   focus, show the old value as placeholder, and restore an empty blur. Gym, holds and rotation stay.
 - **COMMAND:** one searchable catalog for screens, log actions, saved meals and exercises; Search
-  all records retains FIND-001. Today / Review / Plan / Notes / Systems / Settings & backup groups
+  all records retains FIND-001. *(Groups amended by FIELD-AUTHORITY-001 above.)* Today / Review / Plan / Notes / Systems / Settings & backup groups
   preserve every destination, including backup/restore, help, reports, Mirror and existing prompts.
   NEW on the report uses existing timing/seen evidence, never a fabricated readiness claim.
 - **Optional tools:** Minimum Day's screen/tool, Small Steps and online food lookup start hidden;

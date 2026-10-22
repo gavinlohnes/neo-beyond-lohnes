@@ -22,7 +22,8 @@ export type SystemDestination =
   | { kind: "more"; view: MoreView }
   | { kind: "section"; section: CommandSection };
 
-export const CAPABILITY_GROUPS = ["Log", "Today", "Review", "Plan", "Notes", "Systems", "Settings & backup"] as const;
+// FIELD-AUTHORITY-001: COMMAND browses by job. The last two rows also hold their tool panels.
+export const CAPABILITY_GROUPS = ["Log", "On shift", "Review", "Plan", "Notes", "Systems", "Backup & recovery", "Settings"] as const;
 
 export type Capability = {
   hiddenFeature?: HiddenFeature;
@@ -42,8 +43,8 @@ export const SYSTEM_CAPABILITIES = [
   { label: "NOTE", description: "TODAY · Quick Capture", aliases: ["capture", "thought", "idea", "handoff"], group: "Log", destination: { kind: "capture" } },
   { label: "URGE", description: "BODY · Quit tracker entry", aliases: ["quit", "habit", "craving"], group: "Log", destination: { kind: "body", focus: "urge" } },
   { label: "SYSTEMS", description: "COMMAND · Sleep, fuel, training, state and device readings", aliases: ["status", "system status", "readout", "readings", "suit", "connection", "offline"], group: "Systems", destination: { kind: "more", view: "SYSTEMS" } },
-  { label: "STEALTH", description: "Hide your numbers. Long-press the emblem anytime", aliases: ["hide", "privacy", "discreet", "screen"], group: "Today", destination: { kind: "stealth" } },
-  { label: "TODAY TOOLS", description: "COMMAND · All daily controls", aliases: ["check in", "check-in", "minimum day", "end day", "shift down", "reset"], group: "Today", destination: { kind: "tools" } },
+  { label: "STEALTH", description: "Hide your numbers. Long-press the emblem anytime", aliases: ["hide", "privacy", "discreet", "screen"], group: "On shift", destination: { kind: "stealth" } },
+  { label: "TODAY TOOLS", description: "COMMAND · All daily controls", aliases: ["check in", "check-in", "minimum day", "end day", "shift down", "reset"], group: "On shift", destination: { kind: "tools" } },
   { label: "PLAN TODAY", description: "COMMAND · Your chosen tasks and recorded deadlines", aliases: ["plan", "tasks", "today plan"], group: "Plan", destination: { kind: "more", view: "PLAN" } },
   { label: "TRAIN", description: "Workouts, recovery and records", aliases: ["training", "fitness", "recovery"], group: "Plan", destination: { kind: "workspace", tab: "TRAIN" } },
   { label: "WORKOUT", description: "TRAIN · Start or resume in the existing workout workspace", aliases: ["exercise", "resume", "gym", "set", "lift"], group: "Plan", destination: { kind: "workout" } },
@@ -58,30 +59,30 @@ export const SYSTEM_CAPABILITIES = [
   { label: "HISTORY", description: "COMMAND · Complete chronological records", aliases: ["timeline", "past"], group: "Review", destination: { kind: "more", view: "HISTORY" } },
   { label: "DECISION JOURNAL", description: "COMMAND · Decisions, outcomes and lessons", aliases: ["journal", "decision"], group: "Review", destination: { kind: "more", view: "JOURNAL" } },
   { label: "SEARCH RECORDS", description: "COMMAND · Find your personal records", aliases: ["search", "find records"], group: "Review", destination: { kind: "more", view: "SEARCH" } },
-  { label: "BACKUP & RECOVERY", description: "COMMAND · Export, share, automatic backup and restore", aliases: ["backup", "restore", "export", "share", "data safety", "automatic backup"], group: "Settings & backup", destination: { kind: "section", section: "BACKUP" } },
-  { label: "NUTRITION TARGETS", description: "COMMAND · Protein and calorie targets", aliases: ["targets", "settings", "calories"], group: "Settings & backup", destination: { kind: "section", section: "NUTRITION_TARGETS" } },
-  { label: "QUIT TRACKER SETTINGS", description: "COMMAND · The habit you're avoiding and your plan", aliases: ["quit", "habit", "settings"], group: "Settings & backup", destination: { kind: "section", section: "QUIT_TRACKER" } },
+  { label: "BACKUP & RECOVERY", description: "COMMAND · Export, share, automatic backup and restore", aliases: ["backup", "restore", "export", "share", "data safety", "automatic backup"], group: "Backup & recovery", destination: { kind: "section", section: "BACKUP" } },
+  { label: "NUTRITION TARGETS", description: "COMMAND · Protein and calorie targets", aliases: ["targets", "settings", "calories"], group: "Settings", destination: { kind: "section", section: "NUTRITION_TARGETS" } },
+  { label: "QUIT TRACKER SETTINGS", description: "COMMAND · The habit you're avoiding and your plan", aliases: ["quit", "habit", "settings"], group: "Settings", destination: { kind: "section", section: "QUIT_TRACKER" } },
   { label: "TIME CAPSULE", description: "COMMAND · Seal a note for future you", aliases: ["capsule", "future", "seal"], group: "Notes", destination: { kind: "section", section: "TIME_CAPSULE" } },
-  { label: "CHECK-IN REMINDER", description: "COMMAND · Daily reminder when you open BEYOND", aliases: ["reminder", "notification", "settings"], group: "Settings & backup", destination: { kind: "section", section: "REMINDERS" } },
-  { label: "DIAGNOSTICS", description: "COMMAND · Record checks, app version and build", aliases: ["diagnostic", "version", "build", "debug", "mismatch"], group: "Settings & backup", destination: { kind: "section", section: "DIAGNOSTICS" } },
-  { label: "A PLACE TO START", description: "COMMAND · Guided suggestions and where things live", aliases: ["guide", "help", "suggestions", "start"], group: "Settings & backup", destination: { kind: "section", section: "GUIDE" } },
-  { label: "WORK CONTEXT", description: "Declare work or a day off", aliases: ["work", "day off", "context"], group: "Today", destination: { kind: "daily", tool: "WORK_CONTEXT" } },
-  { label: "MARK WORK ENDED", description: "Explicitly record the end of your shift", aliases: ["shift ended", "finished work"], group: "Today", destination: { kind: "daily", tool: "WORK_CONTEXT" } },
-  { label: "END DAY", description: "Close this lived day deliberately", aliases: ["finish day"], group: "Today", destination: { kind: "daily", tool: "END_DAY" } },
-  { label: "CHECK IN", description: "Record or update how you feel", aliases: ["check-in", "energy", "stress", "mood"], group: "Today", destination: { kind: "daily", tool: "CHECK_IN" } },
-  { label: "SHIFT DOWN", description: "Existing recovery operation", aliases: ["recover", "after shift"], group: "Today", destination: { kind: "daily", tool: "SHIFT_DOWN" } },
-  { label: "RESET", description: "Existing reset operation", aliases: ["reset"], group: "Today", destination: { kind: "daily", tool: "RESET" } },
-  { label: "FUEL", description: "Recorded water and protein", aliases: ["fuel"], group: "Today", destination: { kind: "daily", tool: "FUEL" } },
+  { label: "CHECK-IN REMINDER", description: "COMMAND · Daily reminder when you open BEYOND", aliases: ["reminder", "notification", "settings"], group: "Settings", destination: { kind: "section", section: "REMINDERS" } },
+  { label: "DIAGNOSTICS", description: "COMMAND · Record checks, app version and build", aliases: ["diagnostic", "version", "build", "debug", "mismatch"], group: "Settings", destination: { kind: "section", section: "DIAGNOSTICS" } },
+  { label: "A PLACE TO START", description: "COMMAND · Guided suggestions and where things live", aliases: ["guide", "help", "suggestions", "start"], group: "Settings", destination: { kind: "section", section: "GUIDE" } },
+  { label: "WORK CONTEXT", description: "Declare work or a day off", aliases: ["work", "day off", "context"], group: "On shift", destination: { kind: "daily", tool: "WORK_CONTEXT" } },
+  { label: "MARK WORK ENDED", description: "Explicitly record the end of your shift", aliases: ["shift ended", "finished work"], group: "On shift", destination: { kind: "daily", tool: "WORK_CONTEXT" } },
+  { label: "END DAY", description: "Close this lived day deliberately", aliases: ["finish day"], group: "On shift", destination: { kind: "daily", tool: "END_DAY" } },
+  { label: "CHECK IN", description: "Record or update how you feel", aliases: ["check-in", "energy", "stress", "mood"], group: "On shift", destination: { kind: "daily", tool: "CHECK_IN" } },
+  { label: "SHIFT DOWN", description: "Existing recovery operation", aliases: ["recover", "after shift"], group: "On shift", destination: { kind: "daily", tool: "SHIFT_DOWN" } },
+  { label: "RESET", description: "Existing reset operation", aliases: ["reset"], group: "On shift", destination: { kind: "daily", tool: "RESET" } },
+  { label: "FUEL", description: "Recorded water and protein", aliases: ["fuel"], group: "On shift", destination: { kind: "daily", tool: "FUEL" } },
   { label: "ADVISORY", description: "Existing observations, separate from Engine guidance", aliases: ["observations", "advisory"], group: "Systems", destination: { kind: "daily", tool: "ADVISORY" } },
   { label: "CAPTURE", description: "Your notes inbox and existing conversion actions", aliases: ["notes", "inbox", "capture"], group: "Notes", destination: { kind: "daily", tool: "CAPTURE" } },
   { label: "SHIFT HANDOFF NOTES", description: "Notes for your next shift", aliases: ["handoff", "shift note"], group: "Notes", destination: { kind: "daily", tool: "SHIFT_HANDOFF" } },
   { label: "MONTHLY REVIEW", description: "Review · Monthly evidence appears in every fourth saved review week", aliases: ["monthly", "four weeks"], group: "Review", destination: { kind: "more", view: "REVIEW" } },
   { label: "AFTER ACTION REPORT", description: "Existing report, available any time", aliases: ["report", "briefing", "after action"], group: "Review", destination: { kind: "more", view: "REPORT" } },
   { label: "MIRROR", description: "Compare your own recorded progress", aliases: ["mirror", "30 days", "90 days"], group: "Review", destination: { kind: "more", view: "MIRROR" } },
-  { label: "MY MEALS", description: "Manage your reusable saved meals", aliases: ["meal memory", "presets", "saved meals"], group: "Settings & backup", destination: { kind: "record", target: "myMeals" } },
-  { hiddenFeature: "minimumDay", label: "MINIMUM DAY", description: "The existing six-basics tool", aliases: ["minimum", "basics"], group: "Today", destination: { kind: "daily", tool: "MINIMUM_DAY" } },
-  { hiddenFeature: "smallSteps", label: "SMALL STEPS", description: "One existing tool at a time", aliases: ["small steps", "simple"], group: "Today", destination: { kind: "daily", tool: "SMALL_STEPS" } },
-  { label: "HIDDEN FEATURES", description: "Show optional tools. Existing data is kept", aliases: ["hidden", "minimum day", "small steps", "food lookup"], group: "Settings & backup", destination: { kind: "section", section: "HIDDEN_FEATURES" } },
+  { label: "MY MEALS", description: "Manage your reusable saved meals", aliases: ["meal memory", "presets", "saved meals"], group: "Settings", destination: { kind: "record", target: "myMeals" } },
+  { hiddenFeature: "minimumDay", label: "MINIMUM DAY", description: "The existing six-basics tool", aliases: ["minimum", "basics"], group: "On shift", destination: { kind: "daily", tool: "MINIMUM_DAY" } },
+  { hiddenFeature: "smallSteps", label: "SMALL STEPS", description: "One existing tool at a time", aliases: ["small steps", "simple"], group: "On shift", destination: { kind: "daily", tool: "SMALL_STEPS" } },
+  { label: "HIDDEN FEATURES", description: "Show optional tools. Existing data is kept", aliases: ["hidden", "minimum day", "small steps", "food lookup"], group: "Settings", destination: { kind: "section", section: "HIDDEN_FEATURES" } },
   { label: "PROTEIN ONLY", description: "Log protein with the existing protein-only form", aliases: ["protein", "grams"], group: "Log", destination: { kind: "record", target: "protein" } },
 ] as const satisfies readonly Capability[];
 

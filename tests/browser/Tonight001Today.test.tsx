@@ -62,7 +62,7 @@ describe("the morning call", () => {
     await expect.poll(rows).toEqual(["WORKOUT_CALL", "NIGHT_CLOSED", "MAIN_SLEEP"]);
     await expect.element(screen.getByRole("heading", { name: "Train or sleep?" })).toBeVisible();
     await expect.element(screen.getByText("Nothing urgent. One question below.", { exact: true })).toBeVisible();
-    expect(document.body.textContent).not.toContain("Nothing needs you right now.");
+    expect(document.body.textContent).not.toContain("Nothing needs you.");
     // SHIFT DOWN and the check-in moved to TOOLS; the card links to the check-in.
     expect(rows()).not.toContain("SHIFT_DOWN");
     await expect.element(screen.getByRole("button", { name: "CHECK IN FIRST" })).toBeVisible();
@@ -73,7 +73,7 @@ describe("the morning call", () => {
     expect(await plannedWork()).toEqual([false]);
     expect(await db.events.count()).toBe(before + 1);
     expect(onOpenTrain).not.toHaveBeenCalled();
-    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you.", { exact: true })).toBeVisible();
     // Editing the answer is presentation-only, but the headline must follow it.
     const afterAnswer = await db.events.count();
     await screen.getByRole("button", { name: "CHANGE", exact: true }).click();
@@ -84,7 +84,7 @@ describe("the morning call", () => {
     await screen.getByRole("button", { name: /^SHORT · A REDUCED/ }).click();
     await expect.poll(() => onOpenTrain.mock.calls.at(-1)?.[0]).toBe("WORKOUT_REDUCED");
     expect(await plannedWork()).toEqual([false, true]);
-    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you.", { exact: true })).toBeVisible();
     expect(day.id).toBeTruthy();
   });
 
@@ -125,7 +125,7 @@ describe("the morning call", () => {
     await screen.getByRole("button", { name: /^LATER/ }).click();
     await expect.element(screen.getByText(/^Later · A/)).toBeVisible();
     expect(await db.events.count()).toBe(before);
-    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you.", { exact: true })).toBeVisible();
   });
 
   it("keeps a day-off change of mind and its headline together without rewriting the saved answer", async () => {
@@ -135,7 +135,7 @@ describe("the morning call", () => {
     const screen = await render(<TodayScreen />);
     await screen.getByRole("button", { name: /^NOT TODAY/ }).click();
     await expect.element(screen.getByText(/^Not today\. A stays next\./)).toBeVisible();
-    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you.", { exact: true })).toBeVisible();
     const before = await db.events.count();
     await screen.getByRole("button", { name: "CHANGE", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "A today?" })).toBeVisible();
@@ -143,7 +143,7 @@ describe("the morning call", () => {
     expect(await db.events.count()).toBe(before);
     expect(await plannedWork()).toEqual([false]);
     await screen.getByRole("button", { name: /^LATER/ }).click();
-    await expect.element(screen.getByText("Nothing needs you right now.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nothing needs you.", { exact: true })).toBeVisible();
     expect(await db.events.count()).toBe(before);
     expect(await plannedWork()).toEqual([false]);
   });
@@ -187,11 +187,12 @@ describe("quick log", () => {
 });
 
 describe("protein target and briefing", () => {
-  it("says a weigh-in sets the protein target instead of NO TARGET", async () => {
+  it("says a weigh-in sets the protein target, under the numbers rather than inside the tile", async () => {
     await startDayAt(at(14, 16, 30));
     vi.setSystemTime(at(14, 17, 0));
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("ADD WEIGHT", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("A weigh-in sets the protein target.", { exact: true })).toBeVisible();
+    expect(document.body.textContent).not.toContain("ADD WEIGHT");
   });
 
   it("the 03:00 briefing leads with tonight so far", async () => {

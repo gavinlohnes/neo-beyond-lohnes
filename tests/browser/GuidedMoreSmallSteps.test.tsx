@@ -1,4 +1,4 @@
-import { commandResult } from "./helpers/command";
+import { commandResult, openCommandPanel } from "./helpers/command";
 import { beforeEach as optionalToolFixture } from "vitest";
 import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
 optionalToolFixture(() => { for (const feature of ["minimumDay", "smallSteps", "foodLookup"] as const) setHiddenFeature(feature, true); });
@@ -53,6 +53,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     const confirmation = vi.spyOn(window, "confirm").mockReturnValue(false);
     try {
       const screen = await render(<MoreScreen onOpenCapture={onCapture} />);
+    await openCommandPanel(screen, "settings"); // FIELD-AUTHORITY-001: the guide lives under Settings.
     await screen.getByText("A place to start", { exact: true }).first().click();
       await screen.getByRole("button", { name: "OPEN JOURNAL", exact: true }).click();
       await screen.getByText("Need a starting point?", { exact: true }).click();
@@ -113,6 +114,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
   it("guided choices only write on explicit existing saves and free notes remain Capture", async () => {
     const onCapture = vi.fn();
     const screen = await render(<MoreScreen onOpenCapture={onCapture} />);
+    await openCommandPanel(screen, "settings"); // FIELD-AUTHORITY-001: the guide lives under Settings.
     await screen.getByText("A place to start", { exact: true }).first().click();
     await screen.getByRole("button", { name: "OPEN JOURNAL", exact: true }).click();
     await screen.getByText("Need a starting point?", { exact: true }).click();
@@ -146,6 +148,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await createDecisionJournalEntry({ title: "Alpha decision", decision: "Pick alpha" });
     await createDecisionJournalEntry({ title: "Bravo decision", decision: "Pick bravo" });
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "settings"); // FIELD-AUTHORITY-001: the guide lives under Settings.
     await screen.getByText("A place to start", { exact: true }).first().click();
     const alphaDetail = screen.getByRole("heading", { name: "Alpha decision", exact: true });
     const decisionsList = screen.getByRole("heading", { name: "Decisions", exact: true });
@@ -172,6 +175,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     const before = await db.events.toArray();
     const onCapture = vi.fn();
     const screen = await render(<MoreScreen onOpenCapture={onCapture} />);
+    await openCommandPanel(screen, "settings"); // FIELD-AUTHORITY-001: the guide lives under Settings.
     await screen.getByText("A place to start", { exact: true }).first().click();
     await expect.poll(() => screen.getByRole("status").elements().length).toBe(0);
     expect(screen.container.querySelectorAll(".guided-starts li")).toHaveLength(2);
@@ -206,8 +210,8 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await expect.element(task).toHaveValue("A concrete step");
     expect(await db.events.toArray()).toEqual(before);
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
-    await screen.getByText("Find the right destination", { exact: true }).click();
-    await expect.element(screen.getByText("The full chronological event trail", { exact: false })).toBeVisible();
+    // FIELD-AUTHORITY-001: the destination glossary left; the job rows name where things live.
+    await expect.element(await commandResult(screen, "HISTORY")).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     expect((await axe.run(screen.container)).violations).toEqual([]);
   });
@@ -220,6 +224,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
       .mockImplementationOnce(() => new Promise((_resolve, reject) => { fail = reject; }))
       .mockImplementationOnce(() => new Promise((resolve) => { recover = resolve; }));
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "settings"); // FIELD-AUTHORITY-001: the guide lives under Settings.
     await screen.getByText("A place to start", { exact: true }).first().click();
     await expect.element(screen.getByText("9 decisions await review.")).toBeVisible();
     await (await commandResult(screen, "HISTORY")).click();

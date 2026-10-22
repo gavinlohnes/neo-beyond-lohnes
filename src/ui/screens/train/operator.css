@@ -41,3 +41,7 @@
 .train-switcher button { min-height: 44px; padding-inline: 2px; }
 .train-switcher button[aria-pressed="true"] { border-bottom: 2px solid var(--text-1); background: var(--surface-2); color: var(--text-1); }
 .train-planned-work > summary { min-height: 44px; }
+
+/* FIELD-AUTHORITY-001: TRAIN's check-in gate — one line, one neutral control. */
+.train-check-in-gate { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 0 0 16px; color: var(--text-2); }
+.train-check-in-gate .btn-secondary { width: auto; min-height: 44px; padding-inline: 16px; }

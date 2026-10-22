@@ -71,7 +71,9 @@ describe("Production Command Console", () => {
     const screen = await render(<App />);
     await expect.poll(() => [...document.querySelectorAll("[data-shift-clock-row]")].map((element) => element.getAttribute("data-shift-clock-row")))
       .toEqual([]);
-    await expect.poll(() => document.querySelector("[data-system-status]")?.getAttribute("data-system-status")).toBe("NO_READ");
+    // FIELD-AUTHORITY-001: NO READ is said once, by the check-in line, not echoed as STATUS.
+    await expect.element(screen.getByRole("button", { name: "CHECK IN", exact: true })).toBeVisible();
+    expect(document.querySelector("[data-system-status]")).toBeNull();
     // COMMAND-CENTER-001: TRAIN and BODY through COMMAND's search, COMMAND by its tab.
     for (const destination of ["TRAIN", "BODY", "COMMAND"] as const) {
       if (destination === "COMMAND") await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
@@ -96,7 +98,10 @@ describe("Production Command Console", () => {
       await submitCheckIn(day.id, values);
       const screen = await render(<App />);
       await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
-      if (level !== "GREEN") await expect.poll(() => document.querySelector("[data-system-status]")?.getAttribute("data-system-status")).toBe(level);
+      // FIELD-AUTHORITY-001: TODAY echoes the level only when no real recommendation is already speaking.
+      const realNext = document.querySelector(".console-guidance .all-clear") === null;
+      if (level !== "GREEN" && !realNext) await expect.poll(() => document.querySelector("[data-system-status]")?.getAttribute("data-system-status")).toBe(level);
+      if (realNext) expect(document.querySelector("[data-system-status]")).toBeNull();
       await (await commandResult(screen, "SYSTEMS")).click();
       await expect.element(screen.getByRole("region", { name: "STATE" }).getByText(level, { exact: true }).first()).toBeVisible();
       await expect.poll(() => document.querySelectorAll(".console-guidance").length).toBe(1);
@@ -133,7 +138,10 @@ describe("Production Command Console", () => {
       expect(guidance).not.toBeNull();
       expect(operations).not.toBeNull();
       expect(situation!.compareDocumentPosition(operations!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(operations!.compareDocumentPosition(guidance!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      // FIELD-AUTHORITY-001: a real recommendation leads the log row; an all-clear follows it.
+      const allClear = guidance!.querySelector(".all-clear") !== null;
+      const [first, second] = allClear ? [operations!, guidance!] : [guidance!, operations!];
+      expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       // SUIT-001: SYSTEMS replaces the System Status line in the same place.
       expect(document.querySelector(".systems-line")).toBeNull();
       await expect.element(screen.getByRole("region", { name: "Next action" })).toBeVisible();

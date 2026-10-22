@@ -33,7 +33,8 @@ try {
       await page.waitForFunction((phase) => document.querySelector(".mode-header")?.dataset.mode === phase, phase);
       await page.evaluate(() => { for (const animation of document.getAnimations()) { if (animation.effect?.getComputedTiming().iterations === Infinity) animation.pause(); else animation.finish(); } window.scrollTo(0, 0); });
       const sections = await page.locator(".redesign-today > section").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
-      assert.deepEqual(sections, ["Day mode", "Log", "Next action", "Today's numbers", "Check-in"]);
+      // FIELD-AUTHORITY-001: no separate check-in section; with no guidance, logging leads.
+      assert.deepEqual(sections, ["Day mode", "Log", "Next action", "Today's numbers"]);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       await page.screenshot({ path: `${out}/${width}-${phase.toLowerCase()}.png`, fullPage: true });
     }

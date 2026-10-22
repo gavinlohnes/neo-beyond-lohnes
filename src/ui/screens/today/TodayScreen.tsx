@@ -5,7 +5,7 @@ import { LogSheet } from "../../components/LogSheet";
 import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { CheckInSheet } from "./CheckInSheet";
 import { useSessionDraft } from "../../sessionDrafts";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { getLastMainSleep, getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
 import { SystemsLine } from "../systems/SystemsLine";
 import { Signal } from "../../components/Signal";
@@ -1913,11 +1913,11 @@ export function TodayScreen({
       </button>;
     return (
       <>
-        <p className="cc-lbl cc-numbers-head"><span>TODAY’S NUMBERS</span><span className="cc-hint">Tap a number for its history.</span></p>
+        <p className="cc-lbl cc-numbers-head"><span>TODAY’S NUMBERS</span></p>
         <div className="cc-fuel" role="group" aria-label={fuelLine}>
           {tile("protein", "PROTEIN", <><b><DecryptNumber value={minimumDayProteinG} dayId={day?.id ?? "unstarted"} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
-            // TONIGHT-001: the target comes from the latest weigh-in, so say what sets it.
-            pct === null ? <span className="cc-flab">{latestWeightLbs === undefined ? "ADD WEIGHT" : "NO TARGET"}</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
+            // FIELD-AUTHORITY-001: a tile states facts; how the target is set lives in its history.
+            pct === null ? <span className="cc-flab">NO TARGET</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
             `Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g`)}
           {tile("water", "WATER", <><b><DecryptNumber value={minimumDayHydrateOz} dayId={day?.id ?? "unstarted"} reading="water" /></b><small>oz</small></>,
             <span className="cc-flab">{waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>, `Water ${minimumDayHydrateOz} oz`)}
@@ -1926,6 +1926,8 @@ export function TodayScreen({
           {tile("sleep", "SLEEP", <b>{sleep ?? "—"}</b>, <span className="cc-flab">{sleep ? "LAST MAIN" : "NOT LOGGED"}</span>,
             sleep ? `Main sleep ${sleep}` : "Main sleep not logged")}
         </div>
+        {/* FIELD-AUTHORITY-001: TONIGHT-001's "a weigh-in sets the target" moves out of the tile. */}
+        {pct === null && latestWeightLbs === undefined && <p className="meta cc-numbers-note">A weigh-in sets the protein target.</p>}
       </>
     );
   }
@@ -2273,45 +2275,13 @@ export function TodayScreen({
       </>}
   </div>;
 
-  if (!operationsOnly) return <div className="screen command-console today-field redesign-today">
-    <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
-    <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
-    {day ? <section className="today-situation cc-hero-wrap" aria-label="Day mode">          <ModeHeader
-            now={now}
-            countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
-            hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
-            scheduledPhase={scheduledClock.phase}
-            pin={pinnedPhase}
-            dayStart={livedDayStart}
-            dayOff={day.workContext === "OFF"}
-            busy={busy}
-            strip={deriveLivedDayStrip({
-              dayStart: livedDayStart,
-              dayEnd: nextRolloverBoundaryAfter(new Date(day.startedAt)),
-              now,
-              workContext: day.workContext,
-              shiftWindow,
-              workEndedAt: workPeriodEndedAt,
-              mainSleepRecordedAt,
-            })}
-            onPin={(phase) => { setModePin(day.id, phase); setModePinState({ dayId: day.id, phase }); }}
-            onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
-
-          >
-            {/* The context sentence (or the countdown) stays for screen readers; the meta line shows it. */}
-            <p className="visually-hidden status-strip__headline">
-              {shiftClock.countdown
-                ? describeCountdown(shiftClock.countdown, now)
-                : describeContextStrip(
-                    currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
-                    currentContext ? currentContext.schedulePrediction : scheduledContext,
-                    currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
-                    workContextPerSchedule,
-                    scheduledClock.phase,
-                  ).replace(" — shift ended, not yet shifted down", " · shift down pending").replace(" — after your shift", " · after shift")}
-            </p>
-            {shiftClock.countdown && <p className="visually-hidden status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>}
-          </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><div className="cc-mode mode-empty"><h2 className="cc-mode-name">Mode not set</h2><p className="cc-mode-meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} hasAction={false} /><div className="cc-scene" aria-hidden="true" /></div></section>}
+  // FIELD-AUTHORITY-001: a real next thing (day start, an operation, a shift-down, the late sleep
+  // prompt or an Engine recommendation that asks for something) leads TODAY; otherwise logging leads.
+  const nextIsReal = !day || dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId
+    || lateRecoverWithoutSleep || shiftClock.phase === "EXPECTED_POST_WORK" || (!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED");
+  const statusSignal = !!systemStatus && systemStatus.level !== "GREEN" && systemStatus.level !== "NO_READ" && !nextIsReal;
+  const checkInOwnedHere = !!day && !checkIn && dominant !== "OPERATION_CONFLICT" && !activeWorkout && !activeResetId && !activeShiftDownId && !lateRecoverWithoutSleep;
+  const logSection = <>
     <section aria-label="Log">{onOpenRecordSheet ? <LogActions open={onOpenRecordSheet} busy={busy} isInFlight={() => busyRef.current} /> : <ConsoleControls
           onWaterVisibilityChange={setWaterControlsVisible}
           onLogWater={handleMinimumDayLogWater}
@@ -2335,7 +2305,8 @@ export function TodayScreen({
             ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
           }}
         />}</section>
-
+  </>;
+  const nextSection = <>
       <section className="console-guidance" aria-label="Next action">
         {dominant === "OPERATION_CONFLICT" ? <>      {day && dominant === "OPERATION_CONFLICT" && (
         <div className="card card--warning" role="alert">
@@ -2430,7 +2401,8 @@ export function TodayScreen({
           : shiftClock.phase === "EXPECTED_POST_WORK" ? renderPhaseRow("SHIFT_DOWN")
           : recommendation ? <>          <RecommendationCard
             nextAction
-            questionBelow={questionBelow}
+            // FIELD-AUTHORITY-001: this TODAY renders no question below the card, so never claim one.
+            questionBelow={false}
             context={nextActionContext}
             day={day}
             recommendation={recommendation}
@@ -2452,24 +2424,73 @@ export function TodayScreen({
             onHandoff={handleRecommendationHandoff}
             confirmPanel={<ConfirmPanel />}
           /></>
-          : <><h2>No guidance recorded yet.</h2><p className="meta">Your tools are ready. Check in when you can.</p><button type="button" className="btn-primary" onClick={() => onOpenRecordSheet ? onOpenRecordSheet("log") : setCheckInFormOpen(true)}>CHOOSE AN ACTION</button></>}
+          // FIELD-AUTHORITY-001 (states C/D): no Engine guidance yet is not an emergency. A calm
+          // line, no red; logging leads and the one check-in path sits below.
+          : <h2>{checkIn ? describeAllClearHeadline() : "Log when you want."}</h2>}
         {(activeWorkout || activeResetId || activeShiftDownId || shiftClock.phase === "EXPECTED_POST_WORK") && recommendation && <details><summary>WHY</summary><p>{recommendation.rationale}</p><p className="meta">Recorded Engine guidance. Your call.</p></details>}
       {(activeResetId || activeShiftDownId || shiftClock.phase === "EXPECTED_POST_WORK") && <ConfirmPanel />}
+      {/* FIELD-AUTHORITY-001: TODAY's single "not checked in" surface — quiet, never red, and
+          absent while an operation or the late sleep prompt owns the card. */}
+      {checkInOwnedHere && <p className="today-check-in"><span>Not checked in.</span><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></p>}
     </section>
+  </>;
+
+  if (!operationsOnly) return <div className="screen command-console today-field redesign-today">
+    <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
+    <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
+    {day ? <section className="today-situation cc-hero-wrap" aria-label="Day mode">          <ModeHeader
+            now={now}
+            countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
+            hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
+            scheduledPhase={scheduledClock.phase}
+            pin={pinnedPhase}
+            dayStart={livedDayStart}
+            dayOff={day.workContext === "OFF"}
+            busy={busy}
+            strip={deriveLivedDayStrip({
+              dayStart: livedDayStart,
+              dayEnd: nextRolloverBoundaryAfter(new Date(day.startedAt)),
+              now,
+              workContext: day.workContext,
+              shiftWindow,
+              workEndedAt: workPeriodEndedAt,
+              mainSleepRecordedAt,
+            })}
+            onPin={(phase) => { setModePin(day.id, phase); setModePinState({ dayId: day.id, phase }); }}
+            onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
+
+          >
+            {/* The context sentence (or the countdown) stays for screen readers; the meta line shows it. */}
+            <p className="visually-hidden status-strip__headline">
+              {shiftClock.countdown
+                ? describeCountdown(shiftClock.countdown, now)
+                : describeContextStrip(
+                    currentContext ? (currentContext.workContext ?? day.workContext) : day.workContext,
+                    currentContext ? currentContext.schedulePrediction : scheduledContext,
+                    currentContext ? currentContext.hasUnresolvedPostShift : unresolvedPostShift,
+                    workContextPerSchedule,
+                    scheduledClock.phase,
+                  ).replace(" — shift ended, not yet shifted down", " · shift down pending").replace(" — after your shift", " · after shift")}
+            </p>
+            {shiftClock.countdown && <p className="visually-hidden status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>}
+          </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><div className="cc-mode mode-empty"><h2 className="cc-mode-name">Mode not set</h2><p className="cc-mode-meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} hasAction={false} /><div className="cc-scene" aria-hidden="true" /></div></section>}
+    {/* Keyed so a state change reorders the two sections without remounting them (focus and drafts survive). */}
+    {(nextIsReal ? [["next", nextSection], ["log", logSection]] as const : [["log", logSection], ["next", nextSection]] as const).map(([key, node]) => <Fragment key={key}>{node}</Fragment>)}
     <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
       {stale && <p role="status"><Signal data-signal="stale-note">{staleRefresh === "HELD"
         ? "These are yesterday’s numbers. Today starts when you finish your workout, or 2 hours after your last set."
         : staleRefresh === "FAILED" ? "These are yesterday’s numbers. Today didn’t load. Try again." : "These are yesterday’s numbers."}</Signal><button type="button" className="btn-secondary" disabled={busy || staleRefresh === "RUNNING"} onClick={() => void handleStaleRefresh()}>REFRESH</button></p>}
-      {(!online || backupDue || undoFailure || checkInError || systemStatus && systemStatus.level !== "GREEN") && <button type="button" className="btn-secondary today-system-signal" onClick={onOpenSystems}>
+      {/* FIELD-AUTHORITY-001: one compact signal line. System Status joins it only when the next card
+          isn't already speaking (no real recommendation) — never NOT CHECKED IN, which the card owns. */}
+      {(!online || backupDue || undoFailure || checkInError || statusSignal) && <button type="button" className="btn-secondary today-system-signal" onClick={onOpenSystems}>
         {(undoFailure || checkInError) && <><Signal data-signal="save-failed">{undoFailure ?? checkInError}</Signal>{" "}</>}
         {!online && <><Signal data-signal="offline-line">Offline. Logging still saves on this phone.</Signal>{" "}</>}
-        {systemStatus && systemStatus.level !== "GREEN" && <><span data-system-status={systemStatus.level}>STATUS · {describeSystemStatus(systemStatus)}</span>{" "}</>}
+        {statusSignal && systemStatus && <><span data-system-status={systemStatus.level}>STATUS · {describeSystemStatus(systemStatus)}</span>{" "}</>}
         {backupDue && <Signal data-signal="backup-line">{backupDue.days === null ? "No backup yet." : "Backup overdue."}</Signal>}
       </button>}
 
     </section>
-    {!checkIn && <section aria-label="Check-in"><h2>CHECK-IN</h2><p>Not checked in.</p><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></section>}
     <LogSheet open={fastCaptureOpen} title="NOTE" onClose={closeFastCapture} canClose={() => !busyRef.current}>{renderToolsItem("CAPTURE")}</LogSheet>
     <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} quickValues={quickCheckInValues} error={checkInError} />
     {(hydrationConfirmation || mealConfirmation || sleepConfirmation || proteinConfirmation) && <div className="redesign-toast" role="status">

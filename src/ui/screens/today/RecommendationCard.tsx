@@ -117,7 +117,7 @@ export function RecommendationCard({
       : "equipment-row fade-in";
   const cardContent = (
     <>
-      {nextAction && <p className="cc-lbl">NEXT USEFUL ACTION</p>}
+      {nextAction && !isAllClear && <p className="cc-lbl">NEXT</p>}
       {!nextAction && (isAttention || isDominant) && !isAllClear && <p className="tool-label">ENGINE GUIDANCE</p>}
       {nextAction ? <h2 className={isAllClear ? undefined : "command-title"}>{isAllClear ? describeAllClearHeadline(questionBelow) : title}</h2> : (
       <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
@@ -136,7 +136,8 @@ export function RecommendationCard({
         <p className="meta" style={{ marginTop: 8 }}>Same as before — you already said not now.</p>
       )}
       {nextAction && !decision && (isAllClear
-        ? <button type="button" className="btn-primary cc-cta" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>
+        // FIELD-AUTHORITY-001: an all-clear earns no red; its acknowledgement is neutral.
+        ? <button type="button" className="btn-secondary" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>
         : <button type="button" className="cc-decline" disabled={busy} onClick={onDecline}>{DECLINE_LABEL}</button>)}
       <WhyDisclosure summary="How BEYOND decided" style={{ marginTop: nextAction ? 2 : 12 }}>
         {nextAction && <>{evidenceBasis && <p className="meta">{evidenceBasis}</p>}<p className="meta">{describeRecommendationEffect(recommendation.kind)}</p>
@@ -210,7 +211,7 @@ export function RecommendationCard({
       </WhyDisclosure>
       <div style={{ marginTop: nextAction ? 0 : isDominant && !isAllClear ? 20 : 12 }}>
         {nextAction ? (
-          decision ? <>
+          decision ? isAllClear ? <p className="meta">{describeRecordedDecision(decision)}</p> : <>
             <p className="meta">{describeRecordedDecision(decision)}</p>
             {canHandoff ? <button type="button" className="btn-primary cc-cta" disabled={busy} onClick={() => onHandoff(recommendationHandoff!)}>{describeRecommendationHandoff(recommendationHandoff!)}</button>
               : <button type="button" className="btn-primary cc-cta" disabled>{describeRecordedDecision(decision)}</button>}
@@ -305,5 +306,5 @@ export function RecommendationCard({
 
 /** TONIGHT-001: the all-clear headline, honest about a question shown below it. */
 export function describeAllClearHeadline(questionBelow = false): string {
-  return questionBelow ? "Nothing urgent. One question below." : "Nothing needs you right now.";
+  return questionBelow ? "Nothing urgent. One question below." : "Nothing needs you.";
 }
