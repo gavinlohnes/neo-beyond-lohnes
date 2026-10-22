@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
@@ -21,7 +22,7 @@ async function photoBlob(): Promise<Blob> {
 async function openMoreQuestions() {
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-  await screen.getByRole("button", { name: "Open REVIEW", exact: true }).click();
+  await (await commandResult(screen, "REVIEW")).click();
   await screen.getByText("More questions", { exact: true }).click();
   return screen;
 }

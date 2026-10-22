@@ -57,7 +57,6 @@ async function openPhotos() {
   const day = await startDay(); await setWorkContext(day.id, "OFF", "MANUAL");
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "BODY", exact: true }).click();
-  await screen.getByRole("button", { name: "YOUR PROGRESS", exact: true }).click();
   await screen.getByRole("button", { name: "PHOTOS", exact: true }).click();
   return screen;
 }

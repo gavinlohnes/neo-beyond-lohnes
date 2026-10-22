@@ -121,10 +121,10 @@ describe("Gate A correction — State Input red-authority reduction", () => {
     // DECLUTTER-001: the finished check-in is one line; UPDATE reopens the
     // full form (ALL GOOD + the manual fields).
     await screen.getByRole("button", { name: "Update check-in" }).click();
-    // Drop 5: the form opens with the previous answers as a draft; START BLANK is the one-tap way out.
-    await expect.element(screen.getByText(/^Draft: your check-in/)).toBeVisible();
-    await screen.getByRole("button", { name: "START BLANK" }).click();
-    await expect.element(screen.getByText(/Nothing is prefilled/i)).toBeVisible();
+    // REDESIGN-001: previous answers are optional reference, never filled input.
+    const sheet = screen.getByRole("dialog", { name: "CHECK IN", exact: true });
+    expect(sheet.element().querySelectorAll('[aria-pressed="true"]')).toHaveLength(0);
+    await expect.element(sheet.getByRole("button", { name: "SUBMIT CHECK-IN" })).toBeDisabled();
     await expect.element(screen.getByRole("button", { name: "SUBMIT CHECK-IN" })).toBeVisible();
   });
 });

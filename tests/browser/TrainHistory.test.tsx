@@ -80,9 +80,9 @@ describe("TRAIN → HISTORY", () => {
     const rows = screen.getByRole("list").getByRole("button");
     await expect.element(rows.first()).toBeVisible();
     expect(rows.elements().map((row) => row.getAttribute("aria-label"))).toEqual([
-      "Template B · REDUCED, Mon, Oct 12, 2026. Abandoned · 2 min · 1 working set · 960 lb volume",
-      "Template A, Mon, Oct 12, 2026. Partial · 4 min · 2 working sets · 1,600 lb volume · 1 record",
-      "Template A, Mon, Oct 12, 2026. Completed · 2 min · 1 working set · 900 lb volume",
+      "WORKOUT B · REDUCED, Mon, Oct 12, 2026. Abandoned · 2 min · 1 working set · 960 lb volume",
+      "WORKOUT A, Mon, Oct 12, 2026. Partial · 4 min · 2 working sets · 1,600 lb volume · 1 record",
+      "WORKOUT A, Mon, Oct 12, 2026. Completed · 2 min · 1 working set · 900 lb volume",
     ]);
     // What is read is what is shown: the name only adds separators between the visible title, date and facts.
     for (const row of rows.elements()) {
@@ -90,7 +90,7 @@ describe("TRAIN → HISTORY", () => {
     }
 
     await rows.nth(1).click();
-    const heading = screen.getByRole("heading", { level: 2, name: /^Template A · / });
+    const heading = screen.getByRole("heading", { level: 2, name: /^WORKOUT A · / });
     await expect.element(heading).toHaveFocus();
     await expect.element(screen.getByText("Set 1 · 100 lb × 10", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("heaviest yet (100 lb)", { exact: true })).toBeVisible();
@@ -104,7 +104,7 @@ describe("TRAIN → HISTORY", () => {
     expect((await axe.run(document.querySelector(".train-operator")!)).violations).toEqual([]);
 
     await screen.getByRole("button", { name: "BACK", exact: true }).click();
-    await expect.poll(() => document.activeElement?.textContent).toMatch(/^Template A.*Partial/);
+    await expect.poll(() => document.activeElement?.textContent).toMatch(/^WORKOUT A.*Partial/);
     expect(await writes()).toEqual(before);
   });
 

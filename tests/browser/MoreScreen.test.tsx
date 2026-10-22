@@ -1,3 +1,4 @@
+import { commandResult, openCommandPanel } from "./helpers/command";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
@@ -29,19 +30,21 @@ afterEach(() => {
 });
 
 describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
-  it("renders the three functional sections with every capability reachable", async () => {
+  it("renders grouped destinations with every capability and recovery reachable", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
 
-    await expect.element(screen.getByText("Direction", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Plan", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Data safety", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Evidence", { exact: true })).toBeVisible();
+    await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
     await expect.element(screen.getByText("Settings", { exact: true })).toBeVisible();
 
-    await expect.element(screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "Open WORK SCHEDULE" })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "Open HISTORY" })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "Open REVIEW" })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "Open SEARCH" })).toBeVisible();
+    await expect.element((await commandResult(screen, "MISSIONS & OBLIGATIONS"))).toBeVisible();
+    await expect.element((await commandResult(screen, "WORK SCHEDULE"))).toBeVisible();
+    await expect.element((await commandResult(screen, "HISTORY"))).toBeVisible();
+    await expect.element((await commandResult(screen, "REVIEW"))).toBeVisible();
+    await expect.element((await commandResult(screen, "SEARCH"))).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "EXPORT BACKUP" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "SHARE BACKUP" })).toBeVisible();
     await expect.element(screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true })).toBeVisible();
@@ -52,27 +55,32 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     // does not HTML-decode the way JSX children text does — this exact
     // mistake was made and caught while building this checkpoint.
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     expect(screen.getByText("MISSIONS &amp; OBLIGATIONS", { exact: true }).elements()).toHaveLength(0);
-    await expect.element(screen.getByText("MISSIONS & OBLIGATIONS", { exact: true })).toBeVisible();
+    await expect.element(await commandResult(screen, "MISSIONS & OBLIGATIONS")).toBeVisible();
   });
 
-  it("GLYPH-002: MISSIONS & OBLIGATIONS, WORK SCHEDULE, HISTORY, SEARCH, and BACKUP each carry a glyph now", async () => {
+  it("REDESIGN-001: planning and record rows keep full readable labels and 44px targets", async () => {
     const screen = await render(<MoreScreen />);
-    const rowIcon = (name: string) => screen.getByRole("button", { name: `Open ${name}` }).element().querySelector(".tool-label svg");
-    expect(rowIcon("MISSIONS & OBLIGATIONS")).not.toBeNull();
-    expect(rowIcon("WORK SCHEDULE")).not.toBeNull();
-    expect(rowIcon("HISTORY")).not.toBeNull();
-    expect(rowIcon("SEARCH")).not.toBeNull();
-    expect(screen.getByText("BACKUP", { exact: true }).element().closest(".tool-label")?.querySelector("svg")).not.toBeNull();
+    for (const label of ["MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "HISTORY", "SEARCH"]) {
+      const row = await commandResult(screen, label);
+      expect(row.element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+      expect(row.element().textContent).toContain(label);
+    }
+    await openCommandPanel(screen, "backup");
+    await expect.element(screen.getByRole("button", { name: "EXPORT BACKUP" })).toBeVisible();
   });
 
-  it("GLYPH-003: DECISION JOURNAL, EXERCISE LIBRARY, CUSTOM PROGRAMS, and REVIEW each carry a glyph now", async () => {
+  it("REDESIGN-001: journal, exercises, custom programs and review remain distinct destinations", async () => {
     const screen = await render(<MoreScreen />);
-    const rowIcon = (name: string) => screen.getByRole("button", { name: `Open ${name}` }).element().querySelector(".tool-icon svg");
-    expect(rowIcon("DECISION JOURNAL")).not.toBeNull();
-    expect(rowIcon("EXERCISE LIBRARY")).not.toBeNull();
-    expect(rowIcon("CUSTOM PROGRAMS")).not.toBeNull();
-    expect(rowIcon("REVIEW")).not.toBeNull();
+    const before = await db.events.toArray();
+    const rows = [];
+    for (const label of ["DECISION JOURNAL", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "REVIEW"]) {
+      rows.push((await commandResult(screen, label)).element());
+    }
+    expect(new Set(rows).size).toBe(4);
+    expect(await db.events.toArray()).toEqual(before);
   });
 
   it("no dominant .command-surface exists — MORE has no single primary decision, only system access", async () => {
@@ -82,6 +90,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
   it("renders the Reminders section, off by default", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await expect.element(screen.getByText("Reminders", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("region", { name: "Reminders", exact: true }).getByText("Off.", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("region", { name: "Reminders", exact: true }).getByRole("button", { name: "TURN ON" })).toBeVisible();
@@ -89,8 +99,10 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
   it("uses semantic operational zones and keeps restore subordinate until explicitly opened", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
 
-    for (const name of ["Direction", "Data safety", "Evidence", "Settings"]) {
+    for (const name of ["Data safety", "Settings"]) {
       await expect.element(screen.getByRole("heading", { name, exact: true })).toBeVisible();
     }
 
@@ -108,6 +120,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
   it("keeps routine backup neutral and reserves danger semantics for confirmed replacement", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     // LAUNCH POLISH (owner approval 2026-10-01): MORE has no single primary action, so backup is a neutral button.
     expect(screen.getByRole("button", { name: "EXPORT BACKUP" }).elements()[0]?.className).toBe("btn-secondary");
     const restoreLabel = screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).elements()[0];
@@ -117,9 +131,11 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
   it("DECLUTTER Drop 3: Settings holds Nutrition Targets, and saving updates the one-line summary", async () => {
     const screen = await render(<MoreScreen />);
-    await expect.element(screen.getByText("No calorie target · 1 g/lb protein", { exact: true })).toBeVisible();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await expect.element(await commandResult(screen, "NUTRITION TARGETS")).toHaveTextContent("No calorie target · 1 g/lb protein");
 
-    await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
+    await (await commandResult(screen, "NUTRITION TARGETS")).click();
     await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2200");
     await screen.getByRole("spinbutton", { name: "Protein multiplier (g per lb bodyweight)" }).fill("0.9");
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
@@ -133,7 +149,9 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
   it("HOTFIX: the targets form opens filled with the saved values, not placeholders", async () => {
     await updateNutritionTargets({ calorieTargetKcal: 2200, proteinMultiplierGPerLb: 0.9, goalWeightLbs: 180 });
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "NUTRITION TARGETS")).click();
     await expect.element(screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" })).toHaveValue(2200);
     await expect.element(screen.getByRole("spinbutton", { name: "Protein multiplier (g per lb bodyweight)" })).toHaveValue(0.9);
     await expect.element(screen.getByRole("spinbutton", { name: "Goal weight (lb)" })).toHaveValue(180);
@@ -143,7 +161,9 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await updateNutritionTargets({ calorieTargetKcal: 2200 });
     const before = await db.nutritionTargets.get("current");
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "NUTRITION TARGETS")).click();
     await expect.element(screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" })).toHaveValue(2200);
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
 
@@ -155,7 +175,9 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
   it("HOTFIX: a targets SAVE shows what was saved with UNDO, and UNDO puts the old targets back", async () => {
     await updateNutritionTargets({ calorieTargetKcal: 2200 });
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "NUTRITION TARGETS")).click();
     await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2000");
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
 
@@ -168,8 +190,10 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
   it("Drop 6: the quit tracker's habit, cost and plan save from Settings", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await expect.element(screen.getByText("Not set up", { exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "Open QUIT TRACKER" }).click();
+    await (await commandResult(screen, "QUIT TRACKER")).click();
     await screen.getByRole("textbox", { name: "Habit to avoid" }).fill("Drinking");
     await screen.getByRole("spinbutton", { name: "Cost per day ($, optional)" }).fill("7");
     await screen.getByRole("textbox", { name: "Post-shift plan (optional, shown in SHIFT DOWN)" }).fill("Shower, eat, bed");
@@ -182,7 +206,9 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
   it("Drop 4: if-then plans save per trigger from Settings; a blank one is left out", async () => {
     await saveQuitHabit({ name: "Drinking", ifThenPlans: { BORED: "Old plan" } });
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open QUIT TRACKER" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "QUIT TRACKER")).click();
     await expect.element(screen.getByRole("textbox", { name: "If it's “Bored”, then I'll… (optional)" })).toHaveValue("Old plan");
     await screen.getByRole("textbox", { name: "If it's “After shift”, then I'll… (optional)" }).fill("Shower and eat first");
     await screen.getByRole("textbox", { name: "If it's “Bored”, then I'll… (optional)" }).fill("");
@@ -194,7 +220,9 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
   it("Drop 5: a goal weight saves with the targets and shows in the summary", async () => {
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open NUTRITION TARGETS" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "NUTRITION TARGETS")).click();
     await screen.getByRole("spinbutton", { name: "Goal weight (lb)" }).fill("180");
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
 
@@ -205,6 +233,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
   it("DECLUTTER Drop 3: backup status sits beside EXPORT BACKUP — none on record", async () => {
     localStorage.removeItem("beyond:lastBackupAt");
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await expect.element(screen.getByText("No backup on record yet.", { exact: true })).toBeVisible();
   });
 
@@ -212,6 +242,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     localStorage.setItem("beyond:lastBackupAt", new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString());
     try {
       const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
       await expect.element(screen.getByText("Last backup: 3 days ago.", { exact: true })).toBeVisible();
     } finally {
       localStorage.removeItem("beyond:lastBackupAt");
@@ -220,6 +252,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
   it("the SYSTEM instrument cluster reflects live truth, not a fabricated or duplicated reading", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     // DECLUTTER Drop 3: the SYSTEM readings live inside Diagnostic detail now.
     await expect.element(screen.getByText("SCHEMA", { exact: true })).not.toBeVisible();
     await screen.getByText("Diagnostic detail", { exact: true }).click();
@@ -240,6 +274,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     // than a global text search) since APP_RELEASE and ENGINE_VERSION can
     // coincidentally share the same string value.
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
 
     const cells = screen.container.querySelectorAll(".instrument-cluster > div");
     const readings = Array.from(cells).reduce<Record<string, string>>((acc, cell) => {
@@ -262,6 +298,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
   it("database contents (raw counts) are TECHNICAL DETAIL, tucked behind disclosure, not permanently visible", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
 
     await expect.element(screen.getByText("Diagnostic detail", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Days", { exact: true })).not.toBeVisible();
@@ -276,6 +314,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
   // only — no full-screen DEPTH-001 machinery reveal on SYSTEM.
   it("opening Diagnostic detail shows no full-screen reveal overlay", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("Diagnostic detail", { exact: true }).click();
     await expect.element(screen.getByText("Days", { exact: true })).toBeVisible();
     expect(document.querySelector(".machinery-reveal-overlay")).toBeNull();
@@ -283,6 +323,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
   it("Intelligence Spine I2: no unresolved obligations -> Advisory notes reads 0, no note text rendered", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("Diagnostic detail", { exact: true }).click();
 
     await expect.element(screen.getByText("Advisory notes", { exact: true })).toBeVisible();
@@ -292,6 +334,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
   it("Intelligence Spine I2: an overdue obligation surfaces a note that is plain text, not a button/command", async () => {
     await createObligation({ title: "Renew passport", dueAt: "2020-01-01" });
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("Diagnostic detail", { exact: true }).click();
 
     await expect.element(screen.getByText("Advisory notes", { exact: true })).toBeVisible();
@@ -307,6 +351,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
   it("Intelligence Spine I2: advisory notes are TECHNICAL DETAIL — tucked behind disclosure, not permanently visible, never in .instrument-cluster or dominant", async () => {
     await createObligation({ title: "Renew passport", dueAt: "2020-01-01" });
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
 
     // Collapsed by default, same as every other diagnostic-tier reading.
     await expect.element(screen.getByText("Renew passport — OVERDUE", { exact: true })).not.toBeVisible();
@@ -322,6 +368,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await archiveMission(mission.id);
 
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("Diagnostic detail", { exact: true }).click();
 
     await expect.element(screen.getByText("Advisory notes", { exact: true })).toBeVisible();
@@ -344,6 +392,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
 
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("Diagnostic detail", { exact: true }).click();
 
     await expect.element(screen.getByText("Advisory notes", { exact: true })).toBeVisible();
@@ -358,6 +408,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 
   it("restore's file input still has no accept filter (Android SAF compatibility, unchanged)", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     const fileInput = screen.container.querySelector('input[type="file"][aria-label="Choose a backup file to restore"]');
     expect(fileInput).not.toBeNull();
     expect(fileInput!.hasAttribute("accept")).toBe(false);
@@ -367,54 +419,64 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
 describe("MoreScreen (real browser) — nested navigation", () => {
   it("opens Missions & Obligations and returns to MENU", async () => {
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "MISSIONS & OBLIGATIONS")).click();
 
     await expect.element(screen.getByText("COMMAND // MISSIONS & OBLIGATIONS", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("heading", { name: "Missions · durable direction" })).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
-    await expect.element(screen.getByText("Direction", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Plan", { exact: true })).toBeVisible();
   });
 
   it("opens Work Schedule and returns to MENU", async () => {
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open WORK SCHEDULE" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "WORK SCHEDULE")).click();
 
     await expect.element(screen.getByText("COMMAND // WORK SCHEDULE", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/working days/i).first()).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
-    await expect.element(screen.getByText("Direction", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Plan", { exact: true })).toBeVisible();
   });
 
   it("opens History and returns to MENU", async () => {
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open HISTORY" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "HISTORY")).click();
 
     await expect.element(screen.getByText("COMMAND // HISTORY", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
-    await expect.element(screen.getByText("Evidence", { exact: true })).toBeVisible();
+    await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
   });
 
   it("opens Review and returns to MENU", async () => {
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open REVIEW" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "REVIEW")).click();
 
     await expect.element(screen.getByText("COMMAND // REVIEW", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
-    await expect.element(screen.getByText("Evidence", { exact: true })).toBeVisible();
+    await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
   });
 
   it("opens Search and returns to MENU", async () => {
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open SEARCH" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "SEARCH")).click();
 
     await expect.element(screen.getByText("COMMAND // SEARCH", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
-    await expect.element(screen.getByText("Evidence", { exact: true })).toBeVisible();
+    await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
   });
 });
 
@@ -423,7 +485,9 @@ describe("MoreScreen (real browser) — search-to-navigate", () => {
     await createMission({ title: "Rebuild the deck", description: "Replace the rotted boards" });
 
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open SEARCH" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "SEARCH")).click();
     await screen.getByRole("textbox", { name: "Search everything" }).fill("deck");
     await screen.getByRole("button", { name: "Open MISSION: Rebuild the deck" }).click();
 
@@ -442,7 +506,9 @@ describe("MoreScreen (real browser) — search-to-navigate", () => {
     await createObligation({ title: "Call the electrician" });
 
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open SEARCH" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "SEARCH")).click();
     await screen.getByRole("textbox", { name: "Search everything" }).fill("electrician");
     await screen.getByRole("button", { name: "Open OBLIGATION: Call the electrician" }).click();
 
@@ -456,7 +522,7 @@ describe("MoreScreen (real browser) — search-to-navigate", () => {
     const onOpenCapture = vi.fn();
 
     const screen = await render(<MoreScreen onOpenCapture={onOpenCapture} />);
-    await screen.getByRole("button", { name: "Open SEARCH" }).click();
+    await (await commandResult(screen, "SEARCH")).click();
     await screen.getByRole("textbox", { name: "Search everything" }).fill("registration");
     await screen.getByRole("button", { name: "Open CAPTURE: Renew the car registration" }).click();
 
@@ -469,13 +535,15 @@ describe("MoreScreen (real browser) — search-to-navigate", () => {
     await createMission({ title: "Rebuild the deck" });
 
     const screen = await render(<MoreScreen />);
-    await screen.getByRole("button", { name: "Open SEARCH" }).click();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "SEARCH")).click();
     await screen.getByRole("textbox", { name: "Search everything" }).fill("deck");
     await screen.getByRole("button", { name: "Open MISSION: Rebuild the deck" }).click();
     await expect.element(screen.getByRole("heading", { name: "Rebuild the deck", exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
-    await screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" }).click();
+    await (await commandResult(screen, "MISSIONS & OBLIGATIONS")).click();
 
     await expect.element(screen.getByRole("heading", { name: "Missions · durable direction" })).toBeVisible();
     expect(screen.getByRole("button", { name: "← BACK", exact: true }).elements()).toHaveLength(0);
@@ -495,6 +563,8 @@ describe("MoreScreen (real browser) — Reminders (REMIND-001)", () => {
     );
 
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByRole("region", { name: "Reminders", exact: true }).getByRole("button", { name: "TURN ON" }).click();
     await expect.element(screen.getByText("On, after 20:00.", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "TURN OFF" })).toBeVisible();
@@ -510,6 +580,8 @@ describe("MoreScreen (real browser) — Reminders (REMIND-001)", () => {
     vi.stubGlobal("Notification", { permission: "denied", requestPermission: vi.fn().mockResolvedValue("denied") });
 
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByRole("region", { name: "Reminders", exact: true }).getByRole("button", { name: "TURN ON" }).click();
 
     await expect.element(screen.getByText("Notification permission was denied.", { exact: false })).toBeVisible();
@@ -521,7 +593,9 @@ describe("MoreScreen (real browser) — narrow phone widths", () => {
   it.each([320, 360, 375, 412])("has no horizontal overflow at %ipx", async (width) => {
     await page.viewport(width, 800);
     const screen = await render(<MoreScreen />);
-    await expect.element(screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" })).toBeVisible();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await expect.element((await commandResult(screen, "MISSIONS & OBLIGATIONS"))).toBeVisible();
 
     await expect.poll(() => document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   });
@@ -530,12 +604,16 @@ describe("MoreScreen (real browser) — narrow phone widths", () => {
 describe("MoreScreen (real browser) — accessibility", () => {
   it("passes real WCAG AA color-contrast beyond the known app-wide exception", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     const results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
   });
 
   it("passes axe with restore and diagnostic native disclosures expanded", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).click();
     await screen.getByText("Diagnostic detail", { exact: true }).click();
     const results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });

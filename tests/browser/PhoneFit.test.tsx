@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
@@ -34,7 +35,7 @@ describe("R3 — Obligation EDIT fits a phone", () => {
     await createObligation({ title: "Task A", dueAt: "2026-10-20", plannedAt: "2026-10-14" });
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS", exact: true }).click();
+    await (await commandResult(screen, "MISSIONS & OBLIGATIONS")).click();
     await screen.getByRole("button", { name: "Open Task A", exact: true }).click();
     await screen.getByRole("button", { name: "EDIT", exact: true }).click();
     const due = screen.getByLabelText("Due", { exact: true });
@@ -73,7 +74,7 @@ describe("R4 — BODY warns only about changed correction input", () => {
       ["Protein · 30 g", "Corrected amount (g)", "30", "25"],
     ];
     for (const [record, label, saved, changed] of editors) {
-      await screen.getByRole("button", { name: `Inspect ${record}`, exact: true }).click();
+      await screen.getByRole("button", { name: `Open ${record}`, exact: true }).click();
       await expect.poll(() => document.activeElement instanceof HTMLInputElement).toBe(true);
       await settled();
       expect(reloadWouldWarn(), record).toBe(false);
@@ -95,7 +96,7 @@ describe("R4 — BODY warns only about changed correction input", () => {
       await expect.poll(reloadWouldWarn, { message: record }).toBe(false);
     }
 
-    await screen.getByRole("button", { name: "Inspect Dinner", exact: true }).click();
+    await screen.getByRole("button", { name: "Open Dinner", exact: true }).click();
     const calories = screen.getByRole("spinbutton", { name: "Corrected calories" });
     await expect.element(calories).toHaveValue(600);
     await settled();
@@ -106,7 +107,7 @@ describe("R4 — BODY warns only about changed correction input", () => {
     await expect.poll(reloadWouldWarn).toBe(false);
 
     // Typed new input still warns as before.
-    await screen.getByRole("button", { name: "DAILY RECORD" }).click();
+    await screen.getByRole("button", { name: "TODAY" }).click();
     await screen.getByRole("button", { name: "Open SLEEP" }).click();
     await page.elementLocator(document.getElementById("sleep-hours")!).fill("7");
     await expect.poll(reloadWouldWarn).toBe(true);

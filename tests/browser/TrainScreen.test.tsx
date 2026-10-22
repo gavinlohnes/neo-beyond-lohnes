@@ -815,7 +815,7 @@ describe("TrainScreen (real browser) — DECLUTTER-001 override picker behind CH
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
 
-    await expect.element(screen.getByText("Template A · STANDARD", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("WORKOUT A", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
     const change = screen.getByRole("button", { name: "CHANGE", exact: true });
     await expect.element(change).toHaveAttribute("aria-expanded", "false");
@@ -839,7 +839,7 @@ describe("TrainScreen (real browser) — DECLUTTER-001 override picker behind CH
     await screen.getByRole("button", { name: "REDUCED", exact: true }).click();
     await screen.getByRole("button", { name: "DONE", exact: true }).click();
 
-    await expect.element(screen.getByText("Template B · REDUCED", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("WORKOUT B · REDUCED", { exact: true })).toBeVisible();
     expect(screen.getByRole("button", { name: "REDUCED", exact: true }).elements()).toHaveLength(0);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
     await expect.element(screen.getByText(/REDUCED — in progress/i)).toBeVisible();

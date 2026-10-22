@@ -267,7 +267,7 @@ describe("TRAIN-OPERATOR-001", () => {
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
     await expect.element(screen.getByRole("alert")).toBeVisible();
     await screen.getByRole("button", { name: "RETRY WORKOUT READ" }).click();
-    await expect.element(screen.getByText("Template B · REDUCED", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("WORKOUT B · REDUCED", { exact: true })).toBeVisible();
     expect(await getActiveWorkoutSession()).toBeUndefined();
     await expect.poll(() => document.activeElement?.tagName).toBe("H1");
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
