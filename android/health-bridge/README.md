@@ -5,7 +5,7 @@ browser storage and manual records. This app reads only Garmin sleep through the
 official AndroidX Health Connect client, then saves a versioned JSON file for an
 explicit BEYOND preview/import. GARMIN-002 adds optional steps and heart-rate reads: hourly
 step totals, hourly heart-rate low/average/high and Garmin resting heart rate, saved as a
-separate `BEYOND_HEALTH_CONNECT_ACTIVITY` file, imported through the same COMMAND → IMPORT HEALTH DATA screen. No Internet permission, account, server, background
+separate `BEYOND_HEALTH_CONNECT_ACTIVITY` file, imported through the same COMMAND → IMPORT HEALTH DATA screen. SEND TO BEYOND shares both prepared files to the installed BEYOND app through Android's share sheet, with the same preview and confirmation. No Internet permission, account, server, background
 worker, health write permission, analytics or third-party exporter.
 
 The packaged manifest allows the official Health Connect SDK's bound

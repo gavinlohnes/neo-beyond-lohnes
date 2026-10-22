@@ -122,4 +122,19 @@ describe("Health Connect sleep import", () => {
     await expect.element(evidence.getByText("1,500 steps", { exact: true })).toBeVisible();
     await expect.element(evidence.getByText("Resting heart rate 54 bpm", { exact: true })).toBeVisible();
   });
+  it("SEND TO BEYOND: previews both shared files once, imports nothing until confirmed", async () => {
+    const cache = await caches.open("beyond-shared-health");
+    await cache.put("/shared-health-0", new Response(JSON.stringify(syntheticSleep()), { headers: { "X-Beyond-Name": "beyond-sleep.json" } }));
+    await cache.put("/shared-health-1", new Response(JSON.stringify(syntheticActivity()), { headers: { "X-Beyond-Name": "beyond-activity.json" } }));
+    const screen = await render(<HealthImportScreen />);
+    await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "REVIEW STEPS AND HEART RATE" })).toBeVisible();
+    await expect.element(screen.getByText(/^Preview ready: 1 Garmin sleep records and 3 hours of Garmin steps/)).toBeVisible();
+    expect(await caches.has("beyond-shared-health")).toBe(false);
+    expect(await db.externalSleepRecords.count()).toBe(0); expect(await db.externalActivityHours.count()).toBe(0);
+    await screen.getByRole("button", { name: "CONFIRM STEPS AND HEART RATE IMPORT" }).click();
+    await expect.element(screen.getByText(/^Imported 4 new, 0 updated/)).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();
+    expect(await db.externalSleepRecords.count()).toBe(0);
+  });
 });

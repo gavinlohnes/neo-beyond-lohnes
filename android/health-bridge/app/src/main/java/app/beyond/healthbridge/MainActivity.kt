@@ -1,6 +1,10 @@
 package app.beyond.healthbridge
 
+import android.content.ClipData
+import android.content.Intent
 import android.os.Bundle
+import androidx.core.content.FileProvider
+import java.io.File
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
@@ -41,6 +45,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var read: Button
     private lateinit var save: Button
     private lateinit var saveActivity: Button
+    private lateinit var send: Button
     private var prepared: String? = null // memory only; discarded when this Activity is destroyed
     private var preparedActivity: String? = null
     private var activityGranted: Set<String> = emptySet() // what the prepared activity file was read with
@@ -80,7 +85,7 @@ class MainActivity : ComponentActivity() {
         fun paragraph(text: String) = TextView(this).apply { this.text = text; textSize = 18f; setPadding(0, 12, 0, 12); layout.addView(this) }
         paragraph("BEYOND Health Bridge").apply { textSize = 26f; ViewCompat.setAccessibilityHeading(this, true) }
         paragraph("Read Garmin sleep, steps and heart rate from the last 7 days. Save a file, then review and confirm it in BEYOND. This helper does not sync automatically.")
-        paragraph("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps and heart rate (optional): hourly step totals, hourly heart-rate low/average/high and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. Each goes into its own file you choose. No account, server, Internet permission or other health categories. Your Health Connect data is never changed. Files may be private health information; choose a local folder and delete the file after importing.")
+        paragraph("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps and heart rate (optional): hourly step totals, hourly heart-rate low/average/high and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. Each goes into its own file you save, or is sent straight to BEYOND through Android's share sheet. No account, server, Internet permission or other health categories. Your Health Connect data is never changed. Files may be private health information; choose a local folder and delete the file after importing.")
         status = paragraph("Ready. Complete Garmin's sync before reading. Sessions crossing the 7-day window edges are excluded.").apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }
         read = Button(this).apply {
             text = "ALLOW ACCESS AND READ"
@@ -101,6 +106,9 @@ class MainActivity : ComponentActivity() {
         layout.addView(save)
         saveActivity = Button(this).apply { text = "SAVE STEPS AND HEART RATE FILE"; isEnabled = false; setOnClickListener { saveActivityFile.launch("beyond-activity-${Instant.now().toString().replace(':', '-')}.json") } }
         layout.addView(saveActivity)
+        send = Button(this).apply { text = "SEND TO BEYOND"; isEnabled = false; setOnClickListener { sendToBeyond() } }
+        layout.addView(send)
+        clearShared()
         val scroll = ScrollView(this).apply { addView(layout) }
         ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
@@ -120,8 +128,49 @@ class MainActivity : ComponentActivity() {
     private fun setWorking(value: Boolean) {
         working = value; read.isEnabled = !value
         save.isEnabled = !value && prepared != null; saveActivity.isEnabled = !value && preparedActivity != null
+        send.isEnabled = !value && (prepared != null || preparedActivity != null)
     }
-    private fun clear(message: String) { prepared = null; preparedActivity = null; save.isEnabled = false; saveActivity.isEnabled = false; status.text = message }
+    private fun clear(message: String) {
+        prepared = null; preparedActivity = null; save.isEnabled = false; saveActivity.isEnabled = false; send.isEnabled = false; status.text = message
+    }
+    private fun shareDir() = File(cacheDir, "share")
+    /** Shared copies live only in the helper's private cache and are removed on the next launch or send. */
+    private fun clearShared() { shareDir().listFiles()?.forEach { it.delete() } }
+    /**
+     * GARMIN-002 SEND TO BEYOND: hands the prepared files to Android's share sheet. Choosing the installed
+     * BEYOND app opens its import preview; nothing is imported until it is confirmed there.
+     */
+    private fun sendToBeyond() {
+        val sleep = prepared; val activity = preparedActivity
+        if (working || (sleep == null && activity == null)) return
+        lifecycleScope.launch {
+            setWorking(true)
+            try {
+                val granted = client.permissionController.getGrantedPermissions()
+                if ((sleep != null && !granted.containsAll(permissions)) || (activity != null && !granted.containsAll(activityGranted))) {
+                    clear("Health access was revoked. Read again after granting access."); return@launch
+                }
+                val stamp = Instant.now().toString().replace(':', '-')
+                val uris = withContext(Dispatchers.IO) {
+                    clearShared(); shareDir().mkdirs()
+                    listOfNotNull(sleep?.let { "beyond-sleep-$stamp.json" to it }, activity?.let { "beyond-activity-$stamp.json" to it }).map { (name, text) ->
+                        val file = File(shareDir(), name)
+                        file.writeText(text, Charsets.UTF_8)
+                        FileProvider.getUriForFile(this@MainActivity, "app.beyond.healthbridge.share", file)
+                    }
+                }
+                val intent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                    type = "application/json"
+                    putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+                    clipData = ClipData.newRawUri(null, uris.first()).apply { uris.drop(1).forEach { addItem(ClipData.Item(it)) } }
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(intent, "Send to BEYOND"))
+                status.text = "Choose BEYOND in the share sheet. BEYOND shows a preview; nothing is imported until you confirm there."
+            } catch (_: Exception) { status.text = "Could not open the share sheet. Save the files instead, then import them in BEYOND." }
+            finally { setWorking(false) }
+        }
+    }
     private fun readSleep() {
         if (working) return
         clear("Reading Garmin sleep…"); setWorking(true)

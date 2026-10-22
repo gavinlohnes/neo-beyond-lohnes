@@ -5,16 +5,16 @@ Owner-approved PROTECTED objective; brief [GARMIN-002.md](GARMIN-002.md). Builde
 the phone: helper 0.3.0 installs, reads 73 hours of steps/heart rate plus sleep, and BEYOND
 (schema 15) imports both files and shows them under BODY → MEASURED · GARMIN.
 
-Current: PR A follow-ups on branch `ccr-83cf6ed8-ug1ym9` from 0f288f9:
-- lived-day cards capped at 24 hours, with stretches that have no BEYOND day shown separately;
-- readable local sleep times;
-- heart rate never shows "?";
-- one size check;
-- a test for cancelling the activity preview.
+Follow-up A (#263) merged at 614ed17: lived-day cards are capped at 24 hours, stretches with no
+BEYOND day show separately, sleep times are readable, and heart rate never shows "?".
 
-Next: PR B, **SEND TO BEYOND**. It was approved in the brief, and it changes the PWA service
-worker. #261 (REDESIGN-001, Codex) is still open and touches BODY, so expect one small overlap.
-Every PR needs owner merge approval.
+Current: follow-up B, **SEND TO BEYOND**, on branch `ccr-83cf6ed8-ug1ym9` from 614ed17:
+- The helper shares its files to the installed BEYOND app through Android's share sheet (0.4.0).
+- BEYOND is a Web Share Target; a small handler loaded into the service worker parks the files.
+- COMMAND → IMPORT HEALTH DATA previews both; nothing imports until each is confirmed.
+
+Phone check after merge: if BEYOND doesn't appear in the share sheet, re-add it to the home
+screen. #261 (REDESIGN-001, Codex) is still open. Every PR needs owner merge approval.
 
 ---
 Previous checkpoint:

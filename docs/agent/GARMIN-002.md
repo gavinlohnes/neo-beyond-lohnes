@@ -77,5 +77,26 @@ the nearest day start, so the 16:30 edges hold. Sleep shows device-local times a
 minutes; source UTC stays under details. A missing heart-rate low or high is left out rather
 than shown as "?".
 
+## Follow-up B — SEND TO BEYOND
+
+This is the hand-off approved in the original scope.
+- **Helper:** **SEND TO BEYOND** shares the prepared sleep and steps/heart-rate files through
+  Android's share sheet. It re-checks permissions before sharing. The file copies live only in
+  the helper's private cache, exposed read-only through a FileProvider, and are removed on the
+  next launch or send.
+- **BEYOND:** the installed app declares a Web Share Target (`POST ./share-target`, field
+  `health`). A small script, `public/share-target-sw.js`, is loaded into the generated Workbox
+  service worker with `importScripts`. It parks at most two files of up to 2 MB each in a device
+  cache, then redirects to `?share=health`.
+- App routing opens COMMAND → IMPORT HEALTH DATA. That screen previews each parked file once,
+  then deletes it. Nothing imports until the owner confirms each preview.
+
+The existing service worker update prompt and caching are unchanged; the handler only answers
+POST requests to `share-target`.
+
+Phone note: Chrome refreshes an installed app's share targets when it updates the app, which can
+take a while. If BEYOND doesn't appear in the share sheet, remove BEYOND from the home screen and
+add it again; data in the browser is kept.
+
 Leverage: INTEGRATE PROVIDER. This uses the official Health Connect aggregate API rather than raw
 heart-rate samples, which keeps the file small, and adds no new dependency.

@@ -8,6 +8,7 @@ import { ImportedActivityEvidence } from "./ImportedActivityEvidence";
 import { importActivitySnapshot, previewActivityImport } from "../../../application/externalActivityCommands";
 import { ACTIVITY_IMPORT_FORMAT, MAX_ACTIVITY_FILE_BYTES, summarizeActivity, type ActivitySnapshot } from "../../../domain/health/activityImport";
 import { heartRateLine, hoursMinutes, localDayTime, localTime } from "./healthFormat";
+import { takeSharedHealthFiles } from "./sharedHealthFiles";
 import "./healthImport.css";
 
 export function HealthImportScreen({ active = true }: { active?: boolean }) {
@@ -19,22 +20,37 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
   const locked = useRef(false), selection = useRef(0), result = useRef<HTMLParagraphElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => () => { selection.current++; }, []);
-  async function choose(file?: File) {
+  // GARMIN-002 SEND TO BEYOND: preview any files the share sheet parked; they are removed once read.
+  useEffect(() => {
+    if (!active) return;
+    let cancelled = false;
+    void takeSharedHealthFiles().then((files) => { if (!cancelled && files.length) void chooseMany(files); });
+    return () => { cancelled = true; };
+  }, [active]);
+  async function choose(file?: File) { await chooseMany(file ? [file] : []); }
+  /** Each file fills its own preview: one sleep and one steps/heart-rate file can be reviewed together. */
+  async function chooseMany(files: File[]) {
     const request = ++selection.current;
     setSnapshot(null); setActivity(null); setAssociations({}); setMessage(""); setError("");
-    if (!file) return;
+    if (!files.length) return;
     setBusy(true);
+    const ready: string[] = [];
     try {
-      // GARMIN-002: the helper saves sleep and steps/heart rate as separate files; either can be chosen here.
-      if (file.size > MAX_ACTIVITY_FILE_BYTES) throw new Error("This file is too large for a BEYOND Health Bridge export. Nothing was imported.");
-      const raw = await file.text();
-      if (raw.includes(`"${ACTIVITY_IMPORT_FORMAT}"`)) {
-        const next = await previewActivityImport({ size: file.size, text: async () => raw });
-        if (request === selection.current) { setActivity(next); setMessage(`Preview ready: ${next.hours.length} hours of Garmin steps and heart rate. Nothing has been imported.`); }
-        return;
+      for (const file of files) {
+        if (file.size > MAX_ACTIVITY_FILE_BYTES) throw new Error("This file is too large for a BEYOND Health Bridge export. Nothing was imported.");
+        const raw = await file.text();
+        // The helper saves sleep and steps/heart rate as separate files; either can be chosen here.
+        if (raw.includes(`"${ACTIVITY_IMPORT_FORMAT}"`)) {
+          const next = await previewActivityImport({ size: file.size, text: async () => raw });
+          if (request !== selection.current) return;
+          setActivity(next); ready.push(`${next.hours.length} hours of Garmin steps and heart rate`);
+        } else {
+          const [next, choices] = await Promise.all([previewSleepImport({ size: file.size, text: async () => raw }), getSleepImportDays()]);
+          if (request !== selection.current) return;
+          setSnapshot(next); setDays(choices); ready.push(`${next.records.length} Garmin sleep records`);
+        }
       }
-      const [next, choices] = await Promise.all([previewSleepImport(file), getSleepImportDays()]);
-      if (request === selection.current) { setSnapshot(next); setDays(choices); setMessage(`Preview ready: ${next.records.length} Garmin sleep records. Nothing has been imported.`); }
+      if (request === selection.current) setMessage(`Preview ready: ${ready.join(" and ")}. Nothing has been imported.`);
     } catch (e) { if (request === selection.current) setError(e instanceof Error ? e.message : "This file could not be read. Nothing was imported."); }
     finally { if (request === selection.current) setBusy(false); }
   }
