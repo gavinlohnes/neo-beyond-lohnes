@@ -41,12 +41,29 @@ describe("measured steps and heart rate import", () => {
     await db.beyondDays.bulkAdd([day1, day2]);
     await importActivitySnapshot(syntheticActivity());
     const [latest, earlier] = await getMeasuredActivityByDay(7, Date.parse("2026-10-19T01:00:00Z"));
-    expect(earlier!.day.id).toBe("day-1");
+    expect(earlier!.day!.id).toBe("day-1");
     expect(earlier!.measured).toEqual({ hours: 2, steps: 1500, heartRateMinBpm: 55, heartRateMaxBpm: 120, heartRateAvgBpm: 75 });
     expect(earlier!.restingHeartRateBpm).toBe(54);
-    expect(latest!.day.id).toBe("day-2");
+    expect(latest!.day!.id).toBe("day-2");
     expect(latest!.measured.steps).toBeNull();
     expect(latest!.measured.heartRateAvgBpm).toBe(64);
+  });
+  it("caps a lived day at 24 hours and shows stretches without a BEYOND day on their own", async () => {
+    await db.beyondDays.add(day1); // 2026-10-17 21:30Z; no day for the following two days
+    const snapshot = syntheticActivity();
+    snapshot.hours = [
+      { ...snapshot.hours[0]!, startTime: "2026-10-17T14:00:00Z", endTime: "2026-10-17T15:00:00Z", steps: 10 }, // before the first day
+      { ...snapshot.hours[0]!, startTime: "2026-10-17T22:00:00Z", endTime: "2026-10-17T23:00:00Z", steps: 100 }, // day 1
+      { ...snapshot.hours[0]!, startTime: "2026-10-18T22:00:00Z", endTime: "2026-10-18T23:00:00Z", steps: 1000 }, // 24.5 h after day 1 began
+    ];
+    snapshot.restingHeartRate = [];
+    await importActivitySnapshot(snapshot);
+    const periods = await getMeasuredActivityByDay(7, Date.parse("2026-10-19T00:00:00Z"));
+    expect(periods.map((p) => [p.day?.id ?? null, new Date(p.from).toISOString(), p.measured.steps])).toEqual([
+      [null, "2026-10-18T21:30:00.000Z", 1000],
+      ["day-1", "2026-10-17T21:30:00.000Z", 100],
+      [null, "2026-10-16T21:30:00.000Z", 10],
+    ]);
   });
   it("refuses malformed, foreign or unknown-field exports as a whole", async () => {
     const parse = (mutate: (s: ReturnType<typeof syntheticActivity>) => void) => { const s = syntheticActivity(); mutate(s); return () => parseActivitySnapshot(JSON.stringify(s)); };

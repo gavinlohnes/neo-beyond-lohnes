@@ -6,7 +6,8 @@ import type { BeyondDay } from "../../../domain/common/types";
 import { ImportedSleepEvidence } from "./ImportedSleepEvidence";
 import { ImportedActivityEvidence } from "./ImportedActivityEvidence";
 import { importActivitySnapshot, previewActivityImport } from "../../../application/externalActivityCommands";
-import { ACTIVITY_IMPORT_FORMAT, summarizeActivity, type ActivitySnapshot } from "../../../domain/health/activityImport";
+import { ACTIVITY_IMPORT_FORMAT, MAX_ACTIVITY_FILE_BYTES, summarizeActivity, type ActivitySnapshot } from "../../../domain/health/activityImport";
+import { heartRateLine, hoursMinutes, localDayTime, localTime } from "./healthFormat";
 import "./healthImport.css";
 
 export function HealthImportScreen({ active = true }: { active?: boolean }) {
@@ -25,7 +26,8 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
     setBusy(true);
     try {
       // GARMIN-002: the helper saves sleep and steps/heart rate as separate files; either can be chosen here.
-      const raw = file.size <= 2 * 1024 * 1024 ? await file.text() : "";
+      if (file.size > MAX_ACTIVITY_FILE_BYTES) throw new Error("This file is too large for a BEYOND Health Bridge export. Nothing was imported.");
+      const raw = await file.text();
       if (raw.includes(`"${ACTIVITY_IMPORT_FORMAT}"`)) {
         const next = await previewActivityImport({ size: file.size, text: async () => raw });
         if (request === selection.current) { setActivity(next); setMessage(`Preview ready: ${next.hours.length} hours of Garmin steps and heart rate. Nothing has been imported.`); }
@@ -74,8 +76,8 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
       {snapshot.records.map((r, i) => {
         const duration = sleepDurations(r);
         return <article key={r.id} aria-label={`Sleep preview ${i + 1}`}>
-          <h4>Garmin sleep {i + 1}</h4><p>{r.startTime} → {r.endTime} (UTC)</p>
-          <p>{Math.round(duration.spanMinutes)} minutes in session · {duration.asleepMinutes === null ? "asleep total unavailable" : `${Math.round(duration.asleepMinutes)} minutes asleep`}</p>
+          <h4>Garmin sleep {i + 1} · {localDayTime(r.startTime)} → {localTime(r.endTime)}</h4>
+          <p>{hoursMinutes(duration.spanMinutes)} in session · {duration.asleepMinutes === null ? "asleep total unavailable" : `${hoursMinutes(duration.asleepMinutes)} asleep`}</p>
           <p>Source modified: {r.lastModifiedTime} · {r.stages.length} stages</p>
           <label>Associate sleep {i + 1} with a lived day
             <select value={associations[r.id] ?? ""} disabled={busy} onChange={(e) => setAssociations((old) => ({ ...old, [r.id]: e.target.value || null }))}>
@@ -95,7 +97,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
         <h3>REVIEW STEPS AND HEART RATE</h3>
         <p>Garmin Connect · exported {activity.exportedAt}</p>
         <p>Window: {activity.window.startTime} → {activity.window.endTime} (UTC)</p>
-        <p>{activity.hours.length} measured hours · {total.steps === null ? "no steps" : `${total.steps.toLocaleString("en-US")} steps`} · {total.heartRateAvgBpm === null ? "no heart rate" : `heart rate ${total.heartRateMinBpm ?? "?"}–${total.heartRateMaxBpm ?? "?"} bpm`} · {activity.restingHeartRate.length} resting heart rate readings</p>
+        <p>{activity.hours.length} measured hours · {total.steps === null ? "no steps" : `${total.steps.toLocaleString("en-US")} steps`} · {heartRateLine(total.heartRateMinBpm, total.heartRateAvgBpm, total.heartRateMaxBpm).replace(/^Heart rate/, "heart rate")} · {activity.restingHeartRate.length} resting heart rate readings</p>
         <p>A newer export replaces the same hour. Older or repeated files change nothing.</p>
         {!activity.hours.length && !activity.restingHeartRate.length && <p>No Garmin steps or heart rate in this export. Nothing will be saved.</p>}
         <button type="button" disabled={busy || (!activity.hours.length && !activity.restingHeartRate.length)} onClick={() => void confirmActivity()}>CONFIRM STEPS AND HEART RATE IMPORT</button>

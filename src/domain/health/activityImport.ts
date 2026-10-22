@@ -126,3 +126,41 @@ export function summarizeActivity(hours: readonly ActivityHour[], from: number, 
     heartRateAvgBpm: hr.length ? Math.round(hr.reduce((sum, h) => sum + h.heartRateAvgBpm!, 0) / hr.length) : null,
   };
 }
+
+const DAY_MS = 24 * HOUR_MS;
+export interface MeasuredPeriod {
+  /** The lived day this period belongs to, or null for a stretch BEYOND has no day for. */
+  dayId: string | null; from: number; to: number;
+  measured: MeasuredActivity; restingHeartRateBpm: number | null;
+}
+/**
+ * Splits measurements into lived days, each capped at 24 hours. Hours BEYOND has no day for get
+ * their own 24-hour periods, stepped from the nearest day start, so they keep the same 16:30 edges
+ * instead of piling into the previous day. Newest first.
+ */
+export function measuredPeriods(days: readonly { id: string; startedAt: string }[], hours: readonly ActivityHour[],
+  resting: readonly RestingHeartRate[], now: number): MeasuredPeriod[] {
+  const starts = days.map((d) => ({ id: d.id, at: Date.parse(d.startedAt) })).sort((a, b) => a.at - b.at);
+  function periodOf(t: number): { dayId: string | null; from: number; to: number } {
+    let i = -1;
+    for (let j = 0; j < starts.length && starts[j]!.at <= t; j++) i = j;
+    if (i === -1) {
+      const first = starts[0]?.at ?? Math.floor(t / DAY_MS) * DAY_MS + DAY_MS;
+      const from = first - Math.ceil((first - t) / DAY_MS) * DAY_MS;
+      return { dayId: null, from, to: Math.min(from + DAY_MS, first) };
+    }
+    const start = starts[i]!.at, next = starts[i + 1]?.at ?? Infinity;
+    const k = Math.floor((t - start) / DAY_MS), from = start + k * DAY_MS;
+    return { dayId: k === 0 ? starts[i]!.id : null, from, to: Math.min(from + DAY_MS, next) };
+  }
+  const periods = new Map<number, { dayId: string | null; from: number; to: number }>();
+  for (const t of [...hours.map((h) => Date.parse(h.startTime)), ...resting.map((r) => Date.parse(r.time))]) {
+    const p = periodOf(t); periods.set(p.from, p);
+  }
+  return [...periods.values()].sort((a, b) => b.from - a.from).map((p) => {
+    const to = Math.min(p.to, Math.max(now, p.from + HOUR_MS));
+    const latest = resting.filter((r) => { const t = Date.parse(r.time); return t >= p.from && t < p.to; })
+      .sort((a, b) => b.time.localeCompare(a.time))[0];
+    return { ...p, measured: summarizeActivity(hours, p.from, p.to), restingHeartRateBpm: latest?.bpm ?? null, to };
+  });
+}

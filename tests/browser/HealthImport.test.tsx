@@ -68,7 +68,7 @@ describe("Health Connect sleep import", () => {
     expect(await db.externalSleepRevisions.count()).toBe(1); expect(await db.healthImportReceipts.count()).toBe(1);
     await cleanup();
     const evidence = await render(<ImportedSleepEvidence />);
-    await expect.element(evidence.getByRole("heading", { name: "Garmin Connect · sleep" })).toBeVisible();
+    await expect.element(evidence.getByRole("heading", { name: /^Garmin sleep · .* → \d\d:\d\d$/ })).toBeVisible();
     await expect.element(evidence.getByText("Source dates only · no lived day assigned")).toBeVisible();
     await evidence.getByText("Source details and revisions").click();
     await evidence.getByRole("button", { name: "SHOW REVISION HISTORY" }).click();
@@ -105,10 +105,14 @@ describe("Health Connect sleep import", () => {
     const screen = await render(<HealthImportScreen />);
     chooseFile(screen.getByLabelText("Health export file").element() as HTMLInputElement, JSON.stringify(syntheticActivity()));
     await expect.element(screen.getByRole("heading", { name: "REVIEW STEPS AND HEART RATE" })).toBeVisible();
-    await expect.element(screen.getByText(/^3 measured hours · 1,500 steps · heart rate 55–120 bpm · 1 resting/)).toBeVisible();
+    await expect.element(screen.getByText(/^3 measured hours · 1,500 steps · heart rate 55–120 bpm · average 71 · 1 resting/)).toBeVisible();
     expect(await db.externalActivityHours.count()).toBe(0);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     expect((await axe.run(screen.container, { rules: { region: { enabled: false } } })).violations.map((v) => v.id)).toEqual([]);
+    await screen.getByRole("button", { name: "CANCEL PREVIEW" }).click();
+    await expect.element(screen.getByRole("heading", { name: "REVIEW STEPS AND HEART RATE" })).not.toBeInTheDocument();
+    expect(await db.externalActivityHours.count()).toBe(0); expect(await db.healthImportReceipts.count()).toBe(0);
+    chooseFile(screen.getByLabelText("Health export file").element() as HTMLInputElement, JSON.stringify(syntheticActivity()));
     await screen.getByRole("button", { name: "CONFIRM STEPS AND HEART RATE IMPORT" }).click();
     await expect.element(screen.getByText(/^Imported 4 new, 0 updated/)).toBeVisible();
     expect(await db.events.count()).toBe(0); expect(await db.externalSleepRecords.count()).toBe(0);
