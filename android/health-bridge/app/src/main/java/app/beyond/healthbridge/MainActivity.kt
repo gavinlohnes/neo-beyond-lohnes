@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.HealthConnectFeatures
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.HeartRateRecord
@@ -40,9 +41,14 @@ class MainActivity : ComponentActivity() {
     private val heartRatePermission = HealthPermission.getReadPermission(HeartRateRecord::class)
     private val restingPermission = HealthPermission.getReadPermission(RestingHeartRateRecord::class)
     private val activityPermissions = setOf(stepsPermission, heartRatePermission, restingPermission)
+    // GARMIN-003: optional "Access past data" for READ FULL HISTORY. Without it Health Connect returns about 30 days.
+    private val historyPermission = HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY
+    /** 7 for the daily read; MAX_EXPORT_DAYS for READ FULL HISTORY. */
+    private var windowDays = 7L
     private val client by lazy { HealthConnectClient.getOrCreate(this) }
     private lateinit var status: TextView
     private lateinit var read: Button
+    private lateinit var history: Button
     private lateinit var save: Button
     private lateinit var saveActivity: Button
     private lateinit var send: Button
@@ -84,7 +90,7 @@ class MainActivity : ComponentActivity() {
         val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(padding, padding, padding, padding) }
         fun paragraph(text: String) = TextView(this).apply { this.text = text; textSize = 18f; setPadding(0, 12, 0, 12); layout.addView(this) }
         paragraph("BEYOND Health Bridge").apply { textSize = 26f; ViewCompat.setAccessibilityHeading(this, true) }
-        paragraph("Read Garmin sleep, steps and heart rate from the last 7 days. Save a file, then review and confirm it in BEYOND. This helper does not sync automatically.")
+        paragraph("Read Garmin sleep, steps and heart rate from the last 7 days, or everything Health Connect has with READ FULL HISTORY. Save a file, then review and confirm it in BEYOND. This helper does not sync automatically.")
         paragraph("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps and heart rate (optional): hourly step totals, hourly heart-rate low/average/high and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. Each goes into its own file you save, or is sent straight to BEYOND through Android's share sheet. No account, server, Internet permission or other health categories. Your Health Connect data is never changed. Files may be private health information; choose a local folder and delete the file after importing.")
         status = paragraph("Ready. Complete Garmin's sync before reading. Sessions crossing the 7-day window edges are excluded.").apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }
         read = Button(this).apply {
@@ -95,6 +101,7 @@ class MainActivity : ComponentActivity() {
                 } else lifecycleScope.launch {
                     try {
                         // Ask again only while something is missing; Health Connect stops prompting after repeated declines.
+                        windowDays = 7
                         if (client.permissionController.getGrantedPermissions().containsAll(permissions + activityPermissions)) readSleep()
                         else requestPermission.launch(permissions + activityPermissions)
                     } catch (_: Exception) { clear("Health Connect could not be opened. Check sleep access in Android Settings and try again.") }
@@ -102,6 +109,22 @@ class MainActivity : ComponentActivity() {
             }
         }
         layout.addView(read)
+        history = Button(this).apply {
+            text = "READ FULL HISTORY"
+            setOnClickListener {
+                if (HealthConnectClient.getSdkStatus(this@MainActivity) != HealthConnectClient.SDK_AVAILABLE) {
+                    clear("Health Connect is unavailable or needs an update. Open Android Settings → Health Connect, update it, then return.")
+                } else lifecycleScope.launch {
+                    try {
+                        windowDays = MAX_EXPORT_DAYS
+                        val wanted = permissions + activityPermissions + (if (historyAvailable()) setOf(historyPermission) else emptySet())
+                        if (client.permissionController.getGrantedPermissions().containsAll(wanted)) readSleep()
+                        else requestPermission.launch(wanted)
+                    } catch (_: Exception) { clear("Health Connect could not be opened. Check access in Android Settings and try again.") }
+                }
+            }
+        }
+        layout.addView(history)
         save = Button(this).apply { text = "SAVE SLEEP FILE"; isEnabled = false; setOnClickListener { saveFile.launch("beyond-sleep-${Instant.now().toString().replace(':', '-')}.json") } }
         layout.addView(save)
         saveActivity = Button(this).apply { text = "SAVE STEPS AND HEART RATE FILE"; isEnabled = false; setOnClickListener { saveActivityFile.launch("beyond-activity-${Instant.now().toString().replace(':', '-')}.json") } }
@@ -126,13 +149,15 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun setWorking(value: Boolean) {
-        working = value; read.isEnabled = !value
+        working = value; read.isEnabled = !value; history.isEnabled = !value
         save.isEnabled = !value && prepared != null; saveActivity.isEnabled = !value && preparedActivity != null
         send.isEnabled = !value && (prepared != null || preparedActivity != null)
     }
     private fun clear(message: String) {
         prepared = null; preparedActivity = null; save.isEnabled = false; saveActivity.isEnabled = false; send.isEnabled = false; status.text = message
     }
+    private fun historyAvailable() = client.features.getFeatureStatus(HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_HISTORY) ==
+        HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
     private fun shareDir() = File(cacheDir, "share")
     /** Shared copies live only in the helper's private cache and are removed on the next launch or send. */
     private fun clearShared() { shareDir().listFiles()?.forEach { it.delete() } }
@@ -178,7 +203,7 @@ class MainActivity : ComponentActivity() {
             try {
                 require(client.permissionController.getGrantedPermissions().containsAll(permissions))
                 val end = Instant.now()
-                val start = end.minus(7, ChronoUnit.DAYS)
+                val start = end.minus(windowDays, ChronoUnit.DAYS)
                 val records = mutableListOf<ExportSleep>()
                 var token: String? = null
                 val seenTokens = mutableSetOf<String>()
@@ -199,12 +224,12 @@ class MainActivity : ComponentActivity() {
                                 else -> "UNKNOWN"
                             }) }))
                     }
-                    require(records.size <= 500 && records.sumOf { it.stages.size } <= 15000)
+                    require(records.size <= 2000 && records.sumOf { it.stages.size } <= 60000)
                     token = response.pageToken
                     if (token != null) require(seenTokens.add(token))
                 } while (token != null)
                 prepared = sleepExport(records, start, end, Instant.now(), BuildConfig.VERSION_NAME)
-                val sleepLine = "${records.size} Garmin sleep sessions ready. ${if (records.isEmpty()) "No matching sessions: check Garmin sync and Health Connect sleep entries." else "Save the file, then preview it in BEYOND."}"
+                val sleepLine = "${if (windowDays > 7) "Full history (up to $windowDays days): " else ""}${records.size} Garmin sleep sessions ready. ${if (records.isEmpty()) "No matching sessions: check Garmin sync and Health Connect sleep entries." else "Save the file, then preview it in BEYOND."}"
                 val activityLine = try { readActivity() } catch (_: Exception) {
                     preparedActivity = null
                     "Steps and heart rate could not be read; sleep is unaffected."
@@ -219,7 +244,7 @@ class MainActivity : ComponentActivity() {
         val granted = client.permissionController.getGrantedPermissions()
         if (granted.intersect(activityPermissions).isEmpty()) return "Steps and heart rate were not allowed; only sleep was read."
         val end = Instant.now().truncatedTo(ChronoUnit.HOURS)
-        val start = end.minus(7, ChronoUnit.DAYS)
+        val start = end.minus(windowDays, ChronoUnit.DAYS)
         val garmin = setOf(DataOrigin(GARMIN_PACKAGE))
         val metrics = buildSet {
             if (stepsPermission in granted) add(StepsRecord.COUNT_TOTAL)
@@ -227,12 +252,19 @@ class MainActivity : ComponentActivity() {
         }
         // An implausible value is dropped on its own instead of failing the whole file.
         fun bpm(value: Long?) = value?.takeIf { it in 20..300 }
-        val hours = if (metrics.isEmpty()) emptyList() else client.aggregateGroupByDuration(AggregateGroupByDurationRequest(metrics,
-            TimeRangeFilter.between(start, end), Duration.ofHours(1), garmin)).mapNotNull { bucket ->
-            val r = bucket.result
-            val hour = ExportHour(bucket.startTime, bucket.zoneOffset.totalSeconds, r[StepsRecord.COUNT_TOTAL]?.takeIf { it in 0..100_000 },
-                bpm(r[HeartRateRecord.BPM_MIN]), bpm(r[HeartRateRecord.BPM_AVG]), bpm(r[HeartRateRecord.BPM_MAX]))
-            if (hour.steps == null && hour.heartRateAvg == null) null else hour
+        // Health Connect aggregates in 30-day slices so a full-history read stays within its query limits.
+        val hours = mutableListOf<ExportHour>()
+        var sliceStart = start
+        while (metrics.isNotEmpty() && sliceStart < end) {
+            val sliceEnd = minOf(sliceStart.plus(30, ChronoUnit.DAYS), end)
+            client.aggregateGroupByDuration(AggregateGroupByDurationRequest(metrics,
+                TimeRangeFilter.between(sliceStart, sliceEnd), Duration.ofHours(1), garmin)).forEach { bucket ->
+                val r = bucket.result
+                val hour = ExportHour(bucket.startTime, bucket.zoneOffset.totalSeconds, r[StepsRecord.COUNT_TOTAL]?.takeIf { it in 0..100_000 },
+                    bpm(r[HeartRateRecord.BPM_MIN]), bpm(r[HeartRateRecord.BPM_AVG]), bpm(r[HeartRateRecord.BPM_MAX]))
+                if (hour.steps != null || hour.heartRateAvg != null) hours.add(hour)
+            }
+            sliceStart = sliceEnd
         }
         val resting = mutableListOf<ExportRestingHeartRate>()
         if (restingPermission in granted) {
@@ -245,7 +277,7 @@ class MainActivity : ComponentActivity() {
                     resting.add(ExportRestingHeartRate(r.metadata.id, r.metadata.dataOrigin.packageName, r.metadata.lastModifiedTime,
                         r.time, r.zoneOffset?.totalSeconds, r.beatsPerMinute))
                 }
-                require(resting.size <= 500)
+                require(resting.size <= 1000)
                 token = response.pageToken
                 if (token != null) require(seenTokens.add(token))
             } while (token != null)

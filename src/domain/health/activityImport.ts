@@ -1,4 +1,4 @@
-import { GARMIN_ORIGIN } from "./sleepImport";
+import { GARMIN_ORIGIN, MAX_EXPORT_WINDOW_MS } from "./sleepImport";
 
 /**
  * GARMIN-002: measured steps and heart rate from BEYOND Health Bridge. Evidence only — never a
@@ -6,9 +6,8 @@ import { GARMIN_ORIGIN } from "./sleepImport";
  * export replaces an older one for the same hour instead of keeping revisions.
  */
 export const ACTIVITY_IMPORT_FORMAT = "BEYOND_HEALTH_CONNECT_ACTIVITY";
-export const MAX_ACTIVITY_FILE_BYTES = 2 * 1024 * 1024;
+export const MAX_ACTIVITY_FILE_BYTES = 8 * 1024 * 1024;
 const HOUR_MS = 60 * 60 * 1000;
-const WEEK_MS = 7 * 24 * HOUR_MS;
 
 export interface ActivityHour {
   startTime: string; endTime: string; zoneOffsetSeconds: number | null; steps: number | null;
@@ -66,8 +65,8 @@ export function validateActivitySnapshot(value: unknown): ActivitySnapshot {
   const window = object(root.window, ["startTime", "endTime"]);
   const startTime = instant(window.startTime), endTime = instant(window.endTime);
   const from = Date.parse(startTime), to = Date.parse(endTime);
-  if (to <= from || to - from > WEEK_MS || to > Date.parse(exportedAt)) return fail();
-  if (!Array.isArray(root.hours) || root.hours.length > 7 * 24) return fail();
+  if (to <= from || to - from > MAX_EXPORT_WINDOW_MS || to > Date.parse(exportedAt)) return fail();
+  if (!Array.isArray(root.hours) || root.hours.length > 366 * 24) return fail();
   const seenHours = new Set<string>();
   const hours = root.hours.map((input): ActivityHour => {
     const h = object(input, ["startTime", "endTime", "zoneOffsetSeconds", "steps", "heartRateMinBpm", "heartRateAvgBpm", "heartRateMaxBpm"]);
@@ -80,7 +79,7 @@ export function validateActivitySnapshot(value: unknown): ActivitySnapshot {
     if (steps === null && avg === null) return fail();
     return { startTime: start, endTime: end, zoneOffsetSeconds: offset(h.zoneOffsetSeconds), steps, heartRateMinBpm: min, heartRateAvgBpm: avg, heartRateMaxBpm: max };
   });
-  if (!Array.isArray(root.restingHeartRate) || root.restingHeartRate.length > 500) return fail();
+  if (!Array.isArray(root.restingHeartRate) || root.restingHeartRate.length > 1000) return fail();
   const seenIds = new Set<string>();
   const restingHeartRate = root.restingHeartRate.map((input): RestingHeartRate => {
     const r = object(input, ["id", "dataOriginPackage", "lastModifiedTime", "time", "zoneOffsetSeconds", "bpm"]);

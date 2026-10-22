@@ -21,13 +21,13 @@ describe("sleep interchange boundary", () => {
     (f: SleepSnapshotMutable) => { f.records.push(f.records[0]); },
     (f: SleepSnapshotMutable) => { f.records[0].startTime = "2026-02-30T00:00:00Z"; },
     (f: SleepSnapshotMutable) => { f.records[0].endTime = f.records[0].startTime; },
-    (f: SleepSnapshotMutable) => { f.window.startTime = "2026-10-01T00:00:00Z"; },
+    (f: SleepSnapshotMutable) => { f.window.startTime = "2025-10-17T00:00:00Z"; },
     (f: SleepSnapshotMutable) => { f.window.endTime = "2026-10-20T00:00:00Z"; },
     (f: SleepSnapshotMutable) => { f.records[0].startZoneOffsetSeconds = 70000; },
     (f: SleepSnapshotMutable) => { f.records[0].stages[1].startTime = f.records[0].startTime; },
     (f: SleepSnapshotMutable) => { f.records[0].stages[0].type = "SNOOZING"; },
     (f: SleepSnapshotMutable) => { f.records[0].title = "unexpected"; },
-    (f: SleepSnapshotMutable) => { f.records = Array.from({ length: 501 }, (_, i) => ({ ...f.records[0], id: `${i}` })); },
+    (f: SleepSnapshotMutable) => { f.records = Array.from({ length: 2001 }, (_, i) => ({ ...f.records[0], id: `${i}` })); },
   ])("rejects an unsupported or malformed export", (mutate) => {
     const file = syntheticSleep(); mutate(file);
     expect(() => validateSleepSnapshot(file)).toThrow();

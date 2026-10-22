@@ -50,7 +50,7 @@ describe("share target service worker", () => {
     expect(await dispatch(new Request(`${SCOPE}share-target`))).toBeNull();
     expect(await dispatch(new Request(`${SCOPE}other`, { method: "POST", body: "x" }))).toBeNull();
     const form = new FormData();
-    form.append("health", shared("big.json", "x".repeat(2 * 1024 * 1024 + 1)));
+    form.append("health", shared("big.json", "x".repeat(8 * 1024 * 1024 + 1)));
     expect((await dispatch(new Request(`${SCOPE}share-target`, { method: "POST", body: form })))!.status).toBe(303);
     expect(store.get("beyond-shared-health")!.size).toBe(0);
   });

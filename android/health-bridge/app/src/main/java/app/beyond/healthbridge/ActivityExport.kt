@@ -19,9 +19,9 @@ private fun nullable(value: Any?): Any = value ?: JSONObject.NULL
 /** Versioned interchange for steps and heart rate. Separate from the sleep file, whose format is unchanged. */
 fun activityExport(hours: List<ExportHour>, resting: List<ExportRestingHeartRate>, start: Instant, end: Instant,
     exported: Instant, version: String): String {
-    require(start < end && Duration.between(start, end).seconds <= 7 * 86400 && end <= exported)
-    require(hours.size <= 7 * 24 && hours.map { it.start }.distinct().size == hours.size)
-    require(resting.size <= 500 && resting.map { it.id }.distinct().size == resting.size)
+    require(start < end && Duration.between(start, end).seconds <= MAX_EXPORT_DAYS * 86400 && end <= exported)
+    require(hours.size <= MAX_EXPORT_DAYS * 24 && hours.map { it.start }.distinct().size == hours.size)
+    require(resting.size <= 1000 && resting.map { it.id }.distinct().size == resting.size)
     val rows = JSONArray()
     hours.sortedBy { it.start }.forEach { h ->
         require(h.start >= start && h.start.plus(Duration.ofHours(1)) <= end && h.start.epochSecond % 3600 == 0L)
@@ -44,7 +44,7 @@ fun activityExport(hours: List<ExportHour>, resting: List<ExportRestingHeartRate
         .put("producer", JSONObject().put("name", "BEYOND Health Bridge").put("version", version))
         .put("source", GARMIN_PACKAGE).put("exportedAt", exported.toString())
         .put("window", JSONObject().put("startTime", start.toString()).put("endTime", end.toString()))
-        .put("hours", rows).put("restingHeartRate", restingRows).toString(2)
-    require(result.toByteArray(Charsets.UTF_8).size <= 2 * 1024 * 1024) { "Export exceeds the file limit." }
+        .put("hours", rows).put("restingHeartRate", restingRows).toString()
+    require(result.toByteArray(Charsets.UTF_8).size <= MAX_EXPORT_BYTES) { "Export exceeds the file limit." }
     return result
 }

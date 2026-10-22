@@ -21,13 +21,16 @@ export async function importActivitySnapshot(input: unknown): Promise<{ inserted
   return db.transaction("rw", [db.externalActivityHours, db.externalRestingHeartRates, db.healthImportReceipts], async () => {
     const receiptId = crypto.randomUUID(), importedAt = new Date().toISOString();
     const result = { inserted: 0, revised: 0, skipped: 0 };
-    for (const hour of snapshot.hours) {
-      const existing = await db.externalActivityHours.get(hour.startTime);
-      if (existing && compareSleepInstants(snapshot.exportedAt, existing.exportedAt) <= 0) { result.skipped++; continue; }
-      const row: ExternalActivityHour = { ...hour, id: hour.startTime, exportedAt: snapshot.exportedAt, receiptId };
-      await db.externalActivityHours.put(row);
+    // GARMIN-003: a full-history file can hold ~8,800 hours, so read and write them in bulk.
+    const existingHours = await db.externalActivityHours.bulkGet(snapshot.hours.map((h) => h.startTime));
+    const rows: ExternalActivityHour[] = [];
+    snapshot.hours.forEach((hour, i) => {
+      const existing = existingHours[i];
+      if (existing && compareSleepInstants(snapshot.exportedAt, existing.exportedAt) <= 0) { result.skipped++; return; }
+      rows.push({ ...hour, id: hour.startTime, exportedAt: snapshot.exportedAt, receiptId });
       if (existing) result.revised++; else result.inserted++;
-    }
+    });
+    await db.externalActivityHours.bulkPut(rows);
     for (const reading of snapshot.restingHeartRate) {
       const key = restingHeartRateKey(reading);
       const existing = await db.externalRestingHeartRates.get(key);

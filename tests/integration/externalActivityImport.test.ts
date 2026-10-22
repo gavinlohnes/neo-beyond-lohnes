@@ -73,7 +73,7 @@ describe("measured steps and heart rate import", () => {
     expect(parse((s) => { s.hours.push({ ...s.hours[0]! }); })).toThrow();
     expect(parse((s) => { s.restingHeartRate[0]!.dataOriginPackage = "phone"; })).toThrow();
     expect(parse((s) => { (s as unknown as Record<string, unknown>).extra = 1; })).toThrow();
-    expect(parse((s) => { s.window.startTime = "2026-10-11T23:00:00Z"; })).toThrow();
+    expect(parse((s) => { s.window.startTime = "2025-10-17T00:00:00Z"; })).toThrow();
     await expect(importActivitySnapshot({ format: "BEYOND_HEALTH_CONNECT_SLEEP" })).rejects.toThrow();
     expect(await db.externalActivityHours.count()).toBe(0);
   });
