@@ -133,7 +133,7 @@ describe("getLastPerformedSetForExercise — pre-fill source for a new set", () 
     await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
 
     const result = await getLastPerformedSetForExercise("A", "STANDARD", "machine-chest-press");
-    expect(result).toEqual({ weight: 135, reps: 10, recordedAt: (await getPerformedSets(session.id))[0]!.recordedAt });
+    expect(result).toEqual({ weight: 135, reps: 10, recordedAt: (await getPerformedSets(session.id)).find((s) => s.setNumber === 1)!.recordedAt });
   });
 
   it("uses the MOST RECENT matching session, not an older one", async () => {

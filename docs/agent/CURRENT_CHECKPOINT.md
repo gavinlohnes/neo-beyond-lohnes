@@ -1,36 +1,29 @@
-# REDESIGN-001 — finishing acceptance; PR remains draft
+# REDESIGN-001 — acceptance complete; awaiting independent review
 
-- **Builder / objective:** Codex, owner-approved PROTECTED [REDESIGN-001](REDESIGN-001.md).
+- **Builder / objective:** owner-approved PROTECTED [REDESIGN-001](REDESIGN-001.md).
   Branch `codex/redesign-001`; [PR #261](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/261).
-  Continue this branch; never merge or start another objective. Claude reviews the final exact head.
-- **Baseline:** started at master `9f0f2c23efadb7925051172e5eeac48f5882f70f` after #251.
-  Integrated master `cb4f0df7f1c35843f7aa8d5dc53b42050fd4969e` at `c33514d`, preserving its
-  Garmin import/share-target/source behavior. No new Garmin work is authorized here.
-- **Done:** frozen attachments committed unchanged; items 1–7 built and pushed. TODAY's five
-  sections, global logging sheets, BODY numbers/progress/history, TRAIN switcher, grouped COMMAND,
-  optional-feature switches and plain labels. Locked rulings are recorded in UX_DECISIONS.
+  Codex built items 1–8. On 2026-10-22 Gavin asked Claude Code to finish it; Claude Code
+  completed the final gate with a single test-only fix.
+- **Baseline:** started at master `9f0f2c23efadb7925051172e5eeac48f5882f70f`; integrates master
+  `cb4f0df7f1c35843f7aa8d5dc53b42050fd4969e` with its Garmin import/share-target/source behavior.
+- **Done:** frozen attachments committed unchanged; items 1–8 implemented, with the locked
+  rulings recorded in UX_DECISIONS.
 - **Approved exception:** Gavin's “Yes, I approve” on 2026-10-22 authorizes the bounded canonical
   meal/provenance extension for one-off meals and fractional servings. [Ruling](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/261#issuecomment-6330409263).
   No schema, backup format, migration, Engine rule, dependency or protected-fixture change.
-- **Verified progress:** `5ec05f1` restores canonical duplicate choices and actionable save failures;
-  its 17 sheet cases passed. `f5f4103` migrates COMMAND/BODY/TRAIN regression paths: 199/213
-  passed in the broad batch; all 14 remaining cases passed focused rechecks. Typecheck and
-  architecture pass. Subsequent acceptance corrections preserve signal wording/glitch boundaries,
-  source-return labels, meal-sheet scroll/focus, keyboard containment, in-flight logging guards,
-  ON SHIFT button contrast and fresh-install/pinned-mode scene layout. Latest affected batch:
-  123/124 passed, followed by the final scoped Attention case passing its recheck.
-  No tests/axe rules were disabled; former flows now use approved production paths.
-- **Full-gate truth:** full verification at `b403caa` completed with **2,846 passed / six
-  failed / one existing skip** across 286 files. The six failures were two ambiguous selectors,
-  three instances of remaining Inspect/Open display copy, and stealth return-focus timing.
-  Those corrections passed all **25 cases in the four affected browser suites**; TypeScript
-  passes. Production build/mobile/offline evidence and final full verification follow.
-- **Next:** finish affected regression fixes; run full verification and the built production
-  mobile/offline acceptance script. Refresh screenshots, update PR Handoff, mark ready only after
-  acceptance, and request independent Claude exact-head review. Gavin alone decides merge.
+- **Final fix:** CI at `4d26418` had one failure (2,851 passed). The LAST TIME `recordedAt` test
+  read `getPerformedSets(...)[0]`, which comes back in random id order, instead of set 1. The
+  test now selects set 1. No product code changed.
+- **Verified:** `npm run verify` passes locally: architecture OK, 286 files / 2,852 passed /
+  one existing skip, build OK. Built production acceptance (`scripts/verify-redesign-001.mjs`)
+  passes at 320/360/390/412 px with offline cold reload; screenshots and
+  `final-acceptance.json` refreshed in `docs/screenshots/redesign-001/`.
+- **Next:** green required CI on the final head, then an independent exact-head review by a
+  reviewer that did not build this PR. Gavin alone decides merge.
 - **Preservation / limits:** unrelated daily-operations work remains in stash
-  `e1396c8e7ab549dec117e0f631a0c7e1144af309`; do not apply it here. Synthetic test data only.
-  Physical phones, Safari and screen-reader/device-keyboard testing remain unverified.
+  `e1396c8e7ab549dec117e0f631a0c7e1144af309` (Codex's machine); do not apply it here. Synthetic
+  test data only. Physical phones, Safari and screen-reader/device-keyboard testing remain
+  unverified; the existing bundle-size warning remains.
 
 ---
 Previous checkpoint (historical; Garmin is not this objective):

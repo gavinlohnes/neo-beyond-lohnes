@@ -49,3 +49,12 @@ COMMAND index and named-meal servings screenshots at every width; `item-5-accept
 Seven new COMMAND and nine TODAY cases pass. Destination subset: 62 passed and one stale
 selector, corrected and rechecked successfully (53 excluded by the focused name filter).
 Production build, architecture and all-width offline checks pass. Full objective gate pending.
+
+## Final acceptance
+
+`final-acceptance.json` and every screenshot here were refreshed from the built production app
+at `4d26418` (the app source of the final head; the only later change is a test-ordering fix).
+At 320, 360, 390 and 412 px: TODAY's five sections in order in all four modes, the check-in
+sheet, visible water UNDO above navigation, and offline cold reload all pass with no page
+errors. Full `npm run verify`: architecture OK, 286 files / 2,852 passed / one existing skip,
+build OK. Physical phones, Safari and screen readers remain unverified.
