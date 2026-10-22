@@ -124,28 +124,35 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const MIN_GARMIN_SLEEP_MINUTES = 10;
 /**
  * GARMIN-003 (owner ruling, approach A): which lived day each Garmin sleep belongs to and whether it
- * is that day's main sleep. A sleep belongs to the existing day it starts in (day start ≤ sleep start
- * < next day start, at most 24 hours); with no such day it stays evidence. The longest sleep in a day
+ * is that day's main sleep. A sleep belongs to the day the owner explicitly linked it to in the import
+ * preview; otherwise to the existing day it starts in (day start ≤ sleep start < next day start, at most
+ * 24 hours); with no such day it stays evidence. The longest sleep in a day
  * is PRIMARY; the rest are SUPPLEMENTAL. Minutes are the asleep total when the stages are complete,
  * otherwise the session span.
  */
 export function assignGarminSleep(days: readonly { id: string; startedAt: string }[],
-  records: readonly { recordKey: string; sourceVersion: string; evidence: ExternalSleep }[]): GarminSleepAssignment[] {
+  records: readonly { recordKey: string; sourceVersion: string; evidence: ExternalSleep; associatedDayId?: string | null }[]): GarminSleepAssignment[] {
   const starts = days.map((d) => ({ id: d.id, at: Date.parse(d.startedAt) })).sort((a, b) => a.at - b.at);
   const byDay = new Map<string, Omit<GarminSleepAssignment, "kind">[]>();
+  const known = new Set(starts.map((s) => s.id));
   for (const r of records) {
-    const t = Date.parse(r.evidence.startTime);
-    let i = -1;
-    for (let j = 0; j < starts.length && starts[j]!.at <= t; j++) i = j;
-    if (i === -1) continue;
-    const limit = Math.min(starts[i]!.at + DAY_MS, starts[i + 1]?.at ?? Infinity);
-    if (t >= limit) continue;
+    // The owner's explicit link from the import preview wins over the automatic rule.
+    let dayId: string | null = r.associatedDayId && known.has(r.associatedDayId) ? r.associatedDayId : null;
+    if (!dayId) {
+      const t = Date.parse(r.evidence.startTime);
+      let i = -1;
+      for (let j = 0; j < starts.length && starts[j]!.at <= t; j++) i = j;
+      if (i === -1) continue;
+      const limit = Math.min(starts[i]!.at + DAY_MS, starts[i + 1]?.at ?? Infinity);
+      if (t >= limit) continue;
+      dayId = starts[i]!.id;
+    }
     const { spanMinutes, asleepMinutes } = sleepDurations(r.evidence);
     const minutes = Math.round(asleepMinutes ?? spanMinutes);
     if (minutes < MIN_GARMIN_SLEEP_MINUTES) continue;
-    const list = byDay.get(starts[i]!.id) ?? [];
-    list.push({ dayId: starts[i]!.id, recordKey: r.recordKey, minutes, endTime: r.evidence.endTime, sourceVersion: r.sourceVersion });
-    byDay.set(starts[i]!.id, list);
+    const list = byDay.get(dayId) ?? [];
+    list.push({ dayId, recordKey: r.recordKey, minutes, endTime: r.evidence.endTime, sourceVersion: r.sourceVersion });
+    byDay.set(dayId, list);
   }
   return [...byDay.values()].flatMap((list) => list
     .sort((a, b) => b.minutes - a.minutes || a.endTime.localeCompare(b.endTime))
