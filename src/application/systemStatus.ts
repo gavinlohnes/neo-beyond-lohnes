@@ -77,7 +77,7 @@ export const MAIN_SLEEP_FRESH_HOURS = 36;
  * sleep from weeks ago must never color today). SUIT-001's SYSTEMS line and
  * readout show this same entry, so they can never disagree with the status.
  */
-export async function getLastMainSleep(activeDayId: string, now: Date = new Date()): Promise<{ minutes: number; recordedAt: string } | null> {
+export async function getLastMainSleep(activeDayId: string, now: Date = new Date()): Promise<{ minutes: number; recordedAt: string; fromGarmin: boolean } | null> {
   const days = (await db.beyondDays.toArray()).sort((a, b) => b.startedAt.localeCompare(a.startedAt));
   const index = days.findIndex((d) => d.id === activeDayId);
   const since = now.getTime() - MAIN_SLEEP_FRESH_HOURS * 60 * 60 * 1000;
@@ -85,7 +85,7 @@ export async function getLastMainSleep(activeDayId: string, now: Date = new Date
     const primary = (await getSleepEntries(day.id)).filter((e) => e.kind === "PRIMARY");
     if (primary.length === 0) continue;
     const last = primary.at(-1)!;
-    return new Date(last.recordedAt).getTime() >= since ? { minutes: last.effectiveDurationMinutes, recordedAt: last.recordedAt } : null;
+    return new Date(last.recordedAt).getTime() >= since ? { minutes: last.effectiveDurationMinutes, recordedAt: last.recordedAt, fromGarmin: last.fromGarmin } : null;
   }
   return null;
 }

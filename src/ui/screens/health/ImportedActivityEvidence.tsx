@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getMeasuredActivityByDay, type MeasuredDay } from "../../../application/externalActivityCommands";
-import { heartRateLine, localDayTime } from "./healthFormat";
+import { heartRateLine } from "./healthFormat";
+
+const dayLabel = (at: string | number) => new Date(at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
 /** GARMIN-002: measured Garmin steps and heart rate per lived day. Separate from manual logs and guidance. */
 export function ImportedActivityEvidence({ active = true, refreshKey = 0 }: { active?: boolean; refreshKey?: number }) {
@@ -14,16 +16,14 @@ export function ImportedActivityEvidence({ active = true, refreshKey = 0 }: { ac
   if (!error && !rows.length) return null;
   return <section aria-label="Measured steps and heart rate" className="health-import">
     <h2>MEASURED · GARMIN</h2>
-    <p>Steps and heart rate your watch recorded, by lived day (up to 24 hours each). Separate from your own logs and TODAY guidance.</p>
+    <p>Recent watch measurements. Select a day for source detail.</p>
     {error ? <><p role="alert">Measured steps and heart rate could not be loaded.</p><button type="button" onClick={() => setAttempt((n) => n + 1)}>RETRY</button></> :
       rows.map(({ day, from, measured, restingHeartRateBpm }) => {
-        const title = day ? `Day started ${localDayTime(day.startedAt)}` : `No BEYOND day · from ${localDayTime(from)}`;
+        const title = dayLabel(day?.startedAt ?? from);
         return <article key={from} aria-label={title}>
           <h3>{title}</h3>
-          <p>{measured.steps === null ? "Steps not measured" : `${measured.steps.toLocaleString("en-US")} steps`}</p>
-          <p>{heartRateLine(measured.heartRateMinBpm, measured.heartRateAvgBpm, measured.heartRateMaxBpm)}</p>
-          {restingHeartRateBpm !== null && <p>Resting heart rate {restingHeartRateBpm} bpm</p>}
-          <p>{measured.hours} measured {measured.hours === 1 ? "hour" : "hours"}{day?.status === "ACTIVE" ? " so far" : ""}</p>
+          <p>{measured.steps === null ? "Steps —" : `${measured.steps.toLocaleString("en-US")} steps`}{restingHeartRateBpm !== null ? ` · resting HR ${restingHeartRateBpm}` : ""} · {measured.hours}h coverage{day?.status === "ACTIVE" ? " so far" : ""}</p>
+          <details><summary>Day details</summary><p>{heartRateLine(measured.heartRateMinBpm, measured.heartRateAvgBpm, measured.heartRateMaxBpm)}</p><p>{day ? "Matched to your BEYOND day." : "Garmin measurement without a matching BEYOND day."}</p></details>
         </article>;
       })}
   </section>;

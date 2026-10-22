@@ -1,3 +1,29 @@
+# UX-COHESION-001 — quiet by default
+
+- **Objective / authority:** Gavin approved the expanded mobile UX audit and its preferred
+  `Quiet by Default` plan on 2026-10-22. Protected primary-information presentation work. Brief:
+  [UX-COHESION-001.md](UX-COHESION-001.md).
+- **Builder / baseline:** Codex on `codex/ux-cohesion-001`, starting from freshly fetched master
+  `f1aeecf9e194b683bf2b03fa003730f01c2b6349` after GARMIN-005 merged.
+- **Current bounded slice:** sleep truth/provenance and calm Garmin import/history. TODAY uses a
+  measured Garmin sleep value when no operator-confirmed sleep exists and labels the source;
+  operator-entered sleep still wins. Import previews lead with count/date range and lazily render
+  individual sessions only on request. The importer no longer appends stored history. BODY keeps
+  the combined compact Garmin archive behind one deliberate `Garmin history` disclosure. No data,
+  import safety, schema, Engine, guidance, four-tab navigation or capability was removed.
+- **Verified so far:** typecheck; focused browser coverage 61/61 across import, Garmin, connected
+  health, BODY navigation, phone fit and accessibility at mobile widths. Large-preview regression
+  proves 68 sessions create no record cards until review is requested. Full verification passed
+  architecture and 2,878 tests / one skip, with one unrelated full-load TODAY check-in timing
+  failure; that exact test then passed in isolation and the production build passed. Required CI is
+  the clean full-gate authority.
+- **Next:** full verification, production acceptance/screenshots, PR, independent exact-head
+  review and green CI. Gavin alone decides merge. Later approved UX-COHESION slices remain separate
+  so this trust/clutter correction stays reviewable.
+
+---
+Previous checkpoint:
+
 # GARMIN-005 — eaten vs burned
 
 - **Objective / authority:** Gavin approved [GARMIN-005](GARMIN-005.md) on 2026-10-22 ("Approved.

@@ -41,7 +41,7 @@ describe("GARMIN-004 — Garmin numbers on TODAY", () => {
     const steps = screen.getByRole("button", { name: /^Steps [\d,]+, usual [\d,]+, open steps$/ });
     await expect.element(steps).toBeVisible();
     await expect.element(screen.getByRole("button", { name: /^Resting heart rate \d+ bpm, usual \d+, open resting heart rate$/ })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: /^Main sleep .*, usual \d+:\d\d, open sleep$/ })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: /^Sleep .*, (garmin|logged), usual \d+:\d\d, open sleep$/ })).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     if (width === 390) await shot("390-today");
 

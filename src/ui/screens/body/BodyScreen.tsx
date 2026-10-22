@@ -310,6 +310,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     });
   }
   const [otherToolsOpen, setOtherToolsOpen] = useState(focus === "urge");
+  const [garminHistoryOpen, setGarminHistoryOpen] = useState(false);
   const [readingsReady, setReadingsReady] = useState(false);
   const [readCorrectionKey, setReadCorrectionKey] = useState<number | null>(null);
   const [dataRevision, setDataRevision] = useState(0);
@@ -2497,8 +2498,10 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       <section aria-label="History"><h2 className="section-label">HISTORY</h2>
         <HealthDayBrowser selected={healthDay} disabled={busy} visible={visible && !progressOpen} refreshKey={dataRevision} onHistory={onHealthHistory} onSelect={setHealthDay} onExplore={showProgress} onInspect={(selection) => openSources(selection, true)} />
         {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} holdToInspect onInspect={(record) => onEditRecord?.(record, day.id)} />}
-        {!healthDay && <ImportedActivityEvidence active={visible && !progressOpen} />}
-        <details><summary>Imported source evidence</summary><ImportedSleepEvidence active={visible && !progressOpen} /></details>
+        {!healthDay && <details open={garminHistoryOpen} onToggle={(event) => setGarminHistoryOpen(event.currentTarget.open)}>
+          <summary>Garmin history</summary>
+          {garminHistoryOpen && <><ImportedActivityEvidence active={visible && !progressOpen} /><ImportedSleepEvidence active={visible && !progressOpen} /></>}
+        </details>}
       </section>
     </div>
     <div hidden={!progressOpen}>
@@ -2654,8 +2657,10 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       </div>
       {readingsReady && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries}
         protein={proteinEntries} meals={mealEntries} disabled={busy || foodSearchBusy} onInspect={inspectRecord} />}
-      {!waterFocused && <ImportedActivityEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} />}
-      {!waterFocused && <ImportedSleepEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} />}
+      {!waterFocused && <details open={garminHistoryOpen} onToggle={(event) => setGarminHistoryOpen(event.currentTarget.open)}>
+        <summary>Garmin history</summary>
+        {garminHistoryOpen && <><ImportedActivityEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} /><ImportedSleepEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} /></>}
+      </details>}
       <FieldDisclosure summary={`${otherToolsOpen ? "HIDE" : "SHOW"} OTHER BODY TOOLS`} open={otherToolsOpen} onToggle={setOtherToolsOpen}>
         <QuitTracker initiallyOpen={focus === "urge"} openRequest={focus === "urge" ? focusRequest : 0} />
         <p className="meta">Nutrition targets are editable in COMMAND → Settings.</p>
