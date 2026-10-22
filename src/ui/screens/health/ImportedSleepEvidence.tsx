@@ -8,10 +8,11 @@ export function SleepEvidence({ revision }: { revision: ExternalSleepRevision })
   const [error, setError] = useState(false);
   const r = revision.evidence, duration = sleepDurations(r);
   return <article aria-label="Imported Garmin sleep">
-    <h3>Garmin sleep · {localDayTime(r.startTime)} → {localTime(r.endTime)}</h3>
-    <p>{duration.asleepMinutes === null ? `${hoursMinutes(duration.spanMinutes)} in session · asleep total unavailable (stages missing or incomplete)` : `${hoursMinutes(duration.asleepMinutes)} asleep · ${hoursMinutes(duration.spanMinutes)} in session`}</p>
-    <p>{revision.associatedDayId ? `Linked to lived day ${revision.associatedDayId}` : "Source dates only · no lived day assigned"}</p>
+    <h3>{new Date(r.startTime).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</h3>
+    <p>{duration.asleepMinutes === null ? `${hoursMinutes(duration.spanMinutes)} session · asleep unavailable` : `${hoursMinutes(duration.asleepMinutes)} asleep`} · Garmin</p>
     <details><summary>Source details and revisions</summary>
+      <p>{localDayTime(r.startTime)} → {localTime(r.endTime)}</p>
+      <p>{revision.associatedDayId ? "Matched to your BEYOND day." : "Garmin measurement without a matching BEYOND day."}</p>
       <p>Source times (UTC): {r.startTime} → {r.endTime}</p>
       <p>Source: {r.dataOriginPackage}</p><p>Record: {r.id}</p>
       <p>Source modified: {r.lastModifiedTime}</p><p>Imported: {revision.importedAt}</p>
@@ -35,7 +36,7 @@ export function ImportedSleepEvidence({ active = true, refreshKey = 0 }: { activ
   }, [active, refreshKey, attempt]);
   if (!error && !rows.length) return null;
   return <section aria-label="Imported sleep evidence" className="health-import">
-    <h2>IMPORTED SLEEP</h2><p>Source records by date. Separate from manual sleep logs and TODAY guidance.</p>
+    <h2>GARMIN SLEEP</h2><p>Recent watch measurements. Select a night for source detail.</p>
     {error ? <><p role="alert">Imported sleep could not be loaded.</p><button type="button" onClick={() => setAttempt((n) => n + 1)}>RETRY</button></> : rows.slice(0, limit).map((row) => <SleepEvidence key={row.id} revision={row} />)}
     {rows.length > limit && <button type="button" onClick={() => setLimit((n) => n + 10)}>SHOW MORE SLEEP RECORDS</button>}
   </section>;

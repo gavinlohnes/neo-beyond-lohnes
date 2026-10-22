@@ -3,8 +3,6 @@ import { importSleepSnapshot, previewSleepImport } from "../../../application/ex
 import { getSleepImportDays } from "../../../application/externalSleepQueries";
 import { MAX_SLEEP_FILE_BYTES, sleepDurations, type SleepSnapshot } from "../../../domain/health/sleepImport";
 import type { BeyondDay } from "../../../domain/common/types";
-import { ImportedSleepEvidence } from "./ImportedSleepEvidence";
-import { ImportedActivityEvidence } from "./ImportedActivityEvidence";
 import { importActivitySnapshot, previewActivityImport } from "../../../application/externalActivityCommands";
 import { ACTIVITY_IMPORT_FORMAT, MAX_ACTIVITY_FILE_BYTES, summarizeActivity, type ActivitySnapshot } from "../../../domain/health/activityImport";
 import { heartRateLine, hoursMinutes, localDayTime, localTime } from "./healthFormat";
@@ -18,8 +16,8 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
   const [snapshot, setSnapshot] = useState<SleepSnapshot | null>(null), [days, setDays] = useState<BeyondDay[]>([]);
   const [associations, setAssociations] = useState<Record<string, string | null>>({});
   const [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState("");
-  const [refresh, setRefresh] = useState(0);
   const [activity, setActivity] = useState<ActivitySnapshot | null>(null);
+  const [sleepDetailsOpen, setSleepDetailsOpen] = useState(false);
   const locked = useRef(false), selection = useRef(0), result = useRef<HTMLParagraphElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => () => { selection.current++; }, []);
@@ -34,7 +32,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
   /** Each file fills its own preview: one sleep and one steps/heart-rate file can be reviewed together. */
   async function chooseMany(files: File[]) {
     const request = ++selection.current;
-    setSnapshot(null); setActivity(null); setAssociations({}); setMessage(""); setError("");
+    setSnapshot(null); setActivity(null); setAssociations({}); setSleepDetailsOpen(false); setMessage(""); setError("");
     if (!files.length) return;
     setBusy(true);
     const ready: string[] = [];
@@ -62,7 +60,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
     locked.current = true; setBusy(true); setError("");
     try {
       const counts = await importActivitySnapshot(activity);
-      setActivity(null); setRefresh((n) => n + 1);
+      setActivity(null);
       setMessage(`Imported ${counts.inserted} new, ${counts.revised} updated; ${counts.skipped} unchanged or older. Manual logs and guidance are unchanged.`);
       requestAnimationFrame(() => result.current?.focus());
     } catch (e) { setError(e instanceof Error ? e.message : "Import failed. Nothing was changed."); }
@@ -73,7 +71,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
     locked.current = true; setBusy(true); setError("");
     try {
       const counts = await importSleepSnapshot(snapshot, associations);
-      setSnapshot(null); setRefresh((n) => n + 1);
+      setSnapshot(null);
       // GARMIN-003: say what Garmin filled in; the owner's own entries are never replaced.
       const filled = counts.logged || counts.corrected
         ? ` Sleep filled in from Garmin: ${counts.logged} new, ${counts.corrected} updated. Your own sleep entries always win.`
@@ -93,10 +91,11 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
     <p ref={result} tabIndex={-1} role="status">{message}</p>
     {snapshot && <section aria-label="Sleep import preview">
       <h3>REVIEW SLEEP IMPORT</h3>
-      <p>Garmin Connect · {snapshot.records.length} records · exported {snapshot.exportedAt}</p>
-      <p>Window: {snapshot.window.startTime} → {snapshot.window.endTime} (UTC). Only complete sessions inside this window are included.</p>
-      <p>Repeated records are skipped. Newer source revisions retain earlier versions. An omitted source record is never treated as a deletion.</p>
-      {snapshot.records.map((r, i) => {
+      <p><strong>{snapshot.records.length} sleep {snapshot.records.length === 1 ? "session" : "sessions"}</strong> · {localDayTime(snapshot.window.startTime)} → {localDayTime(snapshot.window.endTime)}</p>
+      <p>Repeated or older records are skipped. Your own sleep entries always win.</p>
+      <details open={sleepDetailsOpen} onToggle={(event) => setSleepDetailsOpen(event.currentTarget.open)}>
+        <summary>Review individual sessions · {snapshot.records.length}</summary>
+      {sleepDetailsOpen && snapshot.records.map((r, i) => {
         const duration = sleepDurations(r);
         return <article key={r.id} aria-label={`Sleep preview ${i + 1}`}>
           <h4>Garmin sleep {i + 1} · {localDayTime(r.startTime)} → {localTime(r.endTime)}</h4>
@@ -110,6 +109,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
           </label>
         </article>;
       })}
+      </details>
       {!snapshot.records.length && <p>No Garmin sleep records in this export. Nothing will be saved.</p>}
       <button type="button" disabled={busy || !snapshot.records.length} onClick={() => void confirm()}>CONFIRM SLEEP IMPORT</button>
       <button type="button" disabled={busy} onClick={() => { selection.current++; setSnapshot(null); setAssociations({}); setMessage("Preview cancelled. Nothing was imported."); fileInput.current?.focus(); }}>CANCEL PREVIEW</button>
@@ -127,7 +127,5 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
         <button type="button" disabled={busy} onClick={() => { selection.current++; setActivity(null); setMessage("Preview cancelled. Nothing was imported."); fileInput.current?.focus(); }}>CANCEL PREVIEW</button>
       </section>;
     })()}
-    <ImportedActivityEvidence active={active} refreshKey={refresh} />
-    <ImportedSleepEvidence active={active} refreshKey={refresh} />
   </section>;
 }

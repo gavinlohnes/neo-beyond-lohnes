@@ -12,6 +12,27 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## UX-COHESION-001 — quiet by default (owner approved 2026-10-22)
+
+Gavin approved [the brief](agent/UX-COHESION-001.md) after field use showed that complete imported
+history was overwhelming routine mobile screens.
+
+- **Keep everything; show what matters:** valid local evidence is retained, but primary screens do
+  not grow with archive size. Recent summaries lead; long history and raw source evidence require a
+  deliberate request.
+- **Import is a task, not a history browser:** preview remains explicit and safe, but leads with
+  counts and a readable date range. Individual sessions are optional detail. Successful import ends
+  with a compact receipt; it does not append the stored archive.
+- **One truth with provenance:** `GARMIN` means measured automatically, `LOGGED` means entered or
+  confirmed by the operator, and calculated facts must be identified when ambiguity is possible.
+  A tile may not say “not logged” while opening a valid measured value.
+- **Progressive disclosure:** routine screens use familiar dates and compact rows. Raw identifiers,
+  UTC timestamps, revision history, internal lived-day boundaries and unmatched-source mechanics
+  belong behind source inspection.
+- **Stable structure:** TODAY acts and orients, TRAIN owns training, BODY owns health logging and
+  history, and COMMAND finds, plans and configures. The four primary tabs and all stored capability
+  remain.
+
 ## GARMIN-005 — eaten vs burned (owner approved 2026-10-22)
 
 Gavin approved [the brief](agent/GARMIN-005.md), including the defaults below and its wording table.

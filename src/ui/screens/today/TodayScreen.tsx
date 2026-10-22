@@ -187,6 +187,7 @@ import { ShiftHandoff } from "../../components/ShiftHandoff";
 import { clearModePin, getModePin, setModePin } from "../../../application/modePinQueries";
 import { mostRecentBoundaryAtOrBefore, nextRolloverBoundaryAfter } from "../../../engine/dayRollover";
 import { describeError } from "../../errorMessage";
+import { sleepMinutes as measuredSleepMinutes } from "../../../domain/health/measuredSeries";
 
 /** UNDO-001: what a TODAY log banner needs to undo the entry it confirms. */
 type LoggedEntry = { amount: number; eventId: string; dayId: string };
@@ -387,6 +388,7 @@ export function TodayScreen({
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   // SUIT-001: the SYSTEMS line's sleep reading — System Status's own last-main-sleep rule.
   const [lastMainSleepMinutes, setLastMainSleepMinutes] = useState<number | null>(null);
+  const [lastMainSleepFromGarmin, setLastMainSleepFromGarmin] = useState(false);
   // SUIT-001 signals: the browser's connection flag and the existing backup-due rule (same
   // setting and threshold as BackupDueLine), re-read whenever TODAY refreshes.
   const online = useOnline();
@@ -892,7 +894,7 @@ export function TodayScreen({
     setLastWaterAmount(lastWater);
     setWaterLogCount(waterLogs);
     setLatestWeightLbs(latestWeight);
-    if (isOwner) { setSystemStatus(nextSystemStatus); setLastMainSleepMinutes(nextLastMainSleep?.minutes ?? null); }
+    if (isOwner) { setSystemStatus(nextSystemStatus); setLastMainSleepMinutes(nextLastMainSleep?.minutes ?? null); setLastMainSleepFromGarmin(nextLastMainSleep?.fromGarmin ?? false); }
     // GARMIN-004: off the critical path; a failed Garmin read hides the Garmin tiles, nothing else.
     if (isOwner && !operationsOnly) void getMeasuredSnapshot().then((next) => { if (mountedRef.current && myRequestId === refreshRequestIdRef.current) setMeasured(next); }, () => { if (mountedRef.current) setMeasured(null); });
     const prompt = getBackupPrompt();
@@ -1923,6 +1925,9 @@ export function TodayScreen({
     const garminStale = calorieTile && measured!.caloriesAsOf !== null && measured!.readAt - measured!.caloriesAsOf > 12 * 3600_000;
     // Garmin publishes resting heart rate once a day, so the tile shows the latest from today or yesterday.
     const restingToday = measured?.resting.at(-1)?.value ?? measured?.resting.at(-2)?.value ?? null;
+    const garminSleepMinutes = measured?.lastNight ? measuredSleepMinutes(measured.lastNight) : null;
+    const visibleSleep = sleep ?? (garminSleepMinutes === null ? null : measuredClock(garminSleepMinutes));
+    const sleepSource = sleep ? (lastMainSleepFromGarmin ? "GARMIN" : "LOGGED") : garminSleepMinutes !== null ? "GARMIN" : "NOT LOGGED";
     const openMeasured = (metric: MeasuredMetric | null) => () => { if (busyRef.current) return; if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); };
     const tile = (metric: "water" | "protein" | "weight" | "sleep", label: string, value: ReactNode, below: ReactNode, spoken: string) =>
       <button type="button" disabled={busy || !onOpenHealthEvidence} aria-label={`${spoken}, explore records`} onClick={open(metric)}>
@@ -1945,8 +1950,8 @@ export function TodayScreen({
             <span className="cc-flab">{waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>, `Water ${minimumDayHydrateOz} oz`)}
           {tile("weight", "WEIGHT", <b>{latestWeightLbs === undefined ? "—" : latestWeightLbs.toFixed(1)}</b>,
             <span className="cc-flab">{latestWeightLbs === undefined ? "NOT LOGGED" : "LATEST"}</span>, latestWeightLbs === undefined ? "Weight not logged" : `Weight ${latestWeightLbs} lb`)}
-          {garminTiles ? <button type="button" disabled={busy} aria-label={`${sleep ? `Main sleep ${sleep}` : "Main sleep not logged"}${measured!.usual.sleep.value !== null ? `, usual ${measuredClock(measured!.usual.sleep.value)}` : ""}, open sleep`} onClick={openMeasured(measured!.lastNight ? "sleep" : null)}>
-            <span className="cc-flab">SLEEP</span><span className="cc-num"><b>{sleep ?? "—"}</b></span><span className="cc-flab">{measured!.usual.sleep.value !== null ? `USUAL ${measuredClock(measured!.usual.sleep.value)}` : sleep ? "LAST MAIN" : "NOT LOGGED"}</span>
+          {garminTiles ? <button type="button" disabled={busy} aria-label={`${visibleSleep ? `Sleep ${visibleSleep}, ${sleepSource.toLowerCase()}` : "Sleep not logged or measured"}${measured!.usual.sleep.value !== null ? `, usual ${measuredClock(measured!.usual.sleep.value)}` : ""}, open sleep`} onClick={sleep && !lastMainSleepFromGarmin ? open("sleep") : openMeasured(measured!.lastNight ? "sleep" : null)}>
+            <span className="cc-flab">SLEEP</span><span className="cc-num"><b>{visibleSleep ?? "—"}</b></span><span className="cc-flab">{sleepSource}</span>
           </button> : tile("sleep", "SLEEP", <b>{sleep ?? "—"}</b>, <span className="cc-flab">{sleep ? "LAST MAIN" : "NOT LOGGED"}</span>,
             sleep ? `Main sleep ${sleep}` : "Main sleep not logged")}
           {garminTiles && <>
