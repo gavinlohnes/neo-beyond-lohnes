@@ -125,6 +125,7 @@ describe("TrainScreen (real browser) — no active session", () => {
 describe("TrainScreen (real browser) — PLANNED WORK (TODAY-QUICKACTIONS-001)", () => {
   it("renders the PLANNED WORK toggle pre-session, unanswered, with no day/check-in yet", async () => {
     const screen = await render(<TrainScreen />);
+    await screen.getByText("PLANNED WORK", { exact: true }).first().click();
 
     await expect.element(screen.getByText("Planning to train today?", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "TRAIN TODAY" })).toBeVisible();
@@ -133,6 +134,7 @@ describe("TrainScreen (real browser) — PLANNED WORK (TODAY-QUICKACTIONS-001)",
 
   it("declaring TRAIN TODAY from TRAIN (never having visited TODAY) records the same PLANNED_WORK_SET fact TODAY's own toggle would", async () => {
     const screen = await render(<TrainScreen />);
+    await screen.getByText("PLANNED WORK", { exact: true }).first().click();
 
     await screen.getByRole("button", { name: "TRAIN TODAY" }).click();
     // Answered -> the toggle collapses to its settled-state summary row.
@@ -146,6 +148,7 @@ describe("TrainScreen (real browser) — PLANNED WORK (TODAY-QUICKACTIONS-001)",
 
   it("declaring NOT TODAY from TRAIN means a subsequent GREEN check-in does not resolve EXECUTE_PLANNED_WORK", async () => {
     const screen = await render(<TrainScreen />);
+    await screen.getByText("PLANNED WORK", { exact: true }).first().click();
 
     await screen.getByRole("button", { name: "NOT TODAY" }).click();
     await expect.element(screen.getByText("Not training today.", { exact: true })).toBeVisible();
@@ -162,6 +165,7 @@ describe("TrainScreen (real browser) — PLANNED WORK (TODAY-QUICKACTIONS-001)",
     await setPlannedWork(day.id, true);
 
     const screen = await render(<TrainScreen />);
+    await screen.getByText("PLANNED WORK", { exact: true }).first().click();
     await expect.element(screen.getByText("Training today.", { exact: true })).toBeVisible();
     expect(screen.getByText("Planning to train today?", { exact: true }).elements()).toHaveLength(0);
   });
@@ -1039,7 +1043,7 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
     await expect.element(screen.getByText("Machine Chest Press: heaviest yet (145 lb)", { exact: true })).toBeVisible();
   });
 
-  it("PR-CARDS-001: TRAIN → RECORDS keeps each PR as a card, newest first, without overflow", async () => {
+  it("REDESIGN-001: TRAIN → RECORDS leads with each exercise best and retains every PR in history", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     for (const [weight, reps] of [[135, 10], [145, 6], [145, 8]] as const) {
@@ -1048,18 +1052,20 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
       await completeWorkout(day.id, s.id, "STANDARD", "COMPLETED");
     }
     const screen = await render(<TrainScreen />);
-    await screen.getByRole("button", { name: "Open RECORDS" }).click();
+    await screen.getByRole("button", { name: "RECORDS", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "Records" })).toBeVisible();
     await expect
       .poll(() => [...document.querySelectorAll(".record-card .card-body")].map((el) => el.textContent))
-      .toEqual(["Most reps at 145 lb: 8", "Heaviest: 145 lb × 6"]);
-    expect(document.querySelectorAll(".record-card .pr-tag")).toHaveLength(2);
+      .toEqual(["Most reps at 145 lb: 8"]);
+    await screen.getByText("Every personal record · 2", { exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: /Machine Chest Press · Heaviest: 145 lb × 6/ })).toBeVisible();
+    expect(document.querySelectorAll(".record-card .pr-tag")).toHaveLength(1);
     for (const width of [320, 360, 412]) {
       await page.viewport(width, 800);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     }
     await screen.getByRole("button", { name: "BACK" }).click();
-    await expect.element(screen.getByRole("button", { name: "Open RECORDS" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "RECORDS", exact: true })).toBeVisible();
   });
 
   it("Drop 1.6a: LOG with empty boxes asks for reps and saves nothing", async () => {

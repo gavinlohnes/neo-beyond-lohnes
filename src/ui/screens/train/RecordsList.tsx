@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { describeRecordCard, getAllRecords, type RecordCard } from "../../../application/personalRecordQueries";
-import { StrengthCurve } from "./StrengthCurve";
+import { describeRecordCard, getAllRecords, getBestRecords, type RecordCard } from "../../../application/personalRecordQueries";
+import { LiftHistory } from "./LiftHistory";
 import { getExerciseNames } from "../../../application/exerciseLibraryQueries";
 
 /**
@@ -10,7 +10,10 @@ import { getExerciseNames } from "../../../application/exerciseLibraryQueries";
  *
  * VIEWS-001: tapping a card opens that lift's strength curve in place.
  */
-export function RecordsList({ onClose, focusExerciseId = null }: { onClose: () => void; focusExerciseId?: string | null }) {
+export function RecordsList({ onClose, focusExerciseId = null, active = true }: { onClose: () => void; focusExerciseId?: string | null; active?: boolean }) {
+  const [allRecords, setAllRecords] = useState<RecordCard[]>([]);
+  const [readError, setReadError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [records, setRecords] = useState<RecordCard[] | null>(null);
   const [curve, setCurve] = useState<{ exerciseId: string; exerciseName: string } | null>(null);
   // FIND-001: a LIFT or PR search result opens straight at that lift's curve.
@@ -30,20 +33,22 @@ export function RecordsList({ onClose, focusExerciseId = null }: { onClose: () =
   }, [focusExerciseId, focusExerciseName]);
 
   useEffect(() => {
+    if (!active) return;
     let current = true;
-    void getAllRecords().then((next) => {
-      if (current) setRecords(next);
-    });
-    return () => {
-      current = false;
-    };
-  }, []);
+    setReadError(false);
+    void getAllRecords().then(async (all) => {
+      const best = await getBestRecords(all);
+      if (current) { setRecords(best); setAllRecords(all); }
+    }, () => { if (current) setReadError(true); });
+    return () => { current = false; };
+  }, [active, retry]);
 
-  if (curve) return <StrengthCurve exerciseId={curve.exerciseId} exerciseName={curve.exerciseName} onClose={() => setCurve(null)} />;
+  if (curve) return <LiftHistory exerciseId={curve.exerciseId} exerciseName={curve.exerciseName} onClose={() => setCurve(null)} />;
 
   return (
     <section aria-labelledby="records-heading">
       <h2 id="records-heading" className="section-label">Records</h2>
+      {readError && <div role="alert"><p className="meta">Records could not be read.</p><button className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>RETRY RECORDS</button></div>}
       {records === null ? (
         <p className="meta">Loading…</p>
       ) : records.length === 0 ? (
@@ -69,6 +74,11 @@ export function RecordsList({ onClose, focusExerciseId = null }: { onClose: () =
           ))}
         </ul>
       )}
+      {allRecords.length > 0 && <details><summary className="disclosure-row">Every personal record · {allRecords.length}</summary>
+        <ul className="record-cards">{allRecords.map((r) => <li key={r.setId}><button className="record-card__open" onClick={() => setCurve({ exerciseId: r.exerciseId, exerciseName: r.exerciseName })}>
+          {r.exerciseName} · {describeRecordCard(r.record)} · {formatRecordDate(r.recordedAt)}
+        </button></li>)}</ul>
+      </details>}
       <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={onClose}>
         BACK
       </button>

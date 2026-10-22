@@ -35,3 +35,10 @@ BODY, measurements and photos captured at all four widths by the production veri
 cases pass, including closed-day correction integrity, retained measurement drafts, all-width
 accessibility and read-only history browsing. Combined BODY/sheet subset: 21 passed. Build and
 architecture pass. TRAIN and COMMAND are still incomplete; not final acceptance.
+
+## Item 4
+
+WORKOUT, HISTORY and RECORDS captured at 320/360/390/412; built offline cold reload passes.
+`item-4-acceptance.json`. Six new TRAIN cases plus 76 existing TRAIN/history cases pass;
+15 operator cases passed separately. Progression/PR integration: 28 passed. Typed decimals,
+empty blur restoration, resume, retained cross-view draft and dated PR provenance are covered.

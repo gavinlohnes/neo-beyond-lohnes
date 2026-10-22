@@ -86,6 +86,13 @@ try {
     await page.getByRole("heading", { name: "Progress photos", exact: true }).waitFor();
     await page.screenshot({ path: `${out}/${width}-photos.png`, fullPage: true });
     await page.getByRole("button", { name: "BACK TO BODY", exact: true }).click();
+    await page.getByRole("button", { name: "TRAIN", exact: true }).click();
+    for (const view of ["WORKOUT", "HISTORY", "RECORDS"]) {
+      await page.getByRole("button", { name: view, exact: true }).click();
+      await page.evaluate(() => { for (const a of document.getAnimations()) if (a.effect?.getComputedTiming().iterations !== Infinity) a.finish(); });
+      await page.screenshot({ path: `${out}/${width}-train-${view.toLowerCase()}.png`, fullPage: true });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    }
     await page.getByRole("button", { name: "TODAY", exact: true }).click();
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
     await page.reload();
@@ -103,5 +110,5 @@ try {
     await context.close();
     console.log(`PASS ${width}: TODAY order, four modes, check-in sheet, visible water undo, offline cold reload`);
   }
-  await writeFile(`${out}/item-3-acceptance.json`, JSON.stringify(evidence, null, 2) + "\n");
+  await writeFile(`${out}/item-4-acceptance.json`, JSON.stringify(evidence, null, 2) + "\n");
 } finally { await browser.close(); await server.close(); }

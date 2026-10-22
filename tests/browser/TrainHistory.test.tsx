@@ -74,7 +74,7 @@ describe("TRAIN → HISTORY", () => {
   it("lists sessions with their values in each row's accessible name, opens a record, and returns focus", async () => {
     await seedHistory();
     const screen = await render(<TrainScreen />);
-    await screen.getByRole("button", { name: "Open HISTORY" }).click();
+    await screen.getByRole("button", { name: "HISTORY", exact: true }).click();
     const before = await writes();
 
     const rows = screen.getByRole("list").getByRole("button");
@@ -112,7 +112,7 @@ describe("TRAIN → HISTORY", () => {
     const day = await startDay();
     await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
     const screen = await render(<TrainScreen />);
-    await screen.getByRole("button", { name: "Open HISTORY" }).click();
+    await screen.getByRole("button", { name: "HISTORY", exact: true }).click();
     await expect.element(screen.getByText("Finished and stopped strength sessions will appear here.")).toBeVisible();
   });
 
@@ -120,7 +120,7 @@ describe("TRAIN → HISTORY", () => {
     await seedHistory();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
-    await screen.getByRole("button", { name: "Open HISTORY" }).click();
+    await screen.getByRole("button", { name: "HISTORY", exact: true }).click();
     await screen.getByRole("list").getByRole("button").nth(1).click();
     await expect.element(screen.getByText("Set 2 · skipped", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
@@ -200,10 +200,10 @@ describe("lift history during a workout", () => {
     await screen.getByRole("button", { name: "Machine Chest Press history" }).click();
     await expect.element(screen.getByText("RECENT SESSIONS", { exact: true })).toBeVisible();
 
-    const chips = [...document.querySelectorAll<HTMLButtonElement>("button[aria-pressed]")];
+    const chips = [...document.querySelectorAll<HTMLButtonElement>(".train-exercise-picker button[aria-pressed]")];
     chips[1]!.click();
     await expect.poll(() => document.querySelector(".train-lift-history")).toBeNull();
-    const chip = [...document.querySelectorAll<HTMLButtonElement>("button[aria-pressed]")][0]!;
+    const chip = [...document.querySelectorAll<HTMLButtonElement>(".train-exercise-picker button[aria-pressed]")][0]!;
     chip.focus();
     chip.click();
     await expect.element(screen.getByRole("button", { name: "Machine Chest Press history" })).toBeVisible();

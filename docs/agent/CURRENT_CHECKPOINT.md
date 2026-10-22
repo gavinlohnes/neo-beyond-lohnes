@@ -1,4 +1,4 @@
-# REDESIGN-001 — items 1–3 delivered; item 4 next
+# REDESIGN-001 — items 1–4 delivered; item 5 next
 
 Owner-approved PROTECTED objective: [frozen brief](REDESIGN-001.md), frozen reference
 `prototype/redesign/index.html`. Builder Codex. Branch `codex/redesign-001`;
@@ -56,7 +56,17 @@ measurement draft); BODY plus global-sheet subset 21 passed. Build and architect
 Built production checks pass 320/360/390/412, BODY/progress screenshots and offline cold reload.
 Full verification remains pending the remaining scope; no final acceptance claim.
 
-**Next:** item 4 TRAIN, then items 5–8 in order. Commit/push
+**Item 4 delivered:** WORKOUT / HISTORY / RECORDS are one tap apart, including during an
+active workout. The workout DOM and set draft remain mounted. History uses the existing session
+and lift queries; records lead with each exercise's heaviest/best-reps PR, newest first, with every
+PR retained in disclosure. LAST TIME and BEST include source dates. Typed fields clear on focus,
+retain the old value as placeholder and restore an empty blur. Gym, rotation and finish guards
+are unchanged. Six new cases pass, 76 existing TRAIN/history cases pass after updating approved
+navigation assumptions; the 15-case TRAIN operator file passed separately. Progression/PR Node
+subset 28 passed. Build/architecture and built all-width/offline checks pass. Evidence adds all
+three TRAIN views. Final full gate remains pending.
+
+**Next:** item 5 COMMAND, then items 6–8 in order. Commit/push
 and update PR Handoff after each item. Full final verify and acceptance evidence, then mark ready
 and stop for independent Claude exact-head review. Never merge.
 

@@ -91,7 +91,7 @@ describe("TRAIN-OPERATOR-001", () => {
       expect(log.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     }
-    await expect.element(screen.getByText("Last time: no recorded set", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("LAST TIME: no recorded set", { exact: true })).toBeVisible();
     // Measure settled colors, not composited opacity during finite mount motion.
     await Promise.all(document.getAnimations().map((animation) => animation.finished));
     const results = await axe.run(document.querySelector(".train-operator")!);

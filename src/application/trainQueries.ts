@@ -338,6 +338,7 @@ export async function getRecentStrengthSessions(limit = 5): Promise<RecentStreng
 export interface LastSetInfo {
   weight: number;
   reps: number;
+  recordedAt?: string;
 }
 
 /**
@@ -364,7 +365,7 @@ export async function getLastPerformedSetForExercise(
       .sort((a, b) => a.setNumber - b.setNumber);
     if (sets.length > 0) {
       const first = sets[0]!;
-      return { weight: first.weight, reps: first.reps };
+      return { weight: first.weight, reps: first.reps, recordedAt: first.recordedAt };
     }
   }
   return undefined;

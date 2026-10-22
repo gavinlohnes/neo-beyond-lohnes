@@ -46,7 +46,7 @@ import {
   type LastStrengthSessionSummary,
   type RecentStrengthSessionEntry,
 } from "../../../application/trainQueries";
-import { byLoggedOrder, describePersonalRecord, findSessionRecords, getRecordHistory } from "../../../application/personalRecordQueries";
+import { byLoggedOrder, describePersonalRecord, describeRecordCard, findSessionRecords, getRecordHistory, getBestRecords, type RecordCard } from "../../../application/personalRecordQueries";
 import {
   abandonWorkout,
   adjustRest,
@@ -155,7 +155,7 @@ interface CompletionSummary {
  * made: the full session (STANDARD) or the short one (REDUCED). TRAIN's own flow,
  * including the RED override, still governs the start.
  */
-export type TrainDestination = "RECORDS" | "RECOVERY" | "WORKOUT" | "WORKOUT_STANDARD" | "WORKOUT_REDUCED";
+export type TrainDestination = "HISTORY" | "RECORDS" | "RECOVERY" | "WORKOUT" | "WORKOUT_STANDARD" | "WORKOUT_REDUCED";
 
 export function TrainScreen({
   active = true,
@@ -211,11 +211,17 @@ export function TrainScreen({
   // when they aren't the prominent tool, so it structurally recedes
   // instead of consuming full footprint before any decision is made.
   const [performanceBriefOpen, setPerformanceBriefOpen] = useState(false);
-  // PR-CARDS-001: TRAIN → RECORDS, the list of personal-record cards.
-  const [recordsOpen, setRecordsOpen] = useState(recordsFocus !== null);
-  useEffect(() => { if (recordsFocus) setRecordsOpen(true); }, [recordsFocus]);
-  // ULTIMATE-FOUNDATION-002: TRAIN → HISTORY (the current lift's history keeps its own state).
-  const [historyOpen, setHistoryOpen] = useState(false);
+  const [trainView, setTrainView] = useState<"WORKOUT" | "HISTORY" | "RECORDS">(recordsFocus ? "RECORDS" : "WORKOUT");
+  const [visitedRecords, setVisitedRecords] = useState(recordsFocus !== null);
+  const [visitedHistory, setVisitedHistory] = useState(false);
+  const [bestRecords, setBestRecords] = useState<Record<string, RecordCard>>({});
+  const focusValues = useRef<Record<string, string>>({});
+  function openTrainView(view: "WORKOUT" | "HISTORY" | "RECORDS") {
+    setTrainView(view);
+    if (view === "RECORDS") setVisitedRecords(true);
+    if (view === "HISTORY") setVisitedHistory(true);
+  }
+  useEffect(() => { if (recordsFocus) openTrainView("RECORDS"); }, [recordsFocus]);
   // GYM-001: the full-screen gym view over the active workout.
   const [gymModeOpen, setGymModeOpen] = useState(false);
   const gymModeButtonRef = useRef<HTMLButtonElement>(null);
@@ -308,7 +314,7 @@ export function TrainScreen({
   useEffect(() => {
     if (!active || reading || readError || !destination || !destinationReady || destinationConsumedRef.current) return;
     destinationConsumedRef.current = true;
-    if (destination === "RECORDS") { setRecordsOpen(true); setHistoryOpen(false); }
+    openTrainView(destination === "RECORDS" || destination === "HISTORY" ? destination : "WORKOUT");
     onDestinationConsumed?.();
     if (!session && destination === "RECOVERY") { variantChosenRef.current = true; setChosenVariant("RECOVERY"); setOverridePickerOpen(true); }
     if (!session && (destination === "WORKOUT_STANDARD" || destination === "WORKOUT_REDUCED")) {
@@ -436,6 +442,8 @@ export function TrainScreen({
     setLastPerformedSets(
       Object.fromEntries(lastSetEntries.filter((entry): entry is [string, LastSetInfo] => entry[1] !== undefined)),
     );
+    const best = await getBestRecords();
+    setBestRecords(Object.fromEntries(best.map((record) => [record.exerciseId, record])));
     const substitutionEntries = await Promise.all(
       exercises.map(async (ex) => [ex.exerciseId, await getRecentSubstitutions(ex.exerciseId)] as const),
     );
@@ -969,8 +977,15 @@ export function TrainScreen({
           (unlike TODAY's own moment-to-moment Engine truth), so a fixed
           statement of what TRAIN is fits here without inventing data. */}
       <OperatorHeader destination="train" headingRef={headingRef} focusable>BEYOND // TRAIN</OperatorHeader>
-      {!session && <p className="train-purpose">{completionSummary ? "Review what you recorded." : "Prepare your workout. You choose the session."}</p>}
+      {!session && trainView === "WORKOUT" && <p className="train-purpose">{completionSummary ? "Review what you recorded." : "Prepare your workout. You choose the session."}</p>}
 
+      <div className="train-switcher" role="group" aria-label="Training views">
+        {(["WORKOUT", "HISTORY", "RECORDS"] as const).map((view) => <button key={view} type="button"
+          className="btn-secondary" aria-pressed={trainView === view} onClick={() => openTrainView(view)}>{view}</button>)}
+      </div>
+      {visitedHistory && <div hidden={trainView !== "HISTORY"}><TrainingHistory active={active && trainView === "HISTORY"} customTemplates={customTemplates} onClose={() => openTrainView("WORKOUT")} /></div>}
+      {visitedRecords && <div hidden={trainView !== "RECORDS"}><RecordsList active={active && trainView === "RECORDS"} focusExerciseId={recordsFocus} onClose={() => openTrainView("WORKOUT")} /></div>}
+      <div hidden={trainView !== "WORKOUT"}>
       <ConfirmPanel />
 
       {reading && <p role="status" className="meta">Reading your workout…</p>}
@@ -1191,13 +1206,13 @@ export function TrainScreen({
       {/* LAUNCH POLISH (owner approval 2026-10-01): the suggested workout leads;
           the planned-work question sits under it instead of above it. */}
       {!session && !completionSummary && !workoutFinishedToday && (
-        <PlannedWorkCard
+        <details className="train-planned-work"><summary className="disclosure-row">PLANNED WORK</summary><PlannedWorkCard
           declaration={plannedWorkDeclaration}
           open={plannedWorkOpen}
           setOpen={setPlannedWorkOpen}
           busy={busy}
           onSetPlannedWork={(planned) => void handleSetPlannedWork(planned)}
-        />
+        /></details>
       )}
 
       {/* TRAIN-003 (Performance Brief): read-only derived intelligence,
@@ -1268,19 +1283,6 @@ export function TrainScreen({
             </button>
           </div>
         </>
-      )}
-
-      {/* PR-CARDS-001 (owner brief 2026-10-04): every personal record kept as a card, pre-workout only. */}
-      {!session && !completionSummary && !recordsOpen && (
-        <CollapsibleRow name="RECORDS" summary="Your personal records" onOpen={() => setRecordsOpen(true)} />
-      )}
-      {!session && !completionSummary && recordsOpen && <RecordsList focusExerciseId={recordsFocus} onClose={() => setRecordsOpen(false)} />}
-      {/* ULTIMATE-FOUNDATION-002: every finished or stopped strength session, each opening its own record. */}
-      {!session && !completionSummary && !historyOpen && (
-        <CollapsibleRow name="HISTORY" summary="Past sessions, sets and volume" onOpen={() => setHistoryOpen(true)} />
-      )}
-      {!session && !completionSummary && historyOpen && (
-        <TrainingHistory active={active} customTemplates={customTemplates} onClose={() => setHistoryOpen(false)} />
       )}
 
       {session && session.sessionType === "RECOVERY" && !completionSummary && (
@@ -1410,13 +1412,19 @@ export function TrainScreen({
                   lifter — restrained mono (.meta) rather than .card-body. */}
               {lastPerformedSets[currentExercise.exerciseId] && (
                 <p className="meta" style={{ marginBottom: 4 }}>
-                  Last time: {lastPerformedSets[currentExercise.exerciseId]!.weight} lb x{" "}
+                  LAST TIME: {lastPerformedSets[currentExercise.exerciseId]!.weight} lb x{" "}
                   {lastPerformedSets[currentExercise.exerciseId]!.reps}
+                  {lastPerformedSets[currentExercise.exerciseId]!.recordedAt && ` · ${new Date(lastPerformedSets[currentExercise.exerciseId]!.recordedAt!).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`}
                 </p>
               )}
               {!lastPerformedSets[currentExercise.exerciseId] && (
-                <p className="meta" style={{ marginBottom: 4 }}>Last time: no recorded set</p>
+                <p className="meta" style={{ marginBottom: 4 }}>LAST TIME: no recorded set</p>
               )}
+              <p className="meta" style={{ marginBottom: 8 }}>
+                BEST: {bestRecords[currentExercise.exerciseId]
+                  ? `${describeRecordCard(bestRecords[currentExercise.exerciseId]!.record)} · ${new Date(bestRecords[currentExercise.exerciseId]!.recordedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`
+                  : "No personal record yet"}
+              </p>
               {/* ULTIMATE-FOUNDATION-002: this lift's curve and recent sessions,
                   in place — the set inputs and rest timer below stay as they are.
                   Inside the per-exercise surface, so it closes when the exercise changes. */}
@@ -1541,10 +1549,14 @@ export function TrainScreen({
                       <input
                         type="number"
                         inputMode="decimal"
-                        placeholder="lb"
+                        placeholder={focusValues.current[`${ex.exerciseId}#${setNumber}:weight`] || "lb"}
                         aria-label={`Set ${setNumber} weight in pounds`}
                         value={display.weight}
-                        onFocus={(e) => e.currentTarget.select()}
+                        onFocus={() => {
+                          focusValues.current[`${ex.exerciseId}#${setNumber}:weight`] = display.weight;
+                          patchInput(ex.exerciseId, setNumber, { weight: "" });
+                        }}
+                        onBlur={() => { if (!display.weight) patchInput(ex.exerciseId, setNumber, { weight: focusValues.current[`${ex.exerciseId}#${setNumber}:weight`] ?? "" }); }}
                         onChange={(e) => patchInput(ex.exerciseId, setNumber, { weight: e.target.value })}
                         className="input"
                         style={{ flex: 1, textAlign: "center", fontSize: 20, fontWeight: 700 }}
@@ -1571,10 +1583,14 @@ export function TrainScreen({
                       <input
                         type="number"
                         inputMode="numeric"
-                        placeholder="reps"
+                        placeholder={focusValues.current[`${ex.exerciseId}#${setNumber}:reps`] || "reps"}
                         aria-label={`Set ${setNumber} repetitions`}
                         value={display.reps}
-                        onFocus={(e) => e.currentTarget.select()}
+                        onFocus={() => {
+                          focusValues.current[`${ex.exerciseId}#${setNumber}:reps`] = display.reps;
+                          patchInput(ex.exerciseId, setNumber, { reps: "" });
+                        }}
+                        onBlur={() => { if (!display.reps) patchInput(ex.exerciseId, setNumber, { reps: focusValues.current[`${ex.exerciseId}#${setNumber}:reps`] ?? "" }); }}
                         onChange={(e) => patchInput(ex.exerciseId, setNumber, { reps: e.target.value })}
                         className="input"
                         style={{ flex: 1, textAlign: "center", fontSize: 20, fontWeight: 700 }}
@@ -1759,7 +1775,7 @@ export function TrainScreen({
               compact numeric/fraction display never loses the accessible
               name. */}
           {activeExercises.length > 1 && (
-            <div className="equipment-row">
+            <div className="equipment-row train-exercise-picker">
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {activeExercises.map((ex, i) => {
                   const done = isExerciseComplete(ex);
@@ -1848,6 +1864,7 @@ export function TrainScreen({
         </>
       )}
       </>}
+      </div>
     </div>
   );
 }
