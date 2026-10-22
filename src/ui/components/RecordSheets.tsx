@@ -35,7 +35,8 @@ function parse(form: MealForm) {
 }
 
 /** The shell owns one stable modal. Drafts live here, never in persistent storage. */
-export function RecordSheets({ correctionRequest, target, open, close, onSaved, onBusy, onHistory, onWorkout, onNotes }: {
+export function RecordSheets({ mealRequest, correctionRequest, target, open, close, onSaved, onBusy, onHistory, onWorkout, onNotes }: {
+  mealRequest?: { id: string; key: number } | null;
   correctionRequest?: RecordCorrectionRequest | null;
   target: RecordSheetTarget | null; open: (target: RecordSheetTarget) => void; close: () => void;
   onSaved: () => void; onBusy: (busy: boolean) => void; onHistory: (metric: "water" | "protein") => void; onWorkout: () => void; onNotes: () => void;
@@ -82,6 +83,13 @@ export function RecordSheets({ correctionRequest, target, open, close, onSaved, 
       .catch(() => { if (current) setReadState("error"); });
     return () => { current = false; };
   }, [target, retry]);
+  const appliedMeal = useRef<number | null>(null);
+  useEffect(() => {
+    if (target !== "meal" || !mealRequest || readState !== "ready" || appliedMeal.current === mealRequest.key) return;
+    appliedMeal.current = mealRequest.key;
+    if (meals.some((meal) => meal.id === mealRequest.id)) { setMealId(mealRequest.id); setServings(1); setPage("portion"); }
+    else setError("That saved meal is unavailable. Choose another meal or retry.");
+  }, [target, mealRequest, readState, meals]);
   async function commit(action: () => Promise<{ message: string; undo: () => Promise<unknown>; warning?: string; history?: "water" | "protein"; notes?: boolean }>) {
     if (busyRef.current) return;
     setBusy(true); setError(null);
@@ -100,7 +108,7 @@ export function RecordSheets({ correctionRequest, target, open, close, onSaved, 
   }
   function chooseMeal(meal: SavedMeal) { setMealId(meal.id); setServings(1); setPage("portion"); }
   const selected = meals.find((meal) => meal.id === mealId);
-  const displayed = query.trim() ? meals.filter((meal) => meal.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) : likely;
+  const displayed = query.trim() ? meals.filter((meal) => meal.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) : target === "myMeals" ? meals : likely;
   const formFields = (value: MealForm, update: (value: MealForm) => void, prefix: string, simple = false) => <>
     {!simple && <label className="field">Name<input className="input" aria-label={`${prefix} name`} value={value.name} onChange={(event) => update({ ...value, name: event.target.value })} /></label>}
     {(Object.entries(FIELDS) as [keyof typeof FIELDS, string][]).filter(([key]) => !simple || key === "calories" || key === "proteinG").map(([key, label]) => <label className="field" key={key}>{label}<input className="input" aria-label={`${prefix} ${label}`} type="number" min="0" step="any" value={value[key]} onChange={(event) => update({ ...value, [key]: event.target.value })} /></label>)}

@@ -249,6 +249,7 @@ export function TodayScreen({
   onOpenSystems,
   onOpenRecordSheet,
   operationsOnly = false,
+  commandFocus,
   toolsRequest = 0,
   openToolsOnMount = false,
   onWorkEnded,
@@ -271,6 +272,7 @@ export function TodayScreen({
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
   onOpenRecordSheet?: (target: RecordSheetTarget) => void;
   operationsOnly?: boolean;
+  commandFocus?: ToolsItem | "SHIFT_HANDOFF" | null;
   toolsRequest?: number;
   /** Drop 2: open with TOOLS expanded (MORE's capture link lands in it). */
   openToolsOnMount?: boolean;
@@ -300,7 +302,7 @@ export function TodayScreen({
   const [checkInDraftDismissed, setCheckInDraftDismissed] = useState(false);
   const activeCheckInDraft = checkInDraft && !checkInDraftDismissed ? checkInDraft : undefined;
   // What the form shows and submits: taps win over the draft.
-  const checkInFormValues: PartialCheckInValues = operationsOnly && activeCheckInDraft ? { ...activeCheckInDraft.value, ...values } : values;
+  const checkInFormValues: PartialCheckInValues = operationsOnly && commandFocus === undefined && activeCheckInDraft ? { ...activeCheckInDraft.value, ...values } : values;
   const [busy, setBusy] = useState(false);
   // TODAY-009 (residual TODAY-R02, flagged in TODAY-006): `busy` is React
   // state, so setBusy(true) doesn't take effect (and re-render the
@@ -529,7 +531,7 @@ export function TodayScreen({
       window.scrollTo({ top: origin?.scrollY ?? 0, behavior: "instant" });
     });
   }
-  useEffect(() => { if (captureRequest > 0) openFastCapture(); }, [captureRequest]);
+  useEffect(() => { if (captureRequest > 0 && commandFocus === undefined) openFastCapture(); }, [captureRequest]);
   // Focus waits until TOOLS has rendered and TODAY is the visible workspace.
   const toolsFocusPending = useRef(false);
   useEffect(() => {
@@ -953,7 +955,7 @@ export function TodayScreen({
     try {
       const activeDay = await ensureActiveDay();
       await submitCheckIn(activeDay.id, submitted,
-        operationsOnly && activeCheckInDraft ? checkInDraftDecision(activeCheckInDraft.value, submitted) : undefined);
+        operationsOnly && commandFocus === undefined && activeCheckInDraft ? checkInDraftDecision(activeCheckInDraft.value, submitted) : undefined);
       committed = true;
       setCheckInDraftDismissed(false);
       setValues({});
@@ -1705,7 +1707,7 @@ export function TodayScreen({
         );
       case "SHIFT_DOWN":
         // TONIGHT-001: after the shift SHIFT DOWN waits here (no longer a RECOVER row), with or without a check-in.
-        return !liftedShiftDown && !!day && (!!recommendation || shiftClock.displayPhase === "EXPECTED_POST_WORK") && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT";
+        return !liftedShiftDown && !!day && (commandFocus !== undefined || (!!recommendation || shiftClock.displayPhase === "EXPECTED_POST_WORK") && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT");
       case "RESET":
         return !liftedReset && !!day && !!recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT";
       case "WORK_CONTEXT":
@@ -1816,7 +1818,7 @@ export function TodayScreen({
   function renderResetTool() {
     return (
       <>
-      {day && recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
+      {day && (commandFocus !== undefined || recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT") && (
         <ResetCard
           prominent={resetIsPrimary}
           isDominant={false}
@@ -1874,7 +1876,7 @@ export function TodayScreen({
           SHIFT DOWN already use rather than staying a permanently
           full-weight card. Still WORK and not yet ended keeps the full
           card open, since MARK WORK ENDED is a real pending action. */}
-      {(!workEndInAttention || workContextOpen) && day && scheduledContext && (
+      {(commandFocus !== undefined || !workEndInAttention || workContextOpen) && day && scheduledContext && (
         <WorkContextCard
           day={day}
           scheduledContext={scheduledContext}
@@ -1926,18 +1928,18 @@ export function TodayScreen({
       case "CHECK_IN":
         return liftedCheckIn ? null : renderCheckInTool();
       case "SHIFT_DOWN":
-        return liftedShiftDown ? null : renderShiftDownTool();
+        return commandFocus === undefined && liftedShiftDown ? null : renderShiftDownTool();
       case "RESET":
-        return liftedReset ? null : renderResetTool();
+        return commandFocus === undefined && liftedReset ? null : renderResetTool();
       case "WORK_CONTEXT":
-        return liftedWorkContext ? null : renderWorkContextTool();
+        return commandFocus === undefined && liftedWorkContext ? null : renderWorkContextTool();
       case "FUEL":
         // The tiles above own the history links; TOOLS repeats the totals as one line.
         return day ? <div className="equipment-row"><p className="tool-label" style={{ marginBottom: 4 }}>FUEL</p><p className="card-body" style={{ margin: 0 }}>{fuelLine}</p></div> : null;
       case "MINIMUM_DAY":
         return (
           <>
-      {day && minimumDay && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE" && (
+      {day && minimumDay && (commandFocus !== undefined || !minimumDayInAttention) && dominant !== "HYDRATION_ACTIVE" && (
         <MinimumDayCard
           prominent={false}
           minimumDay={minimumDay}
@@ -1969,7 +1971,7 @@ export function TodayScreen({
         return (
           <CaptureToolsCard
         openCaptureItems={openCaptureItems}
-        captureInAttention={captureInAttention}
+        captureInAttention={commandFocus !== undefined ? false : captureInAttention}
         captureText={captureText}
         feedback={captureFeedback}
         setCaptureText={setCaptureText}
@@ -2013,7 +2015,7 @@ export function TodayScreen({
       case "END_DAY":
         return (
           <>
-      {!endDayInAttention && (
+      {(commandFocus !== undefined || !endDayInAttention) && (
         <EndDayCard
           hasDay={!!day}
           suggestEndDay={suggestEndDay}
@@ -2245,6 +2247,23 @@ export function TodayScreen({
   }
 
 
+  if (operationsOnly && commandFocus != null) return <div className="screen command-daily">
+    <OperatorHeader destination="command">{commandFocus === "CAPTURE" ? "CAPTURE" : commandFocus === "SHIFT_HANDOFF" ? "SHIFT HANDOFF NOTES" : "DAILY CONTROLS"}</OperatorHeader>
+    {!day && <button className="btn-primary" disabled={busy} onClick={() => void handleStartDay()}>START DAY</button>}
+    {checkInError && <p role="alert">{checkInError}</p>}
+    {banners}
+    {commandFocus === "CHECK_IN" ? <><button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
+      <CheckInSheet open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
+        quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} /></>
+      : commandFocus === "SHIFT_HANDOFF" ? <><ShiftHandoff refreshKey={shiftHandoffRefreshKey ?? 0} /><p className="meta">Handoff entry is offered after work is marked ended. Existing notes remain in HISTORY.</p></>
+      : commandFocus ? renderToolsItem(commandFocus) : <>{renderWorkContextTool()}{renderToolsItem("END_DAY")}
+        <details><summary className="disclosure-row">More daily tools</summary>{TOOLS_ORDER.filter((tool) => !["WORK_CONTEXT", "END_DAY", "CHECK_IN"].includes(tool)).map((tool) => <div key={tool}>{renderToolsItem(tool)}</div>)}</details>
+        <button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
+        <CheckInSheet open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
+          quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} />
+      </>}
+  </div>;
+
   if (!operationsOnly) return <div className="screen command-console today-field redesign-today">
     <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
     <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
@@ -2465,7 +2484,7 @@ export function TodayScreen({
           pilot "mission" glyph TODAY's nav tab already uses and a
           closing structural rule, so the screen opens on a real
           instrument header instead of one quiet line of text. */}
-      <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
+      <OperatorHeader destination="command">DAILY CONTROLS</OperatorHeader>
 
       {/* FIELD-ARCH-001: before a day exists, START DAY is the one
           available action — nothing else on this screen can compete for

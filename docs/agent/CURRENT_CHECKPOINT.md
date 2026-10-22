@@ -1,4 +1,4 @@
-# REDESIGN-001 — items 1–4 delivered; item 5 next
+# REDESIGN-001 — items 1–5 delivered; item 6 next
 
 Owner-approved PROTECTED objective: [frozen brief](REDESIGN-001.md), frozen reference
 `prototype/redesign/index.html`. Builder Codex. Branch `codex/redesign-001`;
@@ -66,7 +66,18 @@ navigation assumptions; the 15-case TRAIN operator file passed separately. Progr
 subset 28 passed. Build/architecture and built all-width/offline checks pass. Evidence adds all
 three TRAIN views. Final full gate remains pending.
 
-**Next:** item 5 COMMAND, then items 6–8 in order. Commit/push
+**Item 5 delivered:** COMMAND groups share one capability catalog with search. Existing screens,
+log actions, named saved meals (servings sheet) and exercise histories are reachable without
+writes. Search all records opens FIND-001. Direct work-context/end-day/check-in/reset/shift-down,
+notes inbox/handoff, report (NEW uses existing timing/seen state), Mirror, planning, systems and
+settings routes reuse existing components. Backup/restore and help remain on demand. TODAY TOOLS
+retains the complete existing controls/prompt surface, including outcome ratings; it is not the
+TODAY home. New COMMAND/TODAY subset 16 passed. Destination subset 62 passed with one selector
+failure, corrected and rechecked (one passed; 53 excluded by name filter, not disabled tests).
+Build/architecture and built 320/360/390/412 named-meal/navigation/offline checks pass. Full gate
+remains pending; legacy presentation tests still need approved-path reconciliation.
+
+**Next:** item 6 hidden features, then labels and locked rulings/checkpoint. Commit/push
 and update PR Handoff after each item. Full final verify and acceptance evidence, then mark ready
 and stop for independent Claude exact-head review. Never merge.
 

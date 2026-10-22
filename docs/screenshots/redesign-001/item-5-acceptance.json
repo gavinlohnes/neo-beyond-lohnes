@@ -1,0 +1,46 @@
+[
+  {
+    "width": 320,
+    "modes": 4,
+    "checkInSheet": true,
+    "visibleReceipt": {
+      "receipt": 764,
+      "nav": 779
+    },
+    "offlineColdReload": true,
+    "pageErrors": []
+  },
+  {
+    "width": 360,
+    "modes": 4,
+    "checkInSheet": true,
+    "visibleReceipt": {
+      "receipt": 764,
+      "nav": 779
+    },
+    "offlineColdReload": true,
+    "pageErrors": []
+  },
+  {
+    "width": 390,
+    "modes": 4,
+    "checkInSheet": true,
+    "visibleReceipt": {
+      "receipt": 764,
+      "nav": 779
+    },
+    "offlineColdReload": true,
+    "pageErrors": []
+  },
+  {
+    "width": 412,
+    "modes": 4,
+    "checkInSheet": true,
+    "visibleReceipt": {
+      "receipt": 764,
+      "nav": 779
+    },
+    "offlineColdReload": true,
+    "pageErrors": []
+  }
+]

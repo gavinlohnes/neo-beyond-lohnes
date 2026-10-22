@@ -93,6 +93,16 @@ try {
       await page.screenshot({ path: `${out}/${width}-train-${view.toLowerCase()}.png`, fullPage: true });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     }
+    await page.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await page.getByRole("searchbox", { name: "Find a screen or action" }).waitFor();
+    await page.evaluate(() => { for (const a of document.getAnimations()) if (a.effect?.getComputedTiming().iterations !== Infinity) a.finish(); window.scrollTo(0, 0); });
+    await page.screenshot({ path: `${out}/${width}-command.png`, fullPage: true });
+    await page.getByRole("searchbox", { name: "Find a screen or action" }).fill("Shift dinner");
+    await page.getByRole("button", { name: "Shift dinner Saved meal · choose servings", exact: true }).click();
+    await page.getByRole("dialog", { name: "SERVINGS", exact: true }).waitFor();
+    await page.screenshot({ path: `${out}/${width}-command-meal-search.png` });
+    await page.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
+    await page.waitForFunction(() => !history.state?.recordSheet);
     await page.getByRole("button", { name: "TODAY", exact: true }).click();
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
     await page.reload();
@@ -110,5 +120,5 @@ try {
     await context.close();
     console.log(`PASS ${width}: TODAY order, four modes, check-in sheet, visible water undo, offline cold reload`);
   }
-  await writeFile(`${out}/item-4-acceptance.json`, JSON.stringify(evidence, null, 2) + "\n");
+  await writeFile(`${out}/item-5-acceptance.json`, JSON.stringify(evidence, null, 2) + "\n");
 } finally { await browser.close(); await server.close(); }

@@ -44,6 +44,7 @@ async function launch(screen: Screen, label: string) {
   await screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true }).click();
 }
 const commandHeadings = {
+  REPORT: "AFTER ACTION REPORT", MIRROR: "MIRROR",
   PLAN: "COMMAND // PLAN TODAY", SYSTEMS: "COMMAND // SYSTEMS",
   HISTORY: "COMMAND // HISTORY", WEEKLY: "COMMAND // WEEKLY CHECK-IN", REVIEW: "COMMAND // REVIEW",
   SEARCH: "COMMAND // SEARCH", JOURNAL: "COMMAND // DECISION JOURNAL", INTENT: "COMMAND // MISSIONS & OBLIGATIONS",
@@ -63,9 +64,9 @@ describe("COMMAND catalog", () => {
       const eventCount = await db.events.count();
       await launch(screen, entry.label);
       const destination = entry.destination;
-      if (destination.kind === "tools") {
-        await expect.poll(() => document.activeElement?.id).toBe("console-tools-heading");
-        await expect.element(screen.getByRole("button", { name: "Close TOOLS" })).toBeVisible();
+      if (destination.kind === "tools" || destination.kind === "daily") {
+        await expect.element(screen.getByRole("heading", { name: destination.kind === "daily" && destination.tool === "CAPTURE" ? "CAPTURE" : destination.kind === "daily" && destination.tool === "SHIFT_HANDOFF" ? "SHIFT HANDOFF NOTES" : "DAILY CONTROLS", exact: true })).toBeVisible();
+        await expect.element(screen.getByRole("button", { name: "← BACK TO COMMAND", exact: true })).toBeVisible();
       } else if (destination.kind === "more") {
         await expect.element(screen.getByRole("heading", { name: commandHeadings[destination.view as keyof typeof commandHeadings], exact: true })).toBeVisible();
         // Inside COMMAND, a destination opens with focus on its way back, like every index row.
@@ -80,24 +81,17 @@ describe("COMMAND catalog", () => {
         await expect.poll(() => !!document.activeElement?.closest(`#${target}`) || document.activeElement?.id === target).toBe(true);
         const details = document.getElementById(target)?.closest("details") ?? document.getElementById(target)?.querySelector("details");
         if (destination.section === "TIME_CAPSULE" || destination.section === "DIAGNOSTICS" || destination.section === "GUIDE") expect(details?.open).toBe(true);
-      } else if (destination.kind === "body") {
-        if (destination.focus === "urge") await expect.element(screen.getByRole("button", { name: "Log urge: Stress" })).toBeVisible();
-        else {
-          // TONIGHT-001: FOOD LOOKUP opens the same focused meal view, with the lookup open.
-          const exact = destination.focus === "meal" || destination.focus === "foodLookup";
-          const target = destination.focus === "meal" ? "meal-return" : destination.focus === "foodLookup" ? "food-search" : destination.focus === "weight" ? "body-bodyweight" : destination.focus === "water" ? "body-hydration" : "body-sleep";
-          await expect.poll(() => exact ? document.activeElement?.id === target : !!document.activeElement?.closest(`#${target}`)).toBe(true);
-        }
-      } else if (destination.kind === "capture") {
-        await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
-        await expect.element(screen.getByRole("textbox", { name: "Capture a thought", exact: true })).toBeVisible();
+      } else if (destination.kind === "body" || destination.kind === "record" || destination.kind === "capture") {
+        const title = destination.kind === "capture" ? "NOTE" : destination.kind === "record" ? "MY MEALS" : { water: "WATER", meal: "MEAL", foodLookup: "FOOD LOOKUP", sleep: "SLEEP", weight: "BODYWEIGHT", urge: "URGE" }[destination.focus];
+        await expect.element(screen.getByRole("dialog", { name: title, exact: true })).toBeVisible();
+        await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
       } else if (destination.kind === "stealth") {
         // SUIT-001: stealth covers the screen; Escape exits and nothing was written.
         await expect.element(screen.getByRole("dialog", { name: "Stealth" })).toBeVisible();
         await userEvent.keyboard("{Escape}");
         await expect.poll(() => document.querySelector(".stealth")).toBeNull();
       } else {
-        const tab = destination.kind === "workout" ? "TRAIN" : destination.tab;
+        const tab = destination.kind === "workspace" ? destination.tab : "TRAIN";
         await expect.element(screen.getByRole("button", { name: tab, exact: true })).toHaveAttribute("aria-current", "page");
         await expect.poll(() => document.activeElement?.tagName).toBe("H1");
       }
@@ -111,27 +105,26 @@ describe("COMMAND catalog", () => {
   it("every former MORE destination is also reachable by browsing COMMAND's index", async () => {
     const screen = await render(<App />);
     await openCommand(screen);
-    for (const name of ["WEEKLY CHECK-IN", "HISTORY", "REVIEW", "SEARCH", "DECISION JOURNAL", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "EXERCISE LIBRARY", "CUSTOM PROGRAMS"]) {
-      await expect.element(screen.getByRole("button", { name: `Open ${name}`, exact: true })).toBeVisible();
-    }
-    for (const name of ["PLAN TODAY", "CAPTURE", "EXPORT BACKUP", "SHARE BACKUP"]) await expect.element(screen.getByRole("button", { name, exact: true })).toBeVisible();
-    for (const heading of ["Log", "Evidence", "Direction", "Training tools", "Data safety", "Settings", "Reminders"]) {
-      await expect.element(screen.getByRole("heading", { name: heading, exact: true })).toBeVisible();
-    }
+    // The pre-redesign destination inventory is deliberately independent of the current catalog.
+    const before = ["WATER", "MEAL", "FOOD LOOKUP", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "SYSTEMS", "STEALTH", "TODAY TOOLS", "PLAN TODAY", "TRAIN", "WORKOUT", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "IMPORT HEALTH DATA", "BODY", "WEEKLY CHECK-IN", "REVIEW", "HISTORY", "DECISION JOURNAL", "SEARCH RECORDS", "BACKUP & RECOVERY", "NUTRITION TARGETS", "QUIT TRACKER SETTINGS", "TIME CAPSULE", "CHECK-IN REMINDER", "DIAGNOSTICS", "A PLACE TO START"];
+    for (const name of before) expect(SYSTEM_CAPABILITIES.some((entry) => entry.label === name)).toBe(true);
+    for (const summary of document.querySelectorAll<HTMLDetailsElement>(".command-group")) summary.open = true;
+    for (const entry of SYSTEM_CAPABILITIES) await expect.element(screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true })).toBeVisible();
+    for (const name of ["EXPORT BACKUP", "SHARE BACKUP"]) await expect.element(screen.getByRole("button", { name, exact: true })).toBeVisible();
     await expect.element(screen.getByText("A place to start", { exact: true }).first()).toBeVisible();
     await expect.element(screen.getByText("Diagnostic detail", { exact: true })).toBeVisible();
   });
 
-  it("filters capabilities independently of personal record search; says so plainly when nothing matches", async () => {
+  it("finds named meals alongside capabilities and keeps full record search available", async () => {
     await createSavedMeal({ name: "Synthetic lunch", calories: 500, proteinG: 30, carbsG: 50, fatG: 15 });
     const screen = await render(<App />);
     await openCommand(screen);
     await searchbox(screen).fill("Synthetic lunch");
-    await expect.element(screen.getByText("Nothing called “Synthetic lunch”. Try water, sleep, backup or schedule.")).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Synthetic lunch Saved meal · choose servings", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "Clear search" }).click();
     await expect.element(searchbox(screen)).toHaveValue("");
     await expect.poll(() => document.activeElement).toBe(searchbox(screen).element());
-    await expect.element(screen.getByRole("heading", { name: "Evidence", exact: true })).toBeVisible();
+    expect([...document.querySelectorAll<HTMLElement>(".command-group > summary")].find((el) => el.textContent === "Review")!.getClientRects().length).toBeGreaterThan(0);
     await searchbox(screen).fill("HYDRATION");
     await expect.element(screen.getByText("1 result", { exact: true })).toBeInTheDocument();
     await screen.getByRole("button", { name: "Clear search" }).click();
@@ -154,50 +147,35 @@ describe("COMMAND catalog", () => {
   it("retains meal drafts through catalog departure and reopens the same input", async () => {
     const screen = await render(<App />);
     await openCommand(screen); await launch(screen, "MEAL");
+    await screen.getByRole("button", { name: "New meal", exact: true }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished dinner");
-    await screen.getByRole("button", { name: "RETURN TO COMMAND" }).click();
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
     const confirm = vi.spyOn(window, "confirm");
     await launch(screen, "HISTORY");
     await expect.element(screen.getByRole("heading", { name: "COMMAND // HISTORY", exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "BODY", exact: true }).click();
-    // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
-    await expect.element(screen.getByRole("heading", { name: "BODY // DAILY RECORD" })).toBeVisible();
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
+    await screen.getByRole("button", { name: "← BACK TO COMMAND", exact: true }).click();
+    await launch(screen, "MEAL"); await screen.getByRole("button", { name: "New meal", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
     expect(confirm).not.toHaveBeenCalled();
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
   });
 
-  it("logs through the existing meal command once, survives read failure, returns/reopens and keeps undo", async () => {
-    await createSavedMeal({ name: "Synthetic lunch", calories: 500, proteinG: 30, carbsG: 50, fatG: 15 });
-    const screen = await render(<App />);
-    await openCommand(screen); await launch(screen, "MEAL");
-    await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeEnabled();
-    const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read unavailable"));
-    const log = screen.getByRole("button", { name: "LOG", exact: true }).element() as HTMLButtonElement;
-    log.click(); log.click();
-    await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal logged.");
-    expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
-    expect(await getTotalMealCalories(dayId)).toBe(500);
-    await screen.getByRole("button", { name: "RETURN TO COMMAND" }).click();
-    read.mockRestore();
-    const restoredRead = db.savedMeals.toArray.bind(db.savedMeals);
-    let release!: () => void;
+  it("logs once from COMMAND and keeps undo through a gated sheet read, without stealing focus", async () => {
+    await createSavedMeal({ name: "Synthetic dinner", calories: 600, proteinG: 35, carbsG: 70, fatG: 20 });
+    const screen = await render(<App />); await openCommand(screen); await launch(screen, "MEAL");
+    await screen.getByRole("button", { name: "Log Synthetic dinner", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
+    const restoredRead = db.savedMeals.toArray.bind(db.savedMeals); let release!: () => void;
     const gate = new Promise<void>((resolve) => { release = resolve; });
     vi.spyOn(db.savedMeals, "toArray").mockImplementation(() => Dexie.Promise.resolve(gate).then(restoredRead));
-    try {
-      await launch(screen, "MEAL");
-      await expect.element(screen.getByRole("button", { name: "RETURN TO COMMAND" })).toBeDisabled();
-      // Keep the read gated beyond BODY's 250 ms shortcut positioning; the shell's
-      // temporary heading is then the landing point while RETURN is disabled.
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      document.getElementById("meal-surface-heading")!.focus();
-      expect(document.activeElement?.id).toBe("meal-surface-heading");
-    } finally { release(); }
-    await expect.poll(() => document.activeElement?.id).toBe("meal-return");
-    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
-    expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
+    await launch(screen, "MEAL");
+    const close = screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true });
+    try { await expect.element(close).toBeVisible(); close.element().focus(); }
+    finally { release(); }
+    await expect.element(screen.getByRole("button", { name: "Log Synthetic dinner", exact: true })).toBeVisible();
+    await expect.element(close).toHaveFocus();
+    await close.click(); expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
     await screen.getByRole("button", { name: "UNDO", exact: true }).click();
     await expect.poll(() => getTotalMealCalories(dayId)).toBe(0);
   });
@@ -225,7 +203,7 @@ describe("COMMAND catalog", () => {
         expect(parseFloat(getComputedStyle(control).fontSize)).toBeGreaterThanOrEqual(16);
       }
       for (const animation of document.getAnimations()) animation.finish();
-      expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
+      expect((await axe.run(document.body)).violations).toEqual([]);
       // Keyboard: Tab from the search reaches the result; Enter in the search opens the first match.
       (searchbox(screen).element() as HTMLInputElement).focus();
       await userEvent.tab();

@@ -114,6 +114,7 @@ it('keeps displaced daily controls reachable in COMMAND without rendering them o
   await startDay();
   const screen = await render(<App />);
   await screen.getByRole('button', { name: 'COMMAND', exact: true }).click();
+  await screen.getByRole('searchbox', { name: 'Find a screen or action' }).fill('TODAY TOOLS');
   await screen.getByRole('button', { name: /^TODAY TOOLS / }).click();
   await expect.element(screen.getByRole('button', { name: 'Open END DAY', exact: true })).toBeVisible();
   await expect.element(screen.getByRole('button', { name: 'COMMAND', exact: true })).toHaveAttribute('aria-current', 'page');

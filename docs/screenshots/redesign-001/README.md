@@ -42,3 +42,10 @@ WORKOUT, HISTORY and RECORDS captured at 320/360/390/412; built offline cold rel
 `item-4-acceptance.json`. Six new TRAIN cases plus 76 existing TRAIN/history cases pass;
 15 operator cases passed separately. Progression/PR integration: 28 passed. Typed decimals,
 empty blur restoration, resume, retained cross-view draft and dated PR provenance are covered.
+
+## Item 5
+
+COMMAND index and named-meal servings screenshots at every width; `item-5-acceptance.json`.
+Seven new COMMAND and nine TODAY cases pass. Destination subset: 62 passed and one stale
+selector, corrected and rechecked successfully (53 excluded by the focused name filter).
+Production build, architecture and all-width offline checks pass. Full objective gate pending.

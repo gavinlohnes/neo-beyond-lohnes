@@ -188,6 +188,7 @@ function AppWorkspaces() {
   const closingRecordSheet = useRef(false);
   const recordOrigin = useRef<HTMLElement | null>(null);
   const correctionKey = useRef(0);
+  const [recordMealRequest, setRecordMealRequest] = useState<{ id: string; key: number } | null>(null);
   const [recordCorrection, setRecordCorrection] = useState<RecordCorrectionRequest | null>(null);
   const [recordSheet, setRecordSheet] = useState<RecordSheetTarget | null>(shortcut === "workout" ? null : shortcut);
   const [bodyRequest, setBodyRequest] = useState(0);
@@ -542,6 +543,11 @@ function AppWorkspaces() {
 
   // COMMAND-CENTER-001: COMMAND's search reaches every catalog destination (TODAY's SYSTEM dialog is retired).
   function openSystemDestination(destination: SystemDestination | { kind: "tools" }): boolean {
+    if (destination.kind === "record") {
+      setRecordMealRequest(destination.mealId ? { id: destination.mealId, key: ++correctionKey.current } : null);
+      openRecordSheet(destination.target); return true;
+    }
+    if (destination.kind === "exercise") { if (!openTrain("RECORDS")) return false; setTrainRecordsFocus(destination.exerciseId); return true; }
     if (destination.kind === "body") return openBody(destination.focus);
     if (destination.kind === "workout") return openTrain("WORKOUT");
     if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
@@ -633,7 +639,7 @@ function AppWorkspaces() {
         </div>}
       </main>
 
-      <RecordSheets correctionRequest={recordCorrection} target={recordSheet} open={openRecordSheet} close={closeRecordSheet} onBusy={updateMealInFlight}
+      <RecordSheets mealRequest={recordMealRequest} correctionRequest={recordCorrection} target={recordSheet} open={openRecordSheet} close={closeRecordSheet} onBusy={updateMealInFlight}
         onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); }}
         onHistory={(metric) => leaveRecordSheet(() => { openBodyEvidence(metric); setMealOrigin((origin) => origin ? { ...origin, trigger: recordOrigin.current } : null); })}
         onWorkout={() => leaveRecordSheet(() => openTrain("WORKOUT"))}
