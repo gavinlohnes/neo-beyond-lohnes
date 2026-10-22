@@ -236,7 +236,7 @@ describe("Production Command Console", () => {
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     }
     await searchCommand(screen, "history");
-    await screen.getByRole("button", { name: /^HISTORY COMMAND · / }).click();
+    await screen.getByRole("button", { name: /^HISTORY Every record/ }).click();
     await expect.element(screen.getByRole("heading", { name: "COMMAND // HISTORY" })).toBeVisible();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await screen.getByRole("button", { name: "RESUME WORKOUT" }).click();

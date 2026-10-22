@@ -320,6 +320,10 @@ describe("TRAIN-OPERATOR-001", () => {
     await holdToConfirm(screen.getByRole("button", { name: "COMPLETE", exact: true }));
     await expect.element(screen.getByRole("heading", { name: "WORKOUT COMPLETE", exact: true })).toBeVisible();
     await expect.poll(() => document.activeElement?.textContent).toBe("WORKOUT COMPLETE");
+    // FRICTION-001: the summary's body areas are sentence case too ("Chest, legs, and triceps").
+    const areas = document.querySelector("h2 + p.card-body, .card-body")!;
+    expect(areas.textContent).toMatch(/^[A-Z][^A-Z]*$/);
+    expect(getComputedStyle(areas).textTransform).not.toBe("capitalize");
     await screen.getByRole("button", { name: "DONE", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
     await expect.poll(() => document.activeElement?.tagName).toBe("H1");

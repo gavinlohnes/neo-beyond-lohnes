@@ -33,10 +33,27 @@ Gavin, 2026-10-22: "We have work to do" — continue the pass.
 | A Garmin sleep from the day before was labelled just "Garmin" | "Garmin · last main sleep" |
 | Tapping that sleep opened today's empty day with "not in this rolling range" | Opens all sleep history |
 
+## Slice 3 — COMMAND in plain words
+
+Walked the LOG sheet, CHECK IN, a live workout and every COMMAND group at 02:30.
+
+| Seen | Fix |
+| --- | --- |
+| COMMAND descriptions written as builder notes: "Existing reset operation", "Existing recovery operation", "the existing protein-only form", "existing conversion actions" | Plain descriptions of what each tool does, from its own on-screen copy |
+| "COMMAND ·" prefixed to every item inside COMMAND | Dropped; BODY · / TODAY · / TRAIN · stay because they say where the item goes |
+| IMPORT HEALTH DATA said "Preview Garmin sleep" (it imports activity, calories and heart rate too) | "Preview Garmin data from the helper before saving" |
+| The workout-complete summary's sentence case had no test | Test added |
+
+A unit test keeps "existing" and the "COMMAND ·" self-tag out of COMMAND descriptions.
+
 ## Seen, not fixed (candidates)
 
 - TODAY's tile "NO TARGET" plus the line "A weigh-in sets the protein target." is a deliberate
   FIELD-AUTHORITY-001 split (state in the tile, action below); left as is.
+- A live workout always shows "Saving as PARTIAL will NOT advance your rotation…" under FINISH,
+  even before the first set. Could appear only once FINISH is reached; touches workout completion
+  presentation, so it's a candidate for its own slice.
+- The LOG sheet's "WORKOUT SET → TRAIN" keeps an arrow; harmless.
 - "DONE" closes several inline tool panels; fine as "finished", but not the sheet grammar's CLOSE.
 
 ## Screen ownership / architecture notes (for ARCH-001)
