@@ -68,5 +68,14 @@ waiting for #261. The only overlap with #261 is one line in BODY.
 Deferred: **SEND TO BEYOND**. A PWA share target that receives files needs a custom service
 worker, which is a larger change to the app's offline update path. It needs its own step.
 
+## Follow-up A — readable and honest periods
+
+#262 merged; the owner tested it on the phone. The owner found BODY folding two days with no
+BEYOND day into the previous card (32 measured hours). Lived-day cards are now capped at 24
+hours. Measurements outside any day get "No BEYOND day" cards stepped in 24-hour periods from
+the nearest day start, so the 16:30 edges hold. Sleep shows device-local times and hours and
+minutes; source UTC stays under details. A missing heart-rate low or high is left out rather
+than shown as "?".
+
 Leverage: INTEGRATE PROVIDER. This uses the official Health Connect aggregate API rather than raw
 heart-rate samples, which keeps the file small, and adds no new dependency.

@@ -1,8 +1,8 @@
 import { db } from "../persistence/db";
 import { compareSleepInstants } from "../domain/health/sleepImport";
 import {
-  MAX_ACTIVITY_FILE_BYTES, parseActivitySnapshot, restingHeartRateKey, summarizeActivity,
-  type ActivitySnapshot, type ExternalActivityHour, type ExternalRestingHeartRate, type MeasuredActivity,
+  MAX_ACTIVITY_FILE_BYTES, measuredPeriods, parseActivitySnapshot, restingHeartRateKey,
+  type ActivitySnapshot, type ExternalActivityHour, type ExternalRestingHeartRate, type MeasuredPeriod,
 } from "../domain/health/activityImport";
 import type { HealthImportReceipt } from "../domain/health/sleepImport";
 import type { BeyondDay } from "../domain/common/types";
@@ -44,25 +44,18 @@ export async function importActivitySnapshot(input: unknown): Promise<{ inserted
   });
 }
 
-export interface MeasuredDay { day: BeyondDay; measured: MeasuredActivity; restingHeartRateBpm: number | null }
+export interface MeasuredDay extends MeasuredPeriod { day: BeyondDay | null }
 
 /**
- * Measured steps and heart rate per existing lived day, newest first. A day runs from its start to
- * the next day's start (or now), so a night worker's day is never split at midnight.
+ * Measured steps and heart rate per lived day (each capped at 24 hours), newest first. Stretches
+ * with no BEYOND day are shown on their own rather than folded into the previous day.
  */
 export async function getMeasuredActivityByDay(limit = 7, now = Date.now()): Promise<MeasuredDay[]> {
   return db.transaction("r", [db.beyondDays, db.externalActivityHours, db.externalRestingHeartRates], async () => {
     const [days, hours, resting] = await Promise.all([db.beyondDays.toArray(), db.externalActivityHours.toArray(), db.externalRestingHeartRates.toArray()]);
     if (!hours.length && !resting.length) return [];
-    const ordered = days.sort((a, b) => a.startedAt.localeCompare(b.startedAt));
-    const result: MeasuredDay[] = [];
-    ordered.forEach((day, i) => {
-      const from = Date.parse(day.startedAt), to = i + 1 < ordered.length ? Date.parse(ordered[i + 1]!.startedAt) : now;
-      const measured = summarizeActivity(hours, from, to);
-      const latestResting = resting.filter((r) => { const t = Date.parse(r.time); return t >= from && t < to; })
-        .sort((a, b) => b.time.localeCompare(a.time))[0];
-      if (measured.hours || latestResting) result.push({ day, measured, restingHeartRateBpm: latestResting?.bpm ?? null });
-    });
-    return result.reverse().slice(0, limit);
+    const byId = new Map(days.map((d) => [d.id, d]));
+    return measuredPeriods(days, hours, resting, now).slice(0, limit)
+      .map((p) => ({ ...p, day: p.dayId ? byId.get(p.dayId) ?? null : null }));
   });
 }

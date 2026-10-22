@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { getMeasuredActivityByDay, type MeasuredDay } from "../../../application/externalActivityCommands";
-
-const steps = (n: number) => n.toLocaleString("en-US");
-function dayLabel(startedAt: string) {
-  return new Date(startedAt).toLocaleString("en-US", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-}
+import { heartRateLine, localDayTime } from "./healthFormat";
 
 /** GARMIN-002: measured Garmin steps and heart rate per lived day. Separate from manual logs and guidance. */
 export function ImportedActivityEvidence({ active = true, refreshKey = 0 }: { active?: boolean; refreshKey?: number }) {
@@ -18,14 +14,17 @@ export function ImportedActivityEvidence({ active = true, refreshKey = 0 }: { ac
   if (!error && !rows.length) return null;
   return <section aria-label="Measured steps and heart rate" className="health-import">
     <h2>MEASURED · GARMIN</h2>
-    <p>Steps and heart rate your watch recorded, by lived day. Separate from your own logs and TODAY guidance.</p>
+    <p>Steps and heart rate your watch recorded, by lived day (up to 24 hours each). Separate from your own logs and TODAY guidance.</p>
     {error ? <><p role="alert">Measured steps and heart rate could not be loaded.</p><button type="button" onClick={() => setAttempt((n) => n + 1)}>RETRY</button></> :
-      rows.map(({ day, measured, restingHeartRateBpm }) => <article key={day.id} aria-label={`Measured ${dayLabel(day.startedAt)}`}>
-        <h3>Day started {dayLabel(day.startedAt)}</h3>
-        <p>{measured.steps === null ? "Steps not measured" : `${steps(measured.steps)} steps`}</p>
-        <p>{measured.heartRateAvgBpm === null ? "Heart rate not measured" : `Heart rate ${measured.heartRateMinBpm ?? "?"}–${measured.heartRateMaxBpm ?? "?"} bpm · average ${measured.heartRateAvgBpm}`}</p>
-        {restingHeartRateBpm !== null && <p>Resting heart rate {restingHeartRateBpm} bpm</p>}
-        <p>{measured.hours} measured {measured.hours === 1 ? "hour" : "hours"}{day.status === "ACTIVE" ? " so far" : ""}</p>
-      </article>)}
+      rows.map(({ day, from, measured, restingHeartRateBpm }) => {
+        const title = day ? `Day started ${localDayTime(day.startedAt)}` : `No BEYOND day · from ${localDayTime(from)}`;
+        return <article key={from} aria-label={title}>
+          <h3>{title}</h3>
+          <p>{measured.steps === null ? "Steps not measured" : `${measured.steps.toLocaleString("en-US")} steps`}</p>
+          <p>{heartRateLine(measured.heartRateMinBpm, measured.heartRateAvgBpm, measured.heartRateMaxBpm)}</p>
+          {restingHeartRateBpm !== null && <p>Resting heart rate {restingHeartRateBpm} bpm</p>}
+          <p>{measured.hours} measured {measured.hours === 1 ? "hour" : "hours"}{day?.status === "ACTIVE" ? " so far" : ""}</p>
+        </article>;
+      })}
   </section>;
 }

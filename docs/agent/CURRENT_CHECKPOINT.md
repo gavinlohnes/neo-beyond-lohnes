@@ -1,3 +1,24 @@
+# GARMIN-002 — Garmin steps and heart rate in BEYOND
+
+Owner-approved PROTECTED objective; brief [GARMIN-002.md](GARMIN-002.md). Builder: Claude Code.
+#262 merged at 0f288f9 after two independent exact-head PASS reviews. The owner verified it on
+the phone: helper 0.3.0 installs, reads 73 hours of steps/heart rate plus sleep, and BEYOND
+(schema 15) imports both files and shows them under BODY → MEASURED · GARMIN.
+
+Current: PR A follow-ups on branch `ccr-83cf6ed8-ug1ym9` from 0f288f9:
+- lived-day cards capped at 24 hours, with stretches that have no BEYOND day shown separately;
+- readable local sleep times;
+- heart rate never shows "?";
+- one size check;
+- a test for cancelling the activity preview.
+
+Next: PR B, **SEND TO BEYOND**. It was approved in the brief, and it changes the PWA service
+worker. #261 (REDESIGN-001, Codex) is still open and touches BODY, so expect one small overlap.
+Every PR needs owner merge approval.
+
+---
+Previous checkpoint:
+
 # GARMIN-001 — physical-phone installation diagnosis
 
 #258 merged at 8581af586facf1b08a29347c28787b5e4810db3a after owner approval.
