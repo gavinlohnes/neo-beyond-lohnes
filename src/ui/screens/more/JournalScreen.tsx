@@ -375,7 +375,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
   return (
     <div>
       <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }} onClick={onBack}>
-        ← BACK
+        BACK TO DECISIONS
       </button>
       {!entry && <p className="empty-state">Decision not found.</p>}
       {entry && (

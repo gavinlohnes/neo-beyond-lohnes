@@ -35,7 +35,7 @@ for (const width of [320, 360, 412]) it(`shows the SYSTEMS line and opens the re
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   for (const animation of document.getAnimations()) animation.finish();
   expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
-  await screen.getByRole("button", { name: "← BACK TO COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "BACK TO COMMAND", exact: true }).click();
   await expect.poll(() => document.activeElement?.getAttribute("aria-label") ?? "").toMatch(/^SYSTEMS /);
   expect(await db.events.toArray()).toEqual(before);
 });
@@ -50,7 +50,7 @@ it("opens a metric's existing history from the readout and returns to the same r
   const water = screen.getByRole("button", { name: "Water: 8 oz. Open history" });
   await water.click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("water");
-  await screen.getByRole("button", { name: "RETURN TO COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "BACK TO COMMAND", exact: true }).click();
   await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Water: 8 oz. Open history");
 });
 

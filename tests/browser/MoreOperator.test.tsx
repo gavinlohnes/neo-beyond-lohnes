@@ -135,7 +135,7 @@ describe("MORE-OPERATOR-001", () => {
     trigger.element().focus();
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByRole("heading", { name: heading, exact: true })).toBeVisible();
-    const back = screen.getByRole("button", { name: "← BACK TO COMMAND" });
+    const back = screen.getByRole("button", { name: "BACK TO COMMAND" });
     expect(document.activeElement).toBe(back.element());
     expect(screen.getByRole("searchbox", { name: "Find a screen or action" }).elements()).toHaveLength(0);
     await userEvent.keyboard("{Enter}");
@@ -161,7 +161,7 @@ describe("MORE-OPERATOR-001", () => {
     const origin = window.scrollY;
     await userEvent.keyboard("{Enter}");
     expect(window.scrollY).toBe(0);
-    await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
     expect(window.scrollY).toBe(origin);
     expect(document.activeElement).toBe(trigger.element());
     await expect.element(screen.getByRole("textbox", { name: "Note to future you" })).toHaveValue("Unsaved private draft");
@@ -285,7 +285,7 @@ describe("MORE-OPERATOR-001", () => {
     await expect.element(screen.getByRole("heading", { name: "COMMAND" })).toBeVisible();
     await screen.getByRole("button", { name: "Search everything", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "Search everything" })).toBeVisible();
-    await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
     await expect.element(screen.getByRole("heading", { name: "COMMAND" })).toBeVisible();
     for (const name of ["TODAY", "TRAIN", "BODY", "COMMAND"]) {
       await expect.element(screen.getByRole("button", { name, exact: true })).toBeVisible();

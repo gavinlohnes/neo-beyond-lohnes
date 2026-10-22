@@ -606,7 +606,7 @@ function MissionDetail({ missionId, onBack, active }: { missionId: string; onBac
   return (
     <div>
       <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }} onClick={onBack}>
-        ← BACK
+        BACK TO MISSIONS
       </button>
       {!mission && <p className="empty-state">Mission not found.</p>}
       {mission && (
@@ -770,7 +770,7 @@ function ObligationDetail({
   return (
     <div>
       <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px", marginBottom: 12 }} onClick={onBack}>
-        ← BACK
+        BACK TO OBLIGATIONS
       </button>
       {!obligation && <p className="empty-state">Obligation not found.</p>}
       {obligation && (

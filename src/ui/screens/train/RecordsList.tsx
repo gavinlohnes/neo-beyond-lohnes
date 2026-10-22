@@ -80,7 +80,7 @@ export function RecordsList({ onClose, focusExerciseId = null, active = true }: 
         </button></li>)}</ul>
       </details>}
       <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={onClose}>
-        BACK
+        BACK TO WORKOUT
       </button>
     </section>
   );

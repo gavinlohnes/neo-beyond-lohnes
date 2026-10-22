@@ -253,7 +253,7 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onOpenTrainingRecords, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
+export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onOpenTrainingRecords, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "BACK TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
   overviewOnly?: boolean;
   foodLookupEnabled?: boolean;
   onOpenTrainingRecords?: (() => void) | undefined;
@@ -2529,7 +2529,9 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       <div hidden={waterFocused || mealsVisible || progressOpen}>
         <HealthHistory open={healthHistoryOpen} onOpenChange={setHealthHistoryOpen} active={visible && !waterFocused && !mealsVisible && !progressOpen}
           days={{ selected: healthDay, disabled: busy || foodSearchBusy, refreshKey: dataRevision, onHistory: onHealthHistory,
-            onSelect: (start) => { if (!busyRef.current && !foodSearchBusyRef.current) setHealthDay(start); }, onExplore: showProgress, onInspect: (selection) => openSources(selection, true) }} />
+            // Clearing the selection only changes the view, so it is allowed even while BODY is busy
+            // (closing history then never leaves a past day selected out of sight).
+            onSelect: (start) => { if (start === null || (!busyRef.current && !foodSearchBusyRef.current)) setHealthDay(start); }, onExplore: showProgress, onInspect: (selection) => openSources(selection, true) }} />
       </div>
       {!waterFocused && !mealsVisible && !progressOpen && !healthDay && (readingsReady ? <HealthOverview day={day}
         onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries}

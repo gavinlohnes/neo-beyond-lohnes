@@ -95,7 +95,7 @@ describe("re-tap, back and retention", () => {
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "COMMAND // WORK SCHEDULE" })).toBeVisible();
-    await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
     await expect.element(screen.getByRole("searchbox", { name: "Find a screen or action" })).toHaveValue("schedule");
     await expect.poll(() => document.activeElement?.textContent ?? "").toContain("WORK SCHEDULE");
     expect(await db.captureItems.count()).toBe(0);

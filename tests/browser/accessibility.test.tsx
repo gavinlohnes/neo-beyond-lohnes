@@ -147,7 +147,7 @@ describe("accessibility (real browser, axe-core)", () => {
     await openTodayTools(screen);
     await screen.getByRole("button", { name: "Open END DAY" }).click();
     await screen.getByRole("button", { name: "END DAY" }).click();
-    await expect.element(screen.getByRole("button", { name: "RETURN TO WORKOUT" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "OPEN WORKOUT" })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);

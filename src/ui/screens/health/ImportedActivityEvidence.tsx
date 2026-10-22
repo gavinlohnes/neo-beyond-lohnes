@@ -18,7 +18,7 @@ export function ImportedActivityEvidence({ active = true, refreshKey = 0 }: { ac
   if (!error && !rows.length) return null;
   return <section aria-label="Measured steps and heart rate" className="health-import">
     <h2>MEASURED · GARMIN</h2>
-    <p>Recent watch measurements. Select a day for source detail.</p>
+    <p>Watch measurements, newest first. Select a day for source detail.</p>
     {error ? <><p role="alert">Measured steps and heart rate could not be loaded.</p><button type="button" onClick={() => setAttempt((n) => n + 1)}>RETRY</button></> :
       rows.slice(0, limit).map(({ day, from, measured, restingHeartRateBpm }) => {
         const title = dayLabel(day?.startedAt ?? from);

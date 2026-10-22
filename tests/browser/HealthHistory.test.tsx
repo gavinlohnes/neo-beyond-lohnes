@@ -58,4 +58,18 @@ describe("UX-COHESION-001 — HEALTH HISTORY", () => {
     await screen.getByText("Health history", { exact: true }).click();
     await expect.poll(() => screen.getByRole("region", { name: "Selected health day" }).elements().length).toBe(0);
   });
+
+  it("choosing GARMIN clears a selected past day", async () => {
+    await page.viewport(390, 844);
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByText("Health history", { exact: true }).click();
+    await screen.getByRole("group", { name: "Seven lived days" }).getByRole("button").nth(5).click();
+    await expect.element(screen.getByRole("region", { name: "Selected health day" })).toBeVisible();
+    await screen.getByRole("button", { name: "GARMIN", exact: true }).click();
+    await expect.element(screen.getByRole("heading", { name: "MEASURED · GARMIN" })).toBeVisible();
+    await screen.getByRole("button", { name: "DAYS", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "CURRENT DAY", exact: true })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("region", { name: "Selected health day" }).elements()).toHaveLength(0);
+  });
 });

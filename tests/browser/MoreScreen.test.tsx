@@ -426,7 +426,7 @@ describe("MoreScreen (real browser) — nested navigation", () => {
     await expect.element(screen.getByText("COMMAND // MISSIONS & OBLIGATIONS", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("heading", { name: "Missions · durable direction" })).toBeVisible();
 
-    await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
     await expect.element(screen.getByText("Plan", { exact: true })).toBeVisible();
   });
 
@@ -439,7 +439,7 @@ describe("MoreScreen (real browser) — nested navigation", () => {
     await expect.element(screen.getByText("COMMAND // WORK SCHEDULE", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/working days/i).first()).toBeVisible();
 
-    await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
     await expect.element(screen.getByText("Plan", { exact: true })).toBeVisible();
   });
 
@@ -451,7 +451,7 @@ describe("MoreScreen (real browser) — nested navigation", () => {
 
     await expect.element(screen.getByText("COMMAND // HISTORY", { exact: true })).toBeVisible();
 
-    await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
     await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
   });
 
@@ -463,7 +463,7 @@ describe("MoreScreen (real browser) — nested navigation", () => {
 
     await expect.element(screen.getByText("COMMAND // REVIEW", { exact: true })).toBeVisible();
 
-    await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
     await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
   });
 
@@ -475,7 +475,7 @@ describe("MoreScreen (real browser) — nested navigation", () => {
 
     await expect.element(screen.getByText("COMMAND // SEARCH", { exact: true })).toBeVisible();
 
-    await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
     await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
   });
 });
@@ -496,8 +496,8 @@ describe("MoreScreen (real browser) — search-to-navigate", () => {
     // The LIST view's own section headings are gone — this is the detail view, not a scroll target.
     expect(screen.getByRole("heading", { name: "Missions · durable direction" }).elements()).toHaveLength(0);
 
-    // IntentScreen's own "← BACK" returns to the Mission/Obligation LIST, not back to Search.
-    await screen.getByRole("button", { name: "← BACK", exact: true }).click();
+    // IntentScreen's own BACK TO MISSIONS/OBLIGATIONS returns to the Mission/Obligation LIST, not back to Search.
+    await screen.getByRole("button", { name: /^BACK TO (MISSIONS|OBLIGATIONS|DECISIONS)$/ }).click();
     await expect.element(screen.getByRole("heading", { name: "Missions · durable direction" })).toBeVisible();
     expect(screen.getByText("Rebuild the deck", { exact: true }).elements().length).toBeGreaterThan(0);
   });
@@ -542,11 +542,11 @@ describe("MoreScreen (real browser) — search-to-navigate", () => {
     await screen.getByRole("button", { name: "Open MISSION: Rebuild the deck" }).click();
     await expect.element(screen.getByRole("heading", { name: "Rebuild the deck", exact: true })).toBeVisible();
 
-    await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
     await (await commandResult(screen, "MISSIONS & OBLIGATIONS")).click();
 
     await expect.element(screen.getByRole("heading", { name: "Missions · durable direction" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "← BACK", exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByRole("button", { name: /^BACK TO (MISSIONS|OBLIGATIONS|DECISIONS)$/ }).elements()).toHaveLength(0);
   });
 });
 

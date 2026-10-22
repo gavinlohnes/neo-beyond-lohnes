@@ -49,9 +49,8 @@ export function HealthOverview({ day, calories, protein, water, sleep, weight, m
   const lastWeight = weight.at(-1);
   return (
     <section className="health-overview" aria-label="Your daily health record">
-      <p className="meta health-day">
-        {day ? `Day started ${new Date(day.startedAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}` : "Your day begins with your first record."}
-      </p>
+      {/* UX-COHESION-001: the lived-day boundary is internal; only say something when no day exists yet. */}
+      {!day && <p className="meta health-day">Your day begins with your first record.</p>}
       <ReadoutGrid emphasis="primary" className="health-nutrition">
         <HealthMeasure metric="calories" onExplore={onExplore} label="CALORIES" value={<><TickNumber value={calories} /><span> kcal</span></>} detail={calorieCopy} />
         <HealthMeasure metric="protein" onExplore={onExplore} label="PROTEIN" value={<><TickNumber value={protein} /><span> g</span></>} detail={proteinCopy} />
@@ -62,8 +61,9 @@ export function HealthOverview({ day, calories, protein, water, sleep, weight, m
           detail={lastWeight ? new Date(lastWeight.recordedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : undefined} />
         <HealthMeasure metric="sleep" onExplore={onExplore} label="MAIN SLEEP" value={main ? formatDuration(main.effectiveDurationMinutes) : "Not logged"}
           detail={mains > 1 ? `Latest of ${mains} main-sleep records` : main?.fromGarmin ? "Garmin" : undefined} />
-        <Readout label="NAPS" value={naps.length ? formatDuration(naps.reduce((total, entry) => total + entry.effectiveDurationMinutes, 0)) : "Not logged"}
-          detail={naps.length > 1 ? `${naps.length} naps recorded` : undefined} />
+        {/* UX-COHESION-001: naps appear when there are naps, not as a standing "Not logged". */}
+        {naps.length > 0 && <Readout label="NAPS" value={formatDuration(naps.reduce((total, entry) => total + entry.effectiveDurationMinutes, 0))}
+          detail={naps.length > 1 ? `${naps.length} naps recorded` : undefined} />}
       </ReadoutGrid>
       <FieldDisclosure summary={`${detailsOpen ? "HIDE" : "SHOW"} NUTRITION DETAILS`} open={detailsOpen} onToggle={setDetailsOpen}>
         <p className="meta">Carbs: {mealEntries.reduce((sum, entry) => sum + entry.effectiveCarbsG, 0)} g · Fat: {mealEntries.reduce((sum, entry) => sum + entry.effectiveFatG, 0)} g from recorded meals.</p>
