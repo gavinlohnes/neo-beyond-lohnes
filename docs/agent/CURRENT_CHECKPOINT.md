@@ -1,3 +1,15 @@
+# GARMIN-004 — Garmin numbers you can see
+
+- **Objective:** [GARMIN-004](GARMIN-004.md), approved 2026-10-22. Builder: Claude Code. Branch
+  `claude/garmin-004`, PR #269 against master after FIELD-AUTHORITY-001 (#268) merged as `e2661cc`.
+- **Built:** STEPS and RESTING HR tiles with your usual; detail sheets for steps, resting heart rate
+  and sleep (hypnogram, stages, 7D/4W/1Y, table view). Display only.
+- **Owner:** Gavin approved merging #269 and #270 on 2026-10-22, wording included.
+- **Next:** GARMIN-005 (calories burned, eaten vs burned; new permission, needs a yes).
+
+---
+Previous checkpoint:
+
 # FIELD-AUTHORITY-001 — one next thing, one red
 
 - **Objective:** Gavin's PROTECTED brief [FIELD-AUTHORITY-001](FIELD-AUTHORITY-001.md), approved

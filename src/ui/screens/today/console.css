@@ -183,3 +183,6 @@
 .redesign-today .next-action-card.all-clear { border: 0; background: none; padding: 4px 0 0; box-shadow: none; }
 .redesign-today .next-action-card.all-clear::before, .redesign-today .next-action-card.all-clear::after { display: none; }
 .redesign-today .next-action-card.all-clear > .btn-secondary { align-self: flex-start; width: auto; min-height: 44px; padding-inline: 18px; margin-top: 4px; }
+
+/* GARMIN-004: six numbers (with Garmin) sit three across. */
+.today-numbers .cc-fuel.cc-fuel--six { grid-template-columns: repeat(3, 1fr); }

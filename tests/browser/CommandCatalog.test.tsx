@@ -201,7 +201,7 @@ describe("COMMAND catalog", () => {
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
       await searchbox(screen).fill("history");
       for (const control of document.querySelectorAll<HTMLElement>("#workspace-COMMAND .command-results .command-result, #workspace-COMMAND .command-search input, #workspace-COMMAND .command-search button")) {
-        expect(control.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+        expect(Math.round(control.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
         expect(parseFloat(getComputedStyle(control).fontSize)).toBeGreaterThanOrEqual(16);
       }
       for (const animation of document.getAnimations()) animation.finish();

@@ -78,6 +78,8 @@ import { HydrationOperationCard, MinimumDayCard } from "./MinimumDaySection";
 import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
 import { RecommendationCard, describeAllClearHeadline } from "./RecommendationCard";
+import { getMeasuredSnapshot, type MeasuredSnapshot } from "../../../application/measuredQueries";
+import { MeasuredSheet, measuredClock, type MeasuredMetric } from "./MeasuredSheet";
 import { ConsoleControls } from "./ConsoleControls";
 import { SmallSteps } from "./SmallSteps";
 import "./smallSteps.css";
@@ -462,6 +464,9 @@ export function TodayScreen({
   const [lastWaterAmount, setLastWaterAmount] = useState<number | null>(null);
   // POLISH-002: TODAY's four number tiles — the latest weigh-in and today's water-log count.
   const [latestWeightLbs, setLatestWeightLbs] = useState<number | undefined>(undefined);
+  // GARMIN-004: measured Garmin values for TODAY's tiles and their sheets (display only).
+  const [measured, setMeasured] = useState<MeasuredSnapshot | null>(null);
+  const [measuredOpen, setMeasuredOpen] = useState<MeasuredMetric | null>(null);
   const [waterLogCount, setWaterLogCount] = useState(0);
   const [hydrationConfirmation, setHydrationConfirmation] = useState<LoggedEntry | null>(null);
   const [proteinConfirmation, setProteinConfirmation] = useState<LoggedEntry | null>(null);
@@ -888,6 +893,8 @@ export function TodayScreen({
     setWaterLogCount(waterLogs);
     setLatestWeightLbs(latestWeight);
     if (isOwner) { setSystemStatus(nextSystemStatus); setLastMainSleepMinutes(nextLastMainSleep?.minutes ?? null); }
+    // GARMIN-004: off the critical path; a failed Garmin read hides the Garmin tiles, nothing else.
+    if (isOwner && !operationsOnly) void getMeasuredSnapshot().then((next) => { if (mountedRef.current && myRequestId === refreshRequestIdRef.current) setMeasured(next); }, () => { if (mountedRef.current) setMeasured(null); });
     const prompt = getBackupPrompt();
     setBackupDue(prompt?.kind === "BACKUP_DUE" ? { days: prompt.daysSinceLastBackup } : null);
     setProteinTargetG(effectiveProteinTarget);
@@ -1907,6 +1914,12 @@ export function TodayScreen({
     const open = (metric: "water" | "protein" | "weight" | "sleep") => () => { if (!busyRef.current) onOpenHealthEvidence?.(metric); };
     const pct = proteinTargetG ? Math.min(100, Math.round((minimumDayProteinG / proteinTargetG) * 100)) : null;
     const sleep = lastMainSleepMinutes === null ? null : `${Math.floor(lastMainSleepMinutes / 60)}:${String(Math.round(lastMainSleepMinutes % 60)).padStart(2, "0")}`;
+    // GARMIN-004: with Garmin data, STEPS and RESTING HR join the numbers and SLEEP shows your usual.
+    const garminTiles = !operationsOnly && !!measured?.any;
+    const stepsToday = measured?.steps.at(-1)?.value ?? null;
+    // Garmin publishes resting heart rate once a day, so the tile shows the latest from today or yesterday.
+    const restingToday = measured?.resting.at(-1)?.value ?? measured?.resting.at(-2)?.value ?? null;
+    const openMeasured = (metric: MeasuredMetric | null) => () => { if (busyRef.current) return; if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); };
     const tile = (metric: "water" | "protein" | "weight" | "sleep", label: string, value: ReactNode, below: ReactNode, spoken: string) =>
       <button type="button" disabled={busy || !onOpenHealthEvidence} aria-label={`${spoken}, explore records`} onClick={open(metric)}>
         <span className="cc-flab">{label}</span><span className="cc-num">{value}</span>{below}
@@ -1914,7 +1927,7 @@ export function TodayScreen({
     return (
       <>
         <p className="cc-lbl cc-numbers-head"><span>TODAY’S NUMBERS</span></p>
-        <div className="cc-fuel" role="group" aria-label={fuelLine}>
+        <div className={`cc-fuel${garminTiles ? " cc-fuel--six" : ""}`} role="group" aria-label={fuelLine}>
           {tile("protein", "PROTEIN", <><b><DecryptNumber value={minimumDayProteinG} dayId={day?.id ?? "unstarted"} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
             // FIELD-AUTHORITY-001: a tile states facts; how the target is set lives in its history.
             pct === null ? <span className="cc-flab">NO TARGET</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
@@ -1923,8 +1936,20 @@ export function TodayScreen({
             <span className="cc-flab">{waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>, `Water ${minimumDayHydrateOz} oz`)}
           {tile("weight", "WEIGHT", <b>{latestWeightLbs === undefined ? "—" : latestWeightLbs.toFixed(1)}</b>,
             <span className="cc-flab">{latestWeightLbs === undefined ? "NOT LOGGED" : "LATEST"}</span>, latestWeightLbs === undefined ? "Weight not logged" : `Weight ${latestWeightLbs} lb`)}
-          {tile("sleep", "SLEEP", <b>{sleep ?? "—"}</b>, <span className="cc-flab">{sleep ? "LAST MAIN" : "NOT LOGGED"}</span>,
+          {garminTiles ? <button type="button" disabled={busy} aria-label={`${sleep ? `Main sleep ${sleep}` : "Main sleep not logged"}${measured!.usual.sleep.value !== null ? `, usual ${measuredClock(measured!.usual.sleep.value)}` : ""}, open sleep`} onClick={openMeasured(measured!.lastNight ? "sleep" : null)}>
+            <span className="cc-flab">SLEEP</span><span className="cc-num"><b>{sleep ?? "—"}</b></span><span className="cc-flab">{measured!.usual.sleep.value !== null ? `USUAL ${measuredClock(measured!.usual.sleep.value)}` : sleep ? "LAST MAIN" : "NOT LOGGED"}</span>
+          </button> : tile("sleep", "SLEEP", <b>{sleep ?? "—"}</b>, <span className="cc-flab">{sleep ? "LAST MAIN" : "NOT LOGGED"}</span>,
             sleep ? `Main sleep ${sleep}` : "Main sleep not logged")}
+          {garminTiles && <>
+            <button type="button" disabled={busy} aria-label={`Steps ${stepsToday === null ? "not measured today" : stepsToday.toLocaleString("en-US")}${measured!.usual.steps.value !== null ? `, usual ${measured!.usual.steps.value.toLocaleString("en-US")}` : ""}, open steps`} onClick={openMeasured("steps")}>
+              <span className="cc-flab">STEPS</span><span className="cc-num"><b>{stepsToday === null ? "—" : stepsToday.toLocaleString("en-US")}</b></span>
+              <span className="cc-flab">{measured!.usual.steps.value !== null ? `USUAL ${measured!.usual.steps.value.toLocaleString("en-US")}` : stepsToday === null ? "NOT MEASURED" : "GARMIN"}</span>
+            </button>
+            <button type="button" disabled={busy} aria-label={`Resting heart rate ${restingToday === null ? "not measured" : `${restingToday} bpm`}${measured!.usual.resting.value !== null ? `, usual ${measured!.usual.resting.value}` : ""}, open resting heart rate`} onClick={openMeasured("resting")}>
+              <span className="cc-flab">RESTING HR</span><span className="cc-num"><b>{restingToday ?? "—"}</b>{restingToday !== null && <small>bpm</small>}</span>
+              <span className="cc-flab">{measured!.usual.resting.value !== null ? `USUAL ${measured!.usual.resting.value}` : restingToday === null ? "NOT MEASURED" : "GARMIN"}</span>
+            </button>
+          </>}
         </div>
         {/* FIELD-AUTHORITY-001: TONIGHT-001's "a weigh-in sets the target" moves out of the tile. */}
         {pct === null && latestWeightLbs === undefined && <p className="meta cc-numbers-note">A weigh-in sets the protein target.</p>}
@@ -2492,6 +2517,8 @@ export function TodayScreen({
 
     </section>
     <LogSheet open={fastCaptureOpen} title="NOTE" onClose={closeFastCapture} canClose={() => !busyRef.current}>{renderToolsItem("CAPTURE")}</LogSheet>
+    <MeasuredSheet open={measuredOpen !== null} metric={measuredOpen ?? "steps"} snapshot={measured} onClose={() => setMeasuredOpen(null)}
+      onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
     <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} quickValues={quickCheckInValues} error={checkInError} />
     {(hydrationConfirmation || mealConfirmation || sleepConfirmation || proteinConfirmation) && <div className="redesign-toast" role="status">
       {hydrationConfirmation && renderLoggedBanner(`${hydrationConfirmation.amount} oz recorded.`, hydrationUndoOpen, "WATER", "water")}
