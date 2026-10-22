@@ -4,11 +4,13 @@ import { LogSheet } from "./LogSheet";
 import { BodyScreen } from "../screens/body/BodyScreen";
 import type { RecordCorrectionRequest, RecordSheetTarget } from "../recordSheets";
 import type { SavedMeal } from "../../domain/common/types";
-import { ensureActiveDay, logWater, voidWaterLog, captureItem, deleteCaptureItem } from "../../application/commands";
+import { ensureActiveDay, logWater, voidWaterLog, captureItem, deleteCaptureItem, voidProteinLog } from "../../application/commands";
 import { getActiveDay, getHydrationEntries } from "../../application/queries";
 import { getSavedMeals, getLikelySavedMeals } from "../../application/nutritionQueries";
 import { logMeal, logManualMeal, updateSavedMeal, archiveSavedMeal, voidMealLog } from "../../application/nutritionCommands";
 import { getDuplicateMealCheck, getSameFoodCheck } from "../../application/sameFoodQueries";
+import type { DuplicateMealPair, SameFoodPair } from "../../engine/sameFood";
+import { describeDuplicateMealQuestion, describeSameFoodQuestion, describeSameFoodRemoveOne } from "../screens/body/nutritionCopy";
 import { useDayRolloverRefresh } from "../hooks/useDayRolloverRefresh";
 import { useUndoOpen } from "../hooks/useUndoWindow";
 import { useSessionDraft } from "../sessionDrafts";
@@ -16,10 +18,16 @@ import { HoldButton } from "./HoldButton";
 import { describeError } from "../errorMessage";
 import { CcIcon } from "../cc/ccIcons";
 
-type Receipt = { message: string; undo: () => Promise<unknown>; warning?: string; history?: "water" | "protein"; notes?: boolean };
-function ReceiptItem({ receipt, busy, undo, dismiss, history }: { receipt: Receipt; busy: boolean; undo: () => void; dismiss: () => void; history: () => void }) {
+type MealQuestion = { message: string; detail?: string; removeLabel: string; remove: () => Promise<unknown>; removedMessage: string };
+type Receipt = { question?: MealQuestion | undefined; message: string; undo: () => Promise<unknown>; warning?: string; history?: "water" | "protein"; notes?: boolean };
+function ReceiptItem({ receipt, busy, undo, dismiss, history, keep, remove }: { receipt: Receipt; busy: boolean; undo: () => void; dismiss: () => void; history: () => void; keep: () => void; remove: () => void }) {
   const undoOpen = useUndoOpen(receipt);
   return <div className="record-receipt"><p>{receipt.message}</p>{receipt.warning && <p>{receipt.warning}</p>}
+    {receipt.question && <div role="group" aria-label={receipt.question.removeLabel === "REMOVE ONE" ? "Same food?" : "Same meal?"}>
+      <p>{receipt.question.message}</p>{receipt.question.detail && <p>{receipt.question.detail}</p>}
+      <button type="button" className="btn-secondary" disabled={busy} onClick={keep}>KEEP BOTH</button>
+      <button type="button" className="btn-secondary" disabled={busy} onClick={remove}>{receipt.question.removeLabel}</button>
+    </div>}
     {undoOpen ? <button type="button" className="btn-secondary" disabled={busy} onClick={undo}>UNDO</button> : <button type="button" className="btn-secondary" onClick={history}>HISTORY / CORRECT</button>}
     <button type="button" className="btn-secondary" onClick={dismiss}>DISMISS</button>
   </div>;
@@ -92,22 +100,36 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
     if (meals.some((meal) => meal.id === mealRequest.id)) { setMealId(mealRequest.id); setServings(1); setPage("portion"); }
     else setError("That saved meal is unavailable. Choose another meal or retry.");
   }, [target, mealRequest, readState, meals]);
-  async function commit(action: () => Promise<{ message: string; undo: () => Promise<unknown>; warning?: string; history?: "water" | "protein"; notes?: boolean }>) {
+  async function commit(action: () => Promise<Receipt>) {
     if (busyRef.current) return;
     setBusy(true); setError(null);
     try {
       const saved = await action(); addReceipt(saved); onSaved();
       setBusy(false); close();
-    } catch (cause) { setError(describeError(cause, "Nothing saved. Try again.")); }
+    } catch (cause) { setError(`${target === "water" ? "Water" : target === "note" ? "Note" : "Meal"} didn't save. ${describeError(cause, "Nothing saved.")} Try again.`); }
     finally { setBusy(false); }
   }
   async function mealReceipt(dayId: string, eventId: string, name: string) {
     let warning: string | undefined;
-    try { if (await getDuplicateMealCheck(dayId, eventId)) warning = "This resembles a recent meal. Keep both, or undo this log.";
-      else if (await getSameFoodCheck(dayId, { kind: "MEAL", id: eventId })) warning = "Similar protein was just logged. Keep both, or undo this meal.";
+    let question: MealQuestion | undefined;
+    try {
+      const duplicate: DuplicateMealPair | undefined = await getDuplicateMealCheck(dayId, eventId);
+      const sameFood: SameFoodPair | undefined = duplicate ? undefined : await getSameFoodCheck(dayId, { kind: "MEAL", id: eventId });
+      if (duplicate) question = {
+        message: describeDuplicateMealQuestion(duplicate.justLogged, duplicate.earlier),
+        removeLabel: "REMOVE THIS ONE", remove: () => voidMealLog(dayId, eventId),
+        removedMessage: `${name} removed. The earlier meal stays.`,
+      };
+      else if (sameFood) question = {
+        message: describeSameFoodQuestion(sameFood.protein, sameFood.meal),
+        detail: describeSameFoodRemoveOne(sameFood.protein.grams),
+        removeLabel: "REMOVE ONE", remove: () => voidProteinLog(dayId, sameFood.protein.id),
+        removedMessage: "Protein-only entry removed. The meal stays.",
+      };
     } catch { warning = "Meal saved. Duplicate check unavailable; review history."; }
-    return { message: `${name} logged.`, undo: () => voidMealLog(dayId, eventId), ...(warning ? { warning } : {}) };
+    return { message: `${name} logged.`, undo: () => voidMealLog(dayId, eventId), ...(warning ? { warning } : {}), ...(question ? { question } : {}) };
   }
+
   function chooseMeal(meal: SavedMeal) { setMealId(meal.id); setServings(1); setPage("portion"); }
   const selected = meals.find((meal) => meal.id === mealId);
   const displayed = query.trim() ? meals.filter((meal) => meal.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) : target === "myMeals" ? meals : likely;
@@ -173,6 +195,16 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       <div hidden={!bodyVisible}>{bodyFocus && <BodyScreen foodLookupEnabled={hiddenFeatures.foodLookup} correctionRequest={target === "record" ? correctionRequest : null} sheetFocus={bodyFocus === "foodLookup" ? "meal" : bodyFocus} focus={bodyFocus === "protein" ? null : bodyFocus} focusRequest={bodyRequest} visible={bodyVisible && target !== null} onMealJourneyInFlightChange={(next) => { const wasBusy = busyRef.current; setBusy(next); if (wasBusy && !next) onSaved(); }} />}</div>
     </LogSheet>
     {receipts.length > 0 && <div className="redesign-toast" role="status">{receipts.map((receipt) => <ReceiptItem key={receipt.id} receipt={receipt} busy={busy}
+      keep={() => setReceipts((old) => old.map((entry) => entry.id === receipt.id ? { ...entry, question: undefined } : entry))}
+      remove={() => {
+        if (busyRef.current || !receipt.question) return;
+        const question = receipt.question; setBusy(true); setError(null);
+        void question.remove().then(() => {
+          if (question.removeLabel === "REMOVE THIS ONE") dismissReceipt(receipt.id);
+          else setReceipts((old) => old.map((entry) => entry.id === receipt.id ? { ...entry, question: undefined, message: question.removedMessage } : entry));
+          onSaved();
+        }).catch((cause) => setError(`Could not remove the entry. ${describeError(cause, "Try again.")}`)).finally(() => setBusy(false));
+      }}
       dismiss={() => dismissReceipt(receipt.id)} history={() => { dismissReceipt(receipt.id); if (receipt.notes) onNotes(); else onHistory(receipt.history ?? "protein"); }}
       undo={() => { if (busyRef.current) return; setBusy(true); setError(null); void receipt.undo().then(() => { dismissReceipt(receipt.id); onSaved(); }).catch((cause) => setError(describeError(cause, "Could not undo. Try again."))).finally(() => setBusy(false)); }} />)}
       {error && !target && <p role="alert">{error}</p>}

@@ -1,6 +1,7 @@
+/// <reference types="@vitest/browser-playwright" />
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
-import { page } from "vitest/browser";
+import { page, cdp } from "vitest/browser";
 import axe from "axe-core";
 import { App } from "../../src/app/App";
 import { startShiftDown, startDay, updateSchedulePattern } from "../../src/application/commands";
@@ -16,7 +17,7 @@ beforeEach(async () => {
   const { id: _id, createdAt: _c, updatedAt: _u, ...schedule } = DEFAULT_SCHEDULE_PATTERN;
   await updateSchedulePattern(schedule);
 });
-afterEach(() => { cleanup(); vi.useRealTimers(); window.scrollTo(0, 0); });
+afterEach(async () => { cleanup(); vi.useRealTimers(); await cdp().send("Emulation.setEmulatedMedia", { features: [] }); window.scrollTo(0, 0); });
 
 for (const width of [320, 360, 390, 412]) it(`keeps five TODAY sections, blank stable check-in, canonical submission and accessible layout at ${width}`, async () => {
   await page.viewport(width, 844);
@@ -118,4 +119,61 @@ it('keeps displaced daily controls reachable in COMMAND without rendering them o
   await screen.getByRole('button', { name: /^TODAY TOOLS / }).click();
   await expect.element(screen.getByRole('button', { name: 'Open END DAY', exact: true })).toBeVisible();
   await expect.element(screen.getByRole('button', { name: 'COMMAND', exact: true })).toHaveAttribute('aria-current', 'page');
+});
+
+it('names missing guidance truthfully and opens manual actions without inventing an Engine record', async () => {
+  await startDay(); const screen = await render(<App />);
+  await expect.element(screen.getByRole('heading', { name: 'No guidance recorded yet.', exact: true })).toBeVisible();
+  const root = document.querySelector('.redesign-today')!;
+  expect([...root.querySelectorAll<HTMLElement>('.btn-primary')].filter(el => el.getClientRects().length)).toHaveLength(1);
+  const before = await db.events.toArray();
+  await screen.getByRole('button', { name: 'CHOOSE AN ACTION', exact: true }).click();
+  await expect.element(screen.getByRole('dialog', { name: 'LOG', exact: true })).toBeVisible();
+  expect(await db.recommendations.count()).toBe(0); expect(await db.events.toArray()).toEqual(before);
+});
+
+it('keeps RED Engine guidance and the explicit decline guard on the compact TODAY path', async () => {
+  const { submitCheckIn } = await import('../../src/application/commands');
+  const day = await startDay(); await submitCheckIn(day.id, { energy: 1, stress: 1, mood: 4, soreness: 0, alcoholUrge: 0 });
+  const screen = await render(<App />);
+  await expect.element(screen.getByRole('button', { name: 'Not doing this', exact: true })).toBeVisible();
+  const before = await db.events.toArray(); await screen.getByRole('button', { name: 'Not doing this', exact: true }).click();
+  await expect.element(screen.getByText('CONFIRM OVERRIDE', { exact: true })).toBeVisible();
+  await expect.element(screen.getByRole('button', { name: 'PROCEED ANYWAY', exact: true })).toBeVisible();
+  expect(await db.events.toArray()).toEqual(before); await screen.getByRole('button', { name: 'CANCEL', exact: true }).click();
+});
+
+it('keeps short-sleep System Status separate from all-clear Engine guidance overnight', async () => {
+  const { submitCheckIn, logSleep, setWorkContext } = await import('../../src/application/commands');
+  vi.setSystemTime(new Date(2026, 9, 13, 17)); const day = await startDay(); await setWorkContext(day.id, 'WORK', 'MANUAL');
+  vi.setSystemTime(new Date(2026, 9, 14, 3)); await logSleep(day.id, 180, 'PRIMARY');
+  await submitCheckIn(day.id, { energy: 4, stress: 1, mood: 4, soreness: 0, alcoholUrge: 0 });
+  const screen = await render(<App />);
+  await expect.element(screen.getByRole('button', { name: 'GOT IT', exact: true })).toBeVisible();
+  const status = screen.getByRole('button', { name: /STATUS · RED · 3h sleep/ }); await expect.element(status).toBeVisible();
+  const before = await db.events.toArray(); await status.click();
+  await expect.element(screen.getByRole('heading', { name: 'COMMAND // SYSTEMS', exact: true })).toBeVisible();
+  expect(await db.events.toArray()).toEqual(before);
+});
+
+it('preserves the late-recovery main-sleep prompt and opens the existing sleep sheet', async () => {
+  const { setWorkContext, markWorkEnded } = await import('../../src/application/commands');
+  vi.setSystemTime(new Date(2026, 9, 13, 17)); const day = await startDay(); await setWorkContext(day.id, 'WORK', 'MANUAL');
+  vi.setSystemTime(new Date(2026, 9, 14, 13, 30)); await markWorkEnded(day.id);
+  const screen = await render(<App />); await screen.getByRole('button', { name: 'LOG MAIN SLEEP', exact: true }).click();
+  await expect.element(screen.getByRole('dialog', { name: 'SLEEP', exact: true })).toBeVisible();
+  expect(await db.events.where('type').equals('SLEEP_LOGGED').count()).toBe(0);
+  await expect.element(screen.getByRole('button', { name: 'TODAY', exact: true })).toHaveAttribute('aria-current', 'page');
+});
+
+it('keeps reduced-motion logging and check-in free of entry animations at phone width', async () => {
+  await cdp().send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+  await page.viewport(320, 844); await startDay(); const screen = await render(<App />);
+  await screen.getByRole('button', { name: 'CHECK IN', exact: true }).click();
+  await screen.getByRole('dialog').getByRole('group', { name: 'Energy', exact: true }).getByRole('button', { name: '3', exact: true }).click();
+  expect(document.getAnimations().filter((a) => a.playState === 'running')).toHaveLength(0);
+  await screen.getByRole('dialog').getByRole('button', { name: 'CLOSE', exact: true }).click();
+  await screen.getByRole('button', { name: 'Log water', exact: true }).click();
+  await expect.element(screen.getByRole('dialog', { name: 'WATER', exact: true })).toBeVisible();
+  expect(document.getAnimations().filter((a) => a.playState === 'running')).toHaveLength(0);
 });

@@ -130,3 +130,45 @@ it('retains independent water and meal undo after consecutive logs', async()=>{
   (food.querySelector('button') as HTMLButtonElement).click();
   await expect.poll(()=>getMealEntries(dayId)).toEqual([]);
 });
+
+it('keeps the meal and removes only the protein-only duplicate after an explicit choice', async () => {
+  const { logProtein } = await import('../../src/application/commands');
+  const { getProteinEntries } = await import('../../src/application/queries');
+  await logProtein(dayId, 40); await createSavedMeal(meal);
+  const screen = await render(<App />);
+  await screen.getByRole('button', { name: 'Log a meal', exact: true }).click();
+  await screen.getByRole('dialog').getByRole('button', { name: 'Log Dinner', exact: true }).click();
+  const question = screen.getByRole('group', { name: 'Same food?', exact: true });
+  await expect.element(question).toBeVisible();
+  expect(await getProteinEntries(dayId)).toHaveLength(1);
+  expect(await getMealEntries(dayId)).toHaveLength(1);
+  await question.getByRole('button', { name: 'REMOVE ONE', exact: true }).click();
+  await expect.poll(() => getProteinEntries(dayId)).toHaveLength(0);
+  expect(await getMealEntries(dayId)).toHaveLength(1);
+  expect(await db.events.where('type').equals('PROTEIN_LOG_VOIDED').count()).toBe(1);
+});
+it('removes only the repeated meal and leaves the earlier canonical record intact', async () => {
+  const { logMeal } = await import('../../src/application/nutritionCommands');
+  const preset = await createSavedMeal(meal); const earlier = await logMeal(dayId, preset.id);
+  const screen = await render(<App />);
+  await screen.getByRole('button', { name: 'Log a meal', exact: true }).click();
+  await screen.getByRole('dialog').getByRole('button', { name: 'Log Dinner', exact: true }).click();
+  const question = screen.getByRole('group', { name: 'Same meal?', exact: true });
+  await expect.element(question).toBeVisible();
+  expect(await getMealEntries(dayId)).toHaveLength(2);
+  await question.getByRole('button', { name: 'REMOVE THIS ONE', exact: true }).click();
+  await expect.poll(() => getMealEntries(dayId)).toMatchObject([{ rootEventId: earlier.eventId }]);
+  expect(await db.events.where('type').equals('MEAL_LOG_VOIDED').count()).toBe(1);
+});
+it('explains a water write failure, keeps the sheet open and retries without duplicate writes', async () => {
+  const screen = await render(<App />);
+  await screen.getByRole('button', { name: 'Log water', exact: true }).click();
+  const sheet = screen.getByRole('dialog', { name: 'WATER', exact: true });
+  const fail = vi.spyOn(db.events, 'add').mockRejectedValue(new Error('Disk full.'));
+  await sheet.getByRole('button', { name: '+12 oz', exact: true }).click();
+  await expect.element(sheet.getByRole('alert')).toHaveTextContent("Water didn't save. Disk full. Try again.");
+  expect(await db.events.where('type').equals('WATER_LOGGED').count()).toBe(0);
+  fail.mockRestore();
+  await sheet.getByRole('button', { name: '+12 oz', exact: true }).click();
+  await expect.poll(() => db.events.where('type').equals('WATER_LOGGED').count()).toBe(1);
+});

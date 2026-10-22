@@ -1,4 +1,4 @@
-# REDESIGN-001 — items 1–7 delivered; final gate next
+# REDESIGN-001 — acceptance corrections in progress
 
 Owner-approved PROTECTED objective: [frozen brief](REDESIGN-001.md), frozen reference
 `prototype/redesign/index.html`. Builder Codex. Branch `codex/redesign-001`;
@@ -96,11 +96,28 @@ screen browser subset 32 passed; copy Node subset had one old expected label, co
 copy/meal Node subset 46 passed, including the real restore preview/apply path for one-offs and
 portions. Build/architecture pass. Chromium is available locally; no physical-device claim.
 
-**Next:** item 8 locked rulings/checkpoint, reconcile remaining legacy presentation assertions,
-then full `npm run verify` and final production/mobile/offline acceptance. Keep PR draft until
-all acceptance is met. Independent Claude exact-head review follows; never merge. Commit/push
-and update PR Handoff after each item. Full final verify and acceptance evidence, then mark ready
-and stop for independent Claude exact-head review. Never merge.
+**Item 8 rulings recorded:** approved composition, blank check-in/reference-only previous answers,
+BODY sheets, COMMAND groups, optional tools and meal exception amend UX_DECISIONS. All routes
+now use the blank sheet; historical draft provenance remains readable. The relocated complete
+daily-controls regression host is the same component used by COMMAND. No tests disabled.
+Current-master targeted run: 28 passed (TODAY RED/unknown/overnight/recovery, prior-answer reference,
+Garmin imports). Earlier Node diagnostic: 1,738 passed/one existing skip/four presentation
+expectations, all corrected and 26 affected checks passed. Full combined verification follows.
+
+**Final-gate truth:** full `npm run verify` at integrated head `c33514d` failed: 57 files,
+314 cases failed; 229 files / 2,531 cases passed, one existing skip. Architecture passed;
+build was not reached. Most failures follow retired navigation/copy; do not suppress them.
+The next focused batch passed 57/61; its four failures were shortcut expectations, a renamed
+control and navigation-helper startup timing. Three actual sheet defects are corrected: explicit
+same-food/duplicate decisions now reuse the existing queries, copy and void commands; REMOVE ONE
+voids only the protein-only log; failed writes identify the action and retain input for retry.
+New sheet regression tests (17) passed in that batch, including both duplicate choices and retries.
+Read-only TODAY RED/unknown/overnight/recovery and reduced-motion acceptance is retained.
+
+**Next:** finish legacy test-path migration using real production navigation, investigate every
+remaining failure, then run full `npm run verify` and built mobile/offline acceptance. Keep PR
+draft until all acceptance passes. Update the PR handoff with each pushed batch; final exact-head
+Claude review and Gavin's merge decision remain. Never merge or begin another objective.
 
 **Preserved unrelated work:** unfinished local daily-operations sprint is in stash
 `e1396c8e7ab549dec117e0f631a0c7e1144af309`; do not apply to this branch. #254 is now merged into master.

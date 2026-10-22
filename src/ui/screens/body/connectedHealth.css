@@ -9,7 +9,7 @@
 .health-metric { display: block; width: 100%; text-align: left; color: inherit; background: transparent; border: 0; border-radius: 0; padding: 0; font: inherit; align-self: start; position: relative; cursor: pointer; min-height: 44px; }
 .health-metric:hover, .health-metric:active { background: var(--surface-2); }
 .health-metric .tool-label { display: block; }
-.health-metric .tool-label::after { content: "↗"; color: var(--text-2); position: absolute; right: 0; top: 0; }
+.health-metric .tool-label::after { content: ""; position: absolute; right: 4px; top: 6px; width: 7px; height: 7px; border-top: 1px solid var(--text-2); border-right: 1px solid var(--text-2); }
 .health-metric .readout__value { margin: 0; }
 .health-past-day { border-block: 1px solid var(--border-subtle); padding-block: 12px; }
 .health-past-day .readout-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
