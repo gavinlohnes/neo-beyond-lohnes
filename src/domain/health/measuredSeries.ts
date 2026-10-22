@@ -132,3 +132,37 @@ export function lastNight(sleeps: readonly ExternalSleep[], now: number): Extern
   // The main sleep: the longest of the recent sessions, so a nap never replaces the night.
   return recent.reduce((best, s) => (sleepMinutes(s) > sleepMinutes(best) ? s : best));
 }
+
+/**
+ * GARMIN-005: calories burned per period from hourly Garmin energy — "total" (resting + active, what
+ * the watch calls calories burned) or "active". A period without any calorie hour is null.
+ */
+export function burnedByPeriod(periods: readonly Period[], hours: readonly ActivityHour[], now: number, kind: "total" | "active" = "total"): PeriodValue[] {
+  const field = kind === "total" ? "totalCaloriesKcal" : "activeCaloriesKcal";
+  const buckets = bucket(periods, hours.filter((h) => h[field] != null), (h) => Date.parse(h.startTime));
+  return withValue(periods, now, (i) => buckets[i]!.length ? buckets[i]!.reduce((sum, h) => sum + h[field]!, 0) : null);
+}
+
+/** Running Garmin total burned through one period, one point per measured hour. */
+export function cumulativeBurned(period: Period, hours: readonly ActivityHour[], now: number): { t: number; total: number }[] {
+  const inside = hours.filter((h) => { const t = Date.parse(h.startTime); return h.totalCaloriesKcal != null && t >= period.from && t < Math.min(period.to, now); })
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  let total = 0;
+  return [{ t: period.from, total: 0 }, ...inside.map((h) => ({ t: Math.min(Date.parse(h.endTime), now), total: (total += h.totalCaloriesKcal!) }))];
+}
+
+/**
+ * Logged meal calories per period, from each BEYOND day's own ledger. A period with no BEYOND day, or
+ * a day with no meal logged, is null ("not logged"), never zero eaten.
+ */
+export function eatenByPeriod(periods: readonly Period[], kcalByDay: ReadonlyMap<string, number>, now: number): PeriodValue[] {
+  return withValue(periods, now, (i) => { const id = periods[i]!.dayId; return id && kcalByDay.has(id) ? kcalByDay.get(id)! : null; });
+}
+
+/** Running logged-meal total through one period, stepping at each meal's logged time. */
+export function cumulativeEaten(period: Period, meals: readonly { recordedAt: string; calories: number }[], now: number): { t: number; total: number }[] {
+  let total = 0;
+  const inside = meals.filter((m) => { const t = Date.parse(m.recordedAt); return t >= period.from && t <= now; })
+    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+  return [{ t: period.from, total: 0 }, ...inside.map((m) => ({ t: Date.parse(m.recordedAt), total: (total += m.calories) }))];
+}

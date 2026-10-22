@@ -9,7 +9,7 @@ import { GARMIN_ORIGIN, SLEEP_IMPORT_FORMAT, type ExternalSleep, type SleepSnaps
 const H = 3600_000, DAY = 24 * H;
 const iso = (t: number) => new Date(t).toISOString();
 
-export function syntheticGarminMonth(firstDayStart: number, dayCount: number, now: number) {
+export function syntheticGarminMonth(firstDayStart: number, dayCount: number, now: number, options: { calories?: boolean } = {}) {
   const days = Array.from({ length: dayCount }, (_, i) => ({
     id: `garmin-day-${i}`, startedAt: iso(firstDayStart + i * DAY), timezoneId: "America/Chicago",
     workContext: (Math.floor(i / 2) % 2 ? "OFF" : "WORK") as "WORK" | "OFF", status: (i === dayCount - 1 ? "ACTIVE" : "ENDED") as "ACTIVE" | "ENDED",
@@ -20,7 +20,9 @@ export function syntheticGarminMonth(firstDayStart: number, dayCount: number, no
   for (let t = Math.ceil(firstDayStart / H) * H; t + H <= now; t += H) {
     const i = Math.floor((t - firstDayStart) / H), h = i % 24;
     const steps = h >= 14 && h < 21 ? 0 : 150 + ((i * 37) % 9) * 40; // quiet while asleep
-    hours.push({ startTime: iso(t), endTime: iso(t + H), zoneOffsetSeconds: -18000, steps, heartRateMinBpm: 52, heartRateAvgBpm: 70 + (i % 7), heartRateMaxBpm: 110 });
+    // GARMIN-005: ~90 kcal resting each hour plus activity that follows the steps.
+    const calories = options.calories ? { totalCaloriesKcal: 90 + Math.round(steps / 20), activeCaloriesKcal: Math.round(steps / 20) } : {};
+    hours.push({ startTime: iso(t), endTime: iso(t + H), zoneOffsetSeconds: -18000, steps, heartRateMinBpm: 52, heartRateAvgBpm: 70 + (i % 7), heartRateMaxBpm: 110, ...calories });
   }
   const resting: RestingHeartRate[] = days.map((d, i) => ({ id: `rhr-${i}`, dataOriginPackage: GARMIN_ORIGIN, lastModifiedTime: iso(now),
     time: iso(Date.parse(d.startedAt) + 18 * H), zoneOffsetSeconds: -18000, bpm: 58 + (i % 5) }))
@@ -35,7 +37,7 @@ export function syntheticGarminMonth(firstDayStart: number, dayCount: number, no
     return [{ id: `sleep-${i}`, dataOriginPackage: GARMIN_ORIGIN, lastModifiedTime: iso(now), startTime: iso(start), endTime: iso(end), startZoneOffsetSeconds: -18000, endZoneOffsetSeconds: -18000, stages }];
   });
   const window = { startTime: iso(firstDayStart - H), endTime: iso(now) };
-  const activity: ActivitySnapshot = { format: ACTIVITY_IMPORT_FORMAT, schemaVersion: 1, producer: { name: "BEYOND Health Bridge", version: "0.5.0" }, source: GARMIN_ORIGIN, exportedAt: iso(now), window, hours, restingHeartRate: resting };
+  const activity: ActivitySnapshot = { format: ACTIVITY_IMPORT_FORMAT, schemaVersion: options.calories ? 2 : 1, producer: { name: "BEYOND Health Bridge", version: "0.5.0" }, source: GARMIN_ORIGIN, exportedAt: iso(now), window, hours, restingHeartRate: resting };
   const sleep: SleepSnapshot = { format: SLEEP_IMPORT_FORMAT, schemaVersion: 1, producer: { name: "BEYOND Health Bridge", version: "0.5.0" }, exportedAt: iso(now), window, records };
   return { days, activity, sleep };
 }

@@ -4,7 +4,7 @@ import { getWeeklySummary, type WeeklySummary } from "../../../application/weekl
 import { describePersonalRecord } from "../../../application/personalRecordQueries";
 import { formatShortDate } from "../../../application/bodyTrendQueries";
 import { formatUsd } from "../body/quitCopy";
-import { describeExpenditure } from "./weeklyCopy";
+import { describeExpenditure, describeGarminBurned } from "./weeklyCopy";
 import { describeBurdenLine, describeFindings, describeWaitingFindings } from "./weeklyCopy";
 import { PersonalBaselines } from "./PersonalBaselines";
 import { Ribbon } from "./Ribbon";
@@ -191,6 +191,7 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
                 <>
                   {copy.headline && <p className="recommendation-title" style={{ marginBottom: 2 }}>{copy.headline}</p>}
                   <p className="meta" style={{ margin: 0 }}>{copy.detail}</p>
+                  {summary.garminBurned && <p className="meta" data-garmin-burned style={{ margin: "6px 0 0" }}>{describeGarminBurned(summary.garminBurned)}</p>}
                 </>
               );
             })()}

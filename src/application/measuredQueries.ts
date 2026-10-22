@@ -1,10 +1,12 @@
 import { db } from "../persistence/db";
 import type { Period } from "../domain/health/activityImport";
-import { personalBaselines, type Baseline } from "../domain/health/baselines";
+import { BASELINE_MIN_SAMPLES, median, personalBaselines, type Baseline } from "../domain/health/baselines";
 import {
-  cumulativeSteps, lastNight, recentPeriods, restingByPeriod, sleepByPeriod, stepsByPeriod,
+  burnedByPeriod, cumulativeBurned, cumulativeEaten, cumulativeSteps, eatenByPeriod, lastNight, recentPeriods, restingByPeriod, sleepByPeriod, stepsByPeriod,
   type PeriodValue,
 } from "../domain/health/measuredSeries";
+import { getDaySummaries } from "./dayLedgerQueries";
+import { getMealEntries } from "./nutritionQueries";
 import type { ExternalSleep, ExternalSleepRevision } from "../domain/health/sleepImport";
 
 /** Enough lived days for a year of weekly bars (53 weeks). */
@@ -21,11 +23,23 @@ export interface MeasuredSnapshot {
   /** Running step total through the current lived day. */
   stepsToday: { t: number; total: number }[];
   lastNight: ExternalSleep | null;
+  /** GARMIN-005: Garmin calories burned (total and active) and logged meal calories, per lived day. */
+  burned: PeriodValue[];
+  activeBurned: PeriodValue[];
+  eaten: PeriodValue[];
+  burnedToday: { t: number; total: number }[];
+  eatenToday: { t: number; total: number }[];
+  /** Any calorie hour at all; without one, TODAY shows no CALORIES tile. */
+  anyCalories: boolean;
+  /** When the newest Garmin data was read on the phone (the latest export), or null. */
+  garminAsOf: number | null;
   usual: {
     /** Steps baseline for the kind of day today is; null kind when today's work context is unknown. */
     steps: Baseline & { dayKind: "WORK" | "OFF" | null };
     resting: Baseline;
     sleep: Baseline;
+    /** 28-day median of Garmin total burned per finished lived day. */
+    burned: Baseline;
   };
 }
 
@@ -34,9 +48,9 @@ export interface MeasuredSnapshot {
  * show, read once. Display-only: no writes, no Engine input, no recommendation change.
  */
 export async function getMeasuredSnapshot(now = Date.now()): Promise<MeasuredSnapshot> {
-  return db.transaction("r", [db.beyondDays, db.externalActivityHours, db.externalRestingHeartRates, db.externalSleepRecords, db.externalSleepRevisions], async () => {
-    const [days, hours, restingRows, pointers] = await Promise.all([
-      db.beyondDays.toArray(), db.externalActivityHours.toArray(), db.externalRestingHeartRates.toArray(), db.externalSleepRecords.toArray(),
+  const measured = await db.transaction("r", [db.beyondDays, db.externalActivityHours, db.externalRestingHeartRates, db.externalSleepRecords, db.externalSleepRevisions, db.healthImportReceipts], async () => {
+    const [days, hours, restingRows, pointers, receipts] = await Promise.all([
+      db.beyondDays.toArray(), db.externalActivityHours.toArray(), db.externalRestingHeartRates.toArray(), db.externalSleepRecords.toArray(), db.healthImportReceipts.toArray(),
     ]);
     const revisions = await db.externalSleepRevisions.bulkGet(pointers.map((p) => p.revisionId));
     const sleeps = revisions.flatMap((r: ExternalSleepRevision | undefined) => (r ? [r.evidence] : []));
@@ -45,7 +59,12 @@ export async function getMeasuredSnapshot(now = Date.now()): Promise<MeasuredSna
     const baselines = personalBaselines({ days, sleeps, hours, resting: restingRows, now });
     const today = current.dayId ? days.find((d) => d.id === current.dayId) : undefined;
     const dayKind = today?.workContext === "WORK" || today?.workContext === "OFF" ? today.workContext : null;
+    const burned = burnedByPeriod(periods, hours, now);
+    const exports = [...receipts.map((r) => Date.parse(r.exportedAt)), ...hours.map((h) => Date.parse(h.exportedAt))].filter(Number.isFinite);
+    // Only finished days count toward the usual, so a day in progress never lowers it.
+    const finishedBurned = burned.filter((p) => !p.partial && p.value !== null && p.from >= now - 28 * 24 * 3600_000).map((p) => p.value!);
     return {
+      periods, days, hours, burned,
       any: hours.length > 0 || restingRows.length > 0 || sleeps.length > 0,
       readAt: now,
       current,
@@ -54,11 +73,28 @@ export async function getMeasuredSnapshot(now = Date.now()): Promise<MeasuredSna
       sleep: sleepByPeriod(periods, sleeps, now),
       stepsToday: cumulativeSteps(current, hours, now),
       lastNight: lastNight(sleeps, now),
+      activeBurned: burnedByPeriod(periods, hours, now, "active"),
+      burnedToday: cumulativeBurned(current, hours, now),
+      anyCalories: hours.some((h) => h.totalCaloriesKcal != null || h.activeCaloriesKcal != null),
+      garminAsOf: exports.length ? Math.max(...exports) : null,
       usual: {
         steps: dayKind === "OFF" ? { ...baselines.offDaySteps, dayKind } : dayKind === "WORK" ? { ...baselines.workDaySteps, dayKind } : { value: null, samples: 0, dayKind: null },
         resting: baselines.restingHeartRateBpm,
         sleep: baselines.mainSleepMinutes,
+        burned: { value: finishedBurned.length >= BASELINE_MIN_SAMPLES ? median(finishedBurned) : null, samples: finishedBurned.length },
       },
     };
   });
+  // Meal calories come from BEYOND's own day ledger, read outside the Garmin transaction.
+  const [summaries, meals] = await Promise.all([
+    measured.anyCalories ? getDaySummaries() : Promise.resolve([]),
+    measured.anyCalories && measured.current.dayId ? getMealEntries(measured.current.dayId) : Promise.resolve([]),
+  ]);
+  const kcalByDay = new Map(summaries.flatMap((d) => (d.kcal === undefined ? [] : [[d.beyondDayId, d.kcal] as const])));
+  const { periods, days: _days, hours: _hours, ...snapshot } = measured;
+  return {
+    ...snapshot,
+    eaten: eatenByPeriod(periods, kcalByDay, now),
+    eatenToday: cumulativeEaten(measured.current, meals.map((m) => ({ recordedAt: m.recordedAt, calories: m.effectiveCalories })), now),
+  };
 }

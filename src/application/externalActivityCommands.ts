@@ -27,7 +27,10 @@ export async function importActivitySnapshot(input: unknown): Promise<{ inserted
     snapshot.hours.forEach((hour, i) => {
       const existing = existingHours[i];
       if (existing && compareSleepInstants(snapshot.exportedAt, existing.exportedAt) <= 0) { result.skipped++; return; }
-      rows.push({ ...hour, id: hour.startTime, exportedAt: snapshot.exportedAt, receiptId });
+      // GARMIN-005: a schema 1 file carries no calories, so it never erases calories a schema 2 file stored.
+      const keptCalories = snapshot.schemaVersion === 1 && existing && ("totalCaloriesKcal" in existing || "activeCaloriesKcal" in existing)
+        ? { totalCaloriesKcal: existing.totalCaloriesKcal ?? null, activeCaloriesKcal: existing.activeCaloriesKcal ?? null } : {};
+      rows.push({ ...keptCalories, ...hour, id: hour.startTime, exportedAt: snapshot.exportedAt, receiptId });
       if (existing) result.revised++; else result.inserted++;
     });
     await db.externalActivityHours.bulkPut(rows);

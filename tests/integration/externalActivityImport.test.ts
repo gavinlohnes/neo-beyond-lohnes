@@ -119,3 +119,35 @@ describe("v14 upgrade", () => {
     } finally { upgraded.close(); }
   });
 });
+describe("GARMIN-005 calories burned (activity schema 2)", () => {
+  const v2 = (exportedAt = "2026-10-19T00:00:00Z") => {
+    const s = syntheticActivity(exportedAt);
+    return { ...s, schemaVersion: 2 as const, hours: s.hours.map((h, i) => ({ ...h, totalCaloriesKcal: i === 2 ? null : 100 + i, activeCaloriesKcal: i === 2 ? null : 20 + i })) };
+  };
+  it("imports hourly calories from a schema 2 file and keeps missing ones null", async () => {
+    await importActivitySnapshot(v2());
+    expect(await db.externalActivityHours.get("2026-10-17T22:00:00Z")).toMatchObject({ totalCaloriesKcal: 100, activeCaloriesKcal: 20 });
+    expect(await db.externalActivityHours.get("2026-10-18T23:00:00Z")).toMatchObject({ totalCaloriesKcal: null, activeCaloriesKcal: null });
+  });
+  it("still imports schema 1 files, which carry no calories", async () => {
+    await importActivitySnapshot(syntheticActivity());
+    const row = await db.externalActivityHours.get("2026-10-17T22:00:00Z");
+    expect(row && "totalCaloriesKcal" in row).toBe(false);
+  });
+  it("never lets a newer schema 1 file erase calories a schema 2 file stored", async () => {
+    await importActivitySnapshot(v2());
+    const older = syntheticActivity("2026-10-20T00:00:00Z"); older.hours[0]!.steps = 1500;
+    await importActivitySnapshot(older);
+    expect(await db.externalActivityHours.get("2026-10-17T22:00:00Z")).toMatchObject({ steps: 1500, totalCaloriesKcal: 100, activeCaloriesKcal: 20 });
+  });
+  it("accepts an hour with only calories, and refuses implausible or misplaced calorie fields", async () => {
+    const onlyCalories = v2(); onlyCalories.hours = [{ ...onlyCalories.hours[0]!, steps: null, heartRateMinBpm: null, heartRateAvgBpm: null, heartRateMaxBpm: null }];
+    expect(parseActivitySnapshot(JSON.stringify(onlyCalories)).hours[0]).toMatchObject({ steps: null, totalCaloriesKcal: 100 });
+    const tooMuch = v2(); tooMuch.hours[0]!.totalCaloriesKcal = 9000;
+    expect(() => parseActivitySnapshot(JSON.stringify(tooMuch))).toThrow();
+    const v1WithCalories = { ...v2(), schemaVersion: 1 };
+    expect(() => parseActivitySnapshot(JSON.stringify(v1WithCalories))).toThrow();
+    const v2Missing = { ...syntheticActivity(), schemaVersion: 2 };
+    expect(() => parseActivitySnapshot(JSON.stringify(v2Missing))).toThrow();
+  });
+});
