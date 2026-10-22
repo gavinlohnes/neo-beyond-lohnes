@@ -22,11 +22,14 @@ import { DEFAULT_SCHEDULE_PATTERN } from "../engine/scheduledContext";
 import { DEFAULT_NUTRITION_TARGETS } from "../engine/nutritionTargets";
 
 import type { ExternalSleepRecord, ExternalSleepRevision, HealthImportReceipt } from "../domain/health/sleepImport";
+import type { ExternalActivityHour, ExternalRestingHeartRate } from "../domain/health/activityImport";
 
 export class BeyondDB extends Dexie {
   externalSleepRecords!: Table<ExternalSleepRecord, string>;
   externalSleepRevisions!: Table<ExternalSleepRevision, string>;
   healthImportReceipts!: Table<HealthImportReceipt, string>;
+  externalActivityHours!: Table<ExternalActivityHour, string>;
+  externalRestingHeartRates!: Table<ExternalRestingHeartRate, string>;
   beyondDays!: Table<BeyondDay, string>;
   events!: Table<DomainEvent, string>;
   checkIns!: Table<StateCheckIn, string>;
@@ -333,6 +336,11 @@ export class BeyondDB extends Dexie {
       externalSleepRecords: "id, revisionId, startTime",
       externalSleepRevisions: "id, recordKey, receiptId",
       healthImportReceipts: "id, importedAt",
+    });
+    // GARMIN-002: owner-approved additive measured steps/heart-rate evidence. Nothing else changes.
+    this.version(15).stores({
+      externalActivityHours: "id, startTime",
+      externalRestingHeartRates: "key, time",
     });
   }
 }

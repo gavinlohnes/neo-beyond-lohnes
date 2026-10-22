@@ -1,4 +1,5 @@
 import { ImportedSleepEvidence } from "../health/ImportedSleepEvidence";
+import { ImportedActivityEvidence } from "../health/ImportedActivityEvidence";
 import "../health/healthImport.css";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -2267,6 +2268,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
       </div>
       {readingsReady && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries}
         protein={proteinEntries} meals={mealEntries} disabled={busy || foodSearchBusy} onInspect={inspectRecord} />}
+      {!waterFocused && <ImportedActivityEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} />}
       {!waterFocused && <ImportedSleepEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} />}
       <FieldDisclosure summary={`${otherToolsOpen ? "HIDE" : "SHOW"} OTHER BODY TOOLS`} open={otherToolsOpen} onToggle={setOtherToolsOpen}>
         <QuitTracker initiallyOpen={focus === "urge"} openRequest={focus === "urge" ? focusRequest : 0} />

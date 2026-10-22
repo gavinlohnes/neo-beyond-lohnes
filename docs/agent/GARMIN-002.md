@@ -43,16 +43,30 @@ weigh-ins and needs the measured-vs-reported rule before any import.
 - No Internet permission, writes, background work or other categories. CI asserts the exact
   packaged permission set.
 
-## PR 2 — BEYOND side (after REDESIGN-001 / #261 merges)
+## PR 2 — BEYOND imports and shows steps and heart rate (same PR, #262)
 
-Both PR 2 and #261 rework BODY, so PR 2 waits for that merge.
+The owner asked for this to land now ("Let's just get it done"), so it shares #262 instead of
+waiting for #261. The only overlap with #261 is one line in BODY.
 
-- Preview, confirm and import the activity file as measured evidence: additive storage, with
-  revisions handled like GARMIN-001.
-- SEND TO BEYOND: a PWA share target, so the helper hands files to the installed PWA directly.
-- BODY shows measured sleep, steps and heart rate labelled as measured, with manual logs
-  unchanged.
-- No Engine input.
+- COMMAND → IMPORT HEALTH DATA accepts either helper file and previews before anything is saved.
+- Additive database v15 adds `externalActivityHours` (keyed by UTC hour start) and
+  `externalRestingHeartRates`.
+  - Hours are Health Connect aggregates, so a newer export replaces the same hour; older or
+    repeated exports are skipped.
+  - Resting heart rate keeps the newest source version per record.
+  - There are no canonical events, manual-log changes, day creation or Engine input.
+- BODY shows **MEASURED · GARMIN**: steps, heart-rate range and average, and resting heart rate
+  per existing lived day. A day runs from its 16:30 start to the next day's start, so a night
+  shift is never split at midnight. Missing values stay missing.
+- Native backups include the new tables. Legacy and pre-feature native replacements clear them.
+- Review follow-ups in the helper:
+  - The steps and heart-rate file is re-checked against the permissions it was read with
+    before saving.
+  - The privacy text lists resting heart-rate IDs, source, modification times and offsets.
+  - A single implausible value is dropped instead of failing the whole file.
+
+Deferred: **SEND TO BEYOND**. A PWA share target that receives files needs a custom service
+worker, which is a larger change to the app's offline update path. It needs its own step.
 
 Leverage: INTEGRATE PROVIDER. This uses the official Health Connect aggregate API rather than raw
 heart-rate samples, which keeps the file small, and adds no new dependency.

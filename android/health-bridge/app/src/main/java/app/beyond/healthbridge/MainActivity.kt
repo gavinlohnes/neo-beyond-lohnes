@@ -43,6 +43,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var saveActivity: Button
     private var prepared: String? = null // memory only; discarded when this Activity is destroyed
     private var preparedActivity: String? = null
+    private var activityGranted: Set<String> = emptySet() // what the prepared activity file was read with
     private var working = false
     private val requestPermission = registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { granted ->
         if (granted.containsAll(permissions)) readSleep() else clear("Sleep access was not granted. No export was created.")
@@ -51,7 +52,7 @@ class MainActivity : ComponentActivity() {
         write(uri, prepared, permissions, "Saved. Open BEYOND → COMMAND → IMPORT HEALTH DATA, choose this file, review, then confirm. The file contains private sleep data; delete it when finished.")
     }
     private val saveActivityFile = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        write(uri, preparedActivity, emptySet(), "Activity saved. BEYOND can't import steps and heart rate yet; keep the file private and delete it when finished.")
+        write(uri, preparedActivity, activityGranted, "Saved. Open BEYOND → COMMAND → IMPORT HEALTH DATA, choose this file, review, then confirm. The file contains private health data; delete it when finished.")
     }
     private fun write(uri: android.net.Uri?, text: String?, required: Set<String>, done: String) {
         if (uri == null) { status.text = "Save cancelled. No data was imported into BEYOND." }
@@ -60,7 +61,7 @@ class MainActivity : ComponentActivity() {
             setWorking(true)
             try {
                 if (!client.permissionController.getGrantedPermissions().containsAll(required)) {
-                    clear("Sleep access was revoked. Read again after granting access.")
+                    clear("Health access was revoked. Read again after granting access.")
                 } else {
                     withContext(Dispatchers.IO) {
                         val output = contentResolver.openOutputStream(uri, "wt") ?: error("Cannot open file")
@@ -79,7 +80,7 @@ class MainActivity : ComponentActivity() {
         fun paragraph(text: String) = TextView(this).apply { this.text = text; textSize = 18f; setPadding(0, 12, 0, 12); layout.addView(this) }
         paragraph("BEYOND Health Bridge").apply { textSize = 26f; ViewCompat.setAccessibilityHeading(this, true) }
         paragraph("Read Garmin sleep, steps and heart rate from the last 7 days. Save a file, then review and confirm it in BEYOND. This helper does not sync automatically.")
-        paragraph("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps and heart rate (optional): hourly step totals, hourly heart-rate low/average/high and Garmin resting heart rate. Each goes into its own file you choose. No account, server, Internet permission or other health categories. Your Health Connect data is never changed. Files may be private health information; choose a local folder and delete the file after importing.")
+        paragraph("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps and heart rate (optional): hourly step totals, hourly heart-rate low/average/high and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. Each goes into its own file you choose. No account, server, Internet permission or other health categories. Your Health Connect data is never changed. Files may be private health information; choose a local folder and delete the file after importing.")
         status = paragraph("Ready. Complete Garmin's sync before reading. Sessions crossing the 7-day window edges are excluded.").apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }
         read = Button(this).apply {
             text = "ALLOW ACCESS AND READ"
@@ -175,11 +176,13 @@ class MainActivity : ComponentActivity() {
             if (stepsPermission in granted) add(StepsRecord.COUNT_TOTAL)
             if (heartRatePermission in granted) { add(HeartRateRecord.BPM_MIN); add(HeartRateRecord.BPM_AVG); add(HeartRateRecord.BPM_MAX) }
         }
+        // An implausible value is dropped on its own instead of failing the whole file.
+        fun bpm(value: Long?) = value?.takeIf { it in 20..300 }
         val hours = if (metrics.isEmpty()) emptyList() else client.aggregateGroupByDuration(AggregateGroupByDurationRequest(metrics,
             TimeRangeFilter.between(start, end), Duration.ofHours(1), garmin)).mapNotNull { bucket ->
             val r = bucket.result
-            val hour = ExportHour(bucket.startTime, bucket.zoneOffset.totalSeconds, r[StepsRecord.COUNT_TOTAL],
-                r[HeartRateRecord.BPM_MIN], r[HeartRateRecord.BPM_AVG], r[HeartRateRecord.BPM_MAX])
+            val hour = ExportHour(bucket.startTime, bucket.zoneOffset.totalSeconds, r[StepsRecord.COUNT_TOTAL]?.takeIf { it in 0..100_000 },
+                bpm(r[HeartRateRecord.BPM_MIN]), bpm(r[HeartRateRecord.BPM_AVG]), bpm(r[HeartRateRecord.BPM_MAX]))
             if (hour.steps == null && hour.heartRateAvg == null) null else hour
         }
         val resting = mutableListOf<ExportRestingHeartRate>()
@@ -189,7 +192,7 @@ class MainActivity : ComponentActivity() {
             do {
                 val response = client.readRecords(ReadRecordsRequest(RestingHeartRateRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(start, end), dataOriginFilter = garmin, pageSize = 500, pageToken = token))
-                response.records.filter { it.time >= start && it.time < end }.forEach { r ->
+                response.records.filter { it.time >= start && it.time < end && it.beatsPerMinute in 20..300 }.forEach { r ->
                     resting.add(ExportRestingHeartRate(r.metadata.id, r.metadata.dataOrigin.packageName, r.metadata.lastModifiedTime,
                         r.time, r.zoneOffset?.totalSeconds, r.beatsPerMinute))
                 }
@@ -199,6 +202,7 @@ class MainActivity : ComponentActivity() {
             } while (token != null)
         }
         preparedActivity = activityExport(hours, resting, start, end, Instant.now(), BuildConfig.VERSION_NAME)
+        activityGranted = granted.intersect(activityPermissions)
         return "${hours.size} hours of steps/heart rate and ${resting.size} resting heart rate readings ready."
     }
 }
