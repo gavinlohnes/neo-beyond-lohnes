@@ -1,3 +1,26 @@
+# GARMIN-001 — physical-phone installation diagnosis
+
+#258 merged at 8581af586facf1b08a29347c28787b5e4810db3a after owner approval.
+Reviewed source 3d73cdeb; 2741 tests pass/1 skipped; app/Android build and packaged permission
+checks passed. The delivered APK is verified against its original CI checksum/signature.
+
+The owner cannot install it on Android 16 / Nothing OS 4.1: only a generic not-installed
+toast. Chrome and Files by Google already have installation permission. Cause unconfirmed.
+Do not repeat the same install instructions or claim the physical phone is validated.
+
+Builder Codex; branch codex/garmin-001-install-diagnosis from 8581af586facf1b08a29347c28787b5e4810db3a. The branch's draft PR
+adds a time-bounded Android 16 emulator probe of the exact original APK. No app/data/
+permission changes. [Current bounded brief](GARMIN-001.md), phone follow-up section.
+Verified (run 39274986894): the original APK installs and opens on a clean Android 16 emulator, so the
+file is sound and the rejection is phone-side; signature conflict with an earlier helper build is
+the leading hypothesis. Next: owner runs the uninstall/extract/adb steps in GARMIN-001.md
+("Probe result"); correct only what that demonstrates. ADB success cannot validate
+Nothing's user-facing installer/security policy. #257 remains open; every new PR still needs
+owner merge approval. #254 remains separate.
+
+---
+Previous checkpoint:
+
 # GARMIN-001 — local sleep import, PR #258
 
 Owner authorized the sleep-only implementation in [#257](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/257).

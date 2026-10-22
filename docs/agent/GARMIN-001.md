@@ -3,7 +3,7 @@
 Authorization: Gavin explicitly approved the first-release proposal in issue #257: “I absolutely
 approve. It looks like Health Connect can get us a lot of good data.” Builder: Codex.
 Lane: PROTECTED. Starting master: a6d315dd83f7f540782a540d37a32c9a5224a1f2.
-Branch: codex/garmin-001-sleep-import. Active PR: [#258](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/258) (draft).
+Branch: codex/garmin-001-sleep-import. PR [#258](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/258) merged with owner approval; installation follow-up below.
 
 Scope: a foreground Android helper with READ_SLEEP only and no Internet/write/background/history
 permissions; latest seven days of Garmin-origin SleepSessionRecord; versioned JSON through the
@@ -42,3 +42,48 @@ the PWA, proprietary Garmin metrics, paid services, Engine use of imports. Futur
 its own approval.
 
 Research, device observations and primary-source links: https://github.com/gavinlohnes/neo-beyond-lohnes/issues/257
+
+
+## Phone installation follow-up (2026-10-19)
+
+Owner reports the delivered APK is rejected with the generic “The app wasn't installed”
+message on Android 16 / Nothing OS 4.1. Chrome and Files by Google already have install
+permission. APK checksum, ZIP integrity, SDK bounds and absence of testOnly/native ABI
+restrictions were checked; the actual package-manager rejection remains unknown.
+
+Builder: Codex. Starting master: 8581af586facf1b08a29347c28787b5e4810db3a. Branch: codex/garmin-001-install-diagnosis.
+Authorization: continuation of the approved helper delivery and owner's installation-failure
+reports. This diagnostic patch adds CI verification only: download the exact original
+artifact from run 39262505666, verify its source/checksum/signature, install it on an empty
+Android 16 emulator, launch it, and retain package-manager/logcat/UI evidence. No phone
+identifiers/screenshots are committed. No health permission is granted, no source records
+read, no application/runtime/Engine/storage/permission change, and no security restriction
+on the owner's phone is disabled. Keep #257 open pending successful physical phone test.
+
+Leverage: use the official Android SDK emulator/adb and GitHub's official artifact action;
+no new runtime dependency. The source artifact expires 2026-11-02, so this is a time-bounded
+probe rather than permanent release CI. Acceptance: capture actual install/launch result,
+inspect the evidence, then choose a correction supported by that result. ADB success alone
+does not prove the owner's normal installer flow or Nothing-specific policy works.
+
+### Probe result (2026-10-21)
+
+Run 39274986894 at a21675fa passed: the exact original APK (source 3d73cdeb, checksum and
+signature verified) installed with plain `adb install`, without `-t`, on a clean Android 16
+emulator. It opened to "BEYOND Health Bridge", and the "ALLOW SLEEP ACCESS AND READ" control
+was present. The APK is not malformed, test-only or incompatible with Android 16.
+
+The rejection is therefore on the phone side. The leading hypothesis is a signature conflict.
+Every CI run builds with that runner's own throwaway debug key. If any earlier helper build is
+present on the phone, including in another user profile, Private Space, or as a leftover from
+a failed install, Android refuses the new APK with the same generic message. Next owner step:
+- Settings → Apps → show system apps → search "Health Bridge" or `app.beyond.healthbridge`.
+  Uninstall any match, including "for all users".
+- Extract `app-debug.apk` from the downloaded ZIP and open the APK, not the ZIP.
+- If it still fails, note any Play Protect prompt. If a computer is available, run
+  `adb install app-debug.apk`; it prints the exact `INSTALL_FAILED_*` reason, which decides the
+  correction.
+
+A stable signing key is the durable fix if a conflict is confirmed. It is a separate,
+owner-approved change: no keys in Git, and it needs CI secret setup. Do not change it on a
+hypothesis.

@@ -44,7 +44,8 @@ describe("TODAY action row", () => {
       for (const button of document.querySelectorAll<HTMLElement>(".console-controls button")) {
         expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       }
-      expect(document.querySelector("[data-shift-clock-row='QUICK_LOG']")).toBeNull();
+      // Nothing has been logged yet, so QUICK LOG offers nothing (its row may exist but is empty).
+      expect(document.querySelector(".quick-log")).toBeNull();
       await screen.unmount();
     }
   });
