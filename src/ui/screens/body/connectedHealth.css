@@ -23,3 +23,7 @@
 .health-history-focus { outline: 2px solid var(--text-1); outline-offset: 4px; }
 
 .health-day-controls > summary { min-height: 44px; padding-block: 10px; cursor: pointer; font-size: 16px; color: var(--text-2); border-block-end: 1px solid var(--border-subtle); }
+.body-home > div > section { margin-bottom: 24px; }
+.body-home .body-progress-card { border: 1px solid var(--border-strong); padding: 14px; margin-bottom: 12px; }
+.body-home .body-progress-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.body-home .health-record-row { min-height: 56px; width: 100%; text-align: left; }

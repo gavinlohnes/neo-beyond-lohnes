@@ -73,6 +73,20 @@ try {
     assert.ok(bounds.receipt <= bounds.nav);
     await page.getByRole("button", { name: "UNDO", exact: true }).click();
     await page.locator(".redesign-toast").waitFor({ state: "detached" });
+    await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "WEIGHT HISTORY", exact: true }).waitFor();
+    await page.evaluate(() => { for (const animation of document.getAnimations()) if (animation.effect?.getComputedTiming().iterations !== Infinity) animation.finish(); window.scrollTo(0, 0); });
+    assert.equal(await page.locator(".body-home input[type=number]:visible").count(), 0);
+    await page.screenshot({ path: `${out}/${width}-body.png`, fullPage: true });
+    await page.getByRole("button", { name: "MEASUREMENTS", exact: true }).click();
+    await page.getByRole("spinbutton", { name: "Inches", exact: true }).waitFor();
+    await page.screenshot({ path: `${out}/${width}-measurements.png`, fullPage: true });
+    await page.getByRole("button", { name: "BACK TO BODY", exact: true }).click();
+    await page.getByRole("button", { name: "PHOTOS", exact: true }).click();
+    await page.getByRole("heading", { name: "Progress photos", exact: true }).waitFor();
+    await page.screenshot({ path: `${out}/${width}-photos.png`, fullPage: true });
+    await page.getByRole("button", { name: "BACK TO BODY", exact: true }).click();
+    await page.getByRole("button", { name: "TODAY", exact: true }).click();
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
     await page.reload();
     await page.getByRole("button", { name: "Log water", exact: true }).waitFor();
@@ -89,5 +103,5 @@ try {
     await context.close();
     console.log(`PASS ${width}: TODAY order, four modes, check-in sheet, visible water undo, offline cold reload`);
   }
-  await writeFile(`${out}/item-2-acceptance.json`, JSON.stringify(evidence, null, 2) + "\n");
+  await writeFile(`${out}/item-3-acceptance.json`, JSON.stringify(evidence, null, 2) + "\n");
 } finally { await browser.close(); await server.close(); }

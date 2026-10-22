@@ -1,3 +1,6 @@
+import { WeightTrend } from "./WeightTrend";
+import { getRecordedHealthDay } from "../../../application/healthRecordQueries";
+import type { RecordCorrectionRequest } from "../../recordSheets";
 import { ImportedSleepEvidence } from "../health/ImportedSleepEvidence";
 import "../health/healthImport.css";
 import { useSessionDraft } from "../../sessionDrafts";
@@ -251,8 +254,12 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
-  sheetFocus?: "water" | "sleep" | "weight" | "urge" | "meal";
+export function BodyScreen({ overviewOnly = false, onOpenTrainingRecords, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
+  overviewOnly?: boolean;
+  onOpenTrainingRecords?: (() => void) | undefined;
+  onEditRecord?: ((record: HealthRecord, dayId: string) => void) | undefined;
+  correctionRequest?: RecordCorrectionRequest | null | undefined;
+  sheetFocus?: "protein" | "water" | "sleep" | "weight" | "urge" | "meal";
   evidenceRequest?: HealthEvidenceRequest | null;
   onHealthHistory?: ((destination: HealthHistoryDestination) => void) | undefined;
   focus?: BodyFocus | null;
@@ -275,6 +282,7 @@ export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overvie
   const [mealFocused, setMealFocused] = useState(focus === "meal");
   const [bodyMealsOpen, setBodyMealsOpen] = useState(false);
   const mealsVisible = mealFocused || bodyMealsOpen;
+  const [compositionRequest, setCompositionRequest] = useState<{ key: number; view: "photos" | "measurements" } | null>(null);
   const [progressOpen, setProgressOpen] = useState(false);
   const [progressReturnFocus, setProgressReturnFocus] = useState(0);
   const [progressVisited, setProgressVisited] = useState(false);
@@ -301,6 +309,7 @@ export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overvie
   }
   const [otherToolsOpen, setOtherToolsOpen] = useState(focus === "urge");
   const [readingsReady, setReadingsReady] = useState(false);
+  const [readCorrectionKey, setReadCorrectionKey] = useState<number | null>(null);
   const [dataRevision, setDataRevision] = useState(0);
   const localOrigin = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
   const readRevision = useRef(0);
@@ -677,7 +686,8 @@ export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overvie
 
   async function refresh() {
     const revision = ++readRevision.current;
-    const activeDay = (await getActiveDay()) ?? null;
+    const activeDay = (await (correctionRequest ? getRecordedHealthDay(correctionRequest.dayId) : getActiveDay())) ?? null;
+    if (correctionRequest && !activeDay) throw new Error("The source day is unavailable. Nothing changed.");
     const [nextSavedMeals, targets, targetProtein, history, previousMeals, nextWater, waterTotal,
       nextSleep, nextWeight, nextProtein, proteinTotal, nextMeals, calories] = await Promise.all([
       getRecentSavedMeals(), getNutritionTargets(), getEffectiveProteinTargetG(), getBodyweightHistory(),
@@ -697,8 +707,21 @@ export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overvie
     setEffectiveProteinTargetG(targetProtein); setWeightHistory(history); setRepeatMeals(previousMeals);
     setEntries(nextWater); setTotal(waterTotal); setSleepEntries(nextSleep); setBodyweightEntries(nextWeight);
     setProteinEntries(nextProtein); setDayProteinG(proteinTotal); setMealEntries(nextMeals); setTotalMealCalories(calories);
+    setReadCorrectionKey(correctionRequest?.key ?? null);
     setReadingsReady(true); setDataRevision((value) => value + 1);
   }
+
+  const appliedCorrection = useRef<number | null>(null);
+  useEffect(() => {
+    if (!correctionRequest) return;
+    setReadingsReady(false);
+    void refresh().catch(() => { setMealReadFailed(true); setMealError("Could not read the source day. Retry without saving."); });
+  }, [correctionRequest]);
+  useEffect(() => {
+    if (!correctionRequest || !readingsReady || readCorrectionKey !== correctionRequest.key || day?.id !== correctionRequest.dayId || appliedCorrection.current === correctionRequest.key) return;
+    appliedCorrection.current = correctionRequest.key;
+    inspectRecord(correctionRequest.record);
+  }, [correctionRequest, readingsReady, readCorrectionKey, day]);
 
   function inspectRecord(record: HealthRecord) {
     if (busyRef.current || foodSearchBusyRef.current) return;
@@ -1618,6 +1641,345 @@ export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overvie
     </>
   );
 
+  const proteinHistoryContent = (<FieldDisclosure
+                summary={`${proteinHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${proteinEntries.length})`}
+                open={proteinHistoryOpen}
+                onToggle={setProteinHistoryOpen}
+              >
+                  {proteinEntries.map((entry) => (
+                    <div
+                      key={entry.rootEventId}
+                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveGrams} g</p>
+                          <p className="meta">
+                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                          </p>
+                        </div>
+                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectProtein(entry)}>
+                          CORRECT
+                        </button>
+                      </div>
+                      {proteinCorrectingId === entry.headEventId && (
+                        <div style={{ marginTop: 12 }}>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <input
+                              type="number"
+                              id="protein-correction" aria-label="Corrected amount (g)"
+                              value={proteinCorrectionInput}
+                              onChange={(e) => {
+                                setProteinCorrectionInput(e.target.value);
+                                setProteinEditNotice(null);
+                              }}
+                              className="input"
+                              style={{ flex: 1 }}
+                            />
+                            <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
+                              SAVE
+                            </button>
+                          </div>
+                          {proteinEditNotice && (
+                            <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{proteinEditNotice}</p>
+                          )}
+                          {/* DROP 1.5: the same hold-to-confirm DELETE meals have. */}
+                          <HoldButton
+                            className="btn-secondary"
+                            style={{ marginTop: 8 }}
+                            disabled={busy}
+                            hint={PROTEIN_DELETE_HINT}
+                            onConfirm={() => void handleDeleteProteinLog(entry)}
+                          >
+                            DELETE
+                          </HoldButton>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </FieldDisclosure>);
+  const mealHistoryContent = (<FieldDisclosure
+              summary={`${mealHistoryOpen ? "HIDE" : "SHOW"} TODAY'S MEALS (${mealEntries.length})`}
+              open={mealHistoryOpen}
+              onToggle={setMealHistoryOpen}
+            >
+                {mealEntries.length === 0 && <p className="card-body">{MEALS_TODAY_EMPTY}</p>}
+                {mealEntries.map((entry) => {
+                  const editing = correctingMealEventId === entry.headEventId;
+                  return (
+                  <div
+                    key={entry.rootEventId}
+                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                  >
+                    {/* HOTFIX amendment (owner ruling 2026-10-03): the whole row is the
+                        control — tap to edit, tap again to cancel. The chevron says so. */}
+                    <button
+                      type="button"
+                      aria-label={`Edit ${entry.name}`}
+                      aria-expanded={editing}
+                      onClick={() => toggleMealEdit(entry)}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 8,
+                        width: "100%",
+                        minHeight: 44,
+                        padding: 0,
+                        background: "none",
+                        border: "none",
+                        color: "inherit",
+                        font: "inherit",
+                        textAlign: "left",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span style={{ display: "block", minWidth: 0 }}>
+                        <span className="card-title" style={{ display: "block", marginBottom: 2, fontSize: 16 }}>{entry.name}</span>
+                        <span className="meta" style={{ display: "block" }}>
+                          {describeMacros(entry.effectiveCalories, entry.effectiveProteinG, entry.effectiveCarbsG, entry.effectiveFatG)}
+                        </span>
+                        <span className="meta" style={{ display: "block" }}>
+                          {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                        </span>
+                      </span>
+                      <svg
+                        aria-hidden="true"
+                        width={16}
+                        height={16}
+                        viewBox="0 0 24 24"
+                        className="disclosure-chevron"
+                        style={{ transform: editing ? "rotate(90deg)" : undefined }}
+                      >
+                        <path d="M9 5 L16 12 L9 19" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="square" strokeLinejoin="miter" />
+                      </svg>
+                    </button>
+                    {editing && (
+                      <div className="fade-in" style={{ marginTop: 12 }}>
+                        {renderMealMacroInputs(
+                          mealCorrectionForm,
+                          (patch) => setMealCorrectionForm((prev) => ({ ...prev, ...patch })),
+                          `correct-meal-${entry.headEventId}`,
+                          "Corrected",
+                        )}
+                        {mealEditNotice && (
+                          <p className="meta" role="status" style={{ marginBottom: 8 }}>{mealEditNotice}</p>
+                        )}
+                        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                          <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleSaveMealCorrection(entry)}>
+                            SAVE
+                          </button>
+                          <HoldButton
+                            className="btn-secondary"
+                            style={{ flex: 1 }}
+                            disabled={busy}
+                            hint={MEAL_DELETE_HINT}
+                            onConfirm={() => void handleDeleteMealLog(entry)}
+                          >
+                            DELETE
+                          </HoldButton>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  );
+                })}
+            </FieldDisclosure>);
+  const waterHistoryContent = (<FieldDisclosure
+              summary={`${waterHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${entries.length})`}
+              open={waterHistoryOpen}
+              onToggle={setWaterHistoryOpen}
+            >
+                <p className="card-body" style={{ marginBottom: 12 }}>
+                  Correcting or deleting an entry keeps the original on record — nothing is erased.
+                </p>
+                {entries.map((entry) => (
+                  <div
+                    key={entry.rootEventId}
+                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveAmountOz} oz</p>
+                        <p className="meta">
+                          {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                        </p>
+                      </div>
+                      <button
+                        className="btn-secondary"
+                        style={{ width: "auto", padding: "8px 14px" }}
+                        onClick={() => {
+                          setCorrectingId(entry.headEventId);
+                          setCorrectionInput(String(entry.effectiveAmountOz));
+                          setError(null);
+                          setBodyLogNotice(null);
+                        }}
+                      >
+                        CORRECT
+                      </button>
+                    </div>
+                    {correctingId === entry.headEventId && (
+                      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                        <input
+                          type="number"
+                          id="water-correction" aria-label="Corrected amount (oz)"
+                          value={correctionInput}
+                          onChange={(e) => { setCorrectionInput(e.target.value); setBodyLogNotice(null); }}
+                          className="input"
+                          style={{ flex: 1 }}
+                        />
+                        <button
+                          className="btn-primary"
+                          style={{ width: "auto", padding: "10px 16px" }}
+                          disabled={busy}
+                          onClick={() => void handleCorrect(entry)}
+                        >
+                          SAVE
+                        </button>
+                      </div>
+                    )}
+                    {correctingId === entry.headEventId && <>
+                      {bodyLogNotice?.log === "WATER" && <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{bodyLogNotice.message}</p>}
+                      <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
+                        onConfirm={() => void handleDeleteBodyLog("WATER", entry.rootEventId, async (dayId) => describeWaterDeleted(entry.effectiveAmountOz, await getEffectiveHydrationTotal(dayId)))}>
+                        DELETE
+                      </HoldButton>
+                    </>}
+                  </div>
+                ))}
+            </FieldDisclosure>);
+  const sleepHistoryContent = (<FieldDisclosure
+                summary={`${sleepHistoryOpen ? "HIDE" : "SHOW"} TODAY'S SLEEP (${sleepEntries.length})`}
+                open={sleepHistoryOpen}
+                onToggle={setSleepHistoryOpen}
+              >
+                  {sleepEntries.map((entry) => (
+                    <div
+                      key={entry.rootEventId}
+                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>
+                            {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}
+                          </p>
+                          <p className="meta">
+                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                          </p>
+                        </div>
+                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectSleep(entry)}>
+                          CORRECT
+                        </button>
+                      </div>
+                      {sleepCorrectingId === entry.headEventId && (
+                        <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
+                          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+                            <label htmlFor={`sleep-correction-hours-${entry.headEventId}`}><span>Hours</span></label>
+                            <input
+                              id={`sleep-correction-hours-${entry.headEventId}`}
+                              type="number"
+                              min={0}
+                              step={1}
+                              value={sleepCorrectionHours}
+                              onChange={(e) => {
+                                setSleepCorrectionHours(e.target.value);
+                                setSleepCorrectionNotice(null);
+                                setSleepCorrectionPendingConfirm(false);
+                              }}
+                              className="input"
+                            />
+                          </div>
+                          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+                            <label htmlFor={`sleep-correction-minutes-${entry.headEventId}`}><span>Minutes</span></label>
+                            <input
+                              id={`sleep-correction-minutes-${entry.headEventId}`}
+                              type="number"
+                              min={0}
+                              max={59}
+                              step={1}
+                              value={sleepCorrectionMinutes}
+                              onChange={(e) => {
+                                setSleepCorrectionMinutes(e.target.value);
+                                setSleepCorrectionNotice(null);
+                                setSleepCorrectionPendingConfirm(false);
+                              }}
+                              className="input"
+                            />
+                          </div>
+                          <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveSleepCorrection()}>
+                            SAVE
+                          </button>
+                        </div>
+                      )}
+                      {sleepCorrectingId === entry.headEventId && sleepCorrectionNotice && (
+                        <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{sleepCorrectionNotice}</p>
+                      )}
+                      {sleepCorrectingId === entry.headEventId && sleepCorrectionPendingConfirm && (
+                        <div style={{ marginTop: 8 }}>
+                          <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
+                            {(() => {
+                              const reading = readSleepDuration(sleepCorrectionHours, sleepCorrectionMinutes);
+                              return reading.ok ? describeImplausibleSleepCorrection(reading.totalMinutes) : "";
+                            })()}
+                          </p>
+                          <button className="btn-secondary" disabled={busy} onClick={() => void handleSaveSleepCorrection(true)}>
+                            SAVE ANYWAY
+                          </button>
+                        </div>
+                      )}
+                      {sleepCorrectingId === entry.headEventId && (
+                        <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
+                          onConfirm={() => void handleDeleteBodyLog("SLEEP", entry.rootEventId, async () => describeSleepDeleted(entry.effectiveDurationMinutes))}>
+                          DELETE
+                        </HoldButton>
+                      )}
+                    </div>
+                  ))}
+              </FieldDisclosure>);
+  const bodyweightHistoryContent = (<FieldDisclosure
+                summary={`${bodyweightHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${bodyweightEntries.length})`}
+                open={bodyweightHistoryOpen}
+                onToggle={setBodyweightHistoryOpen}
+              >
+                  {bodyweightEntries.map((entry) => (
+                    <div
+                      key={entry.rootEventId}
+                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveWeightLbs} lbs</p>
+                          <p className="meta">
+                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                          </p>
+                        </div>
+                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectBodyweight(entry)}>
+                          CORRECT
+                        </button>
+                      </div>
+                      {bodyweightCorrectingId === entry.headEventId && (
+                        <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                          <input type="number" id="weight-correction" aria-label="Corrected weight (lbs)" value={bodyweightCorrectionInput} onChange={(e) => { setBodyweightCorrectionInput(e.target.value); setBodyLogNotice(null); }} className="input" style={{ flex: 1 }} />
+                          <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
+                            SAVE
+                          </button>
+                        </div>
+                      )}
+                      {bodyweightCorrectingId === entry.headEventId && <>
+                        {bodyLogNotice?.log === "BODYWEIGHT" && <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{bodyLogNotice.message}</p>}
+                        <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
+                          onConfirm={() => void handleDeleteBodyLog("BODYWEIGHT", entry.rootEventId, async () => describeBodyweightDeleted(entry.effectiveWeightLbs))}>
+                          DELETE
+                        </HoldButton>
+                      </>}
+                    </div>
+                  ))}
+              </FieldDisclosure>);
   const weightSheetContent = (<div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.weight}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
             <p className="tool-label" style={{ margin: 0 }}>BODYWEIGHT</p>
@@ -1680,46 +2042,7 @@ export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overvie
 
           {bodyweightEntries.length > 0 && (
             <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-              <FieldDisclosure
-                summary={`${bodyweightHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${bodyweightEntries.length})`}
-                open={bodyweightHistoryOpen}
-                onToggle={setBodyweightHistoryOpen}
-              >
-                  {bodyweightEntries.map((entry) => (
-                    <div
-                      key={entry.rootEventId}
-                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveWeightLbs} lbs</p>
-                          <p className="meta">
-                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
-                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                          </p>
-                        </div>
-                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectBodyweight(entry)}>
-                          CORRECT
-                        </button>
-                      </div>
-                      {bodyweightCorrectingId === entry.headEventId && (
-                        <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                          <input type="number" id="weight-correction" aria-label="Corrected weight (lbs)" value={bodyweightCorrectionInput} onChange={(e) => { setBodyweightCorrectionInput(e.target.value); setBodyLogNotice(null); }} className="input" style={{ flex: 1 }} />
-                          <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
-                            SAVE
-                          </button>
-                        </div>
-                      )}
-                      {bodyweightCorrectingId === entry.headEventId && <>
-                        {bodyLogNotice?.log === "BODYWEIGHT" && <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{bodyLogNotice.message}</p>}
-                        <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
-                          onConfirm={() => void handleDeleteBodyLog("BODYWEIGHT", entry.rootEventId, async () => describeBodyweightDeleted(entry.effectiveWeightLbs))}>
-                          DELETE
-                        </HoldButton>
-                      </>}
-                    </div>
-                  ))}
-              </FieldDisclosure>
+              {bodyweightHistoryContent}
             </div>
           )}
 
@@ -1846,95 +2169,7 @@ export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overvie
 
           {sleepEntries.length > 0 && (
             <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-              <FieldDisclosure
-                summary={`${sleepHistoryOpen ? "HIDE" : "SHOW"} TODAY'S SLEEP (${sleepEntries.length})`}
-                open={sleepHistoryOpen}
-                onToggle={setSleepHistoryOpen}
-              >
-                  {sleepEntries.map((entry) => (
-                    <div
-                      key={entry.rootEventId}
-                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>
-                            {entry.kind === "PRIMARY" ? "Main sleep" : "Nap"} — {formatDuration(entry.effectiveDurationMinutes)}
-                          </p>
-                          <p className="meta">
-                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
-                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                          </p>
-                        </div>
-                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectSleep(entry)}>
-                          CORRECT
-                        </button>
-                      </div>
-                      {sleepCorrectingId === entry.headEventId && (
-                        <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
-                          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                            <label htmlFor={`sleep-correction-hours-${entry.headEventId}`}><span>Hours</span></label>
-                            <input
-                              id={`sleep-correction-hours-${entry.headEventId}`}
-                              type="number"
-                              min={0}
-                              step={1}
-                              value={sleepCorrectionHours}
-                              onChange={(e) => {
-                                setSleepCorrectionHours(e.target.value);
-                                setSleepCorrectionNotice(null);
-                                setSleepCorrectionPendingConfirm(false);
-                              }}
-                              className="input"
-                            />
-                          </div>
-                          <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                            <label htmlFor={`sleep-correction-minutes-${entry.headEventId}`}><span>Minutes</span></label>
-                            <input
-                              id={`sleep-correction-minutes-${entry.headEventId}`}
-                              type="number"
-                              min={0}
-                              max={59}
-                              step={1}
-                              value={sleepCorrectionMinutes}
-                              onChange={(e) => {
-                                setSleepCorrectionMinutes(e.target.value);
-                                setSleepCorrectionNotice(null);
-                                setSleepCorrectionPendingConfirm(false);
-                              }}
-                              className="input"
-                            />
-                          </div>
-                          <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveSleepCorrection()}>
-                            SAVE
-                          </button>
-                        </div>
-                      )}
-                      {sleepCorrectingId === entry.headEventId && sleepCorrectionNotice && (
-                        <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{sleepCorrectionNotice}</p>
-                      )}
-                      {sleepCorrectingId === entry.headEventId && sleepCorrectionPendingConfirm && (
-                        <div style={{ marginTop: 8 }}>
-                          <p className="meta" style={{ color: "var(--warning)", marginBottom: 8 }}>
-                            {(() => {
-                              const reading = readSleepDuration(sleepCorrectionHours, sleepCorrectionMinutes);
-                              return reading.ok ? describeImplausibleSleepCorrection(reading.totalMinutes) : "";
-                            })()}
-                          </p>
-                          <button className="btn-secondary" disabled={busy} onClick={() => void handleSaveSleepCorrection(true)}>
-                            SAVE ANYWAY
-                          </button>
-                        </div>
-                      )}
-                      {sleepCorrectingId === entry.headEventId && (
-                        <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
-                          onConfirm={() => void handleDeleteBodyLog("SLEEP", entry.rootEventId, async () => describeSleepDeleted(entry.effectiveDurationMinutes))}>
-                          DELETE
-                        </HoldButton>
-                      )}
-                    </div>
-                  ))}
-              </FieldDisclosure>
+              {sleepHistoryContent}
             </div>
           )}
         </div>
@@ -2015,70 +2250,7 @@ export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overvie
 
         {entries.length > 0 && (
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <FieldDisclosure
-              summary={`${waterHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${entries.length})`}
-              open={waterHistoryOpen}
-              onToggle={setWaterHistoryOpen}
-            >
-                <p className="card-body" style={{ marginBottom: 12 }}>
-                  Correcting or deleting an entry keeps the original on record — nothing is erased.
-                </p>
-                {entries.map((entry) => (
-                  <div
-                    key={entry.rootEventId}
-                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveAmountOz} oz</p>
-                        <p className="meta">
-                          {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
-                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                        </p>
-                      </div>
-                      <button
-                        className="btn-secondary"
-                        style={{ width: "auto", padding: "8px 14px" }}
-                        onClick={() => {
-                          setCorrectingId(entry.headEventId);
-                          setCorrectionInput(String(entry.effectiveAmountOz));
-                          setError(null);
-                          setBodyLogNotice(null);
-                        }}
-                      >
-                        CORRECT
-                      </button>
-                    </div>
-                    {correctingId === entry.headEventId && (
-                      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                        <input
-                          type="number"
-                          id="water-correction" aria-label="Corrected amount (oz)"
-                          value={correctionInput}
-                          onChange={(e) => { setCorrectionInput(e.target.value); setBodyLogNotice(null); }}
-                          className="input"
-                          style={{ flex: 1 }}
-                        />
-                        <button
-                          className="btn-primary"
-                          style={{ width: "auto", padding: "10px 16px" }}
-                          disabled={busy}
-                          onClick={() => void handleCorrect(entry)}
-                        >
-                          SAVE
-                        </button>
-                      </div>
-                    )}
-                    {correctingId === entry.headEventId && <>
-                      {bodyLogNotice?.log === "WATER" && <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{bodyLogNotice.message}</p>}
-                      <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
-                        onConfirm={() => void handleDeleteBodyLog("WATER", entry.rootEventId, async (dayId) => describeWaterDeleted(entry.effectiveAmountOz, await getEffectiveHydrationTotal(dayId)))}>
-                        DELETE
-                      </HoldButton>
-                    </>}
-                  </div>
-                ))}
-            </FieldDisclosure>
+            {waterHistoryContent}
             {waterHistoryOpen && <button className="btn-secondary" disabled={busy} onClick={() => { setWaterHistoryOpen(false); restoreOrigin(); }}>BACK TO RECORDS</button>}
           </div>
         )}
@@ -2303,97 +2475,39 @@ export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overvie
 
         {mealEntries.length > 0 && (
           <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <FieldDisclosure
-              summary={`${mealHistoryOpen ? "HIDE" : "SHOW"} TODAY'S MEALS (${mealEntries.length})`}
-              open={mealHistoryOpen}
-              onToggle={setMealHistoryOpen}
-            >
-                {mealEntries.length === 0 && <p className="card-body">{MEALS_TODAY_EMPTY}</p>}
-                {mealEntries.map((entry) => {
-                  const editing = correctingMealEventId === entry.headEventId;
-                  return (
-                  <div
-                    key={entry.rootEventId}
-                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-                  >
-                    {/* HOTFIX amendment (owner ruling 2026-10-03): the whole row is the
-                        control — tap to edit, tap again to cancel. The chevron says so. */}
-                    <button
-                      type="button"
-                      aria-label={`Edit ${entry.name}`}
-                      aria-expanded={editing}
-                      onClick={() => toggleMealEdit(entry)}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: 8,
-                        width: "100%",
-                        minHeight: 44,
-                        padding: 0,
-                        background: "none",
-                        border: "none",
-                        color: "inherit",
-                        font: "inherit",
-                        textAlign: "left",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <span style={{ display: "block", minWidth: 0 }}>
-                        <span className="card-title" style={{ display: "block", marginBottom: 2, fontSize: 16 }}>{entry.name}</span>
-                        <span className="meta" style={{ display: "block" }}>
-                          {describeMacros(entry.effectiveCalories, entry.effectiveProteinG, entry.effectiveCarbsG, entry.effectiveFatG)}
-                        </span>
-                        <span className="meta" style={{ display: "block" }}>
-                          {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
-                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                        </span>
-                      </span>
-                      <svg
-                        aria-hidden="true"
-                        width={16}
-                        height={16}
-                        viewBox="0 0 24 24"
-                        className="disclosure-chevron"
-                        style={{ transform: editing ? "rotate(90deg)" : undefined }}
-                      >
-                        <path d="M9 5 L16 12 L9 19" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="square" strokeLinejoin="miter" />
-                      </svg>
-                    </button>
-                    {editing && (
-                      <div className="fade-in" style={{ marginTop: 12 }}>
-                        {renderMealMacroInputs(
-                          mealCorrectionForm,
-                          (patch) => setMealCorrectionForm((prev) => ({ ...prev, ...patch })),
-                          `correct-meal-${entry.headEventId}`,
-                          "Corrected",
-                        )}
-                        {mealEditNotice && (
-                          <p className="meta" role="status" style={{ marginBottom: 8 }}>{mealEditNotice}</p>
-                        )}
-                        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                          <button className="btn-primary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleSaveMealCorrection(entry)}>
-                            SAVE
-                          </button>
-                          <HoldButton
-                            className="btn-secondary"
-                            style={{ flex: 1 }}
-                            disabled={busy}
-                            hint={MEAL_DELETE_HINT}
-                            onConfirm={() => void handleDeleteMealLog(entry)}
-                          >
-                            DELETE
-                          </HoldButton>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  );
-                })}
-            </FieldDisclosure>
+            {mealHistoryContent}
           </div>
         )}
       </div>);
+  if (overviewOnly) return <div className="screen body-field body-home">
+    <OperatorHeader destination="body" focusable>BODY</OperatorHeader>
+    <div hidden={progressOpen}>
+      <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
+        {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} /> : <p role="status">Reading recorded information…</p>}
+        {mealReadFailed && <p role="alert">Could not refresh BODY.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
+      </section>
+      <section aria-label="Progress"><h2 className="section-label">PROGRESS</h2>
+        <div className="body-progress-card"><h3>WEIGHT</h3><p>{weightHistory.at(-1) ? `${weightHistory.at(-1)!.weightLbs} lb · latest recorded` : "No weight recorded yet."}</p><WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} /><button type="button" className="btn-secondary" onClick={() => showProgress("weight")}>WEIGHT HISTORY</button></div>
+        <button type="button" className="btn-secondary body-progress-card" onClick={onOpenTrainingRecords}>TRAINING · RECORDS</button>
+        <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); }}>{label}</button>)}</div>
+      </section>
+      <section aria-label="History"><h2 className="section-label">HISTORY</h2>
+        <HealthDayBrowser selected={healthDay} disabled={busy} visible={visible && !progressOpen} refreshKey={dataRevision} onHistory={onHealthHistory} onSelect={setHealthDay} onExplore={showProgress} onInspect={(selection) => openSources(selection, true)} />
+        {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} holdToInspect onInspect={(record) => onEditRecord?.(record, day.id)} />}
+        <details><summary>Imported source evidence</summary><ImportedSleepEvidence active={visible && !progressOpen} /></details>
+      </section>
+    </div>
+    <div hidden={!progressOpen}>
+      <button type="button" className="btn-secondary" onClick={() => { setProgressOpen(false); setSourceSelection(null); restoreOrigin(); }}>BACK TO BODY</button>
+      <section hidden={sourceSelection !== null}><h2 id="health-progress-heading" tabIndex={-1}>PROGRESS</h2>{progressVisited && <BodyProgress active={visible && progressOpen && sourceSelection === null} refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} request={progressRequest} compositionRequest={compositionRequest} returnFocusRequest={progressReturnFocus} onSources={(selection) => openSources(selection)} />}</section>
+      {sourceSelection && <HealthSources selection={sourceSelection} revision={dataRevision} active={visible && progressOpen} activeDayId={day?.id} allowHistoricalCorrection onCorrect={(record, sourceDayId) => onEditRecord?.(record, sourceDayId ?? day!.id)} onHistory={onHealthHistory} onClose={closeSources} />}
+    </div>
+  </div>;
+
+  if (correctionRequest) return <div className="record-correction">
+    <p className="meta">Source day: {day ? new Date(day.startedAt).toLocaleString("en-GB", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }) : "Reading…"}. Corrections preserve the original entry.</p>
+    {mealReadFailed ? <div role="alert"><p>{mealError}</p><button type="button" className="btn-secondary" onClick={() => void refresh().then(() => setMealReadFailed(false)).catch(() => setMealReadFailed(true))}>RETRY SOURCE DAY</button></div> : !readingsReady || day?.id !== correctionRequest.dayId ? <p role="status">Reading source records…</p> : correctionRequest.record.kind === "WATER" ? waterHistoryContent : correctionRequest.record.kind === "SLEEP" ? sleepHistoryContent : correctionRequest.record.kind === "WEIGHT" ? bodyweightHistoryContent : correctionRequest.record.kind === "PROTEIN" ? proteinHistoryContent : mealHistoryContent}
+  </div>;
   if (sheetFocus) return <div className="body-log-sheet">{sheetFocus === "water" ? waterSheetContent : sheetFocus === "sleep" ? sleepSheetContent : sheetFocus === "weight" ? weightSheetContent : sheetFocus === "meal" ? mealSheetContent : <QuitTracker initiallyOpen openRequest={focusRequest} onBusyChange={onMealJourneyInFlightChange} />}</div>;
   return (
     <div className={`screen fade-in body-field${mealFocused ? " body-meals" : ""}${waterFocused ? " body-water" : ""}`}>
@@ -2511,64 +2625,7 @@ export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overvie
 
           {proteinEntries.length > 0 && (
             <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-              <FieldDisclosure
-                summary={`${proteinHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${proteinEntries.length})`}
-                open={proteinHistoryOpen}
-                onToggle={setProteinHistoryOpen}
-              >
-                  {proteinEntries.map((entry) => (
-                    <div
-                      key={entry.rootEventId}
-                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveGrams} g</p>
-                          <p className="meta">
-                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
-                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                          </p>
-                        </div>
-                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectProtein(entry)}>
-                          CORRECT
-                        </button>
-                      </div>
-                      {proteinCorrectingId === entry.headEventId && (
-                        <div style={{ marginTop: 12 }}>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <input
-                              type="number"
-                              id="protein-correction" aria-label="Corrected amount (g)"
-                              value={proteinCorrectionInput}
-                              onChange={(e) => {
-                                setProteinCorrectionInput(e.target.value);
-                                setProteinEditNotice(null);
-                              }}
-                              className="input"
-                              style={{ flex: 1 }}
-                            />
-                            <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
-                              SAVE
-                            </button>
-                          </div>
-                          {proteinEditNotice && (
-                            <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{proteinEditNotice}</p>
-                          )}
-                          {/* DROP 1.5: the same hold-to-confirm DELETE meals have. */}
-                          <HoldButton
-                            className="btn-secondary"
-                            style={{ marginTop: 8 }}
-                            disabled={busy}
-                            hint={PROTEIN_DELETE_HINT}
-                            onConfirm={() => void handleDeleteProteinLog(entry)}
-                          >
-                            DELETE
-                          </HoldButton>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-              </FieldDisclosure>
+              {proteinHistoryContent}
             </div>
           )}
         </div>

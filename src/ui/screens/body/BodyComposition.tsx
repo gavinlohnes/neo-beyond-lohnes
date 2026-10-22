@@ -11,9 +11,10 @@ import "./bodyProgress.css";
 type ProgressView = "trends" | "measurements" | "photos";
 import { localProgressDate, progressDate, siteLabel } from "./progressCopy";
 
-export function BodyComposition({ active, refreshKey, metricRequest, weights, onWeight, children }: {
-  active: boolean; refreshKey: number; metricRequest?: object | null | undefined; onWeight: () => void; weights: readonly WeighIn[]; children: ReactNode;
+export function BodyComposition({ active, refreshKey, metricRequest, viewRequest, weights, onWeight, children }: {
+  active: boolean; refreshKey: number; metricRequest?: object | null | undefined; viewRequest?: { key: number; view: "photos" | "measurements" } | null | undefined; onWeight: () => void; weights: readonly WeighIn[]; children: ReactNode;
 }) {
+  useEffect(() => { if (viewRequest) setView(viewRequest.view); }, [viewRequest]);
   const [view, setView] = useState<ProgressView>("trends");
   const [measurements, setMeasurements] = useState<MeasurementEntry[]>([]);
   const [ready, setReady] = useState(false);

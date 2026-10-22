@@ -1,5 +1,5 @@
 import { RecordSheets } from "../ui/components/RecordSheets";
-import type { RecordSheetTarget } from "../ui/recordSheets";
+import type { RecordCorrectionRequest, RecordSheetTarget } from "../ui/recordSheets";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
@@ -187,6 +187,8 @@ function AppWorkspaces() {
   const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(null);
   const closingRecordSheet = useRef(false);
   const recordOrigin = useRef<HTMLElement | null>(null);
+  const correctionKey = useRef(0);
+  const [recordCorrection, setRecordCorrection] = useState<RecordCorrectionRequest | null>(null);
   const [recordSheet, setRecordSheet] = useState<RecordSheetTarget | null>(shortcut === "workout" ? null : shortcut);
   const [bodyRequest, setBodyRequest] = useState(0);
   const [healthEvidence, setHealthEvidence] = useState<HealthEvidenceRequest | null>(null);
@@ -485,6 +487,7 @@ function AppWorkspaces() {
   function openRecordSheet(target: RecordSheetTarget) {
     if (!canNavigate()) return;
     if (!recordSheet) recordOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    if (target !== "record") setRecordCorrection(null);
     const next = { ...window.history.state, recordSheet: target };
     if (recordSheet) window.history.replaceState(next, "");
     else window.history.pushState(next, "");
@@ -603,7 +606,7 @@ function AppWorkspaces() {
             onDestinationConsumed={() => setTrainDestination(null)} /></RootErrorBoundary>
         </div>}
         {visited.has("BODY") && <div id="workspace-BODY" className={tab === "BODY" ? "tab-enter" : undefined} hidden={tab !== "BODY"}>
-          <RootErrorBoundary active={tab === "BODY"}><BodyScreen focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
+          <RootErrorBoundary active={tab === "BODY"}><BodyScreen overviewOnly onOpenTrainingRecords={() => openTrain("RECORDS")} onEditRecord={(record, dayId) => { setRecordCorrection({ key: ++correctionKey.current, record, dayId }); openRecordSheet("record"); }} focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
             evidenceRequest={healthEvidence} onHealthHistory={openHealthHistory}
             onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `RETURN TO ${mealOrigin.tab}` : "RETURN TO TODAY"}
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
@@ -630,7 +633,7 @@ function AppWorkspaces() {
         </div>}
       </main>
 
-      <RecordSheets target={recordSheet} open={openRecordSheet} close={closeRecordSheet} onBusy={updateMealInFlight}
+      <RecordSheets correctionRequest={recordCorrection} target={recordSheet} open={openRecordSheet} close={closeRecordSheet} onBusy={updateMealInFlight}
         onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); }}
         onHistory={(metric) => leaveRecordSheet(() => { openBodyEvidence(metric); setMealOrigin((origin) => origin ? { ...origin, trigger: recordOrigin.current } : null); })}
         onWorkout={() => leaveRecordSheet(() => openTrain("WORKOUT"))}

@@ -1,4 +1,4 @@
-# REDESIGN-001 — items 1–2 delivered; item 3 next
+# REDESIGN-001 — items 1–3 delivered; item 4 next
 
 Owner-approved PROTECTED objective: [frozen brief](REDESIGN-001.md), frozen reference
 `prototype/redesign/index.html`. Builder Codex. Branch `codex/redesign-001`;
@@ -46,7 +46,17 @@ TypeScript/build and architecture pass. Built PWA passes 320/360/390/412, modes/
 sheet screenshots, saved-preset creation, stable portion sheet, visible water undo and offline
 save/cold reload. `scripts/verify-redesign-001.mjs`; `docs/screenshots/redesign-001/`.
 
-**Next:** item 3 BODY, then items 4–8 in order. Commit/push
+**Item 3 delivered:** BODY starts with numbers → progress → history, with entry forms in global
+sheets. Existing weight trend/goal date, TRAIN records link, photos/measurements and day/source
+history are reused. Hold-to-open corrections target the actual source day and append existing
+correction/void events; missing source reads offer retry. Measurement drafts survive the return
+to BODY. Saved-meal management remains available in sheets; COMMAND entry follows in item 5.
+Seven BODY cases pass (four widths/axe, read-only browsing, current/closed-day correction,
+measurement draft); BODY plus global-sheet subset 21 passed. Build and architecture pass.
+Built production checks pass 320/360/390/412, BODY/progress screenshots and offline cold reload.
+Full verification remains pending the remaining scope; no final acceptance claim.
+
+**Next:** item 4 TRAIN, then items 5–8 in order. Commit/push
 and update PR Handoff after each item. Full final verify and acceptance evidence, then mark ready
 and stop for independent Claude exact-head review. Never merge.
 

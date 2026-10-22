@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LogSheet } from "./LogSheet";
 import { BodyScreen } from "../screens/body/BodyScreen";
-import type { RecordSheetTarget } from "../recordSheets";
+import type { RecordCorrectionRequest, RecordSheetTarget } from "../recordSheets";
 import type { SavedMeal } from "../../domain/common/types";
 import { ensureActiveDay, logWater, voidWaterLog, captureItem, deleteCaptureItem } from "../../application/commands";
 import { getActiveDay, getHydrationEntries } from "../../application/queries";
@@ -25,7 +25,7 @@ function ReceiptItem({ receipt, busy, undo, dismiss, history }: { receipt: Recei
 }
 type MealForm = { name: string; calories: string; proteinG: string; carbsG: string; fatG: string };
 const EMPTY: MealForm = { name: "", calories: "", proteinG: "", carbsG: "", fatG: "" };
-const TITLE = { water: "WATER", meal: "MEAL", log: "LOG", sleep: "SLEEP", weight: "BODYWEIGHT", note: "NOTE", urge: "URGE", myMeals: "MY MEALS", foodLookup: "FOOD LOOKUP" } as const;
+const TITLE = { water: "WATER", meal: "MEAL", log: "LOG", sleep: "SLEEP", weight: "BODYWEIGHT", note: "NOTE", urge: "URGE", myMeals: "MY MEALS", foodLookup: "FOOD LOOKUP", record: "CORRECT RECORD" } as const;
 const FIELDS = { calories: "Calories", proteinG: "Protein (g)", carbsG: "Carbs (g), optional", fatG: "Fat (g), optional" } as const;
 function parse(form: MealForm) {
   if (!form.name.trim() || !form.calories.trim() || !form.proteinG.trim()) throw new Error("Enter a name, calories and protein.");
@@ -35,7 +35,8 @@ function parse(form: MealForm) {
 }
 
 /** The shell owns one stable modal. Drafts live here, never in persistent storage. */
-export function RecordSheets({ target, open, close, onSaved, onBusy, onHistory, onWorkout, onNotes }: {
+export function RecordSheets({ correctionRequest, target, open, close, onSaved, onBusy, onHistory, onWorkout, onNotes }: {
+  correctionRequest?: RecordCorrectionRequest | null;
   target: RecordSheetTarget | null; open: (target: RecordSheetTarget) => void; close: () => void;
   onSaved: () => void; onBusy: (busy: boolean) => void; onHistory: (metric: "water" | "protein") => void; onWorkout: () => void; onNotes: () => void;
 }) {
@@ -62,13 +63,17 @@ export function RecordSheets({ target, open, close, onSaved, onBusy, onHistory, 
   useSessionDraft("record-sheet-meal", Object.values(form).some(Boolean) || !!quick.calories || !!quick.proteinG);
   useSessionDraft("record-sheet-note", !!note);
   useSessionDraft("record-sheet-edit", page === "edit");
-  const [bodyFocus, setBodyFocus] = useState<"water" | "sleep" | "weight" | "urge" | "meal" | "foodLookup" | null>(null);
+  const [bodyFocus, setBodyFocus] = useState<"water" | "sleep" | "weight" | "urge" | "meal" | "foodLookup" | "protein" | null>(null);
   const [bodyRequest, setBodyRequest] = useState(0);
   useLayoutEffect(() => {
     if (!target) return;
     setError(null); setPage("list");
+    if (target === "record" && correctionRequest) {
+      const kind = correctionRequest.record.kind;
+      setBodyFocus(kind === "MEAL" ? "meal" : kind === "PROTEIN" ? "protein" : kind === "WEIGHT" ? "weight" : kind === "WATER" ? "water" : "sleep"); setBodyRequest((key) => key + 1);
+    }
     if (target === "sleep" || target === "weight" || target === "urge" || target === "foodLookup") { setBodyFocus(target); setBodyRequest((key) => key + 1); }
-  }, [target]);
+  }, [target, correctionRequest]);
   useEffect(() => {
     if (!target) return;
     let current = true; setReadState("loading");
@@ -100,7 +105,7 @@ export function RecordSheets({ target, open, close, onSaved, onBusy, onHistory, 
     {!simple && <label className="field">Name<input className="input" aria-label={`${prefix} name`} value={value.name} onChange={(event) => update({ ...value, name: event.target.value })} /></label>}
     {(Object.entries(FIELDS) as [keyof typeof FIELDS, string][]).filter(([key]) => !simple || key === "calories" || key === "proteinG").map(([key, label]) => <label className="field" key={key}>{label}<input className="input" aria-label={`${prefix} ${label}`} type="number" min="0" step="any" value={value[key]} onChange={(event) => update({ ...value, [key]: event.target.value })} /></label>)}
   </>;
-  const bodyVisible = target === "sleep" || target === "weight" || target === "urge" || (target === "water" && page === "waterDetails") || target === "foodLookup" || page === "mealTools";
+  const bodyVisible = target === "sleep" || target === "weight" || target === "urge" || (target === "water" && page === "waterDetails") || target === "foodLookup" || page === "mealTools" || target === "record" && !!correctionRequest;
   let title: string = target ? TITLE[target] : "LOG";
   if (target === "meal" || target === "myMeals") title = target === "myMeals" && page === "list" ? "MY MEALS" : { list: "MEAL", new: "NEW MEAL", quick: "QUICK ADD", portion: "SERVINGS", edit: "EDIT SAVED MEAL", waterDetails: "MEAL", mealTools: "MEAL TOOLS" }[page];
   return <>
@@ -154,7 +159,7 @@ export function RecordSheets({ target, open, close, onSaved, onBusy, onHistory, 
       </>}
       {target === "log" && <>{(["water", "meal", "sleep", "weight", "note", "urge"] as const).map((kind) => <button type="button" className="today-sheet__option" key={kind} onClick={() => open(kind)}>{TITLE[kind]}</button>)}<button type="button" className="today-sheet__option" onClick={onWorkout}>WORKOUT SET → TRAIN</button></>}
       {target === "note" && <><label className="field">Note<textarea className="input" aria-label="Capture a thought" value={note} onChange={(event) => setNote(event.target.value)} /></label><button type="button" className="btn-primary" disabled={busy || !note.trim()} onClick={() => void commit(async () => { const result = await captureItem(note); setNote(""); return { message: "Note captured.", notes: true, undo: () => deleteCaptureItem(result.id) }; })}>CAPTURE</button></>}
-      <div hidden={!bodyVisible}>{bodyFocus && <BodyScreen sheetFocus={bodyFocus === "foodLookup" ? "meal" : bodyFocus} focus={bodyFocus} focusRequest={bodyRequest} visible={bodyVisible && target !== null} onMealJourneyInFlightChange={(next) => { const wasBusy = busyRef.current; setBusy(next); if (wasBusy && !next) onSaved(); }} />}</div>
+      <div hidden={!bodyVisible}>{bodyFocus && <BodyScreen correctionRequest={target === "record" ? correctionRequest : null} sheetFocus={bodyFocus === "foodLookup" ? "meal" : bodyFocus} focus={bodyFocus === "protein" ? null : bodyFocus} focusRequest={bodyRequest} visible={bodyVisible && target !== null} onMealJourneyInFlightChange={(next) => { const wasBusy = busyRef.current; setBusy(next); if (wasBusy && !next) onSaved(); }} />}</div>
     </LogSheet>
     {receipts.length > 0 && <div className="redesign-toast" role="status">{receipts.map((receipt) => <ReceiptItem key={receipt.id} receipt={receipt} busy={busy}
       dismiss={() => dismissReceipt(receipt.id)} history={() => { dismissReceipt(receipt.id); if (receipt.notes) onNotes(); else onHistory(receipt.history ?? "protein"); }}

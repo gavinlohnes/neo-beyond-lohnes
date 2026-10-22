@@ -27,3 +27,11 @@ synthetic saved meal through the real UI, confirms the serving sheet stays mount
 chip change, then runs visible water undo and offline save/cold reload. Results are in
 `item-2-acceptance.json`. Latest focused meal/receipt tests: 20 passed; prior broad regression:
 108 passed / one existing skip. Build/architecture pass. No physical-device claim.
+
+## Item 3
+
+BODY, measurements and photos captured at all four widths by the production verifier.
+`item-3-acceptance.json` records production checks with no page errors. Seven BODY browser
+cases pass, including closed-day correction integrity, retained measurement drafts, all-width
+accessibility and read-only history browsing. Combined BODY/sheet subset: 21 passed. Build and
+architecture pass. TRAIN and COMMAND are still incomplete; not final acceptance.

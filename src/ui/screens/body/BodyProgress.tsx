@@ -14,10 +14,11 @@ import { getBodyInsights, INSIGHT_DAY_MS, type BodyInsights } from "../../../app
 import { InsightsExplorer, type InsightExploration } from "./InsightsExplorer";
 import { BodyComposition } from "./BodyComposition";
 
-export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request, onSources, returnFocusRequest = 0, active = true }: {
+export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request, compositionRequest, onSources, returnFocusRequest = 0, active = true }: {
   active?: boolean;
   returnFocusRequest?: number;
   request?: HealthEvidenceRequest | null;
+  compositionRequest?: { key: number; view: "photos" | "measurements" } | null | undefined;
   onSources?: ((selection: SourceSelection) => void) | undefined;
   refreshKey: number;
   weightHistory: readonly WeighIn[];
@@ -66,7 +67,7 @@ export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request
       if (!focused || focused === document.body || focused.id === "health-progress-heading" || focused.closest("[hidden]")) document.getElementById("insight-view-records")?.focus({ preventScroll: true });
     });
   }, [summary, insights, returnFocusRequest, active]);
-  return <BodyComposition active={active} refreshKey={refreshKey} metricRequest={request} weights={weightHistory} onWeight={() => { setExploration((state) => ({ ...state, metric: "weight", pointId: null, focusDayId: null })); setTimelineOpen(false); }}>
+  return <BodyComposition viewRequest={compositionRequest} active={active} refreshKey={refreshKey} metricRequest={request} weights={weightHistory} onWeight={() => { setExploration((state) => ({ ...state, metric: "weight", pointId: null, focusDayId: null })); setTimelineOpen(false); }}>
     {failed && <div role="alert"><p className="meta">Could not read your progress. Your records are unchanged.</p><button className="btn-secondary" onClick={() => { restoreRetryFocus.current = true; setRetry((value) => value + 1); }}>RETRY PROGRESS</button></div>}
     {!failed && (!summary || !insights) && <p className="meta" role="status">Loading your recorded progress…</p>}
     {!failed && summary && insights && <div className="health-progress">

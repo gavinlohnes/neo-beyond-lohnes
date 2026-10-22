@@ -155,7 +155,7 @@ interface CompletionSummary {
  * made: the full session (STANDARD) or the short one (REDUCED). TRAIN's own flow,
  * including the RED override, still governs the start.
  */
-export type TrainDestination = "RECOVERY" | "WORKOUT" | "WORKOUT_STANDARD" | "WORKOUT_REDUCED";
+export type TrainDestination = "RECORDS" | "RECOVERY" | "WORKOUT" | "WORKOUT_STANDARD" | "WORKOUT_REDUCED";
 
 export function TrainScreen({
   active = true,
@@ -308,6 +308,7 @@ export function TrainScreen({
   useEffect(() => {
     if (!active || reading || readError || !destination || !destinationReady || destinationConsumedRef.current) return;
     destinationConsumedRef.current = true;
+    if (destination === "RECORDS") { setRecordsOpen(true); setHistoryOpen(false); }
     onDestinationConsumed?.();
     if (!session && destination === "RECOVERY") { variantChosenRef.current = true; setChosenVariant("RECOVERY"); setOverridePickerOpen(true); }
     if (!session && (destination === "WORKOUT_STANDARD" || destination === "WORKOUT_REDUCED")) {
