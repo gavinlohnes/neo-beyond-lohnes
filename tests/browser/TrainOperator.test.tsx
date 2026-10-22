@@ -200,6 +200,36 @@ describe("TRAIN-OPERATOR-001", () => {
     expect(await getPerformedSets(session!.id)).toHaveLength(1);
   });
 
+  it("a slow retry read never takes focus from a set field the operator has moved into", async () => {
+    const { session } = await ready(true);
+    const screen = await render(<TrainScreen />);
+    await screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" }).fill("100");
+    await screen.getByRole("spinbutton", { name: "Set 1 repetitions" }).fill("10");
+    vi.mocked(logEvent).mockRejectedValueOnce(new Error("Event write unavailable"));
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByText(/Could not confirm set recording/)).toBeVisible();
+    // Hold the retry's read open while the operator starts typing.
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    const real = vi.mocked(getActiveDay).getMockImplementation()!;
+    vi.mocked(getActiveDay).mockImplementationOnce(async () => { await held; return real(); });
+    const reads = vi.mocked(getPerformedSets).mock.calls.length;
+    await screen.getByRole("button", { name: "RETRY WORKOUT READ" }).click();
+    const weight = screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" });
+    await expect.element(weight).toBeVisible();
+    await weight.click();
+    release();
+    // The retry read has finished once it re-reads the sets; give its focus step a frame to run.
+    await expect.poll(() => vi.mocked(getPerformedSets).mock.calls.length).toBeGreaterThan(reads);
+    await new Promise<void>((resolve) => setTimeout(resolve, 50));
+    expect(document.activeElement).toBe(weight.element());
+    await weight.fill("105");
+    await screen.getByRole("spinbutton", { name: "Set 1 repetitions" }).fill("8");
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByText("#1 — 105 lb x 8", { exact: true })).toBeVisible();
+    expect((await getPerformedSets(session!.id)).map((set) => [set.weight, set.reps])).toEqual([[105, 8]]);
+  });
+
   it("reconciles an unconfirmed command failure without replaying it; the atomic rollback leaves the set unrecorded", async () => {
     const { session } = await ready(true);
     const screen = await render(<TrainScreen />);
