@@ -1027,8 +1027,8 @@ export function TrainScreen({
             )}
             {completionSummary.status === "COMPLETED" ? "WORKOUT COMPLETE" : "WORKOUT SAVED — PARTIAL"}
           </h2>
-          <p className="card-body" style={{ textTransform: "capitalize", marginBottom: 8 }}>
-            {completionSummary.bodyAreas || "Workout"}
+          <p className="card-body" style={{ marginBottom: 8 }}>
+            {sentenceCase(completionSummary.bodyAreas) || "Workout"}
           </p>
           <ReadoutGrid className="train-session-readout">
             <Readout label="EXERCISES" value={`${completionSummary.exercisesTouched} / ${completionSummary.totalExercises}`} />
@@ -1101,8 +1101,8 @@ export function TrainScreen({
           <p className="tool-label" style={{ marginBottom: 4 }}>
             {noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
           </p>
-          <h2 className="command-title" style={{ textTransform: "capitalize" }}>
-            {chosenVariant === "RECOVERY" ? "Recovery session" : suggestedSummary.bodyAreas || "Workout"}
+          <h2 className="command-title">
+            {chosenVariant === "RECOVERY" ? "Recovery session" : sentenceCase(suggestedSummary.bodyAreas) || "Workout"}
           </h2>
           {chosenVariant !== "RECOVERY" && (
             <p className="meta" style={{ marginBottom: 12 }}>
@@ -1868,3 +1868,6 @@ export function TrainScreen({
     </div>
   );
 }
+
+/** "chest, legs, and triceps" → "Chest, legs, and triceps" (CSS capitalize would also capitalize "and"). */
+const sentenceCase = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);

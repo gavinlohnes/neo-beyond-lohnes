@@ -45,6 +45,11 @@ history was overwhelming routine mobile screens.
   app's short style ("Oct 19").
 - **Bounded history:** HISTORY shows 14 days and TRAIN history 10 sessions at a time, each with SHOW
   MORE; a day opened from search is always included.
+- **One sleep number (FRICTION-001):** before this lived day has a main sleep, BODY shows the same
+  last main sleep TODAY and SYSTEMS read, marked "Last main sleep" (or "Garmin"), never "Not logged".
+- **Copy says what's missing, once (FRICTION-001):** with no weigh-in, BODY's protein line reads
+  "No target yet · a weigh-in sets it." instead of repeating the gram total. Workout titles are
+  sentence case ("Chest, legs, and triceps").
 
 ## GARMIN-005 — eaten vs burned (owner approved 2026-10-22)
 

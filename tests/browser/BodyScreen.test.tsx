@@ -10,6 +10,8 @@ import { createSavedMeal, logMeal } from "../../src/application/nutritionCommand
 import { saveQuitHabit } from "../../src/application/quitCommands";
 import { holdToConfirm } from "./helpers/hold";
 import { formatShortDate } from "../../src/application/bodyTrendQueries";
+import { importSleepSnapshot } from "../../src/application/externalSleepCommands";
+import { syntheticGarminMonth } from "../helpers/syntheticGarminMonth";
 
 /**
  * BEYOND FIELD ALPHA Phase 3 — first real-browser acceptance layer for
@@ -81,6 +83,48 @@ describe("BodyScreen (real browser) — empty state", () => {
     await expect.poll(() => document.querySelectorAll(".health-overview .tool-label").length).toBe(5);
     expect([...document.querySelectorAll(".health-overview .tool-label")].map(el => el.textContent)).toEqual(["CALORIES", "PROTEIN", "WATER", "LAST WEIGHT", "MAIN SLEEP"]);
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
+  });
+
+  it("FRICTION-001: before this day's sleep, shows the last main sleep TODAY shows instead of Not logged", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const H = 3600_000, start = new Date(2026, 9, 20, 16, 30).getTime(), iso = (t: number) => new Date(t).toISOString();
+      const day = (id: string, t: number, status: "ACTIVE" | "ENDED") => ({ id, startedAt: iso(t), timezoneId: "America/Chicago", workContext: "WORK" as const, status, createdAt: iso(t), updatedAt: iso(t) });
+      await db.beyondDays.bulkAdd([day("friction-d0", start, "ENDED"), day("friction-d1", start + 24 * H, "ACTIVE")]);
+      vi.setSystemTime(start + 20 * H); await logSleep("friction-d0", 400, "PRIMARY"); // the morning sleep before tonight's shift
+      vi.setSystemTime(start + 34 * H); // 02:30, mid-shift on the next lived day
+      const screen = await render(<BodyScreen />);
+      const sleep = screen.getByRole("region", { name: "Your daily health record" }).getByRole("button", { name: "main sleep history" });
+      await expect.element(sleep).toHaveTextContent("6 hr 40 min");
+      await expect.element(sleep).toHaveTextContent("Last main sleep");
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("FRICTION-001: a main sleep older than 36 h still reads Not logged", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const H = 3600_000, start = new Date(2026, 9, 20, 16, 30).getTime(), iso = (t: number) => new Date(t).toISOString();
+      const day = (id: string, t: number, status: "ACTIVE" | "ENDED") => ({ id, startedAt: iso(t), timezoneId: "America/Chicago", workContext: "WORK" as const, status, createdAt: iso(t), updatedAt: iso(t) });
+      await db.beyondDays.bulkAdd([day("friction-g0", start, "ENDED"), day("friction-g1", start + 24 * H, "ACTIVE")]);
+      vi.setSystemTime(start + 20 * H); await logSleep("friction-g0", 400, "PRIMARY");
+      vi.setSystemTime(start + 20 * H + 37 * H); // more than 36 h later: too old to stand for last night
+      const stale = await render(<BodyScreen />);
+      await expect.element(stale.getByRole("region", { name: "Your daily health record" }).getByRole("button", { name: "main sleep history" })).toHaveTextContent("Not logged");
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("FRICTION-001: a Garmin sleep from the day before shows with its source", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const H = 3600_000, start = new Date(2026, 9, 20, 16, 30).getTime(), now = start + 34 * H; // 02:30 next lived day
+      const { days, sleep } = syntheticGarminMonth(start, 2, now);
+      await db.beyondDays.bulkAdd(days);
+      vi.setSystemTime(now); await importSleepSnapshot(sleep);
+      const screen = await render(<BodyScreen />);
+      const tile = screen.getByRole("region", { name: "Your daily health record" }).getByRole("button", { name: "main sleep history" });
+      await expect.element(tile).toHaveTextContent("4 hr 35 min"); // asleep time, awake stage excluded, as TODAY shows
+      await expect.element(tile).toHaveTextContent("Garmin");
+    } finally { vi.useRealTimers(); }
   });
 });
 
@@ -252,14 +296,14 @@ describe("BodyScreen (real browser) — PROTEIN", () => {
  * NUTRITION-003 (Calorie + Protein Targets, High-Risk Drop): calorie
  * target is set directly (no formula); protein target is derived from
  * the most recently logged bodyweight × an adjustable multiplier and
- * must read as "no target"/"log a bodyweight" rather than a guessed
+ * must read as "no target"/"a weigh-in sets it" rather than a guessed
  * number until a bodyweight actually exists.
  */
 describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
   it("shows the honest no-target/no-bodyweight defaults before any settings or bodyweight are logged", async () => {
     const screen = await render(<BodyScreen />);
     await expect.element(screen.getByText(/no calorie target/)).toBeVisible();
-    await expect.element(screen.getByText(/log a bodyweight to see your target/)).toBeVisible();
+    await expect.element(screen.getByText("No target yet · a weigh-in sets it.", { exact: true })).toBeVisible();
   });
 
   it("reads saved targets for calorie progress, but protein stays unresolved until a bodyweight is logged", async () => {
@@ -270,7 +314,7 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     await expect.element(screen.getByText("Nutrition targets are editable in COMMAND → Settings.", { exact: true })).toBeVisible();
 
     await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
-    await expect.element(screen.getByText(/log a bodyweight to see your target/)).toBeVisible();
+    await expect.element(screen.getByText("No target yet · a weigh-in sets it.", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
     await screen.getByRole("spinbutton", { name: "Weight (lbs)" }).fill("180");

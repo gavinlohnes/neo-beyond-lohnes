@@ -1,3 +1,17 @@
+# FRICTION-001 — slice 1: the 2:30 AM operator pass
+
+- **Objective / authority:** [FRICTION-001](FRICTION-001.md); Gavin said "start the friction pass
+  after it merges" (#274 merged as 42d6c2b). Builder: Claude Code, branch `claude/friction-1`.
+- **Built:** BODY's sleep reading agrees with TODAY (last main sleep instead of "Not logged");
+  shorter no-target protein line; TRAIN workout titles in sentence case; WeightTrend reuses
+  `formatShortDate`. Display/copy only.
+- **Verified:** `npm run verify` green: architecture OK, 2,889 passed / one skip, build OK.
+- **Next:** PR, green CI, independent review, Gavin's merge. Candidate fixes and ARCH-001 notes
+  are in the brief.
+
+---
+Previous checkpoint:
+
 # UX-COHESION-001 — slice 3: one way back, quieter BODY, bounded history
 
 - **Objective / authority:** [UX-COHESION-001](UX-COHESION-001.md), approved 2026-10-22; Gavin said

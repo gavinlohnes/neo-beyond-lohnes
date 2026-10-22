@@ -28,6 +28,7 @@ import {
   voidBodyweightLog,
   ensureActiveDay,
 } from "../../../application/commands";
+import { getLastMainSleep } from "../../../application/systemStatus";
 import {
   getActiveDay,
   getEffectiveHydrationTotal,
@@ -445,6 +446,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
 
   // Sleep
   const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
+  const [lastMainSleep, setLastMainSleep] = useState<{ minutes: number; fromGarmin: boolean } | null>(null);
   const [sleepKind, setSleepKind] = useState<"PRIMARY" | "SUPPLEMENTAL">("PRIMARY");
   const [sleepHoursInput, setSleepHoursInput] = useState("");
   const [sleepMinutesInput, setSleepMinutesInput] = useState("");
@@ -690,7 +692,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     const activeDay = (await (correctionRequest ? getRecordedHealthDay(correctionRequest.dayId) : getActiveDay())) ?? null;
     if (correctionRequest && !activeDay) throw new Error("The source day is unavailable. Nothing changed.");
     const [nextSavedMeals, targets, targetProtein, history, previousMeals, nextWater, waterTotal,
-      nextSleep, nextWeight, nextProtein, proteinTotal, nextMeals, calories] = await Promise.all([
+      nextSleep, nextWeight, nextProtein, proteinTotal, nextMeals, calories, nextLastMainSleep] = await Promise.all([
       getRecentSavedMeals(), getNutritionTargets(), getEffectiveProteinTargetG(), getBodyweightHistory(),
       getPreviousDayMeals(activeDay?.id),
       activeDay ? getHydrationEntries(activeDay.id) : Promise.resolve([]),
@@ -701,12 +703,13 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       activeDay ? getDayProteinTotalG(activeDay.id) : Promise.resolve(0),
       activeDay ? getMealEntries(activeDay.id) : Promise.resolve([]),
       activeDay ? getTotalMealCalories(activeDay.id) : Promise.resolve(0),
+      activeDay && !correctionRequest ? getLastMainSleep(activeDay.id).catch(() => null) : Promise.resolve(null),
     ]);
     // Publish one consistent reading; a delayed older read cannot replace a newer result.
     if (revision !== readRevision.current) return;
     setDay(activeDay); setSavedMeals(nextSavedMeals); setNutritionTargets(targets);
     setEffectiveProteinTargetG(targetProtein); setWeightHistory(history); setRepeatMeals(previousMeals);
-    setEntries(nextWater); setTotal(waterTotal); setSleepEntries(nextSleep); setBodyweightEntries(nextWeight);
+    setEntries(nextWater); setTotal(waterTotal); setSleepEntries(nextSleep); setLastMainSleep(nextLastMainSleep); setBodyweightEntries(nextWeight);
     setProteinEntries(nextProtein); setDayProteinG(proteinTotal); setMealEntries(nextMeals); setTotalMealCalories(calories);
     setReadCorrectionKey(correctionRequest?.key ?? null);
     setReadingsReady(true); setDataRevision((value) => value + 1);
@@ -2485,7 +2488,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     {onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>{returnLabel}</button>}
     <div hidden={progressOpen}>
       <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
-        {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} /> : <p role="status">Reading recorded information…</p>}
+        {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} /> : <p role="status">Reading recorded information…</p>}
         {mealReadFailed && <p role="alert">Could not refresh BODY.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
       </section>
       <section aria-label="Progress"><h2 className="section-label">PROGRESS</h2>
@@ -2534,7 +2537,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
             onSelect: (start) => { if (start === null || (!busyRef.current && !foodSearchBusyRef.current)) setHealthDay(start); }, onExplore: showProgress, onInspect: (selection) => openSources(selection, true) }} />
       </div>
       {!waterFocused && !mealsVisible && !progressOpen && !healthDay && (readingsReady ? <HealthOverview day={day}
-        onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries}
+        onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep}
         weight={weightHistory} mealEntries={mealEntries}
         calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged from meals · no calorie target"}
         proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} /> : <p className="meta" role="status">Loading recorded information…</p>)}

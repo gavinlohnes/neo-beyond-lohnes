@@ -30,13 +30,15 @@ export function HealthMeasure({ label, value, detail, metric, onExplore }: {
   </button>;
 }
 
-export function HealthOverview({ day, calories, protein, water, sleep, weight, mealEntries, calorieCopy, proteinCopy, onExplore }: {
+export function HealthOverview({ day, calories, protein, water, sleep, lastMainSleep = null, weight, mealEntries, calorieCopy, proteinCopy, onExplore }: {
   onExplore?: ((metric: InsightMetric) => void) | undefined;
   day: BeyondDay | null;
   calories: number;
   protein: number;
   water: number;
   sleep: readonly SleepEntry[];
+  /** TODAY's last main sleep (this day or the one before); shown when this day has none yet. */
+  lastMainSleep?: { minutes: number; fromGarmin: boolean } | null;
   weight: readonly WeighIn[];
   mealEntries: readonly NutritionEntry[];
   calorieCopy: string;
@@ -59,8 +61,8 @@ export function HealthOverview({ day, calories, protein, water, sleep, weight, m
         <HealthMeasure metric="water" onExplore={onExplore} label="WATER" value={`${water} oz`} />
         <HealthMeasure metric="weight" onExplore={onExplore} label="LAST WEIGHT" value={lastWeight ? `${lastWeight.weightLbs} lbs` : "Not logged"}
           detail={lastWeight ? new Date(lastWeight.recordedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : undefined} />
-        <HealthMeasure metric="sleep" onExplore={onExplore} label="MAIN SLEEP" value={main ? formatDuration(main.effectiveDurationMinutes) : "Not logged"}
-          detail={mains > 1 ? `Latest of ${mains} main-sleep records` : main?.fromGarmin ? "Garmin" : undefined} />
+        <HealthMeasure metric="sleep" onExplore={onExplore} label="MAIN SLEEP" value={main ? formatDuration(main.effectiveDurationMinutes) : lastMainSleep ? formatDuration(lastMainSleep.minutes) : "Not logged"}
+          detail={mains > 1 ? `Latest of ${mains} main-sleep records` : (main?.fromGarmin ?? lastMainSleep?.fromGarmin) ? "Garmin" : !main && lastMainSleep ? "Last main sleep" : undefined} />
         {/* UX-COHESION-001: naps appear when there are naps, not as a standing "Not logged". */}
         {naps.length > 0 && <Readout label="NAPS" value={formatDuration(naps.reduce((total, entry) => total + entry.effectiveDurationMinutes, 0))}
           detail={naps.length > 1 ? `${naps.length} naps recorded` : undefined} />}
