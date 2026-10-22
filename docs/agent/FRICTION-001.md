@@ -17,7 +17,7 @@ Walked TODAY, TRAIN, BODY and COMMAND at 390 px, 02:30 on a work day, with a mon
 | Seen at 2:30 AM | Fix |
 | --- | --- |
 | TODAY says sleep 4:35 (Garmin); BODY says MAIN SLEEP "Not logged" for the same night | BODY falls back to TODAY's own `getLastMainSleep`, labelled "Last main sleep"/"Garmin" |
-| BODY protein: "40 g" then "40g protein logged today — log a bodyweight to see your target." | "No target yet · a weigh-in sets it." (TODAY's wording) |
+| BODY protein: "40 g" then "40g protein logged today — log a bodyweight to see your target." | "No target yet · a weigh-in sets it." (close to TODAY's "A weigh-in sets the protein target.") |
 | TRAIN title "Chest, Legs, And Triceps" (CSS capitalize) | Sentence case: "Chest, legs, and triceps" |
 | #274 review nit: WeightTrend duplicated `formatShortDate` | Reuses it |
 

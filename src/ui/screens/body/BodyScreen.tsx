@@ -703,7 +703,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       activeDay ? getDayProteinTotalG(activeDay.id) : Promise.resolve(0),
       activeDay ? getMealEntries(activeDay.id) : Promise.resolve([]),
       activeDay ? getTotalMealCalories(activeDay.id) : Promise.resolve(0),
-      activeDay ? getLastMainSleep(activeDay.id).catch(() => null) : Promise.resolve(null),
+      activeDay && !correctionRequest ? getLastMainSleep(activeDay.id).catch(() => null) : Promise.resolve(null),
     ]);
     // Publish one consistent reading; a delayed older read cannot replace a newer result.
     if (revision !== readRevision.current) return;

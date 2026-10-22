@@ -5,7 +5,7 @@
 - **Built:** BODY's sleep reading agrees with TODAY (last main sleep instead of "Not logged");
   shorter no-target protein line; TRAIN workout titles in sentence case; WeightTrend reuses
   `formatShortDate`. Display/copy only.
-- **Verified:** `npm run verify` green: architecture OK, 2,887 passed / one skip, build OK.
+- **Verified:** `npm run verify` green: architecture OK, 2,889 passed / one skip, build OK.
 - **Next:** PR, green CI, independent review, Gavin's merge. Candidate fixes and ARCH-001 notes
   are in the brief.
 

@@ -101,5 +101,3 @@ export function WeightTrend({
     </div>
   );
 }
-
-/** The app's one short date style ("Oct 19"), not the locale's numeric one. */

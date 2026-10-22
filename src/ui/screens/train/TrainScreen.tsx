@@ -1027,8 +1027,8 @@ export function TrainScreen({
             )}
             {completionSummary.status === "COMPLETED" ? "WORKOUT COMPLETE" : "WORKOUT SAVED — PARTIAL"}
           </h2>
-          <p className="card-body" style={{ textTransform: "capitalize", marginBottom: 8 }}>
-            {completionSummary.bodyAreas || "Workout"}
+          <p className="card-body" style={{ marginBottom: 8 }}>
+            {sentenceCase(completionSummary.bodyAreas) || "Workout"}
           </p>
           <ReadoutGrid className="train-session-readout">
             <Readout label="EXERCISES" value={`${completionSummary.exercisesTouched} / ${completionSummary.totalExercises}`} />
