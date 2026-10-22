@@ -15,17 +15,19 @@ distinct.
 
 ## Device observation (2026-10-22)
 
-Health Connect → App permissions → Garmin Connect on Gavin's phone shows these write categories:
+Health Connect → App permissions → Garmin Connect on Gavin's phone. Garmin is allowed to write,
+and all of these are switched on:
 
-| Category | Selected |
+| Category | Data types |
 |---|---|
-| Activity | 8 of 8 |
-| Body measurements | 2 of 2 |
-| Sleep | 1 of 1 |
-| Vitals | 2 of 2 |
+| Activity | Active calories burned, Distance, Elevation gained, Exercise, Floors climbed, Speed, Steps, Total calories burned |
+| Body measurements | Body fat, Weight |
+| Sleep | Sleep |
+| Vitals | Heart rate, Resting heart rate |
 
-The data types inside each category were not expanded. Steps sits under Activity and heart rate
-under Vitals. Resting heart rate is read only if Garmin writes it.
+PR 1 reads Steps, Heart rate and Resting heart rate, all of which are confirmed. The remaining
+types are candidates for later, separately approved scope. Weight overlaps BEYOND's manual
+weigh-ins and needs the measured-vs-reported rule before any import.
 
 ## PR 1 — helper reads steps and heart rate (this PR)
 
