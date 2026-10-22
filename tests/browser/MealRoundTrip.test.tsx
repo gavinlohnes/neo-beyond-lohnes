@@ -199,6 +199,8 @@ describe("TODAY meal round trip", () => {
     await seedMeal();
     const screen = await render(<App />);
     await openMeal(screen);
+    // The sheet's own saved-meal read must finish before the failure is injected.
+    await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeVisible();
     const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal logged.");
@@ -294,6 +296,8 @@ describe("TODAY meal round trip", () => {
     await logMeal(dayId, meal.id);
     const screen = await render(<App />);
     await openMeal(screen);
+    // The sheet's own saved-meal read must finish before the failure is injected.
+    await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeVisible();
     const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal logged.");
