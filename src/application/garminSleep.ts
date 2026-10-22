@@ -79,13 +79,3 @@ export async function applyGarminSleep(): Promise<{ logged: number; corrected: n
   }
   return result;
 }
-
-/** GARMIN-003: the owner's own sleep entry replaces any active Garmin entry of the same kind on that day. */
-export async function replaceGarminSleep(dayId: string, kind: Kind, ownerEventId: string): Promise<void> {
-  const events = await db.events.where("beyondDayId").equals(dayId).toArray();
-  const voided = voidedIds(events);
-  for (const e of events) {
-    if (e.type !== "SLEEP_LOGGED" || voided.has(e.id) || !garminSource(e)) continue;
-    if (((e.payload as SleepLoggedPayload).kind ?? "PRIMARY") === kind) await voidAsSystem(dayId, e.id, ownerEventId);
-  }
-}

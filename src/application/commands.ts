@@ -1,6 +1,5 @@
 import { db } from "../persistence/db";
 import { DAY_WRITE_TABLES, writeAtomically } from "./atomicWrite";
-import { replaceGarminSleep } from "./garminSleep";
 import type { DraftDecision } from "../domain/intelligence/types";
 import { evaluate } from "../engine/evaluate";
 import { computeDueRollover, workoutHoldsRollover } from "../engine/dayRollover";
@@ -13,6 +12,7 @@ import type {
   DomainEvent,
   ProteinLogVoidedPayload,
   BodyLogVoidedPayload,
+  SleepLoggedPayload,
   Recommendation,
   SchedulePattern,
   StateCheckIn,
@@ -1323,4 +1323,20 @@ export async function markShiftHandoffRead(beyondDayId: string, handoffEventId: 
   const correlationId = newId();
   const payload: ShiftHandoffReadPayload = { commandId: correlationId, handoffEventId };
   await logEvent(beyondDayId, "SHIFT_HANDOFF_READ", payload, "USER", correlationId, handoffEventId);
+}
+
+/**
+ * GARMIN-003 (owner ruling 2026-10-22): the owner's own sleep entry replaces any active Garmin entry of
+ * the same kind on that day. Lives here, not in garminSleep.ts, so the import graph stays one-way
+ * (garminSleep → commands); a cycle hung Vitest's browser module loader.
+ */
+async function replaceGarminSleep(dayId: string, kind: SleepLoggedPayload["kind"], ownerEventId: string): Promise<void> {
+  const events = await db.events.where("beyondDayId").equals(dayId).toArray();
+  const voided = new Set(events.filter((e) => e.type === "SLEEP_LOG_VOIDED").map((e) => (e.payload as BodyLogVoidedPayload).loggedEventId));
+  for (const e of events) {
+    const payload = e.payload as SleepLoggedPayload;
+    if (e.type !== "SLEEP_LOGGED" || voided.has(e.id) || payload.source?.kind !== "GARMIN" || (payload.kind ?? "PRIMARY") !== kind) continue;
+    const commandId = newId();
+    await logEvent(dayId, "SLEEP_LOG_VOIDED", { commandId, loggedEventId: e.id }, "SYSTEM", commandId, ownerEventId);
+  }
 }
