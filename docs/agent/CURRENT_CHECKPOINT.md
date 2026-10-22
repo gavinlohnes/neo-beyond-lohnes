@@ -3,7 +3,8 @@
 - **Objective / authority:** Gavin approved [GARMIN-005](GARMIN-005.md) on 2026-10-22 ("Approved.
   Make it amazing"). PROTECTED: new Health Connect read permissions and new TODAY numbers. Builder
   Claude Code handed the objective to Codex to finish.
-- **Branch:** `claude/garmin-005`, stacked on GARMIN-004 PR #269. PR pending. GARMIN-004's one-line
+- **Branch:** `claude/garmin-005`, [PR #271](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/271)
+  stacked on GARMIN-004 PR #269. GARMIN-004's one-line
   sub-pixel CI repair is `520699a`; bring this branch onto merged master after #269 integrates.
 - **Built:** helper 0.6.0 exports hourly total/active calories in compatible activity format 2;
   BEYOND accepts formats 1 and 2 without old imports erasing calories. TODAY shows a conditional
@@ -11,8 +12,10 @@
   Weekly's measured Garmin average. No Engine, target, advice, net/remaining or schema change.
 - **Finished in handoff:** corrected the 4W expectation to 27 completed measured days; 5/5 focused
   browser tests pass at 320/390 px; refreshed four screenshots; added the brief/wording table and
-  UX_DECISIONS ruling. Full gate attempt passed architecture and 2,873 tests / one skip; two
-  unrelated 5-second `classifyRisk` timeouts then passed 18/18 in isolation. Clean full rerun remains.
+  UX_DECISIONS ruling. Two full gate attempts passed architecture and all product/browser work
+  (2,871+ tests / one skip each), but the Windows host timed out only in legacy `classifyRisk`
+  subprocess tests at their 5-second limit; the affected group passed 18/18 in isolation. Required
+  PR CI is the clean full gate.
 - **Limits:** no Android SDK here, so helper compilation/permission packaging awaits CI. Physical
   phone permission/export, Safari and screen readers remain unverified.
 - **Next:** integrate #269/master, obtain a clean full gate and helper CI, open the PR, then obtain
