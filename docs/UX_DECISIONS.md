@@ -12,6 +12,21 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## GARMIN-004 — Garmin numbers you can see (owner approved 2026-10-22)
+
+Gavin approved [the brief](agent/GARMIN-004.md); its wording table is for his review before merge.
+
+- **TODAY numbers:** with Garmin data, STEPS and RESTING HR join the numbers (three across) and SLEEP
+  shows your usual. Tiles state value and `USUAL …` (GARMIN-003's 28-day median, 14+ days) or
+  `GARMIN` / `NOT MEASURED`. Resting HR shows the latest from today or yesterday (Garmin publishes it
+  daily). Without Garmin data the four tiles are unchanged.
+- **Detail sheets** open over TODAY: steps (today's running total, 7D/4W/1Y), resting heart rate and
+  sleep (last night's hypnogram and stage minutes, 7D/4W/1Y). Bars are tappable, every chart has a
+  table view, missing days and stages are "Not recorded"/"not measured", never zero.
+- **Never:** comparisons with other people, streaks, auto goals, or any change to advice. Sleep
+  stages use one validated blue ramp (Awake light → Deep dark); Garmin data wears blue, red stays the
+  action color.
+
 ## FIELD-AUTHORITY-001 — one next thing, one red (owner approved 2026-10-22)
 
 Gavin wrote and approved [the brief](agent/FIELD-AUTHORITY-001.md). It amends REDESIGN-001's

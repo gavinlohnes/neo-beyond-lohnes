@@ -1,0 +1,24 @@
+/* GARMIN-004: measured detail sheet. Thin marks, hairline grid, text in text tokens. */
+.measured-sheet { display: flex; flex-direction: column; gap: 10px; }
+.measured-ranges { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+.measured-ranges .btn-secondary { min-height: 44px; padding-inline: 4px; }
+.measured-ranges .btn-secondary[aria-pressed="true"] { border-color: var(--p-t1, var(--text-1)); color: var(--p-t1, var(--text-1)); }
+.measured-hero { margin: 4px 0 0; color: var(--p-t2, var(--text-2)); }
+.measured-hero b { font-size: 34px; font-weight: 700; color: var(--p-t1, var(--text-1)); margin-right: 6px; font-variant-numeric: tabular-nums; }
+.measured-chart { width: 100%; height: auto; display: block; overflow: visible; }
+.measured-grid { stroke: var(--p-line-2, #292929); stroke-width: 1; }
+.measured-usual { stroke: var(--p-t3, #767676); stroke-width: 1; }
+.measured-axis { fill: var(--p-t2, #8a8a8a); font-size: 10px; font-family: var(--p-mono, monospace); }
+.measured-line { fill: none; stroke: #3987e5; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.measured-dot { fill: #3987e5; stroke: var(--p-s1, #030303); stroke-width: 2; }
+.measured-bar { cursor: pointer; }
+.measured-readout { margin: 0; color: var(--p-t1, var(--text-1)); }
+.measured-stages { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin: 0; }
+.measured-stages div { display: flex; flex-direction: column; border-top: 1px solid var(--p-line-2, #292929); padding-top: 6px; }
+.measured-stages dt { display: flex; align-items: center; gap: 6px; color: var(--p-t2, var(--text-2)); font-size: 13px; }
+.measured-stages dt i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.measured-stages dd { margin: 2px 0 0; font-size: 20px; font-weight: 600; color: var(--p-t1, var(--text-1)); }
+.measured-table table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.measured-table th, .measured-table td { text-align: left; padding: 6px 0; border-bottom: 1px solid var(--p-line, #1b1b1b); font-weight: 400; }
+.measured-table td { text-align: right; }
+.measured-table summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }

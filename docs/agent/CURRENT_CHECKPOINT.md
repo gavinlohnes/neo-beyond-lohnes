@@ -1,3 +1,16 @@
+# GARMIN-004 — Garmin numbers you can see (stacked on FIELD-AUTHORITY-001)
+
+- **Objective:** [GARMIN-004](GARMIN-004.md), approved 2026-10-22. Builder: Claude Code. Branch
+  `claude/garmin-004`, stacked on #268 (`ccr-18eb6d33-pxewfy`); the PR targets that branch.
+- **Built:** STEPS and RESTING HR tiles with your usual; detail sheets for steps, resting heart rate
+  and sleep (hypnogram, stages, 7D/4W/1Y, table view). Display only.
+- **Waiting on Gavin:** the wording table in the brief. Then #268 merges, this PR retargets master.
+- **Next after it:** GARMIN-005 (calories burned, eaten vs burned; new permission, needs a yes) and
+  the TRAIN weight-field flake fix (approved, separate PR).
+
+---
+Previous checkpoint:
+
 # FIELD-AUTHORITY-001 — one next thing, one red
 
 - **Objective:** Gavin's PROTECTED brief [FIELD-AUTHORITY-001](FIELD-AUTHORITY-001.md), approved
