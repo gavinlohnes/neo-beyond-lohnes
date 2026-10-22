@@ -88,7 +88,7 @@ export function ModeHeader({
   }, [mode]);
 
   return (
-    <section className="mode-header cc-mode" data-mode={mode ?? "UNSET"} aria-label="Mode">
+    <section className={`mode-header cc-mode${scheduledPhase ? "" : " cc-mode--thin"}`} data-mode={mode ?? "UNSET"} aria-label="Mode">
       <button
         ref={trigger}
         type="button"

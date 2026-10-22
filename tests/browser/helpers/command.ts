@@ -1,5 +1,4 @@
 import { expect } from 'vitest';
-import { page } from 'vitest/browser';
 import type { render } from 'vitest-browser-react';
 import { SYSTEM_CAPABILITIES } from '../../../src/ui/systemCatalog';
 
@@ -21,8 +20,7 @@ export async function commandResult(screen: Screen, label: string) {
   if ((search.element() as HTMLInputElement).value) await search.fill('');
   const sectionForm = label === 'NUTRITION TARGETS' || label === 'QUIT TRACKER';
   if (sectionForm) {
-    const summary = screen.getByText('Settings tools', { exact: true });
-    if (!(summary.element().parentElement as HTMLDetailsElement).open) await summary.click();
+    await openCommandPanel(screen, 'settings');
     return screen.getByRole('button', { name: `Open ${label}`, exact: true });
   }
   const canonical = label === 'SEARCH' ? 'SEARCH RECORDS' : label;
@@ -30,7 +28,9 @@ export async function commandResult(screen: Screen, label: string) {
   if (!entry) throw new Error(`Unknown COMMAND destination: ${label}`);
   const summary = screen.getByText(entry.group, { exact: true }).elements().find((element) => element.tagName === 'SUMMARY');
   if (!summary) throw new Error(`Missing COMMAND group: ${entry.group}`);
-  if (!(summary.parentElement as HTMLDetailsElement).open) await page.elementLocator(summary).click();
+  // Click the element itself: a text locator for a job row ("On shift") can match the mode name too.
+  if (!(summary.parentElement as HTMLDetailsElement).open) (summary as HTMLElement).click();
+  await expect.poll(() => (summary.parentElement as HTMLDetailsElement).open).toBe(true);
   const result = screen.getByRole('button', { name: `${entry.label} ${entry.description}`, exact: true });
   await expect.element(result).toBeVisible();
   return result;
@@ -39,6 +39,9 @@ export async function openCommandDestination(screen: Screen, label: string) {
   await (await commandResult(screen, label)).click();
 }
 export async function openCommandPanel(screen: Screen, panel: 'backup' | 'settings') {
-  const summary = screen.getByText(panel === 'backup' ? 'Backup & recovery tools' : 'Settings tools', { exact: true });
-  if (!(summary.element().parentElement as HTMLDetailsElement).open) await summary.click();
+  // FIELD-AUTHORITY-001: the job rows "Backup & recovery" and "Settings" hold their tool panels.
+  const summary = screen.getByText(panel === 'backup' ? 'Backup & recovery' : 'Settings', { exact: true }).elements().find((element) => element.tagName === 'SUMMARY');
+  if (!summary) throw new Error(`Missing COMMAND panel: ${panel}`);
+  if (!(summary.parentElement as HTMLDetailsElement).open) (summary as HTMLElement).click();
+  await expect.poll(() => (summary.parentElement as HTMLDetailsElement).open).toBe(true);
 }

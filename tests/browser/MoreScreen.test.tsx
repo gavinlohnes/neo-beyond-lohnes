@@ -38,7 +38,7 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await expect.element(screen.getByText("Plan", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Data safety", { exact: true })).toBeVisible();
     await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
-    await expect.element(screen.getByText("Settings", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
 
     await expect.element((await commandResult(screen, "MISSIONS & OBLIGATIONS"))).toBeVisible();
     await expect.element((await commandResult(screen, "WORK SCHEDULE"))).toBeVisible();

@@ -178,3 +178,8 @@
 .night-closed__rows dd { margin: 0; font-family: var(--p-mono); text-align: right; }
 .today-sheet__search { margin: 4px 14px 8px; }
 .today-sheet__list { max-height: 46vh; overflow: auto; border-bottom: 1px solid var(--p-line); }
+
+/* FIELD-AUTHORITY-001: an all-clear is a calm line, not a panel competing with the log rack. */
+.redesign-today .next-action-card.all-clear { border: 0; background: none; padding: 4px 0 0; box-shadow: none; }
+.redesign-today .next-action-card.all-clear::before, .redesign-today .next-action-card.all-clear::after { display: none; }
+.redesign-today .next-action-card.all-clear > .btn-secondary { align-self: flex-start; width: auto; min-height: 44px; padding-inline: 18px; margin-top: 4px; }

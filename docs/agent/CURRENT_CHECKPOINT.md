@@ -1,4 +1,25 @@
-# REDESIGN-001 — acceptance complete; awaiting independent review
+# FIELD-AUTHORITY-001 — one next thing, one red
+
+- **Objective:** Gavin's PROTECTED brief [FIELD-AUTHORITY-001](FIELD-AUTHORITY-001.md), approved
+  2026-10-22. Builder: Claude Code. Branch `ccr-18eb6d33-pxewfy` from master `b3879ac`; PR to follow.
+- **Before it:** REDESIGN-001 merged as #261 (`b3879ac`). Independent review PASS at `8211f96`, CI green.
+- **Built:** TODAY state machine (real next thing leads, otherwise logging leads with a calm line);
+  at most one red, none when calm; check-in said once; no STATUS echo of NOT CHECKED IN; number
+  tiles without coaching; compact mode band when the schedule is silent; TRAIN gate as one line
+  with neutral QUICK CHECK-IN; COMMAND as search plus eight job rows. Rulings in UX_DECISIONS.
+- **Unchanged:** Engine, recommendation selection, schema, events, backup, Garmin semantics, sheets
+  and their 2-tap paths, the four tabs and every COMMAND destination.
+- **Verified:** full suite 286 files / 2,854 passed / one existing skip; architecture OK; build
+  OK; REDESIGN production acceptance passes at 320/360/390/412 with offline reload. 360px FIELD
+  evidence in `docs/screenshots/field-authority-001/`.
+- **Risks:** the COMMAND browse is new muscle memory; physical phones, Safari and screen readers
+  remain unverified.
+- **Next:** green CI, independent exact-head review, Gavin's merge decision. SUIT-ALIVE is not started.
+
+---
+Previous checkpoint:
+
+# REDESIGN-001 — merged as #261
 
 - **Builder / objective:** owner-approved PROTECTED [REDESIGN-001](REDESIGN-001.md).
   Branch `codex/redesign-001`; [PR #261](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/261).

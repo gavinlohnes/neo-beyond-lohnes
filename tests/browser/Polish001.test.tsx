@@ -136,9 +136,10 @@ it("holds header/card/numbers/actions order and the phone fold in every pinned m
       const card = document.querySelector(".console-guidance")!.getBoundingClientRect();
       const numbers = document.querySelector(".today-numbers")!.getBoundingClientRect();
       const actions = document.querySelector(".console-controls")!.getBoundingClientRect();
-      expect(header.bottom).toBeLessThanOrEqual(actions.top);
-      expect(actions.bottom).toBeLessThanOrEqual(card.top);
-      expect(card.bottom).toBeLessThanOrEqual(numbers.top);
+      // FIELD-AUTHORITY-001: a real (RED) recommendation leads; the log row follows within the fold.
+      expect(header.bottom).toBeLessThanOrEqual(card.top);
+      expect(card.bottom).toBeLessThanOrEqual(actions.top);
+      expect(actions.bottom).toBeLessThanOrEqual(numbers.top);
       expect(actions.bottom).toBeLessThanOrEqual(height! - 64);
       // POLISH-002 review: "How BEYOND decided" keeps a full 44px target while the fold holds.
       expect(document.querySelector(".console-guidance .why > summary")!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);

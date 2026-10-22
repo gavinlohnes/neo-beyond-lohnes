@@ -173,13 +173,14 @@ describe("MORE-OPERATOR-001", () => {
   it.each([320, 360, 412])("provides immediate recovery access and usable controls at %ipx", async (width) => {
     await page.viewport(width, 800);
     const screen = await render(<MoreScreen />);
-    await openCommandPanel(screen, "backup");
-    await openCommandPanel(screen, "settings");
-    const link = screen.getByRole("link", { name: "BACKUP & RECOVERY ↓" });
-    expect(link.element().getBoundingClientRect().bottom).toBeLessThan(400);
-    link.element().focus();
+    // FIELD-AUTHORITY-001: recovery is a top-level job row on the first screen, opened from the keyboard.
+    const summary = [...screen.container.querySelectorAll<HTMLElement>("summary")].find((element) => element.textContent === "Backup & recovery")!;
+    expect(summary.getBoundingClientRect().bottom).toBeLessThan(600);
+    summary.focus();
     await userEvent.keyboard("{Enter}");
-    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Data safety", exact: true }).element());
+    await expect.element(screen.getByRole("heading", { name: "Data safety", exact: true })).toBeVisible();
+    await openCommandPanel(screen, "settings");
+    screen.getByRole("heading", { name: "Data safety", exact: true }).element().scrollIntoView({ block: "start", behavior: "instant" });
     for (const name of ["EXPORT BACKUP", "SHARE BACKUP"]) {
       const box = screen.getByRole("button", { name }).element().getBoundingClientRect();
       expect(box.height).toBeGreaterThanOrEqual(44);

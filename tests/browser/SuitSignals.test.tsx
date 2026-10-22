@@ -45,7 +45,9 @@ it("glitches once on first appearance and never replays on re-render", async () 
 it("shows offline in words on TODAY and SYSTEMS, glitches once, and keeps logging available", async () => {
   const day = await startDay(); await setWorkContext(day.id, "OFF", "MANUAL");
   const screen = await render(<App />);
-  await expect.element(screen.getByRole("button", { name: /STATUS · / })).toBeVisible();
+  // FIELD-AUTHORITY-001: with only NOT CHECKED IN to say, no signal line shows; the check-in line owns it.
+  await expect.element(screen.getByRole("button", { name: "CHECK IN", exact: true })).toBeVisible();
+  expect(document.querySelector(".today-system-signal")).toBeNull();
   expect(document.querySelector('[data-signal="offline-line"]')).toBeNull();
   watchGlitches();
   setOnline(false);
@@ -60,7 +62,7 @@ it("shows offline in words on TODAY and SYSTEMS, glitches once, and keeps loggin
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   expect(glitching('[data-signal="offline-line"]')).toBe(false);
   await expect.element(screen.getByRole("button", { name: "Log water" })).toBeEnabled();
-  await screen.getByRole("button", { name: /STATUS · / }).click();
+  await screen.getByRole("button", { name: /Offline\. Logging still saves/ }).click();
   const device = screen.getByRole("region", { name: "DEVICE" });
   await expect.element(device.getByText("Offline. Logging still saves on this phone.", { exact: true })).toBeVisible();
   setOnline(true);
@@ -75,7 +77,7 @@ it("marks a backup overdue with the existing rule, on the line and in DEVICE", a
   await expect.element(screen.getByText("No backup yet.", { exact: true })).toBeVisible();
   await expect.poll(() => glitched.has("backup-line")).toBe(true);
   await expect.element(screen.getByRole("button", { name: /No backup yet\./ })).toBeVisible();
-  await screen.getByRole("button", { name: /STATUS · / }).click();
+  await screen.getByRole("button", { name: /No backup yet\./ }).click();
   const device = screen.getByRole("region", { name: "DEVICE" });
   await expect.element(device.getByText("None on record", { exact: true })).toBeVisible();
   await expect.element(device.getByText("Backup due. Export or share one from COMMAND.", { exact: true })).toBeVisible();

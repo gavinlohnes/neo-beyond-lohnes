@@ -77,3 +77,11 @@
 @media (max-width: 370px) { .redesign-today .cc-mode .cc-scene { height: 68px; } }
 
 .redesign-today .mode-empty .cc-scene { height: 120px; }
+
+/* FIELD-AUTHORITY-001: when the schedule says nothing (or no day is set) the band stops
+   dominating TODAY. Gotham stays; the scene below the context shrinks. */
+.redesign-today .cc-mode--thin .cc-scene { height: 36px; }
+.redesign-today .mode-empty .cc-scene { height: 52px; }
+.redesign-today :is(.cc-mode--thin, .mode-empty) .cc-skyline { bottom: 0; height: 64px; }
+.redesign-today :is(.cc-mode--thin, .mode-empty) :is(.cc-perch) { bottom: 0; height: 64px; width: 71px; }
+.redesign-today .mode-empty { padding-bottom: 12px; }

@@ -530,46 +530,6 @@ export function MoreScreen({
         </div>
       )}
       <div hidden={!!query.trim()}>
-      <h2 className="more-title">Control center</h2>
-      <p className="more-purpose">Every screen, setting and backup tool. Search above, or browse.</p>
-      <div className="more-context">
-        <p>LOCAL FIRST · OFFLINE FIRST</p>
-        <a href="#safety-heading" onClick={(event) => {
-          event.preventDefault();
-          const heading = menuRef.current?.querySelector<HTMLElement>("#safety-heading");
-          const panel = document.getElementById("command-backup-panel"); if (panel instanceof HTMLDetailsElement) panel.open = true;
-          heading?.focus({ preventScroll: true });
-          heading?.scrollIntoView({ block: "start", behavior: "instant" });
-        }}>BACKUP & RECOVERY ↓</a>
-      </div>
-
-      <div className="more-shortcuts" aria-label="Everyday destinations">
-        <button type="button" className="btn-secondary" onClick={() => setView("PLAN")}>PLAN TODAY</button>
-        <button type="button" className="btn-secondary" onClick={openGuidedCapture} disabled={!onOpenCapture}>CAPTURE</button>
-      </div>
-      <details id="command-guide" className="more-inspection more-help">
-        <summary>A place to start</summary>
-        <GuidedOverview active={active && view === "MENU"} canOpenCapture={onOpenCapture !== undefined} onOpen={(destination) => {
-          if (destination === "CAPTURE") openGuidedCapture();
-          else { if (destination === "INTENT") setIntentFocus(null); setView(destination); }
-        }} />
-      </details>
-      <details className="more-inspection more-destination-guide">
-        <summary>Find the right destination</summary>
-        <p className="meta">Write a note from LOG → NOTE. Your inbox is in COMMAND → Capture. A decision belongs in the Journal; longer-term direction in Missions; a concrete commitment in Obligations.</p>
-        <dl>
-          <dt>Weekly Check-in</dt><dd>Recorded progress, findings and the week ahead. Read-only; no grade.</dd>
-          <dt>History</dt><dd>The full chronological event trail, including corrections and undo.</dd>
-          <dt>Review</dt><dd>Weight, nutrition, recovery and training evidence, plus past recommendations.</dd>
-          <dt>Search</dt><dd>Find existing records by words, then open where they live.</dd>
-          <dt>Decision Journal</dt><dd>Write a choice and expectation; return later for its actual outcome and lesson.</dd>
-          <dt>Missions & Obligations</dt><dd>Keep durable plans separate from tasks, dates and deliberate resolution.</dd>
-          <dt>Work Schedule</dt><dd>Open or change the schedule you declared.</dd>
-          <dt>Exercise Library & Custom Programs</dt><dd>Your existing movements and workout templates.</dd>
-          <dt>Data safety & Settings</dt><dd>Backups, recovery, targets, quit plans, time capsules, reminders and diagnostic detail.</dd>
-        </dl>
-      </details>
-
       {/* FIELD ALPHA Phase 4B: reorganized by functional meaning
           (OPERATIONS / RECORDS / SYSTEM) rather than historical screen
           order. OPERATIONS entries the operator navigates into
@@ -580,10 +540,11 @@ export function MoreScreen({
           view-swap, so this is genuine reuse, not a forced fit. Backup/
           Archive/Restore are immediate actions, not navigation, so they
           use .equipment-row instead. */}
-      {CAPABILITY_GROUPS.map((group) => <details className="command-group" key={group}><summary className="disclosure-row">{group}</summary>
+      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings").map((group) => <details className="command-group" key={group}><summary className="disclosure-row">{group}</summary>
         {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry))}
       </details>)}
-      <details className="command-group" id="command-backup-panel"><summary className="disclosure-row">Backup & recovery tools</summary>
+      <details className="command-group" id="command-backup-panel"><summary className="disclosure-row">Backup & recovery</summary>
+      {visibleCapabilities.filter((entry) => entry.group === "Backup & recovery").map((entry) => renderCapability(entry))}
       <section className="operational-index-zone" aria-labelledby="safety-heading">
         <h2 id="safety-heading" tabIndex={-1} className="section-label">Data safety</h2>
         <div className="equipment-row">
@@ -739,9 +700,17 @@ export function MoreScreen({
       {/* DECLUTTER Drop 3 (owner ruling 2026-09-30): a Settings group.
           Nutrition Targets moved here from BODY; the SYSTEM readings moved
           inside Diagnostic detail so the main list stays short. */}
-      <details className="command-group" id="command-settings-panel"><summary className="disclosure-row">Settings tools</summary>
+      <details className="command-group" id="command-settings-panel"><summary className="disclosure-row">Settings</summary>
+      {visibleCapabilities.filter((entry) => entry.group === "Settings").map((entry) => renderCapability(entry))}
       <section className="operational-index-zone" aria-labelledby="settings-heading">
       <h2 id="settings-heading" className="section-label">Settings</h2>
+      <details id="command-guide" className="more-inspection more-help">
+        <summary>A place to start</summary>
+        <GuidedOverview active={active && view === "MENU"} canOpenCapture={onOpenCapture !== undefined} onOpen={(destination) => {
+          if (destination === "CAPTURE") openGuidedCapture();
+          else { if (destination === "INTENT") setIntentFocus(null); setView(destination); }
+        }} />
+      </details>
       <details id="command-hidden-features" className="more-inspection"><summary>Hidden features</summary>
         <p className="meta">These optional tools start hidden. Showing or hiding them never changes records or Engine guidance. This preference stays on this browser.</p>
         {([ ["minimumDay", "Minimum Day"], ["smallSteps", "Small Steps"], ["foodLookup", "Online food lookup"] ] as [HiddenFeature, string][]).map(([feature, label]) => <label key={feature} className="hidden-feature-choice">

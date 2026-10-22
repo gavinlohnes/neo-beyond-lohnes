@@ -63,7 +63,9 @@ for (const [level, values, words] of [
   await submitCheckIn(day.id, values);
   const screen = await render(<App />);
   await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
-  if (level === "GREEN") expect(document.querySelector(".today-system-signal [data-system-status]")).toBeNull();
+  // FIELD-AUTHORITY-001: TODAY's line carries the level only when the next card isn't already speaking.
+  const realNext = document.querySelector(".console-guidance .all-clear") === null;
+  if (level === "GREEN" || realNext) expect(document.querySelector(".today-system-signal [data-system-status]")).toBeNull();
   else await expect.poll(() => document.querySelector(".today-system-signal [data-system-status]")?.textContent).toContain(level);
   await (await commandResult(screen, "SYSTEMS")).click();
   const state = screen.getByRole("region", { name: "STATE" });
@@ -74,8 +76,10 @@ for (const [level, values, words] of [
 it("explains NO READ and missing readings plainly", async () => {
   await startDay();
   const screen = await render(<App />);
-  await expect.element(screen.getByRole("button", { name: /STATUS · NOT CHECKED IN/ })).toBeVisible();
-  await screen.getByRole("button", { name: /STATUS · NOT CHECKED IN/ }).click();
+  // FIELD-AUTHORITY-001: TODAY says "not checked in" once (its check-in line); SYSTEMS explains it.
+  await expect.element(screen.getByRole("button", { name: "CHECK IN", exact: true })).toBeVisible();
+  expect(screen.getByRole("button", { name: /STATUS · / }).elements()).toHaveLength(0);
+  await (await commandResult(screen, "SYSTEMS")).click();
   await expect.element(screen.getByText("NOT CHECKED IN", { exact: true })).toBeVisible();
   await expect.element(screen.getByText("Log sleep or check in.", { exact: true })).toBeVisible();
   await expect.element(screen.getByText("Not logged", { exact: true }).first()).toBeVisible();

@@ -1,4 +1,4 @@
-import { commandResult } from "./helpers/command";
+import { commandResult, openCommandPanel } from "./helpers/command";
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
@@ -92,7 +92,7 @@ describe("HUD-001 — HUD design system", () => {
     // actual consecutive capability rows, not accidental TODAY siblings.
     const system = await render(<MoreScreen />);
     await expect.element(await commandResult(system, "HISTORY")).toBeVisible();
-    await system.getByRole("link", { name: "BACKUP & RECOVERY ↓" }).click();
+    await openCommandPanel(system, "backup");
     const rows = system.container.querySelectorAll(".equipment-row:not(:first-child)");
     const row = rows[0];
     expect(row).toBeDefined();

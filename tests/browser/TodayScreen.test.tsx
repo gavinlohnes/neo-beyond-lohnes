@@ -1524,14 +1524,14 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     expect(bg).toBe("rgb(208, 20, 27)");
   });
 
-  it("REDESIGN-001: the all-clear acknowledgement is the single NEXT action", async () => {
+  it("FIELD-AUTHORITY-001: the all-clear acknowledgement stays available but wears no red", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByRole("button", { name: "GOT IT" })).toBeVisible();
     const el = screen.getByRole("button", { name: "GOT IT" }).element();
-    expect(el.className).toContain("btn-primary");
-    expect(getComputedStyle(el).backgroundColor).toBe("rgb(208, 20, 27)");
+    expect(el.className).toContain("btn-secondary");
+    expect(getComputedStyle(el).backgroundColor).not.toBe("rgb(208, 20, 27)");
   });
 
   it("Drop 6: SHIFT DOWN shows the quit tracker's post-shift plan", async () => {

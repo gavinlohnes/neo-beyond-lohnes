@@ -41,7 +41,7 @@ describe("TrainScreen (real browser) — no active session", () => {
   it("is usable with no day/check-in yet: NO CHECK-IN banner + a reachable suggested workout", async () => {
     const screen = await render(<TrainScreen />);
 
-    await expect.element(screen.getByText("NO CHECK-IN YET", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Check in for a suggested session.", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "QUICK CHECK-IN (ALL GOOD)" })).toBeVisible();
     await expect.element(screen.getByText("DEFAULT WORKOUT", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
@@ -52,7 +52,7 @@ describe("TrainScreen (real browser) — no active session", () => {
     await screen.getByRole("button", { name: "QUICK CHECK-IN (ALL GOOD)" }).click();
 
     await expect.element(screen.getByText("SUGGESTED WORKOUT", { exact: true })).toBeVisible();
-    expect(screen.getByText("NO CHECK-IN YET", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("Check in for a suggested session.", { exact: true }).elements()).toHaveLength(0);
   });
 
   it("the pre-session picker is the one dominant surface (.command-surface), not a plain card", async () => {

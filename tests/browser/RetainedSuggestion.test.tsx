@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import { App } from "../../src/app/App";
+import { commandResult } from "./helpers/command";
 import { startDay, submitCheckIn } from "../../src/application/commands";
 import { db } from "../../src/persistence/db";
 
@@ -87,7 +88,7 @@ describe("R2 — a Capture return does not outlive its visit", () => {
   it("MORE → CAPTURE, then leaving by primary nav: closing a new note on TODAY stays on TODAY", async () => {
     const screen = await render(<App />);
     await tab(screen, "COMMAND");
-    await screen.getByRole("button", { name: "CAPTURE", exact: true }).first().click();
+    await (await commandResult(screen, "NOTE")).click(); // FIELD-AUTHORITY-001: the old CAPTURE shortcut is the NOTE row.
     await expect.element(screen.getByRole("textbox", { name: "Capture a thought", exact: true })).toBeVisible();
 
     await tab(screen, "BODY");
@@ -103,7 +104,7 @@ describe("R2 — a Capture return does not outlive its visit", () => {
   it("COMMAND → CAPTURE → CLOSE returns to COMMAND", async () => {
     const screen = await render(<App />);
     await tab(screen, "COMMAND");
-    await screen.getByRole("button", { name: "CAPTURE", exact: true }).first().click();
+    await (await commandResult(screen, "NOTE")).click(); // FIELD-AUTHORITY-001: the old CAPTURE shortcut is the NOTE row.
     await expect.element(screen.getByRole("textbox", { name: "Capture a thought", exact: true })).toBeVisible();
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.poll(() => document.getElementById("workspace-COMMAND")?.hidden).toBe(false);
