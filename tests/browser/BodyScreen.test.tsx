@@ -97,6 +97,10 @@ describe("BodyScreen (real browser) — empty state", () => {
       const sleep = screen.getByRole("region", { name: "Your daily health record" }).getByRole("button", { name: "main sleep history" });
       await expect.element(sleep).toHaveTextContent("6 hr 40 min");
       await expect.element(sleep).toHaveTextContent("Last main sleep");
+      // Slice 2: the tile opens all sleep, not this (still empty) day with a "not in this range" note.
+      await sleep.click();
+      await expect.element(screen.getByText(/One main-sleep entry per recorded day segment/)).toBeVisible();
+      expect(screen.getByText(/The selected day's reading is not in this rolling range/).elements()).toHaveLength(0);
     } finally { vi.useRealTimers(); }
   });
 
@@ -123,7 +127,7 @@ describe("BodyScreen (real browser) — empty state", () => {
       const screen = await render(<BodyScreen />);
       const tile = screen.getByRole("region", { name: "Your daily health record" }).getByRole("button", { name: "main sleep history" });
       await expect.element(tile).toHaveTextContent("4 hr 35 min"); // asleep time, awake stage excluded, as TODAY shows
-      await expect.element(tile).toHaveTextContent("Garmin");
+      await expect.element(tile).toHaveTextContent("Garmin · last main sleep");
     } finally { vi.useRealTimers(); }
   });
 });
