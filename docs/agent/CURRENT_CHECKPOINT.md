@@ -4,8 +4,8 @@
   Make it amazing"). PROTECTED: new Health Connect read permissions and new TODAY numbers. Builder
   Claude Code handed the objective to Codex to finish.
 - **Branch:** `claude/garmin-005`, [PR #271](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/271)
-  stacked on GARMIN-004 PR #269. GARMIN-004's one-line
-  sub-pixel CI repair is `520699a`; bring this branch onto merged master after #269 integrates.
+  against master. GARMIN-004 PR #269 merged with owner approval as `35c9f17` after its exact-head
+  CI passed; this branch includes that master integration.
 - **Built:** helper 0.6.0 exports hourly total/active calories in compatible activity format 2;
   BEYOND accepts formats 1 and 2 without old imports erasing calories. TODAY shows a conditional
   CALORIES tile, eaten-vs-burned sheet, Garmin freshness/stale notice, 7D/4W/1Y comparisons and
@@ -18,8 +18,8 @@
   PR CI is the clean full gate.
 - **Limits:** no Android SDK here, so helper compilation/permission packaging awaits CI. Physical
   phone permission/export, Safari and screen readers remain unverified.
-- **Next:** integrate #269/master, obtain a clean full gate and helper CI, open the PR, then obtain
-  independent exact-head review. Gavin alone decides merge.
+- **Next:** obtain green required PR/helper CI, then independent exact-head review. Gavin alone
+  decides merge.
 
 ---
 Previous checkpoint:
