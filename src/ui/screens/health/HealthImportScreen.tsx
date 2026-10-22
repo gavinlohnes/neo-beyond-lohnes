@@ -83,7 +83,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
   }
   return <section aria-label="Import health data" className="health-import">
     <h2>IMPORT HEALTH DATA</h2>
-    <p>Choose a sleep or a steps and heart rate file from BEYOND Health Bridge. Review it before saving. Garmin measurements stay on this device.</p>
+    <p>Choose a file from BEYOND Health Bridge: sleep, or activity (steps, heart rate and calories). Review it before saving. Garmin measurements stay on this device.</p>
     <p>No account or upload. Imported measurements never change your own logs or TODAY guidance.</p>
     <label>Health export file<input ref={fileInput} type="file" disabled={busy} onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} /></label>
     {busy && <p role="status">Working…</p>}

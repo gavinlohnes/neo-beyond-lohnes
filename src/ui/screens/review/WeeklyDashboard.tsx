@@ -115,7 +115,7 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
       <div className="weekly-dashboard__hero">
         <p className="tool-label">{kind} · {isLatest ? "LATEST COMPLETED WEEK" : plural(data.weeksBack, "WEEK EARLIER", "WEEKS EARLIER")}</p>
         <h2 id="weekly-dashboard-heading" className="weekly-dashboard__range">{longDate(week.start)} — {longDate(lastDayOf(week))}</h2>
-        <p className="meta">Lived days, 16:30 to 16:30, Monday through Sunday. {plural(headline.recordedDays, "of 7 days has", "of 7 days have")} completed records.</p>
+        <p className="meta">Monday through Sunday. {plural(headline.recordedDays, "of 7 days has", "of 7 days have")} completed records.</p>
         <div className="weekly-dashboard__nav">
           <button type="button" className="btn-secondary" disabled={!data.hasEarlier} onClick={() => setWeeksBack((n) => n + 1)}>← PREVIOUS WEEK</button>
           <button type="button" className="btn-secondary" disabled={isLatest} onClick={() => setWeeksBack((n) => Math.max(0, n - 1))}>NEXT WEEK →</button>

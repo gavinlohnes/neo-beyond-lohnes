@@ -70,7 +70,7 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
   return <div className="plan-today">
     <OperatorHeader destination="mission" focusable>COMMAND // PLAN TODAY</OperatorHeader>
     <h2 className="more-title">Your plan</h2>
-    <p className="meta">{plan?.date ?? "Today"} · Your choices and recorded deadlines. Not a recommendation.</p>
+    <p className="meta">{plan ? planDate(plan.date) : "Today"} · Your choices and recorded deadlines. Not a recommendation.</p>
     {readError ? <div role="alert"><p>{readError} Tasks are unavailable, not empty.</p><button className="btn-secondary" onClick={() => void refresh()}>RETRY PLAN</button></div>
       : !plan ? <p role="status">Reading your plan…</p> : <>
         <section aria-labelledby="plan-chosen-heading"><h3 id="plan-chosen-heading" className="section-label">Planned today</h3>{rows(plan.planned, "Nothing planned for today. Add only what you want to commit to.")}</section>
@@ -93,3 +93,9 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
     <p className="meta">Open a task to complete it, release it, or change its dates. Nothing is moved automatically.</p>
   </div>;
 }
+
+/** "2026-10-22" → "Thu, Oct 22": the plan's calendar date, read as a person would say it. */
+const planDate = (date: string) => {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(y!, m! - 1, d!).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+};

@@ -112,7 +112,7 @@ export function WeeklyReviewPanel({ active = true, showFacts = true, openRequest
         <div><dt>Main sleep</dt><dd>{number(summary!.sleepMean, "h")} average · {days(summary!.sleepDays, "unambiguous logged")}</dd></div>
         <div><dt>Training</dt><dd>{summary!.sessions} completed or partial strength sessions</dd></div>
       </dl>
-      <p className="meta">{summary!.recordedDays} of 7 lived-day windows have completed records. Food figures describe logged amounts, not verified total intake. Missing stays missing. Use the question hub below for source-day records.</p></>}
+      <p className="meta">{summary!.recordedDays} of 7 days have completed records. Food figures describe logged amounts, not verified total intake. Missing stays missing. Use the question hub below for source-day records.</p></>}
       {data.previousFocus && <div className="equipment-row"><h3>Your previous focus</h3><p className="card-body">{data.previousFocus.text}</p>
         <p className="card-body">{data.previousFocusCount === undefined ? "Written focus: reflect using the recorded evidence; no automatic verdict." : `${data.previousFocusCount} recorded in this week; your chosen count was ${"target" in data.previousFocus ? data.previousFocus.target : "not set"}.`}</p>
         <p className="meta">Counts cover the entire named week, including days before a late review.</p>

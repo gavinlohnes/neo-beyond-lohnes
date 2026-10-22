@@ -57,6 +57,8 @@ history was overwhelming routine mobile screens.
 - **COMMAND speaks plainly (FRICTION-001 slice 3):** COMMAND descriptions say what a tool does,
   never "existing …", and items inside COMMAND carry no "COMMAND ·" tag; a BODY · / TODAY · /
   TRAIN · tag stays where an item leaves COMMAND.
+- **Dates as people say them (FRICTION-001 slice 4):** routine screens show "Thu, Oct 22", never an
+  ISO date, and don't state the 16:30 lived-day boundary.
 
 ## GARMIN-005 — eaten vs burned (owner approved 2026-10-22)
 
