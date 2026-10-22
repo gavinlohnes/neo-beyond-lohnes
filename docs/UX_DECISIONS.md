@@ -54,6 +54,9 @@ history was overwhelming routine mobile screens.
   surface (latest value, trend, LOG WEIGHT, WEIGHT HISTORY); the readout grid no longer repeats it.
   LOG WEIGHT opens the existing bodyweight sheet. A sleep shown from the day before says so
   ("Garmin · last main sleep") and opens all sleep history rather than an empty day.
+- **COMMAND speaks plainly (FRICTION-001 slice 3):** COMMAND descriptions say what a tool does,
+  never "existing …", and items inside COMMAND carry no "COMMAND ·" tag; a BODY · / TODAY · /
+  TRAIN · tag stays where an item leaves COMMAND.
 
 ## GARMIN-005 — eaten vs burned (owner approved 2026-10-22)
 

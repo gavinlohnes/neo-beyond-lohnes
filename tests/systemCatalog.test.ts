@@ -37,3 +37,12 @@ describe("capability discovery (COMMAND search)", () => {
   });
 });
 
+
+describe("FRICTION-001 — COMMAND descriptions in plain words", () => {
+  it("never describe a tool as 'existing' or tag COMMAND items with COMMAND", () => {
+    for (const entry of SYSTEM_CAPABILITIES) {
+      expect(entry.description, entry.label).not.toMatch(/\bexisting\b/i);
+      expect(entry.description, entry.label).not.toMatch(/^COMMAND · /);
+    }
+  });
+});

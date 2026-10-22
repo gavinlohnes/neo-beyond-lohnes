@@ -19,7 +19,7 @@ for(const width of [320,360,390,412])it(`groups all capabilities and retains bac
  await document.fonts.ready;for(const a of document.getAnimations())if(a.effect?.getComputedTiming().iterations!==Infinity)a.finish();
  expect((await axe.run(root)).violations).toEqual([]);expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
  const search=screen.getByRole('searchbox',{name:'Find a screen or action'});await search.fill('backup');
- await screen.getByRole('button',{name:/^BACKUP & RECOVERY COMMAND/}).click();
+ await screen.getByRole('button',{name:/^BACKUP & RECOVERY Export/}).click();
  await expect.element(screen.getByRole('button',{name:'EXPORT BACKUP',exact:true})).toBeVisible();
  await expect.element(screen.getByText('RESTORE — REPLACES ALL DATA',{exact:true})).toBeVisible();
  expect(await db.events.where('type').equals('MEAL_LOGGED').count()).toBe(0);

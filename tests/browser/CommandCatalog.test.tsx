@@ -142,7 +142,7 @@ describe("COMMAND catalog", () => {
     const screen = await render(<App />);
     await openCommand(screen);
     await searchbox(screen).fill("weekly review");
-    await screen.getByRole("button", { name: /^REVIEW COMMAND · Weekly review/ }).click();
+    await screen.getByRole("button", { name: /^REVIEW Weekly review/ }).click();
     await expect.element(screen.getByRole("heading", { name: "COMMAND // REVIEW", exact: true })).toBeVisible();
   });
 

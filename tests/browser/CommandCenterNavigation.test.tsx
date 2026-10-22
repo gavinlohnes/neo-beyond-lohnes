@@ -73,7 +73,7 @@ describe("re-tap, back and retention", () => {
   it("re-tapping COMMAND inside a destination returns to its index with the query kept", async () => {
     const screen = await render(<App />);
     await searchCommand(screen, "history");
-    await screen.getByRole("button", { name: /^HISTORY COMMAND · / }).click();
+    await screen.getByRole("button", { name: /^HISTORY Every record/ }).click();
     await expect.element(screen.getByRole("heading", { name: "COMMAND // HISTORY" })).toBeVisible();
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "COMMAND" })).toBeVisible();
