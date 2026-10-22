@@ -32,6 +32,12 @@ history was overwhelming routine mobile screens.
 - **Stable structure:** TODAY acts and orients, TRAIN owns training, BODY owns health logging and
   history, and COMMAND finds, plans and configures. The four primary tabs and all stored capability
   remain.
+- **One health-history destination:** BODY → HISTORY shows today's records and one closed
+  **Health history** disclosure. Inside, DAYS (recorded days, the seven-day strip and any date) and
+  GARMIN (measured days and imported sleep) are deliberate choices; it replaces the separate
+  "Browse health days" and "Garmin history". Garmin lists show ten rows and SHOW MORE ten at a time,
+  so every measured day is reachable and nothing grows on its own. Closing history returns to today.
+  COMMAND keeps only import, not the archive.
 
 ## GARMIN-005 — eaten vs burned (owner approved 2026-10-22)
 

@@ -9,8 +9,10 @@ import "./connectedHealth.css";
 function dayDate(start: string) { return new Date(start).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric", year: "numeric" }); }
 const localDate = (start: string) => { const d = new Date(start); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 
-export function HealthDayBrowser({ selected, onSelect, onExplore, refreshKey, visible, onInspect, disabled, onHistory }: {
+export function HealthDayBrowser({ selected, onSelect, onExplore, refreshKey, visible, onInspect, disabled, onHistory, embedded = false }: {
   onHistory?: ((destination: HealthHistoryDestination) => void) | undefined;
+  /** UX-COHESION-001: inside HEALTH HISTORY the day controls show directly, without their own disclosure. */
+  embedded?: boolean;
   onInspect: (selection: SourceSelection) => void; disabled: boolean;
   selected: string | null; onSelect: (start: string | null) => void; onExplore: (metric: InsightMetric, dayId?: string) => void;
   refreshKey: number; visible: boolean;
@@ -40,8 +42,7 @@ export function HealthDayBrowser({ selected, onSelect, onExplore, refreshKey, vi
   const naps = records.flatMap((r) => r.kind === "SLEEP" && r.entry.kind === "SUPPLEMENTAL" ? [r.entry] : []);
   const weights = records.flatMap((r) => r.kind === "WEIGHT" ? [r.entry] : []);
   const main = mains.at(-1);
-  return <section className="health-day-browser" aria-label="Browse health days">
-    <details className="health-day-controls"><summary>Browse health days</summary>
+  const controls = <>
     <div className="health-day-heading"><span className="meta">{selected ? dayDate(start) : "Your current day"}</span><button disabled={disabled} type="button" className="btn-secondary" aria-pressed={!selected} onClick={() => onSelect(null)}>CURRENT DAY</button></div>
     <div className="health-day-strip" role="group" aria-label="Seven lived days">
       {recent.map((at) => <button disabled={disabled} type="button" key={at} aria-label={`Open ${dayDate(at)}`} aria-pressed={at === start} onClick={() => onSelect(at === current ? null : at)}>
@@ -56,7 +57,9 @@ export function HealthDayBrowser({ selected, onSelect, onExplore, refreshKey, vi
       const next = new Date(year, month - 1, date, 16, 30).toISOString();
       onSelect(next === current ? null : next);
     }} /></label></details>
-    </details>
+  </>;
+  return <section className="health-day-browser" aria-label="Browse health days">
+    {embedded ? <div className="health-day-controls">{controls}</div> : <details className="health-day-controls"><summary>Browse health days</summary>{controls}</details>}
     {selected && <div className="health-past-day" role="region" aria-label="Selected health day" aria-live="polite">
       <p className="meta">Past day · read-only. New records are always logged in your current day.</p>
       <p className="meta">{new Date(start).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })} → {new Date(offsetHealthDay(start, 1)).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</p>

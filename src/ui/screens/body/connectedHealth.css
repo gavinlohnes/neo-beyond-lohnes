@@ -27,3 +27,8 @@
 .body-home .body-progress-card { border: 1px solid var(--border-strong); padding: 14px; margin-bottom: 12px; }
 .body-home .body-progress-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .body-home .health-record-row { min-height: 56px; width: 100%; text-align: left; }
+/* UX-COHESION-001: one HEALTH HISTORY destination; DAYS and GARMIN are deliberate choices. */
+.health-history > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.health-history-views { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 12px; }
+.health-history-views .btn-secondary { min-height: 44px; }
+.health-history-views .btn-secondary[aria-pressed="true"] { border-color: var(--p-t1, var(--text-1)); color: var(--p-t1, var(--text-1)); }

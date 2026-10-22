@@ -1,3 +1,23 @@
+# UX-COHESION-001 — one health-history destination (slice 2)
+
+- **Objective / authority:** [UX-COHESION-001](UX-COHESION-001.md), approved 2026-10-22; slice 1
+  merged as #272 (`40147c3`). Codex began this slice locally (not pushed); Gavin asked Claude Code
+  to continue it. Builder: Claude Code, branch `claude/health-history` from `40147c3`.
+- **Built:** BODY → HISTORY keeps today's records plus one closed **Health history** with DAYS
+  (existing day browser, controls shown directly) and GARMIN (measured days + imported sleep). The
+  separate "Browse health days" and "Garmin history" are gone from both BODY paths. Garmin measured
+  days page ten at a time (previously capped at the newest 7, so older days were unreachable);
+  imported sleep already paged by ten. Closing history returns to today. No data, schema, Engine,
+  import or capability change; COMMAND already shows import only (slice 1).
+- **Verified:** `npm run verify` — architecture OK, 290 files / 2,882 passed / one skip, build OK.
+  New `tests/browser/HealthHistory.test.tsx` (320/390 px, a month of Garmin days paged 10→20→30,
+  axe, closing returns to today); updated BODY/import/connected-health tests.
+- **Next:** PR, green CI, independent exact-head review, Gavin's merge. Remaining UX-COHESION
+  slices (quieter BODY/TODAY, back/close grammar) stay separate.
+
+---
+Previous checkpoint:
+
 # UX-COHESION-001 — quiet by default
 
 - **Objective / authority:** Gavin approved the expanded mobile UX audit and its preferred

@@ -93,14 +93,20 @@ describe("Health Connect sleep import", () => {
     await expect.poll(() => document.querySelectorAll(".health-import li").length).toBe(1);
   });
 
-  it("keeps Garmin archives behind one deliberate BODY history disclosure", async () => {
+  it("keeps Garmin archives behind one deliberate HEALTH HISTORY destination", async () => {
     await importSleepSnapshot(syntheticSleep());
     await importActivitySnapshot(syntheticActivity());
     const screen = await render(<BodyScreen />);
-    await expect.element(screen.getByText("Garmin history", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Health history", { exact: true })).toBeVisible();
+    expect(screen.getByText("Garmin history", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("Browse health days", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByRole("heading", { name: "MEASURED · GARMIN" }).elements()).toHaveLength(0);
     expect(screen.getByRole("heading", { name: "GARMIN SLEEP" }).elements()).toHaveLength(0);
-    await screen.getByText("Garmin history", { exact: true }).click();
+    await screen.getByText("Health history", { exact: true }).click();
+    // UX-COHESION-001: DAYS first; Garmin is a deliberate second choice.
+    await expect.element(screen.getByRole("group", { name: "Seven lived days" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "MEASURED · GARMIN" }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "GARMIN", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "MEASURED · GARMIN" })).toBeVisible();
     await expect.element(screen.getByRole("heading", { name: "GARMIN SLEEP" })).toBeVisible();
   });
