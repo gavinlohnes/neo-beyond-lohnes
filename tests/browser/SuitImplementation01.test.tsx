@@ -1,9 +1,13 @@
+import { beforeEach } from "vitest";
+import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
+beforeEach(() => setHiddenFeature("minimumDay", true));
+// REDESIGN-001: exercise the production daily-controls host now used by COMMAND.
 import { afterEach, describe, expect, it } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn, recordRecommendation } from "../../src/application/commands";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { openTodayTools } from "./helpers/todayTools";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 

@@ -1,3 +1,4 @@
+import { openCommandPanel } from "./helpers/command";
 /// <reference types="@vitest/browser-playwright" />
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
@@ -42,6 +43,8 @@ describe("WORKOUT-ATOMICITY-001 in a real browser", () => {
     const session = await startWorkout(day.id, "A", "STANDARD");
     await logSet(day.id, session.id, "squat", 1, 135, 5);
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("Diagnostic detail", { exact: true }).click();
     const label = screen.getByText("Record mismatches", { exact: true });
     await expect.element(label).toBeVisible();
@@ -65,6 +68,8 @@ describe("WORKOUT-ATOMICITY-001 in a real browser", () => {
     const sessionsBefore = await db.workoutSessions.toArray();
 
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     const message = screen.getByText("Workout from 2026-10-01 is saved without its start event.", { exact: true });
     await expect.element(message).not.toBeVisible();
     await screen.getByText("Diagnostic detail", { exact: true }).click();

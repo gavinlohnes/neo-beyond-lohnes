@@ -1,3 +1,4 @@
+import { openCommandPanel, commandResult } from "./helpers/command";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { page } from "vitest/browser";
@@ -45,6 +46,7 @@ describe("BACKUP-AUTO-001 — automatic backup", () => {
     const share = fakeShareSheet();
     await startDay();
     const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     const button = screen.getByRole("button", { name: "BACK UP NOW" });
     await expect.element(button).toBeVisible();
     await expect.element(screen.getByText("Backup due", { exact: true })).toBeVisible();
@@ -70,6 +72,7 @@ describe("BACKUP-AUTO-001 — automatic backup", () => {
     });
     await startDay();
     const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     await screen.getByRole("button", { name: "BACK UP NOW" }).click();
     await expect.element(screen.getByRole("status")).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "BACK UP NOW" })).toBeVisible();
@@ -79,12 +82,15 @@ describe("BACKUP-AUTO-001 — automatic backup", () => {
     localStorage.setItem(PREFERENCE_KEY, JSON.stringify({ enabled: true, everyDays: 7 }));
     await startDay();
     const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     await screen.getByRole("button", { name: "LATER" }).click();
     await expect.poll(() => document.querySelector('section[aria-label="Backup"]')).toBeNull();
   });
 
   it("MORE → Data safety turns it on and picks the interval", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("Automatic backups & file check", { exact: true }).click();
     await expect.element(screen.getByText("AUTOMATIC BACKUP", { exact: true })).toBeVisible();
     const row = screen.getByText("AUTOMATIC BACKUP", { exact: true }).element().closest(".equipment-row")!;

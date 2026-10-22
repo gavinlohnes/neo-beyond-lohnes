@@ -1,3 +1,4 @@
+import { openCommandPanel } from "./helpers/command";
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { startDay, submitCheckIn } from "../../src/application/commands";
@@ -23,13 +24,10 @@ describe("Launch polish (real browser)", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("heading", { name: "Orient", level: 2 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Orient", level: 2 }).element().className).toBe("visually-hidden");
-    const strip = document.querySelector(".status-strip--stacked") as HTMLElement;
-    expect(strip).not.toBeNull();
-    const style = getComputedStyle(strip);
-    expect(style.borderLeftWidth).toBe("0px");
-    expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Orient", level: 2 }).elements()).toHaveLength(0);
+    expect(document.querySelector(".systems-line")).toBeNull();
+    expect(document.querySelector(".console-guidance")).not.toBeNull();
   });
 
   it("sentences use the body face; labels use the display face and numbers the mono face (POLISH-002)", async () => {
@@ -90,12 +88,16 @@ describe("Launch polish (real browser)", () => {
     const start = screen.getByRole("button", { name: "START WORKOUT" });
     await expect.element(start).toBeVisible();
     const question = screen.getByText("Planning to train today?", { exact: true });
+    await expect.element(question).not.toBeVisible();
+    (document.querySelector(".train-planned-work > summary") as HTMLElement).click();
     await expect.element(question).toBeVisible();
     expect(start.element().compareDocumentPosition(question.element()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("MORE's routine settings are neutral buttons", async () => {
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await expect.element(screen.getByRole("button", { name: "TURN ON" }).first()).toBeVisible();
     expect(screen.getByRole("button", { name: "TURN ON" }).first().element().className).toBe("btn-secondary");
     expect(screen.getByRole("button", { name: "EXPORT BACKUP" }).element().className).toBe("btn-secondary");

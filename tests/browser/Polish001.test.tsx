@@ -65,24 +65,23 @@ it("keeps a failed water sheet open for one safe retry", async () => {
 });
 
 async function fillMeal(screen: Awaited<ReturnType<typeof render>>) {
-  await openMealInBody(screen);
+  await screen.getByRole("button", { name: "Log a meal", exact: true }).click();
+  await screen.getByRole("dialog").getByRole("button", { name: "New meal", exact: true }).click();
   await screen.getByRole("textbox", { name: "New meal name" }).fill("Shift dinner");
-  for (const [field, value] of [["calories", "600"], ["protein (g)", "45"], ["carbs (g)", "60"], ["fat (g)", "15"]])
-    await screen.getByRole("spinbutton", { name: `New meal ${field}` }).fill(value!);
+  await screen.getByRole("spinbutton", { name: "New meal Calories", exact: true }).fill("600");
+  await screen.getByRole("spinbutton", { name: "New meal Protein (g)", exact: true }).fill("45");
+  await screen.getByRole("checkbox", { name: "Save for next time" }).click();
 }
-
-for (const fail of [false, true]) it(`SAVE & LOG is exactly-once${fail ? " after an injected log failure" : " on repeated taps"}`, async () => {
-  const screen = await render(<App />);
-  await fillMeal(screen);
+for (const fail of [false, true]) it(`opt-in meal save and LOG is atomic and exactly once (failure: ${fail})`, async () => {
+  const screen = await render(<App />); await fillMeal(screen);
   const failure = fail ? vi.spyOn(db.events, "add").mockRejectedValue(new Error("Disk full")) : null;
-  const save = screen.getByRole("button", { name: "SAVE & LOG", exact: true }).element() as HTMLButtonElement;
+  const save = screen.getByRole("dialog").getByRole("button", { name: "LOG", exact: true }).element() as HTMLButtonElement;
   save.click(); save.click();
-  await expect.poll(() => db.savedMeals.count()).toBe(1);
   if (fail) {
-    await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal saved. Logging failed.");
+    await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal didn't save");
+    expect(await db.savedMeals.count()).toBe(0);
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
-    failure!.mockRestore();
-    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    failure!.mockRestore(); await screen.getByRole("dialog").getByRole("button", { name: "LOG", exact: true }).click();
   }
   await expect.poll(() => db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
   expect(await db.savedMeals.count()).toBe(1);
@@ -137,9 +136,9 @@ it("holds header/card/numbers/actions order and the phone fold in every pinned m
       const card = document.querySelector(".console-guidance")!.getBoundingClientRect();
       const numbers = document.querySelector(".today-numbers")!.getBoundingClientRect();
       const actions = document.querySelector(".console-controls")!.getBoundingClientRect();
-      expect(header.bottom).toBeLessThanOrEqual(card.top);
+      expect(header.bottom).toBeLessThanOrEqual(actions.top);
+      expect(actions.bottom).toBeLessThanOrEqual(card.top);
       expect(card.bottom).toBeLessThanOrEqual(numbers.top);
-      expect(numbers.bottom).toBeLessThanOrEqual(actions.top);
       expect(actions.bottom).toBeLessThanOrEqual(height! - 64);
       // POLISH-002 review: "How BEYOND decided" keeps a full 44px target while the fold holds.
       expect(document.querySelector(".console-guidance .why > summary")!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);

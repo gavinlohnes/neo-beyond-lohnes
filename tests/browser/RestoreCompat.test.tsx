@@ -1,3 +1,4 @@
+import { openCommandPanel } from "./helpers/command";
 /// <reference types="@vitest/browser-playwright" />
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
@@ -24,6 +25,8 @@ async function exportWithVersion(version: number): Promise<File> {
 
 async function openRestore() {
   const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
   await screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).click();
   const input = screen.getByLabelText("Choose a backup file to restore").element() as HTMLInputElement;
   const choose = (file: File) => {

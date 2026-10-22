@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
@@ -29,6 +30,7 @@ describe("NOTES-HANDOFF-001 — shift handoff", () => {
     vi.setSystemTime(new Date(2026, 9, 13, 5, 10));
     await workDay();
     const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     await expect.element(screen.getByRole("button", { name: "MARK WORK ENDED" })).toBeVisible();
     expect(document.querySelector(".shift-handoff")).toBeNull();
 
@@ -48,6 +50,7 @@ describe("NOTES-HANDOFF-001 — shift handoff", () => {
     await markWorkEnded(day.id);
     const before = await db.events.count();
     const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     await screen.getByRole("button", { name: "SKIP", exact: true }).click();
     await expect.poll(() => document.querySelector(".shift-handoff")).toBeNull();
     expect(await db.events.count()).toBe(before);
@@ -59,6 +62,7 @@ describe("NOTES-HANDOFF-001 — shift handoff", () => {
     await noteShiftHandoff(first.id, "Truck 12 brakes still soft");
     await workDay();
     const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     await expect.element(screen.getByText("Truck 12 brakes still soft")).toBeVisible();
     await expect.element(screen.getByText(/^FROM LAST SHIFT · /)).toBeVisible();
     // Inside TODAY, whose entrance animation briefly scales it; measure at rest.

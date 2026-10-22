@@ -10,7 +10,7 @@ import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { MAX_PHASE_ROWS } from "../../src/ui/screens/today/shiftClock";
 import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { db } from "../../src/persistence/db";
-import { openTodayTools } from "./helpers/todayTools";
+import { openTodayTools, revealAllGood } from "./helpers/todayTools";
 import type { BeyondDay } from "../../src/domain/common/types";
 import { openMealInBody } from "./helpers/mealSheet";
 
@@ -86,6 +86,7 @@ describe("Shift Clock — before shift (16:30 → 18:00)", () => {
     expect(screen.getByText("Attention", { exact: true }).elements()).toHaveLength(0);
 
     await openTodayTools(screen);
+    await revealAllGood(screen);
     await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
   });
 
@@ -200,6 +201,7 @@ describe("Shift Clock — after shift (06:00 → main sleep)", () => {
 
     // Check-in produces the same guidance; the console renders it once.
     await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
+    await revealAllGood(screen);
     await screen.getByRole("button", { name: "ALL GOOD" }).click();
     await expect.poll(() => document.querySelector(".console-guidance")?.textContent ?? "").toContain("Shift down after work");
     expect(document.querySelectorAll(".console-guidance")).toHaveLength(1);
@@ -260,6 +262,7 @@ describe("Shift Clock — day off", () => {
 
     // TONIGHT-001: the check-in waits behind the wake card's CHECK IN FIRST, and guidance shows once.
     await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
+    await revealAllGood(screen);
     await screen.getByRole("button", { name: "ALL GOOD" }).click();
     await expect.poll(() => document.querySelector(".console-guidance")?.textContent ?? "").toContain("Nothing urgent. One question below.");
     expect(document.querySelectorAll(".console-guidance")).toHaveLength(1);

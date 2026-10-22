@@ -119,7 +119,7 @@ describe("Fix 2 — open screens move to the new day at 16:30", () => {
     const newDay = await performDueDayRollover();
     expect(newDay).toBeDefined();
 
-    await screen.getByRole("button", { name: "DAILY RECORD" }).click();
+    await screen.getByRole("button", { name: "TODAY" }).click();
     await expect.poll(waterReading).toBe("0 oz");
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Half-typed bowl");
@@ -135,9 +135,9 @@ describe("Fix 2 — open screens move to the new day at 16:30", () => {
     await submitCheckIn(day.id, quickCheckInValues);
 
     const screen = await render(<App />);
-    await expect.element(screen.getByText(/Checked in/)).toBeVisible();
-
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
+    await expect.poll(() => screen.getByRole("button", { name: "CHECK IN", exact: true }).elements().length).toBe(0);
     await expect.poll(async () => (await getActiveDay())?.id, { timeout: 10_000, interval: 250 }).not.toBe(day.id);
-    await expect.poll(() => screen.getByText(/Checked in/).elements().length, { timeout: 5_000 }).toBe(0);
+    await expect.element(screen.getByRole("button", { name: "CHECK IN", exact: true })).toBeVisible();
   }, 20_000);
 });

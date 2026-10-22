@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
@@ -34,8 +35,9 @@ describe("direct shortcut suit", () => {
     setModePin(day!.id, "SCHEDULED_SHIFT");
     window.history.replaceState(null, "", `${window.location.pathname}?go=${shortcut}`);
     const screen = await render(<App />);
-    await expect.poll(current).toContain(shortcut === "workout" ? "TRAIN" : "BODY");
-    expect(document.getElementById("workspace-TODAY")).toBeNull();
+    await expect.poll(current).toContain(shortcut === "workout" ? "TRAIN" : "TODAY");
+    if (shortcut === "workout") expect(document.getElementById("workspace-TODAY")).toBeNull();
+    else await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.poll(() => document.documentElement.dataset.suitMode).toBe("SCHEDULED_SHIFT");
     expect(getComputedStyle(document.documentElement).getPropertyValue("--red").trim()).toBe("#9f1117");
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
@@ -82,12 +84,15 @@ describe("re-tap, back and retention", () => {
     const screen = await render(<App />);
     await openCaptureFromLog(screen);
     await screen.getByRole("textbox", { name: "Capture a thought", exact: true }).fill("Half a thought");
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await searchCommand(screen, "schedule");
     await screen.getByRole("button", { name: /^WORK SCHEDULE / }).click();
     await expect.element(screen.getByRole("heading", { name: "COMMAND // WORK SCHEDULE" })).toBeVisible();
     emblem(screen, "COMMAND").click();
     await expect.poll(current).toContain("TODAY");
+    await openCaptureFromLog(screen);
     await expect.element(screen.getByRole("textbox", { name: "Capture a thought", exact: true })).toHaveValue("Half a thought");
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "COMMAND // WORK SCHEDULE" })).toBeVisible();
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
@@ -99,7 +104,7 @@ describe("re-tap, back and retention", () => {
   it("keeps an unsaved settings draft through COMMAND search", async () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await screen.getByRole("button", { name: "Open NUTRITION TARGETS", exact: true }).click();
+    await (await commandResult(screen, "NUTRITION TARGETS")).click();
     await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("1875");
     await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("history");
     await screen.getByRole("button", { name: "Clear search" }).click();
@@ -109,9 +114,9 @@ describe("re-tap, back and retention", () => {
   it("returns to TODAY's place and focus after a LOG trip to BODY", async () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Log water" }).click();
-    await screen.getByRole("button", { name: "More → BODY water" }).click();
-    await expect.poll(current).toContain("BODY");
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await expect.element(screen.getByRole("dialog", { name: "WATER", exact: true })).toBeVisible();
+    await expect.poll(current).toContain("TODAY");
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.poll(current).toContain("TODAY");
     await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Log water");
   });

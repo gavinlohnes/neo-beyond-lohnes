@@ -1,127 +1,35 @@
-# REDESIGN-001 — acceptance corrections in progress
+# REDESIGN-001 — finishing acceptance; PR remains draft
 
-Owner-approved PROTECTED objective: [frozen brief](REDESIGN-001.md), frozen reference
-`prototype/redesign/index.html`. Builder Codex. Branch `codex/redesign-001`;
-[draft PR #261](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/261).
-Fresh starting master `9f0f2c23efadb7925051172e5eeac48f5882f70f` (includes #251).
-No new Garmin work, Engine/schema changes, production merge or deployment authorized here.
-Master `cb4f0df7f1c35843f7aa8d5dc53b42050fd4969e` is integrated for final verification;
-its already-approved Garmin/Share Target behavior and source labels are preserved. No new
-Garmin advice or display specification is implemented by REDESIGN-001.
-
-**Done:** attachment files committed unchanged. Item 1: TODAY scene → logging → NEXT → numbers
-→ unfinished check-in. Canonical operations and safety gate retained in NEXT; active operation
-conflicts stay explicit. Check-in sheet starts blank with the approved anchors and secondary
-ALL GOOD, retains its modal node across selections, and gates submit on all five. In-memory
-partial answers and focus survive dismissal. Canonical check-in errors preserve the draft;
-post-commit read failures do not invite repeat submission. Water/meal/sleep receipts use a visible
-fixed toast with existing undo/correction. Note entry remains available in a sheet. Removed daily
-controls/banners remain reachable via COMMAND → TODAY TOOLS, using the existing components;
-item 5 will refine their final grouping. The frozen prototype and brief have matching upload hashes.
-
-**Verification:** nine new focused browser cases pass, including four mobile widths, mode order,
-check-in accessibility, canonical check-in/water records, note draft retention and active-operation
-receipt bounds. Architecture and TypeScript/production build pass. Built PWA acceptance passes
-320/360/390/412, four modes each, check-in sheet, visible water undo, offline save/cold reload.
-Evidence: [item 1](../screenshots/redesign-001/README.md). Full verify is NOT claimed at this
-intermediate stage: legacy presentation assertions need reconciliation with the approved new
-paths during the remaining items. No tests weakened; existing tests are untouched.
-
-**Owner ruling, 2026-10-22:** Gavin explicitly approved the bounded canonical meal command and
-provenance extension needed for unsaved meals and fractional servings (“Yes, I approve”). This
-supersedes the brief's command/event exclusion only for those meal paths. Existing records,
-correction/undo, Engine rules, schemas, backup formats and compatibility remain protected.
-No disposable hidden preset, fabricated provenance or correction-as-portion workaround.
-The frozen attachments stay unchanged. The bounded extension is now implemented and tested.
-
-**Item 2 delivered:** one stable shell-level record sheet over the current tab, including shortcuts.
-Water adds 8/12/16/24, repeat, custom entry and history. Meal search, four deterministic likely-now
-presets, one-serving LOG, portions, quick add and opt-in saved presets use canonical commands.
-Manual provenance is null; portion logs snapshot scaled canonical macros. Optional saving and its
-log commit atomically. Existing correction/void chains, duplicate questions and native backup
-round-trip remain. No migration, Engine, backup format or dependency change. Reused sleep,
-weight, water-history and urge forms retain state; note input is retained. Native Back and focus
-return are guarded during writes. Separate water/meal/note receipts retain independent undo.
-
-**Item 2 verification:** broad focused regression 108 passed/one existing skip; subsequent focused
-meal/shortcut/receipt tests 53 passed/one existing skip; final receipt-stack/meal tests 20 passed.
-TypeScript/build and architecture pass. Built PWA passes 320/360/390/412, modes/order, all log
-sheet screenshots, saved-preset creation, stable portion sheet, visible water undo and offline
-save/cold reload. `scripts/verify-redesign-001.mjs`; `docs/screenshots/redesign-001/`.
-
-**Item 3 delivered:** BODY starts with numbers → progress → history, with entry forms in global
-sheets. Existing weight trend/goal date, TRAIN records link, photos/measurements and day/source
-history are reused. Hold-to-open corrections target the actual source day and append existing
-correction/void events; missing source reads offer retry. Measurement drafts survive the return
-to BODY. Saved-meal management remains available in sheets; COMMAND entry follows in item 5.
-Seven BODY cases pass (four widths/axe, read-only browsing, current/closed-day correction,
-measurement draft); BODY plus global-sheet subset 21 passed. Build and architecture pass.
-Built production checks pass 320/360/390/412, BODY/progress screenshots and offline cold reload.
-Full verification remains pending the remaining scope; no final acceptance claim.
-
-**Item 4 delivered:** WORKOUT / HISTORY / RECORDS are one tap apart, including during an
-active workout. The workout DOM and set draft remain mounted. History uses the existing session
-and lift queries; records lead with each exercise's heaviest/best-reps PR, newest first, with every
-PR retained in disclosure. LAST TIME and BEST include source dates. Typed fields clear on focus,
-retain the old value as placeholder and restore an empty blur. Gym, rotation and finish guards
-are unchanged. Six new cases pass, 76 existing TRAIN/history cases pass after updating approved
-navigation assumptions; the 15-case TRAIN operator file passed separately. Progression/PR Node
-subset 28 passed. Build/architecture and built all-width/offline checks pass. Evidence adds all
-three TRAIN views. Final full gate remains pending.
-
-**Item 5 delivered:** COMMAND groups share one capability catalog with search. Existing screens,
-log actions, named saved meals (servings sheet) and exercise histories are reachable without
-writes. Search all records opens FIND-001. Direct work-context/end-day/check-in/reset/shift-down,
-notes inbox/handoff, report (NEW uses existing timing/seen state), Mirror, planning, systems and
-settings routes reuse existing components. Backup/restore and help remain on demand. TODAY TOOLS
-retains the complete existing controls/prompt surface, including outcome ratings; it is not the
-TODAY home. New COMMAND/TODAY subset 16 passed. Destination subset 62 passed with one selector
-failure, corrected and rechecked (one passed; 53 excluded by name filter, not disabled tests).
-Build/architecture and built 320/360/390/412 named-meal/navigation/offline checks pass. Full gate
-remains pending; legacy presentation tests still need approved-path reconciliation.
-
-**Item 6 delivered:** Minimum Day, Small Steps and online food lookup are hidden by default,
-with explicit browser-local switches under COMMAND → Hidden features. No canonical state or
-Engine input depends on these preferences. Hiding closes optional presentation while preserving
-input state. Protein-only logging remains separately reachable through its original form,
-command, correction history and undo. Hidden-preference/COMMAND/sheet subset 23 passed;
-final hidden/COMMAND subset 10 passed, then the final three hidden cases passed after closing
-optional presentation on hide. Build and architecture pass. Canonical records are compared
-before/after toggling; original protein-only writes/undo are covered. No migration/dependency.
-
-**Item 7 delivered:** plain HUD labels (TODAY, MY MEALS, TRAINING SUMMARY, WORKOUT A,
-NOT CHECKED IN, history/open), no Orient/Current state/Immediate operations headings. Existing
-Engine/advisory messages are mapped only in UI; no recommendation or threshold changes. New
-screen browser subset 32 passed; copy Node subset had one old expected label, corrected. Final
-copy/meal Node subset 46 passed, including the real restore preview/apply path for one-offs and
-portions. Build/architecture pass. Chromium is available locally; no physical-device claim.
-
-**Item 8 rulings recorded:** approved composition, blank check-in/reference-only previous answers,
-BODY sheets, COMMAND groups, optional tools and meal exception amend UX_DECISIONS. All routes
-now use the blank sheet; historical draft provenance remains readable. The relocated complete
-daily-controls regression host is the same component used by COMMAND. No tests disabled.
-Current-master targeted run: 28 passed (TODAY RED/unknown/overnight/recovery, prior-answer reference,
-Garmin imports). Earlier Node diagnostic: 1,738 passed/one existing skip/four presentation
-expectations, all corrected and 26 affected checks passed. Full combined verification follows.
-
-**Final-gate truth:** full `npm run verify` at integrated head `c33514d` failed: 57 files,
-314 cases failed; 229 files / 2,531 cases passed, one existing skip. Architecture passed;
-build was not reached. Most failures follow retired navigation/copy; do not suppress them.
-The next focused batch passed 57/61; its four failures were shortcut expectations, a renamed
-control and navigation-helper startup timing. Three actual sheet defects are corrected: explicit
-same-food/duplicate decisions now reuse the existing queries, copy and void commands; REMOVE ONE
-voids only the protein-only log; failed writes identify the action and retain input for retry.
-New sheet regression tests (17) passed in that batch, including both duplicate choices and retries.
-Read-only TODAY RED/unknown/overnight/recovery and reduced-motion acceptance is retained.
-
-**Next:** finish legacy test-path migration using real production navigation, investigate every
-remaining failure, then run full `npm run verify` and built mobile/offline acceptance. Keep PR
-draft until all acceptance passes. Update the PR handoff with each pushed batch; final exact-head
-Claude review and Gavin's merge decision remain. Never merge or begin another objective.
-
-**Preserved unrelated work:** unfinished local daily-operations sprint is in stash
-`e1396c8e7ab549dec117e0f631a0c7e1144af309`; do not apply to this branch. #254 is now merged into master.
-Physical devices/Safari/screen readers remain untested; existing bundle advisory remains.
+- **Builder / objective:** Codex, owner-approved PROTECTED [REDESIGN-001](REDESIGN-001.md).
+  Branch `codex/redesign-001`; [PR #261](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/261).
+  Continue this branch; never merge or start another objective. Claude reviews the final exact head.
+- **Baseline:** started at master `9f0f2c23efadb7925051172e5eeac48f5882f70f` after #251.
+  Integrated master `cb4f0df7f1c35843f7aa8d5dc53b42050fd4969e` at `c33514d`, preserving its
+  Garmin import/share-target/source behavior. No new Garmin work is authorized here.
+- **Done:** frozen attachments committed unchanged; items 1–7 built and pushed. TODAY's five
+  sections, global logging sheets, BODY numbers/progress/history, TRAIN switcher, grouped COMMAND,
+  optional-feature switches and plain labels. Locked rulings are recorded in UX_DECISIONS.
+- **Approved exception:** Gavin's “Yes, I approve” on 2026-10-22 authorizes the bounded canonical
+  meal/provenance extension for one-off meals and fractional servings. [Ruling](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/261#issuecomment-6330409263).
+  No schema, backup format, migration, Engine rule, dependency or protected-fixture change.
+- **Verified progress:** `5ec05f1` restores canonical duplicate choices and actionable save failures;
+  its 17 sheet cases passed. `f5f4103` migrates COMMAND/BODY/TRAIN regression paths: 199/213
+  passed in the broad batch; all 14 remaining cases passed focused rechecks. Typecheck and
+  architecture pass. Subsequent acceptance corrections preserve signal wording/glitch boundaries,
+  source-return labels, meal-sheet scroll/focus, keyboard containment, in-flight logging guards,
+  ON SHIFT button contrast and fresh-install/pinned-mode scene layout. Latest affected batch:
+  123/124 passed, followed by the final scoped Attention case passing its recheck.
+  No tests/axe rules were disabled; former flows now use approved production paths.
+- **Full-gate truth:** the last full `npm run verify` at `c33514d` failed: 314 failed / 2,531
+  passed / one existing skip across 286 files. Architecture passed; build was not reached.
+  Most failures use retired presentation/navigation. Reconcile them without suppressing safeguards.
+  Subsequent focused batches are evidence for progress, not a final full-suite acceptance claim.
+- **Next:** finish affected regression fixes; run full verification and the built production
+  mobile/offline acceptance script. Refresh screenshots, update PR Handoff, mark ready only after
+  acceptance, and request independent Claude exact-head review. Gavin alone decides merge.
+- **Preservation / limits:** unrelated daily-operations work remains in stash
+  `e1396c8e7ab549dec117e0f631a0c7e1144af309`; do not apply it here. Synthetic test data only.
+  Physical phones, Safari and screen-reader/device-keyboard testing remain unverified.
 
 ---
 Previous checkpoint (historical; Garmin is not this objective):

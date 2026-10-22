@@ -1,11 +1,12 @@
+// REDESIGN-001: exercise the production daily-controls host now used by COMMAND.
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn, logSleep } from "../../src/application/commands";
 import { createObligation } from "../../src/application/intentCommands";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
-import { openTodayTools } from "./helpers/todayTools";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { openTodayTools, revealAllGood } from "./helpers/todayTools";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 
 /**
@@ -39,7 +40,7 @@ describe("Suit Layer 01 — at most one dominant decision surface", () => {
 
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByText("Attention", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("DAY CONTEXT", { exact: true })).toBeVisible();
 
     // TODAY-002: NO ACTION REQUIRED is truthful support, not a fake
     // command surface created merely to fill the field.
@@ -100,7 +101,7 @@ describe("Suit Layer 01 — utility cards use the neutral tool-label, not the re
 
   it("the screen identity label (BEYOND // TODAY) remains .eyebrow — identity, not a utility card", async () => {
     const screen = await render(<TodayScreen />);
-    const identity = screen.getByText("BEYOND // TODAY", { exact: true }).element();
+    const identity = screen.getByText("DAILY CONTROLS", { exact: true }).element();
     expect(identity.className).toContain("eyebrow");
   });
 });
@@ -150,6 +151,7 @@ describe("Suit Layer 01 — no capability disappeared", () => {
     await expect.element(screen.getByRole("button", { name: "Open SHIFT DOWN" })).toBeVisible();
     // DECLUTTER-001: after a check-in, ALL GOOD is one tap away behind UPDATE.
     await screen.getByRole("button", { name: "Update check-in" }).click();
+    await revealAllGood(screen);
     await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
     await expect.element(screen.getByPlaceholder("Capture a thought...")).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open END DAY" })).toBeVisible();

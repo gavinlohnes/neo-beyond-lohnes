@@ -177,3 +177,14 @@ it('keeps reduced-motion logging and check-in free of entry animations at phone 
   await expect.element(screen.getByRole('dialog', { name: 'WATER', exact: true })).toBeVisible();
   expect(document.getAnimations().filter((a) => a.playState === 'running')).toHaveLength(0);
 });
+
+for (const width of [320, 360, 390, 412]) it(`contains the fresh-install scene and keeps actions visible at ${width}`, async () => {
+  await page.viewport(width, 844); const screen = await render(<App />);
+  await expect.element(screen.getByRole("heading", { name: "Mode not set", exact: true })).toBeVisible();
+  const hero = document.querySelector(".mode-empty")!.getBoundingClientRect();
+  const skyline = document.querySelector(".mode-empty .cc-skyline")!.getBoundingClientRect();
+  expect(skyline.top).toBeGreaterThanOrEqual(hero.top); expect(skyline.bottom).toBeLessThanOrEqual(hero.bottom);
+  expect(screen.getByRole("button", { name: "Open LOG", exact: true }).element().getBoundingClientRect().bottom).toBeLessThan(700);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+  expect(await db.beyondDays.count()).toBe(0);
+});

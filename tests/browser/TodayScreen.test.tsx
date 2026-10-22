@@ -1323,7 +1323,8 @@ describe("TodayScreen (real browser) — Commitments (Intent & Commitment Spine,
     await screen.getByRole("button", { name: "Open COMMITMENT" }).click();
     await screen.getByRole("button", { name: "SATISFY COMMITMENT" }).click();
     const confirm = screen.getByRole("button", { name: "CONFIRM SATISFACTION" });
-    await Promise.allSettled([confirm.click(), confirm.click()]);
+    const confirmNode = confirm.element() as HTMLButtonElement;
+    confirmNode.click(); confirmNode.click();
 
     await expect.element(screen.getByRole("status")).toHaveTextContent("Commitment satisfied: Renew passport.");
     expect(screen.getByRole("alert").elements()).toHaveLength(0);
@@ -1523,14 +1524,14 @@ describe("TodayScreen (real browser) — LAUNCH-VISION-001 red CTA & structural 
     expect(bg).toBe("rgb(208, 20, 27)");
   });
 
-  it("DECLUTTER Drop 2: the all-clear \"No action needed\" button is neutral, not red", async () => {
+  it("REDESIGN-001: the all-clear acknowledgement is the single NEXT action", async () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
     await expect.element(screen.getByRole("button", { name: "GOT IT" })).toBeVisible();
     const el = screen.getByRole("button", { name: "GOT IT" }).element();
-    expect(el.className).toContain("btn-secondary");
-    expect(getComputedStyle(el).backgroundColor).not.toBe("rgb(208, 20, 27)");
+    expect(el.className).toContain("btn-primary");
+    expect(getComputedStyle(el).backgroundColor).toBe("rgb(208, 20, 27)");
   });
 
   it("Drop 6: SHIFT DOWN shows the quit tracker's post-shift plan", async () => {

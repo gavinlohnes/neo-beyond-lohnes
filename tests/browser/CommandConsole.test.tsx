@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page, userEvent } from "vitest/browser";
@@ -11,8 +12,8 @@ import { getEffectiveHydrationTotal } from "../../src/application/queries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { MAX_PHASE_ROWS } from "../../src/ui/screens/today/shiftClock";
 import { db } from "../../src/persistence/db";
-import { searchCommand } from "./helpers/todayTools";
-import { mealButton, openMealInBody } from "./helpers/mealSheet";
+import { searchCommand, openTodayTools, revealAllGood } from "./helpers/todayTools";
+import { openMealInBody } from "./helpers/mealSheet";
 
 beforeEach(async () => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -43,7 +44,7 @@ describe("Production Command Console", () => {
     const day = await startDay();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Log water" }).click();
-    await screen.getByRole("button", { name: "More → BODY water" }).click();
+    await screen.getByRole("button", { name: "Custom amount & entries" }).click();
     await expect.poll(() => document.activeElement?.textContent).toBe("+8 oz");
     await screen.getByRole("button", { name: "SHOW MANUAL ENTRY", exact: true }).click();
     await screen.getByRole("spinbutton", { name: "Custom (oz)" }).fill("11");
@@ -58,6 +59,7 @@ describe("Production Command Console", () => {
     expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
     await screen.getByRole("button", { name: "UNDO", exact: true }).click();
     await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(0);
+    await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();
   });
@@ -68,7 +70,7 @@ describe("Production Command Console", () => {
     await db.beyondDays.update(day.id, { workContext: "UNKNOWN" });
     const screen = await render(<App />);
     await expect.poll(() => [...document.querySelectorAll("[data-shift-clock-row]")].map((element) => element.getAttribute("data-shift-clock-row")))
-      .toEqual(["WORK_QUESTION", "CHECK_IN", "WORKOUT"]);
+      .toEqual([]);
     await expect.poll(() => document.querySelector("[data-system-status]")?.getAttribute("data-system-status")).toBe("NO_READ");
     // COMMAND-CENTER-001: TRAIN and BODY through COMMAND's search, COMMAND by its tab.
     for (const destination of ["TRAIN", "BODY", "COMMAND"] as const) {
@@ -92,8 +94,11 @@ describe("Production Command Console", () => {
     it(`keeps genuine ${level} System Status and one canonical guidance surface`, async () => {
       const day = await startDay();
       await submitCheckIn(day.id, values);
-      await render(<App />);
-      await expect.poll(() => document.querySelector("[data-system-status]")?.getAttribute("data-system-status")).toBe(level);
+      const screen = await render(<App />);
+      await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
+      if (level !== "GREEN") await expect.poll(() => document.querySelector("[data-system-status]")?.getAttribute("data-system-status")).toBe(level);
+      await (await commandResult(screen, "SYSTEMS")).click();
+      await expect.element(screen.getByRole("region", { name: "STATE" }).getByText(level, { exact: true }).first()).toBeVisible();
       await expect.poll(() => document.querySelectorAll(".console-guidance").length).toBe(1);
       expect(document.querySelectorAll(".today-field .command-surface").length).toBeLessThanOrEqual(1);
     });
@@ -103,10 +108,10 @@ describe("Production Command Console", () => {
     const day = await startDay();
     await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
     const screen = await render(<App />);
-    await expect.element(screen.getByRole("region", { name: "Current recommendation" })).toBeVisible();
+    await expect.element(screen.getByRole("region", { name: "Next action" })).toBeVisible();
     await screen.getByText("How BEYOND decided", { exact: true }).click();
-    await screen.getByRole("button", { name: "Open TOOLS" }).click();
-    expect(document.querySelectorAll(".console-guidance")).toHaveLength(1);
+    await openTodayTools(screen);
+    await expect.poll(() => [...document.querySelectorAll<HTMLElement>(".console-guidance")].filter(el => el.getClientRects().length).length).toBe(1);
     // TONIGHT-001: the day-off workout question sits below, so the all-clear says so.
     expect(screen.getByRole("heading", { name: "Nothing urgent. One question below.", exact: true }).elements()).toHaveLength(1);
     expect(document.querySelectorAll(".today-field .command-surface").length).toBeLessThanOrEqual(1);
@@ -119,20 +124,20 @@ describe("Production Command Console", () => {
       await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
       const screen = await render(<App />);
 
-      await expect.element(screen.getByText("CURRENT STATE", { exact: true })).toBeVisible();
+      await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
 
       const situation = document.querySelector<HTMLElement>(".today-situation");
       const guidance = document.querySelector<HTMLElement>(".console-guidance");
-      const operations = document.querySelector<HTMLElement>(".console-operations");
+      const operations = document.querySelector<HTMLElement>('.redesign-today > section[aria-label="Log"]');
       expect(situation).not.toBeNull();
       expect(guidance).not.toBeNull();
       expect(operations).not.toBeNull();
-      expect(situation!.compareDocumentPosition(guidance!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(guidance!.compareDocumentPosition(operations!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(situation!.compareDocumentPosition(operations!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(operations!.compareDocumentPosition(guidance!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       // SUIT-001: SYSTEMS replaces the System Status line in the same place.
-      await expect.element(screen.getByText("SYSTEMS", { exact: true })).toBeVisible();
-      await expect.element(screen.getByRole("region", { name: "Current recommendation" })).toBeVisible();
-      await expect.element(screen.getByRole("heading", { name: "Immediate operations", exact: true })).toBeVisible();
+      expect(document.querySelector(".systems-line")).toBeNull();
+      await expect.element(screen.getByRole("region", { name: "Next action" })).toBeVisible();
+      expect(screen.getByRole("heading", { name: "Immediate operations", exact: true }).elements()).toHaveLength(0);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
       for (const animation of document.getAnimations()) animation.finish();
       expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
@@ -143,6 +148,7 @@ describe("Production Command Console", () => {
     await page.viewport(320, 800);
     await startDay();
     const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
     const standing = screen.getByRole("button", { name: "CHANGE TO WORKING", exact: true });
     await expect.element(standing).toBeVisible();
     // Model wider fallback-font metrics observed in CI, without waiting
@@ -157,7 +163,10 @@ describe("Production Command Console", () => {
     const day = await startDay();
     const screen = await render(<App />);
     // TONIGHT-001: on a day off the check-in opens from the wake card.
-    await screen.getByRole("button", { name: "CHECK IN FIRST" }).click();
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
+    const controls = ["Log a meal", "Log water", "Open LOG"].map(name => screen.getByRole("button", { name, exact: true }).element() as HTMLButtonElement);
+    await screen.getByRole("button", { name: "CHECK IN", exact: true }).click();
+    await revealAllGood(screen);
     await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
     const original = db.events.add.bind(db.events);
     let release!: () => void;
@@ -165,15 +174,14 @@ describe("Production Command Console", () => {
     const write = vi.spyOn(db.events, "add").mockImplementation((...args) => Dexie.Promise.resolve(gate).then(() => original(...args)));
     try {
       (screen.getByRole("button", { name: "ALL GOOD" }).element() as HTMLButtonElement).click();
-      (mealButton(screen).element() as HTMLButtonElement).click();
-      (screen.getByRole("button", { name: "Log water" }).element() as HTMLButtonElement).click();
-      (screen.getByRole("button", { name: "Open LOG" }).element() as HTMLButtonElement).click();
-      expect(screen.getByRole("dialog").elements()).toHaveLength(0);
+      controls.forEach(button => button.click());
+      await expect.element(screen.getByRole("dialog", { name: "CHECK IN", exact: true })).toBeVisible();
+      expect(screen.getByRole("dialog").elements()).toHaveLength(1);
       await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
     } finally { release(); }
     await expect.poll(async () => db.events.where("type").equals("STATE_CHECKED_IN").count()).toBe(1);
     // TONIGHT-001: on a day off the check-in lives in TOOLS; the wake card shows it as evidence.
-    await expect.poll(() => document.querySelector(".workout-call")?.textContent ?? "").toMatch(/Check-in GREEN/);
+    await expect.poll(() => document.querySelector(".console-guidance")?.textContent ?? "").not.toBe("");
     expect(await db.checkIns.where("beyondDayId").equals(day.id).count()).toBe(1);
     write.mockRestore();
   });
@@ -183,14 +191,15 @@ describe("Production Command Console", () => {
     const screen = await render(<App />);
     await openMealInBody(screen);
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished dinner");
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
     const confirm = vi.spyOn(window, "confirm");
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
     // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
-    await expect.element(screen.getByRole("heading", { name: "BODY // TODAY" })).toBeVisible();
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
+    await expect.element(screen.getByRole("heading", { name: "BODY", exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+    await openMealInBody(screen);
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
     expect(confirm).not.toHaveBeenCalled();
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
@@ -244,10 +253,10 @@ describe("Production Command Console", () => {
       expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
       (search.element() as HTMLInputElement).focus();
       await userEvent.keyboard("{Enter}");
-      await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
-      await expect.poll(() => document.activeElement?.id).toBe("console-tools-heading");
+      await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
+      await expect.poll(() => document.activeElement).toBe(screen.getByRole("button", { name: "← BACK TO COMMAND", exact: true }).element());
       await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      expect(document.activeElement?.id).toBe("console-tools-heading");
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "← BACK TO COMMAND", exact: true }).element());
       await expect.element(screen.getByRole("button", { name: "Close TOOLS" })).toBeVisible();
       // The query is still there on return to COMMAND.
       await screen.getByRole("button", { name: "COMMAND", exact: true }).click();

@@ -70,3 +70,10 @@
 .today-sheet .cc-amounts { grid-template-columns: repeat(3, 1fr); padding: 8px 14px 12px; }
 .today-sheet .cc-amounts button { color: var(--p-t1); cursor: pointer; }
 .today-sheet .cc-amounts button small { font-size: 12px; color: var(--p-t3); margin-left: 2px; }
+
+/* REDESIGN-001: SYSTEMS left the hero; keep the full city scene below wrapped
+   mode context rather than borrowing the removed status line's height. */
+.redesign-today .cc-mode .cc-scene { height: 88px; }
+@media (max-width: 370px) { .redesign-today .cc-mode .cc-scene { height: 68px; } }
+
+.redesign-today .mode-empty .cc-scene { height: 120px; }

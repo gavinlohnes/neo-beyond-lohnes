@@ -1630,7 +1630,7 @@ export function TodayScreen({
     : scheduledClock.phase === "EXPECTED_POST_WORK" ? "Shift’s done. Power down. Sleep."
     : scheduledClock.phase === "OFF" ? "Your time. Train, plan or rest. Nothing’s waiting."
     : undefined;
-  const lateRecoverWithoutSleep = !!day && scheduledClock.phase === "EXPECTED_POST_WORK" && shiftClock.phase === "EXPECTED_POST_WORK" && now.getHours() >= 13 && mainSleepRecordedAt.length === 0;
+  const lateRecoverWithoutSleep = !!day && scheduledClock.phase === "EXPECTED_POST_WORK" && shiftClock.displayPhase === "EXPECTED_POST_WORK" && now.getHours() >= 13 && mainSleepRecordedAt.length === 0;
   const attentionPlan = deriveAttentionPlan({
     activeWorkoutId: activeWorkout?.id ?? null,
     activeWorkoutType: activeWorkout?.sessionType ?? null,
@@ -1714,7 +1714,7 @@ export function TodayScreen({
         );
       case "SHIFT_DOWN":
         // TONIGHT-001: after the shift SHIFT DOWN waits here (no longer a RECOVER row), with or without a check-in.
-        return !liftedShiftDown && !!day && (commandFocus !== undefined || (!!recommendation || shiftClock.displayPhase === "EXPECTED_POST_WORK") && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT");
+        return !liftedShiftDown && !!day && (!!recommendation || shiftClock.displayPhase === "EXPECTED_POST_WORK") && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT";
       case "RESET":
         return !liftedReset && !!day && !!recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT";
       case "WORK_CONTEXT":
@@ -2311,8 +2311,8 @@ export function TodayScreen({
                   ).replace(" — shift ended, not yet shifted down", " · shift down pending").replace(" — after your shift", " · after shift")}
             </p>
             {shiftClock.countdown && <p className="visually-hidden status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>}
-          </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><h2>Mode not set</h2><p className="meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} hasAction={false} /></section>}
-    <section aria-label="Log">{onOpenRecordSheet ? <LogActions open={onOpenRecordSheet} /> : <ConsoleControls
+          </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><div className="cc-mode mode-empty"><h2 className="cc-mode-name">Mode not set</h2><p className="cc-mode-meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} hasAction={false} /><div className="cc-scene" aria-hidden="true" /></div></section>}
+    <section aria-label="Log">{onOpenRecordSheet ? <LogActions open={onOpenRecordSheet} busy={busy} isInFlight={() => busyRef.current} /> : <ConsoleControls
           onWaterVisibilityChange={setWaterControlsVisible}
           onLogWater={handleMinimumDayLogWater}
           lastWaterAmount={lastWaterAmount}
@@ -2458,13 +2458,16 @@ export function TodayScreen({
     </section>
     <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
-      {stale && <p role="status"><Signal data-signal="stale-note">Yesterday’s numbers. Refresh to check today.</Signal><button type="button" className="btn-secondary" disabled={busy || staleRefresh === "RUNNING"} onClick={() => void handleStaleRefresh()}>REFRESH</button></p>}
-      {(!online || backupDue || undoFailure || checkInError || systemStatus && systemStatus.level !== "GREEN") && <button type="button" className="btn-secondary today-system-signal" onClick={onOpenSystems}><Signal data-signal={undoFailure || checkInError ? "save-failed" : !online ? "offline-line" : "backup"}>{[
-        undoFailure ?? checkInError,
-        !online ? "Offline. Logging saves on this phone." : null,
-        systemStatus && systemStatus.level !== "GREEN" ? `STATUS · ${describeSystemStatus(systemStatus)}` : null,
-        backupDue ? backupDue.days === null ? "No backup yet." : "Backup overdue." : null,
-      ].filter(Boolean).join(" · ")}</Signal></button>}
+      {stale && <p role="status"><Signal data-signal="stale-note">{staleRefresh === "HELD"
+        ? "These are yesterday’s numbers. Today starts when you finish your workout, or 2 hours after your last set."
+        : staleRefresh === "FAILED" ? "These are yesterday’s numbers. Today didn’t load. Try again." : "These are yesterday’s numbers."}</Signal><button type="button" className="btn-secondary" disabled={busy || staleRefresh === "RUNNING"} onClick={() => void handleStaleRefresh()}>REFRESH</button></p>}
+      {(!online || backupDue || undoFailure || checkInError || systemStatus && systemStatus.level !== "GREEN") && <button type="button" className="btn-secondary today-system-signal" onClick={onOpenSystems}>
+        {(undoFailure || checkInError) && <><Signal data-signal="save-failed">{undoFailure ?? checkInError}</Signal>{" "}</>}
+        {!online && <><Signal data-signal="offline-line">Offline. Logging still saves on this phone.</Signal>{" "}</>}
+        {systemStatus && systemStatus.level !== "GREEN" && <><span data-system-status={systemStatus.level}>STATUS · {describeSystemStatus(systemStatus)}</span>{" "}</>}
+        {backupDue && <Signal data-signal="backup-line">{backupDue.days === null ? "No backup yet." : "Backup overdue."}</Signal>}
+      </button>}
+
     </section>
     {!checkIn && <section aria-label="Check-in"><h2>CHECK-IN</h2><p>Not checked in.</p><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></section>}
     <LogSheet open={fastCaptureOpen} title="NOTE" onClose={closeFastCapture} canClose={() => !busyRef.current}>{renderToolsItem("CAPTURE")}</LogSheet>

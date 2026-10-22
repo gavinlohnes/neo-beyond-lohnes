@@ -2462,7 +2462,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
               "new-meal",
               "New meal",
             )}
-            <p className="meta">Save this meal and record it today, or keep it for later.</p>
+            <p className="meta">{sheetFocus === "meal" ? "Save a reusable meal here. Use LOG when you eat it." : "Save this meal and record it today, or keep it for later."}</p>
             {sheetFocus !== "meal" && <button className="btn-primary" disabled={busy} onClick={() => void handleCreateSavedMeal(true)}>
               SAVE &amp; LOG
             </button>}
@@ -2483,6 +2483,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       </div>);
   if (overviewOnly) return <div className="screen body-field body-home">
     <OperatorHeader destination="body" focusable>BODY</OperatorHeader>
+    {onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>{returnLabel}</button>}
     <div hidden={progressOpen}>
       <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
         {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} /> : <p role="status">Reading recorded information…</p>}
@@ -2503,7 +2504,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     <div hidden={!progressOpen}>
       <button type="button" className="btn-secondary" onClick={() => { setProgressOpen(false); setSourceSelection(null); restoreOrigin(); }}>BACK TO BODY</button>
       <section hidden={sourceSelection !== null}><h2 id="health-progress-heading" tabIndex={-1}>PROGRESS</h2>{progressVisited && <BodyProgress active={visible && progressOpen && sourceSelection === null} refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} request={progressRequest} compositionRequest={compositionRequest} returnFocusRequest={progressReturnFocus} onSources={(selection) => openSources(selection)} />}</section>
-      {sourceSelection && <HealthSources selection={sourceSelection} revision={dataRevision} active={visible && progressOpen} activeDayId={day?.id} allowHistoricalCorrection onCorrect={(record, sourceDayId) => onEditRecord?.(record, sourceDayId ?? day!.id)} onHistory={onHealthHistory} onClose={closeSources} />}
+      {sourceSelection && <HealthSources selection={sourceSelection} revision={dataRevision} active={visible && progressOpen} activeDayId={day?.id} returnLabel={sourceOrigin.current?.daily ? "BACK TO DAY" : "BACK TO TREND"} allowHistoricalCorrection onCorrect={(record, sourceDayId) => onEditRecord?.(record, sourceDayId ?? day!.id)} onHistory={onHealthHistory} onClose={closeSources} />}
     </div>
   </div>;
 

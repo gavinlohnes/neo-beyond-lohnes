@@ -118,7 +118,7 @@ describe("Same food?", () => {
 
     await prompt.getByRole("button", { name: "REMOVE ONE" }).click();
     await expect.element(body.getByText("Deleted 49 g. Protein today: 50 g.", { exact: true })).toBeVisible();
-    await body.getByRole("button", { name: "DAILY RECORD" }).click();
+    await body.getByRole("button", { name: "TODAY", exact: true }).click();
     await expect.poll(proteinTile).toBe("50 g");
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
   });
@@ -155,7 +155,7 @@ describe("Same food?", () => {
     vi.setSystemTime(at(20, 50, 0));
     await body.getByRole("button", { name: "OPEN MEALS" }).click();
     await body.getByRole("button", { name: "LOG", exact: true }).click();
-    await body.getByRole("button", { name: "DAILY RECORD" }).click();
+    await body.getByRole("button", { name: "TODAY", exact: true }).click();
     await expect.poll(proteinTile).toBe("174 g");
     expect(body.getByRole("group", { name: "Same food?" }).elements()).toHaveLength(0);
   });

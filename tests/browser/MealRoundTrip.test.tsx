@@ -28,8 +28,8 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.sc
 
 async function openMeal(screen: Screen) {
   await openMealInBody(screen);
-  await expect.element(screen.getByRole("button", { name: "RETURN TO TODAY" })).toBeVisible();
-  await expect.poll(() => document.activeElement?.id).toBe("meal-return");
+  await expect.element(screen.getByRole("button", { name: "CLOSE" })).toBeVisible();
+  await expect.poll(() => screen.getByRole("dialog").element().contains(document.activeElement)).toBe(true);
 }
 async function fillMeal(screen: Screen, name = "Lunch") {
   await screen.getByRole("textbox", { name: "New meal name" }).fill(name);
@@ -43,14 +43,17 @@ async function loggedCount() { return db.events.where("type").equals("MEAL_LOGGE
 describe("TODAY meal round trip", () => {
   it("uses canonical preset creation and logging once, then restores TODAY's disclosure, position, focus and totals", async () => {
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Open TOOLS" }).click();
+    await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();
+    await document.fonts.ready;
+    for (const animation of document.getAnimations()) if (animation.effect?.getComputedTiming().iterations !== Infinity) animation.finish();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     const trigger = mealButton(screen).element() as HTMLButtonElement;
     trigger.focus();
     trigger.scrollIntoView({ block: "center" });
     const originY = window.scrollY;
-    await openMeal(screen);
+    await openMealInBodyDom(screen);
     await fillMeal(screen);
-    await screen.getByRole("button", { name: "SAVE ONLY", exact: true }).click();
+    await screen.getByRole("button", { name: "SAVE FOR REUSE", exact: true }).click();
     await expect.element(screen.getByText("Meal saved. Use LOG when you eat it.")).toBeVisible();
     expect(await loggedCount()).toBe(0);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
@@ -59,10 +62,10 @@ describe("TODAY meal round trip", () => {
     expect(await getTotalMealCalories(dayId)).toBe(600);
     expect(await getDayProteinTotalG(dayId)).toBe(45);
     expect((await getHistoryDays()).flatMap((day) => day.events).filter((event) => event.type === "MEAL_LOGGED")).toHaveLength(1);
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
-    await expect.element(screen.getByRole("button", { name: "Close TOOLS" })).toBeVisible();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
+    await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();
     await expect.poll(() => document.activeElement).toBe(trigger);
-    await expect.poll(() => Math.abs(window.scrollY - originY)).toBeLessThanOrEqual(2);
+    await expect.poll(() => Math.abs(window.scrollY - Math.min(originY, document.documentElement.scrollHeight - innerHeight))).toBeLessThanOrEqual(2);
     await expect.element(screen.getByRole("group", { name: "Protein 45 g · Water 0 oz", exact: true })).toBeVisible();
   });
 
@@ -72,7 +75,7 @@ describe("TODAY meal round trip", () => {
     const screen = await render(<App />);
     await openMeal(screen);
     await fillMeal(screen, "Unfinished dinner");
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
     expect(await db.savedMeals.count()).toBe(0);
     expect(await loggedCount()).toBe(0);
     window.scrollTo(0, 80);
@@ -81,7 +84,7 @@ describe("TODAY meal round trip", () => {
     // A DOM click: a locator click first scrolls its target into view, which would move the origin under test.
     await openMealInBodyDom(screen);
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
     await expect.poll(() => window.scrollY).toBe(reopenedOrigin);
   });
 
@@ -90,13 +93,15 @@ describe("TODAY meal round trip", () => {
     await openMeal(screen);
     await fillMeal(screen);
     const confirm = vi.spyOn(window, "confirm");
+    await screen.getByRole("button", { name: "CLOSE", exact: true }).click();
     await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
     // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
-    await expect.element(screen.getByRole("heading", { name: "BODY // TODAY" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "RETURN TO TODAY" }).elements()).toHaveLength(0);
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
+    await expect.element(screen.getByRole("heading", { name: "BODY", exact: true })).toBeVisible();
+    expect(screen.getByRole("dialog").elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+    await openMealInBody(screen);
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Lunch");
     await expect.element(screen.getByRole("spinbutton", { name: "New meal calories" })).toHaveValue(600);
     expect(confirm).not.toHaveBeenCalled();
@@ -108,12 +113,12 @@ describe("TODAY meal round trip", () => {
     await openMeal(screen);
     await fillMeal(screen);
     const failure = vi.spyOn(db.savedMeals, "add").mockRejectedValue(new Error("Disk full"));
-    await screen.getByRole("button", { name: "SAVE ONLY", exact: true }).click();
+    await screen.getByRole("button", { name: "SAVE FOR REUSE", exact: true }).click();
     await expect.element(screen.getByRole("alert")).toHaveTextContent("Disk full");
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Lunch");
     expect(await loggedCount()).toBe(0);
     failure.mockRestore();
-    await screen.getByRole("button", { name: "SAVE ONLY", exact: true }).click();
+    await screen.getByRole("button", { name: "SAVE FOR REUSE", exact: true }).click();
     await expect.poll(() => db.savedMeals.count()).toBe(1);
   });
 
@@ -130,7 +135,7 @@ describe("TODAY meal round trip", () => {
     await expect.poll(loggedCount).toBe(1);
   });
 
-  for (const destination of ["TRAIN", "TODAY", "BODY", "COMMAND", "Search everything", "RETURN TO TODAY"]) {
+  for (const destination of ["TRAIN", "TODAY", "BODY", "COMMAND", "Search everything", "CLOSE"]) {
     it(`blocks LOG followed immediately by ${destination}, plus same-tick duplicate taps`, async () => {
       await seedMeal();
       const screen = await render(<App />);
@@ -145,8 +150,8 @@ describe("TODAY meal round trip", () => {
       try {
         // No await, disabled-state wait or React commit between the dispatches.
         button.click(); button.click(); navigate.click();
-        await expect.element(screen.getByRole("button", { name: "RETURN TO TODAY" })).toBeVisible();
-        await expect.poll(() => screen.getByRole("button", { name: "BODY", exact: true }).element().getAttribute("aria-current")).toBe("page");
+        await expect.element(screen.getByRole("button", { name: "CLOSE" })).toBeVisible();
+        await expect.poll(() => screen.getByRole("button", { name: "TODAY", exact: true }).element().getAttribute("aria-current")).toBe("page");
       } finally { release(); }
       await expect.poll(loggedCount).toBe(1);
       expect(write).toHaveBeenCalledOnce();
@@ -160,7 +165,7 @@ describe("TODAY meal round trip", () => {
     await openMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
     await openMealInBody(screen);
     await screen.getByRole("button", { name: "UNDO", exact: true }).click();
     await expect.poll(() => getMealEntries(dayId)).toHaveLength(0);
@@ -176,7 +181,7 @@ describe("TODAY meal round trip", () => {
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
     const [original] = await getMealEntries(dayId);
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
     await openMealInBody(screen);
     await screen.getByRole("button", { name: "SHOW TODAY'S MEALS (1)" }).click();
     await screen.getByRole("button", { name: "Edit Lunch" }).click();
@@ -186,7 +191,7 @@ describe("TODAY meal round trip", () => {
     expect(await loggedCount()).toBe(1);
     expect(await db.events.where("type").equals("MEAL_LOG_CORRECTED").count()).toBe(1);
     expect((await db.events.get(original!.rootEventId))?.payload).toMatchObject({ proteinG: 45 });
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
     await expect.element(screen.getByRole("group", { name: "Protein 30 g · Water 0 oz", exact: true })).toBeVisible();
   });
 
@@ -200,7 +205,7 @@ describe("TODAY meal round trip", () => {
     await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
     expect(await loggedCount()).toBe(1);
     expect(await getMealEntries(dayId)).toHaveLength(1);
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
     read.mockRestore();
     await openMealInBody(screen);
     await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
@@ -220,11 +225,11 @@ describe("TODAY meal round trip", () => {
     const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal logged.");
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
     let release!: () => void;
     const gate = new Promise<void>((resolve) => { release = resolve; });
     read.mockImplementation(() => Dexie.Promise.resolve(gate).then(originalRead));
-    const returnButton = screen.getByRole("button", { name: "RETURN TO TODAY" });
+    const returnButton = screen.getByRole("button", { name: "CLOSE" });
     try {
       await openMealInBody(screen);
       await expect.element(returnButton).toBeDisabled();
@@ -233,7 +238,7 @@ describe("TODAY meal round trip", () => {
       if (moveFocus) (screen.getByRole("textbox", { name: "New meal name" }).element() as HTMLInputElement).focus();
     } finally { release(); }
     await expect.element(returnButton).toBeEnabled();
-    const expectedFocus = moveFocus ? screen.getByRole("textbox", { name: "New meal name" }).element() : returnButton.element();
+    const expectedFocus = moveFocus ? screen.getByRole("textbox", { name: "New meal name" }).element() : screen.getByRole("button", { name: "LOG", exact: true }).element();
     await expect.poll(() => document.activeElement).toBe(expectedFocus);
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
     await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
@@ -250,11 +255,11 @@ describe("TODAY meal round trip", () => {
     await openMeal(screen);
     await fillMeal(screen);
     const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
-    await screen.getByRole("button", { name: "SAVE ONLY", exact: true }).click();
+    await screen.getByRole("button", { name: "SAVE FOR REUSE", exact: true }).click();
     await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal saved.");
     expect(await db.savedMeals.count()).toBe(1);
     expect(screen.getByRole("button", { name: "LOG", exact: true }).elements()).toHaveLength(0);
-    await screen.getByRole("button", { name: "RETURN TO TODAY" }).click();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
     read.mockRestore();
     await openMealInBody(screen);
     await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeVisible();
@@ -304,8 +309,9 @@ describe("TODAY meal round trip", () => {
     await seedMeal();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
-    expect(screen.getByRole("button", { name: "RETURN TO TODAY" }).elements()).toHaveLength(0);
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
+    expect(screen.getByRole("dialog").elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+    await openMealInBody(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByText("Lunch logged · 600 kcal · 45g", { exact: true })).toBeVisible();
     expect(await loggedCount()).toBe(1);
@@ -318,7 +324,7 @@ describe("TODAY meal round trip", () => {
       await openMeal(screen);
       await fillMeal(screen);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
-      expect(screen.getByRole("button", { name: "RETURN TO TODAY" }).element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+      expect(screen.getByRole("button", { name: "CLOSE" }).element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       const result = await axe.run(document.body, { rules: { "region": { enabled: false } } });
       expect(result.violations).toEqual([]);
     });

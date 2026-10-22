@@ -1,8 +1,9 @@
+import { commandResult, openCommandPanel } from "./helpers/command";
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn, startShiftDown, recordRecommendation } from "../../src/application/commands";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { TodayScreen, DailyControls } from "../../src/ui/screens/today/TodayScreen";
 import { openTodayTools } from "./helpers/todayTools";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
@@ -59,7 +60,7 @@ describe("accessibility (real browser, axe-core)", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);
@@ -72,7 +73,7 @@ describe("accessibility (real browser, axe-core)", () => {
    */
   it("TodayScreen (pre-day, no BeyondDay started) has no violations beyond the known color-contrast exception", async () => {
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("heading", { level: 2, name: "Start your BEYOND Day" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { level: 2, name: "Start your day" })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);
@@ -120,7 +121,7 @@ describe("accessibility (real browser, axe-core)", () => {
     await recordRecommendation(priorDay.id, prior.recommendation);
     const currentDay = await startDay();
     await submitCheckIn(currentDay.id, GREEN);
-    const screen = await render(<TodayScreen />);
+    const screen = await render(<DailyControls />);
     await expect.element(screen.getByRole("heading", { level: 2, name: "Attention" })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
@@ -142,7 +143,7 @@ describe("accessibility (real browser, axe-core)", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     await startWorkout(day.id, "A", "STANDARD");
-    const screen = await render(<TodayScreen onOpenTrain={() => {}} />);
+    const screen = await render(<DailyControls onOpenTrain={() => {}} />);
     await openTodayTools(screen);
     await screen.getByRole("button", { name: "Open END DAY" }).click();
     await screen.getByRole("button", { name: "END DAY" }).click();
@@ -282,7 +283,9 @@ describe("accessibility (real browser, axe-core)", () => {
    */
   it("MoreScreen (MENU) has no violations beyond the known color-contrast exception", async () => {
     const screen = await render(<MoreScreen />);
-    await expect.element(screen.getByRole("button", { name: "Open MISSIONS & OBLIGATIONS" })).toBeVisible();
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await expect.element((await commandResult(screen, "MISSIONS & OBLIGATIONS"))).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);

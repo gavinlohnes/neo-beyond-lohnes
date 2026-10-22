@@ -1,3 +1,4 @@
+import { openCommandPanel } from "./helpers/command";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { db } from "../../src/persistence/db";
@@ -102,6 +103,8 @@ describe("MoreScreen restore picker — no accept filter (Drop 01 acceptance ret
     getAdvisoryNotesMock.mockClear();
     await startDay();
     const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
     await screen.getByText("Diagnostic detail", { exact: true }).click();
     await expect.element(screen.getByText("YES", { exact: true })).toBeVisible();
     // "YES" lands one await before refresh()'s last read — wait for that

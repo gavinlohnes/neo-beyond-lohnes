@@ -1,3 +1,4 @@
+import { commandResult } from "./helpers/command";
 import { afterEach, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
@@ -29,9 +30,9 @@ afterEach(async () => { await cleanup(); vi.mocked(saveWeeklyReview).mockClear()
 for (const width of [320, 360, 412]) it(`saves a note/focus via TODAY→Review, retains a tab-detour draft and reloads at ${width}px`, async () => {
   await page.viewport(width, 800); await seed(); const recommendations = await db.recommendations.toArray();
   let screen = await render(<App />);
-  await expect.element(screen.getByRole("button", { name: "OPEN REVIEW", exact: true })).toBeVisible();
+  await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
-  await screen.getByRole("button", { name: "OPEN REVIEW", exact: true }).click();
+  await (await commandResult(screen, "REVIEW")).click();
   const panel = screen.getByRole("region", { name: "Weekly review", exact: true });
   // The Weekly Review dashboard (2026-10-18) shows the week's logged protein in its headline.
   await expect.element(panel.getByText("Recorded on 1 day", { exact: true })).toBeVisible();
@@ -48,7 +49,7 @@ for (const width of [320, 360, 412]) it(`saves a note/focus via TODAY→Review, 
   await expect.element(screen.getByRole("button", { name: "OPEN REVIEW", exact: true })).not.toBeInTheDocument();
   await cleanup(); screen = await render(<App />);
   await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-  await screen.getByRole("button", { name: "Open REVIEW", exact: true }).click();
+  await (await commandResult(screen, "REVIEW")).click();
   const reloaded = screen.getByRole("region", { name: "Weekly review", exact: true });
   await reloaded.getByText(/Saved review · starting/).click();
   await expect.element(reloaded.getByRole("textbox", { name: "What stood out? (optional)", exact: true })).toHaveValue("Protein logging was easier on shift.");
