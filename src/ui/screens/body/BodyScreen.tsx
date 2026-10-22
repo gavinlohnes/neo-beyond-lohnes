@@ -2499,8 +2499,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         {mealReadFailed && <p role="alert">Could not refresh BODY.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
       </section>
       <section aria-label="Progress"><h2 className="section-label">PROGRESS</h2>
-        <div className="body-progress-card"><h3>WEIGHT</h3><p>{weightHistory.at(-1) ? `${weightHistory.at(-1)!.weightLbs} lb${weightHistory.length < 2 ? ` · ${formatShortDate(weightHistory.at(-1)!.recordedAt)}` : ""}` : "No weight recorded yet."}</p><WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
-          <div className="body-progress-pair">{onLogWeight && <button type="button" className="btn-secondary" disabled={busy} onClick={onLogWeight}>LOG WEIGHT</button>}<button type="button" className="btn-secondary" onClick={() => showProgress("weight")}>WEIGHT HISTORY</button></div></div>
+        <div className="body-progress-card"><h3>WEIGHT</h3><p>{weightHistory.at(-1) ? `${weightHistory.at(-1)!.weightLbs} lb${weightHistory.length < 2 ? ` · ${weighInDate(weightHistory.at(-1)!.recordedAt)}` : ""}` : "No weight recorded yet."}</p><WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
+          <div className="body-progress-pair">{onLogWeight && <button type="button" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={onLogWeight}>LOG WEIGHT</button>}<button type="button" className="btn-secondary" onClick={() => showProgress("weight")}>WEIGHT HISTORY</button></div></div>
         <button type="button" className="btn-secondary body-progress-card" onClick={onOpenTrainingRecords}>TRAINING · RECORDS</button>
         <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); }}>{label}</button>)}</div>
       </section>
@@ -2698,3 +2698,6 @@ function alreadyLoggedAll(repeat: RepeatableMeals, today: readonly NutritionEntr
   });
 }
 
+/** A lone weigh-in's date: "Oct 22", with the year when it isn't this year. */
+const weighInDate = (at: string) => new Date(at).getFullYear() === new Date().getFullYear()
+  ? formatShortDate(at) : new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });

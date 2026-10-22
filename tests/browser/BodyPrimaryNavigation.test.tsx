@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import { App } from "../../src/app/App";
-import { startDay, updateSchedulePattern } from "../../src/application/commands";
+import { logBodyweight, startDay, updateSchedulePattern } from "../../src/application/commands";
 import { getEffectiveHydrationTotal } from "../../src/application/queries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
@@ -125,5 +125,17 @@ describe("FRICTION-001 slice 2 — BODY home", () => {
     await weight.getByRole("button", { name: "CLOSE", exact: true }).click();
     // One weigh-in has no trend line yet, so the card carries its date (the trend line does once there are two).
     await expect.element(screen.getByText(/^181 lb · [A-Z][a-z]{2} \d{1,2}$/)).toBeVisible();
+  });
+
+  it("dates a lone weigh-in from an earlier year with its year, and returns focus to LOG WEIGHT", async () => {
+    vi.setSystemTime(new Date(2025, 5, 3, 9)); await logBodyweight(dayId, 200);
+    vi.setSystemTime(new Date(2026, 9, 12, 22));
+    const screen = await render(<App />);
+    await tapBody(screen);
+    await expect.element(screen.getByText("200 lb · Jun 3, 2025", { exact: true })).toBeVisible();
+    const log = screen.getByRole("button", { name: "LOG WEIGHT", exact: true });
+    await log.click();
+    await screen.getByRole("dialog", { name: "BODYWEIGHT", exact: true }).getByRole("button", { name: "CLOSE", exact: true }).click();
+    await expect.poll(() => document.activeElement).toBe(log.element());
   });
 });
