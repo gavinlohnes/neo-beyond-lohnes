@@ -18,3 +18,12 @@ This is partial objective evidence, not final acceptance or a review verdict. Lo
 BODY, TRAIN, COMMAND grouping, hidden-feature preferences, labels, locked-ruling amendments,
 full regression and independent exact-head review remain. Physical-device/Safari/screen-reader
 checks are unclaimed. No Engine, command, event, schema or backup-format changes in item 1.
+
+## Item 2
+
+The same production script now captures MEAL, NEW MEAL (opt-in save), SERVINGS, QUICK ADD,
+LOG, SLEEP, BODYWEIGHT, NOTE, URGE and water confirmation at all four widths. It creates a
+synthetic saved meal through the real UI, confirms the serving sheet stays mounted across a
+chip change, then runs visible water undo and offline save/cold reload. Results are in
+`item-2-acceptance.json`. Latest focused meal/receipt tests: 20 passed; prior broad regression:
+108 passed / one existing skip. Build/architecture pass. No physical-device claim.

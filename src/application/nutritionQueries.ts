@@ -44,7 +44,7 @@ export async function getSavedMeals(options: { includeArchived?: boolean } = {})
  * voiding a log removes its evidence automatically, and no duplicate
  * mutable "last used" field can drift from the event stream.
  */
-export async function getRecentSavedMeals(limit = Number.POSITIVE_INFINITY): Promise<SavedMeal[]> {
+export async function getRecentSavedMeals(limit = Number.POSITIVE_INFINITY, now?: Date): Promise<SavedMeal[]> {
   const safeLimit = Math.max(0, Math.floor(limit));
   if (safeLimit === 0) return [];
 
@@ -68,13 +68,26 @@ export async function getRecentSavedMeals(limit = Number.POSITIVE_INFINITY): Pro
       return byRecency !== 0 ? byRecency : a.id.localeCompare(b.id);
     });
   for (const event of survivingLogs) {
-    if (!latestUseByMealId.has(event.payload.savedMealId)) {
+    if (event.payload.savedMealId && !latestUseByMealId.has(event.payload.savedMealId)) {
       latestUseByMealId.set(event.payload.savedMealId, event);
     }
   }
 
+  const scores = new Map<string, number>();
+  if (now) {
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    for (const event of survivingLogs) {
+      const id = event.payload.savedMealId;
+      if (!id) continue;
+      const at = new Date(event.recordedAt);
+      const distance = Math.abs(minutes - (at.getHours() * 60 + at.getMinutes()));
+      if (Math.min(distance, 1440 - distance) <= 180) scores.set(id, (scores.get(id) ?? 0) + 1);
+    }
+  }
   return [...meals]
     .sort((a, b) => {
+      const byTimeOfDay = (scores.get(b.id) ?? 0) - (scores.get(a.id) ?? 0);
+      if (byTimeOfDay) return byTimeOfDay;
       const aUse = latestUseByMealId.get(a.id);
       const bUse = latestUseByMealId.get(b.id);
       if (aUse && bUse) {
@@ -105,7 +118,7 @@ export async function getRecentSavedMeals(limit = Number.POSITIVE_INFINITY): Pro
 export interface NutritionEntry {
   rootEventId: string;
   headEventId: string;
-  savedMealId: string;
+  savedMealId: string | null;
   name: string;
   originalCalories: number;
   originalProteinG: number;
@@ -220,8 +233,7 @@ export async function getPreviousDayMeals(
     if (entries.length === 0) continue;
     const loggable = new Map((await getSavedMeals()).map((m) => [m.id, m.name]));
     const meals = entries
-      .filter((e) => loggable.has(e.savedMealId))
-      .map((e) => ({ savedMealId: e.savedMealId, name: loggable.get(e.savedMealId)! }));
+      .flatMap((e) => e.savedMealId && loggable.has(e.savedMealId) ? [{ savedMealId: e.savedMealId, name: loggable.get(e.savedMealId)! }] : []);
     if (meals.length === 0) return undefined;
     const currentWindow = mostRecentBoundaryAtOrBefore(now);
     const previousWindow = mostRecentBoundaryAtOrBefore(new Date(currentWindow.getTime() - 1));
@@ -231,4 +243,9 @@ export async function getPreviousDayMeals(
     return { dayStartedAt: day.startedAt, isPreviousLivedDay, meals };
   }
   return undefined;
+}
+
+/** Read-only ranking of surviving personal logs, using circular local-clock distance. */
+export async function getLikelySavedMeals(now = new Date(), limit = 4): Promise<SavedMeal[]> {
+  return getRecentSavedMeals(limit, now);
 }

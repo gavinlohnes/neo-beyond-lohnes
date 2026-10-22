@@ -251,7 +251,8 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
+export function BodyScreen({ sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
+  sheetFocus?: "water" | "sleep" | "weight" | "urge" | "meal";
   evidenceRequest?: HealthEvidenceRequest | null;
   onHealthHistory?: ((destination: HealthHistoryDestination) => void) | undefined;
   focus?: BodyFocus | null;
@@ -357,7 +358,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
     setMealFocused(focus === "meal" || focus === "foodLookup");
     setBodyMealsOpen(focus === "meal" || focus === "foodLookup");
     setProgressOpen(false);
-    if (focus === "meal" || focus === "foodLookup") setAddMealOpen(true);
+    if (!sheetFocus && (focus === "meal" || focus === "foodLookup")) setAddMealOpen(true);
     if (focus === "foodLookup") { setLookupReachable(true); setLookupOpen(true); }
     if (focus === "sleep") setSleepOpen(true);
     if (focus === "weight") setBodyweightOpen(true);
@@ -559,7 +560,7 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
   const proteinCorrected = proteinEntries.find((entry) => entry.headEventId === proteinCorrectingId);
   const proteinCorrectionChanged = proteinCorrectingId !== null && (!proteinCorrected || proteinCorrectionInput !== String(proteinCorrected.effectiveGrams));
   const mealDirty = Boolean(foodQuery.trim() || Object.values(newMealForm).some((value) => value.trim()) || mealEditChanged || mealCorrectionChanged);
-  useSessionDraft("body", mealDirty || Boolean(sleepHoursInput || sleepMinutesInput || input) || waterCorrectionChanged
+  useSessionDraft(`${sheetFocus ? "sheet" : "body"}-body`, mealDirty || Boolean(sleepHoursInput || sleepMinutesInput || input) || waterCorrectionChanged
     || sleepCorrectionChanged || bodyweightCorrectionChanged || proteinCorrectionChanged);
   useEffect(() => {
     onMealJourneyStateChange?.({ busy: busy || foodSearchBusy, dirty: mealDirty });
@@ -1617,194 +1618,113 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
     </>
   );
 
-  return (
-    <div className={`screen fade-in body-field${mealFocused ? " body-meals" : ""}${waterFocused ? " body-water" : ""}`}>
-      <OperatorHeader destination="body" headingId="meal-surface-heading" focusable>
-        {waterFocused ? "BODY // WATER" : mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // DAILY RECORD"}
-      </OperatorHeader>
-      <div hidden={waterFocused || mealsVisible || progressOpen}>
-        <HealthDayBrowser selected={healthDay} disabled={busy || foodSearchBusy} visible={visible && !waterFocused && !mealsVisible && !progressOpen}
-          refreshKey={dataRevision} onHistory={onHealthHistory} onSelect={(start) => { if (!busyRef.current && !foodSearchBusyRef.current) setHealthDay(start); }}
-          onExplore={showProgress} onInspect={(selection) => openSources(selection, true)} />
-      </div>
-      {!waterFocused && !mealsVisible && !progressOpen && !healthDay && (readingsReady ? <HealthOverview day={day}
-        onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries}
-        weight={weightHistory} mealEntries={mealEntries}
-        calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged from meals · no calorie target"}
-        proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} /> : <p className="meta" role="status">Loading recorded information…</p>)}
-      <div className="meal-navigation">
-        <button id="body-meals-entry" className="btn-secondary" disabled={busy || foodSearchBusy}
-          onClick={() => { if (progressOpen) { setProgressOpen(false); restoreOrigin(); } else showMealSurface(!mealsVisible); }}>
-          {waterFocused || mealsVisible || progressOpen ? "DAILY RECORD" : "OPEN MEALS"}
-        </button>
-        {!waterFocused && !mealsVisible && !progressOpen && <button id="body-progress-entry" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={() => showProgress()}>YOUR PROGRESS</button>}
-        {onReturnToToday && <button id="meal-return" className="btn-secondary"
-          disabled={busy || foodSearchBusy} onClick={onReturnToToday}>{returnLabel}</button>}
-      </div>
-      <section hidden={!progressOpen || sourceSelection !== null} aria-labelledby="health-progress-heading">
-        <h2 id="health-progress-heading" tabIndex={-1} className="insights-title">Your progress</h2>
-        {progressVisited && <BodyProgress active={visible && progressOpen && sourceSelection === null} refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} request={progressRequest} returnFocusRequest={progressReturnFocus}
-          onSources={(selection) => openSources(selection)} />}
-      </section>
-      {sourceSelection && <div hidden={!progressOpen}><HealthSources selection={sourceSelection} revision={dataRevision} active={visible && progressOpen} activeDayId={healthDay === null ? day?.id : undefined}
-        returnLabel={sourceOrigin.current?.daily ? "BACK TO DAY" : "BACK TO TREND"}
-        onClose={closeSources} onHistory={onHealthHistory}
-        onCorrect={(record) => { setProgressOpen(false); inspectRecord(record); }} /></div>}
-      <div hidden={mealsVisible || progressOpen || healthDay !== null}>
-      {waterFocused && <p className="water-focused-total" role="status">{readingsReady ? `${total} oz recorded today` : "Reading today’s water…"}</p>}
-      {mealReadFailed && <div role="alert"><p className="meta">{mealError}</p><button className="btn-secondary" disabled={busy || foodSearchBusy} onClick={() => void retryMealRead()}>RETRY READINGS</button></div>}
-      {/* WATER — one consolidated instrument row: current total, fastest
-          actions, custom fallback, collapsed history. FIELD ALPHA Phase
-          3: .equipment-row, not .card — a logging tool, not a floating
-          card; .tool-label, not .eyebrow — that's reserved for identity. */}
-      <div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.water}>
-        <p className="tool-label" style={{ marginBottom: 12 }}>HYDRATION</p>
-        {/* Overdrive Phase 18 (PHONE WIDTH + BODY GLANCEABILITY): quick-add
-            and "repeat last" used to share one flexWrap row — at a real
-            narrow-Android content width their combined minimum widths sat
-            right at the wrap boundary, an unpredictable break. Separate
-            rows remove the ambiguity entirely and read as two distinct
-            fast actions rather than one crowded strip. */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
-          {WATER_QUICK_ADD_OZ.map((amount) => (
-            <button
-              key={amount}
-              className="btn-secondary"
-              style={{ flex: 1, minWidth: 60 }}
-              disabled={busy}
-              onClick={() => void handleLogWaterAmount(amount)}
-            >
-              +{amount} oz
+  const weightSheetContent = (<div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.weight}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+            <p className="tool-label" style={{ margin: 0 }}>BODYWEIGHT</p>
+            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} disabled={busy} onClick={closeTool}>
+              DONE
             </button>
-          ))}
-        </div>
-        <button
-          className="btn-secondary"
-          style={{ marginBottom: 8 }}
-          disabled={busy || lastWaterAmount === null}
-          onClick={() => lastWaterAmount !== null && void handleLogWaterAmount(lastWaterAmount)}
-        >
-          {lastWaterAmount !== null ? `Repeat last (${lastWaterAmount} oz)` : "Repeat last"}
-        </button>
-        <FieldDisclosure
-          summary={`${waterManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
-          open={waterManualOpen}
-          onToggle={setWaterManualOpen}
-        >
-          <div className="field">
-            <label htmlFor="water-custom-oz"><span>Custom (oz)</span></label>
-            <input id="water-custom-oz" type="number" min={0} value={input} onChange={(e) => setInput(e.target.value)} className="input" />
           </div>
-          <button className="btn-primary" disabled={busy} onClick={() => void handleLog()}>
-            LOG WATER
-          </button>
-        </FieldDisclosure>
-        {writeFailure === "WATER" && (
-          <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
-            {BODY_WRITE_FAILED}
-          </p>
-        )}
-        {waterConfirmation && (
-          <ConfirmBanner
-            message={waterConfirmation.message}
-            actionLabel={waterUndoOpen ? "UNDO" : "CORRECT"}
-            disabled={waterUndoOpen && busy}
-            onAction={() => {
-              if (waterUndoOpen) {
-                void handleUndoLog("WATER");
-                return;
-              }
-              const entry = entries.find((e) => e.headEventId === waterConfirmation.headEventId);
-              if (entry) {
-                setCorrectingId(entry.headEventId);
-                setCorrectionInput(String(entry.effectiveAmountOz));
-                setError(null);
-                setWaterHistoryOpen(true);
-              }
-            }}
-          />
-        )}
-        {renderUndoFailure("WATER")}
-        {bodyLogDeleted?.log === "WATER" && <p className="meta" role="status">{bodyLogDeleted.message}</p>}
-        {error && <p className="meta meta--error" style={{ marginTop: 8 }}>{error}</p>}
-
-        {entries.length > 0 && (
-          <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <FieldDisclosure
-              summary={`${waterHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${entries.length})`}
-              open={waterHistoryOpen}
-              onToggle={setWaterHistoryOpen}
+          {lastBodyweightEntry && (
+            <p className="meta" style={{ marginBottom: 12 }}>
+              Logged {new Date(lastBodyweightEntry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+            </p>
+          )}
+          {/* Overdrive Phase 18 (BODY GLANCEABILITY): manual entry only has
+              a genuine fast-path alternative once a prior weight exists
+              (SAME AS LAST) — collapsed by default in that case, always
+              open when it's the only path (first-ever log). */}
+          {lastBodyweightEntry && (
+            <button
+              className="btn-secondary"
+              style={{ marginBottom: 12 }}
+              disabled={busy}
+              onClick={() => void handleLogBodyweightAmount(lastBodyweightEntry.effectiveWeightLbs)}
             >
-                <p className="card-body" style={{ marginBottom: 12 }}>
-                  Correcting or deleting an entry keeps the original on record — nothing is erased.
-                </p>
-                {entries.map((entry) => (
-                  <div
-                    key={entry.rootEventId}
-                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveAmountOz} oz</p>
-                        <p className="meta">
-                          {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
-                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                        </p>
-                      </div>
-                      <button
-                        className="btn-secondary"
-                        style={{ width: "auto", padding: "8px 14px" }}
-                        onClick={() => {
-                          setCorrectingId(entry.headEventId);
-                          setCorrectionInput(String(entry.effectiveAmountOz));
-                          setError(null);
-                          setBodyLogNotice(null);
-                        }}
-                      >
-                        CORRECT
-                      </button>
-                    </div>
-                    {correctingId === entry.headEventId && (
-                      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                        <input
-                          type="number"
-                          id="water-correction" aria-label="Corrected amount (oz)"
-                          value={correctionInput}
-                          onChange={(e) => { setCorrectionInput(e.target.value); setBodyLogNotice(null); }}
-                          className="input"
-                          style={{ flex: 1 }}
-                        />
-                        <button
-                          className="btn-primary"
-                          style={{ width: "auto", padding: "10px 16px" }}
-                          disabled={busy}
-                          onClick={() => void handleCorrect(entry)}
-                        >
-                          SAVE
+              SAME AS LAST ({lastBodyweightEntry.effectiveWeightLbs} lbs)
+            </button>
+          )}
+          {lastBodyweightEntry ? (
+            <FieldDisclosure
+              summary={`${bodyweightManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
+              open={bodyweightManualOpen}
+              onToggle={setBodyweightManualOpen}
+            >
+              {bodyweightManualEntryForm}
+            </FieldDisclosure>
+          ) : (
+            <div className="fade-in">{bodyweightManualEntryForm}</div>
+          )}
+          {writeFailure === "BODYWEIGHT" && (
+            <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
+              {BODY_WRITE_FAILED}
+            </p>
+          )}
+          {bodyweightConfirmation && (
+            <ConfirmBanner
+              message={bodyweightConfirmation.message}
+              actionLabel={bodyweightUndoOpen ? "UNDO" : "CORRECT"}
+              disabled={bodyweightUndoOpen && busy}
+              onAction={() => {
+                if (bodyweightUndoOpen) {
+                  void handleUndoLog("BODYWEIGHT");
+                  return;
+                }
+                const entry = bodyweightEntries.find((e) => e.headEventId === bodyweightConfirmation.headEventId);
+                if (entry) beginCorrectBodyweight(entry);
+              }}
+            />
+          )}
+          {renderUndoFailure("BODYWEIGHT")}
+          {bodyLogDeleted?.log === "BODYWEIGHT" && <p className="meta" role="status">{bodyLogDeleted.message}</p>}
+
+          {bodyweightEntries.length > 0 && (
+            <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+              <FieldDisclosure
+                summary={`${bodyweightHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${bodyweightEntries.length})`}
+                open={bodyweightHistoryOpen}
+                onToggle={setBodyweightHistoryOpen}
+              >
+                  {bodyweightEntries.map((entry) => (
+                    <div
+                      key={entry.rootEventId}
+                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveWeightLbs} lbs</p>
+                          <p className="meta">
+                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                          </p>
+                        </div>
+                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectBodyweight(entry)}>
+                          CORRECT
                         </button>
                       </div>
-                    )}
-                    {correctingId === entry.headEventId && <>
-                      {bodyLogNotice?.log === "WATER" && <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{bodyLogNotice.message}</p>}
-                      <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
-                        onConfirm={() => void handleDeleteBodyLog("WATER", entry.rootEventId, async (dayId) => describeWaterDeleted(entry.effectiveAmountOz, await getEffectiveHydrationTotal(dayId)))}>
-                        DELETE
-                      </HoldButton>
-                    </>}
-                  </div>
-                ))}
-            </FieldDisclosure>
-            {waterHistoryOpen && <button className="btn-secondary" disabled={busy} onClick={() => { setWaterHistoryOpen(false); restoreOrigin(); }}>BACK TO RECORDS</button>}
-          </div>
-        )}
-      </div>
+                      {bodyweightCorrectingId === entry.headEventId && (
+                        <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                          <input type="number" id="weight-correction" aria-label="Corrected weight (lbs)" value={bodyweightCorrectionInput} onChange={(e) => { setBodyweightCorrectionInput(e.target.value); setBodyLogNotice(null); }} className="input" style={{ flex: 1 }} />
+                          <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
+                            SAVE
+                          </button>
+                        </div>
+                      )}
+                      {bodyweightCorrectingId === entry.headEventId && <>
+                        {bodyLogNotice?.log === "BODYWEIGHT" && <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{bodyLogNotice.message}</p>}
+                        <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
+                          onConfirm={() => void handleDeleteBodyLog("BODYWEIGHT", entry.rootEventId, async () => describeBodyweightDeleted(entry.effectiveWeightLbs))}>
+                          DELETE
+                        </HoldButton>
+                      </>}
+                    </div>
+                  ))}
+              </FieldDisclosure>
+            </div>
+          )}
 
-      {/* SLEEP — FIELD ALPHA Phase 3: .equipment-row, not .card; leads
-          with the reading itself (duration, .recommendation-title, same
-          value-forward register HYDRATION already used) with kind/
-          timestamp as .meta machine metadata underneath, instead of one
-          undifferentiated prose sentence. */}
-      <div id={SHORTCUT_ANCHOR_IDS.sleep}>
+        </div>);
+  const sleepSheetContent = (<div id={SHORTCUT_ANCHOR_IDS.sleep}>
       {sleepOpen ? (
         <div className="equipment-row">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
@@ -2021,271 +1941,150 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
       ) : (
         null
       )}
-      </div>
-
-      {/* BODYWEIGHT — FIELD ALPHA Phase 3: same reading-forward pattern as SLEEP. */}
-      {bodyweightOpen ? (
-        <div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.weight}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
-            <p className="tool-label" style={{ margin: 0 }}>BODYWEIGHT</p>
-            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} disabled={busy} onClick={closeTool}>
-              DONE
-            </button>
-          </div>
-          {lastBodyweightEntry && (
-            <p className="meta" style={{ marginBottom: 12 }}>
-              Logged {new Date(lastBodyweightEntry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
-            </p>
-          )}
-          {/* Overdrive Phase 18 (BODY GLANCEABILITY): manual entry only has
-              a genuine fast-path alternative once a prior weight exists
-              (SAME AS LAST) — collapsed by default in that case, always
-              open when it's the only path (first-ever log). */}
-          {lastBodyweightEntry && (
+      </div>);
+  const waterSheetContent = (<div className="equipment-row" id={SHORTCUT_ANCHOR_IDS.water}>
+        <p className="tool-label" style={{ marginBottom: 12 }}>HYDRATION</p>
+        {/* Overdrive Phase 18 (PHONE WIDTH + BODY GLANCEABILITY): quick-add
+            and "repeat last" used to share one flexWrap row — at a real
+            narrow-Android content width their combined minimum widths sat
+            right at the wrap boundary, an unpredictable break. Separate
+            rows remove the ambiguity entirely and read as two distinct
+            fast actions rather than one crowded strip. */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
+          {WATER_QUICK_ADD_OZ.map((amount) => (
             <button
+              key={amount}
               className="btn-secondary"
-              style={{ marginBottom: 12 }}
+              style={{ flex: 1, minWidth: 60 }}
               disabled={busy}
-              onClick={() => void handleLogBodyweightAmount(lastBodyweightEntry.effectiveWeightLbs)}
+              onClick={() => void handleLogWaterAmount(amount)}
             >
-              SAME AS LAST ({lastBodyweightEntry.effectiveWeightLbs} lbs)
+              +{amount} oz
             </button>
-          )}
-          {lastBodyweightEntry ? (
-            <FieldDisclosure
-              summary={`${bodyweightManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
-              open={bodyweightManualOpen}
-              onToggle={setBodyweightManualOpen}
-            >
-              {bodyweightManualEntryForm}
-            </FieldDisclosure>
-          ) : (
-            <div className="fade-in">{bodyweightManualEntryForm}</div>
-          )}
-          {writeFailure === "BODYWEIGHT" && (
-            <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
-              {BODY_WRITE_FAILED}
-            </p>
-          )}
-          {bodyweightConfirmation && (
-            <ConfirmBanner
-              message={bodyweightConfirmation.message}
-              actionLabel={bodyweightUndoOpen ? "UNDO" : "CORRECT"}
-              disabled={bodyweightUndoOpen && busy}
-              onAction={() => {
-                if (bodyweightUndoOpen) {
-                  void handleUndoLog("BODYWEIGHT");
-                  return;
-                }
-                const entry = bodyweightEntries.find((e) => e.headEventId === bodyweightConfirmation.headEventId);
-                if (entry) beginCorrectBodyweight(entry);
-              }}
-            />
-          )}
-          {renderUndoFailure("BODYWEIGHT")}
-          {bodyLogDeleted?.log === "BODYWEIGHT" && <p className="meta" role="status">{bodyLogDeleted.message}</p>}
+          ))}
+        </div>
+        <button
+          className="btn-secondary"
+          style={{ marginBottom: 8 }}
+          disabled={busy || lastWaterAmount === null}
+          onClick={() => lastWaterAmount !== null && void handleLogWaterAmount(lastWaterAmount)}
+        >
+          {lastWaterAmount !== null ? `Repeat last (${lastWaterAmount} oz)` : "Repeat last"}
+        </button>
+        <FieldDisclosure
+          summary={`${waterManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
+          open={waterManualOpen}
+          onToggle={setWaterManualOpen}
+        >
+          <div className="field">
+            <label htmlFor="water-custom-oz"><span>Custom (oz)</span></label>
+            <input id="water-custom-oz" type="number" min={0} value={input} onChange={(e) => setInput(e.target.value)} className="input" />
+          </div>
+          <button className="btn-primary" disabled={busy} onClick={() => void handleLog()}>
+            LOG WATER
+          </button>
+        </FieldDisclosure>
+        {writeFailure === "WATER" && (
+          <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
+            {BODY_WRITE_FAILED}
+          </p>
+        )}
+        {waterConfirmation && (
+          <ConfirmBanner
+            message={waterConfirmation.message}
+            actionLabel={waterUndoOpen ? "UNDO" : "CORRECT"}
+            disabled={waterUndoOpen && busy}
+            onAction={() => {
+              if (waterUndoOpen) {
+                void handleUndoLog("WATER");
+                return;
+              }
+              const entry = entries.find((e) => e.headEventId === waterConfirmation.headEventId);
+              if (entry) {
+                setCorrectingId(entry.headEventId);
+                setCorrectionInput(String(entry.effectiveAmountOz));
+                setError(null);
+                setWaterHistoryOpen(true);
+              }
+            }}
+          />
+        )}
+        {renderUndoFailure("WATER")}
+        {bodyLogDeleted?.log === "WATER" && <p className="meta" role="status">{bodyLogDeleted.message}</p>}
+        {error && <p className="meta meta--error" style={{ marginTop: 8 }}>{error}</p>}
 
-          {bodyweightEntries.length > 0 && (
-            <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-              <FieldDisclosure
-                summary={`${bodyweightHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${bodyweightEntries.length})`}
-                open={bodyweightHistoryOpen}
-                onToggle={setBodyweightHistoryOpen}
-              >
-                  {bodyweightEntries.map((entry) => (
-                    <div
-                      key={entry.rootEventId}
-                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveWeightLbs} lbs</p>
-                          <p className="meta">
-                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
-                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                          </p>
-                        </div>
-                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectBodyweight(entry)}>
-                          CORRECT
+        {entries.length > 0 && (
+          <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+            <FieldDisclosure
+              summary={`${waterHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${entries.length})`}
+              open={waterHistoryOpen}
+              onToggle={setWaterHistoryOpen}
+            >
+                <p className="card-body" style={{ marginBottom: 12 }}>
+                  Correcting or deleting an entry keeps the original on record — nothing is erased.
+                </p>
+                {entries.map((entry) => (
+                  <div
+                    key={entry.rootEventId}
+                    style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveAmountOz} oz</p>
+                        <p className="meta">
+                          {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                          {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                        </p>
+                      </div>
+                      <button
+                        className="btn-secondary"
+                        style={{ width: "auto", padding: "8px 14px" }}
+                        onClick={() => {
+                          setCorrectingId(entry.headEventId);
+                          setCorrectionInput(String(entry.effectiveAmountOz));
+                          setError(null);
+                          setBodyLogNotice(null);
+                        }}
+                      >
+                        CORRECT
+                      </button>
+                    </div>
+                    {correctingId === entry.headEventId && (
+                      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                        <input
+                          type="number"
+                          id="water-correction" aria-label="Corrected amount (oz)"
+                          value={correctionInput}
+                          onChange={(e) => { setCorrectionInput(e.target.value); setBodyLogNotice(null); }}
+                          className="input"
+                          style={{ flex: 1 }}
+                        />
+                        <button
+                          className="btn-primary"
+                          style={{ width: "auto", padding: "10px 16px" }}
+                          disabled={busy}
+                          onClick={() => void handleCorrect(entry)}
+                        >
+                          SAVE
                         </button>
                       </div>
-                      {bodyweightCorrectingId === entry.headEventId && (
-                        <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                          <input type="number" id="weight-correction" aria-label="Corrected weight (lbs)" value={bodyweightCorrectionInput} onChange={(e) => { setBodyweightCorrectionInput(e.target.value); setBodyLogNotice(null); }} className="input" style={{ flex: 1 }} />
-                          <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveBodyweightCorrection()}>
-                            SAVE
-                          </button>
-                        </div>
-                      )}
-                      {bodyweightCorrectingId === entry.headEventId && <>
-                        {bodyLogNotice?.log === "BODYWEIGHT" && <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{bodyLogNotice.message}</p>}
-                        <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
-                          onConfirm={() => void handleDeleteBodyLog("BODYWEIGHT", entry.rootEventId, async () => describeBodyweightDeleted(entry.effectiveWeightLbs))}>
-                          DELETE
-                        </HoldButton>
-                      </>}
-                    </div>
-                  ))}
-              </FieldDisclosure>
-            </div>
-          )}
-
-        </div>
-      ) : (
-        null
-      )}
-
-      {/* PROTEIN — FIELD ALPHA Phase 3: same value-forward pattern as
-          HYDRATION (a cumulative daily total, not a single point-in-time
-          reading like SLEEP/BODYWEIGHT). */}
-      {proteinOpen ? (
-        <div className="equipment-row" id="body-protein">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
-            <p className="tool-label" style={{ margin: 0 }}>PROTEIN</p>
-            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} disabled={busy} onClick={closeTool}>
-              DONE
-            </button>
-          </div>
-          {lastProteinEntry && (
-            <button
-              className="btn-secondary"
-              style={{ marginBottom: 12 }}
-              disabled={busy}
-              onClick={() => void handleLogProteinAmount(lastProteinEntry.effectiveGrams)}
-            >
-              REPEAT LAST ({lastProteinEntry.effectiveGrams} g)
-            </button>
-          )}
-          {lastProteinEntry ? (
-            <FieldDisclosure
-              summary={`${proteinManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
-              open={proteinManualOpen}
-              onToggle={setProteinManualOpen}
-            >
-              {proteinManualEntryForm}
+                    )}
+                    {correctingId === entry.headEventId && <>
+                      {bodyLogNotice?.log === "WATER" && <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{bodyLogNotice.message}</p>}
+                      <HoldButton className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} hint={BODY_LOG_DELETE_HINT}
+                        onConfirm={() => void handleDeleteBodyLog("WATER", entry.rootEventId, async (dayId) => describeWaterDeleted(entry.effectiveAmountOz, await getEffectiveHydrationTotal(dayId)))}>
+                        DELETE
+                      </HoldButton>
+                    </>}
+                  </div>
+                ))}
             </FieldDisclosure>
-          ) : (
-            <div className="fade-in">{proteinManualEntryForm}</div>
-          )}
-          {writeFailure === "PROTEIN" && (
-            <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
-              {BODY_WRITE_FAILED}
-            </p>
-          )}
-          {proteinConfirmation && (
-            <ConfirmBanner
-              message={proteinConfirmation.message}
-              actionLabel={proteinUndoOpen ? "UNDO" : "CORRECT"}
-              disabled={proteinUndoOpen && busy}
-              onAction={() => {
-                if (proteinUndoOpen) {
-                  void handleUndoLog("PROTEIN");
-                  return;
-                }
-                const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId);
-                if (entry) beginCorrectProtein(entry);
-              }}
-            />
-          )}
-          {renderUndoFailure("PROTEIN")}
-          {proteinDeletedMessage && (
-            <p className="meta" role="status" style={{ marginTop: 8 }}>{proteinDeletedMessage}</p>
-          )}
-          {renderSameFood("PROTEIN")}
+            {waterHistoryOpen && <button className="btn-secondary" disabled={busy} onClick={() => { setWaterHistoryOpen(false); restoreOrigin(); }}>BACK TO RECORDS</button>}
+          </div>
+        )}
+      </div>);
 
-          {proteinEntries.length > 0 && (
-            <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-              <FieldDisclosure
-                summary={`${proteinHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${proteinEntries.length})`}
-                open={proteinHistoryOpen}
-                onToggle={setProteinHistoryOpen}
-              >
-                  {proteinEntries.map((entry) => (
-                    <div
-                      key={entry.rootEventId}
-                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveGrams} g</p>
-                          <p className="meta">
-                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
-                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
-                          </p>
-                        </div>
-                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectProtein(entry)}>
-                          CORRECT
-                        </button>
-                      </div>
-                      {proteinCorrectingId === entry.headEventId && (
-                        <div style={{ marginTop: 12 }}>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            <input
-                              type="number"
-                              id="protein-correction" aria-label="Corrected amount (g)"
-                              value={proteinCorrectionInput}
-                              onChange={(e) => {
-                                setProteinCorrectionInput(e.target.value);
-                                setProteinEditNotice(null);
-                              }}
-                              className="input"
-                              style={{ flex: 1 }}
-                            />
-                            <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
-                              SAVE
-                            </button>
-                          </div>
-                          {proteinEditNotice && (
-                            <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{proteinEditNotice}</p>
-                          )}
-                          {/* DROP 1.5: the same hold-to-confirm DELETE meals have. */}
-                          <HoldButton
-                            className="btn-secondary"
-                            style={{ marginTop: 8 }}
-                            disabled={busy}
-                            hint={PROTEIN_DELETE_HINT}
-                            onConfirm={() => void handleDeleteProteinLog(entry)}
-                          >
-                            DELETE
-                          </HoldButton>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-              </FieldDisclosure>
-            </div>
-          )}
-        </div>
-      ) : (
-        null
-      )}
-
-      <div className="health-actions" role="group" aria-label="More recording actions">
-        <button className="btn-secondary" aria-label="Open SLEEP" disabled={busy} onClick={() => openTool("SLEEP")}>SLEEP</button>
-        <button className="btn-secondary" aria-label="Open BODYWEIGHT" disabled={busy} onClick={() => openTool("WEIGHT")}>BODYWEIGHT</button>
-        <button className="btn-secondary" aria-label="Open PROTEIN ONLY" disabled={busy} onClick={() => openTool("PROTEIN")}>PROTEIN ONLY</button>
-      </div>
-      {readingsReady && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries}
-        protein={proteinEntries} meals={mealEntries} disabled={busy || foodSearchBusy} onInspect={inspectRecord} />}
-      {!waterFocused && <ImportedSleepEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} />}
-      <FieldDisclosure summary={`${otherToolsOpen ? "HIDE" : "SHOW"} OTHER BODY TOOLS`} open={otherToolsOpen} onToggle={setOtherToolsOpen}>
-        <QuitTracker initiallyOpen={focus === "urge"} openRequest={focus === "urge" ? focusRequest : 0} />
-        <p className="meta">Nutrition targets are editable in COMMAND → Settings.</p>
-      </FieldDisclosure>
-      </div>
-
-      {/* MEAL MEMORY — NUTRITION-001 (High-Risk Drop): a small reusable
-          preset library ("the sandwich I always make"), not a food
-          database — no barcode, no recipe, no serving ontology, no goal.
-          Logging a SavedMeal snapshots its current macros into immutable
-          MEAL_LOGGED history (hydration-style correction chain); editing
-          or archiving the preset afterward never touches a past log.
-          Effective meal protein also counts toward Minimum Day, alongside
-          protein-only logs (application/queries.ts's getMinimumDayStatus) —
-          this station's own reading stays a meal COUNT, distinct from the
-          PROTEIN station's own gram total above, so the two are never
-          visually conflated. */}
-      <div hidden={!mealsVisible || progressOpen} className="equipment-row" id={SHORTCUT_ANCHOR_IDS.meal}>
+  const mealSheetContent = (<div hidden={!mealsVisible || progressOpen} className="equipment-row" id={SHORTCUT_ANCHOR_IDS.meal}>
         {mealsVisible && <div className="meal-summary" role="group" aria-label="Nutrition recorded today">
           <p className="card-title">{nutritionTargets?.calorieTargetKcal
             ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal)
@@ -2490,10 +2289,10 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
               "New meal",
             )}
             <p className="meta">Save this meal and record it today, or keep it for later.</p>
-            <button className="btn-primary" disabled={busy} onClick={() => void handleCreateSavedMeal(true)}>
+            {sheetFocus !== "meal" && <button className="btn-primary" disabled={busy} onClick={() => void handleCreateSavedMeal(true)}>
               SAVE &amp; LOG
-            </button>
-            <button className="btn-secondary" disabled={busy} onClick={() => void handleCreateSavedMeal(false)}>SAVE ONLY</button>
+            </button>}
+            <button className="btn-secondary" disabled={busy} onClick={() => void handleCreateSavedMeal(false)}>{sheetFocus === "meal" ? "SAVE FOR REUSE" : "SAVE ONLY"}</button>
           </MealSection>
         </FieldDisclosure>
 
@@ -2594,14 +2393,222 @@ export function BodyScreen({ focus = null, focusRequest = 0, overviewRequest = {
             </FieldDisclosure>
           </div>
         )}
+      </div>);
+  if (sheetFocus) return <div className="body-log-sheet">{sheetFocus === "water" ? waterSheetContent : sheetFocus === "sleep" ? sleepSheetContent : sheetFocus === "weight" ? weightSheetContent : sheetFocus === "meal" ? mealSheetContent : <QuitTracker initiallyOpen openRequest={focusRequest} onBusyChange={onMealJourneyInFlightChange} />}</div>;
+  return (
+    <div className={`screen fade-in body-field${mealFocused ? " body-meals" : ""}${waterFocused ? " body-water" : ""}`}>
+      <OperatorHeader destination="body" headingId="meal-surface-heading" focusable>
+        {waterFocused ? "BODY // WATER" : mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // DAILY RECORD"}
+      </OperatorHeader>
+      <div hidden={waterFocused || mealsVisible || progressOpen}>
+        <HealthDayBrowser selected={healthDay} disabled={busy || foodSearchBusy} visible={visible && !waterFocused && !mealsVisible && !progressOpen}
+          refreshKey={dataRevision} onHistory={onHealthHistory} onSelect={(start) => { if (!busyRef.current && !foodSearchBusyRef.current) setHealthDay(start); }}
+          onExplore={showProgress} onInspect={(selection) => openSources(selection, true)} />
       </div>
+      {!waterFocused && !mealsVisible && !progressOpen && !healthDay && (readingsReady ? <HealthOverview day={day}
+        onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries}
+        weight={weightHistory} mealEntries={mealEntries}
+        calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged from meals · no calorie target"}
+        proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} /> : <p className="meta" role="status">Loading recorded information…</p>)}
+      <div className="meal-navigation">
+        <button id="body-meals-entry" className="btn-secondary" disabled={busy || foodSearchBusy}
+          onClick={() => { if (progressOpen) { setProgressOpen(false); restoreOrigin(); } else showMealSurface(!mealsVisible); }}>
+          {waterFocused || mealsVisible || progressOpen ? "DAILY RECORD" : "OPEN MEALS"}
+        </button>
+        {!waterFocused && !mealsVisible && !progressOpen && <button id="body-progress-entry" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={() => showProgress()}>YOUR PROGRESS</button>}
+        {onReturnToToday && <button id="meal-return" className="btn-secondary"
+          disabled={busy || foodSearchBusy} onClick={onReturnToToday}>{returnLabel}</button>}
+      </div>
+      <section hidden={!progressOpen || sourceSelection !== null} aria-labelledby="health-progress-heading">
+        <h2 id="health-progress-heading" tabIndex={-1} className="insights-title">Your progress</h2>
+        {progressVisited && <BodyProgress active={visible && progressOpen && sourceSelection === null} refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} request={progressRequest} returnFocusRequest={progressReturnFocus}
+          onSources={(selection) => openSources(selection)} />}
+      </section>
+      {sourceSelection && <div hidden={!progressOpen}><HealthSources selection={sourceSelection} revision={dataRevision} active={visible && progressOpen} activeDayId={healthDay === null ? day?.id : undefined}
+        returnLabel={sourceOrigin.current?.daily ? "BACK TO DAY" : "BACK TO TREND"}
+        onClose={closeSources} onHistory={onHealthHistory}
+        onCorrect={(record) => { setProgressOpen(false); inspectRecord(record); }} /></div>}
+      <div hidden={mealsVisible || progressOpen || healthDay !== null}>
+      {waterFocused && <p className="water-focused-total" role="status">{readingsReady ? `${total} oz recorded today` : "Reading today’s water…"}</p>}
+      {mealReadFailed && <div role="alert"><p className="meta">{mealError}</p><button className="btn-secondary" disabled={busy || foodSearchBusy} onClick={() => void retryMealRead()}>RETRY READINGS</button></div>}
+      {/* WATER — one consolidated instrument row: current total, fastest
+          actions, custom fallback, collapsed history. FIELD ALPHA Phase
+          3: .equipment-row, not .card — a logging tool, not a floating
+          card; .tool-label, not .eyebrow — that's reserved for identity. */}
+      {waterSheetContent}
+
+      {/* SLEEP — FIELD ALPHA Phase 3: .equipment-row, not .card; leads
+          with the reading itself (duration, .recommendation-title, same
+          value-forward register HYDRATION already used) with kind/
+          timestamp as .meta machine metadata underneath, instead of one
+          undifferentiated prose sentence. */}
+      {sleepSheetContent}
+
+      {/* BODYWEIGHT — FIELD ALPHA Phase 3: same reading-forward pattern as SLEEP. */}
+      {bodyweightOpen ? (
+        weightSheetContent
+      ) : (
+        null
+      )}
+
+      {/* PROTEIN — FIELD ALPHA Phase 3: same value-forward pattern as
+          HYDRATION (a cumulative daily total, not a single point-in-time
+          reading like SLEEP/BODYWEIGHT). */}
+      {proteinOpen ? (
+        <div className="equipment-row" id="body-protein">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+            <p className="tool-label" style={{ margin: 0 }}>PROTEIN</p>
+            <button type="button" className="chip" style={{ flex: "none", padding: "8px 14px" }} disabled={busy} onClick={closeTool}>
+              DONE
+            </button>
+          </div>
+          {lastProteinEntry && (
+            <button
+              className="btn-secondary"
+              style={{ marginBottom: 12 }}
+              disabled={busy}
+              onClick={() => void handleLogProteinAmount(lastProteinEntry.effectiveGrams)}
+            >
+              REPEAT LAST ({lastProteinEntry.effectiveGrams} g)
+            </button>
+          )}
+          {lastProteinEntry ? (
+            <FieldDisclosure
+              summary={`${proteinManualOpen ? "HIDE" : "SHOW"} MANUAL ENTRY`}
+              open={proteinManualOpen}
+              onToggle={setProteinManualOpen}
+            >
+              {proteinManualEntryForm}
+            </FieldDisclosure>
+          ) : (
+            <div className="fade-in">{proteinManualEntryForm}</div>
+          )}
+          {writeFailure === "PROTEIN" && (
+            <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
+              {BODY_WRITE_FAILED}
+            </p>
+          )}
+          {proteinConfirmation && (
+            <ConfirmBanner
+              message={proteinConfirmation.message}
+              actionLabel={proteinUndoOpen ? "UNDO" : "CORRECT"}
+              disabled={proteinUndoOpen && busy}
+              onAction={() => {
+                if (proteinUndoOpen) {
+                  void handleUndoLog("PROTEIN");
+                  return;
+                }
+                const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId);
+                if (entry) beginCorrectProtein(entry);
+              }}
+            />
+          )}
+          {renderUndoFailure("PROTEIN")}
+          {proteinDeletedMessage && (
+            <p className="meta" role="status" style={{ marginTop: 8 }}>{proteinDeletedMessage}</p>
+          )}
+          {renderSameFood("PROTEIN")}
+
+          {proteinEntries.length > 0 && (
+            <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+              <FieldDisclosure
+                summary={`${proteinHistoryOpen ? "HIDE" : "SHOW"} TODAY'S ENTRIES (${proteinEntries.length})`}
+                open={proteinHistoryOpen}
+                onToggle={setProteinHistoryOpen}
+              >
+                  {proteinEntries.map((entry) => (
+                    <div
+                      key={entry.rootEventId}
+                      style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--radius)", padding: 12, marginBottom: 8 }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveGrams} g</p>
+                          <p className="meta">
+                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                            {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
+                          </p>
+                        </div>
+                        <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={() => beginCorrectProtein(entry)}>
+                          CORRECT
+                        </button>
+                      </div>
+                      {proteinCorrectingId === entry.headEventId && (
+                        <div style={{ marginTop: 12 }}>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <input
+                              type="number"
+                              id="protein-correction" aria-label="Corrected amount (g)"
+                              value={proteinCorrectionInput}
+                              onChange={(e) => {
+                                setProteinCorrectionInput(e.target.value);
+                                setProteinEditNotice(null);
+                              }}
+                              className="input"
+                              style={{ flex: 1 }}
+                            />
+                            <button className="btn-primary" style={{ width: "auto", padding: "10px 16px" }} disabled={busy} onClick={() => void handleSaveProteinCorrection()}>
+                              SAVE
+                            </button>
+                          </div>
+                          {proteinEditNotice && (
+                            <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{proteinEditNotice}</p>
+                          )}
+                          {/* DROP 1.5: the same hold-to-confirm DELETE meals have. */}
+                          <HoldButton
+                            className="btn-secondary"
+                            style={{ marginTop: 8 }}
+                            disabled={busy}
+                            hint={PROTEIN_DELETE_HINT}
+                            onConfirm={() => void handleDeleteProteinLog(entry)}
+                          >
+                            DELETE
+                          </HoldButton>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </FieldDisclosure>
+            </div>
+          )}
+        </div>
+      ) : (
+        null
+      )}
+
+      <div className="health-actions" role="group" aria-label="More recording actions">
+        <button className="btn-secondary" aria-label="Open SLEEP" disabled={busy} onClick={() => openTool("SLEEP")}>SLEEP</button>
+        <button className="btn-secondary" aria-label="Open BODYWEIGHT" disabled={busy} onClick={() => openTool("WEIGHT")}>BODYWEIGHT</button>
+        <button className="btn-secondary" aria-label="Open PROTEIN ONLY" disabled={busy} onClick={() => openTool("PROTEIN")}>PROTEIN ONLY</button>
+      </div>
+      {readingsReady && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries}
+        protein={proteinEntries} meals={mealEntries} disabled={busy || foodSearchBusy} onInspect={inspectRecord} />}
+      {!waterFocused && <ImportedSleepEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} />}
+      <FieldDisclosure summary={`${otherToolsOpen ? "HIDE" : "SHOW"} OTHER BODY TOOLS`} open={otherToolsOpen} onToggle={setOtherToolsOpen}>
+        <QuitTracker initiallyOpen={focus === "urge"} openRequest={focus === "urge" ? focusRequest : 0} />
+        <p className="meta">Nutrition targets are editable in COMMAND → Settings.</p>
+      </FieldDisclosure>
+      </div>
+
+      {/* MEAL MEMORY — NUTRITION-001 (High-Risk Drop): a small reusable
+          preset library ("the sandwich I always make"), not a food
+          database — no barcode, no recipe, no serving ontology, no goal.
+          Logging a SavedMeal snapshots its current macros into immutable
+          MEAL_LOGGED history (hydration-style correction chain); editing
+          or archiving the preset afterward never touches a past log.
+          Effective meal protein also counts toward Minimum Day, alongside
+          protein-only logs (application/queries.ts's getMinimumDayStatus) —
+          this station's own reading stays a meal COUNT, distinct from the
+          PROTEIN station's own gram total above, so the two are never
+          visually conflated. */}
+      {mealSheetContent}
     </div>
   );
 }
 
 function alreadyLoggedAll(repeat: RepeatableMeals, today: readonly NutritionEntry[]): boolean {
   const remaining = new Map<string, number>();
-  for (const e of today) remaining.set(e.savedMealId, (remaining.get(e.savedMealId) ?? 0) + 1);
+  for (const e of today) if (e.savedMealId) remaining.set(e.savedMealId, (remaining.get(e.savedMealId) ?? 0) + 1);
   return repeat.meals.every((m) => {
     const left = remaining.get(m.savedMealId) ?? 0;
     if (left === 0) return false;

@@ -98,13 +98,13 @@ it('keeps note entry available as a sheet over TODAY with its draft after close'
   await startDay();
   const screen = await render(<App />);
   await screen.getByRole('button', { name: 'Open LOG', exact: true }).click();
-  await screen.getByRole('dialog').getByRole('button', { name: /^Note/ }).click();
+  await screen.getByRole('dialog').getByRole('button', { name: 'NOTE', exact: true }).click();
   const sheet = screen.getByRole('dialog', { name: 'NOTE', exact: true });
   const input = sheet.getByRole('textbox', { name: 'Capture a thought' });
   await input.fill('Keep this interruption-safe note');
   await sheet.getByRole('button', { name: 'CLOSE', exact: true }).click();
   await screen.getByRole('button', { name: 'Open LOG', exact: true }).click();
-  await screen.getByRole('dialog').getByRole('button', { name: /^Note/ }).click();
+  await screen.getByRole('dialog').getByRole('button', { name: 'NOTE', exact: true }).click();
   await expect.element(input).toHaveValue('Keep this interruption-safe note');
   await expect.element(screen.getByRole('button', { name: 'TODAY', exact: true })).toHaveAttribute('aria-current', 'page');
   expect(await db.captureItems.count()).toBe(0);

@@ -13,3 +13,12 @@
 .redesign-today > section { margin-bottom: 18px; }
 .redesign-today .console-guidance .btn-primary { background: var(--action-primary-bg); color: var(--action-primary-text); }
 .redesign-today .today-numbers { margin-top: 16px; }
+.record-meal-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 8px; }
+.record-meal-row button { margin: 0; min-width: 0; }
+.record-meal-row strong, .record-meal-row .meta { display: block; overflow-wrap: anywhere; }
+.save-meal-choice { display: flex; align-items: center; gap: 10px; margin: 12px 0; min-height: 44px; }
+.body-log-sheet { padding: 0; }
+.log-sheet .cc-amounts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.log-sheet .cc-amounts button { min-width: 0; padding-inline: 4px; }
+.redesign-toast { max-height: 38dvh; overflow-y: auto; }
+.record-receipt + .record-receipt { border-top: 1px solid var(--border-strong); margin-top: 8px; }

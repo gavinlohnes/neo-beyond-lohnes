@@ -1,4 +1,4 @@
-# REDESIGN-001 — item 1 delivered; item 2 needs a meal-contract ruling
+# REDESIGN-001 — items 1–2 delivered; item 3 next
 
 Owner-approved PROTECTED objective: [frozen brief](REDESIGN-001.md), frozen reference
 `prototype/redesign/index.html`. Builder Codex. Branch `codex/redesign-001`;
@@ -24,17 +24,29 @@ Evidence: [item 1](../screenshots/redesign-001/README.md). Full verify is NOT cl
 intermediate stage: legacy presentation assertions need reconciliation with the approved new
 paths during the remaining items. No tests weakened; existing tests are untouched.
 
-**Blocking ruling before item 2:** existing `application/nutritionCommands.ts:logMeal` accepts
-only a saved preset ID and snapshots exactly one serving. There is no canonical unsaved-meal or
-fractional-serving command. The brief requires those paths, but explicitly excludes command/event
-semantic changes. Gavin has been asked whether a bounded canonical meal-command extension is
-approved, preserving old records, correction/undo, schemas and backup compatibility, or whether
-those paths should be deferred. Do not fabricate preset provenance, create hidden disposable
-presets, or misuse corrections as portion logging to bypass this exclusion. No such extension
-has been implemented. Keep the uploaded brief unchanged; record the owner ruling in this handoff
-and its PR when received. Work scope items in order.
+**Owner ruling, 2026-10-22:** Gavin explicitly approved the bounded canonical meal command and
+provenance extension needed for unsaved meals and fractional servings (“Yes, I approve”). This
+supersedes the brief's command/event exclusion only for those meal paths. Existing records,
+correction/undo, Engine rules, schemas, backup formats and compatibility remain protected.
+No disposable hidden preset, fabricated provenance or correction-as-portion workaround.
+The frozen attachments stay unchanged. The bounded extension is now implemented and tested.
 
-**Next:** resolve that ruling, then item 2 log sheets, followed by items 3–8 in order. Commit/push
+**Item 2 delivered:** one stable shell-level record sheet over the current tab, including shortcuts.
+Water adds 8/12/16/24, repeat, custom entry and history. Meal search, four deterministic likely-now
+presets, one-serving LOG, portions, quick add and opt-in saved presets use canonical commands.
+Manual provenance is null; portion logs snapshot scaled canonical macros. Optional saving and its
+log commit atomically. Existing correction/void chains, duplicate questions and native backup
+round-trip remain. No migration, Engine, backup format or dependency change. Reused sleep,
+weight, water-history and urge forms retain state; note input is retained. Native Back and focus
+return are guarded during writes. Separate water/meal/note receipts retain independent undo.
+
+**Item 2 verification:** broad focused regression 108 passed/one existing skip; subsequent focused
+meal/shortcut/receipt tests 53 passed/one existing skip; final receipt-stack/meal tests 20 passed.
+TypeScript/build and architecture pass. Built PWA passes 320/360/390/412, modes/order, all log
+sheet screenshots, saved-preset creation, stable portion sheet, visible water undo and offline
+save/cold reload. `scripts/verify-redesign-001.mjs`; `docs/screenshots/redesign-001/`.
+
+**Next:** item 3 BODY, then items 4–8 in order. Commit/push
 and update PR Handoff after each item. Full final verify and acceptance evidence, then mark ready
 and stop for independent Claude exact-head review. Never merge.
 

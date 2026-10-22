@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { preview } from "vite";
 import { chromium } from "playwright";
 
-// Item 1 evidence only. Remaining REDESIGN-001 acceptance is intentionally not claimed.
+// Production evidence for completed stages; final full-objective acceptance remains separate.
 const out = "docs/screenshots/redesign-001";
 await mkdir(out, { recursive: true });
 const server = await preview({ preview: { host: "127.0.0.1", port: 5192, strictPort: true } });
@@ -32,9 +32,43 @@ try {
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       await page.screenshot({ path: `${out}/${width}-${phase.toLowerCase()}.png`, fullPage: true });
     }
+    await page.getByRole("button", { name: "Log a meal", exact: true }).click();
+    await page.getByRole("button", { name: "New meal", exact: true }).click();
+    const newMeal = page.getByRole("dialog", { name: "NEW MEAL", exact: true });
+    await newMeal.getByRole("textbox", { name: "New meal name" }).fill("Shift dinner");
+    await newMeal.getByRole("spinbutton", { name: "New meal Calories", exact: true }).fill("600");
+    await newMeal.getByRole("spinbutton", { name: "New meal Protein (g)", exact: true }).fill("40");
+    await newMeal.getByRole("checkbox", { name: "Save for next time" }).check();
+    await page.screenshot({ path: `${out}/${width}-new-meal.png` });
+    await newMeal.getByRole("button", { name: "LOG", exact: true }).click();
+    await page.locator(".record-receipt").waitFor();
+    await page.getByRole("button", { name: "DISMISS", exact: true }).click();
+    await page.waitForFunction(() => !history.state?.recordSheet);
+    await page.getByRole("button", { name: "Log a meal", exact: true }).click();
+    await page.getByRole("button", { name: "Log Shift dinner", exact: true }).waitFor();
+    await page.screenshot({ path: `${out}/${width}-meal.png` });
+    await page.getByRole("button", { name: "Servings for Shift dinner", exact: true }).click();
+    const portion = await page.locator("dialog[open]").elementHandle();
+    await page.getByRole("button", { name: "0.5 servings", exact: true }).click();
+    assert.ok(await portion.evaluate((node) => node.isConnected && node.open));
+    await page.screenshot({ path: `${out}/${width}-servings.png` });
+    await page.getByRole("button", { name: "BACK TO MY MEALS", exact: true }).click();
+    await page.getByRole("button", { name: "QUICK ADD", exact: true }).click();
+    await page.screenshot({ path: `${out}/${width}-quick-add.png` });
+    await page.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
+    await page.waitForFunction(() => !history.state?.recordSheet);
+    for (const kind of ["LOG", "SLEEP", "BODYWEIGHT", "NOTE", "URGE"]) {
+      await page.getByRole("button", { name: "Open LOG", exact: true }).click();
+      if (kind !== "LOG") await page.getByRole("dialog").getByRole("button", { name: kind, exact: true }).click();
+      await page.screenshot({ path: `${out}/${width}-${kind.toLowerCase()}.png` });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+      await page.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
+      await page.waitForFunction(() => !history.state?.recordSheet);
+    }
     await page.getByRole("button", { name: "Log water", exact: true }).click();
     await page.getByRole("dialog", { name: "WATER", exact: true }).getByRole("button", { name: "+8 oz", exact: true }).click();
     await page.locator(".redesign-toast").waitFor();
+    await page.screenshot({ path: `${out}/${width}-water-confirmation.png` });
     const bounds = await page.evaluate(() => ({ receipt: document.querySelector(".redesign-toast").getBoundingClientRect().bottom, nav: document.querySelector(".shell-nav").getBoundingClientRect().top }));
     assert.ok(bounds.receipt <= bounds.nav);
     await page.getByRole("button", { name: "UNDO", exact: true }).click();
@@ -55,5 +89,5 @@ try {
     await context.close();
     console.log(`PASS ${width}: TODAY order, four modes, check-in sheet, visible water undo, offline cold reload`);
   }
-  await writeFile(`${out}/item-1-acceptance.json`, JSON.stringify(evidence, null, 2) + "\n");
+  await writeFile(`${out}/item-2-acceptance.json`, JSON.stringify(evidence, null, 2) + "\n");
 } finally { await browser.close(); await server.close(); }

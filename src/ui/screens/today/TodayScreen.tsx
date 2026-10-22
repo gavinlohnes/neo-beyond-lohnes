@@ -1,3 +1,5 @@
+import { LogActions } from "../../components/RecordSheets";
+import type { RecordSheetTarget } from "../../recordSheets";
 import { LogSheet } from "../../components/LogSheet";
 import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { CheckInSheet } from "./CheckInSheet";
@@ -245,6 +247,7 @@ export function TodayScreen({
   onOpenHealthEvidence,
   onOpenWeeklyReview,
   onOpenSystems,
+  onOpenRecordSheet,
   operationsOnly = false,
   toolsRequest = 0,
   openToolsOnMount = false,
@@ -266,6 +269,7 @@ export function TodayScreen({
   onOpenHealthEvidence?: (metric: "water" | "protein" | "weight" | "sleep") => void;
   onOpenBody?: (target?: BodyFocus) => void;
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
+  onOpenRecordSheet?: (target: RecordSheetTarget) => void;
   operationsOnly?: boolean;
   toolsRequest?: number;
   /** Drop 2: open with TOOLS expanded (MORE's capture link lands in it). */
@@ -2280,7 +2284,7 @@ export function TodayScreen({
             </p>
             {shiftClock.countdown && <p className="visually-hidden status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>}
           </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><h2>Mode not set</h2><p className="meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} hasAction={false} /></section>}
-    <section aria-label="Log">        <ConsoleControls
+    <section aria-label="Log">{onOpenRecordSheet ? <LogActions open={onOpenRecordSheet} /> : <ConsoleControls
           onWaterVisibilityChange={setWaterControlsVisible}
           onLogWater={handleMinimumDayLogWater}
           lastWaterAmount={lastWaterAmount}
@@ -2302,7 +2306,7 @@ export function TodayScreen({
             note: openFastCapture,
             ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
           }}
-        /></section>
+        />}</section>
 
       <section className="console-guidance" aria-label="Next action">
         {dominant === "OPERATION_CONFLICT" ? <>      {day && dominant === "OPERATION_CONFLICT" && (

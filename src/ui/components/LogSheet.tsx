@@ -19,9 +19,18 @@ export function LogSheet({ open, title, onClose, canClose, children }: {
       requestAnimationFrame(() => { if (target?.isConnected && target.getClientRects().length) target.focus({ preventScroll: true }); });
     }
   }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const frame = requestAnimationFrame(() => {
+      const body = dialog.current?.querySelector<HTMLElement>(".log-sheet__body");
+      const target = [...(body?.querySelectorAll<HTMLElement>('[aria-pressed="true"], input:not([type="checkbox"]), textarea, button') ?? [])].find((element) => element.getClientRects().length);
+      if (target?.getClientRects().length) target.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [open, title]);
   useEffect(() => () => { dialog.current?.close(); }, []);
   return <dialog ref={dialog} className="log-sheet" aria-label={title} onCancel={(event) => { event.preventDefault(); close(); }}>
-    <header className="log-sheet__header"><h2>{title}</h2><button type="button" className="btn-secondary" onClick={close}>CLOSE</button></header>
+    <header className="log-sheet__header"><h2>{title}</h2><button type="button" className="btn-secondary" disabled={canClose ? !canClose() : false} onClick={close}>CLOSE</button></header>
     <div className="log-sheet__body">{children}</div>
   </dialog>;
 }

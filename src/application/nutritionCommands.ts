@@ -1,3 +1,4 @@
+import { writeAtomically } from "./atomicWrite";
 import { db } from "../persistence/db";
 import { logEvent, newId } from "./commands";
 import type {
@@ -108,34 +109,52 @@ export interface MealLogResult {
  * (parseSavedMeal) and eligibility (archivedAt) semantics getSavedMeals
  * already uses, rather than a second, parallel definition of "valid."
  */
-export async function logMeal(beyondDayId: string, savedMealId: string): Promise<MealLogResult> {
-  const raw = await db.savedMeals.get(savedMealId);
-  if (!raw) throw notFound(savedMealId);
-  const meal = parseSavedMeal(raw);
-  if (!meal) {
-    throw new Error(`SAVED_MEAL_INVALID: saved meal ${savedMealId} failed validation and cannot be logged.`);
-  }
-  if (meal.archivedAt) {
-    throw new Error(`SAVED_MEAL_ARCHIVED: saved meal ${savedMealId} has been archived and can no longer be logged.`);
-  }
+export async function logMeal(beyondDayId: string, savedMealId: string, servings = 1): Promise<MealLogResult> {
+  if (![0.5, 1, 1.5, 2].includes(servings)) throw new Error("Choose a supported serving amount.");
+  return writeAtomically(["savedMeals"], async () => {
+    const raw = await db.savedMeals.get(savedMealId);
+    if (!raw) throw notFound(savedMealId);
+    const meal = parseSavedMeal(raw);
+    if (!meal) {
+      throw new Error(`SAVED_MEAL_INVALID: saved meal ${savedMealId} failed validation and cannot be logged.`);
+    }
+    if (meal.archivedAt) {
+      throw new Error(`SAVED_MEAL_ARCHIVED: saved meal ${savedMealId} has been archived and can no longer be logged.`);
+    }
 
-  const correlationId = newId();
-  const snapshot = {
-    savedMealId: meal.id,
-    name: meal.name,
-    calories: meal.calories,
-    proteinG: meal.proteinG,
-    carbsG: meal.carbsG,
-    fatG: meal.fatG,
-  };
-  const eventId = await logEvent(
-    beyondDayId,
-    "MEAL_LOGGED",
-    { commandId: correlationId, ...snapshot },
-    "USER",
-    correlationId,
-  );
-  return { eventId, name: meal.name, calories: meal.calories, proteinG: meal.proteinG, carbsG: meal.carbsG, fatG: meal.fatG };
+    const correlationId = newId();
+    const snapshot = {
+      savedMealId: meal.id,
+      ...(servings !== 1 ? { servings } : {}),
+      name: meal.name,
+      calories: meal.calories * servings,
+      proteinG: meal.proteinG * servings,
+      carbsG: meal.carbsG * servings,
+      fatG: meal.fatG * servings,
+    };
+    const eventId = await logEvent(
+      beyondDayId,
+      "MEAL_LOGGED",
+      { commandId: correlationId, ...snapshot },
+      "USER",
+      correlationId,
+    );
+    return { eventId, name: meal.name, calories: snapshot.calories, proteinG: snapshot.proteinG, carbsG: snapshot.carbsG, fatG: snapshot.fatG };
+  });
+}
+
+/** REDESIGN-001 owner exception: explicit manual snapshot, optionally saved atomically.
+ * Preset provenance is null unless the operator actually chose to create one.
+ * Existing MEAL_LOGGED correction/void chains and backup formats are unchanged.
+ */
+export async function logManualMeal(beyondDayId: string, input: SavedMealInput, saveForNextTime = false): Promise<MealLogResult> {
+  const parsed = savedMealInputSchema.parse(input);
+  return writeAtomically(["savedMeals"], async () => {
+    const preset = saveForNextTime ? await createSavedMeal(parsed) : null;
+    const commandId = newId();
+    const eventId = await logEvent(beyondDayId, "MEAL_LOGGED", { commandId, savedMealId: preset?.id ?? null, ...parsed }, "USER", commandId);
+    return { eventId, ...parsed };
+  });
 }
 
 /**
