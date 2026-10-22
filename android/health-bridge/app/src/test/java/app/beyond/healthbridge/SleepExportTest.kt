@@ -31,6 +31,6 @@ class SleepExportTest {
         val stage = ExportStage(r.start, r.end, "LIGHT")
         sleepExport(listOf(r.copy(stages = listOf(stage, stage))), start, end, end, "0.1.0")
     }
-    @Test(expected = IllegalArgumentException::class) fun refusesExcessiveWindow() { sleepExport(emptyList(), start.minusSeconds(1), end, end, "0.1.0") }
-    @Test(expected = IllegalArgumentException::class) fun refusesExcessiveRecords() { sleepExport((0..500).map { record().copy(id = "r-$it") }, start, end, end, "0.1.0") }
+    @Test(expected = IllegalArgumentException::class) fun refusesExcessiveWindow() { sleepExport(emptyList(), end.minusSeconds(MAX_EXPORT_DAYS * 86400 + 1), end, end, "0.1.0") }
+    @Test(expected = IllegalArgumentException::class) fun refusesExcessiveRecords() { sleepExport((0..2000).map { record().copy(id = "r-$it") }, start, end, end, "0.1.0") }
 }

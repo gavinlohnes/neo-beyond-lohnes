@@ -44,8 +44,9 @@ class ActivityExportTest {
     @Test(expected = IllegalArgumentException::class) fun refusesDuplicateHours() { export(listOf(hour(), hour())) }
     @Test(expected = IllegalArgumentException::class) fun refusesUnalignedHours() { export(listOf(hour().copy(start = start.plusSeconds(60)))) }
     @Test(expected = IllegalArgumentException::class) fun refusesHoursOutsideWindow() { export(listOf(hour(7 * 24))) }
+    @Test fun acceptsAYearWindow() { assertEquals(0, JSONObject(activityExport(emptyList(), emptyList(), end.minusSeconds(MAX_EXPORT_DAYS * 86400), end, end, "0.5.0")).getJSONArray("hours").length()) }
     @Test(expected = IllegalArgumentException::class) fun refusesImplausibleHeartRate() { export(listOf(hour().copy(heartRateMax = 400))) }
     @Test(expected = IllegalArgumentException::class) fun refusesOtherSources() { export(rest = listOf(resting().copy(origin = "phone"))) }
     @Test(expected = IllegalArgumentException::class) fun refusesDuplicateRestingIds() { export(rest = listOf(resting(), resting())) }
-    @Test(expected = IllegalArgumentException::class) fun refusesExcessiveWindow() { activityExport(emptyList(), emptyList(), start.minusSeconds(3600), end, end, "0.2.0") }
+    @Test(expected = IllegalArgumentException::class) fun refusesExcessiveWindow() { activityExport(emptyList(), emptyList(), end.minusSeconds(MAX_EXPORT_DAYS * 86400 + 3600), end, end, "0.2.0") }
 }

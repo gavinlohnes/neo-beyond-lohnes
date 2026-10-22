@@ -5,7 +5,7 @@
  * Loaded into the generated service worker with Workbox's importScripts.
  */
 const SHARE_CACHE = "beyond-shared-health";
-const MAX_SHARED_BYTES = 2 * 1024 * 1024;
+const MAX_SHARED_BYTES = 8 * 1024 * 1024; // matches the import limit (GARMIN-003 history)
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);

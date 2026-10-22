@@ -1,3 +1,20 @@
+# GARMIN-003 — Garmin fills in your record
+
+The owner approved this on 2026-10-22: brief [GARMIN-003.md](GARMIN-003.md), rulings in
+UX_DECISIONS → GARMIN-003. GARMIN-002 is complete (#262, #263, #264), with SEND TO BEYOND
+verified on the phone.
+
+Current: PR 1 (history) on `ccr-83cf6ed8-ug1ym9` from master:
+- the helper's READ FULL HISTORY with "Access past data" (0.5.0);
+- both file formats and SEND TO BEYOND accept up to 366 days / 8 MiB.
+
+Next: PR 2 (Garmin sleep becomes a sleep entry, approach A), then PR 3 (baselines). Display
+changes and advice wording wait for #261 (REDESIGN-001, Codex). Each PR needs an independent
+review and the owner's merge.
+
+---
+Previous checkpoint:
+
 # GARMIN-002 — Garmin steps and heart rate in BEYOND
 
 Owner-approved PROTECTED objective; brief [GARMIN-002.md](GARMIN-002.md). Builder: Claude Code.

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { importSleepSnapshot, previewSleepImport } from "../../../application/externalSleepCommands";
 import { getSleepImportDays } from "../../../application/externalSleepQueries";
-import { sleepDurations, type SleepSnapshot } from "../../../domain/health/sleepImport";
+import { MAX_SLEEP_FILE_BYTES, sleepDurations, type SleepSnapshot } from "../../../domain/health/sleepImport";
 import type { BeyondDay } from "../../../domain/common/types";
 import { ImportedSleepEvidence } from "./ImportedSleepEvidence";
 import { ImportedActivityEvidence } from "./ImportedActivityEvidence";
@@ -37,7 +37,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
     const ready: string[] = [];
     try {
       for (const file of files) {
-        if (file.size > MAX_ACTIVITY_FILE_BYTES) throw new Error("This file is too large for a BEYOND Health Bridge export. Nothing was imported.");
+        if (file.size > Math.max(MAX_ACTIVITY_FILE_BYTES, MAX_SLEEP_FILE_BYTES)) throw new Error("This file is too large for a BEYOND Health Bridge export. Nothing was imported.");
         const raw = await file.text();
         // The helper saves sleep and steps/heart rate as separate files; either can be chosen here.
         if (raw.includes(`"${ACTIVITY_IMPORT_FORMAT}"`)) {

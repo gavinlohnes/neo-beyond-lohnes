@@ -1,9 +1,10 @@
 /** GARMIN-001: portable evidence, never a canonical sleep log or Engine input. */
 export const SLEEP_IMPORT_FORMAT = "BEYOND_HEALTH_CONNECT_SLEEP";
 export const GARMIN_ORIGIN = "com.garmin.android.apps.connectmobile";
-export const MAX_SLEEP_FILE_BYTES = 2 * 1024 * 1024;
-export const MAX_SLEEP_RECORDS = 500;
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+// GARMIN-003: a full-history export covers up to 366 days; the daily read still covers 7.
+export const MAX_SLEEP_FILE_BYTES = 8 * 1024 * 1024;
+export const MAX_SLEEP_RECORDS = 2000;
+export const MAX_EXPORT_WINDOW_MS = 366 * 24 * 60 * 60 * 1000;
 export const SLEEP_STAGES = ["AWAKE", "SLEEPING", "OUT_OF_BED", "LIGHT", "DEEP", "REM", "AWAKE_IN_BED", "UNKNOWN"] as const;
 export interface SleepStage { startTime: string; endTime: string; type: (typeof SLEEP_STAGES)[number] }
 export interface ExternalSleep {
@@ -70,7 +71,7 @@ export function validateSleepSnapshot(value: unknown): SleepSnapshot {
   const window = object(root.window, ["startTime", "endTime"]);
   const startTime = instant(window.startTime), endTime = instant(window.endTime);
   const from = Date.parse(startTime), to = Date.parse(endTime);
-  if (to <= from || to - from > WEEK_MS || to > Date.parse(exportedAt)) return fail();
+  if (to <= from || to - from > MAX_EXPORT_WINDOW_MS || to > Date.parse(exportedAt)) return fail();
   if (!Array.isArray(root.records) || root.records.length > MAX_SLEEP_RECORDS) return fail();
   const seen = new Set<string>(); let stageCount = 0;
   const records = root.records.map((input): ExternalSleep => {
@@ -81,7 +82,7 @@ export function validateSleepSnapshot(value: unknown): SleepSnapshot {
     const start = instant(r.startTime), end = instant(r.endTime), modified = instant(r.lastModifiedTime);
     const begin = Date.parse(start), finish = Date.parse(end);
     if (finish <= begin || begin < from || finish > to) return fail();
-    if (!Array.isArray(r.stages) || r.stages.length > 1500 || (stageCount += r.stages.length) > 15000) return fail();
+    if (!Array.isArray(r.stages) || r.stages.length > 1500 || (stageCount += r.stages.length) > 60000) return fail();
     let previous = begin;
     const stages = r.stages.map((input): SleepStage => {
       const s = object(input, ["startTime", "endTime", "type"]);

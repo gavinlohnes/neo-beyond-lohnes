@@ -38,7 +38,7 @@ jobs:
           key = '{http://schemas.android.com/apk/res/android}name'
           permissions = {e.attrib[key] for e in root.findall('uses-permission')}
           health = {p for p in permissions if p.startswith('android.permission.health.')}
-          assert health == {'android.permission.health.READ_SLEEP', 'android.permission.health.READ_STEPS', 'android.permission.health.READ_HEART_RATE', 'android.permission.health.READ_RESTING_HEART_RATE'}, permissions
+          assert health == {'android.permission.health.READ_SLEEP', 'android.permission.health.READ_STEPS', 'android.permission.health.READ_HEART_RATE', 'android.permission.health.READ_RESTING_HEART_RATE', 'android.permission.health.READ_HEALTH_DATA_HISTORY'}, permissions
           assert 'android.permission.INTERNET' not in permissions, permissions
           services = {e.attrib[key] for e in root.findall('application/service')}
           # Official Health Connect bound IPC service; not a scheduled sync worker.
