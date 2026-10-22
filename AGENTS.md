@@ -34,12 +34,18 @@ approval; the adoption's historical brief is not the current objective.
   remaining risks, and next action. No mandatory closure PR or Factory lifecycle for new work.
 - Governance changes are Protected and require bounded owner authorization, regardless of provider.
 
-## "Let's work" protocol
+## "Advance BEYOND" / "Let's work" protocol
 
-Read the checkpoint and roadmap, propose the next owner-prioritized objective in plain language,
-and obtain any missing objective authorization before implementation. Existing approval permits
-ordinary implementation details without repeated permission requests. Open a PR, report evidence,
-and wait for owner merge approval. Do not treat the Queue or doctrine as standing authorization.
+Treat "Advance BEYOND" (case-insensitive) and "Let's work" as entry points to the
+[`Advance BEYOND` protocol in DEV-FLOW-002](docs/agent/DEV-FLOW-002.md#advance-beyond).
+Establish current truth, continue authorized work when ownership permits, or recommend one
+valuable next objective for approval. Take responsibility for investigation and routine choices;
+Gavin should not have to invent the next assignment or manage each step. This phrase adds no
+implementation, takeover, review, merge, or product authority beyond the existing approvals.
+
+Claude Code exposes `/advance-beyond`; Codex's repository skill is `advance-beyond` (invoke
+explicitly as `$advance-beyond` where supported). Natural-language invocation follows the same
+protocol. Both skill entry points delegate to DEV-FLOW-002 rather than defining another workflow.
 
 ## Record owner rulings
 

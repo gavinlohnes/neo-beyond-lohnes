@@ -64,7 +64,41 @@ Previous checkpoint (retained):
 
 # Current checkpoint
 
-## Current objective — TONIGHT-001 (2026-10-19, PROTECTED)
+## Current preparation — workflow command and Garmin discovery
+
+Owner instruction, 2026-10-19: "Lets get to a good point to start work". Codex is preparing
+the existing approved workflow PR #254 and the next discovery brief.
+
+**Released:** master a6d315dd83f7f540782a540d37a32c9a5224a1f2.
+- #255 merged at ea03c7266157f60c3bcc13f80063323a0df9259b: idle rollover plus deadline retry.
+- #256 merged at a6d315dd83f7f540782a540d37a32c9a5224a1f2: the TODAY shift loop and headline fixes.
+- Both have independent exact-head PASS. Final required CI [39250635029](https://github.com/gavinlohnes/neo-beyond-lohnes/actions/runs/39250635029):
+  272 files, 2,700 passed, 1 skipped; architecture, TypeScript and production build pass.
+- Physical-device, Safari and screen-reader checks remain unclaimed.
+
+**Current PR:** [#254](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/254),
+codex/advance-beyond-command. Original owner-approved PROTECTED workflow objective, Builder Codex.
+One shared DEV-FLOW-002 protocol, thin Claude/Codex skills, AGENTS/roadmap routing and governance
+classification for .agents/. No application, dependency, CI or protection change.
+Reconciled with released TONIGHT master, preserving both histories. The prior reviewed head
+78650e7 is historical; the current head needs fresh independent review and green required CI.
+Then it awaits owner merge approval. This preparation instruction does not authorize that merge.
+
+**Next discovery:** [GARMIN-001 proposal, #257](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/257).
+Prepared for review; integration implementation is not approved. First collect phone model/OS,
+Garmin watch model, and actual Garmin Connect permissions/recent records in Health Connect.
+Verify current official support and the deployed PWA's access constraints, then recommend one
+route and present a bounded implementation brief. No native wrapper/backend/provider/schema
+or Engine integration has started.
+
+**Environment:** connected GitHub tools work. The local workspace has partial review-fix files,
+no complete checkout or app dependencies, and its configured proxy was unreachable. Do not
+treat those partial files as a fresh checkout or claim local full verification.
+
+The sections below preserve the previous checkpoint. This summary and live PR evidence
+supersede their pending-review/merge wording.
+
+## Previous objective — TONIGHT-001 (merged 2026-10-19)
 
 Gavin approved TONIGHT after the product discovery proposal. Brief: [TONIGHT-001.md](TONIGHT-001.md);
 rulings in UX_DECISIONS → TONIGHT-001. Builder: Claude Code. Branch `ccr-83cf6ed8-ug1ym9`; [PR #255](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/255).

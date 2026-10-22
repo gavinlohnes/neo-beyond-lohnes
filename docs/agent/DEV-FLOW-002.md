@@ -27,6 +27,75 @@ availability, and cost. Only one active Builder owns a given implementation obje
 must independently inspect the changes and must not review their own work. No provider is
 specifically required for review or integration.
 
+## Advance BEYOND
+
+Owner-approved entry protocol, 2026-10-19. "Advance BEYOND" and "Let's work" mean: take the
+lead in moving the project through this charter, without requiring Gavin to supply a technical
+assignment. This section is the shared command definition, not a second workflow or standing
+product authorization. A narrower instruction (for example, report-only or review-only) still
+limits the invocation.
+
+### Establish truth and take the appropriate next step
+
+Read `AGENTS.md`, this charter, the checkpoint, product direction and relevant roadmap/owner
+rulings. Verify the current master, working tree, active briefs, branches, PRs, exact heads,
+reviews and CI using available repository access. Check overlap and preserve unknown work.
+Treat checkpoint/roadmap pointers as leads, not proof that an objective is still active. Do not
+restart merged work or resurrect retired Factory procedures.
+
+| Verified situation | Next action |
+| --- | --- |
+| Unfinished approved objective; this session owns it or has an explicit handoff | Resume the same objective and branch from the verified next step. Finish any half-done slice first; do not ask again for approved details. |
+| Another Builder owns the objective, or ownership is unclear | Do not take over, edit its branch, or create a competing implementation. Investigate read-only; report the owner/next action. Request an explicit handoff only if needed to proceed. |
+| Changes await review or a review blocks progress | Preserve role separation. The assigned Builder fixes findings within scope; an independently assigned Reviewer inspects the exact head. Do not self-review or interpret this command as a review assignment. |
+| Approved work is complete or nothing approved is ready | Investigate the highest-value next opportunity and recommend one bounded objective. Obtain missing owner approval before implementation. |
+| Required access, evidence, or an unapproved boundary blocks progress | State the specific gap and request only what is needed. Continue independent permitted investigation; never fabricate repository state or approvals. |
+
+Within existing priorities, favor data integrity/reliability problems and recurring field
+friction, then complete useful journeys and meaningful progress. Check current capabilities and
+prior reuse findings before proposing a new subsystem. Use product/design/engineering judgment;
+do not simply choose the next stale Queue item or start another cosmetic pass by default.
+
+### Make the owner's next decision easy
+
+Recommend one direction in plain language: what Gavin will experience, why it matters now,
+scope/exclusions, important tradeoffs, and what counts as finished. Show an example interaction
+or screen outline when it helps him judge the result. A short owner response is sufficient when
+it unambiguously approves the stated scope; record it in the existing brief/PR. Resolve routine
+choices yourself and ask only questions whose answers materially affect the outcome, preferably
+with a recommended answer. Do not turn this command into a mandatory audit, report, new planning
+document, repeated approval ceremony, or unprioritized feature list.
+
+Once authorized, carry the objective through implementation, proportional verification, a PR,
+independent review where this charter or the owner requires it, and a durable handoff. If a
+required independent Reviewer is unavailable, prepare the exact-head review handoff and report the blocker;
+do not claim review completion. Fix review findings within scope, then obtain renewed review
+when required. Close with what changed, what Gavin should try, remaining limitations, and one
+recommended next step. New scope still waits for approval; do not start an unattended chain of
+objectives. Every merge remains Gavin's decision; all existing no-self-merge/no-bypass rules apply.
+
+Default progress/handoff format (brief, with evidence links where useful): **Where we are ·
+What I recommend or am doing · Why it matters · What needs your decision**. If no decision is
+needed, say so and continue the authorized work rather than stopping at a plan.
+
+### Cross-tool entry points
+
+- Repository-capable agents read `AGENTS.md`; `CLAUDE.md` already imports it. The thin skills in
+  `.agents/skills/advance-beyond/` and `.claude/skills/advance-beyond/` route here. They grant no
+  additional permissions, access, ownership, or review authority.
+- For Claude/ChatGPT project instructions, use this short instruction:
+
+  > When Gavin says "Advance BEYOND" or "Let's work", read the current BEYOND repository's
+  > AGENTS.md and the "Advance BEYOND" section of docs/agent/DEV-FLOW-002.md, then follow that
+  > protocol. Verify the current checkpoint and live work before acting. If repository access
+  > is unavailable, request the current AGENTS.md, DEV-FLOW-002.md, checkpoint, and relevant
+  > active brief/PR handoff in one bundle. Use supplied snapshots provisionally, state what
+  > cannot be verified, and do not invent live state or treat stale records as authorization.
+
+Installing repository files does not configure chat project settings or guarantee that every
+host exposes a skill command. Natural-language invocation uses the same definition once the
+host can read it. Do not claim a command is installed or tested in an unavailable host.
+
 ## One concise durable brief per objective
 
 Keep one short brief in the repository or a GitHub issue/PR. An existing scope document can serve

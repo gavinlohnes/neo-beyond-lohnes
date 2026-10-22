@@ -40,6 +40,8 @@ describe("DEV-FLOW-002 risk guidance", () => {
     "docs/OPERATOR_INTERFACE_DOCTRINE.md", "docs/UX_DECISIONS.md", "docs/ROADMAP_1.0.md",
     "docs/PRODUCT_DIRECTION.md",
     ".claude/skills/beyond-drop/SKILL.md", ".claude/rules/engine.md",
+    ".claude/skills/advance-beyond/SKILL.md", ".agents/skills/advance-beyond/SKILL.md",
+    ".agents/skills/advance-beyond/agents/openai.yaml",
     ".github/workflows/pr-verify.yml", "scripts/classify-risk.mjs",
     "scripts/check-architecture-boundaries.mjs", "scripts/factory-drop.mjs",
   ])("recognizes authority or safeguard changes in %s as Protected evidence", (path) => {
