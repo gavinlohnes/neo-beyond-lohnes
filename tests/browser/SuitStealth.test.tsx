@@ -222,7 +222,7 @@ it("BODY and an open SYSTEMS readout behind stealth show its logs and undos on e
     await expect.poll(() => overlay()).toBeNull();
   };
   await screen.getByRole("button", { name: "BODY", exact: true }).click();
-  const body = () => document.querySelector('#workspace-BODY [aria-label="Explore water"] .readout__value')?.textContent;
+  const body = () => document.querySelector('#workspace-BODY [aria-label="water history"] .readout__value')?.textContent;
   await expect.poll(body).toBe("8 oz");
   await stealthLog(false);
   await expect.poll(body).toBe("20 oz");

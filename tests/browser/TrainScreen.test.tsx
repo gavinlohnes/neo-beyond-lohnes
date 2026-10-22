@@ -181,11 +181,11 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     // by default behind the same CollapsibleRow primitive RESET/SHIFT
     // DOWN already use — it does not compete with the dominant picker's
     // own footprint until explicitly opened.
-    await expect.element(screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open TRAINING SUMMARY" })).toBeVisible();
     expect(document.querySelectorAll(".command-surface")).toHaveLength(1);
 
-    await screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" }).click();
-    await expect.element(screen.getByText("Performance Brief", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).click();
+    await expect.element(screen.getByText("TRAINING SUMMARY", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/Training history will appear here/)).toBeVisible();
     await expect.element(screen.getByText(/Recent training will appear here/)).toBeVisible();
     await expect.element(screen.getByText(/No exercise history yet/)).toBeVisible();
@@ -212,7 +212,7 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     await completeRecoverySession(day.id, recovery.id, 15);
 
     const screen = await render(<TrainScreen />);
-    await screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" }).click();
+    await screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).click();
     await expect.element(screen.getByText(/Training history will appear here/)).toBeVisible();
     await expect.element(screen.getByText(/Recent training will appear here/)).toBeVisible();
   });
@@ -224,7 +224,7 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     await abandonWorkout(day.id, session.id, "STANDARD");
 
     const screen = await render(<TrainScreen />);
-    await screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" }).click();
+    await screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).click();
     // Not eligible as LAST — still the calm empty-history copy.
     await expect.element(screen.getByText(/Training history will appear here/)).toBeVisible();
     // But visible, honestly, in RECENT.
@@ -240,7 +240,7 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
 
     const screen = await render(<TrainScreen />);
-    await screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" }).click();
+    await screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).click();
     await expect.element(screen.getByText("Template A", { exact: true })).not.toBeVisible();
     await screen.getByText("Exercise detail", { exact: true }).click();
 
@@ -258,8 +258,8 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
     await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
 
-    expect(screen.getByText("Performance Brief", { exact: true }).elements()).toHaveLength(0);
-    expect(screen.getByRole("button", { name: "Open PERFORMANCE BRIEF" }).elements()).toHaveLength(0);
+    expect(screen.getByText("TRAINING SUMMARY", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).elements()).toHaveLength(0);
   });
 });
 

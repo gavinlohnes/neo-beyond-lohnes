@@ -2277,12 +2277,12 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
           </button>
         )}
         {mealPresetNotice && <p className="meta" role="status" style={{ marginBottom: 12 }}>{mealPresetNotice}</p>}
-        <p className="tool-label" style={{ marginBottom: 4 }}>MEAL MEMORY</p>
+        <p className="tool-label" style={{ marginBottom: 4 }}>MY MEALS</p>
         <p className={mealFocused ? "meta" : "recommendation-title"} style={{ marginBottom: 2 }}>
           {mealEntries.length} {mealEntries.length === 1 ? "meal" : "meals"} logged today
         </p>
         {!mealFocused && <p className="meta" style={{ marginBottom: 12 }}>
-          Protein from meals counts toward Minimum Day, alongside protein-only logs.
+          Protein from meals and protein-only entries share today’s total.
         </p>}
 
         {/* Drop 5: one tap logs the previous day's saved meals again. Hidden
@@ -2523,7 +2523,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   return (
     <div className={`screen fade-in body-field${mealFocused ? " body-meals" : ""}${waterFocused ? " body-water" : ""}`}>
       <OperatorHeader destination="body" headingId="meal-surface-heading" focusable>
-        {waterFocused ? "BODY // WATER" : mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // DAILY RECORD"}
+        {waterFocused ? "BODY // WATER" : mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // TODAY"}
       </OperatorHeader>
       <div hidden={waterFocused || mealsVisible || progressOpen}>
         <HealthDayBrowser selected={healthDay} disabled={busy || foodSearchBusy} visible={visible && !waterFocused && !mealsVisible && !progressOpen}
@@ -2538,7 +2538,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       <div className="meal-navigation">
         <button id="body-meals-entry" className="btn-secondary" disabled={busy || foodSearchBusy}
           onClick={() => { if (progressOpen) { setProgressOpen(false); restoreOrigin(); } else showMealSurface(!mealsVisible); }}>
-          {waterFocused || mealsVisible || progressOpen ? "DAILY RECORD" : "OPEN MEALS"}
+          {waterFocused || mealsVisible || progressOpen ? "TODAY" : "OPEN MEALS"}
         </button>
         {!waterFocused && !mealsVisible && !progressOpen && <button id="body-progress-entry" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={() => showProgress()}>YOUR PROGRESS</button>}
         {onReturnToToday && <button id="meal-return" className="btn-secondary"

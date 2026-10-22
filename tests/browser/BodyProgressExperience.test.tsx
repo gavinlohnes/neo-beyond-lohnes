@@ -172,7 +172,7 @@ it("does not call a failed photo read an empty timeline and can retry without wr
 it("reveals an explicit metric request after measurements while retaining its unsaved input", async () => {
   clock(); const screen = await render(<BodyScreen />); await screen.getByRole("button", { name: "YOUR PROGRESS", exact: true }).click();
   await screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).click(); await screen.getByRole("spinbutton", { name: "Inches", exact: true }).fill("36");
-  await screen.getByRole("button", { name: "DAILY RECORD", exact: true }).click(); await screen.getByRole("button", { name: "Explore water", exact: true }).click();
+  await screen.getByRole("button", { name: "DAILY RECORD", exact: true }).click(); await screen.getByRole("button", { name: "water history", exact: true }).click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("water");
   await screen.getByRole("button", { name: "Open weight trends", exact: true }).click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("weight");

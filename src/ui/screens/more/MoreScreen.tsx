@@ -556,7 +556,7 @@ export function MoreScreen({
       </details>
       <details className="more-inspection more-destination-guide">
         <summary>Find the right destination</summary>
-        <p className="meta">Free notes live in TODAY → Capture. A decision belongs in the Journal; longer-term direction in Missions; a concrete commitment in Obligations.</p>
+        <p className="meta">Write a note from LOG → NOTE. Your inbox is in COMMAND → Capture. A decision belongs in the Journal; longer-term direction in Missions; a concrete commitment in Obligations.</p>
         <dl>
           <dt>Weekly Check-in</dt><dd>Recorded progress, findings and the week ahead. Read-only; no grade.</dd>
           <dt>History</dt><dd>The full chronological event trail, including corrections and undo.</dd>
@@ -564,7 +564,7 @@ export function MoreScreen({
           <dt>Search</dt><dd>Find existing records by words, then open where they live.</dd>
           <dt>Decision Journal</dt><dd>Write a choice and expectation; return later for its actual outcome and lesson.</dd>
           <dt>Missions & Obligations</dt><dd>Keep durable plans separate from tasks, dates and deliberate resolution.</dd>
-          <dt>Work Schedule</dt><dd>Inspect or change the schedule you declared.</dd>
+          <dt>Work Schedule</dt><dd>Open or change the schedule you declared.</dd>
           <dt>Exercise Library & Custom Programs</dt><dd>Your existing movements and workout templates.</dd>
           <dt>Data safety & Settings</dt><dd>Backups, recovery, targets, quit plans, time capsules, reminders and diagnostic detail.</dd>
         </dl>

@@ -189,7 +189,7 @@ describe("BODY daily health record", () => {
     screen.getByRole("button", { name: "+8 oz" }).element().dispatchEvent(new MouseEvent("click", { bubbles: true }));
     screen.getByRole("button", { name: "YOUR PROGRESS" }).element().dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await expect.element(screen.getByText("8 oz added.", { exact: true })).toBeVisible();
-    await expect.element(screen.getByRole("heading", { name: "BODY // DAILY RECORD" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "BODY // TODAY" })).toBeVisible();
     expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
   });
 

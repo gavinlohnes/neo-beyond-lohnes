@@ -1,4 +1,5 @@
 import { expect, it, vi } from "vitest";
+import { previewAnyRestore, applyAnyRestore } from "../../src/persistence/restore";
 import { db } from "../../src/persistence/db";
 import { startDay } from "../../src/application/commands";
 import { createSavedMeal, logManualMeal, logMeal, correctMealLog, voidMealLog } from "../../src/application/nutritionCommands";
@@ -63,7 +64,8 @@ it("round-trips manual provenance and portions through the existing native backu
   const blob = await db.export({ prettyJson: true });
   const file = new File([blob], "redesign-synthetic.json", { type: "application/json" });
   await db.events.clear(); await db.savedMeals.clear();
-  await db.import(file, { clearTablesBeforeImport: true });
+  expect((await previewAnyRestore(file)).format).toBe("NATIVE");
+  await applyAnyRestore(file);
   expect(await getMealEntries(day.id)).toEqual(before);
   expect(await db.savedMeals.count()).toBe(1);
 });

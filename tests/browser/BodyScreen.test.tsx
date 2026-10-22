@@ -305,7 +305,7 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
  * real rendered screen (never hand-constructed events), matching every
  * other BODY station's own test convention above.
  */
-describe("BodyScreen (real browser) — MEAL MEMORY", () => {
+describe("BodyScreen (real browser) — MY MEALS", () => {
   async function addSavedMeal(
     screen: Awaited<ReturnType<typeof render>>,
     { name = "Chicken & Rice Bowl", calories = "600", protein = "45", carbs = "60", fat = "15" } = {},

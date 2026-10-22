@@ -2044,7 +2044,7 @@ export function TodayScreen({
         busy={busy}
         waterControlVisible={waterControlsVisible}
         {...(!waterControlsVisible && dominant !== "HYDRATION_ACTIVE" ? { onLogWater: (amountOz: number) => void handleMinimumDayLogWater(amountOz) } : {})}
-        onOpenMinimumDay={hiddenFeatures.minimumDay ? () => setMinimumDayOpen(true) : undefined}
+        {...(hiddenFeatures.minimumDay ? { onOpenMinimumDay: () => setMinimumDayOpen(true) } : {})}
       />
         );
     }
@@ -2540,7 +2540,7 @@ export function TodayScreen({
       {/* LAUNCH POLISH (owner approval 2026-10-01): ORIENT drops its label
           and box — the same two facts read as a status line under the
           header, as in the Launch Vision prototype. */}
-      {day && <h2 className="visually-hidden">Orient</h2>}
+      
       {/* FIELD-ARCH-001: same two facts (describeContextStrip's sentence,
           the capacity dot+clause) this strip has always shown — restacked
           into a real label-free instrument reading (a bold headline line,
@@ -2553,7 +2553,7 @@ export function TodayScreen({
           unaffected by this change. */}
       {day && (
         <section aria-labelledby="today-current-state-heading" className={`status-strip status-strip--stacked today-situation cc-hero-wrap${stripLevel ? ` status-strip--${stripLevel}` : ""}`}>
-          <h2 id="today-current-state-heading" className="visually-hidden">CURRENT STATE</h2>
+          <h2 id="today-current-state-heading" className="visually-hidden">DAY CONTEXT</h2>
           {/* POLISH-002: the prototype's mode hero — mode, meta, timeline, scene, and SYSTEMS inside
               its frame. AMBER or RED still lead the SYSTEMS line in words (SUIT-001). */}
           <ModeHeader
@@ -2670,7 +2670,7 @@ export function TodayScreen({
       {day && onOpenWeeklyReview && <div className="today-review-line"><WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} /></div>}
       {day && <section className="today-numbers" aria-label="Today's numbers">{renderFuel()}</section>}
       <section className="console-operations" aria-labelledby="console-operations-heading">
-        <h2 id="console-operations-heading" className="visually-hidden">Immediate operations</h2>
+        <h2 id="console-operations-heading" className="visually-hidden">LOG ACTIONS</h2>
         <ConsoleControls
           onWaterVisibilityChange={setWaterControlsVisible}
           onLogWater={handleMinimumDayLogWater}
@@ -2790,7 +2790,7 @@ export function TodayScreen({
       )}
       {day && dominant === "HYDRATION_ACTIVE" && (
         <div data-small-hydration>
-        <HydrationOperationCard
+        <HydrationOperationCard fullToolAvailable={hiddenFeatures.minimumDay}
           minimumDay={minimumDay}
           minimumDayHydrateOz={minimumDayHydrateOz}
           busy={busy}

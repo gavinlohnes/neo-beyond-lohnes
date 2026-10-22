@@ -1,4 +1,4 @@
-# REDESIGN-001 — items 1–6 delivered; item 7 next
+# REDESIGN-001 — items 1–7 delivered; final gate next
 
 Owner-approved PROTECTED objective: [frozen brief](REDESIGN-001.md), frozen reference
 `prototype/redesign/index.html`. Builder Codex. Branch `codex/redesign-001`;
@@ -86,7 +86,16 @@ final hidden/COMMAND subset 10 passed, then the final three hidden cases passed 
 optional presentation on hide. Build and architecture pass. Canonical records are compared
 before/after toggling; original protein-only writes/undo are covered. No migration/dependency.
 
-**Next:** item 7 labels, then item 8 locked rulings/checkpoint and full verification. Commit/push
+**Item 7 delivered:** plain HUD labels (TODAY, MY MEALS, TRAINING SUMMARY, WORKOUT A,
+NOT CHECKED IN, history/open), no Orient/Current state/Immediate operations headings. Existing
+Engine/advisory messages are mapped only in UI; no recommendation or threshold changes. New
+screen browser subset 32 passed; copy Node subset had one old expected label, corrected. Final
+copy/meal Node subset 46 passed, including the real restore preview/apply path for one-offs and
+portions. Build/architecture pass. Chromium is available locally; no physical-device claim.
+
+**Next:** item 8 locked rulings/checkpoint, reconcile remaining legacy presentation assertions,
+then full `npm run verify` and final production/mobile/offline acceptance. Keep PR draft until
+all acceptance is met. Independent Claude exact-head review follows; never merge. Commit/push
 and update PR Handoff after each item. Full final verify and acceptance evidence, then mark ready
 and stop for independent Claude exact-head review. Never merge.
 

@@ -24,6 +24,6 @@ export function describeStatusFact(fact: SystemStatusFact): string {
 }
 
 export function describeSystemStatus(status: SystemStatus): string {
-  if (status.level === "NO_READ") return "NO READ · log sleep or check in";
+  if (status.level === "NO_READ") return "NOT CHECKED IN · log sleep or check in";
   return `${status.level} · ${status.facts.map(describeStatusFact).join(", ")}`;
 }

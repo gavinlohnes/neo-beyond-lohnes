@@ -1114,7 +1114,7 @@ export function TrainScreen({
             <p className="meta-strong" style={{ margin: 0 }}>
               {chosenVariant === "RECOVERY"
                 ? "RECOVERY"
-                : `Template ${templateLabel(chosenTemplate, customTemplates)} · ${chosenVariant}`}
+                : `WORKOUT ${templateLabel(chosenTemplate, customTemplates)}${chosenVariant === "STANDARD" ? "" : ` · ${chosenVariant}`}`}
             </p>
             <button
               type="button"
@@ -1229,14 +1229,14 @@ export function TrainScreen({
           actual pre-workout decision is made. */}
       {!session && !completionSummary && !performanceBriefOpen && (
         <CollapsibleRow
-          name="PERFORMANCE BRIEF"
+          name="TRAINING SUMMARY"
           summary={describeLastStrengthSession(lastStrengthSession)}
           onOpen={() => setPerformanceBriefOpen(true)}
         />
       )}
       {!session && !completionSummary && performanceBriefOpen && (
         <>
-          <p className="section-label">Performance Brief</p>
+          <p className="section-label">TRAINING SUMMARY</p>
           <div className="equipment-row">
             <p className="tool-label" style={{ marginBottom: 4 }}>LAST</p>
             <p className="card-body" style={{ marginBottom: 12 }}>{describeLastStrengthSession(lastStrengthSession)}</p>
@@ -1332,7 +1332,7 @@ export function TrainScreen({
               Gym Mode is the same optional full-screen operating shortcut. */}
               <section className="train-session-state" aria-label="Session progress">
                 <div className="train-session-tools">
-                  <p className="meta-strong">Template {templateLabel(session.templateId, customTemplates)} · {session.sessionType} — in progress</p>
+                  <p className="meta-strong">WORKOUT {templateLabel(session.templateId, customTemplates)}{session.sessionType === "STANDARD" ? "" : ` · ${session.sessionType}`} — in progress</p>
                   <button ref={gymModeButtonRef} type="button" className="btn-secondary" onClick={() => setGymModeOpen(true)}>GYM MODE</button>
                 </div>
                 <ReadoutGrid className="train-session-readout">

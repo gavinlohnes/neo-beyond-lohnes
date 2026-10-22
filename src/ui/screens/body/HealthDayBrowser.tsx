@@ -44,7 +44,7 @@ export function HealthDayBrowser({ selected, onSelect, onExplore, refreshKey, vi
     <details className="health-day-controls"><summary>Browse health days</summary>
     <div className="health-day-heading"><span className="meta">{selected ? dayDate(start) : "Your current day"}</span><button disabled={disabled} type="button" className="btn-secondary" aria-pressed={!selected} onClick={() => onSelect(null)}>CURRENT DAY</button></div>
     <div className="health-day-strip" role="group" aria-label="Seven lived days">
-      {recent.map((at) => <button disabled={disabled} type="button" key={at} aria-label={`Inspect ${dayDate(at)}`} aria-pressed={at === start} onClick={() => onSelect(at === current ? null : at)}>
+      {recent.map((at) => <button disabled={disabled} type="button" key={at} aria-label={`Open ${dayDate(at)}`} aria-pressed={at === start} onClick={() => onSelect(at === current ? null : at)}>
         <span>{new Date(at).toLocaleDateString([], { weekday: "short" })}</span><strong>{new Date(at).getDate()}</strong>
       </button>)}
     </div>

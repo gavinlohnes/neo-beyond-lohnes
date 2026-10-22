@@ -74,9 +74,9 @@ for (const [level, values, words] of [
 it("explains NO READ and missing readings plainly", async () => {
   await startDay();
   const screen = await render(<App />);
-  await expect.element(screen.getByRole("button", { name: /^Systems: NO READ · log sleep or check in, Fuel 0g\. Open readout$/ })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: /^Systems: NOT CHECKED IN · log sleep or check in, Fuel 0g\. Open readout$/ })).toBeVisible();
   await screen.getByRole("button", { name: /^Systems: / }).click();
-  await expect.element(screen.getByText("NO READ", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("NOT CHECKED IN", { exact: true })).toBeVisible();
   await expect.element(screen.getByText("Log sleep or check in.", { exact: true })).toBeVisible();
   await expect.element(screen.getByText("Not logged", { exact: true }).first()).toBeVisible();
   await expect.element(screen.getByText("None yet", { exact: true })).toBeVisible();

@@ -414,8 +414,8 @@ describe("ULTIMATE-FOUNDATION-002 — Training Record copy", () => {
   };
 
   it("names the variant only when REDUCED", () => {
-    expect(describeHistoryTitle(entry, [])).toBe("Template A");
-    expect(describeHistoryTitle({ ...entry, sessionType: "REDUCED" }, [])).toBe("Template A · REDUCED");
+    expect(describeHistoryTitle(entry, [])).toBe("WORKOUT A");
+    expect(describeHistoryTitle({ ...entry, sessionType: "REDUCED" }, [])).toBe("WORKOUT A · REDUCED");
   });
 
   it("states the real status and only what was recorded", () => {

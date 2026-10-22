@@ -44,7 +44,7 @@ export function BodyComposition({ active, refreshKey, metricRequest, viewRequest
     <div className="progress-overview" hidden={view !== "trends"} role="group" aria-label="Recorded progress overview">
       <button type="button" onClick={() => { onWeight(); select("trends"); }} aria-label="Open weight trends">
         <span className="tool-label">LAST WEIGHT</span><strong>{latestWeight ? `${latestWeight.weightLbs} lb` : "Not logged"}</strong>
-        <span className="meta">{latestWeight ? new Date(latestWeight.recordedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : "Explore trends"}</span>
+        <span className="meta">{latestWeight ? new Date(latestWeight.recordedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : "Weight history"}</span>
       </button>
       <button type="button" onClick={() => select("measurements", true)} aria-label="Open measurements">
         <span className="tool-label">WAIST</span><strong>{failed ? "Unavailable" : !ready ? "Reading…" : latestWaist ? `${latestWaist.inches} in` : "Not logged"}</strong>

@@ -22,7 +22,7 @@ for(const width of [320,360,390,412])it(`puts numbers, progress and history firs
   expect((await axe.run(root)).violations).toEqual([]);
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   const before=await db.events.toArray();
-  await screen.getByRole('button',{name:'Explore water',exact:true}).click();
+  await screen.getByRole('button',{name:'water history',exact:true}).click();
   await expect.element(screen.getByRole('button',{name:'BACK TO BODY',exact:true})).toBeVisible();
   expect(await db.events.toArray()).toEqual(before);
 });

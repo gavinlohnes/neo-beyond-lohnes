@@ -189,7 +189,7 @@ describe("Production Command Console", () => {
     await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
     await screen.getByRole("button", { name: "BODY", exact: true }).click();
     // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
-    await expect.element(screen.getByRole("heading", { name: "BODY // DAILY RECORD" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "BODY // TODAY" })).toBeVisible();
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
     expect(confirm).not.toHaveBeenCalled();

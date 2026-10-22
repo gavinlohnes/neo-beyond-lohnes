@@ -37,13 +37,13 @@ for (const width of [320, 360, 412]) it(`selects an overnight health day and its
   await screen.getByText("Browse health days", { exact: true }).click();
   await screen.getByRole("button", { name: dayName(offsetHealthDay(healthDayStart(), -1)) }).click();
   const past = screen.getByRole("region", { name: "Selected health day" });
-  await expect.element(past.getByRole("button", { name: "Explore water", exact: true })).toHaveTextContent("12 oz");
-  await expect.element(past.getByRole("button", { name: "Explore protein", exact: true })).toHaveTextContent("25 g");
+  await expect.element(past.getByRole("button", { name: "water history", exact: true })).toHaveTextContent("12 oz");
+  await expect.element(past.getByRole("button", { name: "protein history", exact: true })).toHaveTextContent("25 g");
   expect(screen.getByRole("button", { name: "+8 oz", exact: true }).elements()).toHaveLength(0);
   await past.getByText("Recorded entries · 2", { exact: true }).click();
   await past.getByRole("button", { name: "Source of Water · 12 oz", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Water · 12 oz", exact: true })).toBeVisible();
-  expect(screen.getByRole("button", { name: "CORRECT IN DAILY RECORD", exact: true }).elements()).toHaveLength(0);
+  expect(screen.getByRole("button", { name: "CORRECT ENTRY", exact: true }).elements()).toHaveLength(0);
   expect(document.querySelector("[data-source-root]")?.getAttribute("data-source-root")).toBe(root);
   expect((await axe.run(document.body)).violations).toEqual([]);
   await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
@@ -73,9 +73,9 @@ it("retains range, exact same-time weight selection and source focus through the
   const before = await db.events.toArray();
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "BODY", exact: true }).click();
-  await screen.getByRole("button", { name: "Explore last weight", exact: true }).click();
+  await screen.getByRole("button", { name: "last weight history", exact: true }).click();
   await screen.getByRole("button", { name: "7 DAYS", exact: true }).click();
-  const slider = screen.getByRole("slider", { name: "Inspect recorded observation" });
+  const slider = screen.getByRole("slider", { name: "Open recorded observation" });
   slider.element().focus(); await userEvent.keyboard("{Home}");
   await expect.element(screen.getByText(/179.0 lb · observation 1 of 2/)).toBeVisible();
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
@@ -101,11 +101,11 @@ it("keeps an unfinished sleep form through trend, sources and History, and uses 
   await screen.getByRole("button", { name: "Open SLEEP", exact: true }).click();
   await screen.getByRole("spinbutton", { name: "Hours", exact: true }).fill("6");
   await screen.getByRole("spinbutton", { name: "Minutes", exact: true }).fill("35");
-  await screen.getByRole("button", { name: "Explore water", exact: true }).click();
+  await screen.getByRole("button", { name: "water history", exact: true }).click();
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
   await screen.getByRole("button", { name: "RETURN TO BODY", exact: true }).click();
-  await screen.getByRole("button", { name: "CORRECT IN DAILY RECORD", exact: true }).click();
+  await screen.getByRole("button", { name: "CORRECT ENTRY", exact: true }).click();
   const corrected = screen.getByRole("spinbutton", { name: "Corrected amount (oz)", exact: true });
   await expect.element(corrected).toHaveValue(16); await corrected.fill("12");
   await screen.getByRole("button", { name: "SAVE", exact: true }).click();
@@ -121,7 +121,7 @@ it("reports source read failure and retries reads without replaying a write", as
   clock(); const day = await startDay(); await logWater(day.id, 8);
   const before = await db.events.toArray();
   const screen = await render(<BodyScreen />);
-  await screen.getByRole("button", { name: "Explore water", exact: true }).click();
+  await screen.getByRole("button", { name: "water history", exact: true }).click();
   vi.mocked(getHealthSources).mockRejectedValueOnce(new Error("Interrupted read"));
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await expect.element(screen.getByRole("alert")).toHaveTextContent("Your data is unchanged");
@@ -177,7 +177,7 @@ it.each([false, true])("keeps TODAY FUEL accessible values current after protein
   await screen.getByRole("button", { name: "LOG PROTEIN", exact: true }).click();
   await expect.poll(() => db.events.where("type").equals("PROTEIN_LOGGED").count()).toBe(2);
   await screen.getByRole("button", { name: "+16 oz", exact: true }).click();
-  await expect.element(screen.getByRole("button", { name: "Explore water", exact: true })).toHaveTextContent("24 oz");
+  await expect.element(screen.getByRole("button", { name: "water history", exact: true })).toHaveTextContent("24 oz");
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await expect.element(screen.getByRole("button", { name: `Protein 55${target} g, explore records`, exact: true })).toBeVisible();
   await expect.element(screen.getByRole("button", { name: "Water 24 oz, explore records", exact: true })).toBeVisible();
@@ -188,14 +188,14 @@ it("reopens the current correction in retained History and does not steal focus 
   clock(); const day = await startDay(); await logWater(day.id, 8);
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "BODY", exact: true }).click();
-  await screen.getByRole("button", { name: "Explore water", exact: true }).click();
+  await screen.getByRole("button", { name: "water history", exact: true }).click();
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
   await screen.getByRole("button", { name: "RETURN TO BODY", exact: true }).click();
-  await screen.getByRole("button", { name: "CORRECT IN DAILY RECORD", exact: true }).click();
+  await screen.getByRole("button", { name: "CORRECT ENTRY", exact: true }).click();
   await screen.getByRole("spinbutton", { name: "Corrected amount (oz)", exact: true }).fill("12");
   await screen.getByRole("button", { name: "SAVE", exact: true }).click();
-  await screen.getByRole("button", { name: "Explore water", exact: true }).click();
+  await screen.getByRole("button", { name: "water history", exact: true }).click();
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Water · 12 oz", exact: true })).toBeVisible();
   await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
@@ -215,7 +215,7 @@ it("reopens the current correction in retained History and does not steal focus 
 it("retains exploration without running hidden progress reads on each quick log", async () => {
   clock(); const day = await startDay(); await logWater(day.id, 8);
   const screen = await render(<BodyScreen />);
-  await screen.getByRole("button", { name: "Explore water", exact: true }).click();
+  await screen.getByRole("button", { name: "water history", exact: true }).click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("water");
   const reads = vi.mocked(getBodyInsights).mock.calls.length;
   await screen.getByRole("button", { name: "DAILY RECORD", exact: true }).click();
@@ -231,7 +231,7 @@ it("retains exploration without running hidden progress reads on each quick log"
 it("reveals an explicitly requested metric after a retained timeline and exposes its reading to assistive technology", async () => {
   clock(); const day = await startDay(); await logWater(day.id, 8);
   const screen = await render(<BodyScreen />);
-  const reading = screen.getByRole("button", { name: "Explore water", exact: true });
+  const reading = screen.getByRole("button", { name: "water history", exact: true });
   await expect.element(reading).toHaveTextContent("8 oz");
   const description = reading.element().getAttribute("aria-describedby")!;
   expect(document.getElementById(description)?.textContent).toBe("8 oz");
@@ -239,7 +239,7 @@ it("reveals an explicitly requested metric after a retained timeline and exposes
   await screen.getByRole("button", { name: "SHOW ACCOMPLISHMENT TIMELINE", exact: true }).click();
   await expect.element(screen.getByText("The chart is hidden while your accomplishment timeline is open.", { exact: true })).toBeVisible();
   await screen.getByRole("button", { name: "DAILY RECORD", exact: true }).click();
-  await screen.getByRole("button", { name: "Explore water", exact: true }).click();
+  await screen.getByRole("button", { name: "water history", exact: true }).click();
   await expect.element(screen.getByRole("img", { name: /^Water:/ })).toBeVisible();
 });
 
@@ -257,7 +257,7 @@ it("keeps explicit historical browsing read-only when an active workout defers r
   await screen.getByText("Recorded entries · 1", { exact: true }).click();
   await screen.getByRole("button", { name: "Source of Water · 8 oz", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Water · 8 oz", exact: true })).toBeVisible();
-  expect(screen.getByRole("button", { name: "CORRECT IN DAILY RECORD", exact: true }).elements()).toHaveLength(0);
+  expect(screen.getByRole("button", { name: "CORRECT ENTRY", exact: true }).elements()).toHaveLength(0);
   expect((await db.workoutSessions.get(session.id))?.status).toBe("ACTIVE");
   expect(await db.beyondDays.count()).toBe(1);
   expect(await db.events.toArray()).toEqual(before);

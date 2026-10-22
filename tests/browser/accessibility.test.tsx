@@ -87,7 +87,7 @@ describe("accessibility (real browser, axe-core)", () => {
     await startDay();
     const screen = await render(<TodayScreen />);
     // STATUS-001: the strip's line is the System Status once read.
-    await expect.element(screen.getByText("NO READ · log sleep or check in", { exact: false })).toBeVisible();
+    await expect.element(screen.getByText("NOT CHECKED IN · log sleep or check in", { exact: false })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);

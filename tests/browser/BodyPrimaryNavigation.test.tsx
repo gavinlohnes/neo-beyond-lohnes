@@ -28,7 +28,7 @@ beforeEach(async () => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo(0, 0); });
 
 async function expectDailyRecord(screen: Screen) {
-  await expect.element(screen.getByRole("heading", { name: "BODY // DAILY RECORD" })).toBeVisible();
+  await expect.element(screen.getByRole("heading", { name: "BODY // TODAY" })).toBeVisible();
   await expect.element(screen.getByRole("button", { name: "YOUR PROGRESS" })).toBeVisible();
   expect(screen.getByRole("button", { name: "RETURN TO TODAY" }).elements()).toHaveLength(0);
   expect(screen.getByRole("heading", { name: "BODY // WATER" }).elements()).toHaveLength(0);

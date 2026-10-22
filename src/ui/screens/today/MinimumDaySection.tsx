@@ -31,7 +31,7 @@ export function HydrationOperationCard({
   hydrationManualOpen,
   setHydrationManualOpen,
   onLogWater,
-  onViewFull,
+  onViewFull, fullToolAvailable = true,
 }: {
   minimumDay: MinimumDayStatus | null;
   minimumDayHydrateOz: number;
@@ -41,12 +41,12 @@ export function HydrationOperationCard({
   hydrationManualOpen: boolean;
   setHydrationManualOpen: (open: boolean) => void;
   onLogWater: (amountOverride?: number) => void;
-  onViewFull: () => void;
+  onViewFull: () => void; fullToolAvailable?: boolean;
 }) {
   if (!minimumDay || !minimumDay.enabled || minimumDay.hydrate) return null;
   return (
     <CommandSurface>
-      <p className="tool-label">MINIMUM DAY // HYDRATION</p>
+      <p className="tool-label">HYDRATION</p>
       <h2 className="command-title">Record what you drank</h2>
       <p className="card-body" style={{ marginBottom: 4 }}>
         {minimumDayHydrateOz} oz recorded today.
@@ -55,7 +55,7 @@ export function HydrationOperationCard({
         className="field-progress"
         style={{ marginBottom: 16 }}
         role="progressbar"
-        aria-label="Hydration progress toward Minimum Day target"
+        aria-label="Water recorded toward the daily amount"
         aria-valuenow={Math.min(minimumDayHydrateOz, MINIMUM_DAY_HYDRATE_OZ)}
         aria-valuemin={0}
         aria-valuemax={MINIMUM_DAY_HYDRATE_OZ}
@@ -106,9 +106,9 @@ export function HydrationOperationCard({
           </button>
         </div>
       </FieldDisclosure>
-      <button className="btn-secondary" style={{ marginTop: 12 }} onClick={onViewFull}>
+      {fullToolAvailable && <button className="btn-secondary" style={{ marginTop: 12 }} onClick={onViewFull}>
         VIEW FULL MINIMUM DAY
-      </button>
+      </button>}
     </CommandSurface>
   );
 }

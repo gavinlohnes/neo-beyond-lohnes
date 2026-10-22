@@ -25,7 +25,7 @@ function formatFuelCompact(proteinG: number, targetG: number | undefined): strin
 }
 
 export function describeStatusLevel(level: SystemStatusLevel): string {
-  return level === "NO_READ" ? "NO READ" : level;
+  return level === "NO_READ" ? "NOT CHECKED IN" : level;
 }
 
 export interface SystemsLineInput {
@@ -41,7 +41,7 @@ export interface SystemsLineInput {
 /** The System Status part of the line: AMBER/RED lead in words; NO READ keeps its existing sentence. */
 export function describeSystemsStatus(level: SystemStatusLevel | null): string | null {
   if (level === "AMBER" || level === "RED") return level;
-  if (level === "NO_READ") return "NO READ · log sleep or check in";
+  if (level === "NO_READ") return "NOT CHECKED IN · log sleep or check in";
   return null;
 }
 

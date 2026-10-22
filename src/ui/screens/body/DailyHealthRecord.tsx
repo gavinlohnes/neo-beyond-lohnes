@@ -24,7 +24,7 @@ export function HealthMeasure({ label, value, detail, metric, onExplore }: {
 }) {
   const valueId = useId();
   if (!onExplore) return <Readout label={label} value={value} detail={detail} />;
-  return <button type="button" className="readout health-metric" onClick={() => onExplore(metric)} aria-label={`Explore ${label.toLowerCase()}`} aria-describedby={valueId}>
+  return <button type="button" className="readout health-metric" onClick={() => onExplore(metric)} aria-label={`${label.toLowerCase()} history`} aria-describedby={valueId}>
     <span className="tool-label">{label}</span><span id={valueId} className="readout__value" style={{ display: "block" }}>{value}</span>
     {detail && <span className="meta readout__detail" style={{ display: "block" }}>{detail}</span>}
   </button>;
@@ -109,7 +109,7 @@ export function DailyHealthRecord({ water, sleep, weight, protein, meals, disabl
       {records.length === 0 && <p className="meta">Nothing recorded yet. Record what is useful to you.</p>}
       {(allOpen ? records : records.slice(0, 5)).map((record) => holdToInspect ? <HoldButton key={record.entry.rootEventId} className="health-record-row" disabled={disabled} hint="Hold to open correction or deletion. Nothing changes until you confirm." onConfirm={() => onInspect(record)}>{describeRecord(record)} · {new Date(record.entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</HoldButton> : (
         <button className="health-record-row" key={record.entry.rootEventId} disabled={disabled}
-          aria-label={`Inspect ${describeRecord(record)}`} onClick={() => onInspect(record)}>
+          aria-label={`Open ${describeRecord(record)}`} onClick={() => onInspect(record)}>
           <span><span className="health-record-name">{describeRecord(record)}</span>
             {record.kind === "MEAL" && <span className="meta">{record.entry.effectiveCalories} kcal · {record.entry.effectiveProteinG} g protein</span>}
             <span className="meta">{new Date(record.entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}{record.entry.correctionCount ? ` · corrected ${record.entry.correctionCount}x` : ""}</span>

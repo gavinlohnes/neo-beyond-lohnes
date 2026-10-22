@@ -36,7 +36,7 @@ describe("BODY Insights & Progress", () => {
     const weights = [{ recordedAt: new Date(Date.parse(data.readAt) - 410 * INSIGHT_DAY_MS).toISOString(), weightLbs: 200 }, { recordedAt: new Date(Date.parse(data.readAt) - 400 * INSIGHT_DAY_MS).toISOString(), weightLbs: 195 }];
     const screen = await render(subject(weights));
     await expect.element(screen.getByText("No weight recorded in this range.", { exact: false })).toBeVisible();
-    await screen.getByText("Inspect last recorded weight window", { exact: true }).click();
+    await screen.getByText("Last recorded weight window", { exact: true }).click();
     await expect.element(screen.getByRole("img", { name: /Weight over the last 60 days/ })).toBeVisible();
     expect(screen.getByRole("img", { name: /Weight over the last 60 days/ }).element().getAttribute("aria-label")).toContain(new Date(weights.at(-1)!.recordedAt).toLocaleDateString());
     await expect.element(screen.getByText("Last recorded 60 days, ending", { exact: false })).toBeVisible();
@@ -57,7 +57,7 @@ describe("BODY Insights & Progress", () => {
     await expect.element(screen.getByText("Low 185.0 lb", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("All-history milestones and the existing projection use weigh-ins through", { exact: false })).toBeVisible();
     expect(screen.getByRole("img", { name: /Weight:/ }).element().querySelector("path")?.getAttribute("d")).toContain("L");
-    const slider = screen.getByRole("slider", { name: "Inspect recorded observation" });
+    const slider = screen.getByRole("slider", { name: "Open recorded observation" });
     slider.element().focus();
     await userEvent.keyboard("{Home}");
     await expect.element(screen.getByRole("status")).toHaveTextContent("190.0 lb");
@@ -66,7 +66,7 @@ describe("BODY Insights & Progress", () => {
     await screen.getByRole("combobox", { name: "EXPLORE A MEASURE" }).selectOptions("calories");
     await expect.element(screen.getByText("−500 kcal average change", { exact: false })).toBeVisible();
     expect(screen.getByRole("img", { name: /Meal calories:/ }).element().querySelector("path")?.getAttribute("d")).not.toContain("L");
-    screen.getByRole("slider", { name: "Inspect recorded observation" }).element().focus();
+    screen.getByRole("slider", { name: "Open recorded observation" }).element().focus();
     await userEvent.keyboard("{Home}");
     await expect.element(screen.getByRole("status")).toHaveTextContent("0 kcal");
     await screen.getByRole("combobox", { name: "EXPLORE A MEASURE" }).selectOptions("sleep");
@@ -76,7 +76,7 @@ describe("BODY Insights & Progress", () => {
     await screen.getByText("Nutrition detail & coverage", { exact: true }).click();
     await expect.element(screen.getByText("Fiber is not recorded", { exact: false })).toBeVisible();
     await expect.element(screen.getByText("Co-recording is an observation", { exact: false })).toBeVisible();
-    await screen.getByText("Inspect observations & calculation", { exact: true }).click();
+    await screen.getByText("Recorded observations & calculation", { exact: true }).click();
     await expect.element(screen.getByText("Effective corrected entries", { exact: false })).toBeVisible();
     for (const name of ["7 DAYS", "28 DAYS", "90 DAYS"]) expect(screen.getByRole("button", { name }).element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
@@ -115,7 +115,7 @@ describe("BODY Insights & Progress", () => {
     await expect.element(screen.getByText("No weight recorded in this range.", { exact: false })).toBeVisible();
     await expect.element(screen.getByText("No weigh-ins recorded. Your other progress is still available.")).toBeVisible();
     await screen.getByRole("combobox", { name: "EXPLORE A MEASURE" }).selectOptions("protein");
-    await expect.element(screen.getByRole("slider", { name: "Inspect recorded observation" })).toBeVisible();
+    await expect.element(screen.getByRole("slider", { name: "Open recorded observation" })).toBeVisible();
     expect(document.querySelector(".command-surface")).toBeNull();
   });
 
@@ -124,8 +124,8 @@ describe("BODY Insights & Progress", () => {
     const { data, weights } = fixture();
     vi.mocked(getBodyInsights).mockResolvedValue(data);
     const screen = await render(subject(weights));
-    await expect.element(screen.getByRole("slider", { name: "Inspect recorded observation" })).toBeVisible();
-    await screen.getByText("Inspect observations & calculation", { exact: true }).click();
+    await expect.element(screen.getByRole("slider", { name: "Open recorded observation" })).toBeVisible();
+    await screen.getByText("Recorded observations & calculation", { exact: true }).click();
     expect(document.getAnimations()).toHaveLength(0);
     expect((await axe.run(screen.container)).violations).toEqual([]);
   });

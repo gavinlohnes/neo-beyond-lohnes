@@ -100,8 +100,8 @@ function kindOf(note: AdvisoryNote): Kind | null {
         label: () => "Before your shift",
         item: (n) => ({
           note: n,
-          name: n.message,
-          why: "The shift starts soon, and the Minimum Day amounts are easiest to reach before it.",
+          name: n.message.replace(/ of the Minimum Day amounts?\./, "."),
+          why: "The shift starts soon. Log what you eat and drink before it if helpful.",
         }),
       };
     case "patternProposal":
