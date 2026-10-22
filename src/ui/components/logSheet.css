@@ -11,7 +11,7 @@
 .check-in-scale button { flex: 1; min-width: 0; padding: 6px; }
 .redesign-toast { position: fixed; bottom: calc(80px + env(safe-area-inset-bottom)); left: 12px; right: 12px; max-width: 520px; margin: auto; padding: 12px; z-index: 20; background: var(--surface-2); border: 1px solid var(--border-strong); }
 .redesign-today > section { margin-bottom: 18px; }
-.redesign-today .console-guidance .btn-primary { background: var(--action-primary-bg); color: var(--action-primary-text); }
+.redesign-today .console-guidance .btn-primary:not(.cc-cta):not(:disabled) { background: var(--p-red, var(--action-primary-bg)); color: var(--p-cta-t, var(--action-primary-text)); border: 0; }
 .redesign-today .today-numbers { margin-top: 16px; }
 .record-meal-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 8px; }
 .record-meal-row button { margin: 0; min-width: 0; }

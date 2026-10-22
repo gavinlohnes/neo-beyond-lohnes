@@ -126,6 +126,7 @@ it('names missing guidance truthfully and opens manual actions without inventing
   await expect.element(screen.getByRole('heading', { name: 'No guidance recorded yet.', exact: true })).toBeVisible();
   const root = document.querySelector('.redesign-today')!;
   expect([...root.querySelectorAll<HTMLElement>('.btn-primary')].filter(el => el.getClientRects().length)).toHaveLength(1);
+  expect(getComputedStyle(screen.getByRole('button', { name: 'CHOOSE AN ACTION', exact: true }).element()).backgroundColor).toBe('rgb(208, 20, 27)');
   const before = await db.events.toArray();
   await screen.getByRole('button', { name: 'CHOOSE AN ACTION', exact: true }).click();
   await expect.element(screen.getByRole('dialog', { name: 'LOG', exact: true })).toBeVisible();
@@ -183,6 +184,7 @@ for (const width of [320, 360, 390, 412]) it(`contains the fresh-install scene a
   await expect.element(screen.getByRole("heading", { name: "Mode not set", exact: true })).toBeVisible();
   const hero = document.querySelector(".mode-empty")!.getBoundingClientRect();
   const skyline = document.querySelector(".mode-empty .cc-skyline")!.getBoundingClientRect();
+  expect(getComputedStyle(screen.getByRole("button", { name: "START DAY", exact: true }).element()).backgroundColor).toBe("rgb(208, 20, 27)");
   expect(skyline.top).toBeGreaterThanOrEqual(hero.top); expect(skyline.bottom).toBeLessThanOrEqual(hero.bottom);
   expect(screen.getByRole("button", { name: "Open LOG", exact: true }).element().getBoundingClientRect().bottom).toBeLessThan(700);
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
