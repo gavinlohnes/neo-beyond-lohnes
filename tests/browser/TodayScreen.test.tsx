@@ -1202,11 +1202,11 @@ describe("TodayScreen (real browser) — END DAY relevance", () => {
     await screen.getByRole("button", { name: "END DAY" }).click();
 
     await expect.element(screen.getByText(/Workout in progress/)).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "RETURN TO WORKOUT" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "OPEN WORKOUT" })).toBeVisible();
     expect((await db.beyondDays.get(day.id))?.status).toBe("ACTIVE");
     expect((await db.workoutSessions.get(workout.id))?.status).toBe("ACTIVE");
 
-    await screen.getByRole("button", { name: "RETURN TO WORKOUT" }).click();
+    await screen.getByRole("button", { name: "OPEN WORKOUT" }).click();
     expect(openTrain).toHaveBeenCalledWith("WORKOUT");
   });
 });

@@ -1,3 +1,20 @@
+# UX-COHESION-001 — slice 3: one way back, quieter BODY, bounded history
+
+- **Objective / authority:** [UX-COHESION-001](UX-COHESION-001.md), approved 2026-10-22; Gavin said
+  yes to starting slice 3 after #273. Builder: Claude Code, branch `claude/ux-cohesion-3`, stacked on
+  #273 (`claude/health-history`) until it merges.
+- **Built:** one back/close grammar (CLOSE for sheets, BACK TO <place> for sub-screens; RETURN TO and
+  arrows gone; OPEN WORKOUT for the blocked END DAY); BODY drops the day-start time and the standing
+  NAPS "Not logged", and the weight card uses short dates; HISTORY pages 14 days and TRAIN history
+  10 sessions with SHOW MORE, keeping a searched day reachable. Labels and copy only, plus paging;
+  no data, schema, Engine or capability change.
+- **Verified:** full suite 2,884 passed / one skip; the one failure is the known full-load TODAY
+  check-in timing test (passes 3/3 in isolation, untouched here). New `BoundedLists.test.tsx`.
+- **Next:** PR (retarget to master after #273), green CI, independent review, Gavin's merge.
+
+---
+Previous checkpoint:
+
 # UX-COHESION-001 — one health-history destination (slice 2)
 
 - **Objective / authority:** [UX-COHESION-001](UX-COHESION-001.md), approved 2026-10-22; slice 1

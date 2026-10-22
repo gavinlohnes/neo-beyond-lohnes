@@ -110,7 +110,7 @@ describe("IntentScreen (real browser)", () => {
     await expect.element(screen.getByText("OPEN", { exact: true })).toBeVisible();
 
     await satisfyObligation(obligation.id);
-    await screen.getByText("← BACK").click();
+    await screen.getByText(/^BACK TO (MISSIONS|OBLIGATIONS|DECISIONS)$/).click();
     // Resolved, so it no longer shows under the default UNRESOLVED filter.
     await expect.element(screen.getByText("Nothing here.")).toBeVisible();
     expect(consoleErrors).toEqual([]);
@@ -147,7 +147,7 @@ describe("IntentScreen (real browser)", () => {
     await screen.getByRole("button", { name: "CANCEL" }).click();
     expect(screen.getByText("Archive this Mission?", { exact: true }).elements()).toHaveLength(0);
 
-    await screen.getByRole("button", { name: "← BACK" }).click();
+    await screen.getByRole("button", { name: /^BACK TO (MISSIONS|OBLIGATIONS|DECISIONS)$/ }).click();
     await screen.getByRole("button", { name: "Open Retire obsolete checklist" }).click();
     await screen.getByRole("button", { name: "RELEASE", exact: true }).click();
     await expect.element(screen.getByText("Release this Obligation?", { exact: true })).toBeVisible();
@@ -232,7 +232,7 @@ describe("IntentScreen (real browser) — recurrence (INTENT-002)", () => {
     await screen.getByRole("button", { name: "Open Water the plants" }).click();
     await screen.getByRole("button", { name: "SATISFY", exact: true }).click();
     await screen.getByRole("button", { name: "CONFIRM SATISFIED", exact: true }).click();
-    await screen.getByText("← BACK").click();
+    await screen.getByText(/^BACK TO (MISSIONS|OBLIGATIONS|DECISIONS)$/).click();
 
     // Default UNRESOLVED filter — the satisfied instance is gone, but a
     // fresh OPEN one with the same title (the materialized next

@@ -146,7 +146,7 @@ describe("HUD-001 — HUD design system", () => {
     expect(getComputedStyle(document.body).backgroundColor).toBe("rgb(10, 10, 10)");
     expect(getComputedStyle(weekly.querySelector(".meta")!).fontFamily).toMatch(/IBM Plex Sans/);
     expect(getComputedStyle(weekly.querySelector(".eyebrow")!).fontFamily).toMatch(/IBM Plex Mono/);
-    const back = screen.getByRole("button", { name: "← BACK TO COMMAND" }).element();
+    const back = screen.getByRole("button", { name: "BACK TO COMMAND" }).element();
     expect(getComputedStyle(back).clipPath).toBe("none");
     expect(getComputedStyle(back).borderTopLeftRadius).toBe("4px");
   });

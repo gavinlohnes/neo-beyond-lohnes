@@ -49,7 +49,7 @@ export function EndDayCard({
             Workout in progress. Finish it, save it as partial, or stop it on TRAIN before ending the day.
           </p>
           <button className="btn-primary" disabled={busy} onClick={() => onOpenTrain?.("WORKOUT")}>
-            RETURN TO WORKOUT
+            OPEN WORKOUT
           </button>
         </div>
       )}

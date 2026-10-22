@@ -103,7 +103,7 @@ describe("TRAIN → HISTORY", () => {
     }
     expect((await axe.run(document.querySelector(".train-operator")!)).violations).toEqual([]);
 
-    await screen.getByRole("button", { name: "BACK", exact: true }).click();
+    await screen.getByRole("button", { name: "BACK TO HISTORY", exact: true }).click();
     await expect.poll(() => document.activeElement?.textContent).toMatch(/^WORKOUT A.*Partial/);
     expect(await writes()).toEqual(before);
   });

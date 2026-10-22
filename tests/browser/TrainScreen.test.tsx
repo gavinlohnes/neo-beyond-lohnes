@@ -1064,7 +1064,7 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
       await page.viewport(width, 800);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     }
-    await screen.getByRole("button", { name: "BACK" }).click();
+    await screen.getByRole("button", { name: "BACK TO WORKOUT" }).click();
     await expect.element(screen.getByRole("button", { name: "RECORDS", exact: true })).toBeVisible();
   });
 

@@ -104,10 +104,10 @@ describe("blocker 1 — unfinished record edits survive cross-record navigation"
     await screen.getByRole("button", { name: "Open Mission A", exact: true }).click();
     await screen.getByRole("button", { name: "EDIT", exact: true }).click();
     await screen.getByRole("textbox", { name: "Mission title" }).fill("Mission A, unfinished");
-    await screen.getByRole("button", { name: "← BACK", exact: true }).click();
+    await screen.getByRole("button", { name: /^BACK TO (MISSIONS|OBLIGATIONS|DECISIONS)$/ }).click();
     await screen.getByRole("button", { name: "Open Mission B", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "Mission B", exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "← BACK", exact: true }).click();
+    await screen.getByRole("button", { name: /^BACK TO (MISSIONS|OBLIGATIONS|DECISIONS)$/ }).click();
     await screen.getByRole("button", { name: "Open Mission A", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "Mission title" })).toHaveValue("Mission A, unfinished");
     expect(await db.events.where("type").equals("MISSION_MODIFIED").count()).toBe(0);
@@ -187,7 +187,7 @@ describe("blocker 2 — Intent drafts reach reload and update protection", () =>
     await expect.element(screen.getByRole("textbox", { name: "Obligation title" })).toHaveValue("Existing task");
     await settled();
     expect(reloadWouldWarn()).toBe(false);
-    await screen.getByRole("button", { name: "← BACK", exact: true }).click();
+    await screen.getByRole("button", { name: /^BACK TO (MISSIONS|OBLIGATIONS|DECISIONS)$/ }).click();
     await screen.getByRole("button", { name: "Open Existing direction", exact: true }).click();
     await screen.getByRole("button", { name: "EDIT", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "Mission title" })).toHaveValue("Existing direction");

@@ -52,7 +52,7 @@ for (const width of [320, 360, 412]) it(`selects an overnight health day and its
   const head = (await getHydrationEntries(prior.id))[0]!.headEventId;
   await expect.poll(() => document.activeElement?.id).toBe(`history-event-${head}`);
   expect((await axe.run(document.body)).violations).toEqual([]);
-  await screen.getByRole("button", { name: "RETURN TO BODY", exact: true }).click();
+  await screen.getByRole("button", { name: "BACK TO BODY", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Water · 12 oz", exact: true })).toBeVisible();
   await screen.getByRole("button", { name: "BACK TO DAY", exact: true }).click();
   await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Source of Water · 12 oz");
@@ -87,8 +87,8 @@ it("retains range, exact same-time weight selection and source focus through the
   expect(document.querySelector("[data-source-root]")?.getAttribute("data-source-root")).toBe(first);
   await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
   await expect.poll(() => document.activeElement?.id).toBe(`history-event-${correction.id}`);
-  await expect.element(screen.getByRole("button", { name: "RETURN TO BODY", exact: true })).toBeVisible();
-  await screen.getByRole("button", { name: "RETURN TO BODY", exact: true }).click();
+  await expect.element(screen.getByRole("button", { name: "BACK TO BODY", exact: true })).toBeVisible();
+  await screen.getByRole("button", { name: "BACK TO BODY", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Bodyweight · 179 lbs", exact: true })).toBeVisible();
   await expect.poll(() => document.activeElement?.textContent).toBe("FULL HISTORY");
   await screen.getByRole("button", { name: "BACK TO TREND", exact: true }).click();
@@ -110,7 +110,7 @@ it("keeps an unfinished sleep form through trend, sources and History, and uses 
   await screen.getByRole("button", { name: "water history", exact: true }).click();
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
-  await screen.getByRole("button", { name: "RETURN TO BODY", exact: true }).click();
+  await screen.getByRole("button", { name: "BACK TO BODY", exact: true }).click();
   await holdToConfirm(screen.getByRole("button", { name: "CORRECT / DELETE", exact: true }));
   const corrected = screen.getByRole("spinbutton", { name: "Corrected amount (oz)", exact: true });
   await expect.element(corrected).toHaveValue(16); await corrected.fill("12");
@@ -160,7 +160,7 @@ it("opens the raw water evidence from existing TODAY FUEL and returns without ad
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("water");
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Water · 8 oz", exact: true })).toBeVisible();
-  await screen.getByRole("button", { name: "RETURN TO TODAY", exact: true }).click();
+  await screen.getByRole("button", { name: "BACK TO TODAY", exact: true }).click();
   await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Water 8 oz, explore records");
   expect(document.querySelector('[data-system-status="RED"]')).not.toBeNull();
   expect(document.querySelectorAll("[data-shift-clock-row]").length).toBeLessThanOrEqual(4);
@@ -198,7 +198,7 @@ it("reopens the current correction in retained History and does not steal focus 
   await screen.getByRole("button", { name: "water history", exact: true }).click();
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
-  await screen.getByRole("button", { name: "RETURN TO BODY", exact: true }).click();
+  await screen.getByRole("button", { name: "BACK TO BODY", exact: true }).click();
   await holdToConfirm(screen.getByRole("button", { name: "CORRECT / DELETE", exact: true }));
   await screen.getByRole("spinbutton", { name: "Corrected amount (oz)", exact: true }).fill("12");
   await screen.getByRole("button", { name: "SAVE", exact: true }).click();
@@ -216,7 +216,7 @@ it("reopens the current correction in retained History and does not steal focus 
   toggle.click(); toggle.focus();
   await expect.poll(() => document.activeElement).toBe(toggle);
   document.getElementById(`history-day-${day.id}`)!.querySelector<HTMLButtonElement>("button")!.click();
-  await screen.getByRole("button", { name: "RETURN TO BODY", exact: true }).click();
+  await screen.getByRole("button", { name: "BACK TO BODY", exact: true }).click();
   await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
   await expect.poll(() => document.activeElement?.id).toBe(`history-event-${head}`);
 });

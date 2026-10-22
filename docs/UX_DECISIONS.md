@@ -38,6 +38,13 @@ history was overwhelming routine mobile screens.
   "Browse health days" and "Garmin history". Garmin lists show ten rows and SHOW MORE ten at a time,
   so every measured day is reachable and nothing grows on its own. Closing history returns to today.
   COMMAND keeps only import, not the archive.
+- **One way back:** sheets say CLOSE; sub-screens say BACK TO <place> (BACK TO COMMAND, BACK TO TODAY,
+  BACK TO BODY, BACK TO MISSIONS…), never "RETURN TO" or an arrow. DONE means finished, not leave.
+  Forward actions say what they do (OPEN WORKOUT, RESUME WORKOUT).
+- **Quieter BODY:** no internal day-start time; NAPS appears only when a nap exists; dates use the
+  app's short style ("Oct 19").
+- **Bounded history:** HISTORY shows 14 days and TRAIN history 10 sessions at a time, each with SHOW
+  MORE; a day opened from search is always included.
 
 ## GARMIN-005 — eaten vs burned (owner approved 2026-10-22)
 

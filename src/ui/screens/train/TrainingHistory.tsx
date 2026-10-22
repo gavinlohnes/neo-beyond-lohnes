@@ -31,6 +31,8 @@ export function TrainingHistory({
   const [readError, setReadError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const returnFocusId = useRef<string | null>(null);
+  // UX-COHESION-001: ten sessions at a time; the count survives opening a record and coming back.
+  const [limit, setLimit] = useState(10);
 
   useEffect(() => {
     if (!active) return;
@@ -77,7 +79,7 @@ export function TrainingHistory({
         <p className="empty-state">{TRAINING_HISTORY_EMPTY}</p>
       ) : (
         <ul className="record-cards">
-          {entries.map((entry) => (
+          {entries.slice(0, limit).map((entry) => (
             <li key={entry.id} className="card record-card">
               <button
                 id={historyRowId(entry.id)}
@@ -96,8 +98,11 @@ export function TrainingHistory({
           ))}
         </ul>
       )}
+      {entries && !readError && entries.length > limit && (
+        <button type="button" className="btn-secondary" onClick={() => setLimit((n) => n + 10)}>SHOW MORE SESSIONS</button>
+      )}
       <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={onClose}>
-        BACK
+        BACK TO WORKOUT
       </button>
     </section>
   );
@@ -177,7 +182,7 @@ function SessionRecordView({
         </>
       )}
       <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px", marginTop: 12 }} onClick={onBack}>
-        BACK
+        BACK TO HISTORY
       </button>
     </section>
   );

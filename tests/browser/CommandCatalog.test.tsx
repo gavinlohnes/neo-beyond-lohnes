@@ -68,12 +68,12 @@ describe("COMMAND catalog", () => {
       const destination = entry.destination;
       if (destination.kind === "tools" || destination.kind === "daily") {
         await expect.element(screen.getByRole("heading", { name: destination.kind === "daily" && destination.tool === "CAPTURE" ? "CAPTURE" : destination.kind === "daily" && destination.tool === "SHIFT_HANDOFF" ? "SHIFT HANDOFF NOTES" : "DAILY CONTROLS", exact: true })).toBeVisible();
-        await expect.element(screen.getByRole("button", { name: "← BACK TO COMMAND", exact: true })).toBeVisible();
+        await expect.element(screen.getByRole("button", { name: "BACK TO COMMAND", exact: true })).toBeVisible();
       } else if (destination.kind === "more") {
         await expect.element(screen.getByRole("heading", { name: commandHeadings[destination.view as keyof typeof commandHeadings], exact: true })).toBeVisible();
         // Inside COMMAND, a destination opens with focus on its way back, like every index row.
-        await expect.poll(() => document.activeElement?.textContent).toBe("← BACK TO COMMAND");
-        await screen.getByRole("button", { name: "← BACK TO COMMAND", exact: true }).click();
+        await expect.poll(() => document.activeElement?.textContent).toBe("BACK TO COMMAND");
+        await screen.getByRole("button", { name: "BACK TO COMMAND", exact: true }).click();
         await expect.element(screen.getByRole("heading", { name: "COMMAND", exact: true })).toBeVisible();
         // Back returns to the result that was used, with the query kept.
         await expect.element(searchbox(screen)).toHaveValue(entry.label.toLowerCase());
@@ -156,7 +156,7 @@ describe("COMMAND catalog", () => {
     const confirm = vi.spyOn(window, "confirm");
     await launch(screen, "HISTORY");
     await expect.element(screen.getByRole("heading", { name: "COMMAND // HISTORY", exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "← BACK TO COMMAND", exact: true }).click();
+    await screen.getByRole("button", { name: "BACK TO COMMAND", exact: true }).click();
     await launch(screen, "MEAL"); await screen.getByRole("button", { name: "New meal", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
     expect(confirm).not.toHaveBeenCalled();

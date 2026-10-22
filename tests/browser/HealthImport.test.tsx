@@ -129,7 +129,7 @@ describe("Health Connect sleep import", () => {
     await screen.getByRole("button", { name: /^IMPORT HEALTH DATA/ }).click();
     chooseFile(screen.getByLabelText("Health export file").element() as HTMLInputElement);
     await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();
-    await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
     await screen.getByLabelText("Find a screen or action").fill("health connect");
     await screen.getByRole("button", { name: /^IMPORT HEALTH DATA/ }).click();
     await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();

@@ -71,15 +71,15 @@ describe("BodyScreen (real browser) — empty state", () => {
     await expect.element(screen.getByText("0 oz", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("0 g", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Not logged", { exact: true }).first()).toBeVisible();
-    // DECLUTTER Drop 2: only the STATUS box shows "Not logged" (SLEEP and
-    // WEIGHT); the trackers below no longer repeat it.
-    expect(screen.getByText("Not logged", { exact: true }).elements()).toHaveLength(3);
+    // DECLUTTER Drop 2 / UX-COHESION-001: only WEIGHT and MAIN SLEEP say "Not logged"; NAPS appears
+    // only once a nap exists.
+    expect(screen.getByText("Not logged", { exact: true }).elements()).toHaveLength(2);
   });
 
   it("presents calories and protein first, with honest separate main-sleep and nap readings", async () => {
     await render(<BodyScreen />);
-    await expect.poll(() => document.querySelectorAll(".health-overview .tool-label").length).toBe(6);
-    expect([...document.querySelectorAll(".health-overview .tool-label")].map(el => el.textContent)).toEqual(["CALORIES", "PROTEIN", "WATER", "LAST WEIGHT", "MAIN SLEEP", "NAPS"]);
+    await expect.poll(() => document.querySelectorAll(".health-overview .tool-label").length).toBe(5);
+    expect([...document.querySelectorAll(".health-overview .tool-label")].map(el => el.textContent)).toEqual(["CALORIES", "PROTEIN", "WATER", "LAST WEIGHT", "MAIN SLEEP"]);
     expect(document.querySelectorAll(".command-surface")).toHaveLength(0);
   });
 });

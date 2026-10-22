@@ -36,6 +36,11 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
     target.focus({ preventScroll: true });
   }, [active, requestKey, loading, readError, focusDayId, focusEventId, expanded]);
 
+  // UX-COHESION-001: fourteen days at a time; a day opened from search is always included.
+  const [limit, setLimit] = useState(14);
+  const focusIndex = focusDayId ? days.findIndex(({ day }) => day.id === focusDayId) : -1;
+  const shown = days.slice(0, Math.max(limit, focusIndex + 1));
+
   async function refresh() {
     const revision = ++readRevision.current;
     positioned.current = null;
@@ -71,7 +76,7 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
         </p>
       )}
 
-      {days.map(({ day, events }) => {
+      {shown.map(({ day, events }) => {
         const isOpen = expanded[day.id] ?? false;
         return (
           <div className="card" key={day.id} id={`history-day-${day.id}`} tabIndex={-1}>
@@ -124,6 +129,7 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
           </div>
         );
       })}
+      {!loading && !readError && days.length > shown.length && <button type="button" className="btn-secondary" onClick={() => setLimit(shown.length + 14)}>SHOW MORE DAYS</button>}
     </div>
   );
 }

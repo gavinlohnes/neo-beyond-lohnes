@@ -38,7 +38,7 @@ for (const width of [320, 360, 412]) it(`connects Review answers to source Histo
   const source = screen.getByRole("button", { name: "Open source day Oct 6, segment 1", exact: true });
   await source.click();
   await expect.element(screen.getByText("COMMAND // HISTORY", { exact: true })).toBeVisible();
-  await screen.getByRole("button", { name: "RETURN TO REVIEW", exact: true }).click();
+  await screen.getByRole("button", { name: "BACK TO REVIEW", exact: true }).click();
   await expect.element(screen.getByText("Oct 6 · 182.0 lb · 1 recorded day segment", { exact: true })).toBeVisible();
   await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Open source day Oct 6, segment 1");
   await expect.poll(() => document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
