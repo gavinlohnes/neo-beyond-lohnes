@@ -20,10 +20,11 @@
   ON SHIFT button contrast and fresh-install/pinned-mode scene layout. Latest affected batch:
   123/124 passed, followed by the final scoped Attention case passing its recheck.
   No tests/axe rules were disabled; former flows now use approved production paths.
-- **Full-gate truth:** the last full `npm run verify` at `c33514d` failed: 314 failed / 2,531
-  passed / one existing skip across 286 files. Architecture passed; build was not reached.
-  Most failures use retired presentation/navigation. Reconcile them without suppressing safeguards.
-  Subsequent focused batches are evidence for progress, not a final full-suite acceptance claim.
+- **Full-gate truth:** full verification at `b403caa` completed with **2,846 passed / six
+  failed / one existing skip** across 286 files. The six failures were two ambiguous selectors,
+  three instances of remaining Inspect/Open display copy, and stealth return-focus timing.
+  Those corrections passed all **25 cases in the four affected browser suites**; TypeScript
+  passes. Production build/mobile/offline evidence and final full verification follow.
 - **Next:** finish affected regression fixes; run full verification and the built production
   mobile/offline acceptance script. Refresh screenshots, update PR Handoff, mark ready only after
   acceptance, and request independent Claude exact-head review. Gavin alone decides merge.

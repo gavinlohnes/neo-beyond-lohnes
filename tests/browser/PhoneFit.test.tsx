@@ -107,7 +107,7 @@ describe("R4 — BODY warns only about changed correction input", () => {
     await expect.poll(reloadWouldWarn).toBe(false);
 
     // Typed new input still warns as before.
-    await screen.getByRole("button", { name: "TODAY" }).click();
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await screen.getByRole("button", { name: "Open SLEEP" }).click();
     await page.elementLocator(document.getElementById("sleep-hours")!).fill("7");
     await expect.poll(reloadWouldWarn).toBe(true);

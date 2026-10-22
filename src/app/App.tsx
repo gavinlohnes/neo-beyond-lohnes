@@ -173,18 +173,26 @@ function AppWorkspaces() {
   // SUIT-001: stealth hides the screen, not the data. It stays on across reloads until exited.
   const [stealthOn, setStealthOn] = useState(() => getStealth());
   const stealthOnRef = useRef(stealthOn);
+  const restoreStealthFocus = useRef(false);
   function changeStealth(on: boolean) {
     if (on === stealthOnRef.current) return;
     stealthOnRef.current = on;
+    restoreStealthFocus.current = !on;
     setStealth(on);
     setStealthOn(on);
     // Close any open sheet behind it; the screens and their drafts stay as they were.
     if (on) for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog[open]")) dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
-    else requestAnimationFrame(() => {
+  }
+  useEffect(() => {
+    if (stealthOn || !restoreStealthFocus.current) return;
+    restoreStealthFocus.current = false;
+    // React has removed inert before we return focus to the retained workspace.
+    const frame = requestAnimationFrame(() => {
       const emblem = [...document.querySelectorAll<HTMLElement>(`#workspace-${tabRef.current} .operator-emblem`)].find((element) => element.getClientRects().length);
       emblem?.focus({ preventScroll: true });
     });
-  }
+    return () => cancelAnimationFrame(frame);
+  }, [stealthOn]);
   const [workEndedKey, setWorkEndedKey] = useState(0);
   const [bodyFocus, setBodyFocus] = useState<BodyFocus | null>(null);
   const closingRecordSheet = useRef(false);

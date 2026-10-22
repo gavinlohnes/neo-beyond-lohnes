@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { preview } from "vite";
+import { execFileSync } from "node:child_process";
 import { chromium } from "playwright";
 
-// Production evidence for completed stages; final full-objective acceptance remains separate.
+// Built production evidence. Full regression and independent exact-head review remain separate.
+const inspectedHead = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 const out = "docs/screenshots/redesign-001";
 await mkdir(out, { recursive: true });
 const server = await preview({ preview: { host: "127.0.0.1", port: 5192, strictPort: true } });
@@ -16,6 +18,9 @@ try {
     const errors = []; page.on("pageerror", (error) => errors.push(error.message));
     await page.clock.install({ time: new Date("2026-10-12T17:10:00-05:00") });
     await page.goto("http://127.0.0.1:5192/neo-beyond-lohnes/");
+    await page.getByRole("heading", { name: "Mode not set", exact: true }).waitFor();
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    await page.screenshot({ path: `${out}/${width}-fresh-install.png` });
     await page.getByRole("button", { name: "START DAY", exact: true }).click();
     await page.getByRole("button", { name: "CHECK IN", exact: true }).click();
     const sheet = page.getByRole("dialog", { name: "CHECK IN", exact: true });
@@ -103,6 +108,21 @@ try {
     await page.screenshot({ path: `${out}/${width}-command-meal-search.png` });
     await page.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await page.waitForFunction(() => !history.state?.recordSheet);
+    const search = page.getByRole("searchbox", { name: "Find a screen or action" });
+    await search.fill("hidden features");
+    await page.getByRole("button", { name: /^HIDDEN FEATURES / }).click();
+    for (const name of ["Minimum Day", "Small Steps", "Online food lookup"]) assert.equal(await page.getByRole("checkbox", { name: `Show ${name}`, exact: true }).isChecked(), false);
+    await page.screenshot({ path: `${out}/${width}-hidden-features.png`, fullPage: true });
+    await search.fill("protein only");
+    await page.getByRole("button", { name: /^PROTEIN ONLY / }).click();
+    await page.getByRole("dialog", { name: "PROTEIN ONLY", exact: true }).waitFor();
+    await page.screenshot({ path: `${out}/${width}-protein-only.png` });
+    await page.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
+    await page.waitForFunction(() => !history.state?.recordSheet);
+    await search.fill("backup");
+    await page.getByRole("button", { name: /^BACKUP & RECOVERY / }).click();
+    await page.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).waitFor();
+    await page.screenshot({ path: `${out}/${width}-backup-recovery.png`, fullPage: true });
     await page.getByRole("button", { name: "TODAY", exact: true }).click();
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
     await page.reload();
@@ -120,5 +140,5 @@ try {
     await context.close();
     console.log(`PASS ${width}: TODAY order, four modes, check-in sheet, visible water undo, offline cold reload`);
   }
-  await writeFile(`${out}/item-5-acceptance.json`, JSON.stringify(evidence, null, 2) + "\n");
+  await writeFile(`${out}/final-acceptance.json`, JSON.stringify({ inspectedHead, browser: "Chromium", timezone: "America/Chicago", reducedMotion: true, syntheticDataOnly: true, evidence }, null, 2) + "\n");
 } finally { await browser.close(); await server.close(); }

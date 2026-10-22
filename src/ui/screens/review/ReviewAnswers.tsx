@@ -33,7 +33,7 @@ function Evidence({ data, metric, unit, method, onOpenHistory }: { data: ReviewO
         <polyline points={points.map((row, index) => `${x(index)},${y(row[metric]!)}`).join(" ")} fill="none" stroke="currentColor" strokeWidth="2" />
         {points.map((row, index) => <circle key={row.start} cx={x(index)} cy={y(row[metric]!)} r={row.start === selected ? 5 : 3} fill="currentColor" />)}
       </svg>
-      <label className="review-select">Inspect recorded day
+      <label className="review-select">Open recorded day
         <select className="input" value={chosen?.start ?? ""} onChange={(event) => setSelected(event.target.value)}>
           <option value="">Choose a day</option>
           {points.map((row) => <option key={row.start} value={row.start}>{date(row.start)} · {value(row[metric], unit)}</option>)}
