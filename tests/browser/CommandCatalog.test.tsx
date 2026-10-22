@@ -3,6 +3,7 @@ import { cleanup, render } from "vitest-browser-react";
 import { page, userEvent } from "vitest/browser";
 import axe from "axe-core";
 import Dexie from "dexie";
+import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
 import { App } from "../../src/app/App";
 import { SYSTEM_CAPABILITIES } from "../../src/ui/systemCatalog";
 import { startDay, updateSchedulePattern } from "../../src/application/commands";
@@ -24,6 +25,7 @@ let dayId: string;
 beforeEach(async () => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(2026, 9, 14, 17));
+  for (const feature of ["minimumDay", "smallSteps", "foodLookup"] as const) setHiddenFeature(feature, true);
   await page.viewport(360, 800);
   const { id: _id, createdAt: _c, updatedAt: _u, ...fields } = DEFAULT_SCHEDULE_PATTERN;
   await updateSchedulePattern(fields);
@@ -51,7 +53,7 @@ const commandHeadings = {
   WORK_SCHEDULE: "COMMAND // WORK SCHEDULE", EXERCISE_LIBRARY: "COMMAND // EXERCISE LIBRARY", CUSTOM_TEMPLATES: "COMMAND // CUSTOM PROGRAMS",
 };
 const sectionTargets = {
-  BACKUP: "safety-heading", NUTRITION_TARGETS: "command-nutrition-targets", QUIT_TRACKER: "command-quit-tracker",
+  HIDDEN_FEATURES: "command-hidden-features", BACKUP: "safety-heading", NUTRITION_TARGETS: "command-nutrition-targets", QUIT_TRACKER: "command-quit-tracker",
   TIME_CAPSULE: "command-time-capsule", REMINDERS: "reminders-heading", DIAGNOSTICS: "command-diagnostics", GUIDE: "command-guide",
 };
 
@@ -82,7 +84,7 @@ describe("COMMAND catalog", () => {
         const details = document.getElementById(target)?.closest("details") ?? document.getElementById(target)?.querySelector("details");
         if (destination.section === "TIME_CAPSULE" || destination.section === "DIAGNOSTICS" || destination.section === "GUIDE") expect(details?.open).toBe(true);
       } else if (destination.kind === "body" || destination.kind === "record" || destination.kind === "capture") {
-        const title = destination.kind === "capture" ? "NOTE" : destination.kind === "record" ? "MY MEALS" : { water: "WATER", meal: "MEAL", foodLookup: "FOOD LOOKUP", sleep: "SLEEP", weight: "BODYWEIGHT", urge: "URGE" }[destination.focus];
+        const title = destination.kind === "capture" ? "NOTE" : destination.kind === "record" ? destination.target === "protein" ? "PROTEIN ONLY" : "MY MEALS" : { water: "WATER", meal: "MEAL", foodLookup: "FOOD LOOKUP", sleep: "SLEEP", weight: "BODYWEIGHT", urge: "URGE" }[destination.focus];
         await expect.element(screen.getByRole("dialog", { name: title, exact: true })).toBeVisible();
         await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
       } else if (destination.kind === "stealth") {

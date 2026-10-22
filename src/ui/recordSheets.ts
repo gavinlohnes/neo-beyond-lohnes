@@ -1,4 +1,4 @@
-export type RecordSheetTarget = "water" | "meal" | "log" | "sleep" | "weight" | "note" | "urge" | "myMeals" | "foodLookup" | "record";
+export type RecordSheetTarget = "protein" | "water" | "meal" | "log" | "sleep" | "weight" | "note" | "urge" | "myMeals" | "foodLookup" | "record";
 
 export interface RecordCorrectionRequest {
   key: number;

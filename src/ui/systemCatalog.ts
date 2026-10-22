@@ -1,3 +1,4 @@
+import type { HiddenFeature } from "./hiddenFeatures";
 import type { BodyFocus } from "./shortcuts";
 import type { ToolsItem } from "./screens/today/shiftClock";
 import type { MoreView } from "./screens/more/MoreScreen";
@@ -7,11 +8,11 @@ import type { MoreView } from "./screens/more/MoreScreen";
  * TODAY's SYSTEM dialog). Navigation metadata only. No commands, personal
  * records or usage history.
  */
-export type CommandSection = "NUTRITION_TARGETS" | "QUIT_TRACKER" | "TIME_CAPSULE" | "REMINDERS" | "BACKUP" | "DIAGNOSTICS" | "GUIDE";
+export type CommandSection = "NUTRITION_TARGETS" | "QUIT_TRACKER" | "TIME_CAPSULE" | "REMINDERS" | "BACKUP" | "DIAGNOSTICS" | "GUIDE" | "HIDDEN_FEATURES";
 
 export type SystemDestination =
-  | { kind: "daily"; tool: ToolsItem | "SHIFT_HANDOFF" }
-  | { kind: "record"; target: "myMeals" | "meal"; mealId?: string }
+  | { kind: "daily"; tool: ToolsItem | "SHIFT_HANDOFF" | "SMALL_STEPS" }
+  | { kind: "record"; target: "protein" | "myMeals" | "meal"; mealId?: string }
   | { kind: "exercise"; exerciseId: string }
   | { kind: "workspace"; tab: "TRAIN" | "BODY" }
   | { kind: "body"; focus: BodyFocus }
@@ -24,6 +25,7 @@ export type SystemDestination =
 export const CAPABILITY_GROUPS = ["Log", "Today", "Review", "Plan", "Notes", "Systems", "Settings & backup"] as const;
 
 export type Capability = {
+  hiddenFeature?: HiddenFeature;
   label: string;
   description: string;
   aliases: readonly string[];
@@ -34,7 +36,7 @@ export type Capability = {
 export const SYSTEM_CAPABILITIES = [
   { label: "WATER", description: "BODY · Add water to today", aliases: ["drink", "hydration"], group: "Log", destination: { kind: "body", focus: "water" } },
   { label: "MEAL", description: "BODY · Saved meals or manual entry", aliases: ["food", "nutrition", "protein", "eat"], group: "Log", destination: { kind: "body", focus: "meal" } },
-  { label: "FOOD LOOKUP", description: "BODY · Search the online USDA food database", aliases: ["usda", "food search", "lookup", "macros"], group: "Log", destination: { kind: "body", focus: "foodLookup" } },
+  { hiddenFeature: "foodLookup", label: "FOOD LOOKUP", description: "BODY · Search the online USDA food database", aliases: ["usda", "food search", "lookup", "macros"], group: "Log", destination: { kind: "body", focus: "foodLookup" } },
   { label: "SLEEP", description: "BODY · Main sleep and naps", aliases: ["nap", "rest", "bed"], group: "Log", destination: { kind: "body", focus: "sleep" } },
   { label: "BODYWEIGHT", description: "BODY · Weight logging and trends", aliases: ["weigh in", "weigh-in", "weight", "scale"], group: "Log", destination: { kind: "body", focus: "weight" } },
   { label: "NOTE", description: "TODAY · Quick Capture", aliases: ["capture", "thought", "idea", "handoff"], group: "Log", destination: { kind: "capture" } },
@@ -77,6 +79,10 @@ export const SYSTEM_CAPABILITIES = [
   { label: "AFTER ACTION REPORT", description: "Existing report, available any time", aliases: ["report", "briefing", "after action"], group: "Review", destination: { kind: "more", view: "REPORT" } },
   { label: "MIRROR", description: "Compare your own recorded progress", aliases: ["mirror", "30 days", "90 days"], group: "Review", destination: { kind: "more", view: "MIRROR" } },
   { label: "MY MEALS", description: "Manage your reusable saved meals", aliases: ["meal memory", "presets", "saved meals"], group: "Settings & backup", destination: { kind: "record", target: "myMeals" } },
+  { hiddenFeature: "minimumDay", label: "MINIMUM DAY", description: "The existing six-basics tool", aliases: ["minimum", "basics"], group: "Today", destination: { kind: "daily", tool: "MINIMUM_DAY" } },
+  { hiddenFeature: "smallSteps", label: "SMALL STEPS", description: "One existing tool at a time", aliases: ["small steps", "simple"], group: "Today", destination: { kind: "daily", tool: "SMALL_STEPS" } },
+  { label: "HIDDEN FEATURES", description: "Show optional tools. Existing data is kept", aliases: ["hidden", "minimum day", "small steps", "food lookup"], group: "Settings & backup", destination: { kind: "section", section: "HIDDEN_FEATURES" } },
+  { label: "PROTEIN ONLY", description: "Log protein with the existing protein-only form", aliases: ["protein", "grams"], group: "Log", destination: { kind: "record", target: "protein" } },
 ] as const satisfies readonly Capability[];
 
 export type SystemCapability = Capability;

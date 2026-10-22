@@ -254,8 +254,9 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ overviewOnly = false, onOpenTrainingRecords, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
+export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onOpenTrainingRecords, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "RETURN TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory }: {
   overviewOnly?: boolean;
+  foodLookupEnabled?: boolean;
   onOpenTrainingRecords?: (() => void) | undefined;
   onEditRecord?: ((record: HealthRecord, dayId: string) => void) | undefined;
   correctionRequest?: RecordCorrectionRequest | null | undefined;
@@ -2390,7 +2391,7 @@ export function BodyScreen({ overviewOnly = false, onOpenTrainingRecords, onEdit
           open={addMealOpen}
           onToggle={setAddMealOpen}
         >
-          {lookupReachable && <MealSection direct={!mealFocused} summary={`${lookupOpen ? "HIDE" : "SHOW"} FOOD LOOKUP (ONLINE)`}
+          {foodLookupEnabled && lookupReachable && <MealSection direct={!mealFocused} summary={`${lookupOpen ? "HIDE" : "SHOW"} FOOD LOOKUP (ONLINE)`}
             open={lookupOpen} onToggle={setLookupOpen}>
           <div className="field">
             <label htmlFor="food-search"><span>Search USDA food database</span></label>
@@ -2507,6 +2508,16 @@ export function BodyScreen({ overviewOnly = false, onOpenTrainingRecords, onEdit
   if (correctionRequest) return <div className="record-correction">
     <p className="meta">Source day: {day ? new Date(day.startedAt).toLocaleString("en-GB", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }) : "Reading…"}. Corrections preserve the original entry.</p>
     {mealReadFailed ? <div role="alert"><p>{mealError}</p><button type="button" className="btn-secondary" onClick={() => void refresh().then(() => setMealReadFailed(false)).catch(() => setMealReadFailed(true))}>RETRY SOURCE DAY</button></div> : !readingsReady || day?.id !== correctionRequest.dayId ? <p role="status">Reading source records…</p> : correctionRequest.record.kind === "WATER" ? waterHistoryContent : correctionRequest.record.kind === "SLEEP" ? sleepHistoryContent : correctionRequest.record.kind === "WEIGHT" ? bodyweightHistoryContent : correctionRequest.record.kind === "PROTEIN" ? proteinHistoryContent : mealHistoryContent}
+  </div>;
+  if (sheetFocus === "protein") return <div className="body-log-sheet">
+    {lastProteinEntry && <button className="btn-secondary" disabled={busy} onClick={() => void handleLogProteinAmount(lastProteinEntry.effectiveGrams)}>REPEAT LAST ({lastProteinEntry.effectiveGrams} g)</button>}
+    {proteinManualEntryForm}
+    {writeFailure === "PROTEIN" && <p role="alert">{BODY_WRITE_FAILED}</p>}
+    {proteinConfirmation && <ConfirmBanner message={proteinConfirmation.message} actionLabel={proteinUndoOpen ? "UNDO" : "CORRECT"} disabled={proteinUndoOpen && busy} onAction={() => {
+      if (proteinUndoOpen) { void handleUndoLog("PROTEIN"); return; }
+      const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId); if (entry) beginCorrectProtein(entry);
+    }} />}
+    {renderUndoFailure("PROTEIN")}{proteinDeletedMessage && <p role="status">{proteinDeletedMessage}</p>}{renderSameFood("PROTEIN")}{proteinHistoryContent}
   </div>;
   if (sheetFocus) return <div className="body-log-sheet">{sheetFocus === "water" ? waterSheetContent : sheetFocus === "sleep" ? sleepSheetContent : sheetFocus === "weight" ? weightSheetContent : sheetFocus === "meal" ? mealSheetContent : <QuitTracker initiallyOpen openRequest={focusRequest} onBusyChange={onMealJourneyInFlightChange} />}</div>;
   return (

@@ -82,3 +82,6 @@
 .command-group > summary { min-height: 48px; padding: 12px 0; cursor: pointer; font-size: 18px; color: var(--text-1); }
 .command-group .command-result { min-height: 56px; }
 .command-result small.pr-tag { margin-left: 8px; }
+
+.hidden-feature-choice { display: flex; align-items: center; gap: 12px; min-height: 48px; padding-block: 8px; font-size: 16px; }
+.hidden-feature-choice input { width: 24px; height: 24px; }

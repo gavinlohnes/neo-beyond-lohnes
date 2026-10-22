@@ -1,3 +1,4 @@
+import { useHiddenFeatures } from "../../hiddenFeatures";
 import { LogActions } from "../../components/RecordSheets";
 import type { RecordSheetTarget } from "../../recordSheets";
 import { LogSheet } from "../../components/LogSheet";
@@ -249,7 +250,7 @@ export function TodayScreen({
   onOpenSystems,
   onOpenRecordSheet,
   operationsOnly = false,
-  commandFocus,
+  commandFocus, onReturnToFullTools,
   toolsRequest = 0,
   openToolsOnMount = false,
   onWorkEnded,
@@ -272,7 +273,8 @@ export function TodayScreen({
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
   onOpenRecordSheet?: (target: RecordSheetTarget) => void;
   operationsOnly?: boolean;
-  commandFocus?: ToolsItem | "SHIFT_HANDOFF" | null;
+  commandFocus?: ToolsItem | "SHIFT_HANDOFF" | "SMALL_STEPS" | null;
+  onReturnToFullTools?: () => void;
   toolsRequest?: number;
   /** Drop 2: open with TOOLS expanded (MORE's capture link lands in it). */
   openToolsOnMount?: boolean;
@@ -551,8 +553,13 @@ export function TodayScreen({
     }));
   }, [toolsOpen, active, toolsRequest]);
   // Optional session-local presentation, never a capacity/plan/Minimum Day write.
+  const hiddenFeatures = useHiddenFeatures();
   const [smallSteps, setSmallSteps] = useState(false);
   const [smallTool, setSmallTool] = useState<"MINIMUM_DAY" | "CAPTURE" | null>(null);
+  useEffect(() => {
+    if (!hiddenFeatures.minimumDay) { setMinimumDayOpen(false); setHydrationOperationOpen(false); }
+    if (!hiddenFeatures.smallSteps) { setSmallSteps(false); setSmallTool(null); }
+  }, [hiddenFeatures.minimumDay, hiddenFeatures.smallSteps]);
   const smallStepsRef = useRef<HTMLDivElement>(null);
   const smallStepsEntryRef = useRef<HTMLButtonElement>(null);
 
@@ -1726,7 +1733,7 @@ export function TodayScreen({
         return !liftedAdvisory && shownAdvisoryNotes.length > 0;
     }
   }
-  const visibleTools = toolsItems.filter(toolHasContent);
+  const visibleTools = toolsItems.filter((tool) => tool !== "MINIMUM_DAY" || hiddenFeatures.minimumDay).filter(toolHasContent);
 
   useEffect(() => {
     // If an existing operation takes foreground authority, exit tool isolation
@@ -1937,6 +1944,7 @@ export function TodayScreen({
         // The tiles above own the history links; TOOLS repeats the totals as one line.
         return day ? <div className="equipment-row"><p className="tool-label" style={{ marginBottom: 4 }}>FUEL</p><p className="card-body" style={{ margin: 0 }}>{fuelLine}</p></div> : null;
       case "MINIMUM_DAY":
+        if (!hiddenFeatures.minimumDay) return null;
         return (
           <>
       {day && minimumDay && (commandFocus !== undefined || !minimumDayInAttention) && dominant !== "HYDRATION_ACTIVE" && (
@@ -2036,7 +2044,7 @@ export function TodayScreen({
         busy={busy}
         waterControlVisible={waterControlsVisible}
         {...(!waterControlsVisible && dominant !== "HYDRATION_ACTIVE" ? { onLogWater: (amountOz: number) => void handleMinimumDayLogWater(amountOz) } : {})}
-        onOpenMinimumDay={() => setMinimumDayOpen(true)}
+        onOpenMinimumDay={hiddenFeatures.minimumDay ? () => setMinimumDayOpen(true) : undefined}
       />
         );
     }
@@ -2252,7 +2260,8 @@ export function TodayScreen({
     {!day && <button className="btn-primary" disabled={busy} onClick={() => void handleStartDay()}>START DAY</button>}
     {checkInError && <p role="alert">{checkInError}</p>}
     {banners}
-    {commandFocus === "CHECK_IN" ? <><button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
+    {commandFocus === "SMALL_STEPS" ? (hiddenFeatures.smallSteps ? <><SmallSteps minimumDayAvailable={hiddenFeatures.minimumDay} enabled busy={busy} onToggle={() => onReturnToFullTools?.()} onOpen={setSmallTool} />{smallTool && renderToolsItem(smallTool)}</> : <p className="meta">Show Small Steps in COMMAND → Hidden features.</p>)
+      : commandFocus === "CHECK_IN" ? <><button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
       <CheckInSheet open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
         quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} /></>
       : commandFocus === "SHIFT_HANDOFF" ? <><ShiftHandoff refreshKey={shiftHandoffRefreshKey ?? 0} /><p className="meta">Handoff entry is offered after work is marked ended. Existing notes remain in HISTORY.</p></>
@@ -2864,7 +2873,7 @@ export function TodayScreen({
         <span>PLAN TODAY</span><span>Your commitments & dates →</span>
       </button>}
 
-      {day && smallSteps && <div ref={smallStepsRef}><SmallSteps enabled={true} busy={busy} onToggle={exitSmallSteps} onOpen={openSmallTool} /></div>}
+      {day && hiddenFeatures.smallSteps && smallSteps && <div ref={smallStepsRef}><SmallSteps minimumDayAvailable={hiddenFeatures.minimumDay} enabled={true} busy={busy} onToggle={exitSmallSteps} onOpen={openSmallTool} /></div>}
 
       {/* ATTENTION — earned, capped at ATTENTION_MAX, and disappears
           entirely when nothing currently qualifies (attentionPolicy.ts). */}
@@ -2941,7 +2950,7 @@ export function TodayScreen({
 
           {minimumDayInAttention && dominant !== "HYDRATION_ACTIVE" && (
             <div data-small-minimum>
-            <MinimumDayCard
+            {hiddenFeatures.minimumDay && <MinimumDayCard
               prominent={true}
               minimumDay={minimumDay}
               minimumDayOpen={minimumDayOpen}
@@ -2964,7 +2973,7 @@ export function TodayScreen({
               onMarkMinimum={(kind) => void handleMarkMinimum(kind)}
               onLogWater={() => void handleMinimumDayLogWater()}
               onLogProtein={() => void handleMinimumDayLogProtein()}
-            />
+            />}
             </div>
           )}
 
@@ -3079,7 +3088,7 @@ export function TodayScreen({
             {smallSteps && smallTool && <div className="small-steps__return"><p className="meta">One tool open. Your other tools and drafts are still available.</p><button type="button" className="btn-secondary" onClick={returnToSmallSteps}>BACK TO SMALL STEPS</button><button type="button" className="btn-secondary" onClick={() => { setSmallTool(null); window.requestAnimationFrame(() => document.getElementById("console-tools-heading")?.focus()); }}>SHOW ALL TOOLS</button></div>}
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
               <h2 id="console-tools-heading" tabIndex={-1} className="section-label" style={{ margin: 0 }}>Tools</h2>
-              {day && !smallSteps && commandTools && <button ref={smallStepsEntryRef} type="button" className="chip" aria-label="USE SMALL STEPS" disabled={busy} style={{ flex: "none", padding: "8px 10px" }} onClick={() => {
+              {day && hiddenFeatures.smallSteps && !smallSteps && commandTools && <button ref={smallStepsEntryRef} type="button" className="chip" aria-label="USE SMALL STEPS" disabled={busy} style={{ flex: "none", padding: "8px 10px" }} onClick={() => {
                 setSmallSteps(true);
                 setSmallTool(null);
                 window.requestAnimationFrame(() => { smallStepsRef.current?.querySelector<HTMLElement>("button")?.focus({ preventScroll: true }); smallStepsRef.current?.scrollIntoView({ block: "start", behavior: "instant" }); });

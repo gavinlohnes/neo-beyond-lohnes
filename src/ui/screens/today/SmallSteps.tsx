@@ -1,5 +1,5 @@
-export function SmallSteps({ enabled, busy, onToggle, onOpen }: {
-  enabled: boolean; busy: boolean; onToggle: () => void; onOpen: (tool: "MINIMUM_DAY" | "CAPTURE") => void;
+export function SmallSteps({ minimumDayAvailable = true, enabled, busy, onToggle, onOpen }: {
+  minimumDayAvailable?: boolean; enabled: boolean; busy: boolean; onToggle: () => void; onOpen: (tool: "MINIMUM_DAY" | "CAPTURE") => void;
 }) {
   return <section className="small-steps" aria-labelledby="small-steps-heading">
     <div className="small-steps__header">
@@ -9,7 +9,7 @@ export function SmallSteps({ enabled, busy, onToggle, onOpen }: {
     {enabled && <>
       <p className="meta">You chose a smaller path. Capacity, plans and Engine guidance are unchanged.</p>
       <div className="small-steps__choices">
-        <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpen("MINIMUM_DAY")}><strong>Inspect Minimum Day</strong><span>The existing six basics, if helpful. Turning it on is your decision.</span></button>
+        {minimumDayAvailable && <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpen("MINIMUM_DAY")}><strong>Inspect Minimum Day</strong><span>The existing six basics, if helpful. Turning it on is your decision.</span></button>}
         <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpen("CAPTURE")}><strong>Put a thought down</strong><span>Write freely. Save only when you tap CAPTURE.</span></button>
       </div>
       <p className="meta">All controls remain below or in SYSTEM. Essentials stay visible.</p>

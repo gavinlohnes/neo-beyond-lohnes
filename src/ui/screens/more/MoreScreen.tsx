@@ -1,3 +1,4 @@
+import { useHiddenFeatures, setHiddenFeature, type HiddenFeature } from "../../hiddenFeatures";
 import { getExerciseNames } from "../../../application/exerciseLibraryQueries";
 import { getSavedMeals } from "../../../application/nutritionQueries";
 import type { SavedMeal } from "../../../domain/common/types";
@@ -112,8 +113,11 @@ export function MoreScreen({
   const [view, setViewState] = useState<MoreView>(initialView);
   // COMMAND-CENTER-001: kept while COMMAND is hidden or a destination is open, like every draft here.
   const [query, setQuery] = useState("");
-  const matches = query.trim() ? findCapabilities(query) : [];
-  const [dailyFocus, setDailyFocus] = useState<ToolsItem | "SHIFT_HANDOFF" | null>(captureRequest ? "CAPTURE" : null);
+  const hiddenFeatures = useHiddenFeatures();
+  const [hiddenError, setHiddenError] = useState(false);
+  const visibleCapabilities = SYSTEM_CAPABILITIES.filter((entry) => !("hiddenFeature" in entry) || hiddenFeatures[entry.hiddenFeature]);
+  const matches = query.trim() ? findCapabilities(query).filter((entry) => !("hiddenFeature" in entry) || hiddenFeatures[entry.hiddenFeature]) : [];
+  const [dailyFocus, setDailyFocus] = useState<ToolsItem | "SHIFT_HANDOFF" | "SMALL_STEPS" | null>(captureRequest ? "CAPTURE" : null);
   const [namedMeals, setNamedMeals] = useState<SavedMeal[]>([]);
   const [namedExercises, setNamedExercises] = useState<Record<string, string>>({});
   const [namedReadError, setNamedReadError] = useState(false);
@@ -426,6 +430,7 @@ export function MoreScreen({
     REMINDERS: "reminders-heading",
     DIAGNOSTICS: "command-diagnostics",
     GUIDE: "command-guide",
+    HIDDEN_FEATURES: "command-hidden-features",
   };
 
   /** A setting lives on this index: show it, open its disclosure, and put focus there. */
@@ -468,7 +473,7 @@ export function MoreScreen({
     <div className="screen more-operator">
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
           <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { if (onReturnToToday) { onReturnToToday(); return; } setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>{onReturnToToday ? "← TODAY" : "← BACK TO COMMAND"}</button>
-          <div hidden={view !== "DAILY_CONTROLS"}>{visited.has("DAILY_CONTROLS") && <TodayScreen operationsOnly commandFocus={dailyFocus} banners={dailyFocus === null ? dailyBanners : undefined} shiftHandoffRefreshKey={dailyRefreshKey} onWorkEnded={() => onDailyContextChanged?.()} onWorkContextChanged={() => onDailyContextChanged?.()} captureRequest={captureRequest} active={active && view === "DAILY_CONTROLS"} openToolsOnMount onOpenBody={(focus) => { if (focus) onOpenDestination?.({ kind: "body", focus }); }} onOpenTrain={() => { onOpenDestination?.({ kind: "workout" }); }} onOpenSystems={() => setView("SYSTEMS")} />}</div>
+          <div hidden={view !== "DAILY_CONTROLS"}>{visited.has("DAILY_CONTROLS") && <TodayScreen operationsOnly onReturnToFullTools={() => setDailyFocus(null)} commandFocus={dailyFocus} banners={dailyFocus === null ? dailyBanners : undefined} shiftHandoffRefreshKey={dailyRefreshKey} onWorkEnded={() => onDailyContextChanged?.()} onWorkContextChanged={() => onDailyContextChanged?.()} captureRequest={captureRequest} active={active && view === "DAILY_CONTROLS"} openToolsOnMount onOpenBody={(focus) => { if (focus) onOpenDestination?.({ kind: "body", focus }); }} onOpenTrain={() => { onOpenDestination?.({ kind: "workout" }); }} onOpenSystems={() => setView("SYSTEMS")} />}</div>
           {view === "SYSTEMS" && <><SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} /></>}
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
           {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>RETURN TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>RETURN TO BODY</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
@@ -576,7 +581,7 @@ export function MoreScreen({
           Archive/Restore are immediate actions, not navigation, so they
           use .equipment-row instead. */}
       {CAPABILITY_GROUPS.map((group) => <details className="command-group" key={group}><summary className="disclosure-row">{group}</summary>
-        {SYSTEM_CAPABILITIES.filter((entry) => entry.group === group).map((entry) => renderCapability(entry))}
+        {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry))}
       </details>)}
       <details className="command-group" id="command-backup-panel"><summary className="disclosure-row">Backup & recovery tools</summary>
       <section className="operational-index-zone" aria-labelledby="safety-heading">
@@ -737,6 +742,13 @@ export function MoreScreen({
       <details className="command-group" id="command-settings-panel"><summary className="disclosure-row">Settings tools</summary>
       <section className="operational-index-zone" aria-labelledby="settings-heading">
       <h2 id="settings-heading" className="section-label">Settings</h2>
+      <details id="command-hidden-features" className="more-inspection"><summary>Hidden features</summary>
+        <p className="meta">These optional tools start hidden. Showing or hiding them never changes records or Engine guidance. This preference stays on this browser.</p>
+        {([ ["minimumDay", "Minimum Day"], ["smallSteps", "Small Steps"], ["foodLookup", "Online food lookup"] ] as [HiddenFeature, string][]).map(([feature, label]) => <label key={feature} className="hidden-feature-choice">
+          <input type="checkbox" checked={hiddenFeatures[feature]} onChange={(event) => setHiddenError(!setHiddenFeature(feature, event.target.checked))} />Show {label}
+        </label>)}
+        {hiddenError && <p role="alert">Preference could not be saved. Try again.</p>}
+      </details>
       <div id="command-nutrition-targets" tabIndex={-1}><NutritionTargetsSettings /></div>
       <div id="command-quit-tracker" tabIndex={-1}><QuitHabitSettings /></div>
       <details id="command-time-capsule" className="more-inspection"><summary>Time capsule</summary><TimeCapsuleSettings /></details>

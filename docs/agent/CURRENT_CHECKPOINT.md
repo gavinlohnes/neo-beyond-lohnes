@@ -1,4 +1,4 @@
-# REDESIGN-001 — items 1–5 delivered; item 6 next
+# REDESIGN-001 — items 1–6 delivered; item 7 next
 
 Owner-approved PROTECTED objective: [frozen brief](REDESIGN-001.md), frozen reference
 `prototype/redesign/index.html`. Builder Codex. Branch `codex/redesign-001`;
@@ -77,7 +77,16 @@ failure, corrected and rechecked (one passed; 53 excluded by name filter, not di
 Build/architecture and built 320/360/390/412 named-meal/navigation/offline checks pass. Full gate
 remains pending; legacy presentation tests still need approved-path reconciliation.
 
-**Next:** item 6 hidden features, then labels and locked rulings/checkpoint. Commit/push
+**Item 6 delivered:** Minimum Day, Small Steps and online food lookup are hidden by default,
+with explicit browser-local switches under COMMAND → Hidden features. No canonical state or
+Engine input depends on these preferences. Hiding closes optional presentation while preserving
+input state. Protein-only logging remains separately reachable through its original form,
+command, correction history and undo. Hidden-preference/COMMAND/sheet subset 23 passed;
+final hidden/COMMAND subset 10 passed, then the final three hidden cases passed after closing
+optional presentation on hide. Build and architecture pass. Canonical records are compared
+before/after toggling; original protein-only writes/undo are covered. No migration/dependency.
+
+**Next:** item 7 labels, then item 8 locked rulings/checkpoint and full verification. Commit/push
 and update PR Handoff after each item. Full final verify and acceptance evidence, then mark ready
 and stop for independent Claude exact-head review. Never merge.
 

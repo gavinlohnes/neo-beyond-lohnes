@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import axe from "axe-core";
+import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
 import { App } from "../../src/app/App";
 import { SYSTEM_CAPABILITIES, CAPABILITY_GROUPS } from "../../src/ui/systemCatalog";
 import { startDay } from "../../src/application/commands";
@@ -10,6 +11,7 @@ import { db } from "../../src/persistence/db";
 beforeEach(()=>{vi.useFakeTimers({toFake:['Date']});vi.setSystemTime(new Date(2026,9,12,18));window.history.replaceState(null,'',location.pathname);});
 afterEach(()=>{cleanup();vi.useRealTimers();});
 for(const width of [320,360,390,412])it(`groups all capabilities and retains backup/restore at ${width}`,async()=>{
+ for(const feature of ["minimumDay","smallSteps","foodLookup"] as const)setHiddenFeature(feature,true);
  await page.viewport(width,844);await startDay();const screen=await render(<App/>);await screen.getByRole('button',{name:'COMMAND',exact:true}).click();
  const root=document.querySelector('.more-control-center')!;
  for(const group of CAPABILITY_GROUPS){const summary=[...root.querySelectorAll('summary')].find(s=>s.textContent===group)!;expect(summary).toBeTruthy();(summary.parentElement as HTMLDetailsElement).open=true;}
