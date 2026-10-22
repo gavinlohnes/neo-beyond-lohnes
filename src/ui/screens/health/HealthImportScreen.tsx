@@ -4,6 +4,9 @@ import { getSleepImportDays } from "../../../application/externalSleepQueries";
 import { sleepDurations, type SleepSnapshot } from "../../../domain/health/sleepImport";
 import type { BeyondDay } from "../../../domain/common/types";
 import { ImportedSleepEvidence } from "./ImportedSleepEvidence";
+import { ImportedActivityEvidence } from "./ImportedActivityEvidence";
+import { importActivitySnapshot, previewActivityImport } from "../../../application/externalActivityCommands";
+import { ACTIVITY_IMPORT_FORMAT, summarizeActivity, type ActivitySnapshot } from "../../../domain/health/activityImport";
 import "./healthImport.css";
 
 export function HealthImportScreen({ active = true }: { active?: boolean }) {
@@ -11,19 +14,38 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
   const [associations, setAssociations] = useState<Record<string, string | null>>({});
   const [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
+  const [activity, setActivity] = useState<ActivitySnapshot | null>(null);
   const locked = useRef(false), selection = useRef(0), result = useRef<HTMLParagraphElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => () => { selection.current++; }, []);
   async function choose(file?: File) {
     const request = ++selection.current;
-    setSnapshot(null); setAssociations({}); setMessage(""); setError("");
+    setSnapshot(null); setActivity(null); setAssociations({}); setMessage(""); setError("");
     if (!file) return;
     setBusy(true);
     try {
+      // GARMIN-002: the helper saves sleep and steps/heart rate as separate files; either can be chosen here.
+      const raw = file.size <= 2 * 1024 * 1024 ? await file.text() : "";
+      if (raw.includes(`"${ACTIVITY_IMPORT_FORMAT}"`)) {
+        const next = await previewActivityImport({ size: file.size, text: async () => raw });
+        if (request === selection.current) { setActivity(next); setMessage(`Preview ready: ${next.hours.length} hours of Garmin steps and heart rate. Nothing has been imported.`); }
+        return;
+      }
       const [next, choices] = await Promise.all([previewSleepImport(file), getSleepImportDays()]);
       if (request === selection.current) { setSnapshot(next); setDays(choices); setMessage(`Preview ready: ${next.records.length} Garmin sleep records. Nothing has been imported.`); }
     } catch (e) { if (request === selection.current) setError(e instanceof Error ? e.message : "This file could not be read. Nothing was imported."); }
     finally { if (request === selection.current) setBusy(false); }
+  }
+  async function confirmActivity() {
+    if (!activity || locked.current) return;
+    locked.current = true; setBusy(true); setError("");
+    try {
+      const counts = await importActivitySnapshot(activity);
+      setActivity(null); setRefresh((n) => n + 1);
+      setMessage(`Imported ${counts.inserted} new, ${counts.revised} updated; ${counts.skipped} unchanged or older. Manual logs and guidance are unchanged.`);
+      requestAnimationFrame(() => result.current?.focus());
+    } catch (e) { setError(e instanceof Error ? e.message : "Import failed. Nothing was changed."); }
+    finally { locked.current = false; setBusy(false); }
   }
   async function confirm() {
     if (!snapshot || locked.current) return;
@@ -38,9 +60,9 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
   }
   return <section aria-label="Import health data" className="health-import">
     <h2>IMPORT HEALTH DATA</h2>
-    <p>Choose a sleep export from BEYOND Health Bridge. Review it before saving. This imports Garmin sleep evidence only, on this device.</p>
-    <p>No account or upload. Other health data, automatic sync and changes to TODAY guidance are outside this first version.</p>
-    <label>Sleep export file<input ref={fileInput} type="file" disabled={busy} onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} /></label>
+    <p>Choose a sleep or a steps and heart rate file from BEYOND Health Bridge. Review it before saving. Garmin measurements stay on this device.</p>
+    <p>No account or upload. Imported measurements never change your own logs or TODAY guidance.</p>
+    <label>Health export file<input ref={fileInput} type="file" disabled={busy} onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} /></label>
     {busy && <p role="status">Working…</p>}
     {error && <p role="alert">{error}</p>}
     <p ref={result} tabIndex={-1} role="status">{message}</p>
@@ -67,6 +89,20 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
       <button type="button" disabled={busy || !snapshot.records.length} onClick={() => void confirm()}>CONFIRM SLEEP IMPORT</button>
       <button type="button" disabled={busy} onClick={() => { selection.current++; setSnapshot(null); setAssociations({}); setMessage("Preview cancelled. Nothing was imported."); fileInput.current?.focus(); }}>CANCEL PREVIEW</button>
     </section>}
+    {activity && (() => {
+      const total = summarizeActivity(activity.hours, Date.parse(activity.window.startTime), Date.parse(activity.window.endTime));
+      return <section aria-label="Steps and heart rate import preview">
+        <h3>REVIEW STEPS AND HEART RATE</h3>
+        <p>Garmin Connect · exported {activity.exportedAt}</p>
+        <p>Window: {activity.window.startTime} → {activity.window.endTime} (UTC)</p>
+        <p>{activity.hours.length} measured hours · {total.steps === null ? "no steps" : `${total.steps.toLocaleString("en-US")} steps`} · {total.heartRateAvgBpm === null ? "no heart rate" : `heart rate ${total.heartRateMinBpm ?? "?"}–${total.heartRateMaxBpm ?? "?"} bpm`} · {activity.restingHeartRate.length} resting heart rate readings</p>
+        <p>A newer export replaces the same hour. Older or repeated files change nothing.</p>
+        {!activity.hours.length && !activity.restingHeartRate.length && <p>No Garmin steps or heart rate in this export. Nothing will be saved.</p>}
+        <button type="button" disabled={busy || (!activity.hours.length && !activity.restingHeartRate.length)} onClick={() => void confirmActivity()}>CONFIRM STEPS AND HEART RATE IMPORT</button>
+        <button type="button" disabled={busy} onClick={() => { selection.current++; setActivity(null); setMessage("Preview cancelled. Nothing was imported."); fileInput.current?.focus(); }}>CANCEL PREVIEW</button>
+      </section>;
+    })()}
+    <ImportedActivityEvidence active={active} refreshKey={refresh} />
     <ImportedSleepEvidence active={active} refreshKey={refresh} />
   </section>;
 }

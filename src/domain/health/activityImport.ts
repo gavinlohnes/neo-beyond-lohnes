@@ -1,0 +1,128 @@
+import { GARMIN_ORIGIN } from "./sleepImport";
+
+/**
+ * GARMIN-002: measured steps and heart rate from BEYOND Health Bridge. Evidence only — never a
+ * manual log, canonical event or Engine input. Hours are Health Connect aggregates, so a newer
+ * export replaces an older one for the same hour instead of keeping revisions.
+ */
+export const ACTIVITY_IMPORT_FORMAT = "BEYOND_HEALTH_CONNECT_ACTIVITY";
+export const MAX_ACTIVITY_FILE_BYTES = 2 * 1024 * 1024;
+const HOUR_MS = 60 * 60 * 1000;
+const WEEK_MS = 7 * 24 * HOUR_MS;
+
+export interface ActivityHour {
+  startTime: string; endTime: string; zoneOffsetSeconds: number | null; steps: number | null;
+  heartRateMinBpm: number | null; heartRateAvgBpm: number | null; heartRateMaxBpm: number | null;
+}
+export interface RestingHeartRate {
+  id: string; dataOriginPackage: string; lastModifiedTime: string; time: string; zoneOffsetSeconds: number | null; bpm: number;
+}
+export interface ActivitySnapshot {
+  format: typeof ACTIVITY_IMPORT_FORMAT; schemaVersion: 1;
+  producer: { name: "BEYOND Health Bridge"; version: string }; source: typeof GARMIN_ORIGIN;
+  exportedAt: string; window: { startTime: string; endTime: string };
+  hours: ActivityHour[]; restingHeartRate: RestingHeartRate[];
+}
+/** Stored hour, keyed by its UTC start. `exportedAt` decides which export is newer. */
+export interface ExternalActivityHour extends ActivityHour { id: string; exportedAt: string; receiptId: string }
+export interface ExternalRestingHeartRate extends RestingHeartRate { key: string; importedAt: string; receiptId: string }
+
+function fail(): never { throw new Error("This is not a supported BEYOND steps and heart rate export. Nothing was imported."); }
+function object(value: unknown, keys: string[]): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return fail();
+  const row = value as Record<string, unknown>;
+  if (Object.keys(row).length !== keys.length || keys.some((key) => !Object.hasOwn(row, key))) return fail();
+  return row;
+}
+function text(value: unknown, max = 200): string {
+  if (typeof value !== "string" || value.length === 0 || value.length > max || /[\u0000-\u001f]/.test(value)) return fail();
+  return value;
+}
+function instant(value: unknown): string {
+  const input = text(value, 40);
+  if (!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,9})?Z$/.test(input) || !Number.isFinite(Date.parse(input))) return fail();
+  if (new Date(input).toISOString().slice(0, 19) !== input.slice(0, 19)) return fail();
+  return input;
+}
+function offset(value: unknown): number | null {
+  if (value === null) return null;
+  if (typeof value !== "number" || !Number.isInteger(value) || Math.abs(value) > 64800) return fail();
+  return value;
+}
+function count(value: unknown, min: number, max: number): number | null {
+  if (value === null) return null;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < min || value > max) return fail();
+  return value;
+}
+
+/** Full validation/copy at both preview and command boundary. Unknown fields are refused. */
+export function validateActivitySnapshot(value: unknown): ActivitySnapshot {
+  const root = object(value, ["format", "schemaVersion", "producer", "source", "exportedAt", "window", "hours", "restingHeartRate"]);
+  if (root.format !== ACTIVITY_IMPORT_FORMAT || root.schemaVersion !== 1 || root.source !== GARMIN_ORIGIN) return fail();
+  const producer = object(root.producer, ["name", "version"]);
+  if (producer.name !== "BEYOND Health Bridge") return fail();
+  const version = text(producer.version, 40);
+  const exportedAt = instant(root.exportedAt);
+  const window = object(root.window, ["startTime", "endTime"]);
+  const startTime = instant(window.startTime), endTime = instant(window.endTime);
+  const from = Date.parse(startTime), to = Date.parse(endTime);
+  if (to <= from || to - from > WEEK_MS || to > Date.parse(exportedAt)) return fail();
+  if (!Array.isArray(root.hours) || root.hours.length > 7 * 24) return fail();
+  const seenHours = new Set<string>();
+  const hours = root.hours.map((input): ActivityHour => {
+    const h = object(input, ["startTime", "endTime", "zoneOffsetSeconds", "steps", "heartRateMinBpm", "heartRateAvgBpm", "heartRateMaxBpm"]);
+    const start = instant(h.startTime), end = instant(h.endTime);
+    const begin = Date.parse(start);
+    if (begin % HOUR_MS !== 0 || Date.parse(end) !== begin + HOUR_MS || begin < from || begin + HOUR_MS > to || seenHours.has(start)) return fail();
+    seenHours.add(start);
+    const steps = count(h.steps, 0, 100_000);
+    const min = count(h.heartRateMinBpm, 20, 300), avg = count(h.heartRateAvgBpm, 20, 300), max = count(h.heartRateMaxBpm, 20, 300);
+    if (steps === null && avg === null) return fail();
+    return { startTime: start, endTime: end, zoneOffsetSeconds: offset(h.zoneOffsetSeconds), steps, heartRateMinBpm: min, heartRateAvgBpm: avg, heartRateMaxBpm: max };
+  });
+  if (!Array.isArray(root.restingHeartRate) || root.restingHeartRate.length > 500) return fail();
+  const seenIds = new Set<string>();
+  const restingHeartRate = root.restingHeartRate.map((input): RestingHeartRate => {
+    const r = object(input, ["id", "dataOriginPackage", "lastModifiedTime", "time", "zoneOffsetSeconds", "bpm"]);
+    const id = text(r.id);
+    if (r.dataOriginPackage !== GARMIN_ORIGIN || seenIds.has(id)) return fail();
+    seenIds.add(id);
+    const time = instant(r.time);
+    if (Date.parse(time) < from || Date.parse(time) >= to) return fail();
+    const bpm = count(r.bpm, 20, 300);
+    if (bpm === null) return fail();
+    return { id, dataOriginPackage: GARMIN_ORIGIN, lastModifiedTime: instant(r.lastModifiedTime), time, zoneOffsetSeconds: offset(r.zoneOffsetSeconds), bpm };
+  });
+  return { format: ACTIVITY_IMPORT_FORMAT, schemaVersion: 1, producer: { name: "BEYOND Health Bridge", version }, source: GARMIN_ORIGIN,
+    exportedAt, window: { startTime, endTime }, hours, restingHeartRate };
+}
+export function parseActivitySnapshot(input: string): ActivitySnapshot {
+  if (new TextEncoder().encode(input).byteLength > MAX_ACTIVITY_FILE_BYTES) throw new Error("Steps and heart rate export is too large.");
+  let value: unknown;
+  try { value = JSON.parse(input); } catch { return fail(); }
+  return validateActivitySnapshot(value);
+}
+export function restingHeartRateKey(record: Pick<RestingHeartRate, "dataOriginPackage" | "id">): string {
+  return JSON.stringify([record.dataOriginPackage, record.id]);
+}
+
+export interface MeasuredActivity {
+  hours: number; steps: number | null; heartRateMinBpm: number | null; heartRateMaxBpm: number | null;
+  /** Hour averages weighted equally; Health Connect does not export sample counts. */
+  heartRateAvgBpm: number | null;
+}
+/** Totals for the measured hours that start inside [from, to). Missing hours stay missing, never zero. */
+export function summarizeActivity(hours: readonly ActivityHour[], from: number, to: number): MeasuredActivity {
+  const inside = hours.filter((h) => { const t = Date.parse(h.startTime); return t >= from && t < to; });
+  const steps = inside.filter((h) => h.steps !== null);
+  const hr = inside.filter((h) => h.heartRateAvgBpm !== null);
+  const mins = inside.map((h) => h.heartRateMinBpm).filter((v): v is number => v !== null);
+  const maxs = inside.map((h) => h.heartRateMaxBpm).filter((v): v is number => v !== null);
+  return {
+    hours: inside.length,
+    steps: steps.length ? steps.reduce((sum, h) => sum + h.steps!, 0) : null,
+    heartRateMinBpm: mins.length ? Math.min(...mins) : null,
+    heartRateMaxBpm: maxs.length ? Math.max(...maxs) : null,
+    heartRateAvgBpm: hr.length ? Math.round(hr.reduce((sum, h) => sum + h.heartRateAvgBpm!, 0) / hr.length) : null,
+  };
+}

@@ -10,6 +10,8 @@ import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { ImportedSleepEvidence } from "../../src/ui/screens/health/ImportedSleepEvidence";
 import { getAdvisoryNotes } from "../../src/application/advisoryQueries";
 import { syntheticSleep } from "../helpers/syntheticSleep";
+import { syntheticActivity } from "../helpers/syntheticActivity";
+import { ImportedActivityEvidence } from "../../src/ui/screens/health/ImportedActivityEvidence";
 
 vi.mock("../../src/application/advisoryQueries", async (original) => {
   const actual = await original<typeof import("../../src/application/advisoryQueries")>();
@@ -39,7 +41,7 @@ describe("Health Connect sleep import", () => {
   it.each([320, 360, 390, 412])("previews accessibly at %i px; cancel writes nothing", async (width) => {
     await page.viewport(width, 844);
     const screen = await render(<HealthImportScreen />);
-    const input = screen.getByLabelText("Sleep export file").element() as HTMLInputElement;
+    const input = screen.getByLabelText("Health export file").element() as HTMLInputElement;
     expect(input.hasAttribute("accept")).toBe(false); // Android SAF must not hide a valid file because of provider MIME metadata.
     chooseFile(input);
     await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();
@@ -54,7 +56,7 @@ describe("Health Connect sleep import", () => {
   });
   it("confirms once, keeps focus on the result, skips duplicates and displays source evidence", async () => {
     const screen = await render(<HealthImportScreen />);
-    const input = screen.getByLabelText("Sleep export file").element() as HTMLInputElement;
+    const input = screen.getByLabelText("Health export file").element() as HTMLInputElement;
     chooseFile(input);
     await screen.getByRole("button", { name: "CONFIRM SLEEP IMPORT" }).click();
     await expect.element(screen.getByText(/^Imported 1 new, 0 revised/)).toBeVisible();
@@ -74,7 +76,7 @@ describe("Health Connect sleep import", () => {
   });
   it("rejects unsupported files and offers a fresh selection", async () => {
     const screen = await render(<HealthImportScreen />);
-    const input = screen.getByLabelText("Sleep export file").element() as HTMLInputElement;
+    const input = screen.getByLabelText("Health export file").element() as HTMLInputElement;
     chooseFile(input, '{"format":"anything-else"}');
     await expect.element(screen.getByRole("alert")).toBeVisible();
     expect(await db.externalSleepRecords.count()).toBe(0);
@@ -89,12 +91,31 @@ describe("Health Connect sleep import", () => {
     await vi.mocked(getAdvisoryNotes).mock.results[0]!.value;
     await screen.getByLabelText("Find a screen or action").fill("health connect");
     await screen.getByRole("button", { name: /^IMPORT HEALTH DATA/ }).click();
-    chooseFile(screen.getByLabelText("Sleep export file").element() as HTMLInputElement);
+    chooseFile(screen.getByLabelText("Health export file").element() as HTMLInputElement);
     await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();
     await screen.getByRole("button", { name: "← BACK TO COMMAND" }).click();
     await screen.getByLabelText("Find a screen or action").fill("health connect");
     await screen.getByRole("button", { name: /^IMPORT HEALTH DATA/ }).click();
     await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();
     expect(await db.externalSleepRecords.count()).toBe(0);
+  });
+  it.each([320, 412])("previews and imports a steps and heart rate file accessibly at %i px, shown as measured by lived day", async (width) => {
+    await page.viewport(width, 844);
+    await db.beyondDays.add({ id: "day-1", startedAt: "2026-10-17T21:30:00Z", timezoneId: "America/Chicago", workContext: "WORK", status: "ENDED", createdAt: "2026-10-17T21:30:00Z", updatedAt: "2026-10-17T21:30:00Z" });
+    const screen = await render(<HealthImportScreen />);
+    chooseFile(screen.getByLabelText("Health export file").element() as HTMLInputElement, JSON.stringify(syntheticActivity()));
+    await expect.element(screen.getByRole("heading", { name: "REVIEW STEPS AND HEART RATE" })).toBeVisible();
+    await expect.element(screen.getByText(/^3 measured hours · 1,500 steps · heart rate 55–120 bpm · 1 resting/)).toBeVisible();
+    expect(await db.externalActivityHours.count()).toBe(0);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+    expect((await axe.run(screen.container, { rules: { region: { enabled: false } } })).violations.map((v) => v.id)).toEqual([]);
+    await screen.getByRole("button", { name: "CONFIRM STEPS AND HEART RATE IMPORT" }).click();
+    await expect.element(screen.getByText(/^Imported 4 new, 0 updated/)).toBeVisible();
+    expect(await db.events.count()).toBe(0); expect(await db.externalSleepRecords.count()).toBe(0);
+    await cleanup();
+    const evidence = await render(<ImportedActivityEvidence />);
+    await expect.element(evidence.getByRole("heading", { name: "MEASURED · GARMIN" })).toBeVisible();
+    await expect.element(evidence.getByText("1,500 steps", { exact: true })).toBeVisible();
+    await expect.element(evidence.getByText("Resting heart rate 54 bpm", { exact: true })).toBeVisible();
   });
 });

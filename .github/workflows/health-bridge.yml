@@ -38,13 +38,13 @@ jobs:
           key = '{http://schemas.android.com/apk/res/android}name'
           permissions = {e.attrib[key] for e in root.findall('uses-permission')}
           health = {p for p in permissions if p.startswith('android.permission.health.')}
-          assert health == {'android.permission.health.READ_SLEEP'}, permissions
+          assert health == {'android.permission.health.READ_SLEEP', 'android.permission.health.READ_STEPS', 'android.permission.health.READ_HEART_RATE', 'android.permission.health.READ_RESTING_HEART_RATE'}, permissions
           assert 'android.permission.INTERNET' not in permissions, permissions
           services = {e.attrib[key] for e in root.findall('application/service')}
           # Official Health Connect bound IPC service; not a scheduled sync worker.
           allowed = {'androidx.health.platform.client.impl.sdkservice.HealthDataSdkService'}
           assert services <= allowed, services
-          print('Packaged manifest: sleep read only; no Internet; SDK IPC service only')
+          print('Packaged manifest: sleep, steps and heart rate read only; no Internet; SDK IPC service only')
           PY
       - name: Record build identity
         run: |
