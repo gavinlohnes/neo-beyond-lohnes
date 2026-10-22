@@ -12,6 +12,21 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## GARMIN-005 — eaten vs burned (owner approved 2026-10-22)
+
+Gavin approved [the brief](agent/GARMIN-005.md), including the defaults below and its wording table.
+
+- **Meaning:** calories eaten are BEYOND meal logs; calories burned are Garmin's total estimate,
+  resting plus active. They are shown side by side, never reduced to net, remaining, deficit or
+  surplus, and never used as an Engine target or recommendation.
+- **Placement and history:** CALORIES sits next to PROTEIN when Garmin supplied calorie data. Its
+  TODAY/7D/4W/1Y sheet compares the two series, preserves missing as missing, excludes today from
+  completed-period averages and remains read-only. Weekly adds Garmin's measured average beside the
+  existing weight-trend estimate rather than replacing it.
+- **Trust:** every sheet shows `Garmin as of …`; TODAY calls out data older than 12 hours. Copy says
+  burned is a watch estimate that can be off by 10–20%. Older helper files remain compatible and
+  cannot erase already imported calorie values.
+
 ## GARMIN-004 — Garmin numbers you can see (owner approved 2026-10-22)
 
 Gavin approved [the brief](agent/GARMIN-004.md); its wording table is for his review before merge.

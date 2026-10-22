@@ -62,7 +62,7 @@ describe("GARMIN-005 — eaten vs burned", () => {
     expect(sheet.element().textContent).not.toMatch(/left|remaining|deficit|surplus|net/i);
     if (width === 390) await shot("390-calories-today");
     await sheet.getByRole("button", { name: "4W", exact: true }).click();
-    await expect.element(sheet.getByText(/^kcal a day on average · 8 logged days, 28 measured · today left out$/)).toBeVisible();
+    await expect.element(sheet.getByText(/^kcal a day on average · 8 logged days, 27 measured · today left out$/)).toBeVisible();
     await sheet.getByText("Show as table", { exact: true }).click();
     const unlogged = [...sheet.element().querySelectorAll("tbody tr")].find((row) => row.textContent?.includes("Not logged"));
     expect(unlogged).toBeTruthy();

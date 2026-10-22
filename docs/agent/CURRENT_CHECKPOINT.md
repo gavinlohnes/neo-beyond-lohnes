@@ -1,26 +1,22 @@
-# GARMIN-005 — eaten vs burned (PAUSED mid-build; handoff to Codex)
+# GARMIN-005 — eaten vs burned
 
-- **Objective:** approved by Gavin 2026-10-22 ("Approved. Make it amazing"), with defaults: CALORIES
-  tile next to PROTEIN; "burned" = Garmin total (resting + active); no eaten-minus-burned number.
-  Plus Garmin freshness ("Garmin as of 14:20"; a TODAY note when data is over 12 h old).
-  Display only: no Engine, target or advice change. Brief not yet written (docs/agent/GARMIN-005.md).
-- **Branch:** `claude/garmin-005`, built on `claude/garmin-004` (PR #269, approved for merge, CI was
-  re-running at `8a4b80d`). Rebase/merge onto master once #269 merges. No PR opened yet.
-- **Done (WIP commit):**
-  - Helper 0.6.0: READ_TOTAL/ACTIVE_CALORIES_BURNED, hourly `totalCaloriesKcal`/`activeCaloriesKcal`,
-    activity format schema 2, unit tests, workflow permission allowlist. Not compiled locally (no
-    Android SDK; Maven 429) — CI's health-bridge workflow must prove it.
-  - BEYOND: validator accepts schema 1 and 2; schema 1 re-import never erases stored calories;
-    import preview counts calorie hours; 4 integration tests pass.
-  - `measuredSeries` burned/eaten series; snapshot `burned`, `eaten`, `burnedToday`, `eatenToday`,
-    `garminAsOf`, `usual.burned`; CALORIES tile (spans 2; STEPS spans 2 with it); CALORIES sheet
-    (today two-line chart, 7D/4W/1Y paired bars, legend, table); Weekly "Garmin says about …" line.
-- **Failing now:** `tests/browser/Garmin005.test.tsx` 4W summary expectation (counts line regex,
-  line 65) — check what `logged`/`measured` render (likely 9 logged incl. partial handling) and fix
-  the test or copy. Other 3 tests in that file pass.
-- **Next:** fix that test; screenshots (`VITE_GARMIN005_SHOTS=../../docs/screenshots/garmin-005`);
-  write docs/agent/GARMIN-005.md with the wording table; UX_DECISIONS entry; `npm run verify`;
-  open the PR; independent review; Gavin's merge.
+- **Objective / authority:** Gavin approved [GARMIN-005](GARMIN-005.md) on 2026-10-22 ("Approved.
+  Make it amazing"). PROTECTED: new Health Connect read permissions and new TODAY numbers. Builder
+  Claude Code handed the objective to Codex to finish.
+- **Branch:** `claude/garmin-005`, stacked on GARMIN-004 PR #269. PR pending. GARMIN-004's one-line
+  sub-pixel CI repair is `520699a`; bring this branch onto merged master after #269 integrates.
+- **Built:** helper 0.6.0 exports hourly total/active calories in compatible activity format 2;
+  BEYOND accepts formats 1 and 2 without old imports erasing calories. TODAY shows a conditional
+  CALORIES tile, eaten-vs-burned sheet, Garmin freshness/stale notice, 7D/4W/1Y comparisons and
+  Weekly's measured Garmin average. No Engine, target, advice, net/remaining or schema change.
+- **Finished in handoff:** corrected the 4W expectation to 27 completed measured days; 5/5 focused
+  browser tests pass at 320/390 px; refreshed four screenshots; added the brief/wording table and
+  UX_DECISIONS ruling. Full gate attempt passed architecture and 2,873 tests / one skip; two
+  unrelated 5-second `classifyRisk` timeouts then passed 18/18 in isolation. Clean full rerun remains.
+- **Limits:** no Android SDK here, so helper compilation/permission packaging awaits CI. Physical
+  phone permission/export, Safari and screen readers remain unverified.
+- **Next:** integrate #269/master, obtain a clean full gate and helper CI, open the PR, then obtain
+  independent exact-head review. Gavin alone decides merge.
 
 ---
 Previous checkpoint:
