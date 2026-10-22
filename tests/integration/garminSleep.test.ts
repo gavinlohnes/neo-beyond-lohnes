@@ -18,6 +18,7 @@ const day = { id: "day-1", startedAt: "2026-10-17T21:30:00Z", timezoneId: "Ameri
 function sleep(id: string, start: string, end: string, modified = "2026-10-18T12:00:00Z") {
   const s = syntheticSleep();
   s.records = [{ ...s.records[0]!, id, startTime: start, endTime: end, lastModifiedTime: modified, stages: [] }];
+  s.window.endTime = s.exportedAt = "2026-10-20T00:00:00Z";
   return s;
 }
 const entries = () => getSleepEntries(day.id);
@@ -82,6 +83,52 @@ describe("Garmin sleep fills in the day", () => {
     await importSleepSnapshot(both);
     const kinds = (await entries()).map((e) => [e.kind, e.effectiveDurationMinutes]).sort();
     expect(kinds).toEqual([["PRIMARY", 360], ["SUPPLEMENTAL", 60]]);
+  });
+});
+
+describe("#266 review fixes", () => {
+  const day2 = { ...day, id: "day-2", startedAt: "2026-10-18T21:30:00Z" };
+  const all = async () => (await db.events.where("type").equals("SLEEP_LOGGED").toArray());
+  const active = async (dayId: string) => (await getSleepEntries(dayId)).map((e) => [e.kind, e.effectiveDurationMinutes, e.fromGarmin]);
+
+  it("uses the owner's explicit day link from the preview over the automatic rule", async () => {
+    await db.beyondDays.bulkAdd([day, day2]);
+    // Starts in day-1 by time, but the owner linked it to day-2.
+    await importSleepSnapshot(sleep("night", "2026-10-18T07:00:00Z", "2026-10-18T13:00:00Z"), { night: "day-2" });
+    expect(await active("day-1")).toEqual([]);
+    expect(await active("day-2")).toEqual([["PRIMARY", 360, true]]);
+  });
+
+  it("withdraws the old day's untouched entry when a newer version moves the sleep to another day", async () => {
+    await db.beyondDays.bulkAdd([day, day2]);
+    await importSleepSnapshot(sleep("night", "2026-10-18T07:00:00Z", "2026-10-18T13:00:00Z"));
+    expect(await active("day-1")).toEqual([["PRIMARY", 360, true]]);
+    expect(await importSleepSnapshot(sleep("night", "2026-10-18T22:00:00Z", "2026-10-19T04:00:00Z", "2026-10-19T05:00:00Z"))).toMatchObject({ removed: 1, logged: 1 });
+    expect(await active("day-1")).toEqual([]);
+    expect(await active("day-2")).toEqual([["PRIMARY", 360, true]]);
+  });
+
+  it("withdraws an untouched entry when a newer version falls below the minimum", async () => {
+    await db.beyondDays.add(day);
+    await importSleepSnapshot(sleep("night", "2026-10-18T07:00:00Z", "2026-10-18T13:00:00Z"));
+    await importSleepSnapshot(sleep("night", "2026-10-18T07:00:00Z", "2026-10-18T07:05:00Z", "2026-10-18T14:00:00Z"));
+    expect(await active("day-1")).toEqual([]);
+  });
+
+  it("keeps an entry the owner corrected, and never re-adds one the owner deleted, even after a move", async () => {
+    await db.beyondDays.bulkAdd([day, day2]);
+    await importSleepSnapshot(sleep("night", "2026-10-18T07:00:00Z", "2026-10-18T13:00:00Z"));
+    const entry = (await getSleepEntries("day-1"))[0]!;
+    await correctSleep("day-1", entry.headEventId, 350);
+    await importSleepSnapshot(sleep("night", "2026-10-18T22:00:00Z", "2026-10-19T04:00:00Z", "2026-10-19T05:00:00Z"));
+    expect(await active("day-1")).toEqual([["PRIMARY", 350, true]]); // the owner's correction stands
+
+    await db.events.clear(); await db.externalSleepRecords.clear(); await db.externalSleepRevisions.clear();
+    await importSleepSnapshot(sleep("nap", "2026-10-18T07:00:00Z", "2026-10-18T09:00:00Z"));
+    await voidSleepLog("day-1", (await getSleepEntries("day-1"))[0]!.rootEventId);
+    await importSleepSnapshot(sleep("nap", "2026-10-18T22:00:00Z", "2026-10-19T00:00:00Z", "2026-10-19T05:00:00Z"));
+    expect(await active("day-2")).toEqual([]);
+    expect((await all()).length).toBe(1);
   });
 });
 
