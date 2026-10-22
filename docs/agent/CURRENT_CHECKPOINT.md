@@ -8,7 +8,7 @@ Current: PR 1 (history) on `ccr-83cf6ed8-ug1ym9` from master:
 - the helper's READ FULL HISTORY with "Access past data" (0.5.0);
 - both file formats and SEND TO BEYOND accept up to 366 days / 8 MiB.
 
-Next: PR 2 (Garmin sleep becomes a sleep entry, approach A), then PR 3 (baselines). Display
+PR 1 is #265. PR 2 (Garmin sleep becomes a sleep entry, approach A, plus baselines) is stacked on it. Display
 changes and advice wording wait for #261 (REDESIGN-001, Codex). Each PR needs an independent
 review and the owner's merge.
 

@@ -11,7 +11,8 @@ Starting master: 9f0f2c23efadb7925051172e5eeac48f5882f70f. Branch: `ccr-83cf6ed8
 
 Ruling recorded with the approval: Garmin data is **measured** evidence. It never silently
 becomes a manual log. BEYOND keeps measured, reported, interpreted and recommended information
-distinct.
+distinct. **Superseded on 2026-10-22** by [UX_DECISIONS → GARMIN-003](../UX_DECISIONS.md): Garmin
+now fills in sleep as an entry marked Garmin, and the owner's own entry wins.
 
 ## Device observation (2026-10-22)
 

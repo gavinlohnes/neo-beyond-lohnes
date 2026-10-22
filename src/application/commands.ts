@@ -1,5 +1,6 @@
 import { db } from "../persistence/db";
 import { DAY_WRITE_TABLES, writeAtomically } from "./atomicWrite";
+import { replaceGarminSleep } from "./garminSleep";
 import type { DraftDecision } from "../domain/intelligence/types";
 import { evaluate } from "../engine/evaluate";
 import { computeDueRollover, workoutHoldsRollover } from "../engine/dayRollover";
@@ -419,13 +420,18 @@ export async function logSleep(
   draft?: DraftDecision,
 ): Promise<string> {
   const correlationId = newId();
-  return logEvent(
-    beyondDayId,
-    "SLEEP_LOGGED",
-    { commandId: correlationId, durationMinutes, kind, ...(draft ? { draft } : {}) },
-    "USER",
-    correlationId,
-  );
+  // GARMIN-003: the owner's entry replaces Garmin's of the same kind, in the same transaction.
+  return writeAtomically([], async () => {
+    const eventId = await logEvent(
+      beyondDayId,
+      "SLEEP_LOGGED",
+      { commandId: correlationId, durationMinutes, kind, ...(draft ? { draft } : {}) },
+      "USER",
+      correlationId,
+    );
+    await replaceGarminSleep(beyondDayId, kind, eventId);
+    return eventId;
+  });
 }
 
 export async function submitCheckIn(
