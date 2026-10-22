@@ -512,13 +512,7 @@ function AppWorkspaces() {
     if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
     if (destination.kind === "capture") { openCapture(); return true; }
     if (destination.kind === "stealth") { changeStealth(true); return true; }
-    if (destination.kind === "tools") {
-      if (!canNavigate()) return false;
-      setTodayToolsOpen(true);
-      setToolsRequest((key) => key + 1);
-      showTab("TODAY", false);
-      return true;
-    }
+    if (destination.kind === "tools") return openMore("DAILY_CONTROLS");
     if (destination.kind === "more") return openMore(destination.view);
     return false;
   }
@@ -534,10 +528,8 @@ function AppWorkspaces() {
 
   function openCapture() {
     if (!canNavigate()) return;
-    if (tab !== "TODAY") setCaptureOrigin(tab);
-    setTodayToolsOpen(true);
     setCaptureRequest((key) => key + 1);
-    showTab("TODAY", false);
+    openMore("DAILY_CONTROLS");
   }
 
   if (!continuityResolved) {
@@ -561,17 +553,10 @@ function AppWorkspaces() {
             <TodayScreen
               active={tab === "TODAY"}
               mealRefreshKey={todayRefreshKey}
-              captureRequest={captureRequest}
               onReturnFromCapture={captureOrigin ? () => { showTab(captureOrigin); setCaptureOrigin(null); } : undefined}
               onWorkEnded={() => setWorkEndedKey((k) => k + 1)}
               onWorkContextChanged={() => setWorkEndedKey((k) => k + 1)}
               shiftHandoffRefreshKey={workEndedKey}
-              banners={<>
-                <BackupDueLine />
-                <NotesSweep refreshKey={workEndedKey} onSwept={() => setTodayRefreshKey((k) => k + 1)} />
-                <TimeCapsuleOpened />
-                <ReportReadyLine />
-              </>}
               onViewCommitments={(id) => openMore("INTENT", id ? { kind: "OBLIGATION", obligationId: id } : null)}
               onOpenPlan={() => openMore("PLAN")}
               onOpenTrain={openTrain}
@@ -598,7 +583,12 @@ function AppWorkspaces() {
           <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}
-            onOpenCapture={openCapture}
+            onOpenCapture={openCapture} captureRequest={captureRequest} dailyRefreshKey={workEndedKey} onDailyContextChanged={() => setWorkEndedKey((key) => key + 1)} dailyBanners={<>
+                <BackupDueLine />
+                <NotesSweep refreshKey={workEndedKey} onSwept={() => setTodayRefreshKey((k) => k + 1)} />
+                <TimeCapsuleOpened />
+                <ReportReadyLine />
+              </>}
             onOpenRecords={(exerciseId) => {
               if (!canNavigate()) return;
               setTrainDestination(null); setTrainRecordsFocus(exerciseId); showTab("TRAIN", false);

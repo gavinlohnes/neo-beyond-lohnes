@@ -1,3 +1,50 @@
+# REDESIGN-001 — item 1 delivered; item 2 needs a meal-contract ruling
+
+Owner-approved PROTECTED objective: [frozen brief](REDESIGN-001.md), frozen reference
+`prototype/redesign/index.html`. Builder Codex. Branch `codex/redesign-001`;
+[draft PR #261](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/261).
+Fresh starting master `9f0f2c23efadb7925051172e5eeac48f5882f70f` (includes #251).
+No Garmin work, Engine/schema changes, merge or deployment authorized here.
+
+**Done:** attachment files committed unchanged. Item 1: TODAY scene → logging → NEXT → numbers
+→ unfinished check-in. Canonical operations and safety gate retained in NEXT; active operation
+conflicts stay explicit. Check-in sheet starts blank with the approved anchors and secondary
+ALL GOOD, retains its modal node across selections, and gates submit on all five. In-memory
+partial answers and focus survive dismissal. Canonical check-in errors preserve the draft;
+post-commit read failures do not invite repeat submission. Water/meal/sleep receipts use a visible
+fixed toast with existing undo/correction. Note entry remains available in a sheet. Removed daily
+controls/banners remain reachable via COMMAND → TODAY TOOLS, using the existing components;
+item 5 will refine their final grouping. The frozen prototype and brief have matching upload hashes.
+
+**Verification:** nine new focused browser cases pass, including four mobile widths, mode order,
+check-in accessibility, canonical check-in/water records, note draft retention and active-operation
+receipt bounds. Architecture and TypeScript/production build pass. Built PWA acceptance passes
+320/360/390/412, four modes each, check-in sheet, visible water undo, offline save/cold reload.
+Evidence: [item 1](../screenshots/redesign-001/README.md). Full verify is NOT claimed at this
+intermediate stage: legacy presentation assertions need reconciliation with the approved new
+paths during the remaining items. No tests weakened; existing tests are untouched.
+
+**Blocking ruling before item 2:** existing `application/nutritionCommands.ts:logMeal` accepts
+only a saved preset ID and snapshots exactly one serving. There is no canonical unsaved-meal or
+fractional-serving command. The brief requires those paths, but explicitly excludes command/event
+semantic changes. Gavin has been asked whether a bounded canonical meal-command extension is
+approved, preserving old records, correction/undo, schemas and backup compatibility, or whether
+those paths should be deferred. Do not fabricate preset provenance, create hidden disposable
+presets, or misuse corrections as portion logging to bypass this exclusion. No such extension
+has been implemented. Keep the uploaded brief unchanged; record the owner ruling in this handoff
+and its PR when received. Work scope items in order.
+
+**Next:** resolve that ruling, then item 2 log sheets, followed by items 3–8 in order. Commit/push
+and update PR Handoff after each item. Full final verify and acceptance evidence, then mark ready
+and stop for independent Claude exact-head review. Never merge.
+
+**Preserved unrelated work:** unfinished local daily-operations sprint is in stash
+`e1396c8e7ab549dec117e0f631a0c7e1144af309`; do not apply to this branch. #254 stays separate.
+Physical devices/Safari/screen readers remain untested; existing bundle advisory remains.
+
+---
+Previous checkpoint (historical; Garmin is not this objective):
+
 # GARMIN-001 — physical-phone installation diagnosis
 
 #258 merged at 8581af586facf1b08a29347c28787b5e4810db3a after owner approval.
