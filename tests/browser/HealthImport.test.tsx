@@ -136,6 +136,9 @@ describe("Health Connect sleep import", () => {
     chooseFile(screen.getByLabelText("Health export file").element() as HTMLInputElement, JSON.stringify(syntheticActivity()));
     await expect.element(screen.getByRole("heading", { name: "REVIEW STEPS AND HEART RATE" })).toBeVisible();
     await expect.element(screen.getByText(/^3 measured hours · 1,500 steps · heart rate 55–120 bpm · average 71 · 1 resting/)).toBeVisible();
+    await expect.element(screen.getByText("2026-10-12T00:00:00Z", { exact: false })).not.toBeVisible();
+    await screen.getByText("Source details", { exact: true }).click();
+    await expect.element(screen.getByText("2026-10-12T00:00:00Z", { exact: false })).toBeVisible();
     expect(await db.externalActivityHours.count()).toBe(0);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     expect((await axe.run(screen.container, { rules: { region: { enabled: false } } })).violations.map((v) => v.id)).toEqual([]);

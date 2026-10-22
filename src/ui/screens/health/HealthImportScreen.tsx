@@ -118,10 +118,14 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
       const total = summarizeActivity(activity.hours, Date.parse(activity.window.startTime), Date.parse(activity.window.endTime));
       return <section aria-label="Steps and heart rate import preview">
         <h3>REVIEW STEPS AND HEART RATE</h3>
-        <p>Garmin Connect · exported {activity.exportedAt}</p>
-        <p>Window: {activity.window.startTime} → {activity.window.endTime} (UTC)</p>
+        <p><strong>{localDayTime(activity.window.startTime)} → {localDayTime(activity.window.endTime)}</strong></p>
         <p>{activity.hours.length} measured hours · {total.steps === null ? "no steps" : `${total.steps.toLocaleString("en-US")} steps`} · {heartRateLine(total.heartRateMinBpm, total.heartRateAvgBpm, total.heartRateMaxBpm).replace(/^Heart rate/, "heart rate")} · {activity.restingHeartRate.length} resting heart rate readings{calorieHours(activity) ? ` · ${calorieHours(activity)} hours with calories burned` : ""}</p>
         <p>A newer export replaces the same hour. Older or repeated files change nothing.</p>
+        <details>
+          <summary>Source details</summary>
+          <p>Garmin Connect · exported {localDayTime(activity.exportedAt)}</p>
+          <p>Exact source times (UTC): {activity.window.startTime} → {activity.window.endTime}</p>
+        </details>
         {!activity.hours.length && !activity.restingHeartRate.length && <p>No Garmin steps or heart rate in this export. Nothing will be saved.</p>}
         <button type="button" disabled={busy || (!activity.hours.length && !activity.restingHeartRate.length)} onClick={() => void confirmActivity()}>CONFIRM STEPS AND HEART RATE IMPORT</button>
         <button type="button" disabled={busy} onClick={() => { selection.current++; setActivity(null); setMessage("Preview cancelled. Nothing was imported."); fileInput.current?.focus(); }}>CANCEL PREVIEW</button>
