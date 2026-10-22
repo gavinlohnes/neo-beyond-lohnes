@@ -45,6 +45,10 @@ describe("TrainScreen (real browser) — no active session", () => {
     await expect.element(screen.getByRole("button", { name: "QUICK CHECK-IN (ALL GOOD)" })).toBeVisible();
     await expect.element(screen.getByText("DEFAULT WORKOUT", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
+    // FRICTION-001: sentence case, so a list reads "Chest, legs, and triceps", not "Chest, Legs, And Triceps".
+    const title = document.querySelector(".command-title")!;
+    expect(title.textContent).toMatch(/^[A-Z][^A-Z]*$/);
+    expect(getComputedStyle(title).textTransform).not.toBe("capitalize");
   });
 
   it("quick check-in clears the NO CHECK-IN banner", async () => {

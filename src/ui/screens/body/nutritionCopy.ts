@@ -54,7 +54,7 @@ export function describeCalorieProgress(loggedKcal: number, targetKcal: number |
 }
 
 export function describeProteinProgress(loggedG: number, targetG: number | undefined): string {
-  if (targetG === undefined) return `${loggedG}g protein logged today — log a bodyweight to see your target.`;
+  if (targetG === undefined) return "No target yet · a weigh-in sets it.";
   const remaining = targetG - loggedG;
   return remaining >= 0
     ? `${loggedG} / ${targetG}g protein · ${remaining}g to go`

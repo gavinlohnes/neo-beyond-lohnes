@@ -1101,8 +1101,8 @@ export function TrainScreen({
           <p className="tool-label" style={{ marginBottom: 4 }}>
             {noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
           </p>
-          <h2 className="command-title" style={{ textTransform: "capitalize" }}>
-            {chosenVariant === "RECOVERY" ? "Recovery session" : suggestedSummary.bodyAreas || "Workout"}
+          <h2 className="command-title">
+            {chosenVariant === "RECOVERY" ? "Recovery session" : sentenceCase(suggestedSummary.bodyAreas) || "Workout"}
           </h2>
           {chosenVariant !== "RECOVERY" && (
             <p className="meta" style={{ marginBottom: 12 }}>
@@ -1868,3 +1868,6 @@ export function TrainScreen({
     </div>
   );
 }
+
+/** "chest, legs, and triceps" → "Chest, legs, and triceps" (CSS capitalize would also capitalize "and"). */
+const sentenceCase = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);

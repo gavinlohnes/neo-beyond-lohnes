@@ -1,5 +1,4 @@
 import {
-
   describeBestSince,
   describeMilestone,
   formatShortDate,
@@ -57,10 +56,10 @@ export function WeightTrend({
 
   return (
     <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-      {!hideChart && <p className="meta" style={{ marginBottom: 6 }}>Last {WINDOW_DAYS} days · latest {shortDate(latest.recordedAt)}</p>}
+      {!hideChart && <p className="meta" style={{ marginBottom: 6 }}>Last {WINDOW_DAYS} days · latest {formatShortDate(latest.recordedAt)}</p>}
       {!hideChart && <svg
         role="img"
-        aria-label={`Weight over the last ${WINDOW_DAYS} days ending ${shortDate(latest.recordedAt)}, from ${shown[0]!.weightLbs} to ${latest.weightLbs} lb`}
+        aria-label={`Weight over the last ${WINDOW_DAYS} days ending ${formatShortDate(latest.recordedAt)}, from ${shown[0]!.weightLbs} to ${latest.weightLbs} lb`}
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
         style={{ width: "100%", height: H, display: "block" }}
@@ -104,4 +103,3 @@ export function WeightTrend({
 }
 
 /** The app's one short date style ("Oct 19"), not the locale's numeric one. */
-const shortDate = (at: string) => new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric" });

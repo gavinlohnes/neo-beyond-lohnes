@@ -60,7 +60,7 @@ describe("one protein total on every screen", () => {
 
     const body = await render(<BodyScreen />);
     await expect.poll(proteinTile).toBe("99 g");
-    await expect.element(body.getByText("99g protein logged today — log a bodyweight to see your target.", { exact: true })).toBeVisible();
+    await expect.element(body.getByText("No target yet · a weigh-in sets it.", { exact: true })).toBeVisible();
 
     // DELETE the 49 g entry: open its correction, then hold DELETE.
     await body.getByRole("button", { name: "Open PROTEIN ONLY" }).click();
@@ -73,7 +73,7 @@ describe("one protein total on every screen", () => {
 
     await expect.element(body.getByText("Deleted 49 g. Protein today: 50 g.", { exact: true })).toBeVisible();
     await expect.poll(proteinTile).toBe("50 g");
-    await expect.element(body.getByText("50g protein logged today — log a bodyweight to see your target.", { exact: true })).toBeVisible();
+    await expect.element(body.getByText("No target yet · a weigh-in sets it.", { exact: true })).toBeVisible();
     expect(body.getByRole("button", { name: /SHOW TODAY'S ENTRIES/ }).elements()).toHaveLength(0);
     expect(await db.events.where("type").equals("PROTEIN_LOGGED").count()).toBe(1);
     await cleanup();
