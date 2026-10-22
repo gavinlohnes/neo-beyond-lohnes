@@ -3,7 +3,7 @@ import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import { completeShiftDown, logWater, markWorkEnded, startDay, startShiftDown, updateSchedulePattern } from "../../src/application/commands";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { markAppOpened } from "../../src/ui/appSession";
 import { db } from "../../src/persistence/db";
 import type { BeyondDay } from "../../src/domain/common/types";

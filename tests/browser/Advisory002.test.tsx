@@ -1,9 +1,12 @@
+import { beforeEach as optionalToolFixture } from "vitest";
+import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
+optionalToolFixture(() => { for (const feature of ["minimumDay", "smallSteps", "foodLookup"] as const) setHiddenFeature(feature, true); });
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { startDay, submitCheckIn } from "../../src/application/commands";
 import { createObligation } from "../../src/application/intentCommands";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 
 /** ADVISORY-002: real to-dos live in COMMITMENT; the vague lines are gone. */

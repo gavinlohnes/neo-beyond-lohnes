@@ -10,7 +10,7 @@ import {
 } from "../../src/application/commands";
 import { getActiveDay, getWorkContextSource } from "../../src/application/queries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
 import { App } from "../../src/app/App";
 import { db } from "../../src/persistence/db";

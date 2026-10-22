@@ -304,7 +304,7 @@ export function TodayScreen({
   const [checkInDraftDismissed, setCheckInDraftDismissed] = useState(false);
   const activeCheckInDraft = checkInDraft && !checkInDraftDismissed ? checkInDraft : undefined;
   // What the form shows and submits: taps win over the draft.
-  const checkInFormValues: PartialCheckInValues = operationsOnly && commandFocus === undefined && activeCheckInDraft ? { ...activeCheckInDraft.value, ...values } : values;
+  const checkInFormValues: PartialCheckInValues = values;
   const [busy, setBusy] = useState(false);
   // TODAY-009 (residual TODAY-R02, flagged in TODAY-006): `busy` is React
   // state, so setBusy(true) doesn't take effect (and re-render the
@@ -1851,7 +1851,7 @@ export function TodayScreen({
       <div id="today-check-in">
 
       {(!checkInInAttention || checkInFormOpen) && (
-        <CheckInCard
+        <CheckInCard isInFlight={() => busyRef.current}
           busy={busy}
           checkIn={checkIn}
           checkInFormOpen={checkInFormOpen}
@@ -2152,7 +2152,7 @@ export function TodayScreen({
         }
         if (!checkIn || checkInFormOpen || !recommendation || attentionPlan.recommendationPlacement === "ATTENTION") {
           return (
-            <CheckInCard
+            <CheckInCard isInFlight={() => busyRef.current}
               busy={busy}
               checkIn={checkIn}
               checkInFormOpen={checkInFormOpen}
@@ -2174,7 +2174,7 @@ export function TodayScreen({
         return (
           <>
 
-            <CheckInCard
+            <CheckInCard isInFlight={() => busyRef.current}
               busy={busy}
               checkIn={checkIn}
               checkInFormOpen={false}
@@ -2262,13 +2262,13 @@ export function TodayScreen({
     {banners}
     {commandFocus === "SMALL_STEPS" ? (hiddenFeatures.smallSteps ? <><SmallSteps minimumDayAvailable={hiddenFeatures.minimumDay} enabled busy={busy} onToggle={() => onReturnToFullTools?.()} onOpen={setSmallTool} />{smallTool && renderToolsItem(smallTool)}</> : <p className="meta">Show Small Steps in COMMAND → Hidden features.</p>)
       : commandFocus === "CHECK_IN" ? <><button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
-      <CheckInSheet open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
+      <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
         quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} /></>
       : commandFocus === "SHIFT_HANDOFF" ? <><ShiftHandoff refreshKey={shiftHandoffRefreshKey ?? 0} /><p className="meta">Handoff entry is offered after work is marked ended. Existing notes remain in HISTORY.</p></>
       : commandFocus ? renderToolsItem(commandFocus) : <>{renderWorkContextTool()}{renderToolsItem("END_DAY")}
         <details><summary className="disclosure-row">More daily tools</summary>{TOOLS_ORDER.filter((tool) => !["WORK_CONTEXT", "END_DAY", "CHECK_IN"].includes(tool)).map((tool) => <div key={tool}>{renderToolsItem(tool)}</div>)}</details>
         <button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
-        <CheckInSheet open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
+        <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
           quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} />
       </>}
   </div>;
@@ -2452,18 +2452,23 @@ export function TodayScreen({
             onHandoff={handleRecommendationHandoff}
             confirmPanel={<ConfirmPanel />}
           /></>
-          : <><h2>Nothing needs you right now.</h2><p className="meta">No guidance recorded yet.</p></>}
+          : <><h2>No guidance recorded yet.</h2><p className="meta">Your tools are ready. Check in when you can.</p><button type="button" className="btn-primary" onClick={() => onOpenRecordSheet ? onOpenRecordSheet("log") : setCheckInFormOpen(true)}>CHOOSE AN ACTION</button></>}
         {(activeWorkout || activeResetId || activeShiftDownId || shiftClock.phase === "EXPECTED_POST_WORK") && recommendation && <details><summary>WHY</summary><p>{recommendation.rationale}</p><p className="meta">Recorded Engine guidance. Your call.</p></details>}
       {(activeResetId || activeShiftDownId || shiftClock.phase === "EXPECTED_POST_WORK") && <ConfirmPanel />}
     </section>
     <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
       {stale && <p role="status"><Signal data-signal="stale-note">Yesterday’s numbers. Refresh to check today.</Signal><button type="button" className="btn-secondary" disabled={busy || staleRefresh === "RUNNING"} onClick={() => void handleStaleRefresh()}>REFRESH</button></p>}
-      {(!online || backupDue || undoFailure || checkInError) && <button type="button" className="btn-secondary" onClick={onOpenSystems}><Signal data-signal={undoFailure || checkInError ? "save-failed" : !online ? "offline-line" : "backup"}>{undoFailure ?? checkInError ?? (!online ? "Offline. Logging still saves on this phone." : backupDue?.days === null ? "No backup yet." : "Backup overdue.")}</Signal></button>}
+      {(!online || backupDue || undoFailure || checkInError || systemStatus && systemStatus.level !== "GREEN") && <button type="button" className="btn-secondary today-system-signal" onClick={onOpenSystems}><Signal data-signal={undoFailure || checkInError ? "save-failed" : !online ? "offline-line" : "backup"}>{[
+        undoFailure ?? checkInError,
+        !online ? "Offline. Logging saves on this phone." : null,
+        systemStatus && systemStatus.level !== "GREEN" ? `STATUS · ${describeSystemStatus(systemStatus)}` : null,
+        backupDue ? backupDue.days === null ? "No backup yet." : "Backup overdue." : null,
+      ].filter(Boolean).join(" · ")}</Signal></button>}
     </section>
     {!checkIn && <section aria-label="Check-in"><h2>CHECK-IN</h2><p>Not checked in.</p><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></section>}
     <LogSheet open={fastCaptureOpen} title="NOTE" onClose={closeFastCapture} canClose={() => !busyRef.current}>{renderToolsItem("CAPTURE")}</LogSheet>
-    <CheckInSheet open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} quickValues={quickCheckInValues} error={checkInError} />
+    <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} quickValues={quickCheckInValues} error={checkInError} />
     {(hydrationConfirmation || mealConfirmation || sleepConfirmation || proteinConfirmation) && <div className="redesign-toast" role="status">
       {hydrationConfirmation && renderLoggedBanner(`${hydrationConfirmation.amount} oz recorded.`, hydrationUndoOpen, "WATER", "water")}
       {mealConfirmation && renderLoggedBanner(mealConfirmation.message, mealUndoOpen, "MEAL", "meal")}
@@ -2939,12 +2944,7 @@ export function TodayScreen({
               <p className="card-body" style={{ marginBottom: 12 }}>
                 No check-in yet today. Suggestions still work without one; a check-in just helps them fit.
               </p>
-              <button className="btn-primary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
-                ALL GOOD
-              </button>
-              <button className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setCheckInFormOpen(true)}>
-                MANUAL CHECK-IN
-              </button>
+              <button className="btn-secondary" disabled={busy} onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
             </SignalRow>
           )}
 
@@ -3108,4 +3108,9 @@ export function TodayScreen({
       </div>
     </div>
   );
+}
+
+/** Complete existing controls, available on demand in COMMAND. */
+export function DailyControls(props: Parameters<typeof TodayScreen>[0] = {}) {
+  return <TodayScreen {...props} operationsOnly commandFocus={props.commandFocus ?? null} />;
 }

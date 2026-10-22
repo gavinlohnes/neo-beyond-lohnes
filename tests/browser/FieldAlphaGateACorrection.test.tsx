@@ -1,10 +1,13 @@
+import { beforeEach as optionalToolFixture } from "vitest";
+import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
+optionalToolFixture(() => { for (const feature of ["minimumDay", "smallSteps", "foodLookup"] as const) setHiddenFeature(feature, true); });
 import { afterEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { startDay, submitCheckIn, enableMinimumDay, markMedsCompleted, markHygieneCompleted } from "../../src/application/commands";
 import { createObligation } from "../../src/application/intentCommands";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 import { openTodayTools } from "./helpers/todayTools";
 
@@ -17,7 +20,7 @@ import { openTodayTools } from "./helpers/todayTools";
  * covers the three corrections that followed: Minimum Day's GLANCE-
  * depth compaction, State Input's red-authority reduction, and the
  * commitment row's label clarity (no longer duplicating TODAY's own
- * "Orient" section label). Behavioral coverage for the underlying
+ * "DAY CONTEXT" section label). Behavioral coverage for the underlying
  * capabilities (Minimum Day semantics, check-in semantics, Obligation
  * relevance/ranking) is unchanged and already exists elsewhere
  * (tests/integration/minimumDay.test.ts, tests/ui/checkInFields.test.ts,
@@ -133,11 +136,11 @@ describe("Gate A correction — commitment label clarity", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("Orient", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("DAY CONTEXT", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open COMMITMENT" })).toBeVisible();
-    // Exactly one "Orient" on the whole screen — the section header, not
+    // Exactly one "DAY CONTEXT" on the whole screen — the section header, not
     // also the commitment row underneath it.
-    expect(screen.getByText("Orient", { exact: true }).elements()).toHaveLength(1);
+    expect(screen.getByText("DAY CONTEXT", { exact: true }).elements()).toHaveLength(1);
   });
 
   it("the obligation's own title still appears, in the row's summary line, once role-labeled as COMMITMENT", async () => {

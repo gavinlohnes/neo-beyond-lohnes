@@ -1,10 +1,13 @@
+import { beforeEach as optionalToolFixture } from "vitest";
+import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
+optionalToolFixture(() => { for (const feature of ["minimumDay", "smallSteps", "foodLookup"] as const) setHiddenFeature(feature, true); });
 /// <reference types="@vitest/browser-playwright" />
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cdp, page, userEvent } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
 import axe from "axe-core";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { getGuidedMoreStarts, GENERIC_MORE_STARTS } from "../../src/application/guidedMoreQueries";
 import { startDay, setWorkContext, submitCheckIn, logWater, captureItem } from "../../src/application/commands";
 import { getMinimumDayStatus, getEffectiveHydrationTotal, getOpenCaptureItems } from "../../src/application/queries";

@@ -84,7 +84,7 @@ describe("SYSTEMS line copy", () => {
 
   it("states missing data plainly and leads AMBER/RED in words", () => {
     expect(describeSystemsLine({ sleepMinutes: null, proteinG: 0, proteinTargetG: undefined, checkIn: null, statusLevel: "NO_READ", warnings: [] }))
-      .toEqual(["NO READ · log sleep or check in", "Fuel 0g"]);
+      .toEqual(["NOT CHECKED IN · log sleep or check in", "Fuel 0g"]);
     expect(describeSystemsLine({ sleepMinutes: null, proteinG: 0, proteinTargetG: undefined, checkIn: "GREEN", statusLevel: "GREEN", warnings: [] }))
       .toEqual(["Sleep not logged", "Fuel 0g", "Check-in GREEN"]);
     expect(describeSystemsLine({ sleepMinutes: 410, proteinG: 96, proteinTargetG: 170, checkIn: "GREEN", statusLevel: "GREEN", warnings: ["Offline"] }))

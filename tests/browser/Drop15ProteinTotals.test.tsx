@@ -1,3 +1,6 @@
+import { beforeEach as optionalToolFixture } from "vitest";
+import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
+optionalToolFixture(() => { for (const feature of ["minimumDay", "smallSteps", "foodLookup"] as const) setHiddenFeature(feature, true); });
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
@@ -5,7 +8,7 @@ import { logProtein, startDay, updateSchedulePattern } from "../../src/applicati
 import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { BodyScreen } from "../../src/ui/screens/body/BodyScreen";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { db } from "../../src/persistence/db";
 import { holdToConfirm } from "./helpers/hold";
 

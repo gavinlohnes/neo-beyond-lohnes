@@ -1,3 +1,6 @@
+import { beforeEach as optionalToolFixture } from "vitest";
+import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
+optionalToolFixture(() => { for (const feature of ["minimumDay", "smallSteps", "foodLookup"] as const) setHiddenFeature(feature, true); });
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
@@ -5,7 +8,7 @@ import { logSleep, markWorkEnded, startDay, submitCheckIn, updateSchedulePattern
 import { saveQuitHabit } from "../../src/application/quitCommands";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { MAX_PHASE_ROWS } from "../../src/ui/screens/today/shiftClock";
-import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { db } from "../../src/persistence/db";
 import { openTodayTools } from "./helpers/todayTools";
 import type { BeyondDay } from "../../src/domain/common/types";
