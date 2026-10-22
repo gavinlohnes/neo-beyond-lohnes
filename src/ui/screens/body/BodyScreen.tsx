@@ -1,8 +1,6 @@
 import { WeightTrend } from "./WeightTrend";
 import { getRecordedHealthDay } from "../../../application/healthRecordQueries";
 import type { RecordCorrectionRequest } from "../../recordSheets";
-import { ImportedSleepEvidence } from "../health/ImportedSleepEvidence";
-import { ImportedActivityEvidence } from "../health/ImportedActivityEvidence";
 import "../health/healthImport.css";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -71,7 +69,7 @@ import {
 import { DailyHealthRecord, HealthOverview, type HealthRecord } from "./DailyHealthRecord";
 import type { InsightMetric } from "../../../application/bodyInsightsQueries";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../../../application/healthRecordQueries";
-import { HealthDayBrowser } from "./HealthDayBrowser";
+import { HealthHistory } from "./HealthHistory";
 import { HealthSources, type SourceSelection } from "./HealthSources";
 import { BodyProgress } from "./BodyProgress";
 import { QuitTracker } from "./QuitTracker";
@@ -310,7 +308,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     });
   }
   const [otherToolsOpen, setOtherToolsOpen] = useState(focus === "urge");
-  const [garminHistoryOpen, setGarminHistoryOpen] = useState(false);
+  const [healthHistoryOpen, setHealthHistoryOpen] = useState(false);
   const [readingsReady, setReadingsReady] = useState(false);
   const [readCorrectionKey, setReadCorrectionKey] = useState<number | null>(null);
   const [dataRevision, setDataRevision] = useState(0);
@@ -2496,12 +2494,9 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); }}>{label}</button>)}</div>
       </section>
       <section aria-label="History"><h2 className="section-label">HISTORY</h2>
-        <HealthDayBrowser selected={healthDay} disabled={busy} visible={visible && !progressOpen} refreshKey={dataRevision} onHistory={onHealthHistory} onSelect={setHealthDay} onExplore={showProgress} onInspect={(selection) => openSources(selection, true)} />
         {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} holdToInspect onInspect={(record) => onEditRecord?.(record, day.id)} />}
-        {!healthDay && <details open={garminHistoryOpen} onToggle={(event) => setGarminHistoryOpen(event.currentTarget.open)}>
-          <summary>Garmin history</summary>
-          {garminHistoryOpen && <><ImportedActivityEvidence active={visible && !progressOpen} /><ImportedSleepEvidence active={visible && !progressOpen} /></>}
-        </details>}
+        <HealthHistory open={healthHistoryOpen} onOpenChange={setHealthHistoryOpen} active={visible && !progressOpen}
+          days={{ selected: healthDay, disabled: busy, refreshKey: dataRevision, onHistory: onHealthHistory, onSelect: setHealthDay, onExplore: showProgress, onInspect: (selection) => openSources(selection, true) }} />
       </section>
     </div>
     <div hidden={!progressOpen}>
@@ -2532,9 +2527,9 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         {waterFocused ? "BODY // WATER" : mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // TODAY"}
       </OperatorHeader>
       <div hidden={waterFocused || mealsVisible || progressOpen}>
-        <HealthDayBrowser selected={healthDay} disabled={busy || foodSearchBusy} visible={visible && !waterFocused && !mealsVisible && !progressOpen}
-          refreshKey={dataRevision} onHistory={onHealthHistory} onSelect={(start) => { if (!busyRef.current && !foodSearchBusyRef.current) setHealthDay(start); }}
-          onExplore={showProgress} onInspect={(selection) => openSources(selection, true)} />
+        <HealthHistory open={healthHistoryOpen} onOpenChange={setHealthHistoryOpen} active={visible && !waterFocused && !mealsVisible && !progressOpen}
+          days={{ selected: healthDay, disabled: busy || foodSearchBusy, refreshKey: dataRevision, onHistory: onHealthHistory,
+            onSelect: (start) => { if (!busyRef.current && !foodSearchBusyRef.current) setHealthDay(start); }, onExplore: showProgress, onInspect: (selection) => openSources(selection, true) }} />
       </div>
       {!waterFocused && !mealsVisible && !progressOpen && !healthDay && (readingsReady ? <HealthOverview day={day}
         onExplore={(metric) => showProgress(metric, metric === "weight" ? undefined : day?.id)} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries}
@@ -2657,10 +2652,6 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       </div>
       {readingsReady && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries}
         protein={proteinEntries} meals={mealEntries} disabled={busy || foodSearchBusy} onInspect={inspectRecord} />}
-      {!waterFocused && <details open={garminHistoryOpen} onToggle={(event) => setGarminHistoryOpen(event.currentTarget.open)}>
-        <summary>Garmin history</summary>
-        {garminHistoryOpen && <><ImportedActivityEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} /><ImportedSleepEvidence active={visible && !mealsVisible && !progressOpen && healthDay === null} /></>}
-      </details>}
       <FieldDisclosure summary={`${otherToolsOpen ? "HIDE" : "SHOW"} OTHER BODY TOOLS`} open={otherToolsOpen} onToggle={setOtherToolsOpen}>
         <QuitTracker initiallyOpen={focus === "urge"} openRequest={focus === "urge" ? focusRequest : 0} />
         <p className="meta">Nutrition targets are editable in COMMAND → Settings.</p>

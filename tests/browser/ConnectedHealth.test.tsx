@@ -36,7 +36,7 @@ for (const width of [320, 360, 412]) it(`selects an overnight health day and its
   const before = await db.events.toArray();
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "BODY", exact: true }).click();
-  await screen.getByText("Browse health days", { exact: true }).click();
+  await screen.getByText("Health history", { exact: true }).click(); // UX-COHESION-001: DAYS is the default view
   await screen.getByRole("button", { name: dayName(offsetHealthDay(healthDayStart(), -1)) }).click();
   const past = screen.getByRole("region", { name: "Selected health day" });
   await expect.element(past.getByRole("button", { name: "water history", exact: true })).toHaveTextContent("12 oz");
@@ -142,7 +142,7 @@ it("retains changed input while a historical selection crosses the 16:30 rollove
   const screen = await render(<BodyScreen />);
   await screen.getByRole("button", { name: "Open SLEEP", exact: true }).click();
   await screen.getByRole("spinbutton", { name: "Hours", exact: true }).fill("7");
-  await screen.getByText("Browse health days", { exact: true }).click();
+  await screen.getByText("Health history", { exact: true }).click(); // UX-COHESION-001: DAYS is the default view
   await screen.getByRole("button", { name: dayName(offsetHealthDay(healthDayStart(), -1)) }).click();
   vi.setSystemTime(new Date(2026, 9, 16, 16, 31));
   const { performDueDayRollover } = await import("../../src/application/commands");
@@ -261,7 +261,7 @@ it("keeps explicit historical browsing read-only when an active workout defers r
   const screen = await render(<App />);
   await expect.element(screen.getByRole("spinbutton", { name: "Set 1 repetitions", exact: true })).toBeVisible();
   await screen.getByRole("button", { name: "BODY", exact: true }).click();
-  await screen.getByText("Browse health days", { exact: true }).click();
+  await screen.getByText("Health history", { exact: true }).click(); // UX-COHESION-001: DAYS is the default view
   await screen.getByRole("button", { name: dayName(offsetHealthDay(healthDayStart(), -1)) }).click();
   await screen.getByText("Recorded entries · 1", { exact: true }).click();
   await screen.getByRole("button", { name: "Source of Water · 8 oz", exact: true }).click();
