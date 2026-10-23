@@ -255,12 +255,13 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onOpenTrainingRecords, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "BACK TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory, onLogWeight }: {
+export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onOpenTrainingRecords, onOpenReview, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "BACK TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory, onLogWeight }: {
   overviewOnly?: boolean;
   /** FRICTION-001: BODY home's WEIGHT card opens the weight log directly. */
   onLogWeight?: () => void;
   foodLookupEnabled?: boolean;
   onOpenTrainingRecords?: (() => void) | undefined;
+  onOpenReview?: ((view: "overview" | "rotation") => void) | undefined;
   onEditRecord?: ((record: HealthRecord, dayId: string) => void) | undefined;
   correctionRequest?: RecordCorrectionRequest | null | undefined;
   sheetFocus?: "protein" | "water" | "sleep" | "weight" | "urge" | "meal";
@@ -2507,6 +2508,10 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
           <div className="body-progress-pair">{onLogWeight && <button type="button" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={onLogWeight}>LOG WEIGHT</button>}<button type="button" className="btn-secondary" onClick={() => showProgress("weight")}>WEIGHT HISTORY</button></div></div>
         <button type="button" className="btn-secondary body-progress-card" onClick={onOpenTrainingRecords}>TRAINING · RECORDS</button>
         <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); }}>{label}</button>)}</div>
+        <div className="body-progress-pair" aria-label="Patterns">
+          <button type="button" className="btn-secondary body-progress-card" disabled={!onOpenReview} onClick={() => onOpenReview?.("overview")}>WHOLE PICTURE</button>
+          <button type="button" className="btn-secondary body-progress-card" disabled={!onOpenReview} onClick={() => onOpenReview?.("rotation")}>YOUR ROTATION</button>
+        </div>
       </section>
       <section aria-label="History"><h2 className="section-label">HISTORY</h2>
         {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} holdToInspect onInspect={(record) => onEditRecord?.(record, day.id)} />}

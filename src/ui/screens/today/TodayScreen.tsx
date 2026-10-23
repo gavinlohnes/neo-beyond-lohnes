@@ -1936,7 +1936,7 @@ export function TodayScreen({
       </button>;
     return (
       <>
-        <p className="cc-lbl cc-numbers-head"><span>TODAY’S NUMBERS</span></p>
+        <p className="cc-lbl cc-numbers-head"><span>TODAY’S NUMBERS</span>{garminTiles && <SyncGarminLink />}</p>
         <div className={`cc-fuel${garminTiles ? " cc-fuel--six" : ""}${calorieTile ? " cc-fuel--calories" : ""}`} role="group" aria-label={fuelLine}>
           {tile("protein", "PROTEIN", <><b><DecryptNumber value={minimumDayProteinG} dayId={day?.id ?? "unstarted"} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
             // FIELD-AUTHORITY-001: a tile states facts; how the target is set lives in its history.
@@ -1969,7 +1969,7 @@ export function TodayScreen({
         {/* FIELD-AUTHORITY-001: TONIGHT-001's "a weigh-in sets the target" moves out of the tile. */}
         {pct === null && latestWeightLbs === undefined && <p className="meta cc-numbers-note">A weigh-in sets the protein target.</p>}
         {/* GARMIN-005: Garmin numbers only move when the helper sends; say so when they are old. */}
-        {garminStale && <><p className="meta cc-numbers-note">{describeGarminAsOf(measured!.caloriesAsOf!, measured!.readAt).replace(/\.$/, "")}. Send from the helper to update.</p><SyncGarminLink /></>}
+        {garminStale && <p className="meta cc-numbers-note">{describeGarminAsOf(measured!.caloriesAsOf!, measured!.readAt).replace(/\.$/, "")}. Send from the helper to update.</p>}
       </>
     );
   }

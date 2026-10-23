@@ -67,6 +67,7 @@ const DATA_SCHEMA = db.verno;
 export type MoreView = "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT";
 
 import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
+import type { WholePictureDestination } from "../review/WholePicture";
 
 export function MoreScreen({
   onViewChange,
@@ -82,6 +83,7 @@ export function MoreScreen({
   onOpenDestination,
   historyDestination = null, onReturnToHealth, onHistoryExit,
   onOpenMetric, onReturnToToday, systemsRefreshKey = 0,
+  reviewDestination = null,
 }: {
   onViewChange?: (view: MoreView) => void;
   /** COMMAND-CENTER-001: search results outside COMMAND (BODY, TRAIN, TODAY) go through the shell. */
@@ -109,6 +111,8 @@ export function MoreScreen({
   onOpenRecords?: (exerciseId: string) => void;
   /** FIND-001: a MEAL result opens BODY's meal entry. */
   onOpenMeal?: () => void;
+  /** NAV-001: DATA can open the existing Whole Picture at its overview or rotation view. */
+  reviewDestination?: { key: number; view: WholePictureDestination } | null;
 } = {}) {
   const [view, setViewState] = useState<MoreView>(initialView);
   // COMMAND-CENTER-001: kept while COMMAND is hidden or a destination is open, like every draft here.
@@ -480,7 +484,7 @@ export function MoreScreen({
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
           {view === "REPORT" && <><OperatorHeader destination="command">AFTER ACTION REPORT</OperatorHeader><ReportView /></>}
           {view === "MIRROR" && <><OperatorHeader destination="command">MIRROR</OperatorHeader><MirrorView /></>}
-          <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} onOpenHistory={(id) => {
+          <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} destination={reviewDestination} onOpenHistory={(id) => {
             reviewOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
             setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
           }} />}</div>

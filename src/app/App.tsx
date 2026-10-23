@@ -9,6 +9,7 @@ import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import { TrainScreen, type TrainDestination } from "../ui/screens/train/TrainScreen";
 import { BodyScreen } from "../ui/screens/body/BodyScreen";
 import { MoreScreen, type MoreView } from "../ui/screens/more/MoreScreen";
+import type { WholePictureDestination } from "../ui/screens/review/WholePicture";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { CcIcon } from "../ui/cc/ccIcons";
@@ -261,6 +262,7 @@ function AppWorkspaces() {
   // FIND-001: a LIFT/PR search result opens TRAIN → RECORDS at that lift; the top-bar icon opens SEARCH.
   const [trainRecordsFocus, setTrainRecordsFocus] = useState<string | null>(null);
   const [moreView, setMoreView] = useState<MoreView>(sharedHealth ? "HEALTH_IMPORT" : "MENU");
+  const [reviewDestination, setReviewDestination] = useState<{ key: number; view: WholePictureDestination } | null>(null);
   useEffect(() => {
     if (!sharedHealth) return;
     const url = new URL(window.location.href);
@@ -479,6 +481,11 @@ function AppWorkspaces() {
     return true;
   }
 
+  function openDataReview(view: WholePictureDestination) {
+    setReviewDestination((current) => ({ key: (current?.key ?? 0) + 1, view }));
+    openMore("REVIEW", null, false);
+  }
+
   function openTrain(destination: TrainDestination) {
     if (!canNavigate()) return false;
     setTrainRecordsFocus(null);
@@ -631,13 +638,13 @@ function AppWorkspaces() {
             onDestinationConsumed={() => setTrainDestination(null)} /></RootErrorBoundary>
         </div>}
         {visited.has("BODY") && <div id="workspace-BODY" className={tab === "BODY" ? "tab-enter" : undefined} hidden={tab !== "BODY"}>
-          <RootErrorBoundary active={tab === "BODY"}><BodyScreen overviewOnly onOpenTrainingRecords={() => openTrain("RECORDS")} onEditRecord={(record, dayId) => { setRecordCorrection({ key: ++correctionKey.current, record, dayId }); openRecordSheet("record"); }} focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
+          <RootErrorBoundary active={tab === "BODY"}><BodyScreen overviewOnly onOpenTrainingRecords={() => openTrain("RECORDS")} onOpenReview={openDataReview} onEditRecord={(record, dayId) => { setRecordCorrection({ key: ++correctionKey.current, record, dayId }); openRecordSheet("record"); }} focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
             evidenceRequest={healthEvidence} onHealthHistory={openHealthHistory} onLogWeight={() => openRecordSheet("weight")}
             onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `BACK TO ${TAB_LABEL[mealOrigin.tab]}` : "BACK TO TODAY"}
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
         {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
-          <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus}
+          <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} reviewDestination={reviewDestination}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}
             onOpenCapture={openCapture} captureRequest={captureRequest} dailyRefreshKey={workEndedKey} onDailyContextChanged={() => setWorkEndedKey((key) => key + 1)} dailyBanners={<>
