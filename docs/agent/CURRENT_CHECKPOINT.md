@@ -10,16 +10,19 @@
 - **Status / PR:** implementation pushed; draft [#283](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/283).
   Fresh master `5e0811c` through #281 merged. No `src/engine/**` diff; new pure projections
   live in application as Gavin directed.
-- **Verified so far:** architecture, typecheck and production build pass; focused node evidence
-  tests pass 5/5 and synthetic acceptance fixture passes 1/1. Browser feature/related checks pass
-  after explicit legacy-disclosure navigation adjustments. Built-PWA acceptance passes at
-  320/390/1440 pixels, including source links/History return, no exploration writes, retained
-  draft, canonical offline save and offline cold reload. [Screenshots/results](../screenshots/whole-picture-001/README.md).
-  Independent WIP review at `a60f84f` found no substantive issues; final-head renewal required.
-  First CI failed the MoreOperator legacy-review retry test because its section is now behind
-  an explicit disclosure; test updated to open it. Full local verification is running.
-- **Next:** finish full verification, renew independent exact-head review, obtain green required
-  CI, then Gavin’s merge approval. No merge or deployment authorized. DEPS-001 #280 and DELTA-002 #281 are now on master.
+- **Verification:** `npm run verify` PASS (2026-10-23): architecture 298 files,
+  295 test files; **2,910 passed / 1 existing skip**, then TypeScript + production/PWA build.
+  Risk classifier reports PROTECTED; `git diff --check` passes. No assertions, timeouts or
+  suite configuration weakened. The build retains Vite’s advisory about a bundle over 500 kB.
+  Built-PWA acceptance passes at 320/390/1440 pixels: source links/History return, no
+  exploration writes, retained draft, canonical offline save and offline cold reload.
+  [Screenshots/results/reproduction](../screenshots/whole-picture-001/README.md).
+- **Review / CI:** independent review at `8c00266` found no substantive issues. Renew on this
+  final documentation head and persist exact SHA / PASS or BLOCK in PR #283. Initial CI’s
+  legacy-disclosure navigation failure was corrected; its assertions now pass in the full
+  local gate. Required CI must be green on the final PR head; live result is in #283.
+- **Next:** renew independent exact-head review, obtain green required CI on this final head,
+  then Gavin’s merge approval. No merge or deployment authorized. DEPS-001 #280 and DELTA-002 #281 are now on master.
   Read DELTA-002 and the DELTA-ADVANCED brief at #282 (`c1a3c1e`); Delta implementation waits
   for this objective. Every claim must reach its records; show denominators, never causes/scores.
 

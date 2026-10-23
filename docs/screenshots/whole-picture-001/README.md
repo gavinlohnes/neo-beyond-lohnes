@@ -26,3 +26,10 @@ node scripts/verify-whole-picture.mjs
 
 The script uses its own preview server and fresh disposable contexts, never an existing
 user profile. The exported synthetic backup stays in `.cache`; it is not shipped.
+
+Full local verification on 2026-10-23: `npm run verify` **PASS** — architecture
+(298 files), all 295 test files (2,910 passed, 1 existing skip), TypeScript and
+production PWA build. Risk classifier reports PROTECTED. No test assertions,
+timeouts or suite configuration weakened. The existing large-bundle advisory
+remains non-fatal; it is not a runtime dependency or architecture change.
+Final exact-head CI and independent review are recorded in PR #283.
