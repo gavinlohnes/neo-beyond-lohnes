@@ -27,7 +27,7 @@
 .redesign-today .today-check-in .btn-secondary { width: auto; min-height: 44px; padding-inline: 18px; }
 .cc-numbers-note { margin: 8px 0 0; }
 /* NAV-001: one floating + for every log, bottom-right of TODAY, above the tab bar. Neutral, not red (red budget). */
-.cc-actions.cc-actions--two { grid-template-columns: 1fr 1fr; }
+.cc-actions.cc-actions--two, .today-field .cc-actions.cc-actions--two { grid-template-columns: 1fr 1fr; }
 .today-field .cc-actions button.cc-act.cc-fab, .cc-act.cc-fab {
   position: fixed; z-index: 19; right: max(16px, calc((100vw - 560px) / 2)); bottom: calc(var(--p-nav-h, 64px) + 16px + env(safe-area-inset-bottom, 0px));
   width: 64px; min-height: 64px; flex-direction: column; gap: 2px; font-size: 11px;

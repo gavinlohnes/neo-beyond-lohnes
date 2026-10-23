@@ -156,7 +156,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         {page === "list" && <>
           {/* NAV-001: starting a new meal comes first, not after the whole list. */}
           <div className="record-meal-start">
-            <button type="button" className="btn-primary" onClick={() => { if (!form.name) setForm({ ...form, name: query.trim() }); setPage("new"); }}>NEW MEAL{query.trim() ? ` ‘${query.trim()}’` : ""}</button>
+            <button type="button" className="btn-secondary" onClick={() => { if (!form.name) setForm({ ...form, name: query.trim() }); setPage("new"); }}>NEW MEAL{query.trim() ? ` ‘${query.trim()}’` : ""}</button>
             <button type="button" className="btn-secondary" onClick={() => setPage("quick")}>QUICK ADD</button>
           </div>
           <label className="field">Search your meals<input className="input" type="search" aria-label="Search your meals" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
