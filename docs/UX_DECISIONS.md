@@ -12,6 +12,14 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## DELTA-ADVANCED — smarter about you, not more AI (direction approved 2026-10-23)
+
+Gavin approved the [advanced direction](agent/DELTA-ADVANCED.md) and its order: personal
+experiments first, then unusual-against-your-range and rotation-aware planning as readings, then
+rotation forecasts, then "what moves the needle" once months of data exist. Guardrails: data
+first, patterns not causes, sample sizes shown, every claim taps through, silence is valid. No
+model required; each item still needs its own approved slice.
+
 ## DELTA-002 — what changed, and why it matters (direction locked 2026-10-23)
 
 Gavin locked the direction in [the brief](agent/DELTA-002.md): DELTA is a voice for BEYOND's
