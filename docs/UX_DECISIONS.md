@@ -31,6 +31,13 @@ Parallel feature epics are parked unless Gavin names them. Earlier approval of a
 including DELTA-ADVANCED, is not implementation authority. This process lock is docs-only and
 does not expand any product/UI scope. See [the brief](agent/REUSE-FIRST-002.md).
 
+## ROTATION-001 — runs, not calendar weeks (owner go 2026-10-23)
+
+Whole Picture gains a Rotation tab: recorded lived days grouped into work runs, days off and
+unknown-context stretches, newest first, each day showing main sleep, check-in energy and training and
+opening the existing day inspector; plus the next predicted run from Week Ahead. Recorded context only,
+no score, no Engine input. [Brief](agent/ROTATION-001.md).
+
 ## DELTA-ADVANCED — smarter about you, not more AI (direction approved 2026-10-23)
 
 Gavin approved the [advanced direction](agent/DELTA-ADVANCED.md) and its order: personal

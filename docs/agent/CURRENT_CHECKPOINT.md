@@ -1,3 +1,18 @@
+# ROTATION-001 — phase 1: the rotation map
+
+- **Objective / authority:** [ROTATION-001](ROTATION-001.md); Gavin: "go ROTATION" (2026-10-23).
+  Builder: Claude Code, branch `claude/rotation-1`. SYNC-001 (#287) is separate and pending merge.
+- **Built:** Rotation tab in Whole Picture (runs by recorded context, per-day sleep/energy/workout
+  cells into the existing inspector, next predicted run). Display only.
+- **Verified:** `npm run verify` green: 2,916 passed / one skip, build OK.
+- **Found in Gavin's 2026-10-23 backup (not committed):** two Garmin sleeps on Oct 21 were never
+  filed as sleep because no lived day covered their start (BEYOND unused Oct 19–21); Garmin steps
+  stop at Oct 22 05:00 local while heart rate continues. Filing fix is Protected; awaiting Gavin.
+- **Next:** PR, CI, review, Gavin's merge.
+
+---
+Previous checkpoint:
+
 # Owner-approved integration — #286 and #282
 
 - **Authority:** Gavin explicitly requested merging both PRs on 2026-10-23. Codex integrates;
