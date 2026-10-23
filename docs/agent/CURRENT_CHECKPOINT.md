@@ -6,11 +6,14 @@
   local checkout `codex/nav-001`. SLEEP-FILING-001 (#289) merged.
 - **Built:** a floating + LOG; the meal sheet opens with NEW MEAL / QUICK ADD; "See the reasoning ›";
   path tests per top task (`tests/browser/NavPaths.test.tsx`).
-- **Verification / next:** original `241606e` has green required CI; Claude reported full verify
-  2,928 passed / one skip / four future-slice todos, plus 57 affected browser tests after styling.
-  Takeover adds responsive/scroll/hit-testing, modal isolation/focus return and tab visibility
-  checks. Finish focused verification, independent exact-head review and green final-head CI;
-  Gavin approves merging slice 1. Final evidence is recorded in #290.
+- **Takeover verification:** 8 related browser files **230 passed / 4 future-slice todos**;
+  architecture (300 files), TypeScript/production build and diff check pass. Built-PWA acceptance
+  passes 320/390/landscape/desktop: floating LOG placement, sheet focus return, inactive-tab hiding,
+  retained meal draft, no overflow/page errors. [Evidence](../screenshots/nav-001/README.md).
+  Fixed the reproduced entrance-animation containing-block bug with a TODAY-only fade; logging
+  handlers unchanged. Original Claude head had green full CI/verify; final-head required CI
+  runs the full suite/build again. Independent final exact-head review and CI are recorded
+  in #290 before readiness. Gavin approves merging slice 1; takeover is not merge authority.
 - **Later approved slices:** slice 2 (BODY → DATA, COMMAND → MORE, "Back up my data"), slice 3 (sleep page by week),
   slice 4 (DATA layout, sync on numbers, tree-test re-run).
 
