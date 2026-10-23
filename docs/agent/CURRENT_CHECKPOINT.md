@@ -1,3 +1,19 @@
+# NAV-001 — slice 3: sleep metric page
+
+- **Authority / Builder:** owner-approved NAV map; Gavin: “go ahead” after slice-2 handoff.
+  Codex; approved PROTECTED IA. [Brief](NAV-001.md#slice-3--sleep-metric-page).
+- **Branch / baseline:** `codex/nav-001-slice3`, `64248eb8cb8bac5af05517943aa3469b494f7086`.
+  #291 merged with explicit approval, green CI and independent exact-head PASS.
+- **Scope:** shared week-first sleep detail, D/W/M/Y and period paging/swipe, record drill-through;
+  display only. No Engine/schema/logging/Garmin/backup semantics change.
+- **REUSE:** measured charts/queries, SleepEvidence, LogSheet; **OWN:** period-to-evidence mapping;
+  **BUILD FROM SCRATCH:** period navigation because existing charts use fixed ranges.
+- **PR / verification:** pending; implementation starting. Next: focused and production evidence,
+  full verification, independent exact-head review and green CI; Gavin approves this merge.
+
+---
+Historical slice-2 checkpoint (merged):
+
 # NAV-001 — slice 2: DATA / MORE and backup first
 
 - **Authority / Builder:** Gavin approved the NAV map and explicitly requested merging #290 and
