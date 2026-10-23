@@ -12,7 +12,7 @@ import { getWeeklyReviewRecords, findWeekReview } from "./weeklyReviewQueries";
 import { getActiveDay } from "./queries";
 import { latestReviewWeek } from "../engine/weeklyReview";
 import { projectReviewRows } from "../engine/reviewOverview";
-import { attachPictureCheckIns } from "../engine/wholePicture";
+import { attachPictureCheckIns } from "./wholePictureProjection";
 import { finishedLivedDays, livedDayBoundary } from "../engine/livedDaySeries";
 import { restingByPeriod, stepsByPeriod } from "../domain/health/measuredSeries";
 import type { Period } from "../domain/health/activityImport";
@@ -69,8 +69,12 @@ export async function getWholePicture(now = new Date()) {
       lift.sets.push({ id: set.id, sessionId: set.sessionId, dayId, at, weight: set.weight, reps: set.reps }); liftsById.set(set.exerciseId, lift);
     }
     const lifts = [...liftsById.values()].map((lift) => ({ ...lift, sets: lift.sets.sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id)) })).sort((a, b) => b.sets.length - a.sets.length || a.name.localeCompare(b.name));
+    const measurements = Object.fromEntries(periods.map((period, index) => [rows[index]!.start, {
+      hours: hours.filter((hour) => Date.parse(hour.startTime) >= period.from && Date.parse(hour.startTime) < period.to),
+      resting: resting.filter((reading) => Date.parse(reading.time) >= period.from && Date.parse(reading.time) < period.to),
+    }]));
     const week = latestReviewWeek(now);
-    return { readAt: now.toISOString(), rows, stories, lifts, weekAhead, week, savedReview: findWeekReview(reviews, week), canSave: Boolean(activeDay), eligibleCommitments: eligible };
+    return { readAt: now.toISOString(), rows, measurements, stories, lifts, weekAhead, week, savedReview: findWeekReview(reviews, week), canSave: Boolean(activeDay), eligibleCommitments: eligible };
   });
 }
 export type WholePictureData = Awaited<ReturnType<typeof getWholePicture>>;

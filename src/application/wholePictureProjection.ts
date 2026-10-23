@@ -1,6 +1,6 @@
 import type { StateCheckIn } from "../domain/common/types";
-import type { ReviewRow } from "./reviewOverview";
-import { reviewMean } from "./reviewOverview";
+import type { ReviewRow } from "../engine/reviewOverview";
+import { reviewMean } from "../engine/reviewOverview";
 
 /** WHOLE-PICTURE-001: read-only projections; never an input to primary arbitration. */
 export type PictureScope = "ALL" | "WORK" | "OFF";
