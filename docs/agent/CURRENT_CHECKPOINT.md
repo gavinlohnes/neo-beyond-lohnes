@@ -1,3 +1,14 @@
+# SLEEP-FILING-001 — real sleep, not quiet shifts
+
+- **Objective / authority:** [SLEEP-FILING-001](SLEEP-FILING-001.md); Gavin: "go sleep filing"
+  (2026-10-23), only while actually working. Builder: Claude Code, branch `claude/sleep-filing`.
+- **Built:** shift-aware, gap-aware Garmin sleep filing; Health history notes for uncounted sleep.
+- **Verified:** `npm run verify` green: 2,921 passed / one skip, build OK.
+- **Next:** PR, CI, independent review, Gavin's merge. SYNC-001 (#287) merges on its review pass.
+
+---
+Previous checkpoint:
+
 # ROTATION-001 — phase 1: the rotation map
 
 - **Objective / authority:** [ROTATION-001](ROTATION-001.md); Gavin: "go ROTATION" (2026-10-23).

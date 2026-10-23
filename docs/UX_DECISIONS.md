@@ -31,6 +31,13 @@ Parallel feature epics are parked unless Gavin names them. Earlier approval of a
 including DELTA-ADVANCED, is not implementation authority. This process lock is docs-only and
 does not expand any product/UI scope. See [the brief](agent/REUSE-FIRST-002.md).
 
+## SLEEP-FILING-001 — real sleep, not quiet shifts (owner approval 2026-10-23)
+
+A Garmin "sleep" overlapping a worked shift by an hour or more isn't counted as sleep (a watch can't
+tell a quiet stretch at work from sleep); days off, naps and sleep at any other time count as before.
+A sleep that starts with no lived day open is filed under the day it ends in. Health history says when
+and why a Garmin sleep isn't counted. [Brief](agent/SLEEP-FILING-001.md).
+
 ## ROTATION-001 — runs, not calendar weeks (owner go 2026-10-23)
 
 Whole Picture gains a Rotation tab: recorded lived days grouped into work runs, days off and

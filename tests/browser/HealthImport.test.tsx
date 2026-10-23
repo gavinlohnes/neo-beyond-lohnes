@@ -176,3 +176,16 @@ describe("Health Connect sleep import", () => {
     expect(await db.externalSleepRecords.count()).toBe(0);
   });
 });
+
+describe("SLEEP-FILING-001 — Garmin sleep that isn't counted says why", () => {
+  it("marks a sleep during a worked shift and one with no open day", async () => {
+    await db.beyondDays.add({ id: "worked", startedAt: "2026-10-17T21:30:00Z", timezoneId: "America/Chicago", workContext: "WORK", status: "ENDED", createdAt: "2026-10-17T21:30:00Z", updatedAt: "2026-10-17T21:30:00Z" });
+    const base = syntheticSleep();
+    const record = (id: string, startTime: string, endTime: string) => ({ ...base.records[0]!, id, startTime, endTime, stages: [] });
+    await importSleepSnapshot({ ...base, window: { startTime: "2026-10-15T00:00:00Z", endTime: "2026-10-23T00:00:00Z" }, exportedAt: "2026-10-23T00:00:00Z",
+      records: [record("at-work", "2026-10-18T02:47:00Z", "2026-10-18T08:24:00Z"), record("gap", "2026-10-20T12:00:00Z", "2026-10-20T18:00:00Z")] });
+    const screen = await render(<ImportedSleepEvidence />);
+    await expect.element(screen.getByText("During your shift, so BEYOND didn't count it as sleep. If you did sleep, log it in BODY → Sleep.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("No BEYOND day was open then, so it isn't counted as sleep.", { exact: true })).toBeVisible();
+  });
+});
