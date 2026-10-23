@@ -1,4 +1,4 @@
-import { describeReason } from "./capacityCopy";
+import { describeReason, joinWithAnd } from "./capacityCopy";
 import type { ObligationRelevance } from "../../../engine/obligationRelevance";
 import type { Outcome, Recommendation, RecommendationKind, StateCheckIn } from "../../../domain/common/types";
 import type { RecommendationDecision, RecommendationHandoffTarget } from "../../../application/queries";
@@ -164,10 +164,6 @@ function reasonWithAnswer(code: string, checkIn: StateCheckIn | null): string {
   return field && checkIn ? `${words} (${checkIn[field]} of 5)` : words;
 }
 
-function joinWords(items: string[]): string {
-  return items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
-}
-
 /**
  * DELTA-002 slice 1 (owner, 2026-10-23): "Why this?" in plain words, read only from the
  * recommendation's own DecisionTrace — never recomputed — so the explanation cannot disagree
@@ -179,7 +175,7 @@ export function explainRecommendation(recommendation: Recommendation, checkIn: S
   const input = (key: string) => t.inputs.find((i) => i.key === key)?.value === true;
   const capacity = t.derived.find((d) => d.key === "capacity")?.value as string | undefined;
   const codes = String(t.derived.find((d) => d.key === "reasonCodes")?.value ?? "").split(", ").filter(Boolean);
-  const because = joinWords(codes.map((code) => reasonWithAnswer(code, checkIn)));
+  const because = joinWithAnd(codes.map((code) => reasonWithAnswer(code, checkIn)));
   const lines: string[] = [];
   switch (recommendation.kind) {
     case "STABILIZE":

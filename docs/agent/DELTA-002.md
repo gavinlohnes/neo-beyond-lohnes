@@ -48,3 +48,24 @@ should consider sleep (it currently doesn't; that would be a Protected recommend
 - **Next decisions:** should the Engine consider sleep (Protected)? Tile marks when a reading leaves
   your usual (Routine, small).
 
+### What already exists (inspected 2026-10-23, before building further)
+
+- **Recommendation WHY:** `engine/evaluate.ts` writes the DecisionTrace (inputs, derived capacity and
+  reason codes, every rule with its result and reason, selection reason). `RecommendationCard` shows it
+  raw in "How BEYOND decided", plus `describeRecommendationReason` (one line), prior outcome memory and
+  "Same as before" (`continuityQueries.wasRecommendationMateriallyRepeated`). `capacityCopy` already
+  words reason codes (`describeReason`, `joinWithAnd`, `describeCapacity`).
+- **Intelligence Spine:** `AdvisoryNote` (`domain/intelligence/types.ts`) with mandatory provenance
+  (`sourceModule`), evidence (`basis`), `attentionLevel` QUIET/SURFACE/INTERRUPT and an optional
+  `relatedRecommendationId`; seven producers composed in `engine/advisory.ts` and orchestrated by
+  `advisoryQueries.getAdvisoryNotes`: commitments, TRAIN progression, journal lessons, shift
+  protection, continuity, pattern proposals, sleep-rollover ambiguity. `AdvisorySection` /
+  `advisoryCopy` group them (max three rows) on TODAY. Notes never feed the Engine.
+- **The one missing capability slice 1 fills:** nothing turned the *whole* trace (capacity reasons with
+  the actual answers, and rule precedence such as RED outranking shift-down) into plain sentences.
+  `explainRecommendation` does only that, reusing `describeReason`/`joinWithAnd`, reading the trace,
+  never recomputing; the Engine is unchanged.
+- **Next gap (not in slice 1): supporting observations.** Show spine notes relevant to the current
+  recommendation under "Why this?" by reusing `AdvisoryNote` and its existing, never-yet-set
+  `relatedRecommendationId` (or a pure UI-side relevance filter), not a new observation type.
+
