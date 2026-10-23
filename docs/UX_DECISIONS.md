@@ -38,6 +38,13 @@ tell a quiet stretch at work from sleep); days off, naps and sleep at any other 
 A sleep that starts with no lived day open is filed under the day it ends in. Health history says when
 and why a Garmin sleep isn't counted. [Brief](agent/SLEEP-FILING-001.md).
 
+## SYNC-001 — current in two taps (owner go 2026-10-23)
+
+BEYOND's SYNC GARMIN link (Android) opens BEYOND Health Bridge, which reads when it opens and sends
+to BEYOND; you confirm the preview there. The helper says how current Garmin's sleep and steps are in
+Health Connect and to sync Garmin Connect when they're behind. No background sync; preview-before-write
+stays. [Brief](agent/SYNC-001.md).
+
 ## ROTATION-001 — runs, not calendar weeks (owner go 2026-10-23)
 
 Whole Picture gains a Rotation tab: recorded lived days grouped into work runs, days off and

@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
 class MainActivity : ComponentActivity() {
@@ -61,6 +62,8 @@ class MainActivity : ComponentActivity() {
     private var preparedActivity: String? = null
     private var activityGranted: Set<String> = emptySet() // what the prepared activity file was read with
     private var working = false
+    private var newestStepsHour: Instant? = null // SYNC-001: for the freshness line
+    private var pendingSend = false // SYNC-001: a SYNC request that arrived while a read was running
     private val requestPermission = registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { granted ->
         if (granted.containsAll(permissions)) readSleep() else clear("Sleep access was not granted. No export was created.")
     }
@@ -95,7 +98,7 @@ class MainActivity : ComponentActivity() {
         val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(padding, padding, padding, padding) }
         fun paragraph(text: String) = TextView(this).apply { this.text = text; textSize = 18f; setPadding(0, 12, 0, 12); layout.addView(this) }
         paragraph("BEYOND Health Bridge").apply { textSize = 26f; ViewCompat.setAccessibilityHeading(this, true) }
-        paragraph("Read Garmin sleep, steps, heart rate and calories burned from the last 7 days, or everything Health Connect has with READ FULL HISTORY. Save a file, then review and confirm it in BEYOND. This helper does not sync automatically.")
+        paragraph("Reads Garmin sleep, steps, heart rate and calories burned from the last 7 days when it opens, once access is allowed. Tap SEND TO BEYOND, choose BEYOND, then confirm there. BEYOND's SYNC GARMIN button opens this helper and sends for you. READ FULL HISTORY reads everything Health Connect has. This helper does not sync in the background.")
         paragraph("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps, heart rate and calories (optional): hourly step totals, hourly heart-rate low/average/high, hourly total and active calories burned and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. READ FULL HISTORY reads up to a year and asks for the optional “Access past data” permission; without it, Health Connect only returns data from up to 30 days before you first granted access. Each goes into its own file you save, or is sent straight to BEYOND through Android's share sheet. No account, server, Internet permission or other health categories. Your Health Connect data is never changed. Files may be private health information; choose a local folder and delete the file after importing.")
         status = paragraph("Ready. Complete Garmin's sync before reading. Sessions crossing the 7-day window edges are excluded.").apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }
         read = Button(this).apply {
@@ -137,6 +140,9 @@ class MainActivity : ComponentActivity() {
         send = Button(this).apply { text = "SEND TO BEYOND"; isEnabled = false; setOnClickListener { sendToBeyond() } }
         layout.addView(send)
         clearShared()
+        // SYNC-001: read straight away when access is already allowed; opened from BEYOND, also send.
+        // Only a fresh launch sends: a recreated activity (rotation, process restore) must not reopen the share sheet.
+        autoRead(sendAfter = savedInstanceState == null && intent?.data?.scheme == SYNC_SCHEME)
         val scroll = ScrollView(this).apply { addView(layout) }
         ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
@@ -151,6 +157,24 @@ class MainActivity : ComponentActivity() {
         if (prepared != null && HealthConnectClient.getSdkStatus(this) == HealthConnectClient.SDK_AVAILABLE) lifecycleScope.launch {
             try { if (!client.permissionController.getGrantedPermissions().containsAll(permissions)) clear("Sleep access was revoked. No export is ready.") }
             catch (_: Exception) { clear("Sleep access could not be checked. Read again.") }
+        }
+    }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.data?.scheme == SYNC_SCHEME) autoRead(sendAfter = true)
+    }
+    /** SYNC-001: the daily 7-day read without a tap, only when every needed permission is already granted. */
+    private fun autoRead(sendAfter: Boolean) {
+        if (HealthConnectClient.getSdkStatus(this) != HealthConnectClient.SDK_AVAILABLE) return
+        lifecycleScope.launch {
+            try {
+                if (client.permissionController.getGrantedPermissions().containsAll(permissions)) {
+                    // A read already running (e.g. READ FULL HISTORY) keeps its window; the send waits for it.
+                    if (!working) windowDays = 7
+                    readSleep(sendAfter)
+                }
+                else status.text = "Tap ALLOW ACCESS AND READ once to allow access. After that the helper reads when it opens."
+            } catch (_: Exception) { /* leave the manual buttons; nothing was read */ }
         }
     }
     private fun setWorking(value: Boolean) {
@@ -201,10 +225,12 @@ class MainActivity : ComponentActivity() {
             finally { setWorking(false) }
         }
     }
-    private fun readSleep() {
-        if (working) return
+    private fun readSleep(sendAfter: Boolean = false) {
+        if (working) { if (sendAfter) pendingSend = true; return }
+        pendingSend = sendAfter
         clear("Reading Garmin sleep…"); setWorking(true)
         lifecycleScope.launch {
+            var ready = false
             try {
                 require(client.permissionController.getGrantedPermissions().containsAll(permissions))
                 val end = Instant.now()
@@ -234,19 +260,23 @@ class MainActivity : ComponentActivity() {
                     if (token != null) require(seenTokens.add(token))
                 } while (token != null)
                 prepared = sleepExport(records, start, end, Instant.now(), BuildConfig.VERSION_NAME)
-                val sleepLine = "${if (windowDays > 7) "Full history (up to $windowDays days): " else ""}${records.size} Garmin sleep sessions ready. ${if (records.isEmpty()) "No matching sessions: check Garmin sync and Health Connect sleep entries." else "Save the file, then preview it in BEYOND."}"
+                val sleepLine = "${if (windowDays > 7) "Full history (up to $windowDays days): " else ""}${records.size} Garmin sleep sessions ready."
                 val activityLine = try { readActivity() } catch (_: Exception) {
                     preparedActivity = null
                     "Steps and heart rate could not be read; sleep is unaffected."
                 }
-                status.text = "$sleepLine $activityLine No data has been imported."
+                val freshness = freshnessLine(records.maxOfOrNull { it.end }, newestStepsHour, Instant.now(), ZoneId.systemDefault())
+                status.text = "$sleepLine $activityLine $freshness Tap SEND TO BEYOND to preview it there. No data has been imported."
+                ready = true
             } catch (_: Exception) { clear("Sleep could not be read safely. Check Health Connect sleep access and Garmin sync, then try again. No partial export was kept.") }
             finally { setWorking(false) }
+            if (ready && pendingSend) { pendingSend = false; sendToBeyond() }
         }
     }
     /** Hourly Garmin steps and heart rate, plus resting heart rate, for whichever of them were granted. */
     private suspend fun readActivity(): String {
         val granted = client.permissionController.getGrantedPermissions()
+        newestStepsHour = null
         if (granted.intersect(activityPermissions).isEmpty()) return "Steps, heart rate and calories were not allowed; only sleep was read."
         val end = Instant.now().truncatedTo(ChronoUnit.HOURS)
         val start = end.minus(windowDays, ChronoUnit.DAYS)
@@ -291,6 +321,7 @@ class MainActivity : ComponentActivity() {
                 if (token != null) require(seenTokens.add(token))
             } while (token != null)
         }
+        newestStepsHour = hours.filter { it.steps != null }.maxOfOrNull { it.start }
         preparedActivity = activityExport(hours, resting, start, end, Instant.now(), BuildConfig.VERSION_NAME)
         activityGranted = granted.intersect(activityPermissions)
         val calorieHours = hours.count { it.totalCalories != null || it.activeCalories != null }

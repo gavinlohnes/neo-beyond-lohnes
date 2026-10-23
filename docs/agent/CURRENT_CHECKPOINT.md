@@ -4,10 +4,24 @@
   (2026-10-23), only while actually working. Builder: Claude Code, branch `claude/sleep-filing`.
 - **Built:** shift-aware, gap-aware Garmin sleep filing; Health history notes for uncounted sleep.
 - **Verified:** `npm run verify` green: 2,921 passed / one skip, build OK.
-- **Next:** PR, CI, independent review, Gavin's merge. SYNC-001 (#287) merges on its review pass.
+- **Next:** #289: CI, independent review, Gavin's merge. SYNC-001 (#287) is merged.
 
 ---
 Previous checkpoint:
+
+# SYNC-001 — current in two taps
+
+- **Objective / authority:** [SYNC-001](SYNC-001.md); Gavin: "go SYNC-001" (2026-10-23).
+  Builder: Claude Code, branch `claude/sync-001`.
+- **Built:** helper 0.7.0 reads on open, explains stale Garmin data, opens from BEYOND's SYNC GARMIN
+  link and sends; BEYOND shows SYNC GARMIN on Android in Garmin sheets and the old-data note.
+- **Verified:** BEYOND `npm run verify` green (2,914 passed / one skip, build OK). The helper is
+  compiled and tested by Health Bridge CI (no local Android SDK).
+- **Next:** #287: both CI workflows on the master-merged head, renewed exact-head review, merge
+  (Gavin approved on review pass); Gavin installs helper 0.7.0.
+
+---
+Previous checkpoint (ROTATION-001 phase 1, #288 merged by Gavin):
 
 # ROTATION-001 — phase 1: the rotation map
 

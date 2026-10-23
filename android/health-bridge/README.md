@@ -8,6 +8,12 @@ step totals, hourly heart-rate low/average/high and Garmin resting heart rate, s
 separate `BEYOND_HEALTH_CONNECT_ACTIVITY` file, imported through the same COMMAND → IMPORT HEALTH DATA screen. READ FULL HISTORY (GARMIN-003) reads everything Health Connect has from Garmin, up to 366 days, and asks for the optional "Access past data" permission; without it Health Connect only returns data from up to 30 days before access was first granted. SEND TO BEYOND shares both prepared files to the installed BEYOND app through Android's share sheet, with the same preview and confirmation. No Internet permission, account, server, background
 worker, health write permission, analytics or third-party exporter.
 
+SYNC-001 (0.7.0): once access is allowed, the helper reads its 7-day window as soon as it opens and
+says how current Health Connect's Garmin sleep and steps are (with a hint to sync Garmin Connect when
+they're behind). BEYOND's **SYNC GARMIN** link opens the helper through `beyond-bridge://sync`; it
+reads and opens the share sheet, and BEYOND still previews before anything is saved. Still no
+background sync.
+
 The packaged manifest allows the official Health Connect SDK's bound
 `HealthDataSdkService`, used for platform/client IPC. It is not a scheduled sync
 worker. CI rejects other services, other health permissions and Internet access.
