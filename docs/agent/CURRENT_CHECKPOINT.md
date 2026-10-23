@@ -1,3 +1,47 @@
+# DEPS-001 — dev/build dependency security patches
+
+- **Authority / lane / Builder:** Gavin approved DEPS-001 on 2026-10-23 in the task; ROUTINE;
+  Codex. Disposition: USE DEPENDENCY (upstream security patches).
+- **Branch / start:** `codex/deps-001`, from freshly fetched master
+  `ba381c77066a426c6ea52e10dfa30603c5210c3a` (#279). No worktree or Factory activation.
+- **Scope:** Vite 8.3.0 → 8.3.5; Vitest, browser, browser-playwright and mocker
+  4.1.11 → 4.1.12; source-map-js 1.2.1 → 1.2.2; serialize-javascript 7.1.1 → 7.1.3.
+  Declare vitest-browser-react ^2.3.0 (already locked at 2.3.0). npm regenerated the lockfile
+  using installs and non-forced audit fix; no overrides or hand-edited lockfile.
+- **Boundaries:** runtime dependency declarations and the entire runtime lock graph are unchanged.
+  No application/Engine/persistence/protected-fixture, Kotlin, Gradle or test changes.
+  Playwright remains 1.63.0; existing CI's installed Playwright CLI still installs its matched
+  Chromium, so no workflow adjustment is needed.
+- **Verified:** clean `npm ci`, `npm audit` (0 vulnerabilities), production-only audit (0),
+  compatible `npm ls` peer tree, production build (`tsc -b && vite build`) and `git diff --check`.
+  Independent preliminary review agrees
+  on audit, peer compatibility and runtime-lock invariance; final exact-head verdict pending.
+- **Full gate:** first run: 2,894 passed / 4 failed / 1 existing skip; two-worker run: 2,895
+  passed / 3 different timeouts / 1 skip. First-run failures passed afterward, and all second-run
+  failures passed in a focused check. A separate focused meal-entry timeout also passed alone.
+  The one-worker complete gate finished with 2,895 passed / 3 timeouts / 1 existing skip:
+  three RedesignSheets undo/duplicate-food cases. All three passed in isolation afterward
+  (3 selected; 14 unselected). All failures are retained; no assertions/timeouts/tests changed.
+  The complete local gate is NOT green; focused passes do not replace it. Production build
+  passed independently after the full gate stopped before build. Matched Chromium uses
+  `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright`. No further full retries are
+  justified without new evidence or an environment change; required CI still must run.
+- **PR / alerts / CI:** PR not yet created; GitHub API is denied by the environment network
+  policy, and the private Dependabot page returned 404. `api.github.com` has been added to the
+  saved environment draft, preserving existing domains. Save/apply that network change to
+  unblock the actual alert list, open-PR inspection, PR creation and required CI checks.
+  The seven npm package findings cover ten distinct advisory IDs, which may explain GitHub's
+  reported ten alerts; this is not an authenticated Dependabot reconciliation. Any Android/
+  Gradle alerts must be listed in the PR, not changed under this objective.
+- **Next:** commit/push this branch and bind independent review to the final head. Save/apply
+  the API network addition, reconcile actual Dependabot/Gradle alerts and open one PR against
+  master. Resolve/verify the intermittent gate failures and require green exact-head CI before
+  Gavin's merge approval. Local audit/build success does not establish green CI or a completed
+  objective. No merge authorized.
+
+---
+Previous checkpoint:
+
 # FRICTION-001 — slice 5: owner-approved sleep freshness and PARTIAL note
 
 - **Objective / authority:** [FRICTION-001](FRICTION-001.md); Gavin approved both on 2026-10-22
