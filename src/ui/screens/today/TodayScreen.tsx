@@ -79,7 +79,7 @@ import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
 import { RecommendationCard, describeAllClearHeadline } from "./RecommendationCard";
 import { getMeasuredSnapshot, type MeasuredSnapshot } from "../../../application/measuredQueries";
-import { MeasuredSheet, describeGarminAsOf, measuredClock, type MeasuredMetric } from "./MeasuredSheet";
+import { MeasuredSheet, SyncGarminLink, describeGarminAsOf, measuredClock, type MeasuredMetric } from "./MeasuredSheet";
 import { ConsoleControls } from "./ConsoleControls";
 import { SmallSteps } from "./SmallSteps";
 import "./smallSteps.css";
@@ -1968,7 +1968,7 @@ export function TodayScreen({
         {/* FIELD-AUTHORITY-001: TONIGHT-001's "a weigh-in sets the target" moves out of the tile. */}
         {pct === null && latestWeightLbs === undefined && <p className="meta cc-numbers-note">A weigh-in sets the protein target.</p>}
         {/* GARMIN-005: Garmin numbers only move when the helper sends; say so when they are old. */}
-        {garminStale && <p className="meta cc-numbers-note">{describeGarminAsOf(measured!.caloriesAsOf!, measured!.readAt).replace(/\.$/, "")}. Send from the helper to update.</p>}
+        {garminStale && <><p className="meta cc-numbers-note">{describeGarminAsOf(measured!.caloriesAsOf!, measured!.readAt).replace(/\.$/, "")}. Send from the helper to update.</p><SyncGarminLink /></>}
       </>
     );
   }

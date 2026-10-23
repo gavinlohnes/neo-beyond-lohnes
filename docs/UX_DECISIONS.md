@@ -31,6 +31,12 @@ Parallel feature epics are parked unless Gavin names them. Earlier approval of a
 including DELTA-ADVANCED, is not implementation authority. This process lock is docs-only and
 does not expand any product/UI scope. See [the brief](agent/REUSE-FIRST-002.md).
 
+## SYNC-001 — current in two taps (owner go 2026-10-23)
+
+BEYOND's SYNC GARMIN link (Android) opens BEYOND Health Bridge, which reads when it opens and sends
+to BEYOND; you confirm the preview there. The helper says how current Garmin's sleep and steps are in
+Health Connect and to sync Garmin Connect when they're behind. No background sync; preview-before-write
+stays. [Brief](agent/SYNC-001.md).
 ## ROTATION-001 — runs, not calendar weeks (owner go 2026-10-23)
 
 Whole Picture gains a Rotation tab: recorded lived days grouped into work runs, days off and
