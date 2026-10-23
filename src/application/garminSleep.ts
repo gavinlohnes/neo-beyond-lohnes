@@ -1,10 +1,26 @@
 import { db } from "../persistence/db";
 import { logEvent, newId } from "./commands";
-import { assignGarminSleep, type GarminSleepSource } from "../domain/health/sleepImport";
+import { assignGarminSleep, type GarminSleepSource, type ShiftWindow } from "../domain/health/sleepImport";
+import { livedDayShiftWindow } from "../engine/scheduledContext";
+import { getSchedulePattern } from "./queries";
+import type { BeyondDay } from "../domain/common/types";
 import type { DomainEvent, SleepLoggedPayload } from "../domain/common/types";
 
 /** Tables applyGarminSleep reads or writes, beyond the sequence tables writeAtomically always adds. */
-export const GARMIN_SLEEP_TABLES = ["beyondDays", "externalSleepRecords", "externalSleepRevisions"] as const;
+export const GARMIN_SLEEP_TABLES = ["beyondDays", "externalSleepRecords", "externalSleepRevisions", "schedulePatterns"] as const;
+
+/**
+ * SLEEP-FILING-001: the shifts BEYOND knows you actually worked — lived days recorded as WORK, with
+ * the scheduled shift that day owns. Days off and days without a recorded work context have none.
+ */
+export async function getWorkedShiftWindows(days: readonly BeyondDay[]): Promise<ShiftWindow[]> {
+  const pattern = await getSchedulePattern();
+  return days.flatMap((day) => {
+    if (day.workContext !== "WORK") return [];
+    const window = livedDayShiftWindow(new Date(day.startedAt), pattern);
+    return window ? [{ dayId: day.id, start: window.start.getTime(), end: window.end.getTime() }] : [];
+  });
+}
 
 type Kind = SleepLoggedPayload["kind"];
 const garminSource = (e: DomainEvent) => (e.payload as SleepLoggedPayload).source;
@@ -39,7 +55,7 @@ export async function applyGarminSleep(): Promise<{ logged: number; corrected: n
   const revisions = await db.externalSleepRevisions.bulkGet(pointers.map((p) => p.revisionId));
   const records = revisions.flatMap((r) => (r ? [{ recordKey: r.recordKey, sourceVersion: r.sourceVersion, evidence: r.evidence, associatedDayId: r.associatedDayId }] : []));
   const result = { logged: 0, corrected: 0, removed: 0 };
-  const assignments = assignGarminSleep(days, records);
+  const assignments = assignGarminSleep(days, records, await getWorkedShiftWindows(days));
   const assignedDay = new Map(assignments.map((a) => [a.recordKey, a.dayId]));
   // Every sleep log, correction and void, across days: a Garmin sleep can move between days.
   const events = await db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_CORRECTED", "SLEEP_LOG_VOIDED"]).toArray();

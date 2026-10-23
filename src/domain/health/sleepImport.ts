@@ -122,39 +122,63 @@ export interface GarminSleepAssignment {
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Shorter sessions are left as evidence only. */
 export const MIN_GARMIN_SLEEP_MINUTES = 10;
+/** SLEEP-FILING-001: a lived day recorded as a work day and the shift it owns, epoch ms. */
+export interface ShiftWindow { dayId: string; start: number; end: number }
+/** A Garmin "sleep" overlapping a worked shift by at least this much is not filed as sleep. */
+export const SHIFT_OVERLAP_MINUTES = 60;
+/** Garmin sleep left out of the day's sleep entries, and why. Very short sessions are not listed. */
+export type GarminSleepUnfiled =
+  | { recordKey: string; reason: "DURING_SHIFT"; dayId: string; minutes: number }
+  | { recordKey: string; reason: "NO_DAY"; minutes: number };
+type SleepRecordInput = { recordKey: string; sourceVersion: string; evidence: ExternalSleep; associatedDayId?: string | null };
 /**
- * GARMIN-003 (owner ruling, approach A): which lived day each Garmin sleep belongs to and whether it
- * is that day's main sleep. A sleep belongs to the day the owner explicitly linked it to in the import
- * preview; otherwise to the existing day it starts in (day start ≤ sleep start < next day start, at most
- * 24 hours); with no such day it stays evidence. The longest sleep in a day
- * is PRIMARY; the rest are SUPPLEMENTAL. Minutes are the asleep total when the stages are complete,
- * otherwise the session span.
+ * GARMIN-003 (owner ruling, approach A), amended by SLEEP-FILING-001 (owner approval 2026-10-23):
+ * which lived day each Garmin sleep belongs to and whether it is that day's main sleep.
+ * - The owner's explicit link from the import preview wins.
+ * - Otherwise the existing day it starts in (day start ≤ sleep start < next day start, at most 24
+ *   hours); if no day covers the start, the day it ends in. With neither it is NO_DAY: evidence only,
+ *   and said so rather than silently dropped.
+ * - A sleep overlapping a recorded work day's shift by SHIFT_OVERLAP_MINUTES or more is DURING_SHIFT:
+ *   not filed, because a watch can't tell a quiet stretch at work from sleep. Days off and sleep
+ *   outside shifts file as before, so naps and changing sleep times are unaffected.
+ * The longest filed sleep in a day is PRIMARY; the rest are SUPPLEMENTAL. Minutes are the asleep total
+ * when the stages are complete, otherwise the session span.
  */
-export function assignGarminSleep(days: readonly { id: string; startedAt: string }[],
-  records: readonly { recordKey: string; sourceVersion: string; evidence: ExternalSleep; associatedDayId?: string | null }[]): GarminSleepAssignment[] {
+export function classifyGarminSleep(days: readonly { id: string; startedAt: string }[], records: readonly SleepRecordInput[],
+  shiftWindows: readonly ShiftWindow[] = []): { assignments: GarminSleepAssignment[]; unfiled: GarminSleepUnfiled[] } {
   const starts = days.map((d) => ({ id: d.id, at: Date.parse(d.startedAt) })).sort((a, b) => a.at - b.at);
   const byDay = new Map<string, Omit<GarminSleepAssignment, "kind">[]>();
   const known = new Set(starts.map((s) => s.id));
+  const unfiled: GarminSleepUnfiled[] = [];
+  const dayCovering = (t: number): string | null => {
+    let i = -1;
+    for (let j = 0; j < starts.length && starts[j]!.at <= t; j++) i = j;
+    if (i === -1) return null;
+    return t < Math.min(starts[i]!.at + DAY_MS, starts[i + 1]?.at ?? Infinity) ? starts[i]!.id : null;
+  };
   for (const r of records) {
-    // The owner's explicit link from the import preview wins over the automatic rule.
-    let dayId: string | null = r.associatedDayId && known.has(r.associatedDayId) ? r.associatedDayId : null;
-    if (!dayId) {
-      const t = Date.parse(r.evidence.startTime);
-      let i = -1;
-      for (let j = 0; j < starts.length && starts[j]!.at <= t; j++) i = j;
-      if (i === -1) continue;
-      const limit = Math.min(starts[i]!.at + DAY_MS, starts[i + 1]?.at ?? Infinity);
-      if (t >= limit) continue;
-      dayId = starts[i]!.id;
-    }
     const { spanMinutes, asleepMinutes } = sleepDurations(r.evidence);
     const minutes = Math.round(asleepMinutes ?? spanMinutes);
     if (minutes < MIN_GARMIN_SLEEP_MINUTES) continue;
+    const from = Date.parse(r.evidence.startTime), to = Date.parse(r.evidence.endTime);
+    // The owner's explicit link from the import preview wins over the automatic rules.
+    let dayId: string | null = r.associatedDayId && known.has(r.associatedDayId) ? r.associatedDayId : null;
+    if (!dayId) {
+      const shift = shiftWindows.find((w) => Math.min(to, w.end) - Math.max(from, w.start) >= SHIFT_OVERLAP_MINUTES * 60000);
+      if (shift) { unfiled.push({ recordKey: r.recordKey, reason: "DURING_SHIFT", dayId: shift.dayId, minutes }); continue; }
+      dayId = dayCovering(from) ?? dayCovering(to);
+      if (!dayId) { unfiled.push({ recordKey: r.recordKey, reason: "NO_DAY", minutes }); continue; }
+    }
     const list = byDay.get(dayId) ?? [];
     list.push({ dayId, recordKey: r.recordKey, minutes, endTime: r.evidence.endTime, sourceVersion: r.sourceVersion });
     byDay.set(dayId, list);
   }
-  return [...byDay.values()].flatMap((list) => list
+  const assignments = [...byDay.values()].flatMap((list) => list
     .sort((a, b) => b.minutes - a.minutes || a.endTime.localeCompare(b.endTime))
     .map((a, i) => ({ ...a, kind: i === 0 ? "PRIMARY" as const : "SUPPLEMENTAL" as const })));
+  return { assignments, unfiled };
+}
+export function assignGarminSleep(days: readonly { id: string; startedAt: string }[], records: readonly SleepRecordInput[],
+  shiftWindows: readonly ShiftWindow[] = []): GarminSleepAssignment[] {
+  return classifyGarminSleep(days, records, shiftWindows).assignments;
 }
