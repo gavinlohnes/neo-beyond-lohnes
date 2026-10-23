@@ -14,8 +14,8 @@
   Chromium, so no workflow adjustment is needed.
 - **Verified:** clean `npm ci`, `npm audit` (0 vulnerabilities), production-only audit (0),
   compatible `npm ls` peer tree, production build (`tsc -b && vite build`) and `git diff --check`.
-  Independent preliminary review agrees
-  on audit, peer compatibility and runtime-lock invariance; final exact-head verdict pending.
+  Independent review of `3f5ff89d67cc091c892db8836d2480a1305c24a5` found no code-diff issues
+  (code PASS), but overall BLOCK on verification/delivery gates. Renew at the final PR head.
 - **Full gate:** first run: 2,894 passed / 4 failed / 1 existing skip; two-worker run: 2,895
   passed / 3 different timeouts / 1 skip. First-run failures passed afterward, and all second-run
   failures passed in a focused check. A separate focused meal-entry timeout also passed alone.
@@ -26,18 +26,18 @@
   passed independently after the full gate stopped before build. Matched Chromium uses
   `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright`. No further full retries are
   justified without new evidence or an environment change; required CI still must run.
-- **PR / alerts / CI:** PR not yet created; GitHub API is denied by the environment network
-  policy, and the private Dependabot page returned 404. `api.github.com` has been added to the
-  saved environment draft, preserving existing domains. Save/apply that network change to
-  unblock the actual alert list, open-PR inspection, PR creation and required CI checks.
-  The seven npm package findings cover ten distinct advisory IDs, which may explain GitHub's
-  reported ten alerts; this is not an authenticated Dependabot reconciliation. Any Android/
-  Gradle alerts must be listed in the PR, not changed under this objective.
-- **Next:** commit/push this branch and bind independent review to the final head. Save/apply
-  the API network addition, reconcile actual Dependabot/Gradle alerts and open one PR against
-  master. Resolve/verify the intermittent gate failures and require green exact-head CI before
-  Gavin's merge approval. Local audit/build success does not establish green CI or a completed
-  objective. No merge authorized.
+- **PR / alerts / CI:** [#280](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/280),
+  draft, against master; branch pushed. GitHub API network access recovered after reattachment.
+  The authenticated alerts endpoint still returns HTTP 403, `Resource not accessible by
+  integration`, requiring `vulnerability_alerts=read` (Dependabot alerts read permission).
+  GitHub's ten alerts (2 high / 6 moderate / 2 low) match the ten distinct npm advisory IDs
+  and severity totals, but this does not establish the private alert list or Android status.
+  Any confirmed Gradle alerts belong in the PR report, not Kotlin/Gradle changes here.
+- **Next:** renew independent review at this checkpoint's final PR head, monitor required CI,
+  resolve/verify the intermittent gate failures and require green exact-head CI. Obtain the
+  integration's Dependabot-alert read permission to finish authenticated alert reconciliation.
+  Local audit/build success does not establish green full verification or a completed objective.
+  Wait for Gavin's explicit merge approval; no merge authorized.
 
 ---
 Previous checkpoint:
