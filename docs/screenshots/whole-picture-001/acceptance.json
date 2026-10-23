@@ -1,0 +1,50 @@
+[
+  {
+    "width": 320,
+    "result": "PASS",
+    "checks": [
+      "canonical backup restore of synthetic command-built records",
+      "overview + comparisons",
+      "claim to contributing source records to History and back",
+      "no exploration writes",
+      "real reviewed lesson",
+      "draft primary-tab detour",
+      "forecast does not write",
+      "offline canonical focus save",
+      "offline cold reload",
+      "no overflow or page errors"
+    ]
+  },
+  {
+    "width": 390,
+    "result": "PASS",
+    "checks": [
+      "canonical backup restore of synthetic command-built records",
+      "overview + comparisons",
+      "claim to contributing source records to History and back",
+      "no exploration writes",
+      "real reviewed lesson",
+      "draft primary-tab detour",
+      "forecast does not write",
+      "offline canonical focus save",
+      "offline cold reload",
+      "no overflow or page errors"
+    ]
+  },
+  {
+    "width": 1440,
+    "result": "PASS",
+    "checks": [
+      "canonical backup restore of synthetic command-built records",
+      "overview + comparisons",
+      "claim to contributing source records to History and back",
+      "no exploration writes",
+      "real reviewed lesson",
+      "draft primary-tab detour",
+      "forecast does not write",
+      "offline canonical focus save",
+      "offline cold reload",
+      "no overflow or page errors"
+    ]
+  }
+]

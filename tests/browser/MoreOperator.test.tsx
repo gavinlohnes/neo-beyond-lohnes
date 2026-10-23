@@ -1,3 +1,4 @@
+import { openDetailedReviews } from "./helpers/review";
 import { commandResult, openCommandPanel } from "./helpers/command";
 /// <reference types="@vitest/browser-playwright" />
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -114,6 +115,7 @@ describe("MORE-OPERATOR-001", () => {
     const query = view === "HISTORY" ? vi.mocked(getHistoryDays) : view === "REVIEW" ? vi.mocked(getRecommendationLedger) : vi.mocked(getWeeklySummary);
     query.mockRejectedValueOnce(new Error("Evidence read interrupted"));
     const screen = await render(<MoreScreen initialView={view} />);
+    if (view === "REVIEW") await openDetailedReviews(screen);
     await expect.element(screen.getByRole("alert")).toHaveTextContent("unavailable");
     expect(screen.getByText(/No days yet|No recommendations yet/).elements()).toHaveLength(0);
     await screen.getByRole("button", { name: `RETRY ${view}` }).click();

@@ -7,10 +7,19 @@
 - **Scope:** production connected evidence, comparisons, real intent/journal stories, canonical
   weekly focus, tentative real-schedule planning, source inspection and review export/print.
   Full approved concept retained; no fake data, new runtime dependency, schema or Engine rule.
-- **Status / verification / PR:** WIP pushed at `b1dbecf`; master through #281 merged.
-  Verification and PR pending; this is not a finished build.
-- **Next:** implement and verify the complete experience; independent exact-head review and
-  green CI; Gavin's merge approval. DEPS-001 #280 and DELTA-002 #281 are now on master.
+- **Status / PR:** implementation pushed; draft [#283](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/283).
+  Fresh master `5e0811c` through #281 merged. No `src/engine/**` diff; new pure projections
+  live in application as Gavin directed.
+- **Verified so far:** architecture, typecheck and production build pass; focused node evidence
+  tests pass 5/5 and synthetic acceptance fixture passes 1/1. Browser feature/related checks pass
+  after explicit legacy-disclosure navigation adjustments. Built-PWA acceptance passes at
+  320/390/1440 pixels, including source links/History return, no exploration writes, retained
+  draft, canonical offline save and offline cold reload. [Screenshots/results](../screenshots/whole-picture-001/README.md).
+  Independent WIP review at `a60f84f` found no substantive issues; final-head renewal required.
+  First CI failed the MoreOperator legacy-review retry test because its section is now behind
+  an explicit disclosure; test updated to open it. Full local verification is running.
+- **Next:** finish full verification, renew independent exact-head review, obtain green required
+  CI, then Gavin’s merge approval. No merge or deployment authorized. DEPS-001 #280 and DELTA-002 #281 are now on master.
   Read DELTA-002 and the DELTA-ADVANCED brief at #282 (`c1a3c1e`); Delta implementation waits
   for this objective. Every claim must reach its records; show denominators, never causes/scores.
 
