@@ -219,4 +219,3 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
 export function LogActions({ open, busy = false, isInFlight = () => busy }: { open: (target: RecordSheetTarget) => void; busy?: boolean; isInFlight?: () => boolean }) {
   return <div className="console-controls cc-actions cc-actions--two" role="group" aria-label="Log actions">{([['water', 'WATER'], ['meal', 'MEAL'], ['log', 'LOG']] as const).map(([target, label]) => <button type="button" className={target === "log" ? "cc-act cc-fab" : "cc-act"} aria-label={target === 'water' ? 'Log water' : target === 'meal' ? 'Log a meal' : 'Open LOG'} aria-haspopup="dialog" disabled={busy} key={target} onClick={() => { if (!isInFlight()) open(target); }}>{CcIcon[target === "log" ? "plus" : target === "meal" ? "meal" : "water"]()}{label}</button>)}</div>;
 }
-

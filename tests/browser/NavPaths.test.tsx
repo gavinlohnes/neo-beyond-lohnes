@@ -16,7 +16,7 @@ beforeEach(async () => {
   const { id: _id, createdAt: _c, updatedAt: _u, ...schedule } = DEFAULT_SCHEDULE_PATTERN;
   await updateSchedulePattern(schedule);
 });
-afterEach(() => { cleanup(); vi.useRealTimers(); });
+afterEach(async () => { await cleanup(); vi.useRealTimers(); });
 
 async function openLog(screen: Awaited<ReturnType<typeof render>>) {
   await screen.getByRole("button", { name: "Open LOG" }).click();
@@ -26,7 +26,8 @@ async function openLog(screen: Awaited<ReturnType<typeof render>>) {
 }
 
 describe("NAV-001 top tasks from TODAY", () => {
-  it("+ floats at the bottom-right, above the tab bar", async () => {
+  it.each([[320, 640], [390, 844], [844, 390], [1280, 800]])("+ remains reachable above navigation at %sx%s, including after scroll", async (width, height) => {
+    await page.viewport(width, height);
     await startDay();
     const screen = await render(<App />);
     const plus = screen.getByRole("button", { name: "Open LOG" });
@@ -35,8 +36,32 @@ describe("NAV-001 top tasks from TODAY", () => {
     const nav = document.querySelector(".shell-nav")!.getBoundingClientRect();
     expect(getComputedStyle(plus.element()).position).toBe("fixed");
     expect(box.bottom).toBeLessThanOrEqual(nav.top);
-    expect(window.innerWidth - box.right).toBeLessThanOrEqual(32);
+    if (width <= 560) expect(window.innerWidth - box.right).toBeLessThanOrEqual(32);
+    expect(box.left).toBeGreaterThanOrEqual(0);
+    expect(box.top).toBeGreaterThanOrEqual(0);
+    const hit = () => { const rect = plus.element().getBoundingClientRect(); return plus.element().contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)); };
+    expect(hit()).toBe(true);
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
+    await expect.poll(() => plus.element().getBoundingClientRect().bottom).toBe(box.bottom);
+    expect(hit()).toBe(true);
+    await plus.click();
+    await expect.element(screen.getByRole("dialog", { name: "LOG", exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "CLOSE", exact: true }).click();
+    await expect.poll(() => document.activeElement === plus.element()).toBe(true);
     expect(box.height).toBeGreaterThanOrEqual(44);
+  });
+
+  it("keeps the floating LOG on TODAY only and behind the native modal", async () => {
+    await startDay(); const screen = await render(<App />);
+    const sheet = await openLog(screen);
+    const plus = document.querySelector<HTMLButtonElement>(".cc-fab")!;
+    const rect = plus.getBoundingClientRect();
+    expect(plus.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2))).toBe(false);
+    await sheet.getByRole("button", { name: "CLOSE", exact: true }).click();
+    await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
+    expect(screen.getByRole("button", { name: "Open LOG" }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();
   });
 
   it("log a meal: + → MEAL opens with NEW MEAL first, before the list", async () => {

@@ -36,3 +36,7 @@
 .redesign-today { padding-bottom: 88px; }
 .record-meal-start { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px; }
 .record-meal-start button { margin: 0; }
+/* A transformed tab becomes the containing block of fixed descendants. Keep TODAY's
+   entrance as a fade so the floating LOG stays above navigation from its first frame. */
+#workspace-TODAY.tab-enter { animation-name: today-log-tab-in; }
+@keyframes today-log-tab-in { from { opacity: 0; } to { opacity: 1; } }

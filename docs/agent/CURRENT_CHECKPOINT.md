@@ -1,10 +1,17 @@
 # NAV-001 — slice 1: TODAY
 
 - **Objective / authority:** [NAV-001](NAV-001.md); Gavin approved the map on 2026-10-23 (Protected IA).
-  Builder: Claude Code, branch `claude/nav-001`. SLEEP-FILING-001 (#289) merged.
+  Builder: Codex, explicitly taking over from Claude Code on Gavin’s 2026-10-23 instruction.
+  Existing branch `claude/nav-001`, [PR #290](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/290);
+  local checkout `codex/nav-001`. SLEEP-FILING-001 (#289) merged.
 - **Built:** a floating + LOG; the meal sheet opens with NEW MEAL / QUICK ADD; "See the reasoning ›";
   path tests per top task (`tests/browser/NavPaths.test.tsx`).
-- **Next:** slice 2 (BODY → DATA, COMMAND → MORE, "Back up my data"), slice 3 (sleep page by week),
+- **Verification / next:** original `241606e` has green required CI; Claude reported full verify
+  2,928 passed / one skip / four future-slice todos, plus 57 affected browser tests after styling.
+  Takeover adds responsive/scroll/hit-testing, modal isolation/focus return and tab visibility
+  checks. Finish focused verification, independent exact-head review and green final-head CI;
+  Gavin approves merging slice 1. Final evidence is recorded in #290.
+- **Later approved slices:** slice 2 (BODY → DATA, COMMAND → MORE, "Back up my data"), slice 3 (sleep page by week),
   slice 4 (DATA layout, sync on numbers, tree-test re-run).
 
 ---
