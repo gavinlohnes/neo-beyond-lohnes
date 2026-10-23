@@ -6,8 +6,23 @@
   link and sends; BEYOND shows SYNC GARMIN on Android in Garmin sheets and the old-data note.
 - **Verified:** BEYOND `npm run verify` green (2,914 passed / one skip, build OK). The helper is
   compiled and tested by Health Bridge CI (no local Android SDK).
-- **Next:** PR, both CI workflows, independent review, Gavin installs 0.7.0 and merges. Then
-  ROTATION phase 1 (proposed, not yet approved).
+- **Next:** #287: both CI workflows on the master-merged head, renewed exact-head review, merge
+  (Gavin approved on review pass); Gavin installs helper 0.7.0.
+
+---
+Previous checkpoint (ROTATION-001 phase 1, #288 merged by Gavin):
+
+# ROTATION-001 — phase 1: the rotation map
+
+- **Objective / authority:** [ROTATION-001](ROTATION-001.md); Gavin: "go ROTATION" (2026-10-23).
+  Builder: Claude Code, branch `claude/rotation-1`. SYNC-001 (#287) is separate and pending merge.
+- **Built:** Rotation tab in Whole Picture (runs by recorded context, per-day sleep/energy/workout
+  cells into the existing inspector, next predicted run). Display only.
+- **Verified:** `npm run verify` green: 2,916 passed / one skip, build OK.
+- **Found in Gavin's 2026-10-23 backup (not committed):** two Garmin sleeps on Oct 21 were never
+  filed as sleep because no lived day covered their start (BEYOND unused Oct 19–21); Garmin steps
+  stop at Oct 22 05:00 local while heart rate continues. Filing fix is Protected; awaiting Gavin.
+- **Next:** PR, CI, review, Gavin's merge.
 
 ---
 Previous checkpoint:

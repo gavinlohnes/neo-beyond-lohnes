@@ -168,7 +168,11 @@ class MainActivity : ComponentActivity() {
         if (HealthConnectClient.getSdkStatus(this) != HealthConnectClient.SDK_AVAILABLE) return
         lifecycleScope.launch {
             try {
-                if (client.permissionController.getGrantedPermissions().containsAll(permissions)) { windowDays = 7; readSleep(sendAfter) }
+                if (client.permissionController.getGrantedPermissions().containsAll(permissions)) {
+                    // A read already running (e.g. READ FULL HISTORY) keeps its window; the send waits for it.
+                    if (!working) windowDays = 7
+                    readSleep(sendAfter)
+                }
                 else status.text = "Tap ALLOW ACCESS AND READ once to allow access. After that the helper reads when it opens."
             } catch (_: Exception) { /* leave the manual buttons; nothing was read */ }
         }

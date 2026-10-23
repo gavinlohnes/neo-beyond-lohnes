@@ -37,6 +37,12 @@ BEYOND's SYNC GARMIN link (Android) opens BEYOND Health Bridge, which reads when
 to BEYOND; you confirm the preview there. The helper says how current Garmin's sleep and steps are in
 Health Connect and to sync Garmin Connect when they're behind. No background sync; preview-before-write
 stays. [Brief](agent/SYNC-001.md).
+## ROTATION-001 — runs, not calendar weeks (owner go 2026-10-23)
+
+Whole Picture gains a Rotation tab: recorded lived days grouped into work runs, days off and
+unknown-context stretches, newest first, each day showing main sleep, check-in energy and training and
+opening the existing day inspector; plus the next predicted run from Week Ahead. Recorded context only,
+no score, no Engine input. [Brief](agent/ROTATION-001.md).
 
 ## DELTA-ADVANCED — smarter about you, not more AI (direction approved 2026-10-23)
 
