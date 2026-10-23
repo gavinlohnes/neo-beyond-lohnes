@@ -69,10 +69,9 @@ the import time, and the 36 h freshness rule counted from it.
 ## Seen, not fixed (candidates)
 
 - Review still states the boundary: `WeeklyReviewPanel.tsx` "Lived days starting …" / "the Sunday
-  lived day ending Monday at 16:30", `ReviewAnswers.tsx` "lived-day windows, starting at 16:30".
-  TODAY/SYSTEMS pin and reset times ("resets 16:30", "Pinned until 16:30") are real times the owner
-  acts on, not the boundary, and stay.
-
+  lived day ending Monday at 16:30", `ReviewAnswers.tsx` "lived-day windows, starting at 16:30",
+  and Minimum Day's "the day ends (16:30, or when you end it)". TODAY/SYSTEMS pin and reset times
+  ("resets 16:30", "Pinned until 16:30") are real times the owner acts on, not the boundary, and stay.
 - TODAY's tile "NO TARGET" plus the line "A weigh-in sets the protein target." is a deliberate
   FIELD-AUTHORITY-001 split (state in the tile, action below); left as is.
 - The LOG sheet's "WORKOUT SET → TRAIN" keeps an arrow; harmless.
