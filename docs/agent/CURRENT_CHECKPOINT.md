@@ -1,3 +1,15 @@
+# FRICTION-001 — slice 4: review screens say it plainly
+
+- **Objective / authority:** [FRICTION-001](FRICTION-001.md); Gavin: "We have work to do".
+  Builder: Claude Code, branch `claude/friction-4`; slice 3 (#277) merged and is merged in.
+- **Built:** Plan today names the day instead of an ISO date; Review drops the 16:30 boundary
+  wording; Import describes activity files (with calories). Copy only.
+- **Verified:** `npm run verify` green: architecture OK, 2,894 passed / one skip, build OK.
+- **Next:** PR, green CI, independent review, Gavin's merge.
+
+---
+Previous checkpoint:
+
 # FRICTION-001 — slice 3: COMMAND in plain words
 
 - **Objective / authority:** [FRICTION-001](FRICTION-001.md); Gavin: "We have work to do".

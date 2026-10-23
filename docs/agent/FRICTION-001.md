@@ -46,7 +46,25 @@ Walked the LOG sheet, CHECK IN, a live workout and every COMMAND group at 02:30.
 
 A unit test keeps "existing" and the "COMMAND ·" self-tag out of COMMAND descriptions.
 
+## Slice 4 — review screens say it plainly
+
+Walked Weekly, History, Plan today, Import health data, Systems and Review at 02:30.
+
+| Seen | Fix |
+| --- | --- |
+| Plan today headed "2026-10-22 · …" | "Thu, Oct 22 · …" |
+| Review: "Lived days, 16:30 to 16:30, Monday through Sunday" and "lived-day windows" (the internal day boundary on a routine screen) | "Monday through Sunday." / "N of 7 days" |
+| Import: "Choose a sleep or a steps and heart rate file" | "sleep, or activity (steps, heart rate and calories)" |
+
+Noted, not changed: SYSTEMS' "Logged HH:MM" for a Garmin sleep is the import time, not when you
+woke; and the 36 h freshness rule counts from that import time.
+
 ## Seen, not fixed (candidates)
+
+- Review still states the boundary: `WeeklyReviewPanel.tsx` "Lived days starting …" / "the Sunday
+  lived day ending Monday at 16:30", `ReviewAnswers.tsx` "lived-day windows, starting at 16:30".
+  TODAY/SYSTEMS pin and reset times ("resets 16:30", "Pinned until 16:30") are real times the owner
+  acts on, not the boundary, and stay.
 
 - TODAY's tile "NO TARGET" plus the line "A weigh-in sets the protein target." is a deliberate
   FIELD-AUTHORITY-001 split (state in the tile, action below); left as is.
