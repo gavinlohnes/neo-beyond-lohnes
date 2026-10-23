@@ -1,3 +1,4 @@
+import { openDetailedReviews } from "./helpers/review";
 import { commandResult } from "./helpers/command";
 import { afterEach, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
@@ -60,6 +61,7 @@ for (const width of [320, 360, 412]) it(`opens the monthly review from TODAY wit
   const screen = await render(<App />);
   expect(screen.getByText("Monthly review ready", { exact: true }).elements()).toHaveLength(0);
   await (await commandResult(screen, "REVIEW")).click();
+  await openDetailedReviews(screen);
   const review = screen.getByRole("region", { name: "Weekly review", exact: true });
   await expect.element(review.getByText("MONTHLY REVIEW · LATEST COMPLETED WEEK", { exact: true })).toBeVisible();
   const body = screen.getByRole("region", { name: "BODY COMPOSITION · LAST 4 WEEKS" });
@@ -88,6 +90,7 @@ it("keeps ordinary weeks weekly and says when the monthly review comes", async (
   const screen = await render(<App />);
   expect(screen.getByText("Weekly review ready", { exact: true }).elements()).toHaveLength(0);
   await (await commandResult(screen, "REVIEW")).click();
+  await openDetailedReviews(screen);
   const review = screen.getByRole("region", { name: "Weekly review", exact: true });
   await expect.element(review.getByText("WEEKLY REVIEW · LATEST COMPLETED WEEK", { exact: true })).toBeVisible();
   await expect.element(review.getByText("Monthly review in 3 weeks. It adds body composition: weight, measurements and photos.", { exact: true })).toBeVisible();
@@ -98,6 +101,7 @@ it("never shows a newly hidden photo while the re-read is pending, then shows on
   const { later } = await seedMonth();
   const screen = await render(<App />);
   await (await commandResult(screen, "REVIEW")).click();
+  await openDetailedReviews(screen);
   await expect.element(screen.getByRole("figure", { name: "Front photos, Oct 1 and Nov 10" })).toBeVisible();
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await hideProgressPhoto(later.id);
@@ -120,6 +124,7 @@ it("drops the cached body panel when a re-read fails, so a newly hidden photo is
   const { later } = await seedMonth();
   const screen = await render(<App />);
   await (await commandResult(screen, "REVIEW")).click();
+  await openDetailedReviews(screen);
   await expect.element(screen.getByRole("figure", { name: "Front photos, Oct 1 and Nov 10" })).toBeVisible();
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await hideProgressPhoto(later.id);

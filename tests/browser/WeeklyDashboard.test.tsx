@@ -1,4 +1,5 @@
 /// <reference types="@vitest/browser-playwright" />
+import { openDetailedReviews } from "./helpers/review";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cdp, page } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
@@ -67,6 +68,7 @@ afterEach(async () => {
 
 async function renderReview(onOpenHistory = vi.fn()) {
   const screen = await render(<ReviewScreen onOpenHistory={onOpenHistory} />);
+  await openDetailedReviews(screen);
   const dashboard = screen.getByRole("region", { name: "Weekly review", exact: true });
   await expect.element(dashboard.getByRole("heading", { name: "Oct 12 — Oct 18" })).toBeVisible();
   return { screen, dashboard, onOpenHistory };

@@ -1,3 +1,4 @@
+import { openDetailedReviews } from "./helpers/review";
 import { commandResult } from "./helpers/command";
 import { afterEach, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
@@ -28,6 +29,7 @@ for (const width of [320, 360, 412]) it(`connects Review answers to source Histo
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
   await (await commandResult(screen, "REVIEW")).click();
+  await openDetailedReviews(screen);
   await expect.element(screen.getByText("2.0 lb lower · latest 7-day mean versus previous 7", { exact: true })).toBeVisible();
   await screen.getByText("Is my weight going down?", { exact: true }).click();
   await screen.getByText("How this is calculated", { exact: true }).first().click();
