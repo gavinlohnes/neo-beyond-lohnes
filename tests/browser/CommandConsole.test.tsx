@@ -114,7 +114,7 @@ describe("Production Command Console", () => {
     await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
     const screen = await render(<App />);
     await expect.element(screen.getByRole("region", { name: "Next action" })).toBeVisible();
-    await screen.getByText("How BEYOND decided", { exact: true }).click();
+    await screen.getByText("See the reasoning", { exact: true }).click();
     await openTodayTools(screen);
     await expect.poll(() => [...document.querySelectorAll<HTMLElement>(".console-guidance")].filter(el => el.getClientRects().length).length).toBe(1);
     // TONIGHT-001: the day-off workout question sits below, so the all-clear says so.

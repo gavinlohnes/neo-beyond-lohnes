@@ -32,7 +32,7 @@ for (const width of [320,360,390,412]) it(`logs a saved meal in two taps without
 it('logs an unsaved new meal with optional macros without creating a preset', async()=>{
   const screen=await render(<App />); await screen.getByRole('button',{name:'Log a meal',exact:true}).click();
   await screen.getByRole('searchbox',{name:'Search your meals'}).fill('Soup');
-  await screen.getByRole('button',{name:'New meal ‘Soup’',exact:true}).click();
+  await screen.getByRole('button',{name:'NEW MEAL ‘Soup’',exact:true}).click();
   const sheet=screen.getByRole('dialog',{name:'NEW MEAL',exact:true});
   await expect.element(sheet.getByRole('textbox',{name:'New meal name'})).toHaveValue('Soup');
   await expect.element(sheet.getByRole('checkbox',{name:'Save for next time'})).not.toBeChecked();
@@ -44,7 +44,7 @@ it('logs an unsaved new meal with optional macros without creating a preset', as
 });
 it('retains checked-save input on an atomic write failure, then retries exactly once', async()=>{
   const screen=await render(<App />);await screen.getByRole('button',{name:'Log a meal',exact:true}).click();
-  await screen.getByRole('button',{name:'New meal',exact:true}).click();
+  await screen.getByRole('button',{name:'NEW MEAL',exact:true}).click();
   const sheet=screen.getByRole('dialog',{name:'NEW MEAL',exact:true});
   await sheet.getByRole('textbox',{name:'New meal name'}).fill('Test meal');
   await sheet.getByRole('spinbutton',{name:'New meal Calories',exact:true}).fill('100');

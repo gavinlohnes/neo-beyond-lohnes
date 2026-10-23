@@ -20,7 +20,7 @@ async function tab(screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "COMMAND")
 async function manualMeal(screen: Screen) {
   await tab(screen, "TODAY");
   await screen.getByRole("button", { name: "Log a meal", exact: true }).click();
-  await screen.getByRole("dialog").getByRole("button", { name: "New meal", exact: true }).click();
+  await screen.getByRole("dialog").getByRole("button", { name: "NEW MEAL", exact: true }).click();
 }
 beforeEach(async () => { await page.viewport(360, 800); vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 9, 13, 22)); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo(0, 0); });

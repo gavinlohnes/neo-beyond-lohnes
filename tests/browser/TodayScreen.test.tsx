@@ -217,7 +217,7 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     // the all-clear state, and no repeated rationale or note under its button.
     expect(getComputedStyle(allClear!).minHeight).toBe("0px");
     expect(screen.getByText("No rule requires attention right now.", { exact: true }).elements()).toHaveLength(0);
-    // The note now sits inside the closed "How BEYOND decided" disclosure.
+    // The note now sits inside the closed "See the reasoning" disclosure.
     await expect.element(screen.getByText("Just records that you saw this. Nothing to start.", { exact: true })).not.toBeVisible();
   });
 
@@ -368,7 +368,7 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — WHY machinery panel", () =>
 
     const screen = await render(<TodayScreen />);
 
-    await expect.element(screen.getByText("How BEYOND decided", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("See the reasoning", { exact: true })).toBeVisible();
     // <details> content exists in the DOM but is not visible while closed.
     await expect.element(screen.getByText("State input", { exact: true })).not.toBeVisible();
   });
@@ -378,7 +378,7 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — WHY machinery panel", () =>
     await submitCheckIn(day.id, GREEN);
 
     const screen = await render(<TodayScreen />);
-    await screen.getByText("How BEYOND decided", { exact: true }).click();
+    await screen.getByText("See the reasoning", { exact: true }).click();
 
     // DELTA-002 slice 1: the plain answer leads, ending with what the Engine doesn't use.
     const plain = document.querySelector("[data-why-plain]")!;
@@ -414,7 +414,7 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — WHY machinery panel", () =>
     await expect.element(screen.getByText("Previous result", { exact: true })).not.toBeVisible();
     await expect.element(screen.getByText(/Last time this recommendation was recorded/)).not.toBeVisible();
 
-    await screen.getByText("How BEYOND decided", { exact: true }).click();
+    await screen.getByText("See the reasoning", { exact: true }).click();
 
     await expect.element(screen.getByText("Previous result", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/NO ACTION RECORDED · GOOD/)).toBeVisible();
@@ -449,7 +449,7 @@ describe("TodayScreen (real browser) — cross-day outcome follow-up", () => {
 
     await screen.rerender(<></>);
     await screen.rerender(<TodayScreen />);
-    await screen.getByText("How BEYOND decided", { exact: true }).click();
+    await screen.getByText("See the reasoning", { exact: true }).click();
     await expect.element(screen.getByText("Previous result", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/NO ACTION RECORDED · GOOD/)).toBeVisible();
   });

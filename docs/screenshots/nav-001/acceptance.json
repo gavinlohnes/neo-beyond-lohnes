@@ -1,0 +1,58 @@
+[
+  {
+    "width": 320,
+    "height": 640,
+    "result": "PASS",
+    "checks": [
+      "production UI day setup",
+      "floating LOG above navigation",
+      "LOG to Meal to New Meal",
+      "CLOSE returns focus to floating LOG",
+      "hidden outside TODAY",
+      "meal draft survives close and tab detour",
+      "no overflow or uncaught errors"
+    ]
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "result": "PASS",
+    "checks": [
+      "production UI day setup",
+      "floating LOG above navigation",
+      "LOG to Meal to New Meal",
+      "CLOSE returns focus to floating LOG",
+      "hidden outside TODAY",
+      "meal draft survives close and tab detour",
+      "no overflow or uncaught errors"
+    ]
+  },
+  {
+    "width": 844,
+    "height": 390,
+    "result": "PASS",
+    "checks": [
+      "production UI day setup",
+      "floating LOG above navigation",
+      "LOG to Meal to New Meal",
+      "CLOSE returns focus to floating LOG",
+      "hidden outside TODAY",
+      "meal draft survives close and tab detour",
+      "no overflow or uncaught errors"
+    ]
+  },
+  {
+    "width": 1280,
+    "height": 800,
+    "result": "PASS",
+    "checks": [
+      "production UI day setup",
+      "floating LOG above navigation",
+      "LOG to Meal to New Meal",
+      "CLOSE returns focus to floating LOG",
+      "hidden outside TODAY",
+      "meal draft survives close and tab detour",
+      "no overflow or uncaught errors"
+    ]
+  }
+]

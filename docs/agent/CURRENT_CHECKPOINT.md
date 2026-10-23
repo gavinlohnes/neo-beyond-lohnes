@@ -1,3 +1,31 @@
+# NAV-001 — slice 1: TODAY
+
+- **Objective / authority:** [NAV-001](NAV-001.md); Gavin approved the map on 2026-10-23 (Protected IA).
+  Builder: Codex, explicitly taking over from Claude Code on Gavin’s 2026-10-23 instruction.
+  Existing branch `claude/nav-001`, [PR #290](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/290);
+  local checkout `codex/nav-001`. SLEEP-FILING-001 (#289) merged.
+- **Built:** a floating + LOG; the meal sheet opens with NEW MEAL / QUICK ADD; "See the reasoning ›";
+  path tests per top task (`tests/browser/NavPaths.test.tsx`).
+- **Takeover verification:** 8 related browser files **230 passed / 4 future-slice todos**;
+  architecture (300 files), TypeScript/production build and diff check pass. Built-PWA acceptance
+  passes 320/390/landscape/desktop: floating LOG placement, sheet focus return, inactive-tab hiding,
+  retained meal draft, no overflow/page errors. [Evidence](../screenshots/nav-001/README.md).
+  Fixed the reproduced entrance-animation containing-block bug with a TODAY-only fade; logging
+  handlers unchanged. Original Claude head had green full CI/verify; final-head required CI
+  runs the full suite/build again. Independent final exact-head review and CI are recorded
+  in #290 before readiness. Gavin approves merging slice 1; takeover is not merge authority.
+- **CI follow-up:** the first takeover CI failed four legacy fresh-install cases asserting
+  LOG bottom <700px. NAV intentionally places it above bottom navigation (764px at height844).
+  Replaced the superseded absolute threshold with viewport/navigation bounds, target size,
+  pointer hit test and actual LOG opening, preserving empty-state, red-budget and no-day-write
+  checks. RedesignToday + NavPaths follow-up: **29 passed / 4 later-slice todos**. No product
+  code changed after the accepted production capture; final CI/review renewal required.
+- **Later approved slices:** slice 2 (BODY → DATA, COMMAND → MORE, "Back up my data"), slice 3 (sleep page by week),
+  slice 4 (DATA layout, sync on numbers, tree-test re-run).
+
+---
+Previous checkpoint (SLEEP-FILING-001, #289 merged):
+
 # SLEEP-FILING-001 — real sleep, not quiet shifts
 
 - **Objective / authority:** [SLEEP-FILING-001](SLEEP-FILING-001.md); Gavin: "go sleep filing"

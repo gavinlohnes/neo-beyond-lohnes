@@ -149,7 +149,7 @@ describe("COMMAND catalog", () => {
   it("retains meal drafts through catalog departure and reopens the same input", async () => {
     const screen = await render(<App />);
     await openCommand(screen); await launch(screen, "MEAL");
-    await screen.getByRole("button", { name: "New meal", exact: true }).click();
+    await screen.getByRole("button", { name: "NEW MEAL", exact: true }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished dinner");
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
@@ -157,7 +157,7 @@ describe("COMMAND catalog", () => {
     await launch(screen, "HISTORY");
     await expect.element(screen.getByRole("heading", { name: "COMMAND // HISTORY", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "BACK TO COMMAND", exact: true }).click();
-    await launch(screen, "MEAL"); await screen.getByRole("button", { name: "New meal", exact: true }).click();
+    await launch(screen, "MEAL"); await screen.getByRole("button", { name: "NEW MEAL", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
     expect(confirm).not.toHaveBeenCalled();
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);

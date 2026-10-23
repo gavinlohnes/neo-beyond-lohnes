@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
  * Plain words (owner ruling 2026-10-04): no developer terms in text the
  * operator reads on TODAY, BODY, TRAIN, Weekly or History. Comments and
  * identifiers may say BeyondDay; on-screen text says "today" / "the day".
- * The "How BEYOND decided" machinery panel is technical by design and its
+ * The "See the reasoning" machinery panel is technical by design and its
  * code doesn't contain these phrases.
  */
 const SCREENS = ["src/ui/screens/today", "src/ui/screens/body", "src/ui/screens/train", "src/ui/screens/weekly", "src/ui/screens/history"];
