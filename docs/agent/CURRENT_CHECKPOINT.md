@@ -1,3 +1,24 @@
+# Owner-approved integration — #286 and #282
+
+- **Authority:** Gavin explicitly requested merging both PRs on 2026-10-23. Codex integrates;
+  no additional feature implementation is authorized.
+- **Current truth:** Whole Picture #283, reuse-first #285 and TODAY “Why this?” #284 are merged.
+  #286 records mandatory REUSE / OWN / BUILD FROM SCRATCH and proportional process. #282 records
+  advanced Delta direction only; each future slice still requires owner approval.
+- **Branches / verification:** #286 `codex/reuse-first-002` merges fresh master `a17a2fd`;
+  #282 `claude/delta-advanced` incorporates that same reconciled base. Conflicting checkpoint
+  and register entries retain both owner direction and Delta history. Final exact-head reviews
+  and unchanged required CI are recorded in each PR before the owner-approved merges.
+- **Mainline / next:** use Whole Picture and TODAY’s explanation on shift; Gavin decides whether
+  to authorize sleep-aware Engine work. Parallel feature epics remain parked; no SUIT-ALIVE,
+  visual epic, boxed AI, ranked help, new recommendation priority or pushback schema authorized.
+- **REUSE:** existing register, checkpoint, Intelligence Spine and Delta direction briefs.
+- **OWN:** documentation reconciliation and mapping to existing owner authority.
+- **BUILD FROM SCRATCH:** none.
+
+---
+Historical checkpoint (superseded status; retained for evidence):
+
 # REUSE-FIRST-002 — owner build direction, 2026-10-23
 
 - **Authority / Builder / lane:** Gavin’s explicit owner direction; Codex; PROTECTED docs-only.

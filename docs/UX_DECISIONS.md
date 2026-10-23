@@ -31,6 +31,14 @@ Parallel feature epics are parked unless Gavin names them. Earlier approval of a
 including DELTA-ADVANCED, is not implementation authority. This process lock is docs-only and
 does not expand any product/UI scope. See [the brief](agent/REUSE-FIRST-002.md).
 
+## DELTA-ADVANCED — smarter about you, not more AI (direction approved 2026-10-23)
+
+Gavin approved the [advanced direction](agent/DELTA-ADVANCED.md) and its order: personal
+experiments first, then unusual-against-your-range and rotation-aware planning as readings, then
+rotation forecasts, then "what moves the needle" once months of data exist. Guardrails: data
+first, patterns not causes, sample sizes shown, every claim taps through, silence is valid. No
+model required; each item still needs its own approved slice.
+
 ## WHOLE-PICTURE-001 — connected Review (owner approved 2026-10-23)
 
 Gavin approved the complete interactive Whole Picture concept for production; see
