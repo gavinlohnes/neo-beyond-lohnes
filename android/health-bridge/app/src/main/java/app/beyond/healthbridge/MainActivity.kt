@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
     private var activityGranted: Set<String> = emptySet() // what the prepared activity file was read with
     private var working = false
     private var newestStepsHour: Instant? = null // SYNC-001: for the freshness line
+    private var pendingSend = false // SYNC-001: a SYNC request that arrived while a read was running
     private val requestPermission = registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { granted ->
         if (granted.containsAll(permissions)) readSleep() else clear("Sleep access was not granted. No export was created.")
     }
@@ -140,7 +141,8 @@ class MainActivity : ComponentActivity() {
         layout.addView(send)
         clearShared()
         // SYNC-001: read straight away when access is already allowed; opened from BEYOND, also send.
-        autoRead(sendAfter = intent?.data?.scheme == SYNC_SCHEME)
+        // Only a fresh launch sends: a recreated activity (rotation, process restore) must not reopen the share sheet.
+        autoRead(sendAfter = savedInstanceState == null && intent?.data?.scheme == SYNC_SCHEME)
         val scroll = ScrollView(this).apply { addView(layout) }
         ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
@@ -220,7 +222,8 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun readSleep(sendAfter: Boolean = false) {
-        if (working) return
+        if (working) { if (sendAfter) pendingSend = true; return }
+        pendingSend = sendAfter
         clear("Reading Garmin sleep…"); setWorking(true)
         lifecycleScope.launch {
             var ready = false
@@ -263,7 +266,7 @@ class MainActivity : ComponentActivity() {
                 ready = true
             } catch (_: Exception) { clear("Sleep could not be read safely. Check Health Connect sleep access and Garmin sync, then try again. No partial export was kept.") }
             finally { setWorking(false) }
-            if (ready && sendAfter) sendToBeyond()
+            if (ready && pendingSend) { pendingSend = false; sendToBeyond() }
         }
     }
     /** Hourly Garmin steps and heart rate, plus resting heart rate, for whichever of them were granted. */

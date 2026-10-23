@@ -2,8 +2,9 @@
 
 - **Authority:** Gavin, 2026-10-23: "go SYNC-001", after a night where last night's sleep and today's
   steps never reached BEYOND (Garmin hadn't passed them to Health Connect yet, and nothing said so).
-- **Builder / lane / branch:** Claude Code; Routine (helper UX, no new permission or data category;
-  BEYOND link only); `claude/sync-001` from `4d38b3a`.
+- **Builder / lane / branch:** Claude Code; FEATURE (a new capability and a web-reachable entry point,
+  per DEV-FLOW-002's 2026-10-23 clarification; no new permission or data category); `claude/sync-001`
+  from `4d38b3a`.
 - **REUSE:** the helper's existing Health Connect reads and SEND TO BEYOND share path; BEYOND's
   existing share-target import preview and confirm; the "Garmin as of" line and stale note.
 - **OWN:** the `beyond-bridge://sync` link between BEYOND and the helper; the freshness wording.
