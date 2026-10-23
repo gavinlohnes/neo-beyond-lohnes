@@ -1,3 +1,26 @@
+# REUSE-FIRST-002 — owner build direction, 2026-10-23
+
+- **Authority / Builder / lane:** Gavin’s explicit owner direction; Codex; PROTECTED docs-only.
+- **Branch / baseline:** `codex/reuse-first-002`, fresh master `fcc0d0d`; [brief](REUSE-FIRST-002.md).
+- **Direction:** reuse existing work/proven patterns by default; every new brief and PR description
+  states REUSE / OWN / BUILD FROM SCRATCH (one-sentence justification or none). Existing builder
+  gate, risk lanes and review retained; Routine stays thin; Careful presentation uses short
+  brief/tests; Protected safeguards remain. [Locked decision](../UX_DECISIONS.md#reuse-first-002--owner-build-direction-locked-2026-10-23).
+- **Mainline:** Whole Picture #283, reuse-first #285 and TODAY-only DELTA slice #284 merged. Park parallel feature epics unless Gavin names them. SUIT-ALIVE/visual epics,
+  boxed AI, ranked “what would help most,” new recommendation priority and new pushback schema
+  are not authorized. #282 is direction documentation, not implementation permission.
+- **PR / verification:** [#286](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/286).
+  Local Markdown targets, diff check and architecture pass (298 files); classifier confirms
+  PROTECTED. Docs-only; unchanged required CI runs full verification. Final exact-head review
+  and CI evidence are recorded in #286 before readiness; Gavin approves merge.
+- **Merge authority / next:** Gavin explicitly requested merging #286 and #282 on 2026-10-23.
+  Fresh master through #284 merged into this branch; renew independent exact-head review and
+  green required CI, then perform the approved merges without bypass. No new product work.
+
+
+---
+Historical checkpoint (superseded status; retained for evidence):
+
 # DELTA-002 slice 1 — "Why this?" in plain words
 
 - **Objective / authority:** [DELTA-002](DELTA-002.md) slice 1; Gavin: "yes start step 1"

@@ -12,6 +12,25 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## REUSE-FIRST-002 — owner build direction (locked 2026-10-23)
+
+Gavin directs BEYOND to reuse existing work and proven patterns by default: legally reuse and
+adapt behavior before inventing it. Own only the BEYOND-specific mapping to events/rules/data;
+protect Engine semantics, the lived-day model, provenance, owner-wins Garmin, local-first behavior
+and FIELD doctrine. Every new brief and PR description states **REUSE**, **OWN**, and
+**BUILD FROM SCRATCH** (one-sentence justification or `none`). The authoritative operational rule
+is [AGENTS.md’s leverage gate](../AGENTS.md#the-leverage-gate); risk-proportional process remains
+in [DEV-FLOW-002](agent/DEV-FLOW-002.md). Thin ROUTINE PRs and normal review; short brief/tests for
+Careful presentation work; full Protected safeguards for Engine, schema, Garmin write/fill-in,
+backup and permissions. No new report, automated gate or legacy ceremony.
+
+**Current mainline:** WHOLE-PICTURE-001 is merged; the first DELTA slice is on TODAY only.
+Claude owns that implementation (#284). **Not authorized:** SUIT-ALIVE or other visual epics,
+boxed AI, ranked “what would help most,” new recommendation priority or new schema for pushback.
+Parallel feature epics are parked unless Gavin names them. Earlier approval of a direction,
+including DELTA-ADVANCED, is not implementation authority. This process lock is docs-only and
+does not expand any product/UI scope. See [the brief](agent/REUSE-FIRST-002.md).
+
 ## WHOLE-PICTURE-001 — connected Review (owner approved 2026-10-23)
 
 Gavin approved the complete interactive Whole Picture concept for production; see
