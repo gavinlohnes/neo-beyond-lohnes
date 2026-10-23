@@ -175,19 +175,23 @@ export function explainRecommendation(recommendation: Recommendation, checkIn: S
   const input = (key: string) => t.inputs.find((i) => i.key === key)?.value === true;
   const capacity = t.derived.find((d) => d.key === "capacity")?.value as string | undefined;
   const codes = String(t.derived.find((d) => d.key === "reasonCodes")?.value ?? "").split(", ").filter(Boolean);
+  // The answers come from the caller's check-in, not the trace (which holds no values); TODAY pairs
+  // the latest check-in with the recommendation submitCheckIn wrote with it, atomically.
   const because = joinWithAnd(codes.map((code) => reasonWithAnswer(code, checkIn)));
+  const capacityLine = (level: string) => because ? `Your check-in put capacity at ${level}: ${because}.` : `Your check-in put capacity at ${level}.`;
   const lines: string[] = [];
   switch (recommendation.kind) {
     case "STABILIZE":
-      lines.push(`Your check-in put capacity at RED: ${because}.`);
-      if (input("hasUnresolvedPostShift")) lines.push("Shifting down after work can wait; low capacity comes first.");
+      lines.push(capacityLine("RED"));
+      // STABILIZE also hands off to SHIFT DOWN: only the rule outranks the end-of-shift rule, not the action.
+      if (input("hasUnresolvedPostShift")) lines.push("Low capacity outranks the end-of-shift rule; either way, shifting down is the step.");
       break;
     case "RECOVER":
-      lines.push(`Your check-in put capacity at YELLOW: ${because}.`);
+      lines.push(capacityLine("YELLOW"));
       break;
     case "POST_SHIFT_TRANSITION":
       lines.push("Your shift has ended and you haven't shifted down yet.");
-      if (capacity) lines.push(`Your check-in is ${capacity}, so coming down from work comes before anything else.`);
+      if (capacity) lines.push(`Your check-in is ${capacity}, not RED, so coming down from work comes before anything else.`);
       break;
     case "EXECUTE_PLANNED_WORK":
       lines.push("Your check-in is GREEN and you have work planned today.");
@@ -202,6 +206,6 @@ export function explainRecommendation(recommendation: Recommendation, checkIn: S
         : "No check-in yet, and your plan, shift and commitments don't call for anything.");
       break;
   }
-  lines.push("BEYOND decides from your check-in, plan, shift and commitments. It doesn't use sleep, weight or training here.");
+  lines.push("BEYOND decides from your check-in, plan, shift and commitments. It doesn't use sleep, weight or training history.");
   return lines;
 }

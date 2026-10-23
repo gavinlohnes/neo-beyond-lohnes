@@ -114,19 +114,32 @@ as constitutional, or use creative freedom as standing approval for protected ch
 
 ## The leverage gate
 
-Before consequential implementation, ask: **is BEYOND uniquely responsible for solving this
-problem?** Classify the decision:
+**Reuse before invention.** Before consequential implementation, ask: **has this already
+been solved, inside BEYOND or elsewhere, and can we legally reuse or adapt the solution?**
 
-`BUILD OWNED` · `USE DEPENDENCY` · `ADAPT UPSTREAM` · `INTEGRATE PROVIDER` · `STANDARDIZE` ·
-`DEFER` · `REJECT`
+1. Inspect existing BEYOND code and tests, then the relevant entries in
+   [`CAPABILITY_MAP.md`](docs/agent/CAPABILITY_MAP.md) and prior decisions. Verify implementation
+   truth; a stale summary is not evidence that a capability is missing.
+2. Investigate suitable standards, maintained libraries, open-source implementations and proven
+   designs to the depth the task warrants. Trivial fixes need no external search; do not repeat
+   settled research without a concrete new need or new evidence.
+3. Choose the approach that best fits BEYOND: reuse or adapt a suitable solution; build custom
+   code when existing options do not adequately fit. Classify the decision:
+   `BUILD OWNED` · `USE DEPENDENCY` · `ADAPT UPSTREAM` · `INTEGRATE PROVIDER` · `STANDARDIZE` ·
+   `DEFER` · `REJECT`.
+4. Include a concise **Reuse decision** in the existing brief or PR: identify the existing code
+   and relevant alternatives checked, what will be reused/adapted, and why new custom work is
+   justified. Link concrete evidence where useful. For a trivial fix, a sentence identifying
+   the existing path being repaired is enough; no separate report or approval gate.
 
-Do not add dependencies simply because they're convenient. Do not hand-build commodity
-infrastructure merely for purity.
+Check licenses and attribution (including separately licensed data/assets), privacy/security,
+compatibility, performance and lifetime maintenance cost. Respect access controls and proprietary
+assets. Do not add dependencies merely for convenience or hand-build commodity infrastructure
+merely for purity. Reuse does not bypass Protected boundaries or owner approval requirements.
 
-Research to the depth the decision warrants; reuse existing work and proven application patterns.
-Check license/attribution, privacy/security, compatibility, performance and lifetime maintenance
-cost. Respect access controls and proprietary assets. Record a useful disposition in the existing
-brief/PR; no separate research gate or mandatory report is needed.
+Update the capability map when a significant finding or shipped capability would prevent future
+rediscovery or duplicate work; link actual code and preserve useful prior decisions. Do not turn
+it into an exhaustive inventory or duplicate the rule in provider-specific instructions.
 
 ## Commands
 

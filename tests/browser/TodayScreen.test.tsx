@@ -382,7 +382,7 @@ describe("TodayScreen // SUIT LAYER 01 (DEC-003) — WHY machinery panel", () =>
 
     // DELTA-002 slice 1: the plain answer leads, ending with what the Engine doesn't use.
     const plain = document.querySelector("[data-why-plain]")!;
-    await expect.element(page.elementLocator(plain).getByText(/doesn't use sleep, weight or training here\.$/)).toBeVisible();
+    await expect.element(page.elementLocator(plain).getByText(/doesn't use sleep, weight or training history\.$/)).toBeVisible();
     expect(plain.compareDocumentPosition(document.querySelector(".machinery-panel")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     // Real deterministic inputs — the exact values just submitted, not manufactured.

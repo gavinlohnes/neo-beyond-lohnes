@@ -5,13 +5,32 @@
 - **Built:** `explainRecommendation` (recommendationCopy.ts) reads the DecisionTrace into plain
   sentences that lead the "How BEYOND decided" panel; always states the Engine doesn't use sleep,
   weight or training. Display only.
-- **Verified:** full verify: 2,912 passed / one skip; one failure, ModePinExpiry at 320px, a 250 ms
-  clock-edge test that passes alone (2/2) and on master, untouched here. Build OK.
-- **Next:** PR, CI, independent review, Gavin's merge. Then Gavin's call: should the Engine
+- **Verified:** full verify 2,912 passed / one skip (ModePinExpiry 320px clock-edge flake, passes
+  alone and on master). Review @ e60e35b requested one fix (the RED + post-shift sentence said
+  shift-down could wait while STABILIZE hands off to SHIFT DOWN); fixed with the cheap notes.
+- **Next:** CI, exact-head re-review, Gavin's merge. Then Gavin's call: should the Engine
   consider sleep (Protected)?
 
 ---
-Previous checkpoint:
+Previous checkpoint (REUSE-FIRST-001, #285 merged):
+
+# REUSE-FIRST-001 — reuse before invention
+
+- **Authority / lane / Builder:** Gavin’s “Make it so,” 2026-10-23; PROTECTED; Codex.
+- **Branch / baseline:** `codex/reuse-first-001`, fresh master `628ea3c`; [brief](REUSE-FIRST-001.md).
+- **Scope:** existing leverage gate strengthened; concise reuse evidence in brief/PR and reviewer
+  check; capability map now points to the existing Intelligence Spine. No runtime changes.
+- **PR / verified:** [#285](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/285).
+  Local Markdown links and new implementation pointers resolve; diff check and architecture
+  pass (298 files); risk classifier confirms PROTECTED. Docs-only: no redundant local runtime
+  tests; required CI is unchanged. Independent final-head review and CI results are recorded
+  in #285 before readiness; Gavin approves merge.
+- **Other work:** WHOLE-PICTURE-001 #283 merged; its final local gate, independent review and CI
+  passed. Claude owns DELTA slice 1 (#284); #282 is separate advanced-direction documentation.
+- **Next:** verify, open PR, independent review and green CI; no merge without Gavin’s approval.
+
+---
+Historical checkpoint (superseded status; retained for evidence):
 
 # WHOLE-PICTURE-001 — connected Review production integration
 

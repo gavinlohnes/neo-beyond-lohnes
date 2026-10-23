@@ -163,14 +163,14 @@ describe("DELTA-002 slice 1 — explainRecommendation (plain-words why, from the
     const recommendation = evaluate({ beyondDayId: "d", checkIn, hasPlannedWork: false, hasUnresolvedPostShift: false, hasEligibleObligationDueOrOverdue: false, ...flags } as EvaluateInput);
     return { kind: recommendation.kind, lines: explainRecommendation(recommendation, checkIn) };
   };
-  const limits = "BEYOND decides from your check-in, plan, shift and commitments. It doesn't use sleep, weight or training here.";
+  const limits = "BEYOND decides from your check-in, plan, shift and commitments. It doesn't use sleep, weight or training history.";
 
   it("names the check-in answers that put capacity at RED, and that it outranks shifting down", () => {
     const { kind, lines } = run(check({ energy: 1, stress: 5 }), { hasUnresolvedPostShift: true });
     expect(kind).toBe("STABILIZE");
     expect(lines).toEqual([
       "Your check-in put capacity at RED: energy is critically low (1 of 5) and stress is very high (5 of 5).",
-      "Shifting down after work can wait; low capacity comes first.",
+      "Low capacity outranks the end-of-shift rule; either way, shifting down is the step.",
       limits,
     ]);
   });
@@ -178,7 +178,7 @@ describe("DELTA-002 slice 1 — explainRecommendation (plain-words why, from the
   it("explains YELLOW, post-shift, planned work, a due commitment and the all-clear", () => {
     expect(run(check({ energy: 2 }))).toEqual({ kind: "RECOVER", lines: ["Your check-in put capacity at YELLOW: energy is low (2 of 5).", limits] });
     expect(run(check({}), { hasUnresolvedPostShift: true }).lines.slice(0, 2)).toEqual([
-      "Your shift has ended and you haven't shifted down yet.", "Your check-in is GREEN, so coming down from work comes before anything else."]);
+      "Your shift has ended and you haven't shifted down yet.", "Your check-in is GREEN, not RED, so coming down from work comes before anything else."]);
     expect(run(check({}), { hasPlannedWork: true, hasEligibleObligationDueOrOverdue: true }).lines.slice(0, 2)).toEqual([
       "Your check-in is GREEN and you have work planned today.", "A commitment is also due; your plan comes first."]);
     expect(run(check({}), { hasEligibleObligationDueOrOverdue: true }).lines[0]).toBe("A commitment is due or overdue, and nothing more urgent came first.");

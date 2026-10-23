@@ -137,6 +137,12 @@ unchanged. Do not duplicate full runs without a new change or unresolved failure
 full browser verification concurrently. Diagnose failures; never weaken assertions or bypass
 checks for a green result. Record passed, failed, skipped, and unrun checks honestly.
 
+Every PR review checks the [AGENTS.md leverage gate](../../AGENTS.md#the-leverage-gate):
+is the Reuse decision supported by the existing code and relevant alternatives, does the change
+avoid duplicating a capability, and is custom implementation justified? Scale this check to the
+task; a label or completed checkbox alone is not evidence. Use the existing brief/PR and review,
+not a separate research report or gate. Protected work retains independent exact-head review.
+
 Protected review is performed by an independently assigned qualified agent/session against the
 exact PR head and approved brief. Persist the reviewed SHA, evidence, findings/disposition, and
 PASS/BLOCK verdict in GitHub. Head changes require renewed exact-head review. A shared GitHub
