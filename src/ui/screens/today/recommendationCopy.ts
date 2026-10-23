@@ -1,6 +1,6 @@
-import { describeReason } from "./capacityCopy";
+import { describeReason, joinWithAnd } from "./capacityCopy";
 import type { ObligationRelevance } from "../../../engine/obligationRelevance";
-import type { Outcome, Recommendation, RecommendationKind } from "../../../domain/common/types";
+import type { Outcome, Recommendation, RecommendationKind, StateCheckIn } from "../../../domain/common/types";
 import type { RecommendationDecision, RecommendationHandoffTarget } from "../../../application/queries";
 
 /**
@@ -151,4 +151,61 @@ export function describeRecommendationReason(rationale: string): string {
     "No rule requires attention right now.": "Nothing needs you right now. Your call.",
   };
   return copy[rationale] ?? rationale;
+}
+
+const CHECK_IN_FIELD: Record<string, keyof Pick<StateCheckIn, "energy" | "stress" | "mood" | "soreness" | "alcoholUrge">> = {
+  energy: "energy", stress: "stress", mood: "mood", soreness: "soreness", alcoholUrge: "alcoholUrge",
+};
+
+/** "energy is low (2 of 5)": the locked reason code in words, with the answer that triggered it. */
+function reasonWithAnswer(code: string, checkIn: StateCheckIn | null): string {
+  const field = CHECK_IN_FIELD[code.split(" ")[0] ?? ""];
+  const words = describeReason(code);
+  return field && checkIn ? `${words} (${checkIn[field]} of 5)` : words;
+}
+
+/**
+ * DELTA-002 slice 1 (owner, 2026-10-23): "Why this?" in plain words, read only from the
+ * recommendation's own DecisionTrace — never recomputed — so the explanation cannot disagree
+ * with what the Engine decided. Ends by naming what the Engine does not consider, so the
+ * explanation never implies sleep or weight drove it.
+ */
+export function explainRecommendation(recommendation: Recommendation, checkIn: StateCheckIn | null): string[] {
+  const t = recommendation.trace;
+  const input = (key: string) => t.inputs.find((i) => i.key === key)?.value === true;
+  const capacity = t.derived.find((d) => d.key === "capacity")?.value as string | undefined;
+  const codes = String(t.derived.find((d) => d.key === "reasonCodes")?.value ?? "").split(", ").filter(Boolean);
+  // The answers come from the caller's check-in, not the trace (which holds no values); TODAY pairs
+  // the latest check-in with the recommendation submitCheckIn wrote with it, atomically.
+  const because = joinWithAnd(codes.map((code) => reasonWithAnswer(code, checkIn)));
+  const capacityLine = (level: string) => because ? `Your check-in put capacity at ${level}: ${because}.` : `Your check-in put capacity at ${level}.`;
+  const lines: string[] = [];
+  switch (recommendation.kind) {
+    case "STABILIZE":
+      lines.push(capacityLine("RED"));
+      // STABILIZE also hands off to SHIFT DOWN: only the rule outranks the end-of-shift rule, not the action.
+      if (input("hasUnresolvedPostShift")) lines.push("Low capacity outranks the end-of-shift rule; either way, shifting down is the step.");
+      break;
+    case "RECOVER":
+      lines.push(capacityLine("YELLOW"));
+      break;
+    case "POST_SHIFT_TRANSITION":
+      lines.push("Your shift has ended and you haven't shifted down yet.");
+      if (capacity) lines.push(`Your check-in is ${capacity}, not RED, so coming down from work comes before anything else.`);
+      break;
+    case "EXECUTE_PLANNED_WORK":
+      lines.push("Your check-in is GREEN and you have work planned today.");
+      if (input("hasEligibleObligationDueOrOverdue")) lines.push("A commitment is also due; your plan comes first.");
+      break;
+    case "OBLIGATION_DUE":
+      lines.push("A commitment is due or overdue, and nothing more urgent came first.");
+      break;
+    case "NO_ACTION_REQUIRED":
+      lines.push(input("hasCheckIn")
+        ? "Your check-in, plan, shift and commitments don't call for anything right now."
+        : "No check-in yet, and your plan, shift and commitments don't call for anything.");
+      break;
+  }
+  lines.push("BEYOND decides from your check-in, plan, shift and commitments. It doesn't use sleep, weight or training history.");
+  return lines;
 }

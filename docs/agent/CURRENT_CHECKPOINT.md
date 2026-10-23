@@ -6,19 +6,36 @@
   states REUSE / OWN / BUILD FROM SCRATCH (one-sentence justification or none). Existing builder
   gate, risk lanes and review retained; Routine stays thin; Careful presentation uses short
   brief/tests; Protected safeguards remain. [Locked decision](../UX_DECISIONS.md#reuse-first-002--owner-build-direction-locked-2026-10-23).
-- **Mainline:** Whole Picture #283 and reuse-first #285 merged. First DELTA slice on TODAY only;
-  Claude owns #284. Park parallel feature epics unless Gavin names them. SUIT-ALIVE/visual epics,
+- **Mainline:** Whole Picture #283, reuse-first #285 and TODAY-only DELTA slice #284 merged. Park parallel feature epics unless Gavin names them. SUIT-ALIVE/visual epics,
   boxed AI, ranked “what would help most,” new recommendation priority and new pushback schema
   are not authorized. #282 is direction documentation, not implementation permission.
 - **PR / verification:** [#286](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/286).
   Local Markdown targets, diff check and architecture pass (298 files); classifier confirms
   PROTECTED. Docs-only; unchanged required CI runs full verification. Final exact-head review
   and CI evidence are recorded in #286 before readiness; Gavin approves merge.
-- **Next:** independent review and green CI, then owner merge approval. No product UI or
-  parallel feature work.
+- **Merge authority / next:** Gavin explicitly requested merging #286 and #282 on 2026-10-23.
+  Fresh master through #284 merged into this branch; renew independent exact-head review and
+  green required CI, then perform the approved merges without bypass. No new product work.
+
 
 ---
 Historical checkpoint (superseded status; retained for evidence):
+
+# DELTA-002 slice 1 — "Why this?" in plain words
+
+- **Objective / authority:** [DELTA-002](DELTA-002.md) slice 1; Gavin: "yes start step 1"
+  (2026-10-23). Builder: Claude Code, branch `claude/delta-002-slice1`, from `628ea3c` (#283).
+- **Built:** `explainRecommendation` (recommendationCopy.ts) reads the DecisionTrace into plain
+  sentences that lead the "How BEYOND decided" panel; always states the Engine doesn't use sleep,
+  weight or training. Display only.
+- **Verified:** full verify 2,912 passed / one skip (ModePinExpiry 320px clock-edge flake, passes
+  alone and on master). Review @ e60e35b requested one fix (the RED + post-shift sentence said
+  shift-down could wait while STABILIZE hands off to SHIFT DOWN); fixed with the cheap notes.
+- **Next:** CI, exact-head re-review, Gavin's merge. Then Gavin's call: should the Engine
+  consider sleep (Protected)?
+
+---
+Previous checkpoint (REUSE-FIRST-001, #285 merged):
 
 # REUSE-FIRST-001 — reuse before invention
 
