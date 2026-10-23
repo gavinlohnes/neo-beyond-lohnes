@@ -7,10 +7,67 @@
 - **Scope:** production connected evidence, comparisons, real intent/journal stories, canonical
   weekly focus, tentative real-schedule planning, source inspection and review export/print.
   Full approved concept retained; no fake data, new runtime dependency, schema or Engine rule.
-- **Status / verification / PR:** implementation started; verification and PR pending.
+- **Status / verification / PR:** WIP pushed at `b1dbecf`; master through #281 merged.
+  Verification and PR pending; this is not a finished build.
 - **Next:** implement and verify the complete experience; independent exact-head review and
-  green CI; Gavin's merge approval. DEPS-001 #280 remains separate, draft and unmerged; its
-  final-head CI and code review passed, private-alert reconciliation lacks read permission.
+  green CI; Gavin's merge approval. DEPS-001 #280 and DELTA-002 #281 are now on master.
+  Read DELTA-002 and the DELTA-ADVANCED brief at #282 (`c1a3c1e`); Delta implementation waits
+  for this objective. Every claim must reach its records; show denominators, never causes/scores.
+
+---
+Previous checkpoint:
+
+# DELTA-002 — direction locked (docs only)
+
+- **Objective / authority:** Gavin locked the DELTA-002 direction on 2026-10-23 ("Lock it in for
+  right now"). Builder: Claude Code, branch `claude/delta-002`. Docs only: [brief](DELTA-002.md) and
+  a Decision Register entry. No implementation authorized.
+- **Also in flight:** WHOLE-PICTURE-001 (Codex), unpushed in Codex's container; it goes first.
+- **Next:** PR, Gavin's merge. Then Codex pushes WHOLE-PICTURE-001 for continuation.
+
+---
+Previous checkpoint:
+
+# DEPS-001 — dev/build dependency security patches
+
+- **Authority / lane / Builder:** Gavin approved DEPS-001 on 2026-10-23 in the task; ROUTINE;
+  Codex. Disposition: USE DEPENDENCY (upstream security patches).
+- **Branch / start:** `codex/deps-001`, from freshly fetched master
+  `ba381c77066a426c6ea52e10dfa30603c5210c3a` (#279). No worktree or Factory activation.
+- **Scope:** Vite 8.3.0 → 8.3.5; Vitest, browser, browser-playwright and mocker
+  4.1.11 → 4.1.12; source-map-js 1.2.1 → 1.2.2; serialize-javascript 7.1.1 → 7.1.3.
+  Declare vitest-browser-react ^2.3.0 (already locked at 2.3.0). npm regenerated the lockfile
+  using installs and non-forced audit fix; no overrides or hand-edited lockfile.
+- **Boundaries:** runtime dependency declarations and the entire runtime lock graph are unchanged.
+  No application/Engine/persistence/protected-fixture, Kotlin, Gradle or test changes.
+  Playwright remains 1.63.0; existing CI's installed Playwright CLI still installs its matched
+  Chromium, so no workflow adjustment is needed.
+- **Verified:** clean `npm ci`, `npm audit` (0 vulnerabilities), production-only audit (0),
+  compatible `npm ls` peer tree, production build (`tsc -b && vite build`) and `git diff --check`.
+  Independent review of `3f5ff89d67cc091c892db8836d2480a1305c24a5` found no code-diff issues
+  (code PASS), but overall BLOCK on verification/delivery gates. Renew at the final PR head.
+- **Full gate:** first run: 2,894 passed / 4 failed / 1 existing skip; two-worker run: 2,895
+  passed / 3 different timeouts / 1 skip. First-run failures passed afterward, and all second-run
+  failures passed in a focused check. A separate focused meal-entry timeout also passed alone.
+  The one-worker complete gate finished with 2,895 passed / 3 timeouts / 1 existing skip:
+  three RedesignSheets undo/duplicate-food cases. All three passed in isolation afterward
+  (3 selected; 14 unselected). All failures are retained; no assertions/timeouts/tests changed.
+  The complete local gate is NOT green; focused passes do not replace it. Production build
+  passed independently after the full gate stopped before build. Matched Chromium uses
+  `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright`. No further full retries are
+  justified without new evidence or an environment change; required CI still must run.
+- **PR / alerts / CI:** [#280](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/280),
+  draft, against master; branch pushed. GitHub API network access recovered after reattachment.
+  The authenticated alerts endpoint still returns HTTP 403, `Resource not accessible by
+  integration`, requiring `vulnerability_alerts=read` (Dependabot alerts read permission).
+  GitHub's ten alerts (2 high / 6 moderate / 2 low) match the ten distinct npm advisory IDs
+  and severity totals, but this does not establish the private alert list or Android status.
+  Any confirmed Gradle alerts belong in the PR report, not Kotlin/Gradle changes here.
+- **Next:** renew independent review at this checkpoint's final PR head, monitor required CI,
+  resolve/verify the intermittent gate failures and require green exact-head CI. Obtain the
+  integration's Dependabot-alert read permission to finish authenticated alert reconciliation.
+  Local audit/build success does not establish green full verification or a completed objective.
+  Wait for Gavin's explicit merge approval; no merge authorized.
 
 ---
 Previous checkpoint:
