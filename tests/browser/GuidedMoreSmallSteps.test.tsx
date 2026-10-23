@@ -70,7 +70,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
 
   it("Capture failures keep text; a committed save with failed refresh is never blindly repeated", async () => {
     const day = await startDay();
-    // TONIGHT-001: Small Steps sits in TOOLS opened from COMMAND → Today tools.
+    // TONIGHT-001: Small Steps sits in TOOLS opened from MORE → Today tools.
     const screen = await render(<TodayScreen openToolsOnMount />);
     await screen.getByRole("button", { name: "USE SMALL STEPS" }).click();
     await screen.getByRole("button", { name: "Put a thought down", exact: false }).click();
@@ -129,7 +129,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await screen.getByRole("button", { name: "RECORD DECISION", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "Open A real choice" })).toBeVisible();
     expect(await db.events.where("type").equals("DECISION_JOURNAL_CREATED").count()).toBe(1);
-    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO MORE" }).click();
     await screen.getByRole("button", { name: "OPEN PLANS", exact: true }).click();
     await screen.getByText("Start a plan or a task", { exact: true }).click();
     await screen.getByRole("button", { name: "GUIDE A TASK" }).click();
@@ -155,13 +155,13 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await (await commandResult(screen, "DECISION JOURNAL")).click();
     await screen.getByRole("button", { name: "Open Alpha decision", exact: true }).click();
     await expect.element(alphaDetail).toBeVisible();
-    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO MORE" }).click();
     await (await commandResult(screen, "DECISION JOURNAL")).click();
     await expect.element(decisionsList).toBeVisible();
     expect(alphaDetail.elements()).toHaveLength(0);
     await screen.getByRole("button", { name: "Open Alpha decision", exact: true }).click();
     await expect.element(alphaDetail).toBeVisible();
-    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO MORE" }).click();
     await (await commandResult(screen, "SEARCH")).click();
     await screen.getByRole("textbox", { name: "Search everything" }).fill("Bravo");
     await screen.getByRole("button", { name: /: Bravo decision$/ }).click();
@@ -189,12 +189,12 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await title.fill("My unsaved choice");
     await screen.getByRole("textbox", { name: "Decision", exact: true }).fill("Try the smaller option");
     await screen.getByRole("button", { name: "WRITE WITHOUT GUIDANCE", exact: true }).click();
-    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO MORE" }).click();
     expect(document.activeElement).toBe(journal.element());
     await journal.click();
     await expect.element(title).toHaveValue("My unsaved choice");
     await expect.element(screen.getByRole("textbox", { name: "Decision", exact: true })).toHaveValue("Try the smaller option");
-    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO MORE" }).click();
     await screen.getByRole("button", { name: "OPEN PLANS", exact: true }).click();
     await screen.getByText("Start a plan or a task", { exact: true }).click();
     await screen.getByRole("button", { name: "GUIDE A MISSION", exact: true }).click();
@@ -205,11 +205,11 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     expect(document.activeElement).toBe(task.element());
     await task.fill("A concrete step");
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
-    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO MORE" }).click();
     await screen.getByRole("button", { name: "OPEN PLANS", exact: true }).click();
     await expect.element(task).toHaveValue("A concrete step");
     expect(await db.events.toArray()).toEqual(before);
-    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO MORE" }).click();
     // FIELD-AUTHORITY-001: the destination glossary left; the job rows name where things live.
     await expect.element(await commandResult(screen, "HISTORY")).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
@@ -228,7 +228,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await screen.getByText("A place to start", { exact: true }).first().click();
     await expect.element(screen.getByText("9 decisions await review.")).toBeVisible();
     await (await commandResult(screen, "HISTORY")).click();
-    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO MORE" }).click();
     await expect.element(screen.getByText("Reading context…", { exact: false })).toBeVisible();
     expect(screen.getByText("9 decisions await review.").elements()).toHaveLength(0);
     fail(new Error("Context interrupted"));
@@ -249,7 +249,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     expect(deriveCapacity(issued.checkIn).capacity).toBe(capacity);
     const before = await db.events.toArray();
     const rec = await db.recommendations.toArray();
-    // TONIGHT-001: Small Steps sits in TOOLS opened from COMMAND → Today tools.
+    // TONIGHT-001: Small Steps sits in TOOLS opened from MORE → Today tools.
     const screen = await render(<TodayScreen openToolsOnMount />);
     await expect.element(screen.getByRole("button", { name: "USE SMALL STEPS" })).toBeVisible();
     const system = screen.container.querySelector("[data-system-status]")?.textContent;
@@ -282,7 +282,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await setWorkContext(day.id, "OFF", "MANUAL");
     await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
     const screen = await render(<App />);
-    // TONIGHT-001: Small Steps is reached through COMMAND → Today tools.
+    // TONIGHT-001: Small Steps is reached through MORE → Today tools.
     await searchCommand(screen, "today tools");
     await screen.getByRole("button", { name: /^TODAY TOOLS / }).click();
     await screen.getByRole("button", { name: "USE SMALL STEPS", exact: true }).click();
@@ -309,7 +309,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await submitCheckIn(day.id, { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
     await logWater(day.id, 8);
     const rec = await db.recommendations.toArray();
-    // TONIGHT-001: Small Steps sits in TOOLS opened from COMMAND → Today tools.
+    // TONIGHT-001: Small Steps sits in TOOLS opened from MORE → Today tools.
     const screen = await render(<TodayScreen openToolsOnMount />);
     await screen.getByRole("button", { name: "USE SMALL STEPS" }).click();
     await screen.getByRole("button", { name: "Open Minimum Day", exact: false }).click();
@@ -336,7 +336,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     const day = await startDay();
     const session = await startWorkout(day.id, "A", "STANDARD");
     const before = await db.events.toArray();
-    // TONIGHT-001: Small Steps sits in TOOLS opened from COMMAND → Today tools.
+    // TONIGHT-001: Small Steps sits in TOOLS opened from MORE → Today tools.
     const screen = await render(<TodayScreen openToolsOnMount onOpenTrain={vi.fn()} />);
     await expect.element(screen.getByRole("button", { name: "USE SMALL STEPS" })).toBeVisible();
     await screen.getByRole("button", { name: "USE SMALL STEPS" }).click();

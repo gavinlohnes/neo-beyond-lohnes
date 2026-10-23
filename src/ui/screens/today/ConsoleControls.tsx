@@ -8,12 +8,12 @@ import "./console.css";
 
 /** COMMAND-CENTER-001: + LOG lists every record type; each opens its existing canonical form. */
 export const LOG_ENTRIES = [
-  { key: "water", label: "Water", description: "BODY · Add water to today" },
-  { key: "meal", label: "Meal", description: "BODY · Saved meals or manual entry" },
-  { key: "sleep", label: "Sleep", description: "BODY · Main sleep or nap" },
-  { key: "weight", label: "Bodyweight", description: "BODY · Weigh-in" },
+  { key: "water", label: "Water", description: "DATA · Add water to today" },
+  { key: "meal", label: "Meal", description: "DATA · Saved meals or manual entry" },
+  { key: "sleep", label: "Sleep", description: "DATA · Main sleep or nap" },
+  { key: "weight", label: "Bodyweight", description: "DATA · Weigh-in" },
   { key: "note", label: "Note", description: "TODAY · Quick Capture" },
-  { key: "urge", label: "Urge", description: "BODY · Quit tracker entry" },
+  { key: "urge", label: "Urge", description: "DATA · Quit tracker entry" },
   { key: "workout", label: "Workout set", description: "Opens TRAIN" },
 ] as const;
 export type LogEntryKey = (typeof LOG_ENTRIES)[number]["key"];
@@ -130,7 +130,7 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, onWaterVis
       </button>
       <button type="button" ref={mealTrigger} className="cc-act" disabled={busy || (!onOpenMeal && !mealSheet)}
         onClick={() => { if (isInFlight()) return; if (mealSheet) { restoreMealTrigger.current = true; setMealError(null); setMealQuery(""); setMealOpen(true); } else onOpenMeal?.(); }}
-        aria-label={mealSheet ? "Log a meal" : "Log a meal in BODY"} aria-haspopup={mealSheet ? "dialog" : undefined} aria-expanded={mealSheet ? mealOpen : undefined}>
+        aria-label={mealSheet ? "Log a meal" : "Log a meal in DATA"} aria-haspopup={mealSheet ? "dialog" : undefined} aria-expanded={mealSheet ? mealOpen : undefined}>
         <CcIcon.meal /><span>MEAL</span>
       </button>
       <button type="button" ref={logTrigger} className="console-controls__log cc-act cc-log" disabled={busy || logEntries.length === 0}
@@ -153,7 +153,7 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, onWaterVis
         {[8, 12, 16].map((amount, i) => <button key={amount} type="button" aria-label={`+${amount} oz`} autoFocus={i === 0} disabled={busy} onClick={() => void addWater(amount)}>{amount}<small>oz</small></button>)}
       </div>
       <button type="button" className="today-sheet__option" disabled={busy || lastWaterAmount === null} onClick={() => lastWaterAmount !== null && void addWater(lastWaterAmount)}>{lastWaterAmount === null ? "Repeat last" : `Repeat last (${lastWaterAmount} oz)`}</button>
-      {onOpenWater && <button type="button" className="today-sheet__option" disabled={busy} onClick={() => { if (isInFlight()) return; restoreWaterTrigger.current = false; waterDialog.current?.close(); waterTrigger.current?.focus({ preventScroll: true }); setWaterOpen(false); onOpenWater(); }}>More → BODY water</button>}
+      {onOpenWater && <button type="button" className="today-sheet__option" disabled={busy} onClick={() => { if (isInFlight()) return; restoreWaterTrigger.current = false; waterDialog.current?.close(); waterTrigger.current?.focus({ preventScroll: true }); setWaterOpen(false); onOpenWater(); }}>More → DATA water</button>}
       {waterError && <p className="meta today-sheet__note" role="alert">{waterError}</p>}
     </dialog>}
     {mealOpen && <dialog ref={mealDialog} className="today-sheet" aria-labelledby="meal-sheet-title"
@@ -171,7 +171,7 @@ export function ConsoleControls({ onOpenWater, onOpenMeal, onOpenLog, onWaterVis
           </button>)}
       </div>
       {onOpenMeal && <button type="button" className="today-sheet__option" disabled={busy} onClick={() => { if (isInFlight()) return; restoreMealTrigger.current = false; mealDialog.current?.close(); mealTrigger.current?.focus({ preventScroll: true }); setMealOpen(false); onOpenMeal(); }}>
-        <span><strong>New meal or manual entry</strong><span>Opens BODY</span></span><LineIcon icon={ArrowUpRight} />
+        <span><strong>New meal or manual entry</strong><span>Opens DATA</span></span><LineIcon icon={ArrowUpRight} />
       </button>}
       {mealError && <p className="meta today-sheet__note" role="alert">{mealError}</p>}
     </dialog>}

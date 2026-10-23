@@ -76,7 +76,7 @@ it("toggles on a long-press of the emblem; a short tap still goes to TODAY", asy
 it("opens from COMMAND by keyboard, traps focus, exits on Escape and persists across a reload", async () => {
   await readyDay();
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "MORE", exact: true }).click();
   await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("stealth");
   await userEvent.keyboard("{Enter}");
   await expect.element(screen.getByRole("dialog", { name: "Stealth" })).toBeVisible();
@@ -221,7 +221,7 @@ it("BODY and an open SYSTEMS readout behind stealth show its logs and undos on e
     await userEvent.keyboard("{Escape}");
     await expect.poll(() => overlay()).toBeNull();
   };
-  await screen.getByRole("button", { name: "BODY", exact: true }).click();
+  await screen.getByRole("button", { name: "DATA", exact: true }).click();
   const body = () => document.querySelector('#workspace-BODY [aria-label="water history"] .readout__value')?.textContent;
   await expect.poll(body).toBe("8 oz");
   await stealthLog(false);
@@ -231,7 +231,7 @@ it("BODY and an open SYSTEMS readout behind stealth show its logs and undos on e
   await expect.poll(() => db.events.where("type").equals("WATER_LOG_VOIDED").count()).toBe(1);
   await expect.poll(body).toBe("20 oz");
 
-  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "MORE", exact: true }).click();
   await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("systems");
   await screen.getByRole("button", { name: /^SYSTEMS / }).click();
   await expect.element(screen.getByRole("button", { name: "Water: 20 oz. Open history" })).toBeVisible();

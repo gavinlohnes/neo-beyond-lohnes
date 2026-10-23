@@ -27,7 +27,7 @@ describe("UX-COHESION-001 — HEALTH HISTORY", () => {
   for (const width of [320, 390]) it(`opens days or Garmin from one place and pages a month of Garmin days ten at a time at ${width}px`, async () => {
     await page.viewport(width, 844);
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
     const history = screen.getByText("Health history", { exact: true });
     await expect.element(history).toBeVisible();
     expect(document.querySelectorAll("article[aria-label]").length).toBe(0); // closed: the archive adds nothing
@@ -50,7 +50,7 @@ describe("UX-COHESION-001 — HEALTH HISTORY", () => {
   it("closing history returns BODY to today", async () => {
     await page.viewport(390, 844);
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
     await screen.getByText("Health history", { exact: true }).click();
     const yesterday = screen.getByRole("group", { name: "Seven lived days" }).getByRole("button").nth(5);
     await yesterday.click();
@@ -62,7 +62,7 @@ describe("UX-COHESION-001 — HEALTH HISTORY", () => {
   it("choosing GARMIN clears a selected past day", async () => {
     await page.viewport(390, 844);
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
     await screen.getByText("Health history", { exact: true }).click();
     await screen.getByRole("group", { name: "Seven lived days" }).getByRole("button").nth(5).click();
     await expect.element(screen.getByRole("region", { name: "Selected health day" })).toBeVisible();

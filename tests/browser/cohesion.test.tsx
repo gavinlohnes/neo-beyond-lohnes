@@ -129,7 +129,7 @@ describe("narrow phone widths — App shell", () => {
     await page.viewport(width, 800);
     const screen = await render(<App />);
 
-    for (const label of ["TODAY", "TRAIN", "BODY", "COMMAND"]) {
+    for (const label of ["TODAY", "TRAIN", "DATA", "MORE"]) {
       await expect.element(screen.getByText(label, { exact: true })).toBeVisible();
     }
     await expect.poll(() => document.documentElement.scrollWidth).toBeLessThanOrEqual(width);

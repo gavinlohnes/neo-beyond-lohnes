@@ -111,7 +111,7 @@ export function QuitTracker({ initiallyOpen = false, openRequest = 0, onBusyChan
       ? `${describeCleanDays(summary.cleanThisMonth)}${
           summary.savedThisMonthUsd !== undefined ? ` · ${formatUsd(summary.savedThisMonthUsd)} saved` : ""
         }`
-      : "Set it up in COMMAND → Settings";
+      : "Set it up in MORE → Settings";
     return (
       <CollapsibleRow
         name={summary ? `QUIT: ${summary.habit.name.toUpperCase()}` : "QUIT TRACKER"}
@@ -134,7 +134,7 @@ export function QuitTracker({ initiallyOpen = false, openRequest = 0, onBusyChan
       </div>
 
       {!summary ? (
-        <p className="card-body">Name the habit you're avoiding in COMMAND → Settings, and it will show up here.</p>
+        <p className="card-body">Name the habit you're avoiding in MORE → Settings, and it will show up here.</p>
       ) : (
         <>
           <p className="recommendation-title" style={{ marginBottom: 2 }}>{describeCleanDays(summary.cleanThisMonth)}</p>

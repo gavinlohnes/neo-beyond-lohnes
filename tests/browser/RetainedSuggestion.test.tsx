@@ -18,7 +18,7 @@ const YELLOW = { energy: 2, stress: 2, mood: 3, soreness: 1, alcoholUrge: 0 } as
 const GREEN = { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 } as const;
 
 type Screen = Awaited<ReturnType<typeof render>>;
-const tab = async (screen: Screen, name: "TODAY" | "TRAIN" | "BODY" | "COMMAND") => {
+const tab = async (screen: Screen, name: "TODAY" | "TRAIN" | "DATA" | "MORE") => {
   const close = screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true });
   if (close.elements().length) await close.click();
   await screen.getByRole("button", { name, exact: true }).click();
@@ -59,7 +59,7 @@ describe("R1 — retained TRAIN follows the current suggestion", () => {
     const screen = await render(<App />);
     await tab(screen, "TRAIN");
     await expect.element(choice(screen, "WORKOUT A · REDUCED")).toBeVisible();
-    await tab(screen, "BODY");
+    await tab(screen, "DATA");
     await submitCheckIn(day.id, GREEN);
     await tab(screen, "TRAIN");
     await expect.element(choice(screen, "WORKOUT A")).toBeVisible();
@@ -87,11 +87,11 @@ describe("R1 — retained TRAIN follows the current suggestion", () => {
 describe("R2 — a Capture return does not outlive its visit", () => {
   it("MORE → CAPTURE, then leaving by primary nav: closing a new note on TODAY stays on TODAY", async () => {
     const screen = await render(<App />);
-    await tab(screen, "COMMAND");
+    await tab(screen, "MORE");
     await (await commandResult(screen, "NOTE")).click(); // FIELD-AUTHORITY-001: the old CAPTURE shortcut is the NOTE row.
     await expect.element(screen.getByRole("textbox", { name: "Capture a thought", exact: true })).toBeVisible();
 
-    await tab(screen, "BODY");
+    await tab(screen, "DATA");
     await tab(screen, "TODAY");
     await screen.getByRole("button", { name: "Open LOG", exact: true }).click();
     await screen.getByRole("dialog").getByRole("button", { name: "NOTE", exact: true }).click();
@@ -101,9 +101,9 @@ describe("R2 — a Capture return does not outlive its visit", () => {
     expect(document.getElementById("workspace-COMMAND")?.hidden ?? true).toBe(true);
   });
 
-  it("COMMAND → CAPTURE → CLOSE returns to COMMAND", async () => {
+  it("MORE → CAPTURE → CLOSE returns to COMMAND", async () => {
     const screen = await render(<App />);
-    await tab(screen, "COMMAND");
+    await tab(screen, "MORE");
     await (await commandResult(screen, "NOTE")).click(); // FIELD-AUTHORITY-001: the old CAPTURE shortcut is the NOTE row.
     await expect.element(screen.getByRole("textbox", { name: "Capture a thought", exact: true })).toBeVisible();
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();

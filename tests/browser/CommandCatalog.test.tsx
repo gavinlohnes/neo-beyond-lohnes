@@ -35,7 +35,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.sc
 
 const searchbox = (screen: Screen) => screen.getByRole("searchbox", { name: "Find a screen or action" });
 async function openCommand(screen: Screen) {
-  const tab = screen.getByRole("button", { name: "COMMAND", exact: true });
+  const tab = screen.getByRole("button", { name: "MORE", exact: true });
   await tab.click();
   if (searchbox(screen).elements().length === 0) await tab.click();
   await expect.element(searchbox(screen)).toBeVisible();
@@ -47,10 +47,10 @@ async function launch(screen: Screen, label: string) {
 }
 const commandHeadings = {
   REPORT: "AFTER ACTION REPORT", MIRROR: "MIRROR",
-  PLAN: "COMMAND // PLAN TODAY", SYSTEMS: "COMMAND // SYSTEMS",
-  HISTORY: "COMMAND // HISTORY", WEEKLY: "COMMAND // WEEKLY CHECK-IN", REVIEW: "COMMAND // REVIEW",
-  SEARCH: "COMMAND // SEARCH", JOURNAL: "COMMAND // DECISION JOURNAL", INTENT: "COMMAND // MISSIONS & OBLIGATIONS",
-  WORK_SCHEDULE: "COMMAND // WORK SCHEDULE", EXERCISE_LIBRARY: "COMMAND // EXERCISE LIBRARY", CUSTOM_TEMPLATES: "COMMAND // CUSTOM PROGRAMS",
+  PLAN: "MORE // PLAN TODAY", SYSTEMS: "MORE // SYSTEMS",
+  HISTORY: "MORE // HISTORY", WEEKLY: "MORE // WEEKLY CHECK-IN", REVIEW: "MORE // REVIEW",
+  SEARCH: "MORE // SEARCH", JOURNAL: "MORE // DECISION JOURNAL", INTENT: "MORE // MISSIONS & OBLIGATIONS",
+  WORK_SCHEDULE: "MORE // WORK SCHEDULE", EXERCISE_LIBRARY: "MORE // EXERCISE LIBRARY", CUSTOM_TEMPLATES: "MORE // CUSTOM PROGRAMS",
 };
 const sectionTargets = {
   HIDDEN_FEATURES: "command-hidden-features", BACKUP: "safety-heading", NUTRITION_TARGETS: "command-nutrition-targets", QUIT_TRACKER: "command-quit-tracker",
@@ -68,13 +68,13 @@ describe("COMMAND catalog", () => {
       const destination = entry.destination;
       if (destination.kind === "tools" || destination.kind === "daily") {
         await expect.element(screen.getByRole("heading", { name: destination.kind === "daily" && destination.tool === "CAPTURE" ? "CAPTURE" : destination.kind === "daily" && destination.tool === "SHIFT_HANDOFF" ? "SHIFT HANDOFF NOTES" : "DAILY CONTROLS", exact: true })).toBeVisible();
-        await expect.element(screen.getByRole("button", { name: "BACK TO COMMAND", exact: true })).toBeVisible();
+        await expect.element(screen.getByRole("button", { name: "BACK TO MORE", exact: true })).toBeVisible();
       } else if (destination.kind === "more") {
         await expect.element(screen.getByRole("heading", { name: commandHeadings[destination.view as keyof typeof commandHeadings], exact: true })).toBeVisible();
         // Inside COMMAND, a destination opens with focus on its way back, like every index row.
-        await expect.poll(() => document.activeElement?.textContent).toBe("BACK TO COMMAND");
-        await screen.getByRole("button", { name: "BACK TO COMMAND", exact: true }).click();
-        await expect.element(screen.getByRole("heading", { name: "COMMAND", exact: true })).toBeVisible();
+        await expect.poll(() => document.activeElement?.textContent).toBe("BACK TO MORE");
+        await screen.getByRole("button", { name: "BACK TO MORE", exact: true }).click();
+        await expect.element(screen.getByRole("heading", { name: "MORE", exact: true })).toBeVisible();
         // Back returns to the result that was used, with the query kept.
         await expect.element(searchbox(screen)).toHaveValue(entry.label.toLowerCase());
         await expect.poll(() => document.activeElement?.textContent ?? "").toContain(entry.label);
@@ -86,21 +86,21 @@ describe("COMMAND catalog", () => {
       } else if (destination.kind === "body" || destination.kind === "record" || destination.kind === "capture") {
         const title = destination.kind === "capture" ? "NOTE" : destination.kind === "record" ? destination.target === "protein" ? "PROTEIN ONLY" : "MY MEALS" : { water: "WATER", meal: "MEAL", foodLookup: "FOOD LOOKUP", sleep: "SLEEP", weight: "BODYWEIGHT", urge: "URGE" }[destination.focus];
         await expect.element(screen.getByRole("dialog", { name: title, exact: true })).toBeVisible();
-        await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
+        await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
       } else if (destination.kind === "stealth") {
         // SUIT-001: stealth covers the screen; Escape exits and nothing was written.
         await expect.element(screen.getByRole("dialog", { name: "Stealth" })).toBeVisible();
         await userEvent.keyboard("{Escape}");
         await expect.poll(() => document.querySelector(".stealth")).toBeNull();
       } else {
-        const tab = destination.kind === "workspace" ? destination.tab : "TRAIN";
+        const tab = destination.kind === "workspace" ? destination.tab === "BODY" ? "DATA" : destination.tab : "TRAIN";
         await expect.element(screen.getByRole("button", { name: tab, exact: true })).toHaveAttribute("aria-current", "page");
         await expect.poll(() => document.activeElement?.tagName).toBe("H1");
       }
       expect(await db.events.count()).toBe(eventCount);
       expect(await db.workoutSessions.count()).toBe(0);
       expect(await db.savedMeals.count()).toBe(0);
-      for (const tab of ["TODAY", "TRAIN", "BODY", "COMMAND"]) await expect.element(screen.getByRole("button", { name: tab, exact: true })).toBeVisible();
+      for (const tab of ["TODAY", "TRAIN", "DATA", "MORE"]) await expect.element(screen.getByRole("button", { name: tab, exact: true })).toBeVisible();
     });
   }
 
@@ -108,7 +108,7 @@ describe("COMMAND catalog", () => {
     const screen = await render(<App />);
     await openCommand(screen);
     // The pre-redesign destination inventory is deliberately independent of the current catalog.
-    const before = ["WATER", "MEAL", "FOOD LOOKUP", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "SYSTEMS", "STEALTH", "TODAY TOOLS", "PLAN TODAY", "TRAIN", "WORKOUT", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "IMPORT HEALTH DATA", "BODY", "WEEKLY CHECK-IN", "REVIEW", "HISTORY", "DECISION JOURNAL", "SEARCH RECORDS", "BACKUP & RECOVERY", "NUTRITION TARGETS", "QUIT TRACKER SETTINGS", "TIME CAPSULE", "CHECK-IN REMINDER", "DIAGNOSTICS", "A PLACE TO START"];
+    const before = ["WATER", "MEAL", "FOOD LOOKUP", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "SYSTEMS", "STEALTH", "TODAY TOOLS", "PLAN TODAY", "TRAIN", "WORKOUT", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "IMPORT HEALTH DATA", "DATA", "WEEKLY CHECK-IN", "REVIEW", "HISTORY", "DECISION JOURNAL", "SEARCH RECORDS", "BACKUP & RECOVERY", "NUTRITION TARGETS", "QUIT TRACKER SETTINGS", "TIME CAPSULE", "CHECK-IN REMINDER", "DIAGNOSTICS", "A PLACE TO START"];
     for (const name of before) expect(SYSTEM_CAPABILITIES.some((entry) => entry.label === name)).toBe(true);
     for (const summary of document.querySelectorAll<HTMLDetailsElement>(".command-group")) summary.open = true;
     for (const entry of SYSTEM_CAPABILITIES) await expect.element(screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true })).toBeVisible();
@@ -135,7 +135,7 @@ describe("COMMAND catalog", () => {
     await expect.element(screen.getByRole("button", { name: /Synthetic lunch/ })).toBeVisible();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await screen.getByRole("button", { name: "Search everything", exact: true }).click();
-    await expect.element(screen.getByRole("heading", { name: "COMMAND // SEARCH", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "MORE // SEARCH", exact: true })).toBeVisible();
   });
 
   it("keeps the Weekly Review reachable from COMMAND", async () => {
@@ -143,7 +143,7 @@ describe("COMMAND catalog", () => {
     await openCommand(screen);
     await searchbox(screen).fill("weekly review");
     await screen.getByRole("button", { name: /^REVIEW Weekly review/ }).click();
-    await expect.element(screen.getByRole("heading", { name: "COMMAND // REVIEW", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "MORE // REVIEW", exact: true })).toBeVisible();
   });
 
   it("retains meal drafts through catalog departure and reopens the same input", async () => {
@@ -152,11 +152,11 @@ describe("COMMAND catalog", () => {
     await screen.getByRole("button", { name: "NEW MEAL", exact: true }).click();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished dinner");
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
     const confirm = vi.spyOn(window, "confirm");
     await launch(screen, "HISTORY");
-    await expect.element(screen.getByRole("heading", { name: "COMMAND // HISTORY", exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "BACK TO COMMAND", exact: true }).click();
+    await expect.element(screen.getByRole("heading", { name: "MORE // HISTORY", exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "BACK TO MORE", exact: true }).click();
     await launch(screen, "MEAL"); await screen.getByRole("button", { name: "NEW MEAL", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
     expect(confirm).not.toHaveBeenCalled();
@@ -215,7 +215,7 @@ describe("COMMAND catalog", () => {
       await page.viewport(width, 420); // constrained visual space with phone keyboard
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
       await userEvent.keyboard("{Enter}");
-      await expect.element(screen.getByRole("heading", { name: "COMMAND // HISTORY", exact: true })).toBeVisible();
+      await expect.element(screen.getByRole("heading", { name: "MORE // HISTORY", exact: true })).toBeVisible();
     });
   }
 });

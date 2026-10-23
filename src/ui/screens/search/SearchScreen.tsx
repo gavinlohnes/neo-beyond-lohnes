@@ -70,7 +70,7 @@ export function SearchScreen({ onSelectResult }: { onSelectResult?: (result: Sea
 
   return (
     <div className="screen">
-      <h1 className="eyebrow">COMMAND // SEARCH</h1>
+      <h1 className="eyebrow">MORE // SEARCH</h1>
       <p className="card-body" style={{ marginBottom: 16 }}>
         Find anything by text: lifts, PRs, meals, notes, days, journal entries and commitments. Read-only — tap a result to go to it.
       </p>

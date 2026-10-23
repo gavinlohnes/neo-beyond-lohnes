@@ -164,7 +164,7 @@ export function StealthOverlay({ onExit, onLogged }: {
         </section>}
         {panel === "MEAL" && <section className="stealth__panel" aria-label="Log a saved meal">
           {meals === null && <p className="stealth__note" role="status">Reading saved meals…</p>}
-          {meals?.length === 0 && <p className="stealth__note">No saved meals yet. Save one in BODY first.</p>}
+          {meals?.length === 0 && <p className="stealth__note">No saved meals yet. Save one in DATA first.</p>}
           {meals?.map((meal, index) => <button key={meal.id} type="button" className="stealth__meal" disabled={busy} autoFocus={index === 0} onClick={() => logMealBlind(meal)}>
             <strong>{meal.name}</strong><span>Saved meal · one tap</span>
           </button>)}

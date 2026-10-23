@@ -461,7 +461,7 @@ export function TodayScreen({
   const [minimumDayOpen, setMinimumDayOpen] = useState(false);
   const [hydrationOperationOpen, setHydrationOperationOpen] = useState(false);
   const [hydrationManualOpen, setHydrationManualOpen] = useState(false);
-  // UNDO-001: a just-logged entry, UNDO for its first UNDO_WINDOW_MS, then CORRECT IN BODY.
+  // UNDO-001: a just-logged entry, UNDO for its first UNDO_WINDOW_MS, then CORRECT IN DATA.
   const [waterControlsVisible, setWaterControlsVisible] = useState(true);
   const [lastWaterAmount, setLastWaterAmount] = useState<number | null>(null);
   // POLISH-002: TODAY's four number tiles — the latest weigh-in and today's water-log count.
@@ -520,7 +520,7 @@ export function TodayScreen({
   const [customTemplateList, setCustomTemplateList] = useState<Parameters<typeof templateLabel>[1]>([]);
   const [quitHabitSetUp, setQuitHabitSetUp] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(openToolsOnMount);
-  // TONIGHT-001: TOOLS opened from COMMAND → Today tools also lists Minimum Day and Small Steps.
+  // TONIGHT-001: TOOLS opened from MORE → Today tools also lists Minimum Day and Small Steps.
   const [commandTools, setCommandTools] = useState(openToolsOnMount);
   const [fastCaptureOpen, setFastCaptureOpen] = useState(false);
   const fastCaptureOrigin = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
@@ -1230,9 +1230,9 @@ export function TodayScreen({
     try {
       await captureItem(captureText);
       setCaptureText("");
-      setCaptureFeedback({ kind: "SUCCESS", message: "Note saved in Capture. It is also searchable in COMMAND." });
+      setCaptureFeedback({ kind: "SUCCESS", message: "Note saved in Capture. It is also searchable in MORE." });
       try { await refresh(); }
-      catch (cause) { setCaptureFeedback({ kind: "ERROR", message: `Note saved. ${describeError(cause, "Could not refresh the list.")} Do not save it again; inspect it in COMMAND → SEARCH.` }); }
+      catch (cause) { setCaptureFeedback({ kind: "ERROR", message: `Note saved. ${describeError(cause, "Could not refresh the list.")} Do not save it again; inspect it in MORE → SEARCH.` }); }
     } catch (cause) {
       setCaptureFeedback({ kind: "ERROR", message: `${describeError(cause, "Could not save the note.")} Your text is kept; try CAPTURE again when ready.` });
     } finally {
@@ -1445,10 +1445,10 @@ export function TodayScreen({
       return <ConfirmBanner message={message} actionLabel="UNDO" disabled={busy} onAction={() => void handleUndoLog(log)} />;
     }
     return onOpenBody ? (
-      <ConfirmBanner message={message} actionLabel="CORRECT IN BODY" onAction={() => onOpenBody(focus)} />
+      <ConfirmBanner message={message} actionLabel="CORRECT IN DATA" onAction={() => onOpenBody(focus)} />
     ) : (
       <p role="status" aria-live="polite" className="meta fade-in">
-        <ConfirmIcon size={20} /> {message.replace(/\.$/, "")}. Corrections remain available in BODY.
+        <ConfirmIcon size={20} /> {message.replace(/\.$/, "")}. Corrections remain available in DATA.
       </p>
     );
   }
@@ -1550,7 +1550,7 @@ export function TodayScreen({
       : null;
   // TONIGHT-001 (owner ruling, 2026-10-19): Gavin never uses Minimum Day, so TODAY no longer
   // offers it after a constrained check-in (Item 1, Phase 3). It stays one tap away in
-  // COMMAND → Today tools, and its TOOLS row shows while it's on.
+  // MORE → Today tools, and its TOOLS row shows while it's on.
   const showProminentMinimumDay = false;
 
   // Item 6 (Phase 4): when a tool IS the actual Engine recommendation
@@ -2276,7 +2276,7 @@ export function TodayScreen({
                 </button>
                 {onOpenBody && (
                   <button type="button" className="chip" onClick={() => onOpenBody("sleep")}>
-                    ENTER IN BODY
+                    ENTER IN DATA
                   </button>
                 )}
               </div>
@@ -2303,7 +2303,7 @@ export function TodayScreen({
     {!day && <button className="btn-primary" disabled={busy} onClick={() => void handleStartDay()}>START DAY</button>}
     {checkInError && <p role="alert">{checkInError}</p>}
     {banners}
-    {commandFocus === "SMALL_STEPS" ? (hiddenFeatures.smallSteps ? <><SmallSteps minimumDayAvailable={hiddenFeatures.minimumDay} enabled busy={busy} onToggle={() => onReturnToFullTools?.()} onOpen={setSmallTool} />{smallTool && renderToolsItem(smallTool)}</> : <p className="meta">Show Small Steps in COMMAND → Hidden features.</p>)
+    {commandFocus === "SMALL_STEPS" ? (hiddenFeatures.smallSteps ? <><SmallSteps minimumDayAvailable={hiddenFeatures.minimumDay} enabled busy={busy} onToggle={() => onReturnToFullTools?.()} onOpen={setSmallTool} />{smallTool && renderToolsItem(smallTool)}</> : <p className="meta">Show Small Steps in MORE → Hidden features.</p>)
       : commandFocus === "CHECK_IN" ? <><button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
       <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
         quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} /></>

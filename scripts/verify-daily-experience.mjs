@@ -40,21 +40,21 @@ for (const width of [320,360,412]) {
  }
  await page.getByRole('button',{name:/^Mode .*Change mode$/}).click();
  await page.getByRole('dialog').getByRole('button',{name:/^Follow schedule/}).click();
- await page.getByRole('button',{name:'COMMAND',exact:true}).click();
+ await page.getByRole('button',{name:'MORE',exact:true}).click();
  await page.getByRole('searchbox',{name:'Find a screen or action'}).fill('weekly review');
  await page.getByRole('button',{name:/^REVIEW COMMAND/}).click();
- await page.getByRole('heading',{name:'COMMAND // REVIEW',exact:true}).waitFor();
+ await page.getByRole('heading',{name:'MORE // REVIEW',exact:true}).waitFor();
  await page.evaluate(()=>history.back());
  await page.getByRole('searchbox',{name:'Find a screen or action'}).waitFor();
  if(await page.getByRole('searchbox',{name:'Find a screen or action'}).inputValue()!=='weekly review')throw Error('Browser Back lost query');
  await page.evaluate(()=>history.forward());
- await page.getByRole('heading',{name:'COMMAND // REVIEW',exact:true}).waitFor();
- await page.getByRole('button',{name:'COMMAND',exact:true}).click();
+ await page.getByRole('heading',{name:'MORE // REVIEW',exact:true}).waitFor();
+ await page.getByRole('button',{name:'MORE',exact:true}).click();
  await page.getByRole('searchbox',{name:'Find a screen or action'}).fill('');
  await page.getByRole('button',{name:'TODAY',exact:true}).click();
  // Browser Back dismisses native sheets before restoring a retained workspace.
  for(const name of ['Open LOG', /^Mode .*Change mode$/]) {
-  await page.getByRole('button',{name:'COMMAND',exact:true}).click();
+  await page.getByRole('button',{name:'MORE',exact:true}).click();
   await page.getByRole('button',{name:'TODAY',exact:true}).click();
   await page.getByRole('button',{name,exact:typeof name==='string'}).click();
   await page.getByRole('dialog').waitFor();
@@ -65,18 +65,18 @@ for (const width of [320,360,412]) {
  }
  const modeMotion=await page.evaluate(()=>document.getAnimations().filter(animation=>animation.playState==='running' && ['city-search','mode-sweep'].includes(animation.animationName)).map(animation=>animation.animationName));
  if(modeMotion.length)throw Error('Mode animation under reduced motion: '+modeMotion.join(','));
- await page.getByRole('button',{name:'Log water in BODY',exact:true}).click();
+ await page.getByRole('button',{name:'Log water in DATA',exact:true}).click();
  await page.getByRole('button',{name:'+8 oz',exact:true}).click();
  await page.getByText('8 oz recorded today',{exact:true}).waitFor();
  if(width===360)await snapshot(page, `${root}/water-360.png`);
  await page.getByRole('button',{name:'RETURN TO TODAY',exact:true}).click();
- await page.getByRole('button',{name:'Log a meal in BODY',exact:true}).click();
+ await page.getByRole('button',{name:'Log a meal in DATA',exact:true}).click();
  await page.getByRole('textbox',{name:'New meal name',exact:true}).fill('Synthetic lunch');
  for(const [field,value] of [['calories','600'],['protein (g)','45'],['carbs (g)','60'],['fat (g)','15']]) await page.getByRole('spinbutton',{name:`New meal ${field}`,exact:true}).fill(value);
- await page.getByRole('button',{name:'COMMAND',exact:true}).click();
- await page.getByRole('button',{name:'BODY',exact:true}).click();
+ await page.getByRole('button',{name:'MORE',exact:true}).click();
+ await page.getByRole('button',{name:'DATA',exact:true}).click();
  // Review B1: primary navigation shows the Daily Record without a stale return; the draft stays.
- await page.getByRole('heading',{name:'BODY // DAILY RECORD',exact:true}).waitFor();
+ await page.getByRole('heading',{name:'DATA // DAILY RECORD',exact:true}).waitFor();
  if(await page.getByRole('button',{name:'RETURN TO TODAY',exact:true}).count())throw Error('Stale return after primary navigation');
  await page.getByRole('button',{name:'OPEN MEALS',exact:true}).click();
  if(await page.getByRole('textbox',{name:'New meal name',exact:true}).inputValue()!=='Synthetic lunch')throw Error('Meal draft lost');
@@ -87,7 +87,7 @@ for (const width of [320,360,412]) {
  await page.getByRole('button',{name:'TODAY',exact:true}).click();
  await page.getByRole('button',{name:'Open LOG',exact:true}).click(); await page.getByRole('dialog',{name:'LOG'}).getByRole('button',{name:/^Note/}).click();
  await page.getByRole('textbox',{name:'Capture a thought',exact:true}).fill('A synthetic thought to keep');
- await page.getByRole('button',{name:'BODY',exact:true}).click();
+ await page.getByRole('button',{name:'DATA',exact:true}).click();
  await page.getByRole('button',{name:'DAILY RECORD',exact:true}).click();
  await page.getByRole('button',{name:'Open SLEEP',exact:true}).click();
  await page.getByRole('spinbutton',{name:'Hours',exact:true}).fill('6');
@@ -96,7 +96,7 @@ for (const width of [320,360,412]) {
  await page.getByRole('button',{name:'START WORKOUT',exact:true}).click();
  await page.getByRole('spinbutton',{name:'Set 1 weight in pounds',exact:true}).fill('85');
  await page.getByRole('spinbutton',{name:'Set 1 repetitions',exact:true}).fill('9');
- await page.getByRole('button',{name:'COMMAND',exact:true}).click();
+ await page.getByRole('button',{name:'MORE',exact:true}).click();
  if(width===360)await snapshot(page, `${root}/more-360.png`);
  await page.getByRole('button',{name:'Open DECISION JOURNAL',exact:true}).click();
  await page.getByRole('button',{name:'RECORD A DECISION',exact:true}).click();
@@ -115,36 +115,36 @@ for (const width of [320,360,412]) {
  await page.getByRole('button',{name:'DONE',exact:true}).click();
  if(await page.getByRole('textbox',{name:'Decision title',exact:true}).inputValue()!=='A synthetic decision')throw Error('Journal draft lost');
  await page.getByRole('button',{name:'RECORD DECISION',exact:true}).click();
- await page.getByRole('button',{name:'BODY',exact:true}).click();
+ await page.getByRole('button',{name:'DATA',exact:true}).click();
  if(await page.getByRole('spinbutton',{name:'Hours',exact:true}).inputValue()!=='6')throw Error('Sleep draft lost: '+JSON.stringify({width,hours:await page.getByRole('spinbutton',{name:'Hours',exact:true}).inputValue(),events:await records(page,'events'),errors}));
  await page.getByRole('button',{name:'LOG SLEEP',exact:true}).click();
  await page.getByRole('button',{name:'TODAY',exact:true}).click();
  await page.getByRole('button',{name:'Open LOG',exact:true}).click(); await page.getByRole('dialog',{name:'LOG'}).getByRole('button',{name:/^Note/}).click();
  await page.getByRole('button',{name:'CAPTURE',exact:true}).click();
- await page.getByText('Note saved in Capture. It is also searchable in COMMAND.',{exact:true}).waitFor();
+ await page.getByText('Note saved in Capture. It is also searchable in MORE.',{exact:true}).waitFor();
  await page.getByRole('button',{name:'DONE',exact:true}).click();
  await page.getByRole('button',{name:'TRAIN',exact:true}).click();
  if(await page.getByRole('spinbutton',{name:'Set 1 repetitions',exact:true}).inputValue()!=='9')throw Error('Set draft lost');
  if(width===360)await snapshot(page, `${root}/workout-360.png`);
  await page.getByRole('button',{name:'LOG',exact:true}).first().click();
  if((await records(page,'performedSets')).length!==1)throw Error('Set write count');
- await page.getByRole('button',{name:'COMMAND',exact:true}).click();
- await page.getByRole('button',{name:'COMMAND',exact:true}).click();
+ await page.getByRole('button',{name:'MORE',exact:true}).click();
+ await page.getByRole('button',{name:'MORE',exact:true}).click();
  await page.getByRole('button',{name:'PLAN TODAY',exact:true}).click();
  await page.getByRole('button',{name:'ALL MISSIONS & OBLIGATIONS',exact:true}).click();
  await page.getByText('CREATE MISSION',{exact:true}).click();
  await page.getByRole('textbox',{name:'New mission title',exact:true}).fill('Synthetic direction');
  await page.getByRole('button',{name:'CREATE',exact:true}).click();
  await page.getByRole('button',{name:'Open Synthetic direction',exact:true}).waitFor();
- await page.getByRole('button',{name:'← BACK TO COMMAND',exact:true}).click();
+ await page.getByRole('button',{name:'← BACK TO MORE',exact:true}).click();
  await page.getByRole('button',{name:'PLAN TODAY',exact:true}).click();
  await page.getByRole('textbox',{name:'Add a task for today',exact:true}).fill('A synthetic task');
  await page.getByText('Date, Mission & repeat',{exact:true}).click();
  await page.getByLabel('Due date (optional)',{exact:true}).fill('2026-10-13');
  await page.getByRole('combobox',{name:'Mission (optional)',exact:true}).selectOption({label:'Synthetic direction'});
  await page.getByRole('combobox',{name:'Repeats',exact:true}).selectOption('DAILY');
- await page.getByRole('button',{name:'BODY',exact:true}).click();
- await page.getByRole('button',{name:'COMMAND',exact:true}).click();
+ await page.getByRole('button',{name:'DATA',exact:true}).click();
+ await page.getByRole('button',{name:'MORE',exact:true}).click();
  if(await page.getByRole('textbox',{name:'Add a task for today',exact:true}).inputValue()!=='A synthetic task')throw Error('Plan draft lost');
  await page.getByRole('button',{name:'ADD TO TODAY',exact:true}).click();
  await page.getByText('Added “A synthetic task” to your plan.',{exact:true}).waitFor();
@@ -156,7 +156,7 @@ for (const width of [320,360,412]) {
  const completed=obligations.find(item=>item.status==='SATISFIED');
  const next=obligations.find(item=>item.status==='OPEN');
  if(!completed || !next || next.dueAt!=='2026-10-14' || next.missionId!==completed.missionId || !next.recurrence)throw Error('Recurrence or Mission semantics');
- await page.getByRole('button',{name:'← BACK TO COMMAND',exact:true}).click();
+ await page.getByRole('button',{name:'← BACK TO MORE',exact:true}).click();
  await page.getByRole('button',{name:'Open MISSIONS & OBLIGATIONS',exact:true}).click();
  await page.getByRole('button',{name:'Open A synthetic task',exact:true}).click();
  await page.getByRole('button',{name:'RELEASE',exact:true}).click();
@@ -168,7 +168,7 @@ for (const width of [320,360,412]) {
  await page.getByRole('button',{name:'TRAIN',exact:true}).waitFor();
  await context.setOffline(true);
  await page.reload();
- await page.getByRole('button',{name:'BODY',exact:true}).click();
+ await page.getByRole('button',{name:'DATA',exact:true}).click();
  await page.getByRole('button',{name:'+12 oz',exact:true}).click();
  let water=[];
  for(let attempt=0;attempt<50;attempt++){
@@ -177,13 +177,13 @@ for (const width of [320,360,412]) {
   await new Promise(resolve=>setTimeout(resolve,100));
  }
  if(water.length!==2)throw Error('Offline water writes');
- await page.getByRole('button',{name:'COMMAND',exact:true}).click();
+ await page.getByRole('button',{name:'MORE',exact:true}).click();
  await page.getByRole('button',{name:'PLAN TODAY',exact:true}).click();
  await page.getByRole('textbox',{name:'Add a task for today',exact:true}).fill('An offline commitment');
  await page.getByRole('button',{name:'ADD TO TODAY',exact:true}).click();
  await page.getByText('Added “An offline commitment” to your plan.',{exact:true}).waitFor();
  await page.reload();
- await page.getByRole('button',{name:'COMMAND',exact:true}).click();
+ await page.getByRole('button',{name:'MORE',exact:true}).click();
  await page.getByRole('button',{name:'PLAN TODAY',exact:true}).click();
  await page.getByRole('button',{name:/An offline commitment.*Open task/}).waitFor();
  // Direct installed shortcuts apply the stored suit before TODAY has ever mounted,

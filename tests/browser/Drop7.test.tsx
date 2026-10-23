@@ -27,7 +27,7 @@ describe("Weekly check-in (real browser)", () => {
   it("opens from MORE and, with nothing logged, says so instead of grading anything", async () => {
     const screen = await render(<MoreScreen />);
     await (await commandResult(screen, "WEEKLY CHECK-IN")).click();
-    await expect.element(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Not enough data yet — no weigh-ins this week.", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("0 workouts", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Not enough data yet — no protein logged this week.", { exact: true })).toBeVisible();

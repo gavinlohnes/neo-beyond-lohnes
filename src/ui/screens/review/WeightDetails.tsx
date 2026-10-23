@@ -11,7 +11,7 @@ const day = (at: Date) => at.toLocaleDateString(undefined, { month: "short", day
 const METHOD = [
   "Rate: the latest 7-day mean minus the previous 7-day mean is a change per week; as a percentage it is divided by the previous mean. It needs the same weigh-in floor as the comparison above.",
   `Usual swing: for consecutive lived days that both have a weigh-in, the absolute difference between their daily means; the median of those differences. It needs ${SWING_FLOOR_PAIRS} pairs. A daily change smaller than this is within your usual swing.`,
-  "Goal date: the existing BODY projection — a straight line fitted to the last 28 days of weigh-ins, shown only when it moves toward your goal. It is arithmetic on past records, not a prediction you are held to.",
+  "Goal date: the existing DATA projection — a straight line fitted to the last 28 days of weigh-ins, shown only when it moves toward your goal. It is arithmetic on past records, not a prediction you are held to.",
   "Timing: for shift work a weigh-in means after your main sleep, before eating. This counts weigh-ins logged after that lived day's main-sleep log; it cannot verify eating. Mixed timing makes day-to-day swings larger.",
 ].join(" ");
 
@@ -33,7 +33,7 @@ export function WeightDetails({ active, overview }: { active: boolean; overview:
   if (!data) return <p className="meta" role="status">Reading weight details…</p>;
   const { rate, swing, timing, goal, goalWeightLbs } = data;
   const goalLine = goalWeightLbs === undefined
-    ? "No goal weight set. Set one in COMMAND → Nutrition targets."
+    ? "No goal weight set. Set one in MORE → Nutrition targets."
     : goal.kind === "REACHED" ? `At or past your goal of ${goalWeightLbs} lb.`
       : goal.kind === "DATE" ? `Goal ${goalWeightLbs} lb: about ${day(goal.date)} at the last 28 days' pace.`
         : `Goal ${goalWeightLbs} lb: no projection. The recent trend isn't moving toward it, or there are too few weigh-ins.`;

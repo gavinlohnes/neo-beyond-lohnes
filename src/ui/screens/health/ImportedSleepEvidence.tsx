@@ -11,7 +11,7 @@ export function SleepEvidence({ revision, unfiled }: { revision: ExternalSleepRe
     <h3>{new Date(r.startTime).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</h3>
     <p>{duration.asleepMinutes === null ? `${hoursMinutes(duration.spanMinutes)} session · asleep unavailable` : `${hoursMinutes(duration.asleepMinutes)} asleep`} · Garmin</p>
     {/* SLEEP-FILING-001: say when a Garmin "sleep" isn't counted, instead of leaving it silently out. */}
-    {unfiled?.reason === "DURING_SHIFT" && <p className="meta" data-unfiled="DURING_SHIFT">During your shift, so BEYOND didn't count it as sleep. If you did sleep, log it in BODY → Sleep.</p>}
+    {unfiled?.reason === "DURING_SHIFT" && <p className="meta" data-unfiled="DURING_SHIFT">During your shift, so BEYOND didn't count it as sleep. If you did sleep, log it in DATA → Sleep.</p>}
     {unfiled?.reason === "NO_DAY" && <p className="meta" data-unfiled="NO_DAY">No BEYOND day was open then, so it isn't counted as sleep.</p>}
     <details><summary>Source details and revisions</summary>
       <p>{localDayTime(r.startTime)} → {localTime(r.endTime)}</p>

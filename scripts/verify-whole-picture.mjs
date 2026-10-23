@@ -10,9 +10,9 @@ const server = await preview({ preview: { host: "127.0.0.1", port: 5196, strictP
 const browser = await chromium.launch({ headless: true });
 const reports = [];
 async function review(page) {
-  await page.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await page.getByRole("button", { name: "MORE", exact: true }).click();
   const search = page.getByRole("searchbox", { name: "Find a screen or action", exact: true });
-  if (!(await search.isVisible())) await page.getByRole("button", { name: "BACK TO COMMAND", exact: true }).click();
+  if (!(await search.isVisible())) await page.getByRole("button", { name: "BACK TO MORE", exact: true }).click();
   await search.fill("review"); await page.getByRole("button", { name: /^REVIEW / }).click();
   try { await page.getByRole("heading", { name: "THE WHOLE PICTURE.", exact: true }).waitFor(); } catch (error) { console.log(await page.locator("body").innerText()); await page.screenshot({path: `${output}/failure.png`}); throw error; }
 }
@@ -28,7 +28,7 @@ try {
     const page = await context.newPage(), errors = []; page.on("pageerror", (error) => errors.push(error.message));
     await page.clock.install({ time: new Date("2026-10-20T20:00:00-05:00") });
     await page.goto("http://127.0.0.1:5196/neo-beyond-lohnes/");
-    await page.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await page.getByRole("button", { name: "MORE", exact: true }).click();
     await page.getByText("Backup & recovery", { exact: true }).click();
     await page.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).click();
     await page.getByLabel("Choose a backup file to restore", { exact: true }).setInputFiles(backup);
@@ -47,7 +47,7 @@ try {
     await page.getByRole("heading", { name: /Main sleep ·/ }).first().waitFor();
     await page.screenshot({ path: `${output}/evidence-${width}.png` });
     await page.getByRole("button", { name: "Open complete source day 1", exact: true }).click();
-    await page.getByText("COMMAND // HISTORY", { exact: true }).waitFor();
+    await page.getByText("MORE // HISTORY", { exact: true }).waitFor();
     await page.getByRole("button", { name: "BACK TO REVIEW", exact: true }).click();
     await page.getByRole("tab", { name: "Compare", exact: true }).waitFor();
     assert.equal(await count(page), before, "Read-only exploration wrote events");
@@ -58,7 +58,7 @@ try {
     await page.getByRole("button", { name: "CLOSE", exact: true }).click();
     await page.getByRole("tab", { name: "Your next move", exact: true }).click();
     await page.getByRole("textbox", { name: "What would this look like in your life?", exact: true }).fill("SYNTHETIC ACCEPTANCE · Leave space after the last shift.");
-    await page.getByRole("button", { name: "BODY", exact: true }).click(); await review(page);
+    await page.getByRole("button", { name: "DATA", exact: true }).click(); await review(page);
     await page.getByRole("tab", { name: "Your next move", exact: true }).click();
     assert.equal(await page.getByRole("textbox", { name: "What would this look like in your life?", exact: true }).inputValue(), "SYNTHETIC ACCEPTANCE · Leave space after the last shift.");
     await page.getByRole("button", { name: "Keep Week Ahead suggestions", exact: true }).click();

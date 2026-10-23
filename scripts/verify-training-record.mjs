@@ -125,7 +125,7 @@ try {
     await page.getByText("Set 2 · 110 lb × 7", { exact: true }).waitFor();
     await layout(page, width, "session record");
     await snapshot(page, `${root}/session-record-${width}.png`, page.getByRole("heading", { name: /^Template A · / }));
-    await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "DATA", exact: true }).click();
     await page.getByRole("button", { name: "TRAIN", exact: true }).click();
     await page.getByText("Set 1 · 100 lb × 10", { exact: true }).waitFor();
     await page.getByRole("button", { name: "BACK", exact: true }).click();

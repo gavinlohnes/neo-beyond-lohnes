@@ -36,7 +36,7 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric }: {
   active: boolean;
   /** Bumped after a write made while the readout stays shown (stealth). */
   refreshKey?: number;
-  /** Opens BODY's existing history for that metric; absent, the rows are plain readings. */
+  /** Opens DATA's existing history for that metric; absent, the rows are plain readings. */
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
 }) {
   const online = useOnline();
@@ -66,7 +66,7 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric }: {
 
   return (
     <section className="systems" aria-labelledby="systems-title">
-      <OperatorHeader destination="command" headingId="systems-title">COMMAND // SYSTEMS</OperatorHeader>
+      <OperatorHeader destination="command" headingId="systems-title">MORE // SYSTEMS</OperatorHeader>
       <p className="systems__purpose">Readings only. No scores. You draw the conclusions.</p>
       {error && <p className="meta meta--error" role="alert">{error}</p>}
       {!state && !error && <p className="meta" role="status">Reading…</p>}
@@ -105,7 +105,7 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric }: {
           <Group title="DEVICE">
             <Reading label="Connection" value={online ? "Online" : <Signal data-signal="offline">Offline</Signal>} tone={online ? undefined : "warn"} detail={online ? "" : "Offline. Logging still saves on this phone."} />
             <Reading label="Last backup" value={state.backupDue ? <Signal data-signal="backup">{describeBackupAge(r.daysSinceLastBackup)}</Signal> : describeBackupAge(r.daysSinceLastBackup)}
-              tone={state.backupDue ? "warn" : undefined} detail={state.backupDue ? "Backup due. Export or share one from COMMAND." : "Export or share a backup from COMMAND."} />
+              tone={state.backupDue ? "warn" : undefined} detail={state.backupDue ? "Backup due. Export or share one from MORE." : "Export or share a backup from MORE."} />
             <Reading label="Records" value="On this phone" detail="No account. Nothing leaves unless you share a backup." />
           </Group>
         </>;

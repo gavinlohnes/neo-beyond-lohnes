@@ -1,3 +1,31 @@
+# NAV-001 — slice 2: DATA / MORE and backup first
+
+- **Authority / Builder:** Gavin approved the NAV map and explicitly requested merging #290 and
+  continuing on 2026-10-23. Codex; PROTECTED primary IA. [Brief](NAV-001.md#slice-2--data--more-and-backup-first).
+- **Branch / baseline:** `codex/nav-001-slice2`, fresh master `3520cba`; slice 1 #290 merged.
+- **Scope:** visible DATA/MORE labels and consistent headings/returns/catalog copy; compatible
+  internal routes/history/shortcuts; direct “Back up my data” first in MORE, existing export
+  handler and visible receipt. No backup format/restore semantics, schema, Engine or Garmin change.
+- **REUSE:** existing tab renderer, catalog, MoreScreen export/backup panel and path tests.
+- **OWN:** presentation mapping to existing destinations and handlers.
+- **BUILD FROM SCRATCH:** none.
+- **PR / evidence:** [#291](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/291).
+  Typecheck, architecture (300 files), diff and build pass. [Production acceptance](../screenshots/nav-001-slice2/README.md)
+  passes phone/landscape/desktop, including offline real backup download, real restore preview,
+  cancel and unchanged domain records. Native-backup path, failure/retry and duplicate-click
+  checks pass; internal legacy routes and “body” search alias are retained.
+- **Verification history:** initial recovery-fold failure fixed without relaxing the bound;
+  follow-up 26/26. First complete local full run: 2,929 passed / 6 failed / 1 skip / 3 future todos.
+  Fixed a dynamic BACK TO label and two stale test selector paths; five affected files then
+  pass 32/32, including both timeout cases. Final full gate runs with two workers for load;
+  no assertion/timeout/configuration weakening. Final exact-head results/review are recorded
+  in #291 before readiness. WIP independent review found no substantive issues.
+- **Next:** final full gate, renewed exact-head independent review and green required CI, then
+  Gavin’s merge approval. Metric zoom and DATA layout remain later slices.
+
+---
+Historical slice-1 checkpoint (merged):
+
 # NAV-001 — slice 1: TODAY
 
 - **Objective / authority:** [NAV-001](NAV-001.md); Gavin approved the map on 2026-10-23 (Protected IA).

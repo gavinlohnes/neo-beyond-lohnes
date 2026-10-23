@@ -69,7 +69,7 @@ try {
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       assert.equal(await page.getByRole("main").count(), 1);
       await page.getByRole("button", { name: "CAPTURE", exact: true }).click();
-      await page.getByText("Note saved in Capture. It is also searchable in COMMAND.", { exact: true }).waitFor();
+      await page.getByText("Note saved in Capture. It is also searchable in MORE.", { exact: true }).waitFor();
       await page.getByRole("button", { name: "DONE", exact: true }).click();
       await page.getByRole("button", { name: "TRAIN", exact: true }).click();
       assert.equal(await page.getByRole("spinbutton", { name: "Set 1 weight in pounds" }).inputValue(), "85");
@@ -91,7 +91,7 @@ try {
       await context.setOffline(true);
       await page.clock.setSystemTime(new Date("2026-10-14T16:29:59.500-05:00"));
       await page.goto(`${baseURL}?go=water`);
-      await page.getByRole("heading", { name: "BODY // WATER" }).waitFor();
+      await page.getByRole("heading", { name: "DATA // WATER" }).waitFor();
       assert.equal(await page.locator("#workspace-TODAY").count(), 0);
       assert.equal(await page.evaluate(() => !!navigator.serviceWorker.controller && !navigator.onLine), true);
       await waitSuit(page, "PRE_WORK");
@@ -104,7 +104,7 @@ try {
       await page.getByText("8 oz added.", { exact: true }).waitFor();
       await page.reload();
       await page.getByRole("button", { name: "TODAY", exact: true }).click();
-      await page.getByRole("button", { name: "Log water in BODY", exact: true }).click();
+      await page.getByRole("button", { name: "Log water in DATA", exact: true }).click();
       await page.getByText("8 oz recorded today", { exact: true }).waitFor();
       const saved = await records(page);
       assert.equal(saved.beyondDays.find((entry) => entry.status === "ACTIVE")?.id, day.id);

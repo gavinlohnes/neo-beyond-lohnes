@@ -25,7 +25,7 @@ for (const width of [320, 360, 390, 412]) {
   await page.clock.install({ time: new Date("2026-10-12T16:40:00-05:00") });
   await page.goto(url); await page.waitForTimeout(1500);
   // Save the schedule once, so the day starts per schedule.
-  await page.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await page.getByRole("button", { name: "MORE", exact: true }).click();
   await page.getByText("WORK SCHEDULE", { exact: true }).click();
   await page.getByRole("button", { name: "SAVE SCHEDULE" }).click();
   await page.getByText("Saved.").waitFor();

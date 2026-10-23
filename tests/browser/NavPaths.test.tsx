@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
+import { db } from "../../src/persistence/db";
+import { previewAnyRestore } from "../../src/persistence/restore";
 import { App } from "../../src/app/App";
 import { startDay, submitCheckIn, updateSchedulePattern } from "../../src/application/commands";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
@@ -102,7 +104,27 @@ describe("NAV-001 top tasks from TODAY", () => {
     await expect.poll(() => document.querySelector('.shell-nav [aria-current="page"]')?.textContent ?? "").toContain("TRAIN");
   });
 
-  it.todo("back up: MORE → Back up my data (slice 2)");
+  it("back up: MORE → Back up my data exports a valid backup in two taps without changing records", async () => {
+    await startDay(); const screen = await render(<App />);
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    const backup = screen.getByRole("button", { name: "Back up my data", exact: true });
+    await expect.element(backup).toBeVisible();
+    expect(backup.element().getBoundingClientRect().top).toBeLessThan(document.querySelector(".command-search")!.getBoundingClientRect().top);
+    expect(document.querySelector<HTMLDetailsElement>("#command-backup-panel")!.open).toBe(false);
+    const before = await db.events.toArray(); let file: File | undefined;
+    const create = URL.createObjectURL.bind(URL);
+    const capture = vi.spyOn(URL, "createObjectURL").mockImplementation((blob) => { file = blob as File; return create(blob); });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    try {
+      await backup.click();
+      await expect.element(screen.getByRole("status")).toHaveTextContent("Backup file downloaded.");
+      expect(file?.type).toBe("application/json"); expect(click).toHaveBeenCalledTimes(1);
+      expect((await previewAnyRestore(file!)).format).toBe("NATIVE");
+      expect(await db.events.toArray()).toEqual(before);
+    } finally { capture.mockRestore(); click.mockRestore(); }
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await expect.element(screen.getByRole("heading", { name: "DATA", exact: true })).toBeVisible();
+  });
   it.todo("review sleep: TODAY's sleep tile or DATA → Sleep opens on this week (slice 3)");
   it.todo("last run of shifts: DATA → Your rotation (slice 4)");
   it.todo("sync Garmin: on TODAY's numbers (slice 4)");

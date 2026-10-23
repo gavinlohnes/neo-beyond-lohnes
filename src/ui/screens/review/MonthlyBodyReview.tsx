@@ -40,7 +40,7 @@ export function MonthlyBodyReview({ body }: { body: NonNullable<MonthlyReview["b
           />
         ))}
       </ReadoutGrid>
-      {measurements.length === 0 && <p className="card-body">No tape measurements in these four weeks. Waist is the one to start with, in BODY → Progress.</p>}
+      {measurements.length === 0 && <p className="card-body">No tape measurements in these four weeks. Waist is the one to start with, in DATA → Progress.</p>}
 
       <h4 className="tool-label monthly-body__subhead">PHOTOS · SAME POSE</h4>
       {photos.length === 0 ? (

@@ -109,7 +109,7 @@ it("never shows a newly hidden photo while the re-read is pending, then shows on
   const held = new Promise<void>((resolve) => { release = resolve; });
   const actual = (await vi.importActual<typeof import("../../src/application/monthlyReviewQueries")>("../../src/application/monthlyReviewQueries")).getMonthlyReview;
   vi.mocked(getMonthlyReview).mockImplementationOnce(async (week) => { await held; return actual(week); });
-  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "MORE", exact: true }).click();
   await expect.element(screen.getByRole("region", { name: "Weekly review", exact: true })).toBeVisible();
   await new Promise((resolve) => setTimeout(resolve, 250));
   expect(document.querySelector(".monthly-body")).toBeNull();
@@ -129,13 +129,13 @@ it("drops the cached body panel when a re-read fails, so a newly hidden photo is
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await hideProgressPhoto(later.id);
   vi.mocked(getMonthlyReview).mockRejectedValueOnce(new Error("read failed"));
-  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "MORE", exact: true }).click();
   await expect.element(screen.getByText("Body composition for this month couldn’t be read. The weekly review below is unaffected.", { exact: true })).toBeVisible();
   expect(document.querySelector(".monthly-body")).toBeNull();
   expect(document.querySelectorAll(".weekly-dashboard img").length).toBe(0);
   await expect.element(screen.getByText("-2.5 lb", { exact: true })).not.toBeInTheDocument();
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "MORE", exact: true }).click();
   const body = screen.getByRole("region", { name: "BODY COMPOSITION · LAST 4 WEEKS" });
   await expect.element(body.getByText("-2.5 lb", { exact: true })).toBeVisible();
   expect(document.querySelector(".monthly-body figure")).toBeNull();

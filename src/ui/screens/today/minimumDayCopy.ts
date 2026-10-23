@@ -90,7 +90,7 @@ export const MINIMUM_DAY_ITEMS: MinimumDayItemConfig[] = [
   {
     key: "hydrate",
     label: "Hydrate ≥40oz",
-    updateNote: "Updates automatically from BODY water logs, or log it right here.",
+    updateNote: "Updates automatically from DATA water logs, or log it right here.",
   },
   {
     key: "protein",
@@ -98,7 +98,7 @@ export const MINIMUM_DAY_ITEMS: MinimumDayItemConfig[] = [
     // NUTRITION-001: effective meal protein counts toward this total too
     // (application/queries.ts's getMinimumDayStatus), alongside
     // protein-only logs — this note stays accurate by naming both.
-    updateNote: "Updates automatically from BODY protein or meal logs, or log it right here.",
+    updateNote: "Updates automatically from DATA protein or meal logs, or log it right here.",
   },
   {
     key: "meds",

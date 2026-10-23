@@ -12,8 +12,8 @@ afterEach(() => {
 
 describe.sequential("shared operator presentation primitives", () => {
   it("keeps the destination identity as one real heading with a reinforcing hidden glyph", async () => {
-    const screen = await render(<OperatorHeader destination="body">BODY // TODAY</OperatorHeader>);
-    const heading = screen.getByRole("heading", { level: 1, name: "BODY // TODAY" }).element();
+    const screen = await render(<OperatorHeader destination="body">DATA // TODAY</OperatorHeader>);
+    const heading = screen.getByRole("heading", { level: 1, name: "DATA // TODAY" }).element();
 
     expect(heading.className).toContain("eyebrow");
     expect(heading.closest(".field-header")).not.toBeNull();
@@ -21,8 +21,8 @@ describe.sequential("shared operator presentation primitives", () => {
   });
 
   it("retains explicit focus handoff without making every identity heading tabbable", async () => {
-    const daily = await render(<OperatorHeader destination="body" headingId="daily-heading" focusable>BODY // TODAY</OperatorHeader>);
-    expect(daily.getByRole("heading", { name: "BODY // TODAY" }).element().tabIndex).toBe(-1);
+    const daily = await render(<OperatorHeader destination="body" headingId="daily-heading" focusable>DATA // TODAY</OperatorHeader>);
+    expect(daily.getByRole("heading", { name: "DATA // TODAY" }).element().tabIndex).toBe(-1);
     cleanup();
     const today = await render(<OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>);
     expect(today.getByRole("heading", { name: "BEYOND // TODAY" }).element().getAttribute("tabindex")).toBeNull();
@@ -34,7 +34,7 @@ describe.sequential("shared operator presentation primitives", () => {
         {/* One labelled region per width: a page has one main landmark, so three <main>s were an
             invalid fixture that axe flagged whenever its landmark rules applied (order-dependent). */}
         {[320, 360, 412].map((width) => <section className="screen test-width" aria-label={`${width}px surface`} style={{ width }} key={width}>
-          <OperatorHeader destination="body">BODY // TODAY</OperatorHeader>
+          <OperatorHeader destination="body">DATA // TODAY</OperatorHeader>
           <ReadoutGrid emphasis="primary">
             <Readout label="CALORIES" value={<>2,450<span> kcal</span></>} detail="Logged from meals · no calorie target" />
             <Readout label="PROTEIN" value={<>185<span> g</span></>} detail="185 of 200 g" />

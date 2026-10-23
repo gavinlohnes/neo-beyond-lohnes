@@ -80,7 +80,7 @@ it("marks a backup overdue with the existing rule, on the line and in DEVICE", a
   await screen.getByRole("button", { name: /No backup yet\./ }).click();
   const device = screen.getByRole("region", { name: "DEVICE" });
   await expect.element(device.getByText("None on record", { exact: true })).toBeVisible();
-  await expect.element(device.getByText("Backup due. Export or share one from COMMAND.", { exact: true })).toBeVisible();
+  await expect.element(device.getByText("Backup due. Export or share one from MORE.", { exact: true })).toBeVisible();
 });
 
 it("shows no signal on a healthy screen", async () => {

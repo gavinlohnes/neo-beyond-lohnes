@@ -7,14 +7,14 @@ type Screen = Pick<Awaited<ReturnType<typeof render>>, 'getByRole' | 'getByText'
 /** Browse the production COMMAND groups. No state injection or hidden-control clicks. */
 export async function commandResult(screen: Screen, label: string) {
   const search = screen.getByRole('searchbox', { name: 'Find a screen or action' });
-  await expect.poll(() => search.elements().length || screen.getByRole('button', { name: 'COMMAND', exact: true }).elements().length || screen.getByRole('button', { name: 'BACK TO COMMAND', exact: true }).elements().length).toBeGreaterThan(0);
+  await expect.poll(() => search.elements().length || screen.getByRole('button', { name: 'MORE', exact: true }).elements().length || screen.getByRole('button', { name: 'BACK TO MORE', exact: true }).elements().length).toBeGreaterThan(0);
   if (!search.elements().length) {
-    const tab = screen.getByRole('button', { name: 'COMMAND', exact: true });
+    const tab = screen.getByRole('button', { name: 'MORE', exact: true });
     if (tab.elements().length) {
       await tab.click();
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       if (!search.elements().length) await tab.click();
-    } else await screen.getByRole('button', { name: 'BACK TO COMMAND', exact: true }).click();
+    } else await screen.getByRole('button', { name: 'BACK TO MORE', exact: true }).click();
   }
   await expect.element(search).toBeVisible();
   if ((search.element() as HTMLInputElement).value) await search.fill('');

@@ -129,7 +129,7 @@ describe("Health Connect sleep import", () => {
     await screen.getByRole("button", { name: /^IMPORT HEALTH DATA/ }).click();
     chooseFile(screen.getByLabelText("Health export file").element() as HTMLInputElement);
     await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();
-    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "BACK TO MORE" }).click();
     await screen.getByLabelText("Find a screen or action").fill("health connect");
     await screen.getByRole("button", { name: /^IMPORT HEALTH DATA/ }).click();
     await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();
@@ -185,7 +185,7 @@ describe("SLEEP-FILING-001 — Garmin sleep that isn't counted says why", () => 
     await importSleepSnapshot({ ...base, window: { startTime: "2026-10-15T00:00:00Z", endTime: "2026-10-23T00:00:00Z" }, exportedAt: "2026-10-23T00:00:00Z",
       records: [record("at-work", "2026-10-18T02:47:00Z", "2026-10-18T08:24:00Z"), record("gap", "2026-10-20T12:00:00Z", "2026-10-20T18:00:00Z")] });
     const screen = await render(<ImportedSleepEvidence />);
-    await expect.element(screen.getByText("During your shift, so BEYOND didn't count it as sleep. If you did sleep, log it in BODY → Sleep.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("During your shift, so BEYOND didn't count it as sleep. If you did sleep, log it in DATA → Sleep.", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("No BEYOND day was open then, so it isn't counted as sleep.", { exact: true })).toBeVisible();
   });
 });

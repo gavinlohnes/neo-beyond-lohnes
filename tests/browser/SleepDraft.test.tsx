@@ -61,7 +61,7 @@ describe("Sleep draft (real browser)", () => {
     await expect.element(screen.getByRole("heading", { name: "Slept up to 7 hr 15 min?" })).toBeVisible();
     await expect.element(screen.getByText("Shift Down 07:05 → opened 14:20", { exact: true })).toBeVisible();
     // Manual entry stays one tap away.
-    await screen.getByRole("button", { name: "ENTER IN BODY" }).click();
+    await screen.getByRole("button", { name: "ENTER IN DATA" }).click();
     expect(onOpenBody).toHaveBeenCalledWith("sleep");
 
     await screen.getByRole("button", { name: "15 minutes less" }).click();
