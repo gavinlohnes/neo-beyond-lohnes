@@ -12,6 +12,14 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## DELTA-002 — what changed, and why it matters (direction locked 2026-10-23)
+
+Gavin locked the direction in [the brief](agent/DELTA-002.md): DELTA is a voice for BEYOND's
+existing deterministic intelligence — what changed since last shift, a plain "why", questions as
+buttons, every claim tapping through to its records. It explains; it never decides, ranks or
+scores. Not an AI assistant: the 2026-10-09 "smart by design, AI optional" ruling stands. Locking
+the direction authorizes no implementation; slices need their own approval, after WHOLE-PICTURE-001.
+
 ## UX-COHESION-001 — quiet by default (owner approved 2026-10-22)
 
 Gavin approved [the brief](agent/UX-COHESION-001.md) after field use showed that complete imported

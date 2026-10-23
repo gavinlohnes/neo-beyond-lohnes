@@ -1,3 +1,14 @@
+# DELTA-002 — direction locked (docs only)
+
+- **Objective / authority:** Gavin locked the DELTA-002 direction on 2026-10-23 ("Lock it in for
+  right now"). Builder: Claude Code, branch `claude/delta-002`. Docs only: [brief](DELTA-002.md) and
+  a Decision Register entry. No implementation authorized.
+- **Also in flight:** WHOLE-PICTURE-001 (Codex), unpushed in Codex's container; it goes first.
+- **Next:** PR, Gavin's merge. Then Codex pushes WHOLE-PICTURE-001 for continuation.
+
+---
+Previous checkpoint:
+
 # DEPS-001 — dev/build dependency security patches
 
 - **Authority / lane / Builder:** Gavin approved DEPS-001 on 2026-10-23 in the task; ROUTINE;
