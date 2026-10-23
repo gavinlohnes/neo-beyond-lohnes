@@ -30,3 +30,9 @@ hidden workspaces and shell inertness. No logging handlers were changed.
 
 Full required CI and final independent exact-head review are recorded in PR #290.
 This is slice 1 evidence, not completion of the later DATA/MORE/metric-page slices.
+
+CI exposed four legacy fresh-install tests with an old `LOG bottom <700px` assertion. They now
+check the approved viewport-bottom placement against navigation, target size and pointer hit,
+open the native LOG sheet, and retain empty-state/red-budget/no-write checks. Focused follow-up
+(RedesignToday + NavPaths): **29 passed / 4 future todos**. Application code and production
+captures above are unchanged by this test-only correction; final CI is recorded in #290.

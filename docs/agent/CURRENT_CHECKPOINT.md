@@ -14,6 +14,12 @@
   handlers unchanged. Original Claude head had green full CI/verify; final-head required CI
   runs the full suite/build again. Independent final exact-head review and CI are recorded
   in #290 before readiness. Gavin approves merging slice 1; takeover is not merge authority.
+- **CI follow-up:** the first takeover CI failed four legacy fresh-install cases asserting
+  LOG bottom <700px. NAV intentionally places it above bottom navigation (764px at height844).
+  Replaced the superseded absolute threshold with viewport/navigation bounds, target size,
+  pointer hit test and actual LOG opening, preserving empty-state, red-budget and no-day-write
+  checks. RedesignToday + NavPaths follow-up: **29 passed / 4 later-slice todos**. No product
+  code changed after the accepted production capture; final CI/review renewal required.
 - **Later approved slices:** slice 2 (BODY → DATA, COMMAND → MORE, "Back up my data"), slice 3 (sleep page by week),
   slice 4 (DATA layout, sync on numbers, tree-test re-run).
 
