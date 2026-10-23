@@ -546,9 +546,6 @@ export function MoreScreen({
           view-swap, so this is genuine reuse, not a forced fit. Backup/
           Archive/Restore are immediate actions, not navigation, so they
           use .equipment-row instead. */}
-      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings").map((group) => <details className="command-group" key={group}><summary className="disclosure-row">{group}</summary>
-        {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry))}
-      </details>)}
       <details className="command-group" id="command-backup-panel"><summary className="disclosure-row">Backup & recovery</summary>
       {visibleCapabilities.filter((entry) => entry.group === "Backup & recovery").map((entry) => renderCapability(entry))}
       <section className="operational-index-zone" aria-labelledby="safety-heading">
@@ -666,6 +663,10 @@ export function MoreScreen({
         </details>
       </section>
       </details>
+
+      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings").map((group) => <details className="command-group" key={group}><summary className="disclosure-row">{group}</summary>
+        {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry))}
+      </details>)}
 
       {/* FIELD ALPHA Phase 4B/4H: RECORDS — historical/review-oriented,
           distinct from OPERATIONS above. History stays a clean single

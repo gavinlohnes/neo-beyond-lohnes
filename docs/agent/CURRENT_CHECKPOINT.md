@@ -9,8 +9,12 @@
 - **REUSE:** existing tab renderer, catalog, MoreScreen export/backup panel and path tests.
 - **OWN:** presentation mapping to existing destinations and handlers.
 - **BUILD FROM SCRATCH:** none.
-- **Status / next:** implementation and verification; one slice-2 PR, independent exact-head
-  review and green CI, then Gavin’s merge approval. Metric zoom and DATA layout remain later slices.
+- **PR / checks:** [#291](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/291); typecheck,
+  architecture (300 files), catalog checks and diff check pass. Initial focused run exposed
+  recovery-group placement below the fold; moved the existing group ahead of other groups,
+  preserving its bound. Recovery follow-up 26/26 passes; full verification/acceptance pending.
+- **Next:** final independent exact-head review and green CI, then Gavin’s merge approval.
+  Metric zoom and DATA layout remain later slices.
 
 ---
 Historical slice-1 checkpoint (merged):
