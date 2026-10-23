@@ -1,3 +1,17 @@
+# SYNC-001 — current in two taps
+
+- **Objective / authority:** [SYNC-001](SYNC-001.md); Gavin: "go SYNC-001" (2026-10-23).
+  Builder: Claude Code, branch `claude/sync-001`.
+- **Built:** helper 0.7.0 reads on open, explains stale Garmin data, opens from BEYOND's SYNC GARMIN
+  link and sends; BEYOND shows SYNC GARMIN on Android in Garmin sheets and the old-data note.
+- **Verified:** BEYOND `npm run verify` green (2,914 passed / one skip, build OK). The helper is
+  compiled and tested by Health Bridge CI (no local Android SDK).
+- **Next:** PR, both CI workflows, independent review, Gavin installs 0.7.0 and merges. Then
+  ROTATION phase 1 (proposed, not yet approved).
+
+---
+Previous checkpoint:
+
 # Owner-approved integration — #286 and #282
 
 - **Authority:** Gavin explicitly requested merging both PRs on 2026-10-23. Codex integrates;

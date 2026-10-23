@@ -29,3 +29,6 @@
 .measured-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .measured-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .measured-table thead td, .measured-table thead th { color: var(--p-t2, var(--text-2)); font-size: 12px; }
+
+/* SYNC-001: the link to BEYOND Health Bridge reads as a button. */
+.measured-sync { display: block; margin-top: var(--space-2); text-align: center; text-decoration: none; }

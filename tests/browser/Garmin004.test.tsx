@@ -108,4 +108,21 @@ describe("GARMIN-004 — Garmin numbers on TODAY", () => {
     expect(screen.getByRole("button", { name: /open steps$/ }).elements()).toHaveLength(0);
     expect(document.querySelector(".cc-fuel--six")).toBeNull();
   });
+
+  it("SYNC-001: offers SYNC GARMIN, opening the helper, on Android only", async () => {
+    await page.viewport(390, 844);
+    await seedGarmin();
+    const agent = vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (Linux; Android 15; Pixel) Chrome/141 Mobile");
+    try {
+      const screen = await render(<App />);
+      await screen.getByRole("button", { name: /open steps$/ }).click();
+      const sheet = screen.getByRole("dialog", { name: "STEPS", exact: true });
+      await expect.element(sheet.getByRole("link", { name: "SYNC GARMIN", exact: true }))
+        .toHaveAttribute("href", "intent://sync#Intent;scheme=beyond-bridge;package=app.beyond.healthbridge;end");
+      agent.mockReturnValue("Mozilla/5.0 (Macintosh) Safari/605");
+      await sheet.getByRole("button", { name: "4W", exact: true }).click(); // re-render
+      expect(sheet.getByRole("link", { name: "SYNC GARMIN" }).elements()).toHaveLength(0);
+    } finally { agent.mockRestore(); }
+  });
 });
+

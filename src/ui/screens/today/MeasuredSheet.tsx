@@ -32,6 +32,14 @@ const clock = (minutes: number) => `${Math.floor(minutes / 60)}:${String(Math.ro
 export function formatMeasured(metric: MeasuredMetric, value: number): string {
   return metric === "steps" ? count(value) : metric === "resting" ? `${value} bpm` : metric === "calories" ? `${count(value)} kcal` : hoursMinutes(value);
 }
+/** SYNC-001: opens BEYOND Health Bridge (beyond-bridge://sync), which reads Health Connect and sends to BEYOND. */
+export const HELPER_SYNC_URL = "intent://sync#Intent;scheme=beyond-bridge;package=app.beyond.healthbridge;end";
+/** The helper exists only on Android; elsewhere the link would go nowhere, so it isn't shown. */
+export function SyncGarminLink() {
+  if (typeof navigator === "undefined" || !/Android/i.test(navigator.userAgent)) return null;
+  return <a className="btn-secondary measured-sync" href={HELPER_SYNC_URL}>SYNC GARMIN</a>;
+}
+
 /** "Garmin as of 14:20" today, otherwise with the date. */
 export function describeGarminAsOf(at: number, now: number): string {
   const sameDay = new Date(at).toDateString() === new Date(now).toDateString();
@@ -160,6 +168,7 @@ export function MeasuredSheet({ open, metric, snapshot, onClose, onAllRecords }:
 
       {usual && <p className="meta measured-usual-line">{metric === "calories" ? describeUsual(metric, usual).replace("Usual:", "Usual burned:") : describeUsual(metric, usual)}</p>}
       {(metric === "calories" ? snapshot.caloriesAsOf : snapshot.garminAsOf) !== null && <p className="meta measured-asof">{describeGarminAsOf((metric === "calories" ? snapshot.caloriesAsOf : snapshot.garminAsOf)!, snapshot.readAt)}</p>}
+      <SyncGarminLink />
       {metric === "calories" && <p className="meta">Burned is Garmin’s estimate, resting plus active; watch estimates can be off by 10–20%. Eaten is what you logged.</p>}
       <p className="meta">Measured by Garmin. A day with no measurement is missing, not zero. Nothing here changes BEYOND’s advice.</p>
       {metric === "sleep" && onAllRecords && <button type="button" className="btn-secondary" onClick={onAllRecords}>ALL SLEEP RECORDS</button>}
