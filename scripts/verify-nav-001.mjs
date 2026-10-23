@@ -8,6 +8,13 @@ await mkdir(output, { recursive: true });
 const server = await preview({ preview: { host: "127.0.0.1", port: 5197, strictPort: true } });
 const browser = await chromium.launch({ headless: true });
 const reports = [];
+async function eventCount(page) {
+  return page.evaluate(() => new Promise((resolve, reject) => {
+    const open = indexedDB.open("beyond"); open.onerror = () => reject(open.error);
+    open.onsuccess = () => { const database = open.result, tx = database.transaction("events", "readonly"), count = tx.objectStore("events").count(); count.onsuccess = () => resolve(count.result); tx.oncomplete = () => database.close(); tx.onerror = () => reject(tx.error); };
+  }));
+}
+
 try {
   for (const [width, height] of [[320, 640], [390, 844], [844, 390], [1280, 800]]) {
     const context = await browser.newContext({ viewport: { width, height }, timezoneId: "America/Chicago" });
@@ -41,9 +48,30 @@ try {
       await log.click(); await page.getByRole("dialog", { name: "LOG", exact: true }).getByRole("button", { name: "MEAL", exact: true }).click();
       await page.getByRole("button", { name: /^NEW MEAL/ }).click();
       assert.equal(await page.getByRole("textbox", { name: "New meal name", exact: true }).inputValue(), "SYNTHETIC NAV ACCEPTANCE");
+      await page.getByRole("button", { name: "CLOSE", exact: true }).click();
+      await page.getByRole("button", { name: "MORE", exact: true }).click();
+      const backup = page.getByRole("button", { name: "Back up my data", exact: true });
+      await backup.waitFor();
+      assert.ok((await backup.boundingBox()).y < (await page.locator(".command-search").boundingBox()).y);
+      await page.screenshot({ path: `${output}/more-${width}.png`, fullPage: true });
+      const before = await eventCount(page);
+      await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+      await context.setOffline(true);
+      const [download] = await Promise.all([page.waitForEvent("download"), backup.click()]);
+      assert.match(download.suggestedFilename(), /^beyond-backup-.*\.json$/);
+      await page.getByRole("status").filter({ hasText: "Backup file downloaded." }).waitFor();
+      await page.getByText("Backup & recovery", { exact: true }).click();
+      await page.getByText("RESTORE — REPLACES ALL DATA", { exact: true }).click();
+      await page.getByLabel("Choose a backup file to restore", { exact: true }).setInputFiles(await download.path());
+      await page.getByRole("button", { name: "CONFIRM REPLACE", exact: true }).waitFor();
+      assert.equal(await eventCount(page), before, "Export and restore preview must preserve domain records");
+      await page.getByRole("button", { name: "CANCEL", exact: true }).click();
+      await page.getByRole("button", { name: "DATA", exact: true }).click();
+      await page.getByRole("heading", { name: "DATA", exact: true }).waitFor();
+      await page.screenshot({ path: `${output}/data-${width}.png`, fullPage: true });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       assert.deepEqual(errors, []);
-      reports.push({ width, height, result: "PASS", checks: ["production UI day setup", "floating LOG above navigation", "LOG to Meal to New Meal", "CLOSE returns focus to floating LOG", "hidden outside TODAY", "meal draft survives close and tab detour", "no overflow or uncaught errors"] });
+      reports.push({ width, height, result: "PASS", checks: ["production UI day setup", "floating LOG above navigation", "LOG to Meal to New Meal", "CLOSE returns focus to floating LOG", "hidden outside TODAY", "meal draft survives close and tab detour", "DATA and MORE labels", "backup first in MORE", "offline native backup download", "download accepted by real restore preview", "preview cancel and unchanged records", "no overflow or uncaught errors"] });
     } catch (error) { await page.screenshot({ path: `${output}/failure-${width}.png` }); throw error; } finally { await context.close(); }
   }
   await writeFile(`${output}/acceptance.json`, JSON.stringify(reports, null, 2) + "\n");

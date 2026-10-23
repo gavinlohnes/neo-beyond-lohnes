@@ -10,11 +10,11 @@ it('hides optional tools by default, then restores all three without changing an
  const day=await startDay();await enableMinimumDay(day.id);await logWater(day.id,12);const before=await db.events.toArray();
  const screen=await render(<App/>);await screen.getByRole('button',{name:'MORE',exact:true}).click();
  const search=screen.getByRole('searchbox',{name:'Find a screen or action'});await search.fill('food lookup');
- expect(screen.getByRole('button',{name:/^FOOD LOOKUP BODY/}).elements()).toHaveLength(0);
+ expect(screen.getByRole('button',{name:/^FOOD LOOKUP DATA/}).elements()).toHaveLength(0);
  await screen.getByRole('button',{name:'HIDDEN FEATURES Show optional tools; your data is kept either way',exact:true}).click();
  for(const label of ['Minimum Day','Small Steps','Online food lookup']){const toggle=screen.getByRole('checkbox',{name:`Show ${label}`,exact:true});await expect.element(toggle).not.toBeChecked();await toggle.click();}
  expect(getHiddenFeatures()).toEqual({minimumDay:true,smallSteps:true,foodLookup:true});
- await search.fill('food lookup');await screen.getByRole('button',{name:/^FOOD LOOKUP BODY/}).click();await expect.element(screen.getByRole('dialog',{name:'FOOD LOOKUP',exact:true})).toBeVisible();
+ await search.fill('food lookup');await screen.getByRole('button',{name:/^FOOD LOOKUP DATA/}).click();await expect.element(screen.getByRole('dialog',{name:'FOOD LOOKUP',exact:true})).toBeVisible();
  await screen.getByRole('dialog').getByRole('button',{name:'CLOSE',exact:true}).click();
  await search.fill('small steps');await screen.getByRole('button',{name:'SMALL STEPS One tool at a time',exact:true}).click();
  await expect.element(screen.getByRole('heading',{name:'Keep it small',exact:true})).toBeVisible();

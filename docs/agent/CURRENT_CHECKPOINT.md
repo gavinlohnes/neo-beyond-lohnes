@@ -9,12 +9,19 @@
 - **REUSE:** existing tab renderer, catalog, MoreScreen export/backup panel and path tests.
 - **OWN:** presentation mapping to existing destinations and handlers.
 - **BUILD FROM SCRATCH:** none.
-- **PR / checks:** [#291](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/291); typecheck,
-  architecture (300 files), catalog checks and diff check pass. Initial focused run exposed
-  recovery-group placement below the fold; moved the existing group ahead of other groups,
-  preserving its bound. Recovery follow-up 26/26 passes; full verification/acceptance pending.
-- **Next:** final independent exact-head review and green CI, then Gavin’s merge approval.
-  Metric zoom and DATA layout remain later slices.
+- **PR / evidence:** [#291](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/291).
+  Typecheck, architecture (300 files), diff and build pass. [Production acceptance](../screenshots/nav-001-slice2/README.md)
+  passes phone/landscape/desktop, including offline real backup download, real restore preview,
+  cancel and unchanged domain records. Native-backup path, failure/retry and duplicate-click
+  checks pass; internal legacy routes and “body” search alias are retained.
+- **Verification history:** initial recovery-fold failure fixed without relaxing the bound;
+  follow-up 26/26. First complete local full run: 2,929 passed / 6 failed / 1 skip / 3 future todos.
+  Fixed a dynamic BACK TO label and two stale test selector paths; five affected files then
+  pass 32/32, including both timeout cases. Final full gate runs with two workers for load;
+  no assertion/timeout/configuration weakening. Final exact-head results/review are recorded
+  in #291 before readiness. WIP independent review found no substantive issues.
+- **Next:** final full gate, renewed exact-head independent review and green required CI, then
+  Gavin’s merge approval. Metric zoom and DATA layout remain later slices.
 
 ---
 Historical slice-1 checkpoint (merged):

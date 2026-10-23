@@ -27,7 +27,7 @@ afterEach(() => { cleanup(); vi.useRealTimers(); window.scrollTo(0, 0); });
 
 const current = () => document.querySelector('.shell-nav [aria-current="page"]')?.textContent ?? "";
 const emblem = (screen: Screen, tab: string) => screen.getByRole("button", { name: "BEYOND emblem: go to TODAY" }).elements()
-  .find((element) => element.closest(`#workspace-${tab}`) && element.getClientRects().length) as HTMLElement;
+  .find((element) => element.closest(`#workspace-${tab === "DATA" ? "BODY" : tab === "MORE" ? "COMMAND" : tab}`) && element.getClientRects().length) as HTMLElement;
 
 describe("direct shortcut suit", () => {
   it.each(["workout", "water"])("applies the stored pin before TODAY mounts for %s", async (shortcut) => {
