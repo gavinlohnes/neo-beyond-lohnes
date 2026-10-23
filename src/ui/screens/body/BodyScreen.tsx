@@ -1,3 +1,4 @@
+import { SleepMetricSheet } from "../today/SleepMetricSheet";
 import { WeightTrend } from "./WeightTrend";
 import { getRecordedHealthDay } from "../../../application/healthRecordQueries";
 import type { RecordCorrectionRequest } from "../../recordSheets";
@@ -348,7 +349,9 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     });
   }
   /** Weight is a cross-day trend; sleep shown from the day before (FRICTION-001) opens all sleep, not an empty day. */
+  const [sleepMetricOpen, setSleepMetricOpen] = useState(false);
   function exploreOverview(metric: InsightMetric) {
+    if (overviewOnly && metric === "sleep") { setSleepMetricOpen(true); return; }
     const dayWide = metric === "weight" || (metric === "sleep" && !sleepEntries.some((entry) => entry.kind === "PRIMARY"));
     showProgress(metric, dayWide ? undefined : day?.id);
   }
@@ -2491,6 +2494,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         )}
       </div>);
   if (overviewOnly) return <div className="screen body-field body-home">
+    <SleepMetricSheet open={sleepMetricOpen} onClose={() => setSleepMetricOpen(false)} onAllRecords={() => { setSleepMetricOpen(false); showProgress("sleep"); }} />
     <OperatorHeader destination="body" focusable>DATA</OperatorHeader>
     {onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>{returnLabel}</button>}
     <div hidden={progressOpen}>

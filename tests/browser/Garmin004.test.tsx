@@ -69,20 +69,23 @@ describe("GARMIN-004 — Garmin numbers on TODAY", () => {
     expect(await db.events.toArray()).toEqual(before);
   });
 
-  it("opens last night's sleep with stages, and says a stage Garmin left out was not recorded", async () => {
+  it("opens sleep on the week, then a night with stages, and says an absent stage was not recorded", async () => {
     await page.viewport(390, 844);
     await seedGarmin();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: /open sleep$/ }).click();
     const sheet = screen.getByRole("dialog", { name: "SLEEP", exact: true });
-    await expect.element(sheet.getByRole("button", { name: "LAST NIGHT", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect.element(sheet.getByRole("button", { name: "Week", exact: true })).toHaveAttribute("aria-pressed", "true");
+    const bars = sheet.element().querySelectorAll<SVGGElement>('.measured-bar[role="button"]');
+    const measured = [...bars].filter((bar) => !bar.getAttribute("aria-label")?.includes("not measured"));
+    measured.at(-1)!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await expect.element(sheet.getByRole("img", { name: /^Sleep stages from \d\d:\d\d to \d\d:\d\d\.$/ })).toBeVisible();
     const deep = [...sheet.element().querySelectorAll(".measured-stages div")].find((row) => row.querySelector("dt")?.textContent === "Deep");
     expect(deep?.querySelector("dd")?.textContent).toBe("Not recorded");
     await settle();
     expect((await axe.run(sheet.element())).violations).toEqual([]);
     await shot("390-sleep-last-night");
-    await sheet.getByRole("button", { name: "7D", exact: true }).click();
+    await sheet.getByRole("button", { name: "Week", exact: true }).click();
     await expect.element(sheet.getByText("average a night", { exact: true })).toBeVisible();
     await expect.element(sheet.getByRole("button", { name: "ALL SLEEP RECORDS", exact: true })).toBeVisible();
   });
