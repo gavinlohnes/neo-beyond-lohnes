@@ -1,11 +1,23 @@
 # NAV-001 — slice 1: TODAY
 
 - **Objective / authority:** [NAV-001](NAV-001.md); Gavin approved the map on 2026-10-23 (Protected IA).
-  Builder: Claude Code, branch `claude/nav-001`. SLEEP-FILING-001 (#289) is separate and pending merge.
+  Builder: Claude Code, branch `claude/nav-001`. SLEEP-FILING-001 (#289) merged.
 - **Built:** a floating + LOG; the meal sheet opens with NEW MEAL / QUICK ADD; "See the reasoning ›";
   path tests per top task (`tests/browser/NavPaths.test.tsx`).
 - **Next:** slice 2 (BODY → DATA, COMMAND → MORE, "Back up my data"), slice 3 (sleep page by week),
   slice 4 (DATA layout, sync on numbers, tree-test re-run).
+
+---
+Previous checkpoint (SLEEP-FILING-001, #289 merged):
+
+# SLEEP-FILING-001 — real sleep, not quiet shifts
+
+- **Objective / authority:** [SLEEP-FILING-001](SLEEP-FILING-001.md); Gavin: "go sleep filing"
+  (2026-10-23), only while actually working. Builder: Claude Code, branch `claude/sleep-filing`.
+- **Built:** shift-aware, gap-aware Garmin sleep filing; Health history notes for uncounted sleep.
+- **Verified:** `npm run verify` green (2,923 passed / one skip, build OK); node suite green under
+  both TZ=UTC and TZ=America/Chicago.
+- **Next:** #289: CI, independent review, Gavin's merge. SYNC-001 (#287) is merged.
 
 ---
 Previous checkpoint:

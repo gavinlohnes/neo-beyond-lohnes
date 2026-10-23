@@ -44,12 +44,20 @@ Primary tabs become TODAY · TRAIN · DATA (was BODY) · MORE (was COMMAND).
 Every top task has a path test from TODAY by visible labels. Future UX choices are put to Gavin as
 2–4 concrete options and recorded in the brief's taste log. Shipped in slices. [Brief](agent/NAV-001.md).
 
+## SLEEP-FILING-001 — real sleep, not quiet shifts (owner approval 2026-10-23)
+
+A Garmin "sleep" overlapping a worked shift by an hour or more isn't counted as sleep (a watch can't
+tell a quiet stretch at work from sleep); days off, naps and sleep at any other time count as before.
+A sleep that starts with no lived day open is filed under the day it ends in. Health history says when
+and why a Garmin sleep isn't counted. [Brief](agent/SLEEP-FILING-001.md).
+
 ## SYNC-001 — current in two taps (owner go 2026-10-23)
 
 BEYOND's SYNC GARMIN link (Android) opens BEYOND Health Bridge, which reads when it opens and sends
 to BEYOND; you confirm the preview there. The helper says how current Garmin's sleep and steps are in
 Health Connect and to sync Garmin Connect when they're behind. No background sync; preview-before-write
 stays. [Brief](agent/SYNC-001.md).
+
 ## ROTATION-001 — runs, not calendar weeks (owner go 2026-10-23)
 
 Whole Picture gains a Rotation tab: recorded lived days grouped into work runs, days off and
