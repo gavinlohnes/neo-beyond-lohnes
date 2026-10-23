@@ -1,3 +1,4 @@
+import { openDetailedReviews } from "./helpers/review";
 import { afterEach, describe, expect, it } from "vitest";
 import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
@@ -22,6 +23,7 @@ afterEach(() => {
 describe("ReviewScreen (real browser)", () => {
   it("shows the empty state when no recommendation has ever been issued", async () => {
     const screen = await render(<ReviewScreen />);
+    await openDetailedReviews(screen);
     await expect.element(screen.getByText(/No recommendations yet/, { exact: false })).toBeVisible();
   });
 
@@ -34,10 +36,11 @@ describe("ReviewScreen (real browser)", () => {
     await recordRecommendation(day.id, second.recommendation);
 
     const screen = await render(<ReviewScreen />);
+    await openDetailedReviews(screen);
     await expect.element(screen.getByText("1 recommendation", { exact: false })).not.toBeInTheDocument();
     await expect.element(screen.getByText("2 recommendations", { exact: true })).toBeVisible();
 
-    await screen.getByRole("button", { name: "SHOW" }).click();
+    await screen.getByRole("button", { name: "SHOW", exact: true }).click();
     await expect.element(screen.getByText(first.recommendation.title, { exact: true }).first()).toBeVisible();
     await expect.element(screen.getByText("No action recorded · GOOD · Resolved", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("No action recorded · Not yet rated · Resolved", { exact: true })).toBeVisible();
@@ -50,12 +53,14 @@ describe("ReviewScreen (real browser)", () => {
     await rateOutcome(day.id, rec.recommendation.id, "NEUTRAL");
 
     let screen = await render(<ReviewScreen />);
-    await screen.getByRole("button", { name: "SHOW" }).click();
+    await openDetailedReviews(screen);
+    await screen.getByRole("button", { name: "SHOW", exact: true }).click();
     await expect.element(screen.getByText("No action recorded · NEUTRAL · Resolved", { exact: true })).toBeVisible();
 
     await screen.rerender(<></>);
     await screen.rerender(<ReviewScreen />);
-    await screen.getByRole("button", { name: "SHOW" }).click();
+    await openDetailedReviews(screen);
+    await screen.getByRole("button", { name: "SHOW", exact: true }).click();
     await expect.element(screen.getByText("No action recorded · NEUTRAL · Resolved", { exact: true })).toBeVisible();
   });
 });
@@ -69,6 +74,7 @@ describe("ReviewScreen (real browser) — narrow phone widths", () => {
 
     await page.viewport(width, 800);
     const screen = await render(<ReviewScreen />);
+    await openDetailedReviews(screen);
     await expect.element(screen.getByText("COMMAND // REVIEW", { exact: true })).toBeVisible();
 
     await expect.poll(() => document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
@@ -83,11 +89,12 @@ describe("ReviewScreen (real browser) — accessibility", () => {
     await rateOutcome(day.id, rec.recommendation.id, "GOOD");
 
     const screen = await render(<ReviewScreen />);
+    await openDetailedReviews(screen);
     await expect.element(screen.getByText("COMMAND // REVIEW", { exact: true })).toBeVisible();
     let results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
 
-    await screen.getByRole("button", { name: "SHOW" }).click();
+    await screen.getByRole("button", { name: "SHOW", exact: true }).click();
     await expect.element(screen.getByText("No action recorded · GOOD · Resolved", { exact: true })).toBeVisible();
     results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);

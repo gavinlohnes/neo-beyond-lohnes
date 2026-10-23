@@ -1,3 +1,4 @@
+import { WholePicture } from "./WholePicture";
 import { useEffect, useRef, useState } from "react";
 import { WeeklyDashboard } from "./WeeklyDashboard";
 import { ReviewAnswers } from "./ReviewAnswers";
@@ -35,8 +36,10 @@ export function ReviewScreen({ active = true, onOpenHistory }: { active?: boolea
   }
 
   return (
-    <div className="screen">
+    <div className="screen picture-review">
       <h1 className="eyebrow">COMMAND // REVIEW</h1>
+      <WholePicture active={active} onOpenHistory={onOpenHistory} />
+      <details className="picture-legacy"><summary>Weekly, monthly & detailed reviews</summary>
       <WeeklyDashboard active={active} onOpenHistory={onOpenHistory} />
       <ReviewAnswers active={active} onOpenHistory={onOpenHistory} />
       <h2 className="tool-label">RECOMMENDATIONS</h2>
@@ -107,6 +110,7 @@ export function ReviewScreen({ active = true, onOpenHistory }: { active?: boolea
           </div>
         );
       })}
+      </details>
     </div>
   );
 }
