@@ -16,4 +16,6 @@
   Careful maps to existing FEATURE without weakening Protected safeguards; TODAY-only mainline
   and explicit exclusions preserved. Link/diff checks, architecture and risk classification;
   independent exact-head review and unchanged required CI, then Gavin’s merge approval.
-- **PR / next:** pending; persist final review and CI evidence in PR before readiness.
+- **PR / next:** [#286](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/286); link/diff and
+  architecture checks pass; classifier confirms PROTECTED. Persist final review/CI evidence in
+  PR before readiness; Gavin approves merge.

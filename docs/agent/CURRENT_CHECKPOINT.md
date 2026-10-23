@@ -10,8 +10,12 @@
   Claude owns #284. Park parallel feature epics unless Gavin names them. SUIT-ALIVE/visual epics,
   boxed AI, ranked “what would help most,” new recommendation priority and new pushback schema
   are not authorized. #282 is direction documentation, not implementation permission.
-- **Status / next:** PR/verification pending. Independent exact-head review and green unchanged
-  required CI before readiness; Gavin approves merge. No product UI or parallel feature work.
+- **PR / verification:** [#286](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/286).
+  Local Markdown targets, diff check and architecture pass (298 files); classifier confirms
+  PROTECTED. Docs-only; unchanged required CI runs full verification. Final exact-head review
+  and CI evidence are recorded in #286 before readiness; Gavin approves merge.
+- **Next:** independent review and green CI, then owner merge approval. No product UI or
+  parallel feature work.
 
 ---
 Historical checkpoint (superseded status; retained for evidence):
