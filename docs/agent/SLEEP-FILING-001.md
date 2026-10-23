@@ -17,7 +17,8 @@
   wins. Health history's GARMIN SLEEP list says when and why a sleep isn't counted.
 - **Effect on existing records:** on the next import, an untouched Garmin-filled entry that now falls in
   a worked shift is withdrawn by the existing withdrawal rule; entries you corrected or replaced are
-  never touched. Garmin evidence is never deleted.
+  never touched. Garmin evidence is never deleted. Filing is re-evaluated at each import against the
+  current saved schedule, so changing your rotation can re-file untouched past Garmin entries then.
 - **Excluded:** asking with a button (log it in BODY → Sleep instead), actual work-ended times (the
   scheduled shift is used), shifts on days without a schedule window, Engine, schema.
 - **Acceptance:** pure and end-to-end tests (shift, gap, day off, explicit choice, threshold), browser

@@ -35,7 +35,8 @@ export function ImportedSleepEvidence({ active = true, refreshKey = 0 }: { activ
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
-    void Promise.all([getImportedSleep(), getUnfiledGarminSleep()]).then(([next, notCounted]) => { if (!cancelled) { setRows(next); setUnfiled(notCounted); setError(false); } }).catch(() => { if (!cancelled) setError(true); });
+    // The notes are extra: if they can't be read, the list still shows.
+    void Promise.all([getImportedSleep(), getUnfiledGarminSleep().catch(() => new Map<string, GarminSleepUnfiled>())]).then(([next, notCounted]) => { if (!cancelled) { setRows(next); setUnfiled(notCounted); setError(false); } }).catch(() => { if (!cancelled) setError(true); });
     return () => { cancelled = true; };
   }, [active, refreshKey, attempt]);
   if (!error && !rows.length) return null;

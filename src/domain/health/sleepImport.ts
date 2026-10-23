@@ -124,7 +124,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const MIN_GARMIN_SLEEP_MINUTES = 10;
 /** SLEEP-FILING-001: a lived day recorded as a work day and the shift it owns, epoch ms. */
 export interface ShiftWindow { dayId: string; start: number; end: number }
-/** A Garmin "sleep" overlapping a recorded shift by at least this much is asked about, not filed. */
+/** A Garmin "sleep" overlapping a worked shift by at least this much is not filed as sleep. */
 export const SHIFT_OVERLAP_MINUTES = 60;
 /** Garmin sleep left out of the day's sleep entries, and why. Very short sessions are not listed. */
 export type GarminSleepUnfiled =

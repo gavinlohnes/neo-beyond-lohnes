@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/persistence/db";
 import { correctSleep, logSleep, voidSleepLog } from "../../src/application/commands";
 import { importSleepSnapshot } from "../../src/application/externalSleepCommands";
+import { getUnfiledGarminSleep } from "../../src/application/externalSleepQueries";
 import { getSleepEntries } from "../../src/application/queries";
 import { assignGarminSleep, classifyGarminSleep } from "../../src/domain/health/sleepImport";
 import type { SleepLoggedPayload } from "../../src/domain/common/types";
@@ -14,7 +15,8 @@ import { syntheticSleep } from "../helpers/syntheticSleep";
 beforeEach(async () => { await db.open(); await db.transaction("rw", db.tables, async () => { for (const t of db.tables) await t.clear(); }); });
 afterEach(async () => { await db.delete(); });
 // A lived day starting 16:30 Chicago (21:30Z) on Oct 17; the synthetic sleep runs 07:00–08:00Z Oct 18.
-const day = { id: "day-1", startedAt: "2026-10-17T21:30:00Z", timezoneId: "America/Chicago", workContext: "WORK" as const, status: "ACTIVE" as const, createdAt: "2026-10-17T21:30:00Z", updatedAt: "2026-10-17T21:30:00Z" };
+// OFF: GARMIN-003 tests are about filing and precedence, not shifts (SLEEP-FILING-001); stays true in any TZ.
+const day = { id: "day-1", startedAt: "2026-10-17T21:30:00Z", timezoneId: "America/Chicago", workContext: "OFF" as const, status: "ACTIVE" as const, createdAt: "2026-10-17T21:30:00Z", updatedAt: "2026-10-17T21:30:00Z" };
 function sleep(id: string, start: string, end: string, modified = "2026-10-18T12:00:00Z") {
   const s = syntheticSleep();
   s.records = [{ ...s.records[0]!, id, startTime: start, endTime: end, lastModifiedTime: modified, stages: [] }];
@@ -87,8 +89,7 @@ describe("Garmin sleep fills in the day", () => {
 });
 
 describe("#266 review fixes", () => {
-  // A day off: its evening sleep isn't during a shift (SLEEP-FILING-001), so this stays a test of moving days.
-  const day2 = { ...day, id: "day-2", startedAt: "2026-10-18T21:30:00Z", workContext: "OFF" as const };
+  const day2 = { ...day, id: "day-2", startedAt: "2026-10-18T21:30:00Z" };
   const all = async () => (await db.events.where("type").equals("SLEEP_LOGGED").toArray());
   const active = async (dayId: string) => (await getSleepEntries(dayId)).map((e) => [e.kind, e.effectiveDurationMinutes, e.fromGarmin]);
 
@@ -154,7 +155,7 @@ describe("SLEEP-FILING-001 — shift-aware, gap-aware filing (owner approval 202
   // d1 was worked: its shift ran 23:00Z → 11:00Z (18:00–06:00 local).
   const shift = { dayId: "d1", start: Date.parse("2026-10-17T23:00:00Z"), end: Date.parse("2026-10-18T11:00:00Z") };
 
-  it("asks about a 'sleep' during a worked shift instead of filing it, and files sleep outside it", () => {
+  it("doesn't file a 'sleep' during a worked shift, and files sleep outside it", () => {
     const { assignments, unfiled } = classifyGarminSleep([d1, d2], [
       rec("at-work", "2026-10-18T02:47:00Z", "2026-10-18T08:24:00Z"), // inside the shift
       rec("after", "2026-10-18T12:55:00Z", "2026-10-18T20:51:00Z"), // after the shift: real sleep
@@ -182,12 +183,23 @@ describe("SLEEP-FILING-001 — shift-aware, gap-aware filing (owner approval 202
 
   it("end to end: a worked day's shift-time Garmin sleep isn't logged; a day off's is", async () => {
     const active = async (dayId: string) => (await getSleepEntries(dayId)).map((e) => [e.kind, e.effectiveDurationMinutes, e.fromGarmin]);
-    await db.beyondDays.add(day); // WORK, default schedule: shift 18:00–06:00 local
+    // WORK with the default schedule's 18:00–06:00 shift in the runtime's local zone: 02:00–08:00Z
+    // overlaps it by 4 h in UTC and 6 h in Chicago, so this holds in either.
+    await db.beyondDays.add({ ...day, workContext: "WORK" });
     await importSleepSnapshot(sleep("at-work", "2026-10-18T02:00:00Z", "2026-10-18T08:00:00Z"));
     expect(await active("day-1")).toEqual([]);
     await db.beyondDays.update("day-1", { workContext: "OFF" });
     await importSleepSnapshot(sleep("at-work", "2026-10-18T02:00:00Z", "2026-10-18T08:00:00Z", "2026-10-18T13:00:00Z"));
     expect(await active("day-1")).toEqual([["PRIMARY", 360, true]]);
+  });
+
+  it("doesn't list a sleep as uncounted while a Garmin entry for it still counts (e.g. one you corrected)", async () => {
+    await db.beyondDays.add(day); // OFF: the sleep is filed
+    await importSleepSnapshot(sleep("kept", "2026-10-18T02:00:00Z", "2026-10-18T08:00:00Z"));
+    const entry = (await getSleepEntries("day-1"))[0]!;
+    await correctSleep("day-1", entry.headEventId, 300);
+    await db.beyondDays.update("day-1", { workContext: "WORK" }); // now inside a worked shift
+    expect([...(await getUnfiledGarminSleep()).keys()]).toEqual([]);
   });
 });
 

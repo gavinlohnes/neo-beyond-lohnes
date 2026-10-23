@@ -3,7 +3,8 @@
 - **Objective / authority:** [SLEEP-FILING-001](SLEEP-FILING-001.md); Gavin: "go sleep filing"
   (2026-10-23), only while actually working. Builder: Claude Code, branch `claude/sleep-filing`.
 - **Built:** shift-aware, gap-aware Garmin sleep filing; Health history notes for uncounted sleep.
-- **Verified:** `npm run verify` green: 2,921 passed / one skip, build OK.
+- **Verified:** `npm run verify` green (2,923 passed / one skip, build OK); node suite green under
+  both TZ=UTC and TZ=America/Chicago.
 - **Next:** #289: CI, independent review, Gavin's merge. SYNC-001 (#287) is merged.
 
 ---
