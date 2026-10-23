@@ -1,3 +1,21 @@
+# REUSE-FIRST-002 — owner build direction, 2026-10-23
+
+- **Authority / Builder / lane:** Gavin’s explicit owner direction; Codex; PROTECTED docs-only.
+- **Branch / baseline:** `codex/reuse-first-002`, fresh master `fcc0d0d`; [brief](REUSE-FIRST-002.md).
+- **Direction:** reuse existing work/proven patterns by default; every new brief and PR description
+  states REUSE / OWN / BUILD FROM SCRATCH (one-sentence justification or none). Existing builder
+  gate, risk lanes and review retained; Routine stays thin; Careful presentation uses short
+  brief/tests; Protected safeguards remain. [Locked decision](../UX_DECISIONS.md#reuse-first-002--owner-build-direction-locked-2026-10-23).
+- **Mainline:** Whole Picture #283 and reuse-first #285 merged. First DELTA slice on TODAY only;
+  Claude owns #284. Park parallel feature epics unless Gavin names them. SUIT-ALIVE/visual epics,
+  boxed AI, ranked “what would help most,” new recommendation priority and new pushback schema
+  are not authorized. #282 is direction documentation, not implementation permission.
+- **Status / next:** PR/verification pending. Independent exact-head review and green unchanged
+  required CI before readiness; Gavin approves merge. No product UI or parallel feature work.
+
+---
+Historical checkpoint (superseded status; retained for evidence):
+
 # REUSE-FIRST-001 — reuse before invention
 
 - **Authority / lane / Builder:** Gavin’s “Make it so,” 2026-10-23; PROTECTED; Codex.

@@ -127,10 +127,16 @@ been solved, inside BEYOND or elsewhere, and can we legally reuse or adapt the s
    code when existing options do not adequately fit. Classify the decision:
    `BUILD OWNED` · `USE DEPENDENCY` · `ADAPT UPSTREAM` · `INTEGRATE PROVIDER` · `STANDARDIZE` ·
    `DEFER` · `REJECT`.
-4. Include a concise **Reuse decision** in the existing brief or PR: identify the existing code
-   and relevant alternatives checked, what will be reused/adapted, and why new custom work is
-   justified. Link concrete evidence where useful. For a trivial fix, a sentence identifying
-   the existing path being repaired is enough; no separate report or approval gate.
+4. Every new brief and PR description must include this concise disposition:
+   - **REUSE:** name the in-repo surface, proven product pattern or OSS primitive being matched.
+   - **OWN:** only the BEYOND-specific mapping to its events, rules and data.
+   - **BUILD FROM SCRATCH:** one sentence explaining why existing solutions do not fit, or `none`.
+   Link concrete evidence where useful. For trivial repairs, keep these entries short and identify
+   the existing path being repaired; no external search or separate report is required.
+
+Prefer legally reusable behavior and proven patterns by default. Own what is specifically BEYOND:
+Engine semantics, the lived-day model, provenance, owner-wins Garmin reconciliation, local-first
+behavior and FIELD doctrine. This is a reuse boundary, not permission to alter those safeguards.
 
 Check licenses and attribution (including separately licensed data/assets), privacy/security,
 compatibility, performance and lifetime maintenance cost. Respect access controls and proprietary
