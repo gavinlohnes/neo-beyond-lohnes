@@ -31,6 +31,19 @@ Parallel feature epics are parked unless Gavin names them. Earlier approval of a
 including DELTA-ADVANCED, is not implementation authority. This process lock is docs-only and
 does not expand any product/UI scope. See [the brief](agent/REUSE-FIRST-002.md).
 
+## NAV-001 — find anything in two taps (owner approval 2026-10-23, Protected IA)
+
+Primary tabs become TODAY · TRAIN · DATA (was BODY) · MORE (was COMMAND).
+
+- **TODAY:** one floating **+** for every log, bottom-right. The meal sheet opens with NEW MEAL.
+  The suggestion's reasoning is a visible "See the reasoning ›".
+- **DATA:** one page per number, opening on this week (D/W/M/Y + swipe), your rotation, the whole
+  picture and health history.
+- **MORE:** starts with "Back up my data".
+
+Every top task has a path test from TODAY by visible labels. Future UX choices are put to Gavin as
+2–4 concrete options and recorded in the brief's taste log. Shipped in slices. [Brief](agent/NAV-001.md).
+
 ## SYNC-001 — current in two taps (owner go 2026-10-23)
 
 BEYOND's SYNC GARMIN link (Android) opens BEYOND Health Bridge, which reads when it opens and sends

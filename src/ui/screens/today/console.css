@@ -95,10 +95,14 @@
 .today-banners .backup-due__row { padding-block: 4px; }
 .today-field .signal-row, .today-field .today-situation { border-left-color: var(--border-strong); }
 
-/* POLISH-002: "How BEYOND decided" in the prototype's quiet style. */
+/* POLISH-002: the reasoning disclosure in the prototype's quiet style. NAV-001: brighter, with a
+   drill-in chevron, so it reads as something to tap (Gavin couldn't find WHY in the tree test). */
 .next-action-card > .why { margin-top: 10px; padding-top: 0; border-top: 0; font-size: 13px; color: var(--p-t2); }
 .next-action-card > .why > summary { min-height: 36px; display: flex; align-items: center; list-style: none; font-size: 13px; letter-spacing: .06em; color: var(--p-t2); }
 .next-action-card > .why > summary::-webkit-details-marker { display: none; }
+.next-action-card > .why > summary { color: var(--p-t1); text-decoration: underline; text-decoration-color: var(--p-line-2); text-underline-offset: 4px; }
+.next-action-card > .why > summary::after { content: "›"; margin-left: 6px; text-decoration: none; display: inline-block; transition: transform .15s; }
+.next-action-card > .why[open] > summary::after { transform: rotate(90deg); }
 .next-action-card > div:last-of-type:empty { display: none; }
 
 /* POLISH-002: phase rows and Tools as the prototype's full-width .row list. */
@@ -140,7 +144,7 @@
 .command-console.today-field .next-action-card.command-surface { padding: 14px; min-height: 0; margin: 0;
   background: linear-gradient(225deg, transparent 9.9px, var(--p-line) 9.9px, var(--p-line) 11.1px, var(--p-s1) 11.1px);
   border: 1px solid var(--p-line); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
-/* Fold: "Not now" shares the "How BEYOND decided" row; the numbers hint shares the label row. */
+/* Fold: "Not now" shares the "See the reasoning" row; the numbers hint shares the label row. */
 .next-action-card .cc-decline { order: 11; align-self: flex-end; margin: -40px 0 0; min-height: 44px; padding: 0 2px 0 12px; border: 0; background: none; color: var(--p-t2); font: inherit; font-size: 13px; letter-spacing: .1em; cursor: pointer; }
 .cc-numbers-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .cc-numbers-head .cc-hint { margin: 0; font-size: 11px; letter-spacing: .04em; text-transform: none; }

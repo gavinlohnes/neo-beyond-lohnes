@@ -66,7 +66,7 @@ it("keeps a failed water sheet open for one safe retry", async () => {
 
 async function fillMeal(screen: Awaited<ReturnType<typeof render>>) {
   await screen.getByRole("button", { name: "Log a meal", exact: true }).click();
-  await screen.getByRole("dialog").getByRole("button", { name: "New meal", exact: true }).click();
+  await screen.getByRole("dialog").getByRole("button", { name: "NEW MEAL", exact: true }).click();
   await screen.getByRole("textbox", { name: "New meal name" }).fill("Shift dinner");
   await screen.getByRole("spinbutton", { name: "New meal Calories", exact: true }).fill("600");
   await screen.getByRole("spinbutton", { name: "New meal Protein (g)", exact: true }).fill("45");
@@ -141,7 +141,7 @@ it("holds header/card/numbers/actions order and the phone fold in every pinned m
       expect(card.bottom).toBeLessThanOrEqual(actions.top);
       expect(actions.bottom).toBeLessThanOrEqual(numbers.top);
       expect(actions.bottom).toBeLessThanOrEqual(height! - 64);
-      // POLISH-002 review: "How BEYOND decided" keeps a full 44px target while the fold holds.
+      // POLISH-002 review: "See the reasoning" keeps a full 44px target while the fold holds.
       expect(document.querySelector(".console-guidance .why > summary")!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       // POLISH-002: buildings stand below the mode name and meta, as in the prototype; the beam
       // marks a real action, and goes dark ON SHIFT.

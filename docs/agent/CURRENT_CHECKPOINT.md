@@ -1,3 +1,15 @@
+# NAV-001 — slice 1: TODAY
+
+- **Objective / authority:** [NAV-001](NAV-001.md); Gavin approved the map on 2026-10-23 (Protected IA).
+  Builder: Claude Code, branch `claude/nav-001`. SLEEP-FILING-001 (#289) is separate and pending merge.
+- **Built:** a floating + LOG; the meal sheet opens with NEW MEAL / QUICK ADD; "See the reasoning ›";
+  path tests per top task (`tests/browser/NavPaths.test.tsx`).
+- **Next:** slice 2 (BODY → DATA, COMMAND → MORE, "Back up my data"), slice 3 (sleep page by week),
+  slice 4 (DATA layout, sync on numbers, tree-test re-run).
+
+---
+Previous checkpoint:
+
 # SYNC-001 — current in two taps
 
 - **Objective / authority:** [SYNC-001](SYNC-001.md); Gavin: "go SYNC-001" (2026-10-23).

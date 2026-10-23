@@ -154,6 +154,11 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       {(target === "meal" || target === "myMeals") && <>
         {page !== "list" && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPage("list")}>BACK TO MY MEALS</button>}
         {page === "list" && <>
+          {/* NAV-001: starting a new meal comes first, not after the whole list. */}
+          <div className="record-meal-start">
+            <button type="button" className="btn-primary" onClick={() => { if (!form.name) setForm({ ...form, name: query.trim() }); setPage("new"); }}>NEW MEAL{query.trim() ? ` ‘${query.trim()}’` : ""}</button>
+            <button type="button" className="btn-secondary" onClick={() => setPage("quick")}>QUICK ADD</button>
+          </div>
           <label className="field">Search your meals<input className="input" type="search" aria-label="Search your meals" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
           {readState === "loading" ? <p role="status">Reading meals…</p> : readState === "error" ? <p role="alert">Could not read your meals.<button type="button" className="btn-secondary" onClick={() => setRetry((key) => key + 1)}>RETRY MEALS</button></p> : <>
             <h3>{target === "myMeals" ? "MY MEALS" : query.trim() ? "MATCHES" : "LIKELY NOW"}</h3>
@@ -163,9 +168,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
             </div>)}
             {!displayed.length && <p>No matching meals.</p>}
           </>}
-          <button type="button" className="today-sheet__option" onClick={() => setPage("quick")}>QUICK ADD</button>
           <button type="button" className="btn-secondary" onClick={() => { setBodyFocus("meal"); setBodyRequest((key) => key + 1); setPage("mealTools"); }}>More meal tools & corrections</button>
-          <button type="button" className="today-sheet__option" onClick={() => { if (!form.name) setForm({ ...form, name: query.trim() }); setPage("new"); }}>New meal{query.trim() ? ` ‘${query.trim()}’` : ""}</button>
         </>}
         {(page === "new" || page === "quick") && <>
           <p className="meta">Carbs and fat default to 0 when not entered.</p>
@@ -212,6 +215,8 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   </>;
 }
 
+/** NAV-001: WATER and MEAL stay as one-tap shortcuts; LOG is the floating + for every record type. */
 export function LogActions({ open, busy = false, isInFlight = () => busy }: { open: (target: RecordSheetTarget) => void; busy?: boolean; isInFlight?: () => boolean }) {
-  return <div className="console-controls cc-actions" role="group" aria-label="Log actions">{([['water', 'WATER'], ['meal', 'MEAL'], ['log', 'LOG']] as const).map(([target, label]) => <button type="button" className="cc-act" aria-label={target === 'water' ? 'Log water' : target === 'meal' ? 'Log a meal' : 'Open LOG'} aria-haspopup="dialog" disabled={busy} key={target} onClick={() => { if (!isInFlight()) open(target); }}>{CcIcon[target === "log" ? "plus" : target === "meal" ? "meal" : "water"]()}{label}</button>)}</div>;
+  return <div className="console-controls cc-actions cc-actions--two" role="group" aria-label="Log actions">{([['water', 'WATER'], ['meal', 'MEAL'], ['log', 'LOG']] as const).map(([target, label]) => <button type="button" className={target === "log" ? "cc-act cc-fab" : "cc-act"} aria-label={target === 'water' ? 'Log water' : target === 'meal' ? 'Log a meal' : 'Open LOG'} aria-haspopup="dialog" disabled={busy} key={target} onClick={() => { if (!isInFlight()) open(target); }}>{CcIcon[target === "log" ? "plus" : target === "meal" ? "meal" : "water"]()}{label}</button>)}</div>;
 }
+

@@ -140,7 +140,7 @@ export function RecommendationCard({
         // FIELD-AUTHORITY-001: an all-clear earns no red; its acknowledgement is neutral.
         ? <button type="button" className="btn-secondary" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>
         : <button type="button" className="cc-decline" disabled={busy} onClick={onDecline}>{DECLINE_LABEL}</button>)}
-      <WhyDisclosure summary="How BEYOND decided" style={{ marginTop: nextAction ? 2 : 12 }}>
+      <WhyDisclosure summary="See the reasoning" style={{ marginTop: nextAction ? 2 : 12 }}>
         {/* DELTA-002 slice 1: the plain answer first; the rules in detail stay below. */}
         <div className="why-plain" data-why-plain>{explainRecommendation(recommendation, checkIn).map((line) => <p key={line}>{line}</p>)}</div>
         {nextAction && <>{evidenceBasis && <p className="meta">{evidenceBasis}</p>}<p className="meta">{describeRecommendationEffect(recommendation.kind)}</p>

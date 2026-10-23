@@ -164,7 +164,7 @@ describe("accessibility (real browser, axe-core)", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await screen.getByText("How BEYOND decided", { exact: true }).click();
+    await screen.getByText("See the reasoning", { exact: true }).click();
     await expect.element(screen.getByText("State input", { exact: true })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
