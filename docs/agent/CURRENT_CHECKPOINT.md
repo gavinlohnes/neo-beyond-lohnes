@@ -8,7 +8,7 @@
   display only. No Engine/schema/logging/Garmin/backup semantics change.
 - **REUSE:** measured charts/queries, SleepEvidence, LogSheet; **OWN:** period-to-evidence mapping;
   **BUILD FROM SCRATCH:** period navigation because existing charts use fixed ranges.
-- **PR / verification:** pending; implementation starting. Next: focused and production evidence,
+- **PR / verification:** [#292](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/292), draft pushed early. Architecture/typecheck PASS; calendar tests 4/4 and Garmin regression 6/6 PASS. Focused journey first run 17 pass / 3 test-harness failures; correcting selectors and browser-compatible failure injection. Next: focused and production evidence,
   full verification, independent exact-head review and green CI; Gavin approves this merge.
 
 ---

@@ -6,7 +6,6 @@ import axe from "axe-core";
 import "../../src/ui/styles/fonts";
 import { App } from "../../src/app/App";
 import { SleepMetricSheet } from "../../src/ui/screens/today/SleepMetricSheet";
-import * as measuredQueries from "../../src/application/measuredQueries";
 import { importSleepSnapshot } from "../../src/application/externalSleepCommands";
 import { logSleep, startDay } from "../../src/application/commands";
 import { db } from "../../src/persistence/db";
@@ -37,7 +36,7 @@ describe("NAV-001 sleep metric", () => {
     await expect.element(sheet.getByRole("button", { name: "Week", exact: true })).toHaveAttribute("aria-pressed", "true");
     await expect.element(sheet.getByText("Week of Mon, Oct 19", { exact: true })).toBeVisible();
     await sheet.getByRole("button", { name: "ALL SLEEP RECORDS", exact: true }).click();
-    await expect.element(screen.getByRole("heading", { name: "DATA // PROGRESS", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "PROGRESS", exact: true })).toBeVisible();
     expect(await db.events.toArray()).toEqual(before);
   });
 
@@ -48,6 +47,7 @@ describe("NAV-001 sleep metric", () => {
     const bar = bars.at(-1)!; const label = bar.getAttribute("aria-label")!;
     bar.focus(); bar.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
     await expect.element(sheet.getByRole("button", { name: "Day", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(() => document.activeElement === sheet.element().querySelector(".sleep-period-navigation p")).toBe(true);
     await expect.element(sheet.getByRole("article", { name: "Imported Garmin sleep" })).toBeVisible();
     await expect.element(sheet.getByRole("img", { name: /^Sleep stages from/ })).toBeVisible();
     await expect.element(sheet.getByText(label.split(" · ")[0]!, { exact: true }).first()).toBeVisible();
@@ -90,17 +90,17 @@ describe("NAV-001 sleep metric", () => {
     await expect.element(sheet.getByText("0 measured nights · Garmin", { exact: true })).toBeVisible();
     await expect.element(sheet.getByText(/Not enough data/)).toBeVisible();
     await sheet.getByRole("button", { name: "ALL SLEEP RECORDS", exact: true }).click();
-    await expect.element(screen.getByRole("heading", { name: "DATA // PROGRESS", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "PROGRESS", exact: true })).toBeVisible();
     expect(await db.events.toArray()).toEqual(before);
   });
 
   it("offers retry on a read failure without pretending there is no data", async () => {
-    const read = vi.spyOn(measuredQueries, "getMeasuredSnapshot").mockRejectedValueOnce(new Error("read failed"));
+    vi.spyOn(db.externalSleepRecords, "toArray").mockRejectedValueOnce(new Error("read failed"));
     const screen = await render(<SleepMetricSheet open onClose={() => {}} />); const sheet = sheetOf(screen);
     await expect.element(sheet.getByRole("alert")).toHaveTextContent("Sleep could not be read");
     await sheet.getByRole("button", { name: "RETRY SLEEP", exact: true }).click();
     await expect.element(sheet.getByText("0 measured nights · Garmin", { exact: true })).toBeVisible();
-    expect(read).toHaveBeenCalledTimes(2);
+    expect(await db.events.count()).toBe(0);
   });
 
   it.each([[320, 640], [390, 844], [844, 390], [1280, 800]])("fits and remains accessible at %sx%s", async (width, height) => {

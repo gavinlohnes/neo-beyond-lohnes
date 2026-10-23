@@ -19,6 +19,8 @@ export function SleepMetricSheet({ open, onClose, onAllRecords }: {
 }) {
   const [data, setData] = useState<Data | null>(null), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const [zoom, setZoom] = useState<SleepZoom>("W"), [anchor, setAnchor] = useState(0), [limit, setLimit] = useState(10);
+  const periodHeading = useRef<HTMLParagraphElement>(null);
+  const focusPeriod = useRef(false);
   const suppressClick = useRef(false);
   const pointer = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
@@ -39,7 +41,8 @@ export function SleepMetricSheet({ open, onClose, onAllRecords }: {
     if (direction === -1 ? !canEarlier : !canLater) return;
     setAnchor(moveSleepWindow(anchor, zoom, direction)); setLimit(10);
   }
-  function select(bar: PeriodValue) { setAnchor(bar.from); setZoom(zoom === "Y" ? "M" : "D"); setLimit(10); }
+  function select(bar: PeriodValue) { focusPeriod.current = true; setAnchor(bar.from); setZoom(zoom === "Y" ? "M" : "D"); setLimit(10); }
+  useEffect(() => { if (focusPeriod.current) { focusPeriod.current = false; periodHeading.current?.focus({ preventScroll: true }); } }, [zoom, anchor]);
   const selectedDay = days[0];
   const nights = data && zoom === "D" && selectedDay ? data.records.filter((r) => {
     const start = Date.parse(r.evidence.startTime); return start >= selectedDay.from && start < selectedDay.to;
@@ -57,7 +60,7 @@ export function SleepMetricSheet({ open, onClose, onAllRecords }: {
       </div>
       <div className="sleep-period-navigation">
         <button type="button" className="btn-secondary" aria-label="Earlier sleep period" disabled={!canEarlier} onClick={() => move(-1)}>‹</button>
-        <p className="meta" aria-live="polite">{title}</p>
+        <p ref={periodHeading} tabIndex={-1} className="meta" aria-live="polite">{title}</p>
         <button type="button" className="btn-secondary" aria-label="Later sleep period" disabled={!canLater} onClick={() => move(1)}>›</button>
       </div>
       <div className="sleep-period-chart" onClickCapture={(e) => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation(); suppressClick.current = false; } }} onPointerDown={(e) => { suppressClick.current = false; pointer.current = { x: e.clientX, y: e.clientY }; }} onPointerCancel={() => { pointer.current = null; }} onPointerUp={(e) => {
