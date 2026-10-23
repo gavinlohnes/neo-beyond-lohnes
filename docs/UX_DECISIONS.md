@@ -59,8 +59,13 @@ history was overwhelming routine mobile screens.
   TRAIN · tag stays where an item leaves COMMAND.
 - **Plain dates on Plan today and the weekly summary (FRICTION-001 slice 4):** Plan today names the
   day ("Thu, Oct 22"), not an ISO date; the Weekly summary and the weekly review's record count no
-  longer state the 16:30 boundary. Other 16:30 lines (Review's period text, TODAY's pin and reset
-  times) are unchanged.
+  longer state the 16:30 boundary. Other 16:30 lines (Review's period text, Minimum Day, and the
+  TODAY/SYSTEMS pin and reset times) are unchanged.
+- **A Garmin night is as fresh as its wake time (FRICTION-001 slice 5, owner approval 2026-10-22):**
+  the last-main-sleep 36 h window counts from when the sleep ended (Garmin's wake time, or your own
+  entry's log time), never from the import; SYSTEMS shows "Garmin · woke HH:MM".
+- **The PARTIAL rotation note appears when PARTIAL is a real choice (slice 5, owner approval
+  2026-10-22):** after a set is logged and before the workout is complete.
 
 ## GARMIN-005 — eaten vs burned (owner approved 2026-10-22)
 

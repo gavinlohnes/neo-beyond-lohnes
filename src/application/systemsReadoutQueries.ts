@@ -26,7 +26,7 @@ export const SESSIONS_WINDOW_DAYS = 7;
 
 export interface SystemsReadout {
   day: BeyondDay | null;
-  lastMainSleep: { minutes: number; recordedAt: string } | null;
+  lastMainSleep: { minutes: number; recordedAt: string; occurredAt: string; fromGarmin: boolean } | null;
   /** null without an active day: there is no "today" to total. */
   proteinG: number | null;
   proteinTargetG: number | undefined;
