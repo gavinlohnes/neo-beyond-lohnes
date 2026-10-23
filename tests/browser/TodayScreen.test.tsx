@@ -249,10 +249,10 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     expect(waterEvents).toHaveLength(2);
     expect(waterEvents.at(-1)?.payload).toMatchObject({ amountOz: 12 });
 
-    // UNDO-001: UNDO for the first 5 seconds, then CORRECT IN BODY.
+    // UNDO-001: UNDO for the first 5 seconds, then CORRECT IN DATA.
     await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "CORRECT IN BODY" }), { timeout: 8000 }).toBeVisible();
-    await screen.getByRole("button", { name: "CORRECT IN BODY" }).click();
+    await expect.element(screen.getByRole("button", { name: "CORRECT IN DATA" }), { timeout: 8000 }).toBeVisible();
+    await screen.getByRole("button", { name: "CORRECT IN DATA" }).click();
     expect(onOpenBody).toHaveBeenCalledOnce();
   });
 

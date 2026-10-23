@@ -119,11 +119,11 @@ it('keeps note entry available as a sheet over TODAY with its draft after close'
 it('keeps displaced daily controls reachable in COMMAND without rendering them on TODAY', async () => {
   await startDay();
   const screen = await render(<App />);
-  await screen.getByRole('button', { name: 'COMMAND', exact: true }).click();
+  await screen.getByRole('button', { name: 'MORE', exact: true }).click();
   await screen.getByRole('searchbox', { name: 'Find a screen or action' }).fill('TODAY TOOLS');
   await screen.getByRole('button', { name: /^TODAY TOOLS / }).click();
   await expect.element(screen.getByRole('button', { name: 'Open END DAY', exact: true })).toBeVisible();
-  await expect.element(screen.getByRole('button', { name: 'COMMAND', exact: true })).toHaveAttribute('aria-current', 'page');
+  await expect.element(screen.getByRole('button', { name: 'MORE', exact: true })).toHaveAttribute('aria-current', 'page');
 });
 
 it('FIELD-AUTHORITY-001: missing guidance is calm, log-first, with one quiet check-in and no red', async () => {
@@ -185,7 +185,7 @@ it('keeps short-sleep System Status separate from all-clear Engine guidance over
   await expect.element(screen.getByRole('button', { name: 'GOT IT', exact: true })).toBeVisible();
   const status = screen.getByRole('button', { name: /STATUS · RED · 3h sleep/ }); await expect.element(status).toBeVisible();
   const before = await db.events.toArray(); await status.click();
-  await expect.element(screen.getByRole('heading', { name: 'COMMAND // SYSTEMS', exact: true })).toBeVisible();
+  await expect.element(screen.getByRole('heading', { name: 'MORE // SYSTEMS', exact: true })).toBeVisible();
   expect(await db.events.toArray()).toEqual(before);
 });
 

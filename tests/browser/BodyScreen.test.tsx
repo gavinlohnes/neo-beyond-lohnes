@@ -311,11 +311,11 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
   });
 
   it("reads saved targets for calorie progress, but protein stays unresolved until a bodyweight is logged", async () => {
-    // DECLUTTER Drop 3: targets are set in COMMAND → Settings now; BODY only reads them.
+    // DECLUTTER Drop 3: targets are set in MORE → Settings now; BODY only reads them.
     await updateNutritionTargets({ calorieTargetKcal: 2200, proteinMultiplierGPerLb: 0.9 });
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
-    await expect.element(screen.getByText("Nutrition targets are editable in COMMAND → Settings.", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "SHOW OTHER DATA TOOLS" }).click();
+    await expect.element(screen.getByText("Nutrition targets are editable in MORE → Settings.", { exact: true })).toBeVisible();
 
     await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
     await expect.element(screen.getByText("No target yet · a weigh-in sets it.", { exact: true })).toBeVisible();
@@ -557,7 +557,7 @@ describe("BodyScreen (real browser) — MY MEALS", () => {
  */
 describe("BodyScreen (real browser) — ADD MEAL (BODY-UX-001, amended by TONIGHT-001)", () => {
   // TONIGHT-001 (owner ruling, 2026-10-19): the online lookup left the meal screen, so
-  // manual macros are ADD MEAL's direct path; COMMAND → FOOD LOOKUP opens the lookup.
+  // manual macros are ADD MEAL's direct path; MORE → FOOD LOOKUP opens the lookup.
   it("opening ADD MEAL shows the manual macro fields directly, with no online lookup", async () => {
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
@@ -843,14 +843,14 @@ describe("BodyScreen (real browser) — Drop 6 quit tracker", () => {
 
   it("before setup, the row points to MORE → Settings", async () => {
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
-    await expect.element(screen.getByText("Set it up in COMMAND → Settings", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "SHOW OTHER DATA TOOLS" }).click();
+    await expect.element(screen.getByText("Set it up in MORE → Settings", { exact: true })).toBeVisible();
   });
 
   it("hold logs a clean day, taps log urges with undo, and money saved adds up", async () => {
     await saveQuitHabit({ name: "Drinking", dailyCostUsd: 7 });
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
+    await screen.getByRole("button", { name: "SHOW OTHER DATA TOOLS" }).click();
     await expect.element(screen.getByText("0 clean days this month · $0 saved", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "Open QUIT: DRINKING" }).click();
 
@@ -873,7 +873,7 @@ describe("BodyScreen (real browser) — Drop 6 quit tracker", () => {
   it("Drop 4: after an urge, the owner's own plan for that trigger shows with one optional tap", async () => {
     await saveQuitHabit({ name: "Drinking", ifThenPlans: { AFTER_SHIFT: "Shower and eat first" } });
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
+    await screen.getByRole("button", { name: "SHOW OTHER DATA TOOLS" }).click();
     await screen.getByRole("button", { name: "Open QUIT: DRINKING" }).click();
 
     // No plan for Stress: nothing extra appears.
@@ -894,7 +894,7 @@ describe("BodyScreen (real browser) — Drop 6 quit tracker", () => {
   it("never mentions a streak, a reset, or a slip", async () => {
     await saveQuitHabit({ name: "Drinking" });
     const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "SHOW OTHER BODY TOOLS" }).click();
+    await screen.getByRole("button", { name: "SHOW OTHER DATA TOOLS" }).click();
     await screen.getByRole("button", { name: "Open QUIT: DRINKING" }).click();
     await expect.element(screen.getByRole("button", { name: "LOG A CLEAN DAY" })).toBeVisible();
     expect(screen.getByText(/streak|relapse|slip|reset|failed/i).elements()).toHaveLength(0);

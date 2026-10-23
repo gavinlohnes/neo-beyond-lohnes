@@ -22,7 +22,7 @@ async function photoBlob(): Promise<Blob> {
 }
 async function openMoreQuestions() {
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "MORE", exact: true }).click();
   await (await commandResult(screen, "REVIEW")).click();
   await openDetailedReviews(screen);
   await screen.getByText("More questions", { exact: true }).click();
@@ -57,7 +57,7 @@ for (const width of [320, 360, 412]) it(`answers the Body questions from recorde
   await screen.getByText("Am I losing fat, not muscle?", { exact: true }).click();
   await expect.element(screen.getByText("No verdict · the changes BEYOND can see, side by side", { exact: true })).toBeVisible();
   await expect.element(screen.getByText("BEYOND does not measure fat or muscle. Here is what it can see. You draw the conclusion.", { exact: true })).toBeVisible();
-  await expect.element(screen.getByText("1 pose with 2+ photos to compare in BODY", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("1 pose with 2+ photos to compare in DATA", { exact: true })).toBeVisible();
 
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   for (const animation of document.getAnimations()) animation.finish();
@@ -73,5 +73,5 @@ it("says what is still needed when nothing is recorded, and never guesses", asyn
   expect(screen.getByText("Not recorded", { exact: true }).elements().length).toBeGreaterThanOrEqual(2);
   await expect.element(screen.getByText("Building up · needs 2 photos in the same pose (0 visible)", { exact: true })).toBeVisible();
   await screen.getByText("Is my waist getting smaller?", { exact: true }).click();
-  await expect.element(screen.getByText("Record one in BODY → Your progress → Measurements.", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("Record one in DATA → Your progress → Measurements.", { exact: true })).toBeVisible();
 });

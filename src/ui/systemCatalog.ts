@@ -35,13 +35,13 @@ export type Capability = {
 };
 
 export const SYSTEM_CAPABILITIES = [
-  { label: "WATER", description: "BODY · Add water to today", aliases: ["drink", "hydration"], group: "Log", destination: { kind: "body", focus: "water" } },
-  { label: "MEAL", description: "BODY · Saved meals or manual entry", aliases: ["food", "nutrition", "protein", "eat"], group: "Log", destination: { kind: "body", focus: "meal" } },
-  { hiddenFeature: "foodLookup", label: "FOOD LOOKUP", description: "BODY · Search the online USDA food database", aliases: ["usda", "food search", "lookup", "macros"], group: "Log", destination: { kind: "body", focus: "foodLookup" } },
-  { label: "SLEEP", description: "BODY · Main sleep and naps", aliases: ["nap", "rest", "bed"], group: "Log", destination: { kind: "body", focus: "sleep" } },
-  { label: "BODYWEIGHT", description: "BODY · Weight logging and trends", aliases: ["weigh in", "weigh-in", "weight", "scale"], group: "Log", destination: { kind: "body", focus: "weight" } },
+  { label: "WATER", description: "DATA · Add water to today", aliases: ["drink", "hydration"], group: "Log", destination: { kind: "body", focus: "water" } },
+  { label: "MEAL", description: "DATA · Saved meals or manual entry", aliases: ["food", "nutrition", "protein", "eat"], group: "Log", destination: { kind: "body", focus: "meal" } },
+  { hiddenFeature: "foodLookup", label: "FOOD LOOKUP", description: "DATA · Search the online USDA food database", aliases: ["usda", "food search", "lookup", "macros"], group: "Log", destination: { kind: "body", focus: "foodLookup" } },
+  { label: "SLEEP", description: "DATA · Main sleep and naps", aliases: ["nap", "rest", "bed"], group: "Log", destination: { kind: "body", focus: "sleep" } },
+  { label: "BODYWEIGHT", description: "DATA · Weight logging and trends", aliases: ["weigh in", "weigh-in", "weight", "scale"], group: "Log", destination: { kind: "body", focus: "weight" } },
   { label: "NOTE", description: "TODAY · Quick Capture", aliases: ["capture", "thought", "idea", "handoff"], group: "Log", destination: { kind: "capture" } },
-  { label: "URGE", description: "BODY · Quit tracker entry", aliases: ["quit", "habit", "craving"], group: "Log", destination: { kind: "body", focus: "urge" } },
+  { label: "URGE", description: "DATA · Quit tracker entry", aliases: ["quit", "habit", "craving"], group: "Log", destination: { kind: "body", focus: "urge" } },
   { label: "SYSTEMS", description: "Sleep, fuel, training, state and device readings", aliases: ["status", "system status", "readout", "readings", "suit", "connection", "offline"], group: "Systems", destination: { kind: "more", view: "SYSTEMS" } },
   { label: "STEALTH", description: "Hide your numbers. Long-press the emblem anytime", aliases: ["hide", "privacy", "discreet", "screen"], group: "On shift", destination: { kind: "stealth" } },
   { label: "TODAY TOOLS", description: "Every daily control in one place", aliases: ["check in", "check-in", "minimum day", "end day", "shift down", "reset"], group: "On shift", destination: { kind: "tools" } },
@@ -53,7 +53,7 @@ export const SYSTEM_CAPABILITIES = [
   { label: "MISSIONS & OBLIGATIONS", description: "Commitments and intent", aliases: ["mission", "obligation", "commitment", "goal"], group: "Plan", destination: { kind: "more", view: "INTENT" } },
   { label: "WORK SCHEDULE", description: "Your standing schedule", aliases: ["shift", "schedule", "rotation"], group: "Plan", destination: { kind: "more", view: "WORK_SCHEDULE" } },
   { label: "IMPORT HEALTH DATA", description: "Preview Garmin data from the helper before saving", aliases: ["import", "health connect", "garmin"], group: "Review", destination: { kind: "more", view: "HEALTH_IMPORT" } },
-  { label: "BODY", description: "Nutrition, water, sleep and bodyweight", aliases: ["daily record", "health"], group: "Review", destination: { kind: "workspace", tab: "BODY" } },
+  { label: "DATA", description: "Nutrition, water, sleep and bodyweight", aliases: ["body", "daily record", "health"], group: "Review", destination: { kind: "workspace", tab: "BODY" } },
   { label: "WEEKLY CHECK-IN", description: "Weekly progress, observations and Mirror", aliases: ["week", "mirror", "progress"], group: "Review", destination: { kind: "more", view: "WEEKLY" } },
   { label: "REVIEW", description: "Weekly review, recorded evidence and recommendations", aliases: ["review", "weekly review", "recommendation", "rating", "decision", "evidence"], group: "Review", destination: { kind: "more", view: "REVIEW" } },
   { label: "HISTORY", description: "Every record, in order", aliases: ["timeline", "past"], group: "Review", destination: { kind: "more", view: "HISTORY" } },

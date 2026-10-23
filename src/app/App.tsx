@@ -44,6 +44,9 @@ type Tab = "TODAY" | "TRAIN" | "BODY" | "COMMAND";
 // any of them) — see Icon.tsx. All four primary destinations have a
 // real glyph now, so this is a complete Record, not Partial.
 // POLISH-002: the prototype's tab glyphs.
+// NAV-001 slice 2: presentation labels only; retained keys preserve history/shortcut compatibility.
+const TAB_LABEL: Record<Tab, string> = { TODAY: "TODAY", TRAIN: "TRAIN", BODY: "DATA", COMMAND: "MORE" };
+
 const CC_TAB_ICON: Record<Tab, () => React.ReactNode> = {
   TODAY: CcIcon.today,
   TRAIN: CcIcon.train,
@@ -551,7 +554,7 @@ function AppWorkspaces() {
     // The origin is used once; a later shortcut records a new one. No inputs are discarded.
     const destination = mealOrigin?.tab ?? "TODAY";
     if (mealOrigin) positions.current[destination] = { ...mealOrigin, trigger: mealOrigin.trigger?.isConnected
-      ? mealOrigin.trigger : destination === "TODAY" ? document.querySelector<HTMLElement>(bodyFocus === "water" ? '[aria-label="Log water in BODY"]' : '[aria-label="Log a meal in BODY"]') : taskFocus.current[destination] ?? null };
+      ? mealOrigin.trigger : destination === "TODAY" ? document.querySelector<HTMLElement>(bodyFocus === "water" ? '[aria-label="Log water in DATA"]' : '[aria-label="Log a meal in DATA"]') : taskFocus.current[destination] ?? null };
     showTab(destination);
     setMealOrigin(null);
     setTodayRefreshKey((key) => key + 1);
@@ -685,7 +688,7 @@ function AppWorkspaces() {
                 className={`shell-nav__item${tab === t ? " shell-nav__item--active" : ""}`}
               >
                 <TabIcon />
-                <span>{t}</span>
+                <span>{TAB_LABEL[t]}</span>
               </button>
             );
           })}

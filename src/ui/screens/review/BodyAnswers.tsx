@@ -65,7 +65,7 @@ export function BodyAnswers({ active, overview }: { active: boolean; overview: R
       <p className="meta">All recorded waist measurements ({waist.count}). Measure at the same spot and time of day; the records do not verify that.</p>
       <details><summary>How this is calculated</summary><p className="card-body">{MEASURE_METHOD}</p></details>
       <Readings summary={waist} />
-      {waist.count === 0 && <p className="card-body">Record one in BODY → Your progress → Measurements.</p>}
+      {waist.count === 0 && <p className="card-body">Record one in DATA → Your progress → Measurements.</p>}
     </Answer>
     <Answer title="Are chest, arms and shoulders growing?" answer={measuredUpper.length === 0 ? "Not recorded" : measuredUpper.map((summary) => `${title(summary.site)}: ${summary.sinceFirst === undefined ? `${summary.latest!.inches} in (1 reading)` : signed(summary.sinceFirst)}`).join(" · ")}>
       <p className="meta">Each site: the latest reading against its first. Optional measurements; missing ones stay missing.</p>
@@ -73,7 +73,7 @@ export function BodyAnswers({ active, overview }: { active: boolean; overview: R
       <details><summary>How this is calculated</summary><p className="card-body">{MEASURE_METHOD}</p></details>
     </Answer>
     <Answer title="Do I look different?" answer={comparable.length === 0 ? `Building up · needs 2 photos in the same pose (${photoCount} visible)` : comparable.map((pose) => `${title(pose.pose)}: ${pose.count} photos, ${calendar(pose.first!)} → ${calendar(pose.latest!)}`).join(" · ")}>
-      <p className="card-body">Only you can judge this. Compare same-pose photos side by side in BODY → Your progress → Photos. Hidden photos are left out here.</p>
+      <p className="card-body">Only you can judge this. Compare same-pose photos side by side in DATA → Your progress → Photos. Hidden photos are left out here.</p>
       {data.photos.map((pose) => <p className="meta" key={pose.pose}>{title(pose.pose)}: {pose.count === 0 ? "no photos" : `${pose.count} ${pose.count === 1 ? "photo" : "photos"}, ${calendar(pose.first!)}${pose.count > 1 ? ` → ${calendar(pose.latest!)}` : ""}`}</p>)}
     </Answer>
     <Answer title="Am I losing fat, not muscle?" answer="No verdict · the changes BEYOND can see, side by side">
@@ -82,7 +82,7 @@ export function BodyAnswers({ active, overview }: { active: boolean; overview: R
         <dt>Weight</dt><dd>{overview.weight.change === undefined ? "Not enough weigh-ins yet for the two-week comparison" : `${overview.weight.change > 0 ? "+" : ""}${overview.weight.change.toFixed(1)} lb, latest 7-day mean versus previous 7`}</dd>
         <dt>Waist</dt><dd>{siteAnswer(waist)}</dd>
         <dt>Strength</dt><dd>{strengthLine}. Lift history is in TRAIN.</dd>
-        <dt>Photos</dt><dd>{comparable.length ? `${comparable.length} ${comparable.length === 1 ? "pose" : "poses"} with 2+ photos to compare in BODY` : `Building up · needs 2 photos in the same pose`}</dd>
+        <dt>Photos</dt><dd>{comparable.length ? `${comparable.length} ${comparable.length === 1 ? "pose" : "poses"} with 2+ photos to compare in DATA` : `Building up · needs 2 photos in the same pose`}</dd>
       </dl>
     </Answer>
   </>;

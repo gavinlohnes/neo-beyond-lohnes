@@ -27,7 +27,7 @@ async function seed() {
 for (const width of [320, 360, 412]) it(`connects Review answers to source History and returns at ${width}px without writes`, async () => {
   await page.viewport(width, 800); await seed(); const before = await db.events.toArray();
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "MORE", exact: true }).click();
   await (await commandResult(screen, "REVIEW")).click();
   await openDetailedReviews(screen);
   await expect.element(screen.getByText("2.0 lb lower · latest 7-day mean versus previous 7", { exact: true })).toBeVisible();
@@ -39,7 +39,7 @@ for (const width of [320, 360, 412]) it(`connects Review answers to source Histo
   await screen.getByText("Every record in this range", { exact: true }).first().click();
   const source = screen.getByRole("button", { name: "Open source day Oct 6, segment 1", exact: true });
   await source.click();
-  await expect.element(screen.getByText("COMMAND // HISTORY", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("MORE // HISTORY", { exact: true })).toBeVisible();
   await screen.getByRole("button", { name: "BACK TO REVIEW", exact: true }).click();
   await expect.element(screen.getByText("Oct 6 · 182.0 lb · 1 recorded day segment", { exact: true })).toBeVisible();
   await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Open source day Oct 6, segment 1");

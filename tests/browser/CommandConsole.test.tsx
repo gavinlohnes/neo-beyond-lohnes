@@ -75,15 +75,15 @@ describe("Production Command Console", () => {
     await expect.element(screen.getByRole("button", { name: "CHECK IN", exact: true })).toBeVisible();
     expect(document.querySelector("[data-system-status]")).toBeNull();
     // COMMAND-CENTER-001: TRAIN and BODY through COMMAND's search, COMMAND by its tab.
-    for (const destination of ["TRAIN", "BODY", "COMMAND"] as const) {
-      if (destination === "COMMAND") await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+    for (const destination of ["TRAIN", "DATA", "MORE"] as const) {
+      if (destination === "MORE") await screen.getByRole("button", { name: "MORE", exact: true }).click();
       else {
         await searchCommand(screen, destination.toLowerCase());
         await screen.getByRole("button", { name: new RegExp(`^${destination} `) }).click();
       }
       await expect.element(screen.getByRole("button", { name: destination, exact: true })).toHaveAttribute("aria-current", "page");
       // COMMAND's tab returns to the search that was last used there; the others land on their heading.
-      if (destination !== "COMMAND") await expect.poll(() => document.activeElement?.tagName).toBe("H1");
+      if (destination !== "MORE") await expect.poll(() => document.activeElement?.tagName).toBe("H1");
       await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     }
   });
@@ -201,11 +201,11 @@ describe("Production Command Console", () => {
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished dinner");
     await screen.getByRole("button", { name: "CLOSE" }).click();
     const confirm = vi.spyOn(window, "confirm");
-    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
-    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
     // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
-    await expect.element(screen.getByRole("heading", { name: "BODY", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "DATA", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await openMealInBody(screen);
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Unfinished dinner");
@@ -237,7 +237,7 @@ describe("Production Command Console", () => {
     }
     await searchCommand(screen, "history");
     await screen.getByRole("button", { name: /^HISTORY Every record/ }).click();
-    await expect.element(screen.getByRole("heading", { name: "COMMAND // HISTORY" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "MORE // HISTORY" })).toBeVisible();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await screen.getByRole("button", { name: "RESUME WORKOUT" }).click();
     expect((await getActiveWorkoutSession())?.id).toBe(workout.id);
@@ -261,13 +261,13 @@ describe("Production Command Console", () => {
       expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
       (search.element() as HTMLInputElement).focus();
       await userEvent.keyboard("{Enter}");
-      await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
-      await expect.poll(() => document.activeElement).toBe(screen.getByRole("button", { name: "BACK TO COMMAND", exact: true }).element());
+      await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
+      await expect.poll(() => document.activeElement).toBe(screen.getByRole("button", { name: "BACK TO MORE", exact: true }).element());
       await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      expect(document.activeElement).toBe(screen.getByRole("button", { name: "BACK TO COMMAND", exact: true }).element());
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "BACK TO MORE", exact: true }).element());
       await expect.element(screen.getByRole("button", { name: "Close TOOLS" })).toBeVisible();
       // The query is still there on return to COMMAND.
-      await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+      await screen.getByRole("button", { name: "MORE", exact: true }).click();
       await expect.element(screen.getByRole("searchbox", { name: "Find a screen or action" })).toHaveValue("tools");
     });
   }

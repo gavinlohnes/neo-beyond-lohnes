@@ -139,14 +139,14 @@ describe("HUD-001 — HUD design system", () => {
   it("Weekly keeps its pre-HUD ground, faces and corners until the F1 review", async () => {
     const screen = await render(<MoreScreen />);
     await (await commandResult(screen, "WEEKLY CHECK-IN")).click();
-    await expect.element(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
     const weekly = document.querySelector(".hud-legacy")!;
     expect(weekly).not.toBeNull();
     expect(getComputedStyle(weekly).backgroundColor).toBe("rgb(10, 10, 10)");
     expect(getComputedStyle(document.body).backgroundColor).toBe("rgb(10, 10, 10)");
     expect(getComputedStyle(weekly.querySelector(".meta")!).fontFamily).toMatch(/IBM Plex Sans/);
     expect(getComputedStyle(weekly.querySelector(".eyebrow")!).fontFamily).toMatch(/IBM Plex Mono/);
-    const back = screen.getByRole("button", { name: "BACK TO COMMAND" }).element();
+    const back = screen.getByRole("button", { name: "BACK TO MORE" }).element();
     expect(getComputedStyle(back).clipPath).toBe("none");
     expect(getComputedStyle(back).borderTopLeftRadius).toBe("4px");
   });

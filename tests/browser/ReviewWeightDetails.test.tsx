@@ -31,7 +31,7 @@ async function seed({ sleepFirst }: { sleepFirst: boolean }) {
 }
 async function openWeight() {
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "MORE", exact: true }).click();
   await (await commandResult(screen, "REVIEW")).click();
   await openDetailedReviews(screen);
   await screen.getByText("Is my weight going down?", { exact: true }).click();
@@ -62,5 +62,5 @@ it("counts weigh-ins logged before the main-sleep log, and says when no goal is 
   await seed({ sleepFirst: false });
   const screen = await openWeight();
   await expect.element(screen.getByText("0 of 15 weigh-ins logged after that day's main-sleep log", { exact: true })).toBeVisible();
-  await expect.element(screen.getByText("No goal weight set. Set one in COMMAND → Nutrition targets.", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("No goal weight set. Set one in MORE → Nutrition targets.", { exact: true })).toBeVisible();
 });

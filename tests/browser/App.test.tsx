@@ -33,13 +33,13 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     await page.viewport(390, 844);
     await startDay();
     const screen = await render(<App />);
-    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toBeVisible();
     const spacer = document.createElement("div");
     spacer.dataset.fieldNavSpacer = "true";
     spacer.style.height = "3000px";
     document.body.append(spacer);
 
-    for (const destination of ["COMMAND", "BODY", "TODAY"] as const) {
+    for (const destination of ["MORE", "DATA", "TODAY"] as const) {
       window.scrollTo(0, 1400);
       expect(window.scrollY).toBeGreaterThan(0);
       (screen.getByRole("button", { name: destination, exact: true }).element() as HTMLButtonElement).click();
@@ -97,8 +97,8 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     await expect.poll(() => window.scrollY).toBe(0);
     await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
 
-    (screen.getByRole("button", { name: "BODY", exact: true }).element() as HTMLButtonElement).click();
-    await expect.poll(() => screen.getByRole("button", { name: "BODY", exact: true }).element().getAttribute("aria-current")).toBe("page");
+    (screen.getByRole("button", { name: "DATA", exact: true }).element() as HTMLButtonElement).click();
+    await expect.poll(() => screen.getByRole("button", { name: "DATA", exact: true }).element().getAttribute("aria-current")).toBe("page");
     window.scrollTo(0, 1400);
     (screen.getByRole("button", { name: "TRAIN", exact: true }).element() as HTMLButtonElement).click();
     await expect.poll(() => window.scrollY).toBe(0);
@@ -138,8 +138,8 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     const screen = await render(<App />);
     await expect.element(screen.getByText("BEYOND // TRAIN", { exact: true })).toBeVisible();
 
-    await screen.getByText("BODY", { exact: true }).click();
-    await expect.poll(() => screen.getByRole("button", { name: "BODY", exact: true }).element().getAttribute("aria-current")).toBe("page");
+    await screen.getByText("DATA", { exact: true }).click();
+    await expect.poll(() => screen.getByRole("button", { name: "DATA", exact: true }).element().getAttribute("aria-current")).toBe("page");
     await screen.getByText("TRAIN", { exact: true }).click();
 
     await expect.element(screen.getByText("#1 — 135 lb x 10", { exact: true })).toBeVisible();
@@ -174,7 +174,7 @@ describe("Utility Belt (App shell bottom navigation)", () => {
 
   it("shows all four stable territories, TODAY selected by default", async () => {
     const screen = await render(<App />);
-    for (const label of ["TODAY", "TRAIN", "BODY", "COMMAND"]) {
+    for (const label of ["TODAY", "TRAIN", "DATA", "MORE"]) {
       await expect.element(screen.getByText(label, { exact: true })).toBeVisible();
     }
     const todayButton = screen.getByText("TODAY", { exact: true }).element().closest("button")!;
@@ -186,12 +186,12 @@ describe("Utility Belt (App shell bottom navigation)", () => {
     const dinner = await createSavedMeal({ name: "Dinner", calories: 650, proteinG: 45, carbsG: 50, fatG: 20 });
     await logMeal(day.id, dinner.id);
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
     await holdToConfirm(screen.getByRole("button", { name: /^Dinner/ }));
     await screen.getByRole("spinbutton", { name: "Corrected calories" }).fill("999");
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
     await holdToConfirm(screen.getByRole("button", { name: /^Dinner/ }));
     await expect.element(screen.getByRole("spinbutton", { name: "Corrected calories" })).toHaveValue(999);
     expect(await db.events.where("type").equals("MEAL_LOG_CORRECTED").count()).toBe(0);
@@ -213,7 +213,7 @@ describe("Utility Belt (App shell bottom navigation)", () => {
 
   it("every nav button meets the 44px minimum touch-target height", async () => {
     const screen = await render(<App />);
-    for (const label of ["TODAY", "TRAIN", "BODY", "COMMAND"]) {
+    for (const label of ["TODAY", "TRAIN", "DATA", "MORE"]) {
       await expect.element(screen.getByText(label, { exact: true })).toBeVisible();
       const button = screen.getByText(label, { exact: true }).element().closest("button")!;
       expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
@@ -463,11 +463,11 @@ describe("App shell — rollover on resume (ROLLOVER-ON-RESUME)", () => {
 
   it("Drop 1.6a: tapping MORE again inside Weekly goes back to the MORE menu", async () => {
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
     await (await commandResult(screen, "WEEKLY CHECK-IN")).click();
-    await expect.element(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await expect.element(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
     await expect.element((await commandResult(screen, "WEEKLY CHECK-IN"))).toBeVisible();
-    expect(screen.getByText("COMMAND // WEEKLY CHECK-IN", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true }).elements()).toHaveLength(0);
   });
 });

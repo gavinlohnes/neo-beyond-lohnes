@@ -94,11 +94,11 @@ describe("TODAY meal round trip", () => {
     await fillMeal(screen);
     const confirm = vi.spyOn(window, "confirm");
     await screen.getByRole("button", { name: "CLOSE", exact: true }).click();
-    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
-    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
     // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
-    await expect.element(screen.getByRole("heading", { name: "BODY", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "DATA", exact: true })).toBeVisible();
     expect(screen.getByRole("dialog").elements()).toHaveLength(0);
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await openMealInBody(screen);
@@ -135,7 +135,7 @@ describe("TODAY meal round trip", () => {
     await expect.poll(loggedCount).toBe(1);
   });
 
-  for (const destination of ["TRAIN", "TODAY", "BODY", "COMMAND", "Search everything", "CLOSE"]) {
+  for (const destination of ["TRAIN", "TODAY", "DATA", "MORE", "Search everything", "CLOSE"]) {
     it(`blocks LOG followed immediately by ${destination}, plus same-tick duplicate taps`, async () => {
       await seedMeal();
       const screen = await render(<App />);
@@ -312,7 +312,7 @@ describe("TODAY meal round trip", () => {
   it("keeps ordinary direct BODY entry independent of the TODAY round trip", async () => {
     await seedMeal();
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
     expect(screen.getByRole("dialog").elements()).toHaveLength(0);
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await openMealInBody(screen);

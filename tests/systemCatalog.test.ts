@@ -13,7 +13,7 @@ describe("capability discovery (COMMAND search)", () => {
   });
   it("keeps every destination the SYSTEM dialog reached", () => {
     const labels = SYSTEM_CAPABILITIES.map((entry) => entry.label as string);
-    for (const label of ["PLAN TODAY", "TODAY TOOLS", "TRAIN", "BODY", "WATER", "MEAL", "SLEEP", "BODYWEIGHT", "WORKOUT", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "HISTORY", "WEEKLY CHECK-IN", "REVIEW", "DECISION JOURNAL", "SEARCH RECORDS"]) {
+    for (const label of ["PLAN TODAY", "TODAY TOOLS", "TRAIN", "DATA", "WATER", "MEAL", "SLEEP", "BODYWEIGHT", "WORKOUT", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "HISTORY", "WEEKLY CHECK-IN", "REVIEW", "DECISION JOURNAL", "SEARCH RECORDS"]) {
       expect(labels).toContain(label);
     }
   });
@@ -29,6 +29,11 @@ describe("capability discovery (COMMAND search)", () => {
     ["nonexistent-tool", []],
   ])("matches names and explicit aliases for %s", (query, names) => {
     expect(findCapabilities(query).map((entry) => entry.label)).toEqual(names);
+  });
+  it("finds DATA by its new name and legacy body alias without changing its route", () => {
+    for (const query of ["data", "body"]) {
+      expect(findCapabilities(query).find((entry) => entry.label === "DATA")?.destination).toEqual({ kind: "workspace", tab: "BODY" });
+    }
   });
   it("keeps record retrieval separate and does not search personal meal names", () => {
     expect(findCapabilities("Synthetic lunch")).toEqual([]);

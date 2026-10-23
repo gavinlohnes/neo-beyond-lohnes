@@ -69,7 +69,7 @@ describe("TODAY // Minimum Day access", () => {
     // compact GLANCE-depth CollapsibleRow when it isn't the operator's
     // primary concern — open it to reach the enable offer. Shift Clock
     // (Drop 2): that row lives behind TOOLS; TONIGHT-001: the TOOLS that
-    // COMMAND → Today tools opens.
+    // MORE → Today tools opens.
     const screen = await render(<TodayScreen openToolsOnMount />);
     await expect.element(screen.getByRole("button", { name: "Open MINIMUM DAY" })).toBeVisible();
     await screen.getByRole("button", { name: "Open MINIMUM DAY" }).click();

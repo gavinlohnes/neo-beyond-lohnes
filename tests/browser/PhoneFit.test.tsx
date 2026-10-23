@@ -34,7 +34,7 @@ describe("R3 — Obligation EDIT fits a phone", () => {
     await page.viewport(width, 800);
     await createObligation({ title: "Task A", dueAt: "2026-10-20", plannedAt: "2026-10-14" });
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
     await (await commandResult(screen, "MISSIONS & OBLIGATIONS")).click();
     await screen.getByRole("button", { name: "Open Task A", exact: true }).click();
     await screen.getByRole("button", { name: "EDIT", exact: true }).click();

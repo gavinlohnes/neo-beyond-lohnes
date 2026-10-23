@@ -1,3 +1,20 @@
+# NAV-001 — slice 2: DATA / MORE and backup first
+
+- **Authority / Builder:** Gavin approved the NAV map and explicitly requested merging #290 and
+  continuing on 2026-10-23. Codex; PROTECTED primary IA. [Brief](NAV-001.md#slice-2--data--more-and-backup-first).
+- **Branch / baseline:** `codex/nav-001-slice2`, fresh master `3520cba`; slice 1 #290 merged.
+- **Scope:** visible DATA/MORE labels and consistent headings/returns/catalog copy; compatible
+  internal routes/history/shortcuts; direct “Back up my data” first in MORE, existing export
+  handler and visible receipt. No backup format/restore semantics, schema, Engine or Garmin change.
+- **REUSE:** existing tab renderer, catalog, MoreScreen export/backup panel and path tests.
+- **OWN:** presentation mapping to existing destinations and handlers.
+- **BUILD FROM SCRATCH:** none.
+- **Status / next:** implementation and verification; one slice-2 PR, independent exact-head
+  review and green CI, then Gavin’s merge approval. Metric zoom and DATA layout remain later slices.
+
+---
+Historical slice-1 checkpoint (merged):
+
 # NAV-001 — slice 1: TODAY
 
 - **Objective / authority:** [NAV-001](NAV-001.md); Gavin approved the map on 2026-10-23 (Protected IA).

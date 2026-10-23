@@ -57,12 +57,12 @@ try {
     const page = await context.newPage(); const errors = []; page.on("pageerror", (error) => errors.push(error.message));
     await page.clock.install({ time: new Date("2026-10-18T04:10:00-05:00") });
     await page.goto(url);
-    await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "DATA", exact: true }).click();
     await page.getByRole("button", { name: "Open BODYWEIGHT", exact: true }).click();
     await page.getByRole("spinbutton", { name: "Weight (lbs)", exact: true }).fill("180");
     await page.getByRole("button", { name: "LOG BODYWEIGHT", exact: true }).click();
     await page.getByText("180 lbs logged.", { exact: true }).waitFor();
-    await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "DATA", exact: true }).click();
     await page.getByRole("button", { name: "YOUR PROGRESS", exact: true }).click();
     await page.getByRole("button", { name: "MEASUREMENTS", exact: true }).click();
     await measurement(page, 38, "2026-09-01");
@@ -77,7 +77,7 @@ try {
     await page.getByRole("spinbutton", { name: "Inches", exact: true }).fill("36.75");
     const before = await rows(page, "events");
     await page.getByRole("button", { name: "TODAY", exact: true }).click();
-    await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "DATA", exact: true }).click();
     assert.equal(await page.getByRole("spinbutton", { name: "Inches", exact: true }).inputValue(), "36.75");
     await page.getByRole("button", { name: "TRENDS", exact: true }).click();
     await page.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true }).waitFor();
@@ -88,7 +88,7 @@ try {
     assert.equal((await rows(page, "progressPhotos")).length, 0, "Selection is not a save");
     await page.getByRole("button", { name: "SAVE PHOTO", exact: true }).click(); await saved(page, "Front photo saved");
     await importPhoto(page, "2026-10-17", "#aaa");
-    await page.getByRole("button", { name: "TODAY", exact: true }).click(); await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "TODAY", exact: true }).click(); await page.getByRole("button", { name: "DATA", exact: true }).click();
     await page.getByRole("img", { name: "Selected photo, not yet saved", exact: true }).waitFor();
     assert.equal((await rows(page, "progressPhotos")).length, 1, "Interrupted photo stays unsaved");
     await page.getByRole("button", { name: "SAVE PHOTO", exact: true }).click(); await saved(page, "Front photo saved");
@@ -106,7 +106,7 @@ try {
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });
     await page.reload(); await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
     await context.setOffline(true); await page.reload();
-    await page.getByRole("button", { name: "BODY", exact: true }).click(); await page.getByRole("button", { name: "YOUR PROGRESS", exact: true }).click();
+    await page.getByRole("button", { name: "DATA", exact: true }).click(); await page.getByRole("button", { name: "YOUR PROGRESS", exact: true }).click();
     await page.getByRole("button", { name: "MEASUREMENTS", exact: true }).click();
     await page.getByRole("region", { name: "Latest measurements", exact: true }).filter({ hasText: "36.75 in" }).waitFor();
     await measurement(page, 36.5, "2026-10-18");

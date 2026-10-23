@@ -24,7 +24,7 @@ for (const width of [320, 360, 412]) it(`shows the SYSTEMS line and opens the re
   await expect.element(line).toBeVisible();
   expect(line.element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
   await line.click();
-  await expect.element(screen.getByRole("heading", { name: "COMMAND // SYSTEMS", exact: true })).toBeVisible();
+  await expect.element(screen.getByRole("heading", { name: "MORE // SYSTEMS", exact: true })).toBeVisible();
   for (const group of ["BODY", "TRAINING", "STATE", "DEVICE"]) await expect.element(screen.getByRole("heading", { name: group, exact: true })).toBeVisible();
   await expect.element(screen.getByRole("button", { name: "Last main sleep: 6h 50m. Logged 20:00. Open history" })).toBeVisible();
   await expect.element(screen.getByRole("button", { name: "Protein: 40 g. No target set. Open history" })).toBeVisible();
@@ -35,7 +35,7 @@ for (const width of [320, 360, 412]) it(`shows the SYSTEMS line and opens the re
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   for (const animation of document.getAnimations()) animation.finish();
   expect((await axe.run(document.body, { rules: { region: { enabled: false } } })).violations).toEqual([]);
-  await screen.getByRole("button", { name: "BACK TO COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "BACK TO MORE", exact: true }).click();
   await expect.poll(() => document.activeElement?.getAttribute("aria-label") ?? "").toMatch(/^SYSTEMS /);
   expect(await db.events.toArray()).toEqual(before);
 });
@@ -44,13 +44,13 @@ it("opens a metric's existing history from the readout and returns to the same r
   clock();
   const day = await startDay(); await setWorkContext(day.id, "OFF", "MANUAL"); await logWater(day.id, 8);
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "MORE", exact: true }).click();
   await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("systems");
   await screen.getByRole("button", { name: /^SYSTEMS / }).click();
   const water = screen.getByRole("button", { name: "Water: 8 oz. Open history" });
   await water.click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("water");
-  await screen.getByRole("button", { name: "BACK TO COMMAND", exact: true }).click();
+  await screen.getByRole("button", { name: "BACK TO MORE", exact: true }).click();
   await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Water: 8 oz. Open history");
 });
 

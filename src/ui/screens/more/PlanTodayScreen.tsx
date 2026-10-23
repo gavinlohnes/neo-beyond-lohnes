@@ -68,7 +68,7 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
     </li>)}</ul> : <p className="meta">{empty}</p>;
   }
   return <div className="plan-today">
-    <OperatorHeader destination="mission" focusable>COMMAND // PLAN TODAY</OperatorHeader>
+    <OperatorHeader destination="mission" focusable>MORE // PLAN TODAY</OperatorHeader>
     <h2 className="more-title">Your plan</h2>
     <p className="meta">{plan ? planDate(plan.date) : "Today"} · Your choices and recorded deadlines. Not a recommendation.</p>
     {readError ? <div role="alert"><p>{readError} Tasks are unavailable, not empty.</p><button className="btn-secondary" onClick={() => void refresh()}>RETRY PLAN</button></div>

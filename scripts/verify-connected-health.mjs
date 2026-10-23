@@ -31,17 +31,17 @@ try {
     await page.getByRole("button", { name: "START DAY", exact: true }).click();
     await page.getByRole("button", { name: "NO", exact: true }).click();
     await page.getByRole("button", { name: "ALL GOOD", exact: true }).click();
-    await page.getByRole("button", { name: "Log water in BODY", exact: true }).click();
+    await page.getByRole("button", { name: "Log water in DATA", exact: true }).click();
     await page.getByRole("button", { name: "+16 oz", exact: true }).click();
     await page.getByText("16 oz recorded today", { exact: true }).waitFor();
     await page.getByRole("button", { name: "RETURN TO TODAY", exact: true }).click();
-    await page.getByRole("button", { name: "Log a meal in BODY", exact: true }).click();
+    await page.getByRole("button", { name: "Log a meal in DATA", exact: true }).click();
     await page.getByRole("textbox", { name: "New meal name", exact: true }).fill("Synthetic work meal");
     for (const [field, value] of [["calories", "600"], ["protein (g)", "45"], ["carbs (g)", "60"], ["fat (g)", "15"]]) await page.getByRole("spinbutton", { name: `New meal ${field}`, exact: true }).fill(value);
     await page.getByRole("button", { name: "SAVE MEAL", exact: true }).click();
     await page.getByRole("button", { name: "LOG", exact: true }).click();
     await page.getByText("Synthetic work meal logged · 600 kcal · 45g", { exact: true }).waitFor();
-    await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "DATA", exact: true }).click();
     await page.getByRole("button", { name: "Open BODYWEIGHT", exact: true }).click();
     await page.getByRole("spinbutton", { name: "Weight (lbs)", exact: true }).fill("180");
     await page.getByRole("button", { name: "LOG BODYWEIGHT", exact: true }).click();
@@ -49,7 +49,7 @@ try {
     await page.getByRole("spinbutton", { name: "Hours", exact: true }).fill("6");
     await page.getByRole("spinbutton", { name: "Minutes", exact: true }).fill("30");
     await page.getByRole("button", { name: "LOG SLEEP", exact: true }).click();
-    await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "DATA", exact: true }).click();
     await page.evaluate(() => window.scrollTo(0, 0));
     await capture(page, `daily-${width}`);
 
@@ -104,12 +104,12 @@ try {
     await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
     await context.setOffline(true);
     await page.reload();
-    await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "DATA", exact: true }).click();
     await page.getByRole("button", { name: "Explore water", exact: true }).click();
     await page.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
     await page.getByRole("heading", { name: "Water · 12 oz", exact: true }).waitFor();
     await page.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
-    await page.getByRole("heading", { name: "COMMAND // HISTORY", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "MORE // HISTORY", exact: true }).waitFor();
     await page.getByRole("button", { name: "RETURN TO BODY", exact: true }).click();
     await page.getByRole("button", { name: "DAILY RECORD", exact: true }).click();
     await page.getByRole("button", { name: "+8 oz", exact: true }).click();
@@ -119,7 +119,7 @@ try {
     assert.equal(saved.filter((event) => event.type === "WATER_LOG_CORRECTED").length, 1);
     assert.equal(saved.filter((event) => event.type === "SLEEP_LOGGED").length, 2);
     await page.reload();
-    await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "DATA", exact: true }).click();
     await page.getByRole("button", { name: "Explore water", exact: true }).filter({ hasText: "20 oz" }).waitFor();
     assert.deepEqual(await rows(page, "events"), saved, "Offline reload changed canonical records");
     assert.equal(await page.getByRole("main").count(), 1);

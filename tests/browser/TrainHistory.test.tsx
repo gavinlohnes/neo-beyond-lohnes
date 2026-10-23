@@ -123,7 +123,7 @@ describe("TRAIN → HISTORY", () => {
     await screen.getByRole("button", { name: "HISTORY", exact: true }).click();
     await screen.getByRole("list").getByRole("button").nth(1).click();
     await expect.element(screen.getByText("Set 2 · skipped", { exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "BODY", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
     await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
     await expect.element(screen.getByText("Set 2 · skipped", { exact: true })).toBeVisible();
   });

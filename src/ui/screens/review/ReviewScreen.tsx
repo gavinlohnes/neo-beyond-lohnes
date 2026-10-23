@@ -37,7 +37,7 @@ export function ReviewScreen({ active = true, onOpenHistory }: { active?: boolea
 
   return (
     <div className="screen picture-review">
-      <h1 className="eyebrow">COMMAND // REVIEW</h1>
+      <h1 className="eyebrow">MORE // REVIEW</h1>
       <WholePicture active={active} onOpenHistory={onOpenHistory} />
       <details className="picture-legacy"><summary>Weekly, monthly & detailed reviews</summary>
       <WeeklyDashboard active={active} onOpenHistory={onOpenHistory} />

@@ -29,10 +29,10 @@ describe("FIND-001", () => {
   it("the top-bar search icon opens SEARCH from TODAY, TRAIN, BODY and MORE", async () => {
     await startDay();
     const screen = await render(<App />);
-    for (const tab of ["TODAY", "TRAIN", "BODY", "COMMAND"]) {
+    for (const tab of ["TODAY", "TRAIN", "DATA", "MORE"]) {
       await screen.getByRole("button", { name: tab, exact: true }).click();
       await screen.getByRole("button", { name: "Search everything" }).click();
-      await expect.element(screen.getByText("COMMAND // SEARCH")).toBeVisible();
+      await expect.element(screen.getByText("MORE // SEARCH")).toBeVisible();
     }
   });
 
@@ -52,7 +52,7 @@ describe("FIND-001", () => {
     const screen = await render(<App />);
     await searchFromTopBar(screen, "gate");
     await screen.getByRole("button", { name: /^Open NOTE: Gate code/ }).click();
-    await expect.element(screen.getByText("COMMAND // HISTORY")).toBeVisible();
+    await expect.element(screen.getByText("MORE // HISTORY")).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "HIDE" })).toBeVisible();
   });
 

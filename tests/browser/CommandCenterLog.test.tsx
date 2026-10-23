@@ -131,7 +131,7 @@ describe("TODAY action row", () => {
     const screen = await render(<App />);
     await (await commandResult(screen, "SHIFT HANDOFF NOTES")).click();
     await expect.element(screen.getByText("Truck 12 brakes still soft")).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
     expect(document.querySelectorAll(".shift-handoff")).toHaveLength(1);
   });
 });

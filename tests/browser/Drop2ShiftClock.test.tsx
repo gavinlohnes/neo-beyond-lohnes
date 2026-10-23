@@ -121,7 +121,7 @@ describe("Shift Clock — on shift (18:00 → 06:00)", () => {
     expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
 
     await screen.getByRole("button", { name: "Log water" }).click();
-    await screen.getByRole("button", { name: "More → BODY water" }).click();
+    await screen.getByRole("button", { name: "More → DATA water" }).click();
     expect(onOpenBody).toHaveBeenLastCalledWith("water");
     await openMealInBody(screen);
     expect(onOpenBody).toHaveBeenLastCalledWith("meal");
@@ -237,7 +237,7 @@ describe("Minimum Day after a YELLOW check-in (Drop 1.6b, amended by TONIGHT-001
     const screen = await render(<TodayScreen />);
 
     await expect.element(screen.getByRole("heading", { name: "Train or sleep?" })).toBeVisible();
-    // Owner ruling 2026-10-19: Gavin never uses Minimum Day; it stays reachable in COMMAND → Today tools.
+    // Owner ruling 2026-10-19: Gavin never uses Minimum Day; it stays reachable in MORE → Today tools.
     expect(screen.getByText("Minimum Day is available if it helps.", { exact: true }).elements()).toHaveLength(0);
     await openTodayTools(screen);
     expect(screen.getByRole("button", { name: "Open MINIMUM DAY" }).elements()).toHaveLength(0);
@@ -274,7 +274,7 @@ describe("Shift Clock — day off", () => {
     await expect.element(screen.getByRole("button", { name: "Open SHIFT DOWN" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open RESET" })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open WORK CONTEXT" })).toBeVisible();
-    // TONIGHT-001: Minimum Day is reachable from COMMAND → Today tools, not TODAY's own TOOLS.
+    // TONIGHT-001: Minimum Day is reachable from MORE → Today tools, not TODAY's own TOOLS.
     expect(screen.getByRole("button", { name: "Open MINIMUM DAY" }).elements()).toHaveLength(0);
     await expect.element(screen.getByPlaceholder("Capture a thought...")).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Open END DAY" })).toBeVisible();

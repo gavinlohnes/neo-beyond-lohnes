@@ -366,7 +366,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   const [managingMealId, setManagingMealId] = useState<string | null>(null);
   const [lookupOpen, setLookupOpen] = useState(focus === "foodLookup");
   // TONIGHT-001 (owner ruling, 2026-10-19): the online lookup isn't on the meal screen;
-  // COMMAND → FOOD LOOKUP opens it here.
+  // MORE → FOOD LOOKUP opens it here.
   const [lookupReachable, setLookupReachable] = useState(focus === "foodLookup");
   useEffect(() => {
     if (!focus) return;
@@ -598,14 +598,14 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     if (!visible) return;
     void refresh().catch(() => {
       setMealReadFailed(true);
-      setMealError("Could not read BODY. Retry readings without saving or logging anything.");
+      setMealError("Could not read DATA. Retry readings without saving or logging anything.");
     });
   }, [visible]);
   useEffect(() => {
     if (!visible || refreshKey === 0) return;
     void refresh().catch(() => {
       setMealReadFailed(true);
-      setMealError("Could not read BODY. Retry readings without saving or logging anything.");
+      setMealError("Could not read DATA. Retry readings without saving or logging anything.");
     });
   }, [refreshKey]);
   // The retained BODY screen does not remount on explicit return/reopen.
@@ -678,7 +678,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       if (el) {
         const surface = focus === "meal" || focus === "foodLookup" ? el.closest(".body-meals") ?? el : focus === "water" ? el.closest(".body-water") ?? el : el;
         surface.scrollIntoView({ block: "start" });
-        // TONIGHT-001: COMMAND → FOOD LOOKUP lands in the search field.
+        // TONIGHT-001: MORE → FOOD LOOKUP lands in the search field.
         if (focus === "foodLookup" && document.getElementById("food-search")) document.getElementById("food-search")!.focus({ preventScroll: true });
         else if (focus === "meal" && onReturnToToday) document.getElementById("meal-return")?.focus({ preventScroll: true });
         else if (!el.contains(document.activeElement)) {
@@ -2491,12 +2491,12 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         )}
       </div>);
   if (overviewOnly) return <div className="screen body-field body-home">
-    <OperatorHeader destination="body" focusable>BODY</OperatorHeader>
+    <OperatorHeader destination="body" focusable>DATA</OperatorHeader>
     {onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>{returnLabel}</button>}
     <div hidden={progressOpen}>
       <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
         {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} showWeight={false} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={exploreOverview} /> : <p role="status">Reading recorded information…</p>}
-        {mealReadFailed && <p role="alert">Could not refresh BODY.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
+        {mealReadFailed && <p role="alert">Could not refresh DATA.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
       </section>
       <section aria-label="Progress"><h2 className="section-label">PROGRESS</h2>
         <div className="body-progress-card"><h3>WEIGHT</h3><p>{weightHistory.at(-1) ? `${weightHistory.at(-1)!.weightLbs} lb${weightHistory.length < 2 ? ` · ${weighInDate(weightHistory.at(-1)!.recordedAt)}` : ""}` : "No weight recorded yet."}</p><WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
@@ -2511,7 +2511,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       </section>
     </div>
     <div hidden={!progressOpen}>
-      <button type="button" className="btn-secondary" onClick={() => { setProgressOpen(false); setSourceSelection(null); restoreOrigin(); }}>BACK TO BODY</button>
+      <button type="button" className="btn-secondary" onClick={() => { setProgressOpen(false); setSourceSelection(null); restoreOrigin(); }}>BACK TO DATA</button>
       <section hidden={sourceSelection !== null}><h2 id="health-progress-heading" tabIndex={-1}>PROGRESS</h2>{progressVisited && <BodyProgress active={visible && progressOpen && sourceSelection === null} refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} request={progressRequest} compositionRequest={compositionRequest} returnFocusRequest={progressReturnFocus} onSources={(selection) => openSources(selection)} />}</section>
       {sourceSelection && <HealthSources selection={sourceSelection} revision={dataRevision} active={visible && progressOpen} activeDayId={day?.id} returnLabel={sourceOrigin.current?.daily ? "BACK TO DAY" : "BACK TO TREND"} allowHistoricalCorrection onCorrect={(record, sourceDayId) => onEditRecord?.(record, sourceDayId ?? day!.id)} onHistory={onHealthHistory} onClose={closeSources} />}
     </div>
@@ -2535,7 +2535,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   return (
     <div className={`screen fade-in body-field${mealFocused ? " body-meals" : ""}${waterFocused ? " body-water" : ""}`}>
       <OperatorHeader destination="body" headingId="meal-surface-heading" focusable>
-        {waterFocused ? "BODY // WATER" : mealsVisible ? "BODY // MEALS" : progressOpen ? "BODY // PROGRESS" : "BODY // TODAY"}
+        {waterFocused ? "DATA // WATER" : mealsVisible ? "DATA // MEALS" : progressOpen ? "DATA // PROGRESS" : "DATA // TODAY"}
       </OperatorHeader>
       <div hidden={waterFocused || mealsVisible || progressOpen}>
         <HealthHistory open={healthHistoryOpen} onOpenChange={setHealthHistoryOpen} active={visible && !waterFocused && !mealsVisible && !progressOpen}
@@ -2665,9 +2665,9 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       </div>
       {readingsReady && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries}
         protein={proteinEntries} meals={mealEntries} disabled={busy || foodSearchBusy} onInspect={inspectRecord} />}
-      <FieldDisclosure summary={`${otherToolsOpen ? "HIDE" : "SHOW"} OTHER BODY TOOLS`} open={otherToolsOpen} onToggle={setOtherToolsOpen}>
+      <FieldDisclosure summary={`${otherToolsOpen ? "HIDE" : "SHOW"} OTHER DATA TOOLS`} open={otherToolsOpen} onToggle={setOtherToolsOpen}>
         <QuitTracker initiallyOpen={focus === "urge"} openRequest={focus === "urge" ? focusRequest : 0} />
-        <p className="meta">Nutrition targets are editable in COMMAND → Settings.</p>
+        <p className="meta">Nutrition targets are editable in MORE → Settings.</p>
       </FieldDisclosure>
       </div>
 

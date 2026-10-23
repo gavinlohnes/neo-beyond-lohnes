@@ -49,7 +49,7 @@ describe("direct shortcut suit", () => {
 describe("emblem", () => {
   it("goes to TODAY's root from every tab, at the top with its heading focused", async () => {
     const screen = await render(<App />);
-    for (const tab of ["TRAIN", "BODY", "COMMAND", "TODAY"]) {
+    for (const tab of ["TRAIN", "DATA", "MORE", "TODAY"]) {
       await screen.getByRole("button", { name: tab, exact: true }).click();
       await expect.poll(current).toContain(tab);
       await expect.poll(() => !!emblem(screen, tab)).toBe(true);
@@ -74,9 +74,9 @@ describe("re-tap, back and retention", () => {
     const screen = await render(<App />);
     await searchCommand(screen, "history");
     await screen.getByRole("button", { name: /^HISTORY Every record/ }).click();
-    await expect.element(screen.getByRole("heading", { name: "COMMAND // HISTORY" })).toBeVisible();
-    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await expect.element(screen.getByRole("heading", { name: "COMMAND" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "MORE // HISTORY" })).toBeVisible();
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await expect.element(screen.getByRole("heading", { name: "MORE" })).toBeVisible();
     await expect.element(screen.getByRole("searchbox", { name: "Find a screen or action" })).toHaveValue("history");
   });
 
@@ -87,15 +87,15 @@ describe("re-tap, back and retention", () => {
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await searchCommand(screen, "schedule");
     await screen.getByRole("button", { name: /^WORK SCHEDULE / }).click();
-    await expect.element(screen.getByRole("heading", { name: "COMMAND // WORK SCHEDULE" })).toBeVisible();
-    emblem(screen, "COMMAND").click();
+    await expect.element(screen.getByRole("heading", { name: "MORE // WORK SCHEDULE" })).toBeVisible();
+    emblem(screen, "MORE").click();
     await expect.poll(current).toContain("TODAY");
     await openCaptureFromLog(screen);
     await expect.element(screen.getByRole("textbox", { name: "Capture a thought", exact: true })).toHaveValue("Half a thought");
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
-    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await expect.element(screen.getByRole("heading", { name: "COMMAND // WORK SCHEDULE" })).toBeVisible();
-    await screen.getByRole("button", { name: "BACK TO COMMAND" }).click();
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await expect.element(screen.getByRole("heading", { name: "MORE // WORK SCHEDULE" })).toBeVisible();
+    await screen.getByRole("button", { name: "BACK TO MORE" }).click();
     await expect.element(screen.getByRole("searchbox", { name: "Find a screen or action" })).toHaveValue("schedule");
     await expect.poll(() => document.activeElement?.textContent ?? "").toContain("WORK SCHEDULE");
     expect(await db.captureItems.count()).toBe(0);
@@ -103,7 +103,7 @@ describe("re-tap, back and retention", () => {
 
   it("keeps an unsaved settings draft through COMMAND search", async () => {
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
     await (await commandResult(screen, "NUTRITION TARGETS")).click();
     await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("1875");
     await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("history");

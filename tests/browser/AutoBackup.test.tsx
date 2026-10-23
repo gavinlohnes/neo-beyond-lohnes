@@ -35,7 +35,7 @@ describe("BACKUP-AUTO-001 — automatic backup", () => {
   it("off by default: TODAY shows no backup line, even with no backup on record", async () => {
     await startDay();
     const screen = await render(<App />);
-    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toBeVisible();
     expect(document.querySelector('section[aria-label="Backup"]')).toBeNull();
   });
 

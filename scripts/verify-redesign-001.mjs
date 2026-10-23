@@ -79,7 +79,7 @@ try {
     assert.ok(bounds.receipt <= bounds.nav);
     await page.getByRole("button", { name: "UNDO", exact: true }).click();
     await page.locator(".redesign-toast").waitFor({ state: "detached" });
-    await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "DATA", exact: true }).click();
     await page.getByRole("button", { name: "WEIGHT HISTORY", exact: true }).waitFor();
     await page.evaluate(() => { for (const animation of document.getAnimations()) if (animation.effect?.getComputedTiming().iterations !== Infinity) animation.finish(); window.scrollTo(0, 0); });
     assert.equal(await page.locator(".body-home input[type=number]:visible").count(), 0);
@@ -87,11 +87,11 @@ try {
     await page.getByRole("button", { name: "MEASUREMENTS", exact: true }).click();
     await page.getByRole("spinbutton", { name: "Inches", exact: true }).waitFor();
     await page.screenshot({ path: `${out}/${width}-measurements.png`, fullPage: true });
-    await page.getByRole("button", { name: "BACK TO BODY", exact: true }).click();
+    await page.getByRole("button", { name: "BACK TO DATA", exact: true }).click();
     await page.getByRole("button", { name: "PHOTOS", exact: true }).click();
     await page.getByRole("heading", { name: "Progress photos", exact: true }).waitFor();
     await page.screenshot({ path: `${out}/${width}-photos.png`, fullPage: true });
-    await page.getByRole("button", { name: "BACK TO BODY", exact: true }).click();
+    await page.getByRole("button", { name: "BACK TO DATA", exact: true }).click();
     await page.getByRole("button", { name: "TRAIN", exact: true }).click();
     for (const view of ["WORKOUT", "HISTORY", "RECORDS"]) {
       await page.getByRole("button", { name: view, exact: true }).click();
@@ -99,7 +99,7 @@ try {
       await page.screenshot({ path: `${out}/${width}-train-${view.toLowerCase()}.png`, fullPage: true });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     }
-    await page.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await page.getByRole("button", { name: "MORE", exact: true }).click();
     await page.getByRole("searchbox", { name: "Find a screen or action" }).waitFor();
     await page.evaluate(() => { for (const a of document.getAnimations()) if (a.effect?.getComputedTiming().iterations !== Infinity) a.finish(); window.scrollTo(0, 0); });
     await page.screenshot({ path: `${out}/${width}-command.png`, fullPage: true });

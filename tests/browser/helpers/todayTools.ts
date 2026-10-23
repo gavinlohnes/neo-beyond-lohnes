@@ -34,7 +34,7 @@ export async function openCaptureFromLog(screen: { getByRole: (role: "button" | 
  * COMMAND tab's search. Opens COMMAND's index and types the query.
  */
 export async function searchCommand(screen: { getByRole: (role: "button" | "searchbox", options?: { name: string; exact?: boolean }) => Locator }, query: string): Promise<Locator> {
-  const tab = screen.getByRole("button", { name: "COMMAND", exact: true });
+  const tab = screen.getByRole("button", { name: "MORE", exact: true });
   await tab.click();
   if (tab.element().getAttribute("aria-current") === "page" && screen.getByRole("searchbox", { name: "Find a screen or action" }).elements().length === 0) await tab.click();
   const search = screen.getByRole("searchbox", { name: "Find a screen or action" });

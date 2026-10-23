@@ -28,16 +28,16 @@ beforeEach(async () => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo(0, 0); });
 
 async function expectDailyRecord(screen: Screen) {
-  await expect.element(screen.getByRole("heading", { name: "BODY", exact: true })).toBeVisible();
+  await expect.element(screen.getByRole("heading", { name: "DATA", exact: true })).toBeVisible();
   await expect.element(screen.getByRole("button", { name: "WEIGHT HISTORY", exact: true })).toBeVisible();
   expect(screen.getByRole("button", { name: "CLOSE" }).elements()).toHaveLength(0);
-  expect(screen.getByRole("heading", { name: "BODY // WATER" }).elements()).toHaveLength(0);
+  expect(screen.getByRole("heading", { name: "DATA // WATER" }).elements()).toHaveLength(0);
   expect(screen.getByRole("dialog", { name: "MEAL TOOLS", exact: true }).elements()).toHaveLength(0);
 }
 
 async function tapBody(screen: Screen) {
-  await screen.getByRole("button", { name: "BODY", exact: true }).click();
-  await expect.element(screen.getByRole("button", { name: "BODY", exact: true })).toHaveAttribute("aria-current", "page");
+  await screen.getByRole("button", { name: "DATA", exact: true }).click();
+  await expect.element(screen.getByRole("button", { name: "DATA", exact: true })).toHaveAttribute("aria-current", "page");
 }
 
 describe("BODY primary navigation after a TODAY shortcut", () => {
@@ -96,8 +96,8 @@ describe("BODY primary navigation after a TODAY shortcut", () => {
     await openMealInBody(screen);
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Draft");
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
-    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "COMMAND", exact: true })).toHaveAttribute("aria-current", "page");
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
     await tapBody(screen);
     await expectDailyRecord(screen);
 

@@ -57,7 +57,7 @@ try {
       // SYSTEMS readout, then back to the same line.
       const before = await records(page);
       await line.click();
-      await page.getByRole("heading", { name: "COMMAND // SYSTEMS", exact: true }).waitFor();
+      await page.getByRole("heading", { name: "MORE // SYSTEMS", exact: true }).waitFor();
       for (const group of ["BODY", "TRAINING", "STATE", "DEVICE"]) await page.getByRole("heading", { name: group, exact: true }).waitFor();
       assert.ok(await noOverflow(page, width), "SYSTEMS overflows");
       await page.screenshot({ path: `${shots}/systems-readout-${width}.png`, fullPage: true });

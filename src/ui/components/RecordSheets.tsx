@@ -142,7 +142,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   if (target === "meal" || target === "myMeals") title = target === "myMeals" && page === "list" ? "MY MEALS" : { list: "MEAL", new: "NEW MEAL", quick: "QUICK ADD", portion: "SERVINGS", edit: "EDIT SAVED MEAL", waterDetails: "MEAL", mealTools: "MEAL TOOLS" }[page];
   return <>
     <LogSheet open={target !== null} title={title} onClose={close} canClose={() => !busyRef.current}>
-      {target === "foodLookup" && !hiddenFeatures.foodLookup && <p className="meta">Show online food lookup in COMMAND → Hidden features.</p>}
+      {target === "foodLookup" && !hiddenFeatures.foodLookup && <p className="meta">Show online food lookup in MORE → Hidden features.</p>}
       {busy && <p role="status">Saving…</p>}
       {error && <p role="alert">{error}</p>}
       {target === "water" && page !== "waterDetails" && <>

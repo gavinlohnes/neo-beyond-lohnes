@@ -8,7 +8,7 @@ const output = process.env.BEYOND_SCREENSHOTS ?? "/tmp/beyond-weekly-review";
 await mkdir(output, { recursive: true });
 const results = [];
 async function protein(page, grams) {
-  await page.getByRole("button", { name: "BODY", exact: true }).click();
+  await page.getByRole("button", { name: "DATA", exact: true }).click();
   await page.getByRole("button", { name: "Open PROTEIN ONLY", exact: true }).click();
   await page.waitForFunction(() => document.activeElement?.id === "protein-grams");
   await page.getByRole("spinbutton", { name: "Protein (g)", exact: true }).fill(String(grams));
@@ -16,7 +16,7 @@ async function protein(page, grams) {
   await page.getByRole("button", { name: "Explore protein", exact: true }).filter({ hasText: `${grams} g` }).waitFor();
 }
 async function review(page) {
-  await page.getByRole("button", { name: "COMMAND", exact: true }).click();
+  await page.getByRole("button", { name: "MORE", exact: true }).click();
   const menu = page.getByRole("button", { name: "Open REVIEW", exact: true });
   if (await menu.isVisible()) await menu.click();
   return page.getByRole("region", { name: "Weekly review", exact: true });
@@ -39,7 +39,7 @@ try {
     await panel.getByRole("textbox", { name: "What stood out? (optional)", exact: true }).fill("Synthetic weekly review note.");
     await panel.getByRole("combobox", { name: /Your focus for the week starting/ }).selectOption({ label: "Record protein on 1 day" });
     // The existing draft provider retains the unfinished review across a primary-tab detour.
-    await page.getByRole("button", { name: "BODY", exact: true }).click();
+    await page.getByRole("button", { name: "DATA", exact: true }).click();
     await review(page);
     assert.equal(await panel.getByRole("textbox", { name: "What stood out? (optional)", exact: true }).inputValue(), "Synthetic weekly review note.");
     await page.evaluate(async () => { await navigator.serviceWorker.ready; });

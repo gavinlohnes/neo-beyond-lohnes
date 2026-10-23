@@ -94,7 +94,7 @@ describe("GARMIN-005 — eaten vs burned", () => {
     await page.viewport(390, 844);
     await seed();
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
     await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("weekly");
     await screen.getByRole("button", { name: /^WEEKLY CHECK-IN / }).click();
     await expect.poll(() => document.querySelector("[data-garmin-burned]")?.textContent).toMatch(/^Garmin says about [\d,]+ kcal a day \(28 measured days\)\. Watch estimates can be off by 10–20%\.$/);

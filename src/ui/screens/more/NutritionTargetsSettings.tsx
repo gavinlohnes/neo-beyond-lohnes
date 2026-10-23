@@ -15,7 +15,7 @@ import { describeError, NO_CHANGES_MESSAGE } from "../../errorMessage";
  * calorie target set directly, protein multiplier in g per lb — only its
  * home changed. BODY keeps the read-only progress lines.
  *
- * Drop 5: also holds the optional goal weight BODY's projected goal date
+ * Drop 5: also holds the optional goal weight DATA's projected goal date
  * uses. Saved with the same command, so it rides along in backups.
  *
  * HOTFIX (owner ruling 2026-10-03): the inputs open filled with the saved
@@ -185,7 +185,7 @@ export function NutritionTargetsSettings() {
             className="input"
           />
           <p className="meta" style={{ marginTop: 4 }}>
-            Used only for BODY's projected goal date.
+            Used only for DATA's projected goal date.
           </p>
         </div>
         {error && <p className="meta" role={error === NO_CHANGES_MESSAGE ? "status" : "alert"}>{error}</p>}

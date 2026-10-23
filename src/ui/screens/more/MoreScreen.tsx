@@ -472,11 +472,11 @@ export function MoreScreen({
   return (
     <div className={`screen more-operator${view === "REVIEW" ? " more-whole-picture" : ""}`}>
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
-          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { if (onReturnToToday) { onReturnToToday(); return; } setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>{onReturnToToday ? "BACK TO TODAY" : "BACK TO COMMAND"}</button>
+          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { if (onReturnToToday) { onReturnToToday(); return; } setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>{onReturnToToday ? "BACK TO TODAY" : "BACK TO MORE"}</button>
           <div hidden={view !== "DAILY_CONTROLS"}>{visited.has("DAILY_CONTROLS") && <DailyControls onReturnToFullTools={() => setDailyFocus(null)} commandFocus={dailyFocus} banners={dailyFocus === null ? dailyBanners : undefined} shiftHandoffRefreshKey={dailyRefreshKey} onWorkEnded={() => onDailyContextChanged?.()} onWorkContextChanged={() => onDailyContextChanged?.()} captureRequest={captureRequest} active={active && view === "DAILY_CONTROLS"} openToolsOnMount onOpenBody={(focus) => { if (focus) onOpenDestination?.({ kind: "body", focus }); }} onOpenTrain={() => { onOpenDestination?.({ kind: "workout" }); }} onOpenSystems={() => setView("SYSTEMS")} />}</div>
           {view === "SYSTEMS" && <><SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} /></>}
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
-          {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>BACK TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>BACK TO BODY</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
+          {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>BACK TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>BACK TO DATA</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
           {view === "REPORT" && <><OperatorHeader destination="command">AFTER ACTION REPORT</OperatorHeader><ReportView /></>}
           {view === "MIRROR" && <><OperatorHeader destination="command">MIRROR</OperatorHeader><MirrorView /></>}
@@ -485,12 +485,12 @@ export function MoreScreen({
             setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
           }} />}</div>
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} />}
-          {view === "WORK_SCHEDULE" && <><OperatorHeader destination="command">COMMAND // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
-          <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="command">COMMAND // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
-          <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">COMMAND // DECISION JOURNAL</OperatorHeader><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></>}</div>
-          {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="command">COMMAND // EXERCISE LIBRARY</OperatorHeader><ExerciseLibraryScreen /></>}
+          {view === "WORK_SCHEDULE" && <><OperatorHeader destination="command">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
+          <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="command">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
+          <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">MORE // DECISION JOURNAL</OperatorHeader><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></>}</div>
+          {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="command">MORE // EXERCISE LIBRARY</OperatorHeader><ExerciseLibraryScreen /></>}
           <div hidden={view !== "HEALTH_IMPORT"}>{visited.has("HEALTH_IMPORT") && <HealthImportScreen active={active && view === "HEALTH_IMPORT"} />}</div>
-          {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="command">COMMAND // CUSTOM PROGRAMS</OperatorHeader><CustomTemplateScreen /></>}
+          {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="command">MORE // CUSTOM PROGRAMS</OperatorHeader><CustomTemplateScreen /></>}
         </div>
       {/* Keep local settings/disclosures/drafts mounted while inspecting a destination. */}
       <div ref={menuRef} hidden={view !== "MENU"} className="more-control-center">
@@ -503,7 +503,13 @@ export function MoreScreen({
           closing structural rule, so all four destinations open the
           same way. No IA change: still the exact same MENU view, same
           heading text/class. */}
-      <OperatorHeader destination="command" focusable>COMMAND</OperatorHeader>
+      <OperatorHeader destination="command" focusable>MORE</OperatorHeader>
+      {/* NAV-001: two taps from TODAY to a real backup, reusing the existing export command. */}
+      <section className="equipment-row" aria-label="Back up my data">
+        <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleExportBackup()}>Back up my data</button>
+        <p className="meta">Download a file with everything on this device. Keep it somewhere safe.</p>
+        {archiveStatus && <p role="status" className="meta">{archiveStatus}</p>}
+      </section>
       <div className="command-search" role="search">
         <label htmlFor="command-query" className="visually-hidden">Find a screen or action</label>
         <Icon name="search" size={20} />
@@ -565,7 +571,6 @@ export function MoreScreen({
           </button>
         </div>
         <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>{describeLastBackup(daysSinceBackup)}</p>
-        {archiveStatus && <p role="status" className="meta" style={{ marginTop: 8 }}>{archiveStatus}</p>}
         </div>
 
         <details className="more-inspection">
