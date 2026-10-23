@@ -1807,7 +1807,10 @@ export function TrainScreen({
           <p className="section-label">Finish</p>
 
           <div className="equipment-row">
-            <p className="meta" style={{ marginBottom: 8 }}>{describePartialAdvancement(session.sessionType as SessionType)}</p>
+            {/* FRICTION-001 (owner approval 2026-10-22): the rotation note matters only once PARTIAL is a
+                real choice — a set logged and the workout not yet complete. */}
+            {sets.some((set) => !set.skipped) && !allExercisesComplete
+              && <p className="meta" style={{ marginBottom: 8 }}>{describePartialAdvancement(session.sessionType as SessionType)}</p>}
             {/* FIELD ALPHA Phase 2K (real-device density test, phone-width
                 fix): .btn-primary/.btn-secondary both set width:100% —
                 without flex:1 here, three such buttons each demand their

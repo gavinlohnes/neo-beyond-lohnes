@@ -56,16 +56,20 @@ Walked Weekly, History, Plan today, Import health data, Systems and Review at 02
 | Review: "Lived days, 16:30 to 16:30, Monday through Sunday" and "lived-day windows" (the internal day boundary on a routine screen) | "Monday through Sunday." / "N of 7 days" |
 | Import: "Choose a sleep or a steps and heart rate file" | "sleep, or activity (steps, heart rate and calories)" |
 
-Noted, not changed: SYSTEMS' "Logged HH:MM" for a Garmin sleep is the import time, not when you
-woke; and the 36 h freshness rule counts from that import time.
+Noted for Gavin (approved and built in slice 5): SYSTEMS' "Logged HH:MM" for a Garmin sleep was
+the import time, and the 36 h freshness rule counted from it.
+
+## Slice 5 — owner-approved (Gavin, 2026-10-22: "yes to both")
+
+| Approved | Built |
+| --- | --- |
+| A Garmin sleep is as fresh as its wake time | `getLastMainSleep` measures the 36 h window from the sleep event's `occurredAt` (Garmin's wake time; your own entry's log time, unchanged). SYSTEMS reads "Garmin · woke HH:MM". A late import can no longer make an old night count as last night, so the AMBER/RED status reading (never advice) can't be colored by it. |
+| The PARTIAL rotation note only when it matters | Shown once a set is logged and the workout isn't complete; hidden before the first set and after everything is done. Wording and the rotation rule are unchanged. |
 
 ## Seen, not fixed (candidates)
 
 - TODAY's tile "NO TARGET" plus the line "A weigh-in sets the protein target." is a deliberate
   FIELD-AUTHORITY-001 split (state in the tile, action below); left as is.
-- A live workout always shows "Saving as PARTIAL will NOT advance your rotation…" under FINISH,
-  even before the first set. Could appear only once FINISH is reached; touches workout completion
-  presentation, so it's a candidate for its own slice.
 - The LOG sheet's "WORKOUT SET → TRAIN" keeps an arrow; harmless.
 - "DONE" closes several inline tool panels; fine as "finished", but not the sheet grammar's CLOSE.
 

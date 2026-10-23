@@ -309,6 +309,19 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     await expect.element(screen.getByText(/Set 2 of 3/)).toBeVisible();
   });
 
+  it("FRICTION-001: the PARTIAL rotation note appears once a set is logged, not before", async () => {
+    const screen = await startStandardWorkout();
+    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    expect(screen.getByText(/will NOT advance your rotation/).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "SKIP" }).first().click(); // a skip alone doesn't make PARTIAL a real choice
+    await expect.element(screen.getByText("#1 — SKIPPED", { exact: true })).toBeVisible();
+    expect(screen.getByText(/will NOT advance your rotation/).elements()).toHaveLength(0);
+    await screen.getByPlaceholder("lb").first().fill("135");
+    await screen.getByPlaceholder("reps").first().fill("10");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+    await expect.element(screen.getByText(/^Saving as PARTIAL will NOT advance your rotation/)).toBeVisible();
+  });
+
   it("skipping a set records it as SKIPPED, not as a logged weight", async () => {
     const screen = await startStandardWorkout();
     await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();

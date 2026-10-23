@@ -8,6 +8,8 @@ import { getLastMainSleep, getSystemStatus } from "../../src/application/systemS
 import { getSystemsReadout } from "../../src/application/systemsReadoutQueries";
 import { describeSystemsLine, formatFuelReading } from "../../src/ui/screens/systems/systemsCopy";
 import { db } from "../../src/persistence/db";
+import { importSleepSnapshot } from "../../src/application/externalSleepCommands";
+import { syntheticGarminMonth } from "../helpers/syntheticGarminMonth";
 
 /** SUIT-001: the SYSTEMS readout is the existing queries' values, read only. */
 afterEach(() => vi.useRealTimers());
@@ -91,5 +93,29 @@ describe("SYSTEMS line copy", () => {
       .toEqual(["Sleep 6:50", "Fuel 96/170g", "Check-in GREEN", "Offline"]);
     expect(describeSystemsLine({ sleepMinutes: 300, proteinG: 0, proteinTargetG: 160, checkIn: "YELLOW", statusLevel: "AMBER", warnings: [] })[0])
       .toBe("AMBER");
+  });
+});
+
+describe("FRICTION-001 — a Garmin sleep is as fresh as its wake time (owner approval 2026-10-22)", () => {
+  const H = 3600_000, start = new Date(2026, 9, 20, 16, 30).getTime(), now = start + 34 * H; // 02:30 the next lived day
+
+  it("counts a Garmin night from when you woke, and SYSTEMS says so", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const { days, sleep } = syntheticGarminMonth(start, 2, now);
+    await db.beyondDays.bulkAdd(days);
+    vi.setSystemTime(now); await importSleepSnapshot(sleep);
+    const last = await getLastMainSleep(days[1]!.id, new Date(now));
+    expect(last).toMatchObject({ fromGarmin: true, occurredAt: sleep.records[0]!.endTime });
+    expect(last!.recordedAt).not.toBe(last!.occurredAt); // imported later than it ended
+    expect((await getSystemsReadout(new Date(now))).lastMainSleep).toEqual(last);
+  });
+
+  it("a late import can't make an old night count as last night", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const { days, sleep } = syntheticGarminMonth(start, 2, now);
+    await db.beyondDays.bulkAdd(days);
+    const late = now + 30 * H; // imported more than 36 h after that wake time
+    vi.setSystemTime(late); await importSleepSnapshot(sleep);
+    expect(await getLastMainSleep(days[1]!.id, new Date(late))).toBeNull();
   });
 });

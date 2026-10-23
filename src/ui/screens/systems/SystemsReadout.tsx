@@ -77,7 +77,7 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric }: {
           <Group title="BODY">
             <MetricRow metric="sleep" label="Last main sleep" onOpen={onOpenMetric}
               value={r.lastMainSleep ? formatSleepReading(r.lastMainSleep.minutes) : "Not logged"}
-              detail={r.lastMainSleep ? `Logged ${clockTime(r.lastMainSleep.recordedAt)}` : "Nothing in the last 36 hours."} />
+              detail={r.lastMainSleep ? (r.lastMainSleep.fromGarmin ? `Garmin · woke ${clockTime(r.lastMainSleep.occurredAt)}` : `Logged ${clockTime(r.lastMainSleep.recordedAt)}`) : "Nothing in the last 36 hours."} />
             <MetricRow metric="protein" label="Protein" onOpen={onOpenMetric}
               value={r.proteinG === null ? noDay : formatFuelReading(r.proteinG, r.proteinTargetG)}
               detail={r.proteinG !== null && r.proteinTargetG === undefined ? "No target set." : ""} />

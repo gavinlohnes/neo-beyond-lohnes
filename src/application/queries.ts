@@ -430,6 +430,8 @@ export interface SleepEntry {
   effectiveDurationMinutes: number;
   correctionCount: number;
   recordedAt: string;
+  /** When the sleep ended as far as BEYOND knows: wake time for Garmin, the log time for your own entry. */
+  occurredAt: string;
   kind: "PRIMARY" | "SUPPLEMENTAL";
   /** GARMIN-003: Garmin filled this entry in from a confirmed import. */
   fromGarmin: boolean;
@@ -453,6 +455,7 @@ export async function getSleepEntries(beyondDayId: string): Promise<SleepEntry[]
         effectiveDurationMinutes: chain.effectiveValue,
         correctionCount: chain.correctionCount,
         recordedAt: root.recordedAt,
+        occurredAt: root.occurredAt,
         kind: payload.kind ?? "PRIMARY",
         fromGarmin: payload.source?.kind === "GARMIN",
       };
