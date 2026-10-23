@@ -8,8 +8,23 @@
   display only. No Engine/schema/logging/Garmin/backup semantics change.
 - **REUSE:** measured charts/queries, SleepEvidence, LogSheet; **OWN:** period-to-evidence mapping;
   **BUILD FROM SCRATCH:** period navigation because existing charts use fixed ranges.
-- **PR / verification:** [#292](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/292), draft pushed early. Architecture/typecheck PASS; calendar tests 4/4 and Garmin regression 6/6 PASS. Focused journey first run 17 pass / 3 test-harness failures; correcting selectors and browser-compatible failure injection. Next: focused and production evidence,
-  full verification, independent exact-head review and green CI; Gavin approves this merge.
+- **Built:** shared week-first Garmin sleep sheet from TODAY and DATA; calendar D/W/M/Y,
+  earlier/later controls and swipe, measured sample counts, keyboard/pointer night selection,
+  retained stages/source records and canonical all-records/correction route. Missing is not zero;
+  manual sleep is not silently converted to Garmin evidence. Existing 371-period history bound
+  is disclosed, including clipped calendar periods.
+- **PR / evidence:** [#292](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/292), draft pushed
+  early. Architecture/typecheck/build PASS; calendar tests 4/4, Garmin regression 6/6; final sleep
+  browser file 9/9 (including four axe sizes), NavPaths 11/11 with two slice-4 todos.
+  [Production acceptance](../screenshots/nav-001-slice3/README.md) PASS at phone/landscape/desktop,
+  offline real import→week→night/source, close/focus, all-records route, unchanged events.
+- **Verification history:** first focused 17 pass / 3 new test-harness failures, then 19 pass /
+  one instrumentation call-count failure. Corrected unsupported ESM spy, actual destination
+  heading and expected DB invocation count; all behavior assertions retained. Keyboard focus
+  refinement independently suggested and verified. WIP code review PASS; final full gate,
+  exact-head review and required CI recorded in #292 before readiness.
+- **Next:** finish full verification, final independent review and green exact-head CI, then
+  Gavin’s merge approval. DATA layout/sync tile/tree-test rerun remain slice 4.
 
 ---
 Historical slice-2 checkpoint (merged):

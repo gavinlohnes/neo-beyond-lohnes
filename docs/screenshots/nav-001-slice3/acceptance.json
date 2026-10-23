@@ -1,0 +1,66 @@
+[
+  {
+    "width": 320,
+    "height": 640,
+    "result": "PASS",
+    "checks": [
+      "real production import of synthetic Garmin records",
+      "offline week-first TODAY and DATA routes",
+      "measured-night sample count",
+      "bar to stages and exact source record",
+      "calendar month/year paging",
+      "CLOSE focus return",
+      "all-records route",
+      "unchanged domain records",
+      "no overflow or page errors"
+    ]
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "result": "PASS",
+    "checks": [
+      "real production import of synthetic Garmin records",
+      "offline week-first TODAY and DATA routes",
+      "measured-night sample count",
+      "bar to stages and exact source record",
+      "calendar month/year paging",
+      "CLOSE focus return",
+      "all-records route",
+      "unchanged domain records",
+      "no overflow or page errors"
+    ]
+  },
+  {
+    "width": 844,
+    "height": 390,
+    "result": "PASS",
+    "checks": [
+      "real production import of synthetic Garmin records",
+      "offline week-first TODAY and DATA routes",
+      "measured-night sample count",
+      "bar to stages and exact source record",
+      "calendar month/year paging",
+      "CLOSE focus return",
+      "all-records route",
+      "unchanged domain records",
+      "no overflow or page errors"
+    ]
+  },
+  {
+    "width": 1280,
+    "height": 800,
+    "result": "PASS",
+    "checks": [
+      "real production import of synthetic Garmin records",
+      "offline week-first TODAY and DATA routes",
+      "measured-night sample count",
+      "bar to stages and exact source record",
+      "calendar month/year paging",
+      "CLOSE focus return",
+      "all-records route",
+      "unchanged domain records",
+      "no overflow or page errors"
+    ]
+  }
+]
