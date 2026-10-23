@@ -125,7 +125,17 @@ describe("NAV-001 top tasks from TODAY", () => {
     await screen.getByRole("button", { name: "DATA", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "DATA", exact: true })).toBeVisible();
   });
-  it.todo("review sleep: TODAY's sleep tile or DATA → Sleep opens on this week (slice 3)");
+  it("review sleep: TODAY’s sleep tile or DATA → Sleep opens on this week", async () => {
+    await startDay(); const screen = await render(<App />);
+    await screen.getByRole("button", { name: "Main sleep not logged, explore records", exact: true }).click();
+    let sheet = screen.getByRole("dialog", { name: "SLEEP", exact: true });
+    await expect.element(sheet.getByRole("button", { name: "Week", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await sheet.getByRole("button", { name: "CLOSE", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "main sleep history", exact: true }).click();
+    sheet = screen.getByRole("dialog", { name: "SLEEP", exact: true });
+    await expect.element(sheet.getByRole("button", { name: "Week", exact: true })).toHaveAttribute("aria-pressed", "true");
+  });
   it.todo("last run of shifts: DATA → Your rotation (slice 4)");
   it.todo("sync Garmin: on TODAY's numbers (slice 4)");
 });

@@ -1,3 +1,34 @@
+# NAV-001 — slice 3: sleep metric page
+
+- **Authority / Builder:** owner-approved NAV map; Gavin: “go ahead” after slice-2 handoff.
+  Codex; approved PROTECTED IA. [Brief](NAV-001.md#slice-3--sleep-metric-page).
+- **Branch / baseline:** `codex/nav-001-slice3`, `64248eb8cb8bac5af05517943aa3469b494f7086`.
+  #291 merged with explicit approval, green CI and independent exact-head PASS.
+- **Scope:** shared week-first sleep detail, D/W/M/Y and period paging/swipe, record drill-through;
+  display only. No Engine/schema/logging/Garmin/backup semantics change.
+- **REUSE:** measured charts/queries, SleepEvidence, LogSheet; **OWN:** period-to-evidence mapping;
+  **BUILD FROM SCRATCH:** period navigation because existing charts use fixed ranges.
+- **Built:** shared week-first Garmin sleep sheet from TODAY and DATA; calendar D/W/M/Y,
+  earlier/later controls and swipe, measured sample counts, keyboard/pointer night selection,
+  retained stages/source records and canonical all-records/correction route. Missing is not zero;
+  manual sleep is not silently converted to Garmin evidence. Existing 371-period history bound
+  is disclosed, including clipped calendar periods.
+- **PR / evidence:** [#292](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/292), draft pushed
+  early. Architecture/typecheck/build PASS; calendar tests 4/4, Garmin regression 6/6; final sleep
+  browser file 9/9 (including four axe sizes), NavPaths 11/11 with two slice-4 todos.
+  [Production acceptance](../screenshots/nav-001-slice3/README.md) PASS at phone/landscape/desktop,
+  offline real import→week→night/source, close/focus, all-records route, unchanged events.
+- **Verification history:** first focused 17 pass / 3 new test-harness failures, then 19 pass /
+  one instrumentation call-count failure. Corrected unsupported ESM spy, actual destination
+  heading and expected DB invocation count; all behavior assertions retained. Keyboard focus
+  refinement independently suggested and verified. WIP code review PASS; final full gate,
+  exact-head review and required CI recorded in #292 before readiness.
+- **Next:** finish full verification, final independent review and green exact-head CI, then
+  Gavin’s merge approval. DATA layout/sync tile/tree-test rerun remain slice 4.
+
+---
+Historical slice-2 checkpoint (merged):
+
 # NAV-001 — slice 2: DATA / MORE and backup first
 
 - **Authority / Builder:** Gavin approved the NAV map and explicitly requested merging #290 and

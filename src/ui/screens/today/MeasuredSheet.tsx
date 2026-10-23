@@ -65,21 +65,21 @@ const tick = (metric: MeasuredMetric, v: number) => metric === "sleep" ? `${Math
 
 const W = 320, H = 150, LEFT = 30, BOTTOM = 18, TOP = 8;
 
-function BarChart({ metric, values, selected, onSelect, label, usual }: {
-  metric: MeasuredMetric; values: readonly PeriodValue[]; selected: number; onSelect: (i: number) => void; label: (v: PeriodValue) => string; usual: number | null;
+export function BarChart({ metric, values, selected, onSelect, label, usual, interactive = false }: {
+  metric: MeasuredMetric; values: readonly PeriodValue[]; selected: number; onSelect: (i: number) => void; label: (v: PeriodValue) => string; usual: number | null; interactive?: boolean;
 }) {
   const max = niceMax(Math.max(...values.map((v) => v.value ?? 0), usual ?? 0));
   const plotW = W - LEFT, plotH = H - BOTTOM - TOP, slot = plotW / values.length;
   const barW = Math.max(2, Math.min(24, slot - 2));
   const y = (v: number) => TOP + plotH - (v / max) * plotH;
   const measured = values.filter((v) => v.value !== null).length;
-  return <svg className="measured-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${values.length} bars, ${measured} measured. Highest ${formatMeasured(metric, Math.max(...values.map((v) => v.value ?? 0)))}.`}>
+  return <svg className="measured-chart" viewBox={`0 0 ${W} ${H}`} role={interactive ? "group" : "img"} aria-label={`${values.length} bars, ${measured} measured. Highest ${formatMeasured(metric, Math.max(...values.map((v) => v.value ?? 0)))}.`}>
     {[0, max / 2, max].map((g) => <g key={g}><line className="measured-grid" x1={LEFT} x2={W} y1={y(g)} y2={y(g)} /><text className="measured-axis" x={LEFT - 4} y={y(g) + 3} textAnchor="end">{tick(metric, g)}</text></g>)}
     {usual !== null && <line className="measured-usual" x1={LEFT} x2={W} y1={y(usual)} y2={y(usual)} />}
     {values.map((v, i) => {
       const x = LEFT + i * slot + (slot - barW) / 2;
       const top = v.value === null ? null : y(v.value), r = Math.min(4, barW / 2);
-      return <g key={v.from} className="measured-bar" onClick={() => onSelect(i)}>
+      return <g key={v.from} className="measured-bar" role={interactive ? "button" : undefined} tabIndex={interactive ? 0 : undefined} aria-label={interactive ? label(v) : undefined} onKeyDown={interactive ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(i); } } : undefined} onClick={() => onSelect(i)}>
         <rect x={LEFT + i * slot} y={TOP} width={slot} height={plotH} fill="transparent" />
         {top !== null && v.value! > 0 && <path d={`M${x},${TOP + plotH} V${top + r} Q${x},${top} ${x + r},${top} H${x + barW - r} Q${x + barW},${top} ${x + barW},${top + r} V${TOP + plotH} Z`}
           fill={i === selected ? MARK_SELECTED : MARK} opacity={v.partial ? 0.6 : 1} />}
@@ -107,7 +107,7 @@ function TodayLine({ snapshot }: { snapshot: MeasuredSnapshot }) {
   </svg>;
 }
 
-function Hypnogram({ sleep }: { sleep: NonNullable<MeasuredSnapshot["lastNight"]> }) {
+export function Hypnogram({ sleep }: { sleep: NonNullable<MeasuredSnapshot["lastNight"]> }) {
   const from = Date.parse(sleep.startTime), to = Date.parse(sleep.endTime), span = Math.max(1, to - from);
   const rowH = (H - BOTTOM - TOP) / 4, plotW = W - LEFT - 6;
   const x = (t: number) => LEFT + ((t - from) / span) * plotW;

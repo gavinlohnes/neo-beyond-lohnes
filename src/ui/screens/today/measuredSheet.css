@@ -32,3 +32,11 @@
 
 /* SYNC-001: the link to BEYOND Health Bridge reads as a button. */
 .measured-sync { display: block; margin-top: var(--space-2); text-align: center; text-decoration: none; }
+
+/* NAV-001: period controls are supplementary to swipe; native page scrolling stays vertical. */
+.sleep-period-navigation { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; }
+.sleep-period-navigation p { text-align: center; margin: 0; }
+.sleep-period-navigation button { min-height: 44px; font-size: 24px; padding: 0; }
+.sleep-period-chart { touch-action: pan-y; }
+.sleep-record-row { display: block; width: 100%; min-height: 44px; margin-block: 6px; text-align: left; }
+.measured-bar:focus-visible { outline: 2px solid var(--p-t1, #eee); outline-offset: 2px; }

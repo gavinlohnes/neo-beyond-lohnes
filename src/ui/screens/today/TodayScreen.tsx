@@ -1,3 +1,4 @@
+import { SleepMetricSheet } from "./SleepMetricSheet";
 import { useHiddenFeatures } from "../../hiddenFeatures";
 import { LogActions } from "../../components/RecordSheets";
 import type { RecordSheetTarget } from "../../recordSheets";
@@ -1913,7 +1914,7 @@ export function TodayScreen({
 
   /** POLISH-002: the prototype's four number tiles. Missing stays "—"; each opens its history. */
   function renderFuel() {
-    const open = (metric: "water" | "protein" | "weight" | "sleep") => () => { if (!busyRef.current) onOpenHealthEvidence?.(metric); };
+    const open = (metric: "water" | "protein" | "weight" | "sleep") => () => { if (!busyRef.current) { if (metric === "sleep") setMeasuredOpen("sleep"); else onOpenHealthEvidence?.(metric); } };
     const pct = proteinTargetG ? Math.min(100, Math.round((minimumDayProteinG / proteinTargetG) * 100)) : null;
     const sleep = lastMainSleepMinutes === null ? null : `${Math.floor(lastMainSleepMinutes / 60)}:${String(Math.round(lastMainSleepMinutes % 60)).padStart(2, "0")}`;
     // GARMIN-004: with Garmin data, STEPS and RESTING HR join the numbers and SLEEP shows your usual.
@@ -1950,7 +1951,7 @@ export function TodayScreen({
             <span className="cc-flab">{waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>, `Water ${minimumDayHydrateOz} oz`)}
           {tile("weight", "WEIGHT", <b>{latestWeightLbs === undefined ? "—" : latestWeightLbs.toFixed(1)}</b>,
             <span className="cc-flab">{latestWeightLbs === undefined ? "NOT LOGGED" : "LATEST"}</span>, latestWeightLbs === undefined ? "Weight not logged" : `Weight ${latestWeightLbs} lb`)}
-          {garminTiles ? <button type="button" disabled={busy} aria-label={`${visibleSleep ? `Sleep ${visibleSleep}, ${sleepSource.toLowerCase()}` : "Sleep not logged or measured"}${measured!.usual.sleep.value !== null ? `, usual ${measuredClock(measured!.usual.sleep.value)}` : ""}, open sleep`} onClick={sleep && !lastMainSleepFromGarmin ? open("sleep") : openMeasured(measured!.lastNight ? "sleep" : null)}>
+          {garminTiles ? <button type="button" disabled={busy} aria-label={`${visibleSleep ? `Sleep ${visibleSleep}, ${sleepSource.toLowerCase()}` : "Sleep not logged or measured"}${measured!.usual.sleep.value !== null ? `, usual ${measuredClock(measured!.usual.sleep.value)}` : ""}, open sleep`} onClick={openMeasured("sleep")}>
             <span className="cc-flab">SLEEP</span><span className="cc-num"><b>{visibleSleep ?? "—"}</b></span><span className="cc-flab">{sleepSource}</span>
           </button> : tile("sleep", "SLEEP", <b>{sleep ?? "—"}</b>, <span className="cc-flab">{sleep ? "LAST MAIN" : "NOT LOGGED"}</span>,
             sleep ? `Main sleep ${sleep}` : "Main sleep not logged")}
@@ -2533,7 +2534,9 @@ export function TodayScreen({
 
     </section>
     <LogSheet open={fastCaptureOpen} title="NOTE" onClose={closeFastCapture} canClose={() => !busyRef.current}>{renderToolsItem("CAPTURE")}</LogSheet>
-    <MeasuredSheet open={measuredOpen !== null} metric={measuredOpen ?? "steps"} snapshot={measured} onClose={() => setMeasuredOpen(null)}
+    <SleepMetricSheet open={measuredOpen === "sleep"} onClose={() => setMeasuredOpen(null)}
+      onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
+    <MeasuredSheet open={measuredOpen !== null && measuredOpen !== "sleep"} metric={measuredOpen ?? "steps"} snapshot={measured} onClose={() => setMeasuredOpen(null)}
       onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
     <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} quickValues={quickCheckInValues} error={checkInError} />
     {(hydrationConfirmation || mealConfirmation || sleepConfirmation || proteinConfirmation) && <div className="redesign-toast" role="status">
