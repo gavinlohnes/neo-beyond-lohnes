@@ -1,3 +1,4 @@
+import { openDetailedReviews } from "./helpers/review";
 import { commandResult } from "./helpers/command";
 import { afterEach, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
@@ -32,6 +33,7 @@ async function openWeight() {
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
   await (await commandResult(screen, "REVIEW")).click();
+  await openDetailedReviews(screen);
   await screen.getByText("Is my weight going down?", { exact: true }).click();
   return screen;
 }

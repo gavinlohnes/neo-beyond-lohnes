@@ -105,6 +105,8 @@ as the brief; do not create duplicate authorization artifacts. Record:
 - Risk lane, scope, and exclusions.
 - Acceptance evidence appropriate to the change.
 - Exact starting commit fetched from `origin/master`.
+- REUSE / OWN / BUILD FROM SCRATCH disposition, also required in every new PR description
+  (the authoritative format is in [AGENTS.md](../../AGENTS.md#the-leverage-gate)).
 - Builder, branch, and active PR (pending until opened, then linked in GitHub).
 
 Routine work within an approved objective needs no separate authorization PR, formal Drop
@@ -124,6 +126,15 @@ existing isolated cloud checkout; do not create a Git worktree unless the owner 
 | FEATURE | Owner-approved capabilities and meaningful UI improvements that do not cross Protected boundaries. | Relevant behavior/regression tests and build/type checks as warranted; acceptance evidence; green required CI; owner merge approval. |
 | PROTECTED | Governance and authorization authority, product doctrine, Engine/recommendation authority, data schemas/migrations, privacy/security, backup integrity, primary information architecture, consequential AI autonomy, or another protected boundary. | Explicit bounded owner approval, appropriate tests and acceptance evidence, independent exact-head review, resolved findings, green required CI, and owner merge approval. |
 
+Owner clarification, 2026-10-23: keep ROUTINE work thin — copy, labels, empty states, list
+flattening and plain-language changes use a concise PR and normal review, with no separate
+ceremony. “Careful” work (layout order, one-red presentation, sheet UX) uses a short brief and
+relevant tests under FEATURE when no Protected boundary is crossed; it is not a fourth lane.
+Engine, schema, Garmin write/fill-in semantics, backup and permissions remain PROTECTED with
+this charter’s full safeguards. Presentation changes that alter recommendation authority or
+other Protected meaning remain Protected regardless of their apparent size. No legacy Factory
+ritual is reinstated.
+
 Classify the actual meaning and impact of the change, not its file extension. A governance
 amendment is Protected even if it changes only Markdown. `npm run check:risk -- <starting-sha>`
 provides conservative path evidence; inspect semantic triggers it cannot detect. Do not downgrade
@@ -136,6 +147,12 @@ build) when the scope or regression risk warrants it. Existing required CI remai
 unchanged. Do not duplicate full runs without a new change or unresolved failure, and do not run
 full browser verification concurrently. Diagnose failures; never weaken assertions or bypass
 checks for a green result. Record passed, failed, skipped, and unrun checks honestly.
+
+Every PR review checks the [AGENTS.md leverage gate](../../AGENTS.md#the-leverage-gate):
+is the Reuse decision supported by the existing code and relevant alternatives, does the change
+avoid duplicating a capability, and is custom implementation justified? Scale this check to the
+task; a label or completed checkbox alone is not evidence. Use the existing brief/PR and review,
+not a separate research report or gate. Protected work retains independent exact-head review.
 
 Protected review is performed by an independently assigned qualified agent/session against the
 exact PR head and approved brief. Persist the reviewed SHA, evidence, findings/disposition, and

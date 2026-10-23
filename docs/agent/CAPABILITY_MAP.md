@@ -84,6 +84,28 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 - **Only relevant once recurrence is actually wanted as a feature** — this entry exists so that
   whenever it is, nobody hand-rolls weekday arithmetic first.
 
+## INTELLIGENCE SPINE / DELTA
+
+- **Existing implementation:** `src/domain/intelligence/types.ts` defines `AdvisoryNote` with
+  source, evidence basis and attention level; `src/engine/advisory.ts` composes seven sources;
+  `src/application/advisoryQueries.ts` gathers their current evidence. Sources: commitment
+  relevance, training progression, reviewed journal lessons, shift protection, continuity,
+  repeated outcome ratings and sleep-rollover attribution ambiguity.
+- **Consumers:** `src/ui/screens/today/AdvisorySection.tsx` and `advisoryCopy.ts` present grouped
+  observations and explanations. `src/application/continuityQueries.ts`, `src/engine/continuity.ts`
+  and `patternProposal.ts` provide existing dismissal/continuity and narrow repeated-rating
+  behavior. Tests include `tests/engine/advisory.test.ts` and
+  `tests/integration/advisoryNotesQuery.test.ts`.
+- **Recommendation explanations:** `src/engine/evaluate.ts` emits a `DecisionTrace`; explain
+  that actual trace rather than recomputing recommendation reasoning in a parallel system.
+  Advisory notes remain informational and do not feed back into recommendation arbitration.
+- **Known limits:** journal relevance uses keyword matching; outcome patterns are a bounded
+  repeated-rating rule, not general habit analysis; evidence basis fields do not universally
+  contain navigable source-record IDs. Sleep attribution detection is not sleep-aware
+  recommendation selection. Inspect current code before extending these seams.
+- **Reuse direction:** extend these existing paths before introducing another intelligence
+  layer. DELTA direction is in [DELTA-002.md](DELTA-002.md); each implementation slice retains its own approval.
+
 ## RECOMMENDATION ARBITRATION / OUTCOME MEMORY
 
 - **Existing primitive**: `src/engine/evaluate.ts` (5 recommendation kinds, capacity + 2
@@ -100,8 +122,8 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   library integration. General-purpose, not limited to Engine recommendations (owner ruling,
   2026-09-02). `src/domain/journal/types.ts`, `src/application/journalCommands.ts`/
   `journalQueries.ts`, `src/ui/screens/more/JournalScreen.tsx` (reachable from MORE), db.ts v8.
-  Still open: nothing yet reads a Decision Journal entry back into Engine arbitration or
-  advisory composition — this Drop only builds the journal itself.
+  Later work added reviewed journal lessons to advisory composition (see Intelligence Spine
+  above); this does not make journal entries Engine arbitration inputs.
 - **Ruling on file**: Obligations entering recommendation arbitration, and outcome history
   biasing recommendation selection, are both recommendation-priority changes — owner sign-off
   obtained 2026-09-02.

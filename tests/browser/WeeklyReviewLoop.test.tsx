@@ -1,3 +1,4 @@
+import { openDetailedReviews } from "./helpers/review";
 import { commandResult } from "./helpers/command";
 import { afterEach, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
@@ -33,6 +34,7 @@ for (const width of [320, 360, 412]) it(`saves a note/focus via TODAY→Review, 
   await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   await (await commandResult(screen, "REVIEW")).click();
+  await openDetailedReviews(screen);
   const panel = screen.getByRole("region", { name: "Weekly review", exact: true });
   // The Weekly Review dashboard (2026-10-18) shows the week's logged protein in its headline.
   await expect.element(panel.getByText("Recorded on 1 day", { exact: true })).toBeVisible();
@@ -50,6 +52,7 @@ for (const width of [320, 360, 412]) it(`saves a note/focus via TODAY→Review, 
   await cleanup(); screen = await render(<App />);
   await screen.getByRole("button", { name: "COMMAND", exact: true }).click();
   await (await commandResult(screen, "REVIEW")).click();
+  await openDetailedReviews(screen);
   const reloaded = screen.getByRole("region", { name: "Weekly review", exact: true });
   await reloaded.getByText(/Saved review · starting/).click();
   await expect.element(reloaded.getByRole("textbox", { name: "What stood out? (optional)", exact: true })).toHaveValue("Protein logging was easier on shift.");

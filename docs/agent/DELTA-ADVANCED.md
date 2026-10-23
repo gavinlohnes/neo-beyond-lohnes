@@ -6,8 +6,14 @@
 - **Builds on** [DELTA-002](DELTA-002.md) (what changed, plain why, question buttons, tap-through
   evidence). Same rule: DELTA explains what BEYOND computed. It never decides, never claims a cause,
   never scores. The 2026-10-09 "smart by design, AI optional" ruling stands; nothing here needs a model.
-- **Leverage:** BUILD OWNED. Uses existing records, personal baselines, the shift forecast and the
-  decision journal. No new dependency or provider.
+- **REUSE:** existing Intelligence Spine, Whole Picture, personal-baseline and shift-forecast
+  primitives, and Decision Journal; match existing evidence and explicit-user-choice patterns.
+- **OWN:** mapping future approved slices to BEYOND events, rules, provenance and lived-day data.
+- **BUILD FROM SCRATCH:** none for this direction-only document; future implementation slices
+  must justify any new custom capability individually. No new dependency or provider.
+- **Integration status (2026-10-23):** Whole Picture #283 and TODAY’s plain-language “Why this?”
+  #284 merged. This does not mean every DELTA-002 part shipped. Gavin explicitly approved
+  merging this documentation and #286; advanced features remain parked pending named approval.
 
 ## Guardrails (apply to every item)
 

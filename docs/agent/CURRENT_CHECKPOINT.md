@@ -1,9 +1,117 @@
-# DELTA-002 + DELTA-ADVANCED — directions locked (docs only)
+# Owner-approved integration — #286 and #282
+
+- **Authority:** Gavin explicitly requested merging both PRs on 2026-10-23. Codex integrates;
+  no additional feature implementation is authorized.
+- **Current truth:** Whole Picture #283, reuse-first #285 and TODAY “Why this?” #284 are merged.
+  #286 records mandatory REUSE / OWN / BUILD FROM SCRATCH and proportional process. #282 records
+  advanced Delta direction only; each future slice still requires owner approval.
+- **Branches / verification:** #286 `codex/reuse-first-002` merges fresh master `a17a2fd`;
+  #282 `claude/delta-advanced` incorporates that same reconciled base. Conflicting checkpoint
+  and register entries retain both owner direction and Delta history. Final exact-head reviews
+  and unchanged required CI are recorded in each PR before the owner-approved merges.
+- **Mainline / next:** use Whole Picture and TODAY’s explanation on shift; Gavin decides whether
+  to authorize sleep-aware Engine work. Parallel feature epics remain parked; no SUIT-ALIVE,
+  visual epic, boxed AI, ranked help, new recommendation priority or pushback schema authorized.
+- **REUSE:** existing register, checkpoint, Intelligence Spine and Delta direction briefs.
+- **OWN:** documentation reconciliation and mapping to existing owner authority.
+- **BUILD FROM SCRATCH:** none.
+
+---
+Historical checkpoint (superseded status; retained for evidence):
+
+# REUSE-FIRST-002 — owner build direction, 2026-10-23
+
+- **Authority / Builder / lane:** Gavin’s explicit owner direction; Codex; PROTECTED docs-only.
+- **Branch / baseline:** `codex/reuse-first-002`, fresh master `fcc0d0d`; [brief](REUSE-FIRST-002.md).
+- **Direction:** reuse existing work/proven patterns by default; every new brief and PR description
+  states REUSE / OWN / BUILD FROM SCRATCH (one-sentence justification or none). Existing builder
+  gate, risk lanes and review retained; Routine stays thin; Careful presentation uses short
+  brief/tests; Protected safeguards remain. [Locked decision](../UX_DECISIONS.md#reuse-first-002--owner-build-direction-locked-2026-10-23).
+- **Mainline:** Whole Picture #283, reuse-first #285 and TODAY-only DELTA slice #284 merged. Park parallel feature epics unless Gavin names them. SUIT-ALIVE/visual epics,
+  boxed AI, ranked “what would help most,” new recommendation priority and new pushback schema
+  are not authorized. #282 is direction documentation, not implementation permission.
+- **PR / verification:** [#286](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/286).
+  Local Markdown targets, diff check and architecture pass (298 files); classifier confirms
+  PROTECTED. Docs-only; unchanged required CI runs full verification. Final exact-head review
+  and CI evidence are recorded in #286 before readiness; Gavin approves merge.
+- **Merge authority / next:** Gavin explicitly requested merging #286 and #282 on 2026-10-23.
+  Fresh master through #284 merged into this branch; renew independent exact-head review and
+  green required CI, then perform the approved merges without bypass. No new product work.
+
+
+---
+Historical checkpoint (superseded status; retained for evidence):
+
+# DELTA-002 slice 1 — "Why this?" in plain words
+
+- **Objective / authority:** [DELTA-002](DELTA-002.md) slice 1; Gavin: "yes start step 1"
+  (2026-10-23). Builder: Claude Code, branch `claude/delta-002-slice1`, from `628ea3c` (#283).
+- **Built:** `explainRecommendation` (recommendationCopy.ts) reads the DecisionTrace into plain
+  sentences that lead the "How BEYOND decided" panel; always states the Engine doesn't use sleep,
+  weight or training. Display only.
+- **Verified:** full verify 2,912 passed / one skip (ModePinExpiry 320px clock-edge flake, passes
+  alone and on master). Review @ e60e35b requested one fix (the RED + post-shift sentence said
+  shift-down could wait while STABILIZE hands off to SHIFT DOWN); fixed with the cheap notes.
+- **Next:** CI, exact-head re-review, Gavin's merge. Then Gavin's call: should the Engine
+  consider sleep (Protected)?
+
+---
+Previous checkpoint (REUSE-FIRST-001, #285 merged):
+
+# REUSE-FIRST-001 — reuse before invention
+
+- **Authority / lane / Builder:** Gavin’s “Make it so,” 2026-10-23; PROTECTED; Codex.
+- **Branch / baseline:** `codex/reuse-first-001`, fresh master `628ea3c`; [brief](REUSE-FIRST-001.md).
+- **Scope:** existing leverage gate strengthened; concise reuse evidence in brief/PR and reviewer
+  check; capability map now points to the existing Intelligence Spine. No runtime changes.
+- **PR / verified:** [#285](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/285).
+  Local Markdown links and new implementation pointers resolve; diff check and architecture
+  pass (298 files); risk classifier confirms PROTECTED. Docs-only: no redundant local runtime
+  tests; required CI is unchanged. Independent final-head review and CI results are recorded
+  in #285 before readiness; Gavin approves merge.
+- **Other work:** WHOLE-PICTURE-001 #283 merged; its final local gate, independent review and CI
+  passed. Claude owns DELTA slice 1 (#284); #282 is separate advanced-direction documentation.
+- **Next:** verify, open PR, independent review and green CI; no merge without Gavin’s approval.
+
+---
+Historical checkpoint (superseded status; retained for evidence):
+
+# WHOLE-PICTURE-001 — connected Review production integration
+
+- **Authority / Builder / lane:** Gavin approved the full interactive concept on 2026-10-23;
+  Codex; PROTECTED. [Brief](WHOLE-PICTURE-001.md).
+- **Branch / start:** `codex/whole-picture-001`, fresh master
+  `ba381c77066a426c6ea52e10dfa30603c5210c3a`; no overlapping open feature PR at start.
+- **Scope:** production connected evidence, comparisons, real intent/journal stories, canonical
+  weekly focus, tentative real-schedule planning, source inspection and review export/print.
+  Full approved concept retained; no fake data, new runtime dependency, schema or Engine rule.
+- **Status / PR:** implementation pushed; draft [#283](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/283).
+  Fresh master `5e0811c` through #281 merged. No `src/engine/**` diff; new pure projections
+  live in application as Gavin directed.
+- **Verification:** `npm run verify` PASS (2026-10-23): architecture 298 files,
+  295 test files; **2,910 passed / 1 existing skip**, then TypeScript + production/PWA build.
+  Risk classifier reports PROTECTED; `git diff --check` passes. No assertions, timeouts or
+  suite configuration weakened. The build retains Vite’s advisory about a bundle over 500 kB.
+  Built-PWA acceptance passes at 320/390/1440 pixels: source links/History return, no
+  exploration writes, retained draft, canonical offline save and offline cold reload.
+  [Screenshots/results/reproduction](../screenshots/whole-picture-001/README.md).
+- **Review / CI:** independent review at `8c00266` found no substantive issues. Renew on this
+  final documentation head and persist exact SHA / PASS or BLOCK in PR #283. Initial CI’s
+  legacy-disclosure navigation failure was corrected; its assertions now pass in the full
+  local gate. Required CI must be green on the final PR head; live result is in #283.
+- **Next:** renew independent exact-head review, obtain green required CI on this final head,
+  then Gavin’s merge approval. No merge or deployment authorized. DEPS-001 #280 and DELTA-002 #281 are now on master.
+  Read DELTA-002 and the DELTA-ADVANCED brief at #282 (`c1a3c1e`); Delta implementation waits
+  for this objective. Every claim must reach its records; show denominators, never causes/scores.
+
+---
+Previous checkpoint:
+
+# DELTA-002 — direction locked (docs only)
 
 - **Objective / authority:** Gavin locked the DELTA-002 direction on 2026-10-23 ("Lock it in for
   right now"). Builder: Claude Code, branch `claude/delta-002`. Docs only: [brief](DELTA-002.md) and
-  a Decision Register entry; [DELTA-ADVANCED](DELTA-ADVANCED.md) direction approved the same day
-  (branch `claude/delta-advanced`). No implementation authorized.
+  a Decision Register entry. No implementation authorized.
 - **Also in flight:** WHOLE-PICTURE-001 (Codex), unpushed in Codex's container; it goes first.
 - **Next:** PR, Gavin's merge. Then Codex pushes WHOLE-PICTURE-001 for continuation.
 

@@ -12,6 +12,25 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## REUSE-FIRST-002 — owner build direction (locked 2026-10-23)
+
+Gavin directs BEYOND to reuse existing work and proven patterns by default: legally reuse and
+adapt behavior before inventing it. Own only the BEYOND-specific mapping to events/rules/data;
+protect Engine semantics, the lived-day model, provenance, owner-wins Garmin, local-first behavior
+and FIELD doctrine. Every new brief and PR description states **REUSE**, **OWN**, and
+**BUILD FROM SCRATCH** (one-sentence justification or `none`). The authoritative operational rule
+is [AGENTS.md’s leverage gate](../AGENTS.md#the-leverage-gate); risk-proportional process remains
+in [DEV-FLOW-002](agent/DEV-FLOW-002.md). Thin ROUTINE PRs and normal review; short brief/tests for
+Careful presentation work; full Protected safeguards for Engine, schema, Garmin write/fill-in,
+backup and permissions. No new report, automated gate or legacy ceremony.
+
+**Current mainline:** WHOLE-PICTURE-001 is merged; the first DELTA slice is on TODAY only.
+Claude owns that implementation (#284). **Not authorized:** SUIT-ALIVE or other visual epics,
+boxed AI, ranked “what would help most,” new recommendation priority or new schema for pushback.
+Parallel feature epics are parked unless Gavin names them. Earlier approval of a direction,
+including DELTA-ADVANCED, is not implementation authority. This process lock is docs-only and
+does not expand any product/UI scope. See [the brief](agent/REUSE-FIRST-002.md).
+
 ## DELTA-ADVANCED — smarter about you, not more AI (direction approved 2026-10-23)
 
 Gavin approved the [advanced direction](agent/DELTA-ADVANCED.md) and its order: personal
@@ -20,6 +39,23 @@ rotation forecasts, then "what moves the needle" once months of data exist. Guar
 first, patterns not causes, sample sizes shown, every claim taps through, silence is valid. No
 model required; each item still needs its own approved slice.
 
+## WHOLE-PICTURE-001 — connected Review (owner approved 2026-10-23)
+
+Gavin approved the complete interactive Whole Picture concept for production; see
+[the bounded brief](agent/WHOLE-PICTURE-001.md) and frozen prototype. Review may lead with
+aligned physical, subjective-state, measured-health and intent/journal evidence over a named
+period, descriptive context/period comparisons, source inspection, operator-selected focus and
+explicitly tentative planning alternatives. This extends Review's presentation/interpretation
+allowance, not Engine recommendation authority. No grade, diagnosis, causal claim or inferred
+historical fact. Sparse/unknown/conflicting evidence stays explicit.
+
+The next-focus action reuses the canonical weekly-review save and its actual calendar focus week;
+it must disclose that it saves/revises the weekly review and preserve its existing note and
+optimistic ownership. Planning previews use existing schedule/Week Ahead and eligible commitments;
+they never book, reschedule, assert availability or write a new plan. Existing weekly/monthly,
+question and recommendation-ledger capabilities remain accessible. No primary-tab, Engine rule,
+rotation, schema/event, backup, provider or historical-fixture amendment is authorized.
+
 ## DELTA-002 — what changed, and why it matters (direction locked 2026-10-23)
 
 Gavin locked the direction in [the brief](agent/DELTA-002.md): DELTA is a voice for BEYOND's
@@ -27,6 +63,9 @@ existing deterministic intelligence — what changed since last shift, a plain "
 buttons, every claim tapping through to its records. It explains; it never decides, ranks or
 scores. Not an AI assistant: the 2026-10-09 "smart by design, AI optional" ruling stands. Locking
 the direction authorizes no implementation; slices need their own approval, after WHOLE-PICTURE-001.
+- **Slice 1, "Why this?" in plain words (owner go 2026-10-23):** the "How BEYOND decided" panel leads
+  with 1–3 sentences read from the recommendation's own trace, ending with what the Engine does not
+  use (sleep, weight, training). The rules in detail stay below.
 
 ## UX-COHESION-001 — quiet by default (owner approved 2026-10-22)
 
