@@ -36,6 +36,9 @@ existing deterministic intelligence — what changed since last shift, a plain "
 buttons, every claim tapping through to its records. It explains; it never decides, ranks or
 scores. Not an AI assistant: the 2026-10-09 "smart by design, AI optional" ruling stands. Locking
 the direction authorizes no implementation; slices need their own approval, after WHOLE-PICTURE-001.
+- **Slice 1, "Why this?" in plain words (owner go 2026-10-23):** the "How BEYOND decided" panel leads
+  with 1–3 sentences read from the recommendation's own trace, ending with what the Engine does not
+  use (sleep, weight, training). The rules in detail stay below.
 
 ## UX-COHESION-001 — quiet by default (owner approved 2026-10-22)
 

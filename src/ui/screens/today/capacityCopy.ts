@@ -28,7 +28,7 @@ export function describeReason(code: string): string {
   return REASON_LABELS[code] ?? code;
 }
 
-function joinWithAnd(items: string[]): string {
+export function joinWithAnd(items: string[]): string {
   if (items.length === 0) return "";
   if (items.length === 1) return items[0]!;
   if (items.length === 2) return `${items[0]} and ${items[1]}`;

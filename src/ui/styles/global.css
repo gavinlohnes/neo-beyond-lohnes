@@ -757,6 +757,11 @@ button, input {
   margin-top: 0;
 }
 
+/* DELTA-002 slice 1: the plain-words answer leads the panel, above the rules in detail. */
+.why-plain { margin: 0 0 var(--space-2); }
+.why-plain p { margin: 0 0 var(--space-1); color: var(--text-1); }
+.why-plain p:last-child { color: var(--text-2); font-size: 14px; }
+
 /* The panel's closing verdict line (DecisionTrace.selectionReason) —
    the one real sentence that names why this specific recommendation, and
    no other, won. Visually closes the reveal: brightest text tier, a

@@ -1,3 +1,19 @@
+# DELTA-002 slice 1 — "Why this?" in plain words
+
+- **Objective / authority:** [DELTA-002](DELTA-002.md) slice 1; Gavin: "yes start step 1"
+  (2026-10-23). Builder: Claude Code, branch `claude/delta-002-slice1`, from `628ea3c` (#283).
+- **Built:** `explainRecommendation` (recommendationCopy.ts) reads the DecisionTrace into plain
+  sentences that lead the "How BEYOND decided" panel; always states the Engine doesn't use sleep,
+  weight or training. Display only.
+- **Verified:** full verify 2,912 passed / one skip (ModePinExpiry 320px clock-edge flake, passes
+  alone and on master). Review @ e60e35b requested one fix (the RED + post-shift sentence said
+  shift-down could wait while STABILIZE hands off to SHIFT DOWN); fixed with the cheap notes.
+- **Next:** CI, exact-head re-review, Gavin's merge. Then Gavin's call: should the Engine
+  consider sleep (Protected)?
+
+---
+Previous checkpoint (REUSE-FIRST-001, #285 merged):
+
 # REUSE-FIRST-001 — reuse before invention
 
 - **Authority / lane / Builder:** Gavin’s “Make it so,” 2026-10-23; PROTECTED; Codex.
