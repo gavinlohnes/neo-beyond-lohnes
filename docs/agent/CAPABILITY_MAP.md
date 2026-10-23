@@ -104,7 +104,7 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   contain navigable source-record IDs. Sleep attribution detection is not sleep-aware
   recommendation selection. Inspect current code before extending these seams.
 - **Reuse direction:** extend these existing paths before introducing another intelligence
-  layer. DELTA direction is in `DELTA-002.md`; each implementation slice retains its own approval.
+  layer. DELTA direction is in [DELTA-002.md](DELTA-002.md); each implementation slice retains its own approval.
 
 ## RECOMMENDATION ARBITRATION / OUTCOME MEMORY
 

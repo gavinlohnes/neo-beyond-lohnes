@@ -19,4 +19,6 @@
   investigation, choice and evidence; review checks substance, not checkbox presence; trivial
   repairs exempt from external search. Diff check, architecture and risk classification;
   existing required CI, independent exact-head review, then Gavin’s merge approval.
-- **PR / next:** create PR; persist verification and final exact-head independent review in PR.
+- **PR / next:** [#285](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/285); local links,
+  diff check and architecture pass; classifier confirms PROTECTED. Persist final exact-head
+  independent review and required CI in PR, then Gavin’s merge approval.

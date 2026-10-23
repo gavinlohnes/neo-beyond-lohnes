@@ -4,8 +4,11 @@
 - **Branch / baseline:** `codex/reuse-first-001`, fresh master `628ea3c`; [brief](REUSE-FIRST-001.md).
 - **Scope:** existing leverage gate strengthened; concise reuse evidence in brief/PR and reviewer
   check; capability map now points to the existing Intelligence Spine. No runtime changes.
-- **Status:** PR and verification pending; independent exact-head review and green required CI
-  before Gavin’s merge approval. Final review/CI evidence will be persisted in the PR.
+- **PR / verified:** [#285](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/285).
+  Local Markdown links and new implementation pointers resolve; diff check and architecture
+  pass (298 files); risk classifier confirms PROTECTED. Docs-only: no redundant local runtime
+  tests; required CI is unchanged. Independent final-head review and CI results are recorded
+  in #285 before readiness; Gavin approves merge.
 - **Other work:** WHOLE-PICTURE-001 #283 merged; its final local gate, independent review and CI
   passed. Claude owns DELTA slice 1 (#284); #282 is separate advanced-direction documentation.
 - **Next:** verify, open PR, independent review and green CI; no merge without Gavin’s approval.
