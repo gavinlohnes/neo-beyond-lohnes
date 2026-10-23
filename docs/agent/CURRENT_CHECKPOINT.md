@@ -1,3 +1,20 @@
+# WHOLE-PICTURE-001 — connected Review production integration
+
+- **Authority / Builder / lane:** Gavin approved the full interactive concept on 2026-10-23;
+  Codex; PROTECTED. [Brief](WHOLE-PICTURE-001.md).
+- **Branch / start:** `codex/whole-picture-001`, fresh master
+  `ba381c77066a426c6ea52e10dfa30603c5210c3a`; no overlapping open feature PR at start.
+- **Scope:** production connected evidence, comparisons, real intent/journal stories, canonical
+  weekly focus, tentative real-schedule planning, source inspection and review export/print.
+  Full approved concept retained; no fake data, new runtime dependency, schema or Engine rule.
+- **Status / verification / PR:** implementation started; verification and PR pending.
+- **Next:** implement and verify the complete experience; independent exact-head review and
+  green CI; Gavin's merge approval. DEPS-001 #280 remains separate, draft and unmerged; its
+  final-head CI and code review passed, private-alert reconciliation lacks read permission.
+
+---
+Previous checkpoint:
+
 # FRICTION-001 — slice 5: owner-approved sleep freshness and PARTIAL note
 
 - **Objective / authority:** [FRICTION-001](FRICTION-001.md); Gavin approved both on 2026-10-22

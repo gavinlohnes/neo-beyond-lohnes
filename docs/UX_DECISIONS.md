@@ -12,6 +12,23 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## WHOLE-PICTURE-001 — connected Review (owner approved 2026-10-23)
+
+Gavin approved the complete interactive Whole Picture concept for production; see
+[the bounded brief](agent/WHOLE-PICTURE-001.md) and frozen prototype. Review may lead with
+aligned physical, subjective-state, measured-health and intent/journal evidence over a named
+period, descriptive context/period comparisons, source inspection, operator-selected focus and
+explicitly tentative planning alternatives. This extends Review's presentation/interpretation
+allowance, not Engine recommendation authority. No grade, diagnosis, causal claim or inferred
+historical fact. Sparse/unknown/conflicting evidence stays explicit.
+
+The next-focus action reuses the canonical weekly-review save and its actual calendar focus week;
+it must disclose that it saves/revises the weekly review and preserve its existing note and
+optimistic ownership. Planning previews use existing schedule/Week Ahead and eligible commitments;
+they never book, reschedule, assert availability or write a new plan. Existing weekly/monthly,
+question and recommendation-ledger capabilities remain accessible. No primary-tab, Engine rule,
+rotation, schema/event, backup, provider or historical-fixture amendment is authorized.
+
 ## UX-COHESION-001 — quiet by default (owner approved 2026-10-22)
 
 Gavin approved [the brief](agent/UX-COHESION-001.md) after field use showed that complete imported
