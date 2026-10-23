@@ -1,13 +1,13 @@
 # FRICTION-001 — slice 5: owner-approved sleep freshness and PARTIAL note
 
 - **Objective / authority:** [FRICTION-001](FRICTION-001.md); Gavin approved both on 2026-10-22
-  ("yes to both"). Builder: Claude Code, branch `claude/friction-5`, stacked on slice 4 (#278).
+  ("yes to both"). Builder: Claude Code, branch `claude/friction-5`; slice 4 (#278) merged and is merged in.
 - **Built:** the 36 h last-main-sleep window counts from the sleep's `occurredAt` (Garmin wake time);
   SYSTEMS shows "Garmin · woke HH:MM"; the PARTIAL rotation note shows only after a set is logged
   and before completion. No schema, Engine or recommendation change.
 - **Verified:** `npm run verify` green: architecture OK, 2,898 passed / one skip, build OK.
-- **Next:** after #278 merges, merge master, PR, CI, independent review, Gavin's merge. This is the
-  last planned FRICTION-001 slice.
+- **Next:** PR, green CI, independent review, Gavin's merge. This is the last planned FRICTION-001
+  slice.
 
 ---
 Previous checkpoint:
