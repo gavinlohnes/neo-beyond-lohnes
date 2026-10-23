@@ -1,6 +1,6 @@
 import { describeReason } from "./capacityCopy";
 import type { ObligationRelevance } from "../../../engine/obligationRelevance";
-import type { Outcome, Recommendation, RecommendationKind } from "../../../domain/common/types";
+import type { Outcome, Recommendation, RecommendationKind, StateCheckIn } from "../../../domain/common/types";
 import type { RecommendationDecision, RecommendationHandoffTarget } from "../../../application/queries";
 
 /**
@@ -151,4 +151,61 @@ export function describeRecommendationReason(rationale: string): string {
     "No rule requires attention right now.": "Nothing needs you right now. Your call.",
   };
   return copy[rationale] ?? rationale;
+}
+
+const CHECK_IN_FIELD: Record<string, keyof Pick<StateCheckIn, "energy" | "stress" | "mood" | "soreness" | "alcoholUrge">> = {
+  energy: "energy", stress: "stress", mood: "mood", soreness: "soreness", alcoholUrge: "alcoholUrge",
+};
+
+/** "energy is low (2 of 5)": the locked reason code in words, with the answer that triggered it. */
+function reasonWithAnswer(code: string, checkIn: StateCheckIn | null): string {
+  const field = CHECK_IN_FIELD[code.split(" ")[0] ?? ""];
+  const words = describeReason(code);
+  return field && checkIn ? `${words} (${checkIn[field]} of 5)` : words;
+}
+
+function joinWords(items: string[]): string {
+  return items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+}
+
+/**
+ * DELTA-002 slice 1 (owner, 2026-10-23): "Why this?" in plain words, read only from the
+ * recommendation's own DecisionTrace — never recomputed — so the explanation cannot disagree
+ * with what the Engine decided. Ends by naming what the Engine does not consider, so the
+ * explanation never implies sleep or weight drove it.
+ */
+export function explainRecommendation(recommendation: Recommendation, checkIn: StateCheckIn | null): string[] {
+  const t = recommendation.trace;
+  const input = (key: string) => t.inputs.find((i) => i.key === key)?.value === true;
+  const capacity = t.derived.find((d) => d.key === "capacity")?.value as string | undefined;
+  const codes = String(t.derived.find((d) => d.key === "reasonCodes")?.value ?? "").split(", ").filter(Boolean);
+  const because = joinWords(codes.map((code) => reasonWithAnswer(code, checkIn)));
+  const lines: string[] = [];
+  switch (recommendation.kind) {
+    case "STABILIZE":
+      lines.push(`Your check-in put capacity at RED: ${because}.`);
+      if (input("hasUnresolvedPostShift")) lines.push("Shifting down after work can wait; low capacity comes first.");
+      break;
+    case "RECOVER":
+      lines.push(`Your check-in put capacity at YELLOW: ${because}.`);
+      break;
+    case "POST_SHIFT_TRANSITION":
+      lines.push("Your shift has ended and you haven't shifted down yet.");
+      if (capacity) lines.push(`Your check-in is ${capacity}, so coming down from work comes before anything else.`);
+      break;
+    case "EXECUTE_PLANNED_WORK":
+      lines.push("Your check-in is GREEN and you have work planned today.");
+      if (input("hasEligibleObligationDueOrOverdue")) lines.push("A commitment is also due; your plan comes first.");
+      break;
+    case "OBLIGATION_DUE":
+      lines.push("A commitment is due or overdue, and nothing more urgent came first.");
+      break;
+    case "NO_ACTION_REQUIRED":
+      lines.push(input("hasCheckIn")
+        ? "Your check-in, plan, shift and commitments don't call for anything right now."
+        : "No check-in yet, and your plan, shift and commitments don't call for anything.");
+      break;
+  }
+  lines.push("BEYOND decides from your check-in, plan, shift and commitments. It doesn't use sleep, weight or training here.");
+  return lines;
 }

@@ -32,3 +32,19 @@
    readings" source so the explanation can never disagree with the recommendation (see the
    FRICTION-001 ARCH notes).
 3. Live with it on shift; then decide on (4), (5), the remaining buttons, and whether (6) is wanted.
+
+## Slice 1 — "Why this?" in plain words (owner go, 2026-10-23)
+
+Gavin: "yes start step 1", after agreeing to drop the separate "since last shift" block (TODAY's tiles
+already show usuals; Whole Picture covers comparisons) and to decide separately whether the Engine
+should consider sleep (it currently doesn't; that would be a Protected recommendation change).
+
+- **Built:** `explainRecommendation` turns the recommendation's own DecisionTrace into 1–3 sentences
+  (e.g. "Your check-in put capacity at RED: energy is critically low (1 of 5) and stress is very high
+  (5 of 5).") and always ends by saying the Engine decides from check-in, plan, shift and commitments,
+  not sleep, weight or training. It leads the existing "How BEYOND decided" panel; the rules in
+  detail and the check-in values (the evidence) stay right below.
+- **Boundaries:** reads the trace only, never recomputes; no Engine, schema or recommendation change.
+- **Next decisions:** should the Engine consider sleep (Protected)? Tile marks when a reading leaves
+  your usual (Routine, small).
+

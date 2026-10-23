@@ -1,3 +1,18 @@
+# DELTA-002 slice 1 — "Why this?" in plain words
+
+- **Objective / authority:** [DELTA-002](DELTA-002.md) slice 1; Gavin: "yes start step 1"
+  (2026-10-23). Builder: Claude Code, branch `claude/delta-002-slice1`, from `628ea3c` (#283).
+- **Built:** `explainRecommendation` (recommendationCopy.ts) reads the DecisionTrace into plain
+  sentences that lead the "How BEYOND decided" panel; always states the Engine doesn't use sleep,
+  weight or training. Display only.
+- **Verified:** full verify: 2,912 passed / one skip; one failure, ModePinExpiry at 320px, a 250 ms
+  clock-edge test that passes alone (2/2) and on master, untouched here. Build OK.
+- **Next:** PR, CI, independent review, Gavin's merge. Then Gavin's call: should the Engine
+  consider sleep (Protected)?
+
+---
+Previous checkpoint:
+
 # WHOLE-PICTURE-001 — connected Review production integration
 
 - **Authority / Builder / lane:** Gavin approved the full interactive concept on 2026-10-23;
