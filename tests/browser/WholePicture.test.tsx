@@ -87,3 +87,19 @@ it("offers a visible retry and honest empty/insufficient states, never demo data
   await expect.element(screen.getByText("0 recorded days · needs 3 · inspect →").first()).toBeVisible();
   expect(await db.events.count()).toBe(0);
 });
+
+it("ROTATION-001: shows recorded runs, newest first, and opens a day's records from the rotation", async () => {
+  await page.viewport(390, 850); await seed(); const before = await db.events.toArray();
+  const screen = await render(<WholePicture />);
+  await screen.getByRole("tab", { name: "Rotation", exact: true }).click();
+  const runs = [...document.querySelectorAll(".rotation-run h3")].map((h) => h.textContent);
+  expect(runs[0]).toMatch(/^Days off · .+ · 4 days$/); // Oct 16–19, newest first
+  expect(runs[1]).toMatch(/^Work run · .+ · 4 shifts$/); // Oct 12–15
+  await screen.getByRole("button", { name: /shift 1 of 4: main sleep 6:00, energy 2, no workout\. Open records\.$/ }).click();
+  await expect.element(screen.getByRole("dialog")).toBeVisible();
+  await expect.element(screen.getByRole("heading", { name: "Main sleep · 6h 00m", exact: true })).toBeVisible();
+  expect(await db.events.toArray()).toEqual(before);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
+  expect((await axe.run(document.body)).violations).toEqual([]);
+});
+
