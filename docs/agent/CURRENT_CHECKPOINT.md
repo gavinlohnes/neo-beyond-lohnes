@@ -1,3 +1,18 @@
+# REUSE-FIRST-001 — reuse before invention
+
+- **Authority / lane / Builder:** Gavin’s “Make it so,” 2026-10-23; PROTECTED; Codex.
+- **Branch / baseline:** `codex/reuse-first-001`, fresh master `628ea3c`; [brief](REUSE-FIRST-001.md).
+- **Scope:** existing leverage gate strengthened; concise reuse evidence in brief/PR and reviewer
+  check; capability map now points to the existing Intelligence Spine. No runtime changes.
+- **Status:** PR and verification pending; independent exact-head review and green required CI
+  before Gavin’s merge approval. Final review/CI evidence will be persisted in the PR.
+- **Other work:** WHOLE-PICTURE-001 #283 merged; its final local gate, independent review and CI
+  passed. Claude owns DELTA slice 1 (#284); #282 is separate advanced-direction documentation.
+- **Next:** verify, open PR, independent review and green CI; no merge without Gavin’s approval.
+
+---
+Historical checkpoint (superseded status; retained for evidence):
+
 # WHOLE-PICTURE-001 — connected Review production integration
 
 - **Authority / Builder / lane:** Gavin approved the full interactive concept on 2026-10-23;
