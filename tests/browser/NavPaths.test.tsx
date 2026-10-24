@@ -143,6 +143,11 @@ describe("NAV-001 top tasks from TODAY", () => {
     await screen.getByRole("button", { name: "YOUR ROTATION", exact: true }).click();
     await expect.element(screen.getByRole("tab", { name: "Rotation", exact: true })).toHaveAttribute("aria-selected", "true");
     await expect.element(screen.getByText("The way you actually live.", { exact: true })).toBeVisible();
+    await screen.getByRole("tab", { name: "The picture", exact: true }).click();
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await expect.element(screen.getByRole("tab", { name: "The picture", exact: true })).toHaveAttribute("aria-selected", "true");
   });
   it("whole picture: DATA opens the existing overview without an intermediate menu", async () => {
     await startDay(); const screen = await render(<App />);

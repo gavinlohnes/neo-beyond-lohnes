@@ -17,8 +17,11 @@
   shared-IndexedDB/overlapping-act contamination across unrelated suites. The isolated existing
   MoreOperator file also currently fails at its setup mock (`mockReset is not a function`) before
   rendering product code. No assertion was weakened; required clean full CI remains the authority.
-- **Next:** commit/push and open the PR, production acceptance, then independent exact-head review,
-  green required CI and Gavin's merge approval.
+- **Review correction:** independent review of `d591dad` found the DATA → Review focus request
+  remained live after use. The corrected handoff is consumed once, is not queued when navigation is
+  blocked, and has a leave/re-enter regression; NAV paths and TypeScript pass on the corrected tree.
+- **Next:** push the correction to #293, obtain renewed independent exact-head review and green
+  required CI, then merge under Gavin's recorded approval.
 
 ---
 

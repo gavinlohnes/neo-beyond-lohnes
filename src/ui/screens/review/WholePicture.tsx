@@ -69,7 +69,7 @@ function PictureChart({ rows, selected, onSelect, measure, title, unit, min, max
 
 export type WholePictureDestination = "overview" | "rotation";
 
-export function WholePicture({ active = true, onOpenHistory, destination }: { active?: boolean; onOpenHistory?: ((id: string) => void) | undefined; destination?: { key: number; view: WholePictureDestination } | null }) {
+export function WholePicture({ active = true, onOpenHistory, destination, onDestinationConsumed }: { active?: boolean; onOpenHistory?: ((id: string) => void) | undefined; destination?: { key: number; view: WholePictureDestination } | null; onDestinationConsumed?: (key: number) => void }) {
   const uid = useId();
   const [data, setData] = useState<WholePictureData | null>(null), [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState(false), [retry, setRetry] = useState(0);
@@ -95,7 +95,8 @@ export function WholePicture({ active = true, onOpenHistory, destination }: { ac
     if (!active || !destination) return;
     setView(destination.view);
     requestAnimationFrame(() => tabRefs.current[destination.view]?.focus({ preventScroll: true }));
-  }, [active, destination?.key]);
+    onDestinationConsumed?.(destination.key);
+  }, [active, destination?.key, onDestinationConsumed]);
   useEffect(() => {
     if (!active) { dialog.current?.close(); return; }
     const request = ++sequence.current; let alive = true; setReading(true); setError(null);

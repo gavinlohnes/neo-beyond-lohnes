@@ -482,8 +482,9 @@ function AppWorkspaces() {
   }
 
   function openDataReview(view: WholePictureDestination) {
+    if (!canNavigate()) return false;
     setReviewDestination((current) => ({ key: (current?.key ?? 0) + 1, view }));
-    openMore("REVIEW", null, false);
+    return openMore("REVIEW", null, false);
   }
 
   function openTrain(destination: TrainDestination) {
@@ -645,6 +646,7 @@ function AppWorkspaces() {
         </div>}
         {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
           <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} reviewDestination={reviewDestination}
+            onReviewDestinationConsumed={(key) => setReviewDestination((current) => current?.key === key ? null : current)}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}
             onOpenCapture={openCapture} captureRequest={captureRequest} dailyRefreshKey={workEndedKey} onDailyContextChanged={() => setWorkEndedKey((key) => key + 1)} dailyBanners={<>
