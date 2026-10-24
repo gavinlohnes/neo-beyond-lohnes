@@ -218,6 +218,33 @@ runtime dependency. Photos use the browser's own file input and canvas, with no 
 
 ### Phase 1b — Strength and muscle analytics (PROTECTED; after about 3 weeks of real training)
 
+**Activated 2026-10-24.** Gavin approved Codex proceeding after NAV-001: “do it.” Builder:
+Codex. Branch: `codex/review-001-phase1b`. Starting master:
+`aafa5b57c85050b5cab3eed3a07e484ae3fbcd02` (#293 merged).
+
+**Bounded outcome:** Review answers whether recorded strength is improving or being preserved while
+weight drops, which lifts are progressing or stalling, weekly hard sets by muscle, and broad
+push/pull plus upper/lower balance. Every answer is read-only, names its evidence window and sample
+floor, abstains when records are not comparable, and links back to the existing session/lift truth.
+
+**Scope / exclusions:** pure calculations over existing effective workout, exercise-library,
+bodyweight and lived-day records; application queries; Review presentation and focused tests. No
+schema, event, command, backup, dependency, provider, workout-template, progression, Engine
+recommendation, target, program-change or automatic-decision change. C2 targets and JOURNAL-002
+remain separate approvals. No body-composition verdict: weight, waist, photos and strength remain
+side-by-side evidence for Gavin to interpret.
+
+**REUSE:** existing performed-set/session truth, undone-set filtering, exercise-name/library and
+custom-exercise mappings, TRAIN lift curves, Review question/evidence patterns and inline SVG.
+**OWN:** BEYOND-specific comparability, sample floors, time windows, muscle mapping and abstention.
+**BUILD FROM SCRATCH:** the small pure aggregation layer only; existing primitives do not answer
+cross-lift strength preservation or weekly muscle exposure.
+
+**Finished when:** synthetic and protected-fixture-safe tests prove exclusions, undo/skip/
+substitution handling, same-lift comparability and missing-data abstention; Review exposes the
+approved answers at phone widths with accessible evidence; architecture/typecheck/build and
+required CI pass; an independent reviewer passes the exact head; Gavin separately approves merge.
+
 - Best set, volume and estimated max per lift; a strength index; relative strength.
 - Hard sets per muscle group. Built-in template exercises map to the matching `EXERCISE_LIBRARY`
   entries (for example `machine-chest-press` → `lib-machine-chest-press`). Custom exercises use their
@@ -241,7 +268,8 @@ runtime dependency. Photos use the browser's own file input and canvas, with no 
 
 ## Remaining decisions for Gavin
 
-1. **Phase 1b, the C2 targets follow-up and Phase 2** each need a go-ahead when their time comes.
+1. **C2 targets and Phase 2** each need a go-ahead when their time comes. Phase 1b was approved
+   and activated on 2026-10-24.
 2. **Photos in backups — decided 2026-10-17: option (a).** Gavin chose to include photos in the
    normal backup file ("Photo backup: option a, include photos in the normal backup"). The
    alternatives were a separate photos backup (b) or no photo backup (c). Consequences for

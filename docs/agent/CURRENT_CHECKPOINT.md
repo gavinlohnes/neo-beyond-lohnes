@@ -1,3 +1,22 @@
+# REVIEW-001 — Phase 1b strength and muscle intelligence
+
+- **Authority / Builder / lane:** Gavin approved the recommended bounded Phase 1b objective on
+  2026-10-24 (“do it”). Codex; PROTECTED read-only Engine analytics.
+- **Branch / baseline:** `codex/review-001-phase1b`; fresh master
+  `aafa5b57c85050b5cab3eed3a07e484ae3fbcd02` after #293 merged.
+- **Outcome:** Review answers strength direction/preservation, lift progress/stalls, weekly hard
+  sets by muscle, and broad training balance from existing records with explicit floors and abstention.
+- **Exclusions:** no schema/events/commands/backups/dependencies/providers; no template,
+  progression, recommendation, target, program or automatic-decision change; no fat/muscle verdict.
+- **REUSE / OWN / BUILD FROM SCRATCH:** existing session/set truth, TRAIN curves, exercise mappings
+  and Review evidence UI / BEYOND comparability and abstention / only the pure aggregation layer.
+- **Next:** implement the pure projection and tests, then application query and Review presentation;
+  verify proportionally, open a PR, and obtain independent exact-head review before owner merge.
+
+---
+
+Historical NAV-001 slice 4 (merged #293 at `aafa5b5`):
+
 # NAV-001 — slice 4: DATA paths and Garmin sync
 
 - **Authority / Builder:** Gavin approved the NAV map and explicitly requested “merge 292 and
