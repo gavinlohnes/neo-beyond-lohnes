@@ -1,4 +1,4 @@
-import { WholePicture } from "./WholePicture";
+import { WholePicture, type WholePictureDestination } from "./WholePicture";
 import { useEffect, useRef, useState } from "react";
 import { WeeklyDashboard } from "./WeeklyDashboard";
 import { ReviewAnswers } from "./ReviewAnswers";
@@ -7,7 +7,7 @@ import { getRecommendationLedger, type LedgerDay } from "../../../application/re
 import { describeLedgerDecision, describeLedgerDisposition, describeLedgerRating } from "./reviewCopy";
 
 /** REVIEW-001: read-only question hub; the Recommendations section keeps the original ledger contract. */
-export function ReviewScreen({ active = true, onOpenHistory }: { active?: boolean; onOpenHistory?: ((id: string) => void) | undefined } = {}) {
+export function ReviewScreen({ active = true, onOpenHistory, destination, onDestinationConsumed }: { active?: boolean; onOpenHistory?: ((id: string) => void) | undefined; destination?: { key: number; view: WholePictureDestination } | null; onDestinationConsumed?: (key: number) => void } = {}) {
   const [days, setDays] = useState<LedgerDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [readError, setReadError] = useState<string | null>(null);
@@ -38,7 +38,7 @@ export function ReviewScreen({ active = true, onOpenHistory }: { active?: boolea
   return (
     <div className="screen picture-review">
       <h1 className="eyebrow">MORE // REVIEW</h1>
-      <WholePicture active={active} onOpenHistory={onOpenHistory} />
+      <WholePicture active={active} onOpenHistory={onOpenHistory} {...(destination === undefined ? {} : { destination })} {...(onDestinationConsumed ? { onDestinationConsumed } : {})} />
       <details className="picture-legacy"><summary>Weekly, monthly & detailed reviews</summary>
       <WeeklyDashboard active={active} onOpenHistory={onOpenHistory} />
       <ReviewAnswers active={active} onOpenHistory={onOpenHistory} />

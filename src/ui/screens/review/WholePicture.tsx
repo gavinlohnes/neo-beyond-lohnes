@@ -67,7 +67,9 @@ function PictureChart({ rows, selected, onSelect, measure, title, unit, min, max
   </div>;
 }
 
-export function WholePicture({ active = true, onOpenHistory }: { active?: boolean; onOpenHistory?: ((id: string) => void) | undefined }) {
+export type WholePictureDestination = "overview" | "rotation";
+
+export function WholePicture({ active = true, onOpenHistory, destination, onDestinationConsumed }: { active?: boolean; onOpenHistory?: ((id: string) => void) | undefined; destination?: { key: number; view: WholePictureDestination } | null; onDestinationConsumed?: (key: number) => void }) {
   const uid = useId();
   const [data, setData] = useState<WholePictureData | null>(null), [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState(false), [retry, setRetry] = useState(0);
@@ -89,6 +91,12 @@ export function WholePicture({ active = true, onOpenHistory }: { active?: boolea
     window.addEventListener("beyond:weekly-review-saved", reload);
     return () => window.removeEventListener("beyond:weekly-review-saved", reload);
   }, [active]);
+  useEffect(() => {
+    if (!active || !destination) return;
+    setView(destination.view);
+    requestAnimationFrame(() => tabRefs.current[destination.view]?.focus({ preventScroll: true }));
+    onDestinationConsumed?.(destination.key);
+  }, [active, destination?.key, onDestinationConsumed]);
   useEffect(() => {
     if (!active) { dialog.current?.close(); return; }
     const request = ++sequence.current; let alive = true; setReading(true); setError(null);

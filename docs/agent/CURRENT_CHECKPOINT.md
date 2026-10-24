@@ -1,3 +1,32 @@
+# NAV-001 — slice 4: DATA paths and Garmin sync
+
+- **Authority / Builder:** Gavin approved the NAV map and explicitly requested “merge 292 and
+  continue” on 2026-10-23. Codex; PROTECTED primary IA. [Brief](NAV-001.md#slice-4--data-paths-and-garmin-sync).
+- **Branch / baseline:** `codex/nav-001-slice4`, fresh master `731279d`; slice 3 #292 merged.
+- **Scope:** direct existing Whole Picture and Rotation entries in DATA; the existing Android-only
+  Health Bridge sync action on TODAY's measured-number heading. No Engine, schema, Garmin import,
+  logging/correction, backup, dependency or TRAIN change.
+- **REUSE:** existing review destination, Whole Picture/Rotation, SyncGarminLink and path tests.
+- **OWN:** presentation-only navigation focus handoff.
+- **BUILD FROM SCRATCH:** none.
+- **Evidence so far:** NAV paths 14/14 pass; DATA/Review/Garmin/App focused browser regression
+  95/95 passed before the added Whole Picture path; the established three-part DATA layout passes
+  7/7 at 320/360/390/412 px after folding the new entries into PROGRESS. Architecture (302 files),
+  TypeScript and production/PWA build pass; diff check is clean. Existing bundle-size warning remains.
+- **Local full-gate note:** the default and two-worker Windows runs were stopped after widespread
+  shared-IndexedDB/overlapping-act contamination across unrelated suites. The isolated existing
+  MoreOperator file also currently fails at its setup mock (`mockReset is not a function`) before
+  rendering product code. No assertion was weakened; required clean full CI remains the authority.
+- **Review correction:** independent review of `d591dad` found the DATA → Review focus request
+  remained live after use. The corrected handoff is consumed once, is not queued when navigation is
+  blocked, and has a leave/re-enter regression; NAV paths and TypeScript pass on the corrected tree.
+- **Next:** push the correction to #293, obtain renewed independent exact-head review and green
+  required CI, then merge under Gavin's recorded approval.
+
+---
+
+Historical slice-3 checkpoint (merged):
+
 # NAV-001 — slice 3: sleep metric page
 
 - **Authority / Builder:** owner-approved NAV map; Gavin: “go ahead” after slice-2 handoff.

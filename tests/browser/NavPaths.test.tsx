@@ -136,6 +136,35 @@ describe("NAV-001 top tasks from TODAY", () => {
     sheet = screen.getByRole("dialog", { name: "SLEEP", exact: true });
     await expect.element(sheet.getByRole("button", { name: "Week", exact: true })).toHaveAttribute("aria-pressed", "true");
   });
-  it.todo("last run of shifts: DATA → Your rotation (slice 4)");
-  it.todo("sync Garmin: on TODAY's numbers (slice 4)");
+  it("last run of shifts: DATA → Your rotation opens the existing rotation view", async () => {
+    await startDay(); const screen = await render(<App />);
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "WHOLE PICTURE", exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "YOUR ROTATION", exact: true }).click();
+    await expect.element(screen.getByRole("tab", { name: "Rotation", exact: true })).toHaveAttribute("aria-selected", "true");
+    await expect.element(screen.getByText("The way you actually live.", { exact: true })).toBeVisible();
+    await screen.getByRole("tab", { name: "The picture", exact: true }).click();
+    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await expect.element(screen.getByRole("tab", { name: "The picture", exact: true })).toHaveAttribute("aria-selected", "true");
+  });
+  it("whole picture: DATA opens the existing overview without an intermediate menu", async () => {
+    await startDay(); const screen = await render(<App />);
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "WHOLE PICTURE", exact: true }).click();
+    await expect.element(screen.getByRole("tab", { name: "The picture", exact: true })).toHaveAttribute("aria-selected", "true");
+  });
+  it("sync Garmin: TODAY's measured numbers expose the existing helper link", async () => {
+    await startDay();
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/140 Mobile Safari/537.36");
+    const start = new Date(Math.floor(Date.now() / 3_600_000) * 3_600_000);
+    await db.externalActivityHours.put({ id: start.toISOString(), startTime: start.toISOString(), endTime: new Date(start.getTime() + 3_600_000).toISOString(), zoneOffsetSeconds: null, steps: 1200, heartRateMinBpm: 60, heartRateAvgBpm: 70, heartRateMaxBpm: 80, totalCaloriesKcal: 180, activeCaloriesKcal: 100, exportedAt: new Date().toISOString(), receiptId: "nav-garmin" });
+    const screen = await render(<App />);
+    const numbers = screen.getByRole("group", { name: /protein.*water/i });
+    await expect.element(numbers).toBeVisible();
+    const sync = screen.getByRole("link", { name: "SYNC GARMIN", exact: true });
+    await expect.element(sync).toBeVisible();
+    expect(sync.element().closest(".cc-numbers-head")).not.toBeNull();
+  });
 });
