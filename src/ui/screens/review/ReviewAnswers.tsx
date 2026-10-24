@@ -5,6 +5,7 @@ import { reviewMean, type ReviewOverview, type ReviewRow } from "../../../engine
 import { describeError } from "../../errorMessage";
 import "./review.css";
 import { BodyAnswers } from "./BodyAnswers";
+import { StrengthAnswers } from "./StrengthAnswers";
 
 type Measure = "weight" | "protein" | "calories" | "sleepHours" | "sessions";
 const date = (at: string) => new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -89,15 +90,7 @@ export function ReviewAnswers({ active = true, onOpenHistory }: { active?: boole
       <WeightDetails active={active} overview={data} />
       {evidence("weight", "lb", "Average effective weigh-ins within each completed lived day, then average those daily means for each of the last two 7-day windows. Comparison requires 7 weighed days in 14, with at least 3 in each week. This is a difference between sampled weekly means, not a prediction or a body-composition verdict. The chart places observations on their lived-day positions; connecting lines are visual guides, not inferred records for missing days.")}
     </Answer>
-    <Answer title="Am I keeping my strength while losing weight?" answer="Building up · no overall strength comparison yet">
-      <p className="card-body">Weight alone cannot answer this. TRAIN → HISTORY shows your recorded sessions and lift history. No muscle or fat verdict is inferred.</p>
-    </Answer>
-    <Answer title="Am I getting stronger?" answer="Building up · inspect individual lift history in TRAIN">
-      <p className="card-body">Your individual session records and lift curves remain in TRAIN. This review does not invent an overall strength score.</p>
-    </Answer>
-    <Answer title="How is each muscle trained?" answer="Building up · muscle-group totals are not available">
-      <p className="card-body">Use TRAIN’s session records to inspect the exercises and sets you performed.</p>
-    </Answer>
+    <StrengthAnswers active={active} />
     <Answer title="What protein and calories have I logged?" answer={`${data.protein.days ? `${value(data.protein.mean, "g")} protein average across ${data.protein.days} logged days` : "No protein recorded in completed days"} · ${data.calories.days ? `${value(data.calories.mean, "kcal")} across ${data.calories.days} meal-logged days` : "No meals recorded in completed days"}`}>
       <p className="meta">These are recorded amounts, not verified total intake or historical target adherence. A single meal does not establish a complete food day.</p>
       <h3>Protein</h3>{evidence("protein", "g", "Sum effective protein-only entries plus consumed-meal protein in each completed lived day, then average only days with recorded protein. Corrections and voids use canonical queries. Unlogged days are excluded; logged zero is preserved.")}

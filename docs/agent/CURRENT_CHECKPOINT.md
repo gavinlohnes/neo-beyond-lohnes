@@ -11,11 +11,15 @@
 - **REUSE / OWN / BUILD FROM SCRATCH:** existing session/set truth, TRAIN curves, exercise mappings
   and Review evidence UI / BEYOND comparability and abstention / only the pure aggregation layer.
 - **Built so far:** pure `strengthReview` projection with two-session-per-window same-lift
-  comparability, estimated-max direction, multi-lift overall abstention, and recent weekly muscle-set
-  rates. Unit tests 3/3, TypeScript and architecture (303 files) pass; diff check is clean.
-- **Next:** feed canonical filtered workout evidence and exercise mappings through an application
-  query, then add Review presentation; verify proportionally, open a PR, and obtain independent
-  exact-head review before owner merge.
+  comparability, estimated-max direction, multi-lift overall abstention and recent weekly muscle-set
+  rates; canonical query excludes active/undone/skipped/substituted work and resolves existing
+  exercise mappings; Review's three strength/muscle placeholders now show the evidence and method.
+- **Evidence:** new Engine + integration tests 5/5; TypeScript, architecture (304 files), production
+  build and diff check pass. Existing ReviewScreen/BodyAnswers browser files pass 11/11. The existing
+  ReviewHub file remains unstable in isolated Chromium at its ESM mocks (`mockClear` /
+  `mockRejectedValueOnce` missing) and two shared-state timing assertions; no assertion was changed.
+- **Next:** add direct browser coverage for the new answers, finish balance and the body
+  side-by-side strength handoff, then full proportional verification, PR and independent review.
 
 ---
 
