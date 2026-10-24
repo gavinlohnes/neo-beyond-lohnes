@@ -10,8 +10,12 @@
   progression, recommendation, target, program or automatic-decision change; no fat/muscle verdict.
 - **REUSE / OWN / BUILD FROM SCRATCH:** existing session/set truth, TRAIN curves, exercise mappings
   and Review evidence UI / BEYOND comparability and abstention / only the pure aggregation layer.
-- **Next:** implement the pure projection and tests, then application query and Review presentation;
-  verify proportionally, open a PR, and obtain independent exact-head review before owner merge.
+- **Built so far:** pure `strengthReview` projection with two-session-per-window same-lift
+  comparability, estimated-max direction, multi-lift overall abstention, and recent weekly muscle-set
+  rates. Unit tests 3/3, TypeScript and architecture (303 files) pass; diff check is clean.
+- **Next:** feed canonical filtered workout evidence and exercise mappings through an application
+  query, then add Review presentation; verify proportionally, open a PR, and obtain independent
+  exact-head review before owner merge.
 
 ---
 
