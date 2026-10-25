@@ -3,7 +3,8 @@
 - **Authority / Builder / lane:** Gavin approved the recommended bounded Phase 1b objective on
   2026-10-24 (“do it”). Codex; PROTECTED read-only Engine analytics.
 - **Branch / baseline:** `codex/review-001-phase1b`; fresh master
-  `aafa5b57c85050b5cab3eed3a07e484ae3fbcd02` after #293 merged.
+  `aafa5b57c85050b5cab3eed3a07e484ae3fbcd02` after #293 merged; active
+  [PR #294](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/294).
 - **Outcome:** Review answers strength direction/preservation, lift progress/stalls, weekly hard
   sets by muscle, and broad training balance from existing records with explicit floors and abstention.
 - **Exclusions:** no schema/events/commands/backups/dependencies/providers; no template,

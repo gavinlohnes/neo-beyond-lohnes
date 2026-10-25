@@ -220,7 +220,8 @@ runtime dependency. Photos use the browser's own file input and canvas, with no 
 
 **Activated 2026-10-24.** Gavin approved Codex proceeding after NAV-001: “do it.” Builder:
 Codex. Branch: `codex/review-001-phase1b`. Starting master:
-`aafa5b57c85050b5cab3eed3a07e484ae3fbcd02` (#293 merged).
+`aafa5b57c85050b5cab3eed3a07e484ae3fbcd02` (#293 merged). Active PR:
+[#294](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/294).
 
 **Bounded outcome:** Review answers whether recorded strength is improving or being preserved while
 weight drops, which lifts are progressing or stalling, weekly hard sets by muscle, and broad
