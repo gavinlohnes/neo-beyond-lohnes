@@ -55,6 +55,7 @@ export function NutritionTargetsSettings() {
   const [weightRateInput, setWeightRateInput] = useState("");
   const [muscleSetsInput, setMuscleSetsInput] = useState("");
   const [sessionsInput, setSessionsInput] = useState("");
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useUndoWindow<TargetsSaveConfirmation>();
@@ -62,15 +63,22 @@ export function NutritionTargetsSettings() {
 
   useEffect(() => {
     disposedRef.current = false;
-    void getNutritionTargets().then((next) => {
-      if (!disposedRef.current) setTargets(next);
-    });
+    void getNutritionTargets()
+      .then((next) => {
+        if (disposedRef.current) return;
+        setTargets(next);
+        setLoadState("ready");
+      })
+      .catch(() => {
+        if (!disposedRef.current) setLoadState("error");
+      });
     return () => {
       disposedRef.current = true;
     };
   }, []);
 
   function openForm() {
+    if (loadState !== "ready") return;
     const filled = formInputs(targets);
     setCalorieInput(filled.calorie);
     setMultiplierInput(filled.multiplier);
@@ -83,7 +91,7 @@ export function NutritionTargetsSettings() {
   }
 
   async function handleSave() {
-    if (busy) return;
+    if (busy || loadState !== "ready") return;
     setError(null);
     const calorieValue = calorieInput.trim() ? Number(calorieInput) : undefined;
     const multiplierValue = multiplierInput.trim() ? Number(multiplierInput) : undefined;
@@ -142,7 +150,13 @@ export function NutritionTargetsSettings() {
   if (!open) {
     return (
       <>
-        <CollapsibleRow name="TARGETS" icon={<LineIcon icon={Target} />} summary={describeTargets(targets)} onOpen={openForm} />
+        <CollapsibleRow
+          name="TARGETS"
+          icon={<LineIcon icon={Target} />}
+          summary={loadState === "loading" ? "Loading targets…" : loadState === "error" ? "Targets unavailable" : describeTargets(targets)}
+          onOpen={openForm}
+          disabled={loadState !== "ready"}
+        />
         {banner}
       </>
     );
@@ -194,12 +208,16 @@ export function NutritionTargetsSettings() {
         <div>
           <label className="meta" htmlFor="weight-rate-target-input">Weight change (% bodyweight/week)</label>
           <input id="weight-rate-target-input" type="number" min="0.1" max="5" step="0.05" aria-label="Weight change target (% bodyweight/week)" placeholder="Optional" value={weightRateInput} onChange={(e) => setWeightRateInput(e.target.value)} className="input" />
-          <p className="meta" style={{ marginTop: 4 }}>For context, commonly cited gradual-loss ranges are about 0.5–1% per week. You choose the number.</p>
+          <p className="meta" style={{ marginTop: 4 }}>
+            Context only: <a href="https://jissn.biomedcentral.com/articles/10.1186/1550-2783-11-20" target="_blank" rel="noreferrer">Helms et al. (2014)</a> discusses 0.5–1% per week for resistance-trained physique athletes. It is not a universal target; you choose the number.
+          </p>
         </div>
         <div>
           <label className="meta" htmlFor="muscle-sets-target-input">Working sets per muscle/week</label>
           <input id="muscle-sets-target-input" type="number" min="1" max="50" step="0.5" aria-label="Working sets target per muscle per week" placeholder="Optional" value={muscleSetsInput} onChange={(e) => setMuscleSetsInput(e.target.value)} className="input" />
-          <p className="meta" style={{ marginTop: 4 }}>Research finds a dose-response with diminishing returns rather than one universal target. BEYOND counts recorded working sets; you choose the number.</p>
+          <p className="meta" style={{ marginTop: 4 }}>
+            Context only: the <a href="https://pubmed.ncbi.nlm.nih.gov/41843416/" target="_blank" rel="noreferrer">ACSM 2026 position stand</a> reports greater hypertrophy with ≥10 sets/week, while a <a href="https://pubmed.ncbi.nlm.nih.gov/41343037/" target="_blank" rel="noreferrer">2026 meta-regression</a> finds diminishing returns. There is no universal target. BEYOND counts recorded working sets; you choose the number.
+          </p>
         </div>
         <div>
           <label className="meta" htmlFor="strength-sessions-target-input">Strength sessions/week</label>

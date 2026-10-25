@@ -7,6 +7,7 @@ import { updateNutritionTargets } from "../../src/application/nutritionTargetCom
 import { db } from "../../src/persistence/db";
 import { saveQuitHabit } from "../../src/application/quitCommands";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
+import { NutritionTargetsSettings } from "../../src/ui/screens/more/NutritionTargetsSettings";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../src/app/buildInfo";
 import { ENGINE_VERSION } from "../../src/engine/evaluate";
 import { archiveMission, createMission, createObligation } from "../../src/application/intentCommands";
@@ -30,6 +31,34 @@ afterEach(() => {
 });
 
 describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
+  it("REVIEW-001 C2: a pending initial read cannot turn untouched blanks into target clears", async () => {
+    const saved = await updateNutritionTargets({
+      weightChangeTargetPercentPerWeek: 0.75,
+      muscleSetsTargetPerWeek: 12,
+      strengthSessionsTargetPerWeek: 3,
+    });
+    let release!: (value: typeof saved) => void;
+    const pending = new Promise<typeof saved>((resolve) => { release = resolve; });
+    vi.spyOn(db.nutritionTargets, "get").mockImplementationOnce(
+      () => pending as ReturnType<typeof db.nutritionTargets.get>,
+    );
+
+    const screen = await render(<NutritionTargetsSettings />);
+    const open = screen.getByRole("button", { name: "Open TARGETS", exact: true });
+    await expect.element(open).toBeDisabled();
+    await expect.element(screen.getByText("Loading targets…", { exact: true })).toBeVisible();
+
+    release(saved);
+    await expect.element(open).toBeEnabled();
+    await open.click();
+    await expect.element(screen.getByRole("spinbutton", { name: "Weight change target (% bodyweight/week)" })).toHaveValue(0.75);
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText("No changes.", { exact: true })).toBeVisible();
+    expect(await db.nutritionTargets.get("current")).toMatchObject(saved);
+    await expect.element(screen.getByRole("link", { name: "Helms et al. (2014)" })).toHaveAttribute("href", "https://jissn.biomedcentral.com/articles/10.1186/1550-2783-11-20");
+    await expect.element(screen.getByRole("link", { name: "ACSM 2026 position stand" })).toHaveAttribute("href", "https://pubmed.ncbi.nlm.nih.gov/41843416/");
+  });
+
   it("renders grouped destinations with every capability and recovery reachable", async () => {
     const screen = await render(<MoreScreen />);
     await openCommandPanel(screen, "backup");

@@ -19,8 +19,14 @@
   169/169, including 320 px target comparison. Diff check is clean. The existing >500 kB bundle
   warning remains. `MoreOperator.test.tsx` retains its pre-existing isolated ESM-mock setup failure
   (`mockReset is not a function`) before product rendering; no assertion was weakened.
-- **Next:** commit and push, open the PR, obtain green required CI and independent exact-head review;
-  Gavin separately decides merge.
+- **Independent review:** exact head `67f51c6` BLOCKED on two P2 gaps: an early-open/late-read
+  race could manufacture clears for untouched Review targets, and setting guidance lacked the
+  brief's inspectable sources. The correction disables Targets until its initial read succeeds,
+  adds the delayed-read/no-edit regression, and attributes bounded context to the relevant JISSN,
+  ACSM and meta-regression sources without creating defaults. Focused browser tests pass 52/52;
+  TypeScript, production/PWA build and diff check pass. Existing bundle warning remains.
+- **Next:** push the corrected head, obtain renewed independent exact-head review and green required
+  CI; Gavin separately decides merge.
 
 ---
 
