@@ -1,3 +1,42 @@
+# REVIEW-001 — Phase 1b strength and muscle intelligence
+
+- **Authority / Builder / lane:** Gavin approved the recommended bounded Phase 1b objective on
+  2026-10-24 (“do it”). Codex; PROTECTED read-only Engine analytics.
+- **Branch / baseline:** `codex/review-001-phase1b`; fresh master
+  `aafa5b57c85050b5cab3eed3a07e484ae3fbcd02` after #293 merged; active
+  [PR #294](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/294).
+- **Outcome:** Review answers strength direction/preservation, lift progress/stalls, weekly hard
+  sets by muscle, and broad training balance from existing records with explicit floors and abstention.
+- **Exclusions:** no schema/events/commands/backups/dependencies/providers; no template,
+  progression, recommendation, target, program or automatic-decision change; no fat/muscle verdict.
+- **REUSE / OWN / BUILD FROM SCRATCH:** existing session/set truth, TRAIN curves, exercise mappings
+  and Review evidence UI / BEYOND comparability and abstention / only the pure aggregation layer.
+- **Built so far:** pure `strengthReview` projection with two-session-per-window same-lift
+  comparability; best-set and volume-led lift/index direction; secondary estimated max; relative
+  strength when a prior bodyweight exists; weekly volume and muscle-set rates; explicit exercise-
+  level push/pull classification; canonical exclusions; and complete 56-day source disclosure.
+- **Evidence:** new Engine + integration tests 5/5; TypeScript, architecture (304 files), production
+  build and diff check pass. Existing ReviewScreen/BodyAnswers browser files pass 11/11. The existing
+  ReviewHub file remains unstable in isolated Chromium at its ESM mocks (`mockClear` /
+  `mockRejectedValueOnce` missing) and two shared-state timing assertions; no assertion was changed.
+- **Completed slice:** direct 320 px browser coverage; push/pull and upper/lower set-rate views
+  retain arms/core/full-body/unknown work as unclassified rather than inventing a split; the body
+  side-by-side now uses the same strength result while preserving its no-verdict language.
+- **Evidence:** Engine + integration 6/6; focused strength/body browser 5/5; TypeScript,
+  architecture (305 files), production/PWA build and diff check pass. Existing >500 kB bundle
+  warning remains.
+- **Independent review:** exact head `cacb658` BLOCKED on three scope gaps: primary strength
+  measures, shoulder movement classification, and inspectable source records. The Builder corrected
+  all three without expanding scope. Focused Engine/integration tests pass 7/7; direct 320 px browser
+  coverage passes; TypeScript, architecture (305 files), production/PWA build and diff check pass.
+  Existing >500 kB bundle warning remains.
+- **Next:** push the corrected head, obtain green required CI and renewed independent exact-head
+  review. Gavin separately decides merge.
+
+---
+
+Historical NAV-001 slice 4 (merged #293 at `aafa5b5`):
+
 # NAV-001 — slice 4: DATA paths and Garmin sync
 
 - **Authority / Builder:** Gavin approved the NAV map and explicitly requested “merge 292 and

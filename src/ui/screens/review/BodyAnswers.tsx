@@ -3,6 +3,7 @@ import { getBodyReview, type BodyReview } from "../../../application/bodyReviewQ
 import type { SiteSummary } from "../../../engine/bodyReview";
 import type { ReviewOverview } from "../../../engine/reviewOverview";
 import { describeError } from "../../errorMessage";
+import { getStrengthReview, type StrengthReviewData } from "../../../application/strengthReviewQueries";
 
 const calendar = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 const title = (key: string) => key.charAt(0) + key.slice(1).toLowerCase();
@@ -37,6 +38,7 @@ function Readings({ summary }: { summary: SiteSummary }) {
  */
 export function BodyAnswers({ active, overview }: { active: boolean; overview: ReviewOverview }) {
   const [data, setData] = useState<BodyReview | null>(null);
+  const [strength, setStrength] = useState<StrengthReviewData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   const version = useRef(0);
@@ -44,7 +46,7 @@ export function BodyAnswers({ active, overview }: { active: boolean; overview: R
     if (!active) return;
     const request = ++version.current; let alive = true;
     setError(null);
-    void getBodyReview().then((next) => { if (alive && request === version.current) setData(next); })
+    void Promise.all([getBodyReview(), getStrengthReview()]).then(([next, nextStrength]) => { if (alive && request === version.current) { setData(next); setStrength(nextStrength); } })
       .catch((failure: unknown) => { if (alive) setError(describeError(failure, "Could not read your measurements and photos.")); });
     return () => { alive = false; };
   }, [active, retry]);
@@ -58,7 +60,9 @@ export function BodyAnswers({ active, overview }: { active: boolean; overview: R
   const measuredUpper = upper.filter((summary) => summary.count > 0);
   const comparable = data.photos.filter((pose) => pose.comparable);
   const photoCount = data.photos.reduce((n, pose) => n + pose.count, 0);
-  const strengthLine = "Building up · no overall strength comparison yet";
+  const strengthLine = strength?.strengthIndexChangePercent === undefined
+    ? `Building up · ${strength?.comparableLifts ?? 0} comparable lifts; needs 2`
+    : `${strength.strengthIndexChangePercent >= 0 ? "+" : ""}${strength.strengthIndexChangePercent.toFixed(1)}% strength index across ${strength.comparableLifts} comparable lifts`;
 
   return <>
     <Answer title="Is my waist getting smaller?" answer={siteAnswer(waist)}>
