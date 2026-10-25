@@ -24,5 +24,10 @@ describe("REVIEW-001 strength projection", () => {
   it("counts recent valid working sets per week and ignores invalid/out-of-window evidence", () => {
     const result = projectStrengthReview([row("press", "a", 2, 100), row("press", "b", 3, 0), row("row", "c", 4, 80, 10, "Back"), row("old", "d", 60, 100)], now);
     expect(result.muscleSetsPerWeek).toEqual({ Chest: .25, Back: .25 });
+    expect(result.balance).toEqual({ push: .25, pull: .25, upper: .5, lower: 0, unclassified: 0 });
+  });
+  it("keeps arms and unmapped work out of push/pull instead of inventing a split", () => {
+    const result = projectStrengthReview([row("curl", "a", 2, 40, 10, "Arms"), row("leg", "b", 3, 100, 10, "Legs"), { sessionId: "c", exerciseId: "unknown", at: new Date(now.getTime() - 4 * 86_400_000).toISOString(), weight: 50, reps: 10 }], now);
+    expect(result.balance).toEqual({ push: 0, pull: 0, upper: .25, lower: .25, unclassified: .75 });
   });
 });

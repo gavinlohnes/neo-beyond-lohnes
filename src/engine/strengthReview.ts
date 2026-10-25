@@ -24,6 +24,7 @@ export interface StrengthReview {
   comparableLifts: number;
   overallChangePercent: number | undefined;
   muscleSetsPerWeek: Partial<Record<MuscleGroup, number>>;
+  balance: { push: number; pull: number; upper: number; lower: number; unclassified: number };
 }
 
 const DAY = 86_400_000;
@@ -51,5 +52,13 @@ export function projectStrengthReview(observations: readonly StrengthObservation
   const overallChangePercent = changes.length >= 2 ? changes.reduce((sum, value) => sum + value, 0) / changes.length : undefined;
   const muscleSetsPerWeek: Partial<Record<MuscleGroup, number>> = {};
   for (const row of valid.filter((item) => Date.parse(item.at) >= recentStart && item.muscleGroup)) muscleSetsPerWeek[row.muscleGroup!] = (muscleSetsPerWeek[row.muscleGroup!] ?? 0) + .25;
-  return { lifts, comparableLifts: changes.length, overallChangePercent, muscleSetsPerWeek };
+  const balance = { push: 0, pull: 0, upper: 0, lower: 0, unclassified: 0 };
+  for (const row of valid.filter((item) => Date.parse(item.at) >= recentStart)) {
+    if (row.muscleGroup === "Chest" || row.muscleGroup === "Shoulders") balance.push += .25;
+    else if (row.muscleGroup === "Back") balance.pull += .25;
+    else balance.unclassified += .25;
+    if (["Chest", "Back", "Shoulders", "Arms"].includes(row.muscleGroup ?? "")) balance.upper += .25;
+    else if (row.muscleGroup === "Legs" || row.muscleGroup === "Glutes") balance.lower += .25;
+  }
+  return { lifts, comparableLifts: changes.length, overallChangePercent, muscleSetsPerWeek, balance };
 }

@@ -18,8 +18,14 @@
   build and diff check pass. Existing ReviewScreen/BodyAnswers browser files pass 11/11. The existing
   ReviewHub file remains unstable in isolated Chromium at its ESM mocks (`mockClear` /
   `mockRejectedValueOnce` missing) and two shared-state timing assertions; no assertion was changed.
-- **Next:** add direct browser coverage for the new answers, finish balance and the body
-  side-by-side strength handoff, then full proportional verification, PR and independent review.
+- **Completed slice:** direct 320 px browser coverage; push/pull and upper/lower set-rate views
+  retain arms/core/full-body/unknown work as unclassified rather than inventing a split; the body
+  side-by-side now uses the same strength result while preserving its no-verdict language.
+- **Evidence:** Engine + integration 6/6; focused strength/body browser 5/5; TypeScript,
+  architecture (305 files), production/PWA build and diff check pass. Existing >500 kB bundle
+  warning remains.
+- **Next:** commit/push, open the PR, run required CI and obtain independent exact-head review;
+  Gavin separately decides merge.
 
 ---
 
