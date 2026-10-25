@@ -20,6 +20,7 @@ export function StrengthAnswers({ active }: { active: boolean }) {
   if (!data) return <p role="status" className="meta">Reading strength evidence…</p>;
   const muscles = Object.entries(data.muscleSetsPerWeek).sort((a, b) => b[1] - a[1]);
   const method = <details><summary>How this is calculated</summary><p className="card-body">The last 28 days are compared with the 28 days before them. A lift needs 2 finished sessions in each window. Best-set weight and total weight × reps lead the per-lift index; estimated max (Epley) is secondary. The overall index needs 2 comparable lifts. Missing evidence stays missing.</p></details>;
+  const muscleMethod = <details><summary>How this is calculated</summary><p className="card-body">Each effective, non-skipped working set in a finished strength session during the last 28 days counts toward its exercise’s mapped primary muscle, then the total is divided by 4 for sets per week. Push and pull use explicit exercise-level mappings; upper and lower use mapped muscle groups. Neutral, multi-pattern, custom without a movement mapping, and unknown exercises stay unclassified for push/pull.</p></details>;
   const records = <details><summary>Every record in this range ({data.records.length})</summary>{data.records.length === 0 ? <p className="card-body">No effective working sets in the last 56 days.</p> : <div className="review-table-scroll"><table className="review-table"><caption>Effective working sets · last 56 days</caption><thead><tr><th scope="col">Date</th><th scope="col">Lift</th><th scope="col">Set</th><th scope="col">Window</th></tr></thead><tbody>{data.records.map((row, index) => <tr key={`${row.sessionId}-${row.exerciseId}-${index}`}><th scope="row">{date(row.at)}</th><td>{data.names[row.exerciseId] ?? row.exerciseId}</td><td>{row.weight} lb × {row.reps}</td><td>{Date.now() - Date.parse(row.at) < 28 * 86_400_000 ? "Recent" : "Earlier"}</td></tr>)}</tbody></table></div>}</details>;
   return <>
     <details className="review-answer"><summary><span>Am I keeping my strength while losing weight?</span><strong>{state(data.strengthIndexChangePercent, data.comparableLifts)}</strong></summary>
@@ -35,7 +36,7 @@ export function StrengthAnswers({ active }: { active: boolean }) {
       {muscles.length ? <ul className="metric-records">{muscles.map(([muscle, sets]) => <li key={muscle}><strong>{muscle}</strong> · {sets.toFixed(1)} working sets/week</li>)}</ul> : <p className="card-body">Finished mapped working sets will appear here. Missing exercise mappings stay unknown.</p>}
       <h3>Broad balance</h3><p className="card-body">Push {data.balance.push.toFixed(1)} · Pull {data.balance.pull.toFixed(1)} working sets/week</p><p className="card-body">Upper {data.balance.upper.toFixed(1)} · Lower {data.balance.lower.toFixed(1)} working sets/week</p>
       {data.balance.unclassified > 0 && <p className="meta">{data.balance.unclassified.toFixed(1)} sets/week unclassified for push/pull. Neutral, multi-pattern and unknown exercises are not forced into a side.</p>}
-      {method}{records}
+      {muscleMethod}{records}
     </details>
   </>;
 }

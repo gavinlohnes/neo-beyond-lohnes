@@ -26,6 +26,8 @@ describe("REVIEW-001 strength answers", () => {
     await screen.getByText("How is each muscle trained?", { exact: true }).click();
     await expect.element(screen.getByText("Chest", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/Push 0.5 · Pull 0.0/)).toBeVisible();
+    await screen.getByText("How this is calculated", { exact: true }).nth(2).click();
+    await expect.element(screen.getByText(/divided by 4 for sets per week/)).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
   });
 });
