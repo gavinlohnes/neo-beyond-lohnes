@@ -60,9 +60,9 @@ export function BodyAnswers({ active, overview }: { active: boolean; overview: R
   const measuredUpper = upper.filter((summary) => summary.count > 0);
   const comparable = data.photos.filter((pose) => pose.comparable);
   const photoCount = data.photos.reduce((n, pose) => n + pose.count, 0);
-  const strengthLine = strength?.overallChangePercent === undefined
+  const strengthLine = strength?.strengthIndexChangePercent === undefined
     ? `Building up · ${strength?.comparableLifts ?? 0} comparable lifts; needs 2`
-    : `${strength.overallChangePercent >= 0 ? "+" : ""}${strength.overallChangePercent.toFixed(1)}% estimated strength across ${strength.comparableLifts} comparable lifts`;
+    : `${strength.strengthIndexChangePercent >= 0 ? "+" : ""}${strength.strengthIndexChangePercent.toFixed(1)}% strength index across ${strength.comparableLifts} comparable lifts`;
 
   return <>
     <Answer title="Is my waist getting smaller?" answer={siteAnswer(waist)}>

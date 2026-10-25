@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/persistence/db";
-import { getStrengthReview } from "../../src/application/strengthReviewQueries";
+import { classifyMovement, getStrengthReview } from "../../src/application/strengthReviewQueries";
+import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
 import type { WorkoutSession } from "../../src/domain/common/types";
 import type { PerformedSet } from "../../src/domain/workout/types";
 
@@ -17,6 +18,14 @@ async function set(id: string, sessionId: string, exerciseId = "machine-chest-pr
 }
 
 describe("getStrengthReview", () => {
+  it("classifies every built-in exercise explicitly without treating every shoulder lift as push", () => {
+    const expected = { "machine-chest-press": "PUSH", "pec-deck": "PUSH", "leg-press": undefined, "triceps-pressdown": "PUSH", "lat-pulldown": "PULL", "seated-cable-row": "PULL", "leg-curl": undefined, "preacher-curl": "PULL", "machine-shoulder-press": "PUSH", "reverse-pec-deck": "PULL" } as const;
+    const ids = [...new Set(Object.values(WORKOUT_TEMPLATES).flatMap((template) => template.exercises.map((exercise) => exercise.exerciseId)))];
+    expect(Object.keys(expected).sort()).toEqual(ids.sort());
+    for (const [id, movement] of Object.entries(expected)) expect(classifyMovement(id)).toBe(movement);
+    expect(classifyMovement("lateral-raise")).toBeUndefined();
+    expect(classifyMovement("face-pull")).toBe("PULL");
+  });
   it("uses finished canonical sets and resolves built-in muscles", async () => {
     for (const [id, days] of [["r1", 2], ["r2", 12], ["p1", 30], ["p2", 40]] as const) { await session(id, days); await set(`s-${id}`, id, "machine-chest-press", { weight: days < 28 ? 110 : 100 }); }
     await session("active", 1, "ACTIVE"); await set("active-set", "active", "machine-chest-press", { weight: 999 });

@@ -12,9 +12,9 @@
 - **REUSE / OWN / BUILD FROM SCRATCH:** existing session/set truth, TRAIN curves, exercise mappings
   and Review evidence UI / BEYOND comparability and abstention / only the pure aggregation layer.
 - **Built so far:** pure `strengthReview` projection with two-session-per-window same-lift
-  comparability, estimated-max direction, multi-lift overall abstention and recent weekly muscle-set
-  rates; canonical query excludes active/undone/skipped/substituted work and resolves existing
-  exercise mappings; Review's three strength/muscle placeholders now show the evidence and method.
+  comparability; best-set and volume-led lift/index direction; secondary estimated max; relative
+  strength when a prior bodyweight exists; weekly volume and muscle-set rates; explicit exercise-
+  level push/pull classification; canonical exclusions; and complete 56-day source disclosure.
 - **Evidence:** new Engine + integration tests 5/5; TypeScript, architecture (304 files), production
   build and diff check pass. Existing ReviewScreen/BodyAnswers browser files pass 11/11. The existing
   ReviewHub file remains unstable in isolated Chromium at its ESM mocks (`mockClear` /
@@ -25,8 +25,13 @@
 - **Evidence:** Engine + integration 6/6; focused strength/body browser 5/5; TypeScript,
   architecture (305 files), production/PWA build and diff check pass. Existing >500 kB bundle
   warning remains.
-- **Next:** commit/push, open the PR, run required CI and obtain independent exact-head review;
-  Gavin separately decides merge.
+- **Independent review:** exact head `cacb658` BLOCKED on three scope gaps: primary strength
+  measures, shoulder movement classification, and inspectable source records. The Builder corrected
+  all three without expanding scope. Focused Engine/integration tests pass 7/7; direct 320 px browser
+  coverage passes; TypeScript, architecture (305 files), production/PWA build and diff check pass.
+  Existing >500 kB bundle warning remains.
+- **Next:** push the corrected head, obtain green required CI and renewed independent exact-head
+  review. Gavin separately decides merge.
 
 ---
 

@@ -19,6 +19,10 @@ describe("REVIEW-001 strength answers", () => {
     }
     const screen = await render(<div className="whole-picture"><StrengthAnswers active /></div>);
     await expect.element(screen.getByText(/1 lifts improving/)).toBeVisible();
+    await screen.getByText("Am I getting stronger?", { exact: true }).click();
+    await expect.element(screen.getByText(/best set 110 lb × 10/)).toBeVisible();
+    await screen.getByText(/Every record in this range/).nth(1).click();
+    await expect.element(screen.getByText("Effective working sets · last 56 days", { exact: true }).nth(1)).toBeVisible();
     await screen.getByText("How is each muscle trained?", { exact: true }).click();
     await expect.element(screen.getByText("Chest", { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/Push 0.5 · Pull 0.0/)).toBeVisible();

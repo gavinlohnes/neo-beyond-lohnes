@@ -3,7 +3,8 @@ import { getStrengthReview, type StrengthReviewData } from "../../../application
 import { describeError } from "../../errorMessage";
 
 const pct = (value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
-const state = (value: number | undefined, count: number) => value === undefined ? `Building up · needs 2 comparable lifts (${count} ready)` : `${pct(value)} estimated strength across ${count} comparable lifts`;
+const state = (value: number | undefined, count: number) => value === undefined ? `Building up · needs 2 comparable lifts (${count} ready)` : `${pct(value)} strength index across ${count} comparable lifts`;
+const date = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
 export function StrengthAnswers({ active }: { active: boolean }) {
   const [data, setData] = useState<StrengthReviewData | null>(null);
@@ -18,22 +19,23 @@ export function StrengthAnswers({ active }: { active: boolean }) {
   if (error) return <p role="alert">{error} <button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>RETRY STRENGTH</button></p>;
   if (!data) return <p role="status" className="meta">Reading strength evidence…</p>;
   const muscles = Object.entries(data.muscleSetsPerWeek).sort((a, b) => b[1] - a[1]);
+  const method = <details><summary>How this is calculated</summary><p className="card-body">The last 28 days are compared with the 28 days before them. A lift needs 2 finished sessions in each window. Best-set weight and total weight × reps lead the per-lift index; estimated max (Epley) is secondary. The overall index needs 2 comparable lifts. Missing evidence stays missing.</p></details>;
+  const records = <details><summary>Every record in this range ({data.records.length})</summary>{data.records.length === 0 ? <p className="card-body">No effective working sets in the last 56 days.</p> : <div className="review-table-scroll"><table className="review-table"><caption>Effective working sets · last 56 days</caption><thead><tr><th scope="col">Date</th><th scope="col">Lift</th><th scope="col">Set</th><th scope="col">Window</th></tr></thead><tbody>{data.records.map((row, index) => <tr key={`${row.sessionId}-${row.exerciseId}-${index}`}><th scope="row">{date(row.at)}</th><td>{data.names[row.exerciseId] ?? row.exerciseId}</td><td>{row.weight} lb × {row.reps}</td><td>{Date.now() - Date.parse(row.at) < 28 * 86_400_000 ? "Recent" : "Earlier"}</td></tr>)}</tbody></table></div>}</details>;
   return <>
-    <details className="review-answer"><summary><span>Am I keeping my strength while losing weight?</span><strong>{state(data.overallChangePercent, data.comparableLifts)}</strong></summary>
+    <details className="review-answer"><summary><span>Am I keeping my strength while losing weight?</span><strong>{state(data.strengthIndexChangePercent, data.comparableLifts)}</strong></summary>
       <p className="card-body">Strength and weight are shown as separate recorded facts. BEYOND does not infer muscle or fat change.</p>
-      <p className="meta">Comparison requires the same lift in at least 2 finished sessions in each 28-day window, and at least 2 comparable lifts for the overall answer.</p>
+      {data.weeklyVolumeGrowthPercent === undefined ? <p className="meta">Weekly volume growth is building up.</p> : <p className="card-body">Weekly volume: {Math.round(data.recentVolumePerWeek).toLocaleString()} lb · {pct(data.weeklyVolumeGrowthPercent)} versus the earlier window</p>}
+      {method}{records}
     </details>
     <details className="review-answer"><summary><span>Am I getting stronger?</span><strong>{data.lifts.some((lift) => lift.status === "IMPROVING") ? `${data.lifts.filter((lift) => lift.status === "IMPROVING").length} lifts improving` : data.comparableLifts ? "No clear increase in comparable lifts" : "Building up · not enough comparable sessions"}</strong></summary>
-      <ul className="metric-records">{data.lifts.map((lift) => <li key={lift.exerciseId}><strong>{data.names[lift.exerciseId] ?? lift.exerciseId}</strong> · {lift.changePercent === undefined ? `${lift.recentSessions} recent / ${lift.previousSessions} earlier sessions` : `${pct(lift.changePercent)} · ${lift.status.toLowerCase()}`}</li>)}</ul>
-      <p className="meta">Best estimated one-rep strength uses weight × (1 + reps ÷ 30), for comparison only. It is not a prescribed max or a recommendation.</p>
+      <ul className="metric-records">{data.lifts.map((lift) => <li key={lift.exerciseId}><strong>{data.names[lift.exerciseId] ?? lift.exerciseId}</strong> · {lift.indexChangePercent === undefined ? `${lift.recentSessions} recent / ${lift.previousSessions} earlier sessions` : <>best set {lift.recentBest!.weight} lb × {lift.recentBest!.reps} ({pct(lift.bestSetChangePercent!)}) · volume {Math.round(lift.recentVolume).toLocaleString()} lb ({pct(lift.volumeChangePercent!)}) · estimated max {pct(lift.estimatedMaxChangePercent!)}{lift.relativeStrength === undefined ? "" : ` · relative ${lift.relativeStrength.toFixed(2)}× bodyweight`}</>}</li>)}</ul>
+      {method}{records}
     </details>
     <details className="review-answer"><summary><span>How is each muscle trained?</span><strong>{muscles.length ? `${muscles.length} muscle groups recorded in the last 4 weeks` : "Building up · no mapped working sets"}</strong></summary>
       {muscles.length ? <ul className="metric-records">{muscles.map(([muscle, sets]) => <li key={muscle}><strong>{muscle}</strong> · {sets.toFixed(1)} working sets/week</li>)}</ul> : <p className="card-body">Finished mapped working sets will appear here. Missing exercise mappings stay unknown.</p>}
-      <p className="meta">Counts effective non-skipped sets in finished strength sessions over the last 28 days, divided by 4. No target or judgment is applied.</p>
-      <h3>Broad balance</h3>
-      <p className="card-body">Push {data.balance.push.toFixed(1)} · Pull {data.balance.pull.toFixed(1)} working sets/week</p>
-      <p className="card-body">Upper {data.balance.upper.toFixed(1)} · Lower {data.balance.lower.toFixed(1)} working sets/week</p>
-      {data.balance.unclassified > 0 && <p className="meta">{data.balance.unclassified.toFixed(1)} sets/week unclassified for push/pull. Arms, core, full-body and unknown exercises are not forced into a side.</p>}
+      <h3>Broad balance</h3><p className="card-body">Push {data.balance.push.toFixed(1)} · Pull {data.balance.pull.toFixed(1)} working sets/week</p><p className="card-body">Upper {data.balance.upper.toFixed(1)} · Lower {data.balance.lower.toFixed(1)} working sets/week</p>
+      {data.balance.unclassified > 0 && <p className="meta">{data.balance.unclassified.toFixed(1)} sets/week unclassified for push/pull. Neutral, multi-pattern and unknown exercises are not forced into a side.</p>}
+      {method}{records}
     </details>
   </>;
 }
