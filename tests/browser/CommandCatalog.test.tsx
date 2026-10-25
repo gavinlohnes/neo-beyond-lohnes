@@ -108,7 +108,7 @@ describe("COMMAND catalog", () => {
     const screen = await render(<App />);
     await openCommand(screen);
     // The pre-redesign destination inventory is deliberately independent of the current catalog.
-    const before = ["WATER", "MEAL", "FOOD LOOKUP", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "SYSTEMS", "STEALTH", "TODAY TOOLS", "PLAN TODAY", "TRAIN", "WORKOUT", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "IMPORT HEALTH DATA", "DATA", "WEEKLY CHECK-IN", "REVIEW", "HISTORY", "DECISION JOURNAL", "SEARCH RECORDS", "BACKUP & RECOVERY", "NUTRITION TARGETS", "QUIT TRACKER SETTINGS", "TIME CAPSULE", "CHECK-IN REMINDER", "DIAGNOSTICS", "A PLACE TO START"];
+    const before = ["WATER", "MEAL", "FOOD LOOKUP", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "SYSTEMS", "STEALTH", "TODAY TOOLS", "PLAN TODAY", "TRAIN", "WORKOUT", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "IMPORT HEALTH DATA", "DATA", "WEEKLY CHECK-IN", "REVIEW", "HISTORY", "DECISION JOURNAL", "SEARCH RECORDS", "BACKUP & RECOVERY", "TARGETS", "QUIT TRACKER SETTINGS", "TIME CAPSULE", "CHECK-IN REMINDER", "DIAGNOSTICS", "A PLACE TO START"];
     for (const name of before) expect(SYSTEM_CAPABILITIES.some((entry) => entry.label === name)).toBe(true);
     for (const summary of document.querySelectorAll<HTMLDetailsElement>(".command-group")) summary.open = true;
     for (const entry of SYSTEM_CAPABILITIES) await expect.element(screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true })).toBeVisible();

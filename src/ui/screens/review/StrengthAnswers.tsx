@@ -33,7 +33,8 @@ export function StrengthAnswers({ active }: { active: boolean }) {
       {method}{records}
     </details>
     <details className="review-answer"><summary><span>How is each muscle trained?</span><strong>{muscles.length ? `${muscles.length} muscle groups recorded in the last 4 weeks` : "Building up · no mapped working sets"}</strong></summary>
-      {muscles.length ? <ul className="metric-records">{muscles.map(([muscle, sets]) => <li key={muscle}><strong>{muscle}</strong> · {sets.toFixed(1)} working sets/week</li>)}</ul> : <p className="card-body">Finished mapped working sets will appear here. Missing exercise mappings stay unknown.</p>}
+      <p className="meta">{data.muscleSetsTargetPerWeek === undefined ? "No sets-per-muscle target set." : `Your target: ${data.muscleSetsTargetPerWeek} working sets per muscle/week. Your choice, not a recommendation.`}</p>
+      {muscles.length ? <ul className="metric-records">{muscles.map(([muscle, sets]) => <li key={muscle}><strong>{muscle}</strong> · {sets.toFixed(1)} working sets/week{data.muscleSetsTargetPerWeek === undefined ? "" : ` · target ${data.muscleSetsTargetPerWeek}`}</li>)}</ul> : <p className="card-body">Finished mapped working sets will appear here. Missing exercise mappings stay unknown.</p>}
       <h3>Broad balance</h3><p className="card-body">Push {data.balance.push.toFixed(1)} · Pull {data.balance.pull.toFixed(1)} working sets/week</p><p className="card-body">Upper {data.balance.upper.toFixed(1)} · Lower {data.balance.lower.toFixed(1)} working sets/week</p>
       {data.balance.unclassified > 0 && <p className="meta">{data.balance.unclassified.toFixed(1)} sets/week unclassified for push/pull. Neutral, multi-pattern and unknown exercises are not forced into a side.</p>}
       {muscleMethod}{records}

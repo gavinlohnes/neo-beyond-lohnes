@@ -23,11 +23,19 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
   const now = new Date().toISOString();
   const effectiveCalorieTarget = parsed.calorieTargetKcal ?? existing?.calorieTargetKcal;
   const effectiveGoalWeight = parsed.goalWeightLbs ?? existing?.goalWeightLbs;
+  const reviewTarget = <K extends "weightChangeTargetPercentPerWeek" | "muscleSetsTargetPerWeek" | "strengthSessionsTargetPerWeek">(key: K) =>
+    parsed[key] === null ? undefined : parsed[key] ?? existing?.[key];
+  const weightChangeTargetPercentPerWeek = reviewTarget("weightChangeTargetPercentPerWeek");
+  const muscleSetsTargetPerWeek = reviewTarget("muscleSetsTargetPerWeek");
+  const strengthSessionsTargetPerWeek = reviewTarget("strengthSessionsTargetPerWeek");
   const record: NutritionTargets = {
     id: "current",
     ...(effectiveCalorieTarget !== undefined ? { calorieTargetKcal: effectiveCalorieTarget } : {}),
     proteinMultiplierGPerLb: parsed.proteinMultiplierGPerLb ?? existing?.proteinMultiplierGPerLb ?? 1.0,
     ...(effectiveGoalWeight !== undefined ? { goalWeightLbs: effectiveGoalWeight } : {}),
+    ...(weightChangeTargetPercentPerWeek !== undefined ? { weightChangeTargetPercentPerWeek } : {}),
+    ...(muscleSetsTargetPerWeek !== undefined ? { muscleSetsTargetPerWeek } : {}),
+    ...(strengthSessionsTargetPerWeek !== undefined ? { strengthSessionsTargetPerWeek } : {}),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };

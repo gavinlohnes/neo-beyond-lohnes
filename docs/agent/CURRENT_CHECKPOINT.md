@@ -1,4 +1,30 @@
-# REVIEW-001 — Phase 1b strength and muscle intelligence
+# REVIEW-001 — C2 operator-set targets
+
+- **Authority / Builder / lane:** Gavin approved C2 on 2026-10-25 after #294 merged. Codex;
+  PROTECTED operator-controlled interpretation settings.
+- **Branch / baseline:** `codex/review-001-c2-targets`; fresh master
+  `9bc96e826f7167cadb0be8ca5f90abd91f72d284`; PR pending.
+- **Outcome:** optional weight-change-rate, sets-per-muscle and strength-sessions-per-week targets;
+  Review compares canonical recorded evidence with the operator's choices.
+- **Exclusions:** no defaults, generic pass/fail verdict, Engine input, program adjustment,
+  recommendation priority, provider/dependency, or JOURNAL work.
+- **REUSE / OWN / BUILD FROM SCRATCH:** existing mutable targets row/save/undo/backup and Review
+  projections / missing-data-aware comparison language / none.
+- **Built:** COMMAND → Targets now stores and clears the three optional choices in the existing
+  targets row. Review presents weight-rate, per-muscle working-set and weekly strength-session
+  actuals beside those choices without a default, score or recommendation. Existing backups carry
+  the additive fields with no schema migration.
+- **Evidence:** TypeScript and production/PWA build pass; persistence/restore/target/strength
+  integration coverage passes 43/43; focused COMMAND/Targets/Review/Body Chromium coverage passes
+  169/169, including 320 px target comparison. Diff check is clean. The existing >500 kB bundle
+  warning remains. `MoreOperator.test.tsx` retains its pre-existing isolated ESM-mock setup failure
+  (`mockReset is not a function`) before product rendering; no assertion was weakened.
+- **Next:** commit and push, open the PR, obtain green required CI and independent exact-head review;
+  Gavin separately decides merge.
+
+---
+
+# REVIEW-001 — Phase 1b strength and muscle intelligence (merged #294 at `9bc96e8`)
 
 - **Authority / Builder / lane:** Gavin approved the recommended bounded Phase 1b objective on
   2026-10-24 (“do it”). Codex; PROTECTED read-only Engine analytics.

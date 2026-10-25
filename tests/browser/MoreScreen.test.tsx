@@ -133,9 +133,9 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     const screen = await render(<MoreScreen />);
     await openCommandPanel(screen, "backup");
     await openCommandPanel(screen, "settings");
-    await expect.element(await commandResult(screen, "NUTRITION TARGETS")).toHaveTextContent("No calorie target · 1 g/lb protein");
+    await expect.element(await commandResult(screen, "TARGETS")).toHaveTextContent("No calorie target · 1 g/lb protein");
 
-    await (await commandResult(screen, "NUTRITION TARGETS")).click();
+    await (await commandResult(screen, "TARGETS")).click();
     await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2200");
     await screen.getByRole("spinbutton", { name: "Protein multiplier (g per lb bodyweight)" }).fill("0.9");
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
@@ -151,7 +151,7 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     const screen = await render(<MoreScreen />);
     await openCommandPanel(screen, "backup");
     await openCommandPanel(screen, "settings");
-    await (await commandResult(screen, "NUTRITION TARGETS")).click();
+    await (await commandResult(screen, "TARGETS")).click();
     await expect.element(screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" })).toHaveValue(2200);
     await expect.element(screen.getByRole("spinbutton", { name: "Protein multiplier (g per lb bodyweight)" })).toHaveValue(0.9);
     await expect.element(screen.getByRole("spinbutton", { name: "Goal weight (lb)" })).toHaveValue(180);
@@ -163,7 +163,7 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     const screen = await render(<MoreScreen />);
     await openCommandPanel(screen, "backup");
     await openCommandPanel(screen, "settings");
-    await (await commandResult(screen, "NUTRITION TARGETS")).click();
+    await (await commandResult(screen, "TARGETS")).click();
     await expect.element(screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" })).toHaveValue(2200);
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
 
@@ -177,7 +177,7 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     const screen = await render(<MoreScreen />);
     await openCommandPanel(screen, "backup");
     await openCommandPanel(screen, "settings");
-    await (await commandResult(screen, "NUTRITION TARGETS")).click();
+    await (await commandResult(screen, "TARGETS")).click();
     await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2000");
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
 
@@ -222,12 +222,31 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     const screen = await render(<MoreScreen />);
     await openCommandPanel(screen, "backup");
     await openCommandPanel(screen, "settings");
-    await (await commandResult(screen, "NUTRITION TARGETS")).click();
+    await (await commandResult(screen, "TARGETS")).click();
     await screen.getByRole("spinbutton", { name: "Goal weight (lb)" }).fill("180");
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
 
     await expect.element(screen.getByText("No calorie target · 1 g/lb protein · goal 180 lb", { exact: true })).toBeVisible();
     expect((await db.nutritionTargets.get("current"))?.goalWeightLbs).toBe(180);
+  });
+
+  it("REVIEW-001 C2: saves and clears the operator's optional Review targets", async () => {
+    const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "backup");
+    await openCommandPanel(screen, "settings");
+    await (await commandResult(screen, "TARGETS")).click();
+    await screen.getByRole("spinbutton", { name: "Weight change target (% bodyweight/week)" }).fill("0.75");
+    await screen.getByRole("spinbutton", { name: "Working sets target per muscle per week" }).fill("12");
+    await screen.getByRole("spinbutton", { name: "Strength sessions target per week" }).fill("3");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText(/3 review targets/)).toBeVisible();
+    expect(await db.nutritionTargets.get("current")).toMatchObject({ weightChangeTargetPercentPerWeek: 0.75, muscleSetsTargetPerWeek: 12, strengthSessionsTargetPerWeek: 3 });
+
+    await (await commandResult(screen, "TARGETS")).click();
+    await screen.getByRole("spinbutton", { name: "Working sets target per muscle per week" }).fill("");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText(/2 review targets/)).toBeVisible();
+    expect((await db.nutritionTargets.get("current"))?.muscleSetsTargetPerWeek).toBeUndefined();
   });
 
   it("DECLUTTER Drop 3: backup status sits beside EXPORT BACKUP — none on record", async () => {

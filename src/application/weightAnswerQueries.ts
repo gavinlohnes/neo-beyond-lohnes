@@ -22,6 +22,7 @@ export async function getWeightAnswers(overview: ReviewOverview) {
     swing: dailySwing(overview.rows),
     timing: weighInTiming(days),
     goalWeightLbs: targets.goalWeightLbs,
+    weightChangeTargetPercentPerWeek: targets.weightChangeTargetPercentPerWeek,
     goal: projectGoalDate(history, targets.goalWeightLbs),
   };
 }

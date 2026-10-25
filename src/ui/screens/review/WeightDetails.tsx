@@ -31,9 +31,9 @@ export function WeightDetails({ active, overview }: { active: boolean; overview:
 
   if (error) return <p role="alert">{error} The comparison above is unaffected.</p>;
   if (!data) return <p className="meta" role="status">Reading weight details…</p>;
-  const { rate, swing, timing, goal, goalWeightLbs } = data;
+  const { rate, swing, timing, goal, goalWeightLbs, weightChangeTargetPercentPerWeek } = data;
   const goalLine = goalWeightLbs === undefined
-    ? "No goal weight set. Set one in MORE → Nutrition targets."
+    ? "No goal weight set. Set one in COMMAND → Targets."
     : goal.kind === "REACHED" ? `At or past your goal of ${goalWeightLbs} lb.`
       : goal.kind === "DATE" ? `Goal ${goalWeightLbs} lb: about ${day(goal.date)} at the last 28 days' pace.`
         : `Goal ${goalWeightLbs} lb: no projection. The recent trend isn't moving toward it, or there are too few weigh-ins.`;
@@ -41,7 +41,8 @@ export function WeightDetails({ active, overview }: { active: boolean; overview:
   return (
     <dl className="review-weight-details">
       <dt>Rate</dt>
-      <dd>{rate ? `${signed(rate.lbPerWeek, 1)} lb per week · ${signed(rate.percentPerWeek, 2)}% of bodyweight per week` : "Building up · same weigh-in floor as the comparison"}</dd>
+      <dd>{rate ? `${signed(rate.lbPerWeek, 1)} lb per week · ${signed(rate.percentPerWeek, 2)}% of bodyweight per week` : "Building up · same weigh-in floor as the comparison"}
+        <div className="meta">{weightChangeTargetPercentPerWeek === undefined ? "No weight-change target set." : `Your target: ${weightChangeTargetPercentPerWeek}% of bodyweight per week. Your choice, not a recommendation.`}</div></dd>
       <dt>Usual swing</dt>
       <dd>{swing.median === undefined ? `Building up · needs ${SWING_FLOOR_PAIRS} pairs of consecutive weighed days (${swing.pairs})` : `±${swing.median.toFixed(1)} lb day to day · median of ${swing.pairs} consecutive-day pairs`}</dd>
       <dt>Goal</dt>

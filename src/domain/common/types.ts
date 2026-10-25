@@ -499,6 +499,10 @@ export interface NutritionTargets {
   proteinMultiplierGPerLb: number;
   /** Drop 5 (owner approval 2026-09-30): optional goal bodyweight, used only for BODY's projected goal date. */
   goalWeightLbs?: number;
+  /** REVIEW-001 C2: operator choices used only for read-only Review comparisons. */
+  weightChangeTargetPercentPerWeek?: number;
+  muscleSetsTargetPerWeek?: number;
+  strengthSessionsTargetPerWeek?: number;
   createdAt: string;
   updatedAt: string;
 }

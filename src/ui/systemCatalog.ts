@@ -60,7 +60,7 @@ export const SYSTEM_CAPABILITIES = [
   { label: "DECISION JOURNAL", description: "Decisions, outcomes and lessons", aliases: ["journal", "decision"], group: "Review", destination: { kind: "more", view: "JOURNAL" } },
   { label: "SEARCH RECORDS", description: "Find your personal records", aliases: ["search", "find records"], group: "Review", destination: { kind: "more", view: "SEARCH" } },
   { label: "BACKUP & RECOVERY", description: "Export, share, automatic backup and restore", aliases: ["backup", "restore", "export", "share", "data safety", "automatic backup"], group: "Backup & recovery", destination: { kind: "section", section: "BACKUP" } },
-  { label: "NUTRITION TARGETS", description: "Protein and calorie targets", aliases: ["targets", "settings", "calories"], group: "Settings", destination: { kind: "section", section: "NUTRITION_TARGETS" } },
+  { label: "TARGETS", description: "Nutrition and personal Review targets", aliases: ["nutrition targets", "review targets", "training target", "weight rate", "settings", "calories"], group: "Settings", destination: { kind: "section", section: "NUTRITION_TARGETS" } },
   { label: "QUIT TRACKER SETTINGS", description: "The habit you're avoiding and your plan", aliases: ["quit", "habit", "settings"], group: "Settings", destination: { kind: "section", section: "QUIT_TRACKER" } },
   { label: "TIME CAPSULE", description: "Seal a note for future you", aliases: ["capsule", "future", "seal"], group: "Notes", destination: { kind: "section", section: "TIME_CAPSULE" } },
   { label: "CHECK-IN REMINDER", description: "Daily reminder when you open BEYOND", aliases: ["reminder", "notification", "settings"], group: "Settings", destination: { kind: "section", section: "REMINDERS" } },
