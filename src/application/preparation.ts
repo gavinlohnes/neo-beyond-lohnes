@@ -3,7 +3,7 @@ import { db } from "../persistence/db";
 import type { PreparationItem, PreparationState, PreparationValue } from "../domain/preparation";
 import { writeAtomically } from "./atomicWrite";
 import { logEvent } from "./commands";
-import { byTimeThenSeq, getActiveDay } from "./queries";
+import { getActiveDay } from "./queries";
 import { computeDueRollover } from "../engine/dayRollover";
 
 const payloadSchema = z.object({
@@ -19,12 +19,28 @@ export async function getPreparation(dayId: string): Promise<PreparationState> {
     BOTTLE: { id: null, value: "UNCONFIRMED", recordedAt: null },
   };
   const events = (await db.events.where("beyondDayId").equals(dayId).toArray())
-    .filter((e) => e.type === "PREPARATION_RECORDED")
-    .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq));
-  for (const event of events) {
+    .filter((e) => e.type === "PREPARATION_RECORDED");
+  const rows = events.map((event) => {
     const payload = payloadSchema.safeParse(event.payload);
     if (!payload.success) throw new Error("Preparation history could not be read. Your records are unchanged.");
-    state[payload.data.item] = { id: event.id, value: payload.data.value, recordedAt: event.recordedAt };
+    return { ...event, preparation: payload.data };
+  });
+  // Supersession is causal truth. Real timestamps can move backward after a clock correction.
+  for (const item of ["FOOD", "BOTTLE"] as const) {
+    const entries = rows.filter((r) => r.preparation.item === item);
+    const next = new Map<string | null, typeof entries[number]>();
+    for (const row of entries) {
+      if (next.has(row.preparation.supersedes)) throw new Error("Preparation history has conflicting revisions. Nothing was changed.");
+      next.set(row.preparation.supersedes, row);
+    }
+    let id: string | null = null; const visited = new Set<string>();
+    while (next.has(id)) {
+      const row: (typeof entries)[number] = next.get(id)!;
+      if (visited.has(row.id)) throw new Error("Preparation history could not be read. Nothing was changed.");
+      visited.add(row.id); id = row.id;
+      state[item] = { id, value: row.preparation.value, recordedAt: row.recordedAt };
+    }
+    if (visited.size !== entries.length) throw new Error("Preparation history is incomplete. Nothing was changed.");
   }
   return state;
 }

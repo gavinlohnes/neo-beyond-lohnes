@@ -55,7 +55,7 @@ describe("PREP-001 work preparation", () => {
     const fail = vi.spyOn(db.events, "add").mockRejectedValueOnce(new Error("QuotaExceededError"));
     await food.click(); await expect.element(screen.getByRole("alert")).toBeVisible();
     expect((await getPreparation(day.id)).FOOD.value).toBe("UNCONFIRMED"); fail.mockRestore();
-    food.element().click(); food.element().click();
+    (food.element() as HTMLButtonElement).click(); (food.element() as HTMLButtonElement).click();
     await expect.poll(async () => (await getPreparation(day.id)).FOOD.value).toBe("READY");
     expect(await db.events.where("type").equals("PREPARATION_RECORDED").count()).toBe(1);
   });
@@ -70,7 +70,7 @@ describe("PREP-001 work preparation", () => {
   });
 
   it("is manually available on days off and a mode pin cannot fabricate pre-work context", async () => {
-    const day = await startDay(); await setWorkContext(day.id, "OFF"); setModePin(day.id, "PRE_WORK");
+    const day = await startDay(); await setWorkContext(day.id, "OFF", "MANUAL"); setModePin(day.id, "PRE_WORK");
     const screen = await render(<App />);
     expect(screen.getByText("READY FOR TONIGHT", { exact: true }).elements()).toHaveLength(0);
     await screen.getByRole("button", { name: "PREPARE FOR WORK", exact: true }).click();

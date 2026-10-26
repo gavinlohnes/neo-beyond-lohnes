@@ -33,6 +33,19 @@ describe("PREP-001 canonical preparation facts", () => {
     expect(undone.state.FOOD.value).toBe("UNCONFIRMED");
     expect(await db.events.where("type").equals("PREPARATION_RECORDED").count()).toBe(3);
   });
+  it("uses the revision chain after a clock correction instead of reviving old state", async () => {
+    const day = await startDay(); vi.setSystemTime(new Date(2026, 9, 26, 17, 2));
+    const first = await recordPreparation({ dayId: day.id, item: "FOOD", value: "READY", expectedPreviousId: null });
+    vi.setSystemTime(new Date(2026, 9, 26, 17, 1));
+    const revised = await recordPreparation({ dayId: day.id, item: "FOOD", value: "FROZEN", expectedPreviousId: first.id });
+    expect(revised.state.FOOD.value).toBe("FROZEN"); expect((await getPreparation(day.id)).FOOD.id).toBe(revised.id);
+  });
+  it("refuses conflicting imported preparation instead of silently inventing a current choice", async () => {
+    const day = await startDay(); await recordPreparation({ dayId: day.id, item: "FOOD", value: "READY", expectedPreviousId: null });
+    const original = (await db.events.where("type").equals("PREPARATION_RECORDED").first())!;
+    await db.events.add({ ...original, id: "conflicting-import", payload: { item: "FOOD", value: "FROZEN", supersedes: null } });
+    await expect(getPreparation(day.id)).rejects.toThrow("conflicting revisions");
+  });
   it("survives midnight and backup/restore, while a new day starts with no preparation debt", async () => {
     const day = await startDay(); await recordPreparation({ dayId: day.id, item: "FOOD", value: "FROZEN", expectedPreviousId: null });
     vi.setSystemTime(new Date(2026, 9, 27, 3)); expect((await getPreparation(day.id)).FOOD.value).toBe("FROZEN");
