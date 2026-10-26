@@ -1,3 +1,38 @@
+# PREP-001 — ready for tonight
+
+- **Authority / Builder:** Gavin approved the focused first campaign step, 2026-10-26. Codex;
+  PROTECTED preparation facts/TODAY composition. [Brief](PREP-001.md).
+- **Branch / baseline:** `codex/prep-001`; `560deb3bc5d080ff19c0dd537c3d20a8c93144cb` (#295 merged).
+- **Scope:** food/snacks and bottle preparation, practical alternatives, undo/change and local
+  persistence; no consumption logging, spending or recommendation changes.
+- **REUSE:** event/atomic-write/day/backup/history and LogSheet/confirmation paths.
+- **OWN:** preparation fact mapping. **BUILD FROM SCRATCH:** missing preparation projection only.
+- **Built:** one-tap food/bottle before actual work, quiet manual entry at other times, native
+  sheet with homemade/frozen/other/not-needed choices, change/undo and inspectable history.
+  Append-only item revision in existing events; atomic idempotence/stale/day guards. New days
+  start unknown; no consumption or Obligation records are created.
+- **PR / evidence:** [#296](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/296), draft pushed
+  early. Persistence 12/12 and initial browser 10/10 PASS (including four axe sizes), TypeScript,
+  architecture (308 files), build and diff check PASS. [Production acceptance](../screenshots/prep-001/README.md)
+  PASS at phone/landscape/desktop, offline confirmations, frozen option, midnight reload, native
+  backup download/restore preview and unchanged non-preparation records. Final verification covers
+  compact controls and retained logging-first placement; no product change after final capture.
+- **Review history:** WIP BLOCK `801d138` found time sorting could revive superseded state after
+  clock correction. Causal-chain projection fixes it and rejects conflicting/incomplete chains;
+  independent original probe and integration 12/12 PASS. Initial CI test-type/import/order
+  issues corrected without assertion/configuration weakening. Final exact-head review and full
+  gate/required CI results are recorded in #296 before readiness.
+- **Full-gate correction:** 2,984 passed / two failed / one skip on prior head. Retained original
+  Polish001 phone-fold assertion by moving preparation below existing Log controls. Preparation
+  and Polish001 now 23/23 PASS. Catalog follow-up had 57 pass / one different 15s timeout; original
+  MIRROR and TODAY TOOLS cases pass 2/2 alone. Final production acceptance refreshed: four sizes
+  PASS. Final full verification/review/CI results are recorded in #296.
+- **Next:** final full verification, independent review and green CI, then Gavin's separate merge
+  approval. Spending and later campaign stages remain outside this focused step.
+
+---
+Historical C2 checkpoint (#295 merged):
+
 # REVIEW-001 — C2 operator-set targets
 
 - **Authority / Builder / lane:** Gavin approved C2 on 2026-10-25 after #294 merged. Codex;

@@ -1,3 +1,4 @@
+import { PREPARATION_LABELS, type PreparationValue } from "../../../domain/preparation";
 import type { DomainEvent, UrgeTrigger } from "../../../domain/common/types";
 import { URGE_TRIGGER_LABELS } from "../body/quitCopy";
 import { formatDuration } from "../body/bodyScreenCopy";
@@ -127,6 +128,8 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Set logged: ${exercise(p.exerciseId)}${p.substitutedName ? ` (as ${p.substitutedName})` : ""} #${p.setNumber} — ${p.weight} lb x ${p.reps}.`;
     case "SET_SKIPPED":
       return `Set skipped: ${exercise(p.exerciseId)} #${p.setNumber}.`;
+    case "PREPARATION_RECORDED":
+      return `Preparation · ${p.item === "FOOD" ? "Food and snacks" : "Bottle"}: ${PREPARATION_LABELS[p.value as PreparationValue] ?? "Unknown"}.`;
     case "WEEKLY_REVIEW_SAVED":
       return `Weekly review ${p?.supersedes ? "revised" : "saved"} for ${String(p?.weekStart ?? "unknown week")}. Note: ${String(p?.note || "None")}. Focus: ${String((p?.focus as { text?: unknown } | null)?.text ?? "None chosen")}.`;
     case "CLEAN_DAY_LOGGED":

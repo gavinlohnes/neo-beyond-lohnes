@@ -1,0 +1,10 @@
+.work-preparation { margin-block: 12px; padding-block: 12px; border-block: 1px solid var(--border-subtle, #292929); }
+.work-preparation h2 { margin: 0 0 6px; }
+.preparation-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.preparation-actions button, .preparation-entry { min-height: 44px; }
+.preparation-options { margin-block: 12px; }
+.preparation-options button { min-height: 44px; margin: 4px 6px 4px 0; }
+.preparation-options button[aria-pressed="true"] { border-color: var(--text-1, #ddd); }
+/* Keep the two common confirmations beside each other at phone widths. */
+.preparation-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.preparation-actions button { width: 100%; min-width: 0; padding-inline: 6px; font-size: 12px; letter-spacing: .08em; }

@@ -1,3 +1,4 @@
+import { WorkPreparation } from "../../components/WorkPreparation";
 import { SleepMetricSheet } from "./SleepMetricSheet";
 import { useHiddenFeatures } from "../../hiddenFeatures";
 import { LogActions } from "../../components/RecordSheets";
@@ -2346,7 +2347,8 @@ export function TodayScreen({
             note: openFastCapture,
             ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
           }}
-        />}</section>
+        />}
+      {day && <WorkPreparation key={day.id} dayId={day.id} beforeWork={day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />}</section>
   </>;
   const nextSection = <>
       <section className="console-guidance" aria-label="Next action">
