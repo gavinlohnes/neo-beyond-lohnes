@@ -228,3 +228,13 @@ for Obligations, a proprietary food database, full pantry/inventory ERP, a perso
 outsourcing recommendation arbitration to a generic rules/policy engine are all explicitly
 rejected in the source research, not merely undecided. Reopen only on a specific new fact, not a
 fresh general review.
+
+
+## WORK PREPARATION
+
+- PREP-001 adds `application/preparation.ts`: operator-confirmed food/snacks and bottle facts,
+  append-only PREPARATION_RECORDED events scoped to the current lived day. Causal supersession,
+  atomic item ownership/idempotence, existing backup/history and native WorkPreparation sheet.
+- Preparation is not consumption, inventory, an Obligation or Engine input. Reuse this path
+  before inventing another checklist or marking packed food/water as eaten/drunk.
+- Scope, authority, tests and active PR: [PREP-001.md](PREP-001.md). Spending remains separate.

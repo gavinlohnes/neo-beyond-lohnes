@@ -5,3 +5,6 @@
 .preparation-options { margin-block: 12px; }
 .preparation-options button { min-height: 44px; margin: 4px 6px 4px 0; }
 .preparation-options button[aria-pressed="true"] { border-color: var(--text-1, #ddd); }
+/* Keep the two common confirmations beside each other at phone widths. */
+.preparation-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.preparation-actions button { width: 100%; min-width: 0; padding-inline: 6px; font-size: 12px; letter-spacing: .08em; }

@@ -1,0 +1,66 @@
+[
+  {
+    "width": 320,
+    "height": 640,
+    "result": "PASS",
+    "checks": [
+      "UI-saved overnight schedule and real day",
+      "offline one-tap food/bottle",
+      "completed preparation quiet state",
+      "frozen alternative and exact existing records",
+      "only preparation events, no consumption",
+      "CLOSE focus return",
+      "offline reload after midnight retains both facts",
+      "real native backup download accepted by restore preview",
+      "no overflow/page errors"
+    ]
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "result": "PASS",
+    "checks": [
+      "UI-saved overnight schedule and real day",
+      "offline one-tap food/bottle",
+      "completed preparation quiet state",
+      "frozen alternative and exact existing records",
+      "only preparation events, no consumption",
+      "CLOSE focus return",
+      "offline reload after midnight retains both facts",
+      "real native backup download accepted by restore preview",
+      "no overflow/page errors"
+    ]
+  },
+  {
+    "width": 844,
+    "height": 390,
+    "result": "PASS",
+    "checks": [
+      "UI-saved overnight schedule and real day",
+      "offline one-tap food/bottle",
+      "completed preparation quiet state",
+      "frozen alternative and exact existing records",
+      "only preparation events, no consumption",
+      "CLOSE focus return",
+      "offline reload after midnight retains both facts",
+      "real native backup download accepted by restore preview",
+      "no overflow/page errors"
+    ]
+  },
+  {
+    "width": 1280,
+    "height": 800,
+    "result": "PASS",
+    "checks": [
+      "UI-saved overnight schedule and real day",
+      "offline one-tap food/bottle",
+      "completed preparation quiet state",
+      "frozen alternative and exact existing records",
+      "only preparation events, no consumption",
+      "CLOSE focus return",
+      "offline reload after midnight retains both facts",
+      "real native backup download accepted by restore preview",
+      "no overflow/page errors"
+    ]
+  }
+]

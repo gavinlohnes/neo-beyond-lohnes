@@ -7,8 +7,23 @@
   persistence; no consumption logging, spending or recommendation changes.
 - **REUSE:** event/atomic-write/day/backup/history and LogSheet/confirmation paths.
 - **OWN:** preparation fact mapping. **BUILD FROM SCRATCH:** missing preparation projection only.
-- **PR / verification:** pending. Next: build, test offline/overnight/no-duplicate behavior,
-  independent exact-head review, green CI; Gavin approves merge separately.
+- **Built:** one-tap food/bottle before actual work, quiet manual entry at other times, native
+  sheet with homemade/frozen/other/not-needed choices, change/undo and inspectable history.
+  Append-only item revision in existing events; atomic idempotence/stale/day guards. New days
+  start unknown; no consumption or Obligation records are created.
+- **PR / evidence:** [#296](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/296), draft pushed
+  early. Persistence 12/12 and initial browser 10/10 PASS (including four axe sizes), TypeScript,
+  architecture (308 files), build and diff check PASS. [Production acceptance](../screenshots/prep-001/README.md)
+  PASS at phone/landscape/desktop, offline confirmations, frozen option, midnight reload, native
+  backup download/restore preview and unchanged non-preparation records. Final full gate covers
+  the compact two-column CSS refinement; no product change after capture.
+- **Review history:** WIP BLOCK `801d138` found time sorting could revive superseded state after
+  clock correction. Causal-chain projection fixes it and rejects conflicting/incomplete chains;
+  independent original probe and integration 12/12 PASS. Initial CI test-type/import/order
+  issues corrected without assertion/configuration weakening. Final exact-head review and full
+  gate/required CI results are recorded in #296 before readiness.
+- **Next:** final full verification, independent review and green CI, then Gavin's separate merge
+  approval. Spending and later campaign stages remain outside this focused step.
 
 ---
 Historical C2 checkpoint (#295 merged):

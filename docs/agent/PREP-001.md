@@ -3,7 +3,7 @@
 - **Authority:** Gavin approved the Prepared for Real Life campaign and focused PREP-001 first
   (“Approved… one focused step at a time”), 2026-10-26. Codex; PROTECTED durable preparation facts
   and bounded TODAY composition. Start `560deb3bc5d080ff19c0dd537c3d20a8c93144cb`; branch
-  `codex/prep-001`; PR pending. Each merge requires separate Gavin approval.
+  `codex/prep-001`; PR [#296](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/296). Each merge requires separate Gavin approval.
 - **Outcome:** food/snacks and bottle preparation, one tap each; frozen/home-made/other covered
   arrangements and not-needed choices are valid; change/undo; offline/restart/midnight continuity.
 - **Placement:** enrich existing TODAY Log area (no new dominant/attention row or Engine input).
@@ -27,3 +27,19 @@
   unknown manual access, context changes and overnight restart; backup round trip including old
   backup without prep events; phone/landscape/desktop and keyboard/axe evidence. Full verify,
   green CI and independent exact-head review before separate owner merge approval.
+
+## Evidence / next
+
+Persistence tests 12/12 PASS; initial browser file 10/10 PASS including four axe sizes;
+TypeScript, architecture (308 files), production/PWA build and diff check PASS.
+[Production evidence](../screenshots/prep-001/README.md) passes all four sizes offline, including
+reload after midnight and real native backup→restore preview. Common controls sit side by side
+at phone widths after visual inspection. Final full gate covers that CSS refinement.
+
+Initial new tests exposed an event-array ordering assumption and an incorrect import; corrected
+without changing behavioral assertions. Initial CI stopped at new test type errors (HTMLElement
+cast and work-context source); corrected. Independent WIP review BLOCK at `801d138` reproduced a
+clock-correction error in timestamp ordering. Replaced it with causal supersession projection,
+rejecting forks/orphans/cycles; the same independent probe and 12 integration tests pass on the
+corrected source. Final exact-head review/full gate/CI results are persisted in #296 before
+readiness. No Engine/schema/dependency change; Gavin separately approves merge.
