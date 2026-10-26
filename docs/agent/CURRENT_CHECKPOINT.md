@@ -3,7 +3,7 @@
 - **Authority / Builder / lane:** Gavin approved C2 on 2026-10-25 after #294 merged. Codex;
   PROTECTED operator-controlled interpretation settings.
 - **Branch / baseline:** `codex/review-001-c2-targets`; fresh master
-  `9bc96e826f7167cadb0be8ca5f90abd91f72d284`; PR pending.
+  `9bc96e826f7167cadb0be8ca5f90abd91f72d284`; [PR #295](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/295).
 - **Outcome:** optional weight-change-rate, sets-per-muscle and strength-sessions-per-week targets;
   Review compares canonical recorded evidence with the operator's choices.
 - **Exclusions:** no defaults, generic pass/fail verdict, Engine input, program adjustment,
@@ -25,8 +25,13 @@
   adds the delayed-read/no-edit regression, and attributes bounded context to the relevant JISSN,
   ACSM and meta-regression sources without creating defaults. Focused browser tests pass 52/52;
   TypeScript, production/PWA build and diff check pass. Existing bundle warning remains.
-- **Next:** push the corrected head, obtain renewed independent exact-head review and green required
-  CI; Gavin separately decides merge.
+- **Closeout handoff, 2026-10-26:** Gavin explicitly approved this session taking over #295
+  (“Let's finish that up then”). Existing PR branch remains `codex/review-001-c2-targets`;
+  isolated local branch `codex/review-001-c2-closeout`. Preserved corrected source head
+  `2708c82798936a3877eaf799db51eab7854f1574`; its required CI passes. No new product scope.
+- **Next:** verify both reviewer corrections, renew independent exact-head review, and update
+  #295 with final checks and review before readiness. Final evidence is recorded in the PR;
+  Gavin separately decides merge. PREP-001 remains an unapproved implementation proposal.
 
 ---
 
