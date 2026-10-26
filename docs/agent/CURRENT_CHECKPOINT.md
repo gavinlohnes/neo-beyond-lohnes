@@ -29,6 +29,9 @@
   (“Let's finish that up then”). Existing PR branch remains `codex/review-001-c2-targets`;
   isolated local branch `codex/review-001-c2-closeout`. Preserved corrected source head
   `2708c82798936a3877eaf799db51eab7854f1574`; its required CI passes. No new product scope.
+- **Closeout evidence:** current-head Targets/Review/integration regression passes 66/66.
+  Corrected two stale “COMMAND → Targets” hints to “MORE → Targets”, with matching existing
+  copy assertions. Final review and unchanged required CI cover that correction as well.
 - **Next:** verify both reviewer corrections, renew independent exact-head review, and update
   #295 with final checks and review before readiness. Final evidence is recorded in the PR;
   Gavin separately decides merge. PREP-001 remains an unapproved implementation proposal.

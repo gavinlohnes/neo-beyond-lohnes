@@ -33,7 +33,7 @@ export function WeightDetails({ active, overview }: { active: boolean; overview:
   if (!data) return <p className="meta" role="status">Reading weight details…</p>;
   const { rate, swing, timing, goal, goalWeightLbs, weightChangeTargetPercentPerWeek } = data;
   const goalLine = goalWeightLbs === undefined
-    ? "No goal weight set. Set one in COMMAND → Targets."
+    ? "No goal weight set. Set one in MORE → Targets."
     : goal.kind === "REACHED" ? `At or past your goal of ${goalWeightLbs} lb.`
       : goal.kind === "DATE" ? `Goal ${goalWeightLbs} lb: about ${day(goal.date)} at the last 28 days' pace.`
         : `Goal ${goalWeightLbs} lb: no projection. The recent trend isn't moving toward it, or there are too few weigh-ins.`;

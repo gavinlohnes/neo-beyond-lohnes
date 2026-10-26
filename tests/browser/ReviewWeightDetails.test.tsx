@@ -63,5 +63,5 @@ it("counts weigh-ins logged before the main-sleep log, and says when no goal is 
   await seed({ sleepFirst: false });
   const screen = await openWeight();
   await expect.element(screen.getByText("0 of 15 weigh-ins logged after that day's main-sleep log", { exact: true })).toBeVisible();
-  await expect.element(screen.getByText("No goal weight set. Set one in COMMAND → Targets.", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("No goal weight set. Set one in MORE → Targets.", { exact: true })).toBeVisible();
 });
