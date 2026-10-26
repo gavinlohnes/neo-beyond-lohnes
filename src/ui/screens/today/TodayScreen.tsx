@@ -2325,8 +2325,7 @@ export function TodayScreen({
   const statusSignal = !!systemStatus && systemStatus.level !== "GREEN" && systemStatus.level !== "NO_READ" && !nextIsReal;
   const checkInOwnedHere = !!day && !checkIn && dominant !== "OPERATION_CONFLICT" && !activeWorkout && !activeResetId && !activeShiftDownId && !lateRecoverWithoutSleep;
   const logSection = <>
-    <section aria-label="Log">{day && <WorkPreparation key={day.id} dayId={day.id} beforeWork={day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />}
-    {onOpenRecordSheet ? <LogActions open={onOpenRecordSheet} busy={busy} isInFlight={() => busyRef.current} /> : <ConsoleControls
+    <section aria-label="Log">{onOpenRecordSheet ? <LogActions open={onOpenRecordSheet} busy={busy} isInFlight={() => busyRef.current} /> : <ConsoleControls
           onWaterVisibilityChange={setWaterControlsVisible}
           onLogWater={handleMinimumDayLogWater}
           lastWaterAmount={lastWaterAmount}
@@ -2348,7 +2347,8 @@ export function TodayScreen({
             note: openFastCapture,
             ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
           }}
-        />}</section>
+        />}
+      {day && <WorkPreparation key={day.id} dayId={day.id} beforeWork={day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />}</section>
   </>;
   const nextSection = <>
       <section className="console-guidance" aria-label="Next action">

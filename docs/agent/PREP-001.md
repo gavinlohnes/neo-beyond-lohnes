@@ -43,3 +43,12 @@ clock-correction error in timestamp ordering. Replaced it with causal supersessi
 rejecting forks/orphans/cycles; the same independent probe and 12 integration tests pass on the
 corrected source. Final exact-head review/full gate/CI results are persisted in #296 before
 readiness. No Engine/schema/dependency change; Gavin separately approves merge.
+
+Full local gate on `82515e3`: 2,984 passed / two failed / one existing skip. Polish001 caught a
+real fold regression under RED guidance; moved preparation after the existing logging controls
+within the same Log section, preserving its original phone bounds and ordering assertions.
+Follow-up: Preparation + Polish001 pass 23/23; catalog file 57 pass / one TODAY TOOLS timeout
+(the original MIRROR timeout passes there); both timed-out navigation cases then pass 2/2 alone.
+No assertions/timeouts/configuration weakened. Refreshed all four production captures after the
+placement correction; PASS. Landscape MORE setup explicitly scrolls the existing search result
+above fixed navigation before its normal click. Final verification/review/CI recorded in #296.

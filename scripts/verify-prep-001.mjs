@@ -20,7 +20,9 @@ try {
       await page.clock.install({ time: new Date("2026-10-26T17:00:00-05:00") }); await page.goto("http://127.0.0.1:5199/neo-beyond-lohnes/");
       await page.getByRole("button", { name: "MORE", exact: true }).click();
       await page.getByRole("searchbox", { name: "Find a screen or action", exact: true }).fill("WORK SCHEDULE");
-      await page.getByRole("button", { name: /^WORK SCHEDULE/ }).click();
+      const schedule = page.getByRole("button", { name: /^WORK SCHEDULE/ });
+      await schedule.evaluate((element) => element.scrollIntoView({ block: "center", behavior: "instant" }));
+      await schedule.click();
       await page.getByRole("button", { name: "SAVE SCHEDULE", exact: true }).click();
       await page.getByRole("button", { name: "TODAY", exact: true }).click();
       await page.getByRole("button", { name: "START DAY", exact: true }).click();

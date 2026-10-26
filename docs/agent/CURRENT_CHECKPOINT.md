@@ -15,13 +15,18 @@
   early. Persistence 12/12 and initial browser 10/10 PASS (including four axe sizes), TypeScript,
   architecture (308 files), build and diff check PASS. [Production acceptance](../screenshots/prep-001/README.md)
   PASS at phone/landscape/desktop, offline confirmations, frozen option, midnight reload, native
-  backup download/restore preview and unchanged non-preparation records. Final full gate covers
-  the compact two-column CSS refinement; no product change after capture.
+  backup download/restore preview and unchanged non-preparation records. Final verification covers
+  compact controls and retained logging-first placement; no product change after final capture.
 - **Review history:** WIP BLOCK `801d138` found time sorting could revive superseded state after
   clock correction. Causal-chain projection fixes it and rejects conflicting/incomplete chains;
   independent original probe and integration 12/12 PASS. Initial CI test-type/import/order
   issues corrected without assertion/configuration weakening. Final exact-head review and full
   gate/required CI results are recorded in #296 before readiness.
+- **Full-gate correction:** 2,984 passed / two failed / one skip on prior head. Retained original
+  Polish001 phone-fold assertion by moving preparation below existing Log controls. Preparation
+  and Polish001 now 23/23 PASS. Catalog follow-up had 57 pass / one different 15s timeout; original
+  MIRROR and TODAY TOOLS cases pass 2/2 alone. Final production acceptance refreshed: four sizes
+  PASS. Final full verification/review/CI results are recorded in #296.
 - **Next:** final full verification, independent review and green CI, then Gavin's separate merge
   approval. Spending and later campaign stages remain outside this focused step.
 

@@ -7,7 +7,7 @@ reviewed SHA and full verification/CI results are recorded in PR #296.
 
 PASS at 320×640, 390×844, 844×390, 1280×800:
 
-- One-tap food/bottle confirmations; no-action-required preparation state.
+- One-tap food/bottle confirmations, below existing Log controls; no-action-required preparation state.
 - Frozen alternative via native options sheet; CLOSE returns focus.
 - Only preparation events written; no meal, water or Obligation commands.
 - Offline reload after midnight retains the same day’s food and bottle facts.
