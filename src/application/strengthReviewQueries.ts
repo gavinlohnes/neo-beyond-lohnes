@@ -5,6 +5,7 @@ import { projectStrengthReview } from "../engine/strengthReview";
 import { getCustomExercises, getExerciseNames } from "./exerciseLibraryQueries";
 import { getUndoneSetIds } from "./trainQueries";
 import { getBodyweightHistoryWithSources } from "./bodyTrendQueries";
+import { getNutritionTargets } from "./nutritionTargetQueries";
 
 const PUSH = new Set(["machine-chest-press", "pec-deck", "triceps-pressdown", "machine-shoulder-press", "barbell-bench-press", "dumbbell-bench-press", "incline-dumbbell-press", "cable-crossover", "pushup", "dip", "overhead-press", "dumbbell-shoulder-press", "skullcrusher", "overhead-triceps-extension", "dip-triceps"]);
 const PULL = new Set(["lat-pulldown", "seated-cable-row", "preacher-curl", "reverse-pec-deck", "barbell-row", "pullup", "chinup", "dumbbell-row", "tbar-row", "face-pull", "barbell-curl", "dumbbell-curl", "hammer-curl"]);
@@ -15,9 +16,9 @@ export const classifyMovement = (exerciseId: string) => PUSH.has(exerciseId) ? "
 /** Canonical read: finished strength sessions and effective sets only; no persisted rollup. */
 export async function getStrengthReview(now = new Date()) {
   return db.transaction("r", db.tables, async () => {
-    const [sessions, rawSets, undone, custom, names, bodyweights] = await Promise.all([
+    const [sessions, rawSets, undone, custom, names, bodyweights, targets] = await Promise.all([
       db.workoutSessions.toArray(), db.performedSets.toArray(), getUndoneSetIds(),
-      getCustomExercises({ includeArchived: true }), getExerciseNames(), getBodyweightHistoryWithSources(),
+      getCustomExercises({ includeArchived: true }), getExerciseNames(), getBodyweightHistoryWithSources(), getNutritionTargets(),
     ]);
     const finished = new Map(sessions.filter((session) =>
       (session.status === "COMPLETED" || session.status === "PARTIAL") &&
@@ -35,7 +36,7 @@ export async function getStrengthReview(now = new Date()) {
       const movement = classifyMovement(set.exerciseId);
       return [{ sessionId: session.id, exerciseId: set.exerciseId, at, weight: set.weight, reps: set.reps, ...(muscleGroup ? { muscleGroup } : {}), ...(movement ? { movement } : {}), ...(bodyweightLbs ? { bodyweightLbs } : {}) }];
     });
-    return { ...projectStrengthReview(observations, now), names };
+    return { ...projectStrengthReview(observations, now), names, muscleSetsTargetPerWeek: targets.muscleSetsTargetPerWeek };
   });
 }
 

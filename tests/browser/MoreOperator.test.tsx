@@ -152,7 +152,7 @@ describe("MORE-OPERATOR-001", () => {
     const screen = await render(<MoreScreen />);
     await openCommandPanel(screen, "backup");
     await openCommandPanel(screen, "settings");
-    await (await commandResult(screen, "NUTRITION TARGETS")).click();
+    await (await commandResult(screen, "TARGETS")).click();
     await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("2345");
     await screen.getByText("Time capsule", { exact: true }).click();
     await screen.getByRole("button", { name: "WRITE ONE" }).click();

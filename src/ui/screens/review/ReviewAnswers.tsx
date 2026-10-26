@@ -7,6 +7,8 @@ import "./review.css";
 import { BodyAnswers } from "./BodyAnswers";
 import { StrengthAnswers } from "./StrengthAnswers";
 
+type ReviewOverviewData = Awaited<ReturnType<typeof getReviewOverview>>;
+
 type Measure = "weight" | "protein" | "calories" | "sleepHours" | "sessions";
 const date = (at: string) => new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 const value = (n: number | undefined, unit: string) => n === undefined ? "Not recorded" : `${n.toFixed(unit === "kcal" || unit === "g" || unit === "sessions" ? 0 : 1)} ${unit}`;
@@ -59,7 +61,7 @@ function Answer({ title, answer, children }: { title: string; answer: string; ch
   return <details className="review-answer"><summary><span>{title}</span><strong>{answer}</strong></summary>{children}</details>;
 }
 export function ReviewAnswers({ active = true, onOpenHistory }: { active?: boolean; onOpenHistory?: ((id: string) => void) | undefined }) {
-  const [data, setData] = useState<ReviewOverview | null>(null);
+  const [data, setData] = useState<ReviewOverviewData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
   const [retry, setRetry] = useState(0);
@@ -97,6 +99,7 @@ export function ReviewAnswers({ active = true, onOpenHistory }: { active?: boole
       <h3>Calories</h3>{evidence("calories", "kcal", "Sum effective consumed-meal calories in each completed lived day; average only meal-logged days. Protein-only entries do not imply calories. These are logged calories, never an estimate of actual daily intake.")}
     </Answer>
     <Answer title="How often have I trained?" answer={`${data.sessions} completed or partial strength sessions on ${data.trainingDays} lived days in this 28-day window`}>
+      <p className="card-body">Recorded average: {(data.sessions / 4).toFixed(1)} sessions/week. {data.strengthSessionsTargetPerWeek === undefined ? "No sessions-per-week target set." : `Your target: ${data.strengthSessionsTargetPerWeek}/week. Your choice, not a recommendation.`}</p>
       {evidence("sessions", "sessions", "Count distinct COMPLETED or PARTIAL STANDARD/REDUCED sessions owned by completed lived days starting in this window. Active, stopped/abandoned and recovery sessions are excluded. A recorded day with no qualifying session is zero; a day with no record is missing. This reports frequency, not adherence to a plan.")}
     </Answer>
     <details className="review-more"><summary>More questions</summary>

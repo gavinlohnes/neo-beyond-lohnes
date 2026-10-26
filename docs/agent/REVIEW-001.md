@@ -262,6 +262,26 @@ required CI pass; an independent reviewer passes the exact head; Gavin separatel
   per week; roughly 10–20 hard sets per muscle per week.
 - Additive settings, the same pattern as the existing goal weight.
 
+**Authorized 2026-10-25:** Gavin approved C2 after Phase 1b merged in #294. Codex is the Builder;
+PROTECTED because operator-selected targets change how Review interprets recorded evidence. Starting
+commit `9bc96e826f7167cadb0be8ca5f90abd91f72d284`; branch `codex/review-001-c2-targets`; [PR #295](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/295).
+Scope is optional weight-change-rate, per-muscle-set and strength-session targets, their local
+settings, and read-only comparisons against existing Review evidence. Targets are the operator's
+choices, never defaults, recommendations or Engine inputs. Excludes automatic program changes,
+generic pass/fail judgment, new providers/dependencies, recommendation priority, and unrelated
+Review/JOURNAL work. **REUSE:** the existing single mutable targets row, save/undo flow, canonical
+Review projections and inspectable evidence. **OWN:** BEYOND's missing-data-aware comparison copy.
+**BUILD FROM SCRATCH:** none; this extends existing settings and read models. Finished when targets
+can be set/cleared and survive backup/restore, Review shows actual-versus-chosen values without
+inventing completeness, phone-width and compatibility tests pass, required CI is green, an
+independent reviewer passes the exact head, and Gavin separately approves merge.
+
+C2 closeout, 2026-10-26: Gavin explicitly handed #295 to this Codex session (“Let's finish that
+up then”). Preserve the same PR/remote branch and corrected source head `2708c827`; local checkout
+`codex/review-001-c2-closeout`. Renew exact-head independent review of the settings-read race and
+cited context corrections; green CI and separate owner merge approval remain required. Final
+verification and review evidence belong in #295. No additional Review or PREP scope is authorized.
+
 ### Phase 2 — Reflection depth (JOURNAL-002)
 
 - Journal and Capture improvements, feeding into Review beside the numbers.

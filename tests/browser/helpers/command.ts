@@ -18,7 +18,7 @@ export async function commandResult(screen: Screen, label: string) {
   }
   await expect.element(search).toBeVisible();
   if ((search.element() as HTMLInputElement).value) await search.fill('');
-  const sectionForm = label === 'NUTRITION TARGETS' || label === 'QUIT TRACKER';
+  const sectionForm = label === 'TARGETS' || label === 'QUIT TRACKER';
   if (sectionForm) {
     await openCommandPanel(screen, 'settings');
     return screen.getByRole('button', { name: `Open ${label}`, exact: true });

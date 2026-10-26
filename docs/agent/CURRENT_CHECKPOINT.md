@@ -1,4 +1,44 @@
-# REVIEW-001 — Phase 1b strength and muscle intelligence
+# REVIEW-001 — C2 operator-set targets
+
+- **Authority / Builder / lane:** Gavin approved C2 on 2026-10-25 after #294 merged. Codex;
+  PROTECTED operator-controlled interpretation settings.
+- **Branch / baseline:** `codex/review-001-c2-targets`; fresh master
+  `9bc96e826f7167cadb0be8ca5f90abd91f72d284`; [PR #295](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/295).
+- **Outcome:** optional weight-change-rate, sets-per-muscle and strength-sessions-per-week targets;
+  Review compares canonical recorded evidence with the operator's choices.
+- **Exclusions:** no defaults, generic pass/fail verdict, Engine input, program adjustment,
+  recommendation priority, provider/dependency, or JOURNAL work.
+- **REUSE / OWN / BUILD FROM SCRATCH:** existing mutable targets row/save/undo/backup and Review
+  projections / missing-data-aware comparison language / none.
+- **Built:** COMMAND → Targets now stores and clears the three optional choices in the existing
+  targets row. Review presents weight-rate, per-muscle working-set and weekly strength-session
+  actuals beside those choices without a default, score or recommendation. Existing backups carry
+  the additive fields with no schema migration.
+- **Evidence:** TypeScript and production/PWA build pass; persistence/restore/target/strength
+  integration coverage passes 43/43; focused COMMAND/Targets/Review/Body Chromium coverage passes
+  169/169, including 320 px target comparison. Diff check is clean. The existing >500 kB bundle
+  warning remains. `MoreOperator.test.tsx` retains its pre-existing isolated ESM-mock setup failure
+  (`mockReset is not a function`) before product rendering; no assertion was weakened.
+- **Independent review:** exact head `67f51c6` BLOCKED on two P2 gaps: an early-open/late-read
+  race could manufacture clears for untouched Review targets, and setting guidance lacked the
+  brief's inspectable sources. The correction disables Targets until its initial read succeeds,
+  adds the delayed-read/no-edit regression, and attributes bounded context to the relevant JISSN,
+  ACSM and meta-regression sources without creating defaults. Focused browser tests pass 52/52;
+  TypeScript, production/PWA build and diff check pass. Existing bundle warning remains.
+- **Closeout handoff, 2026-10-26:** Gavin explicitly approved this session taking over #295
+  (“Let's finish that up then”). Existing PR branch remains `codex/review-001-c2-targets`;
+  isolated local branch `codex/review-001-c2-closeout`. Preserved corrected source head
+  `2708c82798936a3877eaf799db51eab7854f1574`; its required CI passes. No new product scope.
+- **Closeout evidence:** current-head Targets/Review/integration regression passes 66/66.
+  Corrected two stale “COMMAND → Targets” hints to “MORE → Targets”, with matching existing
+  copy assertions. Final review and unchanged required CI cover that correction as well.
+- **Next:** verify both reviewer corrections, renew independent exact-head review, and update
+  #295 with final checks and review before readiness. Final evidence is recorded in the PR;
+  Gavin separately decides merge. PREP-001 remains an unapproved implementation proposal.
+
+---
+
+# REVIEW-001 — Phase 1b strength and muscle intelligence (merged #294 at `9bc96e8`)
 
 - **Authority / Builder / lane:** Gavin approved the recommended bounded Phase 1b objective on
   2026-10-24 (“do it”). Codex; PROTECTED read-only Engine analytics.

@@ -43,11 +43,12 @@ export interface CollapsibleRowProps {
   icon?: ReactNode;
   summary?: ReactNode;
   onOpen: () => void;
+  disabled?: boolean;
 }
 
-export function CollapsibleRow({ name, icon, summary, onOpen }: CollapsibleRowProps) {
+export function CollapsibleRow({ name, icon, summary, onOpen, disabled = false }: CollapsibleRowProps) {
   return (
-    <button type="button" className="equipment-row equipment-row--control" aria-label={`Open ${name}`} onClick={onOpen}>
+    <button type="button" className="equipment-row equipment-row--control" aria-label={`Open ${name}`} onClick={onOpen} disabled={disabled}>
       {/* <button>'s content model is phrasing content only — <p> (flow
           content) isn't valid inside it, so this uses <span> with an
           explicit display:block rather than the <p> every other

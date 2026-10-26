@@ -72,6 +72,18 @@ describe("getNutritionTargets / updateNutritionTargets — single mutable settin
   it("rejects an empty update (neither field provided)", async () => {
     await expect(updateNutritionTargets({})).rejects.toThrow();
   });
+
+  it("stores, validates and explicitly clears optional Review targets without a schema migration", async () => {
+    await updateNutritionTargets({ weightChangeTargetPercentPerWeek: 0.75, muscleSetsTargetPerWeek: 12, strengthSessionsTargetPerWeek: 3 });
+    expect(await getNutritionTargets()).toMatchObject({ weightChangeTargetPercentPerWeek: 0.75, muscleSetsTargetPerWeek: 12, strengthSessionsTargetPerWeek: 3 });
+    await updateNutritionTargets({ muscleSetsTargetPerWeek: null });
+    const cleared = await getNutritionTargets();
+    expect(cleared.muscleSetsTargetPerWeek).toBeUndefined();
+    expect(cleared.weightChangeTargetPercentPerWeek).toBe(0.75);
+    await expect(updateNutritionTargets({ weightChangeTargetPercentPerWeek: 0.01 })).rejects.toThrow();
+    await expect(updateNutritionTargets({ muscleSetsTargetPerWeek: 60 })).rejects.toThrow();
+    await expect(updateNutritionTargets({ strengthSessionsTargetPerWeek: 2.5 })).rejects.toThrow();
+  });
 });
 
 describe("getEffectiveProteinTargetG — derived from bodyweight, never guessed", () => {
@@ -161,7 +173,7 @@ describe("getTotalMealCalories", () => {
  */
 describe("Backup/restore round-trip — NutritionTargets survives", () => {
   it("a saved target row survives a real export -> clear -> import cycle", async () => {
-    await updateNutritionTargets({ calorieTargetKcal: 2100, proteinMultiplierGPerLb: 0.9 });
+    await updateNutritionTargets({ calorieTargetKcal: 2100, proteinMultiplierGPerLb: 0.9, weightChangeTargetPercentPerWeek: 0.75, muscleSetsTargetPerWeek: 12, strengthSessionsTargetPerWeek: 3 });
 
     const blob = await db.export({ prettyJson: true });
     const file = new File([blob], "native-backup.json", { type: "application/json" });
@@ -175,5 +187,6 @@ describe("Backup/restore round-trip — NutritionTargets survives", () => {
     const restored = await getNutritionTargets();
     expect(restored.calorieTargetKcal).toBe(2100);
     expect(restored.proteinMultiplierGPerLb).toBe(0.9);
+    expect(restored).toMatchObject({ weightChangeTargetPercentPerWeek: 0.75, muscleSetsTargetPerWeek: 12, strengthSessionsTargetPerWeek: 3 });
   });
 });

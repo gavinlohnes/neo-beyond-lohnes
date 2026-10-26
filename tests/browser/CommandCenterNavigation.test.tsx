@@ -104,7 +104,7 @@ describe("re-tap, back and retention", () => {
   it("keeps an unsaved settings draft through COMMAND search", async () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "MORE", exact: true }).click();
-    await (await commandResult(screen, "NUTRITION TARGETS")).click();
+    await (await commandResult(screen, "TARGETS")).click();
     await screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" }).fill("1875");
     await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("history");
     await screen.getByRole("button", { name: "Clear search" }).click();

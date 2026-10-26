@@ -41,11 +41,12 @@ async function openWeight() {
 for (const width of [320, 360, 412]) it(`adds rate, usual swing, goal date and timing to the weight answer at ${width}px, writing nothing`, async () => {
   await page.viewport(width, 800);
   await seed({ sleepFirst: true });
-  await updateNutritionTargets({ goalWeightLbs: 190 });
+  await updateNutritionTargets({ goalWeightLbs: 190, weightChangeTargetPercentPerWeek: 0.75 });
   const before = await db.events.count();
   const screen = await openWeight();
   const details = screen.getByRole("definition").filter({ hasText: "lb per week" });
   await expect.element(details).toHaveTextContent("-1.4 lb per week · -0.71% of bodyweight per week");
+  await expect.element(details).toHaveTextContent("Your target: 0.75% of bodyweight per week. Your choice, not a recommendation.");
   await expect.element(screen.getByText(/^±0\.5 lb day to day · median of 14 consecutive-day pairs$/)).toBeVisible();
   await expect.element(screen.getByText(/^Goal 190 lb: about .+ at the last 28 days' pace\.$/)).toBeVisible();
   await expect.element(screen.getByText("15 of 15 weigh-ins logged after that day's main-sleep log", { exact: true })).toBeVisible();
@@ -62,5 +63,5 @@ it("counts weigh-ins logged before the main-sleep log, and says when no goal is 
   await seed({ sleepFirst: false });
   const screen = await openWeight();
   await expect.element(screen.getByText("0 of 15 weigh-ins logged after that day's main-sleep log", { exact: true })).toBeVisible();
-  await expect.element(screen.getByText("No goal weight set. Set one in MORE → Nutrition targets.", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("No goal weight set. Set one in MORE → Targets.", { exact: true })).toBeVisible();
 });

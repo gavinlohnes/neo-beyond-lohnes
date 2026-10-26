@@ -315,7 +315,7 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     await updateNutritionTargets({ calorieTargetKcal: 2200, proteinMultiplierGPerLb: 0.9 });
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "SHOW OTHER DATA TOOLS" }).click();
-    await expect.element(screen.getByText("Nutrition targets are editable in MORE → Settings.", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Nutrition targets are editable in MORE → Targets.", { exact: true })).toBeVisible();
 
     await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
     await expect.element(screen.getByText("No target yet · a weigh-in sets it.", { exact: true })).toBeVisible();
