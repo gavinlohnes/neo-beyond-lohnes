@@ -1,3 +1,18 @@
+# PREP-001 — ready for tonight
+
+- **Authority / Builder:** Gavin approved the focused first campaign step, 2026-10-26. Codex;
+  PROTECTED preparation facts/TODAY composition. [Brief](PREP-001.md).
+- **Branch / baseline:** `codex/prep-001`; `560deb3bc5d080ff19c0dd537c3d20a8c93144cb` (#295 merged).
+- **Scope:** food/snacks and bottle preparation, practical alternatives, undo/change and local
+  persistence; no consumption logging, spending or recommendation changes.
+- **REUSE:** event/atomic-write/day/backup/history and LogSheet/confirmation paths.
+- **OWN:** preparation fact mapping. **BUILD FROM SCRATCH:** missing preparation projection only.
+- **PR / verification:** pending. Next: build, test offline/overnight/no-duplicate behavior,
+  independent exact-head review, green CI; Gavin approves merge separately.
+
+---
+Historical C2 checkpoint (#295 merged):
+
 # REVIEW-001 — C2 operator-set targets
 
 - **Authority / Builder / lane:** Gavin approved C2 on 2026-10-25 after #294 merged. Codex;

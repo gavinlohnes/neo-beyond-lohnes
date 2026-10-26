@@ -1965,3 +1965,14 @@ system-identity glyph."
 These need Gavin's direct input and, for the learning layer, real
 workout data volume that doesn't exist yet. A future session should not
 infer scope for these from adjacent code.
+
+
+## Daily preparation — PREP-001 (2026-10-26)
+
+Owner approved the focused first Prepared for Real Life step: food/snacks and bottle preparation
+inside TODAY’s existing logging area, contextual before work and manually available otherwise.
+Preparation confirmations are separate from food eaten/water consumed; practical frozen/other
+arrangements and not-needed choices are valid. No scores, overdue/catch-up tasks, notification
+pressure or competing Engine advice. Facts persist locally for the current lived day, with
+change/undo and inspectable history; new days start unconfirmed. Spending and automated
+recommendations remain outside PREP-001. Implementation/review bounds: `agent/PREP-001.md`.
