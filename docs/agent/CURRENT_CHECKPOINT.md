@@ -1,3 +1,13 @@
+# LOOP step 4 — REMEMBER
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "go remember". Claude Code; PROTECTED
+  (advisory, informational only; no Engine/schema/new event). [Brief](LOOP.md#step-4--remember).
+- **Baseline:** master `3a74cc9` (#309 TRY merged by Gavin).
+- **Built:** your reviewed lesson on the next recommendation of the same kind; your last debrief's
+  plan under PREP; past experiment lessons when starting a new one.
+- **Next:** CI and Gavin's merge (review per DEV-FLOW-002 unless waived). This completes THE LOOP.
+
+---
 # LOOP step 3 — TRY
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "Merge it and go try". Claude Code; PROTECTED

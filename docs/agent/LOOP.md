@@ -23,8 +23,8 @@
 3. **TRY** (DELTA-ADVANCED item 1; PROTECTED; approved 2026-10-27, "go try", journal-backed) — a
    bounded personal experiment compared with your usual, with sample sizes and an honest "no clear
    difference"; ends with a lesson in the journal.
-4. **REMEMBER** (PROTECTED, advisory) — lessons tied to a situation return as quiet, informational
-   notes at that moment; never override a recommendation. Needs its own approval.
+4. **REMEMBER** (PROTECTED, advisory; approved 2026-10-27, "go remember") — lessons tied to a
+   situation return as quiet, informational notes at that moment; never override a recommendation.
 
 ## Step 1 — ASK (#305, merged)
 
@@ -63,7 +63,7 @@
   tests of the TODAY decline path, debrief and Journal follow-up at phone widths with axe; full
   verify; CI; Gavin's merge.
 
-## Step 3 — TRY
+## Step 3 — TRY (#309, merged)
 
 - **Authority:** Gavin, 2026-10-27, "Merge it and go try", approving the proposed journal-backed
   version (no schema change, no new event type, no Engine input).
@@ -82,3 +82,21 @@
 - **REUSE:** Decision Journal commands/review, Whole Picture rows and `PICTURE_MEAN_FLOOR`, the
   lived-day boundary, REFLECT's chip pattern. **OWN:** the window line, the comparison rule and its
   "about the same" thresholds. **BUILD FROM SCRATCH:** none.
+
+## Step 4 — REMEMBER
+
+- **Authority:** Gavin, 2026-10-27, "go remember".
+- **Built (structural matches only, never keywords or inference):**
+  - TODAY's recommendation card: the most recent *reviewed* reason you gave for declining an
+    earlier recommendation of the same kind ("Last time (Oct 20) you said “Wrong for me”. Looking
+    back: should have done it. Your lesson: …"). Loaded in TODAY's own refresh with the existing
+    "Previous result", so nothing appears late; a failed read leaves it out.
+  - Under the mode in PREP: your last debrief's "one thing for next shift", from the next lived
+    day, with how it went once answered.
+  - TRY SOMETHING: lessons from closed experiments (up to three, newest first).
+- **Boundaries:** informational only; never changes, ranks, suppresses or re-words a
+  recommendation; not an Engine input; no new record, event or schema. Codex's MEMORY-001
+  preferences and JOURNAL-001's keyword advisory are untouched and separate.
+- **REUSE:** REFLECT links and debriefs, TRY entries, the journal's review fields, TODAY's existing
+  refresh and recommendation card. **OWN:** `application/remember.ts` (which conclusion applies
+  when). **BUILD FROM SCRATCH:** none.

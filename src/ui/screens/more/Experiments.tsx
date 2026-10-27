@@ -6,6 +6,7 @@ import {
   TRY_LENGTHS, TRY_OUTCOMES, TRY_SCOPES, closeExperiment, experimentDay, experimentResult, readExperiment, startExperiment,
   type Experiment, type TryScope,
 } from "../../../application/tryExperiment";
+import { experimentLessons } from "../../../application/remember";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { describeError } from "../../errorMessage";
 import "../today/reflect.css";
@@ -30,11 +31,11 @@ export function Experiments({ entries, onChanged }: { entries: readonly Decision
   return <section className="follow-ups" aria-labelledby="experiments-heading" data-experiments>
     <h2 id="experiments-heading" className="section-label">Experiments</h2>
     {experiments.map((e) => <ExperimentCard key={e.entry.id} experiment={e} rows={rows} onClosed={onChanged} />)}
-    <StartExperiment onStarted={() => { setRows(null); onChanged(); }} />
+    <StartExperiment learned={experimentLessons(entries)} onStarted={() => { setRows(null); onChanged(); }} />
   </section>;
 }
 
-function StartExperiment({ onStarted }: { onStarted: () => void }) {
+function StartExperiment({ learned, onStarted }: { learned: ReturnType<typeof experimentLessons>; onStarted: () => void }) {
   const uid = useId();
   const [open, setOpen] = useState(false);
   const [what, setWhat] = useState("");
@@ -53,6 +54,10 @@ function StartExperiment({ onStarted }: { onStarted: () => void }) {
   return <FieldDisclosure summary="TRY SOMETHING" open={open} onToggle={setOpen}>
     <div className="reflect">
       <p className="meta">One change, for a set time. BEYOND compares those days with your usual ones. It never changes advice.</p>
+      {learned.length > 0 && <div data-remember-experiments>
+        <p className="meta">What your earlier experiments taught you:</p>
+        <ul>{learned.map((l) => <li key={l.what + l.lesson} className="meta">{l.what}: {l.outcome.toLowerCase()}. {l.lesson}</li>)}</ul>
+      </div>}
       <label className="meta" htmlFor={`${uid}-what`}>What will you try?</label>
       <input id={`${uid}-what`} className="input" value={what} maxLength={80} placeholder="Nap 40 min before night 1" onChange={(e) => setWhat(e.target.value)} />
       <p className="meta" id={`${uid}-days`}>For how long, starting today?</p>

@@ -293,3 +293,6 @@ fresh general review.
   a fixed window line); `experimentResult` compares in-window days with usual days of the same
   kind from Whole Picture rows, with counts and an "about the same" band. Reuse for any bounded
   personal comparison.
+- LOOP step 4 (REMEMBER): `application/remember.ts` returns your own reviewed conclusions at the
+  matching moment by structure (same recommendation kind, next shift's PREP, next experiment).
+  Extend it for new "when this comes up again" moments; keep it informational.
