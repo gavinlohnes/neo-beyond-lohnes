@@ -1,3 +1,18 @@
+# ROTATION-003 — flip planning
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "go flips". Claude Code; FEATURE.
+  [Brief](ROTATION-003.md). #297 (ROTATION-002) and #298 (DELTA-004) merged at Gavin's direction.
+- **Branch / baseline:** `ccr-0be4f40f-16m0ja` restarted from `c03eff3`.
+- **Built:** Rotation → Flips: aligned actograms of recent flips into/out of work, usual sleep
+  times around each, naps before nights with a comparison gated at 3 flips each way; next-window
+  card names the next forecast flip. Rows carry nap minutes.
+- **Evidence:** full verify 3,013 passed / 1 existing skip; architecture and build OK.
+- **Next:** CI and Gavin's merge. Then use on shift; refinement candidates: one-sentence next
+  window, "unusual" tuning, phone readability of actograms. Sleep-aware Engine stays Protected.
+
+---
+Historical DELTA-004 checkpoint (#298 merged at `c03eff3`):
+
 # DELTA-004 — "not enough data" becomes a goal
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "go Delta 4". Claude Code; FEATURE.
