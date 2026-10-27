@@ -1,3 +1,15 @@
+# ROTATION-004 — your whole day on one line
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "go 004". Claude Code; FEATURE.
+  [Brief](ROTATION-004.md). #300 (SLEEP-ENGINE-001) merged at `c3338a0`; all tonight's deploys green.
+- **Built:** meals, water and workout starts on every Rotation actogram row, with a legend and
+  accessible times on each day. Display only.
+- **Next:** CI and Gavin's merge. Merged branches `claude/delta-004` and `claude/remove-pcb-overlay`
+  could not be deleted from this session (git access limited to its branch); Gavin can delete them.
+
+---
+Historical SLEEP-ENGINE-001 checkpoint (#300 merged at `c3338a0`):
+
 # SLEEP-ENGINE-001 — two short main sleeps suggest the reduced session
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "approve option 1". Claude Code; PROTECTED.

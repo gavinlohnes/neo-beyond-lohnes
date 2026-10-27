@@ -76,3 +76,13 @@
 .whole-picture .rotation-flip-kind details{border-top:1px solid var(--line)}
 .whole-picture .rotation-flip-kind summary{cursor:pointer;min-height:44px;padding:10px 0;font-size:14px}
 .whole-picture .rotation-flip-kind ul{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-wrap:wrap;gap:4px 16px}
+/* ROTATION-004: the rest of the day on the actogram. Ink for meals and workouts, muted for water; red stays the action color. */
+.whole-picture .actogram-meal{fill:var(--ink)}
+.whole-picture .actogram-workout{fill:#e8b860}
+.whole-picture .actogram-water{stroke:#7fa9d9;stroke-width:1.5}
+.whole-picture .rotation-legend{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:10px 0 0}
+.whole-picture .rotation-legend .legend-sleep{display:inline-block;width:14px;height:6px;border-radius:2px;background:#3987e5}
+.whole-picture .rotation-legend .legend-shift{display:inline-block;width:14px;height:8px;border:1.25px dashed #8d8c86}
+.whole-picture .rotation-legend .legend-meal{color:var(--ink);font-size:10px}
+.whole-picture .rotation-legend .legend-workout{color:#e8b860}
+.whole-picture .rotation-legend .legend-water{color:#7fa9d9;font-weight:700}

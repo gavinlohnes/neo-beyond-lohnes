@@ -89,3 +89,19 @@ for (const width of [320, 1280]) it(`ROTATION-003: lines up recent flips, with u
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   expect((await axe.run(document.body)).violations).toEqual([]);
 });
+
+it("ROTATION-004: puts meals, water and workouts on the same line as sleep and the shift", async () => {
+  await page.viewport(390, 900);
+  const marked = rows.map((row, index) => index === 13 ? { ...row, marks: { meals: [345, 720], water: [670], workouts: [875] } } : row);
+  const screen = await render(<div className="whole-picture"><RotationMap rows={marked} weekAhead={weekAhead} readAt={new Date(2026, 8, 17, 20).toISOString()} onInspect={() => {}} /></div>);
+  await expect.element(screen.getByRole("button", { name: /shift 1 of 3: main sleep 6:00, asleep 08:00–14:00, energy 5, no workout; meals 22:15, 04:30 · workout 07:05 · water ×1\. Open records\.$/ })).toBeVisible();
+  // The day also appears in its flip chart; count the run list only.
+  const runsList = document.querySelector(".rotation-runs")!;
+  expect(runsList.querySelectorAll(".actogram-meal")).toHaveLength(2);
+  expect(runsList.querySelectorAll(".actogram-workout")).toHaveLength(1);
+  expect(runsList.querySelectorAll(".actogram-water")).toHaveLength(1);
+  expect(document.querySelector(".rotation-legend")!.textContent).toMatch(/sleep.*scheduled shift.*meal.*workout.*water/);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
+  expect((await axe.run(document.body)).violations).toEqual([]);
+});
+

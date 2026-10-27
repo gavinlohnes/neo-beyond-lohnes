@@ -270,3 +270,5 @@ fresh general review.
 - SLEEP-ENGINE-001: `engine/sleepStreak.ts` (two short main sleeps vs personal baselines) is the
   Engine's only sleep input; `evaluate`'s trace carries it and `traceShortSleepStreak` reads it
   back for TODAY/TRAIN. Extend this path, not a parallel one, for any future sleep-aware advice.
+- ROTATION-004: `PictureRow.marks` (meal/water event times, workout starts, undone excluded) feed
+  the actogram's meal/water/workout marks. Reuse it for any "what happened when" view.
