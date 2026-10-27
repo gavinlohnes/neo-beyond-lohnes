@@ -2554,7 +2554,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         </div>
       </section>
       <section aria-label="History"><h2 className="section-label">HISTORY</h2>
-        {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} holdToInspect onInspect={(record) => onEditRecord?.(record, day.id)} />}
+        {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} onInspect={(record) => onEditRecord?.(record, day.id)} />}
         <HealthHistory open={healthHistoryOpen} onOpenChange={setHealthHistoryOpen} active={visible && !progressOpen}
           days={{ selected: healthDay, disabled: busy, refreshKey: dataRevision, onHistory: onHealthHistory, onSelect: setHealthDay, onExplore: showProgress, onInspect: (selection) => openSources(selection, true) }} />
       </section>

@@ -50,3 +50,9 @@ and retaining both checkpoint histories. Integration order: #303, then #307; Gav
 Mainline advanced during final verification: merged `c28a846` (#306 reflection), then refreshed
 MEMORY `1a653303`, preserving code and checkpoint histories. Newly merged reflection/debrief/
 follow-up save controls use the same post-write light feedback; their behavior is unchanged.
+
+Inspection refinement: history correction opening is one tap, no haptic; the existing charged
+delete control still requires a hold. This follows the owner's charged-actions-only rule and
+resolves the ConnectedHealth inspection-hold CI timeout without loosening mutation safeguards.
+The coverage audit also wires existing decline/Minimum Day/outcome/capture conversion/reopen and
+shift handoff commits. Reopen reports a boolean false for a missing capture; no writes change.

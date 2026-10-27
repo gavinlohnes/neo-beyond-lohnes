@@ -932,11 +932,12 @@ export async function restoreCaptureItem(item: CaptureItem): Promise<void> {
 }
 
 /** Undoes an accidental resolve — same reasoning as RESET/SHIFT DOWN's cancel path having a real undo, not a one-way door. */
-export async function reopenCaptureItem(id: string): Promise<void> {
+export async function reopenCaptureItem(id: string): Promise<boolean> {
   const existing = await db.captureItems.get(id);
-  if (!existing) return;
+  if (!existing) return false;
   const { resolvedAt: _resolvedAt, ...withoutResolvedAt } = existing;
   await db.captureItems.put({ ...withoutResolvedAt, status: "OPEN" });
+  return true;
 }
 
 /**

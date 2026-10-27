@@ -2023,3 +2023,7 @@ Keep next-window detail optional and flip record labels plain; preserve provenan
 floors, uncertainty and trace-only Why this? MEMORY-001 #303 supplies confirmed prep/recovery
 memory; do not introduce a parallel store or inference. Engine, primary navigation, and data
 contracts are outside this presentation slice. Every merge remains Gavin's.
+
+SUIT-002 clarification: opening a historical record/correction form is inspection, so it uses
+one ordinary tap without haptics. Hold-to-fill remains on the actual charged commit; correction
+preview, historical/day guards and append-only deletion semantics remain intact. Recorded-day lists retain their readable record controls without a navigation hold.

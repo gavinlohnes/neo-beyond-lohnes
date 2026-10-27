@@ -1028,11 +1028,13 @@ export function TodayScreen({
   }
 
   async function actuallyDecline() {
+    const acknowledge = captureCommitFeedback();
     if (!day || !recommendation) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await declineRecommendation(day.id, recommendation, { overrideConfirmed: true });
+      acknowledge("LIGHT");
       await refresh();
     } finally {
       busyRef.current = false;
@@ -1341,11 +1343,12 @@ export function TodayScreen({
   }
 
   async function handleUndoResolveCapture() {
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !justResolvedCapture) return;
     busyRef.current = true;
     setBusy(true);
     try {
-      await reopenCaptureItem(justResolvedCapture.id);
+      if (await reopenCaptureItem(justResolvedCapture.id)) acknowledge("LIGHT");
       setJustResolvedCapture(null);
       await refresh();
     } finally {
@@ -1372,6 +1375,7 @@ export function TodayScreen({
   }
 
   async function confirmCaptureConversion() {
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !captureConversion || !conversionTitle.trim()) return;
     const target = captureConversion;
     const title = conversionTitle.trim();
@@ -1381,6 +1385,7 @@ export function TodayScreen({
     setCaptureConversionFeedback(null);
     try {
       await convertCaptureToObligation(target.id, { title, ...(dueAt ? { dueAt } : {}) });
+      acknowledge("LIGHT");
       setCaptureConversion(null);
       setConversionDueAt("");
       setConversionDateSuggestion(null);
@@ -1398,11 +1403,13 @@ export function TodayScreen({
   }
 
   async function handleEnableMinimumDay() {
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await enableMinimumDay(day.id);
+      acknowledge("LIGHT");
       await refresh();
       setMinimumDayOpen(false);
     } finally {
@@ -1547,11 +1554,13 @@ export function TodayScreen({
   }
 
   async function handleRateOutcome(rating: "GOOD" | "NEUTRAL" | "BAD") {
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !pendingOutcome) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await rateOutcome(pendingOutcome.beyondDayId, pendingOutcome.id, rating);
+      acknowledge("LIGHT");
       setPendingOutcome(null);
     } finally {
       busyRef.current = false;
