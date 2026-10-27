@@ -77,6 +77,9 @@ export function describeVariantSuggestion(suggestion: SessionVariantSuggestion):
   if (suggestion.variant === "RESET") {
     return "Capacity is RED, so training itself isn't suggested right now — RESET on TODAY comes first.";
   }
+  if (suggestion.variant === "REDUCED" && suggestion.shortSleep) {
+    return "Capacity is GREEN, but your last two main sleeps were below your usual range, so a REDUCED session is suggested — the same exercises, fewer sets. STANDARD is still yours to choose.";
+  }
   if (suggestion.variant === "REDUCED") {
     return "Capacity is YELLOW, so a REDUCED session is suggested — the same exercises, fewer sets.";
   }

@@ -1,3 +1,14 @@
+# SLEEP-ENGINE-001 — two short main sleeps suggest the reduced session
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "approve option 1". Claude Code; PROTECTED.
+  [Brief](SLEEP-ENGINE-001.md). Independent review waived by Gavin ("Skip the reviews for now");
+  none performed. Merged at Gavin's direction ("Merge") as #300.
+- **Evidence:** full verify 3,028 passed / 1 existing skip; CI green. Overlay removal merged as #301.
+- **Next:** live with it on shift; check that the reduced suggestion appears only after two short nights.
+
+---
+Historical PERSONAL-UNDERSTANDING-001 checkpoint (Codex, #302 merged at `ab35088`):
+
 # PERSONAL-UNDERSTANDING-001 — connected knowledge
 
 - **Authority / Builder / lane:** Gavin: “Let's work on personal understanding”, after the

@@ -10,7 +10,7 @@ import { deriveCapacity } from "./capacity";
 // diagnostics can display the real value the Engine actually stamps onto
 // every Recommendation.engineVersion, instead of a second, independently
 // hardcoded literal that could silently drift from this one.
-export const ENGINE_VERSION = "0.1.0";
+export const ENGINE_VERSION = "0.2.0";
 
 export interface EvaluateInput {
   beyondDayId: string;
@@ -47,6 +47,20 @@ export interface EvaluateInput {
    * pattern as hasPlannedWork/hasUnresolvedPostShift.
    */
   hasEligibleObligationDueOrOverdue: boolean;
+  /**
+   * SLEEP-ENGINE-001 (owner approval 2026-10-27): the application layer's
+   * deriveShortSleepStreak result — two most recent main sleeps both below
+   * the operator's own usual range. It never changes capacity, the rule
+   * order or the recommendation kind; under GREEN with planned work it
+   * suggests the reduced session. `evidence` is the nights it judged, kept in
+   * the trace so "Why this?" can show them. Absent means false.
+   */
+  shortSleep?: { streak: boolean; evidence: string };
+}
+
+/** SLEEP-ENGINE-001: read back from a stored trace; older recommendations have no entry and read false. */
+export function traceShortSleepStreak(trace: DecisionTrace | undefined): boolean {
+  return trace?.inputs.some((input) => input.key === "shortSleepStreak" && input.value === true) ?? false;
 }
 
 /**
@@ -65,6 +79,7 @@ export function evaluate(input: EvaluateInput): Recommendation {
   // unresolved post-shift context recommends SHIFT DOWN before generic
   // recovery or execution.").
   const postShiftApplies = capacity !== "RED" && input.hasUnresolvedPostShift;
+  const shortSleep = input.shortSleep?.streak === true;
 
   const matchedRules: DecisionTrace["matchedRules"] = [
     {
@@ -125,6 +140,8 @@ export function evaluate(input: EvaluateInput): Recommendation {
       { key: "hasPlannedWork", value: input.hasPlannedWork },
       { key: "hasUnresolvedPostShift", value: input.hasUnresolvedPostShift },
       { key: "hasEligibleObligationDueOrOverdue", value: input.hasEligibleObligationDueOrOverdue },
+      { key: "shortSleepStreak", value: shortSleep },
+      ...(input.shortSleep?.evidence ? [{ key: "shortSleepEvidence", value: input.shortSleep.evidence }] : []),
     ],
     derived: capacity
       ? [
@@ -190,12 +207,16 @@ export function evaluate(input: EvaluateInput): Recommendation {
       ...base,
       kind: "EXECUTE_PLANNED_WORK",
       priority: 4,
-      title: "Proceed with planned work",
-      rationale: "Capacity is good and there is planned work for today.",
+      title: shortSleep ? "Proceed with planned work — reduced session" : "Proceed with planned work",
+      rationale: shortSleep
+        ? "Capacity is good and there is planned work for today. Your last two main sleeps were below your usual range, so the reduced session is suggested."
+        : "Capacity is good and there is planned work for today.",
       suggestedCommand: "START_WORKOUT",
       trace: trace(
         "EXECUTE_PLANNED_WORK",
-        "EXECUTE_PLANNED_WORK matched after STABILIZE, POST_SHIFT_TRANSITION, and RECOVER did not.",
+        shortSleep
+          ? "EXECUTE_PLANNED_WORK matched after STABILIZE, POST_SHIFT_TRANSITION, and RECOVER did not; two short main sleeps suggest the reduced session."
+          : "EXECUTE_PLANNED_WORK matched after STABILIZE, POST_SHIFT_TRANSITION, and RECOVER did not.",
       ),
       statusAtIssue: "ACTION",
     };
