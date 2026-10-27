@@ -60,4 +60,13 @@ describe("ROTATION-002 — sleep timing on the rotation", () => {
     vi.setSystemTime(local(13, 16)); await endDay(day.id);
     expect((await rowOf(12)).sleepWindow).toEqual({ start: 960, end: 1350 });
   });
+
+  it("ROTATION-003: carries the day's logged naps, and none when none were logged", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const napped = await workDay(12); await logSleep(napped.id, 50, "SUPPLEMENTAL"); await logSleep(napped.id, 25, "SUPPLEMENTAL");
+    vi.setSystemTime(local(13, 16)); await endDay(napped.id);
+    const plain = await workDay(13); vi.setSystemTime(local(14, 16)); await endDay(plain.id);
+    expect((await rowOf(12)).napMinutes).toBe(75);
+    expect((await rowOf(13)).napMinutes).toBeUndefined();
+  });
 });

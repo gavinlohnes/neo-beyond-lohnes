@@ -18,6 +18,8 @@ export interface PictureRow extends ReviewRow {
   measuredHours: number;
   /** ROTATION-002: main sleep's Garmin start/end, minutes after the lived day's start; absent unless Garmin times back that day's single main sleep. */
   sleepWindow?: { start: number; end: number } | undefined;
+  /** ROTATION-003: logged naps that day, minutes; absent when none was logged. */
+  napMinutes?: number | undefined;
   /** ROTATION-002: the scheduled shift on a recorded work day, minutes after the lived day's start. Scheduled, not clocked. */
   shiftWindow?: { start: number; end: number } | undefined;
 }

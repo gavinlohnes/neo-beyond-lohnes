@@ -15,6 +15,6 @@
   existing day inspector; the next predicted run. Bounded with SHOW MORE.
 - **Excluded in phase 1:** sleep timing blocks, night-N patterns, flip suggestions, Engine change,
   experiments, any write.
-- **Next phases (each needs its own go):** 1b sleep timing per day; 2 night-N patterns with sample
-  sizes; 3 flip planning (suggestions only); 4 sleep-aware Engine (Protected); 5 experiments
-  (Protected, new record kind).
+- **Next phases (each needs its own go):** 1b sleep timing and 2 night-N patterns shipped in
+  ROTATION-002 (#297); 3 flip planning is ROTATION-003; 4 sleep-aware Engine (Protected);
+  5 experiments (Protected, new record kind).
