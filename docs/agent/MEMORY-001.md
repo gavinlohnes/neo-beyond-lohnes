@@ -1,0 +1,56 @@
+# MEMORY-001 — confirmed prep and recovery memory
+
+- **Authority:** Gavin's MEMORY-001 direction, 2026-10-27, explicitly authorizes the complete
+  operator-authored prep/recovery loop, preferring additive events in existing persistence.
+- **Lane / Builder:** PROTECTED additive event/command contract; Codex. No Engine edits.
+- **Baseline:** freshly fetched `ab3508887af7650d6e4180d815e048fd2b48b8f2` (#302 merged/deployed).
+- **Branch / PR:** `codex/memory-001`; PR pending early WIP publication. #300 remains Claude's.
+
+## Model and surfaces
+
+- Kinds: `PREP_FOOD`, `PREP_BOTTLE`, `PREP_OTHER`, `RECOVERY`. Statement: 1–280 trimmed
+  characters, always explicitly authored/chosen and editable. Source: `OPERATOR` (event `USER`).
+- One stable fact ID, creation timestamp, last-confirmed timestamp and ACTIVE/IRRELEVANT status.
+  Additive `MEMORY_RECORDED` full-state revisions in existing events, with causal supersession;
+  no table, schema migration or parallel store. All revisions remain inspectable.
+- Create, correct, re-confirm, mark irrelevant and explicitly restore. Corrections/restores are
+  confirmations; marking irrelevant preserves the previous confirmation time. No silent delete.
+- A stable create request/fact ID prevents duplicate retries. Atomic optimistic head ownership
+  prevents stale edits or status changes; malformed/forked/orphaned history abstains with an error.
+  Writes attach to the actual active day and reject stale/due/ended-day forms. Memory itself is
+  global across lived days and does not expire or create catch-up debt.
+- MORE → “What BEYOND should remember”: bounded active/irrelevant lists, add/edit/kind/status,
+  provenance and full revision history. Existing native LogSheet and session-draft conventions.
+- PREP sheet: active prep facts only, beside the existing food/bottle choices; inspect/fix/add
+  within that sheet. No outer TODAY memory block or added red action.
+- Recovery: quiet active RECOVERY facts in TRAIN's recovery choice/in-progress recovery surfaces.
+  No recovery fact on ordinary TRAIN or permanent TODAY surface. Shared inspect/fix editor.
+- Starters fill editable drafts only: frozen backup, bottle preparation, quiet recovery. Never
+  stored by opening a view. All context is labelled as the operator's words, not system advice.
+
+## Reuse disposition
+
+- **REUSE:** PREP-001 causal event revisions and optimistic guards; writeAtomically/logEvent/seq;
+  existing events/native backup and replace-only restore; LogSheet/ConfirmBanner, session drafts,
+  MORE catalog/view routes and FIELD neutral controls. Prior personal-memory research is recorded
+  in PERSONAL-UNDERSTANDING-001; no new package or external service is warranted.
+- **OWN:** the small validated memory fact projection, command semantics and explicit kind-to-
+  prep/recovery mapping.
+- **BUILD FROM SCRATCH:** only the missing fact projection/editor; preparation confirmations and
+  Decision Journal records cannot truthfully represent durable preferences and their lifecycle.
+
+## Exclusions and acceptance
+
+No inference, model/chat/cloud, notifications, ranking, scores/confidence, runtime dependency,
+schema/backup-format change, Engine/capacity/rotation/trace changes, auto logging, obligations,
+spending, new kinds or visual campaign. Existing primary IA and one-red authority stay intact.
+
+Tests must prove create/duplicate retry, edit/kind changes, confirmation, irrelevant/restore,
+source/history timestamps, stale/day/atomic failure guards, causal ordering and corrupt-history
+abstention, old/native backup round trips, offline and cross-day persistence; scoped contextual
+surfacing and no consumption/Obligation/recommendation side effects; 360px/axe/reduced motion,
+draft preservation, browser source/inspect flows. Full verify, green required CI and independent
+exact-head PASS precede Gavin's separate merge approval.
+
+Next: implement this scope, push WIP early, record verification/review in PR/checkpoint. Build
+MEMORY-001 only; other personal-memory domains remain later tickets.
