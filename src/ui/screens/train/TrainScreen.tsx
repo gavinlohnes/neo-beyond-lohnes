@@ -1,4 +1,5 @@
 import { useSessionDraft } from "../../sessionDrafts";
+import { MemoryPanel } from "../../components/MemoryPanel";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { haptic } from "../../feel/haptics";
 import { describeError } from "../../errorMessage";
@@ -1326,6 +1327,9 @@ export function TrainScreen({
         </CommandSurface>
       )}
 
+      <div hidden={Boolean(completionSummary) || (session ? session.sessionType !== "RECOVERY" : chosenVariant !== "RECOVERY")}>
+        <MemoryPanel scope="RECOVERY" contextual active={active && !completionSummary && (session ? session.sessionType === "RECOVERY" : chosenVariant === "RECOVERY")} blocked={busy} />
+      </div>
       {session && session.sessionType !== "RECOVERY" && !completionSummary && (
         <>
           {/* Canonical session orientation stays compact so recording leads.

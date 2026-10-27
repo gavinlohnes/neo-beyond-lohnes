@@ -130,6 +130,8 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Set skipped: ${exercise(p.exerciseId)} #${p.setNumber}.`;
     case "PREPARATION_RECORDED":
       return `Preparation · ${p.item === "FOOD" ? "Food and snacks" : "Bottle"}: ${PREPARATION_LABELS[p.value as PreparationValue] ?? "Unknown"}.`;
+    case "MEMORY_RECORDED":
+      return `Memory · ${String(p.action ?? "recorded").toLowerCase()} · ${String(p.statement ?? "Unreadable statement")} · ${String(p.status ?? "unknown status")} · OPERATOR.`;
     case "WEEKLY_REVIEW_SAVED":
       return `Weekly review ${p?.supersedes ? "revised" : "saved"} for ${String(p?.weekStart ?? "unknown week")}. Note: ${String(p?.note || "None")}. Focus: ${String((p?.focus as { text?: unknown } | null)?.text ?? "None chosen")}.`;
     case "CLEAN_DAY_LOGGED":

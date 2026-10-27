@@ -52,6 +52,7 @@ export const SYSTEM_CAPABILITIES = [
   { label: "CUSTOM PROGRAMS", description: "Your workout templates", aliases: ["program", "template"], group: "Plan", destination: { kind: "more", view: "CUSTOM_TEMPLATES" } },
   { label: "MISSIONS & OBLIGATIONS", description: "Commitments and intent", aliases: ["mission", "obligation", "commitment", "goal"], group: "Plan", destination: { kind: "more", view: "INTENT" } },
   { label: "WORK SCHEDULE", description: "Your standing schedule", aliases: ["shift", "schedule", "rotation"], group: "Plan", destination: { kind: "more", view: "WORK_SCHEDULE" } },
+  { label: "WHAT BEYOND SHOULD REMEMBER", description: "Your prep and recovery preferences", aliases: ["memory", "preferences", "remember", "constraint"], group: "Settings", destination: { kind: "more", view: "MEMORY" } },
   { label: "IMPORT HEALTH DATA", description: "Preview Garmin data from the helper before saving", aliases: ["import", "health connect", "garmin"], group: "Review", destination: { kind: "more", view: "HEALTH_IMPORT" } },
   { label: "DATA", description: "Nutrition, water, sleep and bodyweight", aliases: ["body", "daily record", "health"], group: "Review", destination: { kind: "workspace", tab: "BODY" } },
   { label: "WEEKLY CHECK-IN", description: "Weekly progress, observations and Mirror", aliases: ["week", "mirror", "progress"], group: "Review", destination: { kind: "more", view: "WEEKLY" } },

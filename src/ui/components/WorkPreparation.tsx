@@ -6,6 +6,7 @@ import { ConfirmBanner } from "./ConfirmBanner";
 import { useUndoWindow } from "../hooks/useUndoWindow";
 import { describeError } from "../errorMessage";
 import "./workPreparation.css";
+import { MemoryPanel } from "./MemoryPanel";
 
 export function WorkPreparation({ dayId, beforeWork, active, busy = false }: {
   dayId: string; beforeWork: boolean; active: boolean; busy?: boolean;
@@ -53,6 +54,7 @@ export function WorkPreparation({ dayId, beforeWork, active, busy = false }: {
     <LogSheet open={active && open} title="PREPARATION" onClose={() => setOpen(false)} canClose={() => !writing.current}>
       <p className="meta">For this BEYOND day. Packing food doesn't log it as eaten. Filling your bottle doesn't log water drunk.</p>
       <p className="meta">Homemade, frozen and other practical arrangements all count. Nothing carries over as an unfinished task.</p>
+      <MemoryPanel scope="PREP" contextual active={active && open} blocked={saving || busy} />
       {!state && !error && <p role="status">Reading preparation…</p>}
       {state && (["FOOD", "BOTTLE"] as const).map((item) => <section key={item} className="preparation-options" aria-label={item === "FOOD" ? "Food and snacks preparation" : "Bottle preparation"}>
         <h3>{item === "FOOD" ? "Food and snacks" : "Bottle"}</h3>
