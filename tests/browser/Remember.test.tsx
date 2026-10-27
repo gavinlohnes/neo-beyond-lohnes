@@ -1,15 +1,14 @@
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, expect, it } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import axe from "axe-core";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { startDay, submitCheckIn } from "../../src/application/commands";
-import { answerFollowUp, recordShiftDebrief, reflectOnDecline } from "../../src/application/reflect";
-import { setModePin } from "../../src/application/modePinQueries";
+import { answerFollowUp, reflectOnDecline } from "../../src/application/reflect";
 import { db } from "../../src/persistence/db";
 
 /** LOOP step 4 — REMEMBER: your own conclusions return on TODAY at the moment they apply. */
-afterEach(async () => { await cleanup(); vi.useRealTimers(); await page.viewport(1280, 800); });
+afterEach(async () => { await cleanup(); await page.viewport(1280, 800); });
 const RED = { energy: 1, stress: 1, mood: 4, soreness: 0, alcoholUrge: 0 } as const;
 
 it("the same kind of recommendation carries your lesson, and the advice itself is unchanged", async () => {
@@ -28,19 +27,18 @@ it("the same kind of recommendation carries your lesson, and the advice itself i
   expect((await axe.run(document.querySelector("[data-remember-lesson]")!.closest("section, .cc-panel, .command-surface")!)).violations).toEqual([]);
 });
 
-it("before the next shift, PREP shows the one thing from your last debrief", async () => {
+it("LOOP-002: the next card of the same kind asks how your reason went, and one tap answers it", async () => {
   await page.viewport(390, 850);
-  vi.useFakeTimers({ toFake: ["Date"], shouldAdvanceTime: true });
-  vi.setSystemTime(new Date(2026, 9, 27, 7));
-  await recordShiftDebrief({ felt: "Rough", because: [], next: "Nap before" });
-  vi.setSystemTime(new Date(2026, 9, 27, 17));
   const day = await startDay();
-  setModePin(day.id, "PRE_WORK");
+  const { recommendation: first } = await submitCheckIn(day.id, RED);
+  await reflectOnDecline({ id: first.id, title: "Stabilize", why: "Capacity is low." }, "Not today");
+  await submitCheckIn(day.id, RED);
   const screen = await render(<TodayScreen />);
-  await expect.element(screen.getByText("From your last debrief — Next shift: Nap before")).toBeVisible();
-  await cleanup();
-  setModePin(day.id, "OFF");
-  const off = await render(<TodayScreen />);
-  await expect.element(off.getByRole("button", { name: /^Mode / })).toBeVisible();
-  expect(document.querySelector("[data-remember-debrief]")).toBeNull();
+  await expect.element(screen.getByText(/you said “Not today”\. Looking back\? Optional\.$/)).toBeVisible();
+  expect((await axe.run(document.querySelector("[data-ask-how-it-went]")!)).violations).toEqual([]);
+  await screen.getByRole("button", { name: "Should have done it", exact: true }).click();
+  await expect.element(screen.getByText(/Looking back: should have done it\.$/)).toBeVisible();
+  expect(document.querySelector("[data-ask-how-it-went]")).toBeNull();
+  expect(await db.decisionJournalEntries.toArray()).toEqual([expect.objectContaining({ status: "REVIEWED", outcome: "Should have done it" })]);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
 });

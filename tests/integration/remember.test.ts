@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
 import { startDay, submitCheckIn } from "../../src/application/commands";
-import { answerFollowUp, recordShiftDebrief, reflectOnDecline } from "../../src/application/reflect";
+import { answerFollowUp, reflectOnDecline } from "../../src/application/reflect";
 import { closeExperiment, startExperiment } from "../../src/application/tryExperiment";
-import { debriefCarryForward, describeRememberedLesson, experimentLessons, getRememberedLesson } from "../../src/application/remember";
+import { describeRememberedLesson, experimentLessons, getRecommendationMemory, getRememberedLesson } from "../../src/application/remember";
 import { getDecisionJournalEntries } from "../../src/application/journalQueries";
 
 beforeEach(async () => { await db.open(); });
@@ -30,17 +30,19 @@ describe("LOOP step 4 — REMEMBER", () => {
     expect(await getRememberedLesson(other)).toBeUndefined(); // a different kind of advice
   });
 
-  it("the last debrief's one thing comes back from the next lived day, with how it went", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date(2026, 9, 27, 7));
-    await recordShiftDebrief({ felt: "Rough", because: ["Sleep"], next: "Nap before" });
-    expect(debriefCarryForward(await getDecisionJournalEntries(), new Date())).toBeUndefined(); // same lived day
-    vi.setSystemTime(new Date(2026, 9, 27, 18));
-    const carry = debriefCarryForward(await getDecisionJournalEntries(), new Date());
-    expect(carry).toMatchObject({ plan: "Next shift: Nap before" });
-    expect(carry!.outcome).toBeUndefined();
-    await answerFollowUp(carry!.entryId, "Did it");
-    expect(debriefCarryForward(await getDecisionJournalEntries(), new Date())).toMatchObject({ plan: "Next shift: Nap before", outcome: "Did it" });
+  it("LOOP-002: an unanswered reason is asked about on the next recommendation of the same kind", async () => {
+    const day = await startDay();
+    const { recommendation: first } = await submitCheckIn(day.id, RED);
+    const reason = await reflectOnDecline({ id: first.id, title: "Stabilize", why: "x" }, "Not today");
+    expect(await getRecommendationMemory(first)).toEqual({}); // never about itself
+    const { recommendation: second } = await submitCheckIn(day.id, RED);
+    expect((await getRecommendationMemory(second)).pending?.id).toBe(reason.id);
+    const { recommendation: other } = await submitCheckIn(day.id, GREEN);
+    expect(await getRecommendationMemory(other)).toEqual({});
+    await answerFollowUp(reason.id, "Glad I didn't");
+    const after = await getRecommendationMemory(second);
+    expect(after.pending).toBeUndefined();
+    expect(after.lesson).toMatchObject({ said: "Not today", outcome: "Glad I didn't" });
   });
 
   it("closed experiments with a lesson come back when starting another, newest first", async () => {

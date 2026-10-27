@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
-import { answerFollowUp, getFollowUpsDue, getReflectionFor, getShiftDebriefFor, livedDayStartOf, recordShiftDebrief, reflectOnDecline } from "../../src/application/reflect";
+import { answerFollowUp, closeShift, debriefForNote, getFollowUpsDue, getReflectionFor, livedDayStartOf, reflectOnDecline } from "../../src/application/reflect";
+import { startDay } from "../../src/application/commands";
 import { createDecisionJournalEntry, modifyDecisionJournalEntry } from "../../src/application/journalCommands";
-import { getDecisionJournalHistory } from "../../src/application/journalQueries";
+import { getDecisionJournalEntries, getDecisionJournalHistory } from "../../src/application/journalQueries";
 
 beforeEach(async () => { await db.open(); });
 afterEach(() => { vi.useRealTimers(); db.close(); });
@@ -37,16 +38,20 @@ describe("LOOP step 2 — REFLECT", () => {
     expect(await getFollowUpsDue()).toEqual([]);
   });
 
-  it("a shift debrief belongs to its lived day and its plan comes back the next one", async () => {
+  it("LOOP-002: closing a shift writes the handoff note and a debrief that carries it, found from the note", async () => {
     vi.useFakeTimers({ toFake: ["Date"] }); at(27, 7, 15);
     expect(livedDayStartOf(new Date())).toEqual(new Date(2026, 9, 26, 16, 30));
-    expect(await getShiftDebriefFor()).toBeUndefined();
-    const debrief = await recordShiftDebrief({ felt: "Rough", because: ["Sleep", "Workload"], next: " Nap before ", now: new Date() });
-    expect(debrief).toMatchObject({ title: "Shift debrief", decision: "Shift felt rough", reasoning: "Mostly: sleep, workload", expectation: "Next shift: Nap before" });
+    const day = await startDay();
+    await closeShift(day.id, { felt: "Rough", note: " Nap before " });
+    const [noted] = await db.events.where("type").equals("SHIFT_HANDOFF_NOTED").toArray();
+    expect(noted!.payload).toMatchObject({ note: "Nap before" });
+    const debrief = debriefForNote(await getDecisionJournalEntries(), noted!.recordedAt)!;
+    expect(debrief).toMatchObject({ title: "Shift debrief", decision: "Shift felt rough", expectation: "Next shift: Nap before" });
     expect(debrief.context).toBe("Lived day starting Mon, Oct 26");
-    expect((await getShiftDebriefFor())?.id).toBe(debrief.id);
+    // A note from another lived day does not pick it up.
+    expect(debriefForNote(await getDecisionJournalEntries(), new Date(2026, 9, 27, 17).toISOString())).toBeUndefined();
     at(27, 17);
-    expect(await getShiftDebriefFor()).toBeUndefined();
     expect((await getFollowUpsDue()).map((e) => e.id)).toEqual([debrief.id]);
+    await expect(closeShift(day.id, {})).rejects.toThrow("EMPTY_HANDOFF");
   });
 });

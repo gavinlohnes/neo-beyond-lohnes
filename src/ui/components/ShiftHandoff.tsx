@@ -4,6 +4,9 @@ import { markShiftHandoffRead, noteShiftHandoff } from "../../application/comman
 import { getShiftHandoffState, skipShiftHandoff, type ShiftHandoffState } from "../../application/shiftHandoffQueries";
 import { SHIFT_HANDOFF_MAX_LENGTH } from "../../domain/common/types";
 import { describeError } from "../errorMessage";
+import type { DecisionJournalEntry } from "../../domain/journal/types";
+import { DEBRIEF_OUTCOMES, SHIFT_FELT, answerFollowUp, closeShift, getDebriefForNote, type ShiftFelt } from "../../application/reflect";
+import "../screens/today/reflect.css";
 
 /**
  * NOTES-HANDOFF-001 (owner rulings 2026-10-04): the shift handoff, above
@@ -11,19 +14,27 @@ import { describeError } from "../errorMessage";
  * SKIP; SKIP writes nothing). On the next work day it shows "From last
  * shift: …" until GOT IT. Renders nothing otherwise. `refreshKey` changes
  * when TODAY ends a work period, so the prompt appears straight away.
+ *
+ * LOOP-002 (owner approval 2026-10-27): the same prompt asks "How was it?" (optional), which saves
+ * the shift debrief with the note as its plan; the next shift's "From last shift" asks whether it
+ * happened, and one tap answers it and marks the note read. GOT IT alone still works.
  */
 export function ShiftHandoff({ refreshKey }: { refreshKey: number }) {
   const [state, setState] = useState<ShiftHandoffState | null>(null);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState<false | "NOTE" | "FELT">(false);
   const [loadKey, setLoadKey] = useState(0);
+  const [felt, setFelt] = useState<ShiftFelt | null>(null);
+  const [debrief, setDebrief] = useState<DecisionJournalEntry | null>(null);
 
   useEffect(() => {
     let current = true;
-    void getShiftHandoffState().then((next) => {
-      if (current) setState(next);
+    void getShiftHandoffState().then(async (next) => {
+      // The debrief is optional context: a failed read leaves the plain handoff in place.
+      const plan = next.unread ? (await getDebriefForNote(next.unread.notedAt).catch(() => undefined)) ?? null : null;
+      if (current) { setState(next); setDebrief(plan); }
     });
     return () => {
       current = false;
@@ -52,6 +63,10 @@ export function ShiftHandoff({ refreshKey }: { refreshKey: number }) {
 
   const prompt = state.prompt && (
     <div className="shift-handoff__card">
+      <p className="tool-label" id="shift-handoff-felt" style={{ marginBottom: 6 }}>HOW WAS IT?</p>
+      <div className="reflect-chips" role="group" aria-labelledby="shift-handoff-felt" style={{ marginBottom: 10 }}>
+        {SHIFT_FELT.map((f) => <button key={f} type="button" className={`chip ${felt === f ? "chip--selected" : ""}`} aria-pressed={felt === f} disabled={busy} onClick={() => setFelt(felt === f ? null : f)}>{f}</button>)}
+      </div>
       <label className="tool-label" htmlFor="shift-handoff-note" style={{ display: "block", marginBottom: 6 }}>
         NOTE FOR NEXT SHIFT?
       </label>
@@ -68,13 +83,14 @@ export function ShiftHandoff({ refreshKey }: { refreshKey: number }) {
         <button
           type="button"
           className="btn-secondary"
-          disabled={busy || !draft.trim()}
+          disabled={busy || (!draft.trim() && !felt)}
           onClick={() =>
             void run(
-              () => noteShiftHandoff(dayId, draft),
+              () => felt ? closeShift(dayId, { felt, note: draft }) : noteShiftHandoff(dayId, draft),
               () => {
+                setSaved(draft.trim() ? "NOTE" : "FELT");
                 setDraft("");
-                setSaved(true);
+                setFelt(null);
               },
             )
           }
@@ -94,6 +110,13 @@ export function ShiftHandoff({ refreshKey }: { refreshKey: number }) {
         FROM LAST SHIFT · {formatNoted(state.unread.notedAt)}
       </p>
       <p className="card-body shift-handoff__note">{state.unread.note}</p>
+      {debrief && <div className="reflect" style={{ marginTop: 0, marginBottom: 8 }}>
+        <p className="meta" id="shift-handoff-happened">{debrief.decision} last time. Did this happen?</p>
+        <div className="reflect-chips" role="group" aria-labelledby="shift-handoff-happened">
+          {DEBRIEF_OUTCOMES.map((o) => <button key={o} type="button" className="chip" disabled={busy}
+            onClick={() => void run(async () => { await answerFollowUp(debrief.id, o); await markShiftHandoffRead(dayId, state.unread!.eventId); })}>{o}</button>)}
+        </div>
+      </div>}
       <button
         type="button"
         className="btn-secondary"
@@ -113,7 +136,7 @@ export function ShiftHandoff({ refreshKey }: { refreshKey: number }) {
       {prompt}
       {saved && !state.prompt && (
         <p className="meta" role="status" style={{ margin: 0 }}>
-          Saved for your next shift.
+          {saved === "NOTE" ? "Saved for your next shift." : "Saved to your journal."}
         </p>
       )}
       {error && (

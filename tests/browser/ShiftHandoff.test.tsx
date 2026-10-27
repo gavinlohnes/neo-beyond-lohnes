@@ -5,6 +5,8 @@ import { render, cleanup } from "vitest-browser-react";
 import { App } from "../../src/app/App";
 import { markWorkEnded, noteShiftHandoff, setWorkContext, startDay } from "../../src/application/commands";
 import { db } from "../../src/persistence/db";
+import { closeShift } from "../../src/application/reflect";
+import axe from "axe-core";
 
 /**
  * NOTES-HANDOFF-001 (owner rulings 2026-10-04): "Note for next shift?" right
@@ -71,5 +73,50 @@ describe("NOTES-HANDOFF-001 — shift handoff", () => {
     await screen.getByRole("button", { name: "GOT IT", exact: true }).click();
     await expect.poll(() => document.querySelector(".shift-handoff")).toBeNull();
     expect(await db.events.where("type").equals("SHIFT_HANDOFF_READ").count()).toBe(1);
+  });
+
+  it("LOOP-002: the same prompt asks how the shift was; the note becomes the debrief's plan", async () => {
+    await page.viewport(320, 800);
+    const day = await workDay();
+    await markWorkEnded(day.id);
+    const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
+    await screen.getByRole("button", { name: "Rough", exact: true }).click();
+    await screen.getByRole("textbox", { name: "NOTE FOR NEXT SHIFT?" }).fill("Nap before");
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+    expect((await axe.run(document.querySelector(".shift-handoff")!)).violations).toEqual([]);
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText("Saved for your next shift.")).toBeVisible();
+    expect((await db.events.where("type").equals("SHIFT_HANDOFF_NOTED").toArray())[0]?.payload).toMatchObject({ note: "Nap before" });
+    expect(await db.decisionJournalEntries.toArray()).toEqual([expect.objectContaining({ title: "Shift debrief", decision: "Shift felt rough", expectation: "Next shift: Nap before", status: "OPEN" })]);
+  });
+
+  it("LOOP-002: how it felt without a note saves only the debrief and closes the prompt", async () => {
+    const day = await workDay();
+    await markWorkEnded(day.id);
+    const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
+    await screen.getByRole("button", { name: "Good", exact: true }).click();
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText("Saved to your journal.")).toBeVisible();
+    expect(await db.events.where("type").equals("SHIFT_HANDOFF_NOTED").count()).toBe(0);
+    expect(await db.decisionJournalEntries.toArray()).toEqual([expect.objectContaining({ decision: "Shift felt good" })]);
+    expect(screen.getByRole("textbox", { name: "NOTE FOR NEXT SHIFT?" }).elements()).toHaveLength(0);
+  });
+
+  it("LOOP-002: next shift, one tap says whether the plan happened and puts the note away", async () => {
+    await page.viewport(360, 800);
+    const first = await workDay();
+    await markWorkEnded(first.id);
+    await closeShift(first.id, { felt: "Rough", note: "Nap before" });
+    await workDay();
+    const screen = await render(<App />);
+    await (await commandResult(screen, "TODAY TOOLS")).click();
+    await expect.element(screen.getByText("Shift felt rough last time. Did this happen?")).toBeVisible();
+    expect((await axe.run(document.querySelector(".shift-handoff")!)).violations).toEqual([]);
+    await screen.getByRole("button", { name: "Did it", exact: true }).click();
+    await expect.poll(() => document.querySelector(".shift-handoff")).toBeNull();
+    expect(await db.events.where("type").equals("SHIFT_HANDOFF_READ").count()).toBe(1);
+    expect(await db.decisionJournalEntries.toArray()).toEqual([expect.objectContaining({ status: "REVIEWED", outcome: "Did it" })]);
   });
 });

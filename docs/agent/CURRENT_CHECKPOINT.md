@@ -1,3 +1,14 @@
+# LOOP-002 — one post-shift moment
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "go LOOP-002". Claude Code; PROTECTED (TODAY
+  post-shift composition; no Engine/schema/new event). [Brief](LOOP.md#loop-002--one-post-shift-moment-follow-ups-where-they-belong).
+- **Baseline:** master `9a37a6b` (#310 REMEMBER merged; review waived by Gavin).
+- **Built:** debrief folded into the shift handoff; "Did this happen?" on "From last shift";
+  "Looking back?" on the next same-kind recommendation card. Duplicate debrief card and PREP line removed.
+- **Next:** CI and Gavin's merge (review per DEV-FLOW-002 unless waived). Then live with the loop
+  for a rotation.
+
+---
 # LOOP step 4 — REMEMBER
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "go remember". Claude Code; PROTECTED
