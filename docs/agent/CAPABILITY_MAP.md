@@ -86,6 +86,17 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 
 ## INTELLIGENCE SPINE / DELTA
 
+- **Personal understanding (PERSONAL-UNDERSTANDING-001, #302):** optional workspace inside
+  MORE → Review; `application/personalUnderstandingQueries.ts` composes canonical active Missions,
+  explicitly selected optional targets, the latest completed week's saved focus, personal baselines
+  with their exact qualifying source days, rotation-position comparisons, and reviewed written
+  lessons. Existing `journalRelevance` supplies explicitly labelled word-matched candidate lessons
+  beside Missions. `ui/screens/review/PersonalUnderstanding.tsx` exposes source records and existing
+  edit destinations; it stores nothing and is never an Engine input. This is an inspectable view of
+  existing knowledge, **not** a new preference store, general learning system or personality model.
+  Do not duplicate it when planning personal memory, feedback or experiments; those remain future
+  approved slices. Consult #302's live status before treating the branch implementation as shipped.
+
 - **Existing implementation:** `src/domain/intelligence/types.ts` defines `AdvisoryNote` with
   source, evidence basis and attention level; `src/engine/advisory.ts` composes seven sources;
   `src/application/advisoryQueries.ts` gathers their current evidence. Sources: commitment

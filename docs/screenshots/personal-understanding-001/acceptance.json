@@ -1,0 +1,34 @@
+[
+  {
+    "width": 320,
+    "height": 844,
+    "result": "PASS",
+    "offline": true,
+    "domainWrites": 0,
+    "pageErrors": []
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "result": "PASS",
+    "offline": true,
+    "domainWrites": 0,
+    "pageErrors": []
+  },
+  {
+    "width": 844,
+    "height": 390,
+    "result": "PASS",
+    "offline": true,
+    "domainWrites": 0,
+    "pageErrors": []
+  },
+  {
+    "width": 1280,
+    "height": 900,
+    "result": "PASS",
+    "offline": true,
+    "domainWrites": 0,
+    "pageErrors": []
+  }
+]

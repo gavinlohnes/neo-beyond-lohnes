@@ -155,8 +155,10 @@ export function MoreScreen({
   const previousView = useRef(view);
   const reviewOrigin = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
   const [reviewHistory, setReviewHistory] = useState(false);
+  const [returnToUnderstanding, setReturnToUnderstanding] = useState(false);
 
   function setView(next: MoreView) {
+    setReturnToUnderstanding(false);
     if (view === "HISTORY" && next !== "HISTORY") onHistoryExit?.();
     if (view === "MENU" && next !== "MENU") {
       originRef.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
@@ -478,7 +480,7 @@ export function MoreScreen({
   return (
     <div className={`screen more-operator${view === "REVIEW" ? " more-whole-picture" : ""}`}>
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
-          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { if (onReturnToToday) { onReturnToToday(); return; } setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>{onReturnToToday ? "BACK TO TODAY" : "BACK TO MORE"}</button>
+          <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { if (returnToUnderstanding) { setView("REVIEW"); return; } if (onReturnToToday) { onReturnToToday(); return; } setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>{returnToUnderstanding ? "BACK TO REVIEW" : onReturnToToday ? "BACK TO TODAY" : "BACK TO MORE"}</button>
           <div hidden={view !== "DAILY_CONTROLS"}>{visited.has("DAILY_CONTROLS") && <DailyControls onReturnToFullTools={() => setDailyFocus(null)} commandFocus={dailyFocus} banners={dailyFocus === null ? dailyBanners : undefined} shiftHandoffRefreshKey={dailyRefreshKey} onWorkEnded={() => onDailyContextChanged?.()} onWorkContextChanged={() => onDailyContextChanged?.()} captureRequest={captureRequest} active={active && view === "DAILY_CONTROLS"} openToolsOnMount onOpenBody={(focus) => { if (focus) onOpenDestination?.({ kind: "body", focus }); }} onOpenTrain={() => { onOpenDestination?.({ kind: "workout" }); }} onOpenSystems={() => setView("SYSTEMS")} />}</div>
           {view === "SYSTEMS" && <><SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} /></>}
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
@@ -486,7 +488,14 @@ export function MoreScreen({
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
           {view === "REPORT" && <><OperatorHeader destination="command">AFTER ACTION REPORT</OperatorHeader><ReportView /></>}
           {view === "MIRROR" && <><OperatorHeader destination="command">MIRROR</OperatorHeader><MirrorView /></>}
-          <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} destination={reviewDestination} {...(onReviewDestinationConsumed ? { onDestinationConsumed: onReviewDestinationConsumed } : {})} onOpenHistory={(id) => {
+          <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} destination={reviewDestination} {...(onReviewDestinationConsumed ? { onDestinationConsumed: onReviewDestinationConsumed } : {})} onOpenUnderstandingSource={(source) => {
+            reviewOrigin.current = { trigger: document.querySelector<HTMLElement>('.personal-understanding [aria-pressed="true"]'), scrollY: window.scrollY };
+            if (source.kind === "MISSION") { setIntentFocus({ kind: "MISSION", missionId: source.id }); setView("INTENT"); }
+            else if (source.kind === "JOURNAL") { setJournalFocus(source.id); setView("JOURNAL"); }
+            else if (source.kind === "SCHEDULE") setView("WORK_SCHEDULE");
+            else { setView("MENU"); revealSection("NUTRITION_TARGETS"); }
+            setReturnToUnderstanding(true);
+          }} onOpenHistory={(id) => {
             reviewOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
             setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
           }} />}</div>
@@ -510,6 +519,7 @@ export function MoreScreen({
           same way. No IA change: still the exact same MENU view, same
           heading text/class. */}
       <OperatorHeader destination="command" focusable>MORE</OperatorHeader>
+      {returnToUnderstanding && <button type="button" className="btn-secondary" onClick={() => setView("REVIEW")}>BACK TO REVIEW</button>}
       {/* NAV-001: two taps from TODAY to a real backup, reusing the existing export command. */}
       <section className="equipment-row" aria-label="Back up my data">
         <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleExportBackup()}>Back up my data</button>
