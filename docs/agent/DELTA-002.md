@@ -69,3 +69,19 @@ should consider sleep (it currently doesn't; that would be a Protected recommend
   recommendation under "Why this?" by reusing `AdvisoryNote` and its existing, never-yet-set
   `relatedRecommendationId` (or a pure UI-side relevance filter), not a new observation type.
 
+
+## Slice 2 — DELTA-004: "not enough data" becomes a goal (owner go, 2026-10-27)
+
+Gavin: "go Delta 4", after an outside review (Grok) named it the highest-leverage follow-up to
+ROTATION-002. Builder: Claude Code; FEATURE lane (copy/presentation of existing abstentions).
+
+- **Outcome:** where a reading abstains below its floor, it says what to log and what that unlocks:
+  "Log meals on 6 more days and weigh in 2 more times, and BEYOND can estimate what you really burn."
+- **Sites:** Weekly expenditure readout, waiting findings and "still learning your usual"; Garmin
+  usual line in TODAY's tile sheets; Whole Picture's sleep comparison; Rotation patterns and places.
+- **REUSE:** each reading's existing floor and have/need counts; one shared `ui/unlockGoal.ts`.
+  **OWN:** the action wording per reading. **BUILD FROM SCRATCH:** none.
+- **Excluded:** TODAY primary composition or new attention rows, streaks, scores, deadlines,
+  notifications, Engine/recommendation, new records, changing any floor.
+- **Acceptance:** helper unit tests; updated copy assertions at every site; full verify, green CI,
+  Gavin's merge.

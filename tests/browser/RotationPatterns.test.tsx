@@ -39,6 +39,7 @@ for (const width of [320, 390, 1280]) it(`shows sleep against the shift, shift-b
   expect(window.textContent).toMatch(/trained most often on day off 2 \(2 of 3\)/);
   // Patterns: three whole work runs (the cut one is left out), means with sample sizes.
   await expect.element(screen.getByRole("heading", { name: "Shift by shift, over 3 work runs." })).toBeVisible();
+  expect(document.querySelector("[data-unlock-goal]")).toBeNull();
   const shift1 = document.querySelector('[data-position="WORK:1"] summary')!.textContent!;
   expect(shift1).toMatch(/sleep 6:10 avg \(3 days\) · energy 4\.3 avg \(3\) · trained on 0 of 3/);
   expect(shift1).toMatch(/Usually asleep 08:00–14:00 \(3 Garmin-timed days\)/);
@@ -59,6 +60,8 @@ it("says how many runs patterns still need, and stays honest with no forecast or
   await page.viewport(390, 900);
   const screen = await render(<div className="whole-picture"><RotationMap rows={rows.slice(0, 8)} weekAhead={[]} readAt={new Date(2026, 8, 9, 20).toISOString()} onInspect={() => {}} /></div>);
   await expect.element(screen.getByRole("heading", { name: "Patterns need 3 complete work runs (1 so far)." })).toBeVisible();
-  expect(document.querySelector('[data-position="WORK:1"] summary')!.textContent).toMatch(/sleep: 1 of 3 days needed · energy: 1 of 3 check-ins needed/);
+  expect(document.querySelector('[data-position="WORK:1"] summary')!.textContent).toMatch(/sleep avg after 2 more logged \(1 of 3\) · energy avg after 2 more check-ins \(1 of 3\)/);
+  // DELTA-004: the abstention says what unlocks it.
+  expect(document.querySelector("[data-unlock-goal]")!.textContent).toBe("Mark each day work or off and log main sleep and a check-in through 2 more work runs, and BEYOND can show shift-by-shift patterns.");
   expect(document.querySelector("[data-rotation-window]")!.textContent).not.toMatch(/trained most often/);
 });

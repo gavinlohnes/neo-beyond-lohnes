@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { MeasuredSnapshot } from "../../../application/measuredQueries";
-import type { Baseline } from "../../../domain/health/baselines";
+import { BASELINE_MIN_SAMPLES, type Baseline } from "../../../domain/health/baselines";
 import { average, hypnogram, sleepMinutes, stageMinutes, STAGE_ORDER, weekly, type PeriodValue, type StageName } from "../../../domain/health/measuredSeries";
 import { LogSheet } from "../../components/LogSheet";
 import { hoursMinutes, localTime } from "../health/healthFormat";
@@ -60,7 +60,8 @@ export function UnusualNote({ metric, reading }: { metric: "resting" | "sleep" |
 
 export function describeUsual(metric: MeasuredMetric, usual: Baseline & { dayKind?: "WORK" | "OFF" | null }): string {
   if (metric === "steps" && usual.dayKind === null) return "Usual steps need today set as a work day or a day off.";
-  if (usual.value === null) return `Your usual appears after 14 days of Garmin data (${usual.samples} so far).`;
+  // DELTA-004: the floor said as what unlocks it.
+  if (usual.value === null) return `Wear your Garmin for ${BASELINE_MIN_SAMPLES - usual.samples} more ${BASELINE_MIN_SAMPLES - usual.samples === 1 ? "day" : "days"}, and BEYOND can show your usual (${usual.samples} of ${BASELINE_MIN_SAMPLES} days so far).`;
   const kind = metric === "steps" ? (usual.dayKind === "OFF" ? " on days off" : " on work days") : "";
   return `Usual${kind}: ${formatMeasured(metric, usual.value)} · median of the last 28 days.`;
 }

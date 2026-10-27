@@ -46,7 +46,7 @@ describe("Weekly check-in — findings (real browser)", () => {
     await expect
       .element(
         section.getByText(
-          "Not enough data yet: sleep before workouts (0 of 6 each way), before vs. after the shift (0 of 6 each way).",
+          "Not enough data yet: sleep before workouts (0 of 6 each way; keep logging main sleep and workouts), before vs. after the shift (0 of 6 each way; keep logging workouts).",
           { exact: true },
         ),
       )
@@ -61,7 +61,7 @@ describe("Weekly check-in — findings (real browser)", () => {
     const screen = await render(<WeeklyCheckInScreen />);
     const section = screen.getByRole("region", { name: "FINDINGS" });
     await expect
-      .element(section.getByText(/^Not enough data yet: sleep before workouts \(0 of 6 each way\), .*when urges came \(0 of 6 urges\)\.$/))
+      .element(section.getByText(/^Not enough data yet: sleep before workouts \(0 of 6 each way; keep logging main sleep and workouts\), .*when urges came \(0 of 6 urges; keep recording them as they come\)\.$/))
       .toBeVisible();
     expect(document.querySelectorAll("[data-finding]")).toHaveLength(0);
   });

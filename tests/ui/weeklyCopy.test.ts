@@ -141,7 +141,7 @@ describe("read-only findings copy", () => {
         { kind: "URGE_TIMING", have: 3, need: 6 },
       ]),
     ).toBe(
-      "Not enough data yet: sleep before workouts (2 of 6 each way), before vs. after the shift (0 of 6 each way), when urges came (3 of 6 urges).",
+      "Not enough data yet: sleep before workouts (2 of 6 each way; keep logging main sleep and workouts), before vs. after the shift (0 of 6 each way; keep logging workouts), when urges came (3 of 6 urges; keep recording them as they come).",
     );
     expect(describeWaitingFindings([])).toBeUndefined();
   });
@@ -160,7 +160,11 @@ describe("expenditure readout copy (Drop 6)", () => {
   it("says exactly what it's still waiting for", () => {
     const waiting = { kind: "WAITING", windowDays: 28, intakeDays: { have: 6, need: 14 }, weighIns: { have: 3, need: 8 }, spanOk: false, tooNoisy: false } as const;
     expect(describeExpenditure(waiting)).toEqual({
-      detail: "Not enough data yet — needs 14 days with meals logged (have 6) and 8 weigh-ins over 2 weeks (have 3) in the last 28 days.",
+      detail: "Log meals on 8 more days and weigh in 5 more times over 2 weeks, and BEYOND can estimate what you really burn (6 of 14 meal days, 3 of 8 weigh-ins in the last 28 days).",
+    });
+    // Enough weigh-ins, all bunched together: spreading them is what's left.
+    expect(describeExpenditure({ ...waiting, intakeDays: { have: 14, need: 14 }, weighIns: { have: 9, need: 8 } })).toEqual({
+      detail: "Spread your weigh-ins across 2 weeks, and BEYOND can estimate what you really burn (14 meal days, 9 weigh-ins in the last 28 days).",
     });
     expect(describeExpenditure({ ...waiting, intakeDays: { have: 20, need: 14 }, weighIns: { have: 10, need: 8 }, spanOk: true, tooNoisy: true })).toEqual({
       detail: "Not enough data yet — weight is moving around too much for a useful range.",
@@ -198,7 +202,7 @@ describe("YOUR USUAL copy (FOUNDATION-A-F1)", () => {
         { kind: "NOT_THIS_WEEK", measure: "MAIN_SLEEP", dayKind: "OFF", low: 420, high: 510, periodDays: 1, baselineDays: 14 },
       ]),
     ).toBe(
-      "Still learning your usual: water on work days (6 of 10 work days), protein on days off (3 of 10 days off). Nothing to compare this week: sleep on days off.",
+      "Log water on 4 more work days and protein on 7 more days off, and BEYOND can learn your usual. Nothing to compare this week: sleep on days off.",
     );
     expect(describeBaselinesQuiet([])).toBeUndefined();
   });
