@@ -57,7 +57,10 @@ export async function getWholePicture(now = new Date()) {
     // ROTATION-002: times only where they are known — Garmin's record behind the day's one main sleep,
     // uncorrected by the owner — and the scheduled shift on a recorded work day.
     const timing = sleepTiming(sleepEvents as DomainEvent[], revisions);
+    const naps = new Map(summaries.flatMap((day) => day.sleep.napMinutes === undefined ? [] : [[day.beyondDayId, day.sleep.napMinutes] as const]));
     for (const row of rows) {
+      const napped = row.dayIds.flatMap((id) => naps.has(id) ? [naps.get(id)!] : []);
+      row.napMinutes = napped.length ? napped.reduce((a, b) => a + b, 0) : undefined;
       const from = Date.parse(row.start), minutes = (t: number) => Math.round((t - from) / 60000);
       const window = row.sleepHours !== undefined && row.dayIds.length === 1 ? timing.get(row.dayIds[0]!) : undefined;
       row.sleepWindow = window ? { start: minutes(window.start), end: minutes(window.end) } : undefined;

@@ -1,5 +1,5 @@
 import type { PictureRow } from "../../../application/wholePictureProjection";
-import { RUN_MEAN_FLOOR, type RunPosition } from "../../../application/rotationProjection";
+import { RUN_MEAN_FLOOR, type RunPosition, type flipSummary } from "../../../application/rotationProjection";
 import { unlockGoal } from "../../unlockGoal";
 
 /** ROTATION-002 copy: counts and recorded values, never a cause, a score or an instruction. */
@@ -45,4 +45,28 @@ export function lastWorkout(rows: readonly PictureRow[], readAt: string): { star
 export function patternsGoal(runs: number): string | null {
   return unlockGoal([{ more: RUN_MEAN_FLOOR - runs, action: (n) => `mark each day work or off and log main sleep and a check-in through ${n} more work ${n === 1 ? "run" : "runs"}` }],
     "show shift-by-shift patterns") ?? null;
+}
+
+type FlipSummaryView = ReturnType<typeof flipSummary>;
+const windowText = (reference: string, w: { start: number; end: number; days: number } | undefined) =>
+  w ? `${clockAfter(reference, w.start)}–${clockAfter(reference, w.end)} (${w.days} days)` : null;
+
+/** ROTATION-003: one line of usual sleep times around a flip; each needs RUN_MEAN_FLOOR Garmin-timed days. */
+export function describeFlipTiming(summary: FlipSummaryView, reference: string): string {
+  const parts = summary.kind === "INTO_WORK"
+    ? [["day before", summary.before], ["shift 1", summary.first], ["shift 2", summary.second]] as const
+    : [["last shift", summary.before], ["day off 1", summary.first], ["day off 2", summary.second]] as const;
+  const known = parts.flatMap(([label, w]) => windowText(reference, w) ? [`${label} ${windowText(reference, w)}`] : []);
+  return known.length ? `Usually asleep: ${known.join(" · ")}.` : `Usual sleep times need ${RUN_MEAN_FLOOR} Garmin-timed days at each point.`;
+}
+
+/** Naps on the day before a flip into work, and the comparison only once both sides have enough flips. */
+export function describeFlipNaps(summary: FlipSummaryView): string | null {
+  if (summary.kind !== "INTO_WORK" || !(summary.naps.napped + summary.naps.none)) return null;
+  const total = summary.naps.napped + summary.naps.none;
+  const head = `Napped the day before on ${summary.naps.napped} of ${total} ${total === 1 ? "flip" : "flips"}.`;
+  if (!summary.comparison) return `${head} A comparison needs ${RUN_MEAN_FLOOR} flips each way (napped ${summary.naps.napped}, didn't ${summary.naps.none}).`;
+  const side = (s: NonNullable<FlipSummaryView["comparison"]>["napped"]) =>
+    `sleep ${s.sleep.mean === undefined ? "—" : duration(s.sleep.mean)}, energy ${s.energy.mean === undefined ? "—" : s.energy.mean.toFixed(1)} (${s.flips} flips)`;
+  return `${head} Shifts 1–2 after a nap: ${side(summary.comparison.napped)}; without: ${side(summary.comparison.none)}. A pattern in your records, not proof.`;
 }

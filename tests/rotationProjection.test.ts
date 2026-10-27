@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupRuns, nextDaysOff, nextForecastRun, runPositions } from "../src/application/rotationProjection";
+import { flipSummary, flips, groupRuns, nextDaysOff, nextForecastRun, runPositions } from "../src/application/rotationProjection";
 import type { PictureRow } from "../src/application/wholePictureProjection";
 import type { WeekAheadDay } from "../src/application/weekAheadQueries";
 
@@ -68,5 +68,37 @@ describe("ROTATION-002 — run positions", () => {
       .toEqual({ from: "2026-10-28", days: 2, now: false });
     expect(nextDaysOff([ahead("2026-10-27", "OFF"), ahead("2026-10-28", "WORK")])).toEqual({ from: "2026-10-27", days: 1, now: true });
     expect(nextDaysOff([ahead("2026-10-27", "WORK")])).toBeNull();
+  });
+});
+
+describe("ROTATION-003 — flips", () => {
+  const off = (start: string, values: Partial<PictureRow> = {}) => day(start, "OFF", values);
+  const work = (start: string, values: Partial<PictureRow> = {}) => day(start, "WORK", values);
+  const timed = (start: number) => ({ sleepWindow: { start, end: start + 300 } });
+
+  it("finds flips both ways from recorded context, and an unknown day breaks a flip", () => {
+    const found = flips([off("o1"), work("w1"), work("w2"), work("w3"), off("x1"), off("x2"), day("u", "UNKNOWN", { dayIds: [] } as Partial<PictureRow>), work("v1")]);
+    expect(found.map((f) => [f.kind, f.before.start, f.after.map((r) => r.start).join(",")])).toEqual([
+      ["INTO_WORK", "o1", "w1,w2"], ["OUT_OF_WORK", "w3", "x1,x2"],
+    ]);
+  });
+
+  it("gives median times only with three timed days, and compares naps only with three flips each way", () => {
+    const into = (n: number, nap: number | undefined, sleepHours: number, energy: number) =>
+      [off(`o${n}`, { napMinutes: nap, ...timed(420 + n) }), work(`a${n}`, { sleepHours, energy, ...timed(900 + n) }), work(`b${n}`, { sleepHours, energy }), off(`p${n}`)];
+    const rows = [1, 2, 3].flatMap((n) => into(n, 60, 6, 4)).concat([4, 5].flatMap((n) => into(n, undefined, 5, 3)));
+    const summary = flipSummary(flips(rows), "INTO_WORK");
+    expect(summary.flips).toHaveLength(5);
+    expect(summary.before).toEqual({ start: 423, end: 723, days: 5 });
+    expect(summary.first).toEqual({ start: 903, end: 1203, days: 5 });
+    expect(summary.second).toBeUndefined();
+    expect(summary.naps).toEqual({ napped: 3, none: 2 });
+    expect(summary.comparison).toBeUndefined();
+    const more = flipSummary(flips(rows.concat(into(6, undefined, 5, 3))), "INTO_WORK");
+    expect(more.comparison).toEqual({
+      napped: { flips: 3, sleep: { mean: 6, days: 6 }, energy: { mean: 4, days: 6 } },
+      none: { flips: 3, sleep: { mean: 5, days: 6 }, energy: { mean: 3, days: 6 } },
+    });
+    expect(flipSummary(flips(rows), "OUT_OF_WORK").comparison).toBeUndefined();
   });
 });

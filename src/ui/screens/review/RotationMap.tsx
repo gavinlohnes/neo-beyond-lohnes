@@ -1,8 +1,8 @@
 import { useState } from "react";
 import type { PictureRow } from "../../../application/wholePictureProjection";
 import type { WeekAheadDay } from "../../../application/weekAheadQueries";
-import { groupRuns, nextDaysOff, nextForecastRun, runPositions, RUN_MEAN_FLOOR, type RotationRun, type RunPosition } from "../../../application/rotationProjection";
-import { clockAfter, describePosition, describeTiming, duration, lastWorkout, mostTrainedDayOff, patternsGoal, positionName, shortDate } from "./rotationCopy";
+import { flipSummary, flips, groupRuns, nextDaysOff, nextForecastRun, runPositions, RUN_MEAN_FLOOR, type Flip, type RotationRun, type RunPosition } from "../../../application/rotationProjection";
+import { clockAfter, describeFlipNaps, describeFlipTiming, describePosition, describeTiming, duration, lastWorkout, mostTrainedDayOff, patternsGoal, positionName, shortDate } from "./rotationCopy";
 
 const day = (at: string) => new Date(at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 const short = (at: string) => new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -28,27 +28,27 @@ const W = 320, LABEL = 34, ROW = 16, GAP = 5, AXIS = 16;
  * main sleep as a filled bar from Garmin's times and the scheduled shift as an outline. Rows without
  * known times stay empty rather than guessed.
  */
-function Actogram({ run }: { run: RotationRun }) {
-  const first = run.rows[0]!.start, plot = W - LABEL - 4;
+function Actogram({ rows, labels, title }: { rows: readonly PictureRow[]; labels: readonly string[]; title: string }) {
+  const first = rows[0]!.start, plot = W - LABEL - 4;
   const x = (minutes: number) => LABEL + (Math.max(0, Math.min(DAY_MINUTES, minutes)) / DAY_MINUTES) * plot;
-  const height = run.rows.length * (ROW + GAP) + AXIS;
+  const height = rows.length * (ROW + GAP) + AXIS;
   // Clock ticks at 18:00, 00:00, 06:00 and 12:00 inside this run's lived-day frame.
   const startHour = new Date(first), ticks = [18, 0, 6, 12].map((hour) => {
     const tick = new Date(startHour); tick.setHours(hour, 0, 0, 0);
     if (tick.getTime() <= startHour.getTime()) tick.setDate(tick.getDate() + 1);
     return { hour, minutes: (tick.getTime() - startHour.getTime()) / 60000 };
   }).filter((tick) => tick.minutes < DAY_MINUTES);
-  const timed = run.rows.filter((row) => row.sleepWindow).length;
+  const timed = rows.filter((row) => row.sleepWindow).length;
   return <svg className="actogram" viewBox={`0 0 ${W} ${height}`} role="img"
-    aria-label={`Sleep and scheduled shift times for ${run.rows.length} ${run.rows.length === 1 ? "day" : "days"}, ${timed} with Garmin sleep times, from 16:30 to 16:30.`}>
+    aria-label={`${title}: sleep and scheduled shift times for ${rows.length} ${rows.length === 1 ? "day" : "days"}, ${timed} with Garmin sleep times, from 16:30 to 16:30.`}>
     {ticks.map((tick) => <g key={tick.hour}>
       <line className="actogram-grid" x1={x(tick.minutes)} x2={x(tick.minutes)} y1={0} y2={height - AXIS} />
       <text className="actogram-axis" x={x(tick.minutes)} y={height - 4} textAnchor="middle">{String(tick.hour).padStart(2, "0")}</text>
     </g>)}
-    {run.rows.map((row, index) => {
+    {rows.map((row, index) => {
       const y = index * (ROW + GAP);
       return <g key={row.start}>
-        <text className="actogram-axis" x={LABEL - 6} y={y + ROW - 4} textAnchor="end">{run.context === "WORK" ? `#${index + 1}` : short(row.start)}</text>
+        <text className="actogram-axis" x={LABEL - 6} y={y + ROW - 4} textAnchor="end">{labels[index]}</text>
         <line className="actogram-base" x1={LABEL} x2={W - 4} y1={y + ROW / 2} y2={y + ROW / 2} />
         {row.shiftWindow && <rect className="actogram-shift" x={x(row.shiftWindow.start)} y={y + 1} width={Math.max(1, x(row.shiftWindow.end) - x(row.shiftWindow.start))} height={ROW - 2} />}
         {row.sleepWindow && <rect className="actogram-sleep" x={x(row.sleepWindow.start)} y={y + 4} width={Math.max(2, x(row.sleepWindow.end) - x(row.sleepWindow.start))} height={ROW - 8} rx={2} />}
@@ -68,6 +68,7 @@ function NextWindow({ rows, weekAhead, positions, readAt }: { rows: readonly Pic
     {!offLine && next && <h3 data-rotation-next>Next predicted: work run from {day(next.from + "T12:00:00")} · {next.days} {next.days === 1 ? "shift" : "shifts"}.</h3>}
     <p>{last ? `Last counted workout: ${shortDate(last.start)}, ${last.daysAgo} ${last.daysAgo === 1 ? "day" : "days"} ago.` : `No counted workout in the last ${rows.length} days.`}
       {favourite && ` Across your recent days off, you trained most often on ${positionName(favourite).toLowerCase()} (${favourite.trained.days} of ${favourite.trained.of}).`}</p>
+    {next && <p className="small" data-rotation-next-flip>Next flip: {next.work === "WORK" ? "into work" : "out of work"}, {shortDate(`${next.from}T12:00:00`)}. Your past flips are under Flips.</p>}
     <p className="muted small">A forecast and your own records. BEYOND suggests a window; it doesn't schedule one.</p>
   </div>;
 }
@@ -93,6 +94,41 @@ function Patterns({ positions, onInspect, reference }: { positions: readonly Run
   </section>;
 }
 
+const FLIP_SHOWN = 4;
+/**
+ * ROTATION-003: how your recent flips went, lined up on the switch — the last day of the old run, then the
+ * first days of the new one — with usual sleep times and naps before nights. Suggests nothing on its own.
+ */
+function Flips({ rows, onInspect }: { rows: readonly PictureRow[]; onInspect: (row: PictureRow) => void }) {
+  const all = flips(rows), reference = rows[0]?.start;
+  if (!reference) return null;
+  return <section className="rotation-flips" aria-labelledby="rotation-flips-heading">
+    <p className="eyebrow">Flips · switching between nights and days</p>
+    <h3 id="rotation-flips-heading">{all.length ? `${all.length} recorded ${all.length === 1 ? "flip" : "flips"} in the last ${rows.length} days.` : "No recorded flips yet."}</h3>
+    <p className="muted small">Each flip lines up the last day of one run with the first days of the next. Times are Garmin's; a pattern here is not a rule.</p>
+    {(["INTO_WORK", "OUT_OF_WORK"] as const).map((kind) => {
+      const summary = flipSummary(all, kind), naps = describeFlipNaps(summary);
+      if (!summary.flips.length) return null;
+      const labels = (flip: Flip) => kind === "INTO_WORK" ? ["−1", ...flip.after.map((_, i) => `#${i + 1}`)] : ["last", ...flip.after.map((_, i) => `off ${i + 1}`)];
+      return <div key={kind} className="rotation-flip-kind" data-flip-kind={kind}>
+        <h4>{kind === "INTO_WORK" ? "Into work" : "Out of work"} · {summary.flips.length} {summary.flips.length === 1 ? "flip" : "flips"}</h4>
+        <p className="small">{describeFlipTiming(summary, reference)}</p>
+        {naps && <p className="small" data-flip-naps>{naps}</p>}
+        {[...summary.flips].reverse().slice(0, FLIP_SHOWN).map((flip) => {
+          const days = [flip.before, ...flip.after];
+          return <details key={flip.before.start}>
+            <summary>{kind === "INTO_WORK" ? "Into work" : "Out of work"} · {shortDate(flip.after[0]!.start)}{kind === "INTO_WORK" && (flip.before.napMinutes ?? 0) > 0 ? " · napped before" : ""}</summary>
+            <Actogram rows={days} labels={labels(flip)} title={`${kind === "INTO_WORK" ? "Into work" : "Out of work"}, ${shortDate(flip.after[0]!.start)}`} />
+            <ul>{days.map((row, index) => <li key={row.start}><button type="button" className="textbutton" onClick={() => onInspect(row)}
+              aria-label={`${labels(flip)[index]}, ${day(row.start)}: main sleep ${row.ambiguousSleep ? "ambiguous" : row.sleepHours === undefined ? "not recorded" : hours(row.sleepHours)}${sleepTimes(row) ? `, asleep ${sleepTimes(row)}` : ""}${row.napMinutes ? `, nap ${row.napMinutes} min` : ""}, energy ${row.energy ?? "not recorded"}. Open records.`}>
+              {labels(flip)[index]} · sleep {row.ambiguousSleep ? "?" : hours(row.sleepHours)}{sleepTimes(row) ? ` · ${sleepTimes(row)}` : ""}{row.napMinutes ? ` · nap ${row.napMinutes}m` : ""} · E {row.energy ?? "—"}</button></li>)}</ul>
+          </details>;
+        })}
+      </div>;
+    })}
+  </section>;
+}
+
 /**
  * ROTATION-001/002: your recent lived days as runs, newest first, each day a cell with main sleep, check-in
  * energy and training, an actogram of sleep against the scheduled shift, patterns across runs and the next
@@ -109,9 +145,10 @@ export function RotationMap({ rows, weekAhead, readAt, onInspect }: { rows: read
     <p className="muted small">Each run is a stretch of recorded work days or days off. Each day shows main sleep, check-in energy and training, and when you slept against the scheduled shift. Tap a day for its records. Days without a recorded work context sit in their own run.</p>
     <NextWindow rows={rows} weekAhead={weekAhead} positions={positions} readAt={readAt} />
     <Patterns positions={positions} onInspect={onInspect} reference={rows[0]?.start} />
+    <Flips rows={rows} onInspect={onInspect} />
     <ol className="rotation-runs">{runs.slice(0, limit).map((run) => <li key={run.rows[0]!.start} className={`rotation-run rotation-run--${run.context.toLowerCase()}`}>
       <h3>{runTitle(run)}</h3>
-      <Actogram run={run} />
+      <Actogram rows={run.rows} labels={run.rows.map((row, index) => run.context === "WORK" ? `#${index + 1}` : short(row.start))} title={runTitle(run)} />
       <ol className="rotation-days">{run.rows.map((row, index) => <li key={row.start}><button type="button" onClick={() => onInspect(row)}
         aria-label={`${day(row.start)}${run.context === "WORK" ? `, shift ${index + 1} of ${run.rows.length}` : ""}: main sleep ${row.ambiguousSleep ? "ambiguous" : row.sleepHours === undefined ? "not recorded" : hours(row.sleepHours)}${sleepTimes(row) ? `, asleep ${sleepTimes(row)}` : ""}, energy ${row.energy ?? "not recorded"}, ${row.sessions ? `${row.sessions} workout${row.sessions === 1 ? "" : "s"}` : "no workout"}. Open records.`}>
         <span className="mono">{run.context === "WORK" ? `#${index + 1}` : short(row.start)}</span>

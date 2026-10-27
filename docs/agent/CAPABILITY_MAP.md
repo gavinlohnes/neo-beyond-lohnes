@@ -251,3 +251,8 @@ fresh general review.
   `measuredQueries.unusual`. It deliberately is not an advisory source: that would be an Engine
   change; revisit only with approval. Reuse it before writing another anomaly rule.
 - Scope and authority: [ROTATION-002.md](ROTATION-002.md).
+- ROTATION-003 adds `flips`/`flipSummary` (rotationProjection) and `PictureRow.napMinutes`: recent
+  switches into and out of work runs, aligned actograms, usual times and a gated nap comparison.
+- Test note: `expect.poll`/`expect.element` advance faked timers by their interval on each retry.
+  A test that sets the clock just before a boundary must wait on real time (see
+  `tests/browser/ModePinExpiry.test.tsx`, `beforeTheEdge`).

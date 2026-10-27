@@ -94,3 +94,43 @@ export function nextDaysOff(days: readonly WeekAheadDay[]): { from: string; days
   const end = days.findIndex((day, index) => index > start && day.work !== "OFF");
   return { from: days[start]!.date, days: (end === -1 ? days.length : end) - start, now: start === 0 };
 }
+
+/**
+ * ROTATION-003: a switch between a run of days off and a work run, read from recorded context only. An
+ * unknown-context day between them means no flip is claimed. `before` is the last day of the old run;
+ * `after` holds the new run's first days (shifts 1–2 into work, days off 1–3 out of work).
+ */
+export interface Flip { kind: "INTO_WORK" | "OUT_OF_WORK"; before: PictureRow; after: PictureRow[] }
+
+export function flips(rows: readonly PictureRow[]): Flip[] {
+  const runs = groupRuns(rows), result: Flip[] = [];
+  for (let index = 1; index < runs.length; index++) {
+    const from = runs[index - 1]!, to = runs[index]!;
+    if (from.context === "OFF" && to.context === "WORK") result.push({ kind: "INTO_WORK", before: from.rows.at(-1)!, after: to.rows.slice(0, 2) });
+    if (from.context === "WORK" && to.context === "OFF") result.push({ kind: "OUT_OF_WORK", before: from.rows.at(-1)!, after: to.rows.slice(0, 3) });
+  }
+  return result;
+}
+
+type Window = { start: number; end: number; days: number };
+function medianWindow(rows: readonly (PictureRow | undefined)[]): Window | undefined {
+  const timed = rows.flatMap((row) => row?.sleepWindow ? [row.sleepWindow] : []);
+  return timed.length >= RUN_MEAN_FLOOR ? { start: median(timed.map((w) => w.start)), end: median(timed.map((w) => w.end)), days: timed.length } : undefined;
+}
+function sideOf(group: readonly Flip[]) {
+  const days = group.flatMap((flip) => flip.after);
+  const sleep = pictureValues(days, "sleepHours"), energy = pictureValues(days, "energy");
+  return { flips: group.length, sleep: { mean: pictureMean(sleep), days: sleep.length }, energy: { mean: pictureMean(energy), days: energy.length } };
+}
+
+/** Per kind of flip: median sleep times before and after, naps on the day before, and a nap comparison only with enough flips each way. */
+export function flipSummary(all: readonly Flip[], kind: Flip["kind"]) {
+  const group = all.filter((flip) => flip.kind === kind);
+  const before = medianWindow(group.map((flip) => flip.before));
+  const first = medianWindow(group.map((flip) => flip.after[0]));
+  const second = medianWindow(group.map((flip) => flip.after[1]));
+  const known = group.filter((flip) => flip.before.dayIds.length > 0);
+  const napped = known.filter((flip) => (flip.before.napMinutes ?? 0) > 0), none = known.filter((flip) => !((flip.before.napMinutes ?? 0) > 0));
+  const comparison = kind === "INTO_WORK" && napped.length >= RUN_MEAN_FLOOR && none.length >= RUN_MEAN_FLOOR ? { napped: sideOf(napped), none: sideOf(none) } : undefined;
+  return { kind, flips: group, before, first, second, naps: { napped: napped.length, none: none.length }, comparison };
+}

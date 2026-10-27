@@ -65,3 +65,27 @@ it("says how many runs patterns still need, and stays honest with no forecast or
   expect(document.querySelector("[data-unlock-goal]")!.textContent).toBe("Mark each day work or off and log main sleep and a check-in through 2 more work runs, and BEYOND can show shift-by-shift patterns.");
   expect(document.querySelector("[data-rotation-window]")!.textContent).not.toMatch(/trained most often/);
 });
+
+for (const width of [320, 1280]) it(`ROTATION-003: lines up recent flips, with usual times, naps and the next flip at ${width}px`, async () => {
+  await page.viewport(width, 900);
+  const onInspect = vi.fn();
+  const screen = await render(<div className="whole-picture"><RotationMap rows={rows} weekAhead={weekAhead} readAt={new Date(2026, 8, 17, 20).toISOString()} onInspect={onInspect} /></div>);
+  await expect.element(screen.getByRole("heading", { name: "6 recorded flips in the last 16 days." })).toBeVisible();
+  expect(document.querySelector("[data-rotation-next-flip]")!.textContent).toBe("Next flip: out of work, Fri, Sep 18. Your past flips are under Flips.");
+  const into = document.querySelector('[data-flip-kind="INTO_WORK"]')!;
+  expect(into.querySelector("h4")!.textContent).toBe("Into work · 3 flips");
+  expect(into.textContent).toContain("Usually asleep: shift 1 08:00–14:00 (3 days) · shift 2 08:00–13:00 (3 days).");
+  expect(into.querySelector("[data-flip-naps]")!.textContent).toBe("Napped the day before on 0 of 3 flips. A comparison needs 3 flips each way (napped 0, didn't 3).");
+  const out = document.querySelector('[data-flip-kind="OUT_OF_WORK"]')!;
+  expect(out.textContent).toContain("Usual sleep times need 3 Garmin-timed days at each point.");
+  expect(out.querySelector("[data-flip-naps]")).toBeNull();
+  // Newest flip first; it opens an aligned actogram and its exact days.
+  const newest = into.querySelector("details summary")!;
+  expect(newest.textContent).toBe("Into work · Mon, Sep 14");
+  await screen.getByText("Into work · Mon, Sep 14", { exact: true }).click();
+  await expect.element(screen.getByRole("img", { name: /^Into work, Mon, Sep 14: sleep and scheduled shift times for 3 days, 2 with Garmin sleep times/ })).toBeVisible();
+  await screen.getByRole("button", { name: /^#1, .*Sep 14: main sleep 6:00, asleep 08:00–14:00, energy 5\. Open records\.$/ }).click();
+  expect(onInspect).toHaveBeenCalledWith(expect.objectContaining({ start: start(14) }));
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+  expect((await axe.run(document.body)).violations).toEqual([]);
+});
