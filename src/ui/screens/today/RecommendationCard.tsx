@@ -7,6 +7,7 @@ import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { ConfirmIcon, ResolveIcon } from "../../icons/Icon";
 import { CHECK_IN_FIELDS } from "./checkInFields";
+import { ReflectOnDecline } from "./ReflectOnDecline";
 import {
   DECLINE_LABEL,
   describeRecommendationReason,
@@ -288,6 +289,7 @@ export function RecommendationCard({
           </>
         )}
         </>}
+        {decision === "DECLINED" && <ReflectOnDecline recommendationId={recommendation.id} title={title} why={describeRecommendationReason(recommendation.rationale)} />}
         {confirmPanel}
       </div>
     </>

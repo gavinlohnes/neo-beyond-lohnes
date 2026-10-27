@@ -76,3 +76,23 @@
 .whole-picture .rotation-flip-kind details{border-top:1px solid var(--line)}
 .whole-picture .rotation-flip-kind summary{cursor:pointer;min-height:44px;padding:10px 0;font-size:14px}
 .whole-picture .rotation-flip-kind ul{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-wrap:wrap;gap:4px 16px}
+/* ROTATION-004: the rest of the day on the actogram. Ink for meals and workouts, muted for water; red stays the action color. */
+.whole-picture .actogram-meal{fill:var(--ink)}
+.whole-picture .actogram-workout{fill:#e8b860}
+.whole-picture .actogram-water{stroke:#7fa9d9;stroke-width:1.5}
+.whole-picture .rotation-legend{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:10px 0 0}
+.whole-picture .rotation-legend .legend-sleep{display:inline-block;width:14px;height:6px;border-radius:2px;background:#3987e5}
+.whole-picture .rotation-legend .legend-shift{display:inline-block;width:14px;height:8px;border:1.25px dashed #8d8c86}
+.whole-picture .rotation-legend .legend-meal{color:var(--ink);font-size:10px}
+.whole-picture .rotation-legend .legend-workout{color:#e8b860}
+.whole-picture .rotation-legend .legend-water{color:#7fa9d9;font-weight:700}
+/* LOOP step 1: Ask. */
+.whole-picture .ask-questions{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.whole-picture .ask-questions .outlined{text-align:left}
+.whole-picture .ask-questions .outlined[aria-pressed=true]{border-color:var(--ink);background:#222}
+.whole-picture .ask-answer{border-top:1px solid var(--line);padding-top:16px}
+.whole-picture .ask-answer h3{font-size:19px;margin-bottom:10px}
+.whole-picture .ask-answer>ul{list-style:none;margin:0;padding:0}
+.whole-picture .ask-answer>ul>li{padding:10px 0;border-bottom:1px solid var(--line)}
+.whole-picture .ask-days summary{cursor:pointer;min-height:44px;padding:10px 0;font-size:13px;color:var(--muted)}
+.whole-picture .ask-days ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px}

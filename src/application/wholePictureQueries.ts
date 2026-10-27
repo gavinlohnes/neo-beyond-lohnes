@@ -41,7 +41,7 @@ export async function getWholePicture(now = new Date()) {
       getWeekAhead(now), getWeeklyReviewRecords(), getActiveDay(), getCurrentlyEligibleUnresolvedObligations(),
     ]);
     const [sleepEvents, revisions, pattern] = await Promise.all([
-      db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_CORRECTED", "SLEEP_LOG_VOIDED"]).toArray(),
+      db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_CORRECTED", "SLEEP_LOG_VOIDED", "MEAL_LOGGED", "MEAL_LOG_VOIDED", "WATER_LOGGED", "WATER_LOG_VOIDED"]).toArray(),
       db.externalSleepRevisions.toArray(), getSchedulePattern(),
     ]);
     const window = finishedLivedDays(now, 0, 56);
@@ -57,10 +57,18 @@ export async function getWholePicture(now = new Date()) {
     // ROTATION-002: times only where they are known — Garmin's record behind the day's one main sleep,
     // uncorrected by the owner — and the scheduled shift on a recorded work day.
     const timing = sleepTiming(sleepEvents as DomainEvent[], revisions);
+    const marksByDay = dayMarks(sleepEvents as DomainEvent[]);
+    const workoutStarts = new Map(summaries.map((day) => [day.beyondDayId, day.workouts.filter((w) => w.status === "COMPLETED" || w.status === "PARTIAL" || w.status === "ACTIVE").map((w) => Date.parse(w.startedAt))]));
     const naps = new Map(summaries.flatMap((day) => day.sleep.napMinutes === undefined ? [] : [[day.beyondDayId, day.sleep.napMinutes] as const]));
     for (const row of rows) {
       const napped = row.dayIds.flatMap((id) => naps.has(id) ? [naps.get(id)!] : []);
       row.napMinutes = napped.length ? napped.reduce((a, b) => a + b, 0) : undefined;
+      // ROTATION-004: the day's logged meals, water and workout starts, in the same 16:30 frame as sleep.
+      const inFrame = (times: number[]) => times.map((t) => Math.round((t - Date.parse(row.start)) / 60000)).filter((m) => m >= 0 && m < 24 * 60).sort((a, b) => a - b);
+      const meals = inFrame(row.dayIds.flatMap((id) => marksByDay.get(id)?.meals ?? []));
+      const water = inFrame(row.dayIds.flatMap((id) => marksByDay.get(id)?.water ?? []));
+      const workouts = inFrame(row.dayIds.flatMap((id) => workoutStarts.get(id) ?? []));
+      row.marks = meals.length || water.length || workouts.length ? { meals, water, workouts } : undefined;
       const from = Date.parse(row.start), minutes = (t: number) => Math.round((t - from) / 60000);
       const window = row.sleepHours !== undefined && row.dayIds.length === 1 ? timing.get(row.dayIds[0]!) : undefined;
       row.sleepWindow = window ? { start: minutes(window.start), end: minutes(window.end) } : undefined;
@@ -96,6 +104,21 @@ export async function getWholePicture(now = new Date()) {
     const week = latestReviewWeek(now);
     return { readAt: now.toISOString(), rows, measurements, stories, lifts, weekAhead, week, savedReview: findWeekReview(reviews, week), canSave: Boolean(activeDay), eligibleCommitments: eligible };
   });
+}
+/** ROTATION-004: per BEYOND day, when each live (not voided or undone) meal and water log happened. */
+function dayMarks(events: readonly DomainEvent[]): Map<string, { meals: number[]; water: number[] }> {
+  const voidedMeals = new Set(events.filter((e) => e.type === "MEAL_LOG_VOIDED").map((e) => (e.payload as { mealEventId: string }).mealEventId));
+  const voidedWater = new Set(events.filter((e) => e.type === "WATER_LOG_VOIDED").map((e) => (e.payload as { loggedEventId: string }).loggedEventId));
+  const result = new Map<string, { meals: number[]; water: number[] }>();
+  for (const e of events) {
+    const live = e.type === "MEAL_LOGGED" ? !voidedMeals.has(e.id) : e.type === "WATER_LOGGED" ? !voidedWater.has(e.id) : false;
+    const at = Date.parse(e.occurredAt);
+    if (!live || !e.beyondDayId || !Number.isFinite(at)) continue;
+    const day = result.get(e.beyondDayId) ?? { meals: [], water: [] };
+    (e.type === "MEAL_LOGGED" ? day.meals : day.water).push(at);
+    result.set(e.beyondDayId, day);
+  }
+  return result;
 }
 /** Per BEYOND day: the Garmin start/end behind its single live main-sleep log, when the owner has not corrected it. */
 function sleepTiming(events: readonly DomainEvent[], revisions: readonly ExternalSleepRevision[]): Map<string, { start: number; end: number }> {

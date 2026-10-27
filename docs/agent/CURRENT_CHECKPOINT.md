@@ -29,13 +29,53 @@
   renewal required after evidence. Source `8da2c0e` required CI [PASS](https://github.com/gavinlohnes/neo-beyond-lohnes/actions/runs/40467876738).
   Final full verification, exact-head review and current-head CI are recorded in #303 before
   readiness. Existing bundle warning remains; no inference, Engine or schema change.
-- **Next:** final full gate/review/CI, then Gavin's separate merge decision. No merge/deployment
+- **Continuity:** fresh master `c28a846` (#305/306 LOOP and ROTATION) merged on 2026-10-27; checkpoint histories retained. Existing memory implementation unchanged.
+- **Next:** current CI and renewed exact-head review, then Gavin's separate merge decision. No merge/deployment
   or next slice authorized here. Other memory domains remain parked.
 
 - **Mainline continuity:** merged fresh master `c3338a0` (#300 SLEEP-ENGINE-001) after it landed during final verification. Only this checkpoint conflicted; both histories are retained. MEMORY adds no Engine change relative to that master. The previous final local run was stopped for integration; combined-head verification/review/CI follow.
 
 ---
 Historical SLEEP-ENGINE-001 (#300 merged at `c3338a0`):
+
+---
+# LOOP step 2 — REFLECT
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "merge 305 and go reflect". Claude Code;
+  PROTECTED (bounded: journal link at creation, no Engine/schema/new event). [Brief](LOOP.md#step-2--reflect).
+- **Baseline / branch:** master `8aedba5` (#305 ASK merged at Gavin's direction); `ccr-0be4f40f-16m0ja`.
+- **Built:** "Why not?" after declining a recommendation, the 30-second shift debrief, and "How did
+  it go?" in the Journal from the next lived day.
+- **Next:** CI and Gavin's merge (independent review per DEV-FLOW-002 unless Gavin waives it).
+  Steps 3 TRY and 4 REMEMBER each need their own approval.
+
+---
+Historical LOOP step 1 checkpoint (#305 merged at `8aedba5`):
+
+# LOOP step 1 — ASK
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "Go loop" (campaign + step 1). Claude Code;
+  FEATURE (read-only). [Campaign brief](LOOP.md). Claude owns THE LOOP; Codex keeps Personal
+  Understanding and memory (#303).
+- **Baseline / branch:** master `98a8300` (#304 ROTATION-004 merged at Gavin's direction);
+  `ccr-0be4f40f-16m0ja` reused.
+- **Built:** Review → Whole Picture → Ask: four questions answered by rules from recorded days
+  (`application/askProjection.ts`), every line opening the days behind it; "not enough recorded
+  yet" names what is missing. No writes, Engine input or AI.
+- **Next:** CI and Gavin's merge. Steps 2–4 (REFLECT, TRY, REMEMBER) are PROTECTED and each need
+  their own approval. Merged branches `claude/delta-004` and `claude/remove-pcb-overlay` still
+  await deletion by Gavin.
+
+---
+Historical ROTATION-004 checkpoint (#304 merged at `98a8300`):
+
+# ROTATION-004 — your whole day on one line
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "go 004". Claude Code; FEATURE.
+  [Brief](ROTATION-004.md). Meals, water and workout starts on every Rotation actogram row.
+
+---
+Historical SLEEP-ENGINE-001 checkpoint (#300 merged at `c3338a0`):
 
 # SLEEP-ENGINE-001 — two short main sleeps suggest the reduced session
 

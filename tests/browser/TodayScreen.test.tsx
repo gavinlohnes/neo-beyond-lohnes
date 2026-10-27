@@ -302,7 +302,8 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     await screen.getByRole("button", { name: "ALL GOOD" }).click();
     // DECLUTTER-001: a finished check-in collapses to one line with UPDATE.
     await expect.element(screen.getByText(/^Checked in .* · all good$/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "ALL GOOD" }).elements()).toHaveLength(0);
+    // The sheet can unmount a render after the collapsed line appears; wait for it rather than racing it.
+    await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).not.toBeInTheDocument();
     expect(screen.getByText(/Nothing is prefilled/i).elements()).toHaveLength(0);
     expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
   });
