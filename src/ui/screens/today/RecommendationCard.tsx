@@ -8,6 +8,7 @@ import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { ConfirmIcon, ResolveIcon } from "../../icons/Icon";
 import { CHECK_IN_FIELDS } from "./checkInFields";
 import { ReflectOnDecline } from "./ReflectOnDecline";
+import { describeRememberedLesson, type RememberedLesson } from "../../../application/remember";
 import {
   DECLINE_LABEL,
   describeRecommendationReason,
@@ -51,6 +52,7 @@ export function RecommendationCard({
   activeShiftDownId,
   priorOutcomeMemory,
   materiallyRepeated = false,
+  rememberedLesson = null,
   questionBelow = false,
   busy,
   onOpenTrain,
@@ -84,6 +86,8 @@ export function RecommendationCard({
    * suppresses issuing the real Recommendation record.
    */
   materiallyRepeated?: boolean;
+  /** LOOP step 4 — REMEMBER: what you concluded the last time this kind of recommendation came up. Informational only. */
+  rememberedLesson?: RememberedLesson | null;
   /**
    * TONIGHT-001: TODAY is showing an unanswered question (the work question or the
    * workout call). The all-clear keeps its meaning (nothing is required) but no longer
@@ -137,6 +141,7 @@ export function RecommendationCard({
       {materiallyRepeated && (
         <p className="meta" style={{ marginTop: 8 }}>Same as before — you already said not now.</p>
       )}
+      {rememberedLesson && !isAllClear && <p className="meta" style={{ marginTop: 8 }} data-remember-lesson>{describeRememberedLesson(rememberedLesson)}</p>}
       {nextAction && !decision && (isAllClear
         // FIELD-AUTHORITY-001: an all-clear earns no red; its acknowledgement is neutral.
         ? <button type="button" className="btn-secondary" disabled={busy} onClick={onRecord}>{describeRecommendationAction(recommendation.kind)}</button>
