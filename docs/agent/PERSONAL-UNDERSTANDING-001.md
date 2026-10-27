@@ -6,6 +6,11 @@
 - **Baseline / branch:** fresh `origin/master` at `e0da229`; `codex/personal-understanding-001`.
 - **PR:** [#302](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/302), draft published early.
 
+Risk interpretation: the conservative path classifier labels this new `docs/agent/*.md` brief
+GOVERNANCE. It records the owner's objective and evidence; it changes no authorization rules,
+doctrine or safeguards. Actual product scope is FEATURE under DEV-FLOW-002's semantic-impact
+rule. No Protected behavior is implemented or waived by this brief.
+
 ## Outcome
 
 In MORE → Review, an optional Personal Understanding workspace connects explicit priorities,
@@ -55,3 +60,18 @@ it does not introduce inferred preferences or claim a complete model of Gavin.
 
 Implement and verify the bounded read-only workspace, open/update one PR, record evidence and
 handoff. Do not start the next personal-learning slice automatically.
+
+## Research carried forward
+
+- [QS Ledger](https://github.com/markwk/qs_ledger), MIT: cross-domain personal analysis as a
+  reference; its Python notebooks are not a PWA dependency and its maintenance is dated.
+- [Simple Statistics](https://github.com/simple-statistics/simple-statistics), ISC: candidate
+  statistical primitives for future experiments; this slice already has the necessary calculations.
+- [Mem0](https://github.com/mem0ai/mem0), Apache-2.0: source/temporal retrieval patterns only;
+  no imported AI infrastructure or managed-service benchmark claims about BEYOND.
+- [Stanford Spezi](https://github.com/StanfordSpezi/Spezi), MIT: modular digital-health reference,
+  not a drop-in JavaScript component. [Loop](https://github.com/iSoron/uhabits), GPL-3.0:
+  offline/fast interaction inspiration only; no source copied, scores or streak mechanics adopted.
+
+Primary READMEs and repository license metadata were inspected on 2026-10-27. These references
+do not constitute a full code/security audit or permission to add future dependencies.
