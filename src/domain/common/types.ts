@@ -236,6 +236,7 @@ export type DomainEventType =
   | "TIME_CAPSULE_OPENED"
   | "WEEKLY_REVIEW_SAVED"
   | "PREPARATION_RECORDED"
+  | "MEMORY_RECORDED"
 
   // REVIEW-001 Phase 1a — not day-scoped; payloads in domain/body/types.ts.
   | "MEASUREMENT_LOGGED"

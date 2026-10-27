@@ -6,28 +6,30 @@ import { ConfirmBanner } from "./ConfirmBanner";
 import { useUndoWindow } from "../hooks/useUndoWindow";
 import { describeError } from "../errorMessage";
 import "./workPreparation.css";
+import { MemoryPanel } from "./MemoryPanel";
 
 export function WorkPreparation({ dayId, beforeWork, active, busy = false }: {
-  dayId: string; beforeWork: boolean; active: boolean; busy?: boolean;
+  dayId: string | null; beforeWork: boolean; active: boolean; busy?: boolean;
 }) {
-  const [state, setState] = useState<PreparationState | null>(null), [error, setError] = useState<string | null>(null);
+  const [read, setRead] = useState<{ dayId: string; state: PreparationState } | null>(null), [error, setError] = useState<string | null>(null);
+  const state = read?.dayId === dayId ? read.state : null;
   const [open, setOpen] = useState(false), [saving, setSaving] = useState(false), [attempt, setAttempt] = useState(0);
   const [receipt, setReceipt] = useUndoWindow<{ item: PreparationItem; id: string; value: PreparationValue }>();
   const writing = useRef(false), epoch = useRef(0);
   useEffect(() => {
     const current = ++epoch.current;
-    setState(null); setError(null); setReceipt(null); setOpen(false);
-    if (active) void getPreparation(dayId).then((next) => { if (epoch.current === current) setState(next); })
+    setRead(null); setError(null); setReceipt(null); setOpen(false);
+    if (active && dayId) void getPreparation(dayId).then((next) => { if (epoch.current === current) setRead({ dayId, state: next }); })
       .catch(() => { if (epoch.current === current) setError("Preparation could not be read. Your records are unchanged."); });
     return () => { ++epoch.current; };
   }, [dayId, active, attempt]);
   async function save(item: PreparationItem, value: PreparationValue, previousId = state?.[item].id ?? null, undo = false) {
-    if (!state || writing.current || busy || !active) return;
+    if (!state || !dayId || writing.current || busy || !active) return;
     writing.current = true; setSaving(true); setError(null); const current = epoch.current;
     try {
       const result = await recordPreparation({ dayId, item, value, expectedPreviousId: previousId });
       if (current !== epoch.current) return;
-      setState(result.state);
+      setRead({ dayId, state: result.state });
       if (result.changed && result.id && !undo) setReceipt({ item, id: result.id, value: result.previousValue });
       else setReceipt(null);
     } catch (failure) { if (current === epoch.current) setError(describeError(failure, "Preparation didn't save. Try again.")); }
@@ -38,7 +40,7 @@ export function WorkPreparation({ dayId, beforeWork, active, busy = false }: {
   const confirmation = receipt && <ConfirmBanner message="Preparation updated." actionLabel="UNDO" disabled={disabled}
     onAction={() => void save(receipt.item, receipt.value, receipt.id, true)} />;
   const failure = error && <div role="alert"><p className="meta">{error}</p><button type="button" className="btn-secondary" disabled={saving} onClick={() => setAttempt((n) => n + 1)}>RELOAD PREPARATION</button></div>;
-  return <div className="work-preparation" aria-label="Work preparation">
+  return <div hidden={!dayId} className="work-preparation" aria-label="Work preparation">
     {beforeWork ? <>
       <h2 className="tool-label">READY FOR TONIGHT</h2>
       {!state && !error && <p role="status" className="meta">Reading preparation…</p>}
@@ -50,9 +52,10 @@ export function WorkPreparation({ dayId, beforeWork, active, busy = false }: {
       <button type="button" className="btn-secondary" disabled={saving || busy} onClick={() => setOpen(true)}>{covered ? "CHANGE PREPARATION" : "PREPARATION OPTIONS"}</button>
       {!open && <>{confirmation}{failure}</>}
     </> : <button type="button" className="btn-secondary preparation-entry" disabled={saving || busy} onClick={() => setOpen(true)}>PREPARE FOR WORK</button>}
-    <LogSheet open={active && open} title="PREPARATION" onClose={() => setOpen(false)} canClose={() => !writing.current}>
+    <LogSheet open={active && Boolean(dayId) && open} title="PREPARATION" onClose={() => setOpen(false)} canClose={() => !writing.current}>
       <p className="meta">For this BEYOND day. Packing food doesn't log it as eaten. Filling your bottle doesn't log water drunk.</p>
       <p className="meta">Homemade, frozen and other practical arrangements all count. Nothing carries over as an unfinished task.</p>
+      <MemoryPanel scope="PREP" contextual active={active && Boolean(dayId) && open} blocked={saving || busy} />
       {!state && !error && <p role="status">Reading preparation…</p>}
       {state && (["FOOD", "BOTTLE"] as const).map((item) => <section key={item} className="preparation-options" aria-label={item === "FOOD" ? "Food and snacks preparation" : "Bottle preparation"}>
         <h3>{item === "FOOD" ? "Food and snacks" : "Bottle"}</h3>

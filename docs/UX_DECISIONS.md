@@ -1980,6 +1980,16 @@ pressure or competing Engine advice. Facts persist locally for the current lived
 change/undo and inspectable history; new days start unconfirmed. Spending and automated
 recommendations remain outside PREP-001. Implementation/review bounds: `agent/PREP-001.md`.
 
+## Confirmed personal memory — MEMORY-001 (2026-10-27)
+
+Gavin authorizes operator-authored prep-food, bottle, other preparation and recovery facts with
+source/creation/last-confirmed timestamps and active/irrelevant lifecycle. Additive append-only
+events reuse the existing store and backup path; corrections, re-confirmation and explicit restore
+remain inspectable. Active facts surface only in the matching PREP/recovery context, in the
+operator's own words, with an inspect/fix route. No inference, confidence/score, AI/cloud,
+notifications, auto logging, obligations or Engine/recommendation influence. Other domains wait
+for later scope. Bounds and event/command acceptance: `agent/MEMORY-001.md`.
+
 ## Rotation intelligence — ROTATION-002 (2026-10-27)
 
 Owner approved ("Go A + B") sleep timing per lived day and run-position patterns in Whole

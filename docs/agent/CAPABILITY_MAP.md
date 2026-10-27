@@ -86,6 +86,15 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 
 ## INTELLIGENCE SPINE / DELTA
 
+- **Confirmed memory (MEMORY-001, #303; consult live PR status):** `application/memory.ts`
+  projects operator-authored prep-food/bottle/other/recovery facts from append-only
+  MEMORY_RECORDED events, with explicit confirmation, irrelevant/restore lifecycle, causal/stale
+  guards and complete history. `components/MemoryPanel.tsx` is the shared MORE/PREP/recovery
+  editor and contextual reader. No schema/new store/dependency; native backup retains the events.
+  Facts are global across lived days; write provenance is guarded to the actual active day.
+  No inference, general profile store, automatic plan change or Engine/advisory producer. Reuse
+  this lifecycle for later approved domains rather than inventing another preference database.
+
 - **Personal understanding (PERSONAL-UNDERSTANDING-001, #302):** optional workspace inside
   MORE → Review; `application/personalUnderstandingQueries.ts` composes canonical active Missions,
   explicitly selected optional targets, the latest completed week's saved focus, personal baselines

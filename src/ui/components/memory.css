@@ -1,0 +1,14 @@
+.memory-panel { margin-block: 16px; min-width: 0; overflow-wrap: anywhere; }
+.memory-panel p { white-space: pre-wrap; }
+.memory-panel summary { min-height: 44px; padding-block: 10px; cursor: pointer; }
+.memory-fact { border-block-start: 1px solid var(--border-subtle); padding-block: 12px; }
+.memory-statement { margin: 0 0 6px; }
+.memory-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 10px; }
+.memory-panel .btn-secondary { white-space: normal; min-height: 44px; }
+.memory-actions > button { flex: 1 1 130px; }
+.memory-actions [aria-pressed="true"] { border-color: currentColor; font-weight: 700; }
+.memory-editor { border-block: 1px solid var(--border-subtle); padding-block: 16px; }
+.memory-editor label { display: block; margin-top: 12px; }
+.memory-editor textarea { min-height: 100px; }
+.memory-editor select, .memory-editor textarea { max-width: 100%; box-sizing: border-box; }
+.memory-history { border-top: 1px solid var(--border-subtle); padding-block: 8px; }
