@@ -784,7 +784,7 @@ export function MoreScreen({
           diagnostics are plain technical readouts, so they expand inline
           only. TODAY/TRAIN's WHY disclosures keep the DEPTH-001 reveal. */}
       <div id="command-diagnostics">
-      <WhyDisclosure summary="Diagnostic detail" reveal={false}>
+      <WhyDisclosure summary="Diagnostic detail">
         <div style={{ marginTop: 8 }}>
           <div className="instrument-cluster">
             <div>

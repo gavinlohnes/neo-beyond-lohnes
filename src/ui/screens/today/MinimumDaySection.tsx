@@ -159,7 +159,7 @@ export function MinimumDayCard({
             TURN ON
           </button>
         </div>
-        <WhyDisclosure summary="WHY" reveal={false} style={{ marginTop: 8 }}>
+        <WhyDisclosure summary="WHY" style={{ marginTop: 8 }}>
           <p className="meta" style={{ margin: "6px 0 0" }}>{MINIMUM_DAY_PROMINENT_BODY}</p>
         </WhyDisclosure>
       </SignalRow>
