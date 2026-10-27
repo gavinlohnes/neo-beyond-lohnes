@@ -82,6 +82,7 @@ import { WorkContextCard } from "./WorkContextCard";
 import { RecommendationCard, describeAllClearHeadline } from "./RecommendationCard";
 import { getMeasuredSnapshot, type MeasuredSnapshot } from "../../../application/measuredQueries";
 import { MeasuredSheet, SyncGarminLink, describeGarminAsOf, measuredClock, type MeasuredMetric } from "./MeasuredSheet";
+import { unusualAria, unusualTileLabel } from "./unusualCopy";
 import { ConsoleControls } from "./ConsoleControls";
 import { SmallSteps } from "./SmallSteps";
 import "./smallSteps.css";
@@ -1952,18 +1953,18 @@ export function TodayScreen({
             <span className="cc-flab">{waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>, `Water ${minimumDayHydrateOz} oz`)}
           {tile("weight", "WEIGHT", <b>{latestWeightLbs === undefined ? "—" : latestWeightLbs.toFixed(1)}</b>,
             <span className="cc-flab">{latestWeightLbs === undefined ? "NOT LOGGED" : "LATEST"}</span>, latestWeightLbs === undefined ? "Weight not logged" : `Weight ${latestWeightLbs} lb`)}
-          {garminTiles ? <button type="button" disabled={busy} aria-label={`${visibleSleep ? `Sleep ${visibleSleep}, ${sleepSource.toLowerCase()}` : "Sleep not logged or measured"}${measured!.usual.sleep.value !== null ? `, usual ${measuredClock(measured!.usual.sleep.value)}` : ""}, open sleep`} onClick={openMeasured("sleep")}>
-            <span className="cc-flab">SLEEP</span><span className="cc-num"><b>{visibleSleep ?? "—"}</b></span><span className="cc-flab">{sleepSource}</span>
+          {garminTiles ? <button type="button" disabled={busy} aria-label={`${visibleSleep ? `Sleep ${visibleSleep}, ${sleepSource.toLowerCase()}` : "Sleep not logged or measured"}${measured!.usual.sleep.value !== null ? `, usual ${measuredClock(measured!.usual.sleep.value)}` : ""}${measured!.unusual.sleep ? unusualAria(measured!.unusual.sleep) : ""}, open sleep`} onClick={openMeasured("sleep")}>
+            <span className="cc-flab">SLEEP</span><span className="cc-num"><b>{visibleSleep ?? "—"}</b></span><span className={`cc-flab${measured!.unusual.sleep ? " cc-flab--unusual" : ""}`}>{measured!.unusual.sleep ? unusualTileLabel(measured!.unusual.sleep) : sleepSource}</span>
           </button> : tile("sleep", "SLEEP", <b>{sleep ?? "—"}</b>, <span className="cc-flab">{sleep ? "LAST MAIN" : "NOT LOGGED"}</span>,
             sleep ? `Main sleep ${sleep}` : "Main sleep not logged")}
           {garminTiles && <>
-            <button type="button" className={calorieTile ? "cc-fuel-wide" : undefined} disabled={busy} aria-label={`Steps ${stepsToday === null ? "not measured today" : stepsToday.toLocaleString("en-US")}${measured!.usual.steps.value !== null ? `, usual ${measured!.usual.steps.value.toLocaleString("en-US")}` : ""}, open steps`} onClick={openMeasured("steps")}>
+            <button type="button" className={calorieTile ? "cc-fuel-wide" : undefined} disabled={busy} aria-label={`Steps ${stepsToday === null ? "not measured today" : stepsToday.toLocaleString("en-US")}${measured!.usual.steps.value !== null ? `, usual ${measured!.usual.steps.value.toLocaleString("en-US")}` : ""}${measured!.unusual.steps ? unusualAria(measured!.unusual.steps) : ""}, open steps`} onClick={openMeasured("steps")}>
               <span className="cc-flab">STEPS</span><span className="cc-num"><b>{stepsToday === null ? "—" : stepsToday.toLocaleString("en-US")}</b></span>
-              <span className="cc-flab">{measured!.usual.steps.value !== null ? `USUAL ${measured!.usual.steps.value.toLocaleString("en-US")}` : stepsToday === null ? "NOT MEASURED" : "GARMIN"}</span>
+              <span className={`cc-flab${measured!.unusual.steps ? " cc-flab--unusual" : ""}`}>{measured!.unusual.steps ? unusualTileLabel(measured!.unusual.steps) : measured!.usual.steps.value !== null ? `USUAL ${measured!.usual.steps.value.toLocaleString("en-US")}` : stepsToday === null ? "NOT MEASURED" : "GARMIN"}</span>
             </button>
-            <button type="button" disabled={busy} aria-label={`Resting heart rate ${restingToday === null ? "not measured" : `${restingToday} bpm`}${measured!.usual.resting.value !== null ? `, usual ${measured!.usual.resting.value}` : ""}, open resting heart rate`} onClick={openMeasured("resting")}>
+            <button type="button" disabled={busy} aria-label={`Resting heart rate ${restingToday === null ? "not measured" : `${restingToday} bpm`}${measured!.usual.resting.value !== null ? `, usual ${measured!.usual.resting.value}` : ""}${measured!.unusual.resting ? unusualAria(measured!.unusual.resting) : ""}, open resting heart rate`} onClick={openMeasured("resting")}>
               <span className="cc-flab">RESTING HR</span><span className="cc-num"><b>{restingToday ?? "—"}</b>{restingToday !== null && <small>bpm</small>}</span>
-              <span className="cc-flab">{measured!.usual.resting.value !== null ? `USUAL ${measured!.usual.resting.value}` : restingToday === null ? "NOT MEASURED" : "GARMIN"}</span>
+              <span className={`cc-flab${measured!.unusual.resting ? " cc-flab--unusual" : ""}`}>{measured!.unusual.resting ? unusualTileLabel(measured!.unusual.resting) : measured!.usual.resting.value !== null ? `USUAL ${measured!.usual.resting.value}` : restingToday === null ? "NOT MEASURED" : "GARMIN"}</span>
             </button>
           </>}
         </div>

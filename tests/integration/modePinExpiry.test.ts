@@ -67,6 +67,18 @@ describe("mode pin expiry — presentation only", () => {
     expect(getModePin(day.id, day.startedAt, at(13, 16, 30))).toBeNull();
   });
 
+  it("judges the pin by the clock when its reads finish, so a read begun at a later time never expires it", async () => {
+    // Full-suite flake (#296 deploy): a read left over from a test that ended at 16:30 resolved against the
+    // next test's day and expired its fresh pin. The clock is now read after the reads.
+    vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(at(12, 22));
+    const day = await startDay(); setModePin(day.id, "OFF");
+    vi.setSystemTime(at(13, 16, 30));
+    const pending = readBootPhase();
+    vi.setSystemTime(at(13, 16, 29));
+    expect(await pending).toBe("OFF");
+    expect(getModePin(day.id)).toBe("OFF");
+  });
+
   for (const [month, day, hours] of [[2, 7, 23], [9, 31, 25]]) it(`expires at local 16:30 over a ${hours}-hour DST day`, () => {
     const previousTZ = process.env.TZ; process.env.TZ = "America/New_York";
     vi.useFakeTimers({ toFake: ["Date"] });

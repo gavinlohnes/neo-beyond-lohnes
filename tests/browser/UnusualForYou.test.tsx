@@ -16,7 +16,7 @@ const now = new Date(2026, 9, 21, 22, 10).getTime(); // day 29 of 30 is in progr
 async function seed(high: boolean) {
   const { days, activity, sleep } = syntheticGarminMonth(firstDay, 30, now);
   // The three finished days before today: resting heart rate 70, against a usual 58–62.
-  if (high) for (const reading of activity.restingHeartRate) if (["rhr-25", "rhr-26", "rhr-27"].includes(reading.id)) reading.bpm = 70;
+  if (high) for (const reading of activity.restingHeartRate) if (["rhr-26", "rhr-27", "rhr-28"].includes(reading.id)) reading.bpm = 70;
   await db.beyondDays.bulkAdd(days);
   await importActivitySnapshot(activity);
   await importSleepSnapshot(sleep);
@@ -37,7 +37,7 @@ for (const width of [320, 390]) it(`marks three days above your usual range on t
   await tile.click();
   const sheet = screen.getByRole("dialog", { name: "RESTING HEART RATE", exact: true });
   await expect.element(sheet.getByText("Resting heart rate has been above your usual range for 3 days: 70 bpm, 70 bpm, 70 bpm.", { exact: true })).toBeVisible();
-  await expect.element(sheet.getByText(/^Your usual range: 57 bpm–63 bpm — the middle 80% of your measured days before these\. A pattern in your own records, not a diagnosis or a cause\.$/)).toBeVisible();
+  await expect.element(sheet.getByText(/^Your usual range: 57–63 bpm — the middle 80% of your measured days before these\. A pattern in your own records, not a diagnosis or a cause\.$/)).toBeVisible();
   expect(await db.events.toArray()).toEqual(before);
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   expect((await axe.run(document.body)).violations).toEqual([]);

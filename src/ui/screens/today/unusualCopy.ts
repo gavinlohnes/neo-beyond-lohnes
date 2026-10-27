@@ -9,6 +9,8 @@ function value(metric: UnusualMetric, n: number): string {
   return metric === "resting" ? `${n} bpm` : metric === "sleep" ? hoursMinutes(n) : Math.round(n).toLocaleString("en-US");
 }
 
+const range = (metric: UnusualMetric, low: number, high: number) => metric === "resting" ? `${low}–${high} bpm` : `${value(metric, low)}–${value(metric, high)}`;
+
 /** The tile's small label: "↑ 3 DAYS". */
 export function unusualTileLabel(reading: UnusualReading): string {
   return `${reading.direction === "ABOVE" ? "↑" : "↓"} ${reading.days.length} DAYS`;
@@ -25,8 +27,8 @@ export function describeUnusual(metric: UnusualMetric, reading: UnusualReading):
   const latest = reading.days.at(-1)!;
   const kinds = new Set(reading.days.map((day) => day.kind));
   const ranges = metric === "steps" && kinds.size > 1
-    ? [...kinds].map((kind) => { const day = [...reading.days].reverse().find((d) => d.kind === kind)!; return `${kind === "WORK" ? "work days" : "days off"} ${value(metric, day.low)}–${value(metric, day.high)}`; }).join("; ")
-    : `${metric === "steps" ? (latest.kind === "OFF" ? "days off " : "work days ") : ""}${value(metric, latest.low)}–${value(metric, latest.high)}`;
+    ? [...kinds].map((kind) => { const day = [...reading.days].reverse().find((d) => d.kind === kind)!; return `${kind === "WORK" ? "work days" : "days off"} ${range(metric, day.low, day.high)}`; }).join("; ")
+    : `${metric === "steps" ? (latest.kind === "OFF" ? "days off " : "work days ") : ""}${range(metric, latest.low, latest.high)}`;
   return {
     headline: `${NAMES[metric]} has been ${side} your usual range for ${reading.days.length} days: ${reading.days.map((day) => value(metric, day.value)).join(", ")}.`,
     basis: `Your usual range: ${ranges} — the middle 80% of your measured days before these${metric === "steps" ? ", by kind of day" : ""}. A pattern in your own records, not a diagnosis or a cause.`,
