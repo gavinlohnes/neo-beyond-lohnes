@@ -206,8 +206,8 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       remove={() => {
         if (busyRef.current || !receipt.question) return;
         const question = receipt.question; setBusy(true); setError(null);
+        const acknowledge = captureFeedback();
         void question.remove().then((changed) => {
-    const acknowledge = captureFeedback();
           if (changed) acknowledge("HEAVY");
           if (question.removeLabel === "REMOVE THIS ONE") dismissReceipt(receipt.id);
           else setReceipts((old) => old.map((entry) => entry.id === receipt.id ? { ...entry, question: undefined, message: question.removedMessage } : entry));
@@ -215,8 +215,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         }).catch((cause) => setError(`Could not remove the entry. ${describeError(cause, "Try again.")}`)).finally(() => setBusy(false));
       }}
       dismiss={() => dismissReceipt(receipt.id)} history={() => { dismissReceipt(receipt.id); if (receipt.notes) onNotes(); else onHistory(receipt.history ?? "protein"); }}
-      undo={() => { if (busyRef.current) return; setBusy(true); setError(null); void receipt.undo().then((changed) => {
-    const acknowledge = captureFeedback(); if (changed) acknowledge("HEAVY"); dismissReceipt(receipt.id); onSaved(); }).catch((cause) => setError(describeError(cause, "Could not undo. Try again."))).finally(() => setBusy(false)); }} />)}
+      undo={() => { const acknowledge = captureFeedback(); if (busyRef.current) return; setBusy(true); setError(null); void receipt.undo().then((changed) => { if (changed) acknowledge("HEAVY"); dismissReceipt(receipt.id); onSaved(); }).catch((cause) => setError(describeError(cause, "Could not undo. Try again."))).finally(() => setBusy(false)); }} />)}
       {error && !target && <p role="alert">{error}</p>}
     </div>}
   </>;

@@ -1306,6 +1306,7 @@ export function TodayScreen({
   }
 
   async function confirmCommitmentSatisfaction() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || commitmentSatisfactionPendingRef.current || !commitmentConfirmation) return;
     const target = commitmentConfirmation;
     commitmentSatisfactionPendingRef.current = true;
@@ -1313,7 +1314,7 @@ export function TodayScreen({
     setBusy(true);
     setCommitmentFeedback(null);
     try {
-      await satisfyObligation(target.id);
+      if (await satisfyObligation(target.id)) acknowledge("LIGHT");
       setCommitmentConfirmation(null);
       setCommitmentsOpen(false);
       await refresh();
@@ -2394,7 +2395,7 @@ export function TodayScreen({
             ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
           }}
         />}
-      {day && <WorkPreparation key={day.id} dayId={day.id} beforeWork={day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />}</section>
+      <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK")} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
   </>;
   const nextSection = <>
       <section className="console-guidance" aria-label="Next action">

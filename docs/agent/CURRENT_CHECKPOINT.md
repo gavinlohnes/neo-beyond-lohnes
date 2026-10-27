@@ -36,6 +36,46 @@ Historical ROTATION-004 checkpoint (#304 merged at `98a8300`):
 ---
 Historical SLEEP-ENGINE-001 checkpoint (#300 merged at `c3338a0`):
 
+# MEMORY-001 — confirmed prep and recovery memory
+
+- **Authority / Builder / lane:** Gavin's explicit MEMORY-001 direction, 2026-10-27; Codex,
+  PROTECTED additive event/command contract. [Brief](MEMORY-001.md). No new schema or Engine rule.
+- **Baseline / branch / PR:** fresh master `ab3508887af7650d6e4180d815e048fd2b48b8f2` (#302
+  merged/deployed); `codex/memory-001`; [#303](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/303), WIP pushed early.
+- **Built:** operator-only food/bottle/other-prep/recovery facts, causal append-only revisions,
+  confirmation/status/history, atomic stale/day/duplicate guards; MORE manager, PREP context and
+  recovery-only TRAIN context. Existing backup/store; no consumption/tasks/advice side effects.
+- **REUSE:** PREP/atomic/events/day/history/backup, native disclosures and existing routes.
+  **OWN:** fact lifecycle and context mapping. **BUILD FROM SCRATCH:** only missing fact/editor
+  semantics, which daily preparation confirmations and Journal records cannot represent honestly.
+- **Evidence so far:** integration 7/7; focused browser/Train/PREP/Nav 104/104 before final day-read
+  ownership refinement. Four-size axe/reduced-motion/bounded controls, inspect/edit/irrelevant,
+  source/Engine isolation and real native backup tests included. TypeScript/architecture pass.
+- **Independent WIP review:** BLOCK on `0401fa4`: day-keyed PREP remount lost a global-memory
+  draft. Corrected by retaining the hidden component through no-day/new-day transitions; day-owned
+  preparation reads reset separately and cannot revive yesterday's confirmation. Regression covers
+  ended/null/new-day draft survival and explicit day adoption; final exact-head review follows.
+- **Production / follow-up:** [Built-PWA acceptance](../screenshots/memory-001/README.md) PASS at
+  360/390/landscape/desktop, offline reload, original/corrected/irrelevant history and recovery-only
+  context, actual native backup preview/cancel. Exactly four memory revisions; all other domain
+  records unchanged. Current Memory/Personal Understanding browser 18/18, node catalog/history/
+  memory 34/34, new catalog route/focus/back/no-write case PASS; TypeScript/build pass.
+- **Full-gate history:** initial local 3,031 pass / three fail / one existing skip. Two missing
+  catalog expectations corrected (heading and existing meal-memory alias), original unchanged
+  target-return timeout passes alone/in follow-up. No assertions/timeouts/gates weakened.
+- **Review / CI:** independent corrective PASS at `b9ea7ae`, 19/19 node probes; final exact-head
+  renewal required after evidence. Source `8da2c0e` required CI [PASS](https://github.com/gavinlohnes/neo-beyond-lohnes/actions/runs/40467876738).
+  Final full verification, exact-head review and current-head CI are recorded in #303 before
+  readiness. Existing bundle warning remains; no inference, Engine or schema change.
+- **Next:** final full gate/review/CI, then Gavin's separate merge decision. No merge/deployment
+  or next slice authorized here. Other memory domains remain parked.
+
+- **Mainline continuity:** merged fresh master `c3338a0` (#300 SLEEP-ENGINE-001) after it landed during final verification. Only this checkpoint conflicted; both histories are retained. MEMORY adds no Engine change relative to that master. The previous final local run was stopped for integration; combined-head verification/review/CI follow.
+
+---
+Historical SLEEP-ENGINE-001 (#300 merged at `c3338a0`):
+
+
 # SLEEP-ENGINE-001 — two short main sleeps suggest the reduced session
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "approve option 1". Claude Code; PROTECTED.
@@ -45,7 +85,7 @@ Historical SLEEP-ENGINE-001 checkpoint (#300 merged at `c3338a0`):
 - **Next:** live with it on shift; check that the reduced suggestion appears only after two short nights.
 
 ---
-Historical PERSONAL-UNDERSTANDING-001 checkpoint (Codex, #302 merged at `ab35088`):
+Historical PERSONAL-UNDERSTANDING-001 (#302 merged/deployed as `ab35088`):
 
 # PERSONAL-UNDERSTANDING-001 — connected knowledge
 
