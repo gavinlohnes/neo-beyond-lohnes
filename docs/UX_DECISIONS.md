@@ -1976,3 +1976,13 @@ arrangements and not-needed choices are valid. No scores, overdue/catch-up tasks
 pressure or competing Engine advice. Facts persist locally for the current lived day, with
 change/undo and inspectable history; new days start unconfirmed. Spending and automated
 recommendations remain outside PREP-001. Implementation/review bounds: `agent/PREP-001.md`.
+
+## Rotation intelligence — ROTATION-002 (2026-10-27)
+
+Owner approved ("Go A + B") sleep timing per lived day and run-position patterns in Whole
+Picture's Rotation tab, plus two readings: multi-day "unusual for you" against the operator's own
+range on TODAY's existing Garmin tiles, and the next predicted window of days off. This extends the
+2026-10-03 read-only findings exception to Review's Rotation tab: deterministic counts with an
+abstain floor and sample sizes, never Engine input, never a cause. Readings stay silent when
+nothing is unusual. Spending/finances are tracked outside BEYOND (owner, 2026-10-27); do not
+propose them as a BEYOND campaign stage. Bounds: `agent/ROTATION-002.md`.
