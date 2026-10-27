@@ -436,3 +436,11 @@ describe("ULTIMATE-FOUNDATION-002 — Training Record copy", () => {
     expect(TRAINING_HISTORY_EMPTY.toLowerCase()).not.toMatch(/error|missing|fail|nothing/);
   });
 });
+
+describe("SLEEP-ENGINE-001 — why a reduced session under GREEN", () => {
+  it("names sleep, not YELLOW, when two short main sleeps made the suggestion", () => {
+    expect(describeVariantSuggestion({ variant: "REDUCED", reason: "x", noCheckIn: false, shortSleep: true }))
+      .toBe("Capacity is GREEN, but your last two main sleeps were below your usual range, so a REDUCED session is suggested — the same exercises, fewer sets. STANDARD is still yours to choose.");
+    expect(describeVariantSuggestion({ variant: "REDUCED", reason: "x", noCheckIn: false })).toMatch(/^Capacity is YELLOW/);
+  });
+});

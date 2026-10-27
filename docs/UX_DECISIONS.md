@@ -1999,3 +1999,13 @@ range on TODAY's existing Garmin tiles, and the next predicted window of days of
 abstain floor and sample sizes, never Engine input, never a cause. Readings stay silent when
 nothing is unusual. Spending/finances are tracked outside BEYOND (owner, 2026-10-27); do not
 propose them as a BEYOND campaign stage. Bounds: `agent/ROTATION-002.md`.
+
+## Sleep in the Engine — SLEEP-ENGINE-001 (2026-10-27)
+
+Owner approved ("approve option 1") the first sleep input to the Engine: under a GREEN check-in
+with planned work, two most recent main sleeps both below the operator's own usual range suggest
+the reduced session. Same recommendation kind, priority and command; the locked capacity rule and
+rule order are unchanged; STANDARD stays the operator's choice. "Why this?" names the nights and
+the range, and its closing line now says sleep can only change the session size. This supersedes
+the DELTA-002 slice 1 statement that the Engine never considers sleep. Bounds:
+`agent/SLEEP-ENGINE-001.md`.

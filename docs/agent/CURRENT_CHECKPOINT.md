@@ -32,6 +32,19 @@
 - **Next:** final full gate/review/CI, then Gavin's separate merge decision. No merge/deployment
   or next slice authorized here. Other memory domains remain parked.
 
+- **Mainline continuity:** merged fresh master `c3338a0` (#300 SLEEP-ENGINE-001) after it landed during final verification. Only this checkpoint conflicted; both histories are retained. MEMORY adds no Engine change relative to that master. The previous final local run was stopped for integration; combined-head verification/review/CI follow.
+
+---
+Historical SLEEP-ENGINE-001 (#300 merged at `c3338a0`):
+
+# SLEEP-ENGINE-001 — two short main sleeps suggest the reduced session
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "approve option 1". Claude Code; PROTECTED.
+  [Brief](SLEEP-ENGINE-001.md). Independent review waived by Gavin ("Skip the reviews for now");
+  none performed. Merged at Gavin's direction ("Merge") as #300.
+- **Evidence:** full verify 3,028 passed / 1 existing skip; CI green. Overlay removal merged as #301.
+- **Next:** live with it on shift; check that the reduced suggestion appears only after two short nights.
+
 ---
 Historical PERSONAL-UNDERSTANDING-001 (#302 merged/deployed as `ab35088`):
 

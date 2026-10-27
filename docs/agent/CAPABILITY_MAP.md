@@ -276,3 +276,6 @@ fresh general review.
 - Test note: `expect.poll`/`expect.element` advance faked timers by their interval on each retry.
   A test that sets the clock just before a boundary must wait on real time (see
   `tests/browser/ModePinExpiry.test.tsx`, `beforeTheEdge`).
+- SLEEP-ENGINE-001: `engine/sleepStreak.ts` (two short main sleeps vs personal baselines) is the
+  Engine's only sleep input; `evaluate`'s trace carries it and `traceShortSleepStreak` reads it
+  back for TODAY/TRAIN. Extend this path, not a parallel one, for any future sleep-aware advice.

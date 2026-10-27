@@ -163,7 +163,8 @@ describe("DELTA-002 slice 1 — explainRecommendation (plain-words why, from the
     const recommendation = evaluate({ beyondDayId: "d", checkIn, hasPlannedWork: false, hasUnresolvedPostShift: false, hasEligibleObligationDueOrOverdue: false, ...flags } as EvaluateInput);
     return { kind: recommendation.kind, lines: explainRecommendation(recommendation, checkIn) };
   };
-  const limits = "BEYOND decides from your check-in, plan, shift and commitments. It doesn't use sleep, weight or training history.";
+  // SLEEP-ENGINE-001: Engine 0.2.0 traces carry the sleep input, so the closing line says what sleep can and cannot do.
+  const limits = "BEYOND decides from your check-in, plan, shift and commitments. Two short main sleeps can only make a planned session the reduced one; sleep never changes the advice itself. It doesn't use weight or training history.";
 
   it("names the check-in answers that put capacity at RED, and that it outranks shifting down", () => {
     const { kind, lines } = run(check({ energy: 1, stress: 5 }), { hasUnresolvedPostShift: true });
@@ -187,5 +188,28 @@ describe("DELTA-002 slice 1 — explainRecommendation (plain-words why, from the
 
   it("always ends by saying what the Engine does not consider", () => {
     for (const c of [check({ mood: 1 }), check({ soreness: 4 }), check({}), null]) expect(run(c).lines.at(-1)).toBe(limits);
+  });
+});
+
+describe("SLEEP-ENGINE-001 — explaining the reduced session", () => {
+  const checkIn = { id: "c", beyondDayId: "d", recordedAt: "2026-10-27T02:00:00.000Z", energy: 4, stress: 2, mood: 4, soreness: 0, alcoholUrge: 0 } as StateCheckIn;
+  const nights = JSON.stringify([{ minutes: 310, kind: "WORK", low: 380, high: 460 }, { minutes: 290, kind: "WORK", low: 380, high: 460 }]);
+  it("names both nights, oldest first, and the usual range from the trace", () => {
+    const recommendation = evaluate({ beyondDayId: "d", checkIn, hasPlannedWork: true, hasUnresolvedPostShift: false, hasEligibleObligationDueOrOverdue: false, shortSleep: { streak: true, evidence: nights } });
+    expect(explainRecommendation(recommendation, checkIn)[1]).toBe(
+      "Your last two main sleeps (4:50, 5:10) were below your usual range (6:20–7:40 on work days), so the reduced session is suggested. You can still choose the standard one.");
+  });
+  it("keeps the old closing line for recommendations issued before sleep counted", () => {
+    const recommendation = evaluate({ beyondDayId: "d", checkIn, hasPlannedWork: true, hasUnresolvedPostShift: false, hasEligibleObligationDueOrOverdue: false });
+    recommendation.trace.inputs = recommendation.trace.inputs.filter((i) => !i.key.startsWith("shortSleep"));
+    expect(explainRecommendation(recommendation, checkIn).at(-1)).toBe("BEYOND decides from your check-in, plan, shift and commitments. It doesn't use sleep, weight or training history.");
+  });
+});
+
+describe("SLEEP-ENGINE-001 — the reasoning panel", () => {
+  it("labels the sleep inputs and reads the judged nights in plain words", () => {
+    expect(describeTraceLabel("shortSleepStreak")).toBe("Two short main sleeps");
+    expect(describeTraceValue(JSON.stringify([{ livedDayStart: "x", minutes: 290, kind: "WORK", low: 380, high: 460 }])))
+      .toBe("4:50 (usual 6:20–7:40, work day)");
   });
 });

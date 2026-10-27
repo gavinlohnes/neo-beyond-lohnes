@@ -27,7 +27,8 @@ import { suggestSessionVariant } from "../../../engine/trainSuggestion";
 import type { ProgressionSuggestion } from "../../../engine/progression";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
-import { getActiveDay, getLatestCheckIn, getPlannedWorkDeclaration } from "../../../application/queries";
+import { getActiveDay, getLatestCheckIn, getLatestRecommendation, getPlannedWorkDeclaration } from "../../../application/queries";
+import { traceShortSleepStreak } from "../../../engine/evaluate";
 import { ensureActiveDay, performDueDayRollover, setPlannedWork, submitCheckIn } from "../../../application/commands";
 import { quickCheckInValues } from "../today/TodayScreen";
 import { PlannedWorkCard } from "../today/PlannedWorkCard";
@@ -171,6 +172,7 @@ export function TrainScreen({
   onDestinationConsumed?: () => void;
 } = {}) {
   const [capacity, setCapacity] = useState<Capacity | null>(null);
+  const [shortSleep, setShortSleep] = useState(false);
   const [suggestedTemplate, setSuggestedTemplate] = useState<WorkoutTemplateId>("A");
   const [lastAdvancingTemplate, setLastAdvancingTemplate] = useState<WorkoutTemplateId | null>(null);
   const [chosenTemplate, setChosenTemplate] = useState<WorkoutTemplateId>("A");
@@ -357,6 +359,9 @@ export function TrainScreen({
     const checkIn = activeDay ? await getLatestCheckIn(activeDay.id) : undefined;
     const cap = checkIn ? deriveCapacity(checkIn).capacity : null;
     setCapacity(cap);
+    // SLEEP-ENGINE-001: the issued recommendation's own short-sleep fact, so TRAIN and TODAY suggest alike.
+    const sleepShort = activeDay ? traceShortSleepStreak((await getLatestRecommendation(activeDay.id))?.trace) : false;
+    setShortSleep(sleepShort);
     // TODAY-QUICKACTIONS-001: TRAIN is where the operator actually decides
     // to train — offering the same explicit declaration here (not just on
     // TODAY) means a session that starts from TRAIN directly still leaves
@@ -369,7 +374,7 @@ export function TrainScreen({
     setCustomTemplates(loadedCustomTemplates);
     setCustomExerciseNames((await getCustomExercises()).map((e) => e.name));
 
-    const suggestion = suggestSessionVariant(cap);
+    const suggestion = suggestSessionVariant(cap, sleepShort);
     setNoCheckIn(suggestion.noCheckIn);
 
     const nextTemplate = await suggestTemplateForNextWorkout();
@@ -863,7 +868,7 @@ export function TrainScreen({
   const activeExercises = session
     ? exercisesFor(session.templateId as WorkoutTemplateId, session.sessionType as SessionType, customTemplates)
     : [];
-  const variantSuggestion = suggestSessionVariant(capacity);
+  const variantSuggestion = suggestSessionVariant(capacity, shortSleep);
   const suggestedExercises = exercisesFor(
     chosenTemplate,
     chosenVariant === "RECOVERY" ? "STANDARD" : chosenVariant,
