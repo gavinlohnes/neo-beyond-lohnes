@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useId, useState } from "react";
 import type { DecisionJournalEntry } from "../../../domain/journal/types";
 import { DECLINE_REASONS, getReflectionFor, reflectOnDecline, type DeclineReason } from "../../../application/reflect";
@@ -27,9 +28,10 @@ export function ReflectOnDecline({ recommendationId, title, why }: { recommendat
   if (saved) return <p className="meta" data-reflect-saved>Saved to your journal: {saved.decision}. From the next lived day, your journal asks how it went.</p>;
 
   async function save() {
+    const acknowledge = captureCommitFeedback();
     if (!reason || busy) return;
     setBusy(true); setError("");
-    try { setSaved(await reflectOnDecline({ id: recommendationId, title, why }, reason, note)); }
+    try { setSaved(await reflectOnDecline({ id: recommendationId, title, why }, reason, note)); acknowledge("LIGHT"); }
     catch (cause) { setError(describeError(cause, "Could not save to the journal.")); }
     finally { setBusy(false); }
   }

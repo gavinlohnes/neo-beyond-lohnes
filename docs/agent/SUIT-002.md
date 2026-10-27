@@ -46,3 +46,7 @@ Combined base includes unchanged MEMORY-001 at `71bcb079`. Master `8aedba5` cont
 merged LOOP/ROTATION work; those are not new SUIT feature scope. Merge conflicts resolved by
 preserving MEMORY's nullable, day-owned PREP guard plus the successful-write acknowledgement,
 and retaining both checkpoint histories. Integration order: #303, then #307; Gavin approves each.
+
+Mainline advanced during final verification: merged `c28a846` (#306 reflection), then refreshed
+MEMORY `1a653303`, preserving code and checkpoint histories. Newly merged reflection/debrief/
+follow-up save controls use the same post-write light feedback; their behavior is unchanged.
