@@ -78,7 +78,9 @@ ROTATION-002. Builder: Claude Code; FEATURE lane (copy/presentation of existing 
 - **Outcome:** where a reading abstains below its floor, it says what to log and what that unlocks:
   "Log meals on 6 more days and weigh in 2 more times, and BEYOND can estimate what you really burn."
 - **Sites:** Weekly expenditure readout, waiting findings and "still learning your usual"; Garmin
-  usual line in TODAY's tile sheets; Whole Picture's sleep comparison; Rotation patterns and places.
+  usual line in TODAY's tile sheets; Rotation patterns and places. Whole Picture's past-period
+  comparison stays as is: logging now cannot fill a finished period, so a goal would mislead.
+- **Branch:** built on ROTATION-002 (#297), whose Rotation copy it extends.
 - **REUSE:** each reading's existing floor and have/need counts; one shared `ui/unlockGoal.ts`.
   **OWN:** the action wording per reading. **BUILD FROM SCRATCH:** none.
 - **Excluded:** TODAY primary composition or new attention rows, streaks, scores, deadlines,
