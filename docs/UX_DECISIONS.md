@@ -1870,6 +1870,9 @@ see that entry above.
   (`border-radius: 0`) instead of inheriting the 4px `--radius` rounding. `.command-surface`
   already had square corners. So each chamfered surface now has exactly one diagonal cut, and
   its other three corners are square. Ordinary `.card`s without a chamfer keep `--radius`.
+- **Removed 2026-10-27 (direct owner ruling: "Those are left over from an idea I wanted to see. It
+  did not work out and those screens can be removed or hidden").** The DEPTH-001 reveal below no
+  longer exists; WHY/diagnostic disclosures open inline only. Kept as history.
 - **"Exposed Machinery" reveal (locked 2026-09-16, direct owner ruling over four rendered
   mockup passes, DEPTH-001).** A narrow, explicit authorization beyond this section's own
   "ambient motion stays deferred" framing above — obtained through its own independent review
