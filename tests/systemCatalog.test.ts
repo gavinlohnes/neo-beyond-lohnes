@@ -8,7 +8,7 @@ describe("capability discovery (COMMAND search)", () => {
     // TONIGHT-001: FOOD LOOKUP left the meal screen for its own COMMAND entry.
     // MEMORY-001 adds one settings destination for confirmed prep/recovery facts.
     expect(SYSTEM_CAPABILITIES).toHaveLength(50);
-    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(49);
+    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(50);
     for (const entry of SYSTEM_CAPABILITIES) expect(CAPABILITY_GROUPS).toContain(entry.group);
     expect(findCapabilities("  ")).toEqual(SYSTEM_CAPABILITIES);
   });
@@ -22,6 +22,7 @@ describe("capability discovery (COMMAND search)", () => {
     ["  HYDRATION ", ["WATER"]],
     ["food", ["MEAL", "FOOD LOOKUP", "HIDDEN FEATURES"]],
     ["decision journal", ["DECISION JOURNAL"]],
+    ["memory", ["WHAT BEYOND SHOULD REMEMBER"]],
     ["resume", ["WORKOUT"]],
     ["restore", ["BACKUP & RECOVERY"]],
     ["weekly review", ["REVIEW"]],
