@@ -34,7 +34,7 @@ function cssRules(): CSSStyleRule[] {
 }
 
 describe("FEEL-001", () => {
-  it("a completed hold-to-confirm taps once; a quick tap doesn't", async () => {
+  it("a hold threshold arms once; a quick tap doesn't", async () => {
     const vibrate = vi.spyOn(navigator, "vibrate").mockReturnValue(true);
     const onConfirm = vi.fn();
     const screen = await render(<HoldButton onConfirm={onConfirm}>FINISH</HoldButton>);
@@ -51,6 +51,9 @@ describe("FEEL-001", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await expect.element(screen.getByRole("button", { name: "LOG" }).first()).toBeVisible();
+    expect(vibrate).toHaveBeenCalledExactlyOnceWith(20);
+    vibrate.mockClear();
     await screen.getByRole("button", { name: "LOG" }).first().click();
     expect(vibrate).not.toHaveBeenCalled();
     await userEvent.type(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" }), "100");

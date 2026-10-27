@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
-import { haptic } from "../feel/haptics";
+import { captureCommitFeedback } from "../feel/feedback";
 
 /**
  * Hold-to-confirm (ROADMAP 1.0 design rule, owner ruling 2026-09-30): for big
@@ -19,6 +19,7 @@ export function HoldButton({
   hint,
   onEarlyRelease,
   durationMs = 1000,
+  armFeedback = true,
 }: {
   children: ReactNode;
   onConfirm: () => void;
@@ -28,6 +29,7 @@ export function HoldButton({
   hint?: string;
   onEarlyRelease?: () => void;
   durationMs?: number;
+  armFeedback?: boolean;
 }) {
   const [holding, setHolding] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -41,16 +43,27 @@ export function HoldButton({
     }
   }
 
-  useEffect(() => clearTimer, []);
+  useEffect(() => {
+    const suspend = () => { clearTimer(); setHolding(false); };
+    const visibility = () => { if (document.hidden) suspend(); };
+    window.addEventListener("blur", suspend);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      clearTimer(); window.removeEventListener("blur", suspend);
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, []);
+  useEffect(() => { if (disabled) { clearTimer(); setHolding(false); } }, [disabled]);
 
   function start() {
     if (disabled || timerRef.current !== null) return;
     setShowHint(false);
     setHolding(true);
     timerRef.current = setTimeout(() => {
+    const acknowledge = captureCommitFeedback();
       timerRef.current = null;
       setHolding(false);
-      haptic("CONFIRMED");
+      if (armFeedback) acknowledge("ARMED");
       onConfirm();
     }, durationMs);
   }
@@ -95,6 +108,7 @@ export function HoldButton({
         }}
         onPointerUp={cancel}
         onPointerCancel={cancel}
+        onLostPointerCapture={cancel}
         onContextMenu={(e) => e.preventDefault()}
         onKeyDown={onKeyDown}
         onKeyUp={onKeyUp}

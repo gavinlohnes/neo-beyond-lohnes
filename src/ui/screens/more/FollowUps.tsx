@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useId, useState } from "react";
 import type { DecisionJournalEntry } from "../../../domain/journal/types";
 import { DEBRIEF_OUTCOMES, DECLINE_OUTCOMES, answerFollowUp, followUpsDue, isShiftDebrief } from "../../../application/reflect";
@@ -29,9 +30,10 @@ function FollowUp({ entry, onDone }: { entry: DecisionJournalEntry; onDone: () =
   const when = new Date(entry.createdAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
   async function save() {
+    const acknowledge = captureCommitFeedback();
     if (!outcome || busy) return;
     setBusy(true); setError("");
-    try { await answerFollowUp(entry.id, outcome, lesson); onDone(); }
+    try { await answerFollowUp(entry.id, outcome, lesson); acknowledge("LIGHT"); onDone(); }
     catch (cause) { setError(describeError(cause, "Could not save.")); setBusy(false); }
   }
 

@@ -58,9 +58,10 @@ export async function updateCustomTemplate(
  * templateId untouched and keeps working exactly as before — only
  * removed from the active picker list.
  */
-export async function archiveCustomTemplate(id: string): Promise<void> {
+export async function archiveCustomTemplate(id: string): Promise<boolean> {
   const existing = await db.customWorkoutTemplates.get(id);
   if (!existing) throw notFound(id);
-  if (existing.archivedAt) return;
+  if (existing.archivedAt) return false;
   await db.customWorkoutTemplates.update(id, { archivedAt: new Date().toISOString() });
+  return true;
 }

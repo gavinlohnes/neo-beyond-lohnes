@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { latestReviewWeek } from "../../../engine/weeklyReview";
 import type { WeeklyFocus } from "../../../domain/review/types";
@@ -72,11 +73,14 @@ export function WeeklyReviewPanel({ active = true, showFacts = true, openRequest
     return () => { alive = false; readVersion.current++; };
   }, [active, retry, weekKey]);
   async function save() {
+    const acknowledge = captureCommitFeedback();
     if (inFlight.current || !draftWeek) return;
     inFlight.current = true; setBusy(true); setError(null); setReceipt(null);
     try {
       const focus: WeeklyFocus | null = choice === "NONE" ? null : choice === "CUSTOM" ? { kind: "CUSTOM", text: writtenFocus.trim() } : JSON.parse(choice) as WeeklyFocus;
-      const id = await saveWeeklyReview({ weekStart: draftWeek.start, weekEnd: draftWeek.end, note, focus, expectedPreviousId: baseline.current.id });
+      const receipt = { changed: false };
+      const id = await saveWeeklyReview({ weekStart: draftWeek.start, weekEnd: draftWeek.end, note, focus, expectedPreviousId: baseline.current.id }, receipt);
+      if (receipt.changed) acknowledge("LIGHT");
       baseline.current = { id, note: note.trim(), choice, written: writtenFocus };
       setNote(note.trim()); setReceipt("Weekly review saved on this device. Your focus is your choice, not a recommendation.");
       window.dispatchEvent(new Event("beyond:weekly-review-saved"));

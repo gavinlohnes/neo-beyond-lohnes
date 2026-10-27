@@ -1,0 +1,27 @@
+{
+  "source": "63a222bdd000b2894dc3bdab362aefacb91e7a1d",
+  "results": [
+    {
+      "width": 360,
+      "offline": true,
+      "reduced": false,
+      "result": "PASS",
+      "tapVoids": 0,
+      "holdVoids": 1,
+      "vibrationPatterns": [
+        10,
+        8,
+        35
+      ]
+    },
+    {
+      "width": 360,
+      "offline": true,
+      "reduced": true,
+      "result": "PASS",
+      "tapVoids": 0,
+      "holdVoids": 1,
+      "vibrationPatterns": []
+    }
+  ]
+}

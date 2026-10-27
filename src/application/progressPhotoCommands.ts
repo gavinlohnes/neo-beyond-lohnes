@@ -98,16 +98,17 @@ export async function correctProgressPhoto(photoId: string, changes: PhotoCorrec
 }
 
 /** Takes a photo out of view and comparisons. The image is kept, here and in backups. Repeating it is a no-op. */
-export async function hideProgressPhoto(photoId: string): Promise<void> {
-  await writeAtomically(PHOTO_WRITE_TABLES, async () => {
+export async function hideProgressPhoto(photoId: string): Promise<boolean> {
+  return writeAtomically(PHOTO_WRITE_TABLES, async () => {
     const photo = await db.progressPhotos.get(photoId);
     if (!photo) throw notFound();
-    if (photo.hiddenAt) return;
+    if (photo.hiddenAt) return false;
     const timestamp = new Date().toISOString();
     await db.progressPhotos.update(photoId, { hiddenAt: timestamp, updatedAt: timestamp });
     const commandId = newId();
     const payload: ProgressPhotoHiddenPayload = { commandId, photoId };
     await logUnscopedEvent("PROGRESS_PHOTO_HIDDEN", payload, commandId);
+    return true;
   });
 }
 
@@ -117,19 +118,20 @@ export async function hideProgressPhoto(photoId: string): Promise<void> {
  * The PROGRESS_PHOTO_DELETED event records that a photo was deleted — with
  * no image data. Deleting an already-deleted photo is a no-op.
  */
-export async function deleteProgressPhotoPermanently(photoId: string): Promise<void> {
-  await writeAtomically(PHOTO_WRITE_TABLES, async () => {
+export async function deleteProgressPhotoPermanently(photoId: string): Promise<boolean> {
+  return writeAtomically(PHOTO_WRITE_TABLES, async () => {
     const photo = await db.progressPhotos.get(photoId);
     if (!photo) {
       const deleted = (await db.events.where("type").equals("PROGRESS_PHOTO_DELETED").toArray()).some(
         (e) => (e.payload as ProgressPhotoDeletedPayload).photoId === photoId,
       );
-      if (deleted) return;
+      if (deleted) return false;
       throw notFound();
     }
     await db.progressPhotos.delete(photoId);
     const commandId = newId();
     const payload: ProgressPhotoDeletedPayload = { commandId, photoId };
     await logUnscopedEvent("PROGRESS_PHOTO_DELETED", payload, commandId);
+    return true;
   });
 }

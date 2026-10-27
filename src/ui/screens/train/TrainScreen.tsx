@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { MemoryPanel } from "../../components/MemoryPanel";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -457,16 +458,19 @@ export function TrainScreen({
   }
 
   async function actuallyStart() {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
+      const receipt = { changed: false };
       const started = await startWorkout(
         activeDay.id,
         chosenVariant === "RECOVERY" ? null : chosenTemplate,
         chosenVariant,
-        { overrideConfirmed: true },
+        { overrideConfirmed: true, receipt },
       );
+      if (receipt.changed) acknowledge("MEDIUM");
       setSession(started);
       // startWorkout is deliberately idempotent across the whole app: a
       // repeated/stale START can return the canonical existing session.
@@ -493,11 +497,13 @@ export function TrainScreen({
   }
 
   async function handleQuickCheckIn() {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
       await submitCheckIn(activeDay.id, quickCheckInValues);
+      acknowledge("MEDIUM");
       await refresh();
     } catch (error) {
       reportOperationFailure(error);
@@ -507,11 +513,13 @@ export function TrainScreen({
   }
 
   async function handleSetPlannedWork(planned: boolean) {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
       await setPlannedWork(activeDay.id, planned);
+      acknowledge("LIGHT");
       await refresh();
     } catch (error) {
       reportOperationFailure(error);
@@ -676,10 +684,11 @@ export function TrainScreen({
    * no longer appears in `sets`) — ready for the lifter to re-enter.
    */
   async function handleUndoLastSet() {
+    const acknowledge = captureCommitFeedback();
     if (busy || !session) return;
     setBusy(true);
     try {
-      await undoLastSet(session.beyondDayId, session.id);
+      if (await undoLastSet(session.beyondDayId, session.id)) acknowledge("HEAVY");
       await skipRest(session.id);
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(null);
@@ -743,6 +752,7 @@ export function TrainScreen({
    * sessions), so this genuinely reflects what changed, not a guess.
    */
   async function handleCompleteWorkout(status: "COMPLETED" | "PARTIAL") {
+    const acknowledge = captureCommitFeedback();
     if (busy || !session) return;
     setFinishHoldHint(false);
     setBusy(true);
@@ -768,6 +778,8 @@ export function TrainScreen({
         });
 
       await completeWorkout(session.beyondDayId, session.id, sessionType, status, durationMinutes ?? undefined);
+
+      acknowledge("HEAVY");
 
       const advisoryChanges: CompletionSummary["advisoryChanges"] = [];
       if (sessionType === "STANDARD" || sessionType === "REDUCED") {
@@ -828,10 +840,12 @@ export function TrainScreen({
   }
 
   async function actuallyStop() {
+    const acknowledge = captureCommitFeedback();
     if (busy || !session) return;
     setBusy(true);
     try {
       await abandonWorkout(session.beyondDayId, session.id, session.sessionType as SessionType);
+      acknowledge("HEAVY");
       // DAY-ROLLOVER-001: see the same comment on completeWorkout's own
       // call site above — abandoning also legitimately ends the workout.
       await performDueDayRollover().catch(() => {});
@@ -844,10 +858,12 @@ export function TrainScreen({
   }
 
   async function handleCompleteRecovery() {
+    const acknowledge = captureCommitFeedback();
     if (busy || !session) return;
     setBusy(true);
     try {
       await completeRecoverySession(session.beyondDayId, session.id, recoveryMinutes);
+      acknowledge("HEAVY");
       // DAY-ROLLOVER-001: see the same comment on completeWorkout's own call site above.
       await performDueDayRollover().catch(() => {});
       await refresh();
@@ -1388,7 +1404,9 @@ export function TrainScreen({
               lastSet={describeGymLastSet()}
               onUndoLastSet={() => void handleUndoLastSet()}
               onSaveCue={async (exerciseId, cue) => {
+    const acknowledge = captureCommitFeedback();
                 await setExerciseCue(session.beyondDayId, exerciseId, cue);
+                acknowledge("LIGHT");
               }}
             />
           )}

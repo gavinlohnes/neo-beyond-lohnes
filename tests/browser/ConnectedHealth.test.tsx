@@ -1,5 +1,4 @@
 import { commandResult } from "./helpers/command";
-import { holdToConfirm } from "./helpers/hold";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cdp, page, userEvent } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
@@ -111,7 +110,12 @@ it("keeps an unfinished sleep form through trend, sources and History, and uses 
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
   await screen.getByRole("button", { name: "BACK TO DATA", exact: true }).click();
-  await holdToConfirm(screen.getByRole("button", { name: "CORRECT / DELETE", exact: true }));
+  const beforeInspect = await db.events.toArray();
+  const vibrate = vi.spyOn(navigator, "vibrate").mockReturnValue(true);
+  await screen.getByRole("button", { name: "CORRECT / DELETE", exact: true }).click();
+  await expect.element(screen.getByRole("spinbutton", { name: "Corrected amount (oz)", exact: true })).toBeVisible();
+  expect(vibrate).not.toHaveBeenCalled(); vibrate.mockRestore();
+  expect(await db.events.toArray()).toEqual(beforeInspect);
   const corrected = screen.getByRole("spinbutton", { name: "Corrected amount (oz)", exact: true });
   await expect.element(corrected).toHaveValue(16); await corrected.fill("12");
   await screen.getByRole("button", { name: "SAVE", exact: true }).click();
@@ -199,7 +203,7 @@ it("reopens the current correction in retained History and does not steal focus 
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
   await screen.getByRole("button", { name: "BACK TO DATA", exact: true }).click();
-  await holdToConfirm(screen.getByRole("button", { name: "CORRECT / DELETE", exact: true }));
+  await screen.getByRole("button", { name: "CORRECT / DELETE", exact: true }).click();
   await screen.getByRole("spinbutton", { name: "Corrected amount (oz)", exact: true }).fill("12");
   await screen.getByRole("button", { name: "SAVE", exact: true }).click();
   await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();

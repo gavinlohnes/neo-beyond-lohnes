@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useState } from "react";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
 import type { CustomExercise } from "../../../domain/workout/customExercise";
@@ -102,6 +103,7 @@ export function CustomTemplateScreen() {
   async function handleCreate() {
     if (!name.trim() || selectedIds.length === 0) return;
     await withBusy(async () => {
+    const acknowledge = captureCommitFeedback();
       const exercises: ExercisePrescription[] = selectedIds.map((exerciseId) => {
         const source = savedExercises.find((ex) => ex.id === exerciseId)!;
         return {
@@ -114,6 +116,7 @@ export function CustomTemplateScreen() {
         };
       });
       await createCustomTemplate({ name: name.trim(), exercises });
+      acknowledge("LIGHT");
       setName("");
       setSelectedSets({});
       setCreateOpen(false);
@@ -123,7 +126,8 @@ export function CustomTemplateScreen() {
 
   async function handleArchive(id: string) {
     await withBusy(async () => {
-      await archiveCustomTemplate(id);
+    const acknowledge = captureCommitFeedback();
+      if (await archiveCustomTemplate(id)) acknowledge("HEAVY");
       await refresh();
     });
   }

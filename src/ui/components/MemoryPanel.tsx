@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../feel/feedback";
 import { useEffect, useId, useRef, useState } from "react";
 import { getMemoryWorkspace, recordMemory } from "../../application/memory";
 import { MEMORY_KINDS, MEMORY_LABELS, type MemoryFact, type MemoryKind, type MemoryAction } from "../../domain/memory";
@@ -57,10 +58,12 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
     if (!dayId) { setError("Start a day before saving memory. Your draft is kept."); return; }
     writing.current = true; setBusy(true); setError(null); setNotice(null);
     const request = lifecycle.current;
+    const acknowledge = captureCommitFeedback(), receipt = { changed: false };
     try {
       const saved = await recordMemory({ action, dayId, factId: subject.factId,
         expectedPreviousId: fact?.id ?? draft!.previous,
-        ...(fact ? {} : { kind: draft!.kind, statement: draft!.statement }) });
+        ...(fact ? {} : { kind: draft!.kind, statement: draft!.statement }) }, receipt);
+      if (receipt.changed) acknowledge(action === "IRRELEVANT" ? "HEAVY" : "LIGHT");
       if (lifecycle.current !== request) return;
       if (!fact) setDraft(null);
       setUndo(action === "IRRELEVANT" ? saved : null);
@@ -75,7 +78,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
     {!contextual && <><h2 className="tool-label">WHAT BEYOND SHOULD REMEMBER</h2><p>Your words. Prep and recovery only. Nothing here changes your plan or BEYOND’s advice.</p></>}
     {loading && <p role="status" className="meta">Reading memory…</p>}
     {error && <div><p role="alert">{error} Unreadable memory is not empty memory.</p><button type="button" className="btn-secondary" disabled={busy} onClick={() => setRefresh((n) => n + 1)}>RELOAD MEMORY LIST</button></div>}
-    {notice && !undo && <p role="status" className="meta">{notice}</p>}
+    {notice && !undo && <p role="status" className="meta confirm-banner">{notice}</p>}
     {undo && <ConfirmBanner message="Marked no longer relevant." actionLabel="RESTORE & CONFIRM" disabled={disabled} onAction={() => void write("RESTORED", undo)} />}
     {data && !loading && <>
       {!contextual && <div className="memory-actions" role="group" aria-label="Memory status">

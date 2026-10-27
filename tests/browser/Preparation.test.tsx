@@ -52,12 +52,15 @@ describe("PREP-001 work preparation", () => {
   it("same-tick taps save once and write failure retains an unconfirmed state with retry", async () => {
     const day = await startDay(); const screen = await render(<WorkPreparation dayId={day.id} beforeWork active />);
     const food = screen.getByRole("button", { name: "FOOD READY", exact: true }); await expect.element(food).toBeEnabled();
+    const vibrate = vi.spyOn(navigator, "vibrate").mockReturnValue(true);
     const fail = vi.spyOn(db.events, "add").mockRejectedValueOnce(new Error("QuotaExceededError"));
     await food.click(); await expect.element(screen.getByRole("alert")).toBeVisible();
-    expect((await getPreparation(day.id)).FOOD.value).toBe("UNCONFIRMED"); fail.mockRestore();
+    expect((await getPreparation(day.id)).FOOD.value).toBe("UNCONFIRMED");
+    expect(vibrate).not.toHaveBeenCalled(); fail.mockRestore();
     (food.element() as HTMLButtonElement).click(); (food.element() as HTMLButtonElement).click();
     await expect.poll(async () => (await getPreparation(day.id)).FOOD.value).toBe("READY");
     expect(await db.events.where("type").equals("PREPARATION_RECORDED").count()).toBe(1);
+    expect(vibrate).toHaveBeenCalledExactlyOnceWith(10);
   });
 
   it("a failed read is unavailable rather than fabricated empty data, with a real retry", async () => {

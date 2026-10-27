@@ -26,14 +26,16 @@ for(const width of [320,360,390,412])it(`puts numbers, progress and history firs
   await expect.element(screen.getByRole('button',{name:'BACK TO DATA',exact:true})).toBeVisible();
   expect(await db.events.toArray()).toEqual(before);
 });
-it('opens the canonical current-day correction sheet after a deliberate hold, preserving original provenance',async()=>{
+it('opens the canonical current-day correction sheet after one tap, preserving original provenance',async()=>{
   const original=await logWater(dayId,8);const screen=await render(<App />);
   await screen.getByRole('button',{name:'DATA',exact:true}).click();
-  const entry=screen.getByRole('button',{name:/^Water · 8 oz/});await expect.element(entry).toBeVisible();
-  const node=entry.element() as HTMLButtonElement;
-  node.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+  const entry=screen.getByRole('button',{name:'Open Water · 8 oz',exact:true});await expect.element(entry).toBeVisible();
+  const beforeInspect=await db.events.toArray();
+  const vibrate=vi.spyOn(navigator,'vibrate').mockReturnValue(true);
+  await entry.click();
   const sheet=screen.getByRole('dialog',{name:'CORRECT RECORD',exact:true});await expect.element(sheet).toBeVisible();
-  node.dispatchEvent(new KeyboardEvent('keyup',{key:'Enter',bubbles:true}));
+  expect(await db.events.toArray()).toEqual(beforeInspect);
+  expect(vibrate).not.toHaveBeenCalled();vibrate.mockRestore();
   await sheet.getByRole('spinbutton',{name:'Corrected amount (oz)',exact:true}).fill('16');
   await sheet.getByRole('button',{name:'SAVE',exact:true}).click();
   await expect.poll(()=>getHydrationEntries(dayId)).toMatchObject([{rootEventId:original,effectiveAmountOz:16,originalAmountOz:8,correctionCount:1}]);

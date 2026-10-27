@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../feel/feedback";
 import { useEffect, useState } from "react";
 import { markTimeCapsuleOpened } from "../../application/timeCapsuleCommands";
 import { getTimeCapsules, type OpenedCapsule } from "../../application/timeCapsuleQueries";
@@ -27,11 +28,13 @@ export function TimeCapsuleOpened() {
   if (!capsule) return null;
 
   async function gotIt(c: OpenedCapsule) {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
       await markTimeCapsuleOpened(c.eventId);
+      acknowledge("LIGHT");
       setDue((prev) => (prev ? prev.slice(1) : prev));
     } catch (e) {
       setError(describeError(e, "That didn't save. Try again."));

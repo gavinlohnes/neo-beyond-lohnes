@@ -59,9 +59,10 @@ export async function updateCustomExercise(id: string, changes: CustomExerciseMo
  * One-way "no longer offered" flag, not a delete — matching
  * archiveSavedMeal/archiveMission's precedent. Idempotent.
  */
-export async function archiveCustomExercise(id: string): Promise<void> {
+export async function archiveCustomExercise(id: string): Promise<boolean> {
   const existing = await db.customExercises.get(id);
   if (!existing) throw notFound(id);
-  if (existing.archivedAt) return;
+  if (existing.archivedAt) return false;
   await db.customExercises.update(id, { archivedAt: new Date().toISOString() });
+  return true;
 }

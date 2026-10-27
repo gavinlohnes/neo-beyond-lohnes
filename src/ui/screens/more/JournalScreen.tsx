@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState } from "react";
 import type { DomainEvent } from "../../../domain/common/types";
@@ -149,6 +150,7 @@ export function JournalScreen({ active = true, navigationEntryId, onOpenCapture,
   async function handleCreate() {
     if (!newTitle.trim() || !newDecision.trim()) return;
     await withBusy(async () => {
+    const acknowledge = captureCommitFeedback();
       await createDecisionJournalEntry({
         title: newTitle.trim(),
         decision: newDecision.trim(),
@@ -157,6 +159,7 @@ export function JournalScreen({ active = true, navigationEntryId, onOpenCapture,
         ...(newReasoning.trim() ? { reasoning: newReasoning.trim() } : {}),
         ...(newExpectation.trim() ? { expectation: newExpectation.trim() } : {}),
       });
+      acknowledge("LIGHT");
       setNewTitle("");
       setNewContext("");
       setNewOptions("");
@@ -334,6 +337,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
   }
 
   async function handleSave() {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -346,6 +350,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
         reasoning: reasoning.trim() || undefined,
         expectation: expectation.trim() || undefined,
       });
+      acknowledge("LIGHT");
       setEditing(false);
       await load();
     } catch (e) {
@@ -356,6 +361,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
   }
 
   async function handleReview() {
+    const acknowledge = captureCommitFeedback();
     if (busy || !outcome.trim()) return;
     setBusy(true);
     setError(null);
@@ -364,6 +370,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
         outcome: outcome.trim(),
         ...(lesson.trim() ? { lesson: lesson.trim() } : {}),
       });
+      acknowledge("LIGHT");
       setReviewing(false);
       setOutcome("");
       setLesson("");

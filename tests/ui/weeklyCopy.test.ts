@@ -160,11 +160,11 @@ describe("expenditure readout copy (Drop 6)", () => {
   it("says exactly what it's still waiting for", () => {
     const waiting = { kind: "WAITING", windowDays: 28, intakeDays: { have: 6, need: 14 }, weighIns: { have: 3, need: 8 }, spanOk: false, tooNoisy: false } as const;
     expect(describeExpenditure(waiting)).toEqual({
-      detail: "Log meals on 8 more days and weigh in 5 more times over 2 weeks, and BEYOND can estimate what you really burn (6 of 14 meal days, 3 of 8 weigh-ins in the last 28 days).",
+      detail: "Log meals on 8 more days and weigh in 5 more times over 2 weeks. Unlocks: your daily burn estimate (6 of 14 meal days, 3 of 8 weigh-ins in the last 28 days).",
     });
     // Enough weigh-ins, all bunched together: spreading them is what's left.
     expect(describeExpenditure({ ...waiting, intakeDays: { have: 14, need: 14 }, weighIns: { have: 9, need: 8 } })).toEqual({
-      detail: "Spread your weigh-ins across 2 weeks, and BEYOND can estimate what you really burn (14 meal days, 9 weigh-ins in the last 28 days).",
+      detail: "Spread your weigh-ins across 2 weeks. Unlocks: your daily burn estimate (14 meal days, 9 weigh-ins in the last 28 days).",
     });
     expect(describeExpenditure({ ...waiting, intakeDays: { have: 20, need: 14 }, weighIns: { have: 10, need: 8 }, spanOk: true, tooNoisy: true })).toEqual({
       detail: "Not enough data yet — weight is moving around too much for a useful range.",
@@ -202,7 +202,7 @@ describe("YOUR USUAL copy (FOUNDATION-A-F1)", () => {
         { kind: "NOT_THIS_WEEK", measure: "MAIN_SLEEP", dayKind: "OFF", low: 420, high: 510, periodDays: 1, baselineDays: 14 },
       ]),
     ).toBe(
-      "Log water on 4 more work days and protein on 7 more days off, and BEYOND can learn your usual. Nothing to compare this week: sleep on days off.",
+      "Log water on 4 more work days and protein on 7 more days off. Unlocks: your usual. Nothing to compare this week: sleep on days off.",
     );
     expect(describeBaselinesQuiet([])).toBeUndefined();
   });

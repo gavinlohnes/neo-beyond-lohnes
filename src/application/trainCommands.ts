@@ -1,3 +1,4 @@
+import type { WriteReceipt } from "./writeReceipt";
 import { db } from "../persistence/db";
 import { deriveCapacity } from "../engine/capacity";
 import { assertRedOverrideConfirmed } from "../engine/redOverride";
@@ -75,7 +76,7 @@ export async function startWorkout(
   beyondDayId: string,
   templateId: WorkoutTemplateId | null,
   sessionType: SessionType,
-  options: { overrideConfirmed?: boolean } = {},
+  options: { overrideConfirmed?: boolean; receipt?: WriteReceipt } = {},
 ): Promise<WorkoutSession> {
   if (startWorkoutInFlight) return startWorkoutInFlight;
 
@@ -112,6 +113,7 @@ export async function startWorkout(
         correlationId,
       );
     });
+    if (options.receipt) options.receipt.changed = true;
     return session;
   })();
 
@@ -215,14 +217,14 @@ export async function skipSet(
  * affordance only when something exists to undo, never called
  * defensively "just in case."
  */
-export async function undoLastSet(beyondDayId: string, sessionId: string): Promise<void> {
+export async function undoLastSet(beyondDayId: string, sessionId: string): Promise<boolean> {
   const visible = await getPerformedSets(sessionId);
   const last = visible.reduce<PerformedSet | null>((latest, s) => {
     if (!latest) return s;
     if (s.recordedAt !== latest.recordedAt) return s.recordedAt > latest.recordedAt ? s : latest;
     return s.setNumber > latest.setNumber ? s : latest;
   }, null);
-  if (!last) return;
+  if (!last) return false;
 
   const correlationId = newId();
   await logEvent(
@@ -232,6 +234,7 @@ export async function undoLastSet(beyondDayId: string, sessionId: string): Promi
     "USER",
     correlationId,
   );
+  return true;
 }
 
 /**

@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { useSessionDraft } from "../../sessionDrafts";
 import type { DomainEvent } from "../../../domain/common/types";
@@ -342,7 +343,9 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
   async function handleCreateMission() {
     if (!newMissionTitle.trim()) return;
     await withBusy(async () => {
+    const acknowledge = captureCommitFeedback();
       await createMission({ title: newMissionTitle.trim() });
+      acknowledge("LIGHT");
       setNewMissionTitle("");
       setMissionCreateOpen(false);
       await refreshList();
@@ -352,6 +355,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
   async function handleCreateObligation() {
     if (!newObligationTitle.trim()) return;
     await withBusy(async () => {
+    const acknowledge = captureCommitFeedback();
       const anchor = newObligationDueAt || formatLocalDate(new Date());
       const recurrence = recurrenceInputFor(newObligationRecurrence, anchor);
       await createObligation({
@@ -361,6 +365,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
         ...(newObligationPlannedAt ? { plannedAt: newObligationPlannedAt } : {}),
         ...(recurrence ? { recurrence } : {}),
       });
+      acknowledge("LIGHT");
       setNewObligationTitle("");
       setNewObligationMissionId("");
       setNewObligationDueAt("");
@@ -571,6 +576,7 @@ function MissionDetail({ missionId, onBack, active }: { missionId: string; onBac
   }
 
   async function handleSave() {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -579,6 +585,7 @@ function MissionDetail({ missionId, onBack, active }: { missionId: string; onBac
         title: title.trim() || undefined,
         description: description.trim() || undefined,
       });
+      acknowledge("LIGHT");
       setEditing(false);
       await load();
     } catch (e) {
@@ -589,11 +596,12 @@ function MissionDetail({ missionId, onBack, active }: { missionId: string; onBac
   }
 
   async function handleArchive() {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
-      await archiveMission(missionId);
+      if (await archiveMission(missionId)) acknowledge("HEAVY");
       setArchiveConfirming(false);
       await load();
     } catch (e) {
@@ -724,6 +732,7 @@ function ObligationDetail({
   }
 
   async function handleSave() {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -741,6 +750,7 @@ function ObligationDetail({
         plannedAt: plannedAt || undefined,
         ...(recurrence ? { recurrence } : {}),
       });
+      acknowledge("LIGHT");
       setEditing(false);
       await load();
     } catch (e) {
@@ -750,12 +760,13 @@ function ObligationDetail({
     }
   }
 
-  async function handleAction(action: (id: string) => Promise<void>) {
+  async function handleAction(action: (id: string) => Promise<boolean>) {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
-      await action(obligationId);
+      if (await action(obligationId)) acknowledge("LIGHT");
       setPendingResolution(null);
       await load();
     } catch (e) {

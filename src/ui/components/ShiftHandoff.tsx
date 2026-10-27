@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../feel/feedback";
 import { useEffect, useState } from "react";
 import { markShiftHandoffRead, noteShiftHandoff } from "../../application/commands";
 import { getShiftHandoffState, skipShiftHandoff, type ShiftHandoffState } from "../../application/shiftHandoffQueries";
@@ -32,12 +33,14 @@ export function ShiftHandoff({ refreshKey }: { refreshKey: number }) {
   if (!state || !state.activeDayId) return null;
   const dayId = state.activeDayId;
 
-  async function run(write: () => Promise<unknown>, after?: () => void) {
+  async function run(write: () => Promise<unknown>, after?: () => void, committed = true) {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
       await write();
+      if (committed) acknowledge("LIGHT");
       after?.();
       setLoadKey((k) => k + 1);
     } catch (e) {
@@ -78,7 +81,7 @@ export function ShiftHandoff({ refreshKey }: { refreshKey: number }) {
         >
           SAVE
         </button>
-        <button type="button" className="btn-secondary" disabled={busy} onClick={() => void run(async () => skipShiftHandoff(dayId))}>
+        <button type="button" className="btn-secondary" disabled={busy} onClick={() => void run(async () => skipShiftHandoff(dayId), undefined, false)}>
           SKIP
         </button>
       </div>

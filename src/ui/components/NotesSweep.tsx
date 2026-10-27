@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../feel/feedback";
 import { useEffect, useState } from "react";
 import type { CaptureItem } from "../../domain/common/types";
 import { deleteCaptureItem, resolveCaptureItem, restoreCaptureItem } from "../../application/commands";
@@ -43,11 +44,13 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
   const note = items[index];
 
   async function act(outcome: Outcome, write: () => Promise<unknown>) {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
       await write();
+      if (outcome !== "KEPT") acknowledge("LIGHT");
       setOutcomes((prev) => [...prev, outcome]);
       setIndex((i) => i + 1);
     } catch (e) {
@@ -58,11 +61,13 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
   }
 
   async function handleDelete(item: CaptureItem) {
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
       const removed = await deleteCaptureItem(item.id);
+      if (removed) acknowledge("HEAVY");
       setDeleted(removed ?? null);
       setOutcomes((prev) => [...prev, "DELETED"]);
       setIndex((i) => i + 1);
@@ -74,10 +79,12 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
   }
 
   async function handleUndoDelete() {
+    const acknowledge = captureCommitFeedback();
     if (!deleted || busy) return;
     setBusy(true);
     try {
       await restoreCaptureItem(deleted);
+      acknowledge("LIGHT");
       setDeleted(null);
       setOutcomes((prev) => prev.slice(0, -1));
       setIndex((i) => i - 1);

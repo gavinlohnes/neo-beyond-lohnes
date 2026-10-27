@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getMeasurements, type MeasurementEntry } from "../../../application/measurementQueries";
 import { correctMeasurement, logMeasurement } from "../../../application/measurementCommands";
@@ -99,6 +100,7 @@ function Measurements({ entries, ready, reading, failed, onRefresh }: {
   }, [ready, reading]);
   useSessionDraft("body-measurements", inches !== "" || !!editing);
   async function save(correcting = false) {
+    const acknowledge = captureCommitFeedback();
     if (lock.current) return;
     const value = Number(correcting ? correction.inches : inches);
     if (!Number.isFinite(value) || value < MEASUREMENT_MIN_INCHES || value > MEASUREMENT_MAX_INCHES) {
@@ -108,11 +110,13 @@ function Measurements({ entries, ready, reading, failed, onRefresh }: {
     try {
       if (correcting && editing) {
         await correctMeasurement(editing.headEventId, { inches: value, measuredOn: correction.date });
+        acknowledge("LIGHT");
         setReceipt(`${siteLabel(editing.site)} corrected to ${value} in · ${progressDate(correction.date)}. Original record retained.`);
         const root = editing.rootEventId; setEditing(null);
         setFocusAfterSave(`measurement-edit-${root}`);
       } else {
         await logMeasurement({ site, inches: value, measuredOn: date });
+        acknowledge("LIGHT");
         setReceipt(`${siteLabel(site)} saved · ${value} in · ${progressDate(date)}.`);
         setInches("");
         setFocusAfterSave("measurement-inches");

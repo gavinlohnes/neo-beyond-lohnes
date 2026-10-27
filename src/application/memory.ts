@@ -1,3 +1,4 @@
+import type { WriteReceipt } from "./writeReceipt";
 import { z } from "zod";
 import { db } from "../persistence/db";
 import type { DomainEvent } from "../domain/common/types";
@@ -62,7 +63,7 @@ export async function getMemoryWorkspace() {
 }
 type Write = { dayId: string; factId: string; expectedPreviousId: string | null; action: MemoryAction; kind?: MemoryKind; statement?: string };
 /** A revision never consumes food/water or changes tasks/plans/recommendations. */
-export async function recordMemory(input: Write): Promise<MemoryFact> {
+export async function recordMemory(input: Write, receipt?: WriteReceipt): Promise<MemoryFact> {
   return writeAtomically(["beyondDays"], async () => {
     const day = await getActiveDay();
     if (!day || day.id !== input.dayId || computeDueRollover(new Date(day.startedAt), new Date())) throw new Error("Your day changed. Reopen memory for the current day. Your draft is kept.");
@@ -96,6 +97,7 @@ export async function recordMemory(input: Write): Promise<MemoryFact> {
     // Validate the entire prospective chain inside the same transaction; any fault rolls back.
     const saved = (await getMemoryFacts()).find((fact) => fact.id === id);
     if (!saved) throw broken();
+    if (receipt) receipt.changed = true;
     return saved;
   });
 }

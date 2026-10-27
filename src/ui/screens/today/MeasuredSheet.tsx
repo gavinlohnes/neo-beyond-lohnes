@@ -61,7 +61,7 @@ export function UnusualNote({ metric, reading }: { metric: "resting" | "sleep" |
 export function describeUsual(metric: MeasuredMetric, usual: Baseline & { dayKind?: "WORK" | "OFF" | null }): string {
   if (metric === "steps" && usual.dayKind === null) return "Usual steps need today set as a work day or a day off.";
   // DELTA-004: the floor said as what unlocks it.
-  if (usual.value === null) return `Wear your Garmin for ${BASELINE_MIN_SAMPLES - usual.samples} more ${BASELINE_MIN_SAMPLES - usual.samples === 1 ? "day" : "days"}, and BEYOND can show your usual (${usual.samples} of ${BASELINE_MIN_SAMPLES} days so far).`;
+  if (usual.value === null) return `Wear your Garmin for ${BASELINE_MIN_SAMPLES - usual.samples} more ${BASELINE_MIN_SAMPLES - usual.samples === 1 ? "day" : "days"}. Unlocks: your usual (${usual.samples} of ${BASELINE_MIN_SAMPLES} days).`;
   const kind = metric === "steps" ? (usual.dayKind === "OFF" ? " on days off" : " on work days") : "";
   return `Usual${kind}: ${formatMeasured(metric, usual.value)} · median of the last 28 days.`;
 }

@@ -1,4 +1,3 @@
-import { HoldButton } from "../../components/HoldButton";
 import { useId, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { LineIcon } from "../../icons/LineIcon";
@@ -88,7 +87,7 @@ export function describeRecord(record: HealthRecord): string {
 }
 
 /** Presentation of existing effective records only; never a second event store or audit trail. */
-export function DailyHealthRecord({ water, sleep, weight, protein, meals, disabled, onInspect, holdToInspect = false }: {
+export function DailyHealthRecord({ water, sleep, weight, protein, meals, disabled, onInspect }: {
   water: readonly HydrationEntry[];
   sleep: readonly SleepEntry[];
   weight: readonly BodyweightEntry[];
@@ -96,7 +95,6 @@ export function DailyHealthRecord({ water, sleep, weight, protein, meals, disabl
   meals: readonly NutritionEntry[];
   disabled: boolean;
   onInspect: (record: HealthRecord) => void;
-  holdToInspect?: boolean;
 }) {
   const [allOpen, setAllOpen] = useState(false);
   const records: HealthRecord[] = [
@@ -111,7 +109,7 @@ export function DailyHealthRecord({ water, sleep, weight, protein, meals, disabl
     <section className="health-record" aria-label="Recorded this day">
       <div className="health-section-heading"><h2 className="section-label">Recorded this day</h2><span className="meta">{records.length} {records.length === 1 ? "entry" : "entries"}</span></div>
       {records.length === 0 && <p className="meta">Nothing recorded yet. Record what is useful to you.</p>}
-      {(allOpen ? records : records.slice(0, 5)).map((record) => holdToInspect ? <HoldButton key={record.entry.rootEventId} className="health-record-row" disabled={disabled} hint="Hold to open correction or deletion. Nothing changes until you confirm." onConfirm={() => onInspect(record)}>{describeRecord(record)} · {new Date(record.entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</HoldButton> : (
+      {(allOpen ? records : records.slice(0, 5)).map((record) => (
         <button className="health-record-row" key={record.entry.rootEventId} disabled={disabled}
           aria-label={`Open ${describeRecord(record)}`} onClick={() => onInspect(record)}>
           <span><span className="health-record-name">{describeRecord(record)}</span>

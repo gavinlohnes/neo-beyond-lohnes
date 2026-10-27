@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../feel/feedback";
 import { useHiddenFeatures } from "../hiddenFeatures";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LogSheet } from "./LogSheet";
@@ -22,7 +23,7 @@ type MealQuestion = { message: string; detail?: string; removeLabel: string; rem
 type Receipt = { question?: MealQuestion | undefined; message: string; undo: () => Promise<unknown>; warning?: string; history?: "water" | "protein"; notes?: boolean };
 function ReceiptItem({ receipt, busy, undo, dismiss, history, keep, remove }: { receipt: Receipt; busy: boolean; undo: () => void; dismiss: () => void; history: () => void; keep: () => void; remove: () => void }) {
   const undoOpen = useUndoOpen(receipt);
-  return <div className="record-receipt"><p>{receipt.message}</p>{receipt.warning && <p>{receipt.warning}</p>}
+  return <div className="record-receipt confirm-banner"><p>{receipt.message}</p>{receipt.warning && <p>{receipt.warning}</p>}
     {receipt.question && <div role="group" aria-label={receipt.question.removeLabel === "REMOVE ONE" ? "Same food?" : "Same meal?"}>
       <p>{receipt.question.message}</p>{receipt.question.detail && <p>{receipt.question.detail}</p>}
       <button type="button" className="btn-secondary" disabled={busy} onClick={keep}>KEEP BOTH</button>
@@ -101,10 +102,11 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
     else setError("That saved meal is unavailable. Choose another meal or retry.");
   }, [target, mealRequest, readState, meals]);
   async function commit(action: () => Promise<Receipt>) {
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current) return;
     setBusy(true); setError(null);
     try {
-      const saved = await action(); addReceipt(saved); onSaved();
+      const saved = await action(); acknowledge("LIGHT"); addReceipt(saved); onSaved();
       setBusy(false); close();
     } catch (cause) { setError(`${target === "water" ? "Water" : target === "note" ? "Note" : "Meal"} didn't save. ${describeError(cause, "Nothing saved.")} Try again.`); }
     finally { setBusy(false); }
@@ -189,8 +191,10 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         </>}
         {page === "edit" && selected && <>
           {formFields(edit, setEdit, "Saved meal")}
-          <button type="button" className="btn-primary" disabled={busy} onClick={async () => { if (busyRef.current) return; setBusy(true); setError(null); try { await updateSavedMeal(selected.id, parse(edit)); setRetry((key) => key + 1); setPage("portion"); } catch (cause) { setError(describeError(cause, "Meal not updated.")); } finally { setBusy(false); } }}>SAVE CHANGES</button>
-          <HoldButton className="btn-secondary" disabled={busy} hint="Hold to archive this preset. Existing logs stay." onConfirm={async () => { if (busyRef.current) return; setBusy(true); try { await archiveSavedMeal(selected.id); setRetry((key) => key + 1); setPage("list"); } catch (cause) { setError(describeError(cause, "Could not archive meal.")); } finally { setBusy(false); } }}>ARCHIVE MEAL</HoldButton>
+          <button type="button" className="btn-primary" disabled={busy} onClick={async () => {
+    const acknowledge = captureCommitFeedback(); if (busyRef.current) return; setBusy(true); setError(null); try { await updateSavedMeal(selected.id, parse(edit)); acknowledge("LIGHT"); setRetry((key) => key + 1); setPage("portion"); } catch (cause) { setError(describeError(cause, "Meal not updated.")); } finally { setBusy(false); } }}>SAVE CHANGES</button>
+          <HoldButton className="btn-secondary" disabled={busy} hint="Hold to archive this preset. Existing logs stay." onConfirm={async () => {
+    const acknowledge = captureCommitFeedback(); if (busyRef.current) return; setBusy(true); try { if (await archiveSavedMeal(selected.id)) acknowledge("HEAVY"); setRetry((key) => key + 1); setPage("list"); } catch (cause) { setError(describeError(cause, "Could not archive meal.")); } finally { setBusy(false); } }}>ARCHIVE MEAL</HoldButton>
         </>}
       </>}
       {target === "log" && <>{(["water", "meal", "sleep", "weight", "note", "urge"] as const).map((kind) => <button type="button" className="today-sheet__option" key={kind} onClick={() => open(kind)}>{TITLE[kind]}</button>)}<button type="button" className="today-sheet__option" onClick={onWorkout}>WORKOUT SET → TRAIN</button></>}
@@ -202,14 +206,16 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       remove={() => {
         if (busyRef.current || !receipt.question) return;
         const question = receipt.question; setBusy(true); setError(null);
-        void question.remove().then(() => {
+        const acknowledge = captureCommitFeedback();
+        void question.remove().then((changed) => {
+          if (changed) acknowledge("HEAVY");
           if (question.removeLabel === "REMOVE THIS ONE") dismissReceipt(receipt.id);
           else setReceipts((old) => old.map((entry) => entry.id === receipt.id ? { ...entry, question: undefined, message: question.removedMessage } : entry));
           onSaved();
         }).catch((cause) => setError(`Could not remove the entry. ${describeError(cause, "Try again.")}`)).finally(() => setBusy(false));
       }}
       dismiss={() => dismissReceipt(receipt.id)} history={() => { dismissReceipt(receipt.id); if (receipt.notes) onNotes(); else onHistory(receipt.history ?? "protein"); }}
-      undo={() => { if (busyRef.current) return; setBusy(true); setError(null); void receipt.undo().then(() => { dismissReceipt(receipt.id); onSaved(); }).catch((cause) => setError(describeError(cause, "Could not undo. Try again."))).finally(() => setBusy(false)); }} />)}
+      undo={() => { const acknowledge = captureCommitFeedback(); if (busyRef.current) return; setBusy(true); setError(null); void receipt.undo().then((changed) => { if (changed) acknowledge("HEAVY"); dismissReceipt(receipt.id); onSaved(); }).catch((cause) => setError(describeError(cause, "Could not undo. Try again."))).finally(() => setBusy(false)); }} />)}
       {error && !target && <p role="alert">{error}</p>}
     </div>}
   </>;

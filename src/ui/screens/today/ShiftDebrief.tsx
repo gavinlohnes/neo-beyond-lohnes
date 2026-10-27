@@ -1,3 +1,4 @@
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useId, useState } from "react";
 import type { DecisionJournalEntry } from "../../../domain/journal/types";
 import { SHIFT_BECAUSE, SHIFT_FELT, getShiftDebriefFor, recordShiftDebrief, type ShiftFelt } from "../../../application/reflect";
@@ -25,9 +26,10 @@ export function ShiftDebrief() {
   }
 
   async function save() {
+    const acknowledge = captureCommitFeedback();
     if (!felt || busy) return;
     setBusy(true); setError("");
-    try { setSaved(await recordShiftDebrief({ felt, because, next })); }
+    try { setSaved(await recordShiftDebrief({ felt, because, next })); acknowledge("LIGHT"); }
     catch (cause) { setError(describeError(cause, "Could not save the debrief.")); }
     finally { setBusy(false); }
   }

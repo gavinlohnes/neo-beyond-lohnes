@@ -82,10 +82,12 @@ function NextWindow({ rows, weekAhead, positions, readAt }: { rows: readonly Pic
     <p className="eyebrow">Next window · forecast from your schedule</p>
     {offLine && <h3>{offLine}</h3>}
     {!offLine && next && <h3 data-rotation-next>Next predicted: work run from {day(next.from + "T12:00:00")} · {next.days} {next.days === 1 ? "shift" : "shifts"}.</h3>}
+    <details><summary>WINDOW DETAILS</summary>
     <p>{last ? `Last counted workout: ${shortDate(last.start)}, ${last.daysAgo} ${last.daysAgo === 1 ? "day" : "days"} ago.` : `No counted workout in the last ${rows.length} days.`}
       {favourite && ` Across your recent days off, you trained most often on ${positionName(favourite).toLowerCase()} (${favourite.trained.days} of ${favourite.trained.of}).`}</p>
-    {next && <p className="small" data-rotation-next-flip>Next flip: {next.work === "WORK" ? "into work" : "out of work"}, {shortDate(`${next.from}T12:00:00`)}. Your past flips are under Flips.</p>}
+    {next && <p className="small" data-rotation-next-flip>Next flip: {next.work === "WORK" ? "into work" : "out of work"}, {shortDate(`${next.from}T12:00:00`)}. See Flips for your records.</p>}
     <p className="muted small">A forecast and your own records. BEYOND suggests a window; it doesn't schedule one.</p>
+    </details>
   </div>;
 }
 
@@ -132,12 +134,14 @@ function Flips({ rows, onInspect }: { rows: readonly PictureRow[]; onInspect: (r
         {naps && <p className="small" data-flip-naps>{naps}</p>}
         {[...summary.flips].reverse().slice(0, FLIP_SHOWN).map((flip) => {
           const days = [flip.before, ...flip.after];
+          const rowNames = kind === "INTO_WORK" ? ["Day before", ...flip.after.map((_, i) => i === 0 ? "First night" : i === 1 ? "Second night" : `Night ${i + 1}`)] : ["Last night", ...flip.after.map((_, i) => i === 0 ? "First day off" : i === 1 ? "Second day off" : `Day off ${i + 1}`)];
           return <details key={flip.before.start}>
             <summary>{kind === "INTO_WORK" ? "Into work" : "Out of work"} · {shortDate(flip.after[0]!.start)}{kind === "INTO_WORK" && (flip.before.napMinutes ?? 0) > 0 ? " · napped before" : ""}</summary>
+            <p className="small">{rowNames.join(" · ")}</p>
             <Actogram rows={days} labels={labels(flip)} title={`${kind === "INTO_WORK" ? "Into work" : "Out of work"}, ${shortDate(flip.after[0]!.start)}`} />
             <ul>{days.map((row, index) => <li key={row.start}><button type="button" className="textbutton" onClick={() => onInspect(row)}
-              aria-label={`${labels(flip)[index]}, ${day(row.start)}: main sleep ${row.ambiguousSleep ? "ambiguous" : row.sleepHours === undefined ? "not recorded" : hours(row.sleepHours)}${sleepTimes(row) ? `, asleep ${sleepTimes(row)}` : ""}${row.napMinutes ? `, nap ${row.napMinutes} min` : ""}, energy ${row.energy ?? "not recorded"}. Open records.`}>
-              {labels(flip)[index]} · sleep {row.ambiguousSleep ? "?" : hours(row.sleepHours)}{sleepTimes(row) ? ` · ${sleepTimes(row)}` : ""}{row.napMinutes ? ` · nap ${row.napMinutes}m` : ""} · E {row.energy ?? "—"}</button></li>)}</ul>
+              aria-label={`${rowNames[index]}, ${day(row.start)}: main sleep ${row.ambiguousSleep ? "ambiguous" : row.sleepHours === undefined ? "not recorded" : hours(row.sleepHours)}${sleepTimes(row) ? `, asleep ${sleepTimes(row)}` : ""}${row.napMinutes ? `, nap ${row.napMinutes} min` : ""}, energy ${row.energy ?? "not recorded"}. Open records.`}>
+              {rowNames[index]} · sleep {row.ambiguousSleep ? "?" : hours(row.sleepHours)}{sleepTimes(row) ? ` · ${sleepTimes(row)}` : ""}{row.napMinutes ? ` · nap ${row.napMinutes}m` : ""} · E {row.energy ?? "—"}</button></li>)}</ul>
           </details>;
         })}
       </div>;

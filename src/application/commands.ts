@@ -801,7 +801,7 @@ export async function setWorkContext(
  * WorkPeriodEndedPayload's doc comment) — there is nothing to correct
  * about "did the shift end," only whether it has been marked yet.
  */
-export async function markWorkEnded(beyondDayId: string): Promise<void> {
+export async function markWorkEnded(beyondDayId: string): Promise<boolean> {
   return writeAtomically(DAY_WRITE_TABLES, async () => {
     const day = await db.beyondDays.get(beyondDayId);
     if (!day || day.status !== "ACTIVE" || day.workContext !== "WORK") {
@@ -810,7 +810,7 @@ export async function markWorkEnded(beyondDayId: string): Promise<void> {
       );
     }
     const existing = await getWorkPeriodEnded(beyondDayId);
-    if (existing) return;
+    if (existing) return false;
     const correlationId = newId();
     await logEvent(
       beyondDayId,
@@ -819,6 +819,7 @@ export async function markWorkEnded(beyondDayId: string): Promise<void> {
       "USER",
       correlationId,
     );
+    return true;
   });
 }
 
@@ -931,11 +932,12 @@ export async function restoreCaptureItem(item: CaptureItem): Promise<void> {
 }
 
 /** Undoes an accidental resolve — same reasoning as RESET/SHIFT DOWN's cancel path having a real undo, not a one-way door. */
-export async function reopenCaptureItem(id: string): Promise<void> {
+export async function reopenCaptureItem(id: string): Promise<boolean> {
   const existing = await db.captureItems.get(id);
-  if (!existing) return;
+  if (!existing) return false;
   const { resolvedAt: _resolvedAt, ...withoutResolvedAt } = existing;
   await db.captureItems.put({ ...withoutResolvedAt, status: "OPEN" });
+  return true;
 }
 
 /**
@@ -1194,17 +1196,18 @@ function isProteinLogVoided(dayEvents: readonly DomainEvent[], proteinEventId: s
  * its deletion side by side. Accepts the root or any correction in its
  * chain. Deleting an already-deleted entry is a no-op.
  */
-export async function voidProteinLog(beyondDayId: string, proteinEventId: string): Promise<void> {
+export async function voidProteinLog(beyondDayId: string, proteinEventId: string): Promise<boolean> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
   const target = events.find((e) => e.id === proteinEventId);
   if (!target || (target.type !== "PROTEIN_LOGGED" && target.type !== "PROTEIN_LOG_CORRECTED")) {
     throw new Error("PROTEIN_LOG_NOT_FOUND: that protein entry could not be found for this day.");
   }
   const rootId = target.type === "PROTEIN_LOGGED" ? target.id : (target.payload as { originalEventId: string }).originalEventId;
-  if (isProteinLogVoided(events, rootId)) return;
+  if (isProteinLogVoided(events, rootId)) return false;
   const commandId = newId();
   const payload: ProteinLogVoidedPayload = { commandId, proteinEventId: rootId };
   await logEvent(beyondDayId, "PROTEIN_LOG_VOIDED", payload, "USER", commandId, rootId);
+  return true;
 }
 
 export async function correctBodyweight(
@@ -1240,7 +1243,7 @@ async function voidBodyLog(params: {
   loggedType: DomainEvent["type"];
   correctedType: DomainEvent["type"];
   voidedType: DomainEvent["type"];
-}): Promise<void> {
+}): Promise<boolean> {
   const { beyondDayId, eventId, loggedType, correctedType, voidedType } = params;
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
   const target = events.find((e) => e.id === eventId);
@@ -1248,21 +1251,22 @@ async function voidBodyLog(params: {
     throw new Error("LOG_NOT_FOUND: that entry could not be found for this day.");
   }
   const rootId = target.type === loggedType ? target.id : (target.payload as { originalEventId: string }).originalEventId;
-  if (isBodyLogVoided(events, voidedType, rootId)) return;
+  if (isBodyLogVoided(events, voidedType, rootId)) return false;
   const commandId = newId();
   const payload: BodyLogVoidedPayload = { commandId, loggedEventId: rootId };
   await logEvent(beyondDayId, voidedType, payload, "USER", commandId, rootId);
+  return true;
 }
 
-export async function voidWaterLog(beyondDayId: string, eventId: string): Promise<void> {
+export async function voidWaterLog(beyondDayId: string, eventId: string): Promise<boolean> {
   return voidBodyLog({ beyondDayId, eventId, loggedType: "WATER_LOGGED", correctedType: "WATER_LOG_CORRECTED", voidedType: "WATER_LOG_VOIDED" });
 }
 
-export async function voidSleepLog(beyondDayId: string, eventId: string): Promise<void> {
+export async function voidSleepLog(beyondDayId: string, eventId: string): Promise<boolean> {
   return voidBodyLog({ beyondDayId, eventId, loggedType: "SLEEP_LOGGED", correctedType: "SLEEP_LOG_CORRECTED", voidedType: "SLEEP_LOG_VOIDED" });
 }
 
-export async function voidBodyweightLog(beyondDayId: string, eventId: string): Promise<void> {
+export async function voidBodyweightLog(beyondDayId: string, eventId: string): Promise<boolean> {
   return voidBodyLog({
     beyondDayId,
     eventId,

@@ -1,3 +1,5 @@
+import { HoldButton } from "../../components/HoldButton";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { addProgressPhoto, correctProgressPhoto, hideProgressPhoto, deleteProgressPhotoPermanently } from "../../../application/progressPhotoCommands";
 import { getProgressPhotos, isPhotoStoragePersistent } from "../../../application/progressPhotoQueries";
@@ -94,6 +96,18 @@ export function ProgressPhotos({ active }: { active: boolean }) {
     catch (cause) { setError(describeError(cause, "Could not save this change. Your input is still here.")); }
     finally { lock.current = false; setBusy(false); }
   }
+  function confirmChange() {
+    if (!confirm) return;
+    const change = confirm;
+    void run(async () => {
+    const acknowledge = captureCommitFeedback();
+      const changed = change.action === "hide" ? await hideProgressPhoto(change.photo.id) : await deleteProgressPhotoPermanently(change.photo.id);
+      if (changed) acknowledge("HEAVY");
+      setReceipt(change.action === "hide" ? "Photo hidden. It remains in backups." : "Photo deleted from this device. Older backups are unchanged.");
+      setEditing(null); setConfirm(null);
+      requestAnimationFrame(() => document.getElementById("photo-filter")?.focus());
+    });
+  }
   function focusManage(id: string) { requestAnimationFrame(() => (document.getElementById(`photo-manage-${id}`) ?? document.getElementById("photo-filter"))?.focus()); }
   if (!visited && !active) return <h3 id="photos-heading" tabIndex={-1} className="progress-section-title">Progress photos</h3>;
   return <>
@@ -105,7 +119,9 @@ export function ProgressPhotos({ active }: { active: boolean }) {
       event.preventDefault();
       if (!file) return;
       void run(async () => {
+    const acknowledge = captureCommitFeedback();
         await addProgressPhoto(file, { pose, takenOn: date }, source);
+        acknowledge("LIGHT");
         setReceipt(`${poseLabel(pose)} photo saved · ${progressDate(date)}.`); setFilter(pose); clearFile();
         requestAnimationFrame(() => document.getElementById("photo-import-button")?.focus());
       });
@@ -144,7 +160,9 @@ export function ProgressPhotos({ active }: { active: boolean }) {
         <div className="progress-photos"><figure><PhotoImage image={earlier.image} alt={`First ${poseLabel(filter).toLowerCase()} comparison photo`} /><figcaption>{progressDate(earlier.takenOn)}</figcaption></figure><figure><PhotoImage image={later.image} alt={`Second ${poseLabel(filter).toLowerCase()} comparison photo`} /><figcaption>{progressDate(later.takenOn)}</figcaption></figure></div>
       </section>}
       {editing && <form className="progress-form" aria-label="Correct photo details" onSubmit={(event) => { event.preventDefault(); void run(async () => {
+    const acknowledge = captureCommitFeedback();
         await correctProgressPhoto(editing.id, { pose: edit.pose, takenOn: edit.date });
+        acknowledge("LIGHT");
         setReceipt("Photo details corrected. The image is unchanged."); setFilter(edit.pose); setCompare({ earlier: "", later: "" }); setEditing(null); focusManage(editing.id);
       }); }}>
         <h4>Correct photo details</h4><div className="progress-fields"><div className="field"><label htmlFor="photo-edit-pose">Corrected photo pose</label><select id="photo-edit-pose" className="input" value={edit.pose} disabled={busy} onChange={(event) => setEdit({ ...edit, pose: event.target.value as PhotoPose })}>{PHOTO_POSES.map((key) => <option key={key} value={key}>{poseLabel(key)}</option>)}</select></div>
@@ -157,12 +175,10 @@ export function ProgressPhotos({ active }: { active: boolean }) {
         <h4 id="photo-confirm-heading" tabIndex={-1}>{confirm.action === "hide" ? "Hide this photo?" : "Permanently delete this photo?"}</h4>
         <p>{poseLabel(confirm.photo.pose)} · {progressDate(confirm.photo.takenOn)}</p>
         <p className="meta">{confirm.action === "hide" ? "It leaves the timeline and comparisons. The image stays on this device and in backups. You can still find it under Manage hidden photos." : "The image will be removed from this device and future backups. This cannot be undone here. Older exported backups still contain it."}</p>
-        <div className="progress-actions"><button className="btn-secondary" disabled={busy} onClick={() => void run(async () => {
-          if (confirm.action === "hide") await hideProgressPhoto(confirm.photo.id); else await deleteProgressPhotoPermanently(confirm.photo.id);
-          setReceipt(confirm.action === "hide" ? "Photo hidden. It remains in backups." : "Photo deleted from this device. Older backups are unchanged.");
-          setEditing(null); setConfirm(null);
-          requestAnimationFrame(() => document.getElementById("photo-filter")?.focus());
-        })}>{confirm.action === "hide" ? "CONFIRM HIDE" : "CONFIRM PERMANENT DELETE"}</button><button className="btn-secondary" disabled={busy} onClick={() => { setConfirm(null); requestAnimationFrame(() => document.getElementById("photo-edit-pose")?.focus()); }}>KEEP PHOTO</button></div>
+        <div className="progress-actions">{confirm.action === "delete"
+          ? <HoldButton className="btn-secondary" disabled={busy} hint="Hold to permanently delete. Older backups stay unchanged." onConfirm={confirmChange}>CONFIRM PERMANENT DELETE</HoldButton>
+          : <button className="btn-secondary" disabled={busy} onClick={confirmChange}>CONFIRM HIDE</button>}
+        <button className="btn-secondary" disabled={busy} onClick={() => { setConfirm(null); requestAnimationFrame(() => document.getElementById("photo-edit-pose")?.focus()); }}>KEEP PHOTO</button></div>
       </section>}
       <h4>{poseLabel(filter)} timeline · {timeline.length} {timeline.length === 1 ? "photo" : "photos"}</h4>
       {!timeline.length && <p className="meta">No {poseLabel(filter).toLowerCase()} photos here yet. Take or import a photo to start.</p>}

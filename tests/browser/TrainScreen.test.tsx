@@ -1012,6 +1012,9 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
     const play = vi.spyOn(HTMLMediaElement.prototype, "play");
     try {
       const screen = await seedHistoryAndStart();
+      await expect.element(screen.getByRole("button", { name: "LOG" }).first()).toBeVisible();
+      expect(vibrate).toHaveBeenCalledExactlyOnceWith(20);
+      vibrate.mockClear();
       await logSetViaInputs(screen, "145", "6");
       await expect.element(screen.getByText("#1 — 145 lb x 6", { exact: true })).toBeVisible();
       await expect.element(screen.getByText("heaviest yet (145 lb)", { exact: true })).toBeVisible();
@@ -1025,7 +1028,7 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
       expect(document.querySelector("audio")).toBeNull();
       // FEEL-001: every logged set taps once (the LOG haptic); a PR adds nothing of its own.
       expect(vibrate).toHaveBeenCalledOnce();
-      expect(vibrate).toHaveBeenCalledWith(15);
+      expect(vibrate).toHaveBeenCalledWith(20);
       expect(play).not.toHaveBeenCalled();
     } finally {
       play.mockRestore();

@@ -44,7 +44,7 @@ export function lastWorkout(rows: readonly PictureRow[], readAt: string): { star
 /** DELTA-004: what turns "patterns need N runs" into patterns. Null once there are enough runs. */
 export function patternsGoal(runs: number): string | null {
   return unlockGoal([{ more: RUN_MEAN_FLOOR - runs, action: (n) => `mark each day work or off and log main sleep and a check-in through ${n} more work ${n === 1 ? "run" : "runs"}` }],
-    "show shift-by-shift patterns") ?? null;
+    "shift-by-shift patterns") ?? null;
 }
 
 type FlipSummaryView = ReturnType<typeof flipSummary>;

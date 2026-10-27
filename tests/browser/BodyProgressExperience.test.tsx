@@ -1,3 +1,4 @@
+import { holdToConfirm } from "./helpers/hold";
 import { afterEach, expect, it, vi } from "vitest";
 import { cdp, page, userEvent } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
@@ -157,6 +158,8 @@ it("keeps a selected photo across views and tab navigation, requires an explicit
   await screen.getByRole("button", { name: "DELETE PHOTO PERMANENTLY", exact: true }).click();
   expect(await db.progressPhotos.count()).toBe(2);
   await screen.getByRole("button", { name: "CONFIRM PERMANENT DELETE", exact: true }).click();
+  expect(await db.progressPhotos.count()).toBe(2);
+  await holdToConfirm(screen.getByRole("button", { name: "CONFIRM PERMANENT DELETE", exact: true }));
   await expect.poll(() => db.progressPhotos.count()).toBe(1);
   await expect.poll(() => document.activeElement?.id).toBe("photo-filter");
   expect((await db.events.where("type").equals("PROGRESS_PHOTO_DELETED").toArray())[0]?.payload).toHaveProperty("photoId");

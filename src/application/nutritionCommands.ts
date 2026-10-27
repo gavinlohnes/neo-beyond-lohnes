@@ -77,11 +77,12 @@ export async function updateSavedMeal(id: string, changes: SavedMealModifyInput)
  * values are all getMealEntries ever reads); this only removes the
  * preset from getSavedMeals' active list.
  */
-export async function archiveSavedMeal(id: string): Promise<void> {
+export async function archiveSavedMeal(id: string): Promise<boolean> {
   const existing = await db.savedMeals.get(id);
   if (!existing) throw notFound(id);
-  if (existing.archivedAt) return; // idempotent, matching archiveMission's precedent
+  if (existing.archivedAt) return false; // idempotent, matching archiveMission's precedent
   await db.savedMeals.update(id, { archivedAt: new Date().toISOString() });
+  return true;
 }
 
 export interface MealLogResult {
@@ -245,14 +246,15 @@ function isVoided(dayEvents: readonly DomainEvent[], mealEventId: string): boole
  * weekly check-in at once. Voiding an already-voided meal is a no-op, so a
  * DELETE racing an UNDO can't fail or double-write.
  */
-export async function voidMealLog(beyondDayId: string, mealEventId: string): Promise<void> {
+export async function voidMealLog(beyondDayId: string, mealEventId: string): Promise<boolean> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
   const target = events.find((e) => e.id === mealEventId);
   if (!target || target.type !== "MEAL_LOGGED") {
     throw new Error("MEAL_LOG_NOT_FOUND: that meal could not be found for this day.");
   }
-  if (isVoided(events, mealEventId)) return;
+  if (isVoided(events, mealEventId)) return false;
   const commandId = newId();
   const payload: MealLogVoidedPayload = { commandId, mealEventId };
   await logEvent(beyondDayId, "MEAL_LOG_VOIDED", payload, "USER", commandId, mealEventId);
+  return true;
 }
