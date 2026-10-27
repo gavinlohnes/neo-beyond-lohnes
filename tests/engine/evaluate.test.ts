@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluate, type EvaluateInput } from "../../src/engine/evaluate";
+import { evaluate, traceShortSleepStreak, type EvaluateInput } from "../../src/engine/evaluate";
 import type { StateCheckIn } from "../../src/domain/common/types";
 
 function checkIn(overrides: Partial<StateCheckIn> = {}): StateCheckIn {
@@ -247,5 +247,44 @@ describe("evaluate — OBLIGATION_DUE (INTENT-ARBITRATION-001)", () => {
     const obligationRule = result.trace.matchedRules.find((r) => r.ruleId === "OBLIGATION_DUE");
     expect(obligationRule?.result).toBe(false);
     expect(obligationRule?.reason).toContain("outranks");
+  });
+});
+
+describe("SLEEP-ENGINE-001 — two short main sleeps", () => {
+  const short = { shortSleep: { streak: true, evidence: '[{"minutes":290}]' } };
+  it("under GREEN with planned work, keeps the same recommendation and suggests the reduced session", () => {
+    const plain = evaluate(input({ hasPlannedWork: true }));
+    const result = evaluate(input({ hasPlannedWork: true, ...short }));
+    expect(result.kind).toBe("EXECUTE_PLANNED_WORK");
+    expect(result.priority).toBe(plain.priority);
+    expect(result.suggestedCommand).toBe(plain.suggestedCommand);
+    expect(result.title).toBe("Proceed with planned work — reduced session");
+    expect(result.rationale).toMatch(/last two main sleeps were below your usual range/);
+    expect(result.trace.inputs).toContainEqual({ key: "shortSleepStreak", value: true });
+    expect(result.trace.inputs).toContainEqual({ key: "shortSleepEvidence", value: '[{"minutes":290}]' });
+    expect(plain.title).toBe("Proceed with planned work");
+    expect(plain.trace.inputs).toContainEqual({ key: "shortSleepStreak", value: false });
+  });
+
+  it("never changes RED, the end-of-shift rule, YELLOW, obligations or no-action", () => {
+    for (const [overrides, kind] of [
+      [{ checkIn: checkIn({ energy: 1 }) }, "STABILIZE"],
+      [{ hasUnresolvedPostShift: true, hasPlannedWork: true }, "POST_SHIFT_TRANSITION"],
+      [{ checkIn: checkIn({ energy: 2 }), hasPlannedWork: true }, "RECOVER"],
+      [{ hasEligibleObligationDueOrOverdue: true }, "OBLIGATION_DUE"],
+      [{}, "NO_ACTION_REQUIRED"],
+    ] as const) {
+      const without = evaluate(input(overrides)), withShort = evaluate(input({ ...overrides, ...short }));
+      expect(withShort.kind).toBe(kind);
+      expect({ ...withShort, id: "", issuedAt: "", trace: undefined }).toEqual({ ...without, id: "", issuedAt: "", trace: undefined });
+    }
+  });
+
+  it("reads a stored trace back, with older traces reading false", () => {
+    expect(traceShortSleepStreak(evaluate(input({ hasPlannedWork: true, ...short })).trace)).toBe(true);
+    expect(traceShortSleepStreak(evaluate(input({ hasPlannedWork: true })).trace)).toBe(false);
+    const old = evaluate(input()).trace; old.inputs = old.inputs.filter((i) => !i.key.startsWith("shortSleep"));
+    expect(traceShortSleepStreak(old)).toBe(false);
+    expect(traceShortSleepStreak(undefined)).toBe(false);
   });
 });

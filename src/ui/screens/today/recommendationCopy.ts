@@ -107,6 +107,8 @@ const TRACE_KEY_LABELS: Record<string, string> = {
   hasEligibleObligationDueOrOverdue: "Obligation overdue or due today",
   capacity: "Capacity",
   reasonCodes: "Reason codes",
+  shortSleepStreak: "Two short main sleeps",
+  shortSleepEvidence: "Main sleeps judged",
 };
 
 export function describeTraceLabel(key: string): string {
@@ -117,6 +119,14 @@ export function describeTraceLabel(key: string): string {
 export function describeTraceValue(value: string | number | boolean): string {
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (value === "") return "—";
+  // SLEEP-ENGINE-001: the judged nights, newest first, against their usual range.
+  if (typeof value === "string" && value.startsWith("[{") && value.includes('"minutes"')) {
+    try {
+      const clock = (m: number) => `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, "0")}`;
+      return (JSON.parse(value) as { minutes: number; kind: string; low: number; high: number }[])
+        .map((n) => `${clock(n.minutes)} (usual ${clock(n.low)}–${clock(n.high)}, ${n.kind === "WORK" ? "work day" : "day off"})`).join(" · ");
+    } catch { return value; }
+  }
   // CLEANUP-003 (walk-through finding 8): capacity reason codes in the same plain words TODAY uses.
   return describeReason(String(value));
 }
@@ -195,6 +205,7 @@ export function explainRecommendation(recommendation: Recommendation, checkIn: S
       break;
     case "EXECUTE_PLANNED_WORK":
       lines.push("Your check-in is GREEN and you have work planned today.");
+      if (input("shortSleepStreak")) lines.push(describeShortSleep(t));
       if (input("hasEligibleObligationDueOrOverdue")) lines.push("A commitment is also due; your plan comes first.");
       break;
     case "OBLIGATION_DUE":
@@ -206,6 +217,20 @@ export function explainRecommendation(recommendation: Recommendation, checkIn: S
         : "No check-in yet, and your plan, shift and commitments don't call for anything.");
       break;
   }
-  lines.push("BEYOND decides from your check-in, plan, shift and commitments. It doesn't use sleep, weight or training history.");
+  // SLEEP-ENGINE-001: a trace from Engine 0.2.0 on carries the sleep input; older ones never used sleep.
+  lines.push(t.inputs.some((i) => i.key === "shortSleepStreak")
+    ? "BEYOND decides from your check-in, plan, shift and commitments. Two short main sleeps can only make a planned session the reduced one; sleep never changes the advice itself. It doesn't use weight or training history."
+    : "BEYOND decides from your check-in, plan, shift and commitments. It doesn't use sleep, weight or training history.");
   return lines;
+}
+
+/** SLEEP-ENGINE-001: "Your last two main sleeps (4:50, 5:10) were below your usual range (6:20–7:40 on work days)…", from the trace's own evidence. */
+function describeShortSleep(t: Recommendation["trace"]): string {
+  const clock = (m: number) => `${Math.floor(m / 60)}:${String(Math.round(m % 60)).padStart(2, "0")}`;
+  try {
+    const nights = JSON.parse(String(t.inputs.find((i) => i.key === "shortSleepEvidence")?.value ?? "[]")) as { minutes: number; kind: "WORK" | "OFF"; low: number; high: number }[];
+    const ranges = [...new Map(nights.map((n) => [n.kind, `${clock(n.low)}–${clock(n.high)} on ${n.kind === "WORK" ? "work days" : "days off"}`])).values()];
+    if (nights.length) return `Your last two main sleeps (${[...nights].reverse().map((n) => clock(n.minutes)).join(", ")}) were below your usual range (${ranges.join("; ")}), so the reduced session is suggested. You can still choose the standard one.`;
+  } catch { /* fall through to the plain sentence */ }
+  return "Your last two main sleeps were below your usual range, so the reduced session is suggested. You can still choose the standard one.";
 }

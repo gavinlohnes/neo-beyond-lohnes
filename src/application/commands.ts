@@ -1,5 +1,7 @@
 import { db } from "../persistence/db";
 import { DAY_WRITE_TABLES, writeAtomically } from "./atomicWrite";
+import { deriveShortSleepStreak } from "../engine/sleepStreak";
+import { getDaySummaries } from "./dayLedgerQueries";
 import type { DraftDecision } from "../domain/intelligence/types";
 import { evaluate } from "../engine/evaluate";
 import { computeDueRollover, workoutHoldsRollover } from "../engine/dayRollover";
@@ -440,6 +442,9 @@ export async function submitCheckIn(
   // Check-in draft (Drop 5): how a drafted check-in was decided, when the form opened with one.
   draft?: DraftDecision,
 ): Promise<{ checkIn: StateCheckIn; recommendation: Recommendation }> {
+  // SLEEP-ENGINE-001: read before the write transaction (the ledger reads tables the day write does not
+  // hold); a check-in never changes sleep, so the reading cannot go stale within this command.
+  const sleep = deriveShortSleepStreak(await getDaySummaries(), beyondDayId, new Date());
   return writeAtomically(DAY_WRITE_TABLES, async () => {
     const checkIn: StateCheckIn = {
       id: newId(),
@@ -484,6 +489,7 @@ export async function submitCheckIn(
           eligibleObligations,
           formatLocalDate(new Date()),
         ),
+        shortSleep: { streak: sleep.streak, evidence: sleep.nights.length ? JSON.stringify(sleep.nights) : "" },
       }),
       seq: await nextSeq(),
     };

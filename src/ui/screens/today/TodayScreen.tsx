@@ -160,6 +160,7 @@ import { getEffectiveProteinTargetG } from "../../../application/nutritionTarget
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
 import { livedDayShiftWindow } from "../../../engine/scheduledContext";
 import { suggestSessionVariant } from "../../../engine/trainSuggestion";
+import { traceShortSleepStreak } from "../../../engine/evaluate";
 import type { SchedulePattern } from "../../../domain/common/types";
 import { templateLabel } from "../train/trainCopy";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
@@ -1698,7 +1699,8 @@ export function TodayScreen({
 
   // ---- SHIFT CLOCK rendering (Drop 2) ----
   const fuelLine = describeFuel(minimumDayProteinG, proteinTargetG, minimumDayHydrateOz);
-  const suggestedVariant = suggestSessionVariant(capacityResult ? capacityResult.capacity : null).variant;
+  // SLEEP-ENGINE-001: the short-sleep fact comes from the issued recommendation's trace, so this row and its card agree.
+  const suggestedVariant = suggestSessionVariant(capacityResult ? capacityResult.capacity : null, traceShortSleepStreak(recommendation?.trace)).variant;
   const workoutLine = nextWorkout
     ? suggestedVariant === "RESET"
       ? `${nextWorkout.label} · RESET suggested first`

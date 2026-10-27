@@ -75,3 +75,14 @@ describe("doesSessionAdvanceRotation", () => {
     expect(doesSessionAdvanceRotation("RECOVERY", "ABANDONED")).toBe(false);
   });
 });
+
+describe("SLEEP-ENGINE-001 — session size after two short sleeps", () => {
+  it("turns only GREEN's standard session into the reduced one", () => {
+    expect(suggestSessionVariant("GREEN", true).variant).toBe("REDUCED");
+    expect(suggestSessionVariant("GREEN", true).reason).toMatch(/last two main sleeps/);
+    expect(suggestSessionVariant("GREEN").variant).toBe("STANDARD");
+    expect(suggestSessionVariant("YELLOW", true).variant).toBe("REDUCED");
+    expect(suggestSessionVariant("RED", true).variant).toBe("RESET");
+    expect(suggestSessionVariant(null, true)).toEqual(suggestSessionVariant(null));
+  });
+});

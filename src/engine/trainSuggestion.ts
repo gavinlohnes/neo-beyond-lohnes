@@ -12,9 +12,15 @@ export interface SessionVariantSuggestion {
   variant: "RESET" | "REDUCED" | "STANDARD";
   reason: string;
   noCheckIn: boolean;
+  /** SLEEP-ENGINE-001: true only when two short main sleeps turned GREEN's STANDARD into REDUCED. */
+  shortSleep?: boolean;
 }
 
-export function suggestSessionVariant(capacity: Capacity | null): SessionVariantSuggestion {
+/**
+ * SLEEP-ENGINE-001: `shortSleep` is the issued recommendation's own trace fact (traceShortSleepStreak), so
+ * TODAY, TRAIN and the recommendation never disagree. It only turns GREEN's STANDARD into REDUCED.
+ */
+export function suggestSessionVariant(capacity: Capacity | null, shortSleep = false): SessionVariantSuggestion {
   if (capacity === null) {
     return { variant: "STANDARD", reason: "No check-in yet today.", noCheckIn: true };
   }
@@ -28,6 +34,7 @@ export function suggestSessionVariant(capacity: Capacity | null): SessionVariant
   if (capacity === "YELLOW") {
     return { variant: "REDUCED", reason: "YELLOW capacity.", noCheckIn: false };
   }
+  if (shortSleep) return { variant: "REDUCED", reason: "GREEN capacity; your last two main sleeps were below your usual range.", noCheckIn: false, shortSleep: true };
   return { variant: "STANDARD", reason: "GREEN capacity.", noCheckIn: false };
 }
 
