@@ -1,3 +1,22 @@
+# Session close — 2026-10-27 (all work merged and live)
+
+- **Live on master `8a14c72`, deployed (GitHub Pages run 418 green):** ROTATION-002/003/004
+  (#297, #299, #304), DELTA-004 (#298), SLEEP-ENGINE-001 (#300), overlay removal (#301),
+  PERSONAL-UNDERSTANDING-001 (#302), LOOP step 1 ASK (#305), LOOP step 2 REFLECT (#306),
+  MEMORY-001 (#303) and SUIT-002 (#307). All merged at Gavin's direction; independent review
+  waived by Gavin for #300 and #306 only (recorded on each PR).
+- **No open PRs from this session; no work in flight.** Builders: Claude Code owns THE LOOP;
+  Codex owns Personal Understanding, memory and SUIT-002.
+- **Next action:** LOOP step 3 TRY (bounded personal experiment, proposed as a journal-backed
+  record with no schema change) awaits Gavin's "go try"; step 4 REMEMBER after it. Both PROTECTED.
+- **Owner checks:** feel SUIT-002 haptics on the phone (water tick; hold-to-delete arm and
+  commit). Delete merged branches `claude/delta-004` and `claude/remove-pcb-overlay` in GitHub.
+- **Known risks:** existing bundle-size warning. REFLECT follow-ups appear in the Journal only,
+  not on TODAY (deliberate; revisit with use).
+
+---
+Historical SUIT-002 checkpoint (Codex, #307 merged at `8a14c72`):
+
 # SUIT-002 — make the armor answer
 
 - Authority: Gavin's BEYOND // SUIT brief, 2026-10-27. Codex; PROTECTED combined memory/command-outcome review.
