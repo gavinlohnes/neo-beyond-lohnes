@@ -20,9 +20,9 @@
    one-tap "Not today / Wrong" with an optional reason, saved as a Decision Journal entry linked to
    the recommendation (the dormant `linkedRecommendationId`), with a later "how did it go?"; a
    30-second shift debrief on the lived day.
-3. **TRY** (DELTA-ADVANCED item 1; PROTECTED, new record kind) — a bounded personal experiment
-   compared with your usual, with sample sizes and an honest "no clear difference"; ends with a
-   lesson in the journal. Needs its own approval.
+3. **TRY** (DELTA-ADVANCED item 1; PROTECTED; approved 2026-10-27, "go try", journal-backed) — a
+   bounded personal experiment compared with your usual, with sample sizes and an honest "no clear
+   difference"; ends with a lesson in the journal.
 4. **REMEMBER** (PROTECTED, advisory) — lessons tied to a situation return as quiet, informational
    notes at that moment; never override a recommendation. Needs its own approval.
 
@@ -39,7 +39,7 @@
 - **Acceptance:** unit tests for each answer and each "not yet"; browser test of the tab, answers
   and tap-through at phone width with axe; full verify; CI; Gavin's merge.
 
-## Step 2 — REFLECT
+## Step 2 — REFLECT (#306, merged)
 
 - **Authority:** Gavin, 2026-10-27, "merge 305 and go reflect", approving the proposed scope: no
   Engine or recommendation change, no schema change, the journal's existing commands; stop and ask
@@ -62,3 +62,23 @@
 - **Acceptance:** integration tests for linking, the lived-day rule, review and debrief; browser
   tests of the TODAY decline path, debrief and Journal follow-up at phone widths with axe; full
   verify; CI; Gavin's merge.
+
+## Step 3 — TRY
+
+- **Authority:** Gavin, 2026-10-27, "Merge it and go try", approving the proposed journal-backed
+  version (no schema change, no new event type, no Engine input).
+- **Built:** Journal → Experiments → TRY SOMETHING: what you'll try, 7/14/28 days starting with the
+  current lived day, on work days / days off / every day, and an optional expectation. A running
+  experiment shows as one quiet line under TODAY's mode ("Trying: … · day 3 of 14"). Its card shows
+  results so far and at the end: main sleep, check-in energy and training on the experiment's days
+  against your usual days of the same kind in the Whole Picture window, with day counts on each
+  side; gaps under 15 min of sleep or 0.3 energy read "about the same"; fewer than 3 days a side
+  says what is missing. Closing it (It helped / No clear difference / It didn't help + lesson) is
+  the journal's own review.
+- **Storage:** an ordinary journal entry titled "Try: …" whose context starts with one fixed window
+  line (`Window YYYY-MM-DD for N days · WORK|OFF|ALL`) written and read by
+  `application/tryExperiment.ts`. Editing that line away turns it back into a plain entry.
+- **Not in scope:** per-day "did I do it" marking, reminders, Engine input, AI, causal claims.
+- **REUSE:** Decision Journal commands/review, Whole Picture rows and `PICTURE_MEAN_FLOOR`, the
+  lived-day boundary, REFLECT's chip pattern. **OWN:** the window line, the comparison rule and its
+  "about the same" thresholds. **BUILD FROM SCRATCH:** none.

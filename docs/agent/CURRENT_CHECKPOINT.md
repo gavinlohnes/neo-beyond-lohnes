@@ -1,3 +1,13 @@
+# LOOP step 3 — TRY
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "Merge it and go try". Claude Code; PROTECTED
+  (bounded: journal-backed, no schema/new event/Engine input). [Brief](LOOP.md#step-3--try).
+- **Built:** Journal → Experiments (start, run, compare with your usual, close with a lesson) and a
+  quiet "Trying: …" line under TODAY's mode while one runs.
+- **Next:** CI, then Gavin's merge (independent review per DEV-FLOW-002 unless waived). Step 4
+  REMEMBER needs its own approval.
+
+---
 # Session close — 2026-10-27 (all work merged and live)
 
 - **Live on master `8a14c72`, deployed (GitHub Pages run 418 green):** ROTATION-002/003/004
