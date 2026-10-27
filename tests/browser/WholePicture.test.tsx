@@ -103,3 +103,17 @@ it("ROTATION-001: shows recorded runs, newest first, and opens a day's records f
   expect((await axe.run(document.body)).violations).toEqual([]);
 });
 
+it("LOOP step 1 — ASK: answers from recorded days and opens a day behind the answer, writing nothing", async () => {
+  await page.viewport(390, 850); await seed(); const before = await db.events.toArray();
+  const screen = await render(<WholePicture />);
+  await screen.getByRole("tab", { name: "Ask", exact: true }).click();
+  await screen.getByRole("button", { name: "What's normal for me, work days vs days off?", exact: true }).click();
+  await expect.element(screen.getByText(/^Main sleep: \d+:\d\d on work days, \d+:\d\d on days off\.$/)).toBeVisible();
+  await screen.getByText(/^\d+ days behind this$/).first().click();
+  await screen.getByRole("button", { name: /\. Open records\.$/ }).first().click();
+  await expect.element(screen.getByRole("dialog")).toBeVisible();
+  expect(await db.events.toArray()).toEqual(before);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
+  expect((await axe.run(document.body)).violations).toEqual([]);
+});
+
