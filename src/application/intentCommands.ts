@@ -136,16 +136,17 @@ export async function modifyMission(missionId: string, changes: MissionModifyInp
  * delete — obligations already linked to it keep their missionId
  * unchanged and remain fully queryable.
  */
-export async function archiveMission(missionId: string): Promise<void> {
+export async function archiveMission(missionId: string): Promise<boolean> {
   return writeAtomically(INTENT_WRITE_TABLES, async () => {
     const existing = await db.missions.get(missionId);
     if (!existing) throw notFound("MISSION", missionId);
-    if (existing.status === "ARCHIVED") return; // idempotent, matching markWorkEnded's precedent for a fact that's either already true or isn't
+    if (existing.status === "ARCHIVED") return false; // idempotent, matching markWorkEnded's precedent for a fact that's either already true or isn't
     await db.missions.update(missionId, { status: "ARCHIVED", updatedAt: new Date().toISOString() });
     const correlationId = newId();
     await logIntentEvent("MISSION_ARCHIVED", { commandId: correlationId, missionId }, "USER", correlationId, {
       missionId,
     });
+    return true;
   });
 }
 
@@ -274,11 +275,11 @@ function assertObligationExists(existing: Obligation | undefined, obligationId: 
 }
 
 /** OPEN -> WAITING only (Drop 01 section 4: "transition OPEN <-> WAITING where valid"). Throws on any other current status, matching markWorkEnded's precedent of surfacing an invalid transition immediately rather than silently no-opping. */
-export async function markObligationWaiting(obligationId: string): Promise<void> {
+export async function markObligationWaiting(obligationId: string): Promise<boolean> {
   return writeAtomically(INTENT_WRITE_TABLES, async () => {
     const existing = await db.obligations.get(obligationId);
     assertObligationExists(existing, obligationId);
-    if (existing.status === "WAITING") return; // idempotent no-op for the already-true case
+    if (existing.status === "WAITING") return false; // idempotent no-op for the already-true case
     if (existing.status !== "OPEN") {
       throw new Error(`INVALID_OBLIGATION_TRANSITION: cannot mark ${existing.status} obligation as WAITING (must be OPEN).`);
     }
@@ -287,15 +288,16 @@ export async function markObligationWaiting(obligationId: string): Promise<void>
     await logIntentEvent("OBLIGATION_MARKED_WAITING", { commandId: correlationId, obligationId }, "USER", correlationId, {
       obligationId,
     });
+    return true;
   });
 }
 
 /** WAITING -> OPEN only. Throws on any other current status. */
-export async function markObligationOpen(obligationId: string): Promise<void> {
+export async function markObligationOpen(obligationId: string): Promise<boolean> {
   return writeAtomically(INTENT_WRITE_TABLES, async () => {
     const existing = await db.obligations.get(obligationId);
     assertObligationExists(existing, obligationId);
-    if (existing.status === "OPEN") return; // idempotent no-op for the already-true case
+    if (existing.status === "OPEN") return false; // idempotent no-op for the already-true case
     if (existing.status !== "WAITING") {
       throw new Error(`INVALID_OBLIGATION_TRANSITION: cannot mark ${existing.status} obligation as OPEN (must be WAITING).`);
     }
@@ -304,6 +306,7 @@ export async function markObligationOpen(obligationId: string): Promise<void> {
     await logIntentEvent("OBLIGATION_MARKED_OPEN", { commandId: correlationId, obligationId }, "USER", correlationId, {
       obligationId,
     });
+    return true;
   });
 }
 
@@ -349,7 +352,7 @@ async function materializeNextOccurrence(existing: Obligation): Promise<void> {
 }
 
 /** Valid from OPEN or WAITING only — an already-resolved (SATISFIED/RELEASED) obligation cannot be satisfied again; re-open is not a Drop 01 operation. */
-export async function satisfyObligation(obligationId: string, resolutionNote?: string): Promise<void> {
+export async function satisfyObligation(obligationId: string, resolutionNote?: string): Promise<boolean> {
   return writeAtomically(INTENT_WRITE_TABLES, async () => {
     const existing = await db.obligations.get(obligationId);
     assertObligationExists(existing, obligationId);
@@ -372,11 +375,12 @@ export async function satisfyObligation(obligationId: string, resolutionNote?: s
       { obligationId },
     );
     await materializeNextOccurrence(existing);
+    return true;
   });
 }
 
 /** Valid from OPEN or WAITING only — "no longer required," distinct from SATISFIED. Same one-way-from-unresolved rule as satisfyObligation. */
-export async function releaseObligation(obligationId: string, resolutionNote?: string): Promise<void> {
+export async function releaseObligation(obligationId: string, resolutionNote?: string): Promise<boolean> {
   return writeAtomically(INTENT_WRITE_TABLES, async () => {
     const existing = await db.obligations.get(obligationId);
     assertObligationExists(existing, obligationId);
@@ -398,5 +402,6 @@ export async function releaseObligation(obligationId: string, resolutionNote?: s
       correlationId,
       { obligationId },
     );
+    return true;
   });
 }

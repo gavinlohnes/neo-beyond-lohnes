@@ -1,4 +1,4 @@
-import { feedback } from "../../feel/feedback";
+import { captureFeedback } from "../../feel/feedback";
 import { useEffect, useState } from "react";
 import { getSchedulePattern, getScheduledContext } from "../../../application/queries";
 import { updateSchedulePattern } from "../../../application/commands";
@@ -85,6 +85,7 @@ export function WorkScheduleScreen() {
   const preview = loaded && !shiftHoursInvalid ? describeSchedulePreview(deriveScheduledContext(new Date(), draftPattern())) : null;
 
   async function handleSave() {
+    const acknowledge = captureFeedback();
     if (saving || shiftHoursInvalid) return;
     setSaving(true);
     setStatus(null);
@@ -97,7 +98,7 @@ export function WorkScheduleScreen() {
         shiftEndHour: draft.shiftEndHour,
         postWorkTailHours: draft.postWorkTailHours,
       });
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setStatus("Saved.");
     } catch (e) {
       setStatus(describeError(e, "Could not save."));

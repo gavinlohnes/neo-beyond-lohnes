@@ -1,4 +1,4 @@
-import { feedback } from "../../feel/feedback";
+import { captureFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState } from "react";
 import type { DomainEvent } from "../../../domain/common/types";
@@ -149,6 +149,7 @@ export function JournalScreen({ active = true, navigationEntryId, onOpenCapture,
   async function handleCreate() {
     if (!newTitle.trim() || !newDecision.trim()) return;
     await withBusy(async () => {
+    const acknowledge = captureFeedback();
       await createDecisionJournalEntry({
         title: newTitle.trim(),
         decision: newDecision.trim(),
@@ -157,7 +158,7 @@ export function JournalScreen({ active = true, navigationEntryId, onOpenCapture,
         ...(newReasoning.trim() ? { reasoning: newReasoning.trim() } : {}),
         ...(newExpectation.trim() ? { expectation: newExpectation.trim() } : {}),
       });
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setNewTitle("");
       setNewContext("");
       setNewOptions("");
@@ -333,6 +334,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
   }
 
   async function handleSave() {
+    const acknowledge = captureFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -345,7 +347,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
         reasoning: reasoning.trim() || undefined,
         expectation: expectation.trim() || undefined,
       });
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setEditing(false);
       await load();
     } catch (e) {
@@ -356,6 +358,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
   }
 
   async function handleReview() {
+    const acknowledge = captureFeedback();
     if (busy || !outcome.trim()) return;
     setBusy(true);
     setError(null);
@@ -364,7 +367,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
         outcome: outcome.trim(),
         ...(lesson.trim() ? { lesson: lesson.trim() } : {}),
       });
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setReviewing(false);
       setOutcome("");
       setLesson("");

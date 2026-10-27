@@ -1,4 +1,4 @@
-import { feedback } from "../../feel/feedback";
+import { captureFeedback } from "../../feel/feedback";
 import { useEffect, useId, useRef, useState } from "react";
 import { RotationMap } from "./RotationMap";
 import { AskPanel } from "./AskPanel";
@@ -123,6 +123,7 @@ export function WholePicture({ active = true, onOpenHistory, destination, onDest
   function go(next: View) { setView(next); requestAnimationFrame(() => tabRefs.current[next]?.focus({ preventScroll: true })); }
   function close() { dialog.current?.close(); setInspect(null); requestAnimationFrame(() => opener.current?.isConnected && opener.current.focus({ preventScroll: true })); }
   async function saveFocus() {
+    const acknowledge = captureFeedback();
     if (!data || inFlight.current) return;
     if (!note.trim()) { setSaveError("Write the intention you want to choose. Nothing was saved."); return; }
     if (draftWeek.current !== data.week.start) { setSaveError("Your draft belongs to an earlier review week. It is kept; explicitly select the current week before saving."); return; }
@@ -131,8 +132,9 @@ export function WholePicture({ active = true, onOpenHistory, destination, onDest
     if (text.length > 1000) { setSaveError("Keep the full focus within 1,000 characters. Your draft is kept."); return; }
     inFlight.current = true; setSaving(true); setSaveError(null); setReceipt(null);
     try {
-      const id = await saveWeeklyReview({ weekStart: data.week.start, weekEnd: data.week.end, note: data.savedReview?.note ?? "", focus: { kind: "CUSTOM", text }, expectedPreviousId: baseline.current });
-      feedback("LIGHT");
+      const receipt = { changed: false };
+      const id = await saveWeeklyReview({ weekStart: data.week.start, weekEnd: data.week.end, note: data.savedReview?.note ?? "", focus: { kind: "CUSTOM", text }, expectedPreviousId: baseline.current }, receipt);
+      if (receipt.changed) acknowledge("LIGHT");
       baseline.current = id; setNote(""); setFocus("recovery"); dirtyRef.current = false;
       setReceipt(`Weekly review and focus saved on this device for the week starting ${date(data.week.end)}. Your existing review note was preserved.`);
       window.dispatchEvent(new Event("beyond:weekly-review-saved"));

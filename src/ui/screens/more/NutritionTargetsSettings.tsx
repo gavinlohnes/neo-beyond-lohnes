@@ -1,4 +1,4 @@
-import { feedback } from "../../feel/feedback";
+import { captureFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { Target } from "lucide-react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
@@ -26,7 +26,7 @@ import { describeError, NO_CHANGES_MESSAGE } from "../../errorMessage";
  */
 interface TargetsSaveConfirmation {
   message: string;
-  undo: () => Promise<void>;
+  undo: () => Promise<boolean>;
 }
 
 function formInputs(targets: NutritionTargets | null) {
@@ -92,6 +92,7 @@ export function NutritionTargetsSettings() {
   }
 
   async function handleSave() {
+    const acknowledge = captureFeedback();
     if (busy || loadState !== "ready") return;
     setError(null);
     const calorieValue = calorieInput.trim() ? Number(calorieInput) : undefined;
@@ -119,7 +120,7 @@ export function NutritionTargetsSettings() {
     setBusy(true);
     try {
       const { saved, undo } = await saveNutritionTargets(changes);
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       if (disposedRef.current) return;
       setTargets(saved);
       setOpen(false);
@@ -132,11 +133,11 @@ export function NutritionTargetsSettings() {
   }
 
   async function handleUndo() {
+    const acknowledge = captureFeedback();
     if (busy || !confirmation) return;
     setBusy(true);
     try {
-      await confirmation.undo();
-      feedback("HEAVY");
+      if (await confirmation.undo()) acknowledge("HEAVY");
       const restored = await getNutritionTargets();
       if (disposedRef.current) return;
       setTargets(restored);

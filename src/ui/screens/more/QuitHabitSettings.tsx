@@ -1,4 +1,4 @@
-import { feedback } from "../../feel/feedback";
+import { captureFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { Ban } from "lucide-react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
@@ -48,6 +48,7 @@ export function QuitHabitSettings() {
   }
 
   async function handleSave() {
+    const acknowledge = captureFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -60,7 +61,7 @@ export function QuitHabitSettings() {
           URGE_TRIGGERS.flatMap((t) => (ifThen[t]?.trim() ? [[t, ifThen[t]!.trim()]] : [])),
         ) as Partial<Record<UrgeTrigger, string>>,
       });
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       if (disposedRef.current) return;
       setHabit(saved);
       setOpen(false);

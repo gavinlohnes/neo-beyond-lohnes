@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
-import { feedback } from "../feel/feedback";
+import { captureFeedback } from "../feel/feedback";
 
 /**
  * Hold-to-confirm (ROADMAP 1.0 design rule, owner ruling 2026-09-30): for big
@@ -60,9 +60,10 @@ export function HoldButton({
     setShowHint(false);
     setHolding(true);
     timerRef.current = setTimeout(() => {
+    const acknowledge = captureFeedback();
       timerRef.current = null;
       setHolding(false);
-      if (armFeedback) feedback("ARMED");
+      if (armFeedback) acknowledge("ARMED");
       onConfirm();
     }, durationMs);
   }

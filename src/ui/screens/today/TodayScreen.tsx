@@ -1,4 +1,4 @@
-import { feedback } from "../../feel/feedback";
+import { captureFeedback } from "../../feel/feedback";
 import { WorkPreparation } from "../../components/WorkPreparation";
 import { SleepMetricSheet } from "./SleepMetricSheet";
 import { useHiddenFeatures } from "../../hiddenFeatures";
@@ -944,12 +944,13 @@ export function TodayScreen({
   }
 
   async function handleStartDay() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await startDay();
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       // TODAY-008 (residual TODAY-R01, flagged in TODAY-006): every other
       // mutating handler in this component calls refresh() afterward so
       // everything derived from the active day (checkIn, recommendation,
@@ -968,6 +969,7 @@ export function TodayScreen({
   }
 
   async function handleCheckIn() {
+    const acknowledge = captureFeedback();
     const submitted = checkInFormValues;
     if (busy || busyRef.current || !isCheckInComplete(submitted)) return;
     busyRef.current = true;
@@ -979,7 +981,7 @@ export function TodayScreen({
       await submitCheckIn(activeDay.id, submitted,
         operationsOnly && commandFocus === undefined && activeCheckInDraft ? checkInDraftDecision(activeCheckInDraft.value, submitted) : undefined);
       committed = true;
-      feedback("MEDIUM");
+      acknowledge("MEDIUM");
       setCheckInDraftDismissed(false);
       setValues({});
       setCheckInFormOpen(false);
@@ -993,13 +995,14 @@ export function TodayScreen({
   }
 
   async function handleQuickCheckIn() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
       await submitCheckIn(activeDay.id, quickCheckInValues);
-      feedback("MEDIUM");
+      acknowledge("MEDIUM");
       await refresh();
       setValues({});
       setCheckInFormOpen(false);
@@ -1010,12 +1013,13 @@ export function TodayScreen({
   }
 
   async function handleRecord() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day || !recommendation) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await recordRecommendation(day.id, recommendation);
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       await refresh();
     } finally {
       busyRef.current = false;
@@ -1055,11 +1059,13 @@ export function TodayScreen({
   }
 
   async function handleStartReset() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await startReset(day.id, resetIntensity);
+      acknowledge("LIGHT");
       setLastResetOutcome(null);
       await refresh();
     } finally {
@@ -1069,12 +1075,13 @@ export function TodayScreen({
   }
 
   async function handleCompleteReset() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day || !activeResetId) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await completeReset(day.id, activeResetId);
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setLastResetOutcome("COMPLETED");
       await refresh();
     } finally {
@@ -1085,11 +1092,13 @@ export function TodayScreen({
 
   /** Distinct from completing — "started this but didn't go through with it," never recorded as done. */
   async function handleCancelReset() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day || !activeResetId) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await cancelReset(day.id, activeResetId);
+      acknowledge("HEAVY");
       setLastResetOutcome("CANCELLED");
       await refresh();
     } finally {
@@ -1099,11 +1108,13 @@ export function TodayScreen({
   }
 
   async function handleStartShiftDown() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await startShiftDown(day.id, shiftDownDuration);
+      acknowledge("LIGHT");
       setLastShiftDownOutcome(null);
       await refresh();
     } finally {
@@ -1113,12 +1124,13 @@ export function TodayScreen({
   }
 
   async function handleCompleteShiftDown() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day || !activeShiftDownId) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await completeShiftDown(day.id, activeShiftDownId);
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setLastShiftDownOutcome("COMPLETED");
       await refresh();
     } finally {
@@ -1128,11 +1140,13 @@ export function TodayScreen({
   }
 
   async function handleCancelShiftDown() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day || !activeShiftDownId) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await cancelShiftDown(day.id, activeShiftDownId);
+      acknowledge("HEAVY");
       setLastShiftDownOutcome("CANCELLED");
       await refresh();
     } finally {
@@ -1142,12 +1156,13 @@ export function TodayScreen({
   }
 
   async function handleEndDay() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await endDay(day.id, "EXPLICIT_END_DAY");
-      feedback("HEAVY");
+      acknowledge("HEAVY");
       clearModePin(day.id);
       setEndDayBlockedByWorkout(false);
       await refresh();
@@ -1165,12 +1180,14 @@ export function TodayScreen({
   }
 
   async function handleSetWorkContext(value: "WORK" | "OFF") {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day || !scheduledContext) return;
     busyRef.current = true;
     setBusy(true);
     try {
       const source = resolveWorkContextSource(scheduledContext.todayIsScheduledWorkDay, value);
       await setWorkContext(day.id, value, source);
+      acknowledge("LIGHT");
       await refresh();
       onWorkContextChanged?.();
     } finally {
@@ -1182,11 +1199,13 @@ export function TodayScreen({
   // DROP 0: one tap flips the saved schedule's value for this day. Always a
   // MANUAL declaration, so it wins for the rest of the day and shows in History.
   async function handleChangeStandingWorkContext() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day || day.workContext === "UNKNOWN") return;
     busyRef.current = true;
     setBusy(true);
     try {
       await setWorkContext(day.id, day.workContext === "WORK" ? "OFF" : "WORK", "MANUAL");
+      acknowledge("LIGHT");
       setWorkContextOpen(false);
       await refresh();
       onWorkContextChanged?.();
@@ -1199,12 +1218,13 @@ export function TodayScreen({
   // SLEEP DRAFT: one tap logs the (possibly nudged) draft as main sleep,
   // recording whether it was confirmed as proposed or adjusted first.
   async function handleLogSleepDraft(minutes: number, adjusted: boolean) {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
     try {
       const eventId = await logSleep(day.id, minutes, "PRIMARY", adjusted ? "ADJUSTED" : "CONFIRMED");
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setSleepDraftAdjust(0);
       await refresh();
       setSleepConfirmation({ amount: minutes, eventId, dayId: day.id });
@@ -1221,12 +1241,12 @@ export function TodayScreen({
   }
 
   async function handleMarkWorkEnded() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
     try {
-      await markWorkEnded(day.id);
-      feedback("LIGHT");
+      if (await markWorkEnded(day.id)) acknowledge("LIGHT");
       setWorkContextOpen(false);
       await refresh();
       onWorkEnded?.();
@@ -1237,13 +1257,14 @@ export function TodayScreen({
   }
 
   async function handleCapture() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !captureText.trim()) return;
     busyRef.current = true;
     setBusy(true);
     setCaptureFeedback(null);
     try {
       await captureItem(captureText);
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setCaptureText("");
       setCaptureFeedback({ kind: "SUCCESS", message: "Note saved in Capture. It is also searchable in MORE." });
       try { await refresh(); }
@@ -1257,12 +1278,13 @@ export function TodayScreen({
   }
 
   async function handleResolveCapture(item: CaptureItem) {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
     try {
       await resolveCaptureItem(item.id);
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setJustResolvedCapture({ id: item.id, text: item.text });
       await refresh();
     } finally {
@@ -1389,6 +1411,7 @@ export function TodayScreen({
   }
 
   async function handleMarkMinimum(kind: "MEDS" | "HYGIENE" | "MOVE" | "RECOVER" | "CONNECT") {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
@@ -1397,6 +1420,7 @@ export function TodayScreen({
       else if (kind === "HYGIENE") await markHygieneCompleted(day.id);
       else if (kind === "MOVE") await markMoveCompleted(day.id);
       else await markRecoverConnectCompleted(day.id, kind);
+      acknowledge("LIGHT");
       await refresh();
     } finally {
       busyRef.current = false;
@@ -1406,6 +1430,7 @@ export function TodayScreen({
 
   /** UNDO-001: UNDO on a just-logged banner voids that entry — never an erase. */
   async function handleUndoLog(log: "WATER" | "SLEEP" | "PROTEIN" | "MEAL") {
+    const acknowledge = captureFeedback();
     const confirmation = { WATER: hydrationConfirmation, SLEEP: sleepConfirmation, PROTEIN: proteinConfirmation, MEAL: mealConfirmation }[log];
     if (busy || busyRef.current || !confirmation) return;
     const voidLog = { WATER: voidWaterLog, SLEEP: voidSleepLog, PROTEIN: voidProteinLog, MEAL: voidMealLog }[log];
@@ -1419,8 +1444,7 @@ export function TodayScreen({
     setBusy(true);
     setUndoFailure(null);
     try {
-      await voidLog(confirmation.dayId, confirmation.eventId);
-      feedback("HEAVY");
+      if (await voidLog(confirmation.dayId, confirmation.eventId)) acknowledge("HEAVY");
       clear(null);
       await refresh();
     } catch (e) {
@@ -1438,6 +1462,7 @@ export function TodayScreen({
    * with UNDO (a MEAL_LOG_VOIDED, never a deletion).
    */
   async function handleLogSavedMeal(meal: SavedMeal): Promise<boolean> {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current) return false;
     busyRef.current = true;
     setBusy(true);
@@ -1445,7 +1470,7 @@ export function TodayScreen({
     try {
       const activeDay = await ensureActiveDay();
       const { eventId } = await logMeal(activeDay.id, meal.id);
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setMealConfirmation({ amount: meal.calories, eventId, dayId: activeDay.id, message: `${meal.name} logged · ${meal.calories} kcal · ${meal.proteinG} g.` });
       try { await refresh(); } catch { setUndoFailure("Meal saved. Readings didn’t refresh. Reopen TODAY."); }
       return true;
@@ -1477,6 +1502,7 @@ export function TodayScreen({
    * there's no way for this to create a duplicate of a BODY-side log.
    */
   async function handleMinimumDayLogWater(amountOverride?: number) {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current) return false;
     const amount = amountOverride ?? Number(mdWaterInput);
     if (!Number.isFinite(amount) || amount <= 0) return false;
@@ -1485,7 +1511,7 @@ export function TodayScreen({
     try {
       const activeDay = await ensureActiveDay();
       const eventId = await logWater(activeDay.id, amount);
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setMdWaterInput("");
       setLastWaterAmount(amount);
       try { await refresh(); } catch { setUndoFailure("Water saved. Readings didn’t refresh. Reopen TODAY."); }
@@ -1500,6 +1526,7 @@ export function TodayScreen({
   }
 
   async function handleMinimumDayLogProtein() {
+    const acknowledge = captureFeedback();
     if (busy || busyRef.current) return;
     const grams = Number(mdProteinInput);
     if (!Number.isFinite(grams) || grams <= 0) return;
@@ -1508,7 +1535,7 @@ export function TodayScreen({
     try {
       const activeDay = await ensureActiveDay();
       const eventId = await logProtein(activeDay.id, grams);
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setMdProteinInput("");
       await refresh();
       setProteinConfirmation({ amount: grams, eventId, dayId: activeDay.id });

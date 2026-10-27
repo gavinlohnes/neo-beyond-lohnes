@@ -46,7 +46,7 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
 export interface NutritionTargetsSave {
   saved: NutritionTargets;
   /** Puts the targets back exactly as they were before this save. */
-  undo: () => Promise<void>;
+  undo: () => Promise<boolean>;
 }
 
 /**
@@ -62,11 +62,12 @@ export async function saveNutritionTargets(input: NutritionTargetsInput): Promis
   return {
     saved,
     undo: async () => {
-      await db.transaction("rw", db.nutritionTargets, async () => {
+      return db.transaction("rw", db.nutritionTargets, async () => {
         const current = await db.nutritionTargets.get("current");
-        if (current?.updatedAt !== saved.updatedAt) return;
+        if (current?.updatedAt !== saved.updatedAt) return false;
         if (previous) await db.nutritionTargets.put(previous);
         else await db.nutritionTargets.delete("current");
+        return true;
       });
     },
   };

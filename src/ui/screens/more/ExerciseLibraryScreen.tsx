@@ -1,4 +1,4 @@
-import { feedback } from "../../feel/feedback";
+import { captureFeedback } from "../../feel/feedback";
 import { useEffect, useState } from "react";
 import type { CustomExercise } from "../../../domain/workout/customExercise";
 import { EXERCISE_LIBRARY, searchLibraryExercises, type LibraryExercise, type MuscleGroup } from "../../../domain/workout/exerciseLibrary";
@@ -92,6 +92,7 @@ export function ExerciseLibraryScreen() {
 
   async function handleAddFromLibrary(lib: LibraryExercise) {
     await withBusy(async () => {
+    const acknowledge = captureFeedback();
       await createCustomExercise({
         name: lib.name,
         muscleGroup: lib.muscleGroup,
@@ -100,7 +101,7 @@ export function ExerciseLibraryScreen() {
         repRangeHigh: lib.repRangeHigh,
         libraryExerciseId: lib.id,
       });
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       await refresh();
     });
   }
@@ -108,6 +109,7 @@ export function ExerciseLibraryScreen() {
   async function handleAddCustom() {
     if (!customName.trim() || !customEquipment.trim()) return;
     await withBusy(async () => {
+    const acknowledge = captureFeedback();
       await createCustomExercise({
         name: customName.trim(),
         muscleGroup: customMuscleGroup,
@@ -116,7 +118,7 @@ export function ExerciseLibraryScreen() {
         repRangeHigh: Number(customRepHigh) || 1,
         ...(customNotes.trim() ? { notes: customNotes.trim() } : {}),
       });
-      feedback("LIGHT");
+      acknowledge("LIGHT");
       setCustomName("");
       setCustomEquipment("");
       setCustomRepLow("8");
@@ -129,8 +131,8 @@ export function ExerciseLibraryScreen() {
 
   async function handleArchive(id: string) {
     await withBusy(async () => {
-      await archiveCustomExercise(id);
-      feedback("HEAVY");
+    const acknowledge = captureFeedback();
+      if (await archiveCustomExercise(id)) acknowledge("HEAVY");
       await refresh();
     });
   }

@@ -1,5 +1,5 @@
 import { HoldButton } from "../../components/HoldButton";
-import { feedback } from "../../feel/feedback";
+import { captureFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { addProgressPhoto, correctProgressPhoto, hideProgressPhoto, deleteProgressPhotoPermanently } from "../../../application/progressPhotoCommands";
 import { getProgressPhotos, isPhotoStoragePersistent } from "../../../application/progressPhotoQueries";
@@ -100,9 +100,9 @@ export function ProgressPhotos({ active }: { active: boolean }) {
     if (!confirm) return;
     const change = confirm;
     void run(async () => {
-      if (change.action === "hide") await hideProgressPhoto(change.photo.id);
-      else await deleteProgressPhotoPermanently(change.photo.id);
-      feedback("HEAVY");
+    const acknowledge = captureFeedback();
+      const changed = change.action === "hide" ? await hideProgressPhoto(change.photo.id) : await deleteProgressPhotoPermanently(change.photo.id);
+      if (changed) acknowledge("HEAVY");
       setReceipt(change.action === "hide" ? "Photo hidden. It remains in backups." : "Photo deleted from this device. Older backups are unchanged.");
       setEditing(null); setConfirm(null);
       requestAnimationFrame(() => document.getElementById("photo-filter")?.focus());
@@ -119,8 +119,9 @@ export function ProgressPhotos({ active }: { active: boolean }) {
       event.preventDefault();
       if (!file) return;
       void run(async () => {
+    const acknowledge = captureFeedback();
         await addProgressPhoto(file, { pose, takenOn: date }, source);
-        feedback("LIGHT");
+        acknowledge("LIGHT");
         setReceipt(`${poseLabel(pose)} photo saved · ${progressDate(date)}.`); setFilter(pose); clearFile();
         requestAnimationFrame(() => document.getElementById("photo-import-button")?.focus());
       });
@@ -159,8 +160,9 @@ export function ProgressPhotos({ active }: { active: boolean }) {
         <div className="progress-photos"><figure><PhotoImage image={earlier.image} alt={`First ${poseLabel(filter).toLowerCase()} comparison photo`} /><figcaption>{progressDate(earlier.takenOn)}</figcaption></figure><figure><PhotoImage image={later.image} alt={`Second ${poseLabel(filter).toLowerCase()} comparison photo`} /><figcaption>{progressDate(later.takenOn)}</figcaption></figure></div>
       </section>}
       {editing && <form className="progress-form" aria-label="Correct photo details" onSubmit={(event) => { event.preventDefault(); void run(async () => {
+    const acknowledge = captureFeedback();
         await correctProgressPhoto(editing.id, { pose: edit.pose, takenOn: edit.date });
-        feedback("LIGHT");
+        acknowledge("LIGHT");
         setReceipt("Photo details corrected. The image is unchanged."); setFilter(edit.pose); setCompare({ earlier: "", later: "" }); setEditing(null); focusManage(editing.id);
       }); }}>
         <h4>Correct photo details</h4><div className="progress-fields"><div className="field"><label htmlFor="photo-edit-pose">Corrected photo pose</label><select id="photo-edit-pose" className="input" value={edit.pose} disabled={busy} onChange={(event) => setEdit({ ...edit, pose: event.target.value as PhotoPose })}>{PHOTO_POSES.map((key) => <option key={key} value={key}>{poseLabel(key)}</option>)}</select></div>

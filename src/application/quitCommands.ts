@@ -1,3 +1,4 @@
+import type { WriteReceipt } from "./writeReceipt";
 import { db } from "../persistence/db";
 import { quitHabitInputSchema, type QuitHabitInput } from "../persistence/quitHabitValidation";
 import { logEvent, newId } from "./commands";
@@ -40,7 +41,7 @@ export async function saveQuitHabit(input: QuitHabitInput): Promise<QuitHabit> {
  * at most once per BeyondDay; a second call is a no-op returning the
  * existing event, so a double hold can't count a day twice.
  */
-export async function logCleanDay(beyondDayId: string): Promise<string> {
+export async function logCleanDay(beyondDayId: string, receipt?: WriteReceipt): Promise<string> {
   const habit = await getQuitHabit();
   if (!habit) throw new Error("QUIT_HABIT_NOT_SET: set up the habit in COMMAND → Settings first.");
   const existing = await db.events
@@ -51,7 +52,9 @@ export async function logCleanDay(beyondDayId: string): Promise<string> {
   if (existing) return existing.id;
   const commandId = newId();
   const payload: CleanDayLoggedPayload = { commandId, habitName: habit.name };
-  return logEvent(beyondDayId, "CLEAN_DAY_LOGGED", payload, "USER", commandId);
+  const id = await logEvent(beyondDayId, "CLEAN_DAY_LOGGED", payload, "USER", commandId);
+  if (receipt) receipt.changed = true;
+  return id;
 }
 
 /** One tap: an urge, now, with what set it off. */
