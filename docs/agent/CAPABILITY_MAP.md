@@ -238,3 +238,16 @@ fresh general review.
 - Preparation is not consumption, inventory, an Obligation or Engine input. Reuse this path
   before inventing another checklist or marking packed food/water as eaten/drunk.
 - Scope, authority, tests and active PR: [PREP-001.md](PREP-001.md). Spending remains separate.
+
+## ROTATION / PERSONAL RANGES
+
+- ROTATION-002 extends Whole Picture's Rotation tab: `PictureRow.sleepWindow`/`shiftWindow`
+  (Garmin times behind a day's single uncorrected main sleep; scheduled shift on recorded work
+  days) in `application/wholePictureQueries.ts`; `runPositions`/`nextDaysOff` in
+  `application/rotationProjection.ts`; actogram, patterns and next window in
+  `ui/screens/review/RotationMap.tsx`.
+- `domain/health/unusual.ts` is the multi-day "outside your own range" rule (10th–90th
+  percentile, minimum widths, per-kind steps). TODAY's Garmin tiles show it via
+  `measuredQueries.unusual`. It deliberately is not an advisory source: that would be an Engine
+  change; revisit only with approval. Reuse it before writing another anomaly rule.
+- Scope and authority: [ROTATION-002.md](ROTATION-002.md).

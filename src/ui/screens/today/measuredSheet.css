@@ -40,3 +40,8 @@
 .sleep-period-chart { touch-action: pan-y; }
 .sleep-record-row { display: block; width: 100%; min-height: 44px; margin-block: 6px; text-align: left; }
 .measured-bar:focus-visible { outline: 2px solid var(--p-t1, #eee); outline-offset: 2px; }
+
+/* ROTATION-002: a reading against your own range; the existing warning token, never the red action color. */
+.measured-unusual{border-left:3px solid var(--warning);padding:8px 12px;margin:4px 0 12px}
+.measured-unusual p{margin:0 0 4px}
+.cc-flab--unusual{color:var(--warning)}

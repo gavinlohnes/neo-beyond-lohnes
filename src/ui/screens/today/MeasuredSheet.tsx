@@ -4,6 +4,8 @@ import type { Baseline } from "../../../domain/health/baselines";
 import { average, hypnogram, sleepMinutes, stageMinutes, STAGE_ORDER, weekly, type PeriodValue, type StageName } from "../../../domain/health/measuredSeries";
 import { LogSheet } from "../../components/LogSheet";
 import { hoursMinutes, localTime } from "../health/healthFormat";
+import { describeUnusual } from "./unusualCopy";
+import type { UnusualReading } from "../../../domain/health/unusual";
 import "./measuredSheet.css";
 
 /**
@@ -49,6 +51,13 @@ const dayLabel = (t: number) => new Date(t).toLocaleDateString("en-US", { weekda
 const weekLabel = (t: number) => `Week of ${new Date(t).toLocaleDateString("en-US", { day: "numeric", month: "short" })}`;
 
 /** "Usual on work days: 4,900" — or how many more measured days a usual needs. */
+/** ROTATION-002: the multi-day "unusual for you" reading, shown only when there is one. */
+export function UnusualNote({ metric, reading }: { metric: "resting" | "sleep" | "steps"; reading: UnusualReading | null }) {
+  if (!reading) return null;
+  const copy = describeUnusual(metric, reading);
+  return <div className="measured-unusual" data-unusual={metric}><p>{copy.headline}</p><p className="meta">{copy.basis}</p></div>;
+}
+
 export function describeUsual(metric: MeasuredMetric, usual: Baseline & { dayKind?: "WORK" | "OFF" | null }): string {
   if (metric === "steps" && usual.dayKind === null) return "Usual steps need today set as a work day or a day off.";
   if (usual.value === null) return `Your usual appears after 14 days of Garmin data (${usual.samples} so far).`;
@@ -142,6 +151,7 @@ export function MeasuredSheet({ open, metric, snapshot, onClose, onAllRecords }:
         {RANGES[metric].map(([id, text]) => <button key={id} type="button" className="btn-secondary" aria-pressed={range === id} onClick={() => { setRange(id); setSelected(null); }}>{text}</button>)}
       </div>
 
+      {metric !== "calories" && <UnusualNote metric={metric} reading={snapshot.unusual[metric]} />}
       {metric === "calories" ? <CaloriesBody snapshot={snapshot} range={range} selected={selected} onSelect={setSelected} /> : <>
       {range === "today" && <>
         <p className="measured-hero"><b>{series.at(-1)?.value === null || series.at(-1) === undefined ? "—" : count(series.at(-1)!.value!)}</b> <span>steps so far today</span></p>

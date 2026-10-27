@@ -6,7 +6,7 @@ import type { ExternalSleepRevision, GarminSleepUnfiled } from "../../../domain/
 import { LogSheet } from "../../components/LogSheet";
 import { SleepEvidence } from "../health/ImportedSleepEvidence";
 import { hoursMinutes } from "../health/healthFormat";
-import { BarChart, Hypnogram, STAGE_COLORS, describeGarminAsOf, describeUsual, SyncGarminLink } from "./MeasuredSheet";
+import { BarChart, Hypnogram, STAGE_COLORS, describeGarminAsOf, describeUsual, SyncGarminLink, UnusualNote } from "./MeasuredSheet";
 import { moveSleepWindow, sleepWindow, sleepWindowValues, type SleepZoom } from "./sleepPeriods";
 
 const date = (t: number) => new Date(t).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
@@ -86,6 +86,7 @@ export function SleepMetricSheet({ open, onClose, onAllRecords }: {
       <p className="meta">Chart: longest Garmin session per BEYOND day. Logged or corrected main sleep can differ; inspect all sleep records to review or correct it. Nothing here changes advice.</p>
       <p className="meta">Chart history starts {date(earliest)}. {bounds.from < earliest ? "This period has partial history." : ""}</p>
       {data.snapshot.garminAsOf !== null && <p className="meta">{describeGarminAsOf(data.snapshot.garminAsOf, data.snapshot.readAt)}</p>}
+      <UnusualNote metric="sleep" reading={data.snapshot.unusual.sleep} />
       <p className="meta">{describeUsual("sleep", data.snapshot.usual.sleep)}</p>
       <SyncGarminLink />
       {onAllRecords && <button type="button" className="btn-secondary" onClick={onAllRecords}>ALL SLEEP RECORDS</button>}

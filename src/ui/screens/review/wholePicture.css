@@ -47,3 +47,22 @@
 .whole-picture .rotation-days strong{font:600 16px var(--display)}
 .whole-picture .rotation-days small{font-size:12px;color:var(--muted)}
 @media(max-width:600px){.whole-picture .tabs{gap:18px;overflow-x:auto;justify-content:flex-start}}
+/* ROTATION-002: actogram, patterns across runs and the next window. Garmin blue marks measured sleep, as on TODAY. */
+.whole-picture .actogram{display:block;width:100%;max-width:560px;height:auto;margin:0 0 12px}
+.whole-picture .actogram-axis{font:10px var(--mono);fill:var(--muted)}
+.whole-picture .actogram-grid{stroke:#2a2a2a;stroke-width:1}
+.whole-picture .actogram-base{stroke:#2f2f2f;stroke-width:1}
+.whole-picture .actogram-shift{fill:none;stroke:#8d8c86;stroke-width:1.25;stroke-dasharray:3 2}
+.whole-picture .actogram-sleep{fill:#3987e5}
+.whole-picture .rotation-window{margin:18px 0;padding:18px 20px;border:1px solid var(--line);background:var(--panel)}
+.whole-picture .rotation-window h3{font-size:19px;margin:8px 0}
+.whole-picture .rotation-window p{font-size:14px}
+.whole-picture .rotation-patterns{margin:26px 0 8px}
+.whole-picture .rotation-patterns h3{margin:8px 0 6px}
+.whole-picture .rotation-places{margin-top:14px}
+.whole-picture .rotation-places h4{margin:0 0 4px;font:600 13px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.whole-picture .rotation-places details{border-top:1px solid var(--line)}
+.whole-picture .rotation-places summary{cursor:pointer;min-height:44px;padding:10px 0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:baseline}
+.whole-picture .rotation-places summary span{font:12px var(--mono);color:var(--muted)}
+.whole-picture .rotation-places summary small{grid-column:1/-1;font-size:13px;color:var(--muted)}
+.whole-picture .rotation-places ul{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-wrap:wrap;gap:4px 16px}

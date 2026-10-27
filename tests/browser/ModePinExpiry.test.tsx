@@ -36,6 +36,18 @@ async function runningWorkout() {
   return { day, workout };
 }
 
+/**
+ * Waits on real time without touching the faked clock. expect.poll advances faked timers (and so Date) by its
+ * interval on every retry; 250 ms before 16:30 a slow render's retries walked the clock past the boundary and
+ * the pin expired for real (the full-suite flake that stopped the #296 deploy).
+ */
+async function beforeTheEdge(read: () => string | undefined, pattern: RegExp | string) {
+  const deadline = performance.now() + 5000;
+  const matches = () => { const value = read() ?? ""; return typeof pattern === "string" ? value === pattern : pattern.test(value); };
+  while (!matches() && performance.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 25));
+  if (typeof pattern === "string") expect(read()).toBe(pattern); else expect(read()).toMatch(pattern);
+}
+
 async function openCapture(screen: Awaited<ReturnType<typeof render>>) {
   await screen.getByRole("button", { name: "Open LOG", exact: true }).click();
   await screen.getByRole("dialog", { name: "LOG" }).getByRole("button", { name: /^Note/i }).click();
@@ -50,8 +62,9 @@ describe("16:30 mode pin expiry", () => {
     await screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" }).fill("85");
     await screen.getByRole("spinbutton", { name: "Set 1 repetitions" }).fill("9");
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-    await expect.poll(source).toMatch(/(^| · )Pinned · /);
-    await expect.poll(suit).toBe("OFF");
+    await beforeTheEdge(source, /(^| · )Pinned · /);
+    await beforeTheEdge(suit, "OFF");
+    expect(new Date().getTime()).toBe(at(13, 16, 29, 59, 750).getTime());
     await openCapture(screen);
     const capture = screen.getByRole("textbox", { name: "Capture a thought", exact: true });
     await capture.fill("Keep this thought through 16:30");
