@@ -56,8 +56,12 @@ then Gavin's merge.
 
 ## Evidence / next
 
-Unit: rotation projection 5/5, copy 2/2, unusual rule 5/5. Integration: Garmin timing 3/3,
-mode-pin expiry 8/8 (new clock-after-reads regression fails before the fix). Browser: Rotation
-patterns 4/4 and unusual tiles 3/3 incl. axe at 320/390/1280. Flake: reproduced once under full
-load (pin cleared, header steady on "Per schedule"); fixed at the only clearing path.
-Screenshots: `docs/screenshots/rotation-002/`. Full verify, CI and review: PR.
+Unit: rotation projection 5/5, copy 2/2, unusual rule 5/5. Integration: Garmin timing 3/3. Browser:
+Rotation patterns 4/4 and unusual tiles 3/3 incl. axe at 320/390/1280. Screenshots:
+`docs/screenshots/rotation-002/`.
+
+Flake (`ModePinExpiry.test.tsx:53`, stopped the #296 deploy): traced under full load to the test, not
+the app. `expect.poll` advances faked timers by its interval on every retry; from 16:29:59.750 a slow
+render's retries walked the clock past 16:30 and the app correctly expired the pin. The pre-edge waits
+now poll on real time and assert the clock did not move. Two earlier app-side changes built on a wrong
+diagnosis were reverted. Three full browser runs 1,169/1,169 each; CI green on `47ce4d2`.
