@@ -10,11 +10,8 @@ export function getModePin(beyondDayId: string, dayStartedAt?: string, now: Date
   const pickedAt = pin.pinnedAt ?? Date.parse(dayStartedAt ?? "");
   // Calendar boundary math stays authoritative across DST and timezone changes.
   // A retained workout day must not extend the presentation pin's lifetime.
-  const boundary = Number.isFinite(pickedAt) ? nextRolloverBoundaryAfter(new Date(pickedAt)).getTime() : -Infinity;
-  if (now.getTime() < boundary) return pin.phase;
-  // Only the real clock deletes: a caller holding a time captured before a slow read must not erase a
-  // pin that is still live (the ModePinExpiry full-suite flake that stopped the #296 deploy).
-  if (Date.now() >= boundary) clearModePin(beyondDayId);
+  if (Number.isFinite(pickedAt) && now.getTime() < nextRolloverBoundaryAfter(new Date(pickedAt)).getTime()) return pin.phase;
+  clearModePin(beyondDayId);
   return null;
 }
 
