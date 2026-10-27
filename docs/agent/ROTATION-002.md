@@ -7,7 +7,7 @@
   test that blocked the #296 deploy. Spending is out of BEYOND ("Elle and I track finances
   elsewhere").
 - **Builder / branch:** Claude Code; `ccr-0be4f40f-16m0ja` from `fa5cdd8` (#296 merged).
-- **Lane:** Routine display work. No Engine input, recommendation or priority change, no new
+- **Lane:** FEATURE (DEV-FLOW-002): owner-approved display capability. No Engine input, recommendation or priority change, no new
   event/command/table/migration, no dependency, no provider. Every merge is Gavin's.
 - **REUSE:** Whole Picture's lived-day rows, day inspector and Rotation tab (`RotationMap.tsx`);
   Garmin sleep revisions (exact start/end) and the scheduled shift window
@@ -34,8 +34,9 @@
 ## Track B — BEYOND notices for you
 
 - **Unusual for you:** resting HR, Garmin main sleep and steps (by day kind). Speaks only when the
-  last 3 finished lived days are all outside your own usual range (10th–90th percentile of the 28
-  finished days before them, with a minimum width; ≥14 measured days) on the same side. Silent
+  last 3+ finished lived days are all outside your own usual range on the same side: 10th–90th
+  percentile of the measured days before them, widened to a minimum (6 bpm, 60 min, 2,000 steps);
+  28 periods and ≥14 samples, or 56 periods and ≥10 of the same kind for steps. Silent
   otherwise. Shown on the existing TODAY tile label and in its sheet with the range and days.
 - **Next window:** the next predicted days off from Week Ahead (labelled a forecast), days since
   the last counted workout, and, when runs support it, which day off you trained on most often.
@@ -52,3 +53,11 @@ Projection unit tests (floors, truncated runs, ambiguous/manual sleep, silence, 
 browser tests for the actogram, patterns, tile notice and sheet; 320/390 px and desktop
 screenshots; typecheck, architecture, build, full verify, green CI, independent exact-head review,
 then Gavin's merge.
+
+## Evidence / next
+
+Unit: rotation projection 5/5, copy 2/2, unusual rule 5/5. Integration: Garmin timing 3/3,
+mode-pin expiry 8/8 (new clock-after-reads regression fails before the fix). Browser: Rotation
+patterns 4/4 and unusual tiles 3/3 incl. axe at 320/390/1280. Flake: reproduced once under full
+load (pin cleared, header steady on "Per schedule"); fixed at the only clearing path.
+Screenshots: `docs/screenshots/rotation-002/`. Full verify, CI and review: PR.

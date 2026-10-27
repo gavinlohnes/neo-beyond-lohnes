@@ -1,3 +1,20 @@
+# ROTATION-002 — BEYOND understands your rotation (Tracks A + B)
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "Go A + B". Claude Code; FEATURE.
+  [Brief](ROTATION-002.md). PREP-001 merged as #296 (`fa5cdd8`); spending is out of BEYOND.
+- **Branch / baseline:** `ccr-0be4f40f-16m0ja` from `fa5cdd8`; PR linked in the brief once open.
+- **Built:** Rotation tab actogram (Garmin sleep vs scheduled shift), shift-by-shift and day-off
+  patterns with sample sizes and tap-through, next window (forecast days off, last workout,
+  most-trained day off). TODAY's Garmin tiles flag 3+ finished days outside your own range;
+  sheets explain values/range/basis. Mode-pin flake fixed (clock read after reads).
+- **Not changed:** Engine, recommendations, events/commands, schema, dependencies, backups.
+- **Next:** full verify + green CI; independent review if Gavin wants one (FEATURE lane does not
+  require it); Gavin's merge approval. Then live with it on shift and decide the next step
+  (ROTATION 3 flip planning, or DELTA-ADVANCED experiments).
+
+---
+Historical PREP-001 checkpoint (#296 merged at `fa5cdd8`):
+
 # PREP-001 — ready for tonight
 
 - **Authority / Builder:** Gavin approved the focused first campaign step, 2026-10-26. Codex;
