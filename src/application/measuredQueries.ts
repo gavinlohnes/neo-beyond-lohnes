@@ -8,6 +8,7 @@ import {
 import { getDaySummaries } from "./dayLedgerQueries";
 import { getMealEntries } from "./nutritionQueries";
 import type { ExternalSleep, ExternalSleepRevision } from "../domain/health/sleepImport";
+import { unusualStreak, UNUSUAL_SPECS, type UnusualReading } from "../domain/health/unusual";
 
 /** Enough lived days for a year of weekly bars (53 weeks). */
 export const MEASURED_PERIODS = 53 * 7;
@@ -43,6 +44,8 @@ export interface MeasuredSnapshot {
     /** 28-day median of Garmin total burned per finished lived day. */
     burned: Baseline;
   };
+  /** ROTATION-002: a streak of finished days outside your own range, or null (silence is the usual answer). */
+  unusual: { resting: UnusualReading | null; sleep: UnusualReading | null; steps: UnusualReading | null };
 }
 
 /**
@@ -62,6 +65,9 @@ export async function getMeasuredSnapshot(now = Date.now()): Promise<MeasuredSna
     const today = current.dayId ? days.find((d) => d.id === current.dayId) : undefined;
     const dayKind = today?.workContext === "WORK" || today?.workContext === "OFF" ? today.workContext : null;
     const burned = burnedByPeriod(periods, hours, now);
+    const steps = stepsByPeriod(periods, hours, now), resting = restingByPeriod(periods, restingRows, now), sleep = sleepByPeriod(periods, sleeps, now);
+    const contextOf = new Map(days.map((d) => [d.id, d.workContext]));
+    const kindOf = (period: { dayId: string | null }) => { const kind = period.dayId ? contextOf.get(period.dayId) : undefined; return kind === "WORK" || kind === "OFF" ? kind : null; };
     const exports = [...receipts.map((r) => Date.parse(r.exportedAt)), ...hours.map((h) => Date.parse(h.exportedAt))].filter(Number.isFinite);
     const calorieExports = hours.flatMap((h) => h.totalCaloriesKcal == null ? []
       : [Date.parse(h.totalCaloriesExportedAt ?? h.exportedAt)]).filter(Number.isFinite);
@@ -72,9 +78,12 @@ export async function getMeasuredSnapshot(now = Date.now()): Promise<MeasuredSna
       any: hours.length > 0 || restingRows.length > 0 || sleeps.length > 0,
       readAt: now,
       current,
-      steps: stepsByPeriod(periods, hours, now),
-      resting: restingByPeriod(periods, restingRows, now),
-      sleep: sleepByPeriod(periods, sleeps, now),
+      steps, resting, sleep,
+      unusual: {
+        resting: unusualStreak(resting, UNUSUAL_SPECS.resting),
+        sleep: unusualStreak(sleep, UNUSUAL_SPECS.sleep),
+        steps: unusualStreak(steps, UNUSUAL_SPECS.steps, kindOf),
+      },
       stepsToday: cumulativeSteps(current, hours, now),
       lastNight: lastNight(sleeps, now),
       activeBurned: burnedByPeriod(periods, hours, now, "active"),
