@@ -1,4 +1,4 @@
-import { captureFeedback } from "../feel/feedback";
+import { captureCommitFeedback } from "../feel/feedback";
 import { useHiddenFeatures } from "../hiddenFeatures";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LogSheet } from "./LogSheet";
@@ -102,7 +102,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
     else setError("That saved meal is unavailable. Choose another meal or retry.");
   }, [target, mealRequest, readState, meals]);
   async function commit(action: () => Promise<Receipt>) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current) return;
     setBusy(true); setError(null);
     try {
@@ -192,9 +192,9 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         {page === "edit" && selected && <>
           {formFields(edit, setEdit, "Saved meal")}
           <button type="button" className="btn-primary" disabled={busy} onClick={async () => {
-    const acknowledge = captureFeedback(); if (busyRef.current) return; setBusy(true); setError(null); try { await updateSavedMeal(selected.id, parse(edit)); acknowledge("LIGHT"); setRetry((key) => key + 1); setPage("portion"); } catch (cause) { setError(describeError(cause, "Meal not updated.")); } finally { setBusy(false); } }}>SAVE CHANGES</button>
+    const acknowledge = captureCommitFeedback(); if (busyRef.current) return; setBusy(true); setError(null); try { await updateSavedMeal(selected.id, parse(edit)); acknowledge("LIGHT"); setRetry((key) => key + 1); setPage("portion"); } catch (cause) { setError(describeError(cause, "Meal not updated.")); } finally { setBusy(false); } }}>SAVE CHANGES</button>
           <HoldButton className="btn-secondary" disabled={busy} hint="Hold to archive this preset. Existing logs stay." onConfirm={async () => {
-    const acknowledge = captureFeedback(); if (busyRef.current) return; setBusy(true); try { if (await archiveSavedMeal(selected.id)) acknowledge("HEAVY"); setRetry((key) => key + 1); setPage("list"); } catch (cause) { setError(describeError(cause, "Could not archive meal.")); } finally { setBusy(false); } }}>ARCHIVE MEAL</HoldButton>
+    const acknowledge = captureCommitFeedback(); if (busyRef.current) return; setBusy(true); try { if (await archiveSavedMeal(selected.id)) acknowledge("HEAVY"); setRetry((key) => key + 1); setPage("list"); } catch (cause) { setError(describeError(cause, "Could not archive meal.")); } finally { setBusy(false); } }}>ARCHIVE MEAL</HoldButton>
         </>}
       </>}
       {target === "log" && <>{(["water", "meal", "sleep", "weight", "note", "urge"] as const).map((kind) => <button type="button" className="today-sheet__option" key={kind} onClick={() => open(kind)}>{TITLE[kind]}</button>)}<button type="button" className="today-sheet__option" onClick={onWorkout}>WORKOUT SET → TRAIN</button></>}
@@ -206,7 +206,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       remove={() => {
         if (busyRef.current || !receipt.question) return;
         const question = receipt.question; setBusy(true); setError(null);
-        const acknowledge = captureFeedback();
+        const acknowledge = captureCommitFeedback();
         void question.remove().then((changed) => {
           if (changed) acknowledge("HEAVY");
           if (question.removeLabel === "REMOVE THIS ONE") dismissReceipt(receipt.id);
@@ -215,7 +215,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         }).catch((cause) => setError(`Could not remove the entry. ${describeError(cause, "Try again.")}`)).finally(() => setBusy(false));
       }}
       dismiss={() => dismissReceipt(receipt.id)} history={() => { dismissReceipt(receipt.id); if (receipt.notes) onNotes(); else onHistory(receipt.history ?? "protein"); }}
-      undo={() => { const acknowledge = captureFeedback(); if (busyRef.current) return; setBusy(true); setError(null); void receipt.undo().then((changed) => { if (changed) acknowledge("HEAVY"); dismissReceipt(receipt.id); onSaved(); }).catch((cause) => setError(describeError(cause, "Could not undo. Try again."))).finally(() => setBusy(false)); }} />)}
+      undo={() => { const acknowledge = captureCommitFeedback(); if (busyRef.current) return; setBusy(true); setError(null); void receipt.undo().then((changed) => { if (changed) acknowledge("HEAVY"); dismissReceipt(receipt.id); onSaved(); }).catch((cause) => setError(describeError(cause, "Could not undo. Try again."))).finally(() => setBusy(false)); }} />)}
       {error && !target && <p role="alert">{error}</p>}
     </div>}
   </>;

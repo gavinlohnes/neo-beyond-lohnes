@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { Target } from "lucide-react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
@@ -92,7 +92,7 @@ export function NutritionTargetsSettings() {
   }
 
   async function handleSave() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || loadState !== "ready") return;
     setError(null);
     const calorieValue = calorieInput.trim() ? Number(calorieInput) : undefined;
@@ -133,7 +133,7 @@ export function NutritionTargetsSettings() {
   }
 
   async function handleUndo() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || !confirmation) return;
     setBusy(true);
     try {

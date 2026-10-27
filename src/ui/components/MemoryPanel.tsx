@@ -1,4 +1,4 @@
-import { captureFeedback } from "../feel/feedback";
+import { captureCommitFeedback } from "../feel/feedback";
 import { useEffect, useId, useRef, useState } from "react";
 import { getMemoryWorkspace, recordMemory } from "../../application/memory";
 import { MEMORY_KINDS, MEMORY_LABELS, type MemoryFact, type MemoryKind, type MemoryAction } from "../../domain/memory";
@@ -58,7 +58,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
     if (!dayId) { setError("Start a day before saving memory. Your draft is kept."); return; }
     writing.current = true; setBusy(true); setError(null); setNotice(null);
     const request = lifecycle.current;
-    const acknowledge = captureFeedback(), receipt = { changed: false };
+    const acknowledge = captureCommitFeedback(), receipt = { changed: false };
     try {
       const saved = await recordMemory({ action, dayId, factId: subject.factId,
         expectedPreviousId: fact?.id ?? draft!.previous,

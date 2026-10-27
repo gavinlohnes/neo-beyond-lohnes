@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { latestReviewWeek } from "../../../engine/weeklyReview";
 import type { WeeklyFocus } from "../../../domain/review/types";
@@ -73,7 +73,7 @@ export function WeeklyReviewPanel({ active = true, showFacts = true, openRequest
     return () => { alive = false; readVersion.current++; };
   }, [active, retry, weekKey]);
   async function save() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (inFlight.current || !draftWeek) return;
     inFlight.current = true; setBusy(true); setError(null); setReceipt(null);
     try {

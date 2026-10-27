@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useState } from "react";
 import type { CustomExercise } from "../../../domain/workout/customExercise";
 import { EXERCISE_LIBRARY, searchLibraryExercises, type LibraryExercise, type MuscleGroup } from "../../../domain/workout/exerciseLibrary";
@@ -92,7 +92,7 @@ export function ExerciseLibraryScreen() {
 
   async function handleAddFromLibrary(lib: LibraryExercise) {
     await withBusy(async () => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       await createCustomExercise({
         name: lib.name,
         muscleGroup: lib.muscleGroup,
@@ -109,7 +109,7 @@ export function ExerciseLibraryScreen() {
   async function handleAddCustom() {
     if (!customName.trim() || !customEquipment.trim()) return;
     await withBusy(async () => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       await createCustomExercise({
         name: customName.trim(),
         muscleGroup: customMuscleGroup,
@@ -131,7 +131,7 @@ export function ExerciseLibraryScreen() {
 
   async function handleArchive(id: string) {
     await withBusy(async () => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       if (await archiveCustomExercise(id)) acknowledge("HEAVY");
       await refresh();
     });

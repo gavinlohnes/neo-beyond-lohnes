@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { Ban } from "lucide-react";
@@ -73,7 +73,7 @@ export function QuitTracker({ initiallyOpen = false, openRequest = 0, onBusyChan
 
   const handleCleanDay = () =>
     run(async () => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       const day = await ensureActiveDay();
       const receipt = { changed: false };
       await logCleanDay(day.id, receipt);
@@ -83,7 +83,7 @@ export function QuitTracker({ initiallyOpen = false, openRequest = 0, onBusyChan
 
   const handleUrge = (trigger: UrgeTrigger) =>
     run(async () => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       const day = await ensureActiveDay();
       const eventId = await logUrge(day.id, trigger);
       acknowledge("LIGHT");
@@ -93,7 +93,7 @@ export function QuitTracker({ initiallyOpen = false, openRequest = 0, onBusyChan
 
   const handleUndoUrge = () =>
     run(async () => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       if (!lastUrge) return;
       const day = await ensureActiveDay();
       await undoUrge(day.id, lastUrge.eventId);
@@ -104,7 +104,7 @@ export function QuitTracker({ initiallyOpen = false, openRequest = 0, onBusyChan
 
   const handlePlanAnswer = (used: boolean) =>
     run(async () => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       if (!lastUrge) return;
       const day = await ensureActiveDay();
       await respondToUrgePlan(day.id, lastUrge.eventId, used);

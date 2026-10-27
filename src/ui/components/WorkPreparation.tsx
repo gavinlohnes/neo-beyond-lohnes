@@ -1,4 +1,4 @@
-import { captureFeedback } from "../feel/feedback";
+import { captureCommitFeedback } from "../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { getPreparation, recordPreparation } from "../../application/preparation";
 import { PREPARATION_LABELS, type PreparationItem, type PreparationState, type PreparationValue } from "../../domain/preparation";
@@ -25,7 +25,7 @@ export function WorkPreparation({ dayId, beforeWork, active, busy = false }: {
     return () => { ++epoch.current; };
   }, [dayId, active, attempt]);
   async function save(item: PreparationItem, value: PreparationValue, previousId = state?.[item].id ?? null, undo = false) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (!state || !dayId || writing.current || busy || !active) return;
     writing.current = true; setSaving(true); setError(null); const current = epoch.current;
     try {

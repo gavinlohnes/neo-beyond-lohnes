@@ -158,7 +158,7 @@ it("keeps a selected photo across views and tab navigation, requires an explicit
   await screen.getByRole("button", { name: "DELETE PHOTO PERMANENTLY", exact: true }).click();
   expect(await db.progressPhotos.count()).toBe(2);
   await screen.getByRole("button", { name: "CONFIRM PERMANENT DELETE", exact: true }).click();
-  expect(await db.progressPhotos.count()).toBeGreaterThan(0);
+  expect(await db.progressPhotos.count()).toBe(2);
   await holdToConfirm(screen.getByRole("button", { name: "CONFIRM PERMANENT DELETE", exact: true }));
   await expect.poll(() => db.progressPhotos.count()).toBe(1);
   await expect.poll(() => document.activeElement?.id).toBe("photo-filter");

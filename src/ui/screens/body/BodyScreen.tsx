@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { SleepMetricSheet } from "../today/SleepMetricSheet";
 import { WeightTrend } from "./WeightTrend";
 import { getRecordedHealthDay } from "../../../application/healthRecordQueries";
@@ -824,7 +824,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   // ---- SLEEP ----
 
   async function handleLogSleep(skipConfirm = false) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current) return;
     const reading = readSleepDuration(sleepHoursInput, sleepMinutesInput);
     if (!reading.ok) {
@@ -883,7 +883,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   }
 
   async function handleSaveSleepCorrection(skipConfirm = false) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !day || !sleepCorrectingId) return;
     const reading = readSleepDuration(sleepCorrectionHours, sleepCorrectionMinutes);
     const typedZero = `${sleepCorrectionHours}${sleepCorrectionMinutes}`.trim() !== ""
@@ -920,7 +920,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   // ---- BODYWEIGHT ----
 
   async function handleLogBodyweightAmount(weight: number) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || weight <= 0) return;
     setBusy(true);
     setError(null);
@@ -970,7 +970,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   }
 
   async function handleSaveBodyweightCorrection() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !day || !bodyweightCorrectingId) return;
     const weight = Number(bodyweightCorrectionInput);
     if (bodyweightCorrectionInput.trim() !== "" && weight === 0) {
@@ -1000,7 +1000,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   // ---- PROTEIN ----
 
   async function handleLogProteinAmount(grams: number) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || grams <= 0) return;
     setBusy(true);
     setError(null);
@@ -1052,7 +1052,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   }
 
   async function handleSaveProteinCorrection() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !day || !proteinCorrectingId) return;
     const grams = Number(proteinCorrectionInput);
     // DROP 1.5: "0", "00" and "0.0" all mean "remove it" — say where that is, right here.
@@ -1081,7 +1081,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
 
   /** DROP 1.5 — DELETE (hold-to-confirm) on a protein-only entry: a void event, never an erase. */
   async function handleDeleteProteinLog(entry: ProteinEntry) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !day) return;
     setBusy(true);
     try {
@@ -1110,7 +1110,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
 
   /** REMOVE ONE: deletes the protein-only entry — the meal carries calories and macros, so it stays. */
   async function handleSameFoodRemoveOne() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !day || !sameFood) return;
     const { protein, anchor } = sameFood;
     setBusy(true);
@@ -1131,7 +1131,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
 
   /** DUP-MEAL-002: REMOVE on the SAME AS YESTERDAY question voids only the repeated new entries. */
   async function handleRepeatDuplicatesRemove() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !day || !repeatDuplicates) return;
     const pairs = repeatDuplicates;
     setBusy(true);
@@ -1152,7 +1152,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   }
 
   async function handleDuplicateMealRemoveThisOne() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !day || !duplicateMeal) return;
     const { justLogged } = duplicateMeal;
     setBusy(true);
@@ -1208,7 +1208,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   }
 
   async function handleCreateSavedMeal(logToday: boolean) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || mealWriteInFlight.current) return;
     const name = newMealForm.name.trim();
     const macros = parseMealMacros(newMealForm);
@@ -1270,7 +1270,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   }
 
   async function handleSaveMealEdit() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !editingMealId) return;
     const name = editMealForm.name.trim();
     const macros = parseMealMacros(editMealForm);
@@ -1297,7 +1297,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   }
 
   async function handleArchiveSavedMeal(id: string) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current) return;
     setBusy(true);
     setError(null);
@@ -1312,7 +1312,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
 
   /** Shared continuation; the caller owns the synchronous write guard. */
   async function logSavedMealToday(mealId: string) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       const activeDay = await ensureActiveDay();
       const result = await logMeal(activeDay.id, mealId);
       acknowledge("LIGHT");
@@ -1366,7 +1366,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   }
 
   async function handleRepeatMeals() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !repeatMeals) return;
     setBusy(true);
     setError(null);
@@ -1426,7 +1426,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   }
 
   async function handleSaveMealCorrection(entry: NutritionEntry) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !day || correctingMealEventId !== entry.headEventId) return;
     const macros = parseMealMacros(mealCorrectionForm);
     if (!macros) {
@@ -1461,7 +1461,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
    * a void event, never an erase, the same as protein's DELETE.
    */
   async function handleUndoLog(log: UndoableLog) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     const confirmation = { WATER: waterConfirmation, SLEEP: sleepConfirmation, BODYWEIGHT: bodyweightConfirmation, PROTEIN: proteinConfirmation }[log];
     if (busyRef.current || !confirmation) return;
     const voidLog = { WATER: voidWaterLog, SLEEP: voidSleepLog, BODYWEIGHT: voidBodyweightLog, PROTEIN: voidProteinLog }[log];
@@ -1489,7 +1489,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
 
   /** UNDO on the just-logged banner: voids what it logged, same as DELETE. */
   async function handleUndoMealLog() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !mealConfirmation) return;
     const { dayId, mealEventIds } = mealConfirmation;
     setBusy(true);
@@ -1512,7 +1512,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
 
   /** DELETE (hold-to-confirm) in TODAY'S MEALS: a void event, never an erase. */
   async function handleDeleteMealLog(entry: NutritionEntry) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !day) return;
     setBusy(true);
     setError(null);
@@ -1532,7 +1532,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   // ---- WATER ----
 
   async function handleLogWaterAmount(amount: number) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || amount <= 0) return;
     setBusy(true);
     setError(null);
@@ -1568,7 +1568,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   }
 
   async function handleCorrect(entry: HydrationEntry) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !day) return;
     const amount = Number(correctionInput);
     if (correctionInput.trim() !== "" && amount === 0) {
@@ -1598,7 +1598,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
 
   /** DELETE (hold-to-confirm) on a water, sleep or bodyweight entry: a void event, never an erase. */
   async function handleDeleteBodyLog(log: "WATER" | "SLEEP" | "BODYWEIGHT", rootEventId: string, deleted: (dayId: string) => Promise<string>) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busyRef.current || !day) return;
     const voidLog = { WATER: voidWaterLog, SLEEP: voidSleepLog, BODYWEIGHT: voidBodyweightLog }[log];
     const confirmation = { WATER: waterConfirmation, SLEEP: sleepConfirmation, BODYWEIGHT: bodyweightConfirmation }[log];

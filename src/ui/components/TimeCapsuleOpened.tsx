@@ -1,4 +1,4 @@
-import { captureFeedback } from "../feel/feedback";
+import { captureCommitFeedback } from "../feel/feedback";
 import { useEffect, useState } from "react";
 import { markTimeCapsuleOpened } from "../../application/timeCapsuleCommands";
 import { getTimeCapsules, type OpenedCapsule } from "../../application/timeCapsuleQueries";
@@ -28,7 +28,7 @@ export function TimeCapsuleOpened() {
   if (!capsule) return null;
 
   async function gotIt(c: OpenedCapsule) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);

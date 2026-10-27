@@ -1,4 +1,4 @@
-import { captureFeedback } from "../feel/feedback";
+import { captureCommitFeedback } from "../feel/feedback";
 import { useEffect, useState } from "react";
 import type { CaptureItem } from "../../domain/common/types";
 import { deleteCaptureItem, resolveCaptureItem, restoreCaptureItem } from "../../application/commands";
@@ -44,7 +44,7 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
   const note = items[index];
 
   async function act(outcome: Outcome, write: () => Promise<unknown>) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -61,7 +61,7 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
   }
 
   async function handleDelete(item: CaptureItem) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -79,7 +79,7 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
   }
 
   async function handleUndoDelete() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (!deleted || busy) return;
     setBusy(true);
     try {

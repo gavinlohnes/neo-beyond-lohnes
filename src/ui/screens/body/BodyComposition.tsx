@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getMeasurements, type MeasurementEntry } from "../../../application/measurementQueries";
 import { correctMeasurement, logMeasurement } from "../../../application/measurementCommands";
@@ -100,7 +100,7 @@ function Measurements({ entries, ready, reading, failed, onRefresh }: {
   }, [ready, reading]);
   useSessionDraft("body-measurements", inches !== "" || !!editing);
   async function save(correcting = false) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (lock.current) return;
     const value = Number(correcting ? correction.inches : inches);
     if (!Number.isFinite(value) || value < MEASUREMENT_MIN_INCHES || value > MEASUREMENT_MAX_INCHES) {

@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useId, useRef, useState } from "react";
 import { RotationMap } from "./RotationMap";
 import { AskPanel } from "./AskPanel";
@@ -123,7 +123,7 @@ export function WholePicture({ active = true, onOpenHistory, destination, onDest
   function go(next: View) { setView(next); requestAnimationFrame(() => tabRefs.current[next]?.focus({ preventScroll: true })); }
   function close() { dialog.current?.close(); setInspect(null); requestAnimationFrame(() => opener.current?.isConnected && opener.current.focus({ preventScroll: true })); }
   async function saveFocus() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (!data || inFlight.current) return;
     if (!note.trim()) { setSaveError("Write the intention you want to choose. Nothing was saved."); return; }
     if (draftWeek.current !== data.week.start) { setSaveError("Your draft belongs to an earlier review week. It is kept; explicitly select the current week before saving."); return; }

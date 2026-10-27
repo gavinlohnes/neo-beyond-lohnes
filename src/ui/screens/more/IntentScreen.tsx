@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { useSessionDraft } from "../../sessionDrafts";
 import type { DomainEvent } from "../../../domain/common/types";
@@ -343,7 +343,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
   async function handleCreateMission() {
     if (!newMissionTitle.trim()) return;
     await withBusy(async () => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       await createMission({ title: newMissionTitle.trim() });
       acknowledge("LIGHT");
       setNewMissionTitle("");
@@ -355,7 +355,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
   async function handleCreateObligation() {
     if (!newObligationTitle.trim()) return;
     await withBusy(async () => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       const anchor = newObligationDueAt || formatLocalDate(new Date());
       const recurrence = recurrenceInputFor(newObligationRecurrence, anchor);
       await createObligation({
@@ -576,7 +576,7 @@ function MissionDetail({ missionId, onBack, active }: { missionId: string; onBac
   }
 
   async function handleSave() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -596,7 +596,7 @@ function MissionDetail({ missionId, onBack, active }: { missionId: string; onBac
   }
 
   async function handleArchive() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -732,7 +732,7 @@ function ObligationDetail({
   }
 
   async function handleSave() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -761,7 +761,7 @@ function ObligationDetail({
   }
 
   async function handleAction(action: (id: string) => Promise<boolean>) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);

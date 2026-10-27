@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState } from "react";
 import type { DomainEvent } from "../../../domain/common/types";
@@ -149,7 +149,7 @@ export function JournalScreen({ active = true, navigationEntryId, onOpenCapture,
   async function handleCreate() {
     if (!newTitle.trim() || !newDecision.trim()) return;
     await withBusy(async () => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       await createDecisionJournalEntry({
         title: newTitle.trim(),
         decision: newDecision.trim(),
@@ -334,7 +334,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
   }
 
   async function handleSave() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);
@@ -358,7 +358,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
   }
 
   async function handleReview() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || !outcome.trim()) return;
     setBusy(true);
     setError(null);

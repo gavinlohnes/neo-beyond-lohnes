@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { Ban } from "lucide-react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
@@ -48,7 +48,7 @@ export function QuitHabitSettings() {
   }
 
   async function handleSave() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     setError(null);

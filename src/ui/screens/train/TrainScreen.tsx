@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { MemoryPanel } from "../../components/MemoryPanel";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -458,7 +458,7 @@ export function TrainScreen({
   }
 
   async function actuallyStart() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     try {
@@ -497,7 +497,7 @@ export function TrainScreen({
   }
 
   async function handleQuickCheckIn() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     try {
@@ -513,7 +513,7 @@ export function TrainScreen({
   }
 
   async function handleSetPlannedWork(planned: boolean) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
     try {
@@ -684,7 +684,7 @@ export function TrainScreen({
    * no longer appears in `sets`) — ready for the lifter to re-enter.
    */
   async function handleUndoLastSet() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || !session) return;
     setBusy(true);
     try {
@@ -752,7 +752,7 @@ export function TrainScreen({
    * sessions), so this genuinely reflects what changed, not a guess.
    */
   async function handleCompleteWorkout(status: "COMPLETED" | "PARTIAL") {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || !session) return;
     setFinishHoldHint(false);
     setBusy(true);
@@ -840,7 +840,7 @@ export function TrainScreen({
   }
 
   async function actuallyStop() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || !session) return;
     setBusy(true);
     try {
@@ -858,7 +858,7 @@ export function TrainScreen({
   }
 
   async function handleCompleteRecovery() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || !session) return;
     setBusy(true);
     try {
@@ -1404,7 +1404,7 @@ export function TrainScreen({
               lastSet={describeGymLastSet()}
               onUndoLastSet={() => void handleUndoLastSet()}
               onSaveCue={async (exerciseId, cue) => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
                 await setExerciseCue(session.beyondDayId, exerciseId, cue);
                 acknowledge("LIGHT");
               }}

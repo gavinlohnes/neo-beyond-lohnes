@@ -1,4 +1,4 @@
-import { captureFeedback } from "../feel/feedback";
+import { captureCommitFeedback } from "../feel/feedback";
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { getStealthReadings } from "../../application/stealthQueries";
 import { getRecentSavedMeals } from "../../application/nutritionQueries";
@@ -69,7 +69,7 @@ export function StealthOverlay({ onExit, onLogged }: {
   }, [logged]);
 
   async function run(write: () => Promise<Logged | null>, failureMessage: string) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (inFlight.current) return;
     inFlight.current = true;
     setBusy(true);
@@ -103,7 +103,7 @@ export function StealthOverlay({ onExit, onLogged }: {
     const entry = logged;
     if (!entry) return;
     void run(async () => {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
       const changed = entry.kind === "WATER" ? await voidWaterLog(entry.dayId, entry.eventId) : await voidMealLog(entry.dayId, entry.eventId);
       if (changed) acknowledge("HEAVY");
       return null;

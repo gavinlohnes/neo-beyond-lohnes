@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { captureFeedback, feedback } from "../../src/ui/feel/feedback";
+import { captureCommitFeedback, feedback } from "../../src/ui/feel/feedback";
 import { haptic } from "../../src/ui/feel/haptics";
 
 const originalVibrate = Object.getOwnPropertyDescriptor(navigator, "vibrate");
@@ -46,7 +46,7 @@ describe("SUIT feedback", () => {
   });
   it("keeps the originating control when focus moves during an async save", () => {
     motion(false); vibration(vi.fn());
-    const original = control(); const acknowledge = captureFeedback(); const navigation = control();
+    const original = control(); const acknowledge = captureCommitFeedback(); const navigation = control();
     acknowledge("LIGHT");
     expect(original.classList.contains("commit-pulse")).toBe(true);
     expect(navigation.classList.contains("commit-pulse")).toBe(false);

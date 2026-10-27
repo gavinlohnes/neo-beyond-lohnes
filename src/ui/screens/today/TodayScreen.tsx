@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { WorkPreparation } from "../../components/WorkPreparation";
 import { SleepMetricSheet } from "./SleepMetricSheet";
 import { useHiddenFeatures } from "../../hiddenFeatures";
@@ -944,7 +944,7 @@ export function TodayScreen({
   }
 
   async function handleStartDay() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
@@ -969,7 +969,7 @@ export function TodayScreen({
   }
 
   async function handleCheckIn() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     const submitted = checkInFormValues;
     if (busy || busyRef.current || !isCheckInComplete(submitted)) return;
     busyRef.current = true;
@@ -995,7 +995,7 @@ export function TodayScreen({
   }
 
   async function handleQuickCheckIn() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
@@ -1013,7 +1013,7 @@ export function TodayScreen({
   }
 
   async function handleRecord() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day || !recommendation) return;
     busyRef.current = true;
     setBusy(true);
@@ -1059,7 +1059,7 @@ export function TodayScreen({
   }
 
   async function handleStartReset() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
@@ -1075,7 +1075,7 @@ export function TodayScreen({
   }
 
   async function handleCompleteReset() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day || !activeResetId) return;
     busyRef.current = true;
     setBusy(true);
@@ -1092,7 +1092,7 @@ export function TodayScreen({
 
   /** Distinct from completing — "started this but didn't go through with it," never recorded as done. */
   async function handleCancelReset() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day || !activeResetId) return;
     busyRef.current = true;
     setBusy(true);
@@ -1108,7 +1108,7 @@ export function TodayScreen({
   }
 
   async function handleStartShiftDown() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
@@ -1124,7 +1124,7 @@ export function TodayScreen({
   }
 
   async function handleCompleteShiftDown() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day || !activeShiftDownId) return;
     busyRef.current = true;
     setBusy(true);
@@ -1140,7 +1140,7 @@ export function TodayScreen({
   }
 
   async function handleCancelShiftDown() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day || !activeShiftDownId) return;
     busyRef.current = true;
     setBusy(true);
@@ -1156,7 +1156,7 @@ export function TodayScreen({
   }
 
   async function handleEndDay() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
@@ -1180,7 +1180,7 @@ export function TodayScreen({
   }
 
   async function handleSetWorkContext(value: "WORK" | "OFF") {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day || !scheduledContext) return;
     busyRef.current = true;
     setBusy(true);
@@ -1199,7 +1199,7 @@ export function TodayScreen({
   // DROP 0: one tap flips the saved schedule's value for this day. Always a
   // MANUAL declaration, so it wins for the rest of the day and shows in History.
   async function handleChangeStandingWorkContext() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day || day.workContext === "UNKNOWN") return;
     busyRef.current = true;
     setBusy(true);
@@ -1218,7 +1218,7 @@ export function TodayScreen({
   // SLEEP DRAFT: one tap logs the (possibly nudged) draft as main sleep,
   // recording whether it was confirmed as proposed or adjusted first.
   async function handleLogSleepDraft(minutes: number, adjusted: boolean) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
@@ -1241,7 +1241,7 @@ export function TodayScreen({
   }
 
   async function handleMarkWorkEnded() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
@@ -1257,7 +1257,7 @@ export function TodayScreen({
   }
 
   async function handleCapture() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !captureText.trim()) return;
     busyRef.current = true;
     setBusy(true);
@@ -1278,7 +1278,7 @@ export function TodayScreen({
   }
 
   async function handleResolveCapture(item: CaptureItem) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
@@ -1306,7 +1306,7 @@ export function TodayScreen({
   }
 
   async function confirmCommitmentSatisfaction() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || commitmentSatisfactionPendingRef.current || !commitmentConfirmation) return;
     const target = commitmentConfirmation;
     commitmentSatisfactionPendingRef.current = true;
@@ -1412,7 +1412,7 @@ export function TodayScreen({
   }
 
   async function handleMarkMinimum(kind: "MEDS" | "HYGIENE" | "MOVE" | "RECOVER" | "CONNECT") {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current || !day) return;
     busyRef.current = true;
     setBusy(true);
@@ -1431,7 +1431,7 @@ export function TodayScreen({
 
   /** UNDO-001: UNDO on a just-logged banner voids that entry — never an erase. */
   async function handleUndoLog(log: "WATER" | "SLEEP" | "PROTEIN" | "MEAL") {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     const confirmation = { WATER: hydrationConfirmation, SLEEP: sleepConfirmation, PROTEIN: proteinConfirmation, MEAL: mealConfirmation }[log];
     if (busy || busyRef.current || !confirmation) return;
     const voidLog = { WATER: voidWaterLog, SLEEP: voidSleepLog, PROTEIN: voidProteinLog, MEAL: voidMealLog }[log];
@@ -1463,7 +1463,7 @@ export function TodayScreen({
    * with UNDO (a MEAL_LOG_VOIDED, never a deletion).
    */
   async function handleLogSavedMeal(meal: SavedMeal): Promise<boolean> {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current) return false;
     busyRef.current = true;
     setBusy(true);
@@ -1503,7 +1503,7 @@ export function TodayScreen({
    * there's no way for this to create a duplicate of a BODY-side log.
    */
   async function handleMinimumDayLogWater(amountOverride?: number) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current) return false;
     const amount = amountOverride ?? Number(mdWaterInput);
     if (!Number.isFinite(amount) || amount <= 0) return false;
@@ -1527,7 +1527,7 @@ export function TodayScreen({
   }
 
   async function handleMinimumDayLogProtein() {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (busy || busyRef.current) return;
     const grams = Number(mdProteinInput);
     if (!Number.isFinite(grams) || grams <= 0) return;

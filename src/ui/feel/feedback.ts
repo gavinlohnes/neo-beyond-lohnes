@@ -22,7 +22,7 @@ export function feedback(meaning: FeedbackMeaning, target?: HTMLElement | null):
 }
 
 /** Capture the initiating control before awaiting a write; later focus is not provenance. */
-export function captureFeedback(): (meaning: FeedbackMeaning) => void {
+export function captureCommitFeedback(): (meaning: FeedbackMeaning) => void {
   const target = typeof document !== "undefined" && document.activeElement instanceof HTMLElement
     ? document.activeElement : null;
   return (meaning) => feedback(meaning, target);

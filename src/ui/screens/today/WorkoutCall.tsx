@@ -1,4 +1,4 @@
-import { captureFeedback } from "../../feel/feedback";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { useRef, useState } from "react";
 import { setPlannedWork } from "../../../application/commands";
 import type { TonightState } from "../../../application/tonightQueries";
@@ -104,7 +104,7 @@ export function WorkoutCall({
   const minutesText = (variant: "STANDARD" | "REDUCED") => (minutes[variant] !== undefined ? `~${minutes[variant]} min` : null);
 
   async function answer(planned: boolean, destination?: TrainDestination) {
-    const acknowledge = captureFeedback();
+    const acknowledge = captureCommitFeedback();
     if (writing.current || busy) return;
     writing.current = true;
     setError(null);
