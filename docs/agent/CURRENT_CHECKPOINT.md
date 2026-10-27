@@ -1,11 +1,24 @@
+# LOOP step 1 — ASK
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "Go loop" (campaign + step 1). Claude Code;
+  FEATURE (read-only). [Campaign brief](LOOP.md). Claude owns THE LOOP; Codex keeps Personal
+  Understanding and memory (#303).
+- **Baseline / branch:** master `98a8300` (#304 ROTATION-004 merged at Gavin's direction);
+  `ccr-0be4f40f-16m0ja` reused.
+- **Built:** Review → Whole Picture → Ask: four questions answered by rules from recorded days
+  (`application/askProjection.ts`), every line opening the days behind it; "not enough recorded
+  yet" names what is missing. No writes, Engine input or AI.
+- **Next:** CI and Gavin's merge. Steps 2–4 (REFLECT, TRY, REMEMBER) are PROTECTED and each need
+  their own approval. Merged branches `claude/delta-004` and `claude/remove-pcb-overlay` still
+  await deletion by Gavin.
+
+---
+Historical ROTATION-004 checkpoint (#304 merged at `98a8300`):
+
 # ROTATION-004 — your whole day on one line
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "go 004". Claude Code; FEATURE.
-  [Brief](ROTATION-004.md). #300 (SLEEP-ENGINE-001) merged at `c3338a0`; all tonight's deploys green.
-- **Built:** meals, water and workout starts on every Rotation actogram row, with a legend and
-  accessible times on each day. Display only.
-- **Next:** CI and Gavin's merge. Merged branches `claude/delta-004` and `claude/remove-pcb-overlay`
-  could not be deleted from this session (git access limited to its branch); Gavin can delete them.
+  [Brief](ROTATION-004.md). Meals, water and workout starts on every Rotation actogram row.
 
 ---
 Historical SLEEP-ENGINE-001 checkpoint (#300 merged at `c3338a0`):

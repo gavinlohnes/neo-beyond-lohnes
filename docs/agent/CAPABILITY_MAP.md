@@ -272,3 +272,7 @@ fresh general review.
   back for TODAY/TRAIN. Extend this path, not a parallel one, for any future sleep-aware advice.
 - ROTATION-004: `PictureRow.marks` (meal/water event times, workout starts, undone excluded) feed
   the actogram's meal/water/workout marks. Reuse it for any "what happened when" view.
+- LOOP step 1 (ASK): `application/askProjection.ts` answers fixed questions by rules over
+  Whole Picture rows, reusing runs/positions/flips and marks; each `AskLine` carries its source
+  rows for tap-through, and `NOT_YET` names what is missing. Add new questions there
+  ([LOOP.md](LOOP.md)), not as free text or AI.
