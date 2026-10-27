@@ -1,3 +1,28 @@
+# MEMORY-001 — confirmed prep and recovery memory (WIP)
+
+- **Authority / Builder / lane:** Gavin's explicit MEMORY-001 direction, 2026-10-27; Codex,
+  PROTECTED additive event/command contract. [Brief](MEMORY-001.md). No new schema or Engine rule.
+- **Baseline / branch / PR:** fresh master `ab3508887af7650d6e4180d815e048fd2b48b8f2` (#302
+  merged/deployed); `codex/memory-001`; [#303](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/303), WIP pushed early.
+- **Built:** operator-only food/bottle/other-prep/recovery facts, causal append-only revisions,
+  confirmation/status/history, atomic stale/day/duplicate guards; MORE manager, PREP context and
+  recovery-only TRAIN context. Existing backup/store; no consumption/tasks/advice side effects.
+- **REUSE:** PREP/atomic/events/day/history/backup, native disclosures and existing routes.
+  **OWN:** fact lifecycle and context mapping. **BUILD FROM SCRATCH:** only missing fact/editor
+  semantics, which daily preparation confirmations and Journal records cannot represent honestly.
+- **Evidence so far:** integration 7/7; focused browser/Train/PREP/Nav 104/104 before final day-read
+  ownership refinement. Four-size axe/reduced-motion/bounded controls, inspect/edit/irrelevant,
+  source/Engine isolation and real native backup tests included. TypeScript/architecture pass.
+- **Independent WIP review:** BLOCK on `0401fa4`: day-keyed PREP remount lost a global-memory
+  draft. Corrected by retaining the hidden component through no-day/new-day transitions; day-owned
+  preparation reads reset separately and cannot revive yesterday's confirmation. Regression covers
+  ended/null/new-day draft survival and explicit day adoption; final exact-head review follows.
+- **Next:** full verify, production/offline acceptance, final independent exact-head review and
+  required CI; then Gavin's separate merge decision. No merge or next slice authorized here.
+
+---
+Historical PERSONAL-UNDERSTANDING-001 (#302 merged/deployed as `ab35088`):
+
 # PERSONAL-UNDERSTANDING-001 — connected knowledge
 
 - **Authority / Builder / lane:** Gavin: “Let's work on personal understanding”, after the

@@ -84,7 +84,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
       {!facts.length && !contextual && <p className="meta">{status === "ACTIVE" ? "No active memories yet. Add only what you want BEYOND to remember." : "No memories marked irrelevant."}</p>}
       {facts.slice(0, limit).map((fact) => <article className="memory-fact" key={fact.factId}>
         <p className="memory-statement">{fact.statement}</p>
-        <p className="meta">{MEMORY_LABELS[fact.kind]} · your words · confirmed {date(fact.lastConfirmedAt)}</p>
+        <p className="meta">{MEMORY_LABELS[fact.kind]} · OPERATOR · confirmed {date(fact.lastConfirmedAt)}</p>
         <details><summary>Inspect or fix this memory</summary>
           <p className="meta">Source: OPERATOR · created {date(fact.createdAt)} · {fact.status === "ACTIVE" ? "Active" : "No longer relevant"}</p>
           <div className="memory-actions">

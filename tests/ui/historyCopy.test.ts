@@ -16,6 +16,10 @@ function event(type: DomainEventType, payload: unknown): DomainEvent {
 }
 
 describe("describeEvent — human-readable summary per real event type", () => {
+  it("summarizes memory revisions with actual source, including an unreadable imported payload", () => {
+    expect(describeEvent(event("MEMORY_RECORDED", { action: "IRRELEVANT", statement: "Frozen meals work for me.", status: "IRRELEVANT" }))).toBe("Memory · irrelevant · Frozen meals work for me. · IRRELEVANT · OPERATOR.");
+    expect(describeEvent({ ...event("MEMORY_RECORDED", null), source: "ENGINE" })).toContain("Unreadable statement · unknown status · ENGINE");
+  });
   it("DAY_ENDED labels every non-explicit reason as auto-closed, including new reasons this ternary hasn't seen before (DAY-ROLLOVER-001)", () => {
     expect(describeEvent(event("DAY_ENDED", { reason: "EXPLICIT_END_DAY" }))).toBe("Day ended (explicit).");
     expect(describeEvent(event("DAY_ENDED", { reason: "AUTO_CLOSED_ON_NEW_DAY_START" }))).toBe(

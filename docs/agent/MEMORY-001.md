@@ -4,7 +4,7 @@
   operator-authored prep/recovery loop, preferring additive events in existing persistence.
 - **Lane / Builder:** PROTECTED additive event/command contract; Codex. No Engine edits.
 - **Baseline:** freshly fetched `ab3508887af7650d6e4180d815e048fd2b48b8f2` (#302 merged/deployed).
-- **Branch / PR:** `codex/memory-001`; PR pending early WIP publication. #300 remains Claude's.
+- **Branch / PR:** `codex/memory-001`; [#303](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/303), WIP published early. #300 remains Claude's.
 
 ## Model and surfaces
 
@@ -25,6 +25,9 @@
   within that sheet. No outer TODAY memory block or added red action.
 - Recovery: quiet active RECOVERY facts in TRAIN's recovery choice/in-progress recovery surfaces.
   No recovery fact on ordinary TRAIN or permanent TODAY surface. Shared inspect/fix editor.
+- PREP's component remains mounted (hidden without an active day) so the global-memory draft
+  survives day transitions; the existing preparation read is explicitly owned by its day ID,
+  resets on a day change and can never display the previous day's confirmation on a new day.
 - Starters fill editable drafts only: frozen backup, bottle preparation, quiet recovery. Never
   stored by opening a view. All context is labelled as the operator's words, not system advice.
 
