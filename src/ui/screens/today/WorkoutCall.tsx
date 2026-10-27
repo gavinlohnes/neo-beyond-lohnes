@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useRef, useState } from "react";
 import { setPlannedWork } from "../../../application/commands";
 import type { TonightState } from "../../../application/tonightQueries";
@@ -108,6 +109,7 @@ export function WorkoutCall({
     setError(null);
     try {
       await setPlannedWork(day.id, planned);
+      feedback("LIGHT");
       question.answered();
       onAnswered();
       if (destination) onOpenTrain?.(destination);

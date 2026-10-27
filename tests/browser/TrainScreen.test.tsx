@@ -1025,7 +1025,7 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
       expect(document.querySelector("audio")).toBeNull();
       // FEEL-001: every logged set taps once (the LOG haptic); a PR adds nothing of its own.
       expect(vibrate).toHaveBeenCalledOnce();
-      expect(vibrate).toHaveBeenCalledWith(15);
+      expect(vibrate).toHaveBeenCalledWith(20);
       expect(play).not.toHaveBeenCalled();
     } finally {
       play.mockRestore();

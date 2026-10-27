@@ -34,7 +34,7 @@ function cssRules(): CSSStyleRule[] {
 }
 
 describe("FEEL-001", () => {
-  it("a completed hold-to-confirm taps once; a quick tap doesn't", async () => {
+  it("a hold threshold arms once; a quick tap doesn't", async () => {
     const vibrate = vi.spyOn(navigator, "vibrate").mockReturnValue(true);
     const onConfirm = vi.fn();
     const screen = await render(<HoldButton onConfirm={onConfirm}>FINISH</HoldButton>);

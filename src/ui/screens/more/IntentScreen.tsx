@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { useSessionDraft } from "../../sessionDrafts";
 import type { DomainEvent } from "../../../domain/common/types";
@@ -343,6 +344,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
     if (!newMissionTitle.trim()) return;
     await withBusy(async () => {
       await createMission({ title: newMissionTitle.trim() });
+      feedback("LIGHT");
       setNewMissionTitle("");
       setMissionCreateOpen(false);
       await refreshList();
@@ -361,6 +363,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
         ...(newObligationPlannedAt ? { plannedAt: newObligationPlannedAt } : {}),
         ...(recurrence ? { recurrence } : {}),
       });
+      feedback("LIGHT");
       setNewObligationTitle("");
       setNewObligationMissionId("");
       setNewObligationDueAt("");
@@ -579,6 +582,7 @@ function MissionDetail({ missionId, onBack, active }: { missionId: string; onBac
         title: title.trim() || undefined,
         description: description.trim() || undefined,
       });
+      feedback("LIGHT");
       setEditing(false);
       await load();
     } catch (e) {
@@ -594,6 +598,7 @@ function MissionDetail({ missionId, onBack, active }: { missionId: string; onBac
     setError(null);
     try {
       await archiveMission(missionId);
+      feedback("HEAVY");
       setArchiveConfirming(false);
       await load();
     } catch (e) {
@@ -741,6 +746,7 @@ function ObligationDetail({
         plannedAt: plannedAt || undefined,
         ...(recurrence ? { recurrence } : {}),
       });
+      feedback("LIGHT");
       setEditing(false);
       await load();
     } catch (e) {

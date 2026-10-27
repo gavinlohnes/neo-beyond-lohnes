@@ -137,7 +137,7 @@ function Flips({ rows, onInspect }: { rows: readonly PictureRow[]; onInspect: (r
           const rowNames = kind === "INTO_WORK" ? ["Day before", ...flip.after.map((_, i) => i === 0 ? "First night" : i === 1 ? "Second night" : `Night ${i + 1}`)] : ["Last night", ...flip.after.map((_, i) => i === 0 ? "First day off" : i === 1 ? "Second day off" : `Day off ${i + 1}`)];
           return <details key={flip.before.start}>
             <summary>{kind === "INTO_WORK" ? "Into work" : "Out of work"} · {shortDate(flip.after[0]!.start)}{kind === "INTO_WORK" && (flip.before.napMinutes ?? 0) > 0 ? " · napped before" : ""}</summary>
-            <p className="small">{kind === "INTO_WORK" ? "Day before · First night · Second night" : "Last night · First day off · Second day off"}</p>
+            <p className="small">{rowNames.join(" · ")}</p>
             <Actogram rows={days} labels={labels(flip)} title={`${kind === "INTO_WORK" ? "Into work" : "Out of work"}, ${shortDate(flip.after[0]!.start)}`} />
             <ul>{days.map((row, index) => <li key={row.start}><button type="button" className="textbutton" onClick={() => onInspect(row)}
               aria-label={`${rowNames[index]}, ${day(row.start)}: main sleep ${row.ambiguousSleep ? "ambiguous" : row.sleepHours === undefined ? "not recorded" : hours(row.sleepHours)}${sleepTimes(row) ? `, asleep ${sleepTimes(row)}` : ""}${row.napMinutes ? `, nap ${row.napMinutes} min` : ""}, energy ${row.energy ?? "not recorded"}. Open records.`}>

@@ -71,4 +71,13 @@ describe("HoldButton (real browser)", () => {
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
+  it("cancels when the app loses focus without disabling the control", async () => {
+    const onConfirm = vi.fn();
+    const screen = await render(<HoldButton onConfirm={onConfirm} durationMs={150}>FINISH</HoldButton>);
+    screen.getByRole("button", { name: "FINISH" }).element().dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerId: 1 }));
+    window.dispatchEvent(new Event("blur"));
+    await new Promise((resolve) => setTimeout(resolve, 220));
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
 });

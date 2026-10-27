@@ -42,7 +42,7 @@ describe("Weekly check-in — burden line (real browser)", () => {
     await expect
       .element(
         section.getByText(
-          "Log meals on 14 more days and weigh in 8 more times over 2 weeks, and BEYOND can estimate what you really burn (0 of 14 meal days, 0 of 8 weigh-ins in the last 28 days).",
+          "Log meals on 14 more days and weigh in 8 more times over 2 weeks. Unlocks: your daily burn estimate (0 of 14 meal days, 0 of 8 weigh-ins in the last 28 days).",
           { exact: true },
         ),
       )

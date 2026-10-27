@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useEffect, useState } from "react";
 import type { CustomExercise } from "../../../domain/workout/customExercise";
 import { EXERCISE_LIBRARY, searchLibraryExercises, type LibraryExercise, type MuscleGroup } from "../../../domain/workout/exerciseLibrary";
@@ -99,6 +100,7 @@ export function ExerciseLibraryScreen() {
         repRangeHigh: lib.repRangeHigh,
         libraryExerciseId: lib.id,
       });
+      feedback("LIGHT");
       await refresh();
     });
   }
@@ -114,6 +116,7 @@ export function ExerciseLibraryScreen() {
         repRangeHigh: Number(customRepHigh) || 1,
         ...(customNotes.trim() ? { notes: customNotes.trim() } : {}),
       });
+      feedback("LIGHT");
       setCustomName("");
       setCustomEquipment("");
       setCustomRepLow("8");
@@ -127,6 +130,7 @@ export function ExerciseLibraryScreen() {
   async function handleArchive(id: string) {
     await withBusy(async () => {
       await archiveCustomExercise(id);
+      feedback("HEAVY");
       await refresh();
     });
   }

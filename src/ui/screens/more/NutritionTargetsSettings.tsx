@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { Target } from "lucide-react";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
@@ -118,6 +119,7 @@ export function NutritionTargetsSettings() {
     setBusy(true);
     try {
       const { saved, undo } = await saveNutritionTargets(changes);
+      feedback("LIGHT");
       if (disposedRef.current) return;
       setTargets(saved);
       setOpen(false);
@@ -134,6 +136,7 @@ export function NutritionTargetsSettings() {
     setBusy(true);
     try {
       await confirmation.undo();
+      feedback("HEAVY");
       const restored = await getNutritionTargets();
       if (disposedRef.current) return;
       setTargets(restored);

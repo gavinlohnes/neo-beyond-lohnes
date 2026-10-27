@@ -209,7 +209,7 @@ export function describeExpenditure(readout: ExpenditureReadout): { headline?: s
   const goal = unlockGoal([
     { more: readout.intakeDays.need - readout.intakeDays.have, action: (n) => `log meals on ${plural(n, "more day", "more days")}` },
     { more: weighIns > 0 ? weighIns : readout.spanOk ? 0 : 1, action: (n) => weighIns > 0 ? `weigh in ${plural(n, "more time", "more times")} over 2 weeks` : "spread your weigh-ins across 2 weeks" },
-  ], "estimate what you really burn");
+  ], "your daily burn estimate");
   const count = (c: { have: number; need: number }, what: string) => `${c.have}${c.have < c.need ? ` of ${c.need}` : ""} ${what}`;
   const progress = `${count(readout.intakeDays, "meal days")}, ${count(readout.weighIns, "weigh-ins")} in the last ${readout.windowDays} days`;
   return { detail: goal ? `${goal.slice(0, -1)} (${progress}).` : `Not enough data yet (${progress}).` };
@@ -271,7 +271,7 @@ export function describeBaselinesQuiet(baselines: readonly PersonalBaseline[]): 
   const goal = unlockGoal(measures.map((measure) => {
     const kinds = learning.filter((b) => b.measure === measure).map((b) => { const n = b.need - b.have; return `${n} more ${n === 1 ? KIND_WORDS[b.dayKind].one : KIND_WORDS[b.dayKind].many}`; });
     return { more: 1, action: () => `${measure === "MAIN_SLEEP" ? "main sleep" : MEASURE_WORDS[measure].toLowerCase()} on ${kinds.join(" and ")}` };
-  }), "learn your usual", "log");
+  }), "your usual", "log");
   const notThisWeek = baselines.flatMap((b) =>
     b.kind === "NOT_THIS_WEEK" ? [`${MEASURE_WORDS[b.measure].toLowerCase()} ${KIND_WORDS[b.dayKind].label}`] : [],
   );

@@ -1130,6 +1130,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setBusy(true);
     try {
       for (const pair of pairs) await voidMealLog(day.id, pair.justLogged.id);
+      if (pairs.length) feedback("HEAVY");
       setRepeatDuplicates(null);
       // The batch's UNDO would now undo a different set than it says; the totals already show the result.
       if (mealConfirmation?.anchor === "REPEAT") setMealConfirmation(null);
@@ -1216,6 +1217,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     let saved: SavedMeal | null = null;
     try {
       saved = await createSavedMeal({ name, ...macros });
+      feedback("LIGHT");
       const meal = saved;
       if (logToday) setSavedMeals((meals) => [...meals.filter((item) => item.id !== meal.id), meal]);
       setMealPresetNotice("Meal saved. Use LOG when you eat it.");
@@ -1274,6 +1276,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setError(null);
     try {
       await updateSavedMeal(editingMealId, { name, ...macros });
+      feedback("LIGHT");
       setEditingMealId(null);
       await refresh();
     } catch (e) {
@@ -1289,6 +1292,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setError(null);
     try {
       await archiveSavedMeal(id);
+      feedback("HEAVY");
       if (editingMealId === id) setEditingMealId(null);
       await refresh();
     } finally {
@@ -1478,6 +1482,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setError(null);
     try {
       for (const id of mealEventIds) await voidMealLog(dayId, id);
+      if (mealEventIds.length) feedback("HEAVY");
       setMealConfirmation(null);
       if (duplicateMeal && mealEventIds.includes(duplicateMeal.justLogged.id)) setDuplicateMeal(null);
       if (repeatDuplicates?.some((p) => mealEventIds.includes(p.justLogged.id))) setRepeatDuplicates(null);

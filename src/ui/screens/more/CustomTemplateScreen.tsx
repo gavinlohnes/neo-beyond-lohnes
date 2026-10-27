@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useEffect, useState } from "react";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
 import type { CustomExercise } from "../../../domain/workout/customExercise";
@@ -114,6 +115,7 @@ export function CustomTemplateScreen() {
         };
       });
       await createCustomTemplate({ name: name.trim(), exercises });
+      feedback("LIGHT");
       setName("");
       setSelectedSets({});
       setCreateOpen(false);
@@ -124,6 +126,7 @@ export function CustomTemplateScreen() {
   async function handleArchive(id: string) {
     await withBusy(async () => {
       await archiveCustomTemplate(id);
+      feedback("HEAVY");
       await refresh();
     });
   }

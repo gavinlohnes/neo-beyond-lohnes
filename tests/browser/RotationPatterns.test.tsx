@@ -63,7 +63,7 @@ it("says how many runs patterns still need, and stays honest with no forecast or
   await expect.element(screen.getByRole("heading", { name: "Patterns need 3 complete work runs (1 so far)." })).toBeVisible();
   expect(document.querySelector('[data-position="WORK:1"] summary')!.textContent).toMatch(/sleep avg after 2 more logged \(1 of 3\) · energy avg after 2 more check-ins \(1 of 3\)/);
   // DELTA-004: the abstention says what unlocks it.
-  expect(document.querySelector("[data-unlock-goal]")!.textContent).toBe("Mark each day work or off and log main sleep and a check-in through 2 more work runs, and BEYOND can show shift-by-shift patterns.");
+  expect(document.querySelector("[data-unlock-goal]")!.textContent).toBe("Mark each day work or off and log main sleep and a check-in through 2 more work runs. Unlocks: shift-by-shift patterns.");
   expect(document.querySelector("[data-rotation-window]")!.textContent).not.toMatch(/trained most often/);
 });
 

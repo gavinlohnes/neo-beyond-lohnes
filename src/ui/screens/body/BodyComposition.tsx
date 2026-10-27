@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getMeasurements, type MeasurementEntry } from "../../../application/measurementQueries";
 import { correctMeasurement, logMeasurement } from "../../../application/measurementCommands";
@@ -108,11 +109,13 @@ function Measurements({ entries, ready, reading, failed, onRefresh }: {
     try {
       if (correcting && editing) {
         await correctMeasurement(editing.headEventId, { inches: value, measuredOn: correction.date });
+        feedback("LIGHT");
         setReceipt(`${siteLabel(editing.site)} corrected to ${value} in · ${progressDate(correction.date)}. Original record retained.`);
         const root = editing.rootEventId; setEditing(null);
         setFocusAfterSave(`measurement-edit-${root}`);
       } else {
         await logMeasurement({ site, inches: value, measuredOn: date });
+        feedback("LIGHT");
         setReceipt(`${siteLabel(site)} saved · ${value} in · ${progressDate(date)}.`);
         setInches("");
         setFocusAfterSave("measurement-inches");

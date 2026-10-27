@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useEffect, useState } from "react";
 import { getSchedulePattern, getScheduledContext } from "../../../application/queries";
 import { updateSchedulePattern } from "../../../application/commands";
@@ -96,6 +97,7 @@ export function WorkScheduleScreen() {
         shiftEndHour: draft.shiftEndHour,
         postWorkTailHours: draft.postWorkTailHours,
       });
+      feedback("LIGHT");
       setStatus("Saved.");
     } catch (e) {
       setStatus(describeError(e, "Could not save."));

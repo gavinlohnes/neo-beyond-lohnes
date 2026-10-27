@@ -23,7 +23,7 @@ type MealQuestion = { message: string; detail?: string; removeLabel: string; rem
 type Receipt = { question?: MealQuestion | undefined; message: string; undo: () => Promise<unknown>; warning?: string; history?: "water" | "protein"; notes?: boolean };
 function ReceiptItem({ receipt, busy, undo, dismiss, history, keep, remove }: { receipt: Receipt; busy: boolean; undo: () => void; dismiss: () => void; history: () => void; keep: () => void; remove: () => void }) {
   const undoOpen = useUndoOpen(receipt);
-  return <div className="record-receipt"><p>{receipt.message}</p>{receipt.warning && <p>{receipt.warning}</p>}
+  return <div className="record-receipt confirm-banner"><p>{receipt.message}</p>{receipt.warning && <p>{receipt.warning}</p>}
     {receipt.question && <div role="group" aria-label={receipt.question.removeLabel === "REMOVE ONE" ? "Same food?" : "Same meal?"}>
       <p>{receipt.question.message}</p>{receipt.question.detail && <p>{receipt.question.detail}</p>}
       <button type="button" className="btn-secondary" disabled={busy} onClick={keep}>KEEP BOTH</button>
@@ -204,6 +204,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         if (busyRef.current || !receipt.question) return;
         const question = receipt.question; setBusy(true); setError(null);
         void question.remove().then(() => {
+          feedback("HEAVY");
           if (question.removeLabel === "REMOVE THIS ONE") dismissReceipt(receipt.id);
           else setReceipts((old) => old.map((entry) => entry.id === receipt.id ? { ...entry, question: undefined, message: question.removedMessage } : entry));
           onSaved();

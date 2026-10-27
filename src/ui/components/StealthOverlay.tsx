@@ -1,3 +1,4 @@
+import { feedback } from "../feel/feedback";
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { getStealthReadings } from "../../application/stealthQueries";
 import { getRecentSavedMeals } from "../../application/nutritionQueries";
@@ -74,6 +75,7 @@ export function StealthOverlay({ onExit, onLogged }: {
     setFailure(null);
     try {
       const result = await write();
+      feedback(result ? "LIGHT" : "HEAVY");
       setLogged(result);
       setPanel(null);
       onLogged();

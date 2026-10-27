@@ -949,6 +949,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       await startDay();
+      feedback("LIGHT");
       // TODAY-008 (residual TODAY-R01, flagged in TODAY-006): every other
       // mutating handler in this component calls refresh() afterward so
       // everything derived from the active day (checkIn, recommendation,
@@ -1014,6 +1015,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       await recordRecommendation(day.id, recommendation);
+      feedback("LIGHT");
       await refresh();
     } finally {
       busyRef.current = false;
@@ -1224,6 +1226,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       await markWorkEnded(day.id);
+      feedback("LIGHT");
       setWorkContextOpen(false);
       await refresh();
       onWorkEnded?.();
@@ -1240,6 +1243,7 @@ export function TodayScreen({
     setCaptureFeedback(null);
     try {
       await captureItem(captureText);
+      feedback("LIGHT");
       setCaptureText("");
       setCaptureFeedback({ kind: "SUCCESS", message: "Note saved in Capture. It is also searchable in MORE." });
       try { await refresh(); }
@@ -1258,6 +1262,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       await resolveCaptureItem(item.id);
+      feedback("LIGHT");
       setJustResolvedCapture({ id: item.id, text: item.text });
       await refresh();
     } finally {

@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState } from "react";
 import { createObligation } from "../../../application/intentCommands";
@@ -50,6 +51,7 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
       const rule = recurrenceInputFor(recurrence, due || current.date);
       await createObligation({ title: name, plannedAt: current.date, ...(due ? { dueAt: due } : {}),
         ...(mission ? { missionId: mission } : {}), ...(rule ? { recurrence: rule } : {}) });
+      feedback("LIGHT");
       setTitle(""); setDue(""); setMission(""); setRecurrence(EMPTY_RECURRENCE);
       setReceipt(`Added “${name}” to your plan.`);
       await refresh();

@@ -513,6 +513,7 @@ export function TrainScreen({
     try {
       const activeDay = await ensureActiveDay();
       await setPlannedWork(activeDay.id, planned);
+      feedback("LIGHT");
       await refresh();
     } catch (error) {
       reportOperationFailure(error);
@@ -1391,6 +1392,7 @@ export function TrainScreen({
               onUndoLastSet={() => void handleUndoLastSet()}
               onSaveCue={async (exerciseId, cue) => {
                 await setExerciseCue(session.beyondDayId, exerciseId, cue);
+                feedback("LIGHT");
               }}
             />
           )}

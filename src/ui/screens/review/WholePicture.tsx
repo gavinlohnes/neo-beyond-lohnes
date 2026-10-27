@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useEffect, useId, useRef, useState } from "react";
 import { RotationMap } from "./RotationMap";
 import { AskPanel } from "./AskPanel";
@@ -131,6 +132,7 @@ export function WholePicture({ active = true, onOpenHistory, destination, onDest
     inFlight.current = true; setSaving(true); setSaveError(null); setReceipt(null);
     try {
       const id = await saveWeeklyReview({ weekStart: data.week.start, weekEnd: data.week.end, note: data.savedReview?.note ?? "", focus: { kind: "CUSTOM", text }, expectedPreviousId: baseline.current });
+      feedback("LIGHT");
       baseline.current = id; setNote(""); setFocus("recovery"); dirtyRef.current = false;
       setReceipt(`Weekly review and focus saved on this device for the week starting ${date(data.week.end)}. Your existing review note was preserved.`);
       window.dispatchEvent(new Event("beyond:weekly-review-saved"));

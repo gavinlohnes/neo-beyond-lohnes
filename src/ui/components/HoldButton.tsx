@@ -43,7 +43,16 @@ export function HoldButton({
     }
   }
 
-  useEffect(() => clearTimer, []);
+  useEffect(() => {
+    const suspend = () => { clearTimer(); setHolding(false); };
+    const visibility = () => { if (document.hidden) suspend(); };
+    window.addEventListener("blur", suspend);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      clearTimer(); window.removeEventListener("blur", suspend);
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, []);
   useEffect(() => { if (disabled) { clearTimer(); setHolding(false); } }, [disabled]);
 
   function start() {
@@ -98,6 +107,7 @@ export function HoldButton({
         }}
         onPointerUp={cancel}
         onPointerCancel={cancel}
+        onLostPointerCapture={cancel}
         onContextMenu={(e) => e.preventDefault()}
         onKeyDown={onKeyDown}
         onKeyUp={onKeyUp}

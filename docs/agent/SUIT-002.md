@@ -23,3 +23,8 @@
   strength is best effort; a browser test cannot prove physical sensation on Gavin's phone.
 - Campaign continuity: #303 has green CI and exact-head independent review at `71bcb079`;
   it is open and unmerged. This objective does not imply merge approval for either PR.
+
+Native API evidence: [MDN Vibration API](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate)
+reviewed via the upstream MDN content repository: sticky user activation, unsupported-device
+no-op, DND refusal and durations rather than programmable physical intensity. Reuse the native
+standard; no haptic library can manufacture hardware support.

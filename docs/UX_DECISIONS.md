@@ -1999,3 +1999,17 @@ rule order are unchanged; STANDARD stays the operator's choice. "Why this?" name
 the range, and its closing line now says sleep can only change the session size. This supersedes
 the DELTA-002 slice 1 statement that the Engine never considers sleep. Bounds:
 `agent/SLEEP-ENGINE-001.md`.
+
+## SUIT-002 — commit feedback and short evidence copy (2026-10-27)
+
+Owner: Gavin's direct BEYOND // SUIT brief. Existing SUIT-001 stealth/signals remain intact.
+Reuse a single native, best-effort semantic feedback path: light for ordinary saved records,
+medium for a saved check-in/set, heavy for void/destruction/closure. A hold threshold means
+armed, never saved; only the successful write earns completion. Inspection and navigation
+stay mute. Use a 120ms neutral confirmation pulse, no new red or idle motion. Reduced-motion
+suppresses tactile and decorative feedback; plain confirmation and all functions remain.
+No sound in this slice. Native support and physical strength cannot be guaranteed by web code.
+Keep next-window detail optional and flip record labels plain; preserve provenance, sample
+floors, uncertainty and trace-only Why this? MEMORY-001 #303 supplies confirmed prep/recovery
+memory; do not introduce a parallel store or inference. Engine, primary navigation, and data
+contracts are outside this presentation slice. Every merge remains Gavin's.

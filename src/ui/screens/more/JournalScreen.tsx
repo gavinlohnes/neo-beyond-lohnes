@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState } from "react";
 import type { DomainEvent } from "../../../domain/common/types";
@@ -156,6 +157,7 @@ export function JournalScreen({ active = true, navigationEntryId, onOpenCapture,
         ...(newReasoning.trim() ? { reasoning: newReasoning.trim() } : {}),
         ...(newExpectation.trim() ? { expectation: newExpectation.trim() } : {}),
       });
+      feedback("LIGHT");
       setNewTitle("");
       setNewContext("");
       setNewOptions("");
@@ -343,6 +345,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
         reasoning: reasoning.trim() || undefined,
         expectation: expectation.trim() || undefined,
       });
+      feedback("LIGHT");
       setEditing(false);
       await load();
     } catch (e) {
@@ -361,6 +364,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
         outcome: outcome.trim(),
         ...(lesson.trim() ? { lesson: lesson.trim() } : {}),
       });
+      feedback("LIGHT");
       setReviewing(false);
       setOutcome("");
       setLesson("");
