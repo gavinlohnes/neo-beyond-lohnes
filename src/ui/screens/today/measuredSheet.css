@@ -44,4 +44,6 @@
 /* ROTATION-002: a reading against your own range; the existing warning token, never the red action color. */
 .measured-unusual{border-left:3px solid var(--warning);padding:8px 12px;margin:4px 0 12px}
 .measured-unusual p{margin:0 0 4px}
-.cc-flab--unusual{color:var(--warning)}
+.cc-flab--unusual{color:var(--warning);font-weight:700}
+/* SUIT: the qualified unusual reading owns its tile; no new red or detector rule. */
+.cc-fuel button:has(.cc-flab--unusual) .cc-num{color:var(--warning)}

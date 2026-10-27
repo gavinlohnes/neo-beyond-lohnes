@@ -105,4 +105,3 @@ it("ROTATION-004: puts meals, water and workouts on the same line as sleep and t
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
   expect((await axe.run(document.body)).violations).toEqual([]);
 });
-

@@ -5,7 +5,9 @@
 - [Brief](SUIT-002.md). Reuse existing haptics/hold/confirmation/rotation and MEMORY-001 #303.
 - Built so far: shared semantic feedback after successful writes, 120ms neutral pulse,
   mute reduced-motion, cancellable holds and short rotation surface with optional detail.
-- Focused browser feedback/hold/rotation: 16/16 pass. Full gate and offline acceptance pending.
+- Evidence: corrected focused TRAIN/KEEP/receipt checks86/86; reviewer node29/29; code review
+  PASS at6db4328. Production build + four-size offline water/undo/memory/backup acceptance PASS
+  (360/390/844/1280), zero unrelated writes/errors/overflow. Final full gate/CI/review follows.
 - Next: combined full gate, production acceptance and renewed exact-head review. No merge authorized.
 - MEMORY-001 #303 remains open, independently reviewed and CI green at `71bcb079`.
   Integrated unchanged memory lifecycle into #307 for combined testing, plus UI feedback. Neither is deployed.

@@ -31,6 +31,10 @@ for (const width of [320, 390]) it(`marks three days above your usual range on t
   const tile = screen.getByRole("button", { name: /^Resting heart rate \d+ bpm, usual \d+, above your usual range 3 days running, open resting heart rate$/ });
   await expect.element(tile).toBeVisible();
   await expect.element(tile.getByText("↑ 3 DAYS", { exact: true })).toBeVisible();
+  const unusual = tile.element().querySelector(".cc-flab--unusual")!;
+  const value = tile.element().querySelector(".cc-num")!;
+  expect(getComputedStyle(value).color).toBe(getComputedStyle(unusual).color);
+  expect(Number(getComputedStyle(unusual).fontWeight)).toBeGreaterThanOrEqual(700);
   // Steps and sleep stay quiet: nothing unusual there.
   await expect.element(screen.getByRole("button", { name: /^Steps [\d,]+, usual [\d,]+, open steps$/ })).toBeVisible();
   const before = await db.events.toArray();
