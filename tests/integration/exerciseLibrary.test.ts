@@ -71,7 +71,7 @@ describe("CustomExercise CRUD — directly mutable, no event trail of its own", 
   it("archiving is idempotent, matching archiveSavedMeal's precedent", async () => {
     const exercise = await makeExercise();
     await archiveCustomExercise(exercise.id);
-    await expect(archiveCustomExercise(exercise.id)).resolves.toBeUndefined();
+    await expect(archiveCustomExercise(exercise.id)).resolves.toBe(false);
   });
 
   it("rejects operating on a nonexistent CustomExercise", async () => {

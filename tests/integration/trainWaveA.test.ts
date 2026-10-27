@@ -64,7 +64,7 @@ describe("undoLastSet — TRAIN-WAVE-A Set Commit Choreography", () => {
   it("is a no-op when there is nothing to undo", async () => {
     const day = await startDay();
     const session = await startWorkout(day.id, "A", "STANDARD");
-    await expect(undoLastSet(day.id, session.id)).resolves.toBeUndefined();
+    await expect(undoLastSet(day.id, session.id)).resolves.toBe(false);
     expect(await getPerformedSets(session.id)).toHaveLength(0);
   });
 

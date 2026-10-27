@@ -1,0 +1,54 @@
+[
+  {
+    "width": 360,
+    "height": 800,
+    "result": "PASS",
+    "offline": true,
+    "reload": true,
+    "memoryRevisions": 4,
+    "waterLoggedAndUndone": true,
+    "reducedMotion": false,
+    "unrelatedWrites": 0,
+    "nativeBackupPreview": true,
+    "pageErrors": []
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "result": "PASS",
+    "offline": true,
+    "reload": true,
+    "memoryRevisions": 4,
+    "waterLoggedAndUndone": true,
+    "reducedMotion": true,
+    "unrelatedWrites": 0,
+    "nativeBackupPreview": true,
+    "pageErrors": []
+  },
+  {
+    "width": 844,
+    "height": 390,
+    "result": "PASS",
+    "offline": true,
+    "reload": true,
+    "memoryRevisions": 4,
+    "waterLoggedAndUndone": true,
+    "reducedMotion": true,
+    "unrelatedWrites": 0,
+    "nativeBackupPreview": true,
+    "pageErrors": []
+  },
+  {
+    "width": 1280,
+    "height": 900,
+    "result": "PASS",
+    "offline": true,
+    "reload": true,
+    "memoryRevisions": 4,
+    "waterLoggedAndUndone": true,
+    "reducedMotion": true,
+    "unrelatedWrites": 0,
+    "nativeBackupPreview": true,
+    "pageErrors": []
+  }
+]

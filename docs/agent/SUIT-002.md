@@ -4,7 +4,7 @@
 - Builder: Codex. Lane: PROTECTED for the integrated MEMORY event contract and additive command outcomes; existing MEMORY-001 remains a
   separately approved Protected event-contract PR, not a second memory implementation.
 - Baseline: fresh origin/master `8aedba5567cded7e40afd8a1fb2c0588f10f7a98`.
-- Branch: `codex/suit-002`; [PR #307](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/307), stacked on #303. Every merge remains Gavin's.
+- Branch: `codex/suit-002`; [PR #307](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/307), depends on #303; base master for required CI. Every merge remains Gavin's.
 - REUSE: native Vibration API, existing `feel/haptics`, HoldButton, ConfirmBanner, PREP,
   RecordSheets, TRAIN set confirmation, rotation/Flips and MEMORY-001 #303.
 - OWN: semantic mapping of actual successful UI commits to light/medium/heavy feedback;

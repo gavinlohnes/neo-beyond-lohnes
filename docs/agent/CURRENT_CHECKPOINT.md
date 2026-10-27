@@ -1,7 +1,7 @@
 # SUIT-002 — make the armor answer
 
 - Authority: Gavin's BEYOND // SUIT brief, 2026-10-27. Codex; PROTECTED combined memory/command-outcome review.
-- Baseline: fresh master `8aedba5`; branch `codex/suit-002`; [PR #307](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/307), stacked on #303.
+- Baseline: fresh master `8aedba5`; branch `codex/suit-002`; [PR #307](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/307), depends on #303; base master for required CI.
 - [Brief](SUIT-002.md). Reuse existing haptics/hold/confirmation/rotation and MEMORY-001 #303.
 - Built so far: shared semantic feedback after successful writes, 120ms neutral pulse,
   mute reduced-motion, cancellable holds and short rotation surface with optional detail.

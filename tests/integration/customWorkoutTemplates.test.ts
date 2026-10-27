@@ -74,7 +74,7 @@ describe("CustomWorkoutTemplate CRUD — directly mutable, no event trail of its
   it("archiving is idempotent, matching archiveCustomExercise's precedent", async () => {
     const template = await makeTemplate();
     await archiveCustomTemplate(template.id);
-    await expect(archiveCustomTemplate(template.id)).resolves.toBeUndefined();
+    await expect(archiveCustomTemplate(template.id)).resolves.toBe(false);
   });
 
   it("rejects operating on a nonexistent template", async () => {

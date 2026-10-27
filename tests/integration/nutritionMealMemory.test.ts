@@ -76,7 +76,7 @@ describe("SavedMeal CRUD — directly mutable, no event trail of its own", () =>
   it("archiving is idempotent, matching archiveMission's precedent", async () => {
     const meal = await makeMeal();
     await archiveSavedMeal(meal.id);
-    await expect(archiveSavedMeal(meal.id)).resolves.toBeUndefined();
+    await expect(archiveSavedMeal(meal.id)).resolves.toBe(false);
   });
 
   it("rejects operating on a nonexistent SavedMeal", async () => {
