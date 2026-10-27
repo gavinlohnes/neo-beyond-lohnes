@@ -4,7 +4,7 @@
   “Yes. I think it everything should be connected and working together. Let's work on personal understanding.”
 - **Builder / lane:** Codex; FEATURE, read-only composition within existing Review.
 - **Baseline / branch:** fresh `origin/master` at `e0da229`; `codex/personal-understanding-001`.
-- **PR:** pending early WIP publication.
+- **PR:** [#302](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/302), draft published early.
 
 ## Outcome
 
@@ -19,6 +19,8 @@ it does not introduce inferred preferences or claim a complete model of Gavin.
 
 - Existing active Missions, explicitly set optional targets, reviewed written lessons, personal
   baseline readings and rotation-position comparisons, all derived afresh from canonical sources.
+- Reuse the existing journal matcher to expose candidate lessons beside Missions, labelled as
+  word matches rather than confirmed relationships, recommendations or inferred preferences.
 - Bounded lists, meaningful empty/loading/error states, re-entry refresh, phone accessibility,
   human-readable dates and direct inspection/correction navigation.
 - No Engine edits, schema/events/commands, backup changes, new preference store, AI/provider,

@@ -1,3 +1,26 @@
+# PERSONAL-UNDERSTANDING-001 — connected knowledge (WIP)
+
+- **Authority / Builder / lane:** Gavin: “Let's work on personal understanding”, after the
+  first-slice proposal; Codex, FEATURE read-only Review composition. [Brief](PERSONAL-UNDERSTANDING-001.md).
+- **Baseline / branch / PR:** fresh master `e0da229`; `codex/personal-understanding-001`;
+  [#302](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/302), draft pushed early.
+- **Scope:** existing Missions/explicit targets/weekly focus, qualified personal baselines,
+  comparable rotation positions, and real written lessons with canonical source/edit navigation.
+  Existing word matching connects candidate lessons to Missions, with its limitation visible.
+- **REUSE:** existing queries, projections, matcher, source screens and native disclosure.
+  **OWN:** read-model/navigation composition. **BUILD FROM SCRATCH:** missing cross-domain view only.
+- **Boundaries:** no Engine/schema/command/backup/dependency changes, new preference store,
+  recommendation priority or TODAY changes. Claude's SLEEP-ENGINE-001 #300 remains separate.
+- **Evidence so far:** integration 3/3 (all-table no-write snapshot, defaults/explicit targets,
+  real reviewed lessons, corrected sleep and disjoint baseline windows). Browser source-return,
+  absence/error/retry, comparable-day navigation pass; refining standalone accessibility and
+  phone controls before the complete regression gate. No failed assertion was removed.
+- **Next:** finish browser/production acceptance, verification and required CI; update this
+  handoff and #302. Gavin separately decides merge. Feedback/experiments remain future scope.
+
+---
+Historical ROTATION-003 (merged #299):
+
 # ROTATION-003 — flip planning
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "go flips". Claude Code; FEATURE.
