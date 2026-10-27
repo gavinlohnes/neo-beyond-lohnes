@@ -4,8 +4,8 @@ Captured 2026-10-27 from the real production/PWA build of source head `5f1bdeb`,
 All displayed entries are synthetic; no owner backup or personal record was used.
 
 - Isolated Chromium contexts at 320×844, 390×844, 844×390 and 1280×900; America/Chicago,
-  fixed at Tue, Oct 27, 06:30. Synthetic historical work/off days, corrected canonical queries,
-  explicit targets, Missions and a real reviewed decision were prepared via application commands.
+  fixed at Tue, Oct 27, 06:30. Synthetic historical work/off days, explicit targets, Missions and a real reviewed decision
+  were prepared via application commands.
   The isolated production database was populated from those synthetic canonical records.
 - MORE → Review → Personal Understanding; Choices, Patterns, comparable-day evidence, Lessons,
   original Journal decision and BACK TO REVIEW. Re-entry waits for the refreshed read.
