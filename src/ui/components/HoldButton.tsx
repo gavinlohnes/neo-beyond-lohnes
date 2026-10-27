@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
-import { haptic } from "../feel/haptics";
+import { feedback } from "../feel/feedback";
 
 /**
  * Hold-to-confirm (ROADMAP 1.0 design rule, owner ruling 2026-09-30): for big
@@ -19,6 +19,7 @@ export function HoldButton({
   hint,
   onEarlyRelease,
   durationMs = 1000,
+  armFeedback = true,
 }: {
   children: ReactNode;
   onConfirm: () => void;
@@ -28,6 +29,7 @@ export function HoldButton({
   hint?: string;
   onEarlyRelease?: () => void;
   durationMs?: number;
+  armFeedback?: boolean;
 }) {
   const [holding, setHolding] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -42,6 +44,7 @@ export function HoldButton({
   }
 
   useEffect(() => clearTimer, []);
+  useEffect(() => { if (disabled) { clearTimer(); setHolding(false); } }, [disabled]);
 
   function start() {
     if (disabled || timerRef.current !== null) return;
@@ -50,7 +53,7 @@ export function HoldButton({
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
       setHolding(false);
-      haptic("CONFIRMED");
+      if (armFeedback) feedback("ARMED");
       onConfirm();
     }, durationMs);
   }

@@ -61,4 +61,14 @@ describe("HoldButton (real browser)", () => {
     await new Promise((resolve) => setTimeout(resolve, 1100));
     expect(onConfirm).not.toHaveBeenCalled();
   });
+  it("cancels an in-progress hold when disabled", async () => {
+    const onConfirm = vi.fn();
+    const screen = await render(<HoldButton onConfirm={onConfirm} durationMs={150}>FINISH</HoldButton>);
+    const button = screen.getByRole("button", { name: "FINISH" }).element();
+    button.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerId: 1 }));
+    await screen.rerender(<HoldButton onConfirm={onConfirm} durationMs={150} disabled>FINISH</HoldButton>);
+    await new Promise((resolve) => setTimeout(resolve, 220));
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
 });

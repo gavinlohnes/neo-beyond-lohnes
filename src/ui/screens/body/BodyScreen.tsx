@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { SleepMetricSheet } from "../today/SleepMetricSheet";
 import { WeightTrend } from "./WeightTrend";
 import { getRecordedHealthDay } from "../../../application/healthRecordQueries";
@@ -847,6 +848,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         const activeDay = await ensureActiveDay();
         dayId = activeDay.id;
         eventId = await logSleep(activeDay.id, totalMinutes, sleepKind);
+        feedback("LIGHT");
       } catch {
         // Nothing was written: drop any earlier banner so it can't read as this save.
         setSleepConfirmation(null);
@@ -902,6 +904,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setSleepCorrectionPendingConfirm(false);
     try {
       await correctSleep(day.id, sleepCorrectingId, totalMinutes);
+      feedback("LIGHT");
       setSleepCorrectingId(null);
       if (sleepConfirmation?.headEventId === sleepCorrectingId) setSleepConfirmation(null);
       await refresh();
@@ -926,6 +929,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         const activeDay = await ensureActiveDay();
         dayId = activeDay.id;
         eventId = await logBodyweight(activeDay.id, weight);
+        feedback("LIGHT");
       } catch {
         setBodyweightConfirmation(null);
         setWriteFailure("BODYWEIGHT");
@@ -978,6 +982,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setBodyLogNotice(null);
     try {
       await correctBodyweight(day.id, bodyweightCorrectingId, weight);
+      feedback("LIGHT");
       setBodyweightCorrectingId(null);
       if (bodyweightConfirmation?.headEventId === bodyweightCorrectingId) setBodyweightConfirmation(null);
       await refresh();
@@ -1002,6 +1007,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         const activeDay = await ensureActiveDay();
         dayId = activeDay.id;
         eventId = await logProtein(activeDay.id, grams);
+        feedback("LIGHT");
       } catch {
         setProteinConfirmation(null);
         setWriteFailure("PROTEIN");
@@ -1056,6 +1062,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setProteinEditNotice(null);
     try {
       await correctProtein(day.id, proteinCorrectingId, grams);
+      feedback("LIGHT");
       setProteinCorrectingId(null);
       if (proteinConfirmation?.headEventId === proteinCorrectingId) setProteinConfirmation(null);
       await refresh();
@@ -1072,6 +1079,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setBusy(true);
     try {
       await voidProteinLog(day.id, entry.rootEventId);
+      feedback("HEAVY");
       setProteinCorrectingId(null);
       setProteinEditNotice(null);
       if (proteinConfirmation && entry.headEventId === proteinConfirmation.headEventId) setProteinConfirmation(null);
@@ -1101,6 +1109,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setBusy(true);
     try {
       await voidProteinLog(day.id, protein.id);
+      feedback("HEAVY");
       setSameFood(null);
       if (proteinConfirmation && proteinEntries.some((e) => e.rootEventId === protein.id && e.headEventId === proteinConfirmation.headEventId)) {
         setProteinConfirmation(null);
@@ -1139,6 +1148,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setBusy(true);
     try {
       await voidMealLog(day.id, justLogged.id);
+      feedback("HEAVY");
       setDuplicateMeal(null);
       if (mealConfirmation?.mealEventIds.includes(justLogged.id)) setMealConfirmation(null);
       await refresh();
@@ -1290,6 +1300,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   async function logSavedMealToday(mealId: string) {
       const activeDay = await ensureActiveDay();
       const result = await logMeal(activeDay.id, mealId);
+      feedback("LIGHT");
       setMealConfirmation({
         message: describeMealLogged(result.name, result.calories, result.proteinG),
         dayId: activeDay.id,
@@ -1351,6 +1362,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         activeDay.id,
         repeatMeals.meals.map((m) => m.savedMealId),
       );
+      if (results.length) feedback("LIGHT");
       await refresh();
       if (results.length > 0) {
         setMealConfirmation({
@@ -1417,6 +1429,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setMealEditNotice(null);
     try {
       await correctMealLog(day.id, entry.headEventId, macros);
+      feedback("LIGHT");
       setCorrectingMealEventId(null);
       await refresh();
     } catch (e) {
@@ -1439,6 +1452,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setUndoFailure(null);
     try {
       await voidLog(confirmation.dayId, confirmation.headEventId);
+      feedback("HEAVY");
       clear(null);
       if (log === "PROTEIN" && sameFood?.protein.id === confirmation.headEventId) setSameFood(null);
       await refresh();
@@ -1483,6 +1497,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setError(null);
     try {
       await voidMealLog(day.id, entry.rootEventId);
+      feedback("HEAVY");
       setCorrectingMealEventId(null);
       if (mealConfirmation?.mealEventIds.includes(entry.rootEventId)) setMealConfirmation(null);
       if (duplicateMeal?.justLogged.id === entry.rootEventId) setDuplicateMeal(null);
@@ -1508,6 +1523,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         const activeDay = await ensureActiveDay();
         dayId = activeDay.id;
         eventId = await logWater(activeDay.id, amount);
+        feedback("LIGHT");
       } catch {
         setWaterConfirmation(null);
         setWriteFailure("WATER");
@@ -1546,6 +1562,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setBodyLogNotice(null);
     try {
       await correctWater(day.id, entry.headEventId, amount);
+      feedback("LIGHT");
       setCorrectingId(null);
       setCorrectionInput("");
       if (waterConfirmation?.headEventId === entry.headEventId) setWaterConfirmation(null);
@@ -1567,6 +1584,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setBodyLogDeleted(null);
     try {
       await voidLog(day.id, rootEventId);
+      feedback("HEAVY");
       if (log === "WATER") setCorrectingId(null);
       if (log === "SLEEP") setSleepCorrectingId(null);
       if (log === "BODYWEIGHT") setBodyweightCorrectingId(null);

@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { haptic } from "../../feel/haptics";
@@ -497,6 +498,7 @@ export function TrainScreen({
     try {
       const activeDay = await ensureActiveDay();
       await submitCheckIn(activeDay.id, quickCheckInValues);
+      feedback("MEDIUM");
       await refresh();
     } catch (error) {
       reportOperationFailure(error);
@@ -679,6 +681,7 @@ export function TrainScreen({
     setBusy(true);
     try {
       await undoLastSet(session.beyondDayId, session.id);
+      feedback("HEAVY");
       await skipRest(session.id);
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(null);
@@ -768,6 +771,8 @@ export function TrainScreen({
 
       await completeWorkout(session.beyondDayId, session.id, sessionType, status, durationMinutes ?? undefined);
 
+      feedback("HEAVY");
+
       const advisoryChanges: CompletionSummary["advisoryChanges"] = [];
       if (sessionType === "STANDARD" || sessionType === "REDUCED") {
         for (const ex of activeExercises) {
@@ -847,6 +852,7 @@ export function TrainScreen({
     setBusy(true);
     try {
       await completeRecoverySession(session.beyondDayId, session.id, recoveryMinutes);
+      feedback("HEAVY");
       // DAY-ROLLOVER-001: see the same comment on completeWorkout's own call site above.
       await performDueDayRollover().catch(() => {});
       await refresh();

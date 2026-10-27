@@ -1,3 +1,16 @@
+# SUIT-002 — make the armor answer
+
+- Authority: Gavin's BEYOND // SUIT brief, 2026-10-27. Codex; FEATURE UI feedback/presentation.
+- Baseline: fresh master `8aedba5`; branch `codex/suit-002`; PR pending.
+- [Brief](SUIT-002.md). Reuse existing haptics/hold/confirmation/rotation and MEMORY-001 #303.
+- Built so far: shared semantic feedback after successful writes, 120ms neutral pulse,
+  mute reduced-motion, cancellable holds and short rotation surface with optional detail.
+- Focused browser feedback/hold/rotation: 16/16 pass. Full gate and offline acceptance pending.
+- Next: finish commit-path inventory, verification and PR. No merge authorized.
+- MEMORY-001 #303 remains open, independently reviewed and CI green at `71bcb079`.
+  It supplies this campaign's memory loop; do not recreate it or assume deployed.
+
+---
 # LOOP step 1 — ASK
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "Go loop" (campaign + step 1). Claude Code;

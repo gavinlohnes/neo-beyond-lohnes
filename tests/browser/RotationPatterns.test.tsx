@@ -35,6 +35,7 @@ for (const width of [320, 390, 1280]) it(`shows sleep against the shift, shift-b
   // Next window: forecast days off, last workout, and the most-trained day off with its counts.
   const window = document.querySelector("[data-rotation-window]")!;
   expect(window.textContent).toMatch(/Days off are forecast from Fri, Sep 18 · 2 days\./);
+  expect(window.querySelector("details")!.open).toBe(false);
   expect(window.textContent).toMatch(/Last counted workout: Tue, Sep 8, 9 days ago\./);
   expect(window.textContent).toMatch(/trained most often on day off 2 \(2 of 3\)/);
   // Patterns: three whole work runs (the cut one is left out), means with sample sizes.
@@ -71,7 +72,7 @@ for (const width of [320, 1280]) it(`ROTATION-003: lines up recent flips, with u
   const onInspect = vi.fn();
   const screen = await render(<div className="whole-picture"><RotationMap rows={rows} weekAhead={weekAhead} readAt={new Date(2026, 8, 17, 20).toISOString()} onInspect={onInspect} /></div>);
   await expect.element(screen.getByRole("heading", { name: "6 recorded flips in the last 16 days." })).toBeVisible();
-  expect(document.querySelector("[data-rotation-next-flip]")!.textContent).toBe("Next flip: out of work, Fri, Sep 18. Your past flips are under Flips.");
+  expect(document.querySelector("[data-rotation-next-flip]")!.textContent).toBe("Next flip: out of work, Fri, Sep 18. See Flips for your records.");
   const into = document.querySelector('[data-flip-kind="INTO_WORK"]')!;
   expect(into.querySelector("h4")!.textContent).toBe("Into work · 3 flips");
   expect(into.textContent).toContain("Usually asleep: shift 1 08:00–14:00 (3 days) · shift 2 08:00–13:00 (3 days).");
@@ -84,7 +85,7 @@ for (const width of [320, 1280]) it(`ROTATION-003: lines up recent flips, with u
   expect(newest.textContent).toBe("Into work · Mon, Sep 14");
   await screen.getByText("Into work · Mon, Sep 14", { exact: true }).click();
   await expect.element(screen.getByRole("img", { name: /^Into work, Mon, Sep 14: sleep and scheduled shift times for 3 days, 2 with Garmin sleep times/ })).toBeVisible();
-  await screen.getByRole("button", { name: /^#1, .*Sep 14: main sleep 6:00, asleep 08:00–14:00, energy 5\. Open records\.$/ }).click();
+  await screen.getByRole("button", { name: /^First night, .*Sep 14: main sleep 6:00, asleep 08:00–14:00, energy 5\. Open records\.$/ }).click();
   expect(onInspect).toHaveBeenCalledWith(expect.objectContaining({ start: start(14) }));
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   expect((await axe.run(document.body)).violations).toEqual([]);

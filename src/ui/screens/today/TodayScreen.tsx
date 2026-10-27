@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { WorkPreparation } from "../../components/WorkPreparation";
 import { SleepMetricSheet } from "./SleepMetricSheet";
 import { useHiddenFeatures } from "../../hiddenFeatures";
@@ -977,6 +978,7 @@ export function TodayScreen({
       await submitCheckIn(activeDay.id, submitted,
         operationsOnly && commandFocus === undefined && activeCheckInDraft ? checkInDraftDecision(activeCheckInDraft.value, submitted) : undefined);
       committed = true;
+      feedback("MEDIUM");
       setCheckInDraftDismissed(false);
       setValues({});
       setCheckInFormOpen(false);
@@ -996,6 +998,7 @@ export function TodayScreen({
     try {
       const activeDay = await ensureActiveDay();
       await submitCheckIn(activeDay.id, quickCheckInValues);
+      feedback("MEDIUM");
       await refresh();
       setValues({});
       setCheckInFormOpen(false);
@@ -1069,6 +1072,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       await completeReset(day.id, activeResetId);
+      feedback("LIGHT");
       setLastResetOutcome("COMPLETED");
       await refresh();
     } finally {
@@ -1112,6 +1116,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       await completeShiftDown(day.id, activeShiftDownId);
+      feedback("LIGHT");
       setLastShiftDownOutcome("COMPLETED");
       await refresh();
     } finally {
@@ -1140,6 +1145,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       await endDay(day.id, "EXPLICIT_END_DAY");
+      feedback("HEAVY");
       clearModePin(day.id);
       setEndDayBlockedByWorkout(false);
       await refresh();
@@ -1196,6 +1202,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       const eventId = await logSleep(day.id, minutes, "PRIMARY", adjusted ? "ADJUSTED" : "CONFIRMED");
+      feedback("LIGHT");
       setSleepDraftAdjust(0);
       await refresh();
       setSleepConfirmation({ amount: minutes, eventId, dayId: day.id });
@@ -1408,6 +1415,7 @@ export function TodayScreen({
     setUndoFailure(null);
     try {
       await voidLog(confirmation.dayId, confirmation.eventId);
+      feedback("HEAVY");
       clear(null);
       await refresh();
     } catch (e) {
@@ -1432,6 +1440,7 @@ export function TodayScreen({
     try {
       const activeDay = await ensureActiveDay();
       const { eventId } = await logMeal(activeDay.id, meal.id);
+      feedback("LIGHT");
       setMealConfirmation({ amount: meal.calories, eventId, dayId: activeDay.id, message: `${meal.name} logged · ${meal.calories} kcal · ${meal.proteinG} g.` });
       try { await refresh(); } catch { setUndoFailure("Meal saved. Readings didn’t refresh. Reopen TODAY."); }
       return true;
@@ -1471,6 +1480,7 @@ export function TodayScreen({
     try {
       const activeDay = await ensureActiveDay();
       const eventId = await logWater(activeDay.id, amount);
+      feedback("LIGHT");
       setMdWaterInput("");
       setLastWaterAmount(amount);
       try { await refresh(); } catch { setUndoFailure("Water saved. Readings didn’t refresh. Reopen TODAY."); }
@@ -1493,6 +1503,7 @@ export function TodayScreen({
     try {
       const activeDay = await ensureActiveDay();
       const eventId = await logProtein(activeDay.id, grams);
+      feedback("LIGHT");
       setMdProteinInput("");
       await refresh();
       setProteinConfirmation({ amount: grams, eventId, dayId: activeDay.id });

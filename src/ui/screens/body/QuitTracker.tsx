@@ -1,3 +1,4 @@
+import { feedback } from "../../feel/feedback";
 import { useEffect, useRef, useState } from "react";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { Ban } from "lucide-react";
@@ -62,6 +63,7 @@ export function QuitTracker({ initiallyOpen = false, openRequest = 0, onBusyChan
     setError(null);
     try {
       await action();
+      feedback("LIGHT");
       await refresh();
     } catch (e) {
       if (!disposedRef.current) setError(describeError(e, "Could not save that."));

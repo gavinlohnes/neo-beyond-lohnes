@@ -1,3 +1,4 @@
+import { feedback } from "../feel/feedback";
 import { useHiddenFeatures } from "../hiddenFeatures";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LogSheet } from "./LogSheet";
@@ -104,7 +105,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
     if (busyRef.current) return;
     setBusy(true); setError(null);
     try {
-      const saved = await action(); addReceipt(saved); onSaved();
+      const saved = await action(); feedback("LIGHT"); addReceipt(saved); onSaved();
       setBusy(false); close();
     } catch (cause) { setError(`${target === "water" ? "Water" : target === "note" ? "Note" : "Meal"} didn't save. ${describeError(cause, "Nothing saved.")} Try again.`); }
     finally { setBusy(false); }
@@ -189,8 +190,8 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         </>}
         {page === "edit" && selected && <>
           {formFields(edit, setEdit, "Saved meal")}
-          <button type="button" className="btn-primary" disabled={busy} onClick={async () => { if (busyRef.current) return; setBusy(true); setError(null); try { await updateSavedMeal(selected.id, parse(edit)); setRetry((key) => key + 1); setPage("portion"); } catch (cause) { setError(describeError(cause, "Meal not updated.")); } finally { setBusy(false); } }}>SAVE CHANGES</button>
-          <HoldButton className="btn-secondary" disabled={busy} hint="Hold to archive this preset. Existing logs stay." onConfirm={async () => { if (busyRef.current) return; setBusy(true); try { await archiveSavedMeal(selected.id); setRetry((key) => key + 1); setPage("list"); } catch (cause) { setError(describeError(cause, "Could not archive meal.")); } finally { setBusy(false); } }}>ARCHIVE MEAL</HoldButton>
+          <button type="button" className="btn-primary" disabled={busy} onClick={async () => { if (busyRef.current) return; setBusy(true); setError(null); try { await updateSavedMeal(selected.id, parse(edit)); feedback("LIGHT"); setRetry((key) => key + 1); setPage("portion"); } catch (cause) { setError(describeError(cause, "Meal not updated.")); } finally { setBusy(false); } }}>SAVE CHANGES</button>
+          <HoldButton className="btn-secondary" disabled={busy} hint="Hold to archive this preset. Existing logs stay." onConfirm={async () => { if (busyRef.current) return; setBusy(true); try { await archiveSavedMeal(selected.id); feedback("HEAVY"); setRetry((key) => key + 1); setPage("list"); } catch (cause) { setError(describeError(cause, "Could not archive meal.")); } finally { setBusy(false); } }}>ARCHIVE MEAL</HoldButton>
         </>}
       </>}
       {target === "log" && <>{(["water", "meal", "sleep", "weight", "note", "urge"] as const).map((kind) => <button type="button" className="today-sheet__option" key={kind} onClick={() => open(kind)}>{TITLE[kind]}</button>)}<button type="button" className="today-sheet__option" onClick={onWorkout}>WORKOUT SET → TRAIN</button></>}
@@ -209,7 +210,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         }).catch((cause) => setError(`Could not remove the entry. ${describeError(cause, "Try again.")}`)).finally(() => setBusy(false));
       }}
       dismiss={() => dismissReceipt(receipt.id)} history={() => { dismissReceipt(receipt.id); if (receipt.notes) onNotes(); else onHistory(receipt.history ?? "protein"); }}
-      undo={() => { if (busyRef.current) return; setBusy(true); setError(null); void receipt.undo().then(() => { dismissReceipt(receipt.id); onSaved(); }).catch((cause) => setError(describeError(cause, "Could not undo. Try again."))).finally(() => setBusy(false)); }} />)}
+      undo={() => { if (busyRef.current) return; setBusy(true); setError(null); void receipt.undo().then(() => { feedback("HEAVY"); dismissReceipt(receipt.id); onSaved(); }).catch((cause) => setError(describeError(cause, "Could not undo. Try again."))).finally(() => setBusy(false)); }} />)}
       {error && !target && <p role="alert">{error}</p>}
     </div>}
   </>;
