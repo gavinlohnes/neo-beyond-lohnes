@@ -16,6 +16,10 @@ export interface PictureRow extends ReviewRow {
   resting: number | undefined;
   steps: number | undefined;
   measuredHours: number;
+  /** ROTATION-002: main sleep's Garmin start/end, minutes after the lived day's start; absent unless Garmin times back that day's single main sleep. */
+  sleepWindow?: { start: number; end: number } | undefined;
+  /** ROTATION-002: the scheduled shift on a recorded work day, minutes after the lived day's start. Scheduled, not clocked. */
+  shiftWindow?: { start: number; end: number } | undefined;
 }
 export function pictureScope(rows: readonly PictureRow[], scope: PictureScope): PictureRow[] {
   return rows.filter((row) => scope === "ALL" || row.context === scope);

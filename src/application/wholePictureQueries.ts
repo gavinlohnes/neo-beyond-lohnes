@@ -9,7 +9,10 @@ import { getUndoneSetIds } from "./trainQueries";
 import { getExerciseNames } from "./exerciseLibraryQueries";
 import { getWeekAhead } from "./weekAheadQueries";
 import { getWeeklyReviewRecords, findWeekReview } from "./weeklyReviewQueries";
-import { getActiveDay } from "./queries";
+import { getActiveDay, getSchedulePattern } from "./queries";
+import { livedDayShiftWindow } from "../engine/scheduledContext";
+import type { DomainEvent, SleepLoggedPayload } from "../domain/common/types";
+import type { ExternalSleepRevision } from "../domain/health/sleepImport";
 import { latestReviewWeek } from "../engine/weeklyReview";
 import { projectReviewRows } from "../engine/reviewOverview";
 import { attachPictureCheckIns } from "./wholePictureProjection";
@@ -37,6 +40,10 @@ export async function getWholePicture(now = new Date()) {
       db.performedSets.toArray(), getUndoneSetIds(), getExerciseNames(),
       getWeekAhead(now), getWeeklyReviewRecords(), getActiveDay(), getCurrentlyEligibleUnresolvedObligations(),
     ]);
+    const [sleepEvents, revisions, pattern] = await Promise.all([
+      db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_CORRECTED", "SLEEP_LOG_VOIDED"]).toArray(),
+      db.externalSleepRevisions.toArray(), getSchedulePattern(),
+    ]);
     const window = finishedLivedDays(now, 0, 56);
     const baseRows = projectReviewRows(summaries, weights.flatMap((weight) => weight.beyondDayId ? [{ dayId: weight.beyondDayId, lbs: weight.weightLbs, at: weight.recordedAt, rootId: weight.rootEventId }] : []), window.from, 56);
     const rows = attachPictureCheckIns(baseRows, checkIns as StateCheckIn[]);
@@ -47,6 +54,16 @@ export async function getWholePicture(now = new Date()) {
       row.steps = stepValues[index]!.value ?? undefined; row.resting = restingValues[index]!.value ?? undefined;
       row.measuredHours = hours.filter((hour) => Date.parse(hour.startTime) >= periods[index]!.from && Date.parse(hour.startTime) < periods[index]!.to && hour.steps !== null).length;
     });
+    // ROTATION-002: times only where they are known — Garmin's record behind the day's one main sleep,
+    // uncorrected by the owner — and the scheduled shift on a recorded work day.
+    const timing = sleepTiming(sleepEvents as DomainEvent[], revisions);
+    for (const row of rows) {
+      const from = Date.parse(row.start), minutes = (t: number) => Math.round((t - from) / 60000);
+      const window = row.sleepHours !== undefined && row.dayIds.length === 1 ? timing.get(row.dayIds[0]!) : undefined;
+      row.sleepWindow = window ? { start: minutes(window.start), end: minutes(window.end) } : undefined;
+      const shift = row.context === "WORK" ? livedDayShiftWindow(new Date(row.start), pattern) : null;
+      row.shiftWindow = shift ? { start: minutes(shift.start.getTime()), end: minutes(shift.end.getTime()) } : undefined;
+    }
     const missionNames = new Map(missions.map((mission) => [mission.id, mission.title]));
     const stories: PictureStory[] = [
       ...obligations.flatMap((item): PictureStory[] => item.resolvedAt && (item.status === "SATISFIED" || item.status === "RELEASED") ? [{ id: item.id, kind: "COMMITMENT", at: item.resolvedAt, title: item.title, status: item.status, mission: item.missionId ? missionNames.get(item.missionId) : undefined, note: item.resolutionNote, entry: undefined }] : []),
@@ -76,5 +93,33 @@ export async function getWholePicture(now = new Date()) {
     const week = latestReviewWeek(now);
     return { readAt: now.toISOString(), rows, measurements, stories, lifts, weekAhead, week, savedReview: findWeekReview(reviews, week), canSave: Boolean(activeDay), eligibleCommitments: eligible };
   });
+}
+/** Per BEYOND day: the Garmin start/end behind its single live main-sleep log, when the owner has not corrected it. */
+function sleepTiming(events: readonly DomainEvent[], revisions: readonly ExternalSleepRevision[]): Map<string, { start: number; end: number }> {
+  const voided = new Set(events.filter((e) => e.type === "SLEEP_LOG_VOIDED").map((e) => (e.payload as { loggedEventId: string }).loggedEventId));
+  // Garmin's own corrections carry the newer version's source; any owner correction makes the times unknown.
+  const corrections = events.filter((e) => e.type === "SLEEP_LOG_CORRECTED").sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
+  const ownerCorrected = new Set(corrections.filter((e) => e.source === "USER").map((e) => (e.payload as { originalEventId: string }).originalEventId));
+  const latestSource = new Map(corrections.flatMap((e) => {
+    const payload = e.payload as { originalEventId: string; source?: SleepLoggedPayload["source"] };
+    return payload.source ? [[payload.originalEventId, payload.source] as const] : [];
+  }));
+  const evidence = new Map(revisions.map((r) => [`${r.recordKey}\u0000${r.sourceVersion}`, r.evidence]));
+  const live = new Map<string, DomainEvent[]>();
+  for (const e of events) {
+    const payload = e.payload as SleepLoggedPayload;
+    if (e.type !== "SLEEP_LOGGED" || !e.beyondDayId || voided.has(e.id) || (payload.kind ?? "PRIMARY") !== "PRIMARY") continue;
+    live.set(e.beyondDayId, [...(live.get(e.beyondDayId) ?? []), e]);
+  }
+  const result = new Map<string, { start: number; end: number }>();
+  for (const [dayId, logs] of live) {
+    const only = logs.length === 1 ? logs[0]! : undefined;
+    const source = only && (latestSource.get(only.id) ?? (only.payload as SleepLoggedPayload).source);
+    if (!only || !source || ownerCorrected.has(only.id)) continue;
+    const record = evidence.get(`${source.recordKey}\u0000${source.sourceVersion}`);
+    const start = record ? Date.parse(record.startTime) : NaN, end = record ? Date.parse(record.endTime) : NaN;
+    if (Number.isFinite(start) && Number.isFinite(end) && end > start) result.set(dayId, { start, end });
+  }
+  return result;
 }
 export type WholePictureData = Awaited<ReturnType<typeof getWholePicture>>;
