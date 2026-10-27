@@ -8,11 +8,27 @@
 - Evidence: corrected focused TRAIN/KEEP/receipt checks86/86; reviewer node29/29; code review
   PASS at6db4328. Production build + four-size offline water/undo/memory/backup acceptance PASS
   (360/390/844/1280), zero unrelated writes/errors/overflow. Final full gate/CI/review follows.
-- Next: combined full gate, production acceptance and renewed exact-head review. No merge authorized.
+- Integration: fresh master `c28a846` (#306 reflection) merged, code clean; both checkpoint histories retained.
+- Next: integrated full gate/CI and renewed exact-head review. No merge authorized.
 - MEMORY-001 #303 remains open, independently reviewed and CI green at `71bcb079`.
   Integrated unchanged memory lifecycle into #307 for combined testing, plus UI feedback. Neither is deployed.
 
 ---
+
+---
+# LOOP step 2 — REFLECT
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "merge 305 and go reflect". Claude Code;
+  PROTECTED (bounded: journal link at creation, no Engine/schema/new event). [Brief](LOOP.md#step-2--reflect).
+- **Baseline / branch:** master `8aedba5` (#305 ASK merged at Gavin's direction); `ccr-0be4f40f-16m0ja`.
+- **Built:** "Why not?" after declining a recommendation, the 30-second shift debrief, and "How did
+  it go?" in the Journal from the next lived day.
+- **Next:** CI and Gavin's merge (independent review per DEV-FLOW-002 unless Gavin waives it).
+  Steps 3 TRY and 4 REMEMBER each need their own approval.
+
+---
+Historical LOOP step 1 checkpoint (#305 merged at `8aedba5`):
+
 # LOOP step 1 — ASK
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "Go loop" (campaign + step 1). Claude Code;

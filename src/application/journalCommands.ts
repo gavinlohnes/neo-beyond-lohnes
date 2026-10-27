@@ -66,6 +66,7 @@ export async function createDecisionJournalEntry(input: DecisionJournalEntryInpu
       decision: parsed.decision,
       ...(parsed.reasoning ? { reasoning: parsed.reasoning } : {}),
       ...(parsed.expectation ? { expectation: parsed.expectation } : {}),
+      ...(parsed.linkedRecommendationId ? { linkedRecommendationId: parsed.linkedRecommendationId } : {}),
       status: "OPEN",
       source: "USER",
       seq: await nextSeq(),
@@ -76,7 +77,7 @@ export async function createDecisionJournalEntry(input: DecisionJournalEntryInpu
     const correlationId = newId();
     await logJournalEvent(
       "DECISION_JOURNAL_CREATED",
-      { commandId: correlationId, decisionJournalEntryId: entry.id, title: entry.title },
+      { commandId: correlationId, decisionJournalEntryId: entry.id, title: entry.title, ...(entry.linkedRecommendationId ? { linkedRecommendationId: entry.linkedRecommendationId } : {}) },
       "USER",
       correlationId,
       entry.id,

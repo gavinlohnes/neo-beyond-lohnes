@@ -21,8 +21,12 @@ const entryInputFields = {
   expectation: z.string().trim().min(1).optional(),
 };
 
-/** Input to createDecisionJournalEntry. id/status/source/seq/createdAt/updatedAt are assigned by the command, not the caller. */
-export const decisionJournalEntryInputSchema = z.object(entryInputFields);
+/**
+ * Input to createDecisionJournalEntry. id/status/source/seq/createdAt/updatedAt are assigned by the command, not the caller.
+ * LOOP step 2 (REFLECT): linkedRecommendationId may be set at creation only — the reason given for a declined
+ * recommendation — and is never changed afterwards (not in the modify schema).
+ */
+export const decisionJournalEntryInputSchema = z.object({ ...entryInputFields, linkedRecommendationId: z.string().min(1).optional() });
 export type DecisionJournalEntryInput = z.infer<typeof decisionJournalEntryInputSchema>;
 
 /** Input to modifyDecisionJournalEntry — same fields, all optional, at least one required. */

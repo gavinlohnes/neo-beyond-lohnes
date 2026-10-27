@@ -11,6 +11,7 @@ import {
 } from "../../../application/journalCommands";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { describeError } from "../../errorMessage";
+import { FollowUps } from "./FollowUps";
 
 /**
  * Decision Journal (approved under the Whole-Life Capability North Star,
@@ -190,6 +191,8 @@ export function JournalScreen({ active = true, navigationEntryId, onOpenCapture,
           {onOpenCapture && <button type="button" className="btn-secondary" disabled={busy} onClick={onOpenCapture}>WRITE A FREE NOTE</button>}
         </div>
       </details>
+
+      {readState === "ready" && <FollowUps entries={entries} onAnswered={() => void refreshList()} />}
 
       <section aria-labelledby="journal-heading">
         <h2 id="journal-heading" className="section-label">Decisions</h2>
