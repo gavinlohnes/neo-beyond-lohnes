@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
-import { correctSleep, endDay, logSleep, setWorkContext, startDay } from "../../src/application/commands";
+import { correctSleep, endDay, logSleep, logWater, setWorkContext, startDay, voidWaterLog } from "../../src/application/commands";
+import { logManualMeal } from "../../src/application/nutritionCommands";
+import { completeWorkout, startWorkout } from "../../src/application/trainCommands";
 import { importSleepSnapshot } from "../../src/application/externalSleepCommands";
 import { getWholePicture } from "../../src/application/wholePictureQueries";
 import { syntheticSleep } from "../helpers/syntheticSleep";
@@ -68,5 +70,19 @@ describe("ROTATION-002 — sleep timing on the rotation", () => {
     const plain = await workDay(13); vi.setSystemTime(local(14, 16)); await endDay(plain.id);
     expect((await rowOf(12)).napMinutes).toBe(75);
     expect((await rowOf(13)).napMinutes).toBeUndefined();
+  });
+
+  it("ROTATION-004: carries the day's meal, water and workout times in the lived-day frame, leaving undone entries out", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const day = await workDay(12);
+    vi.setSystemTime(local(12, 22, 15)); await logManualMeal(day.id, { name: "Rice bowl", calories: 600, proteinG: 40, carbsG: 70, fatG: 15 });
+    vi.setSystemTime(local(13, 3, 40)); await logWater(day.id, 16);
+    vi.setSystemTime(local(13, 4, 0)); const undone = await logWater(day.id, 8); await voidWaterLog(day.id, undone);
+    vi.setSystemTime(local(13, 7, 5)); const session = await startWorkout(day.id, "A", "STANDARD");
+    vi.setSystemTime(local(13, 7, 50)); await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
+    vi.setSystemTime(local(13, 16)); await endDay(day.id);
+    const row = await rowOf(12);
+    expect(row.marks).toEqual({ meals: [345], water: [670], workouts: [875] });
+    expect((await rowOf(13)).marks).toBeUndefined();
   });
 });

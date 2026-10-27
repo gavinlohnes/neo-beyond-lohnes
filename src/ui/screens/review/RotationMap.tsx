@@ -18,6 +18,18 @@ function runTitle(run: RotationRun): string {
   return `Context not recorded · ${span} · ${n} ${n === 1 ? "day" : "days"}`;
 }
 
+/** ROTATION-004: "meals 04:10, 12:30 · workout 15:05" for the day's button, from the same marks the actogram draws. */
+function dayMarksText(row: PictureRow): string | null {
+  if (!row.marks) return null;
+  const at = (m: number) => clockAfter(row.start, m);
+  const parts = [
+    row.marks.meals.length ? `${row.marks.meals.length === 1 ? "meal" : "meals"} ${row.marks.meals.map(at).join(", ")}` : null,
+    row.marks.workouts.length ? `${row.marks.workouts.length === 1 ? "workout" : "workouts"} ${row.marks.workouts.map(at).join(", ")}` : null,
+    row.marks.water.length ? `water ×${row.marks.water.length}` : null,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : null;
+}
+
 function sleepTimes(row: PictureRow): string | null {
   return row.sleepWindow ? `${clockAfter(row.start, row.sleepWindow.start)}–${clockAfter(row.start, row.sleepWindow.end)}` : null;
 }
@@ -52,6 +64,10 @@ function Actogram({ rows, labels, title }: { rows: readonly PictureRow[]; labels
         <line className="actogram-base" x1={LABEL} x2={W - 4} y1={y + ROW / 2} y2={y + ROW / 2} />
         {row.shiftWindow && <rect className="actogram-shift" x={x(row.shiftWindow.start)} y={y + 1} width={Math.max(1, x(row.shiftWindow.end) - x(row.shiftWindow.start))} height={ROW - 2} />}
         {row.sleepWindow && <rect className="actogram-sleep" x={x(row.sleepWindow.start)} y={y + 4} width={Math.max(2, x(row.sleepWindow.end) - x(row.sleepWindow.start))} height={ROW - 8} rx={2} />}
+        {/* ROTATION-004: the rest of the day on the same line — water ticks, meal triangles, workout diamonds. */}
+        {row.marks?.water.map((m, i) => <line key={`w${i}`} className="actogram-water" x1={x(m)} x2={x(m)} y1={y + ROW - 4} y2={y + ROW} />)}
+        {row.marks?.meals.map((m, i) => <path key={`m${i}`} className="actogram-meal" d={`M${x(m)},${y + 1} l3.5,6 h-7 z`} />)}
+        {row.marks?.workouts.map((m, i) => <path key={`t${i}`} className="actogram-workout" d={`M${x(m)},${y + ROW / 2 - 4.5} l4.5,4.5 l-4.5,4.5 l-4.5,-4.5 z`} />)}
       </g>;
     })}
   </svg>;
@@ -143,6 +159,7 @@ export function RotationMap({ rows, weekAhead, readAt, onInspect }: { rows: read
   return <section className="rotation" aria-label="Your rotation">
     <div className="section-head"><div><p className="eyebrow">Rotation / runs, not calendar weeks</p><h2>The way you actually live.</h2></div><span className="section-number">{workRuns} WORK {workRuns === 1 ? "RUN" : "RUNS"} · LAST {rows.length} DAYS</span></div>
     <p className="muted small">Each run is a stretch of recorded work days or days off. Each day shows main sleep, check-in energy and training, and when you slept against the scheduled shift. Tap a day for its records. Days without a recorded work context sit in their own run.</p>
+    <p className="rotation-legend small muted" aria-hidden="true"><span className="legend-sleep" /> sleep <span className="legend-shift" /> scheduled shift <span className="legend-meal">▲</span> meal <span className="legend-workout">◆</span> workout <span className="legend-water">|</span> water</p>
     <NextWindow rows={rows} weekAhead={weekAhead} positions={positions} readAt={readAt} />
     <Patterns positions={positions} onInspect={onInspect} reference={rows[0]?.start} />
     <Flips rows={rows} onInspect={onInspect} />
@@ -150,7 +167,7 @@ export function RotationMap({ rows, weekAhead, readAt, onInspect }: { rows: read
       <h3>{runTitle(run)}</h3>
       <Actogram rows={run.rows} labels={run.rows.map((row, index) => run.context === "WORK" ? `#${index + 1}` : short(row.start))} title={runTitle(run)} />
       <ol className="rotation-days">{run.rows.map((row, index) => <li key={row.start}><button type="button" onClick={() => onInspect(row)}
-        aria-label={`${day(row.start)}${run.context === "WORK" ? `, shift ${index + 1} of ${run.rows.length}` : ""}: main sleep ${row.ambiguousSleep ? "ambiguous" : row.sleepHours === undefined ? "not recorded" : hours(row.sleepHours)}${sleepTimes(row) ? `, asleep ${sleepTimes(row)}` : ""}, energy ${row.energy ?? "not recorded"}, ${row.sessions ? `${row.sessions} workout${row.sessions === 1 ? "" : "s"}` : "no workout"}. Open records.`}>
+        aria-label={`${day(row.start)}${run.context === "WORK" ? `, shift ${index + 1} of ${run.rows.length}` : ""}: main sleep ${row.ambiguousSleep ? "ambiguous" : row.sleepHours === undefined ? "not recorded" : hours(row.sleepHours)}${sleepTimes(row) ? `, asleep ${sleepTimes(row)}` : ""}, energy ${row.energy ?? "not recorded"}, ${row.sessions ? `${row.sessions} workout${row.sessions === 1 ? "" : "s"}` : "no workout"}${dayMarksText(row) ? `; ${dayMarksText(row)}` : ""}. Open records.`}>
         <span className="mono">{run.context === "WORK" ? `#${index + 1}` : short(row.start)}</span>
         <strong>{row.ambiguousSleep ? "?" : hours(row.sleepHours)}</strong>
         <small>E {row.energy ?? "—"}{row.sessions ? " · ◆" : ""}</small>
@@ -159,7 +176,7 @@ export function RotationMap({ rows, weekAhead, readAt, onInspect }: { rows: read
     </li>)}</ol>
     {runs.length > limit && <button type="button" className="textbutton" onClick={() => setLimit((n) => n + RUN_PAGE)}>SHOW MORE RUNS ({runs.length - limit} remaining)</button>}
     <details className="coverage"><summary>How runs and times are formed</summary><p>Runs use each lived day's recorded work context, not today's schedule applied to the past. Sleep is the day's main sleep (Garmin or yours); "?" means more than one main sleep was recorded. E is the latest check-in's energy (1–5); ◆ marks a counted workout. Missing values stay missing.</p>
-      <p>Each actogram row runs from 16:30 to 16:30. The filled bar is main sleep from Garmin's start and end times; a sleep you entered or corrected yourself has a length but no times, so its row stays empty. The outline is the shift your schedule sets for a recorded work day — scheduled hours, not clocked hours.</p>
+      <p>Each actogram row runs from 16:30 to 16:30. The filled bar is main sleep from Garmin's start and end times; a sleep you entered or corrected yourself has a length but no times, so its row stays empty. The outline is the shift your schedule sets for a recorded work day — scheduled hours, not clocked hours. Triangles are meals and short ticks are water, at the time you logged them; diamonds are workouts, at the time they started. Undone entries are left out.</p>
       <p>Patterns leave out the oldest run when the {rows.length}-day window starts inside it, because its first recorded day may not be its first day.</p></details>
   </section>;
 }
