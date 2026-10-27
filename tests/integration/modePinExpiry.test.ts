@@ -79,6 +79,17 @@ describe("mode pin expiry — presentation only", () => {
     expect(getModePin(day.id)).toBe("OFF");
   });
 
+  it("reports a pin expired for a later time it is given, but deletes it only when the real clock has passed 16:30", () => {
+    vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(at(12, 22));
+    setModePin("held", "OFF");
+    vi.setSystemTime(at(13, 16, 29));
+    expect(getModePin("held", undefined, at(13, 16, 30))).toBeNull();
+    expect(getModePin("held")).toBe("OFF");
+    vi.setSystemTime(at(13, 16, 30));
+    expect(getModePin("held")).toBeNull();
+    expect(localStorage.getItem(key("held"))).toBeNull();
+  });
+
   for (const [month, day, hours] of [[2, 7, 23], [9, 31, 25]]) it(`expires at local 16:30 over a ${hours}-hour DST day`, () => {
     const previousTZ = process.env.TZ; process.env.TZ = "America/New_York";
     vi.useFakeTimers({ toFake: ["Date"] });
