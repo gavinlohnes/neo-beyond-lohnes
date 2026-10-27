@@ -1,4 +1,4 @@
-# MEMORY-001 — confirmed prep and recovery memory (WIP)
+# MEMORY-001 — confirmed prep and recovery memory
 
 - **Authority / Builder / lane:** Gavin's explicit MEMORY-001 direction, 2026-10-27; Codex,
   PROTECTED additive event/command contract. [Brief](MEMORY-001.md). No new schema or Engine rule.
@@ -17,8 +17,20 @@
   draft. Corrected by retaining the hidden component through no-day/new-day transitions; day-owned
   preparation reads reset separately and cannot revive yesterday's confirmation. Regression covers
   ended/null/new-day draft survival and explicit day adoption; final exact-head review follows.
-- **Next:** full verify, production/offline acceptance, final independent exact-head review and
-  required CI; then Gavin's separate merge decision. No merge or next slice authorized here.
+- **Production / follow-up:** [Built-PWA acceptance](../screenshots/memory-001/README.md) PASS at
+  360/390/landscape/desktop, offline reload, original/corrected/irrelevant history and recovery-only
+  context, actual native backup preview/cancel. Exactly four memory revisions; all other domain
+  records unchanged. Current Memory/Personal Understanding browser 18/18, node catalog/history/
+  memory 34/34, new catalog route/focus/back/no-write case PASS; TypeScript/build pass.
+- **Full-gate history:** initial local 3,031 pass / three fail / one existing skip. Two missing
+  catalog expectations corrected (heading and existing meal-memory alias), original unchanged
+  target-return timeout passes alone/in follow-up. No assertions/timeouts/gates weakened.
+- **Review / CI:** independent corrective PASS at `b9ea7ae`, 19/19 node probes; final exact-head
+  renewal required after evidence. Source `8da2c0e` required CI [PASS](https://github.com/gavinlohnes/neo-beyond-lohnes/actions/runs/40467876738).
+  Final full verification, exact-head review and current-head CI are recorded in #303 before
+  readiness. Existing bundle warning remains; no inference, Engine or schema change.
+- **Next:** final full gate/review/CI, then Gavin's separate merge decision. No merge/deployment
+  or next slice authorized here. Other memory domains remain parked.
 
 ---
 Historical PERSONAL-UNDERSTANDING-001 (#302 merged/deployed as `ab35088`):

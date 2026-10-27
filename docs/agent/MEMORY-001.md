@@ -13,6 +13,8 @@
 - One stable fact ID, creation timestamp, last-confirmed timestamp and ACTIVE/IRRELEVANT status.
   Additive `MEMORY_RECORDED` full-state revisions in existing events, with causal supersession;
   no table, schema migration or parallel store. All revisions remain inspectable.
+  Creation time is the root event's recorded time; confirmation time is derived from the latest
+  explicit create/correct/confirm/restore revision, never from a read, irrelevant flag or import.
 - Create, correct, re-confirm, mark irrelevant and explicitly restore. Corrections/restores are
   confirmations; marking irrelevant preserves the previous confirmation time. No silent delete.
 - A stable create request/fact ID prevents duplicate retries. Atomic optimistic head ownership
@@ -57,3 +59,16 @@ exact-head PASS precede Gavin's separate merge approval.
 
 Next: implement this scope, push WIP early, record verification/review in PR/checkpoint. Build
 MEMORY-001 only; other personal-memory domains remain later tickets.
+
+## Evidence and review
+
+Source `8da2c0e` required CI PASS; TypeScript, architecture and production/PWA build pass.
+[Built-PWA acceptance](../screenshots/memory-001/README.md) passes four sizes offline with reload,
+native backup preview, matching context and exactly four memory-only writes. Node integration
+7/7; current node memory/history/catalog 34/34; Memory/Personal Understanding browser 18/18;
+PREP/TRAIN/Nav broader regression 104/104 before the last day-owned read refinement.
+
+Independent WIP BLOCK `0401fa4` found PREP day remount lost a global-memory draft. Stable nullable
+parent and day-owned prep reads resolve it; ended/null/new-day regression passes. Independent
+corrective PASS at `b9ea7ae` (node probes 19/19) is persisted in #303. Final evidence head review,
+full verification and required CI results are recorded in #303 before Gavin's merge decision.
