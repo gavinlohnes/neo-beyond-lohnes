@@ -1,6 +1,6 @@
 # MEMORY-001 — built-PWA acceptance
 
-Actual production build from source `8da2c0e23fcbf54d6410276f89715fc4bf6495d4`, captured
+Actual production build from combined source `f58d890d1ee5fd5b22eae92898884ee9f3d966e2`, captured
 2026-10-27 with synthetic records only. No owner backup or personal data was used.
 
 Chromium, America/Chicago, Tue, Oct 27 at 17:00; reduced motion. Viewports 360×800, 390×844,
@@ -28,6 +28,9 @@ horizontal overflow. Fresh isolated contexts are used for each viewport.
 Phone captures: [PREP](prep-360.png), [manager](inspect-360.png),
 [irrelevant](irrelevant-360.png), [recovery](recovery-360.png). Matching 390/844/1280 files show
 the same journey at the other sizes. These are real viewport captures, not composite designs.
+Named content is scrolled into view before capture. The initial landscape manager image retained
+an old scroll position; it and the recovery frame were recaptured with visible content. This
+does not claim the app automatically moves focus to a saved fact.
 
 ## Verification and test history
 
@@ -43,6 +46,10 @@ the same journey at the other sizes. These are real viewport captures, not compo
   expectations (new view heading, existing MY MEALS memory alias); unchanged Personal
   Understanding target-return timeout passes in the focused follow-up. Assertions/timeouts and
   workflow gates were not weakened. Final full verification and exact-head review are in #303.
+- Master gained the already-approved SLEEP-ENGINE-001 (#300, `c3338a0`) during final checks.
+  It was merged, retaining both checkpoint histories; no Engine diff remains for MEMORY against
+  current master. The pre-integration final run was stopped for this integration, not claimed
+  green. The full four-size offline/reload/backup journey above was rerun on the combined build.
 - Initial manual harness used an old preview process (page-load timeout); a fresh preview
   resolved it. Async write waits and clearing the retained menu query before restore preview
   were corrected in the harness. The final four-size journey above passes.

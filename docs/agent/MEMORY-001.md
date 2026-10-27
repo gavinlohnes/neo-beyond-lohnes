@@ -4,7 +4,7 @@
   operator-authored prep/recovery loop, preferring additive events in existing persistence.
 - **Lane / Builder:** PROTECTED additive event/command contract; Codex. No Engine edits.
 - **Baseline:** freshly fetched `ab3508887af7650d6e4180d815e048fd2b48b8f2` (#302 merged/deployed).
-- **Branch / PR:** `codex/memory-001`; [#303](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/303), WIP published early. #300 remains Claude's.
+- **Branch / PR:** `codex/memory-001`; [#303](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/303), WIP published early. #300 was initially separate; it merged during verification and is integrated as current master `c3338a0`. MEMORY changes no Engine behavior relative to that master.
 
 ## Model and surfaces
 
@@ -72,3 +72,9 @@ Independent WIP BLOCK `0401fa4` found PREP day remount lost a global-memory draf
 parent and day-owned prep reads resolve it; ended/null/new-day regression passes. Independent
 corrective PASS at `b9ea7ae` (node probes 19/19) is persisted in #303. Final evidence head review,
 full verification and required CI results are recorded in #303 before Gavin's merge decision.
+
+Mainline integration: #300 merged while final checks were running. Combined head `f58d890`
+builds successfully; actual four-size offline/reload/context/backup acceptance rerun passes on
+that build. Both checkpoint histories are retained. The Engine changes belong to approved
+master, not MEMORY; final review and CI use the integrated head. Landscape captures were
+reframed to their named content after the reviewer flagged a retained-scroll image.
