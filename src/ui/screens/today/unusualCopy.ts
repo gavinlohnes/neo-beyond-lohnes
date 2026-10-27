@@ -32,7 +32,7 @@ export function describeUnusual(metric: UnusualMetric, reading: UnusualReading):
     ? [...kinds].map((kind) => { const day = [...reading.days].reverse().find((d) => d.kind === kind)!; return `${kind === "WORK" ? "work days" : "days off"} ${range(metric, day.low, day.high)}`; }).join("; ")
     : `${metric === "steps" ? (latest.kind === "OFF" ? "days off " : "work days ") : ""}${range(metric, latest.low, latest.high)}`;
   return {
-    headline: `${NAMES[metric]} has been ${side} your usual range for ${reading.days.length} days: ${reading.days.map((day) => `${dayLabel(day.from)} ${value(metric, day.value)}`).join(" · ")}.`,
+    headline: `${NAMES[metric]} has been ${side} your usual range for ${reading.days.length} days: ${reading.days.map((day) => `${dayLabel(day.from)}: ${value(metric, day.value)}`).join(" · ")}.`,
     basis: `Your usual range: ${ranges} — the middle 80% of your measured days before these${metric === "steps" ? ", by kind of day" : ""}. A pattern in your own records, not a diagnosis or a cause.`,
   };
 }

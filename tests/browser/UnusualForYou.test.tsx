@@ -36,7 +36,7 @@ for (const width of [320, 390]) it(`marks three days above your usual range on t
   const before = await db.events.toArray();
   await tile.click();
   const sheet = screen.getByRole("dialog", { name: "RESTING HEART RATE", exact: true });
-  await expect.element(sheet.getByText("Resting heart rate has been above your usual range for 3 days: Sun, Oct 18 70 bpm · Mon, Oct 19 70 bpm · Tue, Oct 20 70 bpm.", { exact: true })).toBeVisible();
+  await expect.element(sheet.getByText("Resting heart rate has been above your usual range for 3 days: Sun, Oct 18: 70 bpm · Mon, Oct 19: 70 bpm · Tue, Oct 20: 70 bpm.", { exact: true })).toBeVisible();
   await expect.element(sheet.getByText(/^Your usual range: 57–63 bpm — the middle 80% of your measured days before these\. A pattern in your own records, not a diagnosis or a cause\.$/)).toBeVisible();
   expect(await db.events.toArray()).toEqual(before);
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
