@@ -1,14 +1,14 @@
 # SUIT-002 — make the armor answer
 
-- Authority: Gavin's BEYOND // SUIT brief, 2026-10-27. Codex; FEATURE UI feedback/presentation.
-- Baseline: fresh master `8aedba5`; branch `codex/suit-002`; PR pending.
+- Authority: Gavin's BEYOND // SUIT brief, 2026-10-27. Codex; PROTECTED combined memory/command-outcome review.
+- Baseline: fresh master `8aedba5`; branch `codex/suit-002`; [PR #307](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/307), stacked on #303.
 - [Brief](SUIT-002.md). Reuse existing haptics/hold/confirmation/rotation and MEMORY-001 #303.
 - Built so far: shared semantic feedback after successful writes, 120ms neutral pulse,
   mute reduced-motion, cancellable holds and short rotation surface with optional detail.
 - Focused browser feedback/hold/rotation: 16/16 pass. Full gate and offline acceptance pending.
-- Next: finish commit-path inventory, verification and PR. No merge authorized.
+- Next: combined full gate, production acceptance and renewed exact-head review. No merge authorized.
 - MEMORY-001 #303 remains open, independently reviewed and CI green at `71bcb079`.
-  It supplies this campaign's memory loop; do not recreate it or assume deployed.
+  Integrated unchanged memory lifecycle into #307 for combined testing, plus UI feedback. Neither is deployed.
 
 ---
 # LOOP step 1 — ASK

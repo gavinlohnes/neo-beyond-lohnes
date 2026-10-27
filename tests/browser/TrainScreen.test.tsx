@@ -1012,6 +1012,9 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
     const play = vi.spyOn(HTMLMediaElement.prototype, "play");
     try {
       const screen = await seedHistoryAndStart();
+      await expect.element(screen.getByRole("button", { name: "LOG" }).first()).toBeVisible();
+      expect(vibrate).toHaveBeenCalledExactlyOnceWith(20);
+      vibrate.mockClear();
       await logSetViaInputs(screen, "145", "6");
       await expect.element(screen.getByText("#1 — 145 lb x 6", { exact: true })).toBeVisible();
       await expect.element(screen.getByText("heaviest yet (145 lb)", { exact: true })).toBeVisible();

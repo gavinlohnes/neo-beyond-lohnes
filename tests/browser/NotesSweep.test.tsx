@@ -15,7 +15,7 @@ import { holdToConfirm } from "./helpers/hold";
  */
 
 afterEach(() => {
-  cleanup();
+  cleanup(); vi.restoreAllMocks();
 });
 
 async function dayOffWithNotes(texts: string[]) {
@@ -26,6 +26,18 @@ async function dayOffWithNotes(texts: string[]) {
 }
 
 describe("NOTES-SWEEP-001 — day-off notes sweep", () => {
+  it("KEEP is an inspect choice and does not acknowledge a write", async () => {
+    await dayOffWithNotes(["Keep this thought"]);
+    const vibrate = vi.spyOn(navigator, "vibrate").mockReturnValue(true);
+    const before = await getAllCaptureItems();
+    const screen = await render(<NotesSweep onSwept={() => {}} />);
+    await screen.getByRole("button", { name: "SWEEP", exact: true }).click();
+    await screen.getByRole("button", { name: "KEEP", exact: true }).click();
+    await expect.element(screen.getByText("Swept 1: 1 kept.", { exact: true })).toBeVisible();
+    expect(vibrate).not.toHaveBeenCalled();
+    expect(await getAllCaptureItems()).toEqual(before);
+  });
+
   it("shows on a day off with notes, not on a work day", async () => {
     const day = await dayOffWithNotes(["Call the dentist"]);
     const screen = await render(<App />);

@@ -51,6 +51,9 @@ describe("FEEL-001", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    await expect.element(screen.getByRole("button", { name: "LOG" }).first()).toBeVisible();
+    expect(vibrate).toHaveBeenCalledExactlyOnceWith(20);
+    vibrate.mockClear();
     await screen.getByRole("button", { name: "LOG" }).first().click();
     expect(vibrate).not.toHaveBeenCalled();
     await userEvent.type(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" }), "100");
