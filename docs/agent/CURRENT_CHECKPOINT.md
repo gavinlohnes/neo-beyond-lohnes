@@ -1,3 +1,34 @@
+# PERSONAL-UNDERSTANDING-001 — connected knowledge
+
+- **Authority / Builder / lane:** Gavin: “Let's work on personal understanding”, after the
+  first-slice proposal; Codex, FEATURE read-only Review composition. [Brief](PERSONAL-UNDERSTANDING-001.md).
+- **Baseline / branch / PR:** fresh master `e0da229`; `codex/personal-understanding-001`;
+  [#302](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/302), draft pushed early.
+- **Scope:** existing Missions/explicit targets/weekly focus, qualified personal baselines,
+  comparable rotation positions, and real written lessons with canonical source/edit navigation.
+  Existing word matching connects candidate lessons to Missions, with its limitation visible.
+- **REUSE:** existing queries, projections, matcher, source screens and native disclosure.
+  **OWN:** read-model/navigation composition. **BUILD FROM SCRATCH:** missing cross-domain view only.
+- **Boundaries:** no Engine/schema/command/backup/dependency changes, new preference store,
+  recommendation priority or TODAY changes. Claude's SLEEP-ENGINE-001 #300 remains separate.
+- **Built:** optional Choices/Patterns/Lessons workspace in MORE → Review, lazy read-only loading,
+  source inspection, direct original Mission/Journal/Targets/Schedule routes and BACK TO REVIEW.
+- **Verification:** full `npm run verify` PASS on source `5f1bdeb`: architecture 312 files;
+  312 test files pass, 3,015 tests pass / one existing skip; TypeScript and production/PWA build
+  pass. New integration 3/3 and browser 9/9 cover exact corrected samples, all-table no-write
+  snapshots, source round trips, absence/error/retry, bounded lists and stale-read rejection.
+  [Production acceptance](../screenshots/personal-understanding-001/README.md) PASS at four sizes,
+  offline, keyboard disclosure and original-source return; zero domain writes/errors/overflow.
+- **CI / limits:** source head's required CI [PASS](https://github.com/gavinlohnes/neo-beyond-lohnes/actions/runs/40454206900).
+  Final evidence-only head's CI is recorded in #302. Existing bundle warning remains. This slice
+  exposes existing knowledge; it does not yet learn preferences or change advice. Risk classifier
+  flags the brief path, not a governance amendment; semantic lane remains FEATURE (brief explains).
+- **Next:** green final-head required CI, then Gavin's merge decision. No merge/deploy is claimed.
+  Feedback/experiments and a durable preference store remain future scope.
+
+---
+Historical ROTATION-003 (merged #299):
+
 # ROTATION-003 — flip planning
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "go flips". Claude Code; FEATURE.
