@@ -83,7 +83,7 @@
   lived-day boundary, REFLECT's chip pattern. **OWN:** the window line, the comparison rule and its
   "about the same" thresholds. **BUILD FROM SCRATCH:** none.
 
-## Step 4 — REMEMBER
+## Step 4 — REMEMBER (#310, merged)
 
 - **Authority:** Gavin, 2026-10-27, "go remember".
 - **Built (structural matches only, never keywords or inference):**
@@ -100,3 +100,23 @@
 - **REUSE:** REFLECT links and debriefs, TRY entries, the journal's review fields, TODAY's existing
   refresh and recommendation card. **OWN:** `application/remember.ts` (which conclusion applies
   when). **BUILD FROM SCRATCH:** none.
+
+## LOOP-002 — one post-shift moment, follow-ups where they belong
+
+- **Authority:** Gavin, 2026-10-27, "go LOOP-002", after Claude's review of the finished loop found
+  the follow-ups buried in the Journal and the debrief duplicating NOTES-HANDOFF-001.
+- **Changed:**
+  - The separate 30-second debrief card is removed. The existing handoff prompt after MARK WORK
+    ENDED now asks "How was it?" (Rough / OK / Good, optional) above "Note for next shift?"; the
+    note is the debrief's plan. Feeling only saves just the debrief and closes the prompt.
+  - The next shift's "From last shift" row asks "Did this happen?" (Did it / Didn't get to it /
+    Changed my mind); one tap answers the debrief and puts the note away. GOT IT alone still works.
+  - A reason given for declining advice is asked about ("Looking back?") on the next
+    recommendation card of the same kind; once answered, REMEMBER's lesson line takes its place.
+  - REMEMBER's PREP debrief line is removed: "From last shift" already carries the note.
+  - The Journal's "How did it go?" stays as the fallback list.
+- **Boundaries:** no new TODAY row (Command Center rule 4): everything rides on the existing
+  handoff and recommendation card. No Engine, schema, event-type or recommendation change; the
+  handoff events are unchanged.
+- **REUSE:** NOTES-HANDOFF-001 prompt/state/events and SKIP, REFLECT/REMEMBER modules, the journal
+  review. **OWN:** `closeShift`, `debriefForNote`, `pendingForKind`. **BUILD FROM SCRATCH:** none.

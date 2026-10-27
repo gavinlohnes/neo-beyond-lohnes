@@ -1,7 +1,6 @@
 import type { Ref } from "react";
 import { Icon, ConfirmIcon, SignalIcon } from "../../icons/Icon";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
-import { ShiftDebrief } from "./ShiftDebrief";
 import {
   describeShiftDownInProgress,
   describeShiftDownResult,
@@ -181,7 +180,6 @@ export function ShiftDownCard({
           >
             START SHIFT DOWN
           </button>
-          {(forceOpen || lastShiftDownOutcome) && <ShiftDebrief />}
           {!prominent && !forceOpen && (
             <button
               className="btn-secondary"

@@ -2,7 +2,6 @@ import type { DecisionJournalEntry } from "../domain/journal/types";
 import type { Recommendation } from "../domain/common/types";
 import { db } from "../persistence/db";
 import { getDecisionJournalEntries } from "./journalQueries";
-import { isShiftDebrief, livedDayStartOf } from "./reflect";
 import { readExperiment } from "./tryExperiment";
 
 /**
@@ -11,7 +10,9 @@ import { readExperiment } from "./tryExperiment";
  * and never inferred:
  * - a reviewed reason you gave for declining a recommendation returns on the next recommendation
  *   of the same kind;
- * - your last shift debrief's "one thing for next shift" returns under PREP before the next shift;
+ * - an unanswered reason returns there too, as "how did it go?" (LOOP-002);
+ * - your shift handoff note returns on the next shift's "From last shift" row (NOTES-HANDOFF-001),
+ *   where LOOP-002 asks whether it happened;
  * - lessons from closed experiments return when you start a new one.
  * Read-only and informational: it never changes, ranks or suppresses a recommendation, and is
  * never an Engine input. Your words are shown as written.
@@ -26,27 +27,27 @@ export function lessonForKind(entries: readonly DecisionJournalEntry[], kindOf: 
   return match ? { entryId: match.id, said: match.decision, outcome: match.outcome!, ...(match.lesson ? { lesson: match.lesson } : {}), when: match.createdAt } : undefined;
 }
 
-export async function getRememberedLesson(current: Recommendation): Promise<RememberedLesson | undefined> {
-  const linked = (await getDecisionJournalEntries()).filter((e) => e.status === "REVIEWED" && e.linkedRecommendationId);
-  if (!linked.length) return undefined;
+/** Pure: the most recent unanswered reason given on an earlier recommendation of the same kind. */
+export function pendingForKind(entries: readonly DecisionJournalEntry[], kindOf: ReadonlyMap<string, Recommendation["kind"]>, current: Pick<Recommendation, "id" | "kind">): DecisionJournalEntry | undefined {
+  return entries
+    .filter((e) => e.status === "OPEN" && e.linkedRecommendationId && e.linkedRecommendationId !== current.id && kindOf.get(e.linkedRecommendationId) === current.kind)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+}
+
+export interface RecommendationMemory { lesson?: RememberedLesson; pending?: DecisionJournalEntry }
+
+/** Both halves for TODAY's card in one read: what you concluded, and what still awaits "how did it go?". */
+export async function getRecommendationMemory(current: Recommendation): Promise<RecommendationMemory> {
+  const linked = (await getDecisionJournalEntries()).filter((e) => e.linkedRecommendationId);
+  if (!linked.length) return {};
   const recs = await db.recommendations.bulkGet(linked.map((e) => e.linkedRecommendationId!));
   const kindOf = new Map(recs.flatMap((r) => r ? [[r.id, r.kind] as const] : []));
-  return lessonForKind(linked, kindOf, current);
+  const lesson = lessonForKind(linked, kindOf, current), pending = pendingForKind(linked, kindOf, current);
+  return { ...(lesson ? { lesson } : {}), ...(pending ? { pending } : {}) };
 }
 
-export interface DebriefCarry { entryId: string; plan: string; outcome?: string; lesson?: string }
-
-/** Pure: the latest debrief from an earlier lived day that named one thing for next shift. */
-export function debriefCarryForward(entries: readonly DecisionJournalEntry[], now: Date): DebriefCarry | undefined {
-  const start = livedDayStartOf(now).getTime();
-  const last = entries.filter((e) => isShiftDebrief(e) && Date.parse(e.createdAt) < start)
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))[0];
-  if (!last?.expectation) return undefined;
-  return { entryId: last.id, plan: last.expectation, ...(last.outcome ? { outcome: last.outcome } : {}), ...(last.lesson ? { lesson: last.lesson } : {}) };
-}
-
-export async function getDebriefCarryForward(now: Date = new Date()): Promise<DebriefCarry | undefined> {
-  return debriefCarryForward(await getDecisionJournalEntries(), now);
+export async function getRememberedLesson(current: Recommendation): Promise<RememberedLesson | undefined> {
+  return (await getRecommendationMemory(current)).lesson;
 }
 
 /** Pure: closed experiments that left a lesson, newest first — shown when starting another. */

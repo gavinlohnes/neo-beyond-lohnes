@@ -3,13 +3,12 @@ import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import axe from "axe-core";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
-import { ShiftDebrief } from "../../src/ui/screens/today/ShiftDebrief";
 import { JournalScreen } from "../../src/ui/screens/more/JournalScreen";
 import { startDay, submitCheckIn } from "../../src/application/commands";
 import { reflectOnDecline } from "../../src/application/reflect";
 import { db } from "../../src/persistence/db";
 
-/** LOOP step 2 — REFLECT: a reason after "Not doing this", the shift debrief, and "how did it go?". */
+/** LOOP step 2 — REFLECT: a reason after "Not doing this" and "how did it go?" (the debrief lives in the shift handoff since LOOP-002; see ShiftHandoff.test.tsx). */
 afterEach(async () => { await cleanup(); await page.viewport(1280, 800); });
 const noOverflow = (width: number) => expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
 
@@ -31,24 +30,6 @@ it("after declining, an optional reason is saved to the journal, linked to that 
   expect(await db.recommendations.toArray()).toEqual(before); // the advice itself is untouched
   noOverflow(320);
   expect((await axe.run(document.querySelector("[data-reflect-saved]")!.parentElement!)).violations).toEqual([]);
-});
-
-for (const width of [320, 390]) it(`the 30-second shift debrief saves once per lived day at ${width}px`, async () => {
-  await page.viewport(width, 800);
-  const screen = await render(<main><ShiftDebrief /></main>);
-  await screen.getByText("30-second shift debrief").click();
-  await screen.getByRole("button", { name: "Rough", exact: true }).click();
-  await screen.getByRole("button", { name: "Sleep", exact: true }).click();
-  await screen.getByLabelText("One thing for next shift? Optional.").fill("Nap before");
-  noOverflow(width);
-  expect((await axe.run(document.body)).violations).toEqual([]);
-  await screen.getByRole("button", { name: "SAVE DEBRIEF" }).click();
-  await expect.element(screen.getByText("Shift debrief saved: shift felt rough. Next shift: Nap before.")).toBeVisible();
-  await cleanup();
-  const again = await render(<ShiftDebrief />);
-  await again.getByText("30-second shift debrief").click(); // nothing is read until it is opened
-  await expect.element(again.getByText(/^Shift debrief saved/)).toBeVisible();
-  expect(await db.decisionJournalEntries.count()).toBe(1);
 });
 
 it("the journal asks how it went from the next lived day, and one tap reviews it", async () => {
