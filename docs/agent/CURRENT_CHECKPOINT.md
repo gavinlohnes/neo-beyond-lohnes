@@ -9,7 +9,10 @@
   PASS at6db4328. Production build + four-size offline water/undo/memory/backup acceptance PASS
   (360/390/844/1280), zero unrelated writes/errors/overflow. Final full gate/CI/review follows.
 - Integration: fresh master `c28a846` (#306 reflection) merged, code clean; both checkpoint histories retained.
-- Next: integrated full gate/CI and renewed exact-head review. No merge authorized.
+- Latest: inspection is one tap/mute, charged deletion retains its hold. Focused114/114 and
+  code review PASS at63a222b. Built offline360 hold PASS in normal/reduced motion: tap/halfway
+  zero voids, full hold exactlyone; expected native calls [10,8,35] or none.
+- Next: final full gate/CI and exact-head evidence review, then owner decision. No merge authorized.
 - MEMORY-001 #303 refreshed onto master `c28a846` as `1a653303`; current CI/review renewal pending. Prior exact `71bcb079` CI/review PASS.
   Integrated unchanged memory lifecycle into #307 for combined testing, plus UI feedback. Neither is deployed.
 

@@ -33,3 +33,13 @@ The 120ms pulse is intentionally transient; a still image cannot demonstrate its
 Browser tests verify timing, reduced-motion silence, origin-control targeting, hold arming,
 release/blur/disable cancellation, rejected writes and exactly-once/no-op behavior. No video,
 physical-haptic claim or live deployment is implied.
+
+## Actual hold, built offline at 360px
+
+Source `63a222bdd000b2894dc3bdab362aefacb91e7a1d`; `hold-acceptance.json`.
+Logged water, opened its existing entry/correction and exercised DELETE. A tap and the
+halfway point both leave zero void events; a full hold appends exactly one void. Native API
+calls: `[10, 8, 35]` (water, arm, committed void). Reduced-motion repeats the complete functional
+flow with no vibration calls. `hold-normal-360.png` captures the in-progress fill;
+`hold-reduced-360.png` captures the same interval without decorative motion. Inspection itself
+is one tap, no write and no haptic. No timer/guard/assertion was weakened.
