@@ -1,3 +1,16 @@
+# LOOP step 2 — REFLECT
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "merge 305 and go reflect". Claude Code;
+  PROTECTED (bounded: journal link at creation, no Engine/schema/new event). [Brief](LOOP.md#step-2--reflect).
+- **Baseline / branch:** master `8aedba5` (#305 ASK merged at Gavin's direction); `ccr-0be4f40f-16m0ja`.
+- **Built:** "Why not?" after declining a recommendation, the 30-second shift debrief, and "How did
+  it go?" in the Journal from the next lived day.
+- **Next:** CI and Gavin's merge (independent review per DEV-FLOW-002 unless Gavin waives it).
+  Steps 3 TRY and 4 REMEMBER each need their own approval.
+
+---
+Historical LOOP step 1 checkpoint (#305 merged at `8aedba5`):
+
 # LOOP step 1 — ASK
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "Go loop" (campaign + step 1). Claude Code;

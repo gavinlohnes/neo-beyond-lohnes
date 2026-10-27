@@ -1,0 +1,9 @@
+/* LOOP step 2 — REFLECT: decline reasons, the shift debrief and "how did it go?". */
+.reflect { display: grid; gap: 8px; margin-top: 12px; min-width: 0; }
+.reflect > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.reflect[open] > summary { margin-bottom: 4px; }
+.reflect-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.reflect-chips .chip { min-height: 44px; padding-inline: 14px; }
+.reflect .input { width: 100%; min-width: 0; box-sizing: border-box; }
+.follow-ups { display: grid; gap: 12px; margin-bottom: 20px; }
+.follow-up { display: grid; gap: 6px; padding: 12px 0; border-top: 1px solid var(--border-subtle); min-width: 0; overflow-wrap: anywhere; }
