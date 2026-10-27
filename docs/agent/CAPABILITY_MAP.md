@@ -276,3 +276,7 @@ fresh general review.
   Whole Picture rows, reusing runs/positions/flips and marks; each `AskLine` carries its source
   rows for tap-through, and `NOT_YET` names what is missing. Add new questions there
   ([LOOP.md](LOOP.md)), not as free text or AI.
+- LOOP step 2 (REFLECT): `application/reflect.ts` — decline reasons are journal entries with
+  `linkedRecommendationId`; shift debriefs are journal entries titled "Shift debrief"; both get
+  "How did it go?" (`getFollowUpsDue`, the journal's own review) from the next lived day. Reuse
+  this for any "you said X, how did it go?" loop rather than a new record kind.
