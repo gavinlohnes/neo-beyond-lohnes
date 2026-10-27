@@ -22,7 +22,7 @@ describe("capability discovery (COMMAND search)", () => {
     ["  HYDRATION ", ["WATER"]],
     ["food", ["MEAL", "FOOD LOOKUP", "HIDDEN FEATURES"]],
     ["decision journal", ["DECISION JOURNAL"]],
-    ["memory", ["WHAT BEYOND SHOULD REMEMBER"]],
+    ["memory", ["WHAT BEYOND SHOULD REMEMBER", "MY MEALS"]],
     ["resume", ["WORKOUT"]],
     ["restore", ["BACKUP & RECOVERY"]],
     ["weekly review", ["REVIEW"]],
