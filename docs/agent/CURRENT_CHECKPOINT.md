@@ -1,3 +1,17 @@
+# DELTA-004 — "not enough data" becomes a goal
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "go Delta 4". Claude Code; FEATURE.
+  Brief: [DELTA-002.md, slice 2](DELTA-002.md).
+- **Branch / baseline:** `claude/delta-004` from `618e435` (#297 merged, Gavin's "Merge it.").
+- **Built:** abstaining readings say what to log and what it unlocks (Weekly expenditure, usual,
+  waiting findings; Garmin usual; Rotation). Same floors; no streaks, scores or TODAY rows.
+- **Evidence:** full verify 3,008 passed / 1 existing skip; architecture and build OK.
+- **Next:** CI, Gavin's merge. Then live with ROTATION-002 + DELTA-004 on shift; candidates after
+  use: one-sentence next window, "unusual" tuning from real data, ROTATION 3 flip planning.
+
+---
+Historical ROTATION-002 checkpoint (#297 merged at `618e435`):
+
 # ROTATION-002 — BEYOND understands your rotation (Tracks A + B)
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "Go A + B". Claude Code; FEATURE.

@@ -37,7 +37,7 @@ describe("Weekly check-in — YOUR USUAL (real browser)", () => {
     const screen = await render(<WeeklyCheckInScreen now={NOW} />);
     const section = screen.getByRole("region", { name: "YOUR USUAL" });
     await expect.element(section).toBeVisible();
-    await expect.element(section.getByText(/Still learning your usual: sleep on work days \(0 of 10 work days\)/)).toBeVisible();
+    await expect.element(section.getByText(/^Log main sleep on 10 more work days and 10 more days off; water on 10 more work days and 10 more days off; protein on 10 more work days and 10 more days off, and BEYOND can learn your usual\./)).toBeVisible();
     expect(section.element().querySelectorAll("[data-baseline]")).toHaveLength(0);
   });
 

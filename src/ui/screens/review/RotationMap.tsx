@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { PictureRow } from "../../../application/wholePictureProjection";
 import type { WeekAheadDay } from "../../../application/weekAheadQueries";
 import { groupRuns, nextDaysOff, nextForecastRun, runPositions, RUN_MEAN_FLOOR, type RotationRun, type RunPosition } from "../../../application/rotationProjection";
-import { clockAfter, describePosition, describeTiming, duration, lastWorkout, mostTrainedDayOff, positionName, shortDate } from "./rotationCopy";
+import { clockAfter, describePosition, describeTiming, duration, lastWorkout, mostTrainedDayOff, patternsGoal, positionName, shortDate } from "./rotationCopy";
 
 const day = (at: string) => new Date(at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 const short = (at: string) => new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -78,6 +78,7 @@ function Patterns({ positions, onInspect, reference }: { positions: readonly Run
   return <section className="rotation-patterns" aria-labelledby="rotation-patterns-heading">
     <p className="eyebrow">Across your runs</p>
     <h3 id="rotation-patterns-heading">{runs >= RUN_MEAN_FLOOR ? `Shift by shift, over ${runs} work runs.` : `Patterns need ${RUN_MEAN_FLOOR} complete work runs (${runs} so far).`}</h3>
+    {patternsGoal(runs) && <p className="rotation-goal" data-unlock-goal>{patternsGoal(runs)}</p>}
     <p className="muted small">Each place in a run (shift 1, shift 2, day off 1…) averaged across the runs that reached it. A mean needs {RUN_MEAN_FLOOR} days. Patterns, not causes.</p>
     {[["Work runs", work], ["Days off", off]].map(([label, places]) => (places as RunPosition[]).length > 0 && <div key={label as string} className="rotation-places">
       <h4>{label as string}</h4>

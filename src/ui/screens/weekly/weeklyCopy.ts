@@ -6,6 +6,7 @@ import type { SchedulePhase } from "../../../engine/scheduledContext";
 import type { PersonalBaseline } from "../../../engine/personalBaselines";
 import type { DayKind, MeasureId } from "../../../engine/livedDaySeries";
 import { formatDuration } from "../body/bodyScreenCopy";
+import { unlockGoal } from "../../unlockGoal";
 
 /**
  * Burden Meter (Drop 1, owner brief 2026-10-03): one neutral, read-only line
@@ -169,12 +170,12 @@ export function describeFindings(findings: readonly Finding[], exerciseNames: Re
 }
 
 const WAITING_WORDS: Record<WaitingFinding["kind"], (w: WaitingFinding) => string> = {
-  SLEEP_BEFORE_WORKOUT: (w) => `sleep before workouts (${w.have} of ${w.need} each way)`,
-  TRAINING_WINDOW: (w) => `before vs. after the shift (${w.have} of ${w.need} each way)`,
-  URGE_TIMING: (w) => `when urges came (${w.have} of ${w.need} urges)`,
+  SLEEP_BEFORE_WORKOUT: (w) => `sleep before workouts (${w.have} of ${w.need} each way; keep logging main sleep and workouts)`,
+  TRAINING_WINDOW: (w) => `before vs. after the shift (${w.have} of ${w.need} each way; keep logging workouts)`,
+  URGE_TIMING: (w) => `when urges came (${w.have} of ${w.need} urges; keep recording them as they come)`,
 };
 
-/** One quiet line naming what's still counting, and how far along it is. */
+/** One quiet line naming what's still counting, how far along it is, and (DELTA-004) what keeps it counting. */
 export function describeWaitingFindings(waiting: readonly WaitingFinding[]): string | undefined {
   if (waiting.length === 0) return undefined;
   return `Not enough data yet: ${waiting.map((w) => WAITING_WORDS[w.kind](w)).join(", ")}.`;
@@ -203,14 +204,15 @@ export function describeExpenditure(readout: ExpenditureReadout): { headline?: s
   if (readout.tooNoisy) {
     return { detail: "Not enough data yet — weight is moving around too much for a useful range." };
   }
-  const needs: string[] = [];
-  if (readout.intakeDays.have < readout.intakeDays.need) {
-    needs.push(`${readout.intakeDays.need} days with meals logged (have ${readout.intakeDays.have})`);
-  }
-  if (readout.weighIns.have < readout.weighIns.need || !readout.spanOk) {
-    needs.push(`${readout.weighIns.need} weigh-ins over 2 weeks (have ${readout.weighIns.have})`);
-  }
-  return { detail: `Not enough data yet — needs ${needs.join(" and ")} in the last ${readout.windowDays} days.` };
+  // DELTA-004: the same floor, said as what to log. Weigh-ins already counted but bunched together need spreading.
+  const weighIns = readout.weighIns.need - readout.weighIns.have;
+  const goal = unlockGoal([
+    { more: readout.intakeDays.need - readout.intakeDays.have, action: (n) => `log meals on ${plural(n, "more day", "more days")}` },
+    { more: weighIns > 0 ? weighIns : readout.spanOk ? 0 : 1, action: (n) => weighIns > 0 ? `weigh in ${plural(n, "more time", "more times")} over 2 weeks` : "spread your weigh-ins across 2 weeks" },
+  ], "estimate what you really burn");
+  const count = (c: { have: number; need: number }, what: string) => `${c.have}${c.have < c.need ? ` of ${c.need}` : ""} ${what}`;
+  const progress = `${count(readout.intakeDays, "meal days")}, ${count(readout.weighIns, "weigh-ins")} in the last ${readout.windowDays} days`;
+  return { detail: goal ? `${goal.slice(0, -1)} (${progress}).` : `Not enough data yet (${progress}).` };
 }
 
 // ---- YOUR USUAL (FOUNDATION-A-F1) ----
@@ -262,16 +264,19 @@ export function describeBaselines(baselines: readonly PersonalBaseline[]): Basel
 
 /** One quiet line for everything not compared: still learning (with progress), or nothing to compare this week. */
 export function describeBaselinesQuiet(baselines: readonly PersonalBaseline[]): string | undefined {
-  const learning = baselines.flatMap((b) =>
-    b.kind === "LEARNING"
-      ? [`${MEASURE_WORDS[b.measure].toLowerCase()} ${KIND_WORDS[b.dayKind].label} (${b.have} of ${days(b.dayKind, b.need)})`]
-      : [],
-  );
+  // DELTA-004: each usual still being learned, said as what to log; progress stays visible.
+  // Grouped by measure so a fresh start reads as three short goals, not six.
+  const learning = baselines.flatMap((b) => (b.kind === "LEARNING" && b.need > b.have ? [b] : []));
+  const measures = [...new Set(learning.map((b) => b.measure))];
+  const goal = unlockGoal(measures.map((measure) => {
+    const kinds = learning.filter((b) => b.measure === measure).map((b) => { const n = b.need - b.have; return `${n} more ${n === 1 ? KIND_WORDS[b.dayKind].one : KIND_WORDS[b.dayKind].many}`; });
+    return { more: 1, action: () => `${measure === "MAIN_SLEEP" ? "main sleep" : MEASURE_WORDS[measure].toLowerCase()} on ${kinds.join(" and ")}` };
+  }), "learn your usual", "log");
   const notThisWeek = baselines.flatMap((b) =>
     b.kind === "NOT_THIS_WEEK" ? [`${MEASURE_WORDS[b.measure].toLowerCase()} ${KIND_WORDS[b.dayKind].label}`] : [],
   );
   const parts = [
-    ...(learning.length ? [`Still learning your usual: ${learning.join(", ")}.`] : []),
+    ...(goal ? [goal] : []),
     ...(notThisWeek.length ? [`Nothing to compare this week: ${notThisWeek.join(", ")}.`] : []),
   ];
   return parts.length ? parts.join(" ") : undefined;
