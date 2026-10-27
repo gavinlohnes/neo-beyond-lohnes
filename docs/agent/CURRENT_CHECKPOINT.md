@@ -1,3 +1,15 @@
+# SLEEP-ENGINE-001 — two short main sleeps suggest the reduced session
+
+- **Authority / Builder / lane:** Gavin, 2026-10-27, "approve option 1". Claude Code; PROTECTED.
+  [Brief](SLEEP-ENGINE-001.md). #297, #298, #299 merged at Gavin's direction.
+- **Branch / baseline:** `ccr-0be4f40f-16m0ja` from `5d960e3`.
+- **Evidence:** full verify 3,028 passed / 1 existing skip; architecture and build OK.
+- **Next:** independent exact-head review (required), CI, then Gavin's merge. After that: remove
+  the leftover decorative circuit overlay on TODAY (Gavin, 2026-10-27: "can be removed or hidden").
+
+---
+Historical ROTATION-003 checkpoint (#299 merged at `5d960e3`):
+
 # ROTATION-003 — flip planning
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "go flips". Claude Code; FEATURE.
