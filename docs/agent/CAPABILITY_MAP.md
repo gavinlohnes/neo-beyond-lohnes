@@ -289,3 +289,7 @@ fresh general review.
   `linkedRecommendationId`; shift debriefs are journal entries titled "Shift debrief"; both get
   "How did it go?" (`getFollowUpsDue`, the journal's own review) from the next lived day. Reuse
   this for any "you said X, how did it go?" loop rather than a new record kind.
+- LOOP step 3 (TRY): `application/tryExperiment.ts` — experiments are journal entries ("Try: …" +
+  a fixed window line); `experimentResult` compares in-window days with usual days of the same
+  kind from Whole Picture rows, with counts and an "about the same" band. Reuse for any bounded
+  personal comparison.

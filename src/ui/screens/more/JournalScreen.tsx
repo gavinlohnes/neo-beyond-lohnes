@@ -12,6 +12,7 @@ import {
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { describeError } from "../../errorMessage";
 import { FollowUps } from "./FollowUps";
+import { Experiments } from "./Experiments";
 
 /**
  * Decision Journal (approved under the Whole-Life Capability North Star,
@@ -193,6 +194,7 @@ export function JournalScreen({ active = true, navigationEntryId, onOpenCapture,
       </details>
 
       {readState === "ready" && <FollowUps entries={entries} onAnswered={() => void refreshList()} />}
+      {readState === "ready" && <Experiments entries={entries} onChanged={() => void refreshList()} />}
 
       <section aria-labelledby="journal-heading">
         <h2 id="journal-heading" className="section-label">Decisions</h2>
