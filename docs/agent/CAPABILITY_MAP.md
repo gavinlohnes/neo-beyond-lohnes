@@ -304,3 +304,5 @@ fresh general review.
 - SUIT-ALIVE S3 (comms, Tonight): `application/caveTonight.ts` ranks complete readings by distance
   outside your own usual range and lists overdue commitments; `describeComms` is TODAY's comms line.
   Reuse it for any "what's off my normal right now" view.
+- SUIT-ALIVE S4 (route): `application/caveRoute.ts` builds the lived day's points (schedule, usual
+  sleep and wake, rollover) and in-app callouts. Reuse it for anything time-of-day on the current day.

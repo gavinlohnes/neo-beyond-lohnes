@@ -92,3 +92,12 @@
 .cc-mode .comms-line + .systems-line { margin-top: 0; }
 .comms-line__head { display: flex; justify-content: space-between; gap: 10px; font-size: 11px; letter-spacing: .16em; color: var(--p-t3); }
 .comms-line__text { font-size: 15px; line-height: 1.45; color: var(--p-t1); }
+/* SUIT-ALIVE S4: ROUTE sits above COMMS, its key beside the points to keep the hero short in the hero's closing band. Usual points read quieter. */
+.cc-mode .route-line { display: grid; grid-template-columns: 64px 1fr; align-items: start; gap: 8px; width: calc(100% + 32px); margin: 12px -16px 0; padding: 10px 16px; border: 0; border-top: 1px solid var(--p-line); background: var(--p-bg); color: inherit; font: inherit; text-align: left; cursor: pointer; position: relative; z-index: 1; }
+.cc-mode .route-line + .comms-line { margin-top: 0; }
+.route-line__key { font-size: 11px; letter-spacing: .16em; color: var(--p-t3); padding-top: 2px; }
+.route-line__ways { display: grid; gap: 2px; }
+.route-line__way { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: 13px; letter-spacing: .1em; color: var(--p-t1); }
+.route-line__way time { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.route-line__way--usual { color: var(--p-t2); }
+.route-line__in { font-family: var(--font-mono); letter-spacing: 0; color: var(--p-t2); }

@@ -2081,3 +2081,31 @@ Brief: [`agent/SUIT-ALIVE.md`](agent/SUIT-ALIVE.md#s3--comms-and-tonight).
   - **Overdue:** commitments past their due date.
 - **Unchanged:** the Engine, recommendation priority, accept and decline, TODAY's rows and
   their order, and every stored record. Nothing new is stored.
+
+## SUIT-ALIVE-003 — the route (owner approval, 2026-10-28)
+
+Gavin, 2026-10-28: "go S4", approving the build plan's S4: "Next three waypoints on the suit, full
+route in the cave, from schedule, NEXT, PREP and your usual sleep. Callouts as waypoints pass,
+in-app only." Protected: it changes TODAY's primary layout. Brief:
+[`agent/SUIT-ALIVE.md`](agent/SUIT-ALIVE.md#s4--the-route).
+
+- **The route** is the lived day's points, 16:30 to 16:30. It is derived on read; nothing is stored.
+  - **Fixed points:** the scheduled shift start and end, and the rollover.
+  - **Usual points:** your sleep start and wake time. Each is the median of your own Garmin-timed
+    days of the same kind, shown only with at least 3 of them. They are always marked "usual" and
+    said to be "not an order".
+  - **Food and bottle preparation** rides on the shift point.
+  - **Marking work ended** passes the shift's end.
+  - **A work day without a scheduled shift** says so instead of guessing times.
+- **TODAY:** ROUTE shows the next three points, with the time to the first, once one of them is more
+  than the rollover. It sits in the mode hero's closing band, above COMMS. It is not a phase row, so
+  `MAX_PHASE_ROWS` is unchanged. Tapping it opens the cave on ROUTE.
+- **Callouts** are in-app only. For half an hour after a point passes, the comms line says it, for
+  example "On shift. Bottle not confirmed." No notification, alarm, sound or schedule is created.
+- **The cave** gains ROUTE between TONIGHT and VITALS: the whole day, with passed, next, fixed and
+  usual marked.
+- **Not built:**
+  - **A break time.** It needs a new schedule field, which is a schema change, so it waits for its
+    own ruling.
+  - **"Last coffee."** BEYOND records no caffeine.
+- **Unchanged:** the Engine, recommendations, TODAY's rows and their order, and every stored record.
