@@ -56,4 +56,16 @@ describe("SUIT-ALIVE S3 — comms and Tonight", () => {
     expect(t.late.map((l) => l.title)).toEqual(["Dentist", "Blood work"]);
     expect(t.recommendation).toBe(rec); expect(t.decision).toBe("DECLINED");
   });
+
+  it("judges today's protein and water by pace once it has a range, and ahead of pace is steady", () => {
+    const pace = (value: number, low: number, high: number) => ({ metric: "water" as const, value, usual: { kind: "RANGE" as const, dayKind: "WORK" as const, low, high, median: (low + high) / 2, days: 12 }, verdict: undefined });
+    const t = buildCaveTonight(input({ pace: { water: pace(8, 30, 40), protein: { ...pace(90, 40, 60), metric: "protein" } } }));
+    const water = t.off.find((r) => r.id === "water")!;
+    expect(water).toMatchObject({ when: "BY_NOW", verdict: "BELOW" });
+    expect(describeTonightReading(water)).toBe("Water 8 oz, under your usual 30–40 oz by now.");
+    expect(t.steady.find((r) => r.id === "protein")).toMatchObject({ when: "BY_NOW", verdict: "INSIDE" });
+    // Without a pace range, the last full day is judged, as before.
+    const learning = { ...pace(8, 0, 0), usual: { kind: "LEARNING" as const, dayKind: "WORK" as const, days: 3, need: 10 } };
+    expect(buildCaveTonight(input({ pace: { water: learning } })).steady.find((r) => r.id === "water")?.when).toBe("LAST_FULL_DAY");
+  });
 });

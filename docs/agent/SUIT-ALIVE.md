@@ -94,3 +94,20 @@ EMBLEM-002 master.
   `CommsLine.tsx`) and `CaveRoute.tsx`. **BUILD FROM SCRATCH:** none.
 - **Deferred:** a break time on the schedule (schema change; needs its own ruling), and "last
   coffee" (no caffeine data).
+
+## S5 — pace and the dark cockpit
+
+- **Authority:** Gavin, 2026-10-28: "go S5". Ruling: SUIT-ALIVE-004. **Lane:** PROTECTED, because it
+  changes how TODAY's primary readings look. No Engine, schema or event change.
+- **Built:**
+  - `application/pace.ts`: your usual protein and water by this minute of the lived day, from the
+    timestamped, corrected logs of your last 28 same-kind days, by the personal-baselines rule.
+  - **TODAY:** protein and water tiles show BEHIND PACE in amber when behind. Readings inside your
+    normal dim.
+  - **The cave:** VITALS and TONIGHT judge today's totals by pace.
+- **REUSE:**
+  - `getHydrationEntries`, `getProteinEntries` and `getMealEntries` (corrected amounts);
+  - Whole Picture rows for which days count;
+  - the personal-baselines quantiles and `MIN_BASELINE_DAYS`;
+  - the existing "unusual" tile style.
+- **OWN:** `pace.ts` and the tile states. **BUILD FROM SCRATCH:** none.
