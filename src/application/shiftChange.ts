@@ -1,5 +1,6 @@
 import { getCaveBrief, type CaveBrief } from "./caveBrief";
-import { getActiveDay, getWorkPeriodEnded, getWorkPeriodStarted } from "./queries";
+import { getActiveDay, getHydrationEntries, getProteinEntries, getWorkPeriodEnded, getWorkPeriodStarted } from "./queries";
+import { getMealEntries } from "./nutritionQueries";
 import { describeIn, getCaveRoute, type CaveRoute } from "./caveRoute";
 
 /**
@@ -27,13 +28,17 @@ export interface ShiftChange {
   plan: string;
   /** The one thing that is off, in plain words; null when nothing is. */
   signal: string | null;
+  /** The shift on one line: its span and every water and food log inside it, ISO. */
+  line: { start: string; end: string; water: string[]; food: string[] };
 }
+
+export interface ShiftMarks { water: readonly string[]; food: readonly string[] }
 
 const hhmm = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const dur = (minutes: number) => `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
 
 /** Pure: the shift-change moment for this instant, or null outside its windows. */
-export function buildShiftChange(brief: CaveBrief | null, route: CaveRoute | null, now: Date): ShiftChange | null {
+export function buildShiftChange(brief: CaveBrief | null, route: CaveRoute | null, now: Date, marks: ShiftMarks = { water: [], food: [] }): ShiftChange | null {
   if (!brief?.shift || !route) return null;
   // A tap within 2 hours of the scheduled end is the real end; a later one is a late record, not a longer shift.
   const scheduledEnd = Date.parse(brief.shift.end), marked = brief.endedAt ? Date.parse(brief.endedAt) : NaN;
@@ -44,6 +49,9 @@ export function buildShiftChange(brief: CaveBrief | null, route: CaveRoute | nul
     : brief.phase === "ON" && end - t <= LANDING_MINUTES * 60_000 ? "LANDING" : null;
   if (!phase) return null;
 
+  const lineEnd = Math.min(t, end);
+  const inside = (list: readonly string[]) => list.filter((at) => { const x = Date.parse(at); return x >= start && x <= lineEnd; }).sort();
+  const line = { start: new Date(start).toISOString(), end: new Date(phase === "LANDING" ? end : lineEnd).toISOString(), water: inside(marks.water), food: inside(marks.food) };
   const sleep = route.waypoints.find((w) => w.kind === "SLEEP" && !w.passed);
   const wake = route.waypoints.find((w) => w.kind === "WAKE");
   const plan = sleep ? `Usual sleep ${hhmm(sleep.at)}${wake ? `–${hhmm(wake.at)}` : ""} · lights out ${describeIn(sleep.at, now)}.`
@@ -56,17 +64,19 @@ export function buildShiftChange(brief: CaveBrief | null, route: CaveRoute | nul
     // Only what can still be done before the end: fuel, water and the handoff note. Packing is for the next shift.
     const rows = brief.items.filter((i) => (i.state === "LATE" || i.state === "HOLD" || i.state === "ADVISORY") && (i.key === "FUEL" || i.key === "HYDRATION" || i.key === "HANDOFF"))
       .map((i) => ({ key: i.key, label: i.system, value: i.detail, tone: "NONE" as const }));
-    return { key: `${brief.dayId}:LANDING`, phase, end: new Date(end).toISOString(), clock: `T–${dur(m).padStart(5, "0")}`, rows, plan, signal };
+    return { key: `${brief.dayId}:LANDING`, phase, end: new Date(end).toISOString(), clock: `T–${dur(m).padStart(5, "0")}`, rows, plan, signal, line };
   }
   const rows = (brief.aar ?? []).filter((r) => r.key !== "SHIFT" && r.key !== "SLEEP")
     .map((r) => ({ key: r.key, label: r.label, value: r.actual, tone: r.verdict === "OFF_PLAN" ? "OFF" as const : r.verdict === "ON_PLAN" ? "ON" as const : "NONE" as const }));
   const worked = Math.max(0, Math.round((Math.min(t, end) - start) / 60000));
-  return { key: `${brief.dayId}:SECURED`, phase, end: new Date(end).toISOString(), clock: dur(worked), rows, plan, signal };
+  return { key: `${brief.dayId}:SECURED`, phase, end: new Date(end).toISOString(), clock: dur(worked), rows, plan, signal, line };
 }
 
 export async function getShiftChange(now: Date = new Date()): Promise<ShiftChange | null> {
   const [brief, route] = await Promise.all([getCaveBrief(now), getCaveRoute(now)]);
-  return buildShiftChange(brief, route, now);
+  if (!brief?.shift) return null;
+  const [water, meals, protein] = await Promise.all([getHydrationEntries(brief.dayId), getMealEntries(brief.dayId), getProteinEntries(brief.dayId)]);
+  return buildShiftChange(brief, route, now, { water: water.map((w) => w.at), food: [...meals.map((m) => m.at), ...protein.map((p) => p.at)] });
 }
 
 /** How long around the scheduled start TODAY offers the one-tap STARTED WORK. */

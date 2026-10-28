@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { effectiveLogTimes } from "./logTimes";
 import type {
   BeyondDay,
   CaptureItem,
@@ -286,6 +287,7 @@ export async function getHydrationEntries(
   const corrections = events.filter(
     (e): e is DomainEvent<WaterLogCorrectedPayload> => e.type === "WATER_LOG_CORRECTED",
   );
+  const times = effectiveLogTimes(events);
 
   return logged
     .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
@@ -309,8 +311,10 @@ export async function getHydrationEntries(
         effectiveAmountOz: headAmount,
         correctionCount: count,
         recordedAt: root.recordedAt,
+        at: times.get(root.id) ?? root.occurredAt,
       };
-    });
+    })
+    .sort((a, b) => a.at.localeCompare(b.at));
 }
 
 export async function getEffectiveHydrationTotal(beyondDayId: string): Promise<number> {
@@ -532,6 +536,8 @@ export async function getMostRecentBodyweight(): Promise<number | undefined> {
 }
 
 export interface ProteinEntry {
+  /** LOG-TIME-001: when it was eaten (a retime, else the log's own occurredAt). */
+  at: string;
   rootEventId: string;
   headEventId: string;
   originalGrams: number;
@@ -552,6 +558,7 @@ export async function getProteinEntries(beyondDayId: string): Promise<ProteinEnt
   );
   const logged = events.filter((e) => e.type === "PROTEIN_LOGGED" && !voided.has(e.id));
   const corrections = events.filter((e) => e.type === "PROTEIN_LOG_CORRECTED");
+  const times = effectiveLogTimes(events);
   return logged
     .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
     .map((root): ProteinEntry => {
@@ -564,6 +571,7 @@ export async function getProteinEntries(beyondDayId: string): Promise<ProteinEnt
         effectiveGrams: chain.effectiveValue,
         correctionCount: chain.correctionCount,
         recordedAt: root.recordedAt,
+        at: times.get(root.id) ?? root.occurredAt,
       };
     });
 }

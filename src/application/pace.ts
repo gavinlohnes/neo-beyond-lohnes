@@ -68,9 +68,9 @@ export async function getPaceHistories(day: Pick<BeyondDay, "startedAt" | "workC
   const items = async (row: PictureRow, metric: PaceMetric) => {
     const at = (iso: string) => Math.round((Date.parse(iso) - Date.parse(row.start)) / 60000);
     const lists = await Promise.all(row.dayIds.map(async (id) => metric === "water"
-      ? (await getHydrationEntries(id)).map((e) => ({ minute: at(e.recordedAt), amount: e.effectiveAmountOz }))
-      : [...(await getProteinEntries(id)).map((e) => ({ minute: at(e.recordedAt), amount: e.effectiveGrams })),
-        ...(await getMealEntries(id)).map((e) => ({ minute: at(e.recordedAt), amount: e.effectiveProteinG }))]));
+      ? (await getHydrationEntries(id)).map((e) => ({ minute: at(e.at), amount: e.effectiveAmountOz }))
+      : [...(await getProteinEntries(id)).map((e) => ({ minute: at(e.at), amount: e.effectiveGrams })),
+        ...(await getMealEntries(id)).map((e) => ({ minute: at(e.at), amount: e.effectiveProteinG }))]));
     return lists.flat();
   };
   const [protein, water] = await Promise.all((["protein", "water"] as const).map(async (metric) =>

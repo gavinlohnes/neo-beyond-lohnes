@@ -214,6 +214,8 @@ export type DomainEventType =
   | "WORK_PERIOD_ENDED"
   /** SHIFT-CHANGE-001 (owner go 2026-10-28): the operator's one-tap "on the clock now"; at most one per day. */
   | "WORK_PERIOD_STARTED"
+  /** LOG-TIME-001 (owner go 2026-10-28): when a water, protein or meal log actually happened, set after the fact. */
+  | "LOG_RETIMED"
   | "MISSION_CREATED"
   | "MISSION_MODIFIED"
   | "MISSION_ARCHIVED"
@@ -255,12 +257,26 @@ export type DomainEventType =
  * happened (the events); this is the effective view of that history.
  */
 export interface HydrationEntry {
+  /** LOG-TIME-001: when the drink happened (a retime, else the log's own occurredAt). */
+  at: string;
   rootEventId: string;
   headEventId: string;
   originalAmountOz: number;
   effectiveAmountOz: number;
   correctionCount: number;
   recordedAt: string;
+}
+
+/**
+ * LOG-TIME-001: moves one water, protein or meal log to when it actually happened. Additive and
+ * separate from the amount-correction chains: the latest retime of a root wins, the original log and
+ * its corrections are never touched. `occurredAt` stays inside the log's own lived day.
+ */
+export interface LogRetimedPayload {
+  commandId: string;
+  rootEventId: string;
+  loggedType: "WATER_LOGGED" | "PROTEIN_LOGGED" | "MEAL_LOGGED";
+  occurredAt: string;
 }
 
 export interface WaterLoggedPayload {

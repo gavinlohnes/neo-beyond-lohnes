@@ -1,4 +1,5 @@
 import { captureCommitFeedback } from "../../feel/feedback";
+import { LogTimeEditor } from "../../components/LogTimeEditor";
 import { SleepMetricSheet } from "../today/SleepMetricSheet";
 import { WeightTrend } from "./WeightTrend";
 import { getRecordedHealthDay } from "../../../application/healthRecordQueries";
@@ -1722,7 +1723,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
                         <div>
                           <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveGrams} g</p>
                           <p className="meta">
-                            {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                            {day ? <LogTimeEditor dayId={day.id} dayStartedAt={day.startedAt} rootEventId={entry.rootEventId} at={entry.at} label="this protein log" onSaved={refresh} /> : null}
                             {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
                           </p>
                         </div>
@@ -1808,7 +1809,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
                           {describeMacros(entry.effectiveCalories, entry.effectiveProteinG, entry.effectiveCarbsG, entry.effectiveFatG)}
                         </span>
                         <span className="meta" style={{ display: "block" }}>
-                          {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                          {new Date(entry.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                           {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
                         </span>
                       </span>
@@ -1825,6 +1826,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
                     </button>
                     {editing && (
                       <div className="fade-in" style={{ marginTop: 12 }}>
+                        {day && <p className="meta"><LogTimeEditor dayId={day.id} dayStartedAt={day.startedAt} rootEventId={entry.rootEventId} at={entry.at} label={entry.name} onSaved={refresh} /></p>}
                         {renderMealMacroInputs(
                           mealCorrectionForm,
                           (patch) => setMealCorrectionForm((prev) => ({ ...prev, ...patch })),
@@ -1871,7 +1873,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
                       <div>
                         <p className="card-title" style={{ marginBottom: 2, fontSize: 16 }}>{entry.effectiveAmountOz} oz</p>
                         <p className="meta">
-                          {new Date(entry.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                          {day ? <LogTimeEditor dayId={day.id} dayStartedAt={day.startedAt} rootEventId={entry.rootEventId} at={entry.at} label="this water log" onSaved={refresh} /> : null}
                           {entry.correctionCount > 0 ? ` · corrected ${entry.correctionCount}x` : ""}
                         </p>
                       </div>

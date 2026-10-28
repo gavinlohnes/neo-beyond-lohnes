@@ -35,7 +35,10 @@ describe("SHIFT-CHANGE-001", () => {
       { key: "WATER", label: "WATER", planned: "", actual: "40 oz", verdict: "OFF_PLAN" as const },
       { key: "PROTEIN", label: "PROTEIN", planned: "", actual: "120 g", verdict: "ON_PLAN" as const },
     ];
-    const m = buildShiftChange(brief({ phase: "AFTER", aar }), route, at(6, 30))!;
+    const m = buildShiftChange(brief({ phase: "AFTER", aar }), route, at(6, 30), {
+      water: [at(17, 0, 27).toISOString(), at(21, 0, 27).toISOString(), at(2).toISOString()], food: [at(23, 30, 27).toISOString(), at(7).toISOString()] })!;
+    // The shift on one line: only logs inside the shift, in order.
+    expect(m.line).toEqual({ start: shift.start, end: at(6).toISOString(), water: [at(21, 0, 27).toISOString(), at(2).toISOString()], food: [at(23, 30, 27).toISOString()] });
     expect(m).toMatchObject({ key: "d27:SECURED", phase: "SECURED", clock: "12:00", signal: null });
     expect(m.rows).toEqual([{ key: "WATER", label: "WATER", value: "40 oz", tone: "OFF" }, { key: "PROTEIN", label: "PROTEIN", value: "120 g", tone: "ON" }]);
     expect(buildShiftChange(brief({ phase: "AFTER", aar }), route, at(9, 1))).toBeNull();

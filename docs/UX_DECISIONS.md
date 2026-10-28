@@ -2339,3 +2339,25 @@ shown once, and never looping.
     SECURED counts from the real start.
   - It is a new user event, so it is kept in backups and listed in history as "Work marked started."
     It never reaches the Engine.
+
+## LOG-TIME-001 — when it actually happened (owner go, 2026-10-28)
+
+Gavin: "make it so I can edit the times … Sometimes I eat or drink and don't log it for a while. Or I
+prelog stuff too." On the rules he said "your call".
+
+- **WHEN on the water and meal sheets:**
+  - the options are NOW (the default), 30 MIN AGO, 1 H AGO, 2 H AGO or a picked time;
+  - it applies to the next log, then returns to NOW;
+  - the receipt says "16 oz recorded at 03:30."
+- **CHANGE TIME on any water, protein or meal entry in BODY:**
+  - it saves a `LOG_RETIMED` fact naming the original log, and the latest move wins;
+  - the log, its amount and its correction chain are never touched;
+  - a voided log cannot move.
+- **The window is the log's own lived day** (16:30 to 16:30), behind or ahead. A time ahead is a
+  pre-log.
+- **Totals count a log as they always have**, so a pre-log counts from when it is entered. This
+  overrides the "planned until its time" idea: honouring that would change the Engine's day totals,
+  which is Protected, for little gain. Everything placed in time reads when it happened: pace "by
+  now", the brief, the after-action, the rotation day strip and the shift strip.
+- **When it was entered is kept as it always was.** History lists a move as "Water log moved to 01:30."
+  Old backups are unchanged, and the new fact is restored like any other event.

@@ -43,7 +43,7 @@ export async function getTonightState(beyondDayId: string): Promise<TonightState
       ? { templateId: finished.templateId, sessionType: finished.sessionType, status: finished.status as TrainedToday["status"] }
       : null,
     mealsLogged: meals.length,
-    lastMealAt: meals.at(-1)?.recordedAt ?? null,
+    lastMealAt: [...meals].sort((a, b) => a.at.localeCompare(b.at)).at(-1)?.at ?? null,
   };
 }
 

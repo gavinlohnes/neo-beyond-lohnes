@@ -42,6 +42,7 @@ export function ShiftChangeMoment({ refreshKey, now, onOpen }: { refreshKey: str
           aria-label={landing ? `Landing. ${show.clock.replace("T–", "")} until the shift ends at ${hhmm(show.end)}.` : `Shift secured. ${show.clock} on the clock.`}>
           {show.clock}<small>{landing ? "TO GO" : "ON THE CLOCK"}</small>
         </h2>
+        <ShiftLine line={show.line} landing={landing} />
         {show.signal && <p className="shift-change__signal">{show.signal}</p>}
         {show.rows.length > 0 && <ol className="shift-change__rows" aria-label={landing ? "Still open" : "After-action"}>
           {show.rows.map((r, i) => (
@@ -92,4 +93,23 @@ export function StartedWork({ refreshKey, now, onSaved }: { refreshKey: string; 
     <button type="button" className="btn-secondary work-start__go" disabled={saving} onClick={() => void start()}>STARTED WORK</button>
     {error && <p className="meta meta--error" role="alert">{error}</p>}
   </div>;
+}
+
+/** The shift on one line: clock-in to clock-out, a tick for every water log above, every meal below. */
+function ShiftLine({ line, landing }: { line: ShiftChange["line"]; landing: boolean }) {
+  const s = Date.parse(line.start), e = Date.parse(line.end), span = Math.max(1, e - s);
+  const W = 320, L = 8, R = 8, x = (at: string) => L + ((Date.parse(at) - s) / span) * (W - L - R);
+  const label = `Your shift on one line, ${hhmm(line.start)} to ${hhmm(line.end)}: ${line.water.length} water log${line.water.length === 1 ? "" : "s"}, ${line.food.length} food log${line.food.length === 1 ? "" : "s"}.`;
+  return (
+    <figure className="shift-line">
+      <svg viewBox={`0 0 ${W} 44`} role="img" aria-label={label}>
+        <line x1={L} x2={W - R} y1={22} y2={22} className="shift-line__axis" />
+        <line x1={L} x2={L} y1={14} y2={30} className="shift-line__edge" />
+        <line x1={W - R} x2={W - R} y1={14} y2={30} className={landing ? "shift-line__edge shift-line__edge--ahead" : "shift-line__edge"} />
+        {line.water.map((at, i) => <line key={`w${i}`} x1={x(at)} x2={x(at)} y1={8} y2={20} className="shift-line__water" style={{ animationDelay: `${300 + i * 40}ms` }} />)}
+        {line.food.map((at, i) => <rect key={`f${i}`} x={x(at) - 3} y={26} width={6} height={6} className="shift-line__food" style={{ animationDelay: `${300 + i * 40}ms` }} />)}
+      </svg>
+      <figcaption aria-hidden="true"><span>{hhmm(line.start)}</span><span>▮ WATER · ■ FOOD</span><span>{hhmm(line.end)}</span></figcaption>
+    </figure>
+  );
 }
