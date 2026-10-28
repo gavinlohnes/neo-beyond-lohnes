@@ -2377,3 +2377,27 @@ prelog stuff too." On the rules he said "your call".
   now", the brief, the after-action, the rotation day strip and the shift strip.
 - **When it was entered is kept as it always was.** History lists a move as "Water log moved to 01:30."
   Old backups are unchanged, and the new fact is restored like any other event.
+
+## BRAND-MARK-003 — Brand Drop v2: the emblem and the palette (owner decision, 2026-10-28)
+
+Gavin's Brand Drop v2 supersedes the split-bat Drop (BRAND-MARK-002), and every split-bat and older
+bat asset is removed. The doctrine is amended in place (`OPERATOR_INTERFACE_DOCTRINE.md`).
+
+- **Palette:** HUD v3's "one red" rule is retired.
+  - Red `#D0141B` (`--red`) is primary.
+  - Yellow `#F7C928` (`--brand-yellow`) is the brand accent.
+  - HUD black is `#000000` (`--black`).
+  - Any further color is added as an explicit token in `tokens.css` first, never hardcoded. AA
+    still applies.
+  - FIELD-AUTHORITY's one filled red action on TODAY is an attention rule and still stands.
+- **The emblem** (`docs/brand/beyond-emblem/`) has locked geometry. The Drop's colors are mapped to
+  the tokens.
+  - **Home-screen icon:** full-bleed yellow, manifest "maskable".
+  - **Chamfered plate:** manifest "any", apple-touch, favicon, launch splash on black, the boot
+    screen and every in-app logo (header, cave heading, shift moments).
+  - **Monochrome silhouette:** the Android themed icon.
+  - No oval or circle container, ever.
+- **Chamfer:** the plate's cut is 80/512, the HUD's square-tile proportion (the 64px LOG tile's 10px
+  cut, 0.156). It replaces the Drop's 60/512 placeholder.
+- **Install:** new `beyond-v3-*` icons; theme and background colors HUD black; service-worker cache
+  `beyond-mark-v3`.

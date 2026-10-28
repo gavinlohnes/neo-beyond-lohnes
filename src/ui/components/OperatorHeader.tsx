@@ -1,7 +1,7 @@
 import { createContext, useContext, useId, type ComponentProps, type Ref } from "react";
 import type { Icon } from "../icons/Icon";
 import { CcIcon } from "../cc/ccIcons";
-import { BatMark } from "./BatMark";
+import { Emblem } from "./Emblem";
 import { useMinuteClock } from "../cc/useMinuteClock";
 import { useLongPress } from "../hooks/useLongPress";
 import "./stealth.css";
@@ -49,12 +49,12 @@ export function OperatorHeader({ destination: _destination, children, headingId,
             aria-describedby={toggleStealth ? hintId : undefined}
             {...(toggleStealth ? press.handlers : {})}
             onClick={(event) => { if (!press.swallowClick(event)) goHome(); }}>
-            <BatMark width={30} />
+            <Emblem size={30} />
             {press.pressing && toggleStealth && <span aria-hidden="true" className="operator-emblem__press" />}
             {toggleStealth && <span id={hintId} className="visually-hidden">Long-press for stealth.</span>}
           </button>
         ) : (
-          <span className="cc-emblem cc-emblem--mark" aria-hidden="true"><BatMark width={30} /></span>
+          <span className="cc-emblem cc-emblem--mark" aria-hidden="true"><Emblem size={30} /></span>
         )}
         <h1 id={headingId} ref={headingRef} tabIndex={focusable ? -1 : undefined} className="eyebrow cc-title">
           {lead}{where && <span className="cc-where">{where}</span>}

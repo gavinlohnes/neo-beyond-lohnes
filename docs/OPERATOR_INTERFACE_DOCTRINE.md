@@ -113,6 +113,16 @@ Amendment (owner ruling, 2026-10-05): the app icon (the bat in `public/icons`) m
 home-screen icon and the cold-launch boot screen only, used as-is and never redrawn. No other
 in-app screen carries the mark.
 
+Amendment (owner ruling, 2026-10-28, BRAND-MARK-003, Brand Drop v2): HUD v3's "one red" rule is
+retired. BEYOND has a defined palette: red (#D0141B, `--red`) is primary and yellow (#F7C928,
+`--brand-yellow`) is the brand accent. Any further color must first be added as an explicit palette
+token, never hardcoded. WCAG AA still applies in every mode. BEYOND's emblem on its chamfered plate
+(`docs/brand/beyond-emblem/`) replaces every earlier mark. It is the in-app logo everywhere a logo
+appears: the header, the cave heading, the boot screen and the shift moments. The home-screen icon
+is the same emblem on full-bleed yellow, and its geometry is locked. No oval or circle container
+surrounds it, ever. This supersedes the bat-only-on-icon-and-boot amendment above. FIELD-AUTHORITY's
+"at most one filled red action on TODAY" is an attention rule, not a palette rule, and still stands.
+
 ## FIELD, COMMAND, and truth boundaries
 
 FIELD is one-hand, divided-attention operation: glanceable, thumb-reachable, interruption-safe,

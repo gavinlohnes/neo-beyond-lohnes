@@ -19,7 +19,7 @@
  * docs/agent/drops/SHELL-001.md and docs/UX_DECISIONS.md, "System
  * identity — EMBLEM vs. GLYPHS split"). The governing split now:
  * EMBLEM = THE MACHINE (a dedicated mark, not this family — now built,
- * see EMBLEM-001 and docs/brand/beyond-mark/) and GLYPHS = THE
+ * see BRAND-MARK-003 and docs/brand/beyond-emblem/) and GLYPHS = THE
  * INSTRUMENTS — this file. The universal/core diamond each destination
  * glyph builds outward from is a shared structural *motif*, not a claim
  * of machine identity; each icon's own outer silhouette is what "the

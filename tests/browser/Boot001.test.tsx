@@ -32,13 +32,14 @@ describe("BOOT-001", () => {
     await expect.poll(() => document.querySelector(".boot")).toBeNull();
   });
 
-  it("plays: the red bat mark, BEYOND types in, the status lines tick in, then it cuts away", async () => {
+  it("plays: the emblem plate, BEYOND types in, the status lines tick in, then it cuts away", async () => {
     await startDay();
     const screen = await render(<BootSequence />);
     await expect.element(screen.getByRole("status", { name: /BEYOND starting/ })).toBeVisible();
-    const halves = document.querySelectorAll(".boot__mark polygon"); // BRAND-MARK-002: the split bat, hairline cut
-    expect(halves).toHaveLength(2);
-    expect([...halves].every((p) => p.getAttribute("fill") === "#D0141B")).toBe(true);
+    // BRAND-MARK-003: the chamfered plate, centered on black, in the palette's yellow.
+    const plate = document.querySelector<SVGPathElement>(".boot__mark path")!;
+    expect(plate.getAttribute("d")).toBe("M0,0 H432 L512,80 V512 H0 Z");
+    expect(getComputedStyle(plate).fill).toBe("rgb(247, 201, 40)");
     await expect.element(screen.getByText("BEYOND", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("DAY 1", { exact: true })).toBeVisible();
     await waitPastEnd();
