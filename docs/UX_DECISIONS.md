@@ -2275,3 +2275,16 @@ D1–D5, each for Gavin's merge. The tab keeps its name.
     later slice.
   - **Not changed:** the Engine, schema, events, NAV-001's paths and stored records. Nothing is a
     score.
+
+## BRAND-MARK-002 — the split bat is BEYOND's mark (owner Drop, 2026-10-28)
+
+Gavin locked the mark and sent it as a Routine Drop of three SVGs (`docs/brand/suit-mark/`). It
+supersedes EMBLEM-002 as the app icon and SUIT-ALIVE-001's in-app bat.
+
+- **One mark, tall ears everywhere.** The geometry is not to be altered. It is drawn in the HUD red
+  and HUD black.
+- **Two cuts.** The icon-safe gap is for the app icon, the favicon and anything under ~64px. The
+  hairline gap is for the boot screen and large headers only, never below ~64px.
+- **Home-screen icon:** the icon cut on full-bleed black with no chamfer, because Android masks the
+  shape. The manifest lists separate "any" and "maskable" icons. Files are new `beyond-v2-*` names,
+  and a new service-worker cache id makes installed phones pick them up. No old icon is referenced.
