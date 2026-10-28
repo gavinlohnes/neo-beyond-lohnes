@@ -1,13 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-import { formatRunEnergy, formatRunSleep, getCaveFile, type CaveFile } from "../../../application/caveFile";
+import { getCaveFile, type CaveFile } from "../../../application/caveFile";
+import { RotationMap } from "../review/RotationMap";
+import "../review/wholePicture.css";
 import { describeError } from "../../errorMessage";
 
 /**
- * SUIT-ALIVE S7 — the cave, File. The case file (findings that met their own evidence floor),
- * calibration (how firm each usual range is, and what BEYOND does not know) and the whole run.
+ * SUIT-ALIVE S7 — the cave, File. The case file (findings that met their own evidence floor) and
+ * calibration (how firm each usual range is, and what BEYOND does not know). CAVE-DATA D3: the whole run
+ * is YOUR ROTATION itself, the same view Whole Picture shows.
  * Depth stays in Personal Understanding, one tap away: one knowledge view, not two. Read-only.
  */
-export function CaveFileView({ onOpenUnderstanding }: { onOpenUnderstanding?: (() => void) | undefined }) {
+export function CaveFileView({ onOpenUnderstanding, onOpenWholePicture, onInspectDay, focusRotation = 0 }: {
+  onOpenUnderstanding?: (() => void) | undefined;
+  /** CAVE-DATA D3: Whole Picture stays in REVIEW, one tap from here. */
+  onOpenWholePicture?: (() => void) | undefined;
+  /** A day tapped in the rotation opens its records in DATA. */
+  onInspectDay?: ((dayId: string) => void) | undefined;
+  /** A new value scrolls to YOUR ROTATION once it is read (NUMBERS' YOUR ROTATION button). */
+  focusRotation?: number;
+}) {
   const [file, setFile] = useState<CaveFile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const sequence = useRef(0);
@@ -22,6 +33,17 @@ export function CaveFileView({ onOpenUnderstanding }: { onOpenUnderstanding?: ((
     }
   }
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    if (!file || !focusRotation) return;
+    // After the rotation has painted, so the scroll lands on it.
+    const frame = requestAnimationFrame(() => {
+      const rotation = document.querySelector<HTMLElement>('.cave section[aria-label="Your rotation"]');
+      const heading = rotation?.querySelector<HTMLElement>("h2");
+      if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
+      rotation?.scrollIntoView({ block: "start" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [file, focusRotation]);
 
   if (error) return <div role="alert"><p className="meta meta--error">{error} The file is unavailable, not empty.</p><button type="button" className="btn-secondary" onClick={() => void load()}>RETRY</button></div>;
   if (!file) return <p className="meta" role="status">Reading…</p>;
@@ -39,6 +61,10 @@ export function CaveFileView({ onOpenUnderstanding }: { onOpenUnderstanding?: ((
       <p className="meta">Patterns from your records, never causes or predictions.</p>
     </section>
 
+    {/* CAVE-DATA D3: YOUR ROTATION lives here now — runs, patterns, flips and the next window. */}
+    {file.rotation && <div className="whole-picture file__rotation"><RotationMap rows={file.rotation.rows} weekAhead={file.rotation.weekAhead} readAt={file.rotation.readAt}
+      onInspect={(row) => { const id = row.dayIds[0]; if (id && onInspectDay) onInspectDay(id); }} /></div>}
+
     <section className="cave__block" aria-labelledby="file-cal">
       <h3 id="file-cal" className="cave__cap">Calibration</h3>
       <ul className="file__cal">{file.calibration.map((c) => (
@@ -53,24 +79,7 @@ export function CaveFileView({ onOpenUnderstanding }: { onOpenUnderstanding?: ((
       <ul className="cave__facts">{file.notKnown.map((n) => <li key={n}>{n}</li>)}</ul>
     </section>
 
-    <section className="cave__block" aria-labelledby="file-run">
-      <h3 id="file-run" className="cave__cap">Whole run</h3>
-      {file.wholeRun.length ? file.wholeRun.map((r) => (
-        <div key={r.context} className="file__run-wrap" tabIndex={0} role="region" aria-label={`${r.context === "WORK" ? "Work runs" : "Stretches off"}, place by place`}>
-          <table className="file__run">
-            <thead><tr><th scope="col">{r.context === "WORK" ? "SHIFT" : "DAY OFF"}</th>{r.columns.map((c) => <th scope="col" key={c.position}>{r.context === "WORK" ? "S" : "D"}{c.position}</th>)}</tr></thead>
-            <tbody>
-              <tr><th scope="row">SLEEP</th>{r.columns.map((c) => <td key={c.position}>{formatRunSleep(c)}</td>)}</tr>
-              <tr><th scope="row">ENERGY</th>{r.columns.map((c) => <td key={c.position}>{formatRunEnergy(c)}</td>)}</tr>
-              <tr><th scope="row">TRAINED</th>{r.columns.map((c) => <td key={c.position}>{c.trained.days}/{c.trained.of}</td>)}</tr>
-              <tr><th scope="row">RUNS</th>{r.columns.map((c) => <td key={c.position}>{c.runs}</td>)}</tr>
-            </tbody>
-          </table>
-        </div>
-      )) : <p className="cave__sum">No whole runs on file yet. Mark work days and days off as you go.</p>}
-      <p className="meta">Averages need 3 measured days; below that the count shows in brackets.</p>
-    </section>
-
+    {onOpenWholePicture && <button type="button" className="btn-secondary" onClick={onOpenWholePicture}>OPEN WHOLE PICTURE</button>}
     {onOpenUnderstanding && <button type="button" className="btn-secondary" onClick={onOpenUnderstanding}>OPEN PERSONAL UNDERSTANDING</button>}
   </>;
 }

@@ -2553,6 +2553,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     {/* CAVE-DATA (Gavin, 2026-10-28, option A): DATA is the cave; its own page is the first view, NUMBERS. */}
     <div hidden={progressOpen}><Cave initial={{ tab: "lead" }} request={caveView} onOpenMetric={(metric) => showProgress(metric)}
       onOpenUnderstanding={onOpenReview ? () => onOpenReview("overview") : undefined}
+      onOpenWholePicture={onOpenReview ? () => onOpenReview("overview") : undefined}
+      onInspectDay={(id) => { setHealthDay(id); setCaveView({ key: ++caveViewKey.current, tab: "lead" }); }}
       lead={{ label: "NUMBERS", content: <>
       <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
         {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} showWeight={false} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={exploreOverview} /> : <p role="status">Reading recorded information…</p>}
@@ -2565,7 +2567,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); }}>{label}</button>)}</div>
         <div className="body-progress-pair" aria-label="Patterns">
           <button type="button" className="btn-secondary body-progress-card" disabled={!onOpenReview} onClick={() => onOpenReview?.("overview")}>WHOLE PICTURE</button>
-          <button type="button" className="btn-secondary body-progress-card" disabled={!onOpenReview} onClick={() => onOpenReview?.("rotation")}>YOUR ROTATION</button>
+          <button type="button" className="btn-secondary body-progress-card" onClick={() => setCaveView({ key: ++caveViewKey.current, tab: "file", section: "rotation" })}>YOUR ROTATION</button>
         </div>
       </section>
       <section aria-label="History"><h2 className="section-label">HISTORY</h2>

@@ -2245,3 +2245,14 @@ D1–D5, each for Gavin's merge. The tab keeps its name.
     Picture, Your Rotation, Health History, sleep's week and the shortcut returns, and each would
     need a tap through NUMBERS. That conflicts with a locked decision, so DATA keeps opening on NUMBERS
     until Gavin chooses.
+- **Default view decided (Gavin, 2026-10-28: "Go with number"):** DATA opens on NUMBERS, and
+  retapping DATA returns to it. NAV-001's two-tap paths stand, and the cave's other views are one tap
+  away.
+- **D3 (Gavin, 2026-10-28: "start d3"):**
+  - **FILE carries YOUR ROTATION**, the same view as Whole Picture's Rotation: runs, patterns, flips
+    and the next window. It replaces FILE's own whole-run table, which duplicated those patterns.
+  - **NUMBERS' YOUR ROTATION** opens FILE in place, with focus on the rotation. That is still two taps
+    from DATA.
+  - **A day tapped in the rotation** opens that day's records under NUMBERS.
+  - **WHOLE PICTURE** stays in REVIEW, one tap from NUMBERS or FILE ("OPEN WHOLE PICTURE"). Its own
+    Rotation tab is unchanged.

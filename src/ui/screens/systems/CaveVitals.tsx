@@ -23,14 +23,14 @@ const HISTORY: Partial<Record<CaveVitalId, InsightMetric>> = { sleep: "sleep", p
 export type CaveTab = "tonight" | "route" | "brief" | "vitals" | "file" | "log";
 export type CaveOpen = { tab: CaveTab; vital?: CaveVitalId };
 /** CAVE-DATA D1: an external entry (TODAY's bands, SYSTEMS rows) opening a view; each key opens it once. */
-export type CaveRequest = { key: number; tab: CaveTab | "lead"; vital?: CaveVitalId | undefined };
+export type CaveRequest = { key: number; tab: CaveTab | "lead"; vital?: CaveVitalId | undefined; section?: "rotation" | undefined };
 
 /**
  * SUIT-ALIVE S3–S8: the cave's views — TONIGHT (the call and what's furthest from your normal), ROUTE,
  * BRIEF, VITALS, FILE and LOG. CAVE-DATA D1 (Gavin, 2026-10-28, option A): the cave lives in DATA, with
  * DATA's own page as its first view (`lead`, kept mounted so nothing on it is lost when you switch).
  */
-export function Cave({ initial, lead, request, onBack, onOpenMetric, onOpenUnderstanding }: {
+export function Cave({ initial, lead, request, onBack, onOpenMetric, onOpenUnderstanding, onOpenWholePicture, onInspectDay }: {
   initial: CaveOpen | { tab: "lead" };
   /** A first view supplied by the host (DATA's NUMBERS). */
   lead?: { label: string; content: ReactNode } | undefined;
@@ -40,15 +40,20 @@ export function Cave({ initial, lead, request, onBack, onOpenMetric, onOpenUnder
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
   /** S7: FILE's depth lives in REVIEW's Personal Understanding. */
   onOpenUnderstanding?: (() => void) | undefined;
+  /** CAVE-DATA D3: FILE carries YOUR ROTATION; Whole Picture stays in REVIEW, and a tapped day opens in DATA. */
+  onOpenWholePicture?: (() => void) | undefined;
+  onInspectDay?: ((dayId: string) => void) | undefined;
 }) {
   const [tab, setTab] = useState<CaveTab | "lead">(initial.tab);
   const [vital, setVital] = useState<CaveVitalId>("vital" in initial && initial.vital ? initial.vital : "sleep");
+  const [section, setSection] = useState<{ key: number; name: "rotation" } | null>(null);
   const backRef = useRef<HTMLButtonElement>(null);
   useEffect(() => { backRef.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => {
     if (!request?.key) return;
     setTab(request.tab === "lead" && !lead ? "tonight" : request.tab);
     if (request.vital) setVital(request.vital);
+    setSection(request.section ? { key: request.key, name: request.section } : null);
   }, [request?.key]);
   const tabs: (CaveTab | "lead")[] = [...(lead ? ["lead" as const] : []), "tonight", "route", "brief", "vitals", "file", "log"];
   const name = (t: CaveTab | "lead") => t === "lead" ? lead!.label : TAB_NAME[t];
@@ -66,7 +71,7 @@ export function Cave({ initial, lead, request, onBack, onOpenMetric, onOpenUnder
         : tab === "tonight" ? <CaveTonightView onOpenVital={(id) => { setVital(id); setTab("vitals"); }} />
         : tab === "route" ? <CaveRouteView />
         : tab === "brief" ? <CaveBriefView />
-        : tab === "file" ? <CaveFileView onOpenUnderstanding={onOpenUnderstanding} />
+        : tab === "file" ? <CaveFileView onOpenUnderstanding={onOpenUnderstanding} onOpenWholePicture={onOpenWholePicture} onInspectDay={onInspectDay} focusRotation={section?.name === "rotation" ? section.key : 0} />
         : tab === "log" ? <CaveLogView />
         : <CaveVitals id={vital} onPick={setVital} onOpenMetric={onOpenMetric} />}
     </section>
