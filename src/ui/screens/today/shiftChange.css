@@ -26,3 +26,9 @@
 @keyframes shift-change-sweep { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes shift-change-stamp { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .shift-change__panel, .shift-change__sweep, .shift-change__row { animation: none; } }
+/* SHIFT-CHANGE-001: one tap for "on the clock now", inside TODAY's mode hero. */
+.cc-mode .work-start { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; width: calc(100% + 32px); margin: 0 -16px; padding: 8px 16px; border-top: 1px solid var(--p-line); background: var(--p-bg); position: relative; z-index: 1; }
+.cc-mode .work-start--on { margin: 0 -16px; color: var(--p-t1, var(--text-1)); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; }
+.work-start__key { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; color: var(--p-t2, var(--text-2)); }
+.cc-mode .work-start__go { width: auto; min-height: 44px; margin: 0; padding-inline: 16px; }
+.cc-mode .work-start .meta--error { grid-column: 1 / -1; margin: 0; }

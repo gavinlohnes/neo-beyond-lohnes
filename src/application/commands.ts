@@ -28,7 +28,7 @@ import type {
 import { SHIFT_HANDOFF_MAX_LENGTH } from "../domain/common/types";
 import type { PerformedSet } from "../domain/workout/types";
 import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
-import { getStandingWorkContext, getWorkPeriodEnded, hasActivePlannedWork, hasUnresolvedPostShift } from "./queries";
+import { getStandingWorkContext, getWorkPeriodEnded, getWorkPeriodStarted, hasActivePlannedWork, hasUnresolvedPostShift } from "./queries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 
 /**
@@ -801,6 +801,24 @@ export async function setWorkContext(
  * WorkPeriodEndedPayload's doc comment) — there is nothing to correct
  * about "did the shift end," only whether it has been marked yet.
  */
+/**
+ * SHIFT-CHANGE-001 (owner go 2026-10-28: "Just hit it and it's logged"): the one-tap record that work
+ * actually started, so the brief and the end of the shift count from the real start, not the schedule.
+ * Explicit, never inferred from the clock; at most one per day; never after work has ended.
+ */
+export async function markWorkStarted(beyondDayId: string): Promise<boolean> {
+  return writeAtomically(DAY_WRITE_TABLES, async () => {
+    const day = await db.beyondDays.get(beyondDayId);
+    if (!day || day.status !== "ACTIVE" || day.workContext !== "WORK") {
+      throw new Error("NOT_AN_ACTIVE_WORK_DAY: markWorkStarted requires the active BeyondDay to have workContext WORK.");
+    }
+    if (await getWorkPeriodStarted(beyondDayId) || await getWorkPeriodEnded(beyondDayId)) return false;
+    const correlationId = newId();
+    await logEvent(beyondDayId, "WORK_PERIOD_STARTED", { commandId: correlationId }, "USER", correlationId);
+    return true;
+  });
+}
+
 export async function markWorkEnded(beyondDayId: string): Promise<boolean> {
   return writeAtomically(DAY_WRITE_TABLES, async () => {
     const day = await db.beyondDays.get(beyondDayId);

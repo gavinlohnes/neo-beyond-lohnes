@@ -126,6 +126,16 @@ it.each([
   expect(document.getAnimations().filter((a) => a.playState === "running").map((a) => (a as CSSAnimation).animationName ?? "?")).toEqual([]);
   expect(await axeClean(), "TODAY").toEqual([]);
   await shot(`${moment}-today-${width}`);
+  // SHIFT-CHANGE-001: one tap and it's logged — offered around the start, gone mid-shift and off.
+  const startButton = screen.getByRole("button", { name: "STARTED WORK", exact: true });
+  if (moment === "preflight") {
+    const events = await db.events.count();
+    await startButton.click();
+    await expect.element(screen.getByText("ON THE CLOCK · 16:45", { exact: true })).toBeVisible();
+    expect(await db.events.count()).toBe(events + 1);
+  } else {
+    expect(document.querySelector(".work-start__go")).toBeNull();
+  }
   // The floating LOG never sits on a control you are reading toward: it steps aside while you scroll
   // down, returns when you scroll up, and at the end of TODAY it covers nothing.
   const fab = document.querySelector<HTMLElement>(".cc-fab")!;

@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { getShiftChange, type ShiftChange } from "../../../application/shiftChange";
+import { getShiftChange, getWorkStart, type ShiftChange, type WorkStart } from "../../../application/shiftChange";
+import { markWorkStarted } from "../../../application/commands";
+import { captureCommitFeedback } from "../../feel/feedback";
+import { describeError } from "../../errorMessage";
 import { BatMark } from "../../components/BatMark";
 import "./shiftChange.css";
 
@@ -57,4 +60,36 @@ export function ShiftChangeMoment({ refreshKey, now, onOpen }: { refreshKey: str
       </div>
     </div>
   );
+}
+
+/**
+ * SHIFT-CHANGE-001: one tap and it's logged. Around the scheduled start, TODAY offers STARTED WORK; once
+ * tapped, the line says when you went on the clock. The brief and the end of the shift count from it.
+ */
+export function StartedWork({ refreshKey, now, onSaved }: { refreshKey: string; now: Date; onSaved?: () => void }) {
+  const [offer, setOffer] = useState<WorkStart | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const sequence = useRef(0);
+  async function load() {
+    const request = ++sequence.current;
+    try { const o = await getWorkStart(now); if (request === sequence.current) setOffer(o); }
+    catch { if (request === sequence.current) setOffer(null); }
+  }
+  useEffect(() => { void load(); }, [refreshKey]);
+  if (!offer) return null;
+  if (offer.startedAt) return <p className="work-start work-start--on"><span className="work-start__key">SHIFT</span><span>ON THE CLOCK · {hhmm(offer.startedAt)}</span></p>;
+  const start = async () => {
+    if (saving) return;
+    const acknowledge = captureCommitFeedback();
+    setSaving(true); setError(null);
+    try { if (await markWorkStarted(offer.dayId)) acknowledge("MEDIUM"); await load(); onSaved?.(); }
+    catch (e) { setError(describeError(e, "Nothing was saved.")); }
+    finally { setSaving(false); }
+  };
+  return <div className="work-start">
+    <span className="work-start__key">SHIFT {hhmm(offer.shiftStart)}</span>
+    <button type="button" className="btn-secondary work-start__go" disabled={saving} onClick={() => void start()}>STARTED WORK</button>
+    {error && <p className="meta meta--error" role="alert">{error}</p>}
+  </div>;
 }

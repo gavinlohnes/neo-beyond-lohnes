@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { describeBrief, getCaveBrief, type CaveBrief, type CheckItem } from "../../../application/caveBrief";
-import { markShiftHandoffRead } from "../../../application/commands";
+import { markShiftHandoffRead, markWorkStarted } from "../../../application/commands";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { recordPreparation } from "../../../application/preparation";
 import { MEMORY_LABELS, type MemoryKind } from "../../../domain/memory";
@@ -70,6 +70,10 @@ export function CaveBriefView({ now = new Date() }: { now?: Date }) {
         {brief.shift && brief.phase === "BEFORE" && <p className="brief__t" aria-label={`Shift at ${clock(brief.shift.start)}`}><span>{tMinus(brief.shift.start, now)}</span><small>SHIFT {clock(brief.shift.start)}</small></p>}
         {brief.shift && brief.phase !== "BEFORE" && <p className="brief__t"><span>{clock(brief.shift.start)}–{clock(brief.shift.end)}</span><small>{brief.phase === "ON" ? "ON SHIFT" : "SHIFT DONE"}</small></p>}
         <p className="brief__verdict" role="status">{describeBrief(brief)}</p>
+        {/* SHIFT-CHANGE-001: one tap for the real start; the after-action and the end of the shift count from it. */}
+        {brief.shift && brief.phase !== "AFTER" && (brief.startedAt
+          ? <p className="brief__on">ON THE CLOCK SINCE {clock(brief.startedAt)}</p>
+          : <button type="button" className="btn-secondary brief__start" disabled={saving} onClick={() => void act(() => markWorkStarted(brief.dayId), "On the clock. The after-action counts from now.")}>STARTED WORK</button>)}
       </div>
       <ol className="brief__poll" aria-label="Systems">
         {brief.items.map((item, i) => (

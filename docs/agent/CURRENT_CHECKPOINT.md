@@ -6,8 +6,11 @@
   - `buildShiftChange`: LANDING runs for the last 45 minutes and SECURED for 3 hours after the real
     end;
   - a full-screen moment on TODAY, shown once per shift and phase;
-  - the rehearsal covers 05:30 and 06:30 on eight weeks of rotation.
-- **Verified:** `npm run verify` green (3,156 passed).
+  - the rehearsal covers 05:30 and 06:30 on eight weeks of rotation;
+  - STARTED WORK: a one-tap `WORK_PERIOD_STARTED` on TODAY and in PREFLIGHT, and the brief and the
+    shift end count from it;
+  - a late "work ended" tap no longer stretches the shift (CI caught "19:30 on the clock").
+- **Verified:** `npm run verify` green (3,160 passed).
 - **Next:** Gavin's merge before about 05:15. Then a pre-shift version, if he wants it.
 
 # LOG overlap — the floating + steps aside while you scroll

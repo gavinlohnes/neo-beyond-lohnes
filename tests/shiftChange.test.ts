@@ -41,6 +41,9 @@ describe("SHIFT-CHANGE-001", () => {
     expect(buildShiftChange(brief({ phase: "AFTER", aar }), route, at(9, 1))).toBeNull();
     // Work marked ended early: the real end, on the clock and in the window.
     expect(buildShiftChange(brief({ phase: "AFTER", aar, endedAt: at(5, 40).toISOString() }), route, at(6, 30))).toMatchObject({ clock: "11:40", end: at(5, 40).toISOString() });
+    // Marked ended hours late (a forgotten tap): the schedule's end, never a 19-hour shift.
+    expect(buildShiftChange(brief({ phase: "AFTER", aar, endedAt: at(13, 30).toISOString() }), route, at(7))).toMatchObject({ clock: "12:00", end: at(6).toISOString() });
+    expect(buildShiftChange(brief({ phase: "AFTER", aar, endedAt: at(13, 30).toISOString() }), route, at(13, 30))).toBeNull();
   });
 
   it("stays out of the way mid-shift, before a shift and with no shift", () => {

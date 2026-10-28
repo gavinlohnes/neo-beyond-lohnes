@@ -1,4 +1,5 @@
 import { getCaveBrief, type CaveBrief } from "./caveBrief";
+import { getActiveDay, getWorkPeriodEnded, getWorkPeriodStarted } from "./queries";
 import { describeIn, getCaveRoute, type CaveRoute } from "./caveRoute";
 
 /**
@@ -10,6 +11,7 @@ import { describeIn, getCaveRoute, type CaveRoute } from "./caveRoute";
  */
 export const LANDING_MINUTES = 45;
 export const SECURED_HOURS = 3;
+export const REAL_END_SLACK_HOURS = 2;
 
 export interface ShiftChangeRow { key: string; label: string; value: string; tone: "ON" | "OFF" | "NONE" }
 export interface ShiftChange {
@@ -33,7 +35,10 @@ const dur = (minutes: number) => `${Math.floor(minutes / 60)}:${String(minutes %
 /** Pure: the shift-change moment for this instant, or null outside its windows. */
 export function buildShiftChange(brief: CaveBrief | null, route: CaveRoute | null, now: Date): ShiftChange | null {
   if (!brief?.shift || !route) return null;
-  const t = now.getTime(), start = Date.parse(brief.shift.start), end = Date.parse(brief.endedAt ?? brief.shift.end);
+  // A tap within 2 hours of the scheduled end is the real end; a later one is a late record, not a longer shift.
+  const scheduledEnd = Date.parse(brief.shift.end), marked = brief.endedAt ? Date.parse(brief.endedAt) : NaN;
+  const t = now.getTime(), start = Date.parse(brief.startedAt ?? brief.shift.start);
+  const end = Number.isFinite(marked) && marked <= scheduledEnd + REAL_END_SLACK_HOURS * 3600_000 ? marked : scheduledEnd;
   const ended = brief.phase === "AFTER";
   const phase = ended ? (t - end <= SECURED_HOURS * 3600_000 ? "SECURED" : null)
     : brief.phase === "ON" && end - t <= LANDING_MINUTES * 60_000 ? "LANDING" : null;
@@ -62,4 +67,27 @@ export function buildShiftChange(brief: CaveBrief | null, route: CaveRoute | nul
 export async function getShiftChange(now: Date = new Date()): Promise<ShiftChange | null> {
   const [brief, route] = await Promise.all([getCaveBrief(now), getCaveRoute(now)]);
   return buildShiftChange(brief, route, now);
+}
+
+/** How long around the scheduled start TODAY offers the one-tap STARTED WORK. */
+export const START_OFFER_BEFORE_HOURS = 3;
+export const START_OFFER_AFTER_HOURS = 2;
+
+export interface WorkStart { dayId: string; shiftStart: string; startedAt: string | null }
+
+/** Pure: whether TODAY offers STARTED WORK (or shows it done) at this instant. */
+export function workStartOffer(route: CaveRoute | null, dayId: string | null, started: string | null, ended: boolean, now: Date): WorkStart | null {
+  if (!route || !dayId || ended || route.dayKind !== "WORK") return null;
+  const start = route.waypoints.find((w) => w.kind === "SHIFT_START");
+  if (!start) return null;
+  const s = Date.parse(start.at), t = now.getTime();
+  if (t < s - START_OFFER_BEFORE_HOURS * 3600_000 || t > s + START_OFFER_AFTER_HOURS * 3600_000) return null;
+  return { dayId, shiftStart: start.at, startedAt: started };
+}
+
+export async function getWorkStart(now: Date = new Date()): Promise<WorkStart | null> {
+  const [route, day] = await Promise.all([getCaveRoute(now), getActiveDay()]);
+  if (!day) return null;
+  const [started, ended] = await Promise.all([getWorkPeriodStarted(day.id), getWorkPeriodEnded(day.id)]);
+  return workStartOffer(route, day.id, started?.occurredAt ?? null, !!ended, now);
 }

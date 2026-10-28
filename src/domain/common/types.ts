@@ -212,6 +212,8 @@ export type DomainEventType =
   | "SLEEP_LOG_VOIDED"
   | "BODYWEIGHT_LOG_VOIDED"
   | "WORK_PERIOD_ENDED"
+  /** SHIFT-CHANGE-001 (owner go 2026-10-28): the operator's one-tap "on the clock now"; at most one per day. */
+  | "WORK_PERIOD_STARTED"
   | "MISSION_CREATED"
   | "MISSION_MODIFIED"
   | "MISSION_ARCHIVED"

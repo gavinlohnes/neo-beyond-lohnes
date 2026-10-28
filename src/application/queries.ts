@@ -891,6 +891,14 @@ export async function getWorkContextSource(beyondDayId: string): Promise<WorkCon
  * (see hasUnresolvedPostShift below for that check) — this query answers
  * "did work ever end today," not "is it still unresolved."
  */
+/** SHIFT-CHANGE-001: the day's one WORK_PERIOD_STARTED fact, if any. markWorkStarted is its only writer. */
+export async function getWorkPeriodStarted(beyondDayId: string): Promise<WorkPeriodEndedInfo | undefined> {
+  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+  const started = events.find((e) => e.type === "WORK_PERIOD_STARTED");
+  if (!started) return undefined;
+  return { eventId: started.id, occurredAt: started.occurredAt };
+}
+
 export async function getWorkPeriodEnded(beyondDayId: string): Promise<WorkPeriodEndedInfo | undefined> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
   const ended = events.find((e) => e.type === "WORK_PERIOD_ENDED");

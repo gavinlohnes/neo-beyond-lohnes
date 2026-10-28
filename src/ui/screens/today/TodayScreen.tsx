@@ -12,7 +12,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { getLastMainSleep, getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
 import { SystemsLine } from "../systems/SystemsLine";
 import { SuitLines } from "./SuitLines";
-import { ShiftChangeMoment } from "./ShiftChange";
+import { ShiftChangeMoment, StartedWork } from "./ShiftChange";
 import { getPaceHistories, minuteOfDay, paceReading, type PaceHistories, type PaceReading } from "../../../application/pace";
 import { Signal } from "../../components/Signal";
 import { useOnline } from "../../hooks/useOnline";
@@ -2600,6 +2600,7 @@ export function TodayScreen({
             onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
             systems={onOpenCave && <>
               <SuitLines now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${recommendation?.id ?? ""}|${lastMainSleepMinutes ?? ""}|${capacityResult?.capacity ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onOpen={(tab) => { if (!busyRef.current) onOpenCave(tab); }} />
+              <StartedWork now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onSaved={() => void refresh()} />
               {/* SHIFT-CHANGE-001: the end of a shift, given the whole screen once. */}
               <ShiftChangeMoment now={now} refreshKey={`${day.id}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 60000)}`} onOpen={() => { if (!busyRef.current) onOpenCave("brief"); }} />
             </>}

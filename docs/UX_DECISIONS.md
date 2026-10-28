@@ -2328,3 +2328,14 @@ shown once, and never looping.
 - **Once per shift and phase.** CONTINUE or Escape dismisses it, and FULL DEBRIEF opens the cave's
   BRIEF. Reduced motion shows it still. It reads the BRIEF and ROUTE already computed, and nothing is
   stored except the dismissal.
+- **The real end** is work marked ended, if that tap came within 2 hours of the scheduled end. A
+  later tap is a late record, so the schedule's end stands. The clock never shows a 19-hour shift.
+- **STARTED WORK (Gavin: "Just hit it and it's logged … Do it"):**
+  - One tap records `WORK_PERIOD_STARTED`, at most once per day, on a work day, and never after work
+    ended.
+  - TODAY offers it in the mode hero from 3 hours before the scheduled start to 2 hours after. Once
+    tapped, the hero reads "ON THE CLOCK · 17:40". The cave's PREFLIGHT offers it too.
+  - The brief goes ON from the tap. The after-action reads "Started 17:40 · ended 05:40", and SHIFT
+    SECURED counts from the real start.
+  - It is a new user event, so it is kept in backups and listed in history as "Work marked started."
+    It never reaches the Engine.
