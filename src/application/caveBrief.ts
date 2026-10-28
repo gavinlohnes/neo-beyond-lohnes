@@ -167,7 +167,8 @@ export function describeBrief(b: CaveBrief): string {
   if (b.phase === "NO_SHIFT") return "No shift on the schedule today.";
   if (b.phase === "AFTER") return "Shift's done. Here's how it went against the plan.";
   if (!b.open.length) return b.items.some((i) => i.state === "ADVISORY") ? "All systems go. Mind the advisories." : "All systems go.";
-  const names = b.open.map((n) => n.toLowerCase());
+  // Spoken names, not panel labels: "PACK · FOOD" reads as "food" in a sentence.
+  const names = b.open.map((n) => n.replace(/^PACK · /, "").toLowerCase());
   const late = b.items.some((i) => i.state === "LATE");
   return `${late ? "Late" : "Hold"}: ${names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0]}.`;
 }

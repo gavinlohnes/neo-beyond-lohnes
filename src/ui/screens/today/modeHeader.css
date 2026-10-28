@@ -43,6 +43,9 @@
 :root[data-suit-mode="SCHEDULED_SHIFT"] {
   --surface-1: #030303; --surface-2: #080808; --border-subtle: #1b1b1b; --border-strong: #292929;
   --text-1: #b6b6b6; --text-2: #8a8a8a; --text-3: #767676; --red: #9f1117;
+  /* FIELD-REHEARSAL: dimmed text on the dimmed red measured 4.03:1, under AA. The prototype's own
+     on-shift CTA text (--p-cta-t) gives 6.32:1. */
+  --action-primary-text: #e2e2e2;
 }
 :root[data-suit-mode="EXPECTED_POST_WORK"] { --motion-fast: 220ms; --motion-base: 350ms; --text-2: #9a9a9a; }
 /* Retained workspaces keep drafts, but spend no animation work while hidden. */

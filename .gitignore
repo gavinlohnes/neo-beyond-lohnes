@@ -12,3 +12,6 @@ tests/browser/__screenshots__
 .vitest-attachments
 test-results
 playwright-report
+
+# Local screenshots and acceptance output (rehearsals, verify scripts).
+.cache/

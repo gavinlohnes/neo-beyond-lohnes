@@ -33,7 +33,8 @@ export interface CaveVital {
   /** Today's reading. Protein and water are running totals, so `partial` is true: they are judged only by pace (S5), never against a full-day range. */
   today: { value: number | undefined; partial: boolean };
   /** Last finished lived days, oldest first; a missing reading stays undefined. */
-  trend: { start: string; value: number | undefined }[];
+  /** `context` lets the chart judge each day only against the band of its own kind (SUIT-VOLUME-001). */
+  trend: { start: string; value: number | undefined; context: PictureRow["context"] }[];
   usual: CaveUsual;
   /** Complete readings against their range; running totals against their pace. */
   verdict: "BELOW" | "INSIDE" | "ABOVE" | undefined;
@@ -101,7 +102,7 @@ export function buildCaveVital(id: CaveVitalId, input: CaveInputs): CaveVital {
   const verdict = today.partial ? input.pace?.verdict
     : usual.kind === "RANGE" && today.value !== undefined ? (today.value < usual.low ? "BELOW" : today.value > usual.high ? "ABOVE" : "INSIDE") : undefined;
 
-  const trend = rows.slice(-CAVE_TREND_DAYS).map((r) => ({ start: r.start, value: (() => { const v = r[KEYS[id]]; return v !== undefined && Number.isFinite(v) ? v : undefined; })() }));
+  const trend = rows.slice(-CAVE_TREND_DAYS).map((r) => ({ start: r.start, context: r.context, value: (() => { const v = r[KEYS[id]]; return v !== undefined && Number.isFinite(v) ? v : undefined; })() }));
 
   const position: CaveVital["position"] = [];
   const place = placeToday(rows, dayKind);

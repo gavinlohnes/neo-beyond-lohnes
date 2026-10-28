@@ -110,7 +110,7 @@ export async function getCaveTonight(now: Date = new Date()): Promise<CaveTonigh
     ...(readout.waterOz !== null ? { water: paceReading("water", readout.waterOz, histories.water, minute) } : {}),
   } : undefined;
   return { ...buildCaveTonight({ rows: picture.rows, readout, checkIn: checkIn ?? null, recommendation: recommendation ?? null, decision, obligations, today: formatLocalDate(now), pace }),
-    since: buildSinceLastShift(picture.rows, now) };
+    since: buildSinceLastShift(picture.rows, now, day?.workContext === "WORK" || day?.workContext === "OFF" ? day.workContext : undefined) };
 }
 
 const NAMES: Record<CaveVitalId, string> = { sleep: "Sleep", energy: "Energy", protein: "Protein", water: "Water", resting: "Resting HR", steps: "Steps" };
@@ -173,12 +173,13 @@ function lastIndexOf<T>(list: readonly T[], test: (item: T) => boolean): number 
 const lastOf = <T>(list: readonly T[], test: (item: T) => boolean): T | undefined => list[lastIndexOf(list, test)];
 
 /** Pure: the "since last shift" lines, or null when no finished shift is on file. */
-export function buildSinceLastShift(rows: readonly PictureRow[], now: Date): SinceFact[] | null {
+export function buildSinceLastShift(rows: readonly PictureRow[], now: Date, todayKind?: "WORK" | "OFF" | undefined): SinceFact[] | null {
   const lastIndex = lastIndexOf(rows, (r) => r.context === "WORK" && r.dayIds.length > 0);
   if (lastIndex < 0) return null;
   const shift = rows[lastIndex]!, after = rows.slice(lastIndex + 1).filter((r) => r.dayIds.length > 0);
   const facts: SinceFact[] = [{ key: "SHIFT", dayId: shift.dayIds[0], why: "Your declared work days.",
-    text: `Last shift ${ago(daysAgo(shift.start, now))}; ${after.length === 0 ? "no full day off since" : `${after.length} full day${after.length === 1 ? "" : "s"} off since`}.` }];
+    text: `Last shift ${ago(daysAgo(shift.start, now))}; ${after.length === 0 ? (todayKind === "OFF" ? "today is your first day off" : "no full day off since")
+      : `${after.length} full day${after.length === 1 ? "" : "s"} off since${todayKind === "OFF" ? ", and today" : ""}`}.` }];
 
   const nights = after.filter((r) => r.sleepHours !== undefined && Number.isFinite(r.sleepHours));
   const usual = caveUsual(rows, "sleep", "OFF");
