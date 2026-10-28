@@ -47,3 +47,29 @@ EMBLEM-002 master.
   `tests/ui/batMark.test.ts` keeps the geometry and color identical and the uses to the three places.
 - **REUSE:** the prototype's `#bat` path and its reveal, and the existing header emblem button.
   **OWN:** `BatMark.tsx`. **BUILD FROM SCRATCH:** none.
+
+## S3 — comms and Tonight
+
+- **Authority:** Gavin, 2026-10-28: "go S3". Ruling: SUIT-ALIVE-002. **Lane:** PROTECTED, because it
+  changes how recommendation authority is presented. No Engine, schema, event or priority change.
+- **Built:**
+  - **TODAY:** the comms line closes the mode hero. It names the readings furthest from your own
+    normal, or says everything is inside it, or that it is still learning. It never names the call.
+    Tapping it opens the cave on TONIGHT.
+  - **The cave:** now has two views, TONIGHT and VITALS. TONIGHT shows:
+    - the call as made, your answer, and the plain reasoning from its trace;
+    - readings outside your usual range, furthest first, each opening that vital;
+    - what holds steady and what is still learning;
+    - overdue commitments.
+- **Rules:** comms is information, not a second recommendation. The order is distance from your own
+  range, never a score, and it is never shown. Missing readings stay missing. Today's running totals
+  are not judged; the last finished day's are.
+- **REUSE:**
+  - S2's `caveUsual`;
+  - `explainRecommendation` and the recommendation copy (the trace, never recomputed);
+  - `classifyObligation` for overdue;
+  - the SYSTEMS readout and Whole Picture;
+  - the mode hero's existing slot.
+- **OWN:** `application/caveTonight.ts` (composition and the comms wording), `CaveTonight.tsx`,
+  `CommsLine.tsx`. **BUILD FROM SCRATCH:** none.
+- **Review:** Protected; independent review per DEV-FLOW-002 unless Gavin waives it.

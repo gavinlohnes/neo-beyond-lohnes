@@ -2057,3 +2057,27 @@ seen it in the Suit & Cave prototype, "I'm good with the symbol. I kind of like 
 - **S1 resolved 2026-10-28:** Gavin chose the prototype's geometry ("go S1 with the prototype bat").
   Its one source is `docs/brand/suit-mark/suit-mark.svg`; `ui/components/BatMark.tsx` draws it, and
   a test keeps the two identical. Stealth keeps its own discreet glyph.
+
+## SUIT-ALIVE-002 — comms line and the cave's Tonight (owner approval, 2026-10-28)
+
+Gavin, 2026-10-28: "go S3", approving the build plan's S3: "the comms line on TODAY in the mentor's
+voice, and the cave's Tonight tab". Protected: it changes how recommendation authority is presented.
+Brief: [`agent/SUIT-ALIVE.md`](agent/SUIT-ALIVE.md#s3--comms-and-tonight).
+
+- **Comms line on TODAY:** one line closing the mode hero. It is not a phase row, so
+  `MAX_PHASE_ROWS` is unchanged. It reports how today's readings sit against your own usual range:
+  the two furthest outside it, that everything sits inside it, or that the usual range is still
+  being learned. It never states or restates the call, which stays on the NEXT card, and it never
+  asks for anything. Amber marks a line with an off-normal reading; red is not used. Tapping it
+  opens the cave on TONIGHT.
+- **The cave's TONIGHT view** has three parts:
+  - **The call**, exactly as the Engine made it, with your recorded answer and its plain reasoning
+    read from its own trace, as "See the reasoning" shows it.
+  - **Furthest from your normal:** complete readings outside your usual range (S2's
+    personal-baselines rule), ordered by how far outside, in widths of that range. This order is
+    never shown as a number and never combined into one. The readings are today's last main sleep,
+    today's check-in energy, and the last finished lived day's protein and water. Today's running
+    totals are not judged.
+  - **Overdue:** commitments past their due date.
+- **Unchanged:** the Engine, recommendation priority, accept and decline, TODAY's rows and
+  their order, and every stored record. Nothing new is stored.

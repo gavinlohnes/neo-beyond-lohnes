@@ -3,25 +3,55 @@ import { CAVE_VITALS, describeCaveVital, formatCaveValue, getCaveVital, type Cav
 import type { InsightMetric } from "../../../application/bodyInsightsQueries";
 import { describeError } from "../../errorMessage";
 import { BatMark } from "../../components/BatMark";
+import { CaveTonightView } from "./CaveTonight";
 import "./systems.css";
 
 /**
  * SUIT-ALIVE S2 — the cave, Vitals. One reading in depth, read-only: value, last 14 finished lived days
  * against your usual range, where you usually are in the run, the records behind it, what it feeds and
  * where it came from. Opened from the SYSTEMS readout; full history stays one tap away.
+ * SUIT-ALIVE S3 adds the TONIGHT view beside it, opened from TODAY's comms line.
  */
 const HISTORY: Partial<Record<CaveVitalId, InsightMetric>> = { sleep: "sleep", protein: "protein", water: "water" };
 
-export function CaveVitals({ initial, onBack, onOpenMetric }: {
-  initial: CaveVitalId;
+export type CaveTab = "tonight" | "vitals";
+export type CaveOpen = { tab: CaveTab; vital?: CaveVitalId };
+
+/** SUIT-ALIVE S3: the cave has two views, TONIGHT (the call and what's furthest from your normal) and VITALS. */
+export function Cave({ initial, onBack, onOpenMetric }: {
+  initial: CaveOpen;
   onBack: () => void;
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
 }) {
-  const [id, setId] = useState<CaveVitalId>(initial);
+  const [tab, setTab] = useState<CaveTab>(initial.tab);
+  const [vital, setVital] = useState<CaveVitalId>(initial.vital ?? "sleep");
+  const backRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => { backRef.current?.focus({ preventScroll: true }); }, []);
+  return (
+    <section className="cave" aria-labelledby="cave-title">
+      <div className="cave__head">
+        <h2 id="cave-title" className="cave__title"><BatMark width={24} className="cave__bat" />THE CAVE <span>// {tab === "tonight" ? "TONIGHT" : "VITALS"}</span></h2>
+        <button ref={backRef} type="button" className="cave__back" onClick={onBack}>BACK TO SYSTEMS</button>
+      </div>
+      <div className="cave__tabs" role="group" aria-label="Cave view">
+        {(["tonight", "vitals"] as const).map((t) => <button key={t} type="button" className="cave__tab" aria-pressed={t === tab} onClick={() => setTab(t)}>{t === "tonight" ? "TONIGHT" : "VITALS"}</button>)}
+      </div>
+      {tab === "tonight"
+        ? <CaveTonightView onOpenVital={(id) => { setVital(id); setTab("vitals"); }} />
+        : <CaveVitals id={vital} onPick={setVital} onOpenMetric={onOpenMetric} />}
+    </section>
+  );
+}
+
+/** One reading in depth. */
+function CaveVitals({ id, onPick, onOpenMetric }: {
+  id: CaveVitalId;
+  onPick: (id: CaveVitalId) => void;
+  onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
+}) {
   const [vital, setVital] = useState<CaveVital | null>(null);
   const [error, setError] = useState<string | null>(null);
   const sequence = useRef(0);
-  const backRef = useRef<HTMLButtonElement>(null);
 
   async function load(next: CaveVitalId) {
     const request = ++sequence.current;
@@ -34,20 +64,15 @@ export function CaveVitals({ initial, onBack, onOpenMetric }: {
     }
   }
   useEffect(() => { void load(id); }, [id]);
-  useEffect(() => { backRef.current?.focus({ preventScroll: true }); }, []);
 
   const shown = vital && vital.id === id ? vital : null;
   const off = shown?.verdict === "BELOW" || shown?.verdict === "ABOVE";
   const history = HISTORY[id];
 
   return (
-    <section className="cave" aria-labelledby="cave-title">
-      <div className="cave__head">
-        <h2 id="cave-title" className="cave__title"><BatMark width={24} className="cave__bat" />THE CAVE <span>// VITALS</span></h2>
-        <button ref={backRef} type="button" className="cave__back" onClick={onBack}>BACK TO SYSTEMS</button>
-      </div>
+    <>
       <div className="cave__pick" role="group" aria-label="Vital">
-        {CAVE_VITALS.map((v) => <button key={v} type="button" className="chip" aria-pressed={v === id} onClick={() => setId(v)}>{TITLE[v]}</button>)}
+        {CAVE_VITALS.map((v) => <button key={v} type="button" className="chip" aria-pressed={v === id} onClick={() => onPick(v)}>{TITLE[v]}</button>)}
       </div>
       {error && <div role="alert"><p className="meta meta--error">{error} The reading is unavailable, not empty.</p><button type="button" className="btn-secondary" onClick={() => void load(id)}>RETRY</button></div>}
       {!shown && !error && <p className="meta" role="status">Reading…</p>}
@@ -78,7 +103,7 @@ export function CaveVitals({ initial, onBack, onOpenMetric }: {
         </section>
         {history && onOpenMetric && <button type="button" className="btn-secondary" onClick={() => onOpenMetric(history)}>FULL HISTORY</button>}
       </>}
-    </section>
+    </>
   );
 }
 

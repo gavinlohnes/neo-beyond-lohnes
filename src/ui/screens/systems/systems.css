@@ -54,3 +54,18 @@
 .cave__facts { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14.5px; line-height: 1.5; }
 .cave__feeds { margin: 0; padding-left: 12px; border-left: 1px solid var(--border-subtle); color: var(--text-2); font-size: 14.5px; line-height: 1.55; }
 .cave__feeds--decides { border-left-color: var(--text-1); color: var(--text-1); }
+/* SUIT-ALIVE S3: the cave's two views, and Tonight. Amber marks off-normal; red stays reserved. */
+.cave__tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border-subtle); }
+.cave__tab { min-height: 44px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--text-2); font: inherit; font-size: 12px; letter-spacing: .2em; cursor: pointer; }
+.cave__tab[aria-pressed="true"] { color: var(--text-1); border-bottom-color: var(--text-1); }
+.cave__call { margin: 0; font-size: 20px; font-weight: 500; line-height: 1.3; }
+.cave__trace { display: grid; gap: 6px; padding-left: 12px; border-left: 1px solid var(--text-1); font-size: 14.5px; line-height: 1.55; }
+.cave__trace p { margin: 0; }
+.cave__axis-line { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; color: var(--text-2); }
+.cave__glance { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cave__glance button { width: 100%; min-height: 44px; text-align: left; background: none; border: 1px solid var(--border-subtle); color: inherit; font: inherit; padding: 12px; display: grid; grid-template-columns: 20px 1fr; gap: 4px 10px; align-items: baseline; cursor: pointer; }
+.cave__rank { font-family: var(--font-mono); font-size: 12px; color: var(--warning); grid-row: span 2; }
+.cave__gt { font-size: 13px; letter-spacing: .14em; }
+.cave__gm { font-size: 14.5px; line-height: 1.45; color: var(--text-2); }
+.cave__cap--late { color: var(--warning); }
+.cave__block > .meta { margin: 0; }

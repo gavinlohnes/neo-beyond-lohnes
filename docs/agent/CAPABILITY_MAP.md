@@ -301,3 +301,6 @@ fresh general review.
   positions. Reuse it for any "this reading against my normal" view instead of re-deriving ranges.
 - SUIT-ALIVE S1 (bat mark): `ui/components/BatMark.tsx` draws the in-app red bat from its one source,
   `docs/brand/suit-mark/suit-mark.svg`. Allowed only in the header, cave and cold start (SUIT-ALIVE-001).
+- SUIT-ALIVE S3 (comms, Tonight): `application/caveTonight.ts` ranks complete readings by distance
+  outside your own usual range and lists overdue commitments; `describeComms` is TODAY's comms line.
+  Reuse it for any "what's off my normal right now" view.
