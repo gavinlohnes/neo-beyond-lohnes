@@ -3,7 +3,7 @@ import { getShiftChange, getWorkStart, type ShiftChange, type WorkStart } from "
 import { markWorkStarted } from "../../../application/commands";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { describeError } from "../../errorMessage";
-import { BatMark } from "../../components/BatMark";
+import { Emblem } from "../../components/Emblem";
 import "./shiftChange.css";
 
 const STORE = "beyond.shiftChange";
@@ -44,7 +44,7 @@ export function ShiftChangeMoment({ refreshKey, now, onOpen, onStarted, onEndWor
       onKeyDown={(e) => { if (e.key === "Escape") dismiss(); }}>
       <div className="shift-change__panel">
         <span className="shift-change__sweep" aria-hidden="true" />
-        <BatMark width={112} cut="hairline" className="shift-change__mark" />
+        <Emblem size={88} className="shift-change__mark" />
         <p className="shift-change__kicker">{kicker}</p>
         <h2 id="shift-change-title" ref={heading} tabIndex={-1} className="shift-change__clock" aria-label={spoken}>
           {show.clock}<small>{preflight ? "TO SHIFT" : landing ? "TO GO" : "ON THE CLOCK"}</small>

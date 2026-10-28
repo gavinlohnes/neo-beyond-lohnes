@@ -299,8 +299,8 @@ fresh general review.
 - SUIT-ALIVE S2 (cave, Vitals): `application/caveVitals.ts` composes one reading in depth from
   the SYSTEMS readout and Whole Picture, using the personal-baselines range rule and run
   positions. Reuse it for any "this reading against my normal" view instead of re-deriving ranges.
-- SUIT-ALIVE S1 (bat mark): `ui/components/BatMark.tsx` draws the in-app red bat from its one source,
-  `docs/brand/suit-mark/suit-mark.svg`. Allowed only in the header, cave and cold start (SUIT-ALIVE-001).
+- The emblem (BRAND-MARK-003): `ui/components/Emblem.tsx` draws BEYOND's emblem plate from its one source,
+  `docs/brand/beyond-emblem/` (BRAND-MARK-003, Brand Drop v2; supersedes the bat and the split bat). The chamfered plate is the in-app logo everywhere (`src/ui/components/Emblem.tsx`).
 - SUIT-ALIVE S3 (comms, Tonight): `application/caveTonight.ts` ranks complete readings by distance
   outside your own usual range and lists overdue commitments; `describeComms` is TODAY's comms line.
   Reuse it for any "what's off my normal right now" view.

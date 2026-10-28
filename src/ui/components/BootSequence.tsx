@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { readBootMode } from "../screens/today/bootMode";
 import { MODE_NAMES, type ShiftClockPhase } from "../screens/today/shiftClock";
 import { describeBootStatus, getBootStatus } from "../../application/bootQueries";
-import { BatMark } from "./BatMark";
+import { Emblem } from "./Emblem";
 
 /**
  * BOOT-001 (owner brief 2026-10-05): the cold-launch boot sequence, right
@@ -100,7 +100,7 @@ export function BootSequence() {
   const shownLines = Math.max(0, Math.min(lines.length, Math.floor((elapsed - STATUS_START_MS) / STATUS_STEP_MS) + 1));
   return (
     <div className="boot" role="status" aria-label="BEYOND starting — tap to skip" onPointerDown={skip} onClick={skip}>
-      <BatMark width={156} cut="hairline" className="boot__mark" />
+      <Emblem size={128} className="boot__mark" />
       <span className="boot__line" aria-hidden="true" />
       <p className="boot__word">{elapsed >= TYPE_START_MS ? WORD.slice(0, typed) : ""}</p>
       <div className="boot__status">

@@ -8,6 +8,11 @@
      Weekly keeps its pre-HUD values (.hud-legacy, global.css) until the
      F1 field-test review. */
   --red: #D0141B;
+  /* BRAND-MARK-003 (owner decision 2026-10-28): HUD v3's "one red" rule is retired. BEYOND has a
+     defined palette: --red is primary, --brand-yellow is the brand accent. Any further color is added
+     here as an explicit palette token first, never hardcoded. --black names the HUD black. */
+  --brand-yellow: #F7C928;
+  --black: #000000;
   --red-text: var(--text-1);
   --bg: #000;
   --surface-1: #070707;

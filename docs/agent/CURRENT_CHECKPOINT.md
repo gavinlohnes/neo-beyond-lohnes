@@ -1,3 +1,18 @@
+# BRAND-MARK-003 — Brand Drop v2: the emblem and the palette
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28, Brand Drop v2 plus the palette decision (it
+  supersedes the split-bat Drop). Claude Code; Protected (doctrine amended by the owner's own
+  decision). Branch `ccr-0be4f40f-16m0ja`.
+- **Built:**
+  - the emblem SVGs in `docs/brand/beyond-emblem/`, chamfer 80/512;
+  - the `--brand-yellow` and `--black` tokens;
+  - the `Emblem` plate as the in-app logo everywhere;
+  - `beyond-v3-*` icons for maskable, any, monochrome, apple-touch and favicon;
+  - service-worker cache `beyond-mark-v3`;
+  - every bat and split-bat asset removed.
+- **Next:** CI and Gavin's merge. Then install on the phone to check the home-screen icon, the
+  splash and the themed icon.
+
 # SHIFT-CHANGE-001 — the end of a shift, given the whole screen once
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28 04:18 on shift ("Am."). Claude Code; PROTECTED
