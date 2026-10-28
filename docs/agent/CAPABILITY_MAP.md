@@ -296,3 +296,6 @@ fresh general review.
 - LOOP step 4 (REMEMBER): `application/remember.ts` returns your own reviewed conclusions at the
   matching moment by structure (same recommendation kind, next shift's PREP, next experiment).
   Extend it for new "when this comes up again" moments; keep it informational.
+- SUIT-ALIVE S2 (cave, Vitals): `application/caveVitals.ts` composes one reading in depth from
+  the SYSTEMS readout and Whole Picture, using the personal-baselines range rule and run
+  positions. Reuse it for any "this reading against my normal" view instead of re-deriving ranges.

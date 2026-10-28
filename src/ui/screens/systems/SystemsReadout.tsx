@@ -26,11 +26,16 @@ import {
   formatFuelReading,
   formatSleepReading,
 } from "./systemsCopy";
+import { CaveVitals } from "./CaveVitals";
+import type { CaveVitalId } from "../../../application/caveVitals";
 import "./systems.css";
 
 /**
  * SUIT-001: the SYSTEMS readout. Read only, from existing queries. BODY rows
  * open the existing metric history; everything else is a plain reading.
+ * SUIT-ALIVE S2: sleep, protein, water and the check-in open the cave in place
+ * (one reading in depth); bodyweight still opens its history directly, and the
+ * cave links to full history.
  */
 export function SystemsReadout({ active, refreshKey = 0, onOpenMetric }: {
   active: boolean;
@@ -43,6 +48,15 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric }: {
   const [state, setState] = useState<{ readout: Readout; mode: ShiftClockPhase | null; pinned: boolean; templates: CustomWorkoutTemplate[]; now: Date; backupDue: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const sequence = useRef(0);
+  const [cave, setCave] = useState<CaveVitalId | null>(null);
+  // The readout re-renders when the cave closes, so focus returns to the row by what it opened, not by element.
+  const returnTo = useRef<CaveVitalId | null>(null);
+  function openCave(id: CaveVitalId) { returnTo.current = id; setCave(id); }
+  useEffect(() => {
+    if (cave || !returnTo.current) return;
+    document.querySelector<HTMLElement>(`[data-cave="${returnTo.current}"]`)?.focus({ preventScroll: true });
+    returnTo.current = null;
+  }, [cave]);
 
   async function refresh() {
     const request = ++sequence.current;
@@ -64,6 +78,8 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric }: {
   // TRAIN's own wording: "Template A", or a custom program's name.
   const label = (id: string) => `Template ${state ? templateLabel(id as WorkoutTemplateId, state.templates) : id}`;
 
+  if (cave) return <CaveVitals initial={cave} onBack={() => setCave(null)} onOpenMetric={onOpenMetric} />;
+
   return (
     <section className="systems" aria-labelledby="systems-title">
       <OperatorHeader destination="command" headingId="systems-title">MORE // SYSTEMS</OperatorHeader>
@@ -75,13 +91,13 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric }: {
         const noDay = "No day started";
         return <>
           <Group title="BODY">
-            <MetricRow metric="sleep" label="Last main sleep" onOpen={onOpenMetric}
+            <MetricRow metric="sleep" label="Last main sleep" onOpen={() => openCave("sleep")} action="Open in the cave" cave="sleep"
               value={r.lastMainSleep ? formatSleepReading(r.lastMainSleep.minutes) : "Not logged"}
               detail={r.lastMainSleep ? (r.lastMainSleep.fromGarmin ? `Garmin · woke ${clockTime(r.lastMainSleep.occurredAt)}` : `Logged ${clockTime(r.lastMainSleep.recordedAt)}`) : "Nothing in the last 36 hours."} />
-            <MetricRow metric="protein" label="Protein" onOpen={onOpenMetric}
+            <MetricRow metric="protein" label="Protein" onOpen={() => openCave("protein")} action="Open in the cave" cave="protein"
               value={r.proteinG === null ? noDay : formatFuelReading(r.proteinG, r.proteinTargetG)}
               detail={r.proteinG !== null && r.proteinTargetG === undefined ? "No target set." : ""} />
-            <MetricRow metric="water" label="Water" onOpen={onOpenMetric} value={r.waterOz === null ? noDay : `${r.waterOz} oz`} />
+            <MetricRow metric="water" label="Water" onOpen={() => openCave("water")} action="Open in the cave" cave="water" value={r.waterOz === null ? noDay : `${r.waterOz} oz`} />
             <MetricRow metric="weight" label="Bodyweight" onOpen={onOpenMetric} value={r.bodyweightLbs === undefined ? "Not logged" : `${r.bodyweightLbs} lb`} />
           </Group>
           <Group title="TRAINING">
@@ -91,7 +107,7 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric }: {
             <Reading label="Next in rotation" value={r.nextTemplateId ? label(r.nextTemplateId) : "Not available"} />
           </Group>
           <Group title="STATE">
-            <Reading label="Check-in" value={r.checkIn ? r.checkIn.capacity : "Not done"}
+            <MetricRow metric="sleep" label="Check-in" onOpen={() => openCave("energy")} action="Open energy in the cave" cave="energy" value={r.checkIn ? r.checkIn.capacity : "Not done"}
               detail={r.checkIn ? [clockTime(r.checkIn.recordedAt), ...r.checkIn.reasonCodes.map(describeReason)].join(" · ") : r.day ? "No check-in today." : noDay} />
             <Reading label="System status" value={describeStatusLevel(r.status.level)} tone={r.status.level === "AMBER" || r.status.level === "RED" ? "warn" : undefined}
               detail={r.status.level === "NO_READ" ? "Log sleep or check in." : r.status.facts.map(describeStatusFact).join(", ")}>
@@ -126,9 +142,9 @@ function Reading({ label, value, detail, tone, children }: { label: string; valu
   </div>;
 }
 
-function MetricRow({ metric, label, value, detail, onOpen }: { metric: InsightMetric; label: string; value: string; detail?: string; onOpen?: ((metric: InsightMetric) => void) | undefined }) {
+function MetricRow({ metric, label, value, detail, onOpen, action = "Open history", cave }: { metric: InsightMetric; label: string; value: string; detail?: string; onOpen?: ((metric: InsightMetric) => void) | undefined; action?: string; cave?: CaveVitalId }) {
   if (!onOpen) return <Reading label={label} value={value} {...(detail ? { detail } : {})} />;
-  return <button type="button" className="systems__row systems__row--link" aria-label={`${label}: ${value}${detail ? `. ${detail.replace(/\.$/, "")}` : ""}. Open history`} onClick={() => onOpen(metric)}>
+  return <button type="button" className="systems__row systems__row--link" data-cave={cave} aria-label={`${label}: ${value}${detail ? `. ${detail.replace(/\.$/, "")}` : ""}. ${action}`} onClick={() => onOpen(metric)}>
     <span className="systems__text"><span className="systems__label">{label}</span>{detail && <span className="systems__detail">{detail}</span>}</span>
     <span className="systems__value">{value}</span>
     <span aria-hidden="true" className="systems__go">›</span>
