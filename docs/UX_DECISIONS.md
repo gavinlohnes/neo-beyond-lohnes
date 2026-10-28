@@ -30,6 +30,8 @@ boxed AI, ranked “what would help most,” new recommendation priority or new 
 Parallel feature epics are parked unless Gavin names them. Earlier approval of a direction,
 including DELTA-ADVANCED, is not implementation authority. This process lock is docs-only and
 does not expand any product/UI scope. See [the brief](agent/REUSE-FIRST-002.md).
+**Amended 2026-10-28:** Gavin opened SUIT-ALIVE slice by slice ("go S2"; the bat ruling,
+SUIT-ALIVE-001). Each further slice still needs his approval.
 
 ## NAV-001 — find anything in two taps (owner approval 2026-10-23, Protected IA)
 
@@ -478,6 +480,8 @@ Brief: [`agent/COMMAND-CENTER-001.md`](agent/COMMAND-CENTER-001.md). Gavin appro
 - **Bruce's voice, text only:** terse, dry, calm display copy that advises and leaves the decision
   to Gavin. Numbers, labels, buttons and data stay literal; Engine strings are mapped in the UI
   layer, never edited; meanings stay identical. No character names, catchphrases, sound or logo.
+  **Amended 2026-10-28 (SUIT-ALIVE-001):** the original red bat mark is allowed in the header,
+  the cave and the cold start; names, catchphrases and sound stay excluded.
 - **Effects rule:** every effect is presentation only, has no animation under reduced motion,
   keeps AA contrast in every mode and never blocks or delays logging.
 
@@ -1943,6 +1947,8 @@ system-identity glyph."
   as the app icon / home-screen mark (`public/icons/icon-*.png`, `index.html`'s favicon and
   `apple-touch-icon` links) only; it is not used anywhere inside the running app's own UI —
   except the boot screen, where the icon file is shown as-is (owner ruling 2026-10-05, BOOT-001).
+  **Amended 2026-10-28 (SUIT-ALIVE-001):** a separate in-app red bat mark is allowed in the header,
+  the cave and the cold start; this emblem stays the app icon, unchanged.
 - **Emblem color is independent of the in-app UI's red.** `#EA131C` is the emblem's own locked
   brand color — it does not change, and was not derived from, `--accent`/`--red-b` in
   [tokens.css](../src/ui/styles/tokens.css). Unifying the two is a separate, larger decision
@@ -2027,3 +2033,24 @@ contracts are outside this presentation slice. Every merge remains Gavin's.
 SUIT-002 clarification: opening a historical record/correction form is inspection, so it uses
 one ordinary tap without haptics. Hold-to-fill remains on the actual charged commit; correction
 preview, historical/day guards and append-only deletion semantics remain intact. Recorded-day lists retain their readable record controls without a navigation hold.
+
+## SUIT-ALIVE-001 — the red bat mark inside the app (owner ruling, 2026-10-28)
+
+Gavin, 2026-10-28: "If we can add a good red bat logo or symbol I'm fine with it", then, having
+seen it in the Suit & Cave prototype, "I'm good with the symbol. I kind of like it." Brief:
+[`agent/SUIT-ALIVE.md`](agent/SUIT-ALIVE.md).
+
+- **Allowed:** the original angular red bat mark from `prototype/suit-alive/index.html` (the `#bat`
+  symbol, `#D0141B` on black) may appear inside the running app in three places only: the header
+  emblem, the cave's heading and the cold start. It is BEYOND's own drawing, not a copy of any
+  published emblem, and it carries no character name, catchphrase or sound.
+- **Amends** COMMAND-CENTER-001's "no … logo" (names, catchphrases and sound stay excluded) and the
+  EMBLEM entry's "not used anywhere inside the running app's own UI" for those three places.
+- **Unchanged:** EMBLEM-002 stays the app icon and home-screen mark, its geometry and `#EA131C`
+  locked; the in-app mark does not replace it. The header emblem keeps its SUIT-001 jobs (tap goes
+  to TODAY, long-press toggles stealth) and its accessible name. Red stays reserved as before; the
+  mark is identity, not a signal, and never pulses or animates under reduced motion.
+- **Open for S1 (owner choice when S1 is built):** draw the in-app mark from the prototype's geometry
+  (what Gavin approved), or from the EMBLEM-002 master so the app has one bat. Either way the geometry
+  gets one source file under `docs/brand/`, and nothing is redrawn from concept imagery.
+- This ruling records permission only. Building it is SUIT-ALIVE S1, which needs its own approval.

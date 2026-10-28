@@ -5,7 +5,11 @@
 - **Baseline:** master `b8fb15a` (#311 LOOP-002 merged).
 - **Built:** MORE → SYSTEMS rows open the cave: one vital in depth against your own normal, with
   run position, records, what it feeds and source; full history one tap further.
-- **Next:** CI and Gavin's merge. Then S1 (bat mark, needs the logo ruling recorded) or S3.
+- **Merged:** #312 by Gavin's direction, 2026-10-28 (`cf3ccfd`).
+- **Bat ruling:** recorded as SUIT-ALIVE-001 in `docs/UX_DECISIONS.md` (docs-only PR). The original red
+  bat mark is allowed in the header emblem, the cave heading and the cold start; EMBLEM-002 stays the
+  app icon. Open for S1: the prototype's geometry or the EMBLEM-002 master.
+- **Next:** Gavin's merge of the ruling PR. Then S1 (build the mark) or S3, each on his go.
 
 ---
 # LOOP-002 — one post-shift moment
