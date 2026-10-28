@@ -17,6 +17,15 @@ type Data = { snapshot: MeasuredSnapshot; records: ExternalSleepRevision[]; unfi
 export function SleepMetricSheet({ open, onClose, onAllRecords }: {
   open: boolean; onClose: () => void; onAllRecords?: (() => void) | undefined;
 }) {
+  return <LogSheet open={open} title="SLEEP" onClose={onClose}>{open && <SleepPeriods active onAllRecords={onAllRecords} />}</LogSheet>;
+}
+
+/**
+ * The sleep page itself — Day / Week / Month / Year over Garmin's measured sleep, stages on a day.
+ * CAVE-DATA D2: shared by the sheet on TODAY and by the cave's VITALS, so there is one sleep page.
+ */
+export function SleepPeriods({ active, onAllRecords }: { active: boolean; onAllRecords?: (() => void) | undefined }) {
+  const open = active;
   const [data, setData] = useState<Data | null>(null), [error, setError] = useState(false), [attempt, setAttempt] = useState(0);
   const [zoom, setZoom] = useState<SleepZoom>("W"), [anchor, setAnchor] = useState(0), [limit, setLimit] = useState(10);
   const periodHeading = useRef<HTMLParagraphElement>(null);
@@ -52,7 +61,7 @@ export function SleepMetricSheet({ open, onClose, onAllRecords }: {
   const label = (v: PeriodValue) => `${zoom === "Y" ? month(v.from) : date(v.from)} · ${v.value === null ? "not measured" : hoursMinutes(v.value)}${zoom === "Y" ? " average" : ""}`;
   const title = zoom === "Y" ? `${new Date(anchor).getFullYear()}` : zoom === "M" ? new Date(anchor).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : zoom === "W" ? `Week of ${date(bounds.from)}` : date(anchor);
-  return <LogSheet open={open} title="SLEEP" onClose={onClose}>
+  return <>
     {!open ? null : error ? <div role="alert"><p>Sleep could not be read. Your records are unchanged.</p><button type="button" className="btn-secondary" onClick={() => setAttempt((n) => n + 1)}>RETRY SLEEP</button></div>
       : !data ? <p role="status">Reading sleep…</p> : <div className="measured-sheet sleep-metric">
       <div className="measured-ranges" role="group" aria-label="SLEEP period">
@@ -91,5 +100,5 @@ export function SleepMetricSheet({ open, onClose, onAllRecords }: {
       <SyncGarminLink />
       {onAllRecords && <button type="button" className="btn-secondary" onClick={onAllRecords}>ALL SLEEP RECORDS</button>}
     </div>}
-  </LogSheet>;
+  </>;
 }

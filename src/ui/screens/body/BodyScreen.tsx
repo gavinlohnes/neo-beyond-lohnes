@@ -390,8 +390,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     if (focus === "weight") setBodyweightOpen(true);
     if (focus === "urge") setOtherToolsOpen(true);
   }, [focus, focusRequest]);
-  // CAVE-DATA D1: which cave view DATA shows. An entry from TODAY or SYSTEMS opens its view; retapping
-  // DATA goes back to NUMBERS, as it always went back to the Daily Record.
+  // CAVE-DATA: which cave view DATA shows. DATA opens on NUMBERS, keeping NAV-001's two-tap paths; an
+  // entry from TODAY or SYSTEMS opens its own view; retapping DATA goes back to NUMBERS.
   const caveViewKey = useRef(0);
   const [caveView, setCaveView] = useState<CaveRequest | undefined>(undefined);
   useEffect(() => {
@@ -2550,7 +2550,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     <SleepMetricSheet open={sleepMetricOpen} onClose={() => setSleepMetricOpen(false)} onAllRecords={() => { setSleepMetricOpen(false); showProgress("sleep"); }} />
     <OperatorHeader destination="body" focusable>DATA</OperatorHeader>
     {onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>{returnLabel}</button>}
-    {/* CAVE-DATA D1 (Gavin, 2026-10-28, option A): DATA is the cave; its own page is the first view, NUMBERS. */}
+    {/* CAVE-DATA (Gavin, 2026-10-28, option A): DATA is the cave; its own page is the first view, NUMBERS. */}
     <div hidden={progressOpen}><Cave initial={{ tab: "lead" }} request={caveView} onOpenMetric={(metric) => showProgress(metric)}
       onOpenUnderstanding={onOpenReview ? () => onOpenReview("overview") : undefined}
       lead={{ label: "NUMBERS", content: <>

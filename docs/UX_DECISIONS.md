@@ -2235,3 +2235,13 @@ D1–D5, each for Gavin's merge. The tab keeps its name.
   - **Unchanged:** DATA still opens on NUMBERS, and retapping DATA returns to it. Every DATA path,
     sheet and history is unchanged.
   - **Not changed:** the Engine, schema, events, TODAY, and stored records.
+- **D2 (Gavin, 2026-10-28: "D2 next"):**
+  - **VITALS carries each reading's own page.** SLEEP shows the Day / Week / Month / Year sleep page,
+    which is the same component as TODAY's sleep sheet, with stages on a day. PROTEIN and WATER show
+    their 7 / 28 / 90-day page, the same explorer as DATA's progress, locked to that measure. FULL
+    HISTORY still opens the full progress page with sources.
+  - **Default view held, pending Gavin.** The plan was for DATA to open on TONIGHT. Doing so breaks
+    NAV-001's locked two-tap paths: 42 path and round-trip tests in 10 files cover weight, Whole
+    Picture, Your Rotation, Health History, sleep's week and the shortcut returns, and each would
+    need a tap through NUMBERS. That conflicts with a locked decision, so DATA keeps opening on NUMBERS
+    until Gavin chooses.
