@@ -221,7 +221,33 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   </>;
 }
 
+/**
+ * The floating LOG steps aside while you scroll down, so it never sits on the control you are reading
+ * toward, and comes back when you scroll up, reach the end, or return to the top. Operator-initiated
+ * motion only (SUIT-VOLUME-001); a keyboard focus always brings it back.
+ */
+export function useScrollAway(): boolean {
+  const [away, setAway] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY, frame = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const y = window.scrollY, atEnd = y + window.innerHeight >= document.documentElement.scrollHeight - 24;
+        if (atEnd || y < 24) setAway(false);
+        else if (y > last + 6) setAway(true);
+        else if (y < last - 6) setAway(false);
+        last = y;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(frame); };
+  }, []);
+  return away;
+}
+
 /** NAV-001: WATER and MEAL stay as one-tap shortcuts; LOG is the floating + for every record type. */
 export function LogActions({ open, busy = false, isInFlight = () => busy }: { open: (target: RecordSheetTarget) => void; busy?: boolean; isInFlight?: () => boolean }) {
-  return <div className="console-controls cc-actions cc-actions--two" role="group" aria-label="Log actions">{([['water', 'WATER'], ['meal', 'MEAL'], ['log', 'LOG']] as const).map(([target, label]) => <button type="button" className={target === "log" ? "cc-act cc-fab" : "cc-act"} aria-label={target === 'water' ? 'Log water' : target === 'meal' ? 'Log a meal' : 'Open LOG'} aria-haspopup="dialog" disabled={busy} key={target} onClick={() => { if (!isInFlight()) open(target); }}>{CcIcon[target === "log" ? "plus" : target === "meal" ? "meal" : "water"]()}{label}</button>)}</div>;
+  const away = useScrollAway();
+  return <div className="console-controls cc-actions cc-actions--two" role="group" aria-label="Log actions">{([['water', 'WATER'], ['meal', 'MEAL'], ['log', 'LOG']] as const).map(([target, label]) => <button type="button" className={target === "log" ? `cc-act cc-fab${away ? " cc-fab--away" : ""}` : "cc-act"} aria-label={target === 'water' ? 'Log water' : target === 'meal' ? 'Log a meal' : 'Open LOG'} aria-haspopup="dialog" disabled={busy} key={target} onClick={() => { if (!isInFlight()) open(target); }}>{CcIcon[target === "log" ? "plus" : target === "meal" ? "meal" : "water"]()}{label}</button>)}</div>;
 }

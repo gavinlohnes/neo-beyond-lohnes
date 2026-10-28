@@ -1,3 +1,14 @@
+# LOG overlap — the floating + steps aside while you scroll
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28: "Fix the LOG button overlap". Claude Code;
+  ROUTINE. Branch `ccr-0be4f40f-16m0ja`.
+- **Baseline:** master after #328 (FIELD-REHEARSAL-001).
+- **Built:** `useScrollAway` on TODAY's floating LOG, which steps aside when you scroll down and
+  comes back when you scroll up, reach the end or return to the top. The rehearsal now checks this,
+  and checks that nothing is covered at the end.
+- **Verified:** `npm run verify` green (3,151 passed).
+- **Next:** CI and Gavin's merge.
+
 # FIELD-REHEARSAL-001 — the suit, walked on eight weeks of rotation
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28: "Make it count and do some amazing stuff."

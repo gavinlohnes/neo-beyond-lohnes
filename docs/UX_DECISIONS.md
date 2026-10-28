@@ -2303,5 +2303,9 @@ operator touches it or when one thing truly needs them, never by default.
 - **The skyline beam** sweeps once when a real next thing appears, then holds. No animation in the
   app may loop.
 - **Off-normal** is outside your usual in either direction, on the VITALS chart as in its headline.
+- **The floating LOG steps aside while you scroll down** (Gavin, 2026-10-28: "Fix the LOG button
+  overlap"). It returns when you scroll up, reach the end or return to the top, and keyboard focus
+  always brings it back. NAV-001's place for it, bottom-right of TODAY, is unchanged. At the end of
+  TODAY it covers no control.
 - **Steps never take a comms slot on TODAY.** They stay in VITALS and TONIGHT, so a low-step day cannot push
   sleep off the line.

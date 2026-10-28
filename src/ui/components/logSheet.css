@@ -33,6 +33,11 @@
   width: 64px; min-height: 64px; flex-direction: column; gap: 2px; font-size: 11px;
   color: var(--p-t1); border-color: var(--p-t1); --p-bd: var(--p-t1); --p-fill: var(--p-s2);
 }
+.today-field .cc-actions button.cc-act.cc-fab, .cc-act.cc-fab { transition: transform 160ms var(--motion-easing, ease-out), opacity 160ms var(--motion-easing, ease-out); }
+/* Scrolling down: the + steps aside so it never covers the control you are reading toward. */
+.today-field .cc-actions button.cc-act.cc-fab.cc-fab--away, .cc-act.cc-fab.cc-fab--away { transform: translateY(calc(100% + 32px)); opacity: 0; pointer-events: none; }
+.today-field .cc-actions button.cc-act.cc-fab.cc-fab--away:focus-visible, .cc-act.cc-fab.cc-fab--away:focus-visible { transform: none; opacity: 1; pointer-events: auto; }
+@media (prefers-reduced-motion: reduce) { .today-field .cc-actions button.cc-act.cc-fab, .cc-act.cc-fab { transition: none; } }
 .redesign-today { padding-bottom: 88px; }
 .record-meal-start { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 12px; }
 .record-meal-start button { margin: 0; }
