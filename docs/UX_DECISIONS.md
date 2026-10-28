@@ -2303,3 +2303,5 @@ operator touches it or when one thing truly needs them, never by default.
 - **The skyline beam** sweeps once when a real next thing appears, then holds. No animation in the
   app may loop.
 - **Off-normal** is outside your usual in either direction, on the VITALS chart as in its headline.
+- **Steps never take a comms slot on TODAY.** They stay in VITALS and TONIGHT, so a low-step day cannot push
+  sleep off the line.

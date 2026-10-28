@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { describeComms, getCaveTonight } from "../../../application/caveTonight";
+import { commsOff, describeComms, getCaveTonight } from "../../../application/caveTonight";
 import { describeIn, getCaveRoute, nextWaypoints, routeCallout, type CaveRoute } from "../../../application/caveRoute";
 import { describeBrief, getCaveBrief } from "../../../application/caveBrief";
 import "../systems/systems.css";
@@ -47,7 +47,7 @@ export function SuitLines({ refreshKey, now, onOpen }: { refreshKey: string; now
   useEffect(() => {
     const request = ++sequence.current;
     getCaveTonight()
-      .then((t) => { if (request === sequence.current) setComms({ text: describeComms(t), off: t.off.length > 0 }); })
+      .then((t) => { if (request === sequence.current) setComms({ text: describeComms(t), off: commsOff(t).length > 0 }); })
       .catch(() => { if (request === sequence.current) setComms(null); });
     getCaveRoute()
       .then((r) => { if (request === sequence.current) setRoute(r); })

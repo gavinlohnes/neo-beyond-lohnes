@@ -99,3 +99,13 @@ describe("CAVE-DATA D4 — since last shift", () => {
     expect(facts[2]!.text).toBe("No workout in the last 12 days.");
   });
 });
+
+describe("SUIT-VOLUME-001 — steps never take a comms slot", () => {
+  it("leaves steps to TONIGHT and VITALS", () => {
+    const t = buildCaveTonight(input());
+    const steps = { id: "steps" as const, when: "LAST_FULL_DAY" as const, value: 2000, low: 8000, high: 10000, median: 9000, verdict: "BELOW" as const, distance: 9 };
+    const withSteps = { ...t, off: [steps, ...t.off] };
+    expect(describeComms(withSteps)).toBe(describeComms(t));
+    expect(describeComms({ ...t, off: [steps], steady: [] , learning: [] })).toBe("Inside your normal, apart from steps. Open TONIGHT for them.");
+  });
+});
