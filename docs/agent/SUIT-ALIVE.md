@@ -137,7 +137,7 @@ EMBLEM-002 master.
 ## Status (2026-10-28)
 
 S1–S6 are merged. The campaign is paused for live use at Gavin's direction ("wrap up everything").
-S7 followed (see above). S8 remains: it is Protected and needs its rulings.
+S7 and S8 followed (see above); the campaign's build plan is complete.
 
 ## S7 — the cave, File
 
@@ -154,3 +154,21 @@ S7 followed (see above). S8 remains: it is Protected and needs its rulings.
   - S2's `caveUsual`, `MIN_BASELINE_DAYS` and `RUN_MEAN_FLOOR`.
 - **OWN:** the findings wording and the FIRM / BUILDING / THIN presentation rule.
   **BUILD FROM SCRATCH:** none.
+
+## S8 — suit systems, vision and the log
+
+- **Authority:** Gavin, 2026-10-28. His rulings: night vision may be automatic; cloak only when he
+  turns it on. Ruling: SUIT-ALIVE-007. **Lane:** PROTECTED, because it changes how every screen
+  looks at night. No Engine, schema or event change.
+- **Built:**
+  - `ui/vision/`: the preference (AUTO, NORMAL, THERMAL, NIGHT; stored on this device), the AUTO rule,
+    and the NIGHT and THERMAL token overrides.
+  - SUIT SYSTEMS in SYSTEMS: CLOAK, which is the existing stealth, and the vision chips.
+  - The cave's LOG (`application/caveLog.ts`): COMMS and RECORDER.
+- **REUSE:**
+  - the suit-mode token system;
+  - SUIT-001's stealth toggle;
+  - `describeEvent` (HISTORY);
+  - the recommendation copy;
+  - S4's `routeCallout`.
+- **OWN:** the vision palettes and the AUTO rule. **BUILD FROM SCRATCH:** none.
