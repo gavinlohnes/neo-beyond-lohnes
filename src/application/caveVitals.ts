@@ -2,6 +2,7 @@ import type { StateCheckIn } from "../domain/common/types";
 import { quantile } from "../engine/livedDaySeries";
 import { BAND_HIGH_QUANTILE, BAND_LOW_QUANTILE, MIN_BASELINE_DAYS } from "../engine/personalBaselines";
 import { getLatestCheckIn } from "./queries";
+import { describePace, getPaceHistories, minuteOfDay, paceReading, type PaceReading } from "./pace";
 import { getSystemsReadout, type SystemsReadout } from "./systemsReadoutQueries";
 import { getWholePicture } from "./wholePictureQueries";
 import { runPositions } from "./rotationProjection";
@@ -28,18 +29,19 @@ export interface CaveVital {
   id: CaveVitalId;
   title: string;
   unit: "h" | "/5" | "g" | "oz";
-  /** Today's reading. Protein and water are running totals, so `partial` is true and they are never judged against a full-day range. */
+  /** Today's reading. Protein and water are running totals, so `partial` is true: they are judged only by pace (S5), never against a full-day range. */
   today: { value: number | undefined; partial: boolean };
   /** Last finished lived days, oldest first; a missing reading stays undefined. */
   trend: { start: string; value: number | undefined }[];
   usual: CaveUsual;
-  /** Only for complete readings with a range. */
+  /** Complete readings against their range; running totals against their pace. */
   verdict: "BELOW" | "INSIDE" | "ABOVE" | undefined;
   /** Where you usually are: this place in the run (sleep and energy), work days, days off. */
   position: { label: string; value: number | undefined; days: number }[];
   facts: string[];
   feeds: { decides: boolean; text: string };
   source: { label: string; value: string }[];
+  pace: PaceReading | undefined;
 }
 
 const TITLES: Record<CaveVitalId, string> = { sleep: "Main sleep", energy: "Energy", protein: "Protein", water: "Water" };
@@ -75,6 +77,8 @@ export interface CaveInputs {
   rows: readonly PictureRow[];
   readout: Pick<SystemsReadout, "day" | "lastMainSleep" | "proteinG" | "proteinTargetG" | "waterOz" | "checkIn">;
   checkIn: StateCheckIn | undefined;
+  /** SUIT-ALIVE S5: today's protein or water against your usual by this point of the day. */
+  pace?: PaceReading | undefined;
 }
 
 /** Pure: everything the cave shows for one vital. */
@@ -88,8 +92,9 @@ export function buildCaveVital(id: CaveVitalId, input: CaveInputs): CaveVital {
     : id === "protein" ? { value: readout.proteinG ?? undefined, partial: true }
     : { value: readout.waterOz ?? undefined, partial: true };
   const usual = caveUsual(rows, id, dayKind);
-  const verdict = usual.kind === "RANGE" && !today.partial && today.value !== undefined
-    ? (today.value < usual.low ? "BELOW" : today.value > usual.high ? "ABOVE" : "INSIDE") : undefined;
+  // A running total is judged only by pace (S5), never against a full day.
+  const verdict = today.partial ? input.pace?.verdict
+    : usual.kind === "RANGE" && today.value !== undefined ? (today.value < usual.low ? "BELOW" : today.value > usual.high ? "ABOVE" : "INSIDE") : undefined;
 
   const trend = rows.slice(-CAVE_TREND_DAYS).map((r) => ({ start: r.start, value: (() => { const v = r[KEYS[id]]; return v !== undefined && Number.isFinite(v) ? v : undefined; })() }));
 
@@ -127,7 +132,7 @@ export function buildCaveVital(id: CaveVitalId, input: CaveInputs): CaveVital {
     else facts.push(id === "protein" ? `So far today: ${total} g${readout.proteinTargetG ? ` of your ${readout.proteinTargetG} g target` : ""}.` : `So far today: ${total} oz.`);
     const logs = rows.slice(-1)[0]?.marks?.[id === "protein" ? "meals" : "water"];
     if (logs?.length) facts.push(`Last finished day: ${logs.length} ${id === "protein" ? "meal" : "water"} log${logs.length === 1 ? "" : "s"}, first at ${atOffset(rows.slice(-1)[0]!.start, logs[0]!)}.`);
-    facts.push("Today is a running total, so it's shown, not judged against a full day.");
+    facts.push(input.pace ? `${describePace(input.pace)} That's judged against your past ${input.pace.usual.dayKind === "WORK" ? "work days" : input.pace.usual.dayKind === "OFF" ? "days off" : "days"} at this hour, not a full day.` : "Today is a running total, so it's shown, not judged against a full day.");
   }
 
   const feeds = id === "sleep" ? { decides: true, text: "Feeds BEYOND's advice. Two short main sleeps in a row make TRAIN offer the reduced session, and main sleep sets System Status." }
@@ -139,13 +144,16 @@ export function buildCaveVital(id: CaveVitalId, input: CaveInputs): CaveVital {
     : id === "energy" ? [{ label: "Source", value: checkIn ? `Your check-in · ${clock(checkIn.recordedAt)}` : "No check-in today" }, { label: "Usual range from", value: range }]
     : [{ label: "Source", value: id === "protein" ? "Your meal and protein logs" : "Your water logs" }, { label: "Usual full day from", value: range }];
 
-  return { id, title: TITLES[id], unit: UNITS[id], today, trend, usual, verdict, position, facts, feeds, source };
+  return { id, title: TITLES[id], unit: UNITS[id], today, trend, usual, verdict, position, facts, feeds, source, pace: input.pace };
 }
 
 export async function getCaveVital(id: CaveVitalId, now: Date = new Date()): Promise<CaveVital> {
   const [readout, picture] = await Promise.all([getSystemsReadout(now), getWholePicture(now)]);
   const checkIn = readout.day ? await getLatestCheckIn(readout.day.id) : undefined;
-  return buildCaveVital(id, { rows: picture.rows, readout, checkIn });
+  const histories = (id === "protein" || id === "water") && readout.day ? await getPaceHistories(readout.day, now) : null;
+  const total = id === "protein" ? readout.proteinG : readout.waterOz;
+  const pace = histories && total !== null && (id === "protein" || id === "water") ? paceReading(id, total, histories[id], minuteOfDay(histories.dayStart, now)) : undefined;
+  return buildCaveVital(id, { rows: picture.rows, readout, checkIn, pace });
 }
 
 /** Plain words for the headline under the value. */
@@ -154,7 +162,7 @@ export function describeCaveVital(v: CaveVital): string {
   if (v.today.value === undefined) return v.id === "energy" ? "No check-in today yet." : v.id === "sleep" ? "No main sleep recorded in the last 36 hours." : "No day started.";
   if (v.usual.kind === "LEARNING") return `Still learning your usual: ${v.usual.days} of ${v.usual.need} days so far.`;
   const range = `${unit(v.usual.low)}–${unit(v.usual.high)}`;
-  if (v.today.partial) return `Running total. A usual full day is ${range}.`;
+  if (v.today.partial) return v.pace?.usual.kind === "RANGE" ? `${describePace(v.pace)} A usual full day is ${range}.` : `Running total. A usual full day is ${range}.`;
   if (v.verdict === "BELOW") return v.id === "sleep" ? `${Math.round((v.usual.median - v.today.value) * 60)} minutes under your usual ${formatCaveValue("sleep", v.usual.median)}. Usual range ${range}.` : `Under your usual ${range}.`;
   if (v.verdict === "ABOVE") return `Above your usual ${range}.`;
   return `Within your usual ${range}.`;

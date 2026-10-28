@@ -306,3 +306,5 @@ fresh general review.
   Reuse it for any "what's off my normal right now" view.
 - SUIT-ALIVE S4 (route): `application/caveRoute.ts` builds the lived day's points (schedule, usual
   sleep and wake, rollover) and in-app callouts. Reuse it for anything time-of-day on the current day.
+- SUIT-ALIVE S5 (pace): `application/pace.ts` gives your usual protein or water by any minute of the
+  lived day from past logs. Reuse it to judge any running total; never judge one against a full day.

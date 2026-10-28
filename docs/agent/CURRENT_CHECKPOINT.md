@@ -1,3 +1,13 @@
+# SUIT-ALIVE S5 — pace and the dark cockpit
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28, "go S5" (SUIT-ALIVE-004). Claude Code; PROTECTED
+  (TODAY readings; no Engine, schema or event change). [Brief](SUIT-ALIVE.md#s5--pace-and-the-dark-cockpit).
+- **Baseline:** master `7e9810c` (#316 S4 merged).
+- **Built:** "by now" pace for protein and water. TODAY's tiles dim inside your normal and say BEHIND
+  PACE in amber; the cave judges today's totals by pace.
+- **Next:** CI and Gavin's merge. Then S6 (preflight and after-action), FEATURE.
+
+---
 # SUIT-ALIVE S4 — the route
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28, "go S4" (SUIT-ALIVE-003). Claude Code; PROTECTED

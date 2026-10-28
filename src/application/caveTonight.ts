@@ -7,6 +7,7 @@ import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 import { getLatestCheckIn, getLatestRecommendation, getRecommendationDecision, type RecommendationDecision } from "./queries";
 import { getSystemsReadout, type SystemsReadout } from "./systemsReadoutQueries";
 import { getWholePicture } from "./wholePictureQueries";
+import { getPaceHistories, minuteOfDay, paceReading, type PaceReading } from "./pace";
 import type { PictureRow } from "./wholePictureProjection";
 
 /**
@@ -15,13 +16,16 @@ import type { PictureRow } from "./wholePictureProjection";
  * recommendation, unchanged. Beside it: which complete readings sit outside your own usual range
  * (S2's personal-baselines rule), ordered by how far outside, in widths of that range; and which
  * commitments are overdue. Nothing here is a score, nothing is combined into one number, nothing is
- * stored, and nothing reaches the Engine. Today's protein and water are running totals, so only
- * the last finished lived day's totals are judged.
+ * stored, and nothing reaches the Engine. Today's protein and water are running totals: S5 judges
+ * them by pace (your usual by now); until pace has a range, the last finished lived day's totals are.
  */
 export interface TonightReading {
   id: CaveVitalId;
-  /** "NOW": today's last main sleep or check-in. "LAST_FULL_DAY": the last finished lived day's total. */
-  when: "NOW" | "LAST_FULL_DAY";
+  /**
+   * "NOW": today's last main sleep or check-in. "BY_NOW": today's protein or water against your usual by
+   * this point of the day (S5 pace). "LAST_FULL_DAY": the last finished lived day's total, until pace has a range.
+   */
+  when: "NOW" | "BY_NOW" | "LAST_FULL_DAY";
   value: number;
   low: number;
   high: number;
@@ -51,6 +55,8 @@ export interface TonightInputs {
   decision: RecommendationDecision | undefined;
   obligations: readonly Obligation[];
   today: string;
+  /** SUIT-ALIVE S5: today's running totals against your usual by now. */
+  pace?: Partial<Record<"protein" | "water", PaceReading>> | undefined;
 }
 
 const ORDER: readonly CaveVitalId[] = ["sleep", "energy", "protein", "water"];
@@ -73,12 +79,14 @@ export function buildCaveTonight(input: TonightInputs): CaveTonight {
   const last = rows.at(-1);
   const off: TonightReading[] = [], steady: TonightReading[] = [], learning: CaveTonight["learning"] = [];
   for (const id of ORDER) {
-    const reading = readingFor(id, readout, checkIn, last, todayKind);
+    const paced = id === "protein" || id === "water" ? input.pace?.[id] : undefined;
+    const reading = paced?.usual.kind === "RANGE" ? { value: paced.value, kind: todayKind, when: "BY_NOW" as const } : readingFor(id, readout, checkIn, last, todayKind);
     if (!reading) continue;
-    const usual = caveUsual(rows, id, reading.kind);
+    const usual = reading.when === "BY_NOW" ? paced!.usual : caveUsual(rows, id, reading.kind);
     if (usual.kind === "LEARNING") { learning.push({ id, days: usual.days, need: usual.need }); continue; }
     const width = Math.max(usual.high - usual.low, Math.abs(usual.median) * 0.1, 1e-6);
-    const verdict = reading.value < usual.low ? "BELOW" : reading.value > usual.high ? "ABOVE" : "INSIDE";
+    // Ahead of your usual pace on a running total is not off-normal: there is still the rest of the day.
+    const verdict = reading.value < usual.low ? "BELOW" : reading.value > usual.high && reading.when !== "BY_NOW" ? "ABOVE" : "INSIDE";
     const distance = verdict === "BELOW" ? (usual.low - reading.value) / width : verdict === "ABOVE" ? (reading.value - usual.high) / width : 0;
     (verdict === "INSIDE" ? steady : off).push({ id, when: reading.when, value: reading.value, low: usual.low, high: usual.high, median: usual.median, verdict, distance });
   }
@@ -93,7 +101,13 @@ export async function getCaveTonight(now: Date = new Date()): Promise<CaveTonigh
   const day = readout.day;
   const [checkIn, recommendation] = day ? await Promise.all([getLatestCheckIn(day.id), getLatestRecommendation(day.id)]) : [undefined, undefined];
   const decision = day && recommendation ? await getRecommendationDecision(day.id, recommendation.id) : undefined;
-  return buildCaveTonight({ rows: picture.rows, readout, checkIn: checkIn ?? null, recommendation: recommendation ?? null, decision, obligations, today: formatLocalDate(now) });
+  const histories = day ? await getPaceHistories(day, now) : null;
+  const minute = histories ? minuteOfDay(histories.dayStart, now) : 0;
+  const pace = histories ? {
+    ...(readout.proteinG !== null ? { protein: paceReading("protein", readout.proteinG, histories.protein, minute) } : {}),
+    ...(readout.waterOz !== null ? { water: paceReading("water", readout.waterOz, histories.water, minute) } : {}),
+  } : undefined;
+  return buildCaveTonight({ rows: picture.rows, readout, checkIn: checkIn ?? null, recommendation: recommendation ?? null, decision, obligations, today: formatLocalDate(now), pace });
 }
 
 const NAMES: Record<CaveVitalId, string> = { sleep: "Sleep", energy: "Energy", protein: "Protein", water: "Water" };
@@ -104,9 +118,10 @@ const range = (r: TonightReading) => r.low === r.high ? show(r.id, r.low) : `${f
 /** One reading against your normal, in the cave's terse voice: "Sleep 5:10, 80 min under your usual." */
 export function describeTonightReading(r: TonightReading): string {
   const lead = r.when === "LAST_FULL_DAY" ? `${NAMES[r.id]} last full day ${show(r.id, r.value)}` : `${NAMES[r.id]} ${show(r.id, r.value)}`;
-  if (r.verdict === "INSIDE") return `${lead}, inside your usual ${range(r)}.`;
+  const by = r.when === "BY_NOW" ? " by now" : "";
+  if (r.verdict === "INSIDE") return `${lead}, inside your usual ${range(r)}${by}.`;
   if (r.id === "sleep" && r.verdict === "BELOW") return `${lead}, ${Math.round((r.median - r.value) * 60)} min under your usual.`;
-  return `${lead}, ${r.verdict === "BELOW" ? "under" : "above"} your usual ${range(r)}.`;
+  return `${lead}, ${r.verdict === "BELOW" ? "under" : "above"} your usual ${range(r)}${by}.`;
 }
 
 /** TODAY's comms line: the two readings furthest from your normal, or that everything sits inside it. Never the call itself. */

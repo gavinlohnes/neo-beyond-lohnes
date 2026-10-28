@@ -2109,3 +2109,27 @@ in-app only." Protected: it changes TODAY's primary layout. Brief:
     own ruling.
   - **"Last coffee."** BEYOND records no caffeine.
 - **Unchanged:** the Engine, recommendations, TODAY's rows and their order, and every stored record.
+
+## SUIT-ALIVE-004 — pace and the dark cockpit (owner approval, 2026-10-28)
+
+Gavin, 2026-10-28: "go S5", approving the build plan's S5: "'By now' pace for water and protein, and
+in-range vitals dimmed." Protected: it changes how TODAY's primary readings look. Brief:
+[`agent/SUIT-ALIVE.md`](agent/SUIT-ALIVE.md#s5--pace-and-the-dark-cockpit).
+
+- **Pace:** today's protein and water are judged against what you had logged by this point of your
+  past lived days of the same kind. It uses the last 28 such days, at least 10, and the middle half,
+  which is the personal-baselines rule. Each log counts when it was recorded, at its corrected
+  amount. A day with no logs is missing, not zero. It is never judged against a full day.
+  Amends SUIT-ALIVE-002's "today's running totals are not judged": once pace has a range, TONIGHT
+  and the comms line judge them by pace. Until then they use the last full day.
+- **Dark cockpit on TODAY's numbers:**
+  - **Dims:** a reading inside your normal, in plain text colour that keeps AA contrast. That covers
+    protein and water on or ahead of pace, and the Garmin sleep, steps and resting tiles inside their
+    usual range.
+  - **Stays lit, with amber words:** protein or water behind pace, which reads "BEHIND PACE".
+  - **Unchanged:** readings with no normal yet, and weight.
+  - Ahead of pace is not off-normal, because the day isn't over.
+- **The cave:** VITALS shows pace for protein and water ("Behind your usual pace: usually 20 oz by
+  now.").
+- **Unchanged:** the Engine, recommendations, targets, and TODAY's rows and their order. Nothing is
+  stored. Red is not used.

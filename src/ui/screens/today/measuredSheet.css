@@ -47,3 +47,6 @@
 .cc-flab--unusual{color:var(--warning);font-weight:700}
 /* SUIT: the qualified unusual reading owns its tile; no new red or detector rule. */
 .cc-fuel button:has(.cc-flab--unusual) .cc-num{color:var(--warning)}
+/* SUIT-ALIVE S5, dark cockpit: a reading inside your normal steps back; off-normal stays lit (above). AA holds. */
+.cc-fuel button.cc-steady .cc-num, .cc-fuel button.cc-steady .cc-num b { color: var(--text-2); }
+.cc-fuel button.cc-steady .cc-bar i { opacity: .55; }

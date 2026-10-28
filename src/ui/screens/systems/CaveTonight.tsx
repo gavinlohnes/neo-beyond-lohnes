@@ -64,7 +64,7 @@ export function CaveTonightView({ onOpenVital }: { onOpenVital: (id: CaveVitalId
       ))}</ol> : <p className="cave__sum">{tonight.steady.length ? "Nothing is outside your normal." : "Nothing to judge yet."}</p>}
       {steady.length > 0 && <p className="meta">Holding steady: {steady.join(", ")}.</p>}
       {learning.length > 0 && <p className="meta">Still learning: {learning.join(", ")}.</p>}
-      <p className="meta">Ordered by how far each reading sits outside your own usual range. Not a score. Today's protein and water are running totals, so the last full day is judged instead.</p>
+      <p className="meta">Ordered by how far each reading sits outside your own usual range. Not a score. Today's protein and water are judged against your usual by this hour, or the last full day until that's known.</p>
     </section>
     {tonight.late.length > 0 && <section className="cave__block" aria-labelledby="tonight-late">
       <h3 id="tonight-late" className="cave__cap cave__cap--late">Overdue</h3>
