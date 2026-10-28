@@ -2275,6 +2275,7 @@ D1–D5, each for Gavin's merge. The tab keeps its name.
     later slice.
   - **Not changed:** the Engine, schema, events, NAV-001's paths and stored records. Nothing is a
     score.
+<<<<<<< HEAD
 
 ## BRAND-MARK-002 — the split bat is BEYOND's mark (owner Drop, 2026-10-28)
 
@@ -2288,3 +2289,5 @@ supersedes EMBLEM-002 as the app icon and SUIT-ALIVE-001's in-app bat.
 - **Home-screen icon:** the icon cut on full-bleed black with no chamfer, because Android masks the
   shape. The manifest lists separate "any" and "maskable" icons. Files are new `beyond-v2-*` names,
   and a new service-worker cache id makes installed phones pick them up. No old icon is referenced.
+=======
+>>>>>>> origin/master
