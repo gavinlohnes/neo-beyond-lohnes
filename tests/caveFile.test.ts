@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCaveFile, firmness, formatRunSleep } from "../src/application/caveFile";
+import { buildCaveFile, firmness } from "../src/application/caveFile";
 import { runPositions } from "../src/application/rotationProjection";
 import type { PictureRow } from "../src/application/wholePictureProjection";
 
@@ -34,13 +34,7 @@ describe("SUIT-ALIVE S7 — the cave, File", () => {
     expect(buildCaveFile({ rows: rows.slice(0, 8), positions: runPositions(rows.slice(0, 8)), lessons: [], journal: [] }).findings).toEqual([]);
   });
 
-  it("lays out the whole run place by place, with counts where a mean isn't earned", () => {
-    const f = file();
-    const work = f.wholeRun.find((r) => r.context === "WORK")!;
-    expect(work.columns.map((c) => c.position)).toEqual([1, 2, 3, 4]);
-    expect(formatRunSleep(work.columns[1]!)).toBe("5:15");
-    expect(f.runs).toEqual({ work: 5, off: 5 });
-    const thin = buildCaveFile({ rows: rows.slice(0, 13), positions: runPositions(rows.slice(0, 13)), lessons: [], journal: [] });
-    expect(formatRunSleep(thin.wholeRun[0]!.columns[0]!)).toBe("— (2)");
+  it("counts the runs on file", () => {
+    expect(file().runs).toEqual({ work: 5, off: 5 });
   });
 });

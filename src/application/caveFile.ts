@@ -7,6 +7,7 @@ import { experimentLessons } from "./remember";
 import { flips, flipSummary, RUN_MEAN_FLOOR, type RunPosition } from "./rotationProjection";
 import { getWholePicture } from "./wholePictureQueries";
 import type { PictureRow } from "./wholePictureProjection";
+import type { WeekAheadDay } from "./weekAheadQueries";
 
 /**
  * SUIT-ALIVE S7 — the cave, File (owner approval 2026-10-28, "go S7"; brief docs/agent/SUIT-ALIVE.md).
@@ -14,7 +15,8 @@ import type { PictureRow } from "./wholePictureProjection";
  * #302) for run positions and written lessons, and links to it for depth. It adds three read-only things:
  * a case file of findings, each shown only once its own evidence floor is met; calibration — how firm each
  * usual range BEYOND judges with is, FIRM / BUILDING / THIN by days on file, and what BEYOND does not know
- * at all; and the whole run, place by place. Counts, never causes; no score; nothing stored.
+ * at all. The whole run is YOUR ROTATION itself (CAVE-DATA D3). Counts, never causes; no score; nothing
+ * stored.
  */
 export type Firmness = "FIRM" | "BUILDING" | "THIN";
 
@@ -25,7 +27,6 @@ export function firmness(days: number, need: number): Firmness {
 
 export interface FileFinding { key: string; label: string; text: string; source: string }
 export interface Calibration { key: string; label: string; days: number; need: number; firmness: Firmness; source: string }
-export interface RunColumn { position: number; runs: number; sleep: number | undefined; sleepDays: number; energy: number | undefined; energyDays: number; trained: { days: number; of: number } }
 
 export interface CaveFile {
   daysOnFile: number;
@@ -33,7 +34,8 @@ export interface CaveFile {
   findings: FileFinding[];
   calibration: Calibration[];
   notKnown: string[];
-  wholeRun: { context: "WORK" | "OFF"; columns: RunColumn[] }[];
+  /** CAVE-DATA D3: what YOUR ROTATION draws (Whole Picture's rows and the week ahead), read once here. */
+  rotation?: { rows: readonly PictureRow[]; weekAhead: readonly WeekAheadDay[]; readAt: string } | undefined;
 }
 
 export interface FileInputs {
@@ -86,12 +88,8 @@ export function buildCaveFile(input: FileInputs): CaveFile {
   calibration.push({ key: "runs-WORK", label: "Run positions · work runs", days: runs.work, need: RUN_MEAN_FLOOR, firmness: firmness(runs.work, RUN_MEAN_FLOOR), source: "Whole run · runs on file" });
   calibration.push({ key: "runs-OFF", label: "Run positions · stretches off", days: runs.off, need: RUN_MEAN_FLOOR, firmness: firmness(runs.off, RUN_MEAN_FLOOR), source: "Whole run · stretches on file" });
 
-  const wholeRun = (["WORK", "OFF"] as const).map((context) => ({ context, columns: positions.filter((p) => p.context === context).map((p) => ({
-    position: p.position, runs: p.rows.length, sleep: p.sleep.mean, sleepDays: p.sleep.days, energy: p.energy.mean, energyDays: p.energy.days, trained: p.trained,
-  })) })).filter((r) => r.columns.length > 0);
-
   return {
-    daysOnFile: rows.filter((r) => r.dayIds.length > 0).length, runs, findings, calibration, wholeRun,
+    daysOnFile: rows.filter((r) => r.dayIds.length > 0).length, runs, findings, calibration,
     // Sleep stages are imported from Garmin and shown in TODAY's sleep sheet; they are not judged against your usual yet.
     notKnown: ["Caffeine: BEYOND doesn't record it.", "Light exposure: not recorded."],
   };
@@ -99,8 +97,6 @@ export function buildCaveFile(input: FileInputs): CaveFile {
 
 export async function getCaveFile(now: Date = new Date()): Promise<CaveFile> {
   const [understanding, picture, journal] = await Promise.all([getPersonalUnderstanding(now), getWholePicture(now), getDecisionJournalEntries()]);
-  return buildCaveFile({ rows: picture.rows, positions: understanding.positions, lessons: understanding.lessons, journal });
+  return { ...buildCaveFile({ rows: picture.rows, positions: understanding.positions, lessons: understanding.lessons, journal }),
+    rotation: { rows: picture.rows, weekAhead: picture.weekAhead.days, readAt: picture.readAt } };
 }
-
-export const formatRunSleep = (c: RunColumn) => c.sleep === undefined ? `— (${c.sleepDays})` : hm(c.sleep);
-export const formatRunEnergy = (c: RunColumn) => c.energy === undefined ? `— (${c.energyDays})` : c.energy.toFixed(1);

@@ -1,3 +1,17 @@
+# CAVE-DATA D3 — FILE carries YOUR ROTATION
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28: "Go with number and start d3. Merge when ready."
+  Claude Code; PROTECTED. [Brief](CAVE-DATA.md).
+- **Baseline:** master `75f4e73` (#323 D2 merged).
+- **Decided:** DATA opens on NUMBERS.
+- **Built:**
+  - FILE shows YOUR ROTATION, the same view as Whole Picture's, in place of its duplicate table.
+  - NUMBERS' YOUR ROTATION opens FILE in place, and a tapped day opens in DATA.
+  - OPEN WHOLE PICTURE in FILE.
+- **Next:** CI, then merge (Gavin: "merge when ready"). Then D4 (DELTA in TONIGHT; needs DELTA's slice
+  approval) or D5 (resting HR, steps and stages as vitals).
+
+---
 # CAVE-DATA D2 — VITALS carries each reading's page
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28, "D2 next" (CAVE-DATA-001). Claude Code; PROTECTED.

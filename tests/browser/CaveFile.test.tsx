@@ -24,7 +24,9 @@ it.each([320, 390])("is honest on a fresh install and hands depth to Personal Un
   // Every usual range starts THIN, said in words.
   await expect.poll(() => [...document.querySelectorAll(".file__firm")].map((e) => e.textContent)).toEqual(Array(12).fill("THIN"));
   await expect.element(cave.getByText("Caffeine: BEYOND doesn't record it.", { exact: true })).toBeVisible();
-  await expect.element(cave.getByText("No whole runs on file yet. Mark work days and days off as you go.", { exact: true })).toBeVisible();
+  // CAVE-DATA D3: the whole run is YOUR ROTATION itself, with Whole Picture one tap away.
+  await expect.element(cave.getByRole("region", { name: "Your rotation" })).toBeVisible();
+  await expect.element(cave.getByRole("button", { name: "OPEN WHOLE PICTURE", exact: true })).toBeVisible();
 
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   for (const animation of document.getAnimations()) animation.finish();

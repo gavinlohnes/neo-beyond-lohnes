@@ -136,17 +136,17 @@ describe("NAV-001 top tasks from TODAY", () => {
     sheet = screen.getByRole("dialog", { name: "SLEEP", exact: true });
     await expect.element(sheet.getByRole("button", { name: "Week", exact: true })).toHaveAttribute("aria-pressed", "true");
   });
-  it("last run of shifts: DATA → Your rotation opens the existing rotation view", async () => {
+  it("last run of shifts: DATA → Your rotation opens it in the cave's FILE, still two taps (CAVE-DATA D3)", async () => {
     await startDay(); const screen = await render(<App />);
     await screen.getByRole("button", { name: "DATA", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "WHOLE PICTURE", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "YOUR ROTATION", exact: true }).click();
-    await expect.element(screen.getByRole("tab", { name: "Rotation", exact: true })).toHaveAttribute("aria-selected", "true");
+    await expect.element(screen.getByRole("heading", { name: "THE CAVE // FILE", exact: true })).toBeVisible();
     await expect.element(screen.getByText("The way you actually live.", { exact: true })).toBeVisible();
-    await screen.getByRole("tab", { name: "The picture", exact: true }).click();
-    await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
-    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await expect.poll(() => document.activeElement?.textContent).toBe("The way you actually live.");
+    await expect.element(screen.getByRole("button", { name: "DATA", exact: true })).toHaveAttribute("aria-current", "page");
+    // Whole Picture is one tap from here too.
+    await screen.getByRole("button", { name: "OPEN WHOLE PICTURE", exact: true }).click();
     await expect.element(screen.getByRole("tab", { name: "The picture", exact: true })).toHaveAttribute("aria-selected", "true");
   });
   it("whole picture: DATA opens the existing overview without an intermediate menu", async () => {

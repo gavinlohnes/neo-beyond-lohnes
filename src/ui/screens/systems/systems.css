@@ -150,3 +150,5 @@
 /* CAVE-DATA D1: in DATA the cave has seven views (NUMBERS first); four then three. */
 .cave__tabs--seven { grid-template-columns: repeat(4, 1fr); }
 .cave__lead-view { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
+/* CAVE-DATA D3: YOUR ROTATION inside FILE keeps Whole Picture's own styling, on the cave's background. */
+.whole-picture.file__rotation { background: none; min-width: 0; }

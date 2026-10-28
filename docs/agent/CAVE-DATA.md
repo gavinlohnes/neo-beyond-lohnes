@@ -22,10 +22,11 @@ SYSTEMS's readings. The duplicates merge into it. DELTA becomes the cave's voice
    SYSTEMS no longer holds its own copy. FULL HISTORY opens DATA's own history, and "BACK TO DATA"
    returns. Retapping DATA returns to NUMBERS. Also fixes S7's wrong "sleep stages not known" line.
 2. **D2: VITALS absorbs the per-number pages.** SLEEP shows its D/W/M/Y page and PROTEIN and WATER
-   their 7/28/90-day pages, using the same components as before, inside VITALS. **The default view is
-   held:** opening DATA on TONIGHT would break NAV-001's two-tap paths (42 tests), so it waits on
-   Gavin's choice.
-3. **D3: FILE absorbs YOUR ROTATION** and opens WHOLE PICTURE. One knowledge view.
+   their 7/28/90-day pages, using the same components as before, inside VITALS. **Default view:**
+   Gavin chose NUMBERS ("Go with number"), which keeps NAV-001's two-tap paths.
+3. **D3: FILE absorbs YOUR ROTATION** (Whole Picture's RotationMap, replacing FILE's duplicate table).
+   NUMBERS' YOUR ROTATION opens it in place, a tapped day opens in DATA, and WHOLE PICTURE is one tap
+   away.
 4. **D4: DELTA in TONIGHT.** "Since last shift": what changed, each with a plain "why" and question
    buttons that tap through to records. Read from existing projections; no AI, no score. Needs DELTA's
    own slice approval under DELTA-002.
