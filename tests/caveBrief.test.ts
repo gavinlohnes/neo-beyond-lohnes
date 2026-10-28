@@ -30,7 +30,7 @@ describe("SUIT-ALIVE S6 — preflight", () => {
       ["SLEEP", "ADVISORY"], ["CHECK-IN", "GO"], ["FUEL", "GO"], ["HYDRATION", "HOLD"],
       ["PACK · FOOD", "GO"], ["PACK · BOTTLE", "HOLD"], ["HANDOFF", "HOLD"],
     ]);
-    expect(describeBrief(b)).toBe("Hold: hydration, pack · bottle and handoff.");
+    expect(describeBrief(b)).toBe("Hold: hydration, bottle and handoff.");
     expect(b.lastDebrief).toEqual({ felt: "rough", next: "Eat at the break", at: at(15, 6, 10) });
   });
 

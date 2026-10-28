@@ -97,6 +97,8 @@ describe("CAVE-DATA D4 — since last shift", () => {
     expect(facts[0]!.text).toBe("Last shift yesterday; no full day off since.");
     expect(facts[1]!.text).toMatch(/^Last shift's sleep \d:\d\d, (under|inside|above) your usual\.$/);
     expect(facts[2]!.text).toBe("No workout in the last 12 days.");
+    expect(buildSinceLastShift(rows, new Date(2026, 8, 13, 18, 0), "OFF")![0]!.text).toBe("Last shift yesterday; today is your first day off.");
+    expect(buildSinceLastShift(since, now, "OFF")![0]!.text).toBe("Last shift 4 days ago; 3 full days off since, and today.");
   });
 });
 

@@ -31,7 +31,7 @@ for (const width of [320, 390]) it(`runs the preflight poll and closes items thr
   await expect.element(screen.getByRole("heading", { name: "THE CAVE // BRIEF", exact: true })).toBeVisible();
   const cave = screen.getByRole("region", { name: "THE CAVE // BRIEF" });
   await expect.element(cave.getByText("T–00:40", { exact: true })).toBeVisible();
-  await expect.element(cave.getByRole("status").getByText("Hold: sleep, fuel, hydration, pack · food, pack · bottle and handoff.", { exact: true })).toBeVisible();
+  await expect.element(cave.getByRole("status").getByText("Hold: sleep, fuel, hydration, food, bottle and handoff.", { exact: true })).toBeVisible();
   const systems = cave.getByRole("list", { name: "Systems" });
   await expect.poll(() => [...systems.element().querySelectorAll(".brief__state")].map((e) => e.textContent)).toEqual(["HOLD", "GO", "HOLD", "HOLD", "HOLD", "HOLD", "HOLD"]);
 

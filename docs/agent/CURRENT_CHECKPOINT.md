@@ -1,3 +1,18 @@
+# FIELD-REHEARSAL-001 — the suit, walked on eight weeks of rotation
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28: "Make it count and do some amazing stuff."
+  Claude Code; ROUTINE (corrections and a test). Branch `ccr-0be4f40f-16m0ja`.
+- **Baseline:** master `8401f3d` (#327 SUIT-VOLUME-001 merged).
+- **Built:** a real-Chromium rehearsal that seeds 56 days of the real 2-2-3 pattern through the app's
+  commands, then walks TODAY, all seven cave views, TRAIN and MORE. It runs before a shift, on shift
+  and on a day off, at 360px and 390px.
+- **Fixed from it:**
+  - on-shift primary buttons failed AA (4.03:1 before, 6.32:1 now);
+  - VITALS painted days off amber on a work day;
+  - PREFLIGHT read "pack · food";
+  - the first day off read "no full day off since".
+- **Next:** CI and Gavin's merge.
+
 # SUIT-VOLUME-001 — flashy on action, calm at rest
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28: "Go volume. But make it bigger." Claude Code;
