@@ -274,6 +274,9 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    // REAL-DATA-001: exercise names now show before START, so callers can't use them to know the
+    // session started. Wait for the live set, or the start write can land in the next test's database.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
     return screen;
   }
 
@@ -682,6 +685,9 @@ describe("TrainScreen (real browser) — TRAIN-WAVE-A: Persistent Rest + Set Com
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    // REAL-DATA-001: exercise names now show before START, so callers can't use them to know the
+    // session started. Wait for the live set, or the start write can land in the next test's database.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
     return screen;
   }
 
