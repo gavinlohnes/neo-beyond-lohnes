@@ -49,6 +49,8 @@ export interface CaveBrief {
   lastDebrief: { felt: string; next?: string | undefined; at: string } | null;
   prep: PreparationState | null;
   aar: AarRow[] | null;
+  /** Work marked ended, when it was (SHIFT-CHANGE-001 reads the real end). */
+  endedAt?: string | null | undefined;
 }
 
 export interface BriefInputs {
@@ -157,7 +159,7 @@ export function buildCaveBrief(input: BriefInputs): CaveBrief {
 
   return {
     dayId: input.dayId, phase, shift, items, open: items.filter((i) => i.state === "HOLD" || i.state === "LATE").map((i) => i.system),
-    handoff: input.handoff, prep: input.prep, lastDebrief, aar,
+    handoff: input.handoff, prep: input.prep, lastDebrief, aar, endedAt: input.workEndedAt,
     memory: input.memory.filter((m) => m.status === "ACTIVE" && m.kind.startsWith("PREP")).map((m) => ({ kind: m.kind, statement: m.statement })),
   };
 }

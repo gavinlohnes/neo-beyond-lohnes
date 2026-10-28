@@ -1,3 +1,15 @@
+# SHIFT-CHANGE-001 — the end of a shift, given the whole screen once
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28 04:18 on shift ("Am."). Claude Code; PROTECTED
+  (TODAY composition, presentation only). Branch `ccr-0be4f40f-16m0ja`.
+- **Built:**
+  - `buildShiftChange`: LANDING runs for the last 45 minutes and SECURED for 3 hours after the real
+    end;
+  - a full-screen moment on TODAY, shown once per shift and phase;
+  - the rehearsal covers 05:30 and 06:30 on eight weeks of rotation.
+- **Verified:** `npm run verify` green (3,156 passed).
+- **Next:** Gavin's merge before about 05:15. Then a pre-shift version, if he wants it.
+
 # LOG overlap — the floating + steps aside while you scroll
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28: "Fix the LOG button overlap". Claude Code;

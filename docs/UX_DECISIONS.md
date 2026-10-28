@@ -2309,3 +2309,22 @@ operator touches it or when one thing truly needs them, never by default.
   TODAY it covers no control.
 - **Steps never take a comms slot on TODAY.** They stay in VITALS and TONIGHT, so a low-step day cannot push
   sleep off the line.
+
+## SHIFT-CHANGE-001 — the end of a shift, given the whole screen once (owner go, 2026-10-28)
+
+Gavin, on shift at 04:18, asked for something that "blows my mind when I open it again at 5:30 or
+6:30 am", and confirmed AM. The moment is Volume 2 under SUIT-VOLUME-001: earned by the shift itself,
+shown once, and never looping.
+
+- **LANDING, the last 45 minutes:**
+  - a T-minus to the end;
+  - what can still be done (fuel, water, the handoff note);
+  - the landing plan (your usual sleep and lights-out).
+- **SHIFT SECURED, for 3 hours from the real end** (work marked ended counts):
+  - time on the clock;
+  - the after-action rows, on or off plan in words;
+  - the landing plan.
+- **At most one amber,** for sleep before the shift when it is off your usual.
+- **Once per shift and phase.** CONTINUE or Escape dismisses it, and FULL DEBRIEF opens the cave's
+  BRIEF. Reduced motion shows it still. It reads the BRIEF and ROUTE already computed, and nothing is
+  stored except the dismissal.

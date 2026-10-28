@@ -59,6 +59,20 @@ const MOMENTS = {
     vi.setSystemTime(new Date(2026, 9, 27, 19)); await logWater(today.id, 24);
     vi.setSystemTime(new Date(2026, 9, 27, 21));
   },
+  // SHIFT-CHANGE-001: the last half hour of the shift, and just after it.
+  landing: async () => {
+    vi.setSystemTime(new Date(2026, 9, 27, 16, 35)); const today = await startDay();
+    vi.setSystemTime(new Date(2026, 9, 27, 16, 40)); await logSleep(today.id, 285);
+    vi.setSystemTime(new Date(2026, 9, 27, 23)); await logWater(today.id, 40);
+    vi.setSystemTime(new Date(2026, 9, 28, 5, 30));
+  },
+  secured: async () => {
+    vi.setSystemTime(new Date(2026, 9, 27, 16, 35)); const today = await startDay();
+    vi.setSystemTime(new Date(2026, 9, 27, 16, 40)); await logSleep(today.id, 285);
+    vi.setSystemTime(new Date(2026, 9, 27, 23)); await logWater(today.id, 40);
+    vi.setSystemTime(new Date(2026, 9, 28, 2)); await logProtein(today.id, 45);
+    vi.setSystemTime(new Date(2026, 9, 28, 6, 30));
+  },
   // The first day off after the shift, at 11:00.
   dayOff: async () => {
     vi.setSystemTime(new Date(2026, 9, 27, 16, 35)); const shift = await startDay();
@@ -79,7 +93,7 @@ async function axeClean() {
 async function shot(name: string) { if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png` }); }
 
 it.each([
-  ["preflight", 360], ["onShift", 360], ["dayOff", 360], ["onShift", 390],
+  ["preflight", 360], ["onShift", 360], ["landing", 360], ["secured", 360], ["dayOff", 360], ["secured", 390],
 ] as const)("walks TODAY and the whole cave, %s at %ipx, on eight weeks of rotation", async (moment, width) => {
   await MOMENTS[moment]();
   await page.viewport(width, 800);
@@ -87,9 +101,23 @@ it.each([
   const onError = (e: ErrorEvent) => errors.push(e.message);
   window.addEventListener("error", onError);
   expect(await db.beyondDays.count()).toBe(moment === "dayOff" ? 58 : 57);
+  try { localStorage.removeItem("beyond.shiftChange"); } catch { /* none */ }
   const screen = await render(<App />);
   await expect.element(screen.getByRole("button", { name: "DATA", exact: true })).toBeVisible();
   await new Promise((done) => setTimeout(done, 400));
+  // SHIFT-CHANGE-001: the end of the shift takes the screen once; nowhere else.
+  const moment_ = screen.getByRole("dialog", { name: /^(Landing|Shift secured)\./ });
+  if (moment === "landing" || moment === "secured") {
+    await expect.element(moment_).toBeVisible();
+    await Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined)));
+    expect(overflow(), "shift change overflows").toBe(false);
+    expect(await axeClean(), "shift change").toEqual([]);
+    await shot(`${moment}-shift-change-${width}`);
+    await screen.getByRole("button", { name: "CONTINUE", exact: true }).click();
+    await expect.element(moment_).not.toBeInTheDocument();
+  } else {
+    expect(document.querySelector(".shift-change")).toBeNull();
+  }
   expect(overflow()).toBe(false);
   // SUIT-VOLUME-001 at runtime: one accented suit band at most, and nothing still moving once settled.
   await expect.poll(() => document.querySelector(".comms-line"), { timeout: 5000 }).not.toBeNull();
