@@ -2188,8 +2188,10 @@ Understanding, so there is one knowledge view, not two. Brief:
 - **Calibration:** every usual range BEYOND judges with, by kind of day: sleep, energy, protein and
   its pace, water and its pace, usual sleep and wake timing, and run positions. Each is rated THIN
   (under its floor, so BEYOND says it's still learning), BUILDING (at the floor) or FIRM (twice the
-  floor), in words. It also lists what BEYOND does not know: caffeine, light exposure and sleep
-  stages. This is a presentation rule, not a score.
+  floor), in words. It also lists what BEYOND does not know: caffeine and light exposure. This is a
+  presentation rule, not a score. **Corrected 2026-10-28:** sleep stages were wrongly listed as not
+  known. Garmin's stages are imported and shown in TODAY's sleep sheet; they are not yet judged
+  against your usual.
 - **Whole run:** shift 1… and day off 1…, with sleep, energy, how often you trained, and runs on
   file. Averages need 3 measured days; below that, the count is shown in brackets.
 - **Unchanged:** the Engine, recommendations, schema, events and TODAY. Nothing is stored.
@@ -2218,3 +2220,18 @@ it on when I'm ready" (cloak). Brief: [`agent/SUIT-ALIVE.md`](agent/SUIT-ALIVE.m
   - Both read newest first.
 - **The cave** now has six views, set in two rows: TONIGHT, ROUTE, BRIEF, VITALS, FILE and LOG.
 - **Unchanged:** the Engine, recommendations, schema, events, and TODAY's rows and layout.
+
+## CAVE-DATA-001 — the cave is DATA (owner choice, 2026-10-28)
+
+Gavin chose option A, "DATA becomes the cave", over a cave card on DATA (B) or a shortcut (C). DELTA
+is to live in it. Brief: [`agent/CAVE-DATA.md`](agent/CAVE-DATA.md). **Amends NAV-001's DATA line:**
+DATA is the cave. Its first view, NUMBERS, keeps everything NAV-001 put on DATA. Built in slices
+D1–D5, each for Gavin's merge. The tab keeps its name.
+
+- **D1:**
+  - **One cave, in DATA.** TODAY's comms, route and brief bands and SYSTEMS's readings open DATA's
+    cave on the view they name, and focus lands on that view's tab. SYSTEMS keeps its readings, CLOAK
+    and vision, and no longer holds a second cave.
+  - **Unchanged:** DATA still opens on NUMBERS, and retapping DATA returns to it. Every DATA path,
+    sheet and history is unchanged.
+  - **Not changed:** the Engine, schema, events, TODAY, and stored records.

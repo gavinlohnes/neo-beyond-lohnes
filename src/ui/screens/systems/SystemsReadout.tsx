@@ -26,14 +26,10 @@ import {
   formatFuelReading,
   formatSleepReading,
 } from "./systemsCopy";
-import { Cave, type CaveOpen } from "./CaveVitals";
 import { StealthToggleContext } from "../../components/OperatorHeader";
 import { setVisionPref, useVision, VISION_PREFS, type VisionPref } from "../../vision/vision";
 import type { CaveVitalId } from "../../../application/caveVitals";
 import "./systems.css";
-
-/** SUIT-ALIVE S3/S4: the last cave request handled, across mounts, so each opens the cave once. */
-let lastCaveRequest = 0;
 
 /**
  * SUIT-001: the SYSTEMS readout. Read only, from existing queries. BODY rows
@@ -41,38 +37,22 @@ let lastCaveRequest = 0;
  * SUIT-ALIVE S2: sleep, protein, water and the check-in open the cave in place
  * (one reading in depth); bodyweight still opens its history directly, and the
  * cave links to full history.
- * SUIT-ALIVE S3/S4: TODAY's comms and route lines open the cave through `caveRequest`.
+ * CAVE-DATA D1: the cave lives in DATA; these rows open it there, on that vital.
  */
-export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveRequest, onOpenUnderstanding }: {
+export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, onOpenCave }: {
   active: boolean;
   /** Bumped after a write made while the readout stays shown (stealth). */
   refreshKey?: number;
   /** Opens DATA's existing history for that metric; absent, the rows are plain readings. */
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
-  /** A new key opens the cave on that view; each key opens it once. */
-  caveRequest?: { key: number; tab: "tonight" | "route" | "brief" } | undefined;
-  /** S7: opens REVIEW, where Personal Understanding lives. */
-  onOpenUnderstanding?: (() => void) | undefined;
+  /** CAVE-DATA D1: opens DATA's cave on a vital; absent, the rows open history. */
+  onOpenCave?: ((vital: CaveVitalId) => void) | undefined;
 }) {
   const online = useOnline();
   const [state, setState] = useState<{ readout: Readout; mode: ShiftClockPhase | null; pinned: boolean; templates: CustomWorkoutTemplate[]; now: Date; backupDue: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const sequence = useRef(0);
-  const [cave, setCave] = useState<CaveOpen | null>(() => caveRequest && caveRequest.key > lastCaveRequest ? { tab: caveRequest.tab } : null);
-  // The readout re-renders when the cave closes, so focus returns to the row by what it opened, not by element.
-  const returnTo = useRef<CaveVitalId | null>(null);
-  function openCave(id: CaveVitalId) { returnTo.current = id; setCave({ tab: "vitals", vital: id }); }
-  useEffect(() => {
-    if (!caveRequest || caveRequest.key <= lastCaveRequest) return;
-    lastCaveRequest = caveRequest.key;
-    returnTo.current = null;
-    setCave({ tab: caveRequest.tab });
-  }, [caveRequest]);
-  useEffect(() => {
-    if (cave || !returnTo.current) return;
-    document.querySelector<HTMLElement>(`[data-cave="${returnTo.current}"]`)?.focus({ preventScroll: true });
-    returnTo.current = null;
-  }, [cave]);
+  const openCave = (id: CaveVitalId) => onOpenCave ? () => onOpenCave(id) : onOpenMetric;
 
   async function refresh() {
     const request = ++sequence.current;
@@ -94,7 +74,6 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveReque
   // TRAIN's own wording: "Template A", or a custom program's name.
   const label = (id: string) => `Template ${state ? templateLabel(id as WorkoutTemplateId, state.templates) : id}`;
 
-  if (cave) return <Cave key={`${cave.tab}:${cave.vital ?? ""}:${lastCaveRequest}`} initial={cave} onBack={() => setCave(null)} onOpenMetric={onOpenMetric} onOpenUnderstanding={onOpenUnderstanding} />;
 
   return (
     <section className="systems" aria-labelledby="systems-title">
@@ -107,13 +86,13 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveReque
         const noDay = "No day started";
         return <>
           <Group title="BODY">
-            <MetricRow metric="sleep" label="Last main sleep" onOpen={() => openCave("sleep")} action="Open in the cave" cave="sleep"
+            <MetricRow metric="sleep" label="Last main sleep" onOpen={openCave("sleep")} action={onOpenCave ? "Open in the cave" : undefined} cave="sleep"
               value={r.lastMainSleep ? formatSleepReading(r.lastMainSleep.minutes) : "Not logged"}
               detail={r.lastMainSleep ? (r.lastMainSleep.fromGarmin ? `Garmin · woke ${clockTime(r.lastMainSleep.occurredAt)}` : `Logged ${clockTime(r.lastMainSleep.recordedAt)}`) : "Nothing in the last 36 hours."} />
-            <MetricRow metric="protein" label="Protein" onOpen={() => openCave("protein")} action="Open in the cave" cave="protein"
+            <MetricRow metric="protein" label="Protein" onOpen={openCave("protein")} action={onOpenCave ? "Open in the cave" : undefined} cave="protein"
               value={r.proteinG === null ? noDay : formatFuelReading(r.proteinG, r.proteinTargetG)}
               detail={r.proteinG !== null && r.proteinTargetG === undefined ? "No target set." : ""} />
-            <MetricRow metric="water" label="Water" onOpen={() => openCave("water")} action="Open in the cave" cave="water" value={r.waterOz === null ? noDay : `${r.waterOz} oz`} />
+            <MetricRow metric="water" label="Water" onOpen={openCave("water")} action={onOpenCave ? "Open in the cave" : undefined} cave="water" value={r.waterOz === null ? noDay : `${r.waterOz} oz`} />
             <MetricRow metric="weight" label="Bodyweight" onOpen={onOpenMetric} value={r.bodyweightLbs === undefined ? "Not logged" : `${r.bodyweightLbs} lb`} />
           </Group>
           <Group title="TRAINING">
@@ -123,7 +102,7 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveReque
             <Reading label="Next in rotation" value={r.nextTemplateId ? label(r.nextTemplateId) : "Not available"} />
           </Group>
           <Group title="STATE">
-            <MetricRow metric="sleep" label="Check-in" onOpen={() => openCave("energy")} action="Open energy in the cave" cave="energy" value={r.checkIn ? r.checkIn.capacity : "Not done"}
+            <MetricRow metric="sleep" label="Check-in" onOpen={onOpenCave ? () => onOpenCave("energy") : undefined} action="Open energy in the cave" cave="energy" value={r.checkIn ? r.checkIn.capacity : "Not done"}
               detail={r.checkIn ? [clockTime(r.checkIn.recordedAt), ...r.checkIn.reasonCodes.map(describeReason)].join(" · ") : r.day ? "No check-in today." : noDay} />
             <Reading label="System status" value={describeStatusLevel(r.status.level)} tone={r.status.level === "AMBER" || r.status.level === "RED" ? "warn" : undefined}
               detail={r.status.level === "NO_READ" ? "Log sleep or check in." : r.status.facts.map(describeStatusFact).join(", ")}>
@@ -181,7 +160,7 @@ function Reading({ label, value, detail, tone, children }: { label: string; valu
   </div>;
 }
 
-function MetricRow({ metric, label, value, detail, onOpen, action = "Open history", cave }: { metric: InsightMetric; label: string; value: string; detail?: string; onOpen?: ((metric: InsightMetric) => void) | undefined; action?: string; cave?: CaveVitalId }) {
+function MetricRow({ metric, label, value, detail, onOpen, action = "Open history", cave }: { metric: InsightMetric; label: string; value: string; detail?: string; onOpen?: ((metric: InsightMetric) => void) | undefined; action?: string | undefined; cave?: CaveVitalId }) {
   if (!onOpen) return <Reading label={label} value={value} {...(detail ? { detail } : {})} />;
   return <button type="button" className="systems__row systems__row--link" data-cave={cave} aria-label={`${label}: ${value}${detail ? `. ${detail.replace(/\.$/, "")}` : ""}. ${action}`} onClick={() => onOpen(metric)}>
     <span className="systems__text"><span className="systems__label">{label}</span>{detail && <span className="systems__detail">{detail}</span>}</span>

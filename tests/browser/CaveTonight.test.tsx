@@ -28,7 +28,8 @@ for (const width of [320, 390]) it(`comms opens Tonight with the call, writing n
   await comms.click();
 
   await expect.element(screen.getByRole("heading", { name: "THE CAVE // TONIGHT", exact: true })).toBeVisible();
-  await expect.poll(() => document.activeElement?.textContent).toBe("BACK TO SYSTEMS");
+  await expect.element(screen.getByRole("button", { name: "DATA", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect.poll(() => document.activeElement?.getAttribute("data-cave-tab")).toBe("tonight");
   await expect.element(screen.getByRole("button", { name: "TONIGHT", exact: true })).toHaveAttribute("aria-pressed", "true");
   const cave = screen.getByRole("region", { name: "THE CAVE // TONIGHT" });
   await expect.element(cave.getByText("Protect recovery", { exact: true })).toBeVisible();
@@ -46,7 +47,8 @@ for (const width of [320, 390]) it(`comms opens Tonight with the call, writing n
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   for (const animation of document.getAnimations()) animation.finish();
   expect((await axe.run(document.querySelector(".cave")!)).violations).toEqual([]);
-  await screen.getByRole("button", { name: "BACK TO SYSTEMS", exact: true }).click();
-  await expect.element(screen.getByRole("heading", { name: "MORE // SYSTEMS", exact: true })).toBeVisible();
+  // Back to NUMBERS, DATA's own page, in one tap.
+  await screen.getByRole("button", { name: "NUMBERS", exact: true }).click();
+  await expect.element(screen.getByRole("heading", { name: "THE CAVE // NUMBERS", exact: true })).toBeVisible();
   expect(await db.events.toArray()).toEqual(before);
 });

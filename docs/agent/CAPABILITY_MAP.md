@@ -314,3 +314,5 @@ fresh general review.
   THIN calibration and the whole run, from Personal Understanding's query. Reuse it, not a second store.
 - SUIT-ALIVE S8 (vision, log): `ui/vision/` gives presentation-only vision modes (AUTO night on shift) as
   token overrides; `application/caveLog.ts` rebuilds what the cave said from records. Reuse both.
+- CAVE-DATA D1: the cave lives in DATA (`BodyScreen` overview → `Cave` with a `lead` view). Open it with
+  App's `openCave(view, vital?)`; never mount a second cave.

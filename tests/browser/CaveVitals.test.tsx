@@ -23,7 +23,9 @@ for (const width of [320, 390]) it(`opens a vital in the cave, switches vitals a
   await screen.getByRole("button", { name: /^Last main sleep: 5h 10m\..* Open in the cave$/ }).click();
 
   await expect.element(screen.getByRole("heading", { name: "THE CAVE // VITALS", exact: true })).toBeVisible();
-  await expect.poll(() => document.activeElement?.textContent).toBe("BACK TO SYSTEMS");
+  // CAVE-DATA D1: the cave lives in DATA; focus lands on the view that was asked for.
+  await expect.element(screen.getByRole("button", { name: "DATA", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect.poll(() => document.activeElement?.getAttribute("data-cave-tab")).toBe("vitals");
   await expect.poll(() => document.querySelector(".cave__value")?.textContent).toBe("5:10h");
   // A fresh install has no history yet: the cave says it is still learning instead of inventing a range.
   await expect.element(screen.getByText(/^Still learning your usual: \d+ of 10 days so far\.$/)).toBeVisible();
@@ -43,9 +45,6 @@ for (const width of [320, 390]) it(`opens a vital in the cave, switches vitals a
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   for (const animation of document.getAnimations()) animation.finish();
   expect((await axe.run(document.querySelector(".cave")!)).violations).toEqual([]);
-  await screen.getByRole("button", { name: "BACK TO SYSTEMS", exact: true }).click();
-  await expect.element(screen.getByRole("heading", { name: "MORE // SYSTEMS", exact: true })).toBeVisible();
-  await expect.poll(() => document.activeElement?.getAttribute("aria-label") ?? "").toMatch(/^Last main sleep: /);
   expect(await db.events.toArray()).toEqual(before);
 });
 

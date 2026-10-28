@@ -92,7 +92,8 @@ export function buildCaveFile(input: FileInputs): CaveFile {
 
   return {
     daysOnFile: rows.filter((r) => r.dayIds.length > 0).length, runs, findings, calibration, wholeRun,
-    notKnown: ["Caffeine: BEYOND doesn't record it.", "Light exposure: not recorded.", "Sleep stages: Garmin import keeps start, end and length only."],
+    // Sleep stages are imported from Garmin and shown in TODAY's sleep sheet; they are not judged against your usual yet.
+    notKnown: ["Caffeine: BEYOND doesn't record it.", "Light exposure: not recorded."],
   };
 }
 

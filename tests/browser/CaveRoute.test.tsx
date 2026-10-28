@@ -28,7 +28,7 @@ for (const width of [320, 390]) it(`shows the next points and opens the full rou
   await route.click();
 
   await expect.element(screen.getByRole("heading", { name: "THE CAVE // ROUTE", exact: true })).toBeVisible();
-  await expect.poll(() => document.activeElement?.textContent).toBe("BACK TO SYSTEMS");
+  await expect.poll(() => document.activeElement?.getAttribute("data-cave-tab")).toBe("route");
   const cave = screen.getByRole("region", { name: "THE CAVE // ROUTE" });
   await expect.element(cave.getByText("Work day, 16:30 to 16:30. Solid points are fixed. Hollow points are your usual, not orders.", { exact: true })).toBeVisible();
   await expect.element(cave.getByText("SHIFT · passed", { exact: true })).toBeVisible();

@@ -1,3 +1,14 @@
+# CAVE-DATA D1 — the cave is DATA
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28, option A (CAVE-DATA-001). Claude Code; PROTECTED
+  (amends NAV-001's DATA). [Brief](CAVE-DATA.md).
+- **Baseline:** master `dbccca9` (#321 S8 merged; the SUIT-ALIVE build plan is complete).
+- **Built:** DATA's page is the cave's first view, NUMBERS. Every cave entry (TODAY's bands, SYSTEMS's
+  readings) opens DATA's cave on its view. The second cave in SYSTEMS is gone. S7's wrong "sleep
+  stages not known" line is fixed.
+- **Next:** CI and Gavin's merge. Then D2 (VITALS absorbs the per-number pages; DATA opens on TONIGHT).
+
+---
 # SUIT-ALIVE S8 — suit systems, vision and the log
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28. He ruled night vision may be automatic and cloak

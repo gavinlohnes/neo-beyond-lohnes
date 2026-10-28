@@ -40,7 +40,7 @@ for (const width of [320, 360, 412]) it(`shows the SYSTEMS line and opens the re
   expect(await db.events.toArray()).toEqual(before);
 });
 
-it("SUIT-ALIVE S2: a vital opens the cave in place, and its full history is one tap further", async () => {
+it("a vital opens DATA's cave on it (CAVE-DATA D1), and its full history is one tap further", async () => {
   clock();
   const day = await startDay(); await setWorkContext(day.id, "OFF", "MANUAL"); await logWater(day.id, 8);
   const screen = await render(<App />);
@@ -49,13 +49,14 @@ it("SUIT-ALIVE S2: a vital opens the cave in place, and its full history is one 
   await screen.getByRole("button", { name: /^SYSTEMS / }).click();
   const water = screen.getByRole("button", { name: "Water: 8 oz. Open in the cave" });
   await water.click();
+  await expect.element(screen.getByRole("button", { name: "DATA", exact: true })).toHaveAttribute("aria-current", "page");
   await expect.element(screen.getByRole("heading", { name: "THE CAVE // VITALS", exact: true })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: "WATER", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => document.activeElement?.getAttribute("data-cave-tab")).toBe("vitals");
   await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("water");
-  await screen.getByRole("button", { name: "BACK TO MORE", exact: true }).click();
+  await screen.getByRole("button", { name: "BACK TO DATA", exact: true }).click();
   await expect.poll(() => document.activeElement?.textContent).toBe("FULL HISTORY");
-  await screen.getByRole("button", { name: "BACK TO SYSTEMS", exact: true }).click();
-  await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Water: 8 oz. Open in the cave");
 });
 
 for (const [level, values, words] of [
