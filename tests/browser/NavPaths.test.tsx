@@ -43,9 +43,14 @@ describe("NAV-001 top tasks from TODAY", () => {
     expect(box.top).toBeGreaterThanOrEqual(0);
     const hit = () => { const rect = plus.element().getBoundingClientRect(); return plus.element().contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)); };
     expect(hit()).toBe(true);
+    // TODAY can still grow while its reads land; a scroll that stops short of the end hides +
+    // (scroll-away). Wait for the page height to settle before scrolling to the end.
+    const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    let settled = -1;
+    await expect.poll(async () => { const before = settled; await frame(); await frame(); settled = document.documentElement.scrollHeight; return settled === before; }).toBe(true);
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
     await expect.poll(() => plus.element().getBoundingClientRect().bottom).toBe(box.bottom);
-    expect(hit()).toBe(true);
+    await expect.poll(hit).toBe(true);
     await plus.click();
     await expect.element(screen.getByRole("dialog", { name: "LOG", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "CLOSE", exact: true }).click();
@@ -148,12 +153,20 @@ describe("NAV-001 top tasks from TODAY", () => {
     // Whole Picture is one tap from here too.
     await screen.getByRole("button", { name: "OPEN WHOLE PICTURE", exact: true }).click();
     await expect.element(screen.getByRole("tab", { name: "The picture", exact: true })).toHaveAttribute("aria-selected", "true");
+    await expect.element(screen.getByRole("button", { name: "DATA", exact: true })).toHaveAttribute("aria-current", "page");
   });
   it("whole picture: DATA opens the existing overview without an intermediate menu", async () => {
     await startDay(); const screen = await render(<App />);
     await screen.getByRole("button", { name: "DATA", exact: true }).click();
     await screen.getByRole("button", { name: "WHOLE PICTURE", exact: true }).click();
     await expect.element(screen.getByRole("tab", { name: "The picture", exact: true })).toHaveAttribute("aria-selected", "true");
+    // WHOLE-PICTURE-IN-DATA: it stays in DATA, and BACK TO DATA returns to the button that opened it.
+    await expect.element(screen.getByRole("button", { name: "DATA", exact: true })).toHaveAttribute("aria-current", "page");
+    await screen.getByRole("button", { name: "BACK TO DATA", exact: true }).click();
+    await expect.poll(() => document.activeElement?.textContent).toBe("WHOLE PICTURE");
+    await screen.getByRole("button", { name: "WHOLE PICTURE", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: "WHOLE PICTURE", exact: true })).toBeVisible();
   });
   it("sync Garmin: TODAY's measured numbers expose the existing helper link", async () => {
     await startDay();

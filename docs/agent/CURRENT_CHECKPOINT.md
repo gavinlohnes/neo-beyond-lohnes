@@ -1,3 +1,14 @@
+# WHOLE-PICTURE-IN-DATA — DATA's Whole Picture stays in DATA
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28 ("merge 336 when green and go whole picture").
+  Claude Code; Protected (navigation, amending FIELD-AUTHORITY-001's COMMAND note). Branch
+  `ccr-0be4f40f-16m0ja`.
+- **Built:** the existing `WholePicture` renders inside DATA behind BACK TO DATA, and focus
+  returns to the button that opened it. Retapping DATA or opening a cave view closes it. MORE //
+  REVIEW still shows Whole Picture as before.
+- **Verified:** `npm run verify` green (3,168 passed).
+- **Next:** CI and Gavin's merge, then decide what's next together.
+
 # MORE-TRIM-001 — MORE shows each destination once
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28 ("merge 335 and trim MORE next"). Claude

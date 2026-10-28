@@ -1,6 +1,7 @@
 import { captureCommitFeedback } from "../../feel/feedback";
 import { LogTimeEditor } from "../../components/LogTimeEditor";
 import { SleepMetricSheet } from "../today/SleepMetricSheet";
+import { WholePicture } from "../review/WholePicture";
 import { WeightTrend } from "./WeightTrend";
 import { getRecordedHealthDay } from "../../../application/healthRecordQueries";
 import type { RecordCorrectionRequest } from "../../recordSheets";
@@ -294,6 +295,9 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   const mealsVisible = mealFocused || bodyMealsOpen;
   const [compositionRequest, setCompositionRequest] = useState<{ key: number; view: "photos" | "measurements" } | null>(null);
   const [progressOpen, setProgressOpen] = useState(false);
+  // WHOLE-PICTURE-IN-DATA: the picture opens inside DATA, so BACK TO DATA returns where you were.
+  const [pictureOpen, setPictureOpen] = useState(false), [pictureVisited, setPictureVisited] = useState(false);
+  function openPicture() { rememberOrigin(); setPictureVisited(true); setPictureOpen(true); requestAnimationFrame(() => { window.scrollTo(0, 0); document.getElementById("data-picture-back")?.focus({ preventScroll: true }); }); }
   const [progressReturnFocus, setProgressReturnFocus] = useState(0);
   const [progressVisited, setProgressVisited] = useState(false);
   const [healthDay, setHealthDay] = useState<string | null>(null);
@@ -384,7 +388,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     setWaterFocused(focus === "water");
     setMealFocused(focus === "meal" || focus === "foodLookup");
     setBodyMealsOpen(focus === "meal" || focus === "foodLookup");
-    setProgressOpen(false);
+    setProgressOpen(false); setPictureOpen(false);
     if (!sheetFocus && (focus === "meal" || focus === "foodLookup")) setAddMealOpen(true);
     if (focus === "foodLookup") { setLookupReachable(true); setLookupOpen(true); }
     if (focus === "sleep") setSleepOpen(true);
@@ -397,14 +401,14 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   const [caveView, setCaveView] = useState<CaveRequest | undefined>(undefined);
   useEffect(() => {
     if (!caveRequest?.key) return;
-    setProgressOpen(false); setSourceSelection(null);
+    setProgressOpen(false); setPictureOpen(false); setSourceSelection(null);
     setCaveView({ ...caveRequest, key: ++caveViewKey.current });
   }, [caveRequest?.key]);
   useEffect(() => {
     if (!overviewRequest.key) return;
     // Supersedes any pending shortcut positioning.
     mealPositioned.current = true;
-    if (overviewRequest.retap) { setHealthDay(null); setSourceSelection(null); setCaveView({ key: ++caveViewKey.current, tab: "lead" }); }
+    if (overviewRequest.retap) { setHealthDay(null); setSourceSelection(null); setPictureOpen(false); setCaveView({ key: ++caveViewKey.current, tab: "lead" }); }
     const shortcutView = waterFocused || mealFocused;
     if (!shortcutView && !(overviewRequest.retap && (bodyMealsOpen || progressOpen))) return;
     // Only the presentation resets; meal, sleep, weight and correction input stay as typed.
@@ -2553,9 +2557,9 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     <OperatorHeader destination="body" focusable>DATA</OperatorHeader>
     {onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>{returnLabel}</button>}
     {/* CAVE-DATA (Gavin, 2026-10-28, option A): DATA is the cave; its own page is the first view, NUMBERS. */}
-    <div hidden={progressOpen}><Cave initial={{ tab: "lead" }} request={caveView} onOpenMetric={(metric) => showProgress(metric)}
+    <div hidden={progressOpen || pictureOpen}><Cave initial={{ tab: "lead" }} request={caveView} onOpenMetric={(metric) => showProgress(metric)}
       onOpenUnderstanding={onOpenReview ? () => onOpenReview("overview") : undefined}
-      onOpenWholePicture={onOpenReview ? () => onOpenReview("overview") : undefined}
+      onOpenWholePicture={openPicture}
       onInspectDay={(id) => { setHealthDay(id); setCaveView({ key: ++caveViewKey.current, tab: "lead" }); }}
       lead={{ label: "NUMBERS", content: <>
       <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
@@ -2568,7 +2572,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         <button type="button" className="btn-secondary body-progress-card" onClick={onOpenTrainingRecords}>TRAINING · RECORDS</button>
         <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); }}>{label}</button>)}</div>
         <div className="body-progress-pair" aria-label="Patterns">
-          <button type="button" className="btn-secondary body-progress-card" disabled={!onOpenReview} onClick={() => onOpenReview?.("overview")}>WHOLE PICTURE</button>
+          <button type="button" className="btn-secondary body-progress-card" onClick={openPicture}>WHOLE PICTURE</button>
           <button type="button" className="btn-secondary body-progress-card" onClick={() => setCaveView({ key: ++caveViewKey.current, tab: "file", section: "rotation" })}>YOUR ROTATION</button>
         </div>
       </section>
@@ -2578,6 +2582,10 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
           days={{ selected: healthDay, disabled: busy, refreshKey: dataRevision, onHistory: onHealthHistory, onSelect: setHealthDay, onExplore: showProgress, onInspect: (selection) => openSources(selection, true) }} />
       </section>
     </> }} /></div>
+    <div hidden={!pictureOpen}>
+      <button id="data-picture-back" type="button" className="btn-secondary" onClick={() => { setPictureOpen(false); restoreOrigin(); }}>BACK TO DATA</button>
+      {pictureVisited && <WholePicture active={visible && pictureOpen} onOpenHistory={onHealthHistory ? (dayId) => onHealthHistory({ dayId }) : undefined} />}
+    </div>
     <div hidden={!progressOpen}>
       <button type="button" className="btn-secondary" onClick={() => { setProgressOpen(false); setSourceSelection(null); restoreOrigin(); }}>BACK TO DATA</button>
       <section hidden={sourceSelection !== null}><h2 id="health-progress-heading" tabIndex={-1}>PROGRESS</h2>{progressVisited && <BodyProgress active={visible && progressOpen && sourceSelection === null} refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} request={progressRequest} compositionRequest={compositionRequest} returnFocusRequest={progressReturnFocus} onSources={(selection) => openSources(selection)} />}</section>
