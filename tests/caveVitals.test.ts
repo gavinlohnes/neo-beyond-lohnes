@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCaveVital, caveUsual, describeCaveVital, type CaveInputs } from "../src/application/caveVitals";
+import { buildCaveVital, caveUsual, describeCaveVital, formatCaveValue, type CaveInputs } from "../src/application/caveVitals";
 import type { PictureRow } from "../src/application/wholePictureProjection";
 import type { StateCheckIn } from "../src/domain/common/types";
 
@@ -66,5 +66,25 @@ describe("SUIT-ALIVE S2 — the cave, Vitals", () => {
     expect(empty.usual).toEqual({ kind: "LEARNING", dayKind: "ALL", days: 0, need: 10 });
     expect(describeCaveVital(empty)).toBe("No check-in today yet.");
     expect(empty.trend).toEqual([]);
+  });
+});
+
+describe("CAVE-DATA D5 — resting heart rate and steps", () => {
+  const daily = Array.from({ length: 12 }, (_, i) => ({
+    start: new Date(2026, 8, i + 1, 16, 30).toISOString(), dayIds: [`g${i}`], context: "OFF", sessions: 0, weights: [],
+    resting: 52 + (i % 3), steps: 8000 + (i % 3) * 1000, measuredHours: 24,
+  })) as unknown as PictureRow[];
+  const readout = { day: { id: "today", workContext: "OFF" }, lastMainSleep: null, proteinG: null, proteinTargetG: null, waterOz: null, checkIn: null } as unknown as CaveInputs["readout"];
+
+  it("judges the last finished day's Garmin reading against your usual, and never feeds the advice", () => {
+    const resting = buildCaveVital("resting", { rows: [...daily, { ...daily[11]!, start: new Date(2026, 8, 13, 16, 30).toISOString(), resting: 60 } as PictureRow], readout, checkIn: undefined });
+    expect(resting.today).toEqual({ value: 60, partial: false });
+    expect(resting.verdict).toBe("ABOVE");
+    expect(describeCaveVital(resting)).toBe("Above your usual 52 bpm–54 bpm.");
+    expect(resting.feeds.decides).toBe(false);
+    expect(resting.source[0]).toEqual({ label: "Source", value: "Garmin · daily summary" });
+    const steps = buildCaveVital("steps", { rows: daily, readout, checkIn: undefined });
+    expect(formatCaveValue("steps", steps.today.value!)).toBe("10,000");
+    expect(steps.verdict).toBe("INSIDE");
   });
 });

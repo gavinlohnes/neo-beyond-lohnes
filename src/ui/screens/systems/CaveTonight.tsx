@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { describeTonightReading, getCaveTonight, type CaveTonight } from "../../../application/caveTonight";
+import { describeTonightReading, getCaveTonight, type CaveTonight, type SinceFact } from "../../../application/caveTonight";
 import type { CaveVitalId } from "../../../application/caveVitals";
 import type { RecommendationDecision } from "../../../application/queries";
 import { describeError } from "../../errorMessage";
@@ -10,7 +10,7 @@ import { describePlainRecommendationTitle, describeRecommendationReason, explain
  * from its own trace; which readings sit furthest outside your own usual range; and what's overdue.
  * Read-only. The order is distance from your normal, never a score, and no number for it is shown.
  */
-const NAMES: Record<CaveVitalId, string> = { sleep: "SLEEP", energy: "ENERGY", protein: "PROTEIN", water: "WATER" };
+const NAMES: Record<CaveVitalId, string> = { sleep: "SLEEP", energy: "ENERGY", protein: "PROTEIN", water: "WATER", resting: "RESTING HR", steps: "STEPS" };
 const DECISION: Record<RecommendationDecision, string> = {
   ACCEPTED: "You said you'd do this.",
   DECLINED: "You said not now.",
@@ -19,7 +19,13 @@ const DECISION: Record<RecommendationDecision, string> = {
 const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const due = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-export function CaveTonightView({ onOpenVital }: { onOpenVital: (id: CaveVitalId) => void }) {
+export function CaveTonightView({ onOpenVital, onOpenNormal, onInspectDay }: {
+  onOpenVital: (id: CaveVitalId) => void;
+  /** CAVE-DATA D4: "What's normal for me?" opens VITALS. */
+  onOpenNormal?: (() => void) | undefined;
+  /** CAVE-DATA D4: a "since last shift" line opens the day it came from in DATA. */
+  onInspectDay?: ((dayId: string) => void) | undefined;
+}) {
   const [tonight, setTonight] = useState<CaveTonight | null>(null);
   const [error, setError] = useState<string | null>(null);
   const sequence = useRef(0);
@@ -42,7 +48,27 @@ export function CaveTonightView({ onOpenVital }: { onOpenVital: (id: CaveVitalId
   const steady = tonight.steady.map((r) => NAMES[r.id].toLowerCase());
   const learning = tonight.learning.map((l) => `${NAMES[l.id].toLowerCase()} (${l.days} of ${l.need} days)`);
 
+  const since = tonight.since;
+  const openFact = (f: SinceFact) => f.key === "SLEEP" ? () => onOpenVital("sleep") : f.dayId && onInspectDay ? () => onInspectDay(f.dayId!) : undefined;
+  const whyThis = () => {
+    const heading = document.getElementById("tonight-call");
+    if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); heading.scrollIntoView({ block: "start" }); }
+  };
+
   return <>
+    {since && <section className="cave__block" aria-labelledby="tonight-since">
+      <h3 id="tonight-since" className="cave__cap">Since last shift</h3>
+      <ul className="cave__since">{since.map((f) => { const open = openFact(f); return (
+        <li key={f.key}>{open
+          ? <button type="button" onClick={open} aria-label={`${f.text} ${f.why} Open ${f.key === "SLEEP" ? "sleep in vitals" : "that day's records"}.`}><span aria-hidden="true">{f.text}</span><small aria-hidden="true">{f.why}</small></button>
+          : <p><span>{f.text}</span><small>{f.why}</small></p>}</li>
+      ); })}</ul>
+      <div className="cave__asks" role="group" aria-label="Questions">
+        {rec && <button type="button" className="chip" onClick={whyThis}>WHY THIS?</button>}
+        {onOpenNormal && <button type="button" className="chip" onClick={onOpenNormal}>WHAT'S NORMAL FOR ME?</button>}
+      </div>
+      <p className="meta">Facts from your records against your own usual. Nothing here is a score or a call.</p>
+    </section>}
     <section className="cave__block" aria-labelledby="tonight-call">
       <h3 id="tonight-call" className="cave__cap">The call{rec ? ` · ${clock(rec.trace.evaluatedAt)}` : ""}</h3>
       {rec ? <>

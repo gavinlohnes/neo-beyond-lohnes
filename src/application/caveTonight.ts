@@ -45,6 +45,8 @@ export interface CaveTonight {
   /** Readings that exist but have under the minimum days for a usual range. */
   learning: { id: CaveVitalId; days: number; need: number }[];
   late: { id: string; title: string; dueAt: string }[];
+  /** CAVE-DATA D4: what changed since last shift; null when no finished shift is on file. */
+  since?: SinceFact[] | null | undefined;
 }
 
 export interface TonightInputs {
@@ -59,7 +61,7 @@ export interface TonightInputs {
   pace?: Partial<Record<"protein" | "water", PaceReading>> | undefined;
 }
 
-const ORDER: readonly CaveVitalId[] = ["sleep", "energy", "protein", "water"];
+const ORDER: readonly CaveVitalId[] = ["sleep", "energy", "protein", "water", "resting", "steps"];
 type Kind = "WORK" | "OFF" | "ALL";
 
 function readingFor(id: CaveVitalId, readout: TonightInputs["readout"], checkIn: StateCheckIn | null, last: PictureRow | undefined, todayKind: Kind):
@@ -107,11 +109,12 @@ export async function getCaveTonight(now: Date = new Date()): Promise<CaveTonigh
     ...(readout.proteinG !== null ? { protein: paceReading("protein", readout.proteinG, histories.protein, minute) } : {}),
     ...(readout.waterOz !== null ? { water: paceReading("water", readout.waterOz, histories.water, minute) } : {}),
   } : undefined;
-  return buildCaveTonight({ rows: picture.rows, readout, checkIn: checkIn ?? null, recommendation: recommendation ?? null, decision, obligations, today: formatLocalDate(now), pace });
+  return { ...buildCaveTonight({ rows: picture.rows, readout, checkIn: checkIn ?? null, recommendation: recommendation ?? null, decision, obligations, today: formatLocalDate(now), pace }),
+    since: buildSinceLastShift(picture.rows, now) };
 }
 
-const NAMES: Record<CaveVitalId, string> = { sleep: "Sleep", energy: "Energy", protein: "Protein", water: "Water" };
-const UNIT: Record<CaveVitalId, string> = { sleep: "", energy: "", protein: " g", water: " oz" };
+const NAMES: Record<CaveVitalId, string> = { sleep: "Sleep", energy: "Energy", protein: "Protein", water: "Water", resting: "Resting HR", steps: "Steps" };
+const UNIT: Record<CaveVitalId, string> = { sleep: "", energy: "", protein: " g", water: " oz", resting: " bpm", steps: "" };
 const show = (id: CaveVitalId, v: number) => `${formatCaveValue(id, v)}${UNIT[id]}`;
 const range = (r: TonightReading) => r.low === r.high ? show(r.id, r.low) : `${formatCaveValue(r.id, r.low)}–${show(r.id, r.high)}`;
 
@@ -133,4 +136,64 @@ export function describeComms(t: CaveTonight): string {
     return `Still learning your normal: ${most} of ${t.learning[0]!.need} days so far.`;
   }
   return "Nothing to read yet. Log sleep or check in.";
+}
+
+/**
+ * CAVE-DATA D4 — DELTA in TONIGHT (owner go 2026-10-28, "get D4 and D5 done"; DELTA-002 step 1 and 2).
+ * What changed since your last finished shift, as plain facts against your own usuals: how long ago it
+ * was, how the nights since sat against your usual sleep, when you last trained, and how weight moved.
+ * Each fact names the day it came from so it can open that day's records. Read from Whole Picture's
+ * rows; nothing is scored, ranked or stored, and nothing reaches the Engine.
+ */
+export interface SinceFact {
+  key: "SHIFT" | "SLEEP" | "TRAINING" | "WEIGHT";
+  text: string;
+  /** Why this line: where it was read from. */
+  why: string;
+  /** The day whose records it opens, when one day backs it. */
+  dayId?: string | undefined;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const daysAgo = (start: string, now: Date) => Math.max(0, Math.floor((now.getTime() - Date.parse(start)) / DAY_MS));
+const ago = (n: number) => n === 0 ? "today" : n === 1 ? "yesterday" : `${n} days ago`;
+function lastIndexOf<T>(list: readonly T[], test: (item: T) => boolean): number {
+  for (let i = list.length - 1; i >= 0; i--) if (test(list[i]!)) return i;
+  return -1;
+}
+const lastOf = <T>(list: readonly T[], test: (item: T) => boolean): T | undefined => list[lastIndexOf(list, test)];
+
+/** Pure: the "since last shift" lines, or null when no finished shift is on file. */
+export function buildSinceLastShift(rows: readonly PictureRow[], now: Date): SinceFact[] | null {
+  const lastIndex = lastIndexOf(rows, (r) => r.context === "WORK" && r.dayIds.length > 0);
+  if (lastIndex < 0) return null;
+  const shift = rows[lastIndex]!, after = rows.slice(lastIndex + 1).filter((r) => r.dayIds.length > 0);
+  const facts: SinceFact[] = [{ key: "SHIFT", dayId: shift.dayIds[0], why: "Your declared work days.",
+    text: `Last shift ${ago(daysAgo(shift.start, now))}; ${after.length === 0 ? "no full day off since" : `${after.length} full day${after.length === 1 ? "" : "s"} off since`}.` }];
+
+  const nights = after.filter((r) => r.sleepHours !== undefined && Number.isFinite(r.sleepHours));
+  const usual = caveUsual(rows, "sleep", "OFF");
+  if (nights.length && usual.kind === "RANGE") {
+    const under = nights.filter((r) => r.sleepHours! < usual.low);
+    facts.push({ key: "SLEEP", dayId: (under.at(-1) ?? nights.at(-1))!.dayIds[0], why: `Main sleep against your usual on days off (${usual.days} days).`,
+      text: under.length ? `${under.length} of ${nights.length} night${nights.length === 1 ? "" : "s"} since ran under your usual sleep.` : `Every night since sat at or above your usual sleep.` });
+  } else if (shift.sleepHours !== undefined) {
+    const work = caveUsual(rows, "sleep", "WORK");
+    if (work.kind === "RANGE") facts.push({ key: "SLEEP", dayId: shift.dayIds[0], why: `Main sleep against your usual on work days (${work.days} days).`,
+      text: `Last shift's sleep ${formatCaveValue("sleep", shift.sleepHours)}, ${shift.sleepHours < work.low ? "under" : shift.sleepHours > work.high ? "above" : "inside"} your usual.` });
+  }
+
+  const trained = lastOf(rows, (r) => r.sessions > 0 && r.dayIds.length > 0);
+  facts.push(trained
+    ? { key: "TRAINING", dayId: trained.dayIds[0], why: "Logged and imported workouts.", text: `Last workout ${ago(daysAgo(trained.start, now))}.` }
+    : { key: "TRAINING", why: "Logged and imported workouts.", text: `No workout in the last ${rows.length} days.` });
+
+  const before = lastOf(rows.slice(0, lastIndex + 1), (r) => r.weight !== undefined);
+  const latest = lastOf(after, (r) => r.weight !== undefined);
+  if (before && latest) {
+    const change = Math.round((latest.weight! - before.weight!) * 10) / 10;
+    facts.push({ key: "WEIGHT", dayId: latest.dayIds[0], why: "Your weigh-ins, the day's mean.",
+      text: change === 0 ? "Weight unchanged since last shift." : `Weight ${change < 0 ? "down" : "up"} ${Math.abs(change)} lb since last shift.` });
+  }
+  return facts;
 }

@@ -16,8 +16,9 @@ import { pictureMean, type PictureRow } from "./wholePictureProjection";
  * reuses the personal-baselines range rule (middle half of the same kind of day, at least
  * MIN_BASELINE_DAYS). No score, no combined number, no Engine input, nothing stored.
  */
-export type CaveVitalId = "sleep" | "energy" | "protein" | "water";
-export const CAVE_VITALS: readonly CaveVitalId[] = ["sleep", "energy", "protein", "water"];
+export type CaveVitalId = "sleep" | "energy" | "protein" | "water" | "resting" | "steps";
+/** CAVE-DATA D5 adds Garmin's resting heart rate and steps, judged on finished days only. */
+export const CAVE_VITALS: readonly CaveVitalId[] = ["sleep", "energy", "protein", "water", "resting", "steps"];
 export const CAVE_TREND_DAYS = 14;
 
 type DayKind = "WORK" | "OFF";
@@ -28,7 +29,7 @@ export type CaveUsual =
 export interface CaveVital {
   id: CaveVitalId;
   title: string;
-  unit: "h" | "/5" | "g" | "oz";
+  unit: "h" | "/5" | "g" | "oz" | "bpm" | "steps";
   /** Today's reading. Protein and water are running totals, so `partial` is true: they are judged only by pace (S5), never against a full-day range. */
   today: { value: number | undefined; partial: boolean };
   /** Last finished lived days, oldest first; a missing reading stays undefined. */
@@ -44,14 +45,16 @@ export interface CaveVital {
   pace: PaceReading | undefined;
 }
 
-const TITLES: Record<CaveVitalId, string> = { sleep: "Main sleep", energy: "Energy", protein: "Protein", water: "Water" };
-const UNITS: Record<CaveVitalId, CaveVital["unit"]> = { sleep: "h", energy: "/5", protein: "g", water: "oz" };
-const KEYS = { sleep: "sleepHours", energy: "energy", protein: "protein", water: "water" } as const;
+const TITLES: Record<CaveVitalId, string> = { sleep: "Main sleep", energy: "Energy", protein: "Protein", water: "Water", resting: "Resting heart rate", steps: "Steps" };
+const UNITS: Record<CaveVitalId, CaveVital["unit"]> = { sleep: "h", energy: "/5", protein: "g", water: "oz", resting: "bpm", steps: "steps" };
+const KEYS = { sleep: "sleepHours", energy: "energy", protein: "protein", water: "water", resting: "resting", steps: "steps" } as const;
+/** Garmin's daily readings: complete only once the day is finished, so the last finished day stands for today. */
+const isGarminDaily = (id: CaveVitalId): id is "resting" | "steps" => id === "resting" || id === "steps";
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const atOffset = (start: string, minutes: number) => clock(new Date(Date.parse(start) + minutes * 60000).toISOString());
 export const formatCaveValue = (id: CaveVitalId, v: number) =>
-  id === "sleep" ? `${Math.floor(v)}:${String(Math.round((v % 1) * 60)).padStart(2, "0")}` : id === "energy" ? String(Math.round(v * 10) / 10) : String(Math.round(v));
+  id === "sleep" ? `${Math.floor(v)}:${String(Math.round((v % 1) * 60)).padStart(2, "0")}` : id === "energy" ? String(Math.round(v * 10) / 10) : id === "steps" ? Math.round(v).toLocaleString("en-US") : String(Math.round(v));
 
 /** Recorded values only: a missing reading never becomes zero. */
 function values(rows: readonly PictureRow[], id: CaveVitalId): number[] {
@@ -87,7 +90,9 @@ export function buildCaveVital(id: CaveVitalId, input: CaveInputs): CaveVital {
   const ctx = readout.day?.workContext;
   const dayKind: DayKind | "ALL" = ctx === "WORK" || ctx === "OFF" ? ctx : "ALL";
   const kindWord = dayKind === "WORK" ? "work days" : dayKind === "OFF" ? "days off" : "all days";
-  const today: CaveVital["today"] = id === "sleep" ? { value: readout.lastMainSleep ? readout.lastMainSleep.minutes / 60 : undefined, partial: false }
+  const lastDaily = isGarminDaily(id) ? [...rows].reverse().find((r) => r[id] !== undefined && Number.isFinite(r[id])) : undefined;
+  const today: CaveVital["today"] = isGarminDaily(id) ? { value: lastDaily?.[id], partial: false }
+    : id === "sleep" ? { value: readout.lastMainSleep ? readout.lastMainSleep.minutes / 60 : undefined, partial: false }
     : id === "energy" ? { value: checkIn?.energy, partial: false }
     : id === "protein" ? { value: readout.proteinG ?? undefined, partial: true }
     : { value: readout.waterOz ?? undefined, partial: true };
@@ -126,6 +131,10 @@ export function buildCaveVital(id: CaveVitalId, input: CaveInputs): CaveVital {
     else facts.push("No check-in today yet.");
     if (readout.checkIn) facts.push(`Capacity from it: ${readout.checkIn.capacity}.`);
     if (last?.energy !== undefined) facts.push(`Last finished day: energy ${last.energy}.`);
+  } else if (isGarminDaily(id)) {
+    facts.push(lastDaily ? `From Garmin, the last finished day (${new Date(lastDaily.start).toLocaleDateString("en-US", { month: "short", day: "numeric" })}). Today's reading is judged once the day ends.` : "No Garmin reading in the window yet. Import from Garmin in COMMAND.");
+    const prev = rows.slice(-3).flatMap((r) => r[id] !== undefined ? [formatCaveValue(id, r[id]!)] : []);
+    if (prev.length) facts.push(`Last ${prev.length === 1 ? "day" : `${prev.length} days`}: ${prev.join(", ")}.`);
   } else {
     const total = id === "protein" ? readout.proteinG : readout.waterOz;
     if (total === null) facts.push("No day started, so no running total.");
@@ -142,6 +151,7 @@ export function buildCaveVital(id: CaveVitalId, input: CaveInputs): CaveVital {
   const range = usual.kind === "RANGE" ? `${usual.days} ${kindWord}` : `${usual.days} of ${usual.need} ${kindWord} needed`;
   const source = id === "sleep" ? [{ label: "Source", value: readout.lastMainSleep ? (readout.lastMainSleep.fromGarmin ? "Garmin · main sleep" : "Logged by you") : "None yet" }, { label: "Usual range from", value: range }]
     : id === "energy" ? [{ label: "Source", value: checkIn ? `Your check-in · ${clock(checkIn.recordedAt)}` : "No check-in today" }, { label: "Usual range from", value: range }]
+    : isGarminDaily(id) ? [{ label: "Source", value: "Garmin · daily summary" }, { label: "Usual range from", value: range }]
     : [{ label: "Source", value: id === "protein" ? "Your meal and protein logs" : "Your water logs" }, { label: "Usual full day from", value: range }];
 
   return { id, title: TITLES[id], unit: UNITS[id], today, trend, usual, verdict, position, facts, feeds, source, pace: input.pace };
@@ -158,8 +168,8 @@ export async function getCaveVital(id: CaveVitalId, now: Date = new Date()): Pro
 
 /** Plain words for the headline under the value. */
 export function describeCaveVital(v: CaveVital): string {
-  const unit = (n: number) => `${formatCaveValue(v.id, n)}${v.unit === "h" ? "" : v.unit === "/5" ? "" : ` ${v.unit}`}`;
-  if (v.today.value === undefined) return v.id === "energy" ? "No check-in today yet." : v.id === "sleep" ? "No main sleep recorded in the last 36 hours." : "No day started.";
+  const unit = (n: number) => `${formatCaveValue(v.id, n)}${v.unit === "h" || v.unit === "/5" ? "" : ` ${v.unit}`}`;
+  if (v.today.value === undefined) return v.id === "energy" ? "No check-in today yet." : v.id === "sleep" ? "No main sleep recorded in the last 36 hours." : isGarminDaily(v.id) ? "No Garmin reading on file yet." : "No day started.";
   if (v.usual.kind === "LEARNING") return `Still learning your usual: ${v.usual.days} of ${v.usual.need} days so far.`;
   const range = `${unit(v.usual.low)}–${unit(v.usual.high)}`;
   if (v.today.partial) return v.pace?.usual.kind === "RANGE" ? `${describePace(v.pace)} A usual full day is ${range}.` : `Running total. A usual full day is ${range}.`;

@@ -39,3 +39,14 @@ SYSTEMS's readings. The duplicates merge into it. DELTA becomes the cave's voice
   navigation and focus pattern.
 - **OWN:** the cave's optional first view, the external view request, and the routing.
 - **BUILD FROM SCRATCH:** none.
+
+## D4 + D5 leverage gate
+
+- **REUSE:**
+  - Whole Picture's rows, with weight, sessions, sleep, resting HR and steps already projected;
+  - S2's personal-baselines range;
+  - the TONIGHT and VITALS views;
+  - DATA's day records via `onInspectDay`.
+- **OWN:** the "since last shift" facts (`buildSinceLastShift`) and two Garmin daily vitals.
+- **BUILD FROM SCRATCH:** none. Sleep stages against your usual are deferred, because the rows carry
+  no stages.

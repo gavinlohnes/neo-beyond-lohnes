@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCaveTonight, describeComms, describeTonightReading, type TonightInputs } from "../src/application/caveTonight";
+import { buildCaveTonight, buildSinceLastShift, describeComms, describeTonightReading, type TonightInputs } from "../src/application/caveTonight";
 import type { PictureRow } from "../src/application/wholePictureProjection";
 import type { Recommendation, StateCheckIn } from "../src/domain/common/types";
 import type { Obligation } from "../src/domain/intent/types";
@@ -67,5 +67,35 @@ describe("SUIT-ALIVE S3 — comms and Tonight", () => {
     // Without a pace range, the last full day is judged, as before.
     const learning = { ...pace(8, 0, 0), usual: { kind: "LEARNING" as const, dayKind: "WORK" as const, days: 3, need: 10 } };
     expect(buildCaveTonight(input({ pace: { water: learning } })).steady.find((r) => r.id === "water")?.when).toBe("LAST_FULL_DAY");
+  });
+});
+
+describe("CAVE-DATA D4 — since last shift", () => {
+  // 12 work days, then 3 days off: under-usual sleep on two, a workout on one, weight down.
+  const off = (i: number, over: Partial<PictureRow>) => ({ start: start(13 + i), dayIds: [`o${i}`], context: "OFF", sessions: 0, weights: [], ...over }) as unknown as PictureRow;
+  const offDays = Array.from({ length: 12 }, (_, i) => ({ ...off(-20 + i, { sleepHours: 7 + (i % 3) * 0.5 }), start: new Date(2026, 7, 10 + i, 16, 30).toISOString(), dayIds: [`h${i}`] })) as PictureRow[];
+  const shiftRow = { ...rows[11]!, weight: 180 } as PictureRow;
+  const since = [...offDays, ...rows.slice(0, 11), shiftRow,
+    off(0, { sleepHours: 5 }), off(1, { sleepHours: 7.5, sessions: 1 }), off(2, { sleepHours: 6, weight: 179.4 })];
+  const now = new Date(2026, 8, 16, 18, 0);
+
+  it("states plain facts against your own usual, each naming the day it opens", () => {
+    const facts = buildSinceLastShift(since, now)!;
+    expect(facts.map((f) => f.text)).toEqual([
+      "Last shift 4 days ago; 3 full days off since.",
+      "2 of 3 nights since ran under your usual sleep.",
+      "Last workout 2 days ago.",
+      "Weight down 0.6 lb since last shift.",
+    ]);
+    expect(facts.map((f) => f.dayId)).toEqual(["d11", "o2", "o1", "o2"]);
+    expect(facts.every((f) => f.why.length > 0)).toBe(true);
+  });
+
+  it("says nothing without a finished shift, and judges last shift's sleep when no night off has passed", () => {
+    expect(buildSinceLastShift(offDays, now)).toBeNull();
+    const facts = buildSinceLastShift(rows, new Date(2026, 8, 13, 18, 0))!;
+    expect(facts[0]!.text).toBe("Last shift yesterday; no full day off since.");
+    expect(facts[1]!.text).toMatch(/^Last shift's sleep \d:\d\d, (under|inside|above) your usual\.$/);
+    expect(facts[2]!.text).toBe("No workout in the last 12 days.");
   });
 });

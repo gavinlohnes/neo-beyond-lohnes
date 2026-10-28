@@ -68,7 +68,7 @@ export function Cave({ initial, lead, request, onBack, onOpenMetric, onOpenUnder
       </div>
       {lead && <div className="cave__lead-view" hidden={tab !== "lead"}>{lead.content}</div>}
       {tab === "lead" ? null
-        : tab === "tonight" ? <CaveTonightView onOpenVital={(id) => { setVital(id); setTab("vitals"); }} />
+        : tab === "tonight" ? <CaveTonightView onOpenVital={(id) => { setVital(id); setTab("vitals"); }} onOpenNormal={() => setTab("vitals")} onInspectDay={onInspectDay} />
         : tab === "route" ? <CaveRouteView />
         : tab === "brief" ? <CaveBriefView />
         : tab === "file" ? <CaveFileView onOpenUnderstanding={onOpenUnderstanding} onOpenWholePicture={onOpenWholePicture} onInspectDay={onInspectDay} focusRotation={section?.name === "rotation" ? section.key : 0} />
@@ -147,7 +147,7 @@ function CaveVitals({ id, onPick, onOpenMetric }: {
 }
 
 const TAB_NAME: Record<CaveTab, string> = { tonight: "TONIGHT", route: "ROUTE", brief: "BRIEF", vitals: "VITALS", file: "FILE", log: "LOG" };
-const TITLE: Record<CaveVitalId, string> = { sleep: "SLEEP", energy: "ENERGY", protein: "PROTEIN", water: "WATER" };
+const TITLE: Record<CaveVitalId, string> = { sleep: "SLEEP", energy: "ENERGY", protein: "PROTEIN", water: "WATER", resting: "RESTING HR", steps: "STEPS" };
 
 /** Bars for each finished day, your usual band behind them and your median dashed. Drawn to one scale. */
 function Trend({ vital }: { vital: CaveVital }) {
