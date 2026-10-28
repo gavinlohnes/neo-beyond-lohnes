@@ -1,0 +1,412 @@
+<title>Suit Options Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an options board. Sections by theme; each option is a card with a sketch, its source, what it does in BEYOND, fit and size. Single dark look. */
+:root {
+  --bg: #000; --s1: #070707; --s2: #0d0d0d; --hair: #1a1a1a; --line: #262626; --line-2: #383838;
+  --t1: #ececec; --t2: #a0a0a0; --t3: #6f6f6f;
+  --red: #C8141A; --amber: #c2913a; --plan: #6f8ea2; --ok: #8fa98f;
+  --display: "Chakra Petch", "Arial Narrow", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--t1); }
+body { margin: 0; font-family: var(--display); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; -webkit-font-smoothing: antialiased; }
+p { margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 40px; }
+.kicker { font-family: var(--mono); font-size: 10.5px; letter-spacing: .22em; color: var(--t3); }
+h1 { font-size: clamp(24px, 5vw, 34px); font-weight: 500; letter-spacing: .24em; margin: 10px 0 14px; text-wrap: balance; }
+.lede { color: var(--t2); font-size: 15.5px; line-height: 1.6; max-width: 68ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 16px; font-family: var(--mono); font-size: 11px; color: var(--t2); letter-spacing: .06em; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.dot { width: 7px; height: 7px; display: inline-block; }
+.d-ok { background: var(--ok); } .d-ask { background: var(--amber); } .d-no { background: var(--red); }
+
+section.theme { display: grid; gap: 16px; }
+.theme-head { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 16px; }
+.theme-head h2 { font-size: 15px; font-weight: 500; letter-spacing: .3em; margin: 0; }
+.theme-head p { color: var(--t2); font-size: 14px; line-height: 1.55; max-width: 70ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 12px; }
+.card { background: var(--s1); border: 1px solid var(--hair); display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+.sketch { background: #000; border-bottom: 1px solid var(--hair); }
+.sketch svg { display: block; width: 100%; height: auto; }
+.sketch text { font-family: var(--mono); }
+.body { padding: 14px 14px 16px; display: grid; gap: 9px; align-content: start; }
+.top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.num { font-family: var(--mono); font-size: 11px; color: var(--t3); letter-spacing: .1em; }
+.card h3 { font-size: 17px; font-weight: 500; letter-spacing: .02em; margin: 0; text-wrap: balance; }
+.from { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; color: var(--t3); text-transform: uppercase; }
+.what { font-size: 14px; line-height: 1.55; color: var(--t1); }
+.fit { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--t2); line-height: 1.45; border-top: 1px solid var(--hair); padding-top: 9px; }
+.fit b { font-weight: 500; color: var(--t1); }
+.chip { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; border: 1px solid var(--line-2); padding: 2px 6px; color: var(--t2); }
+.pick { color: var(--amber); }
+
+.combos { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); }
+.combo { border: 1px solid var(--line-2); padding: 16px; display: grid; gap: 8px; background: var(--s2); }
+.combo h3 { margin: 0; font-size: 17px; font-weight: 500; letter-spacing: .04em; }
+.combo p { color: var(--t2); font-size: 14px; line-height: 1.55; }
+.combo .ids { font-family: var(--mono); font-size: 12px; color: var(--t1); letter-spacing: .06em; }
+.how { color: var(--t2); font-size: 14.5px; line-height: 1.6; max-width: 70ch; }
+.how b { color: var(--t1); font-weight: 500; }
+</style>
+
+<main class="wrap">
+  <header>
+    <p class="kicker">SUIT ALIVE · OPTIONS BOARD · FOR GAVIN</p>
+    <h1>COCKPIT FOR ONE</h1>
+    <p class="lede">Ideas pulled from glass cockpits (airliner and fighter) and the best health apps, each translated into what it would do for a night-shift operator in BEYOND. Pick by number. Mix freely. I'll fold your picks into the prototype and we build from there.</p>
+    <div class="legend" aria-label="Legend">
+      <span><i class="dot d-ok" aria-hidden="true"></i>Fits BEYOND's rules as is</span>
+      <span><i class="dot d-ask" aria-hidden="true"></i>Needs your ruling</span>
+      <span><i class="dot d-no" aria-hidden="true"></i>Conflicts with a locked rule</span>
+      <span class="chip">S · M · L</span><span>build size</span>
+    </div>
+  </header>
+
+  <!-- ===================== A. COCKPIT LAYOUT ===================== -->
+  <section class="theme" aria-labelledby="a-h">
+    <div class="theme-head"><h2 id="a-h">A · COCKPIT LAYOUT</h2><p>How a pilot reads a whole aircraft in a second. Fixed positions, scales instead of bare numbers, and the screen goes quiet when everything is normal.</p></div>
+    <div class="grid">
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <rect x="20" y="16" width="290" height="98" fill="none" stroke="#262626"/>
+        <text x="165" y="58" text-anchor="middle" fill="#3a3a3a" font-size="9">NOTHING TO SHOW</text>
+        <rect x="120" y="76" width="90" height="22" fill="none" stroke="#c2913a"/><text x="165" y="91" text-anchor="middle" fill="#c2913a" font-size="9">WATER LOW</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">A1</span><span class="chip">S</span></div>
+        <h3>Dark cockpit</h3><p class="from">Airbus / Boeing philosophy</p>
+        <p class="what">When a system is normal, its light is off. Vitals in range fade to almost nothing; only what is off-normal lights up. A quiet screen means you're fine.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · nothing hidden, one tap shows all</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <rect x="24" y="14" width="34" height="102" fill="none" stroke="#383838"/>
+        <line x1="24" y1="34" x2="34" y2="34" stroke="#6f6f6f"/><line x1="24" y1="54" x2="34" y2="54" stroke="#6f6f6f"/><line x1="24" y1="74" x2="34" y2="74" stroke="#6f6f6f"/><line x1="24" y1="94" x2="34" y2="94" stroke="#6f6f6f"/>
+        <rect x="18" y="68" width="46" height="16" fill="#000" stroke="#c2913a"/><text x="41" y="80" text-anchor="middle" fill="#c2913a" font-size="9">5:10</text>
+        <text x="41" y="126" text-anchor="middle" fill="#6f6f6f" font-size="8">SLEEP</text>
+        <rect x="272" y="14" width="34" height="102" fill="none" stroke="#383838"/>
+        <line x1="296" y1="34" x2="306" y2="34" stroke="#6f6f6f"/><line x1="296" y1="54" x2="306" y2="54" stroke="#6f6f6f"/><line x1="296" y1="74" x2="306" y2="74" stroke="#6f6f6f"/><line x1="296" y1="94" x2="306" y2="94" stroke="#6f6f6f"/>
+        <rect x="266" y="88" width="46" height="16" fill="#000" stroke="#c2913a"/><text x="289" y="100" text-anchor="middle" fill="#c2913a" font-size="9">0.5 L</text>
+        <text x="289" y="126" text-anchor="middle" fill="#6f6f6f" font-size="8">WATER</text>
+        <line x1="80" y1="65" x2="250" y2="65" stroke="#ececec"/><text x="165" y="58" text-anchor="middle" fill="#ececec" font-size="10">NIGHT 3 / 4</text><text x="165" y="82" text-anchor="middle" fill="#6f6f6f" font-size="9">SHIFT IN 1:03</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">A2</span><span class="chip">M</span></div>
+        <h3>Primary display with tapes</h3><p class="from">Primary Flight Display</p>
+        <p class="what">Vertical tapes on each side: sleep on the left, water or fuel on the right, scrolling past your usual band like airspeed and altitude. The middle is the situation: night, shift countdown, next step.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · scales, not scores</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <rect x="20" y="14" width="290" height="102" fill="none" stroke="#262626"/>
+        <text x="32" y="36" fill="#C8141A" font-size="10">WARNING   none</text>
+        <text x="32" y="58" fill="#c2913a" font-size="10">CAUTION   2 short sleeps · energy 2</text>
+        <text x="32" y="80" fill="#c2913a" font-size="10">CAUTION   water behind pace</text>
+        <text x="32" y="102" fill="#a0a0a0" font-size="10">ADVISORY  backup due in 2 days</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">A3</span><span class="chip">M</span></div>
+        <h3>Alert stack</h3><p class="from">EICAS crew alerting</p>
+        <p class="what">One list, ranked by severity: warning, caution, advisory. Each line in plain words, each opens its detail. Replaces scattered warnings with one place you trust.</p>
+        <p class="fit"><span><i class="dot d-ask"></i> <b>Ruling</b> · groups existing Attention and System Status into one list</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <line x1="24" y1="70" x2="306" y2="70" stroke="#383838"/>
+        <circle cx="40" cy="70" r="4" fill="#ececec"/><text x="40" y="56" text-anchor="middle" fill="#a0a0a0" font-size="8">NAP</text><text x="40" y="90" text-anchor="middle" fill="#6f6f6f" font-size="8">17:50</text>
+        <circle cx="90" cy="70" r="4" fill="none" stroke="#ececec"/><text x="90" y="56" text-anchor="middle" fill="#a0a0a0" font-size="8">EAT</text><text x="90" y="90" text-anchor="middle" fill="#6f6f6f" font-size="8">18:20</text>
+        <rect x="128" y="66" width="8" height="8" fill="#C8141A"/><text x="132" y="56" text-anchor="middle" fill="#ececec" font-size="8">SHIFT</text><text x="132" y="90" text-anchor="middle" fill="#6f6f6f" font-size="8">18:45</text>
+        <circle cx="186" cy="70" r="4" fill="none" stroke="#ececec"/><text x="186" y="56" text-anchor="middle" fill="#a0a0a0" font-size="8">BREAK</text><text x="186" y="90" text-anchor="middle" fill="#6f6f6f" font-size="8">00:30</text>
+        <path d="M228 64 L236 70 L228 76" fill="none" stroke="#6f8ea2"/><text x="232" y="56" text-anchor="middle" fill="#6f8ea2" font-size="8">LAST COFFEE</text><text x="232" y="90" text-anchor="middle" fill="#6f6f6f" font-size="8">02:00</text>
+        <circle cx="290" cy="70" r="4" fill="#6f8ea2"/><text x="290" y="56" text-anchor="middle" fill="#6f8ea2" font-size="8">SLEEP</text><text x="290" y="90" text-anchor="middle" fill="#6f6f6f" font-size="8">08:10</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">A4</span><span class="chip">M</span></div>
+        <h3>Flight plan with waypoints</h3><p class="from">FMS route · Flighty</p>
+        <p class="what">Your lived day as a route: nap, eat, shift, breaks, last coffee, sleep. Waypoints come from your schedule and your own usual times. Logging ticks them off.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · built from your schedule and patterns</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <line x1="24" y1="100" x2="306" y2="100" stroke="#262626"/>
+        <path d="M24 100 L130 72" stroke="#ececec" fill="none"/><path d="M130 72 L306 40" stroke="#ececec" stroke-dasharray="4 3" fill="none"/>
+        <path d="M24 100 L306 22" stroke="#383838" fill="none"/>
+        <line x1="250" y1="10" x2="250" y2="104" stroke="#C8141A"/><text x="250" y="120" text-anchor="middle" fill="#C8141A" font-size="8">BINGO 01:00</text>
+        <text x="300" y="36" text-anchor="end" fill="#ececec" font-size="9">PACE → 2.1 L</text><text x="300" y="18" text-anchor="end" fill="#6f6f6f" font-size="9">TARGET 3.0 L</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">A5</span><span class="chip">S</span></div>
+        <h3>Bingo and projected finish</h3><p class="from">Fighter fuel states · HUD energy</p>
+        <p class="what">Where you'll finish at this pace ("2.1 L by 16:30"), plus a bingo point: the latest time you can still reach the target at a sane rate. Pace, not judgment.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · arithmetic on your own logs</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <rect x="20" y="20" width="290" height="80" fill="none" stroke="#262626"/>
+        <text x="165" y="64" text-anchor="middle" fill="#a0a0a0" font-size="11">PAGE 1 · STATUS</text>
+        <g fill="none" stroke="#383838"><rect x="20" y="104" width="66" height="18"/><rect x="94" y="104" width="66" height="18"/><rect x="168" y="104" width="66" height="18"/><rect x="242" y="104" width="68" height="18"/></g>
+        <text x="53" y="116" text-anchor="middle" fill="#ececec" font-size="8">STATUS</text><text x="127" y="116" text-anchor="middle" fill="#6f6f6f" font-size="8">ROUTE</text><text x="201" y="116" text-anchor="middle" fill="#6f6f6f" font-size="8">SYSTEMS</text><text x="276" y="116" text-anchor="middle" fill="#6f6f6f" font-size="8">LOG</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">A6</span><span class="chip">L</span></div>
+        <h3>Multi-function pages</h3><p class="from">MFD with soft keys</p>
+        <p class="what">TODAY becomes a few fixed pages you swipe between: status, route, systems, log. Same place every time, so your thumb learns it.</p>
+        <p class="fit"><span><i class="dot d-ask"></i> <b>Ruling</b> · changes TODAY's layout (protected)</span></p>
+      </div></article>
+    </div>
+  </section>
+
+  <!-- ===================== B. NIGHT OPS ===================== -->
+  <section class="theme" aria-labelledby="b-h">
+    <div class="theme-head"><h2 id="b-h">B · NIGHT OPERATIONS</h2><p>You work nights. Cockpits and dive computers solve for reading a screen in the dark without wrecking your eyes or your sleep.</p></div>
+    <div class="grid">
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <rect width="330" height="130" fill="#050000"/>
+        <text x="30" y="56" fill="#8a0d11" font-size="30" font-family="Chakra Petch">23:10</text>
+        <text x="30" y="80" fill="#6a0a0d" font-size="10">ON SHIFT · 7:50 TO GO</text>
+        <text x="30" y="104" fill="#6a0a0d" font-size="10">WATER 1.2 L · BEHIND</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">B1</span><span class="chip">S</span></div>
+        <h3>Night vision mode</h3><p class="from">Apple Watch Ultra · cockpit night lighting</p>
+        <p class="what">On shift after dark, the whole screen goes dim red-on-black, the way the Ultra's dial does. It protects your dark-adapted eyes and keeps the screen discreet.</p>
+        <p class="fit"><span><i class="dot d-no"></i> <b>Conflicts</b> · "red only for the next step" is locked. Needs your amendment.</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="30" y="40" fill="#ececec" font-size="10">STEALTH</text>
+        <rect x="30" y="54" width="270" height="1" fill="#262626"/>
+        <text x="30" y="84" fill="#5a5a5a" font-size="22" font-family="Chakra Petch">23:10</text>
+        <text x="300" y="84" text-anchor="end" fill="#5a5a5a" font-size="10">+ WATER  + MEAL</text>
+        <text x="30" y="110" fill="#3a3a3a" font-size="9">LOGGING STILL SAVES · NOTHING ELSE SHOWS</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">B2</span><span class="chip">S</span></div>
+        <h3>Stealth by phase</h3><p class="from">BEYOND's own stealth · cockpit dimming</p>
+        <p class="what">Stealth already exists behind a long-press. This makes it the default look on shift after midnight: dim, time and quick logs only, everything else one tap away.</p>
+        <p class="fit"><span><i class="dot d-ask"></i> <b>Ruling</b> · changes when stealth turns on</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <path d="M20 90 C 70 90, 90 40, 140 40 S 210 100, 260 96 S 300 60, 312 54" fill="none" stroke="#6f8ea2"/>
+        <line x1="150" y1="20" x2="150" y2="110" stroke="#C8141A"/>
+        <text x="150" y="122" text-anchor="middle" fill="#6f6f6f" font-size="8">NOW 03:40</text>
+        <text x="225" y="116" text-anchor="middle" fill="#c2913a" font-size="8">YOUR USUAL DIP 04:00–05:30</text>
+        <text x="140" y="32" text-anchor="middle" fill="#a0a0a0" font-size="8">LIGHT ⟶ CUT OFF 06:00</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">B3</span><span class="chip">M</span></div>
+        <h3>Your circadian map</h3><p class="from">Rise Science · Timeshifter</p>
+        <p class="what">When your energy usually dips on a night, from your own check-ins, plus light and caffeine timing that protects tomorrow's sleep. Only from your data, labelled as pattern, not prediction.</p>
+        <p class="fit"><span><i class="dot d-ask"></i> <b>Ruling</b> · new guidance on light and caffeine timing</span></p>
+      </div></article>
+    </div>
+  </section>
+
+  <!-- ===================== C. DEPTH ===================== -->
+  <section class="theme" aria-labelledby="c-h">
+    <div class="theme-head"><h2 id="c-h">C · DEPTH ON DEMAND</h2><p>What Oura, WHOOP, Apple and Garmin do best: a calm summary that opens into real analysis. Everything here uses data BEYOND already has.</p></div>
+    <div class="grid">
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="20" y="22" fill="#6f6f6f" font-size="8">AWAKE</text><text x="20" y="48" fill="#6f6f6f" font-size="8">LIGHT</text><text x="20" y="74" fill="#6f6f6f" font-size="8">DEEP</text><text x="20" y="100" fill="#6f6f6f" font-size="8">REM</text>
+        <path d="M62 44 H90 V70 H120 V44 H140 V96 H160 V44 H190 V18 H196 V44 H220 V70 H240 V44 H262 V96 H290 V44 H310" fill="none" stroke="#6f8ea2" stroke-width="2"/>
+        <text x="62" y="122" fill="#6f6f6f" font-size="8">08:41</text><text x="310" y="122" text-anchor="end" fill="#6f6f6f" font-size="8">13:51</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">C1</span><span class="chip">M</span></div>
+        <h3>The night, drawn</h3><p class="from">Oura sleep timeline</p>
+        <p class="what">One sleep as a stepped timeline with wake-ups, if Garmin sends stages. If it doesn't, the same view still shows start, end and interruptions.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · I check what Garmin import stores first</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="20" y="30" fill="#a0a0a0" font-size="10">SLEEP</text><text x="200" y="30" fill="#ececec" font-size="10">↓ 90-DAY</text><text x="268" y="30" fill="#6f6f6f" font-size="10">· 1-YR</text>
+        <text x="20" y="58" fill="#a0a0a0" font-size="10">ENERGY</text><text x="200" y="58" fill="#ececec" font-size="10">→ STEADY</text>
+        <text x="20" y="86" fill="#a0a0a0" font-size="10">BODYWEIGHT</text><text x="200" y="86" fill="#ececec" font-size="10">↓ ON TRACK</text>
+        <text x="20" y="114" fill="#a0a0a0" font-size="10">TRAINING</text><text x="200" y="114" fill="#ececec" font-size="10">↑ 90-DAY</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">C2</span><span class="chip">S</span></div>
+        <h3>Trend arrows</h3><p class="from">Apple Fitness trends</p>
+        <p class="what">Each system gets an arrow comparing your last 90 days with your last year: up, down or steady, in words. The long view in one glance.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · read-only</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="20" y="26" fill="#6f6f6f" font-size="8">AFTER NAP BEFORE NIGHT 1 · 6 RUNS</text>
+        <rect x="20" y="40" width="200" height="10" fill="#383838"/><rect x="20" y="40" width="160" height="10" fill="#ececec"/><text x="230" y="49" fill="#ececec" font-size="9">ENERGY 3.4 vs 2.8</text>
+        <rect x="20" y="66" width="200" height="10" fill="#383838"/><rect x="20" y="66" width="120" height="10" fill="#a0a0a0"/><text x="230" y="75" fill="#a0a0a0" font-size="9">SLEEP ≈ SAME</text>
+        <rect x="20" y="92" width="200" height="10" fill="#383838"/><rect x="20" y="92" width="80" height="10" fill="#c2913a"/><text x="230" y="101" fill="#c2913a" font-size="9">SHORT ON 3 OF 6</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">C3</span><span class="chip">M</span></div>
+        <h3>What moves you</h3><p class="from">WHOOP journal impact</p>
+        <p class="what">Your experiments and tagged days, compared honestly: what tends to go with better energy or sleep for you, with day counts and "no clear difference" when there isn't one.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · extends TRY; patterns, not causes</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <g fill="none" stroke="#383838"><path d="M150 14 h30 l6 14 -6 12 h-30 l-6 -12z"/><path d="M138 46 h54 l8 40 -14 6 h-42 l-14 -6z"/><path d="M146 96 l-4 30 M184 96 l4 30"/></g>
+        <path d="M144 52 h22 v18 h-24z" fill="#C8141A" opacity=".55"/><path d="M168 52 h18 v18 h-18z" fill="#c2913a" opacity=".45"/><path d="M146 96 h14 v24 h-16z" fill="#6f8ea2" opacity=".5"/>
+        <text x="230" y="58" fill="#C8141A" font-size="9">CHEST · 1 DAY</text><text x="230" y="76" fill="#c2913a" font-size="9">BACK · 2 DAYS</text><text x="230" y="106" fill="#6f8ea2" font-size="9">LEGS · FRESH</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">C4</span><span class="chip">M</span></div>
+        <h3>Muscle readiness map</h3><p class="from">Fitbod recovery map</p>
+        <p class="what">A plain body outline shaded by days since each muscle group was trained, from your logged sets. Answers "what can I train tonight?" at a glance.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · days since, not a recovery score</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <line x1="20" y1="70" x2="310" y2="70" stroke="#262626"/>
+        <circle cx="60" cy="70" r="3" fill="#ececec"/><circle cx="100" cy="70" r="3" fill="#a0a0a0"/><circle cx="150" cy="70" r="3" fill="#c2913a"/><circle cx="210" cy="70" r="3" fill="#ececec"/><circle cx="260" cy="70" r="3" fill="#6f8ea2"/>
+        <rect x="150" y="62" width="2" height="16" fill="#C8141A"/>
+        <path d="M20 108 h30 l8 -8 v16 z" fill="#ececec"/><text x="70" y="112" fill="#a0a0a0" font-size="9">REPLAY OCT 22 · 02:14</text>
+        <text x="20" y="34" fill="#a0a0a0" font-size="9">03:10 CAFFEINE · 04:40 CHECK-IN 2 · 07:20 END</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">C5</span><span class="chip">M</span></div>
+        <h3>Flight recorder</h3><p class="from">Black box · Strava replay</p>
+        <p class="what">Scrub through any past lived day minute by minute and see what you logged, when, and what BEYOND showed you. Good for "what went wrong on Tuesday?"</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · uses the event history</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="20" y="28" fill="#6f6f6f" font-size="8">ENERGY · CONTRIBUTORS</text>
+        <text x="20" y="54" fill="#a0a0a0" font-size="10">Main sleep</text><rect x="140" y="46" width="160" height="6" fill="#262626"/><rect x="140" y="46" width="60" height="6" fill="#c2913a"/>
+        <text x="20" y="78" fill="#a0a0a0" font-size="10">Night in run</text><rect x="140" y="70" width="160" height="6" fill="#262626"/><rect x="140" y="70" width="90" height="6" fill="#a0a0a0"/>
+        <text x="20" y="102" fill="#a0a0a0" font-size="10">Fuel by now</text><rect x="140" y="94" width="160" height="6" fill="#262626"/><rect x="140" y="94" width="70" height="6" fill="#c2913a"/>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">C6</span><span class="chip">S</span></div>
+        <h3>Contributor bars</h3><p class="from">Oura readiness contributors</p>
+        <p class="what">Under any vital, the few things that usually go with it for you, each as a bar against your normal. No combined number at the top: you read the parts.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · as long as there's no headline score</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="165" y="58" text-anchor="middle" fill="#3a3a3a" font-size="28" font-family="Chakra Petch">READINESS 82</text>
+        <line x1="40" y1="40" x2="290" y2="72" stroke="#C8141A" stroke-width="2"/>
+        <text x="165" y="100" text-anchor="middle" fill="#6f6f6f" font-size="9">NO HEADLINE SCORE</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">C7</span><span class="chip">—</span></div>
+        <h3>Readiness / body battery score</h3><p class="from">Oura · WHOOP · Garmin</p>
+        <p class="what">Listed so you can see I considered it. A single invented number would claim to know you better than your own readings. BEYOND shows the parts instead.</p>
+        <p class="fit"><span><i class="dot d-no"></i> <b>Conflicts</b> · "no score, no combined number" is locked</span></p>
+      </div></article>
+    </div>
+  </section>
+
+  <!-- ===================== D. THE SUIT'S CHARACTER ===================== -->
+  <section class="theme" aria-labelledby="d-h">
+    <div class="theme-head"><h2 id="d-h">D · THE SUIT'S CHARACTER</h2><p>Personality from how it talks and what it remembers, the way a good crew chief or mentor does. Calm, brief, never cute.</p></div>
+    <div class="grid">
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="20" y="30" fill="#6f6f6f" font-size="8">PREFLIGHT · NIGHT 3</text>
+        <text x="20" y="54" fill="#ececec" font-size="10">✓ Nap 20–40 min</text>
+        <text x="20" y="76" fill="#ececec" font-size="10">✓ Meal, 30 g protein</text>
+        <text x="20" y="98" fill="#a0a0a0" font-size="10">○ Bottles packed</text>
+        <text x="20" y="120" fill="#a0a0a0" font-size="10">○ Shift note read</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">D1</span><span class="chip">M</span></div>
+        <h3>Preflight checklist</h3><p class="from">Electronic checklist</p>
+        <p class="what">Before each shift, a short checklist built from your PREP items and memory. Logging auto-ticks lines. Two minutes, and nothing gets forgotten at 18:40.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · reuses PREP and Codex's memory</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="20" y="28" fill="#6f6f6f" font-size="8">AFTER-ACTION · NIGHT 3</text>
+        <text x="20" y="52" fill="#ececec" font-size="10">Planned: nap, eat by 01:00</text>
+        <text x="20" y="74" fill="#ececec" font-size="10">Actual: nap ✓, ate 02:40</text>
+        <text x="20" y="96" fill="#c2913a" font-size="10">Gap: late meal, energy 2 at 04:40</text>
+        <text x="20" y="118" fill="#a0a0a0" font-size="10">Carry forward: eat at first break</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">D2</span><span class="chip">M</span></div>
+        <h3>After-action report</h3><p class="from">Military AAR · flight debrief</p>
+        <p class="what">The shift debrief, upgraded: planned versus actual from your logs, the gap, and one thing to carry forward. You confirm it in one tap.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · builds on LOOP-002's handoff</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="20" y="30" fill="#6f6f6f" font-size="8">VOICE</text>
+        <rect x="20" y="42" width="90" height="26" fill="none" stroke="#383838"/><text x="65" y="59" text-anchor="middle" fill="#6f6f6f" font-size="9">SILENT</text>
+        <rect x="120" y="42" width="90" height="26" fill="none" stroke="#ececec"/><text x="165" y="59" text-anchor="middle" fill="#ececec" font-size="9">TERSE</text>
+        <rect x="220" y="42" width="90" height="26" fill="none" stroke="#383838"/><text x="265" y="59" text-anchor="middle" fill="#6f6f6f" font-size="9">MENTOR</text>
+        <text x="20" y="96" fill="#a0a0a0" font-size="10">"Two short sleeps. Nap before 18:15."</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">D3</span><span class="chip">S</span></div>
+        <h3>Voice setting</h3><p class="from">CARROT Weather personality dial</p>
+        <p class="what">Choose how the suit speaks: silent (numbers only), terse (one line), or mentor (one line plus the why). Same facts either way.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · presentation only</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="20" y="30" fill="#6f6f6f" font-size="8">BRIEFING · RUN 14 · NIGHTS 1–4</text>
+        <text x="20" y="54" fill="#ececec" font-size="10">Objective: hold energy ≥3 on night 3</text>
+        <text x="20" y="76" fill="#a0a0a0" font-size="10">Known risk: night 3 sleep, 6:05 avg</text>
+        <text x="20" y="98" fill="#a0a0a0" font-size="10">Plan: nap before N1 and N3 (trial)</text>
+        <text x="20" y="120" fill="#a0a0a0" font-size="10">Flip back: Sat, nap cap 90 min</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">D4</span><span class="chip">M</span></div>
+        <h3>Run briefing</h3><p class="from">Mission briefing</p>
+        <p class="what">Before each block of nights: what usually goes wrong for you in this run, your plan, and the flip back. Built from rotation patterns, lessons and experiments.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · read-only; you write the objective</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="20" y="34" fill="#6f6f6f" font-size="8">SERVICE RECORD</text>
+        <text x="20" y="60" fill="#ececec" font-size="10">Runs completed 14 · Nights 56</text>
+        <text x="20" y="82" fill="#a0a0a0" font-size="10">Lessons 3 · Trials 2 · Clean days 212</text>
+        <text x="20" y="104" fill="#a0a0a0" font-size="10">Calibrated since Sep 17</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">D5</span><span class="chip">S</span></div>
+        <h3>Service record</h3><p class="from">Pilot logbook</p>
+        <p class="what">A quiet logbook page of what you've done: runs, nights, lessons, trials, clean days. Facts, not badges or streaks.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · counts, never streaks</span></p>
+      </div></article>
+    </div>
+  </section>
+
+  <!-- ===================== E. FEEL ===================== -->
+  <section class="theme" aria-labelledby="e-h">
+    <div class="theme-head"><h2 id="e-h">E · FEEL IN THE HAND</h2><p>How the controls answer. Codex's SUIT-002 already gave saves a buzz and a pulse; these push the physical side further.</p></div>
+    <div class="grid">
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <rect x="20" y="44" width="290" height="40" fill="none" stroke="#C8141A"/><rect x="20" y="44" width="180" height="40" fill="#C8141A" opacity=".35"/>
+        <text x="165" y="68" text-anchor="middle" fill="#ececec" font-size="10">HOLD TO COMMIT</text>
+        <text x="20" y="108" fill="#6f6f6f" font-size="9">8 ms armed · 35 ms committed</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">E1</span><span class="chip">S</span></div>
+        <h3>Guarded switches</h3><p class="from">Switch guards · fire handles</p>
+        <p class="what">Weighty actions (END DAY, decline RED advice, delete) get a hold with a felt arm-and-commit. Light actions stay one tap. The weight matches the consequence.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · extends SUIT-002</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <rect x="100" y="14" width="130" height="104" rx="0" fill="none" stroke="#383838"/>
+        <text x="165" y="40" text-anchor="middle" fill="#6f6f6f" font-size="8">LOCK SCREEN</text>
+        <rect x="112" y="52" width="106" height="44" fill="#0d0d0d" stroke="#262626"/>
+        <text x="120" y="70" fill="#ececec" font-size="10">SHIFT IN 1:03</text><text x="120" y="86" fill="#a0a0a0" font-size="9">Nap before 18:15</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">E2</span><span class="chip">L</span></div>
+        <h3>Glance without opening</h3><p class="from">Flighty Live Activities · widgets</p>
+        <p class="what">The shift countdown and next step on the lock screen. BEYOND is a web app, so this is limited: a quiet Android notification is the realistic version.</p>
+        <p class="fit"><span><i class="dot d-ask"></i> <b>Ruling</b> · notifications are new; platform limits apply</span></p>
+      </div></article>
+
+      <article class="card"><div class="sketch"><svg viewBox="0 0 330 130" aria-hidden="true">
+        <text x="20" y="30" fill="#6f6f6f" font-size="8">PRESS AND HOLD ANY READING</text>
+        <rect x="20" y="42" width="140" height="50" fill="#0d0d0d" stroke="#ececec"/><text x="30" y="74" fill="#ececec" font-size="18" font-family="Chakra Petch">5:10</text>
+        <rect x="170" y="42" width="140" height="74" fill="#000" stroke="#383838"/>
+        <text x="178" y="60" fill="#a0a0a0" font-size="8">Garmin · 13:58</text><text x="178" y="76" fill="#a0a0a0" font-size="8">not corrected</text><text x="178" y="92" fill="#a0a0a0" font-size="8">feeds: short-sleep rule</text><text x="178" y="108" fill="#ececec" font-size="8">OPEN ›</text>
+      </svg></div><div class="body">
+        <div class="top"><span class="num">E3</span><span class="chip">S</span></div>
+        <h3>Inspect anything</h3><p class="from">Halide pro mode · instrument tooltips</p>
+        <p class="what">Press and hold any number anywhere to see where it came from, whether it was corrected, and what it feeds. Provenance is already in BEYOND; this makes it universal.</p>
+        <p class="fit"><span><i class="dot d-ok"></i> <b>Fits</b> · read-only</span></p>
+      </div></article>
+    </div>
+  </section>
+
+  <!-- ===================== COMBOS ===================== -->
+  <section class="theme" aria-labelledby="f-h">
+    <div class="theme-head"><h2 id="f-h">THREE WAYS TO COMBINE THEM</h2><p>Starting points if you'd rather react to a direction than pick from scratch.</p></div>
+    <div class="combos">
+      <div class="combo"><h3>Airliner</h3><p class="ids">A1 · A4 · A5 · D1 · D2 · E3</p><p>Calm and procedural. A dark cockpit that only lights what's off, your day as a route with waypoints, preflight and after-action around every shift. The most useful day to day.</p></div>
+      <div class="combo"><h3>Fighter</h3><p class="ids">A2 · A3 · A5 · B2 · E1 · D3</p><p>Dense and fast. Tape displays, one ranked alert stack, bingo points, stealth on shift and weighted controls. The most "suit". Needs two rulings.</p></div>
+      <div class="combo"><h3>Analyst</h3><p class="ids">C1 · C2 · C3 · C5 · C6 · D4</p><p>For digging in on days off. The night drawn, long-term trends, what moves you, the flight recorder and a run briefing. Calm surface stays as v4.</p></div>
+    </div>
+    <p class="how"><b>How we build it together:</b> tell me the numbers you want (or a combo, plus or minus a few). I fold them into the prototype on sample data, you try it on your phone, we adjust, then each piece goes in as its own small slice with your approval. Anything marked amber needs your ruling first; red needs a rule change.</p>
+  </section>
+</main>

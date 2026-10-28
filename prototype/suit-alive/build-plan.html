@@ -1,0 +1,140 @@
+<title>Suit and Cave Build Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a working plan. Data map (piece → what exists → gap), then slices in build order, then the rulings needed. Single dark look. */
+:root {
+  --bg: #000; --s1: #070707; --hair: #1a1a1a; --line: #262626; --line-2: #383838;
+  --t1: #ececec; --t2: #a0a0a0; --t3: #6f6f6f;
+  --red: #D0141B; --amber: #c2913a; --ok: #8fa98f;
+  --display: "Chakra Petch", "Arial Narrow", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--t1); }
+body { margin: 0; font-family: var(--display); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; -webkit-font-smoothing: antialiased; }
+p { margin: 0; }
+.wrap { max-width: 960px; margin: 0 auto; display: grid; gap: 40px; }
+.kicker { font-family: var(--mono); font-size: 10.5px; letter-spacing: .22em; color: var(--t3); display: flex; align-items: center; gap: 10px; }
+.kicker svg { width: 30px; height: auto; }
+h1 { font-size: clamp(22px, 5vw, 30px); font-weight: 500; letter-spacing: .2em; margin: 10px 0 14px; text-wrap: balance; }
+h2 { font-size: 14px; font-weight: 500; letter-spacing: .3em; margin: 0; }
+.lede { color: var(--t2); font-size: 15.5px; line-height: 1.6; max-width: 68ch; }
+section { display: grid; gap: 14px; }
+.head { border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 6px; }
+.head p { color: var(--t2); font-size: 14px; line-height: 1.55; max-width: 70ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-family: var(--mono); font-size: 11px; color: var(--t2); }
+.dot { width: 7px; height: 7px; display: inline-block; margin-right: 6px; vertical-align: 1px; }
+.g { background: var(--ok); } .a { background: var(--amber); } .r { background: var(--red); }
+
+.map { display: grid; gap: 1px; background: var(--hair); border: 1px solid var(--hair); }
+.row { background: var(--bg); display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr) minmax(0, 1.3fr); gap: 14px; padding: 12px 14px; }
+.row.hd { background: var(--s1); font-family: var(--mono); font-size: 10px; letter-spacing: .18em; color: var(--t3); padding-block: 9px; }
+.row b { font-weight: 500; font-size: 14.5px; display: block; margin-bottom: 2px; }
+.row span, .row p { font-size: 13.5px; color: var(--t2); line-height: 1.5; }
+.row code { font-family: var(--mono); font-size: 11.5px; color: var(--t1); }
+@media (max-width: 640px) { .row { grid-template-columns: 1fr; gap: 6px; } .row.hd { display: none; } .row p::before { font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; color: var(--t3); display: block; margin-bottom: 2px; } .row p.ex::before { content: "EXISTS"; } .row p.gp::before { content: "GAP"; } }
+
+.slices { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; counter-reset: s; }
+.slice { border: 1px solid var(--line); background: var(--s1); padding: 14px 16px; display: grid; gap: 8px; }
+.slice-top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.slice h3 { margin: 0; font-size: 17px; font-weight: 500; letter-spacing: .03em; }
+.slice .n { font-family: var(--mono); font-size: 11px; color: var(--red); letter-spacing: .12em; margin-right: 10px; }
+.lane { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; border: 1px solid var(--line-2); padding: 2px 7px; color: var(--t2); white-space: nowrap; }
+.lane.p { border-color: var(--amber); color: var(--amber); }
+.slice p { font-size: 14px; color: var(--t2); line-height: 1.55; }
+.slice p b { color: var(--t1); font-weight: 500; }
+
+.rulings { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.rulings li { border-left: 2px solid var(--amber); padding: 4px 0 4px 12px; font-size: 14.5px; line-height: 1.55; color: var(--t1); }
+.rulings li span { display: block; color: var(--t2); font-size: 13.5px; }
+.rulings li.r { border-left-color: var(--red); }
+.foot { color: var(--t2); font-size: 14px; line-height: 1.6; max-width: 70ch; }
+</style>
+
+<main class="wrap">
+  <header>
+    <p class="kicker"><svg viewBox="0 0 100 52" aria-hidden="true"><path d="M50 13 L53.5 5 L55.5 14 L63 12.5 L97 20 L84 23.5 L88 35 L73 31 L67 44 L59 36 L50 48 L41 36 L33 44 L27 31 L12 35 L16 23.5 L3 20 L37 12.5 L44.5 14 L46.5 5 Z" fill="#D0141B"/></svg>SUIT-ALIVE · ROUND 8</p>
+    <h1>SUIT &amp; CAVE BUILD PLAN</h1>
+    <p class="lede">Every piece of the prototype mapped to what BEYOND already records, what's missing, and the order to build it. Most of it is presentation over data the app already has. Nothing here is built yet; each slice waits for your approval.</p>
+  </header>
+
+  <section aria-labelledby="map-h">
+    <div class="head"><h2 id="map-h">DATA MAP</h2><p>Checked against the code on master today.</p></div>
+    <div class="legend"><span><i class="dot g"></i>Data exists</span><span><i class="dot a"></i>Partly: new derivation or a small new input</span><span><i class="dot r"></i>Not recorded today</span></div>
+    <div class="map" role="table" aria-label="Prototype pieces mapped to data">
+      <div class="row hd" role="row"><span>PIECE</span><span>WHAT EXISTS</span><span>GAP</span></div>
+
+      <div class="row" role="row"><div><b><i class="dot g"></i>Modes, clock, auto switching</b></div><p class="ex">Shift Clock phases, effective mode and pin (<code>shiftClock.ts</code>, <code>ModeHeader</code>), schedule (<code>scheduledContext.ts</code>), countdowns, the per-mode suit tokens and red sky.</p><p class="gp">None. The prototype's mode names and subtitles are copy.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot a"></i>Red bat mark</b></div><p class="ex">BOOT-001 start-up, header emblem slot, stealth long-press on the emblem.</p><p class="gp">New asset. Needs an amendment to the SUIT-001 / COMMAND-CENTER-001 "no logo" ruling (you've approved it in chat).</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot g"></i>Comms line</b></div><p class="ex">Engine recommendation and rationale, decision trace (<code>evaluate.ts</code>), the "Bruce's voice, text only" copy rule, REMEMBER lessons.</p><p class="gp">Copy mapping per recommendation kind and mode. Waypoint callouts are new copy driven by the route.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot a"></i>Route · next waypoints</b></div><p class="ex">Shift window (<code>livedDayShiftWindow</code>), tonight's NEXT, PREP items (<code>preparation.ts</code>), usual sleep start after a night (<code>flipSummary</code>, <code>sleepWindow</code>).</p><p class="gp">Break time isn't in the schedule (new optional field). "Last coffee" needs caffeine data, which BEYOND doesn't record. Launch without it.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot a"></i>Vitals against your normal</b></div><p class="ex">Personal baselines (<code>personalBaselines.ts</code>), Whole Picture rows and means, sleep, check-ins, meal and water events with timestamps.</p><p class="gp">"By now" pace for water and protein needs a new projection: your usual total at this hour of the lived day, from existing timestamps.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot g"></i>Dark cockpit</b></div><p class="ex">The same in-range or off-normal states.</p><p class="gp">Presentation only, but it changes how TODAY shows readings (protected layout).</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot g"></i>Preflight checklist</b></div><p class="ex">PREP confirmations, Codex's MEMORY-001, the shift handoff note (NOTES-HANDOFF-001), meal logs.</p><p class="gp">Composition only. Lateness is just time against each item's due point.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot g"></i>Hold to commit</b></div><p class="ex"><code>recordRecommendation</code>, <code>HoldButton</code>, SUIT-002 feedback and haptics.</p><p class="gp">None.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot a"></i>After-action report</b></div><p class="ex">LOOP-002 debrief inside the handoff, logs and check-ins for "actual".</p><p class="gp">"Planned" comes from the route, so it follows the route slice.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot g"></i>Cave · Tonight</b></div><p class="ex">Decision trace, personal ranges, REFLECT/REMEMBER.</p><p class="gp">A ranking by distance from your own range (your normal, never a score).</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot g"></i>Cave · Route, whole run</b></div><p class="ex">Rotation runs and positions (<code>rotationProjection.ts</code>), debriefs, marks for meal times.</p><p class="gp">None beyond layout.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot g"></i>Cave · Vitals</b></div><p class="ex">Whole Picture trends, run positions, the day inspector's records, SYSTEMS readout sources and correction state.</p><p class="gp">"What it feeds" needs a short fixed map of which readings are Engine inputs.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot g"></i>Cave · File and calibration</b></div><p class="ex">Weak point (run positions), what works (TRY), lessons (REMEMBER), flip back (<code>flipSummary</code>), day counts behind each baseline.</p><p class="gp">FIRM / BUILDING / THIN thresholds are new presentation rules.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot a"></i>Cave · Log</b></div><p class="ex">The full event history (<code>historyQueries.ts</code>) for the recorder; your responses are already events.</p><p class="gp">What the cave said isn't stored. Derive it from the same rules at each point in time rather than adding a record.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot g"></i>Cloak</b></div><p class="ex">Stealth (SUIT-001): long-press, blind logging, privacy only.</p><p class="gp">A suit-systems button for it, and optionally default-on late in a shift.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot a"></i>Thermal and night vision</b></div><p class="ex">The off-normal states and the route's lateness.</p><p class="gp">New presentation modes. Auto night vision at midnight changes how TODAY behaves on shift.</p></div>
+
+      <div class="row" role="row"><div><b><i class="dot r"></i>Caffeine, light, sleep stages</b></div><p class="ex">Not recorded. Garmin import doesn't keep stages today.</p><p class="gp">Leave out. Shown honestly in calibration as "not known".</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="sl-h">
+    <div class="head"><h2 id="sl-h">SLICES · IN BUILD ORDER</h2><p>Each one is a single PR with tests, a phone-width check, and your merge. Protected slices need your bounded approval first.</p></div>
+    <ol class="slices">
+      <li class="slice"><div class="slice-top"><h3><span class="n">S1</span>Identity: bat mark and cold start</h3><span class="lane p">PROTECTED · RULING</span></div>
+        <p>The red bat in the header, cave and start-up, with the line-sweep cold start reading your real values. <b>Needs:</b> the logo ruling amended in the decision register.</p></li>
+      <li class="slice"><div class="slice-top"><h3><span class="n">S2</span>The cave, with Vitals</h3><span class="lane">FEATURE</span></div>
+        <p>A read-only cave layer: each vital opens trend against your normal, run position, records, what it feeds, source. <b>Reuses</b> Whole Picture, personal ranges, day inspector and SYSTEMS. Changes nothing on TODAY except making vitals tappable.</p></li>
+      <li class="slice"><div class="slice-top"><h3><span class="n">S3</span>Comms and Tonight</h3><span class="lane p">PROTECTED</span></div>
+        <p>The comms line on TODAY in the mentor's voice, and the cave's Tonight tab: the call, the trace, what's furthest from normal, what's late. <b>Protected</b> because it changes how recommendation authority is presented.</p></li>
+      <li class="slice"><div class="slice-top"><h3><span class="n">S4</span>Route</h3><span class="lane p">PROTECTED</span></div>
+        <p>Next three waypoints on the suit, full route in the cave, from schedule, NEXT, PREP and your usual sleep. Callouts as waypoints pass, in-app only. <b>Optional:</b> a break time on the schedule.</p></li>
+      <li class="slice"><div class="slice-top"><h3><span class="n">S5</span>Dark cockpit and pace</h3><span class="lane p">PROTECTED</span></div>
+        <p>"By now" pace for water and protein, and in-range vitals dimmed. <b>Protected</b>: TODAY's primary layout.</p></li>
+      <li class="slice"><div class="slice-top"><h3><span class="n">S6</span>Preflight and after-action</h3><span class="lane">FEATURE</span></div>
+        <p>The pre-shift checklist from PREP, memory and the handoff, auto-ticked by logs; the after-action report built on LOOP-002's handoff using the route as "planned".</p></li>
+      <li class="slice"><div class="slice-top"><h3><span class="n">S7</span>File, calibration, whole run</h3><span class="lane">FEATURE</span></div>
+        <p>The case file, calibration with FIRM / BUILDING / THIN, and the whole-run table. Read-only; shared with Codex's Personal Understanding so there's one knowledge view, not two.</p></li>
+      <li class="slice"><div class="slice-top"><h3><span class="n">S8</span>Suit systems and Log</h3><span class="lane p">PROTECTED · RULING</span></div>
+        <p>Cloak button, thermal and night vision (auto at midnight on shift), the comms history and the recorder.</p></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="ru-h">
+    <div class="head"><h2 id="ru-h">RULINGS I NEED FROM YOU</h2><p>Each one amends a locked decision, so it's yours to make. Nothing else in this plan needs a new rule.</p></div>
+    <ul class="rulings">
+      <li>Red bat mark in the header, cave and start-up.<span>You've said yes in chat. I'd record it as an amendment to the logo rule.</span></li>
+      <li>Comms line and Tonight tab on TODAY.<span>Same advice, new presentation of it. Advice stays advice; the call stays yours.</span></li>
+      <li>Route and dark cockpit on TODAY.<span>Changes TODAY's primary layout within the current row cap.</span></li>
+      <li>Auto night vision at midnight on shift, and cloak default-on late in a shift.<span>Presentation only; logging always works.</span></li>
+      <li class="r">Optional: red night-vision palette.<span>Conflicts with "red only for the next step". Only if you want it.</span></li>
+    </ul>
+    <p class="foot">Recommended start: S2, the cave with Vitals. It's read-only, needs no ruling, and puts real data behind the prototype's best moment. Then S1 for the identity, then S3. Codex owns Personal Understanding and SUIT-002, so S7 and S8 are worth coordinating with them.</p>
+  </section>
+</main>

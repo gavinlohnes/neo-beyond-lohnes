@@ -1,0 +1,700 @@
+<title>BEYOND Suit and Cave</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap">
+<style>
+/* Layout: SUIT = calm field surface that runs live; CAVE = five-tab depth layer (Tonight, Route, Vitals, File, Log). Original red bat mark. Single dark look. */
+:root {
+  --bg: #000; --s1: #060606; --s2: #0b0b0b; --s3: #121212;
+  --hair: #1a1a1a; --line: #252525; --line-2: #363636;
+  --t1: #ececec; --t2: #9b9b9b; --t3: #6c6c6c;
+  --red: #D0141B; --amber: #c2913a; --plan: #5f7a8c;
+  --sky: rgba(208,20,27,.30);
+  --display: "Chakra Petch", "Arial Narrow", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --ease: cubic-bezier(.22,.7,.2,1); --slow: 650ms;
+  color-scheme: dark;
+}
+.panel[data-mode="SHIFT"] { --t1:#d0d0d0; --t2:#858585; --t3:#5c5c5c; --sky: rgba(208,20,27,.16); }
+.panel[data-mode="RECOVER"] { --t1:#e1e5e8; --t2:#919ea6; --sky: rgba(95,122,140,.22); --slow: 1000ms; }
+.panel[data-mode="OFF"] { --sky: rgba(208,20,27,.10); }
+
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--t1); }
+body { margin: 0; font-family: var(--display); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 1px solid var(--t1); outline-offset: 2px; }
+p { margin: 0; }
+
+.stage { display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; align-items: flex-start; }
+.intro { flex: 1 1 260px; max-width: 340px; min-width: 0; order: 2; }
+@media (min-width: 760px) { .intro { order: 0; padding-top: 6px; } }
+.kicker { font-family: var(--mono); font-size: 10.5px; letter-spacing: .22em; color: var(--t3); margin-bottom: 14px; }
+.intro h1 { font-size: 22px; font-weight: 600; letter-spacing: .3em; margin: 0 0 14px; display: flex; align-items: center; gap: 12px; }
+.intro h1 svg { width: 44px; height: auto; }
+.intro p { color: var(--t2); font-size: 14.5px; line-height: 1.6; margin-bottom: 12px; }
+.intro ul { color: var(--t2); font-size: 14px; line-height: 1.55; padding-left: 18px; margin: 0 0 12px; }
+.controls { display: grid; gap: 16px; margin-top: 20px; border-top: 1px solid var(--hair); padding-top: 18px; }
+.ctl-label { font-family: var(--mono); font-size: 10px; letter-spacing: .22em; color: var(--t3); display: block; margin-bottom: 8px; }
+.ctl-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.ctl { min-height: 44px; padding: 0 14px; background: none; border: 1px solid var(--line); color: var(--t2); letter-spacing: .14em; font-size: 12.5px; cursor: pointer; }
+.ctl[aria-pressed="true"] { color: var(--t1); border-color: var(--t2); }
+
+/* Panel */
+.panel { position: relative; width: 100%; max-width: 392px; height: 860px; background: var(--bg); border: 1px solid var(--hair); overflow: hidden; isolation: isolate; }
+.suit { position: absolute; inset: 0; overflow-y: auto; display: grid; gap: 18px; align-content: start; padding-bottom: 22px; transition: transform var(--slow) var(--ease), opacity var(--slow) var(--ease), filter var(--slow) var(--ease); }
+.panel.cave-open .suit { transform: scale(.97); opacity: .2; pointer-events: none; }
+.pad { padding-inline: 16px; }
+.cap { font-family: var(--mono); font-size: 10px; letter-spacing: .22em; color: var(--t3); text-transform: uppercase; }
+.more { font-family: var(--mono); font-size: 10px; letter-spacing: .18em; color: var(--t3); }
+.row-sub { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.linkbtn { background: none; border: 0; padding: 0; min-height: 32px; font-family: var(--mono); font-size: 10px; letter-spacing: .18em; color: var(--t2); cursor: pointer; }
+.sweep { position: absolute; z-index: 30; top: 0; bottom: 0; left: 0; width: 1px; background: var(--t2); opacity: 0; pointer-events: none; }
+.sweep.go { animation: sweep var(--slow) var(--ease); }
+@keyframes sweep { 0% { opacity: 0; transform: translateX(0); } 10% { opacity: .6; } 100% { opacity: 0; transform: translateX(392px); } }
+
+/* Header */
+.city { position: relative; height: 176px; overflow: hidden; border-bottom: 1px solid var(--line); }
+.city::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, var(--sky), transparent 85%); transition: background var(--slow) var(--ease); }
+.skyline { position: absolute; left: -10%; width: 120%; bottom: 0; height: 120px; animation: pan 60s linear infinite alternate; }
+.skyline.far { height: 104px; opacity: .55; animation-duration: 90s; }
+@keyframes pan { from { transform: translateX(0); } to { transform: translateX(-6%); } }
+.topbar { position: absolute; z-index: 2; left: 16px; right: 16px; top: 12px; display: flex; justify-content: space-between; align-items: center; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 10px; letter-spacing: .26em; color: var(--t2); }
+.brand svg { width: 34px; height: auto; display: block; }
+.link { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--t2); }
+.link i { width: 6px; height: 6px; background: var(--t1); animation: blink 2.4s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .25; } }
+.ident { position: absolute; z-index: 2; left: 16px; right: 16px; bottom: 14px; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.mode-name { font-size: clamp(26px, 8vw, 34px); white-space: nowrap; font-weight: 700; letter-spacing: .14em; line-height: 1; transform: skewX(-6deg); transform-origin: left bottom; }
+.mode-sub { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--t2); margin-top: 6px; white-space: nowrap; }
+.clock { font-weight: 300; font-size: 40px; line-height: .9; font-variant-numeric: tabular-nums; text-align: right; }
+.clock small { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--t3); margin-top: 6px; }
+
+/* Comms */
+.comms { text-align: left; background: none; border: 0; border-left: 2px solid var(--red); margin-inline: 16px; padding: 2px 0 2px 12px; cursor: pointer; display: grid; gap: 7px; }
+.comms-head { display: flex; justify-content: space-between; }
+.comms-text { font-size: 17.5px; line-height: 1.45; min-height: 52px; }
+
+/* Suit systems */
+.sysbar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.sbtn { min-height: 40px; padding: 0 6px; background: none; border: 1px solid var(--line); color: var(--t2); font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; cursor: pointer; }
+.sbtn[aria-pressed="true"] { color: var(--t1); border-color: var(--t1); }
+.sbtn small { color: var(--t3); }
+
+/* Route */
+.route { display: grid; gap: 10px; }
+.ways { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--hair); }
+.ways li { display: grid; grid-template-columns: 58px 1fr auto; gap: 12px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--hair); }
+.ways time { font-family: var(--mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+.ways .w { font-size: 15px; letter-spacing: .14em; }
+.ways .in { font-family: var(--mono); font-size: 12px; color: var(--t2); font-variant-numeric: tabular-nums; }
+.ways li.red time { color: var(--red); }
+.ways li.plan .w, .ways li.plan time { color: var(--plan); }
+.ways li.first .in { color: var(--t1); }
+.dayline { position: relative; height: 4px; background: var(--s3); }
+.dayline .shift { position: absolute; top: 0; bottom: 0; left: 9.375%; width: 51.04%; background: rgba(236,236,236,.18); }
+.dayline .done { position: absolute; top: 0; bottom: 0; left: 0; background: var(--t2); }
+.dayline .now { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--red); }
+.dayends { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--t3); letter-spacing: .08em; }
+
+/* Vitals */
+.vitals { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--hair); border: 1px solid var(--hair); }
+.vital { background: var(--bg); border: 0; text-align: left; padding: 11px 12px; display: grid; gap: 4px; cursor: pointer; min-height: 84px; transition: opacity var(--slow) var(--ease); }
+.vital.ok { opacity: .42; }
+.vital:hover, .vital:focus-visible { opacity: 1; background: var(--s1); }
+.v-name { font-family: var(--mono); font-size: 9.5px; letter-spacing: .2em; color: var(--t3); text-transform: uppercase; display: flex; justify-content: space-between; }
+.v-val { font-weight: 300; font-size: 27px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.v-val small { font-size: 12px; color: var(--t3); margin-left: 3px; }
+.v-state { font-size: 12px; color: var(--t2); display: flex; gap: 6px; align-items: center; }
+.v-state i { width: 5px; height: 5px; background: var(--t2); flex: none; }
+.v-state.off { color: var(--amber); } .v-state.off i { background: var(--amber); }
+.vital.tick { animation: tick .6s var(--ease); }
+@keyframes tick { from { background: rgba(236,236,236,.06); } to { background: var(--bg); } }
+
+/* Next + preflight */
+.next { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--line); background: var(--s1); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+.next h2 { font-size: 20px; font-weight: 500; margin: 0; }
+.next .why { color: var(--t2); font-size: 14.5px; line-height: 1.5; }
+.check { list-style: none; padding: 0; margin: 0; display: grid; }
+.check li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hair); font-size: 14px; }
+.check li .box { width: 14px; height: 14px; border: 1px solid var(--line-2); flex: none; margin-top: 2px; }
+.check li span:first-child { display: flex; gap: 10px; }
+.check li.done { color: var(--t3); }
+.check li.done .box { background: var(--t2); border-color: var(--t2); }
+.check li.late .box { border-color: var(--amber); }
+.check .src { font-family: var(--mono); font-size: 10.5px; color: var(--t3); letter-spacing: .08em; }
+.check li.late .src { color: var(--amber); }
+.commit { --p: 0; position: relative; min-height: 54px; background: var(--red); color: #fff; border: 0; letter-spacing: .24em; font-size: 13px; font-weight: 500; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; }
+.commit::after { content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: calc(var(--p) * 100%); background: #fff; }
+.commit.done { background: #160809; color: var(--t1); box-shadow: inset 0 0 0 1px var(--red); }
+.hint { font-family: var(--mono); font-size: 10px; letter-spacing: .18em; color: var(--t3); }
+.plain { background: none; border: 0; color: var(--t2); font-size: 12.5px; letter-spacing: .14em; min-height: 44px; padding: 0; cursor: pointer; }
+.aar { display: none; }
+.panel[data-mode="RECOVER"] .aar { display: grid; }
+.panel[data-mode="RECOVER"] .next:not(.aar), .panel[data-mode="OFF"] .next:not(.aar), .panel[data-mode="SHIFT"] .next:not(.aar) { display: none; }
+
+/* Log bar */
+.log { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); }
+.log button { min-height: 52px; background: none; border: 0; border-left: 1px solid var(--line); letter-spacing: .2em; font-size: 12.5px; cursor: pointer; }
+.log button:first-child { border-left: 0; }
+.log button:active { background: var(--s2); }
+.receipt { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--t2); min-height: 16px; margin-top: 8px; }
+
+/* Cloak, thermal, night */
+.panel.cloak .city, .panel.cloak .route, .panel.cloak .vitals-wrap, .panel.cloak .next { opacity: .06; pointer-events: none; }
+.panel.cloak .suit { filter: brightness(.7); }
+.cloak-tag { display: none; position: absolute; z-index: 5; top: 12px; left: 16px; right: 16px; font-family: var(--mono); font-size: 10px; letter-spacing: .26em; color: var(--t2); justify-content: space-between; }
+.panel.cloak .cloak-tag { display: flex; }
+.panel.thermal .vital.ok { opacity: .08; }
+.panel.thermal .vital:not(.ok), .panel.thermal .check li.late { box-shadow: inset 0 0 0 1px var(--amber); }
+.panel.thermal .check li:not(.late), .panel.thermal .ways, .panel.thermal .city { opacity: .25; }
+.panel.night .suit { filter: brightness(.55) contrast(1.1); }
+
+/* CAVE */
+.cave { position: absolute; inset: 0; z-index: 10; background: #000; transform: translateY(100%); transition: transform var(--slow) var(--ease); visibility: hidden; display: grid; grid-template-rows: auto auto 1fr; }
+.panel.cave-open .cave { transform: none; visibility: visible; }
+.cave-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 10px; border-bottom: 1px solid var(--line); background: linear-gradient(to bottom, rgba(208,20,27,.08), transparent); }
+.cave-title { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; letter-spacing: .34em; }
+.cave-title svg { width: 30px; height: auto; }
+.back { background: none; border: 1px solid var(--line); min-height: 40px; padding: 0 12px; color: var(--t2); letter-spacing: .16em; font-size: 12px; cursor: pointer; }
+.tabs { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--line); }
+.tab { min-height: 44px; padding: 0 4px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--t3); font-family: var(--mono); font-size: 10px; letter-spacing: .14em; cursor: pointer; }
+.tab[aria-selected="true"] { color: var(--t1); border-bottom-color: var(--red); }
+.cave-body { overflow-y: auto; padding: 16px 16px 28px; display: grid; gap: 20px; align-content: start; }
+.lead { font-size: 17px; line-height: 1.45; }
+.d-val { font-weight: 300; font-size: 50px; line-height: 1; font-variant-numeric: tabular-nums; }
+.d-val small { font-size: 16px; color: var(--t3); margin-left: 4px; }
+.d-sum { font-size: 15px; color: var(--t2); line-height: 1.5; margin-top: 6px; }
+.d-sum.off { color: var(--amber); }
+.block { display: grid; gap: 10px; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { font-family: var(--mono); }
+.kv div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 9px 0; border-top: 1px solid var(--hair); font-size: 13.5px; }
+.kv div:last-child { border-bottom: 1px solid var(--hair); }
+.kv span:first-child { color: var(--t2); }
+.kv span:last-child { font-family: var(--mono); font-size: 12.5px; text-align: right; }
+.facts { display: grid; gap: 8px; padding: 0; margin: 0; list-style: none; }
+.facts li { font-size: 14px; line-height: 1.5; padding-left: 14px; position: relative; }
+.facts li::before { content: ""; position: absolute; left: 0; top: .62em; width: 6px; height: 1px; background: var(--t3); }
+.feeds { font-size: 14px; line-height: 1.55; color: var(--t2); border-left: 1px solid var(--red); padding-left: 12px; }
+.trace { font-family: var(--mono); font-size: 12px; line-height: 1.75; color: var(--t2); }
+.trace b { color: var(--t1); font-weight: 400; }
+.vpick, .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+/* Tonight */
+.glance { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.glance button { width: 100%; text-align: left; background: var(--s1); border: 1px solid var(--line); padding: 12px; display: grid; grid-template-columns: 22px 1fr auto; gap: 4px 10px; align-items: baseline; cursor: pointer; }
+.glance .rank { font-family: var(--mono); font-size: 12px; color: var(--amber); grid-row: span 2; }
+.glance .gt { font-size: 15px; font-weight: 500; letter-spacing: .04em; }
+.glance .gv { font-family: var(--mono); font-size: 13px; color: var(--amber); text-align: right; }
+.glance .gm { grid-column: 2 / 4; font-size: 13.5px; color: var(--t2); line-height: 1.45; }
+.steady { font-size: 13.5px; color: var(--t2); line-height: 1.6; }
+/* Route (cave) */
+.fullroute { list-style: none; margin: 0; padding: 0; position: relative; }
+.fullroute::before { content: ""; position: absolute; left: 61px; top: 8px; bottom: 8px; width: 1px; background: var(--line-2); }
+.fullroute li { display: grid; grid-template-columns: 50px 24px 1fr; gap: 0 4px; align-items: start; padding: 10px 0; }
+.fullroute time { font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; padding-top: 1px; }
+.fullroute .pin { width: 11px; height: 11px; border: 1px solid var(--t2); background: #000; margin: 4px 0 0 7px; position: relative; z-index: 1; }
+.fullroute li.done .pin { background: var(--t2); }
+.fullroute li.red .pin { background: var(--red); border-color: var(--red); }
+.fullroute li.plan .pin { border-color: var(--plan); border-style: dashed; }
+.fullroute .what { display: grid; gap: 3px; }
+.fullroute .what b { font-weight: 500; font-size: 16px; letter-spacing: .1em; }
+.fullroute .what span { font-size: 13px; color: var(--t2); line-height: 1.45; }
+.fullroute li.done { color: var(--t3); } .fullroute li.done .what b { color: var(--t2); }
+.fullroute li.nowrow { padding: 4px 0; }
+.fullroute li.nowrow .pin { width: 23px; height: 2px; border: 0; background: var(--red); margin: 8px 0 0 1px; }
+.fullroute li.nowrow .what b { color: var(--red); font-size: 12px; letter-spacing: .24em; font-family: var(--mono); }
+.run { display: grid; grid-template-columns: 70px repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--hair); font-size: 13px; }
+.run > div { padding: 9px 4px; border-bottom: 1px solid var(--hair); font-variant-numeric: tabular-nums; }
+.run .h { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; color: var(--t3); }
+.run .k { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: var(--t2); }
+.run .tn { background: rgba(208,20,27,.07); }
+.run .off { color: var(--amber); }
+.run .na { color: var(--t3); }
+/* File */
+.file { border: 1px solid var(--line); padding: 12px; display: grid; gap: 6px; }
+.file h4 { margin: 0; font-size: 15px; font-weight: 500; }
+.file p { color: var(--t2); font-size: 13.5px; line-height: 1.5; }
+.cal { display: grid; }
+.cal div { display: grid; grid-template-columns: minmax(0, 1fr) 70px 70px; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--hair); font-size: 13.5px; }
+.cal div:last-child { border-bottom: 1px solid var(--hair); }
+.cal .bar { height: 4px; background: var(--s3); position: relative; }
+.cal .bar i { position: absolute; inset: 0 auto 0 0; background: var(--t2); }
+.cal .st { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-align: right; }
+.cal .FIRM { color: var(--t1); } .cal .BUILDING { color: var(--t2); } .cal .THIN { color: var(--amber); }
+/* Log */
+.clog { list-style: none; margin: 0; padding: 0; display: grid; }
+.clog li { display: grid; grid-template-columns: 50px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--hair); }
+.clog time { font-family: var(--mono); font-size: 12px; color: var(--t3); padding-top: 2px; }
+.clog .said { font-size: 14px; line-height: 1.45; }
+.clog .did { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--t2); margin-top: 4px; }
+.clog li.you .said { color: var(--t2); font-family: var(--mono); font-size: 12px; letter-spacing: .06em; }
+.rec input { width: 100%; accent-color: var(--red); }
+.rec-list { list-style: none; padding: 0; margin: 0; display: grid; }
+.rec-list li { display: grid; grid-template-columns: 52px 1fr; gap: 10px; padding: 7px 0; border-top: 1px solid var(--hair); font-size: 13.5px; color: var(--t3); }
+.rec-list li.past { color: var(--t1); }
+.rec-list li.at { color: var(--t1); box-shadow: inset 2px 0 0 var(--red); padding-left: 8px; }
+.rec-list time { font-family: var(--mono); font-size: 12px; }
+
+/* Cold start */
+.boot { position: absolute; inset: 0; z-index: 40; background: #000; display: grid; align-content: center; justify-items: center; padding: 28px; gap: 18px; cursor: pointer; transition: opacity .45s var(--ease); }
+.boot[hidden] { display: none; }
+.boot.out { opacity: 0; }
+.b-line { width: 100%; height: 1px; background: var(--red); transform: scaleX(0); }
+.boot.booting .b-line { animation: line .45s var(--ease) forwards; }
+@keyframes line { to { transform: scaleX(1); } }
+.boot .mark { width: 156px; height: auto; clip-path: inset(0 50% 0 50%); margin-top: -8px; }
+.boot.booting .mark { animation: reveal .5s .35s var(--ease) forwards; }
+@keyframes reveal { to { clip-path: inset(0 0 0 0); } }
+.b-word { font-size: 14px; font-weight: 600; letter-spacing: .62em; padding-left: .62em; opacity: 0; transition: opacity .4s; }
+.b-list { width: 100%; max-width: 300px; }
+.b-list div { display: grid; grid-template-columns: 1fr auto 66px; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--hair); font-family: var(--mono); font-size: 12px; color: var(--t2); opacity: 0; transition: opacity .25s; }
+.b-list .v { color: var(--t1); } .b-list .s { text-align: right; font-size: 10.5px; letter-spacing: .14em; } .b-list .s.off { color: var(--amber); }
+.b-ready { font-family: var(--mono); font-size: 10.5px; letter-spacing: .24em; color: var(--t2); opacity: 0; transition: opacity .3s; }
+.on { opacity: 1 !important; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } .boot .mark { clip-path: none; } }
+.panel.reduce *, .panel.reduce *::before, .panel.reduce *::after { animation: none !important; transition: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs><path id="bat" d="M50 13 L53.5 5 L55.5 14 L63 12.5 L97 20 L84 23.5 L88 35 L73 31 L67 44 L59 36 L50 48 L41 36 L33 44 L27 31 L12 35 L16 23.5 L3 20 L37 12.5 L44.5 14 L46.5 5 Z"/></defs>
+</svg>
+
+<div class="stage">
+  <section class="intro" aria-labelledby="intro-title">
+    <p class="kicker">PROTOTYPE V6 · SAMPLE DATA</p>
+    <h1 id="intro-title"><svg viewBox="0 0 100 52" aria-hidden="true"><use href="#bat" fill="#D0141B"/></svg>SUIT &amp; CAVE</h1>
+    <p>The suit now runs live. Set time to 60× and watch the night go by: countdowns tick, the suit switches itself to ON SHIFT at 18:45, night vision comes on at midnight, and the cave calls out each waypoint.</p>
+    <ul>
+      <li>Cave tabs: TONIGHT (the call, and what's furthest from normal), ROUTE (tonight or the whole run), VITALS, FILE (case file and calibration), LOG (comms history and recorder).</li>
+      <li>THERMAL now also shows anything you're late for.</li>
+      <li>Hold to commit; the cave logs it.</li>
+    </ul>
+    <p>Night 3 of 4. Every figure is invented.</p>
+    <div class="controls">
+      <div><span class="ctl-label" id="lbl-time">TIME</span>
+        <div class="ctl-row" role="group" aria-labelledby="lbl-time">
+          <button class="ctl" data-speed="1" aria-pressed="true">LIVE 1×</button>
+          <button class="ctl" data-speed="60" aria-pressed="false">60×</button>
+          <button class="ctl" data-speed="600" aria-pressed="false">600×</button>
+          <button class="ctl" data-speed="0" aria-pressed="false">PAUSE</button>
+        </div></div>
+      <div><span class="ctl-label" id="lbl-mode">JUMP TO</span>
+        <div class="ctl-row" role="group" aria-labelledby="lbl-mode">
+          <button class="ctl" data-jump="1.2">17:42 PREP</button>
+          <button class="ctl" data-jump="6.67">23:10 SHIFT</button>
+          <button class="ctl" data-jump="14.92">07:25 RECOVER</button>
+          <button class="ctl" data-jump="off">DAY OFF</button>
+        </div></div>
+      <div><span class="ctl-label" id="lbl-m">MOMENTS</span>
+        <div class="ctl-row" role="group" aria-labelledby="lbl-m">
+          <button class="ctl" id="replay">COLD START</button>
+          <button class="ctl" id="reduce" aria-pressed="false">REDUCED MOTION</button>
+        </div></div>
+    </div>
+  </section>
+
+  <div class="panel" id="panel" data-mode="PREP">
+    <div class="sweep" id="sweep" aria-hidden="true"></div>
+    <p class="sr" id="announce" role="status" aria-live="polite"></p>
+
+    <div class="boot" id="boot" role="dialog" aria-label="Cold start. Tap to skip.">
+      <div class="b-line" aria-hidden="true"></div>
+      <svg class="mark" viewBox="0 0 100 52" aria-hidden="true"><use href="#bat" fill="#D0141B"/></svg>
+      <p class="b-word" id="b-word">BEYOND</p>
+      <div class="b-list" id="b-list"></div>
+      <p class="b-ready" id="b-ready">CAVE LINK ESTABLISHED</p>
+    </div>
+
+    <div class="cloak-tag" aria-hidden="true"><span>CLOAK ENGAGED</span><span>LOGGING STILL SAVES</span></div>
+
+    <main class="suit" id="suit">
+      <section class="city" aria-label="Mode">
+        <svg class="skyline far" viewBox="0 0 480 104" preserveAspectRatio="none" aria-hidden="true"><path d="M0 104 V60 H18 V38 H26 V22 H30 V38 H40 V54 H64 V30 H78 V48 H100 V20 H106 V8 H110 V20 H118 V44 H146 V34 H170 V52 H196 V18 H204 V30 H230 V46 H252 V26 H270 V40 H300 V14 H306 V4 H310 V14 H318 V36 H346 V50 H370 V28 H392 V42 H420 V22 H434 V46 H460 V34 H480 V104 Z" fill="#050505"/></svg>
+        <svg class="skyline" viewBox="0 0 480 120" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 120 V78 H22 V58 H34 V80 H52 V40 H58 V24 H62 V12 H66 V24 H72 V40 H80 V66 H104 V48 H124 V82 H142 V56 H160 V30 H166 V20 H172 V30 H180 V60 H204 V72 H226 V44 H236 V34 H246 V44 H256 V70 H280 V52 H298 V26 H304 V10 H308 V26 H316 V62 H340 V48 H362 V76 H382 V38 H392 V22 H398 V38 H410 V64 H436 V50 H458 V70 H480 V120 Z" fill="#060606" stroke="#1c1c1c"/>
+          <g fill="#3a3a3a"><rect x="60" y="34" width="2" height="2"/><rect x="164" y="40" width="2" height="2"/><rect x="240" y="50" width="2" height="2"/><rect x="302" y="36" width="2" height="2"/><rect x="394" y="44" width="2" height="2"/><rect x="110" y="60" width="2" height="2"/></g>
+          <rect x="305" y="6" width="2" height="2" fill="#D0141B"/>
+        </svg>
+        <div class="topbar"><span class="brand"><svg viewBox="0 0 100 52" aria-hidden="true"><use href="#bat" fill="#D0141B"/></svg>BEYOND</span><span class="link"><i aria-hidden="true"></i>CAVE LINK</span></div>
+        <div class="ident"><div><p class="mode-name" id="mode-name">PREP</p><p class="mode-sub" id="mode-sub">NIGHT 3 OF 4</p></div><p class="clock"><span id="clock">17:42</span><small id="speed-tag">LIVE</small></p></div>
+      </section>
+
+      <button class="comms" id="comms" type="button" aria-describedby="comms-more">
+        <span class="comms-head"><span class="cap">COMMS · CAVE · <span id="comms-at">17:42</span></span><span class="more" id="comms-more">TONIGHT ›</span></span>
+        <span class="comms-text" id="comms-text"></span>
+      </button>
+
+      <section class="pad" aria-label="Suit systems">
+        <div class="sysbar">
+          <button class="sbtn" id="cloak" type="button" aria-pressed="false">CLOAK</button>
+          <button class="sbtn" data-vision="normal" type="button" aria-pressed="true">NORMAL</button>
+          <button class="sbtn" data-vision="thermal" type="button" aria-pressed="false">THERMAL</button>
+          <button class="sbtn" data-vision="night" type="button" aria-pressed="false" id="night-btn">NIGHT</button>
+        </div>
+      </section>
+
+      <section class="pad route" aria-labelledby="route-cap">
+        <div class="row-sub"><p class="cap" id="route-cap">ROUTE · NEXT</p><button class="linkbtn" id="route-open" type="button">FULL ROUTE ›</button></div>
+        <ul class="ways" id="ways"></ul>
+        <div class="dayline" aria-hidden="true"><span class="shift"></span><span class="done" id="day-done"></span><span class="now" id="day-now"></span></div>
+        <div class="dayends" aria-hidden="true"><span>16:30</span><span id="day-pct"></span><span>16:30</span></div>
+      </section>
+
+      <section class="pad vitals-wrap" style="display:grid; gap:8px" aria-labelledby="vit-cap">
+        <div class="row-sub"><p class="cap" id="vit-cap">VITALS</p><p class="more">NORMAL STAYS DARK · TAP</p></div>
+        <div class="vitals" id="vitals"></div>
+      </section>
+
+      <section class="pad" aria-label="Next">
+        <div class="next">
+          <p class="cap">NEXT · PREFLIGHT</p>
+          <h2>Nap before the shift</h2>
+          <p class="why">Two short main sleeps in a row. Twenty to forty minutes before 18:15, then eat. Your call.</p>
+          <ul class="check" id="check"></ul>
+          <button class="commit" id="commit" type="button"><span id="commit-text">HOLD TO COMMIT</span></button>
+          <div class="row-sub"><p class="hint" id="commit-hint">HOLD · RELEASE TO CANCEL</p><button class="plain" type="button">NOT TONIGHT</button></div>
+        </div>
+        <div class="next aar">
+          <p class="cap">AFTER-ACTION · NIGHT 3</p>
+          <h2>Debrief</h2>
+          <div class="kv">
+            <div><span>Planned</span><span>Nap · eat at break</span></div>
+            <div><span>Actual</span><span id="aar-actual">Nap 17:50 · ate 02:40</span></div>
+            <div><span style="color:var(--amber)">Gap</span><span style="color:var(--amber)">Late meal · energy 2 at 04:40</span></div>
+            <div><span>Carry forward</span><span>Eat at first break</span></div>
+          </div>
+          <button class="commit" id="aar-commit" type="button"><span>HOLD TO FILE DEBRIEF</span></button>
+        </div>
+      </section>
+
+      <section class="pad" aria-label="Log">
+        <div class="log"><button type="button" data-log="water">WATER</button><button type="button" data-log="meal">MEAL</button><button type="button" data-log="more">LOG</button></div>
+        <p class="receipt" id="receipt" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <section class="cave" id="cave" role="dialog" aria-modal="true" aria-labelledby="cave-title">
+      <div class="cave-head"><p class="cave-title" id="cave-title"><svg viewBox="0 0 100 52" aria-hidden="true"><use href="#bat" fill="#D0141B"/></svg>THE CAVE</p><button class="back" id="back" type="button">BACK TO SUIT</button></div>
+      <div class="tabs" role="tablist" aria-label="Cave">
+        <button class="tab" role="tab" data-tab="tonight">TONIGHT</button>
+        <button class="tab" role="tab" data-tab="route">ROUTE</button>
+        <button class="tab" role="tab" data-tab="vitals">VITALS</button>
+        <button class="tab" role="tab" data-tab="file">FILE</button>
+        <button class="tab" role="tab" data-tab="log">LOG</button>
+      </div>
+      <div class="cave-body" id="cave-body" role="tabpanel"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const panel = $("panel"), mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let reduceToggle = false; const reduced = () => reduceToggle || mq.matches;
+  const buzz = (p) => { if (!reduced() && navigator.vibrate) try { navigator.vibrate(p); } catch (e) {} };
+  const hm = (h) => `${Math.floor(h)}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
+  const median = (a) => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const sweep = () => { if (reduced()) return; const s = $("sweep"); s.classList.remove("go"); void s.offsetWidth; s.classList.add("go"); };
+
+  // ---------- Time: hours since the 16:30 lived-day start ----------
+  let t = 1.2, speed = 1, offDay = false;
+  const clockOf = (h) => { const m = Math.floor(990 + h * 60) % 1440; return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`; };
+  const modeAt = (h) => offDay ? "OFF" : h < 2.25 ? "PREP" : h < 14.5 ? "SHIFT" : "RECOVER";
+
+  // ---------- Sample data (invented) ----------
+  const V = {
+    sleep: { title: "Main sleep", hist: [7.1, 6.8, 7.4, 6.2, 5.9, 7.6, 7.2, 6.9, 7.0, 6.4, 7.3, 6.0, 5.4, 5.17], band: [6.5, 7.67], lo: 4, hi: 8.5,
+      show: (v) => `${hm(v)}<small>h</small>`, axis: hm, mean: "Two short sleeps feed the short-sleep rule and tonight's NEXT.",
+      state: (v, u) => v < 6.5 ? [`${Math.round((u - v) * 60)} min under usual`, true] : ["Within usual", false],
+      summary: (v, u) => `${Math.round((u - v) * 60)} minutes under your usual ${hm(u)}. Second short main sleep in a row.`,
+      position: [["Night 3, this run", "5:10"], ["Night 3, last 4 runs", "6:05 avg"], ["All work nights", "6:22 avg"], ["Days off", "7:35 avg"]],
+      facts: ["Shift ended 07:20. Shift down 07:35–07:50.", "Asleep 08:41, awake 13:51. Woke once at 11:02.", "Night 2: 5:24. Night 1: 6:48."],
+      source: [["Source", "Garmin · main sleep"], ["Imported", "13:58"], ["Corrections", "None"], ["Usual from", "31 nights"]],
+      feeds: "Drives advice. Two short main sleeps trip the short-sleep rule: TRAIN offers the reduced session, and it shapes tonight's NEXT." },
+    energy: { title: "Energy · check-in", hist: [4, 4, 3, 3, 3, 4, 4, 3, 4, 3, 4, 3, 2, 2], band: [3, 4], lo: 1, hi: 5,
+      show: (v) => `${v}<small>/5</small>`, axis: (v) => `${v}`, mean: "Energy 2 is why capacity is YELLOW tonight.",
+      state: (v) => v < 3 ? ["Under your usual 3–4", true] : ["Within usual", false],
+      summary: () => "Under your usual 3–4 for the second check-in running.",
+      position: [["Night 3s", "3.0 avg"], ["All work days", "3.3 avg"], ["Days off", "4.0 avg"]],
+      facts: ["Check-in 17:20: energy 2, stress 3, mood 3, soreness 2.", "Previous: 06:55, energy 2."],
+      source: [["Source", "Your check-in"], ["Recorded", "17:20"], ["Usual from", "41 check-ins"]],
+      feeds: "Drives advice. Energy 2 puts capacity at YELLOW. That's why NEXT says recover before the shift." },
+    fuel: { title: "Protein · by now", hist: [72, 66, 58, 80, 61, 70, 77, 64, 69, 74, 60, 71, 52, 38], band: [55, 80], lo: 20, hi: 100, partial: true,
+      show: (v) => `${Math.round(v)}<small>g</small>`, axis: (v) => `${Math.round(v)} g`, mean: "Eat before you leave; your break meal ran late last night.",
+      state: (v, u) => v < 55 ? [`${Math.round(u - v)} g behind usual`, true] : ["On pace", false],
+      summary: (v, u) => v < 55 ? `${Math.round(u - v)} g behind where you usually are by now. Day target 180 g.` : "On pace. Day target 180 g.",
+      position: [["Night 3s, by now", "70 g avg"], ["Work days, by now", "66 g avg"], ["Days off, by now", "88 g avg"]],
+      facts: ["One meal: 13:58, 38 g (eggs and toast).", "No shake yet. You usually have one before nights."],
+      source: [["Source", "Your meal logs"], ["Logged today", "1"], ["Usual from", "28 days"]],
+      feeds: "Informational. Fuel does not decide the advice." },
+    water: { title: "Water · by now", hist: [1.2, 1.0, 1.3, 0.9, 1.1, 1.4, 1.0, 1.2, 1.3, 1.1, 1.0, 1.2, 0.8, 0.5], band: [0.9, 1.4], lo: 0, hi: 2, partial: true,
+      show: (v) => `${v.toFixed(1)}<small>L</small>`, axis: (v) => `${v.toFixed(1)} L`, mean: "Under 1 L at this hour went with a headache twice last run.",
+      state: (v, u) => v < 0.9 ? [`${(u - v).toFixed(1)} L behind usual`, true] : ["On pace", false],
+      summary: (v, u) => v < 0.9 ? `${(u - v).toFixed(1)} L behind where you usually are by now. Day target 3.0 L.` : "On pace. Day target 3.0 L.",
+      position: [["Night 3s, by now", "1.1 L avg"], ["Work days, by now", "1.15 L avg"]],
+      facts: ["One log: 14:10, 500 ml.", "Twice last run you were under 1 L at this hour. Both nights you logged a headache."],
+      source: [["Source", "Your water logs"], ["Logged today", "1"], ["Usual from", "30 days"]],
+      feeds: "Informational. Water does not decide the advice." },
+  };
+  const now = (k) => V[k].hist[V[k].hist.length - 1], usual = (k) => median(V[k].hist.slice(0, -1));
+  const gap = (k) => { const [a, b] = V[k].band, v = now(k); return v < a ? (a - v) / (b - a) : 0; };
+
+  const SUB = { PREP: "NIGHT 3/4 · CHARGING", SHIFT: "NIGHT 3/4 · ON THE CLOCK", RECOVER: "SHIFT DONE · COOLDOWN", OFF: "DAY OFF 1/3 · STANDBY" };
+  const RESULT = { PREP: "recover before the shift · your call", SHIFT: "hold the basics: water, the 00:30 meal · your call", RECOVER: "shift down, then sleep · your call", OFF: "nothing required · your call" };
+  const NAME = { PREP: "PREP", SHIFT: "ON SHIFT", RECOVER: "RECOVER", OFF: "OFF DUTY" };
+  const OPEN = { PREP: "Two short sleeps. Energy's at two. Nap before 18:15, then eat. Your call.", SHIFT: "On shift. Water's behind. Eat at the 00:30 break, not after.",
+    RECOVER: "Good work tonight. Debrief, shift down, sleep by 08:10.", OFF: "Stand down. You trained twice this run. Nothing's required." };
+  let mode = "PREP";
+
+  // ---------- Route ----------
+  const WAY = [
+    { k: "start", t: "LIVED DAY STARTS", h: 0, why: "Your 16:30 boundary." },
+    { k: "nap", t: "NAP", h: 1.33, why: "20–40 min. From tonight's NEXT.", say: "17:50. Nap window's open. Twenty minutes is enough." },
+    { k: "eat", t: "EAT", h: 1.83, why: "30 g protein before you leave. Your PREP usual.", say: "Eat before you go. Thirty grams." },
+    { k: "shift", t: "SHIFT", h: 2.25, red: true, why: "Night 3 of 4. From your schedule.", say: "On shift. Eat at the 00:30 break, not after." },
+    { k: "midnight", t: "MIDNIGHT", h: 7.5, why: "Night vision comes on by itself.", say: "Midnight. Night vision on. You're behind on water." },
+    { k: "brk", t: "BREAK", h: 8, why: "Eat here. Carried forward from night 2's debrief.", say: "Break. This is the meal. Don't push it to 02:40 again." },
+    { k: "cof", t: "LAST COFFEE", h: 9.5, plan: true, why: "After this, caffeine lands in your sleep. Your usual.", say: "02:00. Last coffee." },
+    { k: "end", t: "SHIFT ENDS", h: 14.5, why: "Then shift down and debrief.", say: "Shift's done. Debrief, shift down, sleep by 08:10." },
+    { k: "sleep", t: "SLEEP", h: 15.67, plan: true, why: "Your usual start after a night like this.", say: "08:10. Lights out. The city can wait." },
+  ];
+  const done = new Set();
+  const inText = (dh) => { const m = Math.round(dh * 60); return m < 60 ? `in ${m} min` : `in ${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`; };
+  function renderRoute() {
+    const pct = offDay ? 0 : (t / 24) * 100;
+    $("day-done").style.width = `${pct}%`; $("day-now").style.left = `calc(${pct}% - 1px)`;
+    $("day-pct").textContent = offDay ? "DAY OFF" : `${Math.round(pct)}% THROUGH THE DAY`;
+    const next = offDay ? [] : WAY.filter((w) => w.h > t && w.k !== "midnight" && !done.has(w.k)).slice(0, 3);
+    $("ways").innerHTML = next.length ? next.map((w, i) => `<li class="${w.red ? "red" : ""}${w.plan ? " plan" : ""}${i === 0 ? " first" : ""}"><time>${clockOf(w.h)}</time><span class="w">${w.t}</span><span class="in">${inText(w.h - t)}</span></li>`).join("")
+      : `<li><time>—</time><span class="w" style="color:var(--t2)">NO ROUTE</span><span class="in">${offDay ? "day off" : "day complete"}</span></li>`;
+  }
+
+  // ---------- Vitals ----------
+  function renderVitals() {
+    $("vitals").innerHTML = Object.keys(V).map((k) => { const [st, off] = V[k].state(now(k), usual(k));
+      return `<button class="vital${off ? "" : " ok"}" type="button" data-k="${k}" aria-label="${V[k].title}. ${st}. Open in the cave.">
+        <span class="v-name"><span>${V[k].title.split(" · ")[0]}</span><span aria-hidden="true">›</span></span>
+        <span class="v-val" data-v>${V[k].show(now(k))}</span>
+        <span class="v-state${off ? " off" : ""}"><i aria-hidden="true"></i><span>${st}</span></span></button>`; }).join("");
+    document.querySelectorAll(".vital").forEach((b) => b.addEventListener("click", () => openCave("vitals", b, b.dataset.k)));
+  }
+  function roll(node, html) {
+    if (reduced()) { node.innerHTML = html; return; }
+    const tail = (html.match(/<small>.*<\/small>/) || [""])[0], target = html.replace(tail, "");
+    let f = 0; const tk = () => { f++; node.innerHTML = target.split("").map((c, i) => /\d/.test(c) && f < 7 - (i % 2) ? String((+c + f) % 10) : c).join("") + tail; if (f < 7) setTimeout(tk, 34); else node.innerHTML = html; }; tk();
+  }
+  function bump(k, by) {
+    const h = V[k].hist; h[h.length - 1] = Math.round((h[h.length - 1] + by) * 100) / 100;
+    const b = document.querySelector(`.vital[data-k="${k}"]`), [st, off] = V[k].state(now(k), usual(k));
+    roll(b.querySelector("[data-v]"), V[k].show(now(k))); b.classList.toggle("ok", !off);
+    const s = b.querySelector(".v-state"); s.className = `v-state${off ? " off" : ""}`; s.lastElementChild.textContent = st;
+    if (!reduced()) { b.classList.remove("tick"); void b.offsetWidth; b.classList.add("tick"); }
+  }
+
+  // ---------- Preflight with lateness ----------
+  const CHECK = [{ k: "nap", t: "Nap 20–40 min", src: "NEXT", due: 1.83 }, { k: "eat", t: "Meal, 30 g protein", src: "LOG", due: 2.25 },
+    { k: "bottles", t: "Bottles packed", src: "PREP", due: 2.25 }, { k: "note", t: "Read last shift's note", src: "HANDOFF", due: 2.5 }];
+  let checkSig = "";
+  function renderCheck() {
+    const sig = CHECK.map((c) => done.has(c.k) ? "d" : t > c.due ? "l" : "o").join("");
+    if (sig === checkSig) return; checkSig = sig;
+    $("check").innerHTML = CHECK.map((c) => { const d = done.has(c.k), late = !d && t > c.due;
+      return `<li class="${d ? "done" : late ? "late" : ""}"><span><span class="box" aria-hidden="true"></span>${c.t}</span><span class="src">${d ? "DONE" : late ? "LATE" : c.src}</span></li>`; }).join("");
+  }
+  function tickOff(k) { if (done.has(k)) return; done.add(k); renderCheck(); renderRoute(); }
+
+  // ---------- Comms, with history ----------
+  const LOG = [{ at: "06:55", said: "Night 2 done. Short sleep again. Watch tonight.", did: "No response" }];
+  let typing = 0;
+  function say(text, quiet) {
+    $("comms-at").textContent = clockOf(t);
+    LOG.unshift({ at: clockOf(t), said: text, did: "" });
+    const n = $("comms-text"), run = ++typing;
+    if (quiet || reduced()) { n.textContent = text; return; }
+    n.textContent = ""; let i = 0; const step = () => { if (run !== typing) return; n.textContent = text.slice(0, ++i); if (i < text.length) setTimeout(step, 16); }; step();
+    buzz([6, 40, 6]);
+  }
+  function youDid(what) { const last = LOG.find((e) => !e.you); if (last && !last.did) last.did = `${what} · ${clockOf(t)}`; else LOG.unshift({ at: clockOf(t), said: what, you: true }); }
+
+  // ---------- Mode ----------
+  let nightAuto = false, vision = "normal";
+  function applyMode(next, quiet) {
+    if (next === mode && !quiet) return;
+    mode = next; panel.dataset.mode = next;
+    $("mode-name").textContent = NAME[next]; $("mode-sub").textContent = SUB[next];
+    $("announce").textContent = `${NAME[next]}. ${SUB[next]}`;
+    if (!quiet) { sweep(); buzz(12); }
+  }
+  function setVision(v, auto) {
+    vision = v; nightAuto = !!auto;
+    panel.classList.toggle("thermal", v === "thermal"); panel.classList.toggle("night", v === "night");
+    document.querySelectorAll("[data-vision]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.vision === v)));
+    $("night-btn").innerHTML = v === "night" && auto ? "NIGHT <small>· AUTO</small>" : "NIGHT";
+  }
+
+  // ---------- The live loop ----------
+  let last = performance.now(), lastTick = 0;
+  function frame(nowMs) {
+    const dt = (nowMs - last) / 1000; last = nowMs;
+    if (speed && !offDay && !panel.classList.contains("cave-open") && $("boot").hidden) {
+      const before = t; t = Math.min(t + (dt * speed) / 3600, 23.99);
+      WAY.forEach((w) => { if (before < w.h && t >= w.h && w.say) { say(w.say); if (w.k === "midnight" && vision === "normal") setVision("night", true); } });
+      if (modeAt(t) !== mode) applyMode(modeAt(t));
+      if (mode !== "SHIFT" && nightAuto) setVision("normal");
+    }
+    if (nowMs - lastTick > 200) { lastTick = nowMs; $("clock").textContent = offDay ? "13:05" : clockOf(t); renderRoute(); renderCheck(); }
+    requestAnimationFrame(frame);
+  }
+
+  function jump(to) {
+    if (to === "off") { offDay = true; applyMode("OFF", false); say(OPEN.OFF); }
+    else { offDay = false; t = +to; done.clear(); if (t > 1.5) done.add("nap"); if (t > 6) ["eat", "bottles", "note"].forEach((k) => done.add(k)); checkSig = ""; applyMode(modeAt(t)); setVision(t >= 7.5 && mode === "SHIFT" ? "night" : "normal", t >= 7.5 && mode === "SHIFT"); say(OPEN[mode]); }
+    renderRoute(); renderCheck();
+  }
+
+  // ---------- Suit systems ----------
+  $("cloak").addEventListener("click", (e) => { const on = !panel.classList.contains("cloak"); panel.classList.toggle("cloak", on); e.currentTarget.setAttribute("aria-pressed", String(on)); $("announce").textContent = on ? "Cloak engaged. Logging still saves." : "Cloak off."; buzz(on ? [6, 40, 6] : 6); });
+  document.querySelectorAll("[data-vision]").forEach((b) => b.addEventListener("click", () => { setVision(b.dataset.vision, false); buzz(6); }));
+
+  // ---------- Hold to commit ----------
+  function hold(btn, onDone) {
+    let raf = 0, t0 = 0, isDone = false; const MS = 600;
+    const fin = () => { isDone = true; btn.classList.add("done"); btn.style.setProperty("--p", 0); onDone(); buzz(25); };
+    const step = (x) => { const p = Math.min((x - t0) / MS, 1); btn.style.setProperty("--p", p); p >= 1 ? fin() : (raf = requestAnimationFrame(step)); };
+    btn.addEventListener("pointerdown", (e) => { if (isDone) return; e.preventDefault(); if (reduced()) return fin(); t0 = performance.now(); raf = requestAnimationFrame(step); });
+    const cancel = () => { cancelAnimationFrame(raf); if (!isDone) btn.style.setProperty("--p", 0); };
+    ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => btn.addEventListener(ev, cancel));
+    btn.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && !isDone) { e.preventDefault(); fin(); } });
+  }
+  hold($("commit"), () => { $("commit-text").textContent = `COMMITTED · ${clockOf(t)}`; $("commit-hint").textContent = "SAVED"; youDid("COMMITTED TO NAP"); tickOff("nap"); say("Copy. Twenty to forty minutes. I'll keep watch."); });
+  hold($("aar-commit"), () => { $("aar-commit").firstElementChild.textContent = "DEBRIEF FILED"; youDid("FILED DEBRIEF"); say("Filed. First break, you eat. Now sleep."); });
+
+  // ---------- Log ----------
+  document.querySelectorAll(".log button").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.log, at = clockOf(t);
+    if (k === "water") { bump("water", 0.5); $("receipt").textContent = `${at}  WATER 500 ML  SAVED · UNDO`; youDid("LOGGED WATER 500 ML"); buzz(8); }
+    else if (k === "meal") { bump("fuel", 34); $("receipt").textContent = `${at}  MEAL 34 G PROTEIN  SAVED · UNDO`; youDid("LOGGED MEAL 34 G"); tickOff("eat"); buzz(12); }
+    else $("receipt").textContent = "OPENS THE LOG SHEET";
+  }));
+
+  // ---------- The cave ----------
+  let opener = null, focusVital = "sleep", routeView = "tonight";
+  function chart(k) {
+    const { hist, band, lo, hi, partial, axis } = V[k], W = 356, H = 132, L = 34, R = 8, T = 10, B = 22, n = hist.length;
+    const x = (i) => L + (i / (n - 1)) * (W - L - R), y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+    const u = usual(k), lastV = hist[n - 1], off = lastV < band[0];
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${V[k].title}, last 14 days against your usual range">`;
+    s += `<rect x="${L}" y="${y(band[1])}" width="${W - L - R}" height="${y(band[0]) - y(band[1])}" fill="rgba(236,236,236,.06)"/>`;
+    s += `<line x1="${L}" x2="${W - R}" y1="${y(u)}" y2="${y(u)}" stroke="#454545" stroke-dasharray="2 3"/>`;
+    s += `<text x="${L - 6}" y="${y(band[1]) + 3}" text-anchor="end" fill="#6c6c6c" font-size="8">${axis(band[1])}</text><text x="${L - 6}" y="${y(band[0]) + 3}" text-anchor="end" fill="#6c6c6c" font-size="8">${axis(band[0])}</text>`;
+    hist.forEach((v, i) => { const isLast = i === n - 1; s += `<rect x="${x(i) - 5}" y="${y(v)}" width="10" height="${y(lo) - y(v)}" fill="${isLast ? (off ? "#c2913a" : "#ececec") : "#3a3a3a"}"${isLast && partial ? ' fill-opacity=".35" stroke="#c2913a" stroke-dasharray="2 2"' : ""}/>`; });
+    s += `<text x="${x(0)}" y="${H - 6}" text-anchor="middle" fill="#6c6c6c" font-size="8">Oct 15</text><text x="${x(n - 1)}" y="${H - 6}" text-anchor="end" fill="#6c6c6c" font-size="8">Today</text>`;
+    return s + "</svg>";
+  }
+  const kv = (rows) => `<div class="kv">${rows.map(([a, b]) => `<div><span>${a}</span><span>${b}</span></div>`).join("")}</div>`;
+  const TABS = {
+    tonight: () => {
+      const ranked = Object.keys(V).filter((k) => gap(k) > 0).sort((a, b) => gap(b) - gap(a)).slice(0, 3);
+      const steady = Object.keys(V).filter((k) => gap(k) === 0).map((k) => V[k].title.split(" · ")[0].toLowerCase());
+      const late = CHECK.filter((c) => !done.has(c.k) && t > c.due).map((c) => c.t);
+      return `<div class="block"><p class="cap">The call · ${clockOf(t)}</p><p class="lead">${(LOG.find((e) => !e.you) || {}).said || OPEN[mode]}</p>
+        <div class="trace"><div><b>INPUT</b>   check-in 17:20 · energy 2</div><div><b>RULE</b>    capacity → YELLOW · short sleep 2 of 2</div><div><b>RESULT</b>  ${RESULT[mode]}</div></div></div>
+        <div class="block"><p class="cap">Furthest from your normal</p><ol class="glance">${ranked.map((k, i) => `<li><button type="button" data-goto="${k}"><span class="rank">${i + 1}</span><span class="gt">${V[k].title.split(" · ")[0]}</span><span class="gv">${V[k].state(now(k), usual(k))[0]}</span><span class="gm">${V[k].mean}</span></button></li>`).join("") || `<li class="steady">Nothing is off your normal.</li>`}</ol>
+        <p class="steady">${steady.length ? `Holding steady: ${steady.join(", ")}.` : ""}</p></div>
+        ${late.length ? `<div class="block"><p class="cap" style="color:var(--amber)">Late</p><ul class="facts">${late.map((l) => `<li>${l}</li>`).join("")}</ul></div>` : ""}
+        <div class="block"><p class="cap">Not used to decide</p><p class="feeds">Fuel and water inform you; they don't decide. Nothing beyond what you checked in. Advice only: you decide.</p></div>`;
+    },
+    route: () => {
+      const seg = `<div class="seg" role="group" aria-label="Route view"><button class="sbtn" data-rv="tonight" aria-pressed="${routeView === "tonight"}">TONIGHT</button><button class="sbtn" data-rv="run" aria-pressed="${routeView === "run"}">WHOLE RUN</button></div>`;
+      if (routeView === "run") {
+        const R = [["", "N1", "N2", "N3", "N4"], ["SLEEP", "6:48", "<span class='off'>5:24</span>", "<span class='off'>5:10</span>", "<span class='na'>—</span>"], ["ENERGY", "3", "<span class='off'>2</span>", "<span class='off'>2</span>", "<span class='na'>—</span>"], ["WATER", "2.9 L", "<span class='off'>2.4 L</span>", "<span class='na'>so far</span>", "<span class='na'>—</span>"], ["MEAL AT BREAK", "00:35", "<span class='off'>02:40</span>", "<span class='na'>tonight</span>", "<span class='na'>—</span>"], ["DEBRIEF", "Good", "<span class='off'>Rough</span>", "<span class='na'>tonight</span>", "<span class='na'>—</span>"]];
+        return `${seg}<p class="lead">Run 14 · nights 1–4. Tonight is night 3.</p><div style="overflow-x:auto"><div class="run">${R.map((r, ri) => r.map((c, ci) => `<div class="${ri === 0 ? "h" : ci === 0 ? "k" : ""}${ci === 3 ? " tn" : ""}">${c}</div>`).join("")).join("")}</div></div>
+          <p class="feeds">Night 3 is your weak point: 6:05 average sleep across your last 4 runs. Night 2's late break meal went with energy 2 at 04:40.</p>`;
+      }
+      let placed = false; const rows = [];
+      WAY.forEach((w) => {
+        if (!placed && w.h > t) { rows.push(`<li class="nowrow"><time style="color:var(--red)">${clockOf(t)}</time><span class="pin"></span><span class="what"><b>NOW</b></span></li>`); placed = true; }
+        rows.push(`<li class="${done.has(w.k) || w.h <= t ? "done" : ""} ${w.red ? "red" : ""} ${w.plan ? "plan" : ""}"><time>${clockOf(w.h)}</time><span class="pin"></span><span class="what"><b>${w.t}</b><span>${w.why}</span></span></li>`);
+      });
+      if (!placed) rows.push(`<li class="nowrow"><time style="color:var(--red)">${clockOf(t)}</time><span class="pin"></span><span class="what"><b>NOW</b></span></li>`);
+      return `${seg}<p class="lead">Tonight, 16:30 to 16:30. Solid points are fixed; dashed points are your usual, not orders.</p><ul class="fullroute">${rows.join("")}</ul>`;
+    },
+    vitals: () => { const k = focusVital, d = V[k], v = now(k), u = usual(k), [, off] = d.state(v, u);
+      return `<div class="vpick" role="group" aria-label="Vital">${Object.keys(V).map((x) => `<button class="sbtn" data-pick="${x}" aria-pressed="${x === k}">${V[x].title.split(" · ")[0].toUpperCase()}</button>`).join("")}</div>
+      <div><p class="d-val">${d.show(v)}</p><p class="d-sum${off ? " off" : ""}">${d.summary(v, u)}</p></div>
+      <div class="block chart"><p class="cap">14 days · band is your usual · dashed is your median${d.partial ? " · today so far" : ""}</p>${chart(k)}</div>
+      <div class="block"><p class="cap">Where you usually are</p>${kv(d.position)}</div>
+      <div class="block"><p class="cap">Behind the number</p><ul class="facts">${d.facts.map((f) => `<li>${f}</li>`).join("")}</ul></div>
+      <div class="block"><p class="cap">What it feeds</p><p class="feeds">${d.feeds}</p></div>
+      <div class="block"><p class="cap">Source</p>${kv(d.source)}</div>`; },
+    file: () => {
+      const CAL = [["Sleep range", 31, "nights"], ["Energy range", 41, "check-ins"], ["Water pace", 30, "days"], ["Protein pace", 28, "days"], ["Night 3 pattern", 4, "runs"], ["Nap trial", 6, "runs"], ["Flip back", 2, "flips"]];
+      const st = (n, u) => u === "runs" || u === "flips" ? (n >= 6 ? "FIRM" : n >= 3 ? "BUILDING" : "THIN") : (n >= 21 ? "FIRM" : n >= 7 ? "BUILDING" : "THIN");
+      return `<p class="lead">What the cave knows about you after 41 days. Your records, your words.</p>
+      <div class="file"><p class="cap">WEAK POINT</p><h4>Night 3</h4><p>Main sleep averages 6:05 on night 3 across 4 runs, against 6:22 on other nights. Energy follows it down.</p></div>
+      <div class="file"><p class="cap">WHAT WORKS</p><h4>A nap before the shift</h4><p>Trial, 6 runs: energy 3.4 with a nap against 2.8 without. Sleep about the same. A pattern, not proof.</p></div>
+      <div class="file"><p class="cap">YOUR LESSON · OCT 20</p><h4>“A nap before night 3 held me.”</h4><p>You passed on the nap that night. Looking back you said you should have taken it.</p></div>
+      <div class="file"><p class="cap">FLIP BACK</p><h4>Day off 1</h4><p>You usually sleep 9:40 on day off 1. Naps over 90 minutes pushed your night sleep late twice.</p></div>
+      <div class="block"><p class="cap">Calibration · how sure the cave is</p><div class="cal">${CAL.map(([n, c, u]) => { const s = st(c, u), w = Math.min(100, (u === "runs" || u === "flips" ? c / 6 : c / 21) * 100); return `<div><span>${n} <span class="cap" style="letter-spacing:.1em">· ${c} ${u}</span></span><span class="bar"><i style="width:${w}%"></i></span><span class="st ${s}">${s}</span></div>`; }).join("")}</div>
+        <p class="feeds">FIRM: enough to lean on. BUILDING: a hint. THIN: don't trust it yet. Not known at all: caffeine timing, light exposure, sleep stages.</p></div>`;
+    },
+    log: () => {
+      const E = [["16:30", "Lived day starts"], ["17:20", "Check-in · energy 2"], ["17:50", "Nap 30 min"], ["18:45", "Shift starts"], ["21:10", "Water 500 ml"], ["00:30", "Break · no meal logged"], ["02:40", "Meal 40 g"], ["03:10", "Caffeine"], ["04:40", "Check-in · energy 2"], ["07:20", "Shift ends"], ["08:41", "Asleep"]];
+      return `<div class="block"><p class="cap">Comms · newest first</p><ul class="clog">${LOG.slice(0, 12).map((e) => `<li class="${e.you ? "you" : ""}"><time>${e.at}</time><div><p class="said">${e.you ? "YOU · " + e.said : e.said}</p>${e.did ? `<p class="did">→ ${e.did}</p>` : ""}</div></li>`).join("")}</ul></div>
+      <div class="rec block"><label class="cap" for="scrub">Recorder · replay last night (night 2)</label><input id="scrub" type="range" min="0" max="${E.length - 1}" value="6"><p class="feeds" id="rec-at"></p>
+      <ul class="rec-list" id="rec-list">${E.map(([a, w]) => `<li><time>${a}</time><span>${w}</span></li>`).join("")}</ul></div>`;
+    },
+  };
+  function renderTab(tab) {
+    document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.tab === tab)));
+    const body = $("cave-body"); body.innerHTML = TABS[tab](); body.scrollTop = 0;
+    body.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => { focusVital = b.dataset.pick; renderTab("vitals"); }));
+    body.querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", () => { focusVital = b.dataset.goto; renderTab("vitals"); }));
+    body.querySelectorAll("[data-rv]").forEach((b) => b.addEventListener("click", () => { routeView = b.dataset.rv; renderTab("route"); }));
+    const sc = $("scrub");
+    if (sc) { const upd = () => { const i = +sc.value; $("rec-list").querySelectorAll("li").forEach((li, j) => li.className = j < i ? "past" : j === i ? "at" : ""); const li = $("rec-list").children[i]; $("rec-at").textContent = `${li.firstElementChild.textContent} · ${li.lastElementChild.textContent}`; }; sc.addEventListener("input", upd); upd(); }
+  }
+  function openCave(tab, from, vital) { opener = from; if (vital) focusVital = vital; renderTab(tab); panel.classList.add("cave-open"); $("back").focus({ preventScroll: true }); buzz(6); }
+  function closeCave() { panel.classList.remove("cave-open"); last = performance.now(); if (opener) opener.focus({ preventScroll: true }); }
+  document.querySelectorAll(".tab").forEach((x) => x.addEventListener("click", () => renderTab(x.dataset.tab)));
+  $("back").addEventListener("click", closeCave);
+  panel.addEventListener("keydown", (e) => { if (e.key === "Escape" && panel.classList.contains("cave-open")) closeCave(); });
+  $("comms").addEventListener("click", (e) => openCave("tonight", e.currentTarget));
+  $("route-open").addEventListener("click", (e) => openCave("route", e.currentTarget));
+
+  // ---------- Cold start ----------
+  const boot = $("boot"); let timers = [];
+  function endBoot() { timers.forEach(clearTimeout); timers = []; last = performance.now(); if (reduced()) { boot.hidden = true; return; } boot.classList.add("out"); setTimeout(() => { boot.hidden = true; boot.classList.remove("out", "booting"); }, 450); }
+  function runBoot() {
+    if (reduced()) { boot.hidden = true; return; }
+    boot.hidden = false; boot.classList.remove("booting"); void boot.offsetWidth; boot.classList.add("booting");
+    ["b-word", "b-ready"].forEach((id) => $(id).classList.remove("on"));
+    const list = $("b-list"); list.innerHTML = "";
+    [["SLEEP", "5:10", "UNDER"], ["ENERGY", "2 / 5", "UNDER"], ["PROTEIN", "38 G", "BEHIND"], ["WATER", "0.5 L", "BEHIND"], ["ROTATION", "NIGHT 3/4", "—"]].forEach(([a, b, c]) => {
+      const d = document.createElement("div"); d.innerHTML = `<span>${a}</span><span class="v">${b}</span><span class="s ${c !== "—" ? "off" : ""}">${c}</span>`; list.appendChild(d); });
+    const at = (ms, f) => timers.push(setTimeout(f, ms));
+    at(820, () => $("b-word").classList.add("on"));
+    [...list.children].forEach((d, i) => at(980 + i * 100, () => d.classList.add("on")));
+    at(1560, () => { $("b-ready").classList.add("on"); buzz([8, 50, 8]); }); at(2150, endBoot);
+  }
+  boot.addEventListener("click", endBoot);
+
+  // ---------- Demo controls ----------
+  document.querySelectorAll("[data-speed]").forEach((b) => b.addEventListener("click", () => {
+    speed = +b.dataset.speed; document.querySelectorAll("[data-speed]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    $("speed-tag").textContent = speed === 0 ? "PAUSED" : speed === 1 ? "LIVE" : `${speed}×`;
+  }));
+  document.querySelectorAll("[data-jump]").forEach((b) => b.addEventListener("click", () => jump(b.dataset.jump)));
+  $("replay").addEventListener("click", runBoot);
+  $("reduce").addEventListener("click", (e) => { reduceToggle = !reduceToggle; e.currentTarget.setAttribute("aria-pressed", String(reduceToggle)); panel.classList.toggle("reduce", reduceToggle); });
+
+  renderVitals(); renderCheck(); renderRoute(); applyMode("PREP", true); say(OPEN.PREP, true); LOG[0].at = "17:42";
+  requestAnimationFrame(frame); runBoot();
+})();
+</script>
