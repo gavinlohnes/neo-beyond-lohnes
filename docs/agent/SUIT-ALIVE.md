@@ -111,3 +111,25 @@ EMBLEM-002 master.
   - the personal-baselines quantiles and `MIN_BASELINE_DAYS`;
   - the existing "unusual" tile style.
 - **OWN:** `pace.ts` and the tile states. **BUILD FROM SCRATCH:** none.
+
+## S6 — preflight and after-action
+
+- **Authority:** Gavin, 2026-10-28: "go S6 and make it bigger more more impressive and badass".
+  Ruling: SUIT-ALIVE-005. **Lane:** FEATURE, plus the TODAY band that swaps the route line before and
+  after a shift. No Engine, schema or event change; writes only through the existing preparation and
+  handoff-read commands.
+- **Built:**
+  - `application/caveBrief.ts`: the poll and the after-action rows, from the route, check-in, meals,
+    protein, water, pace, preparation, handoff, MEMORY-001 and debriefs.
+  - The cave's BRIEF view: T-minus, the sequenced poll, inline actions, intel, and planned beside
+    actual.
+  - The TODAY band.
+- **REUSE:**
+  - S4's route and S5's pace;
+  - `getPreparation` and `recordPreparation`;
+  - `getShiftHandoffState` and `markShiftHandoffRead`;
+  - `getMemoryFacts`;
+  - LOOP-002's debrief journal entries;
+  - the existing entries queries.
+- **OWN:** the poll and report composition and wording, and `CaveBrief.tsx`.
+  **BUILD FROM SCRATCH:** none.

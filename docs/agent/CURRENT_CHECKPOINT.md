@@ -1,3 +1,14 @@
+# SUIT-ALIVE S6 — preflight and after-action
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28, "go S6 and make it bigger" (SUIT-ALIVE-005). Claude
+  Code; FEATURE plus the TODAY band. [Brief](SUIT-ALIVE.md#s6--preflight-and-after-action).
+- **Baseline:** master `79fcaed` (#317 S5 merged).
+- **Built:** the cave's BRIEF view. PREFLIGHT has a T-minus clock and a GO/HOLD/LATE/ADVISORY poll
+  that is auto-ticked by logs, with inline packing and handoff actions. AFTER-ACTION puts planned
+  beside actual. TODAY's band shows PREFLIGHT or DEBRIEF for 3 hours either side of the shift.
+- **Next:** CI and Gavin's merge. Then S7 (coordinate with Codex) or S8 (Protected, needs rulings).
+
+---
 # SUIT-ALIVE S5 — pace and the dark cockpit
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28, "go S5" (SUIT-ALIVE-004). Claude Code; PROTECTED

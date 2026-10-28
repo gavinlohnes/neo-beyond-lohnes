@@ -55,8 +55,8 @@
 .cave__feeds { margin: 0; padding-left: 12px; border-left: 1px solid var(--border-subtle); color: var(--text-2); font-size: 14.5px; line-height: 1.55; }
 .cave__feeds--decides { border-left-color: var(--text-1); color: var(--text-1); }
 /* SUIT-ALIVE S3: the cave's two views, and Tonight. Amber marks off-normal; red stays reserved. */
-.cave__tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border-subtle); }
-.cave__tab { min-height: 44px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--text-2); font: inherit; font-size: 12px; letter-spacing: .2em; cursor: pointer; }
+.cave__tabs { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border-subtle); }
+.cave__tab { min-height: 44px; padding: 0 2px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--text-2); font: inherit; font-size: 12px; letter-spacing: .12em; cursor: pointer; }
 .cave__tab[aria-pressed="true"] { color: var(--text-1); border-bottom-color: var(--text-1); }
 .cave__call { margin: 0; font-size: 20px; font-weight: 500; line-height: 1.3; }
 .cave__trace { display: grid; gap: 6px; padding-left: 12px; border-left: 1px solid var(--text-1); font-size: 14.5px; line-height: 1.55; }
@@ -83,3 +83,32 @@
 .cave__stop-name { font-size: 13px; letter-spacing: .14em; }
 .cave__stop--next .cave__stop-name { color: var(--text-1); font-weight: 600; }
 .cave__stop-why { font-size: 14px; line-height: 1.45; color: var(--text-2); }
+/* SUIT-ALIVE S6: Brief. GO is plain, HOLD quiet, LATE and ADVISORY amber; red stays reserved. The poll
+   stamps in turn once; reduced motion shows it at once. */
+.cave__seg { display: flex; gap: 6px; flex-wrap: wrap; }
+.cave__seg .chip { min-height: 44px; padding-inline: 14px; }
+.brief__lead { display: grid; gap: 6px; padding: 14px; border: 1px solid var(--border-subtle); }
+.brief__lead--go { border-color: var(--text-1); }
+.brief__t { margin: 0; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.brief__t span { font-family: var(--font-mono); font-size: 40px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.brief__t small { font-family: var(--font-mono); font-size: 11px; letter-spacing: .16em; color: var(--text-2); }
+.brief__verdict { margin: 0; font-size: 17px; line-height: 1.4; }
+.brief__poll { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--border-subtle); }
+.brief__item { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); animation: brief-stamp .32s var(--motion-easing, ease-out) both; }
+.brief__sys { font-size: 12px; letter-spacing: .18em; }
+.brief__state { font-family: var(--font-mono); font-size: 12px; letter-spacing: .12em; padding: 2px 8px; border: 1px solid currentColor; justify-self: end; }
+.brief__detail { grid-column: 1 / -1; font-size: 14.5px; line-height: 1.45; color: var(--text-2); }
+.brief__acts { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.brief__acts .btn-secondary { min-height: 44px; }
+.brief__note { flex: 1 1 100%; font-size: 15px; line-height: 1.5; padding-left: 12px; border-left: 1px solid var(--text-1); }
+.brief__item--go .brief__state { color: var(--text-1); }
+.brief__item--hold .brief__state { color: var(--text-2); }
+.brief__item--late .brief__state, .brief__item--advisory .brief__state, .brief__item--late .brief__sys { color: var(--warning); }
+.brief__aar { display: grid; }
+.brief__aar > div { display: grid; grid-template-columns: minmax(84px, .9fr) 1fr 1fr; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); font-size: 14px; line-height: 1.4; }
+.brief__aar-head { font-family: var(--font-mono); font-size: 11px !important; letter-spacing: .14em; color: var(--text-2); }
+.brief__aar [role="rowheader"] { font-size: 12px; letter-spacing: .14em; }
+.brief__aar-row--off [role="cell"]:last-child { color: var(--warning); }
+@keyframes brief-stamp { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .brief__item { animation: none; } }
+.brief__acts .btn-secondary { width: auto; flex: 1 1 0; }
