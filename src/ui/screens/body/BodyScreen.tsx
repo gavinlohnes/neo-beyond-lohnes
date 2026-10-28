@@ -12,6 +12,7 @@ import { HoldButton } from "../../components/HoldButton";
 import { useUndoOpen, useUndoWindow } from "../../hooks/useUndoWindow";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { Cave, type CaveRequest } from "../systems/CaveVitals";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import { Icon } from "../../icons/Icon";
 import type { BeyondDay, HydrationEntry, NutritionTargets, SavedMeal } from "../../../domain/common/types";
@@ -256,7 +257,7 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onOpenTrainingRecords, onOpenReview, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "BACK TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory, onLogWeight }: {
+export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onOpenTrainingRecords, onOpenReview, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "BACK TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory, onLogWeight, caveRequest }: {
   overviewOnly?: boolean;
   /** FRICTION-001: BODY home's WEIGHT card opens the weight log directly. */
   onLogWeight?: () => void;
@@ -275,6 +276,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
    * locally opened meals or progress view. Every unsaved input stays.
    */
   overviewRequest?: { key: number; retap: boolean };
+  /** CAVE-DATA D1: open the cave on a view (TODAY's bands, SYSTEMS rows); each key once. */
+  caveRequest?: CaveRequest | undefined;
   visible?: boolean;
   /** Bumped after a write made elsewhere while BODY stays shown (stealth): re-read, keeping every draft. */
   refreshKey?: number;
@@ -387,11 +390,20 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     if (focus === "weight") setBodyweightOpen(true);
     if (focus === "urge") setOtherToolsOpen(true);
   }, [focus, focusRequest]);
+  // CAVE-DATA D1: which cave view DATA shows. An entry from TODAY or SYSTEMS opens its view; retapping
+  // DATA goes back to NUMBERS, as it always went back to the Daily Record.
+  const caveViewKey = useRef(0);
+  const [caveView, setCaveView] = useState<CaveRequest | undefined>(undefined);
+  useEffect(() => {
+    if (!caveRequest?.key) return;
+    setProgressOpen(false); setSourceSelection(null);
+    setCaveView({ ...caveRequest, key: ++caveViewKey.current });
+  }, [caveRequest?.key]);
   useEffect(() => {
     if (!overviewRequest.key) return;
     // Supersedes any pending shortcut positioning.
     mealPositioned.current = true;
-    if (overviewRequest.retap) { setHealthDay(null); setSourceSelection(null); }
+    if (overviewRequest.retap) { setHealthDay(null); setSourceSelection(null); setCaveView({ key: ++caveViewKey.current, tab: "lead" }); }
     const shortcutView = waterFocused || mealFocused;
     if (!shortcutView && !(overviewRequest.retap && (bodyMealsOpen || progressOpen))) return;
     // Only the presentation resets; meal, sleep, weight and correction input stay as typed.
@@ -2538,7 +2550,10 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     <SleepMetricSheet open={sleepMetricOpen} onClose={() => setSleepMetricOpen(false)} onAllRecords={() => { setSleepMetricOpen(false); showProgress("sleep"); }} />
     <OperatorHeader destination="body" focusable>DATA</OperatorHeader>
     {onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>{returnLabel}</button>}
-    <div hidden={progressOpen}>
+    {/* CAVE-DATA D1 (Gavin, 2026-10-28, option A): DATA is the cave; its own page is the first view, NUMBERS. */}
+    <div hidden={progressOpen}><Cave initial={{ tab: "lead" }} request={caveView} onOpenMetric={(metric) => showProgress(metric)}
+      onOpenUnderstanding={onOpenReview ? () => onOpenReview("overview") : undefined}
+      lead={{ label: "NUMBERS", content: <>
       <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
         {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} showWeight={false} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={exploreOverview} /> : <p role="status">Reading recorded information…</p>}
         {mealReadFailed && <p role="alert">Could not refresh DATA.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
@@ -2558,7 +2573,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         <HealthHistory open={healthHistoryOpen} onOpenChange={setHealthHistoryOpen} active={visible && !progressOpen}
           days={{ selected: healthDay, disabled: busy, refreshKey: dataRevision, onHistory: onHealthHistory, onSelect: setHealthDay, onExplore: showProgress, onInspect: (selection) => openSources(selection, true) }} />
       </section>
-    </div>
+    </> }} /></div>
     <div hidden={!progressOpen}>
       <button type="button" className="btn-secondary" onClick={() => { setProgressOpen(false); setSourceSelection(null); restoreOrigin(); }}>BACK TO DATA</button>
       <section hidden={sourceSelection !== null}><h2 id="health-progress-heading" tabIndex={-1}>PROGRESS</h2>{progressVisited && <BodyProgress active={visible && progressOpen && sourceSelection === null} refreshKey={dataRevision} weightHistory={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} request={progressRequest} compositionRequest={compositionRequest} returnFocusRequest={progressReturnFocus} onSources={(selection) => openSources(selection)} />}</section>

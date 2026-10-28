@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { CAVE_VITALS, describeCaveVital, formatCaveValue, getCaveVital, type CaveVital, type CaveVitalId } from "../../../application/caveVitals";
 import type { InsightMetric } from "../../../application/bodyInsightsQueries";
 import { describeError } from "../../errorMessage";
@@ -20,29 +20,48 @@ const HISTORY: Partial<Record<CaveVitalId, InsightMetric>> = { sleep: "sleep", p
 
 export type CaveTab = "tonight" | "route" | "brief" | "vitals" | "file" | "log";
 export type CaveOpen = { tab: CaveTab; vital?: CaveVitalId };
+/** CAVE-DATA D1: an external entry (TODAY's bands, SYSTEMS rows) opening a view; each key opens it once. */
+export type CaveRequest = { key: number; tab: CaveTab | "lead"; vital?: CaveVitalId | undefined };
 
-/** SUIT-ALIVE S3–S7: the cave's views: TONIGHT (the call and what's furthest from your normal), ROUTE, BRIEF, VITALS, FILE and LOG. */
-export function Cave({ initial, onBack, onOpenMetric, onOpenUnderstanding }: {
-  initial: CaveOpen;
-  onBack: () => void;
+/**
+ * SUIT-ALIVE S3–S8: the cave's views — TONIGHT (the call and what's furthest from your normal), ROUTE,
+ * BRIEF, VITALS, FILE and LOG. CAVE-DATA D1 (Gavin, 2026-10-28, option A): the cave lives in DATA, with
+ * DATA's own page as its first view (`lead`, kept mounted so nothing on it is lost when you switch).
+ */
+export function Cave({ initial, lead, request, onBack, onOpenMetric, onOpenUnderstanding }: {
+  initial: CaveOpen | { tab: "lead" };
+  /** A first view supplied by the host (DATA's NUMBERS). */
+  lead?: { label: string; content: ReactNode } | undefined;
+  request?: CaveRequest | undefined;
+  /** Absent where the cave is the screen itself (DATA). */
+  onBack?: (() => void) | undefined;
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
   /** S7: FILE's depth lives in REVIEW's Personal Understanding. */
   onOpenUnderstanding?: (() => void) | undefined;
 }) {
-  const [tab, setTab] = useState<CaveTab>(initial.tab);
-  const [vital, setVital] = useState<CaveVitalId>(initial.vital ?? "sleep");
+  const [tab, setTab] = useState<CaveTab | "lead">(initial.tab);
+  const [vital, setVital] = useState<CaveVitalId>("vital" in initial && initial.vital ? initial.vital : "sleep");
   const backRef = useRef<HTMLButtonElement>(null);
   useEffect(() => { backRef.current?.focus({ preventScroll: true }); }, []);
+  useEffect(() => {
+    if (!request?.key) return;
+    setTab(request.tab === "lead" && !lead ? "tonight" : request.tab);
+    if (request.vital) setVital(request.vital);
+  }, [request?.key]);
+  const tabs: (CaveTab | "lead")[] = [...(lead ? ["lead" as const] : []), "tonight", "route", "brief", "vitals", "file", "log"];
+  const name = (t: CaveTab | "lead") => t === "lead" ? lead!.label : TAB_NAME[t];
   return (
     <section className="cave" aria-labelledby="cave-title">
       <div className="cave__head">
-        <h2 id="cave-title" className="cave__title"><BatMark width={24} className="cave__bat" />THE CAVE <span>// {TAB_NAME[tab]}</span></h2>
-        <button ref={backRef} type="button" className="cave__back" onClick={onBack}>BACK TO SYSTEMS</button>
+        <h2 id="cave-title" className="cave__title"><BatMark width={24} className="cave__bat" />THE CAVE <span>// {name(tab)}</span></h2>
+        {onBack && <button ref={backRef} type="button" className="cave__back" onClick={onBack}>BACK TO SYSTEMS</button>}
       </div>
-      <div className="cave__tabs" role="group" aria-label="Cave view">
-        {(["tonight", "route", "brief", "vitals", "file", "log"] as const).map((t) => <button key={t} type="button" className="cave__tab" aria-pressed={t === tab} onClick={() => setTab(t)}>{TAB_NAME[t]}</button>)}
+      <div className={`cave__tabs${lead ? " cave__tabs--seven" : ""}`} role="group" aria-label="Cave view">
+        {tabs.map((t) => <button key={t} type="button" className="cave__tab" data-cave-tab={t} aria-pressed={t === tab} onClick={() => setTab(t)}>{name(t)}</button>)}
       </div>
-      {tab === "tonight" ? <CaveTonightView onOpenVital={(id) => { setVital(id); setTab("vitals"); }} />
+      {lead && <div className="cave__lead-view" hidden={tab !== "lead"}>{lead.content}</div>}
+      {tab === "lead" ? null
+        : tab === "tonight" ? <CaveTonightView onOpenVital={(id) => { setVital(id); setTab("vitals"); }} />
         : tab === "route" ? <CaveRouteView />
         : tab === "brief" ? <CaveBriefView />
         : tab === "file" ? <CaveFileView onOpenUnderstanding={onOpenUnderstanding} />

@@ -25,7 +25,7 @@
 .systems-line .capacity-dot { margin-right: 6px; vertical-align: middle; }
 
 /* SUIT-ALIVE S2: the cave, Vitals. HUD tokens only; amber marks off-normal, red is not used. */
-.cave { display: grid; gap: 18px; }
+.cave { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 .cave__head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .cave__title { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: .3em; }
 .cave__title span { color: var(--text-2); letter-spacing: .2em; }
@@ -147,3 +147,6 @@
 .log__line--cave .log__who { color: var(--text-1); }
 .log__text { font-size: 14.5px; line-height: 1.45; min-width: 0; overflow-wrap: anywhere; }
 .log__line--you .log__text, .log__line--system .log__text { color: var(--text-2); }
+/* CAVE-DATA D1: in DATA the cave has seven views (NUMBERS first); four then three. */
+.cave__tabs--seven { grid-template-columns: repeat(4, 1fr); }
+.cave__lead-view { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }

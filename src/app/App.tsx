@@ -28,6 +28,8 @@ import { getNextDayRolloverCheckAt } from "../application/dayRolloverQueries";
 import { parseShortcut, type BodyFocus } from "../ui/shortcuts";
 import { positionPrimaryDestination, positionRevealedSurface } from "../ui/navigationPosition";
 import { VisionMode } from "../ui/vision/VisionMode";
+import type { CaveRequest, CaveTab } from "../ui/screens/systems/CaveVitals";
+import type { CaveVitalId } from "../application/caveVitals";
 import { SessionDraftProvider, useHasSessionDrafts } from "../ui/sessionDrafts";
 import type { IntentFocus } from "../ui/screens/more/IntentScreen";
 import type { SystemDestination } from "../ui/systemCatalog";
@@ -117,7 +119,7 @@ function AppUpdateBanner() {
 /** Fire just after the boundary, so the rollover check sees it as elapsed. */
 const ROLLOVER_TIMER_MARGIN_MS = 1000;
 
-/** SUIT-ALIVE S3: counts cave requests across App mounts, so SystemsReadout opens each one once. */
+/** CAVE-DATA D1: counts cave requests across App mounts, so DATA opens each one once. */
 let caveRequests = 0;
 
 export function App() {
@@ -255,8 +257,8 @@ function AppWorkspaces() {
   const [toolsRequest, setToolsRequest] = useState(0);
   const [captureOrigin, setCaptureOrigin] = useState<Tab | null>(null);
   const [moreRequest, setMoreRequest] = useState(0);
-  /** SUIT-ALIVE S3/S4: TODAY's comms and route lines open the cave on that view; each request counts up across mounts. */
-  const [caveRequest, setCaveRequest] = useState<{ key: number; tab: "tonight" | "route" | "brief" }>({ key: 0, tab: "tonight" });
+  /** CAVE-DATA D1: TODAY's bands and SYSTEMS rows open DATA's cave on a view; each request counts up across mounts. */
+  const [caveRequest, setCaveRequest] = useState<CaveRequest | undefined>(undefined);
   const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(null);
   useEffect(() => {
     if (!shortcut) return;
@@ -591,6 +593,21 @@ function AppWorkspaces() {
     return false;
   }
 
+  /** CAVE-DATA D1 (Gavin, 2026-10-28, option A): the cave lives in DATA; open it there on a view. */
+  function openCave(view: CaveTab, vital?: CaveVitalId) {
+    if (!canNavigate()) return false;
+    setHealthHistoryOrigin(false); setHealthEvidence(null); setMealOrigin(null); setBodyFocus(null);
+    setCaveRequest({ key: ++caveRequests, tab: view, vital });
+    showTab("BODY", false);
+    const request = navigation.current;
+    // After showTab's own heading focus: focus lands on the view that was asked for.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (request !== navigation.current) return;
+      document.querySelector<HTMLElement>(`#workspace-BODY [data-cave-tab="${view}"]`)?.focus({ preventScroll: true });
+    }));
+    return true;
+  }
+
   /** COMMAND-CENTER-001: the header emblem goes to TODAY's root, from anywhere. */
   function goTodayRoot() {
     if (!canNavigate()) return;
@@ -636,7 +653,7 @@ function AppWorkspaces() {
               onOpenHealthEvidence={openBodyEvidence}
               onOpenWeeklyReview={() => openMore("REVIEW")}
               onOpenSystems={() => { openMore("SYSTEMS"); }}
-              onOpenCave={(tab) => { if (openMore("SYSTEMS", null, false)) setCaveRequest({ key: ++caveRequests, tab }); }}
+              onOpenCave={(tab) => { openCave(tab); }}
               toolsRequest={toolsRequest}
             />
           </RootErrorBoundary>
@@ -646,7 +663,7 @@ function AppWorkspaces() {
             onDestinationConsumed={() => setTrainDestination(null)} /></RootErrorBoundary>
         </div>}
         {visited.has("BODY") && <div id="workspace-BODY" className={tab === "BODY" ? "tab-enter" : undefined} hidden={tab !== "BODY"}>
-          <RootErrorBoundary active={tab === "BODY"}><BodyScreen overviewOnly onOpenTrainingRecords={() => openTrain("RECORDS")} onOpenReview={openDataReview} onEditRecord={(record, dayId) => { setRecordCorrection({ key: ++correctionKey.current, record, dayId }); openRecordSheet("record"); }} focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
+          <RootErrorBoundary active={tab === "BODY"}><BodyScreen overviewOnly onOpenTrainingRecords={() => openTrain("RECORDS")} onOpenReview={openDataReview} onEditRecord={(record, dayId) => { setRecordCorrection({ key: ++correctionKey.current, record, dayId }); openRecordSheet("record"); }} focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} caveRequest={caveRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
             evidenceRequest={healthEvidence} onHealthHistory={openHealthHistory} onLogWeight={() => openRecordSheet("weight")}
             onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `BACK TO ${TAB_LABEL[mealOrigin.tab]}` : "BACK TO TODAY"}
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
@@ -669,7 +686,7 @@ function AppWorkspaces() {
             onOpenMeal={() => openBody("meal")}
             onOpenMetric={openBodyEvidence}
             systemsRefreshKey={stealthWrites}
-            caveRequest={caveRequest}
+            onOpenCave={(vital) => { openCave("vitals", vital); }}
             onReturnToToday={commandTodayOrigin && moreView !== "MENU" ? () => { setCommandTodayOrigin(false); showTab("TODAY"); } : undefined}
             onOpenDestination={openSystemDestination} /></RootErrorBoundary>
         </div>}

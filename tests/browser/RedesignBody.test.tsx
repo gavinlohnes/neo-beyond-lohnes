@@ -15,7 +15,8 @@ for(const width of [320,360,390,412])it(`puts numbers, progress and history firs
   const screen=await render(<App />);await screen.getByRole('button',{name:'DATA',exact:true}).click();
   await expect.element(screen.getByRole('button',{name:'WEIGHT HISTORY',exact:true})).toBeVisible();
   const root=document.querySelector('.body-home')!;
-  expect([...root.querySelectorAll(':scope > div:not([hidden]) > section')].map(el=>el.getAttribute('aria-label'))).toEqual(["Today's numbers",'Progress','History']);
+  // CAVE-DATA D1: DATA's page is the cave's first view, NUMBERS; its order is unchanged.
+  expect([...root.querySelectorAll('.cave__lead-view:not([hidden]) > section')].map(el=>el.getAttribute('aria-label'))).toEqual(["Today's numbers",'Progress','History']);
   expect(root.querySelector('input[type="number"]')).toBeNull();
   await document.fonts.ready;
   for (const animation of document.getAnimations()) if (animation.effect?.getComputedTiming().iterations !== Infinity) animation.finish();

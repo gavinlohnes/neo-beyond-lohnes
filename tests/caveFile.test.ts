@@ -20,7 +20,7 @@ describe("SUIT-ALIVE S7 — the cave, File", () => {
     expect(f.calibration.find((c) => c.key === "sleep-WORK")).toMatchObject({ days: 20, need: 10, firmness: "FIRM" });
     expect(f.calibration.find((c) => c.key === "sleep-OFF")).toMatchObject({ days: 15, firmness: "BUILDING" });
     expect(f.calibration.find((c) => c.key === "timing-OFF")).toMatchObject({ days: 5, need: 3, firmness: "BUILDING" });
-    expect(f.notKnown).toHaveLength(3);
+    expect(f.notKnown).toEqual(["Caffeine: BEYOND doesn't record it.", "Light exposure: not recorded."]); // sleep stages are imported
   });
 
   it("files findings only once their floor is met, as patterns not causes", () => {
