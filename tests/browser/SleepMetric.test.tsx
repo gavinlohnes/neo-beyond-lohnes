@@ -87,8 +87,10 @@ describe("NAV-001 sleep metric", () => {
     const screen = await render(<App />); const before = await db.events.toArray();
     await screen.getByRole("button", { name: "Main sleep 7:00, explore records", exact: true }).click();
     const sheet = sheetOf(screen);
-    await expect.element(sheet.getByText("0 measured nights · Garmin", { exact: true })).toBeVisible();
-    await expect.element(sheet.getByText(/Not enough data/)).toBeVisible();
+    // AUDIT: a night Garmin missed shows the logged main sleep, named as logged, never as measured.
+    await expect.element(sheet.getByText("0 measured nights · Garmin · 1 logged by you", { exact: true })).toBeVisible();
+    await expect.element(sheet.getByText(/logged$/).first()).toBeInTheDocument();
+    expect(sheet.element().textContent).not.toMatch(/Not enough data/);
     await sheet.getByRole("button", { name: "ALL SLEEP RECORDS", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "PROGRESS", exact: true })).toBeVisible();
     expect(await db.events.toArray()).toEqual(before);

@@ -58,6 +58,7 @@ export function RecommendationCard({
   pendingReflection = null,
   onReflectionAnswered,
   questionBelow = false,
+  behindPace = false,
   busy,
   onOpenTrain,
   onRecord,
@@ -101,6 +102,8 @@ export function RecommendationCard({
    * reads "Nothing needs you" above a question.
    */
   questionBelow?: boolean;
+  /** AUDIT-FIX: TODAY's numbers show water or protein behind your pace. */
+  behindPace?: boolean;
   busy: boolean;
   onOpenTrain?: ((destination: "RECOVERY" | "WORKOUT") => void) | undefined;
   onRecord: () => void;
@@ -132,7 +135,7 @@ export function RecommendationCard({
     <>
       {nextAction && !isAllClear && <p className="cc-lbl">NEXT</p>}
       {!nextAction && (isAttention || isDominant) && !isAllClear && <p className="tool-label">ENGINE GUIDANCE</p>}
-      {nextAction ? <h2 className={isAllClear ? undefined : "command-title"}>{isAllClear ? describeAllClearHeadline(questionBelow) : title}</h2> : (
+      {nextAction ? <h2 className={isAllClear ? undefined : "command-title"}>{isAllClear ? describeAllClearHeadline(questionBelow, behindPace) : title}</h2> : (
       <h2 className={isDominant || isAllClear ? "command-title" : isAttention ? "card-title" : "tool-label"} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
         {isAllClear ? <ConfirmIcon size={isDominant ? 24 : 20} /> : <ResolveIcon size={isDominant ? 28 : 20} />}
         {title}
@@ -323,6 +326,7 @@ export function RecommendationCard({
 }
 
 /** TONIGHT-001: the all-clear headline, honest about a question shown below it. */
-export function describeAllClearHeadline(questionBelow = false): string {
-  return questionBelow ? "Nothing urgent. One question below." : "Nothing needs you.";
+export function describeAllClearHeadline(questionBelow = false, behindPace = false): string {
+  // AUDIT-FIX: honest beside amber numbers: nothing is urgent, but not "nothing needs you".
+  return questionBelow ? "Nothing urgent. One question below." : behindPace ? "Nothing urgent." : "Nothing needs you.";
 }

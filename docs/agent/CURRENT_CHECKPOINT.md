@@ -1,3 +1,19 @@
+# AUDIT-FIX-001 — fixes from the whole-app audit
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28 ("go audit fixes"). Claude Code; Routine
+  (presentation and copy only, no Engine, event or schema change). Branch `ccr-0be4f40f-16m0ja`.
+- **Built:**
+  - TODAY no longer says "Nothing's waiting" while water or protein is behind pace: the headline
+    reads "Nothing urgent." and the context names what's behind;
+  - PREPARE FOR WORK is hidden once on shift;
+  - TRAIN's COMPLETE button wraps instead of clipping;
+  - IMPORT HEALTH DATA uses a CHOOSE HEALTH FILE button, not the browser's grey file picker;
+  - the SLEEP page shows a night's logged main sleep when Garmin missed it, labelled "logged";
+  - contrast: selected chips on shift, links on MORE, and an invalid aria attribute.
+- **Verified:** `npm run verify` green (3,168 passed). The audit crawler is clean across 85 screens.
+- **Next:** CI and Gavin's merge. Still open, and each needs his go: trim MORE (56 entries), keep
+  DATA's WHOLE PICTURE inside DATA, and move LOG to the header (NAV-001).
+
 # BRAND-MARK-003 — Brand Drop v2: the emblem and the palette
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28, Brand Drop v2 plus the palette decision (it

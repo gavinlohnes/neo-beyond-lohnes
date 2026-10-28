@@ -36,7 +36,7 @@ async function record(name: string) {
   const result = await axe.run(document.body, { runOnly: ["wcag2a", "wcag2aa"] });
   findings.push({
     screen: name, overflow: document.documentElement.scrollWidth > window.innerWidth,
-    axe: result.violations.map((v) => `${v.id} (${v.nodes.length})`), errors: [...errors],
+    axe: result.violations.flatMap((v) => v.nodes.map((n) => `${v.id}: ${n.target.join(" ")} — ${(n.any[0]?.message ?? "").slice(0, 140)}`)), errors: [...errors],
     text: (document.querySelector("main, #root, body") as HTMLElement).innerText.replace(/\s+/g, " ").slice(0, 400),
   });
   errors = [];

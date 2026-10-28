@@ -1848,12 +1848,13 @@ export function TrainScreen({
                 lets a button's own text wrap onto a second line instead.
                 Pre-existing gap (no browser test previously verified
                 this), not a Phase 2 regression. */}
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {/* Drop 4: finishing is a big moment, so COMPLETE and PARTIAL are
-                  press-and-hold (ROADMAP 1.0 design rule). Logging a set stays one tap. */}
+                  press-and-hold (ROADMAP 1.0 design rule). Logging a set stays one tap.
+                  AUDIT-FIX: COMPLETE takes its own row; three across clipped it to "COMPLET" at 360px. */}
               <HoldButton
                 className={allExercisesComplete ? "btn-primary" : "btn-secondary"}
-                style={{ flex: 1, minWidth: 0 }}
+                style={{ flex: "1 1 100%", minWidth: 0 }}
                 disabled={busy}
                 onEarlyRelease={() => setFinishHoldHint(true)}
                 onConfirm={() => void handleCompleteWorkout("COMPLETED")}

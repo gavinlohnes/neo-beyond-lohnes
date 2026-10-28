@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { moveSleepWindow, sleepWindow, sleepWindowValues } from "../src/ui/screens/today/sleepPeriods";
+import { moveSleepWindow, sleepWindow, sleepWindowValues, withLoggedSleep } from "../src/ui/screens/today/sleepPeriods";
 import type { PeriodValue } from "../src/domain/health/measuredSeries";
 const at = (y: number, m: number, d: number, h = 0) => new Date(y, m - 1, d, h).getTime();
 const p = (from: number, value: number | null): PeriodValue => ({ from, to: from + 86400000, value, partial: false, dayId: null });
@@ -24,5 +24,18 @@ describe("sleep display periods, without reattributing lived days", () => {
     const series = [p(at(2026, 1, 5, 17), 300), p(at(2026, 1, 6, 17), null), p(at(2026, 1, 7, 17), 420), p(at(2026, 2, 1, 17), null)];
     const result = sleepWindowValues(series, at(2026, 10, 21), "Y");
     expect(result.bars.map((v) => v.value)).toEqual([360, null]); expect(result.days).toEqual(series);
+  });
+});
+
+describe("withLoggedSleep", () => {
+  it("fills only nights Garmin missed, with that day's logged main sleep, and names them", () => {
+    const series = [
+      { from: 1, to: 2, dayId: "a", value: 400, partial: false },
+      { from: 2, to: 3, dayId: "b", value: null, partial: false },
+      { from: 3, to: 4, dayId: "c", value: null, partial: false },
+    ];
+    const { series: filled, loggedFrom } = withLoggedSleep(series, new Map([["a", 300], ["b", 360]]));
+    expect(filled.map((p) => p.value)).toEqual([400, 360, null]);
+    expect([...loggedFrom]).toEqual([2]);
   });
 });
