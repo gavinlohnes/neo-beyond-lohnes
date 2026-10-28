@@ -1,3 +1,25 @@
+# SUIT-ALIVE — S1–S6 merged; paused for live use (2026-10-28)
+
+- **State:** S1–S6 are all on master: #313/#314 (the bat), #312 (VITALS), #315 (comms and TONIGHT),
+  #316 (ROUTE), #317 (pace and the dark cockpit) and #318 (BRIEF: preflight and after-action). Rulings
+  are SUIT-ALIVE-001 to SUIT-ALIVE-005 in `docs/UX_DECISIONS.md`. The brief is
+  [SUIT-ALIVE.md](SUIT-ALIVE.md). There are no open PRs and no scheduled check-ins.
+- **Verification:** the last full `npm run verify` (S6) passed 3,125 tests with 1 existing skip.
+  Architecture checks and the production build are OK, and CI was green on every merge.
+- **Owner direction:** wrap up and run real shifts. Pace, usual sleep and wake, and the usual ranges
+  appear only after 10 same-kind days (3 Garmin-timed days for the route's usual sleep and wake), so
+  early days will say "still learning".
+- **Remaining risks:**
+  - The comms line, route and brief add reads to TODAY: Whole Picture, plus up to 28 days of entries
+    for pace, loaded once per day.
+  - Hero height is held by swapping lines, not stacking them. Watch the fold on long cards.
+- **Next, each on Gavin's go:**
+  - S7 (case file, calibration and whole-run table): coordinate with Codex's Personal Understanding first.
+  - S8 (cloak, thermal and night vision, comms history): Protected, and needs the night-vision and
+    cloak-default rulings.
+  - Deferred: a break time on the schedule (schema change).
+
+---
 # SUIT-ALIVE S6 — preflight and after-action
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28, "go S6 and make it bigger" (SUIT-ALIVE-005). Claude

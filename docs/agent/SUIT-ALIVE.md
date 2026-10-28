@@ -133,3 +133,9 @@ EMBLEM-002 master.
   - the existing entries queries.
 - **OWN:** the poll and report composition and wording, and `CaveBrief.tsx`.
   **BUILD FROM SCRATCH:** none.
+
+## Status (2026-10-28)
+
+S1–S6 are merged. The campaign is paused for live use at Gavin's direction ("wrap up everything").
+S7 and S8 remain, each on his go: S7 is coordinated with Codex, and S8 is Protected and needs its
+rulings.
