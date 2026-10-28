@@ -2340,6 +2340,16 @@ shown once, and never looping.
   - It is a new user event, so it is kept in backups and listed in history as "Work marked started."
     It never reaches the Engine.
 
+- **PREFLIGHT (Gavin, 2026-10-28: "go preflight"):** the 90 minutes before a scheduled shift, until
+  STARTED WORK, get the same moment once. It shows:
+  - a T-minus to the start;
+  - every system polled GO or HOLD, with what is open;
+  - the verdict ("Hold: food and bottle.");
+  - the sleep signal if sleep was off;
+  - STARTED WORK, one tap, in the moment itself.
+
+  A tap there closes the moment, and TODAY reads "ON THE CLOCK" at once.
+
 ## LOG-TIME-001 — when it actually happened (owner go, 2026-10-28)
 
 Gavin: "make it so I can edit the times … Sometimes I eat or drink and don't log it for a while. Or I

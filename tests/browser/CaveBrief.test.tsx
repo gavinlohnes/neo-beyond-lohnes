@@ -52,6 +52,7 @@ for (const width of [320, 390]) it(`runs the preflight poll and closes items thr
 });
 
 it("after the shift, TODAY offers the debrief and the cave sets planned beside actual", async () => {
+  (globalThis as { __beyondShiftChange?: boolean }).__beyondShiftChange = true;
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(2026, 9, 16, 16, 40));
   const day = await startDay(); await setWorkContext(day.id, "WORK", "MANUAL");
