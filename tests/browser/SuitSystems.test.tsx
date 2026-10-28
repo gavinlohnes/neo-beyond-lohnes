@@ -26,8 +26,8 @@ for (const width of [320, 360, 412]) it(`shows the SYSTEMS line and opens the re
   await line.click();
   await expect.element(screen.getByRole("heading", { name: "MORE // SYSTEMS", exact: true })).toBeVisible();
   for (const group of ["BODY", "TRAINING", "STATE", "DEVICE"]) await expect.element(screen.getByRole("heading", { name: group, exact: true })).toBeVisible();
-  await expect.element(screen.getByRole("button", { name: "Last main sleep: 6h 50m. Logged 20:00. Open history" })).toBeVisible();
-  await expect.element(screen.getByRole("button", { name: "Protein: 40 g. No target set. Open history" })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: "Last main sleep: 6h 50m. Logged 20:00. Open in the cave" })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: "Protein: 40 g. No target set. Open in the cave" })).toBeVisible();
   const state = screen.getByRole("region", { name: "STATE" });
   await expect.element(state.getByText("Day off", { exact: true })).toBeVisible();
   await expect.element(state.getByText("Set by you", { exact: true })).toBeVisible();
@@ -40,18 +40,22 @@ for (const width of [320, 360, 412]) it(`shows the SYSTEMS line and opens the re
   expect(await db.events.toArray()).toEqual(before);
 });
 
-it("opens a metric's existing history from the readout and returns to the same row", async () => {
+it("SUIT-ALIVE S2: a vital opens the cave in place, and its full history is one tap further", async () => {
   clock();
   const day = await startDay(); await setWorkContext(day.id, "OFF", "MANUAL"); await logWater(day.id, 8);
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "MORE", exact: true }).click();
   await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("systems");
   await screen.getByRole("button", { name: /^SYSTEMS / }).click();
-  const water = screen.getByRole("button", { name: "Water: 8 oz. Open history" });
+  const water = screen.getByRole("button", { name: "Water: 8 oz. Open in the cave" });
   await water.click();
+  await expect.element(screen.getByRole("heading", { name: "THE CAVE // VITALS", exact: true })).toBeVisible();
+  await screen.getByRole("button", { name: "FULL HISTORY", exact: true }).click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("water");
   await screen.getByRole("button", { name: "BACK TO MORE", exact: true }).click();
-  await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Water: 8 oz. Open history");
+  await expect.poll(() => document.activeElement?.textContent).toBe("FULL HISTORY");
+  await screen.getByRole("button", { name: "BACK TO SYSTEMS", exact: true }).click();
+  await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Water: 8 oz. Open in the cave");
 });
 
 for (const [level, values, words] of [

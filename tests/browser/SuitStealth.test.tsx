@@ -234,8 +234,8 @@ it("BODY and an open SYSTEMS readout behind stealth show its logs and undos on e
   await screen.getByRole("button", { name: "MORE", exact: true }).click();
   await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("systems");
   await screen.getByRole("button", { name: /^SYSTEMS / }).click();
-  await expect.element(screen.getByRole("button", { name: "Water: 20 oz. Open history" })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: "Water: 20 oz. Open in the cave" })).toBeVisible();
   await stealthLog(false);
-  await expect.element(screen.getByRole("button", { name: "Water: 32 oz. Open history" })).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: "Water: 32 oz. Open in the cave" })).toBeVisible();
 });
 

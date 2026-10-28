@@ -1,3 +1,13 @@
+# SUIT-ALIVE S2 — the cave, Vitals
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28, "go S2". Claude Code; FEATURE (read-only,
+  TODAY unchanged). [Brief](SUIT-ALIVE.md). Prototype and build plan in `prototype/suit-alive/`.
+- **Baseline:** master `b8fb15a` (#311 LOOP-002 merged).
+- **Built:** MORE → SYSTEMS rows open the cave: one vital in depth against your own normal, with
+  run position, records, what it feeds and source; full history one tap further.
+- **Next:** CI and Gavin's merge. Then S1 (bat mark, needs the logo ruling recorded) or S3.
+
+---
 # LOOP-002 — one post-shift moment
 
 - **Authority / Builder / lane:** Gavin, 2026-10-27, "go LOOP-002". Claude Code; PROTECTED (TODAY

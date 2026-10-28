@@ -23,3 +23,33 @@
 .systems-line__warn { color: var(--warning); }
 .systems-line__go { flex: none; color: var(--text-3-strong); font-size: 18px; }
 .systems-line .capacity-dot { margin-right: 6px; vertical-align: middle; }
+
+/* SUIT-ALIVE S2: the cave, Vitals. HUD tokens only; amber marks off-normal, red is not used. */
+.cave { display: grid; gap: 18px; }
+.cave__head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cave__title { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: .3em; }
+.cave__title span { color: var(--text-2); letter-spacing: .2em; }
+.cave__back { min-height: 44px; padding: 0 12px; background: none; border: 1px solid var(--border-subtle); color: var(--text-2); letter-spacing: .14em; font: inherit; font-size: 12px; cursor: pointer; }
+.cave__pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.cave__pick .chip { min-height: 44px; padding-inline: 14px; }
+.cave__lead { display: grid; gap: 6px; }
+.cave__value { margin: 0; font-size: 48px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+.cave__value small { font-size: 15px; color: var(--text-2); margin-left: 6px; }
+.cave__sum { margin: 0; color: var(--text-2); font-size: 15px; line-height: 1.5; }
+.cave__sum--off { color: var(--warning); }
+.cave__block { display: grid; gap: 8px; min-width: 0; }
+.cave__cap { margin: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: .14em; color: var(--text-2); text-transform: uppercase; }
+.cave__chart { width: 100%; height: auto; display: block; }
+.cave__band { fill: var(--border-subtle); opacity: .55; }
+.cave__median { stroke: var(--text-2); stroke-dasharray: 2 3; }
+.cave__bar { fill: var(--text-2); }
+.cave__bar--off { fill: var(--warning); }
+.cave__gap { fill: var(--border-subtle); }
+.cave__axis { fill: var(--text-2); font-family: var(--font-mono); font-size: 9px; }
+.cave__kv { margin: 0; display: grid; }
+.cave__kv div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+.cave__kv dt { color: var(--text-2); font-size: 14px; min-width: 0; }
+.cave__kv dd { margin: 0; font-family: var(--font-mono); font-size: 13px; text-align: right; overflow-wrap: anywhere; }
+.cave__facts { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14.5px; line-height: 1.5; }
+.cave__feeds { margin: 0; padding-left: 12px; border-left: 1px solid var(--border-subtle); color: var(--text-2); font-size: 14.5px; line-height: 1.55; }
+.cave__feeds--decides { border-left-color: var(--text-1); color: var(--text-1); }
