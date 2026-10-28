@@ -96,17 +96,24 @@ export async function getShiftChange(now: Date = new Date()): Promise<ShiftChang
 /** How long around the scheduled start TODAY offers the one-tap STARTED WORK. */
 export const START_OFFER_BEFORE_HOURS = 3;
 export const START_OFFER_AFTER_HOURS = 2;
+/** FIELD-REHEARSAL-002: how long before the scheduled end TODAY offers the one-tap WORK ENDED. */
+export const END_OFFER_BEFORE_HOURS = 2;
 
-export interface WorkStart { dayId: string; shiftStart: string; startedAt: string | null }
+export interface WorkStart { dayId: string; shiftStart: string; shiftEnd: string; startedAt: string | null; offerEnd: boolean }
 
-/** Pure: whether TODAY offers STARTED WORK (or shows it done) at this instant. */
+/**
+ * Pure: what TODAY's shift line offers at this instant: STARTED WORK around the start, ON THE CLOCK once
+ * tapped, and WORK ENDED from 2 hours before the scheduled end until work is marked ended.
+ */
 export function workStartOffer(route: CaveRoute | null, dayId: string | null, started: string | null, ended: boolean, now: Date): WorkStart | null {
   if (!route || !dayId || ended || route.dayKind !== "WORK") return null;
-  const start = route.waypoints.find((w) => w.kind === "SHIFT_START");
-  if (!start) return null;
-  const s = Date.parse(start.at), t = now.getTime();
-  if (t < s - START_OFFER_BEFORE_HOURS * 3600_000 || t > s + START_OFFER_AFTER_HOURS * 3600_000) return null;
-  return { dayId, shiftStart: start.at, startedAt: started };
+  const start = route.waypoints.find((w) => w.kind === "SHIFT_START"), end = route.waypoints.find((w) => w.kind === "SHIFT_END");
+  if (!start || !end) return null;
+  const s = Date.parse(start.at), e = Date.parse(end.at), t = now.getTime();
+  const offerEnd = t >= e - END_OFFER_BEFORE_HOURS * 3600_000;
+  const aroundStart = t >= s - START_OFFER_BEFORE_HOURS * 3600_000 && t <= s + START_OFFER_AFTER_HOURS * 3600_000;
+  if (!offerEnd && !aroundStart) return null;
+  return { dayId, shiftStart: start.at, shiftEnd: end.at, startedAt: started, offerEnd };
 }
 
 export async function getWorkStart(now: Date = new Date()): Promise<WorkStart | null> {

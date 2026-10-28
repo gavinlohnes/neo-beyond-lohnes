@@ -46,5 +46,5 @@
 /* PREFLIGHT: rows stack (GO, or HOLD with what is open); STARTED WORK spans the panel. */
 .shift-change--preflight .shift-change__row { grid-template-columns: minmax(0, 1fr); }
 .shift-change--preflight .shift-change__value { text-align: left; }
-.shift-change__row--on .shift-change__value { letter-spacing: 0.14em; font-family: var(--font-mono); }
+.shift-change--preflight .shift-change__row--on .shift-change__value { letter-spacing: 0.14em; font-family: var(--font-mono); }
 .shift-change__start { width: 100%; min-height: 48px; margin: 0; }

@@ -16,7 +16,7 @@ function remember(key: string) { try { localStorage.setItem(STORE, key); } catch
  * it (until STARTED WORK), LANDING in the last 45 minutes, SHIFT SECURED for 3 hours after. It plays once per shift and phase, a tap or Escape continues to
  * TODAY, and reduced motion shows it still. Volume 2: one moment, earned by the shift itself.
  */
-export function ShiftChangeMoment({ refreshKey, now, onOpen, onStarted }: { refreshKey: string; now: Date; onOpen: () => void; onStarted?: () => void }) {
+export function ShiftChangeMoment({ refreshKey, now, onOpen, onStarted, onEndWork }: { refreshKey: string; now: Date; onOpen: () => void; onStarted?: () => void; onEndWork?: () => void }) {
   const [moment, setMoment] = useState<ShiftChange | null>(null);
   const [closed, setClosed] = useState<string | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -62,6 +62,7 @@ export function ShiftChangeMoment({ refreshKey, now, onOpen, onStarted }: { refr
         {landing && show.rows.length === 0 && <p className="shift-change__clear">Everything's closed out. Bring it home.</p>}
         <p className="shift-change__plan"><span>{preflight ? "VERDICT" : "LANDING PLAN"}</span>{show.plan}</p>
         {preflight && <button type="button" className="btn-secondary shift-change__start" onClick={() => void startWork()}>STARTED WORK</button>}
+        {landing && onEndWork && <button type="button" className="btn-secondary shift-change__start" onClick={() => { dismiss(); onEndWork(); }}>WORK ENDED</button>}
         <div className="shift-change__actions">
           <button type="button" className="btn-secondary" onClick={dismiss}>CONTINUE</button>
           <button type="button" className="btn-secondary" onClick={() => { dismiss(); onOpen(); }}>{preflight || landing ? "OPEN BRIEF ›" : "FULL DEBRIEF ›"}</button>
@@ -75,7 +76,7 @@ export function ShiftChangeMoment({ refreshKey, now, onOpen, onStarted }: { refr
  * SHIFT-CHANGE-001: one tap and it's logged. Around the scheduled start, TODAY offers STARTED WORK; once
  * tapped, the line says when you went on the clock. The brief and the end of the shift count from it.
  */
-export function StartedWork({ refreshKey, now, onSaved }: { refreshKey: string; now: Date; onSaved?: () => void }) {
+export function StartedWork({ refreshKey, now, onSaved, onEndWork }: { refreshKey: string; now: Date; onSaved?: () => void; onEndWork?: () => void }) {
   const [offer, setOffer] = useState<WorkStart | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +88,13 @@ export function StartedWork({ refreshKey, now, onSaved }: { refreshKey: string; 
   }
   useEffect(() => { void load(); }, [refreshKey]);
   if (!offer) return null;
+  // FIELD-REHEARSAL-002: the end of a shift is one tap too, right where you look.
+  if (offer.offerEnd && onEndWork) return <div className="work-start">
+    <span className="work-start__key">{offer.startedAt ? `ON THE CLOCK · ${hhmm(offer.startedAt)}` : `SHIFT ENDS ${hhmm(offer.shiftEnd)}`}</span>
+    <button type="button" className="btn-secondary work-start__go" onClick={onEndWork}>WORK ENDED</button>
+  </div>;
   if (offer.startedAt) return <p className="work-start work-start--on"><span className="work-start__key">SHIFT</span><span>ON THE CLOCK · {hhmm(offer.startedAt)}</span></p>;
+  if (offer.offerEnd) return null;
   const start = async () => {
     if (saving) return;
     const acknowledge = captureCommitFeedback();
@@ -102,7 +109,6 @@ export function StartedWork({ refreshKey, now, onSaved }: { refreshKey: string; 
     {error && <p className="meta meta--error" role="alert">{error}</p>}
   </div>;
 }
-
 /** The shift on one line: clock-in to clock-out, a tick for every water log above, every meal below. */
 function ShiftLine({ line, landing }: { line: NonNullable<ShiftChange["line"]>; landing: boolean }) {
   const s = Date.parse(line.start), e = Date.parse(line.end), span = Math.max(1, e - s);
