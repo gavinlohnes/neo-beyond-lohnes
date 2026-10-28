@@ -1,3 +1,13 @@
+# SUIT-ALIVE S3 — comms and Tonight
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28, "go S3" (SUIT-ALIVE-002). Claude Code; PROTECTED
+  (presentation of recommendation authority; no Engine, schema or event change). [Brief](SUIT-ALIVE.md#s3--comms-and-tonight).
+- **Baseline:** master `d937c3e` (#314 S1 merged).
+- **Built:** a comms line closing TODAY's mode hero (your readings against your normal, never the call),
+  and the cave's TONIGHT view (the call as made, what's furthest from normal, what's overdue).
+- **Next:** CI, independent review (unless waived), Gavin's merge. Then S4 (route), Protected.
+
+---
 # SUIT-ALIVE S1 — the bat mark
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28, "go S1 with the prototype bat" (SUIT-ALIVE-001).

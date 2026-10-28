@@ -83,7 +83,7 @@ export function MoreScreen({
   onOpenMeal,
   onOpenDestination,
   historyDestination = null, onReturnToHealth, onHistoryExit,
-  onOpenMetric, onReturnToToday, systemsRefreshKey = 0,
+  onOpenMetric, onReturnToToday, systemsRefreshKey = 0, caveRequest = 0,
   reviewDestination = null,
   onReviewDestinationConsumed,
 }: {
@@ -97,6 +97,8 @@ export function MoreScreen({
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
   /** SUIT-001: bumped after a stealth write, so an open SYSTEMS readout re-reads. */
   systemsRefreshKey?: number;
+  /** SUIT-ALIVE S3: a new value opens the cave on TONIGHT (TODAY's comms line). */
+  caveRequest?: number;
   /** SUIT-001: set when TODAY's SYSTEMS line opened the readout. */
   onReturnToToday?: (() => void) | undefined;
   onOpenCapture?: () => void;
@@ -483,7 +485,7 @@ export function MoreScreen({
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
           <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { if (returnToUnderstanding) { setView("REVIEW"); return; } if (onReturnToToday) { onReturnToToday(); return; } setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>{returnToUnderstanding ? "BACK TO REVIEW" : onReturnToToday ? "BACK TO TODAY" : "BACK TO MORE"}</button>
           <div hidden={view !== "DAILY_CONTROLS"}>{visited.has("DAILY_CONTROLS") && <DailyControls onReturnToFullTools={() => setDailyFocus(null)} commandFocus={dailyFocus} banners={dailyFocus === null ? dailyBanners : undefined} shiftHandoffRefreshKey={dailyRefreshKey} onWorkEnded={() => onDailyContextChanged?.()} onWorkContextChanged={() => onDailyContextChanged?.()} captureRequest={captureRequest} active={active && view === "DAILY_CONTROLS"} openToolsOnMount onOpenBody={(focus) => { if (focus) onOpenDestination?.({ kind: "body", focus }); }} onOpenTrain={() => { onOpenDestination?.({ kind: "workout" }); }} onOpenSystems={() => setView("SYSTEMS")} />}</div>
-          {view === "SYSTEMS" && <><SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} /></>}
+          {view === "SYSTEMS" && <><SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} caveRequest={caveRequest} /></>}
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
           {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>BACK TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>BACK TO DATA</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}

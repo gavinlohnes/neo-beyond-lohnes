@@ -116,6 +116,9 @@ function AppUpdateBanner() {
 /** Fire just after the boundary, so the rollover check sees it as elapsed. */
 const ROLLOVER_TIMER_MARGIN_MS = 1000;
 
+/** SUIT-ALIVE S3: counts cave requests across App mounts, so SystemsReadout opens each one once. */
+let caveRequests = 0;
+
 export function App() {
   return <SessionDraftProvider><AppWorkspaces /></SessionDraftProvider>;
 }
@@ -251,6 +254,8 @@ function AppWorkspaces() {
   const [toolsRequest, setToolsRequest] = useState(0);
   const [captureOrigin, setCaptureOrigin] = useState<Tab | null>(null);
   const [moreRequest, setMoreRequest] = useState(0);
+  /** SUIT-ALIVE S3: TODAY's comms line opens the cave on TONIGHT; each request counts up across mounts. */
+  const [caveRequest, setCaveRequest] = useState(0);
   const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(null);
   useEffect(() => {
     if (!shortcut) return;
@@ -630,6 +635,7 @@ function AppWorkspaces() {
               onOpenHealthEvidence={openBodyEvidence}
               onOpenWeeklyReview={() => openMore("REVIEW")}
               onOpenSystems={() => { openMore("SYSTEMS"); }}
+              onOpenCave={() => { if (openMore("SYSTEMS", null, false)) setCaveRequest(++caveRequests); }}
               toolsRequest={toolsRequest}
             />
           </RootErrorBoundary>
@@ -662,6 +668,7 @@ function AppWorkspaces() {
             onOpenMeal={() => openBody("meal")}
             onOpenMetric={openBodyEvidence}
             systemsRefreshKey={stealthWrites}
+            caveRequest={caveRequest}
             onReturnToToday={commandTodayOrigin && moreView !== "MENU" ? () => { setCommandTodayOrigin(false); showTab("TODAY"); } : undefined}
             onOpenDestination={openSystemDestination} /></RootErrorBoundary>
         </div>}

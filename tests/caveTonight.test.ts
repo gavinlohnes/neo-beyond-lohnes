@@ -1,0 +1,59 @@
+import { describe, expect, it } from "vitest";
+import { buildCaveTonight, describeComms, describeTonightReading, type TonightInputs } from "../src/application/caveTonight";
+import type { PictureRow } from "../src/application/wholePictureProjection";
+import type { Recommendation, StateCheckIn } from "../src/domain/common/types";
+import type { Obligation } from "../src/domain/intent/types";
+
+const start = (day: number) => new Date(2026, 8, day, 16, 30).toISOString();
+// 12 finished work days: sleep 6:00–7:00, energy 3–4, protein 150–170 g, water 100–110 oz.
+const rows = Array.from({ length: 12 }, (_, i) => ({
+  start: start(i + 1), dayIds: [`d${i}`], context: "WORK", sessions: 0, weights: [],
+  sleepHours: 6 + (i % 3) * 0.5, energy: 3 + (i % 2), protein: 150 + (i % 3) * 10, water: 100 + (i % 3) * 5,
+})) as unknown as PictureRow[];
+const day = { id: "today", workContext: "WORK" } as TonightInputs["readout"]["day"];
+const checkIn = (energy: number) => ({ id: "c", beyondDayId: "today", recordedAt: start(13), energy, stress: 3, mood: 3, soreness: 2, alcoholUrge: 0 }) as unknown as StateCheckIn;
+const input = (over: Partial<TonightInputs> = {}): TonightInputs => ({
+  rows, readout: { day, lastMainSleep: { minutes: 310, recordedAt: start(13), occurredAt: start(13), fromGarmin: false } },
+  checkIn: checkIn(2), recommendation: null, decision: undefined, obligations: [], today: "2026-09-13", ...over,
+});
+
+describe("SUIT-ALIVE S3 — comms and Tonight", () => {
+  it("orders off-normal readings by distance outside your own range, and keeps the rest steady", () => {
+    const t = buildCaveTonight(input());
+    // Energy 2 sits a full range-width under 3–4; sleep 5:10 sits 0.83 of a width under 6:00–7:00.
+    expect(t.off.map((r) => r.id)).toEqual(["energy", "sleep"]);
+    expect(t.off.every((r) => r.verdict === "BELOW")).toBe(true);
+    expect(t.steady.map((r) => r.id)).toEqual(["protein", "water"]);
+    expect(t.steady.every((r) => r.when === "LAST_FULL_DAY")).toBe(true);
+  });
+
+  it("speaks tersely and never states the call", () => {
+    const t = buildCaveTonight(input());
+    expect(describeTonightReading(t.off[1]!)).toBe("Sleep 5:10, 80 min under your usual.");
+    expect(describeTonightReading(t.off[0]!)).toBe("Energy 2, under your usual 3–4.");
+    expect(describeComms(t)).toBe("Energy 2, under your usual 3–4. Sleep 5:10, 80 min under your usual.");
+    expect(describeComms(buildCaveTonight(input({ checkIn: checkIn(3), readout: { day, lastMainSleep: { minutes: 390, recordedAt: start(13), occurredAt: start(13), fromGarmin: true } } }))))
+      .toBe("Every reading sits inside your normal.");
+  });
+
+  it("does not invent a range below the minimum days", () => {
+    const t = buildCaveTonight(input({ rows: rows.slice(0, 6) }));
+    expect(t.off).toEqual([]); expect(t.steady).toEqual([]);
+    expect(t.learning.map((l) => l.id)).toEqual(["sleep", "energy", "protein", "water"]);
+    expect(describeComms(t)).toBe("Still learning your normal: 6 of 10 days so far.");
+    expect(describeComms(buildCaveTonight(input({ rows: [], checkIn: null, readout: { day: null, lastMainSleep: null } })))).toBe("Nothing to read yet. Log sleep or check in.");
+  });
+
+  it("lists overdue commitments only, oldest first, and passes the call through unchanged", () => {
+    const rec = { id: "r", kind: "RECOVER" } as Recommendation;
+    const obligations = [
+      { id: "a", title: "Blood work", status: "OPEN", dueAt: "2026-09-10" },
+      { id: "b", title: "Renew licence", status: "OPEN", dueAt: "2026-09-13" },
+      { id: "c", title: "Dentist", status: "OPEN", dueAt: "2026-09-02" },
+      { id: "d", title: "Waiting on form", status: "WAITING", dueAt: "2026-09-01" },
+    ] as Obligation[];
+    const t = buildCaveTonight(input({ obligations, recommendation: rec, decision: "DECLINED" }));
+    expect(t.late.map((l) => l.title)).toEqual(["Dentist", "Blood work"]);
+    expect(t.recommendation).toBe(rec); expect(t.decision).toBe("DECLINED");
+  });
+});
