@@ -41,7 +41,7 @@ let lastCaveRequest = 0;
  * cave links to full history.
  * SUIT-ALIVE S3/S4: TODAY's comms and route lines open the cave through `caveRequest`.
  */
-export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveRequest }: {
+export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveRequest, onOpenUnderstanding }: {
   active: boolean;
   /** Bumped after a write made while the readout stays shown (stealth). */
   refreshKey?: number;
@@ -49,6 +49,8 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveReque
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
   /** A new key opens the cave on that view; each key opens it once. */
   caveRequest?: { key: number; tab: "tonight" | "route" | "brief" } | undefined;
+  /** S7: opens REVIEW, where Personal Understanding lives. */
+  onOpenUnderstanding?: (() => void) | undefined;
 }) {
   const online = useOnline();
   const [state, setState] = useState<{ readout: Readout; mode: ShiftClockPhase | null; pinned: boolean; templates: CustomWorkoutTemplate[]; now: Date; backupDue: boolean } | null>(null);
@@ -90,7 +92,7 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveReque
   // TRAIN's own wording: "Template A", or a custom program's name.
   const label = (id: string) => `Template ${state ? templateLabel(id as WorkoutTemplateId, state.templates) : id}`;
 
-  if (cave) return <Cave key={`${cave.tab}:${cave.vital ?? ""}:${lastCaveRequest}`} initial={cave} onBack={() => setCave(null)} onOpenMetric={onOpenMetric} />;
+  if (cave) return <Cave key={`${cave.tab}:${cave.vital ?? ""}:${lastCaveRequest}`} initial={cave} onBack={() => setCave(null)} onOpenMetric={onOpenMetric} onOpenUnderstanding={onOpenUnderstanding} />;
 
   return (
     <section className="systems" aria-labelledby="systems-title">

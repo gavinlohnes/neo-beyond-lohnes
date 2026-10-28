@@ -6,6 +6,7 @@ import { BatMark } from "../../components/BatMark";
 import { CaveTonightView } from "./CaveTonight";
 import { CaveRouteView } from "./CaveRoute";
 import { CaveBriefView } from "./CaveBrief";
+import { CaveFileView } from "./CaveFile";
 import "./systems.css";
 
 /**
@@ -16,14 +17,16 @@ import "./systems.css";
  */
 const HISTORY: Partial<Record<CaveVitalId, InsightMetric>> = { sleep: "sleep", protein: "protein", water: "water" };
 
-export type CaveTab = "tonight" | "route" | "brief" | "vitals";
+export type CaveTab = "tonight" | "route" | "brief" | "vitals" | "file";
 export type CaveOpen = { tab: CaveTab; vital?: CaveVitalId };
 
-/** SUIT-ALIVE S3–S6: the cave's views: TONIGHT (the call and what's furthest from your normal), ROUTE, BRIEF and VITALS. */
-export function Cave({ initial, onBack, onOpenMetric }: {
+/** SUIT-ALIVE S3–S7: the cave's views: TONIGHT (the call and what's furthest from your normal), ROUTE, BRIEF, VITALS and FILE. */
+export function Cave({ initial, onBack, onOpenMetric, onOpenUnderstanding }: {
   initial: CaveOpen;
   onBack: () => void;
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
+  /** S7: FILE's depth lives in REVIEW's Personal Understanding. */
+  onOpenUnderstanding?: (() => void) | undefined;
 }) {
   const [tab, setTab] = useState<CaveTab>(initial.tab);
   const [vital, setVital] = useState<CaveVitalId>(initial.vital ?? "sleep");
@@ -36,11 +39,12 @@ export function Cave({ initial, onBack, onOpenMetric }: {
         <button ref={backRef} type="button" className="cave__back" onClick={onBack}>BACK TO SYSTEMS</button>
       </div>
       <div className="cave__tabs" role="group" aria-label="Cave view">
-        {(["tonight", "route", "brief", "vitals"] as const).map((t) => <button key={t} type="button" className="cave__tab" aria-pressed={t === tab} onClick={() => setTab(t)}>{TAB_NAME[t]}</button>)}
+        {(["tonight", "route", "brief", "vitals", "file"] as const).map((t) => <button key={t} type="button" className="cave__tab" aria-pressed={t === tab} onClick={() => setTab(t)}>{TAB_NAME[t]}</button>)}
       </div>
       {tab === "tonight" ? <CaveTonightView onOpenVital={(id) => { setVital(id); setTab("vitals"); }} />
         : tab === "route" ? <CaveRouteView />
         : tab === "brief" ? <CaveBriefView />
+        : tab === "file" ? <CaveFileView onOpenUnderstanding={onOpenUnderstanding} />
         : <CaveVitals id={vital} onPick={setVital} onOpenMetric={onOpenMetric} />}
     </section>
   );
@@ -110,7 +114,7 @@ function CaveVitals({ id, onPick, onOpenMetric }: {
   );
 }
 
-const TAB_NAME: Record<CaveTab, string> = { tonight: "TONIGHT", route: "ROUTE", brief: "BRIEF", vitals: "VITALS" };
+const TAB_NAME: Record<CaveTab, string> = { tonight: "TONIGHT", route: "ROUTE", brief: "BRIEF", vitals: "VITALS", file: "FILE" };
 const TITLE: Record<CaveVitalId, string> = { sleep: "SLEEP", energy: "ENERGY", protein: "PROTEIN", water: "WATER" };
 
 /** Bars for each finished day, your usual band behind them and your median dashed. Drawn to one scale. */

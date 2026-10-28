@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { describeComms, getCaveTonight } from "../../../application/caveTonight";
 import { describeIn, getCaveRoute, nextWaypoints, routeCallout, type CaveRoute } from "../../../application/caveRoute";
 import { describeBrief, getCaveBrief } from "../../../application/caveBrief";
-import type { CaveTab } from "../systems/CaveVitals";
 import "../systems/systems.css";
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -31,7 +30,7 @@ function briefWindow(route: CaveRoute, now: Date): { kind: "BEFORE" | "AFTER"; l
   return null;
 }
 
-export function SuitLines({ refreshKey, now, onOpen }: { refreshKey: string; now: Date; onOpen: (tab: Exclude<CaveTab, "vitals">) => void }) {
+export function SuitLines({ refreshKey, now, onOpen }: { refreshKey: string; now: Date; onOpen: (tab: "tonight" | "route" | "brief") => void }) {
   const [comms, setComms] = useState<{ text: string; off: boolean } | null>(null);
   const [route, setRoute] = useState<CaveRoute | null>(null);
   const [brief, setBrief] = useState<{ text: string; late: boolean } | null>(null);
