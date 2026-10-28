@@ -76,7 +76,7 @@ export function ShiftChangeMoment({ refreshKey, now, onOpen, onStarted, onEndWor
  * SHIFT-CHANGE-001: one tap and it's logged. Around the scheduled start, TODAY offers STARTED WORK; once
  * tapped, the line says when you went on the clock. The brief and the end of the shift count from it.
  */
-export function StartedWork({ refreshKey, now, onSaved, onEndWork }: { refreshKey: string; now: Date; onSaved?: () => void; onEndWork?: () => void }) {
+export function StartedWork({ refreshKey, now, onSaved, onEndWork }: { refreshKey: string; now: Date; onSaved?: () => void; onEndWork?: (() => void) | undefined }) {
   const [offer, setOffer] = useState<WorkStart | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

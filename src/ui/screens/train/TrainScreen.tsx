@@ -1197,19 +1197,19 @@ export function TrainScreen({
             START WORKOUT
           </button>
 
+          {/* REAL-DATA-001: see the workout before starting it. The owner's real backup had 10 of 12
+              workouts abandoned within seconds; looking should never cost an abandoned session. */}
           {chosenVariant !== "RECOVERY" && (
-            <details className="train-lift-inspect">
-              <summary className="disclosure-row">Workout prescription</summary>
-              <ol className="train-prescription">
-                {suggestedExercises.map((exercise) => (
-                  <li key={exercise.exerciseId}>
-                    <span>{exercise.name}</span>
-                    <span className="meta">{exercise.sets} sets × {exercise.repRangeLow}–{exercise.repRangeHigh} reps</span>
-                  </li>
-                ))}
-              </ol>
-            </details>
+            <ol className="train-prescription train-prescription--preview" aria-label="Today's exercises">
+              {suggestedExercises.map((exercise) => (
+                <li key={exercise.exerciseId}>
+                  <span>{exercise.name}</span>
+                  <span className="meta">{exercise.sets} × {exercise.repRangeLow}–{exercise.repRangeHigh}</span>
+                </li>
+              ))}
+            </ol>
           )}
+
 
           <WhyDisclosure summary="Why this suggestion" style={{ marginTop: 12 }}>
             <div style={{ marginTop: 8 }}>

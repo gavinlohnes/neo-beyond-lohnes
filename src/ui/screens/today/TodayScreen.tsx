@@ -47,6 +47,7 @@ import { wasRecommendationMateriallyRepeated } from "../../../application/contin
 import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { AdvisorySection } from "./AdvisorySection";
 import { convertCaptureToObligation, satisfyObligation } from "../../../application/intentCommands";
+import { CommitmentQuickActions } from "./CommitmentQuickActions";
 import { formatLocalDate } from "../../../engine/scheduledContext";
 import type { Mission, Obligation } from "../../../domain/intent/types";
 import { isCheckInComplete, type CheckInValues, type PartialCheckInValues } from "./checkInFields";
@@ -1663,6 +1664,10 @@ export function TodayScreen({
   // `now` parameter already uses.
   const todayLocalDate = formatLocalDate(new Date());
   const headlineCommitment = getMostRelevantUnresolvedObligation(unresolvedObligations, todayLocalDate);
+  // REAL-DATA-001: close the named task right on the card.
+  const commitmentActions = headlineCommitment && (headlineCommitment.tier === "OVERDUE" || headlineCommitment.tier === "DUE_TODAY")
+    ? <CommitmentQuickActions key={headlineCommitment.obligation.id} obligation={headlineCommitment.obligation} today={todayLocalDate} onChanged={() => refresh()} />
+    : null;
   // ADVISORY-002: every other due commitment is listed in COMMITMENT (it used to sit in ADVISORY).
   const otherDueCommitments = unresolvedObligations
     .filter((obligation) => obligation.id !== headlineCommitment?.obligation.id)
@@ -2557,6 +2562,7 @@ export function TodayScreen({
             day={day}
             recommendation={recommendation}
             headlineCommitment={headlineCommitment}
+            commitmentActions={commitmentActions}
             isDominant={dominant === "RECOMMENDATION"}
             isAttention={recommendationInAttention}
             decision={decision}
@@ -2613,7 +2619,9 @@ export function TodayScreen({
             onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
             systems={onOpenCave && <>
               <SuitLines now={now} refreshKey={`${refreshVersion}|${day.id}|${day.workContext ?? ""}|${recommendation?.id ?? ""}|${lastMainSleepMinutes ?? ""}|${capacityResult?.capacity ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onOpen={(tab) => { if (!busyRef.current) onOpenCave(tab); }} />
-              <StartedWork now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${workPeriodEndedAt ?? ""}|${workStartTick}|${Math.floor(now.getTime() / 300000)}`} onSaved={() => { setWorkStartTick((n) => n + 1); void refresh(); }} onEndWork={() => void handleMarkWorkEnded()} />
+              <StartedWork now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${workPeriodEndedAt ?? ""}|${workStartTick}|${Math.floor(now.getTime() / 300000)}`} onSaved={() => { setWorkStartTick((n) => n + 1); void refresh(); }}
+                // REAL-DATA-001: after the shift, SHIFT DOWN carries the one MARK WORK ENDED; no second button up here.
+                onEndWork={shiftClock.phase === "EXPECTED_POST_WORK" ? undefined : () => void handleMarkWorkEnded()} />
               {/* SHIFT-CHANGE-001: the end of a shift, given the whole screen once. */}
               <ShiftChangeMoment now={now} refreshKey={`${day.id}|${workPeriodEndedAt ?? ""}|${workStartTick}|${Math.floor(now.getTime() / 60000)}`} onOpen={() => { if (!busyRef.current) onOpenCave("brief"); }} onStarted={() => { setWorkStartTick((n) => n + 1); void refresh(); }} onEndWork={() => void handleMarkWorkEnded()} />
             </>}
@@ -2838,6 +2846,7 @@ export function TodayScreen({
             day={day}
             recommendation={recommendation}
             headlineCommitment={headlineCommitment}
+            commitmentActions={commitmentActions}
             isDominant={dominant === "RECOMMENDATION"}
             isAttention={recommendationInAttention}
             decision={decision}

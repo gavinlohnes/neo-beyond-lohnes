@@ -1,3 +1,13 @@
+# REAL-DATA-001 — fixes from the owner's real backup
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28 ("Use whatever is beneficial for beyond").
+  Claude Code; Routine. Brief: `docs/agent/REAL-DATA-001.md`. Branch `ccr-0be4f40f-16m0ja`.
+- **Built:** task card DONE / NOT A TASK / NEW DATE; exercises shown before START; TRAIN's LAST
+  skips empty completions; an idle workout no longer takes the launch; one WORK ENDED after a
+  shift with the owner's plan first; DATA shows Garmin's last night when nothing is logged.
+- **Verified:** `npm run verify` green (3,174 passed).
+- **Next:** CI and Gavin's merge. Protected items listed in the brief wait for his word.
+
 # WHOLE-PICTURE-IN-DATA — DATA's Whole Picture stays in DATA
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28 ("merge 336 when green and go whole picture").

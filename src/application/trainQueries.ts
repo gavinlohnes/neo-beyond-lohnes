@@ -283,10 +283,16 @@ export async function getLastStrengthSession(): Promise<LastStrengthSessionSumma
         (s.status === "COMPLETED" || s.status === "PARTIAL"),
     )
     .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
-  const last = sessions.at(-1);
+  // REAL-DATA-001: a session finished with no sets logged isn't training; LAST shows the newest one
+  // that has at least one working set (the owner's real record read "0 working sets · 0 min").
+  let last: (typeof sessions)[number] | undefined;
+  let sets: Awaited<ReturnType<typeof getPerformedSets>> = [];
+  for (const candidate of [...sessions].reverse()) {
+    const candidateSets = await getPerformedSets(candidate.id);
+    if (candidateSets.some((s) => !s.skipped)) { last = candidate; sets = candidateSets; break; }
+  }
   if (!last) return null;
 
-  const sets = await getPerformedSets(last.id);
   const workingSetCount = sets.filter((s) => !s.skipped).length;
   const durationMinutes = last.endedAt
     ? Math.max(0, Math.round((new Date(last.endedAt).getTime() - new Date(last.startedAt).getTime()) / 60000))

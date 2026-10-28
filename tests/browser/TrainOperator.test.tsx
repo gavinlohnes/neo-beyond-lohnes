@@ -67,13 +67,11 @@ describe("TRAIN-OPERATOR-001", () => {
     const screen = await render(<TrainScreen />);
     await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
     const before = await db.events.count();
-    const summary = screen.getByText("Workout prescription", { exact: true });
-    expect(summary.element().closest("details")?.open).toBe(false);
+    // REAL-DATA-001: the exercises show under START without a tap, so looking never starts a session.
+    const list = screen.getByRole("list", { name: "Today's exercises" });
+    await expect.element(list.getByText("Machine Chest Press", { exact: true })).toBeVisible();
     expect(screen.getByRole("button", { name: "START WORKOUT" }).element().getBoundingClientRect().top)
-      .toBeLessThan(summary.element().getBoundingClientRect().top);
-    summary.element().focus();
-    await userEvent.keyboard("{Enter}");
-    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+      .toBeLessThan(list.element().getBoundingClientRect().top);
     await screen.getByText("Why this suggestion", { exact: true }).click();
     expect(await db.events.count()).toBe(before);
     expect(await getActiveWorkoutSession()).toBeUndefined();
