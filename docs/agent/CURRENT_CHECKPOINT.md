@@ -1,3 +1,16 @@
+# SUIT-VOLUME-001 — flashy on action, calm at rest
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28: "Go volume. But make it bigger." Claude Code;
+  PROTECTED (TODAY composition, presentation only). Branch `ccr-0be4f40f-16m0ja`.
+- **Baseline:** master `c8822be` (#326 BRAND-MARK-002 merged).
+- **Built:**
+  - one accented suit band on TODAY;
+  - the beam sweeps once and never loops;
+  - commit feedback on the cave BRIEF's saves;
+  - VITALS bars above your usual read off-normal;
+  - the volume table, recorded in SUIT-VOLUME-001 and UX_DECISIONS.
+- **Next:** CI and Gavin's merge. Then live use for a shift cycle.
+
 # BRAND-MARK-002 — the split bat is BEYOND's mark and app icon
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28, Routine Drop ("Brand mark Drop (Routine). Queue

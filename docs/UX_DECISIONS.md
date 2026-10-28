@@ -2288,3 +2288,20 @@ supersedes EMBLEM-002 as the app icon and SUIT-ALIVE-001's in-app bat.
 - **Home-screen icon:** the icon cut on full-bleed black with no chamfer, because Android masks the
   shape. The manifest lists separate "any" and "maskable" icons. Files are new `beyond-v2-*` names,
   and a new service-worker cache id makes installed phones pick them up. No old icon is referenced.
+
+## SUIT-VOLUME-001 — flashy on action, calm at rest (owner go, 2026-10-28)
+
+Gavin: "Go volume. But make it bigger." Brief: [`agent/SUIT-VOLUME-001.md`](agent/SUIT-VOLUME-001.md).
+This amends SUIT-002 and FIELD-AUTHORITY-001 with one law: the suit may be dramatic when the
+operator touches it or when one thing truly needs them, never by default.
+
+- **Volume 0, idle:** Gotham, the mode, the mark and one calm line. Nothing loops or pulses, and
+  there is no extra red.
+- **Volume 1, commit:** SUIT-002's feedback on every saved record.
+- **Volume 2, signal:** one red next thing, plus at most one amber suit band at a time. The order is
+  a late preflight, then a point just passed, then off-normal.
+- **The skyline beam** sweeps once when a real next thing appears, then holds. No animation in the
+  app may loop.
+- **Off-normal** is outside your usual in either direction, on the VITALS chart as in its headline.
+- **Steps never take a comms slot on TODAY.** They stay in VITALS and TONIGHT, so a low-step day cannot push
+  sleep off the line.

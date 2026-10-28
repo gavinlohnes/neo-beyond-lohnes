@@ -127,9 +127,18 @@ export function describeTonightReading(r: TonightReading): string {
   return `${lead}, ${r.verdict === "BELOW" ? "under" : "above"} your usual ${range(r)}${by}.`;
 }
 
+/**
+ * SUIT-VOLUME-001: what may speak on TODAY's comms line. Steps stay in VITALS and TONIGHT but never take
+ * one of the line's two slots: a low-step day after a night shift must not push sleep out of view.
+ */
+export const commsOff = (t: CaveTonight): TonightReading[] => t.off.filter((r) => r.id !== "steps");
+
 /** TODAY's comms line: the two readings furthest from your normal, or that everything sits inside it. Never the call itself. */
 export function describeComms(t: CaveTonight): string {
-  if (t.off.length) return t.off.slice(0, 2).map(describeTonightReading).join(" ");
+  const off = commsOff(t);
+  if (off.length) return off.slice(0, 2).map(describeTonightReading).join(" ");
+  // Steps off alone is not "everything inside your normal": say so plainly, without taking a slot.
+  if (t.off.length) return "Inside your normal, apart from steps. Open TONIGHT for them.";
   if (t.steady.length) return t.learning.length ? "Readings judged so far sit inside your normal. Still learning the rest." : "Every reading sits inside your normal.";
   if (t.learning.length) {
     const most = Math.max(...t.learning.map((l) => l.days));
