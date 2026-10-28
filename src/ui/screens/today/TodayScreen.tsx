@@ -382,6 +382,8 @@ export function TodayScreen({
   // has been superseded by the time it gets there is discarded, whatever
   // order its own reads settle in.
   const refreshRequestIdRef = useRef(0);
+  // SHIFT-CHANGE-001: a STARTED WORK tap anywhere re-reads TODAY's start line at once.
+  const [workStartTick, setWorkStartTick] = useState(0);
   // Which day `currentContext` was installed for — private to this
   // component, never exposed (CurrentOperationalContext carries no day
   // identity). Request-ownership alone stops a stale request from
@@ -2600,9 +2602,9 @@ export function TodayScreen({
             onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
             systems={onOpenCave && <>
               <SuitLines now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${recommendation?.id ?? ""}|${lastMainSleepMinutes ?? ""}|${capacityResult?.capacity ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onOpen={(tab) => { if (!busyRef.current) onOpenCave(tab); }} />
-              <StartedWork now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onSaved={() => void refresh()} />
+              <StartedWork now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${workPeriodEndedAt ?? ""}|${workStartTick}|${Math.floor(now.getTime() / 300000)}`} onSaved={() => { setWorkStartTick((n) => n + 1); void refresh(); }} />
               {/* SHIFT-CHANGE-001: the end of a shift, given the whole screen once. */}
-              <ShiftChangeMoment now={now} refreshKey={`${day.id}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 60000)}`} onOpen={() => { if (!busyRef.current) onOpenCave("brief"); }} />
+              <ShiftChangeMoment now={now} refreshKey={`${day.id}|${workPeriodEndedAt ?? ""}|${workStartTick}|${Math.floor(now.getTime() / 60000)}`} onOpen={() => { if (!busyRef.current) onOpenCave("brief"); }} onStarted={() => { setWorkStartTick((n) => n + 1); void refresh(); }} />
             </>}
           >
             {/* The context sentence (or the countdown) stays for screen readers; the meta line shows it. */}

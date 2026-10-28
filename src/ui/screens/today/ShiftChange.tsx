@@ -12,11 +12,11 @@ function seen(key: string): boolean { try { return localStorage.getItem(STORE) =
 function remember(key: string) { try { localStorage.setItem(STORE, key); } catch { /* A private window still dismisses for this session. */ } }
 
 /**
- * SHIFT-CHANGE-001: the end of a shift, given the whole screen once. LANDING in the last 45 minutes,
- * SHIFT SECURED for 3 hours after. It plays once per shift and phase, a tap or Escape continues to
+ * SHIFT-CHANGE-001: the edges of a shift, given the whole screen once. PREFLIGHT in the 90 minutes before
+ * it (until STARTED WORK), LANDING in the last 45 minutes, SHIFT SECURED for 3 hours after. It plays once per shift and phase, a tap or Escape continues to
  * TODAY, and reduced motion shows it still. Volume 2: one moment, earned by the shift itself.
  */
-export function ShiftChangeMoment({ refreshKey, now, onOpen }: { refreshKey: string; now: Date; onOpen: () => void }) {
+export function ShiftChangeMoment({ refreshKey, now, onOpen, onStarted }: { refreshKey: string; now: Date; onOpen: () => void; onStarted?: () => void }) {
   const [moment, setMoment] = useState<ShiftChange | null>(null);
   const [closed, setClosed] = useState<string | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -30,33 +30,41 @@ export function ShiftChangeMoment({ refreshKey, now, onOpen }: { refreshKey: str
   if (!show) return null;
 
   const dismiss = () => { remember(show.key); setClosed(show.key); };
-  const landing = show.phase === "LANDING";
+  const landing = show.phase === "LANDING", preflight = show.phase === "PREFLIGHT";
+  const startWork = async () => {
+    const acknowledge = captureCommitFeedback();
+    try { if (await markWorkStarted(show.dayId)) acknowledge("MEDIUM"); dismiss(); onStarted?.(); }
+    catch { dismiss(); }
+  };
+  const kicker = preflight ? `PREFLIGHT · SHIFT ${hhmm(show.end)}` : landing ? `LANDING · SHIFT ENDS ${hhmm(show.end)}` : `SHIFT SECURED · ${hhmm(show.end)}`;
+  const spoken = preflight ? `Preflight. ${show.clock.replace("T–", "")} until the shift starts at ${hhmm(show.end)}.`
+    : landing ? `Landing. ${show.clock.replace("T–", "")} until the shift ends at ${hhmm(show.end)}.` : `Shift secured. ${show.clock} on the clock.`;
   return (
     <div className={`shift-change shift-change--${show.phase.toLowerCase()}`} role="dialog" aria-modal="true" aria-labelledby="shift-change-title"
       onKeyDown={(e) => { if (e.key === "Escape") dismiss(); }}>
       <div className="shift-change__panel">
         <span className="shift-change__sweep" aria-hidden="true" />
         <BatMark width={112} cut="hairline" className="shift-change__mark" />
-        <p className="shift-change__kicker">{landing ? `LANDING · SHIFT ENDS ${hhmm(show.end)}` : `SHIFT SECURED · ${hhmm(show.end)}`}</p>
-        <h2 id="shift-change-title" ref={heading} tabIndex={-1} className="shift-change__clock"
-          aria-label={landing ? `Landing. ${show.clock.replace("T–", "")} until the shift ends at ${hhmm(show.end)}.` : `Shift secured. ${show.clock} on the clock.`}>
-          {show.clock}<small>{landing ? "TO GO" : "ON THE CLOCK"}</small>
+        <p className="shift-change__kicker">{kicker}</p>
+        <h2 id="shift-change-title" ref={heading} tabIndex={-1} className="shift-change__clock" aria-label={spoken}>
+          {show.clock}<small>{preflight ? "TO SHIFT" : landing ? "TO GO" : "ON THE CLOCK"}</small>
         </h2>
-        <ShiftLine line={show.line} landing={landing} />
+        {show.line && <ShiftLine line={show.line} landing={landing} />}
         {show.signal && <p className="shift-change__signal">{show.signal}</p>}
-        {show.rows.length > 0 && <ol className="shift-change__rows" aria-label={landing ? "Still open" : "After-action"}>
+        {show.rows.length > 0 && <ol className="shift-change__rows" aria-label={preflight ? "Systems" : landing ? "Still open" : "After-action"}>
           {show.rows.map((r, i) => (
             <li key={r.key} className={`shift-change__row shift-change__row--${r.tone.toLowerCase()}`} style={{ animationDelay: `${180 + i * 80}ms` }}>
               <span className="shift-change__label">{r.label}</span>
-              <span className="shift-change__value">{r.value}{r.tone === "OFF" ? <em> · off plan</em> : r.tone === "ON" ? <em> · on plan</em> : null}</span>
+              <span className="shift-change__value">{r.value}{preflight ? null : r.tone === "OFF" ? <em> · off plan</em> : r.tone === "ON" ? <em> · on plan</em> : null}</span>
             </li>
           ))}
         </ol>}
         {landing && show.rows.length === 0 && <p className="shift-change__clear">Everything's closed out. Bring it home.</p>}
-        <p className="shift-change__plan"><span>LANDING PLAN</span>{show.plan}</p>
+        <p className="shift-change__plan"><span>{preflight ? "VERDICT" : "LANDING PLAN"}</span>{show.plan}</p>
+        {preflight && <button type="button" className="btn-secondary shift-change__start" onClick={() => void startWork()}>STARTED WORK</button>}
         <div className="shift-change__actions">
           <button type="button" className="btn-secondary" onClick={dismiss}>CONTINUE</button>
-          <button type="button" className="btn-secondary" onClick={() => { dismiss(); onOpen(); }}>{landing ? "OPEN BRIEF ›" : "FULL DEBRIEF ›"}</button>
+          <button type="button" className="btn-secondary" onClick={() => { dismiss(); onOpen(); }}>{preflight || landing ? "OPEN BRIEF ›" : "FULL DEBRIEF ›"}</button>
         </div>
       </div>
     </div>
@@ -96,7 +104,7 @@ export function StartedWork({ refreshKey, now, onSaved }: { refreshKey: string; 
 }
 
 /** The shift on one line: clock-in to clock-out, a tick for every water log above, every meal below. */
-function ShiftLine({ line, landing }: { line: ShiftChange["line"]; landing: boolean }) {
+function ShiftLine({ line, landing }: { line: NonNullable<ShiftChange["line"]>; landing: boolean }) {
   const s = Date.parse(line.start), e = Date.parse(line.end), span = Math.max(1, e - s);
   const W = 320, L = 8, R = 8, x = (at: string) => L + ((Date.parse(at) - s) / span) * (W - L - R);
   const label = `Your shift on one line, ${hhmm(line.start)} to ${hhmm(line.end)}: ${line.water.length} water log${line.water.length === 1 ? "" : "s"}, ${line.food.length} food log${line.food.length === 1 ? "" : "s"}.`;

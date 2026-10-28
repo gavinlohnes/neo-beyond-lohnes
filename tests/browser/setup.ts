@@ -16,7 +16,21 @@ import "../../src/ui/cc/skin.css";
 import "../../src/ui/styles/fonts.ts";
 
 import Dexie from "dexie";
-import { afterEach } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
+
+// SHIFT-CHANGE-001: the shift-edge moment takes the whole screen once around a shift (PREFLIGHT,
+// LANDING, SECURED), and many TODAY tests start inside those windows for other reasons. It is off by
+// default here; tests about it opt in with `globalThis.__beyondShiftChange = true` (the field
+// rehearsal walks it on eight weeks of rotation). Test-only: the app itself is unchanged.
+vi.mock("../../src/application/shiftChange", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/application/shiftChange")>();
+  return {
+    ...actual,
+    getShiftChange: (...args: Parameters<typeof actual.getShiftChange>) =>
+      (globalThis as { __beyondShiftChange?: boolean }).__beyondShiftChange ? actual.getShiftChange(...args) : Promise.resolve(null),
+  };
+});
+beforeEach(() => { (globalThis as { __beyondShiftChange?: boolean }).__beyondShiftChange = false; });
 
 // Real Chromium has real IndexedDB — no fake-indexeddb polyfill needed
 // here (unlike tests/setup.ts, which is Node-only). But a real database

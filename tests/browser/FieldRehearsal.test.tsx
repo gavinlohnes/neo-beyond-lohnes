@@ -19,6 +19,7 @@ const between = (lo: number, hi: number) => lo + rand() * (hi - lo);
 const at = (d: Date, h: number, m = 0) => { const t = new Date(d); t.setHours(h, m, 0, 0); return t; };
 
 beforeEach(async () => {
+  (globalThis as { __beyondShiftChange?: boolean }).__beyondShiftChange = true;
   vi.useFakeTimers({ toFake: ["Date"] });
   const { id: _id, createdAt: _c, updatedAt: _u, ...schedule } = DEFAULT_SCHEDULE_PATTERN;
   vi.setSystemTime(new Date(2026, 8, 1, 16, 31));
@@ -106,8 +107,20 @@ it.each([
   await expect.element(screen.getByRole("button", { name: "DATA", exact: true })).toBeVisible();
   await new Promise((done) => setTimeout(done, 400));
   // SHIFT-CHANGE-001: the end of the shift takes the screen once; nowhere else.
-  const moment_ = screen.getByRole("dialog", { name: /^(Landing|Shift secured)\./ });
-  if (moment === "landing" || moment === "secured") {
+  const moment_ = screen.getByRole("dialog", { name: /^(Preflight|Landing|Shift secured)\./ });
+  if (moment === "preflight") {
+    // PREFLIGHT: the 90 minutes before the shift; STARTED WORK right in the moment, one tap, logged.
+    await expect.element(moment_).toBeVisible();
+    await Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined)));
+    expect(overflow(), "preflight overflows").toBe(false);
+    expect(await axeClean(), "preflight").toEqual([]);
+    await shot(`${moment}-shift-change-${width}`);
+    const events = await db.events.count();
+    await moment_.getByRole("button", { name: "STARTED WORK", exact: true }).click();
+    await expect.element(moment_).not.toBeInTheDocument();
+    await expect.element(screen.getByText("ON THE CLOCK · 16:45", { exact: true })).toBeVisible();
+    expect(await db.events.count()).toBe(events + 1);
+  } else if (moment === "landing" || moment === "secured") {
     await expect.element(moment_).toBeVisible();
     await Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined)));
     expect(overflow(), "shift change overflows").toBe(false);
@@ -127,15 +140,7 @@ it.each([
   expect(await axeClean(), "TODAY").toEqual([]);
   await shot(`${moment}-today-${width}`);
   // SHIFT-CHANGE-001: one tap and it's logged — offered around the start, gone mid-shift and off.
-  const startButton = screen.getByRole("button", { name: "STARTED WORK", exact: true });
-  if (moment === "preflight") {
-    const events = await db.events.count();
-    await startButton.click();
-    await expect.element(screen.getByText("ON THE CLOCK · 16:45", { exact: true })).toBeVisible();
-    expect(await db.events.count()).toBe(events + 1);
-  } else {
-    expect(document.querySelector(".work-start__go")).toBeNull();
-  }
+  if (moment !== "preflight") expect(document.querySelector(".work-start__go")).toBeNull();
   // The floating LOG never sits on a control you are reading toward: it steps aside while you scroll
   // down, returns when you scroll up, and at the end of TODAY it covers nothing.
   const fab = document.querySelector<HTMLElement>(".cc-fab")!;
