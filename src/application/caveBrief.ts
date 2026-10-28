@@ -194,16 +194,16 @@ export async function getCaveBrief(now: Date = new Date()): Promise<CaveBrief | 
   const endMinute = shiftEnd ? minuteOfDay(histories.dayStart, new Date(ended?.occurredAt ?? shiftEnd.at)) : minute;
   const proteinTotal = readout.proteinG ?? 0, waterTotal = readout.waterOz ?? 0;
   // Protein by time: meals and protein-only logs together, as the day's protein total counts them.
-  const proteinLogs = [...meals.map((m) => ({ at: m.recordedAt, proteinG: m.effectiveProteinG })), ...protein.map((p) => ({ at: p.recordedAt, proteinG: p.effectiveGrams }))]
+  const proteinLogs = [...meals.map((m) => ({ at: m.at, proteinG: m.effectiveProteinG })), ...protein.map((p) => ({ at: p.at, proteinG: p.effectiveGrams }))]
     .sort((a, b) => a.at.localeCompare(b.at));
   const sleep = readout.lastMainSleep ? await getCaveVital("sleep", now) : null;
   return buildCaveBrief({
     dayId: day.id, route, now, checkIn: checkIn ?? null,
     sleep: readout.lastMainSleep ? { hours: readout.lastMainSleep.minutes / 60, verdict: sleep?.verdict, at: readout.lastMainSleep.occurredAt } : null,
     // A meal is a meal; protein-only logs count toward protein but not as "a meal before the shift".
-    meals: meals.map((m) => ({ at: m.recordedAt, proteinG: m.effectiveProteinG })),
+    meals: meals.map((m) => ({ at: m.at, proteinG: m.effectiveProteinG })),
     proteinLogs,
-    water: water.map((w) => ({ at: w.recordedAt, oz: w.effectiveAmountOz })),
+    water: water.map((w) => ({ at: w.at, oz: w.effectiveAmountOz })),
     proteinTotal, waterTotal,
     pace: { protein: paceReading("protein", proteinTotal, histories.protein, minute), water: paceReading("water", waterTotal, histories.water, minute) },
     usualByEnd: { protein: paceUsual(histories.protein, endMinute), water: paceUsual(histories.water, endMinute) },

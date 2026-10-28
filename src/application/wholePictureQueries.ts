@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { effectiveLogTimes } from "./logTimes";
 import type { StateCheckIn } from "../domain/common/types";
 import type { DecisionJournalEntry } from "../domain/journal/types";
 import { getDaySummaries } from "./dayLedgerQueries";
@@ -41,7 +42,7 @@ export async function getWholePicture(now = new Date()) {
       getWeekAhead(now), getWeeklyReviewRecords(), getActiveDay(), getCurrentlyEligibleUnresolvedObligations(),
     ]);
     const [sleepEvents, revisions, pattern] = await Promise.all([
-      db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_CORRECTED", "SLEEP_LOG_VOIDED", "MEAL_LOGGED", "MEAL_LOG_VOIDED", "WATER_LOGGED", "WATER_LOG_VOIDED"]).toArray(),
+      db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_CORRECTED", "SLEEP_LOG_VOIDED", "MEAL_LOGGED", "MEAL_LOG_VOIDED", "WATER_LOGGED", "WATER_LOG_VOIDED", "LOG_RETIMED"]).toArray(),
       db.externalSleepRevisions.toArray(), getSchedulePattern(),
     ]);
     const window = finishedLivedDays(now, 0, 56);
@@ -110,9 +111,11 @@ function dayMarks(events: readonly DomainEvent[]): Map<string, { meals: number[]
   const voidedMeals = new Set(events.filter((e) => e.type === "MEAL_LOG_VOIDED").map((e) => (e.payload as { mealEventId: string }).mealEventId));
   const voidedWater = new Set(events.filter((e) => e.type === "WATER_LOG_VOIDED").map((e) => (e.payload as { loggedEventId: string }).loggedEventId));
   const result = new Map<string, { meals: number[]; water: number[] }>();
+  // LOG-TIME-001: a log sits where it actually happened.
+  const times = effectiveLogTimes(events);
   for (const e of events) {
     const live = e.type === "MEAL_LOGGED" ? !voidedMeals.has(e.id) : e.type === "WATER_LOGGED" ? !voidedWater.has(e.id) : false;
-    const at = Date.parse(e.occurredAt);
+    const at = Date.parse(times.get(e.id) ?? e.occurredAt);
     if (!live || !e.beyondDayId || !Number.isFinite(at)) continue;
     const day = result.get(e.beyondDayId) ?? { meals: [], water: [] };
     (e.type === "MEAL_LOGGED" ? day.meals : day.water).push(at);

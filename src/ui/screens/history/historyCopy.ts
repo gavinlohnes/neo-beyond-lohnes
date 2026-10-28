@@ -82,6 +82,8 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return "Work marked ended.";
     case "WORK_PERIOD_STARTED":
       return "Work marked started.";
+    case "LOG_RETIMED":
+      return `${p.loggedType === "WATER_LOGGED" ? "Water" : p.loggedType === "MEAL_LOGGED" ? "Meal" : "Protein"} log moved to ${new Date(String(p.occurredAt)).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}.`;
     case "WORK_CONTEXT_SET":
       return `Work context set to ${p.workContext} (${
         p.source === "MANUAL" ? "manual" : p.source === "SCHEDULE_STANDING" ? "per your saved schedule" : "accepted schedule suggestion"

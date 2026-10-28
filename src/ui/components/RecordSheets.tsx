@@ -2,6 +2,7 @@ import { captureCommitFeedback } from "../feel/feedback";
 import { useHiddenFeatures } from "../hiddenFeatures";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LogSheet } from "./LogSheet";
+import { resolveWhen, type WhenChoice } from "../../application/logTimes";
 import { BodyScreen } from "../screens/body/BodyScreen";
 import type { RecordCorrectionRequest, RecordSheetTarget } from "../recordSheets";
 import type { SavedMeal } from "../../domain/common/types";
@@ -53,6 +54,9 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
 }) {
   const hiddenFeatures = useHiddenFeatures();
   const [busy, setBusyState] = useState(false); const busyRef = useRef(false);
+  // LOG-TIME-001: when the drink or meal happened; NOW unless the operator says otherwise.
+  const [when, setWhen] = useState<WhenChoice>({ kind: "NOW" });
+  const whenAt = (dayStartedAt: string) => resolveWhen(when, dayStartedAt, new Date());
   function setBusy(next: boolean) { busyRef.current = next; setBusyState(next); onBusy(next); }
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState(""); const [meals, setMeals] = useState<SavedMeal[]>([]);
@@ -148,12 +152,14 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       {busy && <p role="status">Saving…</p>}
       {error && <p role="alert">{error}</p>}
       {target === "water" && page !== "waterDetails" && <>
-        <div className="cc-amounts">{[8, 12, 16, 24].map((amount) => <button type="button" key={amount} className="today-sheet__option" disabled={busy} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const id = await logWater(day.id, amount); return { message: `${amount} oz recorded.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>+{amount} oz</button>)}</div>
-        <button type="button" className="today-sheet__option" disabled={busy || lastWater === null || readState !== "ready"} onClick={() => lastWater !== null && void commit(async () => { const day = await ensureActiveDay(); const amount = lastWater; const id = await logWater(day.id, amount); return { message: `${amount} oz recorded.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>Repeat last{lastWater === null ? "" : ` (${lastWater} oz)`}</button>
+        <WhenRow when={when} onChange={setWhen} disabled={busy} />
+        <div className="cc-amounts">{[8, 12, 16, 24].map((amount) => <button type="button" key={amount} className="today-sheet__option" disabled={busy} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const at = whenAt(day.startedAt); const id = await logWater(day.id, amount, at); setWhen({ kind: "NOW" }); return { message: `${amount} oz recorded${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>+{amount} oz</button>)}</div>
+        <button type="button" className="today-sheet__option" disabled={busy || lastWater === null || readState !== "ready"} onClick={() => lastWater !== null && void commit(async () => { const day = await ensureActiveDay(); const amount = lastWater; const at = whenAt(day.startedAt); const id = await logWater(day.id, amount, at); setWhen({ kind: "NOW" }); return { message: `${amount} oz recorded${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>Repeat last{lastWater === null ? "" : ` (${lastWater} oz)`}</button>
         <button type="button" className="btn-secondary" onClick={() => { setBodyFocus("water"); setBodyRequest((key) => key + 1); setPage("waterDetails"); }}>Custom amount & entries</button>
         <button type="button" className="btn-secondary" onClick={() => onHistory("water")}>WATER HISTORY</button>
       </>}
       {(target === "meal" || target === "myMeals") && <>
+        {(page === "list" || page === "new" || page === "quick" || page === "portion") && <WhenRow when={when} onChange={setWhen} disabled={busy} />}
         {page !== "list" && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPage("list")}>BACK TO MY MEALS</button>}
         {page === "list" && <>
           {/* NAV-001: starting a new meal comes first, not after the whole list. */}
@@ -166,7 +172,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
             <h3>{target === "myMeals" ? "MY MEALS" : query.trim() ? "MATCHES" : "LIKELY NOW"}</h3>
             {(target === "myMeals" && !query.trim() ? meals : displayed).map((meal) => <div className="record-meal-row" key={meal.id}>
               <button type="button" className="btn-secondary" disabled={busy} aria-label={`Servings for ${meal.name}`} onClick={() => chooseMeal(meal)}><strong>{meal.name}</strong><span className="meta">{meal.calories} kcal · {meal.proteinG} g protein · 1 serving</span></button>
-              <button type="button" className="btn-secondary" disabled={busy} aria-label={`Log ${meal.name}`} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const result = await logMeal(day.id, meal.id); return mealReceipt(day.id, result.eventId, result.name); })}>LOG</button>
+              <button type="button" className="btn-secondary" disabled={busy} aria-label={`Log ${meal.name}`} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const result = await logMeal(day.id, meal.id, 1, whenAt(day.startedAt)); setWhen({ kind: "NOW" }); return mealReceipt(day.id, result.eventId, result.name); })}>LOG</button>
             </div>)}
             {!displayed.length && <p>No matching meals.</p>}
           </>}
@@ -178,7 +184,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
           {page === "new" && <label className="save-meal-choice"><input type="checkbox" disabled={busy} checked={saveNext} onChange={(event) => setSaveNext(event.target.checked)} />Save for next time</label>}
           <button type="button" className="btn-primary" disabled={busy} onClick={() => void commit(async () => {
             const input = parse(page === "quick" ? quick : form); const day = await ensureActiveDay();
-            const result = await logManualMeal(day.id, input, page === "new" && saveNext);
+            const result = await logManualMeal(day.id, input, page === "new" && saveNext, whenAt(day.startedAt)); setWhen({ kind: "NOW" });
             if (page === "quick") setQuick({ ...EMPTY, name: "Quick add" }); else { setForm(EMPTY); setSaveNext(false); }
             return mealReceipt(day.id, result.eventId, result.name);
           })}>LOG</button>
@@ -186,7 +192,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         {page === "portion" && selected && <>
           <h3>{selected.name}</h3><div className="cc-amounts">{[.5, 1, 1.5, 2].map((amount) => <button type="button" className="chip" aria-pressed={servings === amount} disabled={busy} key={amount} onClick={() => setServings(amount)}>{amount} serving{amount === 1 ? "" : "s"}</button>)}</div>
           <p>{selected.calories * servings} kcal · {selected.proteinG * servings} g protein</p>
-          <button type="button" className="btn-primary" disabled={busy} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const result = await logMeal(day.id, selected.id, servings); return mealReceipt(day.id, result.eventId, result.name); })}>LOG</button>
+          <button type="button" className="btn-primary" disabled={busy} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const result = await logMeal(day.id, selected.id, servings, whenAt(day.startedAt)); setWhen({ kind: "NOW" }); return mealReceipt(day.id, result.eventId, result.name); })}>LOG</button>
           <button type="button" className="btn-secondary" onClick={() => { setEdit({ name: selected.name, calories: String(selected.calories), proteinG: String(selected.proteinG), carbsG: String(selected.carbsG), fatG: String(selected.fatG) }); setPage("edit"); }}>EDIT SAVED MEAL</button>
         </>}
         {page === "edit" && selected && <>
@@ -250,4 +256,20 @@ export function useScrollAway(): boolean {
 export function LogActions({ open, busy = false, isInFlight = () => busy }: { open: (target: RecordSheetTarget) => void; busy?: boolean; isInFlight?: () => boolean }) {
   const away = useScrollAway();
   return <div className="console-controls cc-actions cc-actions--two" role="group" aria-label="Log actions">{([['water', 'WATER'], ['meal', 'MEAL'], ['log', 'LOG']] as const).map(([target, label]) => <button type="button" className={target === "log" ? `cc-act cc-fab${away ? " cc-fab--away" : ""}` : "cc-act"} aria-label={target === 'water' ? 'Log water' : target === 'meal' ? 'Log a meal' : 'Open LOG'} aria-haspopup="dialog" disabled={busy} key={target} onClick={() => { if (!isInFlight()) open(target); }}>{CcIcon[target === "log" ? "plus" : target === "meal" ? "meal" : "water"]()}{label}</button>)}</div>;
+}
+
+const clockOf = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+/**
+ * LOG-TIME-001: one extra tap to say when it happened. NOW is the default; a time ahead within the day
+ * is a pre-log. The choice applies to the next log only, then returns to NOW.
+ */
+function WhenRow({ when, onChange, disabled }: { when: WhenChoice; onChange: (w: WhenChoice) => void; disabled: boolean }) {
+  const ago = (minutes: number) => when.kind === "AGO" && when.minutes === minutes;
+  return <div className="log-when" role="group" aria-label="When">
+    <span className="log-when__key">WHEN</span>
+    <button type="button" className="chip" aria-pressed={when.kind === "NOW"} disabled={disabled} onClick={() => onChange({ kind: "NOW" })}>NOW</button>
+    {[30, 60, 120].map((m) => <button type="button" key={m} className="chip" aria-pressed={ago(m)} disabled={disabled} onClick={() => onChange({ kind: "AGO", minutes: m })}>{m < 60 ? `${m} MIN` : `${m / 60} H`} AGO</button>)}
+    <input type="time" className="input log-when__at" aria-label="Pick a time" disabled={disabled} value={when.kind === "AT" ? when.hhmm : ""} onChange={(e) => onChange(e.target.value ? { kind: "AT", hhmm: e.target.value } : { kind: "NOW" })} />
+  </div>;
 }

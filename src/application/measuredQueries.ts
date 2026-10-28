@@ -109,6 +109,6 @@ export async function getMeasuredSnapshot(now = Date.now()): Promise<MeasuredSna
   return {
     ...snapshot,
     eaten: eatenByPeriod(periods, kcalByDay, now),
-    eatenToday: cumulativeEaten(measured.current, meals.map((m) => ({ recordedAt: m.recordedAt, calories: m.effectiveCalories })), now),
+    eatenToday: cumulativeEaten(measured.current, meals.map((m) => ({ recordedAt: m.at, calories: m.effectiveCalories })), now),
   };
 }

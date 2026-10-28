@@ -76,7 +76,7 @@ export async function getShiftChange(now: Date = new Date()): Promise<ShiftChang
   const [brief, route] = await Promise.all([getCaveBrief(now), getCaveRoute(now)]);
   if (!brief?.shift) return null;
   const [water, meals, protein] = await Promise.all([getHydrationEntries(brief.dayId), getMealEntries(brief.dayId), getProteinEntries(brief.dayId)]);
-  return buildShiftChange(brief, route, now, { water: water.map((w) => w.recordedAt), food: [...meals.map((m) => m.recordedAt), ...protein.map((p) => p.recordedAt)] });
+  return buildShiftChange(brief, route, now, { water: water.map((w) => w.at), food: [...meals.map((m) => m.at), ...protein.map((p) => p.at)] });
 }
 
 /** How long around the scheduled start TODAY offers the one-tap STARTED WORK. */

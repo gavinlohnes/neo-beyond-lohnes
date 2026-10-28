@@ -28,6 +28,7 @@ import type {
 import { SHIFT_HANDOFF_MAX_LENGTH } from "../domain/common/types";
 import type { PerformedSet } from "../domain/workout/types";
 import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
+import { checkLogTime, effectiveLogTimes } from "./logTimes";
 import { getStandingWorkContext, getWorkPeriodEnded, getWorkPeriodStarted, hasActivePlannedWork, hasUnresolvedPostShift } from "./queries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 
@@ -700,14 +701,18 @@ export async function logBodyweight(beyondDayId: string, weightLbs: number): Pro
  * only, explicitly no daily target — "not carrying over the old legacy
  * mockup's 165g+ target."
  */
-export async function logProtein(beyondDayId: string, grams: number): Promise<string> {
+export async function logProtein(beyondDayId: string, grams: number, at?: string): Promise<string> {
   const correlationId = newId();
+  // LOG-TIME-001: when it was eaten, inside this lived day; omitted means now.
+  const occurredAt = at === undefined ? undefined : await placeInDay(beyondDayId, at);
   return logEvent(
     beyondDayId,
     "PROTEIN_LOGGED",
     { commandId: correlationId, grams },
     "USER",
     correlationId,
+    undefined,
+    occurredAt,
   );
 }
 
@@ -1029,15 +1034,53 @@ export async function markRecoverConnectCompleted(
 export async function logWater(
   beyondDayId: string,
   amountOz: number,
+  // LOG-TIME-001: when the drink happened, inside this lived day; omitted means now.
+  at?: string,
 ): Promise<string> {
   const correlationId = newId();
+  const occurredAt = at === undefined ? undefined : await placeInDay(beyondDayId, at);
   return logEvent(
     beyondDayId,
     "WATER_LOGGED",
     { commandId: correlationId, amountOz },
     "USER",
     correlationId,
+    undefined,
+    occurredAt,
   );
+}
+
+/** LOG-TIME-001: a time a log can take on this day, as ISO; throws outside the lived day. */
+export async function placeInDay(beyondDayId: string, at: string): Promise<string> {
+  const day = await db.beyondDays.get(beyondDayId);
+  if (!day) throw new Error("DAY_NOT_FOUND");
+  return checkLogTime(day.startedAt, at);
+}
+
+/**
+ * LOG-TIME-001: move a water, protein or meal log to when it actually happened. Additive: a
+ * LOG_RETIMED fact naming the original log; the log and its amount corrections are never touched,
+ * and the latest retime wins. A voided log cannot move; a no-op move writes nothing.
+ */
+export async function retimeLog(beyondDayId: string, rootEventId: string, at: string): Promise<boolean> {
+  const occurredAt = await placeInDay(beyondDayId, at);
+  return writeAtomically(DAY_WRITE_TABLES, async () => {
+    const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
+    const root = events.find((e) => e.id === rootEventId);
+    if (!root || (root.type !== "WATER_LOGGED" && root.type !== "PROTEIN_LOGGED" && root.type !== "MEAL_LOGGED")) {
+      throw new Error("RETIME_TARGET_INVALID: only an original water, protein or meal log can move.");
+    }
+    const voided =
+      (root.type === "WATER_LOGGED" && isBodyLogVoided(events, "WATER_LOG_VOIDED", root.id)) ||
+      (root.type === "PROTEIN_LOGGED" && isProteinLogVoided(events, root.id)) ||
+      (root.type === "MEAL_LOGGED" && events.some((e) => e.type === "MEAL_LOG_VOIDED" && (e.payload as { mealEventId: string }).mealEventId === root.id));
+    if (voided) throw new Error("LOG_VOIDED: this entry was undone and can no longer move.");
+    const current = effectiveLogTimes(events).get(root.id) ?? root.occurredAt;
+    if (Date.parse(current) === Date.parse(occurredAt)) return false;
+    const correlationId = newId();
+    await logEvent(beyondDayId, "LOG_RETIMED", { commandId: correlationId, rootEventId: root.id, loggedType: root.type, occurredAt }, "USER", correlationId, root.id);
+    return true;
+  });
 }
 
 /**

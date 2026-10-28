@@ -1,6 +1,6 @@
 import { writeAtomically } from "./atomicWrite";
 import { db } from "../persistence/db";
-import { logEvent, newId } from "./commands";
+import { logEvent, newId, placeInDay } from "./commands";
 import type {
   DomainEvent,
   MealLogCorrectedPayload,
@@ -110,8 +110,10 @@ export interface MealLogResult {
  * (parseSavedMeal) and eligibility (archivedAt) semantics getSavedMeals
  * already uses, rather than a second, parallel definition of "valid."
  */
-export async function logMeal(beyondDayId: string, savedMealId: string, servings = 1): Promise<MealLogResult> {
+export async function logMeal(beyondDayId: string, savedMealId: string, servings = 1, at?: string): Promise<MealLogResult> {
   if (![0.5, 1, 1.5, 2].includes(servings)) throw new Error("Choose a supported serving amount.");
+  // LOG-TIME-001: when it was eaten, inside this lived day; omitted means now.
+  const occurredAt = at === undefined ? undefined : await placeInDay(beyondDayId, at);
   return writeAtomically(["savedMeals"], async () => {
     const raw = await db.savedMeals.get(savedMealId);
     if (!raw) throw notFound(savedMealId);
@@ -139,6 +141,8 @@ export async function logMeal(beyondDayId: string, savedMealId: string, servings
       { commandId: correlationId, ...snapshot },
       "USER",
       correlationId,
+      undefined,
+      occurredAt,
     );
     return { eventId, name: meal.name, calories: snapshot.calories, proteinG: snapshot.proteinG, carbsG: snapshot.carbsG, fatG: snapshot.fatG };
   });
@@ -148,12 +152,13 @@ export async function logMeal(beyondDayId: string, savedMealId: string, servings
  * Preset provenance is null unless the operator actually chose to create one.
  * Existing MEAL_LOGGED correction/void chains and backup formats are unchanged.
  */
-export async function logManualMeal(beyondDayId: string, input: SavedMealInput, saveForNextTime = false): Promise<MealLogResult> {
+export async function logManualMeal(beyondDayId: string, input: SavedMealInput, saveForNextTime = false, at?: string): Promise<MealLogResult> {
   const parsed = savedMealInputSchema.parse(input);
+  const occurredAt = at === undefined ? undefined : await placeInDay(beyondDayId, at);
   return writeAtomically(["savedMeals"], async () => {
     const preset = saveForNextTime ? await createSavedMeal(parsed) : null;
     const commandId = newId();
-    const eventId = await logEvent(beyondDayId, "MEAL_LOGGED", { commandId, savedMealId: preset?.id ?? null, ...parsed }, "USER", commandId);
+    const eventId = await logEvent(beyondDayId, "MEAL_LOGGED", { commandId, savedMealId: preset?.id ?? null, ...parsed }, "USER", commandId, undefined, occurredAt);
     return { eventId, ...parsed };
   });
 }

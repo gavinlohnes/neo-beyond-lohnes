@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { effectiveLogTimes } from "./logTimes";
 import { parseSavedMeal } from "../persistence/nutritionValidation";
 import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 import type {
@@ -116,6 +117,8 @@ export async function getRecentSavedMeals(limit = Number.POSITIVE_INFINITY, now?
  * entirely — every total built on this function drops it with it.
  */
 export interface NutritionEntry {
+  /** LOG-TIME-001: when it was eaten (a retime, else the log's own occurredAt). */
+  at: string;
   rootEventId: string;
   headEventId: string;
   savedMealId: string | null;
@@ -144,6 +147,7 @@ export async function getMealEntries(beyondDayId: string): Promise<NutritionEntr
     (e): e is DomainEvent<MealLogCorrectedPayload> => e.type === "MEAL_LOG_CORRECTED",
   );
 
+  const times = effectiveLogTimes(events);
   return logged
     .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
     .map((root): NutritionEntry => {
@@ -164,6 +168,7 @@ export async function getMealEntries(beyondDayId: string): Promise<NutritionEntr
         next = corrections.find((c) => c.payload.supersedesEventId === headId);
       }
       return {
+        at: times.get(root.id) ?? root.occurredAt,
         rootEventId: root.id,
         headEventId: headId,
         savedMealId: root.payload.savedMealId,

@@ -45,3 +45,12 @@
    entrance as a fade so the floating LOG stays above navigation from its first frame. */
 #workspace-TODAY.tab-enter { animation-name: today-log-tab-in; }
 @keyframes today-log-tab-in { from { opacity: 0; } to { opacity: 1; } }
+/* LOG-TIME-001: when it happened, one row above the amounts. */
+.log-when { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 12px; }
+.log-when__key { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; color: var(--p-t2, var(--text-2)); margin-right: 4px; }
+.log-when .chip { min-height: 44px; padding-inline: 10px; }
+.log-when .log-when__at { min-height: 44px; width: auto; padding-inline: 8px; }
+.log-time { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.log-time__change { min-height: 44px; padding: 0 8px; background: none; border: 1px solid var(--border-subtle); color: inherit; font: inherit; font-size: 12px; letter-spacing: 0.1em; cursor: pointer; }
+.log-time--open .input { min-height: 44px; width: auto; }
+.log-time--open .btn-secondary { width: auto; min-height: 44px; margin: 0; padding-inline: 12px; }
