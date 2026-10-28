@@ -1,0 +1,34 @@
+/* SHIFT-CHANGE-001: the end of a shift, once. One-shot motion only; reduced motion shows it still. */
+.shift-change { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.94); overflow-y: auto; }
+.shift-change__panel { position: relative; width: min(100%, 520px); display: grid; gap: 14px; padding: 28px 20px 20px; border: 1px solid var(--border-strong, #2a2a2a); background: var(--bg, #000); overflow: hidden;
+  animation: shift-change-in 360ms var(--motion-easing, ease-out) both; }
+.shift-change__sweep { position: absolute; top: 0; left: 0; height: 2px; width: 100%; background: var(--red); transform-origin: left; animation: shift-change-sweep 700ms var(--motion-easing, ease-out) 120ms both; }
+.shift-change__mark { justify-self: start; }
+.shift-change__kicker { margin: 0; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.18em; color: var(--text-2); }
+.shift-change__clock { margin: 0; display: grid; gap: 6px; white-space: nowrap; font-family: var(--font-mono); font-size: clamp(48px, 15vw, 84px); line-height: 1; letter-spacing: 0.02em; color: var(--text-1); outline: none; }
+.shift-change__clock small { font-size: 12px; letter-spacing: 0.18em; color: var(--text-2); }
+.shift-change__signal { margin: 0; padding: 10px 12px; border-left: 2px solid var(--warning); color: var(--text-1); }
+.shift-change__rows { list-style: none; margin: 0; padding: 0; display: grid; }
+.shift-change__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto); gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle);
+  animation: shift-change-stamp 280ms var(--motion-easing, ease-out) both; }
+.shift-change__label { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; color: var(--text-2); }
+.shift-change__value { text-align: right; color: var(--text-1); }
+/* One amber at most: the signal. Rows say on or off plan in words. */
+.shift-change__value em { font-style: normal; color: var(--text-2); }
+.shift-change--landing .shift-change__row { grid-template-columns: minmax(0, 1fr); }
+.shift-change--landing .shift-change__value { text-align: left; }
+.shift-change__clear { margin: 0; color: var(--text-1); }
+.shift-change__plan { margin: 0; display: grid; gap: 4px; padding: 12px; background: var(--surface-1, #070707); color: var(--text-1); }
+.shift-change__plan span { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.18em; color: var(--text-2); }
+.shift-change__actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.shift-change__actions .btn-secondary { min-height: 48px; margin: 0; }
+@keyframes shift-change-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes shift-change-sweep { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes shift-change-stamp { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .shift-change__panel, .shift-change__sweep, .shift-change__row { animation: none; } }
+/* SHIFT-CHANGE-001: one tap for "on the clock now", inside TODAY's mode hero. */
+.cc-mode .work-start { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; width: calc(100% + 32px); margin: 0 -16px; padding: 8px 16px; border-top: 1px solid var(--p-line); background: var(--p-bg); position: relative; z-index: 1; }
+.cc-mode .work-start--on { margin: 0 -16px; color: var(--p-t1, var(--text-1)); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; }
+.work-start__key { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; color: var(--p-t2, var(--text-2)); }
+.cc-mode .work-start__go { width: auto; min-height: 44px; margin: 0; padding-inline: 16px; }
+.cc-mode .work-start .meta--error { grid-column: 1 / -1; margin: 0; }

@@ -159,3 +159,5 @@
 .cave__since small { font-size: 0.8125rem; }
 .cave__asks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .cave__asks .chip { min-height: 44px; }
+.brief__on { margin: 8px 0 0; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; color: var(--text-1); }
+.brief__start { width: auto; min-height: 44px; margin-top: 10px; padding-inline: 18px; }

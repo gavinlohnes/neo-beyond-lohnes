@@ -80,6 +80,8 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Outcome rated: ${p.rating}.`;
     case "WORK_PERIOD_ENDED":
       return "Work marked ended.";
+    case "WORK_PERIOD_STARTED":
+      return "Work marked started.";
     case "WORK_CONTEXT_SET":
       return `Work context set to ${p.workContext} (${
         p.source === "MANUAL" ? "manual" : p.source === "SCHEDULE_STANDING" ? "per your saved schedule" : "accepted schedule suggestion"

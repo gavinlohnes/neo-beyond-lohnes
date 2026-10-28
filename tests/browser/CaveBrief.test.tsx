@@ -60,6 +60,9 @@ it("after the shift, TODAY offers the debrief and the cave sets planned beside a
   vi.setSystemTime(new Date(2026, 9, 17, 6, 30));
   const before = await db.events.toArray();
   const screen = await render(<App />);
+  // SHIFT-CHANGE-001: the end of the shift takes the screen once first, from the real end.
+  await expect.element(screen.getByRole("dialog", { name: "Shift secured. 11:40 on the clock." })).toBeVisible();
+  await screen.getByRole("button", { name: "CONTINUE", exact: true }).click();
   await screen.getByRole("button", { name: /^After-action ready\. Shift's done\. Here's how it went against the plan\. Open the brief/ }).click();
   const cave = screen.getByRole("region", { name: "THE CAVE // BRIEF" });
   await expect.element(cave.getByRole("button", { name: "AFTER-ACTION", exact: true })).toHaveAttribute("aria-pressed", "true");

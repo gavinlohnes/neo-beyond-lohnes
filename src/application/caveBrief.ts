@@ -9,7 +9,7 @@ import { getMemoryFacts } from "./memory";
 import { getMealEntries } from "./nutritionQueries";
 import { getPaceHistories, minuteOfDay, paceReading, paceUsual, type PaceReading } from "./pace";
 import { getPreparation } from "./preparation";
-import { getActiveDay, getHydrationEntries, getLatestCheckIn, getProteinEntries, getWorkPeriodEnded } from "./queries";
+import { getActiveDay, getHydrationEntries, getLatestCheckIn, getProteinEntries, getWorkPeriodEnded, getWorkPeriodStarted } from "./queries";
 import { isShiftDebrief, livedDayStartOf } from "./reflect";
 import { getShiftHandoffState, type ShiftHandoffNote } from "./shiftHandoffQueries";
 import { getSystemsReadout } from "./systemsReadoutQueries";
@@ -49,6 +49,10 @@ export interface CaveBrief {
   lastDebrief: { felt: string; next?: string | undefined; at: string } | null;
   prep: PreparationState | null;
   aar: AarRow[] | null;
+  /** Work marked ended, when it was (SHIFT-CHANGE-001 reads the real end). */
+  endedAt?: string | null | undefined;
+  /** Work marked started, when it was (SHIFT-CHANGE-001 reads the real start). */
+  startedAt?: string | null | undefined;
 }
 
 export interface BriefInputs {
@@ -72,6 +76,8 @@ export interface BriefInputs {
   memory: readonly MemoryFact[];
   debriefs: readonly DecisionJournalEntry[];
   workEndedAt: string | null;
+  /** SHIFT-CHANGE-001: work marked started, when it was. */
+  workStartedAt?: string | null | undefined;
 }
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -86,7 +92,7 @@ export function buildCaveBrief(input: BriefInputs): CaveBrief {
   const end = route.waypoints.find((w) => w.kind === "SHIFT_END");
   const shift = start && end ? { start: start.at, end: end.at } : null;
   const t = now.getTime();
-  const phase: BriefPhase = !shift ? "NO_SHIFT" : input.workEndedAt || t >= Date.parse(shift.end) ? "AFTER" : t >= Date.parse(shift.start) ? "ON" : "BEFORE";
+  const phase: BriefPhase = !shift ? "NO_SHIFT" : input.workEndedAt || t >= Date.parse(shift.end) ? "AFTER" : input.workStartedAt || t >= Date.parse(shift.start) ? "ON" : "BEFORE";
   const open = (done: boolean): CheckState => done ? "GO" : phase === "BEFORE" || phase === "NO_SHIFT" ? "HOLD" : "LATE";
   const cutoff = shift ? Date.parse(shift.start) : t;
   const items: CheckItem[] = [];
@@ -139,7 +145,8 @@ export function buildCaveBrief(input: BriefInputs): CaveBrief {
     const today = debriefs.filter((d) => Date.parse(d.createdAt) >= dayStart).at(-1);
     aar = [
       { key: "SHIFT", label: "SHIFT", planned: `${clock(shift.start)}–${clock(shift.end)}`, verdict: "NONE",
-        actual: input.workEndedAt ? `Ended ${clock(input.workEndedAt)}` : "Per schedule" },
+        actual: [input.workStartedAt ? `Started ${clock(input.workStartedAt)}` : null, input.workEndedAt ? `ended ${clock(input.workEndedAt)}` : null]
+          .filter(Boolean).join(" · ").replace(/^ended/, "Ended") || "Per schedule" },
       { key: "PRE_MEAL", label: "MEAL BEFORE", planned: `By ${clock(shift.start)}`, verdict: preShiftMeal ? "ON_PLAN" : "OFF_PLAN",
         actual: preShiftMeal ? clock(preShiftMeal.at) : "None logged" },
       { key: "ON_SHIFT_MEALS", label: "MEALS ON SHIFT", planned: "Your call", verdict: "NONE",
@@ -157,7 +164,7 @@ export function buildCaveBrief(input: BriefInputs): CaveBrief {
 
   return {
     dayId: input.dayId, phase, shift, items, open: items.filter((i) => i.state === "HOLD" || i.state === "LATE").map((i) => i.system),
-    handoff: input.handoff, prep: input.prep, lastDebrief, aar,
+    handoff: input.handoff, prep: input.prep, lastDebrief, aar, endedAt: input.workEndedAt, startedAt: input.workStartedAt ?? null,
     memory: input.memory.filter((m) => m.status === "ACTIVE" && m.kind.startsWith("PREP")).map((m) => ({ kind: m.kind, statement: m.statement })),
   };
 }
@@ -181,6 +188,7 @@ export async function getCaveBrief(now: Date = new Date()): Promise<CaveBrief | 
     getPreparation(day.id).catch(() => null), getShiftHandoffState(), getMemoryFacts().catch(() => []), getDecisionJournalEntries(),
     getWorkPeriodEnded(day.id), getPaceHistories(day, now),
   ]);
+  const started = await getWorkPeriodStarted(day.id);
   const minute = minuteOfDay(histories.dayStart, now);
   const shiftEnd = route.waypoints.find((w) => w.kind === "SHIFT_END");
   const endMinute = shiftEnd ? minuteOfDay(histories.dayStart, new Date(ended?.occurredAt ?? shiftEnd.at)) : minute;
@@ -199,6 +207,6 @@ export async function getCaveBrief(now: Date = new Date()): Promise<CaveBrief | 
     proteinTotal, waterTotal,
     pace: { protein: paceReading("protein", proteinTotal, histories.protein, minute), water: paceReading("water", waterTotal, histories.water, minute) },
     usualByEnd: { protein: paceUsual(histories.protein, endMinute), water: paceUsual(histories.water, endMinute) },
-    prep, handoff: handoffState.unread ?? null, memory, debriefs: journal, workEndedAt: ended?.occurredAt ?? null,
+    prep, handoff: handoffState.unread ?? null, memory, debriefs: journal, workEndedAt: ended?.occurredAt ?? null, workStartedAt: started?.occurredAt ?? null,
   });
 }
