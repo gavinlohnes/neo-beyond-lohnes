@@ -2350,6 +2350,12 @@ shown once, and never looping.
 
   A tap there closes the moment, and TODAY reads "ON THE CLOCK" at once.
 
+- **WORK ENDED, one tap (FIELD-REHEARSAL-002, Gavin: "Go H.A.M."):** ending a shift was buried in
+  TODAY's tools at the moment it mattered. LANDING now carries WORK ENDED. Tap it and SHIFT SECURED
+  follows at once, counted to the real end. TODAY's shift line offers WORK ENDED from 2 hours before
+  the scheduled end until it is tapped, beside "ON THE CLOCK". Both use TODAY's existing end-work path,
+  so the handoff-note prompt still follows.
+
 ## LOG-TIME-001 — when it actually happened (owner go, 2026-10-28)
 
 Gavin: "make it so I can edit the times … Sometimes I eat or drink and don't log it for a while. Or I

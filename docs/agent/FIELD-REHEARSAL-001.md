@@ -36,3 +36,23 @@ On TODAY, it also checks that at most one suit band is accented and nothing is s
    It now reads "food and bottle".
 4. **On the first day off, TONIGHT said "no full day off since".** It now says "today is your first
    day off". Later days off add "and today".
+
+## FIELD-REHEARSAL-002 — one whole shift, through the screens
+
+`tests/browser/FullShift.test.tsx` uses the same eight weeks (`tests/browser/helpers/rotation.ts`) and
+walks one shift using only taps, reopening the app at each moment the way a phone is picked up:
+- 16:45: START DAY, then PREFLIGHT, then STARTED WORK;
+- 17:30: a quick-add meal logged for 17:10;
+- 21:00: water, then CHANGE TIME to 20:30;
+- 05:30: LANDING, with the strip showing both;
+- 05:50: WORK ENDED on TODAY;
+- 06:30: SHIFT SECURED at 13:05 on the clock, from the real start and end.
+
+Every stop is checked for overflow and axe AA.
+
+It found and fixed:
+1. **TODAY's comms line said "Water 0 oz" after a drink.** It re-read only every 5 minutes. TODAY's
+   suit bands now re-read on every finished refresh.
+2. **WORK ENDED was out of reach in the last minutes of a shift.** It is now one tap on LANDING and
+   on TODAY's shift line.
+3. **SECURED's "on plan" rows took PREFLIGHT's GO styling.** The style is now scoped to PREFLIGHT.

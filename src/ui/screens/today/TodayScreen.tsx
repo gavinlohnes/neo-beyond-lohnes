@@ -489,6 +489,9 @@ export function TodayScreen({
   const [measured, setMeasured] = useState<MeasuredSnapshot | null>(null);
   const [measuredOpen, setMeasuredOpen] = useState<MeasuredMetric | null>(null);
   const [waterLogCount, setWaterLogCount] = useState(0);
+  // FIELD-REHEARSAL-002: bumped by every finished refresh, so the suit bands re-read after a save
+  // (the comms line said "Water 0 oz" for five minutes after a drink was logged).
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const [hydrationConfirmation, setHydrationConfirmation] = useState<LoggedEntry | null>(null);
   const [proteinConfirmation, setProteinConfirmation] = useState<LoggedEntry | null>(null);
   // TONIGHT-001: a meal logged from QUICK LOG or the MEAL sheet, with the same UNDO window.
@@ -929,6 +932,7 @@ export function TodayScreen({
     setAdvisoryNotes(advisoryNotes);
     setLastWaterAmount(lastWater);
     setWaterLogCount(waterLogs);
+    setRefreshVersion((v) => v + 1);
     setLatestWeightLbs(latestWeight);
     if (isOwner) { setSystemStatus(nextSystemStatus); setLastMainSleepMinutes(nextLastMainSleep?.minutes ?? null); setLastMainSleepFromGarmin(nextLastMainSleep?.fromGarmin ?? false); }
     // GARMIN-004: off the critical path; a failed Garmin read hides the Garmin tiles, nothing else.
@@ -2601,10 +2605,10 @@ export function TodayScreen({
             onPin={(phase) => { setModePin(day.id, phase); setModePinState({ dayId: day.id, phase }); }}
             onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
             systems={onOpenCave && <>
-              <SuitLines now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${recommendation?.id ?? ""}|${lastMainSleepMinutes ?? ""}|${capacityResult?.capacity ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onOpen={(tab) => { if (!busyRef.current) onOpenCave(tab); }} />
-              <StartedWork now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${workPeriodEndedAt ?? ""}|${workStartTick}|${Math.floor(now.getTime() / 300000)}`} onSaved={() => { setWorkStartTick((n) => n + 1); void refresh(); }} />
+              <SuitLines now={now} refreshKey={`${refreshVersion}|${day.id}|${day.workContext ?? ""}|${recommendation?.id ?? ""}|${lastMainSleepMinutes ?? ""}|${capacityResult?.capacity ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onOpen={(tab) => { if (!busyRef.current) onOpenCave(tab); }} />
+              <StartedWork now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${workPeriodEndedAt ?? ""}|${workStartTick}|${Math.floor(now.getTime() / 300000)}`} onSaved={() => { setWorkStartTick((n) => n + 1); void refresh(); }} onEndWork={() => void handleMarkWorkEnded()} />
               {/* SHIFT-CHANGE-001: the end of a shift, given the whole screen once. */}
-              <ShiftChangeMoment now={now} refreshKey={`${day.id}|${workPeriodEndedAt ?? ""}|${workStartTick}|${Math.floor(now.getTime() / 60000)}`} onOpen={() => { if (!busyRef.current) onOpenCave("brief"); }} onStarted={() => { setWorkStartTick((n) => n + 1); void refresh(); }} />
+              <ShiftChangeMoment now={now} refreshKey={`${day.id}|${workPeriodEndedAt ?? ""}|${workStartTick}|${Math.floor(now.getTime() / 60000)}`} onOpen={() => { if (!busyRef.current) onOpenCave("brief"); }} onStarted={() => { setWorkStartTick((n) => n + 1); void refresh(); }} onEndWork={() => void handleMarkWorkEnded()} />
             </>}
           >
             {/* The context sentence (or the countdown) stays for screen readers; the meta line shows it. */}
