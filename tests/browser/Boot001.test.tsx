@@ -32,11 +32,11 @@ describe("BOOT-001", () => {
     await expect.poll(() => document.querySelector(".boot")).toBeNull();
   });
 
-  it("plays: the icon file as-is, BEYOND types in, the status lines tick in, then it cuts away", async () => {
+  it("plays: the red bat mark, BEYOND types in, the status lines tick in, then it cuts away", async () => {
     await startDay();
     const screen = await render(<BootSequence />);
     await expect.element(screen.getByRole("status", { name: /BEYOND starting/ })).toBeVisible();
-    expect(document.querySelector<HTMLImageElement>(".boot__mark")!.getAttribute("src")).toMatch(/icons\/icon-192\.png$/);
+    expect(document.querySelector(".boot__mark path")!.getAttribute("fill")).toBe("#D0141B"); // SUIT-ALIVE-001
     await expect.element(screen.getByText("BEYOND", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("DAY 1", { exact: true })).toBeVisible();
     await waitPastEnd();

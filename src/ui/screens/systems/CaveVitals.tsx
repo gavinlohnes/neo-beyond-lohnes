@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CAVE_VITALS, describeCaveVital, formatCaveValue, getCaveVital, type CaveVital, type CaveVitalId } from "../../../application/caveVitals";
 import type { InsightMetric } from "../../../application/bodyInsightsQueries";
 import { describeError } from "../../errorMessage";
+import { BatMark } from "../../components/BatMark";
 import "./systems.css";
 
 /**
@@ -42,7 +43,7 @@ export function CaveVitals({ initial, onBack, onOpenMetric }: {
   return (
     <section className="cave" aria-labelledby="cave-title">
       <div className="cave__head">
-        <h2 id="cave-title" className="cave__title">THE CAVE <span>// VITALS</span></h2>
+        <h2 id="cave-title" className="cave__title"><BatMark width={24} className="cave__bat" />THE CAVE <span>// VITALS</span></h2>
         <button ref={backRef} type="button" className="cave__back" onClick={onBack}>BACK TO SYSTEMS</button>
       </div>
       <div className="cave__pick" role="group" aria-label="Vital">

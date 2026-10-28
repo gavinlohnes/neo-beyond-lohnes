@@ -2539,9 +2539,10 @@ button:not(:disabled):not(.btn-primary):not(.btn-danger):active {
   cursor: pointer;
 }
 .boot__mark {
-  width: 96px;
-  height: 96px;
+  clip-path: inset(0 50% 0 50%);
+  animation: boot-mark-reveal 420ms var(--motion-easing) 60ms forwards;
 }
+@keyframes boot-mark-reveal { to { clip-path: inset(0 0 0 0); } }
 .boot__line {
   display: block;
   width: min(240px, 70vw);

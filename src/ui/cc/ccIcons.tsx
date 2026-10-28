@@ -6,7 +6,6 @@ const svg = (w: number, h: number, children: React.ReactNode) =>
   <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true" focusable="false">{children}</svg>;
 
 export const CcIcon = {
-  emblem: () => svg(22, 22, <><path d="M11 1.5 20.5 11 11 20.5 1.5 11Z" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M11 6.5 15.5 11 11 15.5 6.5 11Z" fill="currentColor" /></>),
   today: () => svg(20, 20, <path d="M10 2 18 10 10 18 2 10Z" fill="none" stroke="currentColor" strokeWidth="1.5" />),
   train: () => svg(22, 20, <path d="M2 10h18M5 6v8M17 6v8M3 8v4M19 8v4" stroke="currentColor" strokeWidth="1.5" fill="none" />),
   body: () => svg(20, 20, <><path d="M10 2 17 6v8l-7 4-7-4V6Z" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M10 7v6M7 10h6" stroke="currentColor" strokeWidth="1.5" /></>),

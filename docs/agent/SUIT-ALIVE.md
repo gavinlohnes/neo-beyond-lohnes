@@ -33,3 +33,17 @@ Gavin approved the original red bat mark. [SUIT-ALIVE-001](../UX_DECISIONS.md) r
 emblem, the cave heading and the cold start only. EMBLEM-002 stays the app icon. Building it is S1,
 which needs its own go. The one open choice for S1 is which geometry: the prototype's mark or the
 EMBLEM-002 master.
+
+## S1 — the bat mark
+
+- **Authority:** Gavin, 2026-10-28: "go S1 with the prototype bat". Ruling: SUIT-ALIVE-001.
+- **Lane:** presentation only. No Engine, schema, event or navigation change.
+- **Built:** the original red bat (`#D0141B`) replaces the diamond glyph as the header emblem on every
+  primary screen. It keeps the emblem's jobs: tap goes to TODAY, long-press toggles stealth, same
+  accessible name, 44px target. It also sits beside THE CAVE heading, and replaces the app-icon
+  PNG on the cold start, where it opens from its center. The cold start never shows under reduced
+  motion, as before. Stealth keeps its own glyph, and the app icon (EMBLEM-002) is unchanged.
+- **One source:** `docs/brand/suit-mark/suit-mark.svg`. `src/ui/components/BatMark.tsx` draws it, and
+  `tests/ui/batMark.test.ts` keeps the geometry and color identical and the uses to the three places.
+- **REUSE:** the prototype's `#bat` path and its reveal, and the existing header emblem button.
+  **OWN:** `BatMark.tsx`. **BUILD FROM SCRATCH:** none.

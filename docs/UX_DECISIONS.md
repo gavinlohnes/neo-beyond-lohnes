@@ -2054,3 +2054,6 @@ seen it in the Suit & Cave prototype, "I'm good with the symbol. I kind of like 
   (what Gavin approved), or from the EMBLEM-002 master so the app has one bat. Either way the geometry
   gets one source file under `docs/brand/`, and nothing is redrawn from concept imagery.
 - This ruling records permission only. Building it is SUIT-ALIVE S1, which needs its own approval.
+- **S1 resolved 2026-10-28:** Gavin chose the prototype's geometry ("go S1 with the prototype bat").
+  Its one source is `docs/brand/suit-mark/suit-mark.svg`; `ui/components/BatMark.tsx` draws it, and
+  a test keeps the two identical. Stealth keeps its own discreet glyph.
