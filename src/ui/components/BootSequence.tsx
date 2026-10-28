@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { readBootMode } from "../screens/today/bootMode";
 import { MODE_NAMES, type ShiftClockPhase } from "../screens/today/shiftClock";
 import { describeBootStatus, getBootStatus } from "../../application/bootQueries";
+import { BatMark } from "./BatMark";
 
 /**
  * BOOT-001 (owner brief 2026-10-05): the cold-launch boot sequence, right
@@ -11,6 +12,8 @@ import { describeBootStatus, getBootStatus } from "../../application/bootQueries
  * across, "BEYOND" typing in, three status lines ticking in, then a cut to
  * whatever the app opened underneath (TODAY, a resumed workout, a
  * shortcut's destination). The app's own startup runs underneath unchanged.
+ * SUIT-ALIVE-001 (owner ruling 2026-10-28): the mark is now the original red bat, opening from its
+ * center; the app icon itself is unchanged.
  *
  * Once per page load (cold launch): a resume from the background never
  * remounts the app, so it never replays. Tap anywhere skips. With reduced
@@ -97,7 +100,7 @@ export function BootSequence() {
   const shownLines = Math.max(0, Math.min(lines.length, Math.floor((elapsed - STATUS_START_MS) / STATUS_STEP_MS) + 1));
   return (
     <div className="boot" role="status" aria-label="BEYOND starting — tap to skip" onPointerDown={skip} onClick={skip}>
-      <img className="boot__mark" src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={96} height={96} />
+      <BatMark width={156} className="boot__mark" />
       <span className="boot__line" aria-hidden="true" />
       <p className="boot__word">{elapsed >= TYPE_START_MS ? WORD.slice(0, typed) : ""}</p>
       <div className="boot__status">

@@ -29,6 +29,7 @@
 .cave__head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .cave__title { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: .3em; }
 .cave__title span { color: var(--text-2); letter-spacing: .2em; }
+.cave__bat { vertical-align: -2px; margin-right: 10px; }
 .cave__back { min-height: 44px; padding: 0 12px; background: none; border: 1px solid var(--border-subtle); color: var(--text-2); letter-spacing: .14em; font: inherit; font-size: 12px; cursor: pointer; }
 .cave__pick { display: flex; flex-wrap: wrap; gap: 6px; }
 .cave__pick .chip { min-height: 44px; padding-inline: 14px; }

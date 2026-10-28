@@ -1,3 +1,13 @@
+# SUIT-ALIVE S1 — the bat mark
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28, "go S1 with the prototype bat" (SUIT-ALIVE-001).
+  Claude Code; presentation only. [Brief](SUIT-ALIVE.md#s1--the-bat-mark).
+- **Baseline:** the SUIT-ALIVE-001 ruling (#313) merged as master `181aeea`.
+- **Built:** the red bat is the header emblem, sits beside THE CAVE heading and opens on the cold
+  start. It has one source SVG under `docs/brand/suit-mark/`. Stealth and the app icon are unchanged.
+- **Next:** CI and Gavin's merge. Then S3 (comms and Tonight, Protected) on his go.
+
+---
 # SUIT-ALIVE S2 — the cave, Vitals
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28, "go S2". Claude Code; FEATURE (read-only,
