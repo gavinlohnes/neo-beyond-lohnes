@@ -255,7 +255,7 @@ function AppWorkspaces() {
   const [captureOrigin, setCaptureOrigin] = useState<Tab | null>(null);
   const [moreRequest, setMoreRequest] = useState(0);
   /** SUIT-ALIVE S3/S4: TODAY's comms and route lines open the cave on that view; each request counts up across mounts. */
-  const [caveRequest, setCaveRequest] = useState<{ key: number; tab: "tonight" | "route" }>({ key: 0, tab: "tonight" });
+  const [caveRequest, setCaveRequest] = useState<{ key: number; tab: "tonight" | "route" | "brief" }>({ key: 0, tab: "tonight" });
   const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(null);
   useEffect(() => {
     if (!shortcut) return;

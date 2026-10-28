@@ -283,7 +283,7 @@ export function TodayScreen({
   /** SUIT-001: the SYSTEMS line opens the readout in COMMAND. */
   onOpenSystems?: () => void;
   /** SUIT-ALIVE S3/S4: the route and comms lines open the cave on that view. Absent, neither line shows. */
-  onOpenCave?: (tab: "tonight" | "route") => void;
+  onOpenCave?: (tab: "tonight" | "route" | "brief") => void;
   onOpenHealthEvidence?: (metric: "water" | "protein" | "weight" | "sleep") => void;
   onOpenBody?: (target?: BodyFocus) => void;
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */

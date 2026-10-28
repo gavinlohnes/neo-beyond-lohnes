@@ -101,3 +101,9 @@
 .route-line__way time { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .route-line__way--usual { color: var(--p-t2); }
 .route-line__in { font-family: var(--font-mono); letter-spacing: 0; color: var(--p-t2); }
+/* SUIT-ALIVE S6: the brief band, in the route line's place before and after a shift. LATE reads amber. */
+.brief-line__text { font-size: 13.5px; line-height: 1.4; color: var(--p-t1); letter-spacing: 0; }
+.cc-mode .brief-line--late { box-shadow: inset 2px 0 0 var(--warning); }
+.cc-mode .brief-line { grid-template-columns: auto 1fr; }
+.brief-line .route-line__way { grid-template-columns: auto 1fr; }
+.brief-line .route-line__way time { min-width: 58px; }

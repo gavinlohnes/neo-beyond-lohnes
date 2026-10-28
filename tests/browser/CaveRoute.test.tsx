@@ -18,11 +18,12 @@ async function workDayAt(hour: number, minute: number) {
 
 for (const width of [320, 390]) it(`shows the next points and opens the full route, writing nothing, at ${width}px`, async () => {
   await page.viewport(width, 820);
-  await workDayAt(17, 20);
+  // Mid-shift: before and after the shift, S6's preflight and debrief band takes this line's place.
+  await workDayAt(19, 0);
   const before = await db.events.toArray();
   const screen = await render(<App />);
 
-  const route = screen.getByRole("button", { name: "Route, next: 18:00 shift, in 40 min; 06:00 shift ends; 16:30 day rolls. Open the full route in the cave" });
+  const route = screen.getByRole("button", { name: "Route, next: 06:00 shift ends, in 11:00; 16:30 day rolls. Open the full route in the cave" });
   await expect.element(route).toBeVisible();
   await route.click();
 
@@ -30,7 +31,8 @@ for (const width of [320, 390]) it(`shows the next points and opens the full rou
   await expect.poll(() => document.activeElement?.textContent).toBe("BACK TO SYSTEMS");
   const cave = screen.getByRole("region", { name: "THE CAVE // ROUTE" });
   await expect.element(cave.getByText("Work day, 16:30 to 16:30. Solid points are fixed. Hollow points are your usual, not orders.", { exact: true })).toBeVisible();
-  await expect.element(cave.getByText("SHIFT · next", { exact: true })).toBeVisible();
+  await expect.element(cave.getByText("SHIFT · passed", { exact: true })).toBeVisible();
+  await expect.element(cave.getByText("SHIFT ENDS · next", { exact: true })).toBeVisible();
   await expect.element(cave.getByText("From your schedule. Food not confirmed, bottle not confirmed.", { exact: true })).toBeVisible();
   await expect.element(cave.getByText("Usual sleep and wake times appear after 3 Garmin-timed work days; 0 so far.", { exact: true })).toBeVisible();
 

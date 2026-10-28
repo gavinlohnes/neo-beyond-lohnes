@@ -48,7 +48,7 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveReque
   /** Opens DATA's existing history for that metric; absent, the rows are plain readings. */
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
   /** A new key opens the cave on that view; each key opens it once. */
-  caveRequest?: { key: number; tab: "tonight" | "route" } | undefined;
+  caveRequest?: { key: number; tab: "tonight" | "route" | "brief" } | undefined;
 }) {
   const online = useOnline();
   const [state, setState] = useState<{ readout: Readout; mode: ShiftClockPhase | null; pinned: boolean; templates: CustomWorkoutTemplate[]; now: Date; backupDue: boolean } | null>(null);

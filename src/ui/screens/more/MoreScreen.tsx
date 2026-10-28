@@ -98,7 +98,7 @@ export function MoreScreen({
   /** SUIT-001: bumped after a stealth write, so an open SYSTEMS readout re-reads. */
   systemsRefreshKey?: number;
   /** SUIT-ALIVE S3/S4: a new key opens the cave on that view (TODAY's comms and route lines). */
-  caveRequest?: { key: number; tab: "tonight" | "route" };
+  caveRequest?: { key: number; tab: "tonight" | "route" | "brief" };
   /** SUIT-001: set when TODAY's SYSTEMS line opened the readout. */
   onReturnToToday?: (() => void) | undefined;
   onOpenCapture?: () => void;

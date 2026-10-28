@@ -2133,3 +2133,35 @@ in-range vitals dimmed." Protected: it changes how TODAY's primary readings look
   now.").
 - **Unchanged:** the Engine, recommendations, targets, and TODAY's rows and their order. Nothing is
   stored. Red is not used.
+
+## SUIT-ALIVE-005 — preflight and after-action (owner approval, 2026-10-28)
+
+Gavin, 2026-10-28: "go S6 and make it bigger more more impressive and badass", approving the build
+plan's S6: the pre-shift checklist from PREP, memory and the handoff, auto-ticked by logs; and the
+after-action report built on LOOP-002's handoff, using the route as "planned". Brief:
+[`agent/SUIT-ALIVE.md`](agent/SUIT-ALIVE.md#s6--preflight-and-after-action).
+
+- **PREFLIGHT, the cave's BRIEF view:** a T-minus clock to the shift and a poll of each system.
+  - **The systems:** sleep, check-in, fuel (a meal before the shift), hydration, food and bottle
+    packing, and last shift's handoff note.
+  - **States:**
+    - GO: earned from a record you made.
+    - HOLD: open.
+    - LATE: still open after the shift starts.
+    - ADVISORY: a reading outside your own normal, such as sleep under your usual or behind pace.
+      It never blocks anything.
+  - **The verdict line** names what's open: "Hold: fuel and pack · bottle." It is never a count or a
+    score. "All systems go." shows only when nothing is open.
+  - **Inline actions:** packing (READY, NOT NEEDED) and the note (READ IT, GOT IT) can be closed
+    there, through their existing commands: preparation, and the handoff marked read.
+  - **Intel:** how last shift felt, the plan you left, and your preparation notes from MEMORY-001.
+  - The poll stamps in turn once. Under reduced motion it shows at once.
+- **AFTER-ACTION:** planned beside actual, once the shift is done or work is marked ended.
+  - **Rows:** shift, meal before, meals on shift, water, protein, sleep and debrief.
+  - **"Planned"** is the schedule, your usual pace by the shift's end, and your usual sleep. These are
+    never orders.
+  - **Verdicts:** "on plan" or "off plan" in words, amber for off. No score.
+- **TODAY:** for the 3 hours before a shift and the 3 hours after it, the hero's route line becomes
+  PREFLIGHT or DEBRIEF, with the verdict, and opens BRIEF. The hero does not grow, and it is not a
+  phase row.
+- **Unchanged:** the Engine, recommendations, schema, events, and TODAY's rows and their order.
