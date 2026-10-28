@@ -5,7 +5,7 @@ import axe from "axe-core";
 import Dexie from "dexie";
 import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
 import { App } from "../../src/app/App";
-import { SYSTEM_CAPABILITIES } from "../../src/ui/systemCatalog";
+import { findCapabilities, SYSTEM_CAPABILITIES } from "../../src/ui/systemCatalog";
 import { startDay, updateSchedulePattern } from "../../src/application/commands";
 import { createSavedMeal } from "../../src/application/nutritionCommands";
 import { saveQuitHabit } from "../../src/application/quitCommands";
@@ -105,14 +105,21 @@ describe("COMMAND catalog", () => {
     });
   }
 
-  it("every former MORE destination is also reachable by browsing COMMAND's index", async () => {
+  it("every former MORE destination stays reachable: browsed once at its home, found by search", async () => {
     const screen = await render(<App />);
     await openCommand(screen);
     // The pre-redesign destination inventory is deliberately independent of the current catalog.
     const before = ["WATER", "MEAL", "FOOD LOOKUP", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "SYSTEMS", "STEALTH", "TODAY TOOLS", "PLAN TODAY", "TRAIN", "WORKOUT", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "IMPORT HEALTH DATA", "DATA", "WEEKLY CHECK-IN", "REVIEW", "HISTORY", "DECISION JOURNAL", "SEARCH RECORDS", "BACKUP & RECOVERY", "TARGETS", "QUIT TRACKER SETTINGS", "TIME CAPSULE", "CHECK-IN REMINDER", "DIAGNOSTICS", "A PLACE TO START"];
     for (const name of before) expect(SYSTEM_CAPABILITIES.some((entry) => entry.label === name)).toBe(true);
     for (const summary of document.querySelectorAll<HTMLDetailsElement>(".command-group")) summary.open = true;
-    for (const entry of SYSTEM_CAPABILITIES) await expect.element(screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true })).toBeVisible();
+    // MORE-TRIM-001: a row whose destination already has a home one tap away is search-only.
+    const browsed = SYSTEM_CAPABILITIES.filter((entry) => !("browse" in entry) && !("hiddenFeature" in entry));
+    expect(browsed.length).toBeLessThanOrEqual(25);
+    for (const entry of browsed) await expect.element(screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true })).toBeVisible();
+    for (const entry of SYSTEM_CAPABILITIES.filter((e) => "browse" in e)) {
+      expect(screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true }).elements()).toHaveLength(0);
+      expect(findCapabilities(entry.label)).toContain(entry);
+    }
     for (const name of ["EXPORT BACKUP", "SHARE BACKUP"]) await expect.element(screen.getByRole("button", { name, exact: true })).toBeVisible();
     await expect.element(screen.getByText("A place to start", { exact: true }).first()).toBeVisible();
     await expect.element(screen.getByText("Diagnostic detail", { exact: true })).toBeVisible();

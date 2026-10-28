@@ -125,7 +125,8 @@ export function MoreScreen({
   const [query, setQuery] = useState("");
   const hiddenFeatures = useHiddenFeatures();
   const [hiddenError, setHiddenError] = useState(false);
-  const visibleCapabilities = SYSTEM_CAPABILITIES.filter((entry) => !("hiddenFeature" in entry) || hiddenFeatures[entry.hiddenFeature]);
+  // MORE-TRIM-001: the browse list shows each destination once; search still finds every one.
+  const visibleCapabilities = SYSTEM_CAPABILITIES.filter((entry) => (!("hiddenFeature" in entry) || hiddenFeatures[entry.hiddenFeature]) && !("browse" in entry));
   const matches = query.trim() ? findCapabilities(query).filter((entry) => !("hiddenFeature" in entry) || hiddenFeatures[entry.hiddenFeature]) : [];
   const [dailyFocus, setDailyFocus] = useState<ToolsItem | "SHIFT_HANDOFF" | "SMALL_STEPS" | null>(captureRequest ? "CAPTURE" : null);
   const [namedMeals, setNamedMeals] = useState<SavedMeal[]>([]);
@@ -685,7 +686,7 @@ export function MoreScreen({
       </section>
       </details>
 
-      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings").map((group) => <details className="command-group" key={group}><summary className="disclosure-row">{group}</summary>
+      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group)).map((group) => <details className="command-group" key={group}><summary className="disclosure-row">{group}</summary>
         {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry))}
       </details>)}
 

@@ -218,6 +218,12 @@ recommendation selection, schema, events and Garmin semantics are unchanged.
   recovery, Settings. The last two hold their tool panels; "A place to start" lives under Settings.
   The Control center blurb, shortcuts and the destination glossary are removed. Every destination
   stays reachable.
+  *Amended 2026-10-28 (MORE-TRIM-001, Gavin: "trim MORE next"):* the browse list shows each
+  destination once, at its home. A row whose destination is already one tap away becomes
+  search-only (`browse: false` in `src/ui/systemCatalog.ts`). That covers LOG's forms, the
+  TRAIN and DATA tabs, TODAY TOOLS' controls, MONTHLY REVIEW (inside REVIEW), and the Settings and
+  Backup rows that point at panels sitting right below them. 50 rows become 23, and the Log job
+  row leaves the browse list. Search still finds every destination, so none is removed.
 
 ## REDESIGN-001 — one job, one home (owner approved 2026-10-19)
 
