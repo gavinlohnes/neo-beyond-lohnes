@@ -32,3 +32,14 @@
 .work-start__key { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; color: var(--p-t2, var(--text-2)); }
 .cc-mode .work-start__go { width: auto; min-height: 44px; margin: 0; padding-inline: 16px; }
 .cc-mode .work-start .meta--error { grid-column: 1 / -1; margin: 0; }
+/* The shift on one line. White ticks, no red: it is a record, not a signal. */
+.shift-line { margin: 0; display: grid; gap: 4px; }
+.shift-line svg { width: 100%; height: auto; display: block; }
+.shift-line__axis { stroke: var(--text-2); stroke-width: 1; }
+.shift-line__edge { stroke: var(--text-1); stroke-width: 2; }
+.shift-line__edge--ahead { stroke-dasharray: 2 2; }
+.shift-line__water { stroke: var(--text-1); stroke-width: 2; animation: shift-line-in 240ms var(--motion-easing, ease-out) both; }
+.shift-line__food { fill: var(--text-1); animation: shift-line-in 240ms var(--motion-easing, ease-out) both; }
+.shift-line figcaption { display: flex; justify-content: space-between; gap: 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--text-2); }
+@keyframes shift-line-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .shift-line__water, .shift-line__food { animation: none; } }
