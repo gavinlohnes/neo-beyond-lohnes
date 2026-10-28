@@ -1,3 +1,14 @@
+# MORE-TRIM-001 — MORE shows each destination once
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28 ("merge 335 and trim MORE next"). Claude
+  Code; Protected (it amends FIELD-AUTHORITY-001's COMMAND rows; no capability is removed).
+  Branch `ccr-0be4f40f-16m0ja`.
+- **Built:** 27 duplicate rows are search-only, so the browse list goes from 50 to 23 rows.
+  Empty job rows (Log) are hidden. The test helper reaches search-only rows by search.
+- **Verified:** `npm run verify` green (3,168 passed).
+- **Next:** CI and Gavin's merge. Still open: keep DATA's WHOLE PICTURE inside DATA, and move LOG
+  to the header (NAV-001).
+
 # AUDIT-FIX-001 — fixes from the whole-app audit
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28 ("go audit fixes"). Claude Code; Routine

@@ -26,6 +26,13 @@ export async function commandResult(screen: Screen, label: string) {
   const canonical = label === 'SEARCH' ? 'SEARCH RECORDS' : label;
   const entry = SYSTEM_CAPABILITIES.find((item) => item.label === canonical);
   if (!entry) throw new Error(`Unknown COMMAND destination: ${label}`);
+  if ('browse' in entry) {
+    // MORE-TRIM-001: a search-only row is reached the way the owner reaches it, by search.
+    await search.fill(entry.label);
+    const found = screen.getByRole('button', { name: `${entry.label} ${entry.description}`, exact: true });
+    await expect.element(found).toBeVisible();
+    return found;
+  }
   const summary = screen.getByText(entry.group, { exact: true }).elements().find((element) => element.tagName === 'SUMMARY');
   if (!summary) throw new Error(`Missing COMMAND group: ${entry.group}`);
   // Click the element itself: a text locator for a job row ("On shift") can match the mode name too.
