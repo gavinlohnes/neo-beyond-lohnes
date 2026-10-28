@@ -27,6 +27,7 @@ import { nextRolloverBoundaryAfter } from "../engine/dayRollover";
 import { getNextDayRolloverCheckAt } from "../application/dayRolloverQueries";
 import { parseShortcut, type BodyFocus } from "../ui/shortcuts";
 import { positionPrimaryDestination, positionRevealedSurface } from "../ui/navigationPosition";
+import { VisionMode } from "../ui/vision/VisionMode";
 import { SessionDraftProvider, useHasSessionDrafts } from "../ui/sessionDrafts";
 import type { IntentFocus } from "../ui/screens/more/IntentScreen";
 import type { SystemDestination } from "../ui/systemCatalog";
@@ -120,7 +121,7 @@ const ROLLOVER_TIMER_MARGIN_MS = 1000;
 let caveRequests = 0;
 
 export function App() {
-  return <SessionDraftProvider><AppWorkspaces /></SessionDraftProvider>;
+  return <SessionDraftProvider><VisionMode /><AppWorkspaces /></SessionDraftProvider>;
 }
 
 function AppWorkspaces() {

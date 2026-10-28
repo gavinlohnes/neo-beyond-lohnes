@@ -1,3 +1,17 @@
+# SUIT-ALIVE S8 — suit systems, vision and the log
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28. He ruled night vision may be automatic and cloak
+  is only on his word (SUIT-ALIVE-007). Claude Code; PROTECTED (presentation; no Engine, schema or
+  event change). [Brief](SUIT-ALIVE.md#s8--suit-systems-vision-and-the-log).
+- **Baseline:** master `b0f4317` (#320 S7 merged).
+- **Built:**
+  - Vision: AUTO (night from midnight on shift), NORMAL, THERMAL and NIGHT, stored on this device,
+    with AA holding.
+  - CLOAK in SYSTEMS → SUIT SYSTEMS, entered only when pressed.
+  - The cave's LOG: COMMS rebuilt from records, plus the RECORDER.
+- **Next:** CI and Gavin's merge. That completes the SUIT-ALIVE build plan (S1–S8). Then live use.
+
+---
 # SUIT-ALIVE S7 — the cave, File
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28, "go S7" (SUIT-ALIVE-006). Claude Code; FEATURE,

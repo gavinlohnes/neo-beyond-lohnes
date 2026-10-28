@@ -2193,3 +2193,28 @@ Understanding, so there is one knowledge view, not two. Brief:
 - **Whole run:** shift 1… and day off 1…, with sleep, energy, how often you trained, and runs on
   file. Averages need 3 measured days; below that, the count is shown in brackets.
 - **Unchanged:** the Engine, recommendations, schema, events and TODAY. Nothing is stored.
+
+## SUIT-ALIVE-007 — suit systems, vision and the cave's Log (owner rulings, 2026-10-28)
+
+Gavin, 2026-10-28, answering the S8 rulings: "1. Night vision is fine to be automatic. 2. I will turn
+it on when I'm ready" (cloak). Brief: [`agent/SUIT-ALIVE.md`](agent/SUIT-ALIVE.md#s8--suit-systems-vision-and-the-log).
+
+- **Vision is presentation only.** It uses token overrides, so every function stays and AA contrast
+  holds.
+  - NIGHT: a dim, warm palette. Text-1 is about 12:1 against black, and the deepest text is about
+    5.6:1.
+  - THERMAL: off-normal readings glow amber; what's inside your normal stays dark.
+  - NORMAL.
+  - **AUTO** is the default. It turns NIGHT on by itself from midnight while the screen is ON SHIFT,
+    and returns to normal after.
+  - The choice stays on this phone, like stealth. It is not an event and not in backups.
+  - The optional red night-vision palette was not taken: red keeps its one job.
+- **Cloak is never automatic.** CLOAK in SYSTEMS → SUIT SYSTEMS enters the existing stealth (SUIT-001)
+  only when pressed, beside the long-press on the bat. There is no default-on late in a shift.
+- **The cave's LOG.**
+  - COMMS shows what the cave said today: each recommendation as issued and each route callout when
+    its point passed. It is rebuilt from records at each moment, so nothing new is stored.
+  - RECORDER shows today's events as recorded: who did what, and when.
+  - Both read newest first.
+- **The cave** now has six views, set in two rows: TONIGHT, ROUTE, BRIEF, VITALS, FILE and LOG.
+- **Unchanged:** the Engine, recommendations, schema, events, and TODAY's rows and layout.

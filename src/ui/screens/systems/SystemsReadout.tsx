@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { getSystemsReadout, SESSIONS_WINDOW_DAYS, type SystemsReadout as Readout } from "../../../application/systemsReadoutQueries";
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
 import { getModePin } from "../../../application/modePinQueries";
@@ -27,6 +27,8 @@ import {
   formatSleepReading,
 } from "./systemsCopy";
 import { Cave, type CaveOpen } from "./CaveVitals";
+import { StealthToggleContext } from "../../components/OperatorHeader";
+import { setVisionPref, useVision, VISION_PREFS, type VisionPref } from "../../vision/vision";
 import type { CaveVitalId } from "../../../application/caveVitals";
 import "./systems.css";
 
@@ -132,6 +134,7 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveReque
             <Reading label="Mode" value={state.mode ? MODE_NAMES[state.mode] : "Not set"}
               detail={state.pinned ? "Pinned until 16:30" : state.mode ? "Per schedule" : "Answer the work question and the mode follows."} />
           </Group>
+          <SuitSystems />
           <Group title="DEVICE">
             <Reading label="Connection" value={online ? "Online" : <Signal data-signal="offline">Offline</Signal>} tone={online ? undefined : "warn"} detail={online ? "" : "Offline. Logging still saves on this phone."} />
             <Reading label="Last backup" value={state.backupDue ? <Signal data-signal="backup">{describeBackupAge(r.daysSinceLastBackup)}</Signal> : describeBackupAge(r.daysSinceLastBackup)}
@@ -142,6 +145,28 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveReque
       })()}
     </section>
   );
+}
+
+const VISION_WORDS: Record<VisionPref, string> = { AUTO: "AUTO", NORMAL: "NORMAL", THERMAL: "THERMAL", NIGHT: "NIGHT" };
+
+/**
+ * SUIT-ALIVE S8 (owner rulings 2026-10-28): CLOAK is stealth, entered only when you choose; vision is
+ * presentation only, AUTO by default (night vision from midnight on shift). Every function stays.
+ */
+function SuitSystems() {
+  const toggleStealth = useContext(StealthToggleContext);
+  const { pref, vision } = useVision();
+  return <section className="systems__group" aria-labelledby="systems-suit">
+    <h2 id="systems-suit" className="section-label">SUIT SYSTEMS</h2>
+    {toggleStealth && <div className="suit__row">
+      <button type="button" className="btn-secondary suit__cloak" onClick={toggleStealth}>CLOAK</button>
+      <p className="systems__note">Hides the screen; logging still works. Only when you turn it on. Long-press the bat does the same.</p>
+    </div>}
+    <div className="suit__vision" role="group" aria-label="Vision">
+      {VISION_PREFS.map((p) => <button key={p} type="button" className="chip" aria-pressed={pref === p} onClick={() => setVisionPref(p)}>{VISION_WORDS[p]}</button>)}
+    </div>
+    <p className="systems__note" role="status">Now: {vision === "NORMAL" ? "normal" : vision === "NIGHT" ? "night vision" : "thermal"}{pref === "AUTO" ? " (auto)" : ""}. AUTO switches to night vision from midnight while you're on shift. THERMAL makes off-normal readings glow. Presentation only; nothing changes what BEYOND advises.</p>
+  </section>;
 }
 
 function Group({ title, children }: { title: string; children: ReactNode }) {

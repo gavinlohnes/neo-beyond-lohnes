@@ -312,3 +312,5 @@ fresh general review.
   builds the planned-vs-actual after-action. Reuse it for any checklist or shift review.
 - SUIT-ALIVE S7 (file): `application/caveFile.ts` gives findings over run positions, FIRM / BUILDING /
   THIN calibration and the whole run, from Personal Understanding's query. Reuse it, not a second store.
+- SUIT-ALIVE S8 (vision, log): `ui/vision/` gives presentation-only vision modes (AUTO night on shift) as
+  token overrides; `application/caveLog.ts` rebuilds what the cave said from records. Reuse both.

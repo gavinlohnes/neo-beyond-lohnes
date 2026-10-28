@@ -55,7 +55,7 @@
 .cave__feeds { margin: 0; padding-left: 12px; border-left: 1px solid var(--border-subtle); color: var(--text-2); font-size: 14.5px; line-height: 1.55; }
 .cave__feeds--decides { border-left-color: var(--text-1); color: var(--text-1); }
 /* SUIT-ALIVE S3: the cave's two views, and Tonight. Amber marks off-normal; red stays reserved. */
-.cave__tabs { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--border-subtle); }
+.cave__tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border-subtle); }
 .cave__tab { min-height: 44px; padding: 0 2px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--text-2); font: inherit; font-size: 11px; letter-spacing: .08em; cursor: pointer; }
 .cave__tab[aria-pressed="true"] { color: var(--text-1); border-bottom-color: var(--text-1); }
 .cave__call { margin: 0; font-size: 20px; font-weight: 500; line-height: 1.3; }
@@ -133,3 +133,17 @@
 .file__run th, .file__run td { padding: 8px 10px 8px 0; text-align: left; border-bottom: 1px solid var(--border-subtle); white-space: nowrap; font-weight: 400; }
 .file__run thead th { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; color: var(--text-2); }
 .file__run tbody th { font-size: 11px; letter-spacing: .14em; color: var(--text-2); }
+/* SUIT-ALIVE S8: suit systems. */
+.suit__row { display: grid; gap: 6px; padding: 10px 0; }
+.suit__cloak { min-height: 44px; }
+/* Two by two, and never wider than the row: four chips side by side overflowed 320px in CI's fonts. */
+.suit__vision { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding-top: 6px; }
+.suit__vision .chip { min-width: 0; min-height: 44px; padding-inline: 4px; }
+/* SUIT-ALIVE S8: Log. CAVE lines lead in text-1; YOU and SYSTEM read quieter. */
+.log__list { list-style: none; margin: 0; padding: 0; display: grid; }
+.log__line { display: grid; grid-template-columns: 46px 56px 1fr; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); align-items: baseline; }
+.log__line time { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-2); }
+.log__who { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; color: var(--text-2); }
+.log__line--cave .log__who { color: var(--text-1); }
+.log__text { font-size: 14.5px; line-height: 1.45; min-width: 0; overflow-wrap: anywhere; }
+.log__line--you .log__text, .log__line--system .log__text { color: var(--text-2); }
