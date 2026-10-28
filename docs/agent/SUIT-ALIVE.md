@@ -24,5 +24,12 @@
 - **REUSE:** SYSTEMS readout query, Whole Picture rows, personal-baselines quantiles, rotation run
   positions, metric history. **OWN:** `application/caveVitals.ts` (composition and copy).
   **BUILD FROM SCRATCH:** none.
-- **Excluded:** the bat mark (S1, needs the logo ruling recorded), TODAY changes, comms, route,
+- **Excluded:** the bat mark (S1; the logo ruling is now recorded as SUIT-ALIVE-001), TODAY changes, comms, route,
   pace, vision modes.
+
+## The bat ruling (recorded 2026-10-28)
+
+Gavin approved the original red bat mark. [SUIT-ALIVE-001](../UX_DECISIONS.md) records it: the header
+emblem, the cave heading and the cold start only. EMBLEM-002 stays the app icon. Building it is S1,
+which needs its own go. The one open choice for S1 is which geometry: the prototype's mark or the
+EMBLEM-002 master.
