@@ -2165,3 +2165,31 @@ after-action report built on LOOP-002's handoff, using the route as "planned". B
   PREFLIGHT or DEBRIEF, with the verdict, and opens BRIEF. The hero does not grow, and it is not a
   phase row.
 - **Unchanged:** the Engine, recommendations, schema, events, and TODAY's rows and their order.
+
+## SUIT-ALIVE-006 — the cave's File (owner approval, 2026-10-28)
+
+Gavin, 2026-10-28: "go S7", approving the build plan's S7: the case file, calibration with FIRM /
+BUILDING / THIN, and the whole-run table. These are read-only and shared with Codex's Personal
+Understanding, so there is one knowledge view, not two. Brief:
+[`agent/SUIT-ALIVE.md`](agent/SUIT-ALIVE.md#s7--the-cave-file).
+
+- **One knowledge view:** FILE reads PERSONAL-UNDERSTANDING-001's query for run positions and
+  written lessons, and links to it ("OPEN PERSONAL UNDERSTANDING", in REVIEW) for depth. Personal
+  Understanding is unchanged.
+- **Case file:** findings, each shown only once its own floor is met (3 runs or timed days, as
+  ROTATION-002 sets):
+  - the weakest place in a work run, for sleep and for energy;
+  - the day off you train most;
+  - when you fall asleep after a run;
+  - your latest experiment lesson;
+  - your latest written lesson.
+
+  These are patterns, never causes or predictions.
+- **Calibration:** every usual range BEYOND judges with, by kind of day: sleep, energy, protein and
+  its pace, water and its pace, usual sleep and wake timing, and run positions. Each is rated THIN
+  (under its floor, so BEYOND says it's still learning), BUILDING (at the floor) or FIRM (twice the
+  floor), in words. It also lists what BEYOND does not know: caffeine, light exposure and sleep
+  stages. This is a presentation rule, not a score.
+- **Whole run:** shift 1… and day off 1…, with sleep, energy, how often you trained, and runs on
+  file. Averages need 3 measured days; below that, the count is shown in brackets.
+- **Unchanged:** the Engine, recommendations, schema, events and TODAY. Nothing is stored.

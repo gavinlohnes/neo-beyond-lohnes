@@ -137,5 +137,20 @@ EMBLEM-002 master.
 ## Status (2026-10-28)
 
 S1–S6 are merged. The campaign is paused for live use at Gavin's direction ("wrap up everything").
-S7 and S8 remain, each on his go: S7 is coordinated with Codex, and S8 is Protected and needs its
-rulings.
+S7 followed (see above). S8 remains: it is Protected and needs its rulings.
+
+## S7 — the cave, File
+
+- **Authority:** Gavin, 2026-10-28: "go S7". Ruling: SUIT-ALIVE-006. **Lane:** FEATURE, read-only.
+- **Built:** `application/caveFile.ts` (findings, calibration, whole run) and the cave's FILE view,
+  which links to REVIEW's Personal Understanding for depth.
+- **Coordination with Codex:** FILE uses Personal Understanding's query rather than a parallel
+  store or projection, and leaves its UI untouched. Codex owns Personal Understanding; changes to
+  it stay theirs.
+- **REUSE:**
+  - `getPersonalUnderstanding`, including run positions and lessons;
+  - `runPositions`, `flips` and `flipSummary`;
+  - `experimentLessons`;
+  - S2's `caveUsual`, `MIN_BASELINE_DAYS` and `RUN_MEAN_FLOOR`.
+- **OWN:** the findings wording and the FIRM / BUILDING / THIN presentation rule.
+  **BUILD FROM SCRATCH:** none.

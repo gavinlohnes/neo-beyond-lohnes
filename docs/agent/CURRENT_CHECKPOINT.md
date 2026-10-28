@@ -1,3 +1,14 @@
+# SUIT-ALIVE S7 — the cave, File
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28, "go S7" (SUIT-ALIVE-006). Claude Code; FEATURE,
+  read-only. [Brief](SUIT-ALIVE.md#s7--the-cave-file).
+- **Baseline:** master `8441d1b` (#319 checkpoint merged).
+- **Built:** the cave's FILE view. The case file shows findings only once their floor is met.
+  Calibration rates each usual range FIRM, BUILDING or THIN, with a "not known" list. The whole-run
+  table shows each place in a run. It reuses Personal Understanding's query and links to it.
+- **Next:** CI and Gavin's merge. Then S8 (Protected; needs the night-vision and cloak-default rulings).
+
+---
 # SUIT-ALIVE — S1–S6 merged; paused for live use (2026-10-28)
 
 - **State:** S1–S6 are all on master: #313/#314 (the bat), #312 (VITALS), #315 (comms and TONIGHT),

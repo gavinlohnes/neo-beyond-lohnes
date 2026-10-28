@@ -310,3 +310,5 @@ fresh general review.
   lived day from past logs. Reuse it to judge any running total; never judge one against a full day.
 - SUIT-ALIVE S6 (brief): `application/caveBrief.ts` polls pre-shift systems from your own records and
   builds the planned-vs-actual after-action. Reuse it for any checklist or shift review.
+- SUIT-ALIVE S7 (file): `application/caveFile.ts` gives findings over run positions, FIRM / BUILDING /
+  THIN calibration and the whole run, from Personal Understanding's query. Reuse it, not a second store.
