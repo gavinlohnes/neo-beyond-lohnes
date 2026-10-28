@@ -62,8 +62,9 @@ h1,h2,h3{ margin:0; font-weight:600; }
 .cc-mode .cc-sky{ position:absolute; z-index:0; inset:0; pointer-events:none; transition:opacity .6s var(--p-ease);
   background:radial-gradient(140% 85% at 50% calc(100% - 44px), rgba(150,10,16,.5) 0%, rgba(90,5,9,.28) 38%, rgba(40,2,4,.1) 62%, transparent 80%); }
 .cc-mode .cc-beam{ position:absolute; z-index:0; left:calc(30% - 36px); bottom:50px; width:72px; height:250px; transform-origin:50% 100%; transform:rotate(-8deg); pointer-events:none;
-  background:linear-gradient(to top, rgba(255,236,220,.18), rgba(255,236,220,.06) 60%, rgba(255,236,220,0)); clip-path:polygon(47% 100%, 53% 100%, 100% 0, 0 0); filter:blur(1.5px); animation:cc-beam 11s ease-in-out infinite alternate; }
-@keyframes cc-beam{ from{ transform:rotate(-24deg); } to{ transform:rotate(16deg); } }
+  background:linear-gradient(to top, rgba(255,236,220,.18), rgba(255,236,220,.06) 60%, rgba(255,236,220,0)); clip-path:polygon(47% 100%, 53% 100%, 100% 0, 0 0); filter:blur(1.5px); animation:cc-beam 3.6s ease-in-out 1 both; }
+/* SUIT-VOLUME-001: the beam sweeps once when a real next thing appears, then holds still. Never a loop. */
+@keyframes cc-beam{ 0%{ transform:rotate(-8deg); } 35%{ transform:rotate(-24deg); } 75%{ transform:rotate(16deg); } 100%{ transform:rotate(-8deg); } }
 .cc-mode .cc-perch{ position:absolute; z-index:0; right:4px; bottom:47px; width:92px; height:83px; pointer-events:none; }
 .cc-perch .cc-stone{ fill:#000; stroke:#343434; }
 :root[data-suit-mode="SCHEDULED_SHIFT"] .cc-perch .cc-stone{ stroke:#2a2a2a; }

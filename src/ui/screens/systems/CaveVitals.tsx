@@ -170,8 +170,9 @@ function Trend({ vital }: { vital: CaveVital }) {
       {vital.trend.map((d, i) => {
         const x = L + i * step + (step - bw) / 2;
         if (d.value === undefined) return <rect key={d.start} x={x} y={y(lo) - 1} width={bw} height={1} className="cave__gap" />;
-        const below = band && d.value < band.low;
-        return <rect key={d.start} x={x} y={y(d.value)} width={bw} height={Math.max(1, y(lo) - y(d.value))} className={below ? "cave__bar cave__bar--off" : "cave__bar"} />;
+        // Outside your usual either way is off-normal, as the headline says (a high resting HR included).
+        const off = band && (d.value < band.low || d.value > band.high);
+        return <rect key={d.start} x={x} y={y(d.value)} width={bw} height={Math.max(1, y(lo) - y(d.value))} className={off ? "cave__bar cave__bar--off" : "cave__bar"} />;
       })}
       <text x={L} y={H - 5} className="cave__axis">{shortDate(vital.trend[0]!.start)}</text>
       <text x={W - R} y={H - 5} textAnchor="end" className="cave__axis">{shortDate(vital.trend[n - 1]!.start)}</text>

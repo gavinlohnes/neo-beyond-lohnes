@@ -30,6 +30,15 @@ function briefWindow(route: CaveRoute, now: Date): { kind: "BEFORE" | "AFTER"; l
   return null;
 }
 
+/**
+ * SUIT-VOLUME-001 (owner go 2026-10-28): TODAY's suit bands are Volume 2 only when one of them truly
+ * needs you, and only one may carry the amber accent at a time: a LATE preflight, then a point just
+ * passed, then a reading off your normal. The others keep their calm text. Pure; presentation only.
+ */
+export function bandAccent(s: { briefLate: boolean; callout: boolean; commsOff: boolean }): "brief" | "callout" | "comms" | null {
+  return s.briefLate ? "brief" : s.callout ? "callout" : s.commsOff ? "comms" : null;
+}
+
 export function SuitLines({ refreshKey, now, onOpen }: { refreshKey: string; now: Date; onOpen: (tab: "tonight" | "route" | "brief") => void }) {
   const [comms, setComms] = useState<{ text: string; off: boolean } | null>(null);
   const [route, setRoute] = useState<CaveRoute | null>(null);
@@ -61,8 +70,9 @@ export function SuitLines({ refreshKey, now, onOpen }: { refreshKey: string; now
   const callout = route ? routeCallout(route, now) : null;
   const spokenRoute = next.map((w, i) => `${clock(w.at)} ${w.label.toLowerCase()}${w.fixed ? "" : ", usual"}${i === 0 ? `, ${describeIn(w.at, now)}` : ""}`).join("; ");
   const text = callout ?? comms?.text;
+  const accent = bandAccent({ briefLate: !!(window && brief?.late), callout: !!callout, commsOff: !!comms?.off });
   return <>
-    {window && brief ? <button type="button" className={`route-line brief-line${brief.late ? " brief-line--late" : ""}`} aria-label={`${window.kind === "BEFORE" ? `Preflight, shift ${window.label}` : "After-action ready"}. ${brief.text} Open the brief in the cave`} onClick={() => onOpen("brief")}>
+    {window && brief ? <button type="button" className={`route-line brief-line${accent === "brief" ? " brief-line--late" : ""}`} aria-label={`${window.kind === "BEFORE" ? `Preflight, shift ${window.label}` : "After-action ready"}. ${brief.text} Open the brief in the cave`} onClick={() => onOpen("brief")}>
       <span className="route-line__key" aria-hidden="true">{window.kind === "BEFORE" ? "PREFLIGHT ›" : "DEBRIEF ›"}</span>
       <span className="route-line__ways" aria-hidden="true">
         <span className="route-line__way"><time>{window.kind === "BEFORE" ? window.tMinus : "DONE"}</time><span>{window.kind === "BEFORE" ? `SHIFT ${window.label}` : "AFTER-ACTION READY"}</span><span /></span>
@@ -76,7 +86,7 @@ export function SuitLines({ refreshKey, now, onOpen }: { refreshKey: string; now
         </span>
       ))}</span>
     </button>}
-    {text && <button type="button" className={`comms-line${comms?.off && !callout ? " comms-line--off" : ""}`} aria-label={`Comms: ${text} Open tonight in the cave`} onClick={() => onOpen("tonight")}>
+    {text && <button type="button" className={`comms-line${accent === "comms" ? " comms-line--off" : ""}`} aria-label={`Comms: ${text} Open tonight in the cave`} onClick={() => onOpen("tonight")}>
       <span className="comms-line__head" aria-hidden="true"><span className="comms-line__key">COMMS</span><span className="comms-line__go">TONIGHT ›</span></span>
       <span className="comms-line__text" aria-hidden="true">{text}</span>
     </button>}

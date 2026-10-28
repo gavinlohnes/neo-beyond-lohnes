@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { describeBrief, getCaveBrief, type CaveBrief, type CheckItem } from "../../../application/caveBrief";
 import { markShiftHandoffRead } from "../../../application/commands";
+import { captureCommitFeedback } from "../../feel/feedback";
 import { recordPreparation } from "../../../application/preparation";
 import { MEMORY_LABELS, type MemoryKind } from "../../../domain/memory";
 import type { PreparationItem, PreparationValue } from "../../../domain/preparation";
@@ -41,8 +42,10 @@ export function CaveBriefView({ now = new Date() }: { now?: Date }) {
 
   async function act(run: () => Promise<unknown>, done: string) {
     if (saving) return;
+    // SUIT-VOLUME-001: a saved record earns Volume-1 feedback, from the control that asked for it.
+    const acknowledge = captureCommitFeedback();
     setSaving(true); setNotice(null);
-    try { await run(); setNotice(done); await load(); }
+    try { await run(); acknowledge("LIGHT"); setNotice(done); await load(); }
     catch (e) { setNotice(describeError(e, "Nothing was saved.")); }
     finally { setSaving(false); }
   }
