@@ -7,11 +7,12 @@ import { LogSheet } from "../../components/LogSheet";
 import { SleepEvidence } from "../health/ImportedSleepEvidence";
 import { hoursMinutes } from "../health/healthFormat";
 import { BarChart, Hypnogram, STAGE_COLORS, describeGarminAsOf, describeUsual, SyncGarminLink, UnusualNote } from "./MeasuredSheet";
-import { moveSleepWindow, sleepWindow, sleepWindowValues, type SleepZoom } from "./sleepPeriods";
+import { getDaySummaries } from "../../../application/dayLedgerQueries";
+import { moveSleepWindow, sleepWindow, sleepWindowValues, withLoggedSleep, type SleepZoom } from "./sleepPeriods";
 
 const date = (t: number) => new Date(t).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 const month = (t: number) => new Date(t).toLocaleDateString("en-US", { month: "short", year: "numeric" });
-type Data = { snapshot: MeasuredSnapshot; records: ExternalSleepRevision[]; unfiled: Map<string, GarminSleepUnfiled> };
+type Data = { snapshot: MeasuredSnapshot; records: ExternalSleepRevision[]; unfiled: Map<string, GarminSleepUnfiled>; logged: Map<string, number> };
 
 /** NAV-001: navigation over existing measured evidence, never a new sleep ledger or guidance. */
 export function SleepMetricSheet({ open, onClose, onAllRecords }: {
@@ -35,13 +36,14 @@ export function SleepPeriods({ active, onAllRecords }: { active: boolean; onAllR
   useEffect(() => {
     if (!open) return;
     let cancelled = false; setData(null); setError(false); setZoom("W"); setLimit(10);
-    void Promise.all([getMeasuredSnapshot(), getImportedSleep(), getUnfiledGarminSleep()]).then(([snapshot, records, unfiled]) => {
+    void Promise.all([getMeasuredSnapshot(), getImportedSleep(), getUnfiledGarminSleep(), getDaySummaries()]).then(([snapshot, records, unfiled, summaries]) => {
       if (cancelled) return;
-      setData({ snapshot, records, unfiled }); setAnchor(snapshot.current.from);
+      const logged = new Map(summaries.flatMap((d) => d.sleep.primaryMinutes === undefined ? [] : [[d.beyondDayId, d.sleep.primaryMinutes] as const]));
+      setData({ snapshot, records, unfiled, logged }); setAnchor(snapshot.current.from);
     }).catch(() => { if (!cancelled) setError(true); });
     return () => { cancelled = true; };
   }, [open, attempt]);
-  const series = data?.snapshot.sleep ?? [];
+  const { series, loggedFrom } = withLoggedSleep(data?.snapshot.sleep ?? [], data?.logged ?? new Map());
   const { days, bars } = sleepWindowValues(series, anchor, zoom);
   const bounds = sleepWindow(anchor, zoom), latest = series.at(-1)?.from ?? 0, earliest = series[0]?.from ?? 0;
   const canEarlier = series.length > 0 && bounds.from > earliest;
@@ -57,8 +59,9 @@ export function SleepPeriods({ active, onAllRecords }: { active: boolean; onAllR
     const start = Date.parse(r.evidence.startTime); return start >= selectedDay.from && start < selectedDay.to;
   }).sort((a, b) => sleepMinutes(b.evidence) - sleepMinutes(a.evidence)) : [];
   const night = nights[0]?.evidence, stages = night ? stageMinutes(night) : null;
-  const mean = average(days), count = days.filter((p) => p.value !== null).length;
-  const label = (v: PeriodValue) => `${zoom === "Y" ? month(v.from) : date(v.from)} · ${v.value === null ? "not measured" : hoursMinutes(v.value)}${zoom === "Y" ? " average" : ""}`;
+  const mean = average(days), count = days.filter((p) => p.value !== null && !loggedFrom.has(p.from)).length;
+  const loggedCount = days.filter((p) => loggedFrom.has(p.from)).length;
+  const label = (v: PeriodValue) => `${zoom === "Y" ? month(v.from) : date(v.from)} · ${v.value === null ? "not measured" : hoursMinutes(v.value)}${zoom === "Y" ? " average" : loggedFrom.has(v.from) ? " logged" : ""}`;
   const title = zoom === "Y" ? `${new Date(anchor).getFullYear()}` : zoom === "M" ? new Date(anchor).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : zoom === "W" ? `Week of ${date(bounds.from)}` : date(anchor);
   return <>
@@ -77,9 +80,9 @@ export function SleepPeriods({ active, onAllRecords }: { active: boolean; onAllR
         const dx = e.clientX - start.x, dy = e.clientY - start.y;
         if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy) * 1.5) { e.preventDefault(); suppressClick.current = true; move(dx > 0 ? -1 : 1); }
       }}>
-        <p className="measured-hero"><b>{mean === null ? "—" : hoursMinutes(mean)}</b> <span>{zoom === "D" ? "measured sleep" : "average a night"}</span></p>
-        <p className="meta">{count} measured {count === 1 ? "night" : "nights"} · Garmin</p>
-        {mean === null ? <p className="meta">Not enough data. No Garmin sleep measured in this period. Missing nights are not zero.</p>
+        <p className="measured-hero"><b>{mean === null ? "—" : hoursMinutes(mean)}</b> <span>{zoom === "D" ? (loggedCount ? "logged sleep" : "measured sleep") : "average a night"}</span></p>
+        <p className="meta">{count} measured {count === 1 ? "night" : "nights"} · Garmin{loggedCount ? ` · ${loggedCount} logged by you` : ""}</p>
+        {mean === null ? <p className="meta">Not enough data. No sleep measured or logged in this period. Missing nights are not zero.</p>
           : zoom === "D" && night ? <>{hypnogram(night).length ? <Hypnogram sleep={night} /> : <p className="meta">Garmin sent no sleep stages for this night.</p>}
             <dl className="measured-stages">{STAGE_ORDER.map((stage) => <div key={stage}><dt><i style={{ background: STAGE_COLORS[stage] }} aria-hidden="true" />{stage === "REM" ? stage : stage[0] + stage.slice(1).toLowerCase()}</dt><dd>{stages![stage] === null ? "Not recorded" : hoursMinutes(stages![stage]!)}</dd></div>)}</dl></>
           : bars.length > 0 && <BarChart metric="sleep" values={bars} selected={-1} onSelect={(i) => select(bars[i]!)} label={label} usual={null} interactive />}
@@ -92,7 +95,7 @@ export function SleepPeriods({ active, onAllRecords }: { active: boolean; onAllR
       {zoom === "D" && nights.slice(0, limit).map((r) => <SleepEvidence key={r.id} revision={r} unfiled={data.unfiled.get(r.recordKey)} />)}
       {zoom === "D" && nights.length > limit && <button type="button" className="btn-secondary" onClick={() => setLimit((n) => n + 10)}>SHOW MORE</button>}
       {zoom !== "D" && <p className="meta">Tap a bar to inspect {zoom === "Y" ? "that month" : "that night"}. Swipe right for earlier, left for later.</p>}
-      <p className="meta">Chart: longest Garmin session per BEYOND day. Logged or corrected main sleep can differ; inspect all sleep records to review or correct it. Nothing here changes advice.</p>
+      <p className="meta">Chart: longest Garmin session per BEYOND day; a night Garmin missed shows the main sleep you logged. Corrections can differ; inspect all sleep records to review or correct it. Nothing here changes advice.</p>
       <p className="meta">Chart history starts {date(earliest)}. {bounds.from < earliest ? "This period has partial history." : ""}</p>
       {data.snapshot.garminAsOf !== null && <p className="meta">{describeGarminAsOf(data.snapshot.garminAsOf, data.snapshot.readAt)}</p>}
       <UnusualNote metric="sleep" reading={data.snapshot.unusual.sleep} />

@@ -408,7 +408,12 @@ button, input {
 .chip--selected {
   background: var(--accent);
   border-color: var(--accent);
+  /* AUDIT-FIX: the same text the primary button uses on red, which stays AA on shift's dimmed red. */
+  color: var(--action-primary-text);
 }
+
+/* AUDIT-FIX: links read in the palette, never the browser's default blue (2.23:1 on black). */
+a { color: var(--text-1); text-underline-offset: 2px; }
 
 /* Empty state — a distinct, explanatory placeholder, never a bare
    "NO DATA". Reserves comfortable vertical space so its arrival

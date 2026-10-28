@@ -1724,13 +1724,19 @@ export function TodayScreen({
   const shiftDownIsRow = phaseRows.includes("SHIFT_DOWN");
   // POLISH-002: the all-clear card says what's next, in the prototype's voice. Presentation only,
   // and from the schedule, never a pin: a pin never changes guidance.
-  const nextActionContext = scheduledClock.countdown
+  // AUDIT-FIX: the all-clear never says "Nothing needs you" while TODAY's numbers show amber "behind pace".
+  const paceMinute = paceHistories ? minuteOfDay(paceHistories.dayStart, now) : 0;
+  const behindPace = paceHistories ? ([["Water", "water", minimumDayHydrateOz], ["Protein", "protein", minimumDayProteinG]] as const)
+    .filter(([, kind, total]) => paceReading(kind, total, paceHistories[kind], paceMinute).verdict === "BELOW").map(([name]) => name) : [];
+  const behindLine = behindPace.length ? `${behindPace.join(" and ")} ${behindPace.length > 1 ? "are" : "is"} behind your pace. ` : "";
+  const baseActionContext = scheduledClock.countdown
     ? scheduledClock.countdown.kind === "SHIFT_STARTS"
       ? `${describeCountdown(scheduledClock.countdown, now)}. Eat and drink before you go.`
       : `${describeCountdown(scheduledClock.countdown, now).replace("Shift ends in ", "")} left. Log as you go.`
     : scheduledClock.phase === "EXPECTED_POST_WORK" ? "Shift’s done. Power down. Sleep."
     : scheduledClock.phase === "OFF" ? "Your time. Train, plan or rest. Nothing’s waiting."
     : undefined;
+  const nextActionContext = behindLine ? `${behindLine}${(baseActionContext ?? "Log as you go.").replace("Nothing’s waiting.", "").trim()}` : baseActionContext;
   const lateRecoverWithoutSleep = !!day && scheduledClock.phase === "EXPECTED_POST_WORK" && shiftClock.displayPhase === "EXPECTED_POST_WORK" && now.getHours() >= 13 && mainSleepRecordedAt.length === 0;
   const attentionPlan = deriveAttentionPlan({
     activeWorkoutId: activeWorkout?.id ?? null,
@@ -2447,7 +2453,7 @@ export function TodayScreen({
             ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
           }}
         />}
-      <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK")} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
+      <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK")} onShift={scheduledClock.phase === "SCHEDULED_SHIFT"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
   </>;
   const nextSection = <>
       <section className="console-guidance" aria-label="Next action">
@@ -2547,6 +2553,7 @@ export function TodayScreen({
             // FIELD-AUTHORITY-001: this TODAY renders no question below the card, so never claim one.
             questionBelow={false}
             context={nextActionContext}
+            behindPace={behindPace.length > 0}
             day={day}
             recommendation={recommendation}
             headlineCommitment={headlineCommitment}
@@ -2819,7 +2826,7 @@ export function TodayScreen({
 
       {/* One canonical Engine result. Foreground operations above retain priority;
           support guidance stays a disclosure rather than a competing dominant action. */}
-      {day && !recommendation && <section className="console-guidance" aria-label="Current recommendation"><div className="cc-panel cc-rec next-action-card all-clear"><p className="cc-lbl">NEXT USEFUL ACTION</p><h2>{describeAllClearHeadline(questionBelow)}</h2>{nextActionContext && <p>{nextActionContext}</p>}</div></section>}
+      {day && !recommendation && <section className="console-guidance" aria-label="Current recommendation"><div className="cc-panel cc-rec next-action-card all-clear"><p className="cc-lbl">NEXT USEFUL ACTION</p><h2>{describeAllClearHeadline(questionBelow, behindPace.length > 0)}</h2>{nextActionContext && <p>{nextActionContext}</p>}</div></section>}
       {day && recommendation && (
         <section className="console-guidance" aria-label="Current recommendation">
           <p className="tool-label console-guidance__label">GUIDANCE</p>
@@ -2827,6 +2834,7 @@ export function TodayScreen({
             nextAction
             questionBelow={questionBelow}
             context={nextActionContext}
+            behindPace={behindPace.length > 0}
             day={day}
             recommendation={recommendation}
             headlineCommitment={headlineCommitment}

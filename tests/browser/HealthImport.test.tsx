@@ -68,7 +68,7 @@ describe("Health Connect sleep import", () => {
     const a11y = await axe.run(screen.container, { rules: { region: { enabled: false } } });
     expect(a11y.violations.map((v) => v.id)).toEqual([]);
     await screen.getByRole("button", { name: "CANCEL PREVIEW" }).click();
-    expect(document.activeElement).toBe(input);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "CHOOSE HEALTH FILE" }).element());
     expect(await db.externalSleepRecords.count()).toBe(0); expect(await db.healthImportReceipts.count()).toBe(0);
     await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).not.toBeInTheDocument();
   });

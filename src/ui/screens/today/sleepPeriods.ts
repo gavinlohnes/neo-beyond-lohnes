@@ -36,3 +36,17 @@ export function sleepWindowValues(series: readonly PeriodValue[], anchor: number
   }));
   return { days, bars };
 }
+/**
+ * Fills nights Garmin did not measure with the main sleep the owner logged that day, and names them,
+ * so the chart never shows a logged night as missing. Garmin's value always wins where it exists.
+ */
+export function withLoggedSleep(series: readonly PeriodValue[], logged: ReadonlyMap<string, number>) {
+  const loggedFrom = new Set<number>();
+  const filled = series.map((p): PeriodValue => {
+    const minutes = p.value === null && p.dayId ? logged.get(p.dayId) : undefined;
+    if (minutes === undefined) return p;
+    loggedFrom.add(p.from);
+    return { ...p, value: minutes };
+  });
+  return { series: filled, loggedFrom };
+}

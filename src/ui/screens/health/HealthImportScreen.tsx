@@ -19,7 +19,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
   const [activity, setActivity] = useState<ActivitySnapshot | null>(null);
   const [sleepDetailsOpen, setSleepDetailsOpen] = useState(false);
   const locked = useRef(false), selection = useRef(0), result = useRef<HTMLParagraphElement>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null), chooseButton = useRef<HTMLButtonElement>(null);
   useEffect(() => () => { selection.current++; }, []);
   // GARMIN-002 SEND TO BEYOND: preview any files the share sheet parked; they are removed once read.
   useEffect(() => {
@@ -85,7 +85,9 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
     <h2>IMPORT HEALTH DATA</h2>
     <p>Choose a file from BEYOND Health Bridge: sleep, or activity (steps, heart rate and calories). Review it before saving. Garmin measurements stay on this device.</p>
     <p>No account or upload. Imported measurements never change your own logs or TODAY guidance.</p>
-    <label>Health export file<input ref={fileInput} type="file" disabled={busy} onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} /></label>
+    {/* AUDIT-FIX: the suit's own button, not the browser's grey "Choose File · No file chosen". */}
+    <input ref={fileInput} type="file" aria-label="Health export file" style={{ display: "none" }} disabled={busy} onChange={(e) => { void choose(e.target.files?.[0]); e.target.value = ""; }} />
+    <button ref={chooseButton} type="button" className="btn-secondary" style={{ width: "auto" }} disabled={busy} onClick={() => fileInput.current?.click()}>CHOOSE HEALTH FILE</button>
     {busy && <p role="status">Working…</p>}
     {error && <p role="alert">{error}</p>}
     <p ref={result} tabIndex={-1} role="status">{message}</p>
@@ -112,7 +114,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
       </details>
       {!snapshot.records.length && <p>No Garmin sleep records in this export. Nothing will be saved.</p>}
       <button type="button" disabled={busy || !snapshot.records.length} onClick={() => void confirm()}>CONFIRM SLEEP IMPORT</button>
-      <button type="button" disabled={busy} onClick={() => { selection.current++; setSnapshot(null); setAssociations({}); setMessage("Preview cancelled. Nothing was imported."); fileInput.current?.focus(); }}>CANCEL PREVIEW</button>
+      <button type="button" disabled={busy} onClick={() => { selection.current++; setSnapshot(null); setAssociations({}); setMessage("Preview cancelled. Nothing was imported."); chooseButton.current?.focus(); }}>CANCEL PREVIEW</button>
     </section>}
     {activity && (() => {
       const total = summarizeActivity(activity.hours, Date.parse(activity.window.startTime), Date.parse(activity.window.endTime));
@@ -128,7 +130,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
         </details>
         {!activity.hours.length && !activity.restingHeartRate.length && <p>No Garmin steps or heart rate in this export. Nothing will be saved.</p>}
         <button type="button" disabled={busy || (!activity.hours.length && !activity.restingHeartRate.length)} onClick={() => void confirmActivity()}>CONFIRM STEPS AND HEART RATE IMPORT</button>
-        <button type="button" disabled={busy} onClick={() => { selection.current++; setActivity(null); setMessage("Preview cancelled. Nothing was imported."); fileInput.current?.focus(); }}>CANCEL PREVIEW</button>
+        <button type="button" disabled={busy} onClick={() => { selection.current++; setActivity(null); setMessage("Preview cancelled. Nothing was imported."); chooseButton.current?.focus(); }}>CANCEL PREVIEW</button>
       </section>;
     })()}
   </section>;

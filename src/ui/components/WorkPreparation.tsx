@@ -9,8 +9,10 @@ import { describeError } from "../errorMessage";
 import "./workPreparation.css";
 import { MemoryPanel } from "./MemoryPanel";
 
-export function WorkPreparation({ dayId, beforeWork, active, busy = false }: {
+export function WorkPreparation({ dayId, beforeWork, active, busy = false, onShift = false }: {
   dayId: string | null; beforeWork: boolean; active: boolean; busy?: boolean;
+  /** AUDIT-FIX: on shift there is nothing to prepare; the entry hides until the shift is over. */
+  onShift?: boolean;
 }) {
   const [read, setRead] = useState<{ dayId: string; state: PreparationState } | null>(null), [error, setError] = useState<string | null>(null);
   const state = read?.dayId === dayId ? read.state : null;
@@ -43,7 +45,7 @@ export function WorkPreparation({ dayId, beforeWork, active, busy = false }: {
   const confirmation = receipt && <ConfirmBanner message="Preparation updated." actionLabel="UNDO" disabled={disabled}
     onAction={() => void save(receipt.item, receipt.value, receipt.id, true)} />;
   const failure = error && <div role="alert"><p className="meta">{error}</p><button type="button" className="btn-secondary" disabled={saving} onClick={() => setAttempt((n) => n + 1)}>RELOAD PREPARATION</button></div>;
-  return <div hidden={!dayId} className="work-preparation" aria-label="Work preparation">
+  return <div hidden={!dayId} className="work-preparation" role="group" aria-label="Work preparation">
     {beforeWork ? <>
       <h2 className="tool-label">READY FOR TONIGHT</h2>
       {!state && !error && <p role="status" className="meta">Reading preparation…</p>}
@@ -54,7 +56,7 @@ export function WorkPreparation({ dayId, beforeWork, active, busy = false }: {
       </div>}
       <button type="button" className="btn-secondary" disabled={saving || busy} onClick={() => setOpen(true)}>{covered ? "CHANGE PREPARATION" : "PREPARATION OPTIONS"}</button>
       {!open && <>{confirmation}{failure}</>}
-    </> : <button type="button" className="btn-secondary preparation-entry" disabled={saving || busy} onClick={() => setOpen(true)}>PREPARE FOR WORK</button>}
+    </> : onShift ? null : <button type="button" className="btn-secondary preparation-entry" disabled={saving || busy} onClick={() => setOpen(true)}>PREPARE FOR WORK</button>}
     <LogSheet open={active && Boolean(dayId) && open} title="PREPARATION" onClose={() => setOpen(false)} canClose={() => !writing.current}>
       <p className="meta">For this BEYOND day. Packing food doesn't log it as eaten. Filling your bottle doesn't log water drunk.</p>
       <p className="meta">Homemade, frozen and other practical arrangements all count. Nothing carries over as an unfinished task.</p>
