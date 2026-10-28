@@ -224,6 +224,9 @@ recommendation selection, schema, events and Garmin semantics are unchanged.
   TRAIN and DATA tabs, TODAY TOOLS' controls, MONTHLY REVIEW (inside REVIEW), and the Settings and
   Backup rows that point at panels sitting right below them. 50 rows become 23, and the Log job
   row leaves the browse list. Search still finds every destination, so none is removed.
+  *Amended 2026-10-28 (WHOLE-PICTURE-IN-DATA, Gavin: "go whole picture"):* DATA's WHOLE
+  PICTURE and the cave FILE's OPEN WHOLE PICTURE open the same Whole Picture inside DATA, with
+  BACK TO DATA. They no longer jump to MORE // REVIEW, which still shows it too.
 
 ## REDESIGN-001 — one job, one home (owner approved 2026-10-19)
 
