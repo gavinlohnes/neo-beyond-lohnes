@@ -11,7 +11,7 @@ import { useSessionDraft } from "../../sessionDrafts";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { getLastMainSleep, getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
 import { SystemsLine } from "../systems/SystemsLine";
-import { CommsLine } from "./CommsLine";
+import { SuitLines } from "./SuitLines";
 import { Signal } from "../../components/Signal";
 import { useOnline } from "../../hooks/useOnline";
 import { getBackupPrompt } from "../../../application/autoBackupQueries";
@@ -281,8 +281,8 @@ export function TodayScreen({
   onOpenWeeklyReview?: () => void;
   /** SUIT-001: the SYSTEMS line opens the readout in COMMAND. */
   onOpenSystems?: () => void;
-  /** SUIT-ALIVE S3: the comms line opens the cave on TONIGHT. Absent, there is no comms line. */
-  onOpenCave?: () => void;
+  /** SUIT-ALIVE S3/S4: the route and comms lines open the cave on that view. Absent, neither line shows. */
+  onOpenCave?: (tab: "tonight" | "route") => void;
   onOpenHealthEvidence?: (metric: "water" | "protein" | "weight" | "sleep") => void;
   onOpenBody?: (target?: BodyFocus) => void;
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
@@ -2579,7 +2579,7 @@ export function TodayScreen({
             })}
             onPin={(phase) => { setModePin(day.id, phase); setModePinState({ dayId: day.id, phase }); }}
             onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
-            systems={onOpenCave && <CommsLine refreshKey={`${day.id}|${recommendation?.id ?? ""}|${lastMainSleepMinutes ?? ""}|${capacityResult?.capacity ?? ""}`} onOpen={() => { if (!busyRef.current) onOpenCave(); }} />}
+            systems={onOpenCave && <SuitLines now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${recommendation?.id ?? ""}|${lastMainSleepMinutes ?? ""}|${capacityResult?.capacity ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onOpen={(tab) => { if (!busyRef.current) onOpenCave(tab); }} />}
           >
             {/* The context sentence (or the countdown) stays for screen readers; the meta line shows it. */}
             <p className="visually-hidden status-strip__headline">

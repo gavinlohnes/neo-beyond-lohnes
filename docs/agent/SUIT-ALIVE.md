@@ -73,3 +73,24 @@ EMBLEM-002 master.
 - **OWN:** `application/caveTonight.ts` (composition and the comms wording), `CaveTonight.tsx`,
   `CommsLine.tsx`. **BUILD FROM SCRATCH:** none.
 - **Review:** Protected; independent review per DEV-FLOW-002 unless Gavin waives it.
+
+## S4 — the route
+
+- **Authority:** Gavin, 2026-10-28: "go S4". Ruling: SUIT-ALIVE-003. **Lane:** PROTECTED, because it
+  changes TODAY's primary layout. No Engine, schema or event change.
+- **Built:** `application/caveRoute.ts` builds the lived day's route:
+  - **Fixed:** the scheduled shift and the rollover.
+  - **Usual:** sleep and wake, the median of at least 3 Garmin-timed days of the same kind.
+  - **Prep:** food and bottle, on the shift point.
+
+  On TODAY, ROUTE shows the next three points above COMMS, and COMMS says a point for half
+  an hour after it passes. The cave gains ROUTE.
+- **REUSE:**
+  - `livedDayShiftWindow` and `nextRolloverBoundaryAfter`;
+  - Whole Picture `sleepWindow`, with `RUN_MEAN_FLOOR`;
+  - `getPreparation` and `getWorkPeriodEnded`;
+  - S3's hero band and cave navigation.
+- **OWN:** the route composition and callout wording, plus `SuitLines.tsx` (which replaces S3's
+  `CommsLine.tsx`) and `CaveRoute.tsx`. **BUILD FROM SCRATCH:** none.
+- **Deferred:** a break time on the schedule (schema change; needs its own ruling), and "last
+  coffee" (no caffeine data).

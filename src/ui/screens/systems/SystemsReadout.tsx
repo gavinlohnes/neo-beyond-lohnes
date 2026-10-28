@@ -30,7 +30,7 @@ import { Cave, type CaveOpen } from "./CaveVitals";
 import type { CaveVitalId } from "../../../application/caveVitals";
 import "./systems.css";
 
-/** SUIT-ALIVE S3: the last cave request handled, across mounts, so each opens TONIGHT once. */
+/** SUIT-ALIVE S3/S4: the last cave request handled, across mounts, so each opens the cave once. */
 let lastCaveRequest = 0;
 
 /**
@@ -39,30 +39,30 @@ let lastCaveRequest = 0;
  * SUIT-ALIVE S2: sleep, protein, water and the check-in open the cave in place
  * (one reading in depth); bodyweight still opens its history directly, and the
  * cave links to full history.
- * SUIT-ALIVE S3: TODAY's comms line opens the cave on TONIGHT through `caveRequest`.
+ * SUIT-ALIVE S3/S4: TODAY's comms and route lines open the cave through `caveRequest`.
  */
-export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveRequest = 0 }: {
+export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, caveRequest }: {
   active: boolean;
   /** Bumped after a write made while the readout stays shown (stealth). */
   refreshKey?: number;
   /** Opens DATA's existing history for that metric; absent, the rows are plain readings. */
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
-  /** A new value opens the cave on TONIGHT; each value opens it once. */
-  caveRequest?: number;
+  /** A new key opens the cave on that view; each key opens it once. */
+  caveRequest?: { key: number; tab: "tonight" | "route" } | undefined;
 }) {
   const online = useOnline();
   const [state, setState] = useState<{ readout: Readout; mode: ShiftClockPhase | null; pinned: boolean; templates: CustomWorkoutTemplate[]; now: Date; backupDue: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const sequence = useRef(0);
-  const [cave, setCave] = useState<CaveOpen | null>(() => caveRequest > lastCaveRequest ? { tab: "tonight" } : null);
+  const [cave, setCave] = useState<CaveOpen | null>(() => caveRequest && caveRequest.key > lastCaveRequest ? { tab: caveRequest.tab } : null);
   // The readout re-renders when the cave closes, so focus returns to the row by what it opened, not by element.
   const returnTo = useRef<CaveVitalId | null>(null);
   function openCave(id: CaveVitalId) { returnTo.current = id; setCave({ tab: "vitals", vital: id }); }
   useEffect(() => {
-    if (caveRequest <= lastCaveRequest) return;
-    lastCaveRequest = caveRequest;
+    if (!caveRequest || caveRequest.key <= lastCaveRequest) return;
+    lastCaveRequest = caveRequest.key;
     returnTo.current = null;
-    setCave({ tab: "tonight" });
+    setCave({ tab: caveRequest.tab });
   }, [caveRequest]);
   useEffect(() => {
     if (cave || !returnTo.current) return;

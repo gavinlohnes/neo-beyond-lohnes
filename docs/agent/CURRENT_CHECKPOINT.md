@@ -1,3 +1,13 @@
+# SUIT-ALIVE S4 — the route
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28, "go S4" (SUIT-ALIVE-003). Claude Code; PROTECTED
+  (TODAY layout; no Engine, schema or event change). [Brief](SUIT-ALIVE.md#s4--the-route).
+- **Baseline:** master `8fa7f33` (#315 S3 merged).
+- **Built:** ROUTE on TODAY (the next three points), in-app callouts on COMMS, and the cave's
+  ROUTE view. Break time deferred (schema).
+- **Next:** CI and Gavin's merge. Then S5 (dark cockpit and pace), Protected.
+
+---
 # SUIT-ALIVE S3 — comms and Tonight
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28, "go S3" (SUIT-ALIVE-002). Claude Code; PROTECTED

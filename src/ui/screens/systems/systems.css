@@ -55,7 +55,7 @@
 .cave__feeds { margin: 0; padding-left: 12px; border-left: 1px solid var(--border-subtle); color: var(--text-2); font-size: 14.5px; line-height: 1.55; }
 .cave__feeds--decides { border-left-color: var(--text-1); color: var(--text-1); }
 /* SUIT-ALIVE S3: the cave's two views, and Tonight. Amber marks off-normal; red stays reserved. */
-.cave__tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border-subtle); }
+.cave__tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border-subtle); }
 .cave__tab { min-height: 44px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--text-2); font: inherit; font-size: 12px; letter-spacing: .2em; cursor: pointer; }
 .cave__tab[aria-pressed="true"] { color: var(--text-1); border-bottom-color: var(--text-1); }
 .cave__call { margin: 0; font-size: 20px; font-weight: 500; line-height: 1.3; }
@@ -68,4 +68,18 @@
 .cave__gt { font-size: 13px; letter-spacing: .14em; }
 .cave__gm { font-size: 14.5px; line-height: 1.45; color: var(--text-2); }
 .cave__cap--late { color: var(--warning); }
-.cave__block > .meta { margin: 0; }
+.cave__block > .meta, .cave > .meta { margin: 0; }
+/* SUIT-ALIVE S4: the route. Solid pins are fixed, hollow are usual; red stays reserved. */
+.cave__route { list-style: none; margin: 0; padding: 0; position: relative; display: grid; }
+.cave__route::before { content: ""; position: absolute; left: 61px; top: 14px; bottom: 14px; width: 1px; background: var(--border-subtle); }
+.cave__stop { display: grid; grid-template-columns: 50px 24px 1fr; gap: 0 4px; align-items: start; padding: 10px 0; }
+.cave__stop time { font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; padding-top: 1px; }
+.cave__pin { width: 11px; height: 11px; margin: 4px 0 0 7px; border: 1px solid var(--text-1); background: var(--text-1); position: relative; z-index: 1; }
+.cave__stop--usual .cave__pin { background: var(--bg, #000); border-style: dashed; }
+.cave__stop--passed { color: var(--text-2); }
+.cave__stop--passed .cave__pin { border-color: var(--text-2); background: var(--text-2); }
+.cave__stop--usual.cave__stop--passed .cave__pin { background: var(--bg, #000); }
+.cave__stop-body { display: grid; gap: 2px; min-width: 0; }
+.cave__stop-name { font-size: 13px; letter-spacing: .14em; }
+.cave__stop--next .cave__stop-name { color: var(--text-1); font-weight: 600; }
+.cave__stop-why { font-size: 14px; line-height: 1.45; color: var(--text-2); }

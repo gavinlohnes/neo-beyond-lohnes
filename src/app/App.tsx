@@ -254,8 +254,8 @@ function AppWorkspaces() {
   const [toolsRequest, setToolsRequest] = useState(0);
   const [captureOrigin, setCaptureOrigin] = useState<Tab | null>(null);
   const [moreRequest, setMoreRequest] = useState(0);
-  /** SUIT-ALIVE S3: TODAY's comms line opens the cave on TONIGHT; each request counts up across mounts. */
-  const [caveRequest, setCaveRequest] = useState(0);
+  /** SUIT-ALIVE S3/S4: TODAY's comms and route lines open the cave on that view; each request counts up across mounts. */
+  const [caveRequest, setCaveRequest] = useState<{ key: number; tab: "tonight" | "route" }>({ key: 0, tab: "tonight" });
   const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(null);
   useEffect(() => {
     if (!shortcut) return;
@@ -635,7 +635,7 @@ function AppWorkspaces() {
               onOpenHealthEvidence={openBodyEvidence}
               onOpenWeeklyReview={() => openMore("REVIEW")}
               onOpenSystems={() => { openMore("SYSTEMS"); }}
-              onOpenCave={() => { if (openMore("SYSTEMS", null, false)) setCaveRequest(++caveRequests); }}
+              onOpenCave={(tab) => { if (openMore("SYSTEMS", null, false)) setCaveRequest({ key: ++caveRequests, tab }); }}
               toolsRequest={toolsRequest}
             />
           </RootErrorBoundary>

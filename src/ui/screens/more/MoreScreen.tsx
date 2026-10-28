@@ -83,7 +83,7 @@ export function MoreScreen({
   onOpenMeal,
   onOpenDestination,
   historyDestination = null, onReturnToHealth, onHistoryExit,
-  onOpenMetric, onReturnToToday, systemsRefreshKey = 0, caveRequest = 0,
+  onOpenMetric, onReturnToToday, systemsRefreshKey = 0, caveRequest,
   reviewDestination = null,
   onReviewDestinationConsumed,
 }: {
@@ -97,8 +97,8 @@ export function MoreScreen({
   onOpenMetric?: ((metric: InsightMetric) => void) | undefined;
   /** SUIT-001: bumped after a stealth write, so an open SYSTEMS readout re-reads. */
   systemsRefreshKey?: number;
-  /** SUIT-ALIVE S3: a new value opens the cave on TONIGHT (TODAY's comms line). */
-  caveRequest?: number;
+  /** SUIT-ALIVE S3/S4: a new key opens the cave on that view (TODAY's comms and route lines). */
+  caveRequest?: { key: number; tab: "tonight" | "route" };
   /** SUIT-001: set when TODAY's SYSTEMS line opened the readout. */
   onReturnToToday?: (() => void) | undefined;
   onOpenCapture?: () => void;
