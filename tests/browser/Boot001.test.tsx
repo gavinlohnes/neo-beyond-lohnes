@@ -36,7 +36,9 @@ describe("BOOT-001", () => {
     await startDay();
     const screen = await render(<BootSequence />);
     await expect.element(screen.getByRole("status", { name: /BEYOND starting/ })).toBeVisible();
-    expect(document.querySelector(".boot__mark path")!.getAttribute("fill")).toBe("#D0141B"); // SUIT-ALIVE-001
+    const halves = document.querySelectorAll(".boot__mark polygon"); // BRAND-MARK-002: the split bat, hairline cut
+    expect(halves).toHaveLength(2);
+    expect([...halves].every((p) => p.getAttribute("fill") === "#D0141B")).toBe(true);
     await expect.element(screen.getByText("BEYOND", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("DAY 1", { exact: true })).toBeVisible();
     await waitPastEnd();

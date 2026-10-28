@@ -1,3 +1,21 @@
+# BRAND-MARK-002 — the split bat is BEYOND's mark and app icon
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28, Routine Drop ("Brand mark Drop (Routine). Queue
+  after D4."). Claude Code; ROUTINE. Branch `ccr-0be4f40f-16m0ja`.
+- **Baseline:** master `44ded85` (#325 D4 + D5 merged; CAVE-DATA is complete apart from stages).
+- **Built:**
+  - Gavin's three SVGs in `docs/brand/suit-mark/`, using the HUD red `#D0141B` and black.
+  - The in-app bat uses the icon cut in the header and cave, and the hairline cut at boot.
+  - New `beyond-v2-*` icons at 192, 512, 512 maskable, 180 apple-touch, and the 32px and SVG
+    favicons.
+  - The manifest lists "any" and "maskable" separately, and the service worker has a new cache id
+    (`beyond-mark-v2`).
+  - The old icons and their generators are removed.
+- **Verified:** `npm run verify` green. The built manifest and service worker carry only `beyond-v2`
+  icons. A preview with a circle mask shows the bat uncropped and the split visible at 48px.
+- **Next:** CI and Gavin's merge. Then install on the phone to confirm the home-screen icon. If
+  Android still shows the old one, remove and re-add the app.
+
 # CAVE-DATA D4 + D5 — since last shift in TONIGHT; resting HR and steps in VITALS
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28: "If we can get D4 and D5 done…" (this is also

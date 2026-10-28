@@ -31,6 +31,9 @@ export default defineConfig({
       // requirement this checkpoint set out to fix, not a nice-to-have.
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // BRAND-MARK-002: a new cache id so installed phones drop the old icons with the old precache.
+        cacheId: "beyond-mark-v2",
+        cleanupOutdatedCaches: true,
         // GARMIN-002 SEND TO BEYOND: receives Health Bridge files shared to the installed app.
         importScripts: ["share-target-sw.js"],
       },
@@ -41,9 +44,12 @@ export default defineConfig({
         theme_color: "#000000",
         background_color: "#000000",
         display: "standalone",
+        // BRAND-MARK-002: the split bat, full-bleed black. The OS masks the shape; the mark sits inside
+        // the maskable safe zone. Source: docs/brand/suit-mark/beyond-app-icon.svg.
         icons: [
-          { src: "icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-          { src: "icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
+          { src: "icons/beyond-v2-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "icons/beyond-v2-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "icons/beyond-v2-512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
         ],
         // SHORTCUTS-001 (owner brief 2026-10-05): long-press the icon for
         // START WORKOUT, +WATER and LOG MEAL. Each opens straight to that
@@ -57,9 +63,9 @@ export default defineConfig({
           params: { files: [{ name: "health", accept: ["application/json", ".json"] }] },
         },
         shortcuts: [
-          { name: "START WORKOUT", short_name: "START WORKOUT", url: "./?go=workout", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
-          { name: "+WATER", short_name: "+WATER", url: "./?go=water", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] },
-          { name: "LOG MEAL", short_name: "LOG MEAL", url: "./?go=meal", icons: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }] }
+          { name: "START WORKOUT", short_name: "START WORKOUT", url: "./?go=workout", icons: [{ src: "icons/beyond-v2-192.png", sizes: "192x192", type: "image/png" }] },
+          { name: "+WATER", short_name: "+WATER", url: "./?go=water", icons: [{ src: "icons/beyond-v2-192.png", sizes: "192x192", type: "image/png" }] },
+          { name: "LOG MEAL", short_name: "LOG MEAL", url: "./?go=meal", icons: [{ src: "icons/beyond-v2-192.png", sizes: "192x192", type: "image/png" }] }
         ]
       }
     })

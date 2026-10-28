@@ -1,5 +1,8 @@
 BEYOND PRIMARY MARK — PRODUCTION MASTER v1.0
 
+SUPERSEDED (BRAND-MARK-002, 2026-10-28): the split bat in docs/brand/suit-mark/ is now the app icon.
+These files are kept as history and are no longer referenced by the app.
+
 Design authority
 Concept-art direction approved by owner. These files convert that direction
 into deterministic vector geometry.
