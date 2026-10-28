@@ -2256,3 +2256,22 @@ D1–D5, each for Gavin's merge. The tab keeps its name.
   - **A day tapped in the rotation** opens that day's records under NUMBERS.
   - **WHOLE PICTURE** stays in REVIEW, one tap from NUMBERS or FILE ("OPEN WHOLE PICTURE"). Its own
     Rotation tab is unchanged.
+- **D4 and D5 (Gavin, 2026-10-28: "If we can get D4 and D5 done…"; this is also DELTA-002's slice go
+  for "since last shift"):**
+  - **TONIGHT leads with SINCE LAST SHIFT.** Up to four plain facts:
+    - how long ago the last finished shift was, and how many full days off have passed since;
+    - how the nights since sat against your usual sleep on days off;
+    - when you last trained;
+    - how weight moved since the shift.
+  - Each fact says where it was read from, and opens its day's records in DATA. Sleep opens VITALS.
+  - **Questions as buttons:** WHY THIS? goes to the call's own reasoning, and WHAT'S NORMAL FOR ME?
+    opens VITALS. "What would help most?" is not built, because ranking factors is Protected.
+  - **VITALS adds RESTING HR and STEPS** from Garmin's daily summaries. Each is judged on the last
+    finished day against your usual range for that kind of day, and both are informational: they
+    never feed the advice. They join TONIGHT's readings and, by distance from your normal, the comms
+    line.
+  - **Not built: sleep stages against your usual.** Stages are shown on SLEEP's day page, but
+    Whole Picture's rows don't carry them. Judging them needs a new projection, so it is left for a
+    later slice.
+  - **Not changed:** the Engine, schema, events, NAV-001's paths and stored records. Nothing is a
+    score.

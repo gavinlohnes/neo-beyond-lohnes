@@ -1,3 +1,19 @@
+# CAVE-DATA D4 + D5 — since last shift in TONIGHT; resting HR and steps in VITALS
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28: "If we can get D4 and D5 done…" (this is also
+  DELTA-002's slice go). Claude Code; PROTECTED (CAVE-DATA-001). Branch `ccr-0be4f40f-16m0ja`.
+- **Baseline:** master `fb6230c` (#324 D3 merged).
+- **Built:**
+  - TONIGHT leads with SINCE LAST SHIFT: up to four facts (the shift and days off since, nights
+    against your usual sleep, last workout, and weight change). Each opens its records.
+  - Questions as buttons: WHY THIS? and WHAT'S NORMAL FOR ME?
+  - VITALS adds RESTING HR and STEPS, which are Garmin daily readings, informational only.
+- **Verified:** `npm run verify` green (3,142 passed, 1 skipped).
+- **Deferred:** sleep stages against your usual, because the rows carry no stages. "What would help
+  most?", because ranking factors is Protected.
+- **Next:** CI and Gavin's merge. The CAVE-DATA plan is then complete apart from stages. Gavin's
+  brand-mark SVG Drop (three SVGs) is waiting on the files reaching the session.
+
 # CAVE-DATA D3 — FILE carries YOUR ROTATION
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28: "Go with number and start d3. Merge when ready."

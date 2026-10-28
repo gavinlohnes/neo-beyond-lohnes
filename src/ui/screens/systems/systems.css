@@ -152,3 +152,10 @@
 .cave__lead-view { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
 /* CAVE-DATA D3: YOUR ROTATION inside FILE keeps Whole Picture's own styling, on the cave's background. */
 .whole-picture.file__rotation { background: none; min-width: 0; }
+/* CAVE-DATA D4: since last shift — facts that open their records, and questions as buttons. */
+.cave__since { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cave__since button, .cave__since p { width: 100%; min-height: 44px; margin: 0; text-align: left; background: none; border: 1px solid var(--border-subtle); color: inherit; font: inherit; padding: 10px 12px; display: grid; gap: 2px; }
+.cave__since button { cursor: pointer; }
+.cave__since small { font-size: 0.8125rem; }
+.cave__asks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.cave__asks .chip { min-height: 44px; }
