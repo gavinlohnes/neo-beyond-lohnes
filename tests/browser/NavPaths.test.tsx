@@ -43,9 +43,14 @@ describe("NAV-001 top tasks from TODAY", () => {
     expect(box.top).toBeGreaterThanOrEqual(0);
     const hit = () => { const rect = plus.element().getBoundingClientRect(); return plus.element().contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)); };
     expect(hit()).toBe(true);
+    // TODAY can still grow while its reads land; a scroll that stops short of the end hides +
+    // (scroll-away). Wait for the page height to settle before scrolling to the end.
+    const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    let settled = -1;
+    await expect.poll(async () => { const before = settled; await frame(); await frame(); settled = document.documentElement.scrollHeight; return settled === before; }).toBe(true);
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
     await expect.poll(() => plus.element().getBoundingClientRect().bottom).toBe(box.bottom);
-    expect(hit()).toBe(true);
+    await expect.poll(hit).toBe(true);
     await plus.click();
     await expect.element(screen.getByRole("dialog", { name: "LOG", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "CLOSE", exact: true }).click();
