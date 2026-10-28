@@ -1,3 +1,15 @@
+# CAVE-DATA D2 — VITALS carries each reading's page
+
+- **Authority / Builder / lane:** Gavin, 2026-10-28, "D2 next" (CAVE-DATA-001). Claude Code; PROTECTED.
+  [Brief](CAVE-DATA.md).
+- **Baseline:** master `b2ec540` (#322 D1 merged).
+- **Built:** VITALS shows sleep's D/W/M/Y page (shared with TODAY's sheet) and protein's and water's
+  7/28/90 pages inline.
+- **Open question for Gavin:** should DATA open on TONIGHT? It conflicts with NAV-001's two-tap paths
+  (42 tests). DATA stays on NUMBERS until he decides.
+- **Next:** CI and Gavin's merge; his default-view choice; then D3 (FILE absorbs YOUR ROTATION).
+
+---
 # CAVE-DATA D1 — the cave is DATA
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28, option A (CAVE-DATA-001). Claude Code; PROTECTED

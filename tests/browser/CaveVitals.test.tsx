@@ -57,3 +57,25 @@ it("opens energy from the check-in row", async () => {
   await expect.element(screen.getByRole("button", { name: "ENERGY", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect.element(screen.getByText(/^Feeds BEYOND's advice\. Your check-in sets capacity/)).toBeVisible();
 });
+
+for (const width of [320, 390]) it(`CAVE-DATA D2: each vital carries its own page inside VITALS at ${width}px, writing nothing`, async () => {
+  await page.viewport(width, 820);
+  const day = await startDay(); await logWater(day.id, 16); await logSleep(day.id, 400, "PRIMARY");
+  const before = await db.events.toArray();
+  const screen = await render(<App />);
+  await screen.getByRole("button", { name: "DATA", exact: true }).click();
+  await screen.getByRole("button", { name: "VITALS", exact: true }).click();
+  const cave = screen.getByRole("region", { name: "THE CAVE // VITALS" });
+  // Sleep: the Day / Week / Month / Year page, the same one TODAY's sleep sheet shows.
+  await expect.element(cave.getByRole("group", { name: "SLEEP period" })).toBeVisible();
+  await expect.element(cave.getByRole("button", { name: "Week", exact: true })).toHaveAttribute("aria-pressed", "true");
+  // Water: its 7 / 28 / 90-day page, locked to water.
+  await cave.getByRole("button", { name: "WATER", exact: true }).click();
+  await expect.element(cave.getByRole("group", { name: "Progress time range" })).toBeVisible();
+  expect(cave.getByRole("combobox", { name: "EXPLORE A MEASURE" }).elements()).toHaveLength(0);
+  await expect.element(cave.getByRole("heading", { name: "Water", exact: true })).toBeVisible();
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+  for (const animation of document.getAnimations()) animation.finish();
+  expect((await axe.run(document.querySelector(".cave")!)).violations).toEqual([]);
+  expect(await db.events.toArray()).toEqual(before);
+});

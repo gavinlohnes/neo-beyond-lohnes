@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { CAVE_VITALS, describeCaveVital, formatCaveValue, getCaveVital, type CaveVital, type CaveVitalId } from "../../../application/caveVitals";
-import type { InsightMetric } from "../../../application/bodyInsightsQueries";
 import { describeError } from "../../errorMessage";
 import { BatMark } from "../../components/BatMark";
 import { CaveTonightView } from "./CaveTonight";
@@ -8,6 +7,9 @@ import { CaveRouteView } from "./CaveRoute";
 import { CaveBriefView } from "./CaveBrief";
 import { CaveFileView } from "./CaveFile";
 import { CaveLogView } from "./CaveLog";
+import { SleepPeriods } from "../today/SleepMetricSheet";
+import { InsightsExplorer } from "../body/InsightsExplorer";
+import { getBodyInsights, type BodyInsights, type InsightMetric } from "../../../application/bodyInsightsQueries";
 import "./systems.css";
 
 /**
@@ -129,6 +131,10 @@ function CaveVitals({ id, onPick, onOpenMetric }: {
           <h3 id="cave-src" className="cave__cap">Source</h3>
           <dl className="cave__kv">{shown.source.map((s) => <div key={s.label}><dt>{s.label}</dt><dd>{s.value}</dd></div>)}</dl>
         </section>
+        {(id === "sleep" || id === "protein" || id === "water") && <section className="cave__block" aria-labelledby="cave-history">
+          <h3 id="cave-history" className="cave__cap">History</h3>
+          {id === "sleep" ? <SleepPeriods active /> : <VitalHistory metric={id} />}
+        </section>}
         {history && onOpenMetric && <button type="button" className="btn-secondary" onClick={() => onOpenMetric(history)}>FULL HISTORY</button>}
       </>}
     </>
@@ -168,3 +174,21 @@ function Trend({ vital }: { vital: CaveVital }) {
   );
 }
 const shortDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+/**
+ * CAVE-DATA D2: the measure's own page (7, 28 or 90 days over your records), inside VITALS, so the
+ * cave holds one page per number. The same explorer as DATA's progress, locked to this measure.
+ */
+function VitalHistory({ metric }: { metric: "protein" | "water" }) {
+  const [data, setData] = useState<BodyInsights | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let current = true;
+    setData(null); setFailed(false);
+    void getBodyInsights().then((d) => { if (current) setData(d); }).catch(() => { if (current) setFailed(true); });
+    return () => { current = false; };
+  }, [metric]);
+  if (failed) return <p className="meta" role="alert">History could not be read. Your records are unchanged.</p>;
+  if (!data) return <p className="meta" role="status">Reading history…</p>;
+  return <InsightsExplorer data={data} weights={[]} lockedMetric={metric} />;
+}

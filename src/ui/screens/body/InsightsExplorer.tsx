@@ -19,14 +19,16 @@ export function insightValue(value: number | undefined, metric: InsightMetric): 
 }
 
 export interface InsightExploration { metric: InsightMetric; range: number; pointId: string | null; focusDayId: string | null }
-export function InsightsExplorer({ data, weights, goalWeightLbs, hideChart = false, exploration, onExploreChange, onSources }: {
+export function InsightsExplorer({ data, weights, goalWeightLbs, hideChart = false, exploration, onExploreChange, onSources, lockedMetric }: {
+  /** CAVE-DATA D2: the cave's VITALS shows one measure's page; the measure picker is hidden. */
+  lockedMetric?: InsightMetric | undefined;
   exploration?: InsightExploration;
   onExploreChange?: (next: InsightExploration) => void;
   onSources?: ((point: InsightPoint, metric: InsightMetric) => void) | undefined;
   data: BodyInsights; weights: readonly WeighIn[]; goalWeightLbs?: number | undefined; hideChart?: boolean;
 }) {
-  const [local, setLocal] = useState<InsightExploration>({ metric: "weight", range: 28, pointId: null, focusDayId: null });
-  const state = exploration ?? local;
+  const [local, setLocal] = useState<InsightExploration>({ metric: lockedMetric ?? "weight", range: 28, pointId: null, focusDayId: null });
+  const state = lockedMetric ? { ...(exploration ?? local), metric: lockedMetric } : exploration ?? local;
   const change = (next: InsightExploration) => { setLocal(next); onExploreChange?.(next); };
   const { range, metric } = state;
   const window = useMemo(() => insightWindow(insightPoints(data, weights, metric), data.readAt, range), [data, weights, metric, range]);
@@ -44,10 +46,10 @@ export function InsightsExplorer({ data, weights, goalWeightLbs, hideChart = fal
       {[7, 28, 90].map((days) => <button key={days} type="button" className="btn-secondary" aria-pressed={range === days} onClick={() => change({ ...state, range: days, pointId: null })}>{days} DAYS</button>)}
     </div>
     <p className="meta insights-window">{formatShortDate(new Date(Date.parse(data.readAt) - range * INSIGHT_DAY_MS))} – {formatShortDate(data.readAt)} · rolling {range} × 24 hours</p>
-    <label className="tool-label insights-label" htmlFor="insight-measure">EXPLORE A MEASURE</label>
+    {!lockedMetric && <><label className="tool-label insights-label" htmlFor="insight-measure">EXPLORE A MEASURE</label>
     <select id="insight-measure" className="input" value={metric} onChange={(event) => change({ ...state, metric: event.target.value as InsightMetric, pointId: null })}>
       {Object.entries(METRICS).map(([id, spec]) => <option key={id} value={id}>{spec.label}</option>)}
-    </select>
+    </select></>}
     <div className="insights-measure" aria-live="polite">
       <h3 className="tool-label">{METRICS[metric].label}</h3>
       <p className="insights-value">{insightValue(window.average, metric)}</p>
