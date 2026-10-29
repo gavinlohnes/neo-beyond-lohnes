@@ -27,9 +27,12 @@ export const SLEEP_DRAFT_MAX_MINUTES = 12 * 60;
 export const SLEEP_DRAFT_ROUND_MINUTES = 5;
 
 export interface SleepDraftInput {
-  /** The latest SHIFT_DOWN_COMPLETED or WORK_PERIOD_ENDED on this day, and which it was. */
+  /**
+   * The latest SHIFT_DOWN_COMPLETED or WORK_PERIOD_ENDED on this day, and which it was; without
+   * either, the scheduled shift end (SLEEP-001).
+   */
   anchorAt: string | null;
-  anchorKind: "SHIFT_DOWN" | "WORK_ENDED" | null;
+  anchorKind: "SHIFT_DOWN" | "WORK_ENDED" | "SHIFT_END" | null;
   /** The latest thing the operator did on this day before this app open. */
   lastOperatorActionAt: string | null;
   /** When the app was last brought to the foreground. */
@@ -48,7 +51,7 @@ export function deriveSleepDraft(input: SleepDraftInput): Draft<number> | null {
   const value = Math.floor(gapMinutes / SLEEP_DRAFT_ROUND_MINUTES) * SLEEP_DRAFT_ROUND_MINUTES;
   return {
     value,
-    reason: `${fromLastActivity ? "Last logged" : input.anchorKind === "WORK_ENDED" ? "Work ended" : "Shift Down"} ${clock(
+    reason: `${fromLastActivity ? "Last logged" : ANCHOR_WORDS[input.anchorKind ?? "SHIFT_DOWN"]} ${clock(
       new Date(anchor),
     )} → opened ${clock(input.openedAt)}`,
     basis: [
@@ -58,6 +61,13 @@ export function deriveSleepDraft(input: SleepDraftInput): Draft<number> | null {
       { key: "upperBoundMinutes", value },
     ],
   };
+}
+
+const ANCHOR_WORDS = { SHIFT_DOWN: "Shift Down", WORK_ENDED: "Work ended", SHIFT_END: "Shift ended" } as const;
+
+/** SLEEP-001: the draft said as a window — "07:15 → 14:00" — ending when the app was opened. */
+export function sleepDraftWindow(minutes: number, openedAt: Date): string {
+  return `${clock(new Date(openedAt.getTime() - minutes * 60_000))} → ${clock(openedAt)}`;
 }
 
 function clock(date: Date): string {

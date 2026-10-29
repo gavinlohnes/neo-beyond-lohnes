@@ -56,17 +56,16 @@ describe("Sleep draft (real browser)", () => {
     openAt(at(13, 14, 20));
     const onOpenBody = vi.fn();
     const screen = await render(<TodayScreen onOpenBody={onOpenBody} />);
-    await screen.getByRole("button", { name: "LOG MAIN SLEEP", exact: true }).click();
-
-    await expect.element(screen.getByRole("heading", { name: "Slept up to 7 hr 15 min?" })).toBeVisible();
-    await expect.element(screen.getByText("Shift Down 07:05 → opened 14:20", { exact: true })).toBeVisible();
+    // SLEEP-001: the draft is on screen at open; no tap to reveal it.
+    await expect.element(screen.getByRole("heading", { name: "Slept 07:05 → 14:20?" })).toBeVisible();
+    await expect.element(screen.getByText("Up to 7 hr 15 min · Shift Down 07:05 → opened 14:20", { exact: true })).toBeVisible();
     // Manual entry stays one tap away.
     await screen.getByRole("button", { name: "ENTER IN DATA" }).click();
     expect(onOpenBody).toHaveBeenCalledWith("sleep");
 
     await screen.getByRole("button", { name: "15 minutes less" }).click();
-    await expect.element(screen.getByRole("heading", { name: "Slept up to 7 hr?" })).toBeVisible();
-    await expect.element(screen.getByText("Shift Down 07:05 → opened 14:20 · adjusted −15 min", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "Slept 07:20 → 14:20?" })).toBeVisible();
+    await expect.element(screen.getByText("Up to 7 hr · Shift Down 07:05 → opened 14:20 · adjusted −15 min", { exact: true })).toBeVisible();
     // Nothing is written until LOG.
     expect((await db.events.where("beyondDayId").equals(day.id).toArray()).some((e) => e.type === "SLEEP_LOGGED")).toBe(false);
 
@@ -82,17 +81,15 @@ describe("Sleep draft (real browser)", () => {
     await workNightThenShiftDown();
     openAt(at(13, 14, 20));
     const first = await render(<TodayScreen />);
-    await first.getByRole("button", { name: "LOG MAIN SLEEP", exact: true }).click();
     await first.getByRole("button", { name: "NOT NOW" }).click();
     const mainSleepRow = () => document.querySelector('[data-shift-clock-row="MAIN_SLEEP"]')?.textContent ?? "";
-    await expect.poll(mainSleepRow, { timeout: 10_000 }).toContain("Log it when you wake.");
-    expect(mainSleepRow()).not.toContain("Slept up to");
+    await expect.poll(mainSleepRow, { timeout: 10_000 }).toContain("Did you sleep?");
+    expect(mainSleepRow()).not.toContain("Slept 07:05");
     await cleanup();
 
     const reopened = await render(<TodayScreen />);
-    await reopened.getByRole("button", { name: "LOG MAIN SLEEP", exact: true }).click();
-    await expect.poll(mainSleepRow, { timeout: 10_000 }).toContain("Log it when you wake.");
-    expect(mainSleepRow()).not.toContain("Slept up to");
+    await expect.element(reopened.getByRole("heading", { name: "Did you sleep?" })).toBeVisible();
+    expect(mainSleepRow()).not.toContain("Slept 07:05");
   });
 
   it("Drop 1.6b: counts from the last thing logged after Shift Down instead of going quiet", async () => {
@@ -101,10 +98,23 @@ describe("Sleep draft (real browser)", () => {
     await logWater(day.id, 16);
     openAt(at(13, 14, 20));
     const screen = await render(<TodayScreen />);
-    await screen.getByRole("button", { name: "LOG MAIN SLEEP", exact: true }).click();
-
+    await expect.element(screen.getByRole("heading", { name: "Slept 09:00 → 14:20?" })).toBeVisible();
     const mainSleepRow = () => document.querySelector('[data-shift-clock-row="MAIN_SLEEP"]')?.textContent ?? "";
-    await expect.poll(mainSleepRow, { timeout: 10_000 }).toContain("Slept up to 5 hr 20 min?");
+    expect(mainSleepRow()).toContain("Up to 5 hr 20 min");
     expect(mainSleepRow()).toContain("Last logged 09:00 → opened 14:20");
+  });
+
+  it("SLEEP-001: without WORK ENDED or Shift Down, counts from the scheduled shift end — one tap logs it", async () => {
+    const { id: _i, createdAt: _c, updatedAt: _u, ...fields } = DEFAULT_SCHEDULE_PATTERN;
+    await updateSchedulePattern(fields);
+    vi.setSystemTime(at(12, 16, 30));
+    const day = await startDay();
+    openAt(at(13, 13, 40));
+    const screen = await render(<TodayScreen />);
+    await expect.element(screen.getByRole("heading", { name: "Slept 06:00 → 13:40?" })).toBeVisible();
+    await expect.element(screen.getByText("Up to 7 hr 40 min · Shift ended 06:00 → opened 13:40", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "LOG 7 HR 40 MIN" }).click();
+    await expect.poll(async () => (await db.events.where("beyondDayId").equals(day.id).toArray()).find((e) => e.type === "SLEEP_LOGGED")?.payload)
+      .toMatchObject({ durationMinutes: 460, kind: "PRIMARY", draft: "CONFIRMED" });
   });
 });

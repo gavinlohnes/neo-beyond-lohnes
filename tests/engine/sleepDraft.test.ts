@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveSleepDraft, SLEEP_DRAFT_MAX_MINUTES, SLEEP_DRAFT_MIN_MINUTES, type SleepDraftInput } from "../../src/engine/sleepDraft";
+import { deriveSleepDraft, sleepDraftWindow, SLEEP_DRAFT_MAX_MINUTES, SLEEP_DRAFT_MIN_MINUTES, type SleepDraftInput } from "../../src/engine/sleepDraft";
 
 /** Sleep draft (2026-10-03): an upper bound from Shift Down → next app open. */
 const at = (d: number, h: number, min = 0) => new Date(2026, 9, d, h, min, 0, 0);
@@ -32,6 +32,12 @@ describe("deriveSleepDraft", () => {
 
   it("names MARK WORK ENDED when that's the starting point", () => {
     expect(deriveSleepDraft(input({ anchorKind: "WORK_ENDED" }))?.reason).toBe("Work ended 07:05 → opened 14:22");
+  });
+
+  it("SLEEP-001: names the scheduled shift end, and says the draft as a window ending at open", () => {
+    expect(deriveSleepDraft(input({ anchorAt: at(13, 6).toISOString(), anchorKind: "SHIFT_END", lastOperatorActionAt: null, openedAt: at(13, 14, 2) }))?.reason)
+      .toBe("Shift ended 06:00 → opened 14:02");
+    expect(sleepDraftWindow(480, at(13, 14, 2))).toBe("06:02 → 14:02");
   });
 
   it("stays quiet rather than guess", () => {

@@ -170,7 +170,7 @@ import { traceShortSleepStreak } from "../../../engine/evaluate";
 import type { SchedulePattern } from "../../../domain/common/types";
 import { templateLabel } from "../train/trainCopy";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
-import { deriveSleepDraft } from "../../../engine/sleepDraft";
+import { deriveSleepDraft, sleepDraftWindow } from "../../../engine/sleepDraft";
 import { checkInDraftDecision, type CheckInDraft } from "../../../engine/checkInDraft";
 import { getCheckInDraft } from "../../../application/checkInDraftQueries";
 import { getAppOpenedAt } from "../../appSession";
@@ -610,7 +610,6 @@ export function TodayScreen({
   // ---- SLEEP DRAFT (2026-10-03) ----
   const [sleepDraftEvidence, setSleepDraftEvidence] = useState<Awaited<ReturnType<typeof getSleepDraftEvidence>> | null>(null);
   // ±15-minute nudges applied to the draft before logging it.
-  const [recoverSleepOpen, setRecoverSleepOpen] = useState(false);
   const [sleepNotYetDay, setSleepNotYetDay] = useState<string | null>(null);
   const [sleepDraftAdjust, setSleepDraftAdjust] = useState(0);
   // NOT NOW: remembered on this phone only, for that day (per-device convenience).
@@ -1934,13 +1933,13 @@ export function TodayScreen({
 
   function renderRecoverSleepPrompt() {
     if (!day) return null;
+    // SLEEP-001: the drafted night is the question itself, so logging it is one tap.
+    if (sleepDraft && sleepDraftDismissedDayId !== day.id) return <div data-recover-sleep-prompt>{renderPhaseRow("MAIN_SLEEP", true)}</div>;
     return <div className="equipment-row" data-recover-sleep-prompt>
       <h2 className="card-title">Did you sleep?</h2>
       {sleepNotYetDay === day.id && <p className="meta">Log main sleep when you're ready.</p>}
-      {recoverSleepOpen && sleepDraft ? renderPhaseRow("MAIN_SLEEP", true) : <>
-        <button type="button" className="btn-primary" disabled={busy} onClick={() => sleepDraft ? setRecoverSleepOpen(true) : onOpenBody?.("sleep")}>LOG MAIN SLEEP</button>
-        {sleepNotYetDay !== day.id && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setSleepNotYetDay(day.id)}>NOT YET</button>}
-      </>}
+      <button type="button" className="btn-primary" disabled={busy} onClick={() => onOpenBody?.("sleep")}>LOG MAIN SLEEP</button>
+      {sleepNotYetDay !== day.id && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setSleepNotYetDay(day.id)}>NOT YET</button>}
     </div>;
   }
 
@@ -2407,12 +2406,13 @@ export function TodayScreen({
           return (
             <div className="equipment-row">
               <p className="tool-label" style={{ marginBottom: 4 }}>MAIN SLEEP</p>
-              <h2 className="card-title" style={{ marginBottom: 2 }}>Slept up to {formatDuration(minutes)}?</h2>
+              {/* SLEEP-001: said as the window you slept, ending when you opened the app. */}
+              <h2 className="card-title" style={{ marginBottom: 2 }}>Slept {sleepDraftWindow(minutes, getAppOpenedAt())}?</h2>
               <p className="meta" style={{ marginBottom: 12 }}>
-                {sleepDraft.reason}
+                Up to {formatDuration(minutes)} · {sleepDraft.reason}
                 {sleepDraftAdjust !== 0 ? ` · adjusted ${sleepDraftAdjust > 0 ? "+" : "−"}${Math.abs(sleepDraftAdjust)} min` : ""}
               </p>
-              <button className="btn-secondary" disabled={busy} onClick={() => void handleLogSleepDraft(minutes, sleepDraftAdjust !== 0)}>
+              <button className="btn-primary" disabled={busy} onClick={() => void handleLogSleepDraft(minutes, sleepDraftAdjust !== 0)}>
                 LOG {formatDuration(minutes).toUpperCase()}
               </button>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>

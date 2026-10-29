@@ -1,3 +1,12 @@
+# SLEEP-001 — main sleep is one tap after a shift
+
+- **Authority / Builder / lane:** Gavin, 2026-10-29 ("merge 339 and go sleep"). Claude Code;
+  Protected within the owner's go. Brief: `docs/agent/SLEEP-001.md`. Branch `ccr-0be4f40f-16m0ja`.
+- **Built:** the sleep draft counts from the scheduled shift end when WORK ENDED / Shift Down
+  weren't tapped; it reads "Slept 06:00 → 13:40?" and is the "Did you sleep?" card, so one tap logs.
+- **Verified:** `npm run verify` green (3,161 passed).
+- **Next:** CI and Gavin's merge.
+
 # OWNER-GO-001 — the field study's protected fixes
 
 - **Authority / Builder / lane:** Gavin, 2026-10-29 ("Go." and "delete or undo … can go away").
