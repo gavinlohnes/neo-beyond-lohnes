@@ -12,6 +12,21 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## END-OF-RUN-001 — the after-action reads a run as it was lived (owner go 2026-10-29)
+
+Gavin, 2026-10-29: "merge 340 and go end of run". Brief: [`agent/END-OF-RUN-001.md`](agent/END-OF-RUN-001.md).
+Amends REPORT-001's After Action Report; the "AFTER ACTION READY" line on the first day off stays as it is.
+
+- **A block is the lived days that hold its shifts.** It used to start a day early, so the day off
+  before a run counted (the owner's real record read "avg sleep 10h 20m" for a run of nights).
+- **A workout counts only with a logged set** (the rotation rule from OWNER-GO-001). A run with none
+  reads "no workouts", not "0 sessions, 0 sets".
+- **Sleep by night** under the block line: "Sleep by night: Mon 7h 15m · Tue not logged".
+- **FUEL:** the run's protein a day (with your target) and water a day, and how many of its days had
+  a log. Facts only, no grade.
+- **What's coming** also counts open tasks ("2 open tasks on TODAY").
+- At most six items (was five).
+
 ## SLEEP-001 — main sleep is one tap after a shift (owner go 2026-10-29)
 
 Gavin, 2026-10-29: "merge 339 and go sleep". Brief: [`agent/SLEEP-001.md`](agent/SLEEP-001.md).

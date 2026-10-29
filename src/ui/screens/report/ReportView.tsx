@@ -8,7 +8,7 @@ import type { WorkoutTemplateId } from "../../../domain/workout/types";
 
 /**
  * REPORT-001: the one report (Briefing on a work night, After Action on the
- * first day off, or from Weekly any time). At most five items; read only.
+ * first day off, or from Weekly any time). At most six items; read only.
  */
 export function ReportView({ timing = null, now, onClose }: { timing?: ReportTiming; now?: Date | undefined; onClose?: () => void }) {
   const [report, setReport] = useState<Report | null>(null);
@@ -31,7 +31,7 @@ export function ReportView({ timing = null, now, onClose }: { timing?: ReportTim
       current = false;
     };
   }, [now, briefing]);
-  // At most five items: in the briefing, tonight's position takes the block comparison's place.
+  // In the briefing, tonight's position takes the block comparison's place.
   const items = report ? (briefing && tonight ? report.items.filter((item) => item.kind !== "BLOCK") : report.items) : [];
   const tonightCopy = briefing && tonight ? describeTonightPosition(tonight) : null;
   return (

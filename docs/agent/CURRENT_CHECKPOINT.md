@@ -1,3 +1,13 @@
+# END-OF-RUN-001 — the after-action reads a run as it was lived
+
+- **Authority / Builder / lane:** Gavin, 2026-10-29 ("merge 340 and go end of run"). Claude Code;
+  Protected within the owner's go. Brief: `docs/agent/END-OF-RUN-001.md`. Branch
+  `ccr-0be4f40f-16m0ja`.
+- **Built:** the existing AFTER ACTION now covers only the run's own lived days, counts real
+  workouts, and adds sleep by night, fuel, and open tasks.
+- **Verified:** `npm run verify` green (3,163 passed).
+- **Next:** CI and Gavin's merge.
+
 # SLEEP-001 — main sleep is one tap after a shift
 
 - **Authority / Builder / lane:** Gavin, 2026-10-29 ("merge 339 and go sleep"). Claude Code;

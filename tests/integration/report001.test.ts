@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { logSleep, startDay, submitCheckIn } from "../../src/application/commands";
+import { logProtein, logSleep, logWater, startDay, submitCheckIn } from "../../src/application/commands";
+import { createObligation } from "../../src/application/intentCommands";
 import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
 import { deriveReportTiming, getReport, getReportTiming } from "../../src/application/reportQueries";
 import { describeReportItem } from "../../src/ui/screens/report/reportCopy";
@@ -48,13 +49,14 @@ describe("deriveReportTiming", () => {
 });
 
 describe("getReport", () => {
-  it("five items at most: this block vs last, what moved, what stalled, what's coming, one call", async () => {
+  it("this block vs last (with sleep by night), what moved, what stalled, what's coming, one call", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     await session(new Date(2026, 8, 1, 10), "leg-press", 200); // first leg press: 6 weeks back
-    await session(new Date(2026, 9, 7, 10), "machine-chest-press", 100); // last block
-    const d1 = await session(new Date(2026, 9, 12, 10), "machine-chest-press", 110); // this block: a PR
+    // END-OF-RUN-001: a block's activity sits in the lived days holding its shifts — the morning after each night.
+    await session(new Date(2026, 9, 8, 8), "machine-chest-press", 100); // last block
+    const d1 = await session(new Date(2026, 9, 13, 8), "machine-chest-press", 110); // this block: a PR
     await logSleep(d1.id, 300, "PRIMARY");
-    await session(new Date(2026, 9, 13, 10), "leg-press", 200); // this block: leg press, no PR since Sep 1
+    await session(new Date(2026, 9, 14, 8), "leg-press", 200); // this block: leg press, no PR since Sep 1
 
     const now = new Date(2026, 9, 14, 9);
     vi.setSystemTime(now);
@@ -68,7 +70,8 @@ describe("getReport", () => {
     expect(report.items.map((i) => i.kind)).toEqual(["BLOCK", "MOVED", "STALLED", "COMING", "CALL"]);
     const copy = report.items.map(describeReportItem);
     expect(copy[0]!.lines[0]).toBe("This block (Mon, Oct 12 – Tue, Oct 13, 2 shifts): 2 sessions, 2 sets, avg sleep 5h");
-    expect(copy[0]!.lines[1]).toBe("Last block (Wed, Oct 7 – Thu, Oct 8): 1 session, 1 set");
+    expect(copy[0]!.lines[1]).toBe("Sleep by night: Mon 5h · Tue not logged");
+    expect(copy[0]!.lines[2]).toBe("Last block (Wed, Oct 7 – Thu, Oct 8): 1 session, 1 set");
     expect(copy[1]!.lines).toEqual(["1 PR: Machine Chest Press 110 lb × 10"]);
     expect(copy[2]!.lines).toEqual(["Leg Press: heaviest set unchanged since Tue, Sep 1"]);
     expect(copy[3]!.lines).toEqual(["Next block: Fri, Oct 16 – Sun, Oct 18 (3 shifts)"]);
@@ -79,7 +82,7 @@ describe("getReport", () => {
 
   it("with nothing stalled, low sleep gives the sleep call; with neither, no call", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
-    const d = await session(new Date(2026, 9, 12, 10), "machine-chest-press", 100);
+    const d = await session(new Date(2026, 9, 13, 8), "machine-chest-press", 100);
     await logSleep(d.id, 300, "PRIMARY");
     const now = new Date(2026, 9, 14, 9);
     vi.setSystemTime(now);
@@ -91,7 +94,7 @@ describe("getReport", () => {
 
   it("with nothing stalled and sleep at or above six hours, makes no call", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
-    const d = await session(new Date(2026, 9, 12, 10), "machine-chest-press", 100);
+    const d = await session(new Date(2026, 9, 13, 8), "machine-chest-press", 100);
     await logSleep(d.id, 360, "PRIMARY");
     const now = new Date(2026, 9, 14, 9);
     vi.setSystemTime(now);
@@ -139,12 +142,46 @@ describe("getReport review fixes", () => {
     const s = await startWorkout(d.id, "A", "STANDARD", { overrideConfirmed: true });
     await logSet(d.id, s.id, "leg-press", 1, 200, 15); // most reps at 200: a REPS record, not heavier
     await completeWorkout(d.id, s.id, "STANDARD", "COMPLETED", 45);
-    await session(new Date(2026, 9, 12, 10), "leg-press", 200);
+    await session(new Date(2026, 9, 13, 8), "leg-press", 200);
     await session(new Date(2026, 8, 1, 11), "pec-deck", 0);
-    await session(new Date(2026, 9, 13, 10), "pec-deck", 0);
+    await session(new Date(2026, 9, 14, 8), "pec-deck", 0);
     const now = new Date(2026, 9, 14, 9);
     vi.setSystemTime(now);
     const stalled = (await getReport(now)).items.find((i) => i.kind === "STALLED");
     expect(stalled && describeReportItem(stalled).lines).toEqual(["Leg Press: heaviest set unchanged since Tue, Sep 1"]);
+  });
+
+  it("END-OF-RUN-001: a block is the lived days holding its shifts — the day off before it doesn't count", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 12, 10)); // Sun 16:30 → Mon 16:30: the day off before the block
+    const off = await startDay();
+    await logSleep(off.id, 870, "PRIMARY");
+    vi.setSystemTime(new Date(2026, 9, 13, 8)); // the morning after Mon night
+    const mon = await startDay();
+    await logSleep(mon.id, 420, "PRIMARY");
+    const now = new Date(2026, 9, 14, 9);
+    vi.setSystemTime(now);
+    const block = (await getReport(now)).items.find((i) => i.kind === "BLOCK")!;
+    expect(describeReportItem(block).lines.slice(0, 2)).toEqual([
+      "This block (Mon, Oct 12 – Tue, Oct 13, 2 shifts): no workouts, avg sleep 7h",
+      "Sleep by night: Mon 7h · Tue not logged",
+    ]);
+  });
+
+  it("END-OF-RUN-001: an empty completion isn't a workout; FUEL and open tasks join the report", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 13, 8));
+    const mon = await startDay();
+    const empty = await startWorkout(mon.id, "A", "STANDARD", { overrideConfirmed: true });
+    await completeWorkout(mon.id, empty.id, "STANDARD", "COMPLETED", 5);
+    await logProtein(mon.id, 120);
+    await logWater(mon.id, 64);
+    await createObligation({ title: "Return the drill" });
+    const now = new Date(2026, 9, 14, 9);
+    vi.setSystemTime(now);
+    const copy = (await getReport(now)).items.map(describeReportItem);
+    expect(copy[0]!.lines[0]).toBe("This block (Mon, Oct 12 – Tue, Oct 13, 2 shifts): no workouts");
+    expect(copy.find((c) => c.heading === "Fuel")!.lines).toEqual(["Protein: 120 g a day", "Water: 64 oz a day", "Logged on 1 of 2 days"]);
+    expect(copy.find((c) => c.heading === "What's coming")!.lines).toContain("1 open task on TODAY");
   });
 });
