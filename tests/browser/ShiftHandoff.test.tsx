@@ -113,6 +113,8 @@ describe("NOTES-HANDOFF-001 — shift handoff", () => {
     const screen = await render(<App />);
     await (await commandResult(screen, "TODAY TOOLS")).click();
     await expect.element(screen.getByText("Shift felt rough last time. Did this happen?")).toBeVisible();
+    // The tab's entry fade can still be running; axe would read its mid-fade colours.
+    for (const animation of document.getAnimations()) animation.finish();
     expect((await axe.run(document.querySelector(".shift-handoff")!)).violations).toEqual([]);
     await screen.getByRole("button", { name: "Did it", exact: true }).click();
     await expect.poll(() => document.querySelector(".shift-handoff")).toBeNull();
