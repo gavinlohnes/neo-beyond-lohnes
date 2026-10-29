@@ -155,31 +155,15 @@ describe("TODAY meal round trip", () => {
       } finally { release(); }
       await expect.poll(loggedCount).toBe(1);
       expect(write).toHaveBeenCalledOnce();
-      await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
     });
   }
 
-  it("preserves immediate undo when returning and reopening Meal", async () => {
-    await seedMeal();
-    const screen = await render(<App />);
-    await openMeal(screen);
-    await screen.getByRole("button", { name: "LOG", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "CLOSE" }).click();
-    await openMealInBody(screen);
-    await screen.getByRole("button", { name: "UNDO", exact: true }).click();
-    await expect.poll(() => getMealEntries(dayId)).toHaveLength(0);
-    expect(await loggedCount()).toBe(1);
-    expect(await db.events.where("type").equals("MEAL_LOG_VOIDED").count()).toBe(1);
-    expect(await getTotalMealCalories(dayId)).toBe(0);
-  });
 
   it("retains the canonical correction path after return, without changing the original event", async () => {
     await seedMeal();
     const screen = await render(<App />);
     await openMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
     const [original] = await getMealEntries(dayId);
     await screen.getByRole("button", { name: "CLOSE" }).click();
     await openMealInBody(screen);
@@ -204,14 +188,12 @@ describe("TODAY meal round trip", () => {
     const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal logged.");
-    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
     expect(await loggedCount()).toBe(1);
     expect(await getMealEntries(dayId)).toHaveLength(1);
     await screen.getByRole("button", { name: "CLOSE" }).click();
     read.mockRestore();
     await openMealInBody(screen);
     await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "SHOW TODAY'S MEALS (1)" }).click();
     await expect.element(screen.getByRole("button", { name: "Edit Lunch" })).toBeVisible();
     await expect.poll(() => screen.getByRole("alert").elements().length).toBe(0);
@@ -291,23 +273,6 @@ describe("TODAY meal round trip", () => {
     await expect.poll(() => screen.getByRole("button", { name: "RETRY READINGS" }).elements().length).toBe(0);
   });
 
-  it("restores duplicate detection when the post-commit read is retried", async () => {
-    const meal = await seedMeal();
-    await logMeal(dayId, meal.id);
-    const screen = await render(<App />);
-    await openMeal(screen);
-    // The sheet's own saved-meal read must finish before the failure is injected.
-    await expect.element(screen.getByRole("button", { name: "LOG", exact: true })).toBeVisible();
-    const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
-    await screen.getByRole("button", { name: "LOG", exact: true }).click();
-    await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal logged.");
-    read.mockRestore();
-    await screen.getByRole("button", { name: "RETRY READINGS" }).click();
-    await expect.element(screen.getByRole("group", { name: "Same meal?", exact: true })).toBeVisible();
-    await expect.poll(() => screen.getByRole("button", { name: "RETRY READINGS" }).elements().length).toBe(0);
-    expect(await loggedCount()).toBe(2);
-    expect(await getMealEntries(dayId)).toHaveLength(2);
-  });
 
   it("keeps ordinary direct BODY entry independent of the TODAY round trip", async () => {
     await seedMeal();

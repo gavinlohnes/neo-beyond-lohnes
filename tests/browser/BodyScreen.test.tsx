@@ -156,9 +156,9 @@ describe("BodyScreen (real browser) — WATER", () => {
     const screen = await render(<BodyScreen />);
     listReadDelay.ms = 150;
     await screen.getByRole("button", { name: "+8 oz" }).click();
-    // Clicked the moment the banner appears: the banner must only show once
-    // the new entry is loaded, or this CORRECT would silently do nothing.
     await expect.element(screen.getByText("8 oz added.", { exact: true })).toBeVisible();
+    // OWNER-GO-001: the banner is the message only; corrections are made from today's entries.
+    await screen.getByText(/SHOW TODAY.S ENTRIES/).click();
     await screen.getByRole("button", { name: "CORRECT" }).click();
     const correctionInput = screen.getByRole("spinbutton", { name: "Corrected amount (oz)" });
     await expect.element(correctionInput).toBeVisible();
@@ -458,33 +458,14 @@ describe("BodyScreen (real browser) — MY MEALS", () => {
     await expect.element(screen.getByText(/corrected 1x/).last()).toBeVisible();
   });
 
-  it("HOTFIX: UNDO on the logged line takes the meal back out of today's totals", async () => {
-    await updateNutritionTargets({ calorieTargetKcal: 2200 });
+
+  it("OWNER-GO-001: the logged line is the message only, with no UNDO or DELETE", async () => {
     const screen = await render(<BodyScreen />);
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await addSavedMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
-    await expect.element(screen.getByText(/600 \/ 2200 kcal/)).toBeVisible();
-
-    await screen.getByRole("button", { name: "UNDO" }).click();
-
-    await expect.element(screen.getByText("0 meals logged today", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "UNDO" }).elements()).toHaveLength(0);
-    // History keeps both facts: the log and its void.
-    expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
-    expect(await db.events.where("type").equals("MEAL_LOG_VOIDED").count()).toBe(1);
-  });
-
-  it("HOTFIX: the logged line and its UNDO clear themselves after about 5 seconds", async () => {
-    const screen = await render(<BodyScreen />);
-    await screen.getByRole("button", { name: "OPEN MEALS" }).click();
-    await addSavedMeal(screen);
-    await screen.getByRole("button", { name: "LOG", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "UNDO" })).toBeVisible();
-    await expect
-      .poll(() => screen.getByRole("button", { name: "UNDO" }).elements().length, { timeout: 7000, interval: 250 })
-      .toBe(0);
+    await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^(UNDO|DELETE|REMOVE)/ }).elements()).toHaveLength(0);
     await expect.element(screen.getByText("1 meal logged today", { exact: true })).toBeVisible();
   });
 

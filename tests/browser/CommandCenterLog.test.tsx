@@ -107,15 +107,14 @@ describe("TODAY action row", () => {
     await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Open LOG");
   });
 
-  it("+ WATER keeps exactly-once logging and undo through the existing BODY flow", async () => {
+  it("+ WATER keeps exactly-once logging through the existing BODY flow", async () => {
     const day = await startDay();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Log water" }).click();
     await screen.getByRole("button", { name: "+8 oz" }).click();
     await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(8);
     expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
-    await screen.getByRole("button", { name: "UNDO", exact: true }).click();
-    await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(0);
+    expect(screen.getByRole("button", { name: "UNDO", exact: true }).elements()).toHaveLength(0);
   });
 
   it("ON SHIFT gives QUICK_LOG's slot to the shift handoff note, shown once", async () => {

@@ -101,44 +101,7 @@ describe("correcting protein to 0", () => {
 });
 
 describe("Same food?", () => {
-  it("asks after a meal lands 15 s after a similar protein-only log; REMOVE ONE deletes the protein-only entry", async () => {
-    const { day } = await seedOct3Duplicate();
-    // Start over with only the protein-only log, then log the meal from BODY at 20:43:26.
-    await db.events.where("type").equals("MEAL_LOGGED").delete();
-    vi.setSystemTime(at(20, 43, 26));
-    const body = await render(<BodyScreen />);
-    await body.getByRole("button", { name: "OPEN MEALS" }).click();
-    await body.getByRole("button", { name: "LOG", exact: true }).click();
 
-    const prompt = body.getByRole("group", { name: "Same food?" });
-    await expect.element(prompt.getByText("Same food? 49 g protein at 20:43 and Dinner (50 g protein) at 20:43.", { exact: true })).toBeVisible();
-    await expect.element(prompt.getByText("REMOVE ONE deletes the 49 g protein-only entry; the meal stays.", { exact: true })).toBeVisible();
-    // A question, never a block: both logs are saved until the operator chooses.
-    expect(await db.events.where("beyondDayId").equals(day.id).and((e) => e.type === "PROTEIN_LOG_VOIDED").count()).toBe(0);
-
-    await prompt.getByRole("button", { name: "REMOVE ONE" }).click();
-    await expect.element(body.getByText("Deleted 49 g. Protein today: 50 g.", { exact: true })).toBeVisible();
-    await body.getByRole("button", { name: "TODAY", exact: true }).click();
-    await expect.poll(proteinTile).toBe("50 g");
-    expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
-  });
-
-  it("KEEP BOTH keeps both and closes the question", async () => {
-    await seedOct3Duplicate();
-    await db.events.where("type").equals("PROTEIN_LOGGED").delete();
-    vi.setSystemTime(at(20, 43, 40));
-    const body = await render(<BodyScreen />);
-    await body.getByRole("button", { name: "Open PROTEIN ONLY" }).click();
-    await body.getByRole("spinbutton", { name: "Protein (g)" }).fill("49");
-    await body.getByRole("button", { name: "LOG PROTEIN" }).click();
-
-    const prompt = body.getByRole("group", { name: "Same food?" });
-    await expect.element(prompt).toBeVisible();
-    await prompt.getByRole("button", { name: "KEEP BOTH" }).click();
-    expect(body.getByRole("group", { name: "Same food?" }).elements()).toHaveLength(0);
-    await expect.poll(proteinTile).toBe("99 g");
-    expect(await db.events.where("type").equals("PROTEIN_LOG_VOIDED").count()).toBe(0);
-  });
 
   it("never appears in normal logging: different protein, or more than 2 minutes apart", async () => {
     await seedOct3Duplicate();

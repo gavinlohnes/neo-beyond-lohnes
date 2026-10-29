@@ -57,8 +57,6 @@ describe("Production Command Console", () => {
     await screen.getByRole("button", { name: "LOG WATER", exact: true }).click();
     await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(11);
     expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
-    await screen.getByRole("button", { name: "UNDO", exact: true }).click();
-    await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(0);
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();

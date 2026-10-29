@@ -80,7 +80,7 @@ it('renders a truthful empty day without a crash or write', async () => {
   expect(await db.beyondDays.count()).toBe(0);
 });
 
-it('keeps water confirmation and undo above navigation during an active operation', async () => {
+it('keeps the water confirmation above navigation during an active operation', async () => {
   await page.viewport(360, 800);
   const day = await startDay();
   await startShiftDown(day.id, 10);
@@ -88,16 +88,14 @@ it('keeps water confirmation and undo above navigation during an active operatio
   await screen.getByRole('button', { name: 'Log water', exact: true }).click();
   await screen.getByRole('dialog', { name: 'WATER', exact: true }).getByRole('button', { name: '+8 oz', exact: true }).click();
   await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(8);
-  await expect.element(screen.getByRole('button', { name: 'UNDO', exact: true })).toBeVisible();
+  await expect.element(screen.getByText('8 oz recorded.', { exact: true })).toBeVisible();
   const toast = document.querySelector('.redesign-toast')!.getBoundingClientRect();
   const nav = document.querySelector('.shell-nav')!.getBoundingClientRect();
   expect(toast.top).toBeGreaterThanOrEqual(0);
   expect(toast.bottom).toBeLessThanOrEqual(nav.top);
   expect(document.activeElement?.getAttribute('aria-label')).toBe('Log water');
-  await screen.getByRole('button', { name: 'UNDO', exact: true }).click();
-  await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(0);
+  expect(screen.getByRole('button', { name: 'UNDO', exact: true }).elements()).toHaveLength(0);
   expect(await db.events.where('type').equals('WATER_LOGGED').count()).toBe(1);
-  expect(await db.events.where('type').equals('WATER_LOG_VOIDED').count()).toBe(1);
 });
 
 it('keeps note entry available as a sheet over TODAY with its draft after close', async () => {

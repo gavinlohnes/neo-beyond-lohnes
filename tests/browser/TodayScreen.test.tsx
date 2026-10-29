@@ -249,32 +249,10 @@ describe("TodayScreen (real browser) — ordinary/quiet state", () => {
     expect(waterEvents).toHaveLength(2);
     expect(waterEvents.at(-1)?.payload).toMatchObject({ amountOz: 12 });
 
-    // UNDO-001: UNDO for the first 5 seconds, then CORRECT IN DATA.
-    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "CORRECT IN DATA" }), { timeout: 8000 }).toBeVisible();
-    await screen.getByRole("button", { name: "CORRECT IN DATA" }).click();
-    expect(onOpenBody).toHaveBeenCalledOnce();
+    // OWNER-GO-001: the confirmation is the message only; corrections live in DATA's history.
+    expect(screen.getByRole("button", { name: /^(UNDO|CORRECT IN DATA)$/ }).elements()).toHaveLength(0);
   });
 
-  it("UNDO-001: UNDO right after a Minimum Day water log takes it back out", async () => {
-    await useScheduleWithNoWorkdays();
-    const day = await startDay();
-    await submitCheckIn(day.id, GREEN);
-    await enableMinimumDay(day.id);
-    await logWater(day.id, 28);
-    const screen = await render(<TodayScreen onOpenBody={vi.fn()} />);
-
-    await openTodayTools(screen);
-    await screen.getByRole("button", { name: "Open MINIMUM DAY" }).click();
-    await screen.getByRole("button", { name: "+12 OZ" }).click();
-    await expect.element(screen.getByText("12 oz recorded.", { exact: true })).toBeVisible();
-
-    await screen.getByRole("button", { name: "UNDO", exact: true }).click();
-    await expect.element(screen.getByText("12 oz recorded.", { exact: true })).not.toBeInTheDocument();
-    const events = await db.events.where("beyondDayId").equals(day.id).toArray();
-    expect(events.filter((e) => e.type === "WATER_LOG_VOIDED")).toHaveLength(1);
-    expect(await getEffectiveHydrationTotal(day.id)).toBe(28);
-  });
 
   it("asks for missing state input in its own row, once, without manufacturing an Engine action", async () => {
     await startDay();

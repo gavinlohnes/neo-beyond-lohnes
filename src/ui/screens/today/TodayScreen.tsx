@@ -1527,18 +1527,11 @@ export function TodayScreen({
     }
   }
 
-  function renderLoggedBanner(message: string, undoOpen: boolean, log: "WATER" | "SLEEP" | "PROTEIN" | "MEAL", focus?: BodyFocus) {
-    if (undoOpen) {
-      return <ConfirmBanner message={message} actionLabel="UNDO" disabled={busy} onAction={() => void handleUndoLog(log)} />;
-    }
-    return onOpenBody ? (
-      <ConfirmBanner message={message} actionLabel="CORRECT IN DATA" onAction={() => onOpenBody(focus)} />
-    ) : (
-      <p role="status" aria-live="polite" className="meta fade-in">
-        <ConfirmIcon size={20} /> {message.replace(/\.$/, "")}. Corrections remain available in DATA.
-      </p>
-    );
+  // OWNER-GO-001 (Gavin: "it says delete or undo. That can go away"): a log confirms with its message only.
+  function renderLoggedBanner(message: string, _undoOpen?: boolean, _log?: "WATER" | "SLEEP" | "PROTEIN" | "MEAL", _focus?: BodyFocus) {
+    return <ConfirmBanner message={message} />;
   }
+
 
   /**
    * Item 3 (Phase 3): logs directly from the same commands/events BODY
