@@ -24,7 +24,7 @@ beforeEach(async () => {
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo(0, 0); });
 
-it("logs water in two taps, stays on TODAY, and guards duplicate log/undo taps", async () => {
+it("logs water in two taps, stays on TODAY, guards a duplicate tap, and confirms without UNDO", async () => {
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "Log water", exact: true }).click();
   const sheet = screen.getByRole("dialog", { name: "WATER", exact: true });
@@ -33,14 +33,9 @@ it("logs water in two taps, stays on TODAY, and guards duplicate log/undo taps",
   await expect.poll(() => getEffectiveHydrationTotal(dayId)).toBe(12);
   await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
   await expect.poll(() => document.querySelector("dialog[open]")).toBeNull();
-  await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
-  const undo = screen.getByRole("button", { name: "UNDO", exact: true }).element() as HTMLButtonElement;
-  undo.click(); undo.click();
-  await expect.poll(() => getEffectiveHydrationTotal(dayId)).toBe(0);
+  // OWNER-GO-001: the confirmation is the message only.
+  expect(screen.getByRole("button", { name: "UNDO", exact: true }).elements()).toHaveLength(0);
   expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
-  expect(await db.events.where("type").equals("WATER_LOG_VOIDED").count()).toBe(1);
-  await screen.getByRole("button", { name: "Log water", exact: true }).click();
-  await expect.element(screen.getByRole("button", { name: "Repeat last", exact: true })).toBeDisabled();
 });
 
 it("repeats the latest canonical water amount", async () => {

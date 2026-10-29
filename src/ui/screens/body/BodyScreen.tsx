@@ -784,58 +784,9 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     requestAnimationFrame(() => document.getElementById(inputId)?.focus());
   }
 
-  /** "Same food?" — asked where the second log was made; never blocks, never deletes on its own. */
-  function renderSameFood(at: "PROTEIN" | string) {
-    const matches = (anchor: "PROTEIN" | { savedMealId: string }) =>
-      anchor === "PROTEIN" ? at === "PROTEIN" : anchor.savedMealId === at;
-    if (sameFood && matches(sameFood.anchor)) {
-      return (
-        <div className="fade-in" role="group" aria-label="Same food?" style={{ marginTop: 12, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-          <p className="card-body" style={{ marginBottom: 4 }}>{describeSameFoodQuestion(sameFood.protein, sameFood.meal)}</p>
-          <p className="meta" style={{ marginBottom: 8 }}>{describeSameFoodRemoveOne(sameFood.protein.grams)}</p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => setSameFood(null)}>
-              KEEP BOTH
-            </button>
-            <button className="btn-secondary" style={{ flex: 1 }} disabled={busy} onClick={() => void handleSameFoodRemoveOne()}>
-              REMOVE ONE
-            </button>
-          </div>
-        </div>
-      );
-    }
-    if (sameFoodNotice && matches(sameFoodNotice.anchor)) {
-      return <p className="meta" role="status" style={{ marginTop: 8 }}>{sameFoodNotice.message}</p>;
-    }
-    return null;
-  }
-
-  function renderDuplicateMeal(savedMealId: string) {
-    if (duplicateMeal?.justLogged.savedMealId === savedMealId) {
-      return (
-        <div className="fade-in" role="group" aria-label="Same meal?" style={{ marginTop: 12, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-          <p className="card-body" style={{ marginBottom: 8 }}>
-            {describeDuplicateMealQuestion(duplicateMeal.justLogged, duplicateMeal.earlier)}
-          </p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn-secondary" style={{ flex: 1, minHeight: 44 }} disabled={busy} onClick={() => setDuplicateMeal(null)}>
-              KEEP BOTH
-            </button>
-            <button className="btn-secondary" style={{ flex: 1, minHeight: 44 }} disabled={busy} onClick={() => void handleDuplicateMealRemoveThisOne()}>
-              REMOVE THIS ONE
-            </button>
-          </div>
-        </div>
-      );
-    }
-    if (duplicateMealNotice?.savedMealId === savedMealId) {
-      return <p className="meta" role="status" style={{ marginTop: 8 }}>{duplicateMealNotice.message}</p>;
-    }
-    return null;
-  }
   const mealBanner = mealConfirmation && (
     <div role="status">
-      <ConfirmBanner message={mealConfirmation.message} actionLabel="UNDO" disabled={busy} onAction={() => void handleUndoMealLog()} />
+      <ConfirmBanner message={mealConfirmation.message} />
     </div>
   );
   const lastWaterAmount = entries.length > 0 ? entries[entries.length - 1]!.effectiveAmountOz : null;
@@ -2101,19 +2052,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
             </p>
           )}
           {bodyweightConfirmation && (
-            <ConfirmBanner
-              message={bodyweightConfirmation.message}
-              actionLabel={bodyweightUndoOpen ? "UNDO" : "CORRECT"}
-              disabled={bodyweightUndoOpen && busy}
-              onAction={() => {
-                if (bodyweightUndoOpen) {
-                  void handleUndoLog("BODYWEIGHT");
-                  return;
-                }
-                const entry = bodyweightEntries.find((e) => e.headEventId === bodyweightConfirmation.headEventId);
-                if (entry) beginCorrectBodyweight(entry);
-              }}
-            />
+            <ConfirmBanner message={bodyweightConfirmation.message} />
           )}
           {renderUndoFailure("BODYWEIGHT")}
           {bodyLogDeleted?.log === "BODYWEIGHT" && <p className="meta" role="status">{bodyLogDeleted.message}</p>}
@@ -2228,19 +2167,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
             </p>
           )}
           {sleepConfirmation && (
-            <ConfirmBanner
-              message={sleepConfirmation.message}
-              actionLabel={sleepUndoOpen ? "UNDO" : "CORRECT"}
-              disabled={sleepUndoOpen && busy}
-              onAction={() => {
-                if (sleepUndoOpen) {
-                  void handleUndoLog("SLEEP");
-                  return;
-                }
-                const entry = sleepEntries.find((e) => e.headEventId === sleepConfirmation.headEventId);
-                if (entry) beginCorrectSleep(entry);
-              }}
-            />
+            <ConfirmBanner message={sleepConfirmation.message} />
           )}
           {renderUndoFailure("SLEEP")}
           {bodyLogDeleted?.log === "SLEEP" && <p className="meta" role="status">{bodyLogDeleted.message}</p>}
@@ -2303,24 +2230,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
           </p>
         )}
         {waterConfirmation && (
-          <ConfirmBanner
-            message={waterConfirmation.message}
-            actionLabel={waterUndoOpen ? "UNDO" : "CORRECT"}
-            disabled={waterUndoOpen && busy}
-            onAction={() => {
-              if (waterUndoOpen) {
-                void handleUndoLog("WATER");
-                return;
-              }
-              const entry = entries.find((e) => e.headEventId === waterConfirmation.headEventId);
-              if (entry) {
-                setCorrectingId(entry.headEventId);
-                setCorrectionInput(String(entry.effectiveAmountOz));
-                setError(null);
-                setWaterHistoryOpen(true);
-              }
-            }}
-          />
+          <ConfirmBanner message={waterConfirmation.message} />
         )}
         {renderUndoFailure("WATER")}
         {bodyLogDeleted?.log === "WATER" && <p className="meta" role="status">{bodyLogDeleted.message}</p>}
@@ -2365,19 +2275,6 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         {/* Drop 5: one tap logs the previous day's saved meals again. Hidden
             once today already has every one of them, so it can't double up. */}
         {mealConfirmation?.anchor === "REPEAT" && <div style={{ marginBottom: 12 }}>{mealBanner}</div>}
-        {repeatDuplicates && (
-          <div className="fade-in" role="group" aria-label={repeatDuplicates.length === 1 ? "Same meal?" : "Same meals?"} style={{ marginBottom: 12, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
-            <p className="card-body" style={{ marginBottom: 8 }}>{describeRepeatDuplicatesQuestion(repeatDuplicates)}</p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn-secondary" style={{ flex: 1, minHeight: 44 }} disabled={busy} onClick={() => setRepeatDuplicates(null)}>
-                {repeatDuplicates.length === 1 ? "KEEP BOTH" : "KEEP ALL"}
-              </button>
-              <button className="btn-secondary" style={{ flex: 1, minHeight: 44 }} disabled={busy} onClick={() => void handleRepeatDuplicatesRemove()}>
-                {repeatDuplicates.length === 1 ? "REMOVE THIS ONE" : "REMOVE THE REPEATS"}
-              </button>
-            </div>
-          </div>
-        )}
         {repeatDuplicatesNotice && <p className="meta" role="status" style={{ marginBottom: 12 }}>{repeatDuplicatesNotice}</p>}
         {repeatMeals && !alreadyLoggedAll(repeatMeals, mealEntries) && (
           <div style={{ marginBottom: 12 }}>
@@ -2415,8 +2312,6 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
                 mealConfirmation.anchor !== "REPEAT" &&
                 mealConfirmation.anchor.savedMealId === meal.id &&
                 mealBanner}
-              {renderSameFood(meal.id)}
-              {renderDuplicateMeal(meal.id)}
               <MealSection direct={!mealFocused}
                 summary={`${managingMealId === meal.id ? "HIDE" : "SHOW"} MANAGE ${meal.name}`}
                 open={managingMealId === meal.id}
@@ -2606,11 +2501,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     {lastProteinEntry && <button className="btn-secondary" disabled={busy} onClick={() => void handleLogProteinAmount(lastProteinEntry.effectiveGrams)}>REPEAT LAST ({lastProteinEntry.effectiveGrams} g)</button>}
     {proteinManualEntryForm}
     {writeFailure === "PROTEIN" && <p role="alert">{BODY_WRITE_FAILED}</p>}
-    {proteinConfirmation && <ConfirmBanner message={proteinConfirmation.message} actionLabel={proteinUndoOpen ? "UNDO" : "CORRECT"} disabled={proteinUndoOpen && busy} onAction={() => {
-      if (proteinUndoOpen) { void handleUndoLog("PROTEIN"); return; }
-      const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId); if (entry) beginCorrectProtein(entry);
-    }} />}
-    {renderUndoFailure("PROTEIN")}{proteinDeletedMessage && <p role="status">{proteinDeletedMessage}</p>}{renderSameFood("PROTEIN")}{proteinHistoryContent}
+    {proteinConfirmation && <ConfirmBanner message={proteinConfirmation.message} />}
+    {renderUndoFailure("PROTEIN")}{proteinDeletedMessage && <p role="status">{proteinDeletedMessage}</p>}{proteinHistoryContent}
   </div>;
   if (sheetFocus) return <div className="body-log-sheet">{sheetFocus === "water" ? waterSheetContent : sheetFocus === "sleep" ? sleepSheetContent : sheetFocus === "weight" ? weightSheetContent : sheetFocus === "meal" ? mealSheetContent : <QuitTracker initiallyOpen openRequest={focusRequest} onBusyChange={onMealJourneyInFlightChange} />}</div>;
   return (
@@ -2709,25 +2601,12 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
             </p>
           )}
           {proteinConfirmation && (
-            <ConfirmBanner
-              message={proteinConfirmation.message}
-              actionLabel={proteinUndoOpen ? "UNDO" : "CORRECT"}
-              disabled={proteinUndoOpen && busy}
-              onAction={() => {
-                if (proteinUndoOpen) {
-                  void handleUndoLog("PROTEIN");
-                  return;
-                }
-                const entry = proteinEntries.find((e) => e.headEventId === proteinConfirmation.headEventId);
-                if (entry) beginCorrectProtein(entry);
-              }}
-            />
+            <ConfirmBanner message={proteinConfirmation.message} />
           )}
           {renderUndoFailure("PROTEIN")}
           {proteinDeletedMessage && (
             <p className="meta" role="status" style={{ marginTop: 8 }}>{proteinDeletedMessage}</p>
           )}
-          {renderSameFood("PROTEIN")}
 
           {proteinEntries.length > 0 && (
             <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>

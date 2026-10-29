@@ -171,11 +171,11 @@ describe("COMMAND catalog", () => {
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
   });
 
-  it("logs once from COMMAND and keeps undo through a gated sheet read, without stealing focus", async () => {
+  it("logs once from COMMAND through a gated sheet read, without stealing focus", async () => {
     await createSavedMeal({ name: "Synthetic dinner", calories: 600, proteinG: 35, carbsG: 70, fatG: 20 });
     const screen = await render(<App />); await openCommand(screen); await launch(screen, "MEAL");
     await screen.getByRole("button", { name: "Log Synthetic dinner", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
+    await expect.poll(() => db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
     const restoredRead = db.savedMeals.toArray.bind(db.savedMeals); let release!: () => void;
     const gate = new Promise<void>((resolve) => { release = resolve; });
     vi.spyOn(db.savedMeals, "toArray").mockImplementation(() => Dexie.Promise.resolve(gate).then(restoredRead));
@@ -186,8 +186,7 @@ describe("COMMAND catalog", () => {
     await expect.element(screen.getByRole("button", { name: "Log Synthetic dinner", exact: true })).toBeVisible();
     await expect.element(close).toHaveFocus();
     await close.click(); expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
-    await screen.getByRole("button", { name: "UNDO", exact: true }).click();
-    await expect.poll(() => getTotalMealCalories(dayId)).toBe(0);
+    await expect.poll(() => getTotalMealCalories(dayId)).toBe(600);
   });
 
   it("resumes the existing active workout without adding or losing a session or set", async () => {

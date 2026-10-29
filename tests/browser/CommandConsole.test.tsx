@@ -57,8 +57,6 @@ describe("Production Command Console", () => {
     await screen.getByRole("button", { name: "LOG WATER", exact: true }).click();
     await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(11);
     expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
-    await screen.getByRole("button", { name: "UNDO", exact: true }).click();
-    await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(0);
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();
@@ -172,7 +170,8 @@ describe("Production Command Console", () => {
     const screen = await render(<App />);
     // TONIGHT-001: on a day off the check-in opens from the wake card.
     await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
-    const controls = ["Log a meal", "Log water", "Open LOG"].map(name => screen.getByRole("button", { name, exact: true }).element() as HTMLButtonElement);
+    // OWNER-GO-001: LOG left TODAY for the bottom bar; TODAY's own persistent controls are WATER and MEAL.
+    const controls = ["Log a meal", "Log water"].map(name => screen.getByRole("button", { name, exact: true }).element() as HTMLButtonElement);
     await screen.getByRole("button", { name: "CHECK IN", exact: true }).click();
     await revealAllGood(screen);
     await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();

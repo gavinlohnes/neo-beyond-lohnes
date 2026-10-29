@@ -6,7 +6,7 @@ import {
   startDay,
   submitCheckIn,
 } from "../../src/application/commands";
-import { startWorkout, completeWorkout } from "../../src/application/trainCommands";
+import { startWorkout, completeWorkout, logSet } from "../../src/application/trainCommands";
 
 /**
  * Shared realistic-history generator for both the Priority 2 (long-
@@ -33,6 +33,8 @@ export async function generateDayHistory(dayCount: number): Promise<void> {
     if (i % 3 === 0) {
       const template = (["A", "B", "C"] as const)[Math.floor(i / 3) % 3]!;
       const session = await startWorkout(day.id, template, "STANDARD");
+      // OWNER-GO-001: a completion advances the rotation only with a working set logged.
+      await logSet(day.id, session.id, "machine-chest-press", 1, 100, 10);
       await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
     }
     await logSleep(day.id, 420, "PRIMARY");

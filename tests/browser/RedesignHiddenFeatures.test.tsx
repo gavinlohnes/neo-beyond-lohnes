@@ -36,6 +36,5 @@ it('keeps the original protein-only command reachable while Minimum Day is hidde
  const sheet=screen.getByRole('dialog',{name:'PROTEIN ONLY',exact:true});await expect.element(sheet).toBeVisible();
  await sheet.getByRole('spinbutton',{name:'Protein (g)'}).fill('25');await sheet.getByRole('button',{name:'LOG PROTEIN',exact:true}).click();
  await expect.poll(()=>db.events.where('type').equals('PROTEIN_LOGGED').count()).toBe(1);expect(await db.events.where('type').equals('MEAL_LOGGED').count()).toBe(0);
- await sheet.getByRole('button',{name:'UNDO',exact:true}).click();await expect.poll(()=>db.events.where('type').equals('PROTEIN_LOG_VOIDED').count()).toBe(1);
  expect((await db.events.where('type').equals('PROTEIN_LOGGED').first())?.beyondDayId).toBe(day.id);
 });

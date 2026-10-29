@@ -2797,3 +2797,6 @@ html { overflow-anchor: none; }
 .commitment-quick__row { display: flex; flex-wrap: wrap; gap: 8px; }
 .commitment-quick__row > button { flex: 1 1 0; min-width: 0; width: auto; }
 .commitment-quick__confirm { display: grid; gap: 8px; }
+/* OWNER-GO-001: SAME AS LAST leads the check-in sheet; the outcome line sits under NEXT. */
+.check-in-same { display: grid; gap: 4px; margin-bottom: 12px; }
+.check-in-outcome { margin: 0 0 8px; }

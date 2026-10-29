@@ -39,7 +39,7 @@ export function bandAccent(s: { briefLate: boolean; callout: boolean; commsOff: 
   return s.briefLate ? "brief" : s.callout ? "callout" : s.commsOff ? "comms" : null;
 }
 
-export function SuitLines({ refreshKey, now, onOpen }: { refreshKey: string; now: Date; onOpen: (tab: "tonight" | "route" | "brief") => void }) {
+export function SuitLines({ refreshKey, now, onOpen, onShift = false }: { refreshKey: string; now: Date; onOpen: (tab: "tonight" | "route" | "brief") => void; onShift?: boolean }) {
   const [comms, setComms] = useState<{ text: string; off: boolean } | null>(null);
   const [route, setRoute] = useState<CaveRoute | null>(null);
   const [brief, setBrief] = useState<{ text: string; late: boolean } | null>(null);
@@ -66,7 +66,9 @@ export function SuitLines({ refreshKey, now, onOpen }: { refreshKey: string; now
 
   // Only the rollover ahead says nothing worth a line, so the route band waits for a real point.
   const next = route ? nextWaypoints(route, now) : [];
-  const showRoute = next.some((w) => w.kind !== "DAY_END");
+  // OWNER-GO-001: on shift the header already counts down to the end; the route line would repeat it.
+  // The comms line stays (it answers "am I on pace?"); the full route is one tap away in the cave.
+  const showRoute = !onShift && next.some((w) => w.kind !== "DAY_END");
   const callout = route ? routeCallout(route, now) : null;
   const spokenRoute = next.map((w, i) => `${clock(w.at)} ${w.label.toLowerCase()}${w.fixed ? "" : ", usual"}${i === 0 ? `, ${describeIn(w.at, now)}` : ""}`).join("; ");
   const text = callout ?? comms?.text;

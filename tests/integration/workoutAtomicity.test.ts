@@ -96,6 +96,7 @@ describe("workout commands are atomic", () => {
   it("completeWorkout: a failed event write leaves the session ACTIVE and the rotation where it was", async () => {
     const day = await startDay();
     const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 100, 10); // OWNER-GO-001: empty completions don't advance
     const nextBefore = await suggestTemplateForNextWorkout();
     const before = await snapshot();
 

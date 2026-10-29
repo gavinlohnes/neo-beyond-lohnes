@@ -321,13 +321,12 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await expect.poll(() => screen.getByRole("button", { name: "SHOW ALL TOOLS", exact: true }).elements().length).toBe(0);
     await screen.getByRole("button", { name: "+8 OZ", exact: true }).click();
     await expect.element(screen.getByText("8 oz recorded.", { exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "UNDO", exact: true }).click();
-    await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(8);
+    await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(16);
     expect((await getMinimumDayStatus(day.id)).enabled).toBe(true);
     expect(await db.recommendations.toArray()).toEqual(rec);
     expect(await db.events.where("type").equals("MINIMUM_DAY_ENABLED").count()).toBe(1);
     expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(2);
-    expect(await db.events.where("type").equals("WATER_LOG_VOIDED").count()).toBe(1);
+    expect(await db.events.where("type").equals("WATER_LOG_VOIDED").count()).toBe(0);
   });
 
   it.each([320, 360, 412])("retains an active workout, unknown/manual paths and reduced-motion operation at %ipx", async (width) => {

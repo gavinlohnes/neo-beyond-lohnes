@@ -150,7 +150,7 @@ describe("the morning call", () => {
 });
 
 describe("quick log", () => {
-  it("logs a recent saved meal in one tap on shift, with UNDO that voids it", async () => {
+  it("logs a recent saved meal in one tap on shift, confirmed with the message only", async () => {
     const day = await startDayAt(at(12, 16, 30));
     const { shake, wrap } = await savedMeals();
     await logMeal(day.id, shake.id);
@@ -163,8 +163,7 @@ describe("quick log", () => {
     expect((await db.events.where("type").equals("MEAL_LOGGED").toArray())).toHaveLength(3);
     // Focus stays on the logged item (it moves to the front), never dropped to the page.
     await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Log Turkey wrap");
-    await screen.getByRole("button", { name: "UNDO", exact: true }).click();
-    await expect.poll(async () => (await db.events.where("type").equals("MEAL_LOG_VOIDED").toArray()).length).toBe(1);
+    expect(screen.getByRole("button", { name: "UNDO", exact: true }).elements()).toHaveLength(0);
   });
 
   it("MEAL opens a searchable sheet on TODAY that logs through the same command", async () => {

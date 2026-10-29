@@ -19,7 +19,7 @@ import { useOnline } from "../../hooks/useOnline";
 import { getBackupPrompt } from "../../../application/autoBackupQueries";
 import { performDueDayRollover } from "../../../application/commands";
 import { describeSystemStatus } from "./statusCopy";
-import { describePlainRecommendationTitle } from "./recommendationCopy";
+import { describePlainRecommendationTitle, describeRecommendationReason } from "./recommendationCopy";
 import { TickNumber } from "../../feel/TickNumber";
 import type {
   BeyondDay,
@@ -142,6 +142,7 @@ import {
   getOpenShiftDown,
   getLastShiftDownCompletedAt,
   getWorkPeriodEnded,
+  getWorkPeriodStarted,
   getWorkContextSource,
   hasUnresolvedPostShift,
   getOpenCaptureItems,
@@ -361,6 +362,10 @@ export function TodayScreen({
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
+  // OWNER-GO-001: STARTED WORK puts TODAY on shift at once, even before the scheduled start.
+  const [workPeriodStartedAt, setWorkPeriodStartedAt] = useState<string | null>(null);
+  // OWNER-GO-001: after a check-in, one plain line on what it changed and what holds the answer.
+  const [checkInOutcome, setCheckInOutcome] = useState<string | null>(null);
   // DROP 0: where the day's work context came from — "per schedule" only while the saved schedule's value stands.
   const [workContextSource, setWorkContextSource] = useState<WorkContextSource | undefined>(undefined);
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
@@ -808,6 +813,7 @@ export function TodayScreen({
     let openShiftDown: Awaited<ReturnType<typeof getOpenShiftDown>> | undefined;
     let shiftDownCompletedAtValue: string | null = null;
     let workPeriodEndedAt: string | null = null;
+    let workPeriodStartedAt: string | null = null;
     let unresolvedPostShift = false;
     let workContextSource: WorkContextSource | undefined;
     let mainSleepTimes: string[] = [];
@@ -841,6 +847,7 @@ export function TodayScreen({
       shiftDownCompletedAtValue = (await getLastShiftDownCompletedAt(activeDay.id)) ?? null;
       const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
       workPeriodEndedAt = workPeriodEnded ? workPeriodEnded.occurredAt : null;
+      workPeriodStartedAt = (await getWorkPeriodStarted(activeDay.id))?.occurredAt ?? null;
       unresolvedPostShift = await hasUnresolvedPostShift(activeDay.id);
       workContextSource = await getWorkContextSource(activeDay.id);
       mainSleepTimes = (await getSleepEntries(activeDay.id)).filter((e) => e.kind === "PRIMARY").map((e) => e.recordedAt);
@@ -920,6 +927,7 @@ export function TodayScreen({
         setOpenShiftDownStartedAt(null);
       }
       setWorkPeriodEndedAt(workPeriodEndedAt);
+      setWorkPeriodStartedAt(workPeriodStartedAt);
       setUnresolvedPostShift(unresolvedPostShift);
       setWorkContextSource(workContextSource);
       setMainSleepRecordedAt(mainSleepTimes);
@@ -1004,6 +1012,36 @@ export function TodayScreen({
     }
   }
 
+  /** OWNER-GO-001: "Still RECOVER: …" or "Now NO ACTION REQUIRED: …", from the recommendation the check-in issued. */
+  function describeCheckInOutcome(before: string | null, after: { kind: string; title: string; rationale: string }): string {
+    const reason = describeRecommendationReason(after.rationale).replace(/\.$/, "");
+    return before === after.kind ? `Still: ${after.title}. ${reason}. This check-in didn't change it.` : `Now: ${after.title}. ${reason}.`;
+  }
+
+  async function handleSameAsLast() {
+    const acknowledge = captureCommitFeedback();
+    const last = activeCheckInDraft?.value;
+    if (busy || busyRef.current || !last) return;
+    busyRef.current = true;
+    setBusy(true);
+    setCheckInError(null);
+    const before = recommendation?.kind ?? null;
+    try {
+      const activeDay = await ensureActiveDay();
+      const { recommendation: issued } = await submitCheckIn(activeDay.id, last);
+      acknowledge("MEDIUM");
+      setCheckInOutcome(describeCheckInOutcome(before, issued));
+      setValues({});
+      setCheckInFormOpen(false);
+      await refresh();
+    } catch (cause) {
+      setCheckInError(describeError(cause, "Check-in didn’t save. Try again."));
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  }
+
   async function handleCheckIn() {
     const acknowledge = captureCommitFeedback();
     const submitted = checkInFormValues;
@@ -1014,9 +1052,11 @@ export function TodayScreen({
     let committed = false;
     try {
       const activeDay = await ensureActiveDay();
-      await submitCheckIn(activeDay.id, submitted,
+      const before = recommendation?.kind ?? null;
+      const { recommendation: issued } = await submitCheckIn(activeDay.id, submitted,
         operationsOnly && commandFocus === undefined && activeCheckInDraft ? checkInDraftDecision(activeCheckInDraft.value, submitted) : undefined);
       committed = true;
+      setCheckInOutcome(describeCheckInOutcome(before, issued));
       acknowledge("MEDIUM");
       setCheckInDraftDismissed(false);
       setValues({});
@@ -1037,7 +1077,9 @@ export function TodayScreen({
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
-      await submitCheckIn(activeDay.id, quickCheckInValues);
+      const before = recommendation?.kind ?? null;
+      const { recommendation: issued } = await submitCheckIn(activeDay.id, quickCheckInValues);
+      setCheckInOutcome(describeCheckInOutcome(before, issued));
       acknowledge("MEDIUM");
       await refresh();
       setValues({});
@@ -1527,18 +1569,11 @@ export function TodayScreen({
     }
   }
 
-  function renderLoggedBanner(message: string, undoOpen: boolean, log: "WATER" | "SLEEP" | "PROTEIN" | "MEAL", focus?: BodyFocus) {
-    if (undoOpen) {
-      return <ConfirmBanner message={message} actionLabel="UNDO" disabled={busy} onAction={() => void handleUndoLog(log)} />;
-    }
-    return onOpenBody ? (
-      <ConfirmBanner message={message} actionLabel="CORRECT IN DATA" onAction={() => onOpenBody(focus)} />
-    ) : (
-      <p role="status" aria-live="polite" className="meta fade-in">
-        <ConfirmIcon size={20} /> {message.replace(/\.$/, "")}. Corrections remain available in DATA.
-      </p>
-    );
+  // OWNER-GO-001 (Gavin: "it says delete or undo. That can go away"): a log confirms with its message only.
+  function renderLoggedBanner(message: string, _undoOpen?: boolean, _log?: "WATER" | "SLEEP" | "PROTEIN" | "MEAL", _focus?: BodyFocus) {
+    return <ConfirmBanner message={message} />;
   }
+
 
   /**
    * Item 3 (Phase 3): logs directly from the same commands/events BODY
@@ -1698,8 +1733,12 @@ export function TodayScreen({
   // COMMAND-CENTER-001: the pin is placement only. `scheduledClock` (no pin)
   // feeds every decision below — Attention eligibility, guidance timing;
   // `shiftClock` (with the pin) only chooses which rows and countdown TODAY shows.
-  const pinnedPhase = day && modePin?.dayId === day.id ? modePin.phase : null;
   const scheduledClock = deriveShiftClockView(shiftClockInput);
+  // OWNER-GO-001: once STARTED WORK is recorded, PREP's rows and prep prompts give way to ON SHIFT
+  // (placement only, like the pin; decisions still read the schedule). A manual pin still wins.
+  const startedEarly = !!workPeriodStartedAt && workPeriodEndedAt === null && scheduledClock.phase === "PRE_WORK";
+  const manualPin = day && modePin?.dayId === day.id ? modePin.phase : null;
+  const pinnedPhase = manualPin ?? (startedEarly ? "SCHEDULED_SHIFT" : null);
   const shiftClock = deriveShiftClockView(shiftClockInput, pinnedPhase);
   const scheduledRows: ShiftClockRow[] = day ? scheduledClock.rows : [];
   const phaseRows: ShiftClockRow[] = day ? shiftClock.rows : [];
@@ -2418,13 +2457,13 @@ export function TodayScreen({
     {commandFocus === "SMALL_STEPS" ? (hiddenFeatures.smallSteps ? <><SmallSteps minimumDayAvailable={hiddenFeatures.minimumDay} enabled busy={busy} onToggle={() => onReturnToFullTools?.()} onOpen={setSmallTool} />{smallTool && renderToolsItem(smallTool)}</> : <p className="meta">Show Small Steps in MORE → Hidden features.</p>)
       : commandFocus === "CHECK_IN" ? <><button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
       <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
-        quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} /></>
+        quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} /></>
       : commandFocus === "SHIFT_HANDOFF" ? <><ShiftHandoff refreshKey={shiftHandoffRefreshKey ?? 0} /><p className="meta">Handoff entry is offered after work is marked ended. Existing notes remain in HISTORY.</p></>
       : commandFocus ? renderToolsItem(commandFocus) : <>{renderWorkContextTool()}{renderToolsItem("END_DAY")}
         <details><summary className="disclosure-row">More daily tools</summary>{TOOLS_ORDER.filter((tool) => !["WORK_CONTEXT", "END_DAY", "CHECK_IN"].includes(tool)).map((tool) => <div key={tool}>{renderToolsItem(tool)}</div>)}</details>
         <button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
         <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
-          quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} />
+          quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} />
       </>}
   </div>;
 
@@ -2458,10 +2497,11 @@ export function TodayScreen({
             ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
           }}
         />}
-      <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK")} onShift={scheduledClock.phase === "SCHEDULED_SHIFT"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
+      <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK" && !startedEarly)} onShift={scheduledClock.phase === "SCHEDULED_SHIFT"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
   </>;
   const nextSection = <>
       <section className="console-guidance" aria-label="Next action">
+        {checkInOutcome && <p className="meta check-in-outcome" role="status">{checkInOutcome}</p>}
         {dominant === "OPERATION_CONFLICT" ? <>      {day && dominant === "OPERATION_CONFLICT" && (
         <div className="card card--warning" role="alert">
           <p className="tool-label">OPERATION CONFLICT</p>
@@ -2601,8 +2641,8 @@ export function TodayScreen({
             now={now}
             countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
             hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
-            scheduledPhase={scheduledClock.phase}
-            pin={pinnedPhase}
+            scheduledPhase={startedEarly ? "SCHEDULED_SHIFT" : scheduledClock.phase}
+            pin={manualPin}
             dayStart={livedDayStart}
             dayOff={day.workContext === "OFF"}
             busy={busy}
@@ -2618,7 +2658,7 @@ export function TodayScreen({
             onPin={(phase) => { setModePin(day.id, phase); setModePinState({ dayId: day.id, phase }); }}
             onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
             systems={onOpenCave && <>
-              <SuitLines now={now} refreshKey={`${refreshVersion}|${day.id}|${day.workContext ?? ""}|${recommendation?.id ?? ""}|${lastMainSleepMinutes ?? ""}|${capacityResult?.capacity ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onOpen={(tab) => { if (!busyRef.current) onOpenCave(tab); }} />
+              <SuitLines now={now} refreshKey={`${refreshVersion}|${day.id}|${day.workContext ?? ""}|${recommendation?.id ?? ""}|${lastMainSleepMinutes ?? ""}|${capacityResult?.capacity ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onShift={shiftClock.displayPhase === "SCHEDULED_SHIFT"} onOpen={(tab) => { if (!busyRef.current) onOpenCave(tab); }} />
               <StartedWork now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${workPeriodEndedAt ?? ""}|${workStartTick}|${Math.floor(now.getTime() / 300000)}`} onSaved={() => { setWorkStartTick((n) => n + 1); void refresh(); }}
                 // REAL-DATA-001: after the shift, SHIFT DOWN carries the one MARK WORK ENDED; no second button up here.
                 onEndWork={shiftClock.phase === "EXPECTED_POST_WORK" ? undefined : () => void handleMarkWorkEnded()} />
@@ -2663,7 +2703,7 @@ export function TodayScreen({
       onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
     <MeasuredSheet open={measuredOpen !== null && measuredOpen !== "sleep"} metric={measuredOpen ?? "steps"} snapshot={measured} onClose={() => setMeasuredOpen(null)}
       onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
-    <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} quickValues={quickCheckInValues} error={checkInError} />
+    <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} quickValues={quickCheckInValues} error={checkInError} />
     {(hydrationConfirmation || mealConfirmation || sleepConfirmation || proteinConfirmation) && <div className="redesign-toast" role="status">
       {hydrationConfirmation && renderLoggedBanner(`${hydrationConfirmation.amount} oz recorded.`, hydrationUndoOpen, "WATER", "water")}
       {mealConfirmation && renderLoggedBanner(mealConfirmation.message, mealUndoOpen, "MEAL", "meal")}
@@ -2760,8 +2800,8 @@ export function TodayScreen({
             now={now}
             countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
             hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
-            scheduledPhase={scheduledClock.phase}
-            pin={pinnedPhase}
+            scheduledPhase={startedEarly ? "SCHEDULED_SHIFT" : scheduledClock.phase}
+            pin={manualPin}
             dayStart={livedDayStart}
             dayOff={day.workContext === "OFF"}
             busy={busy}

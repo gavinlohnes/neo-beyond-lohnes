@@ -24,8 +24,9 @@ import { ConfirmIcon } from "../icons/Icon";
  */
 export interface ConfirmBannerProps {
   message: ReactNode;
-  actionLabel: string;
-  onAction: () => void;
+  /** OWNER-GO-001: a logged-action confirmation is just the message; no UNDO / DELETE button. */
+  actionLabel?: string;
+  onAction?: () => void;
   disabled?: boolean;
   divider?: boolean;
 }
@@ -48,7 +49,7 @@ export function ConfirmBanner({ message, actionLabel, onAction, disabled, divide
         <ConfirmIcon size={20} />
         {message}
       </p>
-      <button
+      {actionLabel && onAction && <button
         type="button"
         className="btn-secondary"
         style={{ width: "auto", padding: "6px 12px", fontSize: 16, flexShrink: divider ? 0 : undefined }}
@@ -56,7 +57,7 @@ export function ConfirmBanner({ message, actionLabel, onAction, disabled, divide
         onClick={onAction}
       >
         {actionLabel}
-      </button>
+      </button>}
     </div>
   );
 }

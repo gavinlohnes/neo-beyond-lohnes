@@ -12,6 +12,29 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## OWNER-GO-001 — the field study's protected fixes (owner go 2026-10-29)
+
+Gavin, 2026-10-29: "Go." on the five Protected items from the field study
+([report](https://claude.ai/artifact/3QYkVbMnVzQHUqgJLx4Mvr)), and "When I log some stuff it says
+delete or undo. That can go away too." Brief: [`agent/OWNER-GO-001.md`](agent/OWNER-GO-001.md).
+
+- **LOG is the middle of the bottom bar** on every tab: TODAY · TRAIN · + LOG · DATA · MORE. It opens
+  the same LOG sheet. Amends NAV-001's floating + (bottom-right of TODAY only). Still four
+  destinations; LOG is an action, outlined, not filled red. WATER and MEAL stay on TODAY.
+- **Log confirmations are the message only.** No UNDO, DELETE, REMOVE ONE / REMOVE THIS ONE, KEEP
+  BOTH, HISTORY / CORRECT or DISMISS after a log; receipts leave by themselves. Same-meal and
+  same-food prompts are gone. Corrections stay in DATA's history (CORRECT / DELETE on the entry).
+  Supersedes UNDO-001 and DUP-MEAL-001/002's prompts and Drop 15's "Same food?".
+- **PREFLIGHT** is the sleep line plus one line of what's still to do; the cave's BRIEF keeps the
+  per-system list.
+- **STARTED WORK puts TODAY on shift** at once (placement only, like the pin; decisions still read
+  the schedule). On shift, the route line steps back; the header counts down to the end and the
+  comms line stays.
+- **An empty completion never advances the rotation** (amends the rotation advancement rule): a
+  STANDARD or REDUCED session needs at least one working set logged.
+- **Check-in:** SAME AS LAST submits the previous values as now, in one tap. After any check-in,
+  TODAY says in one line whether the recommendation changed and what holds it.
+
 ## REUSE-FIRST-002 — owner build direction (locked 2026-10-23)
 
 Gavin directs BEYOND to reuse existing work and proven patterns by default: legally reuse and

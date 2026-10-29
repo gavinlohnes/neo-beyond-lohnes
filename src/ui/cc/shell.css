@@ -32,3 +32,8 @@
 .cc-hdr .cc-search-btn { margin-left: auto; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--p-t2); cursor: pointer; }
 .cc-hdr .cc-search-btn + .cc-clock { margin-left: 0; }
 .cc-hdr .cc-clock::before { content: attr(data-clock); }
+
+/* OWNER-GO-001: LOG, the middle of the bottom bar. Outlined, not filled: red stays the one next step. */
+.cc-nav .shell-nav__log { color: var(--p-t1); }
+.cc-nav .shell-nav__log-mark { display: grid; place-items: center; width: 34px; height: 34px; margin-top: -6px; border: 1px solid var(--p-t1); background: var(--p-s2); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+.cc-nav .shell-nav__log-mark svg { width: 20px; height: 20px; }

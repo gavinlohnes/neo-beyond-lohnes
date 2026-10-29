@@ -86,3 +86,14 @@ describe("SLEEP-ENGINE-001 — session size after two short sleeps", () => {
     expect(suggestSessionVariant(null, true)).toEqual(suggestSessionVariant(null));
   });
 });
+
+describe("OWNER-GO-001: an empty completion never advances the rotation", () => {
+  it("needs at least one working set when the count is known", () => {
+    expect(doesSessionAdvanceRotation("REDUCED", "COMPLETED", 0)).toBe(false);
+    expect(doesSessionAdvanceRotation("STANDARD", "COMPLETED", 0)).toBe(false);
+    expect(doesSessionAdvanceRotation("STANDARD", "COMPLETED", 1)).toBe(true);
+    expect(doesSessionAdvanceRotation("REDUCED", "PARTIAL", 2)).toBe(true);
+    // Unknown count keeps the status rule alone.
+    expect(doesSessionAdvanceRotation("STANDARD", "COMPLETED")).toBe(true);
+  });
+});

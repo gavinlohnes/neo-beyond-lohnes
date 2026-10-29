@@ -6,33 +6,24 @@ import { resolveWhen, type WhenChoice } from "../../application/logTimes";
 import { BodyScreen } from "../screens/body/BodyScreen";
 import type { RecordCorrectionRequest, RecordSheetTarget } from "../recordSheets";
 import type { SavedMeal } from "../../domain/common/types";
-import { ensureActiveDay, logWater, voidWaterLog, captureItem, deleteCaptureItem, voidProteinLog } from "../../application/commands";
+import { ensureActiveDay, logWater, voidWaterLog, captureItem, deleteCaptureItem } from "../../application/commands";
 import { getActiveDay, getHydrationEntries } from "../../application/queries";
 import { getSavedMeals, getLikelySavedMeals } from "../../application/nutritionQueries";
 import { logMeal, logManualMeal, updateSavedMeal, archiveSavedMeal, voidMealLog } from "../../application/nutritionCommands";
-import { getDuplicateMealCheck, getSameFoodCheck } from "../../application/sameFoodQueries";
-import type { DuplicateMealPair, SameFoodPair } from "../../engine/sameFood";
-import { describeDuplicateMealQuestion, describeSameFoodQuestion, describeSameFoodRemoveOne } from "../screens/body/nutritionCopy";
 import { useDayRolloverRefresh } from "../hooks/useDayRolloverRefresh";
-import { useUndoOpen } from "../hooks/useUndoWindow";
 import { useSessionDraft } from "../sessionDrafts";
 import { HoldButton } from "./HoldButton";
 import { describeError } from "../errorMessage";
 import { CcIcon } from "../cc/ccIcons";
 
-type MealQuestion = { message: string; detail?: string; removeLabel: string; remove: () => Promise<unknown>; removedMessage: string };
-type Receipt = { question?: MealQuestion | undefined; message: string; undo: () => Promise<unknown>; warning?: string; history?: "water" | "protein"; notes?: boolean };
-function ReceiptItem({ receipt, busy, undo, dismiss, history, keep, remove }: { receipt: Receipt; busy: boolean; undo: () => void; dismiss: () => void; history: () => void; keep: () => void; remove: () => void }) {
-  const undoOpen = useUndoOpen(receipt);
-  return <div className="record-receipt confirm-banner"><p>{receipt.message}</p>{receipt.warning && <p>{receipt.warning}</p>}
-    {receipt.question && <div role="group" aria-label={receipt.question.removeLabel === "REMOVE ONE" ? "Same food?" : "Same meal?"}>
-      <p>{receipt.question.message}</p>{receipt.question.detail && <p>{receipt.question.detail}</p>}
-      <button type="button" className="btn-secondary" disabled={busy} onClick={keep}>KEEP BOTH</button>
-      <button type="button" className="btn-secondary" disabled={busy} onClick={remove}>{receipt.question.removeLabel}</button>
-    </div>}
-    {undoOpen ? <button type="button" className="btn-secondary" disabled={busy} onClick={undo}>UNDO</button> : <button type="button" className="btn-secondary" onClick={history}>HISTORY / CORRECT</button>}
-    <button type="button" className="btn-secondary" onClick={dismiss}>DISMISS</button>
-  </div>;
+type Receipt = { message: string; undo: () => Promise<unknown>; warning?: string; history?: "water" | "protein"; notes?: boolean };
+/**
+ * OWNER-GO-001 (Gavin: "When I log some stuff it says delete or undo. That can go away"): the receipt
+ * is the message only, and it leaves by itself. Corrections stay in DATA's history.
+ */
+function ReceiptItem({ receipt, dismiss }: { receipt: Receipt; dismiss: () => void }) {
+  useEffect(() => { const timer = setTimeout(dismiss, 3500); return () => clearTimeout(timer); }, []);
+  return <div className="record-receipt confirm-banner"><p>{receipt.message}</p>{receipt.warning && <p>{receipt.warning}</p>}</div>;
 }
 type MealForm = { name: string; calories: string; proteinG: string; carbsG: string; fatG: string };
 const EMPTY: MealForm = { name: "", calories: "", proteinG: "", carbsG: "", fatG: "" };
@@ -116,24 +107,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
     finally { setBusy(false); }
   }
   async function mealReceipt(dayId: string, eventId: string, name: string) {
-    let warning: string | undefined;
-    let question: MealQuestion | undefined;
-    try {
-      const duplicate: DuplicateMealPair | undefined = await getDuplicateMealCheck(dayId, eventId);
-      const sameFood: SameFoodPair | undefined = duplicate ? undefined : await getSameFoodCheck(dayId, { kind: "MEAL", id: eventId });
-      if (duplicate) question = {
-        message: describeDuplicateMealQuestion(duplicate.justLogged, duplicate.earlier),
-        removeLabel: "REMOVE THIS ONE", remove: () => voidMealLog(dayId, eventId),
-        removedMessage: `${name} removed. The earlier meal stays.`,
-      };
-      else if (sameFood) question = {
-        message: describeSameFoodQuestion(sameFood.protein, sameFood.meal),
-        detail: describeSameFoodRemoveOne(sameFood.protein.grams),
-        removeLabel: "REMOVE ONE", remove: () => voidProteinLog(dayId, sameFood.protein.id),
-        removedMessage: "Protein-only entry removed. The meal stays.",
-      };
-    } catch { warning = "Meal saved. Duplicate check unavailable; review history."; }
-    return { message: `${name} logged.`, undo: () => voidMealLog(dayId, eventId), ...(warning ? { warning } : {}), ...(question ? { question } : {}) };
+    return { message: `${name} logged.`, undo: () => voidMealLog(dayId, eventId) };
   }
 
   function chooseMeal(meal: SavedMeal) { setMealId(meal.id); setServings(1); setPage("portion"); }
@@ -207,21 +181,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       {target === "note" && <><label className="field">Note<textarea className="input" aria-label="Capture a thought" value={note} onChange={(event) => setNote(event.target.value)} /></label><button type="button" className="btn-primary" disabled={busy || !note.trim()} onClick={() => void commit(async () => { const result = await captureItem(note); setNote(""); return { message: "Note captured.", notes: true, undo: () => deleteCaptureItem(result.id) }; })}>CAPTURE</button></>}
       <div hidden={!bodyVisible}>{bodyFocus && <BodyScreen foodLookupEnabled={hiddenFeatures.foodLookup} correctionRequest={target === "record" ? correctionRequest : null} sheetFocus={bodyFocus === "foodLookup" ? "meal" : bodyFocus} focus={bodyFocus === "protein" ? null : bodyFocus} focusRequest={bodyRequest} visible={bodyVisible && target !== null} onMealJourneyInFlightChange={(next) => { const wasBusy = busyRef.current; setBusy(next); if (wasBusy && !next) onSaved(); }} />}</div>
     </LogSheet>
-    {receipts.length > 0 && <div className="redesign-toast" role="status">{receipts.map((receipt) => <ReceiptItem key={receipt.id} receipt={receipt} busy={busy}
-      keep={() => setReceipts((old) => old.map((entry) => entry.id === receipt.id ? { ...entry, question: undefined } : entry))}
-      remove={() => {
-        if (busyRef.current || !receipt.question) return;
-        const question = receipt.question; setBusy(true); setError(null);
-        const acknowledge = captureCommitFeedback();
-        void question.remove().then((changed) => {
-          if (changed) acknowledge("HEAVY");
-          if (question.removeLabel === "REMOVE THIS ONE") dismissReceipt(receipt.id);
-          else setReceipts((old) => old.map((entry) => entry.id === receipt.id ? { ...entry, question: undefined, message: question.removedMessage } : entry));
-          onSaved();
-        }).catch((cause) => setError(`Could not remove the entry. ${describeError(cause, "Try again.")}`)).finally(() => setBusy(false));
-      }}
-      dismiss={() => dismissReceipt(receipt.id)} history={() => { dismissReceipt(receipt.id); if (receipt.notes) onNotes(); else onHistory(receipt.history ?? "protein"); }}
-      undo={() => { const acknowledge = captureCommitFeedback(); if (busyRef.current) return; setBusy(true); setError(null); void receipt.undo().then((changed) => { if (changed) acknowledge("HEAVY"); dismissReceipt(receipt.id); onSaved(); }).catch((cause) => setError(describeError(cause, "Could not undo. Try again."))).finally(() => setBusy(false)); }} />)}
+    {receipts.length > 0 && <div className="redesign-toast" role="status">{receipts.map((receipt) => <ReceiptItem key={receipt.id} receipt={receipt} dismiss={() => dismissReceipt(receipt.id)} />)}
       {error && !target && <p role="alert">{error}</p>}
     </div>}
   </>;
@@ -232,30 +192,10 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
  * toward, and comes back when you scroll up, reach the end, or return to the top. Operator-initiated
  * motion only (SUIT-VOLUME-001); a keyboard focus always brings it back.
  */
-export function useScrollAway(): boolean {
-  const [away, setAway] = useState(false);
-  useEffect(() => {
-    let last = window.scrollY, frame = 0;
-    const onScroll = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const y = window.scrollY, atEnd = y + window.innerHeight >= document.documentElement.scrollHeight - 24;
-        if (atEnd || y < 24) setAway(false);
-        else if (y > last + 6) setAway(true);
-        else if (y < last - 6) setAway(false);
-        last = y;
-      });
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(frame); };
-  }, []);
-  return away;
-}
 
-/** NAV-001: WATER and MEAL stay as one-tap shortcuts; LOG is the floating + for every record type. */
+/** NAV-001: WATER and MEAL stay as one-tap shortcuts on TODAY. OWNER-GO-001: LOG moved to the bottom bar. */
 export function LogActions({ open, busy = false, isInFlight = () => busy }: { open: (target: RecordSheetTarget) => void; busy?: boolean; isInFlight?: () => boolean }) {
-  const away = useScrollAway();
-  return <div className="console-controls cc-actions cc-actions--two" role="group" aria-label="Log actions">{([['water', 'WATER'], ['meal', 'MEAL'], ['log', 'LOG']] as const).map(([target, label]) => <button type="button" className={target === "log" ? `cc-act cc-fab${away ? " cc-fab--away" : ""}` : "cc-act"} aria-label={target === 'water' ? 'Log water' : target === 'meal' ? 'Log a meal' : 'Open LOG'} aria-haspopup="dialog" disabled={busy} key={target} onClick={() => { if (!isInFlight()) open(target); }}>{CcIcon[target === "log" ? "plus" : target === "meal" ? "meal" : "water"]()}{label}</button>)}</div>;
+  return <div className="console-controls cc-actions cc-actions--two" role="group" aria-label="Log actions">{([['water', 'WATER'], ['meal', 'MEAL']] as const).map(([target, label]) => <button type="button" className="cc-act" aria-label={target === 'water' ? 'Log water' : 'Log a meal'} aria-haspopup="dialog" disabled={busy} key={target} onClick={() => { if (!isInFlight()) open(target); }}>{CcIcon[target === "meal" ? "meal" : "water"]()}{label}</button>)}</div>;
 }
 
 const clockOf = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });

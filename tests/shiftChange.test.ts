@@ -49,15 +49,16 @@ describe("SHIFT-CHANGE-001", () => {
     expect(buildShiftChange(brief({ phase: "AFTER", aar, endedAt: at(13, 30).toISOString() }), route, at(13, 30))).toBeNull();
   });
 
-  it("gives the 90 minutes before a shift to PREFLIGHT: every system GO or HOLD, the verdict, until started", () => {
+  it("gives the 90 minutes before a shift to PREFLIGHT: one line of what is still to do, until started", () => {
     const items = [
       { key: "SLEEP" as const, system: "SLEEP", state: "ADVISORY" as const, detail: "4:45, under your usual.", source: "" },
       { key: "CHECK_IN" as const, system: "CHECK-IN", state: "GO" as const, detail: "Checked in.", source: "" },
       { key: "PACK_FOOD" as const, system: "PACK · FOOD", state: "HOLD" as const, detail: "Not confirmed.", source: "" },
     ];
     const m = buildShiftChange(brief({ phase: "BEFORE", items, open: ["PACK · FOOD"] }), route, at(16, 45, 27))!;
-    expect(m).toMatchObject({ key: "d27:PREFLIGHT", phase: "PREFLIGHT", clock: "T–01:15", end: shift.start, line: null, plan: "Hold: food.", signal: "Sleep before this shift: 4:45, under your usual." });
-    expect(m.rows).toEqual([{ key: "CHECK_IN", label: "CHECK-IN", value: "GO", tone: "ON" }, { key: "PACK_FOOD", label: "PACK · FOOD", value: "HOLD · Not confirmed.", tone: "NONE" }]);
+    expect(m).toMatchObject({ key: "d27:PREFLIGHT", phase: "PREFLIGHT", clock: "T–01:15", end: shift.start, line: null, plan: "Still to do: pack food.", signal: "Sleep before this shift: 4:45, under your usual." });
+    // OWNER-GO-001: no per-system rows; the cave's BRIEF keeps them.
+    expect(m.rows).toEqual([]);
     expect(buildShiftChange(brief({ phase: "BEFORE", items }), route, at(16, 29, 27))).toBeNull();
   });
 

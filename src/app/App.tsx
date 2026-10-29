@@ -715,7 +715,16 @@ function AppWorkspaces() {
       {/* POLISH-002: the prototype's tab bar — a 2 px red top indicator on the current tab. */}
       <nav className="shell-nav cc-nav" aria-label="Primary">
         <div className="cc-nav-in">
-          {(["TODAY", "TRAIN", "BODY", "COMMAND"] as Tab[]).map((t) => {
+          {(["TODAY", "TRAIN", "LOG", "BODY", "COMMAND"] as const).map((t) => {
+            // OWNER-GO-001 (Gavin: "Go"): LOG lives in the middle of the bottom bar, on every tab,
+            // where either thumb reaches it and it covers nothing. It opens the same LOG sheet.
+            if (t === "LOG") return (
+              <button key="LOG" type="button" className="shell-nav__item shell-nav__log" aria-label="Open LOG" aria-haspopup="dialog"
+                onClick={() => openRecordSheet("log")}>
+                <span className="shell-nav__log-mark" aria-hidden="true">{CcIcon.plus()}</span>
+                <span>LOG</span>
+              </button>
+            );
             const TabIcon = CC_TAB_ICON[t];
             return (
               <button

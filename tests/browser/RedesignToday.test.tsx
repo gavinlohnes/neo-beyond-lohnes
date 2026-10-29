@@ -80,7 +80,7 @@ it('renders a truthful empty day without a crash or write', async () => {
   expect(await db.beyondDays.count()).toBe(0);
 });
 
-it('keeps water confirmation and undo above navigation during an active operation', async () => {
+it('keeps the water confirmation above navigation during an active operation', async () => {
   await page.viewport(360, 800);
   const day = await startDay();
   await startShiftDown(day.id, 10);
@@ -88,16 +88,14 @@ it('keeps water confirmation and undo above navigation during an active operatio
   await screen.getByRole('button', { name: 'Log water', exact: true }).click();
   await screen.getByRole('dialog', { name: 'WATER', exact: true }).getByRole('button', { name: '+8 oz', exact: true }).click();
   await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(8);
-  await expect.element(screen.getByRole('button', { name: 'UNDO', exact: true })).toBeVisible();
+  await expect.element(screen.getByText('8 oz recorded.', { exact: true })).toBeVisible();
   const toast = document.querySelector('.redesign-toast')!.getBoundingClientRect();
   const nav = document.querySelector('.shell-nav')!.getBoundingClientRect();
   expect(toast.top).toBeGreaterThanOrEqual(0);
   expect(toast.bottom).toBeLessThanOrEqual(nav.top);
   expect(document.activeElement?.getAttribute('aria-label')).toBe('Log water');
-  await screen.getByRole('button', { name: 'UNDO', exact: true }).click();
-  await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(0);
+  expect(screen.getByRole('button', { name: 'UNDO', exact: true }).elements()).toHaveLength(0);
   expect(await db.events.where('type').equals('WATER_LOGGED').count()).toBe(1);
-  expect(await db.events.where('type').equals('WATER_LOG_VOIDED').count()).toBe(1);
 });
 
 it('keeps note entry available as a sheet over TODAY with its draft after close', async () => {
@@ -218,12 +216,11 @@ for (const width of [320, 360, 390, 412]) it(`contains the fresh-install scene a
   const skyline = document.querySelector(".mode-empty .cc-skyline")!.getBoundingClientRect();
   expect(getComputedStyle(screen.getByRole("button", { name: "START DAY", exact: true }).element()).backgroundColor).toBe("rgb(208, 20, 27)");
   expect(skyline.top).toBeGreaterThanOrEqual(hero.top); expect(skyline.bottom).toBeLessThanOrEqual(hero.bottom);
-  // NAV-001 intentionally moves LOG to the viewport bottom, above navigation, rather than
-  // the old in-flow row. Preserve reachability and no-write checks against that approved map.
+  // OWNER-GO-001: LOG is the middle of the bottom bar. Preserve reachability and no-write checks.
   const log = screen.getByRole("button", { name: "Open LOG", exact: true });
   const bounds = log.element().getBoundingClientRect();
   expect(bounds.top).toBeGreaterThanOrEqual(0);
-  expect(bounds.bottom).toBeLessThanOrEqual(document.querySelector(".shell-nav")!.getBoundingClientRect().top);
+  expect(document.querySelector(".shell-nav")!.contains(log.element())).toBe(true);
   expect(bounds.height).toBeGreaterThanOrEqual(44);
   expect(log.element().contains(document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2))).toBe(true);
   await log.click();

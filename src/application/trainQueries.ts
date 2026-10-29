@@ -54,12 +54,17 @@ export async function getActiveWorkoutSession(beyondDayId?: string): Promise<Wor
  * BeyondDays.
  */
 export async function suggestTemplateForNextWorkout(): Promise<WorkoutTemplateId> {
-  const sessions = await db.workoutSessions.toArray();
-  const advancing = sessions
-    .filter((s) => doesSessionAdvanceRotation(s.sessionType as SessionType, s.status as WorkoutSessionStatus))
+  return suggestNextTemplate(await getLastAdvancingTemplate());
+}
+
+/** Sessions that advanced the rotation, oldest first. OWNER-GO-001: an empty completion doesn't count. */
+async function advancingSessions(): Promise<WorkoutSession[]> {
+  const [sessions, sets] = await Promise.all([db.workoutSessions.toArray(), db.performedSets.toArray()]);
+  const working = new Map<string, number>();
+  for (const set of sets as unknown as PerformedSet[]) if (!set.skipped) working.set(set.sessionId, (working.get(set.sessionId) ?? 0) + 1);
+  return (sessions as WorkoutSession[])
+    .filter((s) => doesSessionAdvanceRotation(s.sessionType as SessionType, s.status as WorkoutSessionStatus, working.get(s.id) ?? 0))
     .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
-  const last = advancing.at(-1);
-  return suggestNextTemplate(last ? (last.templateId as WorkoutTemplateId) : null);
 }
 
 /**
@@ -73,11 +78,7 @@ export async function suggestTemplateForNextWorkout(): Promise<WorkoutTemplateId
  * this is a separate, additive query reusing the same filter.
  */
 export async function getLastAdvancingTemplate(): Promise<WorkoutTemplateId | null> {
-  const sessions = await db.workoutSessions.toArray();
-  const advancing = sessions
-    .filter((s) => doesSessionAdvanceRotation(s.sessionType as SessionType, s.status as WorkoutSessionStatus))
-    .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
-  const last = advancing.at(-1);
+  const last = (await advancingSessions()).at(-1);
   return last ? (last.templateId as WorkoutTemplateId) : null;
 }
 

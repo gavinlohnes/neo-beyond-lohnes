@@ -120,27 +120,10 @@ it.each([
   // REAL-DATA-001: after the shift, SHIFT DOWN's MARK WORK ENDED is the one end button, never two.
   expect(shiftButton).toBe(moment === "landing" ? "WORK ENDED" : null);
   if (moment === "secured") expect([...document.querySelectorAll("button")].filter((b) => /WORK ENDED$/.test(b.textContent?.trim() ?? "") && b.getClientRects().length).length).toBeLessThanOrEqual(1);
-  // The floating LOG never sits on a control you are reading toward: it steps aside while you scroll
-  // down, returns when you scroll up, and at the end of TODAY it covers nothing.
-  const fab = document.querySelector<HTMLElement>(".cc-fab")!;
+  // OWNER-GO-001: LOG is the middle of the bottom bar on every screen; nothing floats over TODAY.
   const settle = async () => { await new Promise((done) => setTimeout(done, 80)); await Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))); };
-  const room = document.documentElement.scrollHeight - window.innerHeight;
-  expect(room, "TODAY scrolls").toBeGreaterThan(60);
-  window.scrollTo(0, Math.round(room / 2)); await settle();
-  expect(fab.classList.contains("cc-fab--away"), "steps aside scrolling down").toBe(true);
-  const { left, top, width: w, height: h } = fab.getBoundingClientRect();
-  expect(fab.contains(document.elementFromPoint(left + w / 2, top + h / 2)), "no longer takes taps").toBe(false);
-  window.scrollTo(0, Math.round(room / 4)); await settle();
-  expect(fab.classList.contains("cc-fab--away"), "returns scrolling up").toBe(false);
-  window.scrollTo(0, document.documentElement.scrollHeight); await settle();
-  expect(fab.classList.contains("cc-fab--away"), "returns at the end").toBe(false);
-  const f = fab.getBoundingClientRect();
-  const covered = [...document.querySelectorAll<HTMLElement>("#workspace-TODAY button, #workspace-TODAY a")].filter((b) => {
-    if (b === fab || b.closest(".tabbar, nav")) return false;
-    const r = b.getBoundingClientRect();
-    return r.width > 0 && r.left < f.right && r.right > f.left && r.top < f.bottom && r.bottom > f.top;
-  }).map((b) => b.textContent?.trim());
-  expect(covered, "covered at the end of TODAY").toEqual([]);
+  expect(document.querySelector(".cc-fab"), "no floating LOG").toBeNull();
+  expect(document.querySelector(".shell-nav")!.contains(screen.getByRole("button", { name: "Open LOG" }).element())).toBe(true);
   window.scrollTo(0, 0); await settle();
   await screen.getByRole("button", { name: "DATA", exact: true }).click();
   for (const tab of ["lead", "tonight", "route", "brief", "vitals", "file", "log"]) {

@@ -1,4 +1,4 @@
-import { describeBrief, getCaveBrief, type CaveBrief } from "./caveBrief";
+import { getCaveBrief, type CaveBrief } from "./caveBrief";
 import { getActiveDay, getHydrationEntries, getProteinEntries, getWorkPeriodEnded, getWorkPeriodStarted } from "./queries";
 import { getMealEntries } from "./nutritionQueries";
 import { describeIn, getCaveRoute, type CaveRoute } from "./caveRoute";
@@ -42,6 +42,15 @@ const hhmm = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: 
 const dur = (minutes: number) => `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
 
 /** Pure: the shift-change moment for this instant, or null outside its windows. */
+const TO_DO: Record<string, string> = { CHECK_IN: "check in", FUEL: "eat", HYDRATION: "drink water", PACK_FOOD: "pack food", PACK_BOTTLE: "fill your bottle", HANDOFF: "read the handoff note" };
+/** PREFLIGHT's one line: what's left before the shift, or that you're set. */
+export function describeStillToDo(brief: CaveBrief): string {
+  const left = brief.items.filter((i) => i.key !== "SLEEP" && i.state !== "GO" && i.state !== "ADVISORY" && TO_DO[i.key]).map((i) => TO_DO[i.key]!);
+  if (!left.length) return "You're set.";
+  const list = left.length > 1 ? `${left.slice(0, -1).join(", ")} and ${left.at(-1)}` : left[0]!;
+  return `Still to do: ${list}.`;
+}
+
 export function buildShiftChange(brief: CaveBrief | null, route: CaveRoute | null, now: Date, marks: ShiftMarks = { water: [], food: [] }): ShiftChange | null {
   if (!brief?.shift || !route) return null;
   // A tap within 2 hours of the scheduled end is the real end; a later one is a late record, not a longer shift.
@@ -56,9 +65,9 @@ export function buildShiftChange(brief: CaveBrief | null, route: CaveRoute | nul
     const s0 = Date.parse(brief.shift.start);
     if (t >= s0 || s0 - t > PREFLIGHT_MINUTES * 60_000) return null;
     const m = Math.max(0, Math.round((s0 - t) / 60000));
-    const rows = brief.items.filter((i) => i.key !== "SLEEP")
-      .map((i) => ({ key: i.key, label: i.system, value: i.state === "GO" ? "GO" : `${i.state} · ${i.detail}`, tone: i.state === "GO" ? "ON" as const : "NONE" as const }));
-    return { key: `${brief.dayId}:PREFLIGHT`, phase: "PREFLIGHT", dayId: brief.dayId, end: brief.shift.start, clock: `T–${dur(m).padStart(5, "0")}`, rows, plan: describeBrief(brief), signal, line: null };
+    // OWNER-GO-001 (Gavin: "Go"): one line of what's still to do, in plain words, instead of six
+    // HOLD rows and a verdict that repeated them. The cave's BRIEF keeps the full system list.
+    return { key: `${brief.dayId}:PREFLIGHT`, phase: "PREFLIGHT", dayId: brief.dayId, end: brief.shift.start, clock: `T–${dur(m).padStart(5, "0")}`, rows: [], plan: describeStillToDo(brief), signal, line: null };
   }
   const end = Number.isFinite(marked) && marked <= scheduledEnd + REAL_END_SLACK_HOURS * 3600_000 ? marked : scheduledEnd;
   const ended = brief.phase === "AFTER";
