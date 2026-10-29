@@ -1,3 +1,13 @@
+# OWNER-GO-001 — the field study's protected fixes
+
+- **Authority / Builder / lane:** Gavin, 2026-10-29 ("Go." and "delete or undo … can go away").
+  Claude Code; Protected within the owner's go. Brief: `docs/agent/OWNER-GO-001.md`. Branch
+  `ccr-0be4f40f-16m0ja`.
+- **Built:** quiet log confirmations; LOG in the bottom bar; short PREFLIGHT and STARTED WORK →
+  ON SHIFT; rotation needs a working set; check-in SAME AS LAST with a one-line outcome.
+- **Verified:** `npm run verify` green (3,157 passed).
+- **Next:** CI and Gavin's merge; a phone check of the new bottom bar.
+
 # REAL-DATA-001 — fixes from the owner's real backup
 
 - **Authority / Builder / lane:** Gavin, 2026-10-28 ("Use whatever is beneficial for beyond").

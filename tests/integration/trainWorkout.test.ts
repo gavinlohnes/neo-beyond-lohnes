@@ -238,6 +238,7 @@ describe("getActiveWorkoutSession — resumable across refresh", () => {
     const session = await startWorkout(day.id, "A", "STANDARD");
     expect((await getActiveWorkoutSession(day.id))?.id).toBe(session.id);
 
+    await logSet(day.id, session.id, "machine-chest-press", 1, 100, 10); // OWNER-GO-001: an empty completion no longer advances
     await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
     expect(await getActiveWorkoutSession(day.id)).toBeUndefined();
   });
@@ -309,6 +310,7 @@ describe("A -> B -> C rotation advancement", () => {
   it("STANDARD COMPLETED advances the rotation", async () => {
     const day = await startDay();
     const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 100, 10); // OWNER-GO-001: an empty completion no longer advances
     await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
     expect(await suggestTemplateForNextWorkout()).toBe("B");
   });
@@ -316,6 +318,7 @@ describe("A -> B -> C rotation advancement", () => {
   it("STANDARD PARTIAL does NOT advance the rotation", async () => {
     const day = await startDay();
     const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 100, 10); // OWNER-GO-001: an empty completion no longer advances
     await completeWorkout(day.id, session.id, "STANDARD", "PARTIAL");
     expect(await suggestTemplateForNextWorkout()).toBe("A");
   });
@@ -330,6 +333,7 @@ describe("A -> B -> C rotation advancement", () => {
   it("REDUCED COMPLETED advances the rotation", async () => {
     const day = await startDay();
     const session = await startWorkout(day.id, "A", "REDUCED");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 100, 10); // OWNER-GO-001: an empty completion no longer advances
     await completeWorkout(day.id, session.id, "REDUCED", "COMPLETED");
     expect(await suggestTemplateForNextWorkout()).toBe("B");
   });
@@ -337,6 +341,7 @@ describe("A -> B -> C rotation advancement", () => {
   it("REDUCED PARTIAL also advances the rotation (unlike STANDARD PARTIAL)", async () => {
     const day = await startDay();
     const session = await startWorkout(day.id, "A", "REDUCED");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 100, 10); // OWNER-GO-001: an empty completion no longer advances
     await completeWorkout(day.id, session.id, "REDUCED", "PARTIAL");
     expect(await suggestTemplateForNextWorkout()).toBe("B");
   });
@@ -351,14 +356,17 @@ describe("A -> B -> C rotation advancement", () => {
   it("a full A -> B -> C -> A cycle advances correctly across separate sessions", async () => {
     const day = await startDay();
     const a = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, a.id, "machine-chest-press", 1, 100, 10); // OWNER-GO-001: an empty completion no longer advances
     await completeWorkout(day.id, a.id, "STANDARD", "COMPLETED");
     expect(await suggestTemplateForNextWorkout()).toBe("B");
 
     const b = await startWorkout(day.id, "B", "STANDARD");
+    await logSet(day.id, b.id, "machine-chest-press", 1, 100, 10); // OWNER-GO-001: an empty completion no longer advances
     await completeWorkout(day.id, b.id, "STANDARD", "COMPLETED");
     expect(await suggestTemplateForNextWorkout()).toBe("C");
 
     const c = await startWorkout(day.id, "C", "STANDARD");
+    await logSet(day.id, c.id, "machine-chest-press", 1, 100, 10); // OWNER-GO-001: an empty completion no longer advances
     await completeWorkout(day.id, c.id, "STANDARD", "COMPLETED");
     expect(await suggestTemplateForNextWorkout()).toBe("A");
   });
@@ -377,6 +385,7 @@ describe("getLastAdvancingTemplate — basis for explaining the rotation suggest
   it("names the real template once a session has advanced the rotation", async () => {
     const day = await startDay();
     const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 100, 10); // OWNER-GO-001: an empty completion no longer advances
     await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
     expect(await getLastAdvancingTemplate()).toBe("A");
   });
@@ -384,6 +393,7 @@ describe("getLastAdvancingTemplate — basis for explaining the rotation suggest
   it("does not count a non-advancing session (e.g. STANDARD PARTIAL)", async () => {
     const day = await startDay();
     const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 100, 10); // OWNER-GO-001: an empty completion no longer advances
     await completeWorkout(day.id, session.id, "STANDARD", "PARTIAL");
     expect(await getLastAdvancingTemplate()).toBeNull();
   });

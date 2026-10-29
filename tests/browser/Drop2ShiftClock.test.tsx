@@ -172,6 +172,8 @@ describe("Shift Clock — after shift (06:00 → main sleep)", () => {
       endedAt: new Date(at(d, 7).getTime() + minutes * 60_000).toISOString(),
     });
     await db.workoutSessions.bulkAdd([session("c1", "C", 1, 47), session("c2", "C", 3, 48), session("c3", "C", 5, 49), session("b1", "B", 7, 50)]);
+    // OWNER-GO-001: a finished session advances the rotation only with a working set logged.
+    await db.performedSets.bulkAdd((["c1", "c2", "c3", "b1"] as const).map((id) => ({ id: `${id}-s1`, beyondDayId: "earlier", sessionId: id, exerciseId: "machine-chest-press", setNumber: 1, weight: 100, reps: 10, skipped: false, recordedAt: at(1, 7).toISOString() })));
 
     setClock(at(13, 7, 0));
     const onOpenBody = vi.fn();

@@ -19,7 +19,7 @@ import { useOnline } from "../../hooks/useOnline";
 import { getBackupPrompt } from "../../../application/autoBackupQueries";
 import { performDueDayRollover } from "../../../application/commands";
 import { describeSystemStatus } from "./statusCopy";
-import { describePlainRecommendationTitle } from "./recommendationCopy";
+import { describePlainRecommendationTitle, describeRecommendationReason } from "./recommendationCopy";
 import { TickNumber } from "../../feel/TickNumber";
 import type {
   BeyondDay,
@@ -364,6 +364,8 @@ export function TodayScreen({
   const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
   // OWNER-GO-001: STARTED WORK puts TODAY on shift at once, even before the scheduled start.
   const [workPeriodStartedAt, setWorkPeriodStartedAt] = useState<string | null>(null);
+  // OWNER-GO-001: after a check-in, one plain line on what it changed and what holds the answer.
+  const [checkInOutcome, setCheckInOutcome] = useState<string | null>(null);
   // DROP 0: where the day's work context came from — "per schedule" only while the saved schedule's value stands.
   const [workContextSource, setWorkContextSource] = useState<WorkContextSource | undefined>(undefined);
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
@@ -1010,6 +1012,36 @@ export function TodayScreen({
     }
   }
 
+  /** OWNER-GO-001: "Still RECOVER: …" or "Now NO ACTION REQUIRED: …", from the recommendation the check-in issued. */
+  function describeCheckInOutcome(before: string | null, after: { kind: string; title: string; rationale: string }): string {
+    const reason = describeRecommendationReason(after.rationale).replace(/\.$/, "");
+    return before === after.kind ? `Still: ${after.title}. ${reason}. This check-in didn't change it.` : `Now: ${after.title}. ${reason}.`;
+  }
+
+  async function handleSameAsLast() {
+    const acknowledge = captureCommitFeedback();
+    const last = activeCheckInDraft?.value;
+    if (busy || busyRef.current || !last) return;
+    busyRef.current = true;
+    setBusy(true);
+    setCheckInError(null);
+    const before = recommendation?.kind ?? null;
+    try {
+      const activeDay = await ensureActiveDay();
+      const { recommendation: issued } = await submitCheckIn(activeDay.id, last);
+      acknowledge("MEDIUM");
+      setCheckInOutcome(describeCheckInOutcome(before, issued));
+      setValues({});
+      setCheckInFormOpen(false);
+      await refresh();
+    } catch (cause) {
+      setCheckInError(describeError(cause, "Check-in didn’t save. Try again."));
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  }
+
   async function handleCheckIn() {
     const acknowledge = captureCommitFeedback();
     const submitted = checkInFormValues;
@@ -1020,9 +1052,11 @@ export function TodayScreen({
     let committed = false;
     try {
       const activeDay = await ensureActiveDay();
-      await submitCheckIn(activeDay.id, submitted,
+      const before = recommendation?.kind ?? null;
+      const { recommendation: issued } = await submitCheckIn(activeDay.id, submitted,
         operationsOnly && commandFocus === undefined && activeCheckInDraft ? checkInDraftDecision(activeCheckInDraft.value, submitted) : undefined);
       committed = true;
+      setCheckInOutcome(describeCheckInOutcome(before, issued));
       acknowledge("MEDIUM");
       setCheckInDraftDismissed(false);
       setValues({});
@@ -1043,7 +1077,9 @@ export function TodayScreen({
     setBusy(true);
     try {
       const activeDay = await ensureActiveDay();
-      await submitCheckIn(activeDay.id, quickCheckInValues);
+      const before = recommendation?.kind ?? null;
+      const { recommendation: issued } = await submitCheckIn(activeDay.id, quickCheckInValues);
+      setCheckInOutcome(describeCheckInOutcome(before, issued));
       acknowledge("MEDIUM");
       await refresh();
       setValues({});
@@ -2421,13 +2457,13 @@ export function TodayScreen({
     {commandFocus === "SMALL_STEPS" ? (hiddenFeatures.smallSteps ? <><SmallSteps minimumDayAvailable={hiddenFeatures.minimumDay} enabled busy={busy} onToggle={() => onReturnToFullTools?.()} onOpen={setSmallTool} />{smallTool && renderToolsItem(smallTool)}</> : <p className="meta">Show Small Steps in MORE → Hidden features.</p>)
       : commandFocus === "CHECK_IN" ? <><button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
       <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
-        quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} /></>
+        quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} /></>
       : commandFocus === "SHIFT_HANDOFF" ? <><ShiftHandoff refreshKey={shiftHandoffRefreshKey ?? 0} /><p className="meta">Handoff entry is offered after work is marked ended. Existing notes remain in HISTORY.</p></>
       : commandFocus ? renderToolsItem(commandFocus) : <>{renderWorkContextTool()}{renderToolsItem("END_DAY")}
         <details><summary className="disclosure-row">More daily tools</summary>{TOOLS_ORDER.filter((tool) => !["WORK_CONTEXT", "END_DAY", "CHECK_IN"].includes(tool)).map((tool) => <div key={tool}>{renderToolsItem(tool)}</div>)}</details>
         <button className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button>
         <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} values={values} setValues={setValues} busy={busy} error={checkInError} isInFlight={() => busyRef.current}
-          quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} />
+          quickValues={quickCheckInValues} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} submit={() => void handleCheckIn()} close={() => setCheckInFormOpen(false)} />
       </>}
   </div>;
 
@@ -2465,6 +2501,7 @@ export function TodayScreen({
   </>;
   const nextSection = <>
       <section className="console-guidance" aria-label="Next action">
+        {checkInOutcome && <p className="meta check-in-outcome" role="status">{checkInOutcome}</p>}
         {dominant === "OPERATION_CONFLICT" ? <>      {day && dominant === "OPERATION_CONFLICT" && (
         <div className="card card--warning" role="alert">
           <p className="tool-label">OPERATION CONFLICT</p>
@@ -2666,7 +2703,7 @@ export function TodayScreen({
       onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
     <MeasuredSheet open={measuredOpen !== null && measuredOpen !== "sleep"} metric={measuredOpen ?? "steps"} snapshot={measured} onClose={() => setMeasuredOpen(null)}
       onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
-    <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} quickValues={quickCheckInValues} error={checkInError} />
+    <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} quickValues={quickCheckInValues} error={checkInError} />
     {(hydrationConfirmation || mealConfirmation || sleepConfirmation || proteinConfirmation) && <div className="redesign-toast" role="status">
       {hydrationConfirmation && renderLoggedBanner(`${hydrationConfirmation.amount} oz recorded.`, hydrationUndoOpen, "WATER", "water")}
       {mealConfirmation && renderLoggedBanner(mealConfirmation.message, mealUndoOpen, "MEAL", "meal")}

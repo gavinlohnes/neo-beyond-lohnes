@@ -27,3 +27,24 @@ describe("STARTED WORK puts TODAY on shift", () => {
     expect(document.body.textContent).not.toMatch(/Pinned/);
   });
 });
+
+describe("check-in: SAME AS LAST, and what it changed", () => {
+  it("one tap repeats the previous check-in and says what holds the answer", async () => {
+    const { submitCheckIn, endDay } = await import("../../src/application/commands");
+    const { db } = await import("../../src/persistence/db");
+    vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 9, 14, 16, 40));
+    const first = await startDay();
+    await submitCheckIn(first.id, { energy: 2, stress: 4, mood: 2, soreness: 1, alcoholUrge: 0 });
+    vi.setSystemTime(new Date(2026, 9, 15, 16, 35)); await endDay(first.id);
+    vi.setSystemTime(new Date(2026, 9, 15, 16, 40)); await startDay();
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: "CHECK IN", exact: true }).click();
+    const sheet = screen.getByRole("dialog", { name: "CHECK IN", exact: true });
+    await expect.element(sheet.getByText(/^Energy 2/)).toBeVisible();
+    await sheet.getByRole("button", { name: "SAME AS LAST", exact: true }).click();
+    await expect.poll(() => db.checkIns.count()).toBe(2);
+    const latest = (await db.checkIns.toArray()).sort((a, b) => a.recordedAt.localeCompare(b.recordedAt)).at(-1)!;
+    expect(latest).toMatchObject({ energy: 2, stress: 4, mood: 2, soreness: 1, alcoholUrge: 0 });
+    await expect.element(screen.getByRole("status").filter({ hasText: /^(Still|Now): / }).first()).toBeVisible();
+  });
+});

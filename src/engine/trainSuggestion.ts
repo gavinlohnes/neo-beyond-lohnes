@@ -69,11 +69,19 @@ export function deriveRecoverySessionStatus(
  * reconciliation): STANDARD only advances on COMPLETED. REDUCED advances
  * on COMPLETED or PARTIAL. RECOVERY never advances rotation, regardless
  * of status. ABANDONED never advances rotation for any session type.
+ *
+ * OWNER-GO-001 (Gavin, 2026-10-29: "Go"): a session finished with no
+ * working set logged never advances either. The owner's real backup had B
+ * "completed" in 3 seconds with no sets, which moved the rotation to C.
+ * Callers that don't know the set count (copy that only describes the rule)
+ * omit it and get the status rule alone.
  */
 export function doesSessionAdvanceRotation(
   sessionType: SessionType,
   status: WorkoutSessionStatus,
+  workingSetCount?: number,
 ): boolean {
+  if (workingSetCount === 0) return false;
   if (sessionType === "RECOVERY") return false;
   if (sessionType === "STANDARD") return status === "COMPLETED";
   if (sessionType === "REDUCED") return status === "COMPLETED" || status === "PARTIAL";
