@@ -21,6 +21,7 @@ import {
   deriveScheduledContext,
   deriveStandingWorkContext,
   isOperatorSavedSchedule,
+  livedDayShiftWindow,
   type ScheduledContext,
   type StandingWorkContext,
 } from "../engine/scheduledContext";
@@ -1018,11 +1019,15 @@ export async function getAllCaptureItems(): Promise<CaptureItem[]> {
  * WORK_PERIOD_ENDED on this day; the last operator action is the latest
  * thing the operator did on this day before `openedAt` (anything after it is
  * this visit, and doesn't count against the draft).
+ *
+ * SLEEP-001 (owner, 2026-10-29 "go sleep"): the owner rarely taps WORK ENDED (8 times in his real
+ * history), so the draft almost never showed. Without either event, a day not recorded as OFF
+ * falls back to its scheduled shift end, once that has passed.
  */
 export async function getSleepDraftEvidence(
   beyondDayId: string,
   openedAt: Date,
-): Promise<{ anchorAt: string | null; anchorKind: "SHIFT_DOWN" | "WORK_ENDED" | null; lastOperatorActionAt: string | null }> {
+): Promise<{ anchorAt: string | null; anchorKind: "SHIFT_DOWN" | "WORK_ENDED" | "SHIFT_END" | null; lastOperatorActionAt: string | null }> {
   const openedIso = openedAt.toISOString();
   const events = (await db.events.where("beyondDayId").equals(beyondDayId).toArray()).filter(
     (e) => e.occurredAt <= openedIso,
@@ -1037,9 +1042,13 @@ export async function getSleepDraftEvidence(
       lastOperatorActionAt = e.occurredAt;
     }
   }
-  return {
-    anchorAt: anchor ? anchor.occurredAt : null,
-    anchorKind: anchor ? (anchor.type === "SHIFT_DOWN_COMPLETED" ? "SHIFT_DOWN" : "WORK_ENDED") : null,
-    lastOperatorActionAt,
-  };
+  if (anchor) {
+    return { anchorAt: anchor.occurredAt, anchorKind: anchor.type === "SHIFT_DOWN_COMPLETED" ? "SHIFT_DOWN" : "WORK_ENDED", lastOperatorActionAt };
+  }
+  const day = await db.beyondDays.get(beyondDayId);
+  const shift = day && day.workContext !== "OFF" ? livedDayShiftWindow(new Date(day.startedAt), await getSchedulePattern()) : null;
+  if (shift && shift.end.getTime() <= openedAt.getTime()) {
+    return { anchorAt: shift.end.toISOString(), anchorKind: "SHIFT_END", lastOperatorActionAt };
+  }
+  return { anchorAt: null, anchorKind: null, lastOperatorActionAt };
 }

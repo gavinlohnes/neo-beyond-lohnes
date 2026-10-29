@@ -92,8 +92,7 @@ for (const withSleep of [false, true]) it(`asks about sleep at 13:00 only withou
   await expect.element(screen.getByRole("button", { name: /Mode .*Change mode/ })).toBeVisible();
   await expect.poll(() => document.querySelectorAll("[data-recover-sleep-prompt]").length).toBe(withSleep ? 0 : 1);
   if (!withSleep) {
-    await screen.getByRole("button", { name: "LOG MAIN SLEEP", exact: true }).click();
-    await expect.element(screen.getByText("Slept up to 5 hr 30 min?", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Slept 07:30 → 13:00?", { exact: true })).toBeVisible();
     expect(await db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(0);
   }
 });
@@ -111,8 +110,10 @@ for (const [hour, minute, pin] of [[7, 30, null], [12, 59, null], [13, 0, "OFF"]
 it("NOT YET records no sleep or other domain event", async () => {
   vi.setSystemTime(new Date(2026, 9, 13, 13));
   const screen = await render(<TodayScreen />);
-  await expect.element(screen.getByRole("heading", { name: "Did you sleep?", exact: true })).toBeVisible();
   const before = await db.events.toArray();
+  // SLEEP-001: the scheduled shift end drafts the night first; NOT NOW leaves the plain question.
+  await screen.getByRole("button", { name: "NOT NOW", exact: true }).click();
+  await expect.element(screen.getByRole("heading", { name: "Did you sleep?", exact: true })).toBeVisible();
   await screen.getByRole("button", { name: "NOT YET", exact: true }).click();
   await expect.element(screen.getByText("Log main sleep when you're ready.", { exact: true })).toBeVisible();
   expect(await db.events.toArray()).toEqual(before);

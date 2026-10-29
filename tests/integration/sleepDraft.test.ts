@@ -47,6 +47,21 @@ describe("getSleepDraftEvidence", () => {
     expect((await getSleepDraftEvidence(day.id, at(13, 14, 20))).lastOperatorActionAt).toBe(at(13, 7, 5).toISOString());
     expect((await getSleepDraftEvidence(day.id, at(13, 14, 30))).lastOperatorActionAt).toBe(at(13, 14, 25).toISOString());
   });
+
+  it("SLEEP-001: without WORK ENDED or Shift Down, falls back to the scheduled shift end once it has passed", async () => {
+    vi.setSystemTime(at(12, 16, 30));
+    const day = await startDay();
+    await setWorkContext(day.id, "WORK", "MANUAL");
+    expect(await getSleepDraftEvidence(day.id, at(13, 5, 59))).toEqual({ anchorAt: null, anchorKind: null, lastOperatorActionAt: expect.any(String) });
+    expect(await getSleepDraftEvidence(day.id, at(13, 14, 0))).toMatchObject({ anchorAt: at(13, 6).toISOString(), anchorKind: "SHIFT_END" });
+  });
+
+  it("SLEEP-001: a day recorded as OFF has no shift end to count from", async () => {
+    vi.setSystemTime(at(12, 16, 30));
+    const day = await startDay();
+    await setWorkContext(day.id, "OFF", "MANUAL");
+    expect((await getSleepDraftEvidence(day.id, at(13, 14, 0))).anchorAt).toBeNull();
+  });
 });
 
 describe("a drafted sleep log", () => {

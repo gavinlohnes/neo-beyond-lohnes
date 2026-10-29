@@ -12,6 +12,21 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## SLEEP-001 — main sleep is one tap after a shift (owner go 2026-10-29)
+
+Gavin, 2026-10-29: "merge 339 and go sleep". Brief: [`agent/SLEEP-001.md`](agent/SLEEP-001.md).
+
+- **The sleep draft counts from the scheduled shift end** when neither WORK ENDED nor Shift Down
+  was recorded, once that end has passed, on a day not recorded as OFF. Amends the 2026-10-03
+  SLEEP DRAFT rule, which stayed quiet without one of them. It is still an upper bound, still
+  counts from anything logged after the shift, and still stays quiet outside 3–12 h.
+- **The draft is said as a window:** "Slept 06:00 → 13:40?", with "Up to 7 hr 40 min · Shift
+  ended 06:00 → opened 13:40" below. −15 / +15 move the start. LOG is the primary button.
+- **After 13:00 the draft is the "Did you sleep?" card itself,** so logging it is one tap. NOT NOW
+  leaves the plain question with LOG MAIN SLEEP and NOT YET.
+- Garmin already files its night as main sleep on import (GARMIN-003); once it does, the draft
+  steps aside. Nothing changes there.
+
 ## OWNER-GO-001 — the field study's protected fixes (owner go 2026-10-29)
 
 Gavin, 2026-10-29: "Go." on the five Protected items from the field study
