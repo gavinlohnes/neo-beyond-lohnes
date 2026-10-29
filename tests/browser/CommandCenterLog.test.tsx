@@ -34,14 +34,15 @@ async function openLog(screen: Awaited<ReturnType<typeof render>>) {
 }
 
 describe("TODAY action row", () => {
-  it("keeps WATER, MEAL and LOG in the same order in every mode", async () => {
+  it("keeps WATER and MEAL on TODAY and LOG in the bar, in every mode", async () => {
     for (const [d, h] of [[12, 17], [12, 22], [13, 7], [14, 17]] as const) {
       vi.setSystemTime(new Date(2026, 9, d, h));
       await startDay();
       const screen = await render(<App />);
       await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();
       const labels = [...document.querySelectorAll(".console-controls button")].map((button) => button.getAttribute("aria-label"));
-      expect(labels.slice(0, 3)).toEqual(["Log water", "Log a meal", "Open LOG"]);
+      expect(labels.slice(0, 2)).toEqual(["Log water", "Log a meal"]);
+      expect(document.querySelector(".shell-nav")!.contains(screen.getByRole("button", { name: "Open LOG" }).element())).toBe(true);
       for (const button of document.querySelectorAll<HTMLElement>(".console-controls button")) {
         expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       }

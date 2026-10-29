@@ -143,7 +143,7 @@ details.cc-tools summary::-webkit-details-marker{ display:none; }
 details.cc-tools .cc-chips{ display:flex; flex-wrap:wrap; gap:8px; padding:0 14px 14px; }
 .cc-chip{ min-height:40px; padding:0 12px; border:1px solid var(--p-line); font-size:13px; letter-spacing:.06em; color:var(--p-t2); display:flex; align-items:center; }
 .cc-nav{ position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--p-bg); border-top:1px solid var(--p-line); padding-bottom:env(safe-area-inset-bottom,0px); }
-.cc-nav-in{ max-width:430px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); }
+.cc-nav-in{ max-width:430px; margin:0 auto; display:grid; grid-template-columns:repeat(5,1fr); }
 .cc-nav button{ position:relative; min-height:var(--p-nav-h); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; font-size:11px; letter-spacing:.14em; color:var(--p-t3); font-weight:500; }
 .cc-nav button[aria-current="page"]{ color:var(--p-t1); background:var(--p-s1); }
 .cc-nav button[aria-current="page"]::before{ content:""; position:absolute; top:0; left:22%; right:22%; height:2px; background:var(--p-red); }

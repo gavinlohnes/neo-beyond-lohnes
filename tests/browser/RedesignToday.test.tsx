@@ -216,12 +216,11 @@ for (const width of [320, 360, 390, 412]) it(`contains the fresh-install scene a
   const skyline = document.querySelector(".mode-empty .cc-skyline")!.getBoundingClientRect();
   expect(getComputedStyle(screen.getByRole("button", { name: "START DAY", exact: true }).element()).backgroundColor).toBe("rgb(208, 20, 27)");
   expect(skyline.top).toBeGreaterThanOrEqual(hero.top); expect(skyline.bottom).toBeLessThanOrEqual(hero.bottom);
-  // NAV-001 intentionally moves LOG to the viewport bottom, above navigation, rather than
-  // the old in-flow row. Preserve reachability and no-write checks against that approved map.
+  // OWNER-GO-001: LOG is the middle of the bottom bar. Preserve reachability and no-write checks.
   const log = screen.getByRole("button", { name: "Open LOG", exact: true });
   const bounds = log.element().getBoundingClientRect();
   expect(bounds.top).toBeGreaterThanOrEqual(0);
-  expect(bounds.bottom).toBeLessThanOrEqual(document.querySelector(".shell-nav")!.getBoundingClientRect().top);
+  expect(document.querySelector(".shell-nav")!.contains(log.element())).toBe(true);
   expect(bounds.height).toBeGreaterThanOrEqual(44);
   expect(log.element().contains(document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2))).toBe(true);
   await log.click();
