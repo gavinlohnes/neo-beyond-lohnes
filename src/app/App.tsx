@@ -20,10 +20,10 @@ import { BackupDueLine } from "../ui/components/BackupDueLine";
 import { NotesSweep } from "../ui/components/NotesSweep";
 import { TimeCapsuleOpened } from "../ui/components/TimeCapsuleOpened";
 import { ReportReadyLine } from "../ui/components/ReportReadyLine";
-import { getActiveWorkoutSession } from "../application/trainQueries";
+import { getActiveWorkoutSession, getPerformedSets } from "../application/trainQueries";
 import { maybeSendCheckInReminder } from "../application/checkInReminderQueries";
 import { performDueDayRollover, subscribeToDayRollover } from "../application/commands";
-import { nextRolloverBoundaryAfter } from "../engine/dayRollover";
+import { nextRolloverBoundaryAfter, workoutHoldsRollover } from "../engine/dayRollover";
 import { getNextDayRolloverCheckAt } from "../application/dayRolloverQueries";
 import { parseShortcut, type BodyFocus } from "../ui/shortcuts";
 import { positionPrimaryDestination, positionRevealedSurface } from "../ui/navigationPosition";
@@ -298,15 +298,19 @@ function AppWorkspaces() {
       .catch(() => {})
       .then(() =>
         getActiveWorkoutSession()
-          .then((activeWorkout) => {
-            if (!current) return;
+          .then(async (activeWorkout) => {
             // An explicit shortcut wins over workout continuity; the workout
             // stays active and TRAIN still resumes it when opened.
-            if (activeWorkout && !shortcut) {
-              setTrainDestination("WORKOUT");
-              setVisited((current) => new Set([...current, "TRAIN"]));
-              setTab("TRAIN");
-            }
+            if (!current || !activeWorkout || shortcut) return;
+            // REAL-DATA-001: only a workout in use takes the launch (the same 2-hour idle rule as the
+            // 16:30 roll). An older one stays resumable from TRAIN and shows on TODAY as WORKOUT
+            // STILL OPEN; it no longer opens BEYOND on TRAIN two days later.
+            const sets = await getPerformedSets(activeWorkout.id);
+            const lastActivityAt = sets.reduce((latest, set) => (set.recordedAt > latest ? set.recordedAt : latest), activeWorkout.startedAt);
+            if (!current || !workoutHoldsRollover(new Date(lastActivityAt), new Date())) return;
+            setTrainDestination("WORKOUT");
+            setVisited((current) => new Set([...current, "TRAIN"]));
+            setTab("TRAIN");
           })
           .catch(() => {
             // Continuity restoration is defensive. A failed local read must

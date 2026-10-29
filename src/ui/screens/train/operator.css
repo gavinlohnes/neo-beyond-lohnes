@@ -45,3 +45,6 @@
 /* FIELD-AUTHORITY-001: TRAIN's check-in gate — one line, one neutral control. */
 .train-check-in-gate { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 0 0 16px; color: var(--text-2); }
 .train-check-in-gate .btn-secondary { width: auto; min-height: 44px; padding-inline: 16px; }
+.train-prescription--preview { margin-top: 12px; }
+.train-prescription--preview li { display: flex; justify-content: space-between; gap: 12px; padding-block: 6px; }
+.train-prescription--preview li > span { display: inline; }

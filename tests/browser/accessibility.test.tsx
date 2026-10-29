@@ -192,7 +192,8 @@ describe("accessibility (real browser, axe-core)", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
-    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    // REAL-DATA-001: names show before START now; wait for the live set.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);
@@ -211,7 +212,8 @@ describe("accessibility (real browser, axe-core)", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
-    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    // REAL-DATA-001: names show before START now; wait for the live set.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
 
     // DECLUTTER-001: only the current set has inputs; each set's fields
     // keep their own distinct accessible name as it becomes current.

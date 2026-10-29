@@ -87,17 +87,18 @@ export function ShiftDownCard({
         {active && <span aria-hidden="true" className="diamond" />}
         {active ? "SHIFT DOWN IN PROGRESS" : prominent ? "RECOMMENDED — SHIFT DOWN" : "SHIFT DOWN"}
       </p>
+      {/* REAL-DATA-001: the owner's own plan, in his words, leads the card; the explanation follows. */}
+      {postShiftPlan && (
+        <p className="meta-strong" style={{ marginBottom: 12 }}>
+          Your plan: {postShiftPlan}
+        </p>
+      )}
       <p className="card-body" style={{ marginBottom: 12 }}>{SHIFT_DOWN_EXPLANATION}</p>
       {!active && <p className="meta">{onMarkWorkEnded ? "First, mark work ended. Then choose minutes and start SHIFT DOWN." : "Choose minutes. Then start SHIFT DOWN."}</p>}
       {onMarkWorkEnded && !active && (
         <button className="btn-secondary" style={{ marginBottom: 12 }} disabled={busy} onClick={onMarkWorkEnded}>
           MARK WORK ENDED
         </button>
-      )}
-      {postShiftPlan && (
-        <p className="meta-strong" style={{ marginBottom: 12 }}>
-          Your plan: {postShiftPlan}
-        </p>
       )}
       {active ? (
         <>

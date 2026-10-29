@@ -59,6 +59,7 @@ export function RecommendationCard({
   onReflectionAnswered,
   questionBelow = false,
   behindPace = false,
+  commitmentActions = null,
   busy,
   onOpenTrain,
   onRecord,
@@ -104,6 +105,8 @@ export function RecommendationCard({
   questionBelow?: boolean;
   /** AUDIT-FIX: TODAY's numbers show water or protein behind your pace. */
   behindPace?: boolean;
+  /** REAL-DATA-001: DONE / NOT A TASK / NEW DATE for the task an OBLIGATION_DUE card names. */
+  commitmentActions?: ReactNode;
   busy: boolean;
   onOpenTrain?: ((destination: "RECOVERY" | "WORKOUT") => void) | undefined;
   onRecord: () => void;
@@ -142,9 +145,11 @@ export function RecommendationCard({
       </h2>)}
       {/* POLISH-002: one line of evidence under the headline, as in the prototype. */}
       {nextAction && (isAllClear ? context && <p>{context}</p> : <p>{describeRecommendationReason(recommendation.rationale)}</p>)}
+      {nextAction && recommendation.kind === "OBLIGATION_DUE" && commitmentActions}
       {/* DECLUTTER-001: the all-clear rationale ("No rule requires attention
           right now.") only repeats the title, so it isn't shown there. */}
       {!nextAction && !isAllClear && <p className="card-body">{describeRecommendationReason(recommendation.rationale)}</p>}
+      {!nextAction && recommendation.kind === "OBLIGATION_DUE" && commitmentActions}
       {!nextAction && evidenceBasis && (
         <p className="meta" style={{ marginTop: 8 }}>{evidenceBasis}</p>
       )}

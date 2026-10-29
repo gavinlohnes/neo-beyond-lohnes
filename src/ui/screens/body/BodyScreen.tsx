@@ -34,6 +34,8 @@ import {
   ensureActiveDay,
 } from "../../../application/commands";
 import { getLastMainSleep } from "../../../application/systemStatus";
+import { getMeasuredSnapshot } from "../../../application/measuredQueries";
+import { sleepMinutes as measuredSleepMinutes } from "../../../domain/health/measuredSeries";
 import {
   getActiveDay,
   getEffectiveHydrationTotal,
@@ -732,7 +734,10 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       activeDay ? getDayProteinTotalG(activeDay.id) : Promise.resolve(0),
       activeDay ? getMealEntries(activeDay.id) : Promise.resolve([]),
       activeDay ? getTotalMealCalories(activeDay.id) : Promise.resolve(0),
-      activeDay && !correctionRequest ? getLastMainSleep(activeDay.id).catch(() => null) : Promise.resolve(null),
+      // REAL-DATA-001: with nothing logged, DATA reads the same Garmin night TODAY's tile shows
+      // (the owner saw TODAY 7:15 Garmin beside DATA "Not logged" for the same night).
+      activeDay && !correctionRequest ? getLastMainSleep(activeDay.id).catch(() => null).then(async (logged) => logged
+        ?? await getMeasuredSnapshot().then((m) => m.lastNight ? { minutes: measuredSleepMinutes(m.lastNight), fromGarmin: true } : null, () => null)) : Promise.resolve(null),
     ]);
     // Publish one consistent reading; a delayed older read cannot replace a newer result.
     if (revision !== readRevision.current) return;

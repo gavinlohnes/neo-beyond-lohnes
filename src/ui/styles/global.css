@@ -2791,3 +2791,9 @@ html { overflow-anchor: none; }
 @media (prefers-reduced-motion: reduce) {
   .commit-pulse, .confirm-banner { animation: none !important; }
 }
+
+/* REAL-DATA-001: close a due task right on the card. */
+.commitment-quick { display: grid; gap: 8px; margin-block: 8px; }
+.commitment-quick__row { display: flex; flex-wrap: wrap; gap: 8px; }
+.commitment-quick__row > button { flex: 1 1 0; min-width: 0; width: auto; }
+.commitment-quick__confirm { display: grid; gap: 8px; }

@@ -260,7 +260,8 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
-    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    // REAL-DATA-001: the exercise names show before START too; wait for the live set instead.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
 
     expect(screen.getByText("TRAINING SUMMARY", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).elements()).toHaveLength(0);
@@ -273,6 +274,9 @@ describe("TrainScreen (real browser) — active STANDARD session", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    // REAL-DATA-001: exercise names now show before START, so callers can't use them to know the
+    // session started. Wait for the live set, or the start write can land in the next test's database.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
     return screen;
   }
 
@@ -668,7 +672,8 @@ describe("TrainScreen (real browser) — CustomExercise substitution suggestions
 
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
-    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    // REAL-DATA-001: the exercise names show before START too; wait for the live set instead.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
     await screen.getByText("Progression and substitution", { exact: true }).click();
     expect(screen.getByRole("button", { name: "Chest Supported Row" }).elements()).toHaveLength(1);
   });
@@ -680,6 +685,9 @@ describe("TrainScreen (real browser) — TRAIN-WAVE-A: Persistent Rest + Set Com
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
+    // REAL-DATA-001: exercise names now show before START, so callers can't use them to know the
+    // session started. Wait for the live set, or the start write can land in the next test's database.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
     return screen;
   }
 
@@ -869,7 +877,8 @@ describe("TrainScreen (real browser) — DECLUTTER-001 one set at a time", () =>
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
-    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    // REAL-DATA-001: the exercise names show before START too; wait for the live set instead.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
 
     expect(screen.getByRole("button", { name: "LOG" }).elements()).toHaveLength(1);
     expect(screen.getByRole("spinbutton", { name: "Set 2 weight in pounds" }).elements()).toHaveLength(0);
@@ -934,7 +943,8 @@ describe("TrainScreen (real browser) — narrow phone widths", () => {
     await page.viewport(width, 800);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
-    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    // REAL-DATA-001: the exercise names show before START too; wait for the live set instead.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
 
     await expect.poll(() => document.documentElement.scrollWidth).toBeLessThanOrEqual(width + OVERFLOW_TOLERANCE_PX);
   });
@@ -946,7 +956,8 @@ describe("TrainScreen (real browser) — accessibility", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
-    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    // REAL-DATA-001: the exercise names show before START too; wait for the live set instead.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
     // .command-surface carries .fade-in (a one-shot mount animation, see
     // global.css's beyond-fade-in keyframes) — settle past --motion-base
     // (220ms) so axe measures steady-state contrast, not a mid-fade frame.
@@ -963,7 +974,8 @@ describe("TrainScreen (real browser) — accessibility", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
-    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    // REAL-DATA-001: the exercise names show before START too; wait for the live set instead.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
     await new Promise((resolve) => setTimeout(resolve, 300));
 
     const el = document.querySelector(".command-title");
@@ -991,7 +1003,8 @@ describe("TrainScreen (real browser) — Drop 4 live PRs, summary, hold-to-finis
     await completeWorkout(day.id, past.id, "STANDARD", "COMPLETED");
     const screen = await render(<TrainScreen />);
     await screen.getByRole("button", { name: "START WORKOUT" }).click();
-    await expect.element(screen.getByText("Machine Chest Press", { exact: true })).toBeVisible();
+    // REAL-DATA-001: the exercise names show before START too; wait for the live set instead.
+    await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
     return screen;
   }
 

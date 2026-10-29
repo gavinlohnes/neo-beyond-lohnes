@@ -117,7 +117,9 @@ it.each([
   // The shift line: STARTED WORK around the start, WORK ENDED from 2 hours before the end until tapped,
   // nothing mid-shift or on a day off.
   const shiftButton = document.querySelector(".work-start__go")?.textContent ?? null;
-  expect(shiftButton).toBe(moment === "landing" || moment === "secured" ? "WORK ENDED" : null);
+  // REAL-DATA-001: after the shift, SHIFT DOWN's MARK WORK ENDED is the one end button, never two.
+  expect(shiftButton).toBe(moment === "landing" ? "WORK ENDED" : null);
+  if (moment === "secured") expect([...document.querySelectorAll("button")].filter((b) => /WORK ENDED$/.test(b.textContent?.trim() ?? "") && b.getClientRects().length).length).toBeLessThanOrEqual(1);
   // The floating LOG never sits on a control you are reading toward: it steps aside while you scroll
   // down, returns when you scroll up, and at the end of TODAY it covers nothing.
   const fab = document.querySelector<HTMLElement>(".cc-fab")!;
