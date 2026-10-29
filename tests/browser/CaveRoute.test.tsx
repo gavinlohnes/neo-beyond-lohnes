@@ -23,9 +23,14 @@ for (const width of [320, 390]) it(`shows the next points and opens the full rou
   const before = await db.events.toArray();
   const screen = await render(<App />);
 
-  const route = screen.getByRole("button", { name: "Route, next: 06:00 shift ends, in 11:00; 16:30 day rolls. Open the full route in the cave" });
-  await expect.element(route).toBeVisible();
-  await route.click();
+  // OWNER-GO-001: on shift TODAY's header already counts down to the end, so the route line steps back;
+  // the full route is in the cave.
+  await expect.element(screen.getByRole("button", { name: /^Comms:/ })).toBeVisible();
+  expect(screen.getByRole("button", { name: /^Route, next:/ }).elements()).toHaveLength(0);
+  await screen.getByRole("button", { name: "DATA", exact: true }).click();
+  await expect.poll(() => document.querySelector<HTMLButtonElement>('[data-cave-tab="route"]')).not.toBeNull();
+  document.querySelector<HTMLButtonElement>('[data-cave-tab="route"]')!.click();
+  document.querySelector<HTMLButtonElement>('[data-cave-tab="route"]')!.focus();
 
   await expect.element(screen.getByRole("heading", { name: "THE CAVE // ROUTE", exact: true })).toBeVisible();
   await expect.poll(() => document.activeElement?.getAttribute("data-cave-tab")).toBe("route");
@@ -46,5 +51,5 @@ it("calls out the shift on comms for half an hour after it starts", async () => 
   await workDayAt(18, 10);
   const screen = await render(<App />);
   await expect.element(screen.getByRole("button", { name: "Comms: On shift. Food and bottle not confirmed. Open tonight in the cave" })).toBeVisible();
-  await expect.element(screen.getByRole("button", { name: /^Route, next: 06:00 shift ends, in 11:50; 16:30 day rolls\./ })).toBeVisible();
+  expect(screen.getByRole("button", { name: /^Route, next:/ }).elements()).toHaveLength(0);
 });

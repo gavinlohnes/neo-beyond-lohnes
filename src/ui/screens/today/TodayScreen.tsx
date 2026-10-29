@@ -142,6 +142,7 @@ import {
   getOpenShiftDown,
   getLastShiftDownCompletedAt,
   getWorkPeriodEnded,
+  getWorkPeriodStarted,
   getWorkContextSource,
   hasUnresolvedPostShift,
   getOpenCaptureItems,
@@ -361,6 +362,8 @@ export function TodayScreen({
   const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
+  // OWNER-GO-001: STARTED WORK puts TODAY on shift at once, even before the scheduled start.
+  const [workPeriodStartedAt, setWorkPeriodStartedAt] = useState<string | null>(null);
   // DROP 0: where the day's work context came from — "per schedule" only while the saved schedule's value stands.
   const [workContextSource, setWorkContextSource] = useState<WorkContextSource | undefined>(undefined);
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
@@ -808,6 +811,7 @@ export function TodayScreen({
     let openShiftDown: Awaited<ReturnType<typeof getOpenShiftDown>> | undefined;
     let shiftDownCompletedAtValue: string | null = null;
     let workPeriodEndedAt: string | null = null;
+    let workPeriodStartedAt: string | null = null;
     let unresolvedPostShift = false;
     let workContextSource: WorkContextSource | undefined;
     let mainSleepTimes: string[] = [];
@@ -841,6 +845,7 @@ export function TodayScreen({
       shiftDownCompletedAtValue = (await getLastShiftDownCompletedAt(activeDay.id)) ?? null;
       const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
       workPeriodEndedAt = workPeriodEnded ? workPeriodEnded.occurredAt : null;
+      workPeriodStartedAt = (await getWorkPeriodStarted(activeDay.id))?.occurredAt ?? null;
       unresolvedPostShift = await hasUnresolvedPostShift(activeDay.id);
       workContextSource = await getWorkContextSource(activeDay.id);
       mainSleepTimes = (await getSleepEntries(activeDay.id)).filter((e) => e.kind === "PRIMARY").map((e) => e.recordedAt);
@@ -920,6 +925,7 @@ export function TodayScreen({
         setOpenShiftDownStartedAt(null);
       }
       setWorkPeriodEndedAt(workPeriodEndedAt);
+      setWorkPeriodStartedAt(workPeriodStartedAt);
       setUnresolvedPostShift(unresolvedPostShift);
       setWorkContextSource(workContextSource);
       setMainSleepRecordedAt(mainSleepTimes);
@@ -1691,8 +1697,12 @@ export function TodayScreen({
   // COMMAND-CENTER-001: the pin is placement only. `scheduledClock` (no pin)
   // feeds every decision below — Attention eligibility, guidance timing;
   // `shiftClock` (with the pin) only chooses which rows and countdown TODAY shows.
-  const pinnedPhase = day && modePin?.dayId === day.id ? modePin.phase : null;
   const scheduledClock = deriveShiftClockView(shiftClockInput);
+  // OWNER-GO-001: once STARTED WORK is recorded, PREP's rows and prep prompts give way to ON SHIFT
+  // (placement only, like the pin; decisions still read the schedule). A manual pin still wins.
+  const startedEarly = !!workPeriodStartedAt && workPeriodEndedAt === null && scheduledClock.phase === "PRE_WORK";
+  const manualPin = day && modePin?.dayId === day.id ? modePin.phase : null;
+  const pinnedPhase = manualPin ?? (startedEarly ? "SCHEDULED_SHIFT" : null);
   const shiftClock = deriveShiftClockView(shiftClockInput, pinnedPhase);
   const scheduledRows: ShiftClockRow[] = day ? scheduledClock.rows : [];
   const phaseRows: ShiftClockRow[] = day ? shiftClock.rows : [];
@@ -2451,7 +2461,7 @@ export function TodayScreen({
             ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
           }}
         />}
-      <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK")} onShift={scheduledClock.phase === "SCHEDULED_SHIFT"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
+      <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK" && !startedEarly)} onShift={scheduledClock.phase === "SCHEDULED_SHIFT"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
   </>;
   const nextSection = <>
       <section className="console-guidance" aria-label="Next action">
@@ -2594,8 +2604,8 @@ export function TodayScreen({
             now={now}
             countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
             hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
-            scheduledPhase={scheduledClock.phase}
-            pin={pinnedPhase}
+            scheduledPhase={startedEarly ? "SCHEDULED_SHIFT" : scheduledClock.phase}
+            pin={manualPin}
             dayStart={livedDayStart}
             dayOff={day.workContext === "OFF"}
             busy={busy}
@@ -2611,7 +2621,7 @@ export function TodayScreen({
             onPin={(phase) => { setModePin(day.id, phase); setModePinState({ dayId: day.id, phase }); }}
             onRecordWorkDay={scheduledContext ? () => void handleSetWorkContext("WORK") : undefined}
             systems={onOpenCave && <>
-              <SuitLines now={now} refreshKey={`${refreshVersion}|${day.id}|${day.workContext ?? ""}|${recommendation?.id ?? ""}|${lastMainSleepMinutes ?? ""}|${capacityResult?.capacity ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onOpen={(tab) => { if (!busyRef.current) onOpenCave(tab); }} />
+              <SuitLines now={now} refreshKey={`${refreshVersion}|${day.id}|${day.workContext ?? ""}|${recommendation?.id ?? ""}|${lastMainSleepMinutes ?? ""}|${capacityResult?.capacity ?? ""}|${workPeriodEndedAt ?? ""}|${Math.floor(now.getTime() / 300000)}`} onShift={shiftClock.displayPhase === "SCHEDULED_SHIFT"} onOpen={(tab) => { if (!busyRef.current) onOpenCave(tab); }} />
               <StartedWork now={now} refreshKey={`${day.id}|${day.workContext ?? ""}|${workPeriodEndedAt ?? ""}|${workStartTick}|${Math.floor(now.getTime() / 300000)}`} onSaved={() => { setWorkStartTick((n) => n + 1); void refresh(); }}
                 // REAL-DATA-001: after the shift, SHIFT DOWN carries the one MARK WORK ENDED; no second button up here.
                 onEndWork={shiftClock.phase === "EXPECTED_POST_WORK" ? undefined : () => void handleMarkWorkEnded()} />
@@ -2753,8 +2763,8 @@ export function TodayScreen({
             now={now}
             countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
             hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
-            scheduledPhase={scheduledClock.phase}
-            pin={pinnedPhase}
+            scheduledPhase={startedEarly ? "SCHEDULED_SHIFT" : scheduledClock.phase}
+            pin={manualPin}
             dayStart={livedDayStart}
             dayOff={day.workContext === "OFF"}
             busy={busy}

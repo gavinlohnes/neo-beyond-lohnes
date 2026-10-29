@@ -60,7 +60,7 @@ export function ShiftChangeMoment({ refreshKey, now, onOpen, onStarted, onEndWor
           ))}
         </ol>}
         {landing && show.rows.length === 0 && <p className="shift-change__clear">Everything's closed out. Bring it home.</p>}
-        <p className="shift-change__plan"><span>{preflight ? "VERDICT" : "LANDING PLAN"}</span>{show.plan}</p>
+        <p className="shift-change__plan"><span>{preflight ? "BEFORE YOU GO" : "LANDING PLAN"}</span>{show.plan}</p>
         {preflight && <button type="button" className="btn-secondary shift-change__start" onClick={() => void startWork()}>STARTED WORK</button>}
         {landing && onEndWork && <button type="button" className="btn-secondary shift-change__start" onClick={() => { dismiss(); onEndWork(); }}>WORK ENDED</button>}
         <div className="shift-change__actions">
