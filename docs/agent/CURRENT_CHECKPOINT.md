@@ -1,3 +1,13 @@
+# FOOD-001 — MEAL works like MyFitnessPal, protein first
+
+- **Authority / Builder / lane:** Gavin, 2026-10-30 ("make it closer to my fitness pal"; protein
+  left, by time, barcode yes). Claude Code; Protected within the owner's go. Brief:
+  `docs/agent/FOOD-001.md`. Branch `ccr-0be4f40f-16m0ja`.
+- **Built:** MEAL's diary header, SEARCH ALL FOODS (USDA), amount by grams or servings, SCAN BARCODE
+  (Open Food Facts), any number of servings.
+- **Verified:** `npm run verify`: 3,171 tests passed; build and typecheck green after a test-typing fix.
+- **Next:** CI and Gavin's merge; a real-phone check of the camera scan (Chrome on Android).
+
 # END-OF-RUN-001 — the after-action reads a run as it was lived
 
 - **Authority / Builder / lane:** Gavin, 2026-10-29 ("merge 340 and go end of run"). Claude Code;
