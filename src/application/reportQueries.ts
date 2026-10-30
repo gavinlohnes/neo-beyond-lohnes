@@ -7,6 +7,9 @@ import { getActiveDay, getSchedulePattern, getSleepEntries } from "./queries";
 import { getTimeCapsules } from "./timeCapsuleQueries";
 import { getTimeline } from "./timelineQueries";
 import { getUndoneSetIds } from "./trainQueries";
+import { getDaySummaries } from "./dayLedgerQueries";
+import { getEffectiveProteinTargetG } from "./nutritionTargetQueries";
+import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 
 /**
  * REPORT-001 (owner brief 2026-10-05; approved merge: Briefing and After
@@ -14,7 +17,7 @@ import { getUndoneSetIds } from "./trainQueries";
  * between 0200 and 0500 TODAY offers "BRIEFING READY"; on the first day off
  * after a work block, "AFTER ACTION READY". Weekly opens it any time.
  *
- * At most five items: this block vs last; what moved (PRs, clean-day and
+ * At most six items (five before END-OF-RUN-001 added FUEL): this block vs last; what moved (PRs, clean-day and
  * weight milestones); what stalled (a lift trained this block whose heaviest
  * set hasn't risen in 3+ weeks); what's coming (the
  * next work block, a capsule opening); and ONE call, phrased as a
@@ -24,8 +27,14 @@ import { getUndoneSetIds } from "./trainQueries";
  *
  * A "block" is a run of consecutive scheduled work days (the saved
  * schedule; a day counts as work when its 16:30 lived day owns a shift).
- * Its period runs from 16:30 on the day before its first work day to 16:30
- * on its last work day's next day — the lived days that hold its shifts.
+ * Its period runs from 16:30 on its first work day to 16:30 on its last work
+ * day's next day — the lived days that hold its shifts.
+ *
+ * END-OF-RUN-001 (owner go 2026-10-29, "go end of run"): the period used to
+ * start a day early, so the day off before a run counted as part of it (the
+ * owner's real record read "avg sleep 10h 20m" for a run of nights). A session
+ * counts only with a logged set, the rotation's own rule. The block item
+ * also gives sleep by night, and FUEL gives the run's protein and water.
  */
 export const STALLED_AFTER_DAYS = 21;
 export const BRIEFING_FROM_HOUR = 2;
@@ -46,11 +55,15 @@ export interface BlockFacts {
   avgSleepMinutes: number | null;
 }
 
+/** END-OF-RUN-001: main sleep on each shift's lived day, in order; null where none was logged. */
+export interface BlockNight { date: string; minutes: number | null }
+
 export type ReportItem =
-  | { kind: "BLOCK"; current: BlockFacts; previous: BlockFacts | null }
+  | { kind: "BLOCK"; current: BlockFacts; previous: BlockFacts | null; nights?: BlockNight[] }
   | { kind: "MOVED"; prs: { name: string; weight: number; reps: number }[]; milestones: string[] }
   | { kind: "STALLED"; lifts: { name: string; lastMovedOn: string }[] }
-  | { kind: "COMING"; nextBlock: { from: string; to: string; shifts: number } | null; capsuleOpensOn: string | null }
+  | { kind: "FUEL"; days: number; logged: number; proteinAvgG: number | null; proteinTargetG: number | null; waterAvgOz: number | null }
+  | { kind: "COMING"; nextBlock: { from: string; to: string; shifts: number } | null; capsuleOpensOn: string | null; openTasks?: number }
   | { kind: "CALL"; call: { kind: "LIGHTER_WEEK"; lift: string } | { kind: "PROTECT_SLEEP" } };
 
 export interface Report {
@@ -125,7 +138,7 @@ export async function getReportTiming(now: Date = new Date()): Promise<ReportTim
 }
 
 export async function getReport(now: Date = new Date()): Promise<Report> {
-  const [pattern, sessions, undone, records, names, days, capsules, timeline] = await Promise.all([
+  const [pattern, sessions, undone, records, names, days, capsules, timeline, summaries, proteinTargetG, openTasks] = await Promise.all([
     getSchedulePattern(),
     db.workoutSessions.toArray(),
     getUndoneSetIds(),
@@ -134,6 +147,9 @@ export async function getReport(now: Date = new Date()): Promise<Report> {
     db.beyondDays.toArray(),
     getTimeCapsules(now),
     getTimeline(now),
+    getDaySummaries(),
+    getEffectiveProteinTargetG(),
+    getCurrentlyEligibleUnresolvedObligations(),
   ]);
   const workOn: WorkOn = (d) => scheduledWorkContextForLivedDay(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 17), pattern) === "WORK";
   const finished = sessions.filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL");
@@ -147,14 +163,15 @@ export async function getReport(now: Date = new Date()): Promise<Report> {
     if (primary.length) sleepByDay.set(day.id, primary.at(-1)!.effectiveDurationMinutes);
   }
 
+  const loggedSessions = new Set(sets.map((s) => s.sessionId));
   const facts = (block: { first: Date; last: Date }): BlockFacts & { start: number; end: number } => {
-    const start = boundary(addDays(block.first, -1));
+    const start = boundary(block.first);
     const end = Math.min(boundary(addDays(block.last, 1)), now.getTime());
     const within = (iso: string) => {
       const t = new Date(iso).getTime();
       return t >= start && t < end;
     };
-    const blockSessions = finished.filter((s) => within(s.startedAt));
+    const blockSessions = finished.filter((s) => within(s.startedAt) && loggedSessions.has(s.id));
     const ids = new Set(blockSessions.map((s) => s.id));
     const sleeps = days.filter((d) => within(d.startedAt) && sleepByDay.has(d.id)).map((d) => sleepByDay.get(d.id)!);
     return {
@@ -181,7 +198,13 @@ export async function getReport(now: Date = new Date()): Promise<Report> {
   const previousBlock = blockEndingBy(addDays(currentBlock.first, -2), workOn);
   const previous = previousBlock ? facts(previousBlock) : null;
   const strip = ({ start: _s, end: _e, ...rest }: BlockFacts & { start: number; end: number }): BlockFacts => rest;
-  items.push({ kind: "BLOCK", current: strip(current), previous: previous ? strip(previous) : null });
+  const nights: BlockNight[] = [];
+  for (let d = currentBlock.first; d.getTime() <= currentBlock.last.getTime() && boundary(d) < now.getTime(); d = addDays(d, 1)) {
+    const held = days.filter((x) => { const t = new Date(x.startedAt).getTime(); return t >= boundary(d) && t < boundary(addDays(d, 1)); });
+    const logged = held.filter((x) => sleepByDay.has(x.id));
+    nights.push({ date: formatLocalDate(d), minutes: logged.length ? sleepByDay.get(logged.at(-1)!.id)! : null });
+  }
+  items.push({ kind: "BLOCK", current: strip(current), previous: previous ? strip(previous) : null, ...(nights.length ? { nights } : {}) });
 
   const inBlock = (iso: string) => {
     const t = new Date(iso).getTime();
@@ -229,13 +252,28 @@ export async function getReport(now: Date = new Date()): Promise<Report> {
   stalled.sort((a, b) => a.lastMovedOn.localeCompare(b.lastMovedOn) || a.name.localeCompare(b.name));
   if (stalled.length) items.push({ kind: "STALLED", lifts: stalled });
 
+  // END-OF-RUN-001: the run's fuel, from the day ledger, over the lived days that held its shifts.
+  const runDays = summaries.filter((d) => inBlock(d.startedAt));
+  const fed = runDays.filter((d) => d.proteinG !== undefined || d.waterOz !== undefined);
+  if (fed.length) {
+    const avg = (values: number[]) => (values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null);
+    items.push({
+      kind: "FUEL", days: nights.length || current.shifts, logged: fed.length,
+      proteinAvgG: avg(fed.flatMap((d) => (d.proteinG !== undefined ? [d.proteinG] : []))),
+      proteinTargetG: proteinTargetG ?? null,
+      waterAvgOz: avg(fed.flatMap((d) => (d.waterOz !== undefined ? [d.waterOz] : []))),
+    });
+  }
+
   const next = nextBlockAfter(currentBlock.last, workOn);
   const capsule = capsules.waiting.find((c) => new Date(`${c.opensOn}T12:00:00`).getTime() - now.getTime() <= 14 * DAY_MS);
-  if (next || capsule) {
+  // END-OF-RUN-001: open tasks join what's coming — the days off are when they get done.
+  if (next || capsule || openTasks.length) {
     items.push({
       kind: "COMING",
       nextBlock: next ? { from: formatLocalDate(next.first), to: formatLocalDate(next.last), shifts: Math.round((next.last.getTime() - next.first.getTime()) / DAY_MS) + 1 } : null,
       capsuleOpensOn: capsule?.opensOn ?? null,
+      ...(openTasks.length ? { openTasks: openTasks.length } : {}),
     });
   }
 
@@ -243,5 +281,5 @@ export async function getReport(now: Date = new Date()): Promise<Report> {
   if (stalled.length) items.push({ kind: "CALL", call: { kind: "LIGHTER_WEEK", lift: stalled[0]!.name } });
   else if (current.avgSleepMinutes !== null && current.avgSleepMinutes < LOW_SLEEP_MINUTES) items.push({ kind: "CALL", call: { kind: "PROTECT_SLEEP" } });
 
-  return { items: items.slice(0, 5) };
+  return { items: items.slice(0, 6) };
 }
