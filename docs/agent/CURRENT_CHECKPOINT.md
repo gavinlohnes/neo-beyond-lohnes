@@ -1,3 +1,17 @@
+# CITY-FIX-001 — TODAY's city stands under the timeline
+
+- **Authority / Builder / lane:** Gavin, 2026-10-30, from his phone: "The clock and building and
+  search light are not looking correct." Claude Code; Routine (a display repair, same scene, no
+  doctrine change). Branch `ccr-0be4f40f-16m0ja`.
+- **Built:** the beam, skyline and perch moved into the hero's scene under the timeline (ModeScene),
+  so on shift the COMMS and SHIFT rows no longer cover them, and without those rows they no longer
+  rise into the timeline's labels. The COMMS line keeps its full height above the SHIFT row.
+- **Verified:** `npm run verify` green (3,173 passed); `tests/browser/CityFix001.test.tsx` fails
+  without the fix.
+- **Open from the same report:** splash too quick (owner choosing an option); sleep and resting HR
+  not showing (needs the owner's Health Bridge check or a fresh backup).
+- **Next:** CI and Gavin's merge.
+
 # FOOD-001 — MEAL works like MyFitnessPal, protein first
 
 - **Authority / Builder / lane:** Gavin, 2026-10-30 ("make it closer to my fitness pal"; protein

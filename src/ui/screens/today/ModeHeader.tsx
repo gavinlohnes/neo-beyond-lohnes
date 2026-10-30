@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { MODE_DESCRIPTIONS, MODE_NAMES, MODE_ORDER, type LivedDayStrip, type ShiftClockPhase } from "./shiftClock";
 import "./modeHeader.css";
-import { ModeCity } from "./ModeIdentity";
+import { ModeCity, ModeScene } from "./ModeIdentity";
 
 function clock(at: Date): string {
   return `${String(at.getHours()).padStart(2, "0")}:${String(at.getMinutes()).padStart(2, "0")}`;
@@ -126,9 +126,9 @@ export function ModeHeader({
           <span style={{ left: "100%" }}>{clock(dayStart)}</span>
         </div>
       </div>
-      <div className="cc-scene" aria-hidden="true" />
+      <ModeScene now={now} workDay={!dayOff} hasAction={hasAction} onShift={mode === "SCHEDULED_SHIFT"} />
       {systems}
-      <ModeCity now={now} workDay={!dayOff} hasAction={hasAction} onShift={mode === "SCHEDULED_SHIFT"} />
+      <ModeCity now={now} workDay={!dayOff} />
       {sweep > 0 && <div key={sweep} className="cc-sweep cc-go mode-header__sweep" aria-hidden="true" />}
       {open && (
         <dialog

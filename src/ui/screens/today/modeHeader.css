@@ -66,7 +66,6 @@
   .cc-mode .cc-mode-name { font-size: 30px; }
   .cc-mode .cc-timeline { margin-top: 8px; }
   .cc-mode .cc-scene { height: 18px; }
-  .cc-mode .cc-skyline { height: 70px; }
   .cc-mode .systems-line { min-height: 46px; margin-top: 8px; padding-block: 6px; }
 }
 /* POLISH-002: WATER sheet amount tiles (prototype .amounts). */
@@ -85,13 +84,11 @@
    dominating TODAY. Gotham stays; the scene below the context shrinks. */
 .redesign-today .cc-mode--thin .cc-scene { height: 36px; }
 .redesign-today .mode-empty .cc-scene { height: 52px; }
-.redesign-today :is(.cc-mode--thin, .mode-empty) .cc-skyline { bottom: 0; height: 64px; }
-.redesign-today :is(.cc-mode--thin, .mode-empty) :is(.cc-perch) { bottom: 0; height: 64px; width: 71px; }
 .redesign-today .mode-empty { padding-bottom: 12px; }
 /* SUIT-ALIVE S3: the comms line closes the hero, flush to its bottom edge. Amber marks off-normal; red stays reserved. */
 .cc-mode .comms-line { display: grid; gap: 4px; width: calc(100% + 32px); min-height: 48px; margin: 12px -16px -16px; padding: 10px 16px; border: 0; border-top: 1px solid var(--p-line); background: var(--p-bg); box-shadow: inset 2px 0 0 var(--p-t3); color: inherit; font: inherit; text-align: left; cursor: pointer; position: relative; z-index: 1; }
 .cc-mode .comms-line--off { box-shadow: inset 2px 0 0 var(--warning); }
-.cc-mode .comms-line:has(+ .systems-line) { margin-bottom: 0; }
+.cc-mode .comms-line:has(+ :is(.systems-line, .work-start)) { margin-bottom: 0; }
 .cc-mode .comms-line + .systems-line { margin-top: 0; }
 .comms-line__head { display: flex; justify-content: space-between; gap: 10px; font-size: 11px; letter-spacing: .16em; color: var(--p-t3); }
 .comms-line__text { font-size: 15px; line-height: 1.45; color: var(--p-t1); }
