@@ -110,8 +110,14 @@ export interface MealLogResult {
  * (parseSavedMeal) and eligibility (archivedAt) semantics getSavedMeals
  * already uses, rather than a second, parallel definition of "valid."
  */
+/** FOOD-001: the largest amount one log can hold, in servings (2,000 g of a per-100 g food). */
+export const MAX_SERVINGS = 20;
+/** A macro times servings, to one decimal, so 1.3 servings never logs 64.99999 g. */
+const scaled = (value: number, servings: number) => Math.round(value * servings * 10) / 10;
+
 export async function logMeal(beyondDayId: string, savedMealId: string, servings = 1, at?: string): Promise<MealLogResult> {
-  if (![0.5, 1, 1.5, 2].includes(servings)) throw new Error("Choose a supported serving amount.");
+  // FOOD-001: any amount, as MyFitnessPal allows (was 0.5 / 1 / 1.5 / 2 only).
+  if (!Number.isFinite(servings) || servings <= 0 || servings > MAX_SERVINGS) throw new Error("Choose a supported serving amount.");
   // LOG-TIME-001: when it was eaten, inside this lived day; omitted means now.
   const occurredAt = at === undefined ? undefined : await placeInDay(beyondDayId, at);
   return writeAtomically(["savedMeals"], async () => {
@@ -130,10 +136,10 @@ export async function logMeal(beyondDayId: string, savedMealId: string, servings
       savedMealId: meal.id,
       ...(servings !== 1 ? { servings } : {}),
       name: meal.name,
-      calories: meal.calories * servings,
-      proteinG: meal.proteinG * servings,
-      carbsG: meal.carbsG * servings,
-      fatG: meal.fatG * servings,
+      calories: scaled(meal.calories, servings),
+      proteinG: scaled(meal.proteinG, servings),
+      carbsG: scaled(meal.carbsG, servings),
+      fatG: scaled(meal.fatG, servings),
     };
     const eventId = await logEvent(
       beyondDayId,

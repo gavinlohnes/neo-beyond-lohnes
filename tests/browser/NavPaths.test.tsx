@@ -66,7 +66,7 @@ describe("NAV-001 top tasks from TODAY", () => {
     const meal = screen.getByRole("dialog", { name: "MEAL" });
     await expect.element(meal.getByRole("button", { name: "NEW MEAL", exact: true })).toBeVisible();
     const buttons = [...meal.element().querySelectorAll("button, input")].map((el) => el.textContent || el.getAttribute("aria-label"));
-    expect(buttons.indexOf("NEW MEAL")).toBeLessThan(buttons.indexOf("Search your meals"));
+    expect(buttons.indexOf("NEW MEAL")).toBeLessThan(buttons.indexOf("Search your meals and foods"));
     await meal.getByRole("button", { name: "NEW MEAL", exact: true }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toBeVisible();
   });

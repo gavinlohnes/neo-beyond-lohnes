@@ -12,6 +12,26 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## FOOD-001 — MEAL works like MyFitnessPal, protein first (owner go 2026-10-30)
+
+Gavin, 2026-10-30: "Let's make it closer to my fitness pal or some other food tracking and logging
+app. Someone has already figured out how to do it well, so let's use their idea and make it work for
+beyond." His rulings the same day: protein left is the headline; the day is listed by time, not meal
+slots; barcode scanning with Open Food Facts is in. Brief: [`agent/FOOD-001.md`](agent/FOOD-001.md).
+
+- **MEAL opens on the day's diary:** "115 g protein left", then "45 of 160 g protein · 650 kcal
+  eaten", and TODAY'S FOOD in the order it was eaten. MyFitnessPal's "Goal − Food = Remaining",
+  protein first; the NUTRITION ruling against a calorie-dashboard-first view stands.
+- **One search for your meals and all foods.** Your saved meals filter as you type, on the phone.
+  SEARCH ALL FOODS asks USDA FoodData Central only when tapped (MEAL sheet only; BODY's hidden
+  FOOD LOOKUP toggle is unchanged).
+- **A found food is logged by amount:** grams for a per-weight serving, otherwise servings. It is
+  saved as a meal, so next time it is one tap in LIKELY NOW (MyFitnessPal's recent foods).
+- **SCAN BARCODE** reads the barcode with the phone camera (the browser's own BarcodeDetector) or
+  a typed number, looks it up in Open Food Facts, and credits it (ODbL). Nothing from either
+  database is kept except what you log. Amends NUTRITION's "Open Food Facts conditional".
+- **Any number of servings** for a saved meal (was 0.5 / 1 / 1.5 / 2), up to 20, to one decimal.
+
 ## END-OF-RUN-001 — the after-action reads a run as it was lived (owner go 2026-10-29)
 
 Gavin, 2026-10-29: "merge 340 and go end of run". Brief: [`agent/END-OF-RUN-001.md`](agent/END-OF-RUN-001.md).

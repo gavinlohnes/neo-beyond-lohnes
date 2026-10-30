@@ -172,6 +172,12 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   and FDC keys are free/low-stakes/regenerable, so this is judged an acceptable trade-off rather
   than one requiring its own product decision.
 - **Ruling on file**: schema addition — owner sign-off obtained 2026-09-02.
+- **Built (FOOD-001, 2026-10-30, owner go)**: MyFitnessPal's logging flow in the MEAL sheet
+  (`ui/components/RecordSheets.tsx`): a protein-first diary header (`application/foodDiaryQueries.ts`),
+  SEARCH ALL FOODS (the USDA passthrough above, on tap only), amount by grams or servings, and
+  SCAN BARCODE (`ui/components/BarcodeScanner.tsx`, the browser's BarcodeDetector, no library) with
+  `application/barcodeLookup.ts`, a live uncached Open Food Facts product lookup (ODbL, credited).
+  Open Food Facts is no longer conditional. Found foods are kept only as the owner's saved meals.
 
 ## WORKOUT CREATION / EXERCISE LIBRARY
 

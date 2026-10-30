@@ -93,7 +93,8 @@ it('keeps the water confirmation above navigation during an active operation', a
   const nav = document.querySelector('.shell-nav')!.getBoundingClientRect();
   expect(toast.top).toBeGreaterThanOrEqual(0);
   expect(toast.bottom).toBeLessThanOrEqual(nav.top);
-  expect(document.activeElement?.getAttribute('aria-label')).toBe('Log water');
+  // Focus goes back to the opener once the sheet has closed, which can land a frame after the toast.
+  await expect.poll(() => document.activeElement?.getAttribute('aria-label')).toBe('Log water');
   expect(screen.getByRole('button', { name: 'UNDO', exact: true }).elements()).toHaveLength(0);
   expect(await db.events.where('type').equals('WATER_LOGGED').count()).toBe(1);
 });

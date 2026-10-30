@@ -44,3 +44,11 @@
 .log-time__change { min-height: 44px; padding: 0 8px; background: none; border: 1px solid var(--border-subtle); color: inherit; font: inherit; font-size: 12px; letter-spacing: 0.1em; cursor: pointer; }
 .log-time--open .input { min-height: 44px; width: auto; }
 .log-time--open .btn-secondary { width: auto; min-height: 44px; margin: 0; padding-inline: 12px; }
+/* FOOD-001: the food diary header (protein left first) and the barcode camera. */
+.food-diary { border: 1px solid var(--border-subtle); padding: 12px; margin-bottom: 12px; }
+.food-diary__left { font-size: 1.5rem; font-weight: 700; color: var(--text-1); margin: 0 0 2px; }
+.food-diary__list summary { cursor: pointer; margin-top: 8px; color: var(--text-1); }
+.food-diary__list ol { list-style: none; padding: 0; margin: 8px 0 0; }
+.food-diary__list li { color: var(--text-2); padding: 4px 0; border-top: 1px solid var(--border-subtle); overflow-wrap: anywhere; }
+.food-diary__time { color: var(--text-1); font-variant-numeric: tabular-nums; }
+.barcode-scanner__video { width: 100%; max-height: 50vh; background: var(--black); object-fit: cover; margin-bottom: 8px; }
