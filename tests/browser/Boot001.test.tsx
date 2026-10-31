@@ -32,23 +32,6 @@ describe("BOOT-001", () => {
     await expect.poll(() => document.querySelector(".boot")).toBeNull();
   });
 
-  it("BOOT-ONCE-001: already shown this lived day (a reload), it goes straight in", async () => {
-    localStorage.setItem("beyond.bootShownFor", livedDayKey(new Date()));
-    resetBootSequenceForTests(true);
-    const screen = await render(<><p>TODAY</p><BootSequence /></>);
-    await expect.element(screen.getByText("TODAY")).toBeVisible();
-    // (Kept before the remount test below: its manual unmounts leave later renders in this file blank.)
-    expect(screen.container.querySelector(".boot")).toBeNull();
-  });
-
-  it("BOOT-ONCE-001: the first launch of a lived day plays and remembers the day", async () => {
-    localStorage.setItem("beyond.bootShownFor", "2000-01-01");
-    resetBootSequenceForTests(true);
-    const screen = await render(<BootSequence />);
-    await expect.element(screen.getByRole("status", { name: /BEYOND starting/ })).toBeVisible();
-    expect(localStorage.getItem("beyond.bootShownFor")).toBe(livedDayKey(new Date()));
-  });
-
   it("plays: the emblem plate, BEYOND types in, the status lines tick in, then it cuts away", async () => {
     await startDay();
     const screen = await render(<BootSequence />);
@@ -69,17 +52,18 @@ describe("BOOT-001", () => {
   it("a remount mid-sequence carries on; after it ends, a remount doesn't replay it", async () => {
     const first = await render(<BootSequence />);
     await expect.element(first.getByRole("status", { name: /BEYOND starting/ })).toBeVisible();
-    first.unmount();
+    await first.unmount();
     const second = await render(<BootSequence />);
     await expect.element(second.getByRole("status", { name: /BEYOND starting/ })).toBeVisible();
     await waitPastEnd();
-    second.unmount();
+    await second.unmount();
     const third = await render(<BootSequence />);
     expect(third.container.querySelector(".boot")).toBeNull();
   });
 
   it("never plays on resume: visibility changes don't bring it back", async () => {
-    await render(<BootSequence />);
+    const screen = await render(<BootSequence />);
+    await expect.element(screen.getByRole("status", { name: /BEYOND starting/ })).toBeVisible();
     await waitPastEnd();
     document.dispatchEvent(new Event("visibilitychange"));
     window.dispatchEvent(new Event("pageshow"));
@@ -131,4 +115,20 @@ describe("BOOT-001", () => {
     expect(livedDayKey(new Date(2026, 9, 31, 16, 30))).toBe("2026-10-31");
     expect(livedDayKey(new Date(2026, 10, 1, 0, 27))).toBe("2026-10-31");
   });
+  it("BOOT-ONCE-001: already shown this lived day (a reload), it goes straight in", async () => {
+    localStorage.setItem("beyond.bootShownFor", livedDayKey(new Date()));
+    resetBootSequenceForTests(true);
+    const screen = await render(<><p>TODAY</p><BootSequence /></>);
+    await expect.element(screen.getByText("TODAY")).toBeVisible();
+    expect(screen.container.querySelector(".boot")).toBeNull();
+  });
+
+  it("BOOT-ONCE-001: the first launch of a lived day plays and remembers the day", async () => {
+    localStorage.setItem("beyond.bootShownFor", "2000-01-01");
+    resetBootSequenceForTests(true);
+    const screen = await render(<BootSequence />);
+    await expect.element(screen.getByRole("status", { name: /BEYOND starting/ })).toBeVisible();
+    expect(localStorage.getItem("beyond.bootShownFor")).toBe(livedDayKey(new Date()));
+  });
+
 });

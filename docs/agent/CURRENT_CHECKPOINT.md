@@ -1,3 +1,23 @@
+# GARMIN-AUTO-001 — Garmin checks itself every 3 hours
+
+- **Authority / Builder / lane:** Gavin, 2026-10-31 ("Yes, auto sync every few hours"). Claude Code;
+  Protected within the owner's go (new background permission, WorkManager dependency, Bridge CI
+  allowlist). Branch `ccr-0be4f40f-16m0ja`, with ALFRED-005 and BRIDGE-MOMENTS-002 in PR #351.
+- **Built:** Health Bridge 0.10.0's 3-hourly background check and one-tap notification on new sleep;
+  BEYOND imports the Bridge's own sends straight away after a first SYNC GARMIN.
+- **Next:** CI (PR Verification + Health Bridge), Gavin's merge, install 0.10.0, tap ALLOW ACCESS AND
+  READ once and allow "Access data in background".
+
+# Follow-ups after #350 — test harness fix, roadmap, Alfred's month spend
+
+- **Authority / Builder / lane:** Gavin, 2026-10-31 ("Just keep building and working through the
+  list"). Claude Code; Routine. Branch `ccr-0be4f40f-16m0ja`.
+- **Built:** awaited `unmount()` in Boot001/Alfred003 (later renders in Boot001 were blank, so two
+  tests passed vacuously); the roadmap records tonight's Alfred work; Alfred's sheet shows this
+  month's estimated spend (ALFRED-005); open tasks due this week notify through the Bridge at 16:00
+  on their day (BRIDGE-MOMENTS-002).
+- **Next:** CI and Gavin's merge; then his pick from the roadmap's next candidates.
+
 # BOOT-ONCE-001 — the launch brief shows once per lived day
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 ("having it pop up every time I open it or

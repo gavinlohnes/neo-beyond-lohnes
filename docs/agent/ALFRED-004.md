@@ -54,3 +54,15 @@ runs in the loop and its result reaches Alfred; search and get_days read stored 
 starters and Speak answers. `tests/browser/Month001.test.tsx`: sleep owed, a day's numbers, axe, and
 "ask about this" opening Alfred with the question. `tests/integration/bridgePlan.test.ts` and the
 Bridge's `MomentsTest.kt` (plan parsing, only BEYOND's address opens). Schema migration tests cover v16.
+
+## ALFRED-005 — this month's spend (follow-up, 2026-10-31)
+
+Gavin asked about cost earlier the same night. The sheet's footer now reads "This conversation ≈
+$0.003 · this month ≈ $0.21": answers and TODAY's briefs, at list prices, counted on this phone
+(`application/alfred/alfredSpend.ts`). The Anthropic console has the real bill.
+
+## BRIDGE-MOMENTS-002 — tasks reach the phone (follow-up, 2026-10-31)
+
+An open task due in the next week joins the moments SYNC GARMIN hands the Bridge: "Due today ·
+Call the bank" at 16:00 on its day (when a night worker is up). A task added after the last SYNC
+GARMIN reaches the phone at the next one. No Bridge change: it already posts any moment it's given.

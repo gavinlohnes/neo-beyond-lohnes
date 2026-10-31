@@ -6,6 +6,7 @@ import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/a
 const loadClient = () => import("../../application/alfred/alfredClient");
 import { confirmLabel, confirmProposal, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
 import { forgetFact, getMemories } from "../../application/alfred/alfredMemory";
+import { addSpend, getMonthSpend } from "../../application/alfred/alfredSpend";
 import type { AlfredMemory } from "../../domain/alfred/types";
 import { captureCommitFeedback } from "../feel/feedback";
 import "./alfred.css";
@@ -33,6 +34,7 @@ const STARTERS: { label: string; ask?: string; fill?: string }[] = [
   { label: "When did I last…?", fill: "When did I last " },
 ];
 const SPEAK = "beyond.alfredSpeak";
+const usd = (v: number) => (v > 0 && v < 0.01 ? v.toFixed(3) : v.toFixed(2));
 const plain = (text: string) => text.replace(/\*\*/g, "").replace(/^#+\s*/gm, "").replace(/^\s*[-*•]\s+/gm, "");
 type Recognition = { lang: string; interimResults: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null };
 function speechRecognition(): (new () => Recognition) | null {
@@ -48,6 +50,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { op
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [spent, setSpent] = useState(0);
+  const [monthSpent, setMonthSpent] = useState(() => getMonthSpend());
   const [listening, setListening] = useState(false);
   // ALFRED-004 talk mode: Alfred reads his answers aloud, and a spoken message sends itself.
   const [speak, setSpeak] = useState(() => { try { return localStorage.getItem(SPEAK) === "1"; } catch { return false; } });
@@ -59,7 +62,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { op
   const end = useRef<HTMLDivElement>(null);
 
   // A fresh conversation (and a fresh read of the records) each time the sheet opens.
-  useEffect(() => { if (open) { session.current = null; setTurns([]); setError(null); setSpent(0); } }, [open]);
+  useEffect(() => { if (open) { session.current = null; setTurns([]); setError(null); setSpent(0); setMonthSpent(getMonthSpend()); } }, [open]);
   useEffect(() => { if (open && draft) setText(draft.text); }, [open, draft?.key]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [turns, busy]);
 
@@ -73,6 +76,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { op
       if (!session.current) { const { AlfredSession } = await loadClient(); session.current = new AlfredSession(key, await buildAlfredContext()); }
       const reply = await session.current.send(q, decisions, depth);
       setSpent((s) => s + reply.costUsd);
+      setMonthSpent(addSpend(reply.costUsd));
       setTurns((all) => [...all, { role: "alfred", text: reply.text, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
       if (speak && reply.text && typeof speechSynthesis !== "undefined") { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(plain(reply.text))); }
     } catch (e) {
@@ -153,7 +157,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { op
         {memories.length === 0 ? <p className="meta">Nothing yet. Say "remember…" and confirm the card.</p>
           : <ul>{memories.map((m) => <li key={m.id}><span>{m.text}</span><button type="button" className="alfred-link" aria-label={`Forget: ${m.text}`} onClick={() => void forgetFact(m.id).then(getMemories).then(setMemories)}>Forget</button></li>)}</ul>}
       </div>}
-      <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}This conversation ≈ ${spent < 0.01 && spent > 0 ? spent.toFixed(3) : spent.toFixed(2)} · <button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
+      <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}This conversation ≈ ${usd(spent)} · this month ≈ ${usd(monthSpent)} · <button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
     </>}
   </LogSheet>;
 }

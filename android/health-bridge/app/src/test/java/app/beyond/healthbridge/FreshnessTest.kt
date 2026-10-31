@@ -26,4 +26,10 @@ class FreshnessTest {
         assertTrue(none.startsWith("Sleep: none · Steps: none · Resting HR: none"))
         assertTrue(none.contains("Behind: sleep, steps, resting HR."))
     }
+
+    @Test fun syncSummaryReadsSleepAndSteps() {
+        val start = Instant.parse("2026-10-31T11:00:00Z")
+        assertEquals("slept 7h12 · 8,400 steps today", syncSummary(start, start.plusSeconds(7 * 3600 + 12 * 60), 8400))
+        assertEquals("slept 0h45", syncSummary(start, start.plusSeconds(45 * 60), null))
+    }
 }

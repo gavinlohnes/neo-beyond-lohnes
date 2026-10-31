@@ -6,6 +6,7 @@ import { App } from "../../src/app/App";
 import { setWorkContext, startDay } from "../../src/application/commands";
 import { createObligation } from "../../src/application/intentCommands";
 import { buildAlfredContext } from "../../src/application/alfred/alfredContext";
+import { addSpend, getMonthSpend } from "../../src/application/alfred/alfredSpend";
 import { AlfredBrief, briefIsDue, briefSignature } from "../../src/ui/components/AlfredBrief";
 import { db } from "../../src/persistence/db";
 
@@ -115,6 +116,7 @@ describe("ALFRED-003 brief on TODAY", () => {
     const brief = screen.getByRole("region", { name: "Alfred's brief" });
     await expect.element(brief).toHaveTextContent("Sleep first: the shift starts 18:00");
     expect(briefs()[0]!.model).toBe("claude-haiku-5-5");
+    expect(getMonthSpend()).toBeGreaterThan(0);
     expect(JSON.parse(localStorage.getItem("beyond.alfredBrief")!).text).toMatch(/^Sleep first/);
     // TODAY fades in; read contrast once the fade has finished (CI read it mid-fade).
     for (const animation of document.getAnimations()) animation.finish();
@@ -143,17 +145,24 @@ describe("ALFRED-003 brief on TODAY", () => {
     expect(briefIsDue(stored, "other", at.getTime() + 11 * 60_000)).toBe(true);
     expect(briefIsDue(stored, sig, at.getTime() + 3 * 60 * 60_000)).toBe(true);
   });
-  // Last in the file: it opens the database without the shell, which a later App render here does not expect.
   it("keeps the brief it wrote while the records hold; no second call", async () => {
     await startDay();
     localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
     const first = await render(<AlfredBrief active refreshKey={0} onOpen={() => {}} />);
     await expect.element(first.getByRole("region", { name: "Alfred's brief" })).toHaveTextContent("Sleep first");
-    first.unmount();
+    await first.unmount();
     const second = await render(<AlfredBrief active refreshKey={1} onOpen={() => {}} />);
     await expect.element(second.getByRole("region", { name: "Alfred's brief" })).toHaveTextContent("Sleep first");
     await new Promise((r) => setTimeout(r, 300));
     expect(briefs()).toHaveLength(1);
   });
 
+
+  it("ALFRED-005: counts the month's spend on this phone and starts again each month", () => {
+    const oct = new Date(2026, 9, 31, 6, 0);
+    expect(getMonthSpend(oct)).toBe(0);
+    addSpend(0.002, oct);
+    expect(addSpend(0.0005, oct)).toBeCloseTo(0.0025);
+    expect(getMonthSpend(new Date(2026, 10, 1, 6, 0))).toBe(0);
+  });
 });

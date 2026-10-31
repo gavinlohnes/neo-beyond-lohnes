@@ -43,11 +43,10 @@ describe("SYNC-002", () => {
     await expect.element(screen.getByText(/^Garmin updated/)).not.toBeInTheDocument();
   });
 
-  it("a share without a recent SYNC GARMIN tap still opens the preview and imports nothing", async () => {
+  it("a share before any SYNC GARMIN tap on this phone still opens the preview and imports nothing", async () => {
     const { days, sleep } = syntheticGarminMonth(start, 2, now);
     await db.beyondDays.bulkAdd(days);
     await park([sleep]);
-    markGarminSyncRequested(now - SYNC_REQUEST_WINDOW_MS - 1000);
     arriveFromShare();
     const screen = await render(<App />);
     await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();
@@ -60,9 +59,23 @@ describe("SYNC-002", () => {
       .toMatchObject({ headline: "Garmin hasn't sent anything new", behind: true });
     expect(describeGarminSync({ newestAt: null, sleepMinutes: null, stepsToday: null, restingBpm: null, sleepFilled: 0 }, now).detail)
       .toMatch(/^Health Connect had no Garmin data to send/);
+    expect(takeGarminSyncRequest(now)).toBe(false); // never tapped on this phone
     markGarminSyncRequested(now);
     expect(takeGarminSyncRequest(now + 1000)).toBe(true);
-    expect(takeGarminSyncRequest(now + 2000)).toBe(false);
+    // GARMIN-AUTO-001: after a first SYNC GARMIN, the Bridge's own sends (its notification) import too.
+    expect(takeGarminSyncRequest(now + SYNC_REQUEST_WINDOW_MS + 3 * H)).toBe(true);
+  });
+
+  it("GARMIN-AUTO-001: after one SYNC GARMIN, a later send from the Bridge imports straight away", async () => {
+    const { days, sleep, activity } = syntheticGarminMonth(start, 2, now);
+    await db.beyondDays.bulkAdd(days);
+    await park([sleep, activity]);
+    markGarminSyncRequested(now - SYNC_REQUEST_WINDOW_MS - 3 * H);
+    arriveFromShare();
+    const screen = await render(<App />);
+    await expect.element(screen.getByText(/^Garmin updated · /)).toBeVisible();
+    expect(await db.externalSleepRecords.count()).toBe(sleep.records.length);
+    expect(await caches.has("beyond-shared-health")).toBe(false);
   });
 
   it("the SYNC GARMIN home-screen shortcut remembers the request and offers the link if the Bridge didn't open", async () => {
