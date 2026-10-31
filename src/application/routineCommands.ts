@@ -118,11 +118,13 @@ export async function getRoutineHistory(routineId: string): Promise<DomainEvent[
  */
 export function routineMomentFor(input: { phase: SchedulePhase | null; workContext: string | null | undefined; workStarted: boolean; workEnded: boolean }): RoutineMoment | null {
   if (input.workContext === "OFF") return "DAY_OFF";
-  if (input.workStarted && !input.workEnded) return "ON_SHIFT";
-  if (input.workEnded) return "AFTER_SHIFT";
+  if (input.phase === null) return null;
+  // Review of #357 (M1, L1): follow TODAY's own rules. STARTED WORK only overrides the schedule
+  // before the shift (TODAY's startedEarly); a forgotten END WORK can't hold "on shift" all morning.
+  // An ended shift is "after shift" until the schedule's quiet stretch, same as an unrecorded end.
+  if (input.workEnded) return input.phase === "OFF" ? null : "AFTER_SHIFT";
   switch (input.phase) {
-    case null: return null;
-    case "PRE_WORK": return "BEFORE_SHIFT";
+    case "PRE_WORK": return input.workStarted ? "ON_SHIFT" : "BEFORE_SHIFT";
     case "SCHEDULED_SHIFT": return "ON_SHIFT";
     case "EXPECTED_POST_WORK": return "AFTER_SHIFT";
     // A work day's quiet stretch, or a day not yet declared: no moment rather than a guess.

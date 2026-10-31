@@ -43,10 +43,10 @@ export const DAY_WRITE_TABLES = [
 /** Missions & Obligations lifecycle, recurring next occurrence, Capture conversion. */
 export const INTENT_WRITE_TABLES = ["missions", "obligations", "captureItems", "projects"] as const;
 
-/** Decision Journal create / modify / review. */
 /** ROUTINES-001: routine definitions; ticks are day events. */
 export const ROUTINE_WRITE_TABLES = ["routines", "beyondDays"] as const;
 
+/** Decision Journal create / modify / review. */
 export const JOURNAL_WRITE_TABLES = ["decisionJournalEntries"] as const;
 
 /** TRAIN start / log / skip / complete / abandon. */

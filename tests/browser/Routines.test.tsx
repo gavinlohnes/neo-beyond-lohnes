@@ -59,3 +59,18 @@ it("TODAY shows nothing when no routine fits the moment", async () => {
   const none = await render(<TodayRoutine dayId={day.id} moment={null} active />);
   expect(none.container.textContent).toBe("");
 });
+
+it("a failed tick keeps the routine on screen with a retryable message", async () => {
+  const day = await startDay();
+  const r = await createRoutine({ title: "Pre-shift", moment: "BEFORE_SHIFT", steps: ["Shower", "Fill bottle"] });
+  const screen = await render(<TodayRoutine dayId={day.id} moment="BEFORE_SHIFT" active />);
+  await screen.getByText("BEFORE SHIFT · Pre-shift").click();
+  // The step is edited away elsewhere, then ticked here.
+  const { modifyRoutine } = await import("../../src/application/routineCommands");
+  await modifyRoutine(r.id, { steps: [{ id: r.steps[1]!.id, text: "Fill bottle" }] });
+  await screen.getByRole("checkbox", { name: "Shower" }).click();
+  await expect.element(screen.getByRole("alert")).toBeVisible();
+  await expect.element(screen.getByRole("checkbox", { name: "Fill bottle" })).toBeVisible();
+  await screen.getByRole("checkbox", { name: "Fill bottle" }).click();
+  await expect.poll(async () => (await getRoutineTicks(day.id)).size).toBe(1);
+});

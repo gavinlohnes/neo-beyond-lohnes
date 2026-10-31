@@ -156,6 +156,9 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `${p.cue ? "Cue set" : "Cue cleared"}: ${exercise(p.exerciseId)}.`;
     case "URGE_PLAN_RESPONDED":
       return `Urge plan ${p.used ? "used" : "not used this time"}${p.trigger ? ` (${URGE_TRIGGER_LABELS[p.trigger as UrgeTrigger] ?? p.trigger})` : ""}.`;
+    // ROUTINES-001 (review of #357, L2): plain words, no counting.
+    case "ROUTINE_STEP_SET":
+      return p.done ? "Routine step ticked." : "Routine step unticked.";
     default:
       return event.type;
   }

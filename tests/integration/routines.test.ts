@@ -49,7 +49,11 @@ it("maps the rotation to a moment, and declines to guess", () => {
   expect(at("PRE_WORK", "WORK", true)).toBe("ON_SHIFT");
   expect(at("SCHEDULED_SHIFT", "WORK")).toBe("ON_SHIFT");
   expect(at("EXPECTED_POST_WORK", "WORK")).toBe("AFTER_SHIFT");
-  expect(at("OFF", "WORK", true, true)).toBe("AFTER_SHIFT");
+  expect(at("SCHEDULED_SHIFT", "WORK", true, true)).toBe("AFTER_SHIFT");
+  expect(at("OFF", "WORK", true, true)).toBeNull();
+  // Review of #357 M1: started but END forgotten, the morning after reads as after shift, then nothing.
+  expect(at("EXPECTED_POST_WORK", "WORK", true)).toBe("AFTER_SHIFT");
+  expect(at("OFF", "WORK", true)).toBeNull();
   expect(at("OFF", "WORK")).toBeNull();
   expect(at("OFF", "OFF")).toBe("DAY_OFF");
   expect(at("OFF", "UNKNOWN")).toBeNull();
@@ -86,4 +90,19 @@ it("Alfred drafts and edits routines only through confirmed cards; ticks stay ou
 it("ignores an invalid routine row", async () => {
   await db.routines.add({ id: "bad", title: "", moment: "NOPE", steps: [], status: "ACTIVE", source: "USER", createdAt: "x", updatedAt: "x" } as never);
   expect(await getRoutines()).toEqual([]);
+});
+
+it("Alfred's edit card refuses if the routine changed after it was proposed", async () => {
+  const { buildPlanningContext } = await import("../../src/application/alfred/personalContext");
+  const { confirmContextProposal } = await import("../../src/application/alfred/contextActions");
+  await startDay();
+  const r = await createRoutine({ title: "Pre-shift", moment: "BEFORE_SHIFT", steps: ["Shower"] });
+  const context = await buildPlanningContext(false);
+  const card = toProposal("routine_edit", { routine_id: r.id, title: "Pre-shift", steps: ["Shower", "Nap"] })!;
+  await modifyRoutine(r.id, { steps: [{ text: "Shower" }, { text: "Fill bottle" }] });
+  await expect(confirmContextProposal(card, context, false)).rejects.toThrow("CONTEXT_CHANGED");
+  expect((await getRoutines())[0]!.steps.map((s) => s.text)).toEqual(["Shower", "Fill bottle"]);
+  const fresh = await buildPlanningContext(false);
+  await confirmContextProposal(card, fresh, false);
+  expect((await getRoutines())[0]!.steps.map((s) => s.text)).toEqual(["Shower", "Nap"]);
 });

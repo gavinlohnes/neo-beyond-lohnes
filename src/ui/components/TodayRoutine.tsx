@@ -13,6 +13,7 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
   const [routines, setRoutines] = useState<Routine[] | null>(null);
   const [ticks, setTicks] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [tickError, setTickError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const epoch = useRef(0);
 
@@ -28,7 +29,7 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
   useEffect(() => { setRoutines(null); setTicks(new Set()); if (active && dayId && moment) void load(); return () => { ++epoch.current; }; }, [dayId, moment, active]);
 
   if (!dayId || !moment) return null;
-  if (error) return <p role="alert" className="meta">{error}</p>;
+  if (error) return <div><p role="alert" className="meta">{error}</p><button type="button" className="btn-secondary" onClick={() => void load()}>RETRY ROUTINES</button></div>;
   const here = (routines ?? []).filter((r) => r.moment === moment);
   if (here.length === 0) return null;
 
@@ -36,9 +37,11 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
     if (saving || busy || !dayId) return;
     setSaving(true);
     const acknowledge = captureCommitFeedback();
-    try { if (await setRoutineStep(dayId, routine.id, stepId, done)) acknowledge("LIGHT"); await load(); }
-    catch (cause) { setError(describeError(cause, "That tick didn't save. Try again.")); }
-    finally { setSaving(false); }
+    setTickError(null);
+    // Review of #357 (M2): a failed tick keeps the routine on screen and re-reads it, so "try again" is real.
+    try { if (await setRoutineStep(dayId, routine.id, stepId, done)) acknowledge("LIGHT"); }
+    catch (cause) { setTickError(describeError(cause, "That tick didn't save. Try again.")); }
+    finally { await load(); setSaving(false); }
   }
 
   return <section aria-label={`${ROUTINE_MOMENT_LABELS[moment]} routine`} className="today-routine">
@@ -54,5 +57,6 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
         })}
       </ul>
     </details>)}
+    {tickError && <p role="alert" className="meta">{tickError}</p>}
   </section>;
 }
