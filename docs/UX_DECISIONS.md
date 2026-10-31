@@ -12,6 +12,15 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## SLEEP-WINDOW-001 — "last night" reaches 36 hours for a night worker (owner, 2026-10-31)
+
+Gavin, 2026-10-31: sleep showed in DATA but not TODAY — "Is it because I work overnight and sleep at
+unusual times". Partly yes: TODAY's Garmin sleep reached back only 24 hours, while a night worker's
+main sleep before a shift can end over a day before he next looks; logged sleep already used 36 hours
+(MAIN_SLEEP_FRESH_HOURS). Garmin's last night now uses the same 36 hours everywhere it is read.
+Health Bridge 0.8.1 also keeps its per-kind freshness line on screen after "Sent to BEYOND", which
+0.8.0 replaced, so a kind Garmin hasn't passed to Health Connect is named, not hidden.
+
 ## SYNC-002 — SYNC GARMIN is one tap (owner go 2026-10-31)
 
 Gavin, 2026-10-31: "Is there a way to have it automatically update on it own?" Offered A (one-tap

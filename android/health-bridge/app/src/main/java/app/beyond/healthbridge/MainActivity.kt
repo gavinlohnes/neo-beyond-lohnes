@@ -67,6 +67,7 @@ class MainActivity : ComponentActivity() {
     private var working = false
     private var newestStepsHour: Instant? = null // SYNC-001: for the freshness line
     private var newestResting: Instant? = null // BRIDGE-CHECK-001: resting heart rate's freshness
+    private var lastFreshness = "" // the per-kind line, kept on screen after a send
     private var handBack = false // BRIDGE-CHECK-001: a sync started from BEYOND closes the helper once sent
     private var pendingSend = false // SYNC-001: a SYNC request that arrived while a read was running
     private val requestPermission = registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { granted ->
@@ -277,7 +278,8 @@ class MainActivity : ComponentActivity() {
                 }, packageName)
                 if (target != null) {
                     startActivity(Intent(intent).setComponent(ComponentName(target.packageName, target.activityName)))
-                    status.text = "Sent to BEYOND at ${java.time.LocalTime.now().withNano(0).withSecond(0)}."
+                    // SLEEP-WINDOW-001: keep what was current beside "sent", so a behind kind is never hidden.
+                    status.text = "Sent to BEYOND at ${java.time.LocalTime.now().withNano(0).withSecond(0)}.${if (lastFreshness.isNotEmpty()) "\n\n$lastFreshness" else ""}"
                     // BRIDGE-CHECK-001: started from BEYOND's SYNC GARMIN, the helper steps out of the way.
                     if (handBack) { handBack = false; finish() }
                 } else {
@@ -329,6 +331,7 @@ class MainActivity : ComponentActivity() {
                     "Steps and heart rate could not be read; sleep is unaffected."
                 }
                 val freshness = freshnessLine(records.maxOfOrNull { it.end }, newestStepsHour, newestResting, Instant.now(), ZoneId.systemDefault())
+                lastFreshness = freshness
                 status.text = "$freshness\n\n$sleepLine $activityLine"
                 ready = true
             } catch (_: Exception) { clear("Sleep could not be read safely. Check Health Connect sleep access and Garmin sync, then try again. No partial export was kept.") }
