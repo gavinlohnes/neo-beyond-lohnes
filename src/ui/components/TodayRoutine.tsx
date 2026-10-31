@@ -26,7 +26,7 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
       setRoutines(all.filter((r) => r.status === "ACTIVE")); setTicks(done); setError(null);
     } catch (cause) { if (mine === epoch.current) setError(describeError(cause, "Routines could not be read. Your records are unchanged.")); }
   }
-  useEffect(() => { setRoutines(null); setTicks(new Set()); if (active && dayId && moment) void load(); return () => { ++epoch.current; }; }, [dayId, moment, active]);
+  useEffect(() => { setRoutines(null); setTicks(new Set()); setTickError(null); if (active && dayId && moment) void load(); return () => { ++epoch.current; }; }, [dayId, moment, active]);
 
   if (!dayId || !moment) return null;
   if (error) return <div><p role="alert" className="meta">{error}</p><button type="button" className="btn-secondary" onClick={() => void load()}>RETRY ROUTINES</button></div>;
