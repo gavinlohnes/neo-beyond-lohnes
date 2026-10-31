@@ -88,7 +88,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   if (!active) return null;
   const facts = data?.facts.filter((fact) => includes(scope, fact.kind) && fact.status === status) ?? [];
   return <section className="memory-panel" aria-label={contextual ? scope === "RECOVERY" ? "Your recovery memory" : "Your preparation memory" : "What BEYOND should remember"}>
-    {!contextual && <><h2 className="tool-label">WHAT BEYOND SHOULD REMEMBER</h2><p>Your words. Nothing here changes your plan or BEYOND’s advice. Personal context stays local unless you choose to include it in Alfred.</p></>}
+    {!contextual && <><h2 className="tool-label">WHAT BEYOND SHOULD REMEMBER</h2><p>Your words. Nothing here changes your plan or BEYOND’s advice. Direction and constraints stay local until you share them with Alfred. Prep and recovery also support his briefs.</p></>}
     {loading && <p role="status" className="meta">Reading memory…</p>}
     {error && <div><p role="alert">{error} Unreadable memory is not empty memory.</p><button type="button" className="btn-secondary" disabled={busy} onClick={() => setRefresh((n) => n + 1)}>RELOAD MEMORY LIST</button></div>}
     {notice && !undo && <p role="status" className="meta confirm-banner">{notice}</p>}

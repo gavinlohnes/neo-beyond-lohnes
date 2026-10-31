@@ -31,7 +31,8 @@ beforeEach(async () => {
   requests = []; responses = [];
   vi.spyOn(window, "fetch").mockImplementation(async (input, init) => {
     if (!String(input instanceof Request ? input.url : input).startsWith("https://api.anthropic.com/")) throw new Error("Unexpected destination");
-    requests.push(JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>);
+    const body = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>; requests.push(body);
+    if (!body.tools) return response("Background brief.");
     return (responses.shift() ?? (() => response("Ready.")))();
   });
 });

@@ -41,7 +41,7 @@ export function AlfredContextPanel({ included, onIncluded, busy, snapshot, selec
       <summary>CONTEXT & SOURCES</summary>
       <p className="meta">Claude already receives your current day, recent recorded days, schedule, tasks, notes, targets, saved meals and Alfred memories when you send. Read tools can retrieve older records. Sending needs a connection.</p>
       <label><input type="checkbox" checked={included} disabled={busy} onChange={(e) => onIncluded(e.target.checked)} /> Include my Missions and confirmed personal memory in this conversation</label>
-      <p className="meta">Off by default. These new sources are not added to the automatic TODAY brief. Changing this choice starts a fresh model conversation; earlier requests sent to Claude cannot be recalled.</p>
+      <p className="meta">Off for this conversation by default. Missions, direction and constraints stay out of automatic briefs and weekly reviews; those keep their existing prep/recovery context. Changing this choice starts a fresh model conversation; earlier requests sent to Claude cannot be recalled.</p>
       {open && <>
         <h3>Personal sources available on this phone</h3>
         {previewLoading && <p role="status">Reading local personal sources…</p>}
