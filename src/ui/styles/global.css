@@ -2565,17 +2565,28 @@ button:not(:disabled):not(.btn-primary):not(.btn-danger):active {
   letter-spacing: 0.24em;
   color: var(--text-1, #fff);
 }
+/* BOOT-BRIEF-001: the brief reads at a glance: larger, brighter lines, room for five. */
 .boot__status {
-  min-height: calc(3 * 1.5em);
+  min-height: calc(5 * 1.6em);
   text-align: center;
 }
 .boot__status-line {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 16px;
   letter-spacing: 0.12em;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+.boot__status-line:first-child { color: var(--text-1, #fff); }
+.boot__hint {
+  position: absolute;
+  bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
   color: var(--text-3-strong);
-  line-height: 1.5;
 }
 
 /*

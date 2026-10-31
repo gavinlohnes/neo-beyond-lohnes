@@ -191,7 +191,7 @@ import {
   type ToolsItem,
 } from "./shiftClock";
 import { DecryptNumber } from "./DecryptNumber";
-import { ModeCity, SuitMode } from "./ModeIdentity";
+import { ModeCity, ModeScene, SuitMode } from "./ModeIdentity";
 import { ModeHeader } from "./ModeHeader";
 import { ActiveExperimentLine } from "./ActiveExperimentLine";
 import { getRecommendationMemory, type RecommendationMemory, type RememberedLesson } from "../../../application/remember";
@@ -2680,7 +2680,7 @@ export function TodayScreen({
             </p>
             {shiftClock.countdown && <p className="visually-hidden status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>}
             <ActiveExperimentLine now={now} />
-          </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><div className="cc-mode mode-empty"><h2 className="cc-mode-name">Mode not set</h2><p className="cc-mode-meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} hasAction={false} /><div className="cc-scene" aria-hidden="true" /></div></section>}
+          </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><div className="cc-mode mode-empty"><h2 className="cc-mode-name">Mode not set</h2><p className="cc-mode-meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} /><ModeScene now={now} workDay={false} hasAction={false} /></div></section>}
     {/* Keyed so a state change reorders the two sections without remounting them (focus and drafts survive). */}
     {(nextIsReal ? [["next", nextSection], ["log", logSection]] as const : [["log", logSection], ["next", nextSection]] as const).map(([key, node]) => <Fragment key={key}>{node}</Fragment>)}
     <section className="today-numbers" aria-label="Today's numbers">

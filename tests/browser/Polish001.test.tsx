@@ -10,7 +10,7 @@ import { db } from "../../src/persistence/db";
 import { markAppOpened } from "../../src/ui/appSession";
 import { setModePin } from "../../src/application/modePinQueries";
 import { MODE_ORDER } from "../../src/ui/screens/today/shiftClock";
-import { ModeCity } from "../../src/ui/screens/today/ModeIdentity";
+import { ModeCity, ModeScene } from "../../src/ui/screens/today/ModeIdentity";
 import { openMealInBody } from "./helpers/mealSheet";
 
 let dayId: string;
@@ -152,12 +152,12 @@ it("holds header/card/numbers/actions order and the phone fold in every pinned m
 });
 
 it("lights a fraction of building windows and gates the beam on Engine action", async () => {
-  const night = await render(<ModeCity now={new Date(2026, 9, 12, 23, 40)} workDay hasAction />);
+  const night = await render(<><ModeCity now={new Date(2026, 9, 12, 23, 40)} workDay /><ModeScene now={new Date(2026, 9, 12, 23, 40)} workDay hasAction /></>);
   expect((night.container.querySelector(".cc-sky") as HTMLElement).style.opacity).toBe("1");
   expect(night.container.querySelectorAll("rect").length).toBeGreaterThan(0);
   expect(night.container.querySelector(".cc-beam")).not.toBeNull();
   await night.unmount();
-  const day = await render(<ModeCity now={new Date(2026, 9, 13, 11)} workDay hasAction={false} />);
+  const day = await render(<><ModeCity now={new Date(2026, 9, 13, 11)} workDay /><ModeScene now={new Date(2026, 9, 13, 11)} workDay hasAction={false} /></>);
   expect((day.container.querySelector(".cc-sky") as HTMLElement).style.opacity).toBe("0");
   expect(day.container.querySelector(".cc-beam")).toBeNull();
 });

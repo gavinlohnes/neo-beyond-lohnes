@@ -57,22 +57,31 @@ const CITY = (() => {
 const PERCH = "M0 76 H100 V81 H94 V90 H6 V81 H0 Z M20 76 L13 76 L18 72 L22 70 L22 62 L16 60 L10 58 L5 59 L8 55 L14 54 L20 54 L22 50 L14 48 L3 45 L6 42 L12 41 L16 38 L13 29 L20 35 L24 36 L26 40 L30 40 L34 26 L36 6 L42 22 L50 3 L54 24 L60 12 L62 30 L64 44 L68 58 L66 68 L72 76 Z M72 76 Q84 66 93 71 L90 76 Z";
 
 /**
- * POLISH-002: the scene layers of the prototype's mode hero (sky, beam, skyline, perch, scanlines).
- * Absolutely positioned inside `.cc-mode`, behind its text. The beam only shows when BEYOND has a
- * real next action, never ON SHIFT.
+ * POLISH-002: the scene layers of the prototype's mode hero. ModeCity is the hero-wide light (sky,
+ * scanlines), absolutely positioned inside `.cc-mode` behind its text. CITY-FIX-001 (owner report
+ * 2026-10-30, "the clock and building and search light are not looking correct"): the beam, skyline
+ * and perch live in ModeScene, inside `.cc-scene` under the timeline. They used to be pinned 48px above
+ * the hero's bottom, so on shift the COMMS and SHIFT rows covered them, and without those rows they
+ * rose into the timeline's labels. The beam only shows when BEYOND has a real next action, never ON SHIFT.
  */
-export function ModeCity({ now, workDay, hasAction, onShift = false }: { now: Date; workDay: boolean; hasAction: boolean; onShift?: boolean }) {
+export function ModeCity({ now, workDay }: { now: Date; workDay: boolean }) {
   const light = cityLight(now.getHours() + now.getMinutes() / 60, workDay);
-  const lit = CITY.windows.slice(0, Math.round(CITY.windows.length * light.windows * .35));
   return <>
     <div className="cc-sky mode-city__sky" aria-hidden="true" style={{ opacity: light.sky } as CSSProperties} />
-    {hasAction && !onShift && <div className="cc-beam mode-city__beam" aria-hidden="true" />}
-    <svg className="cc-skyline mode-city__buildings" viewBox="0 0 400 92" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <div className="cc-scan" aria-hidden="true" />
+  </>;
+}
+
+export function ModeScene({ now, workDay, hasAction, onShift = false }: { now: Date; workDay: boolean; hasAction: boolean; onShift?: boolean }) {
+  const light = cityLight(now.getHours() + now.getMinutes() / 60, workDay);
+  const lit = CITY.windows.slice(0, Math.round(CITY.windows.length * light.windows * .35));
+  return <div className="cc-scene" aria-hidden="true">
+    {hasAction && !onShift && <div className="cc-beam mode-city__beam" />}
+    <svg className="cc-skyline mode-city__buildings" viewBox="0 0 400 92" preserveAspectRatio="xMidYMax slice">
       <path className="cc-city" d={CITY.path} strokeWidth="1" vectorEffect="non-scaling-stroke" />
       <g className="cc-ant" strokeWidth="1">{CITY.antennas.map((a) => <path key={a} d={a} />)}</g>
       <g className="mode-city__windows">{lit.map(([wx, wy], i) => <rect key={i} className="cc-w" x={wx} y={wy} width="1.6" height="2" />)}</g>
     </svg>
-    <svg className="cc-perch" viewBox="0 0 100 90" aria-hidden="true"><path className="cc-stone" strokeWidth="1" vectorEffect="non-scaling-stroke" d={PERCH} /></svg>
-    <div className="cc-scan" aria-hidden="true" />
-  </>;
+    <svg className="cc-perch" viewBox="0 0 100 90"><path className="cc-stone" strokeWidth="1" vectorEffect="non-scaling-stroke" d={PERCH} /></svg>
+  </div>;
 }
