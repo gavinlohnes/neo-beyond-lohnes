@@ -1,3 +1,14 @@
+# PROJECTS-001 — help me get this done (built; PR next)
+
+- Authority: Gavin approved PROJECTS-001 incl. additive DB change, 2026-10-31. Builder Claude Code. PROTECTED.
+- Branch `ccr-0be4f40f-16m0ja` from master `9ccd93a` (#353 merged by Gavin). [Brief](PROJECTS-001.md).
+- Built: Dexie v18 `projects`; project commands/queries; Projects section in MISSIONS & OBLIGATIONS;
+  Alfred `project_new` card, project-aware reminders, OPEN PROJECTS in his records.
+- Next: full verify, PR, independent exact-head review, green CI, Gavin merges. Then on-phone use.
+- #353 follow-up: the re-reviewer judged its fix sound locally (24/24); Gavin merged before the formal PASS comment.
+
+---
+
 # PERSONAL-CONTEXT-001 — Claude Code is Builder; PR #353 awaiting review and merge decision
 
 - Authority: Gavin, 2026-10-31: handed PERSONAL-CONTEXT-001 and the PERSONAL-OS campaign to

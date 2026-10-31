@@ -2619,6 +2619,17 @@ earlier external requests cannot be recalled. Engine, priority and TODAY composi
 [Implementation brief](agent/PERSONAL-CONTEXT-001.md); merge remains Gavin's.
 
 
+## 2026-10-31 — PROJECTS-001: help me get this done
+
+Owner approval: "Yes, build it" for PROJECTS-001, including the additive database change.
+A Project is a finite effort with steps; a Mission stays ongoing direction and never completes.
+Steps are ordinary Obligations. Pause, complete or close changes only the Project, never its steps.
+The next step is the operator's own choice; BEYOND never picks one. Progress counts steps
+("2 of 4 done"), not a goal percentage, and is not an Engine input. Projects live inside
+MISSIONS & OBLIGATIONS; no new tab or TODAY row. Alfred proposes a project and its steps as one
+card; nothing is saved until SAVE. Goals are deferred. [Brief](agent/PROJECTS-001.md).
+
+
 ## 2026-10-31 — RELATIONSHIPS-001: remember the people who matter
 
 Owner: "Go relationships". A person's yearly date is a PERSON fact plus an ordinary yearly

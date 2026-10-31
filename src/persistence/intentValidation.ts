@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Mission, Obligation } from "../domain/intent/types";
+import type { Mission, Obligation, Project } from "../domain/intent/types";
 
 /**
  * Intent & Commitment Spine — Drop 01. Same shared-schema pattern as
@@ -65,8 +65,8 @@ const obligationInputFields = {
   recurrence: recurrenceRuleSchema.optional(),
 };
 
-/** Input to createObligation. */
-export const obligationInputSchema = z.object(obligationInputFields);
+/** Input to createObligation. PROJECTS-001: may name its Project at creation; later moves use setObligationProject. */
+export const obligationInputSchema = z.object({ ...obligationInputFields, projectId: z.string().min(1).optional() });
 export type ObligationInput = z.infer<typeof obligationInputSchema>;
 
 /** Input to modifyObligation — same fields, all optional, at least one required. */
@@ -93,6 +93,7 @@ export const obligationSchema = z.object({
   resolvedAt: z.string().optional(),
   resolutionNote: z.string().optional(),
   recurrence: recurrenceRuleSchema.optional(),
+  projectId: z.string().min(1).optional(),
   source: sourceSchema,
   seq: z.number().optional(),
   createdAt: z.string(),
@@ -103,4 +104,37 @@ export const obligationSchema = z.object({
 export function parseObligation(raw: unknown): Obligation | null {
   const result = obligationSchema.safeParse(raw);
   return result.success ? (result.data as Obligation) : null;
+}
+
+/** PROJECTS-001. Same shared-schema pattern as Mission/Obligation above. */
+const projectInputFields = {
+  title: z.string().trim().min(1, "Project title is required"),
+  finish: z.string().trim().min(1).optional(),
+  missionId: z.string().min(1).optional(),
+};
+export const projectInputSchema = z.object(projectInputFields);
+export type ProjectInput = z.infer<typeof projectInputSchema>;
+
+export const projectModifyInputSchema = z
+  .object({ title: projectInputFields.title.optional(), finish: projectInputFields.finish })
+  .refine((v) => v.title !== undefined || v.finish !== undefined, "At least one field must change");
+export type ProjectModifyInput = z.infer<typeof projectModifyInputSchema>;
+
+export const projectSchema = z.object({
+  id: z.string().min(1),
+  title: projectInputFields.title,
+  finish: projectInputFields.finish,
+  status: z.enum(["ACTIVE", "PAUSED", "COMPLETED", "CLOSED"]),
+  missionId: projectInputFields.missionId,
+  nextObligationId: z.string().min(1).optional(),
+  source: sourceSchema,
+  seq: z.number().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+/** Never throws. Returns null on any validation failure so callers can exclude the row rather than crash on it. */
+export function parseProject(raw: unknown): Project | null {
+  const result = projectSchema.safeParse(raw);
+  return result.success ? (result.data as Project) : null;
 }

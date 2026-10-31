@@ -99,6 +99,7 @@ const OBLIGATION_EVENT_TYPES = new Set([
   "OBLIGATION_MARKED_OPEN",
   "OBLIGATION_SATISFIED",
   "OBLIGATION_RELEASED",
+  "OBLIGATION_PROJECT_SET",
 ]);
 
 /** Oldest first — the full historical trail for one Mission, via the missionId index added in db.ts v6. */
