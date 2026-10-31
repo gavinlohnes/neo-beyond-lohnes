@@ -18,7 +18,10 @@ gap is between Garmin Connect and Health Connect, and nothing in BEYOND said so 
 2. TODAY shows `GarminSyncLine`: what came, or that Garmin itself is behind.
 3. Health Bridge 0.8.0: `pickBeyondTarget` sends straight to the one installed BEYOND; else the
    share sheet. Manifest adds a `<queries>` intent only (no permission).
-4. Excluded: background sync, new permissions, Internet, how Garmin sleep is filed into lived days.
+4. BRIDGE-LOOK-001 (owner, 2026-10-31: "I don't like the android app" → how it looks): the helper's
+   screen in BEYOND's look (black, one red SEND TO BEYOND, outlined others, saving files and the
+   privacy note under MORE). `Look.kt`; dark Material theme. Same reads, sends and permissions.
+5. Excluded: background sync, new permissions, Internet, how Garmin sleep is filed into lived days.
 
 ## Leverage
 

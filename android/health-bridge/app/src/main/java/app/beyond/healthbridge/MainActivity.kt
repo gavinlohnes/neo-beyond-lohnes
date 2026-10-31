@@ -2,6 +2,7 @@ package app.beyond.healthbridge
 
 import android.content.ClipData
 import android.content.ComponentName
+import android.graphics.Typeface
 import android.content.Intent
 import android.os.Bundle
 import androidx.core.content.FileProvider
@@ -95,15 +96,26 @@ class MainActivity : ComponentActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val padding = (16 * resources.displayMetrics.density).toInt()
-        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(padding, padding, padding, padding) }
-        fun paragraph(text: String) = TextView(this).apply { this.text = text; textSize = 18f; setPadding(0, 12, 0, 12); layout.addView(this) }
-        paragraph("BEYOND Health Bridge").apply { textSize = 26f; ViewCompat.setAccessibilityHeading(this, true) }
-        paragraph("Reads Garmin sleep, steps, heart rate and calories burned from the last 7 days when it opens, once access is allowed. Tap SEND TO BEYOND, choose BEYOND, then confirm there. BEYOND's SYNC GARMIN button opens this helper and sends for you. READ FULL HISTORY reads everything Health Connect has. This helper does not sync in the background.")
-        paragraph("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps, heart rate and calories (optional): hourly step totals, hourly heart-rate low/average/high, hourly total and active calories burned and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. READ FULL HISTORY reads up to a year and asks for the optional “Access past data” permission; without it, Health Connect only returns data from up to 30 days before you first granted access. Each goes into its own file you save, or is sent straight to BEYOND through Android's share sheet. No account, server, Internet permission or other health categories. Your Health Connect data is never changed. Files may be private health information; choose a local folder and delete the file after importing.")
-        status = paragraph("Ready. Complete Garmin's sync before reading. Sessions crossing the 7-day window edges are excluded.").apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }
-        read = Button(this).apply {
-            text = "ALLOW ACCESS AND READ"
+        // BRIDGE-LOOK-001 (owner, 2026-10-31: "I don't like the android app" → how it looks): BEYOND's own
+        // look — black, one red action, short words, the rarely used buttons under MORE. Same reads and sends.
+        val dp = resources.displayMetrics.density
+        val padding = (16 * dp).toInt()
+        window.statusBarColor = Look.BG; window.navigationBarColor = Look.BG
+        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(padding, padding, padding, padding); setBackgroundColor(Look.BG) }
+        fun text(value: String, size: Float, color: Int, parent: LinearLayout = layout) = TextView(this).apply {
+            text = value; textSize = size; setTextColor(color); setPadding(0, (6 * dp).toInt(), 0, (6 * dp).toInt()); parent.addView(this)
+        }
+        text("BEYOND // HEALTH BRIDGE", 13f, Look.TEXT_3).apply { letterSpacing = 0.18f; typeface = Typeface.MONOSPACE }
+        text("Garmin → BEYOND", 28f, Look.TEXT_1).apply { typeface = Typeface.DEFAULT_BOLD; ViewCompat.setAccessibilityHeading(this, true) }
+        text("Reads Garmin's sleep, steps and heart rate from Health Connect and hands them to BEYOND. Read only; nothing leaves your phone.", 16f, Look.TEXT_2)
+        status = text("Ready. Sync your watch in Garmin Connect first.", 16f, Look.TEXT_1).apply {
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            background = Look.panel(dp); setPadding(padding, padding, padding, padding)
+            layoutParams = Look.spaced(dp, top = 12)
+        }
+        send = Look.button(this, "SEND TO BEYOND", primary = true, dp).apply { isEnabled = false; setOnClickListener { sendToBeyond() } }
+        layout.addView(send, Look.spaced(dp, top = 16))
+        read = Look.button(this, "ALLOW ACCESS AND READ", primary = false, dp).apply {
             setOnClickListener {
                 if (HealthConnectClient.getSdkStatus(this@MainActivity) != HealthConnectClient.SDK_AVAILABLE) {
                     clear("Health Connect is unavailable or needs an update. Open Android Settings → Health Connect, update it, then return.")
@@ -117,9 +129,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        layout.addView(read)
-        history = Button(this).apply {
-            text = "READ FULL HISTORY"
+        layout.addView(read, Look.spaced(dp, top = 8))
+        history = Look.button(this, "READ FULL HISTORY", primary = false, dp).apply {
             setOnClickListener {
                 if (HealthConnectClient.getSdkStatus(this@MainActivity) != HealthConnectClient.SDK_AVAILABLE) {
                     clear("Health Connect is unavailable or needs an update. Open Android Settings → Health Connect, update it, then return.")
@@ -133,18 +144,24 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        layout.addView(history)
-        save = Button(this).apply { text = "SAVE SLEEP FILE"; isEnabled = false; setOnClickListener { saveFile.launch("beyond-sleep-${Instant.now().toString().replace(':', '-')}.json") } }
-        layout.addView(save)
-        saveActivity = Button(this).apply { text = "SAVE STEPS AND HEART RATE FILE"; isEnabled = false; setOnClickListener { saveActivityFile.launch("beyond-activity-${Instant.now().toString().replace(':', '-')}.json") } }
-        layout.addView(saveActivity)
-        send = Button(this).apply { text = "SEND TO BEYOND"; isEnabled = false; setOnClickListener { sendToBeyond() } }
-        layout.addView(send)
+        layout.addView(history, Look.spaced(dp, top = 8))
+        // MORE: saving files and the full privacy note, folded away.
+        val more = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
+        val moreToggle = Look.button(this, "MORE", primary = false, dp).apply {
+            setOnClickListener { val open = more.visibility != View.VISIBLE; more.visibility = if (open) View.VISIBLE else View.GONE; text = if (open) "LESS" else "MORE" }
+        }
+        layout.addView(moreToggle, Look.spaced(dp, top = 24))
+        layout.addView(more)
+        save = Look.button(this, "SAVE SLEEP FILE", primary = false, dp).apply { isEnabled = false; setOnClickListener { saveFile.launch("beyond-sleep-${Instant.now().toString().replace(':', '-')}.json") } }
+        more.addView(save, Look.spaced(dp, top = 8))
+        saveActivity = Look.button(this, "SAVE STEPS AND HEART RATE FILE", primary = false, dp).apply { isEnabled = false; setOnClickListener { saveActivityFile.launch("beyond-activity-${Instant.now().toString().replace(':', '-')}.json") } }
+        more.addView(saveActivity, Look.spaced(dp, top = 8))
+        text("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps, heart rate and calories (optional): hourly step totals, hourly heart-rate low/average/high, hourly total and active calories burned and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. READ FULL HISTORY reads up to a year and asks for the optional “Access past data” permission; without it, Health Connect only returns data from up to 30 days before you first granted access. SEND TO BEYOND hands the data straight to BEYOND; nothing is written where other apps can read it. Saved files may be private health information; choose a local folder and delete the file after importing. No account, server, Internet permission or other health categories. Your Health Connect data is never changed.", 14f, Look.TEXT_3, more)
         clearShared()
         // SYNC-001: read straight away when access is already allowed; opened from BEYOND, also send.
         // Only a fresh launch sends: a recreated activity (rotation, process restore) must not reopen the share sheet.
         autoRead(sendAfter = savedInstanceState == null && intent?.data?.scheme == SYNC_SCHEME)
-        val scroll = ScrollView(this).apply { addView(layout) }
+        val scroll = ScrollView(this).apply { setBackgroundColor(Look.BG); isFillViewport = true; addView(layout) }
         ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
