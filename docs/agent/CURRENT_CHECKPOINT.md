@@ -1,9 +1,10 @@
-# PERSONAL-CONTEXT-001 — built and verified, PR access blocked
+# PERSONAL-CONTEXT-001 — handoff to Claude Code, built and verified
 
 - Authority: Gavin's “Let's get after it” approves the bounded connected-context slice;
-  guilt-free Delta-inspired voice. Codex; PROTECTED. No merge authorized.
+  guilt-free Delta-inspired voice. PROTECTED. Gavin explicitly transferred ownership to Claude Code:
+  “Wrap up. We are handing it over to Claude Code.” Codex stops implementation. No merge authorized.
 - Branch `codex/personal-context-001`; baseline `20743ae`, integrated master #352 `f001049`.
-  [Brief](PERSONAL-CONTEXT-001.md). PR pending: GitHub GraphQL/REST return Forbidden; git works.
+  [Brief](PERSONAL-CONTEXT-001.md) · [Claude handoff](PERSONAL-CONTEXT-001-HANDOFF.md). PR pending: GitHub GraphQL/REST return Forbidden; git works.
 - Built: local direction/constraint revisions in Personal Understanding → My context; existing
   Mission/memory source catalog, explicit per-conversation sharing, current-record inspection
   and canonical editor navigation. Fresh sensitive context resets model history. Confirmed
@@ -12,15 +13,18 @@
   362 test files passed / one skipped; 3,226 tests passed / two existing skipped; TypeScript,
   production build and PWA pass. Full suite 613.82s. Existing bundle-size warning remains.
 - Independent exact-source review PASS; [review record](reviews/PERSONAL-CONTEXT-001.md).
-  Reviewer independent node8/8 PASS. Final evidence-only head gets renewed confirmation.
+  Reviewer independent node8/8 PASS. Exact3ed0b02 PASS is on GitHub as
+  `refs/notes/personal-context-001-review`. This subsequent handoff is docs-only and needs
+  exact-head confirmation before integration; verified source/tests remain identical579ae55.
 - [Built PWA proof](../screenshots/personal-context-001/README.md): four sizes, offline reload,
   local capture/source inspection, reduced motion at390; synthetic records/mocked replies.
   Live Claude response quality, real API cost and physical-phone behavior are unmeasured.
 - Master #352 weekly review/shared memory preserved. Its automatic prep/recovery context stays;
   new Mission/direction/constraint sources remain outside automatic briefs/reviews. No own
   Engine, schema, dependency, workflow or protected-fixture change relative to fresh master.
-- Next: restore GitHub API access, open PR against master, persist exact-head review evidence,
-  require green CI, then Gavin decides merge. No CI/deployment/merge claim.
+- Next (Claude): fetch/check overlap, renew docs-only exact-head review, use Claude’s GitHub
+  access to open the existing branch PR, require green CI, then Gavin decides merge.
+  No CI/deployment/merge claim. No source rebuild or new objective required.
 
 ---
 

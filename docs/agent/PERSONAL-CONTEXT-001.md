@@ -57,3 +57,11 @@ bypass. Integration regression covers both paths. Earlier #351-baseline research
   commit does not change verified source; obtain exact-head reviewer confirmation.
 - No merge/deployment authorized or performed. Live phone/Claude tuning follows a reviewed,
   green-CI owner-approved merge, not a new automatic feature campaign.
+
+
+## Builder transfer
+
+Gavin: “Wrap up. We are handing it over to Claude Code.” Codex stops implementation and
+transfers the existing objective/branch to Claude Code. See the [handoff](PERSONAL-CONTEXT-001-HANDOFF.md)
+for exact heads, completed verification, Git-note review evidence and PR/CI/merge gates.
+This transfer changes no product scope and supplies no merge approval.
