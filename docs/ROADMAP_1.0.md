@@ -21,7 +21,9 @@ and 2" and "Make it so" for the fifteen ideas. Shipped:
 - The launch brief shows once per lived day.
 
 Briefs: [ALFRED-001](agent/ALFRED-001.md), [ALFRED-003](agent/ALFRED-003.md),
-[ALFRED-004](agent/ALFRED-004.md). Alfred's monthly spend now shows in the sheet (ALFRED-005). Next candidates for Gavin to pick
+[ALFRED-004](agent/ALFRED-004.md). Alfred's monthly spend now shows in the sheet (ALFRED-005); Garmin checks itself every 3 hours
+(GARMIN-AUTO-001); the weekly review writes itself and Alfred's memory joins MORE → MEMORY
+(ALFRED-006); Ask Alfred from the Garmin sheets and after a workout (ALFRED-007). Next candidates for Gavin to pick
 from: reminders at an exact time of day (tasks due this week now notify at 16:00 on the day); Garmin sync without a tap;
 real-phone tuning of the brief and the moments after a week of use.
 
