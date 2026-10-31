@@ -1,5 +1,7 @@
 import { captureCommitFeedback } from "../../feel/feedback";
 import { WorkPreparation } from "../../components/WorkPreparation";
+import { TodayRoutine } from "../../components/TodayRoutine";
+import { routineMomentFor } from "../../../application/routineCommands";
 import { SleepMetricSheet } from "./SleepMetricSheet";
 import { useHiddenFeatures } from "../../hiddenFeatures";
 import { LogActions } from "../../components/RecordSheets";
@@ -2500,7 +2502,9 @@ export function TodayScreen({
             ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
           }}
         />}
-      <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK" && !startedEarly)} onShift={scheduledClock.phase === "SCHEDULED_SHIFT"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
+      <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK" && !startedEarly)} onShift={scheduledClock.phase === "SCHEDULED_SHIFT"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />
+      {/* ROUTINES-001 (owner ruling 2026-10-31): one quiet row, only the current moment's routines. */}
+      <TodayRoutine dayId={day?.id ?? null} moment={day ? routineMomentFor({ phase: scheduledClock.phase, workContext: day.workContext, workStarted: !!workPeriodStartedAt, workEnded: !!workPeriodEndedAt }) : null} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
   </>;
   const nextSection = <>
       <section className="console-guidance" aria-label="Next action">

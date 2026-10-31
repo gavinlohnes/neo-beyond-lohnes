@@ -6,6 +6,8 @@ import { getAllCaptureItems } from "../queries";
 import { getMemories } from "./alfredMemory";
 import { getMemoryFacts } from "../memory";
 import { getProjectViews } from "../projectQueries";
+import { getRoutines } from "../routineCommands";
+import { ROUTINE_MOMENT_LABELS } from "../../domain/routines";
 import { MEMORY_LABELS } from "../../domain/memory";
 import { getSleepDebt, SLEEP_NEED_MINUTES } from "../monthQueries";
 import { getActiveDay, getLatestCheckIn, getMostRecentBodyweight, getSchedulePattern, getWorkPeriodEnded, getWorkPeriodStarted } from "../queries";
@@ -77,6 +79,12 @@ export async function buildAlfredContext(now = new Date(), includePreparationMem
   }
 
   if (tasks) lines.push(`OPEN TASKS/REMINDERS ([id] title): ${tasks.length ? tasks.map((t) => `[${t.id}] "${t.title}"${t.dueAt ? ` due ${t.dueAt}` : ""}${t.recurrence ? ` (repeats ${t.recurrence.rrule})` : ""}${t.projectId ? ` (step of project [${t.projectId}])` : ""}`).join("; ") : "none"}.`);
+  // ROUTINES-001: his own routines, by moment. No history of ticks is sent: nothing to count.
+  const routines = await safe(getRoutines);
+  if (routines) {
+    const inUse = routines.filter((r) => r.status === "ACTIVE");
+    lines.push(`ROUTINES ([id] moment: name — steps): ${inUse.length ? inUse.map((r) => `[${r.id}] ${ROUTINE_MOMENT_LABELS[r.moment]}: ${r.title} — ${r.steps.map((st) => st.text).join(", ")}`).join("; ") : "none"}.`);
+  }
   // PROJECTS-001: finite efforts he set up; "next" is his own choice, never Alfred's ranking.
   const projects = await safe(getProjectViews);
   if (projects) {

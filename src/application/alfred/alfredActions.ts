@@ -3,6 +3,8 @@ import { captureItem, ensureActiveDay, logBodyweight, logSleep, logWater, markWo
 import { logManualMeal, logMeal } from "../nutritionCommands";
 import { createObligation, modifyObligation, satisfyObligation } from "../intentCommands";
 import { createProject } from "../projectCommands";
+import { createRoutine, getRoutines, matchSteps, modifyRoutine } from "../routineCommands";
+import { ROUTINE_MOMENTS, ROUTINE_MOMENT_LABELS, type RoutineMoment } from "../../domain/routines";
 import { logCleanDay, logUrge } from "../quitCommands";
 import { forgetFact, rememberFact } from "./alfredMemory";
 import { addPersonDate, anchorRule, describeMonthDay } from "../peopleCommands";
@@ -40,7 +42,10 @@ export type AlfredProposal =
   // HOME-001: a home item: what BEYOND should know about it and/or when it repeats.
   | { kind: "home_item"; item: string; details?: string | undefined; every?: number | undefined; unit?: RepeatUnit | undefined; first_due?: string | undefined }
   // PROJECTS-001: a finite effort and its first steps, in one card.
-  | { kind: "project_new"; title: string; finish?: string | undefined; steps: { title: string; due_date?: string | undefined }[] };
+  | { kind: "project_new"; title: string; finish?: string | undefined; steps: { title: string; due_date?: string | undefined }[] }
+  // ROUTINES-001: a routine he describes, or a change he asked for to one of his ROUTINES.
+  | { kind: "routine_new"; title: string; moment: RoutineMoment; steps: string[] }
+  | { kind: "routine_edit"; routine_id: string; title: string; moment?: RoutineMoment | undefined; steps?: string[] | undefined };
 type Scale = 1 | 2 | 3 | 4 | 5;
 type Zero = 0 | Scale;
 
@@ -64,6 +69,14 @@ export const ALFRED_TOOLS: Anthropic.Beta.BetaTool[] = [
     input_schema: { type: "object", additionalProperties: false, required: ["lbs"], properties: { lbs: n("pounds") } } },
   { name: "add_reminder", description: "Propose a reminder or task. due_date is the local calendar date it is due (YYYY-MM-DD). For repeats give an iCalendar RRULE (e.g. FREQ=MONTHLY;BYMONTHDAY=15). Put the time or moment he named (\"after I wake\", \"9:30\") in when_note.",
     input_schema: { type: "object", additionalProperties: false, required: ["title"], properties: { title: s("short reminder text in his words"), due_date: s("YYYY-MM-DD"), repeat_rrule: s("RRULE, only if it repeats"), when_note: s("time or moment of day he named"), project_id: s("id from OPEN PROJECTS, only when this is a step of that project") } } },
+  { name: "routine_new", description: "Propose a ROUTINE he describes for one moment of his rotation: BEFORE_SHIFT, ON_SHIFT, AFTER_SHIFT or DAY_OFF. Steps are his own, short, in order (1 to 15). Use what he says he does; don't add steps he didn't mention without asking.",
+    input_schema: { type: "object", additionalProperties: false, required: ["title", "moment", "steps"], properties: {
+      title: s("short name, e.g. Pre-shift"), moment: { type: "string", enum: [...ROUTINE_MOMENTS], description: "when it applies" },
+      steps: { type: "array", minItems: 1, maxItems: 15, items: s("one step") } } } },
+  { name: "routine_edit", description: "Propose a change he asked for to one of his ROUTINES (by id): a new name, moment, or the full new list of steps in order. Only when he asks; never change a routine on your own.",
+    input_schema: { type: "object", additionalProperties: false, required: ["routine_id", "title"], properties: {
+      routine_id: s("id from ROUTINES"), title: s("the routine's name (new name if renaming)"), moment: { type: "string", enum: [...ROUTINE_MOMENTS], description: "new moment, if changing" },
+      steps: { type: "array", minItems: 1, maxItems: 15, items: s("one step"), description: "the full new list, if changing steps" } } } },
   { name: "project_new", description: "Propose a new PROJECT: something finite he wants to get done (renew a passport, clear the garage), with its first steps. Use it when he asks for help getting something done. Steps are concrete actions in his words, 1 to 8, in a sensible order. Give a due_date only for a date he named or one that is a fact (an appointment). Not for ongoing direction: that is a Mission.",
     input_schema: { type: "object", additionalProperties: false, required: ["title", "steps"], properties: {
       title: s("short project name"), finish: s("what finished looks like, in his words, if he said"),
@@ -131,6 +144,13 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
     case "log_sleep": { const m = num(i.minutes); return m ? { kind: "log_sleep", minutes: Math.round(m), nap: i.nap === true } : null; }
     case "log_weight": { const lbs = num(i.lbs); return lbs ? { kind: "log_weight", lbs } : null; }
     case "add_reminder": { const t = str(i.title); const due = str(i.due_date); return t ? { kind: "add_reminder", title: t, due_date: due && isRealDate(due) ? due : undefined, repeat_rrule: str(i.repeat_rrule), when_note: str(i.when_note), project_id: str(i.project_id) } : null; }
+    case "routine_new": case "routine_edit": {
+      const t = str(i.title), moment = ROUTINE_MOMENTS.find((m) => m === i.moment);
+      const steps = Array.isArray(i.steps) ? i.steps.flatMap((x) => (str(x) ? [str(x)!] : [])).slice(0, 15) : undefined;
+      if (name === "routine_new") return t && moment && steps?.length ? { kind: "routine_new", title: t, moment, steps } : null;
+      const id = str(i.routine_id);
+      return id && t ? { kind: "routine_edit", routine_id: id, title: t, moment, steps: steps?.length ? steps : undefined } : null;
+    }
     case "project_new": {
       const t = str(i.title);
       const steps = (Array.isArray(i.steps) ? i.steps : []).slice(0, 8).flatMap((raw) => {
@@ -181,6 +201,8 @@ export function describeProposal(p: AlfredProposal): string {
     case "log_sleep": return `Log ${p.nap ? "nap" : "main sleep"} ${Math.floor(p.minutes / 60)}h ${String(p.minutes % 60).padStart(2, "0")}m`;
     case "log_weight": return `Log weight ${p.lbs} lb`;
     case "add_reminder": return `${p.project_id ? "Add step" : "Remind"}: ${p.title}${p.due_date ? ` · ${p.due_date}` : ""}${p.when_note ? ` · ${p.when_note}` : ""}${p.repeat_rrule ? " · repeats" : ""}`;
+    case "routine_new": return `New routine · ${ROUTINE_MOMENT_LABELS[p.moment]}: ${p.title} · ${p.steps.map((st, n) => `${n + 1}. ${st}`).join("; ")}`;
+    case "routine_edit": return `Change routine ${p.title}${p.moment ? ` · now ${ROUTINE_MOMENT_LABELS[p.moment].toLowerCase()}` : ""}${p.steps ? ` · steps: ${p.steps.map((st, n) => `${n + 1}. ${st}`).join("; ")}` : ""}`;
     case "project_new": return `New project: ${p.title}${p.finish ? ` (finished when ${p.finish})` : ""} · ${p.steps.length} ${p.steps.length === 1 ? "step" : "steps"}: ${p.steps.map((st, n) => `${n + 1}. ${st.title}${st.due_date ? ` (${st.due_date})` : ""}`).join("; ")}`;
     case "capture_note": return `Note: ${p.text}`;
     case "check_in": return `Check in · energy ${p.energy} · stress ${p.stress} · mood ${p.mood} · soreness ${p.soreness} · urge ${p.alcohol_urge}`;
@@ -208,6 +230,7 @@ export function describeConfirmError(e: unknown): string {
   if (m.startsWith("QUIT_HABIT_NOT_SET")) return "Set up the quit tracker first (MORE → Settings). Nothing changed.";
   if (m.startsWith("OBLIGATION_ALREADY_RESOLVED")) return "That task is already closed. Nothing changed.";
   if (m.startsWith("MEMORY_NOT_FOUND")) return "That fact is already gone. Nothing changed.";
+  if (m.startsWith("ROUTINE_NOT_FOUND")) return "BEYOND couldn't find that routine. Nothing changed.";
   if (m.startsWith("INVALID_DATE")) return "That date doesn't exist. Nothing changed.";
   if (m.startsWith("INVALID_REPEAT")) return "BEYOND couldn't read that repeat. Nothing changed. Ask again with the dates.";
   if (m.startsWith("PROJECT_FINISHED")) return "That project is finished. Reopen it first. Nothing changed.";
@@ -242,6 +265,13 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
       ...(p.repeat_rrule ? { recurrence: { rrule: anchoredRepeat(p.repeat_rrule, p.due_date) } } : {}),
       ...(p.project_id ? { projectId: p.project_id } : {}),
     });
+    return {};
+  }
+  if (p.kind === "routine_new") { await createRoutine({ title: p.title, moment: p.moment, steps: p.steps }); return {}; }
+  if (p.kind === "routine_edit") {
+    const routine = (await getRoutines()).find((r) => r.id === p.routine_id);
+    if (!routine || routine.status !== "ACTIVE") throw new Error("ROUTINE_NOT_FOUND: no routine in use with that id.");
+    await modifyRoutine(routine.id, { title: p.title, ...(p.moment ? { moment: p.moment } : {}), ...(p.steps ? { steps: matchSteps(routine, p.steps) } : {}) }, routine.updatedAt);
     return {};
   }
   if (p.kind === "project_new") {
