@@ -5,6 +5,9 @@
 - Baseline: fresh master `20743ae`; branch `codex/personal-os-design`.
 - [Research/design proposal](PERSONAL-OS-001.md): pinned source inspections, license
   dispositions, current BEYOND gap map and proposed PERSONAL-CONTEXT-001 first journey.
+- Communication: [Delta-inspired, guilt-free design](ALFRED-COMMUNICATION-DESIGN.md).
+  Owner explicitly rejects guilt; detailed voice remains proposed. Fresh literature access
+  blocked (403); references and evidence limits recorded, no production prompt change.
 - Earlier Goals & Projects design remains preserved on `codex/goals-projects-design`
   (`2e6c502`), parked after owner clarified broader connected personal-OS intent.
 - Findings: TELOS pattern fits; no wholesale harness import. Alfred initial context omits
