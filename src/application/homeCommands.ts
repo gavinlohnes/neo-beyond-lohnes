@@ -24,7 +24,15 @@ export interface HomeItemInput {
   repeat?: { every: number; unit: RepeatUnit; firstDue: string } | undefined;
 }
 
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+/**
+ * A real calendar date in YYYY-MM-DD. Review of #360: Date.parse rolls "2027-02-30" over to
+ * March 2, so the date must read back unchanged, not just look right.
+ */
+export function isRealDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const d = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
+}
 const UNIT_WORD: Record<RepeatUnit, [string, string]> = { WEEKS: ["week", "weeks"], MONTHS: ["month", "months"], YEARS: ["year", "years"] };
 export const describeRepeat = (every: number, unit: RepeatUnit) => `every ${every === 1 ? UNIT_WORD[unit][0] : `${every} ${UNIT_WORD[unit][1]}`}`;
 
@@ -41,7 +49,7 @@ function validate(input: HomeItemInput) {
   if (!details && !input.repeat) throw new Error("NOTHING_TO_KEEP: add details, a repeat, or both.");
   const r = input.repeat;
   if (r && (!Number.isInteger(r.every) || r.every < 1 || r.every > 60)) throw new Error("INVALID_REPEAT: repeat every 1 to 60.");
-  if (r && (!DATE_ONLY.test(r.firstDue) || Number.isNaN(Date.parse(`${r.firstDue}T12:00:00Z`)))) throw new Error("INVALID_DATE: give the next due date.");
+  if (r && !isRealDate(r.firstDue)) throw new Error("INVALID_DATE: give a real next due date.");
   return { item, details, repeat: r };
 }
 

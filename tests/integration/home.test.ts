@@ -60,3 +60,18 @@ it("yearly home jobs stay out of People; bad repeats and impossible person dates
   expect(toProposal("person_date", { person: "Sam", occasion: "Birthday", month: 2, day: 30 })).toBeNull();
   expect(toProposal("person_date", { person: "Sam", occasion: "Birthday", month: 2, day: 29 })).not.toBeNull();
 });
+
+it("refuses dates that don't exist, by hand or from Alfred, so no occurrence is skipped (review of #360)", async () => {
+  const { isRealDate } = await import("../../src/application/homeCommands");
+  expect(isRealDate("2027-02-30")).toBe(false);
+  expect(isRealDate("2026-11-31")).toBe(false);
+  expect(isRealDate("2028-02-29")).toBe(true);
+  expect(isRealDate("2027-02-28")).toBe(true);
+  await expect(addHomeItem({ item: "Filter", repeat: { every: 1, unit: "MONTHS", firstDue: "2027-02-30" } })).rejects.toThrow("INVALID_DATE");
+  expect(await db.obligations.count()).toBe(0);
+  expect(toProposal("home_item", { item: "Filter", every: 1, unit: "MONTHS", first_due: "2027-02-30" })).toBeNull();
+  expect((toProposal("add_reminder", { title: "Call", due_date: "2026-11-31" }) as { due_date?: string }).due_date).toBeUndefined();
+  expect(toProposal("task_new_date", { task_id: "t", title: "x", due_date: "2027-02-30" })).toBeNull();
+  const project = toProposal("project_new", { title: "P", steps: [{ title: "s", due_date: "2026-11-31" }] }) as { steps: { due_date?: string }[] };
+  expect(project.steps[0]!.due_date).toBeUndefined();
+});

@@ -6,7 +6,7 @@ import { createProject } from "../projectCommands";
 import { logCleanDay, logUrge } from "../quitCommands";
 import { forgetFact, rememberFact } from "./alfredMemory";
 import { addPersonDate, anchorRule, describeMonthDay } from "../peopleCommands";
-import { addHomeItem, describeRepeat, REPEAT_UNITS, type RepeatUnit } from "../homeCommands";
+import { addHomeItem, describeRepeat, isRealDate, REPEAT_UNITS, type RepeatUnit } from "../homeCommands";
 import { formatLocalDate } from "../../engine/scheduledContext";
 import { getDays, searchRecords } from "./alfredSearch";
 import { MEMORY_TOPICS, type MemoryTopic } from "../../domain/alfred/types";
@@ -130,13 +130,13 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
     case "log_water": { const oz = num(i.oz); return oz ? { kind: "log_water", oz } : null; }
     case "log_sleep": { const m = num(i.minutes); return m ? { kind: "log_sleep", minutes: Math.round(m), nap: i.nap === true } : null; }
     case "log_weight": { const lbs = num(i.lbs); return lbs ? { kind: "log_weight", lbs } : null; }
-    case "add_reminder": { const t = str(i.title); const due = str(i.due_date); return t ? { kind: "add_reminder", title: t, due_date: due && /^\d{4}-\d{2}-\d{2}$/.test(due) ? due : undefined, repeat_rrule: str(i.repeat_rrule), when_note: str(i.when_note), project_id: str(i.project_id) } : null; }
+    case "add_reminder": { const t = str(i.title); const due = str(i.due_date); return t ? { kind: "add_reminder", title: t, due_date: due && isRealDate(due) ? due : undefined, repeat_rrule: str(i.repeat_rrule), when_note: str(i.when_note), project_id: str(i.project_id) } : null; }
     case "project_new": {
       const t = str(i.title);
       const steps = (Array.isArray(i.steps) ? i.steps : []).slice(0, 8).flatMap((raw) => {
         const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
         const st = str(r.title), due = str(r.due_date);
-        return st ? [{ title: st, due_date: due && /^\d{4}-\d{2}-\d{2}$/.test(due) ? due : undefined }] : [];
+        return st ? [{ title: st, due_date: due && isRealDate(due) ? due : undefined }] : [];
       });
       return t && steps.length ? { kind: "project_new", title: t, finish: str(i.finish), steps } : null;
     }
@@ -149,14 +149,14 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
     }
     case "work_started": case "work_ended": case "clean_day": case "open_training": return { kind: name } as AlfredProposal;
     case "task_done": { const id = str(i.task_id), t = str(i.title); return id && t ? { kind: "task_done", task_id: id, title: t } : null; }
-    case "task_new_date": { const id = str(i.task_id), t = str(i.title), due = str(i.due_date); return id && t && due && /^\d{4}-\d{2}-\d{2}$/.test(due) ? { kind: "task_new_date", task_id: id, title: t, due_date: due } : null; }
+    case "task_new_date": { const id = str(i.task_id), t = str(i.title), due = str(i.due_date); return id && t && due && isRealDate(due) ? { kind: "task_new_date", task_id: id, title: t, due_date: due } : null; }
     case "remember": { const t = str(i.text); const topic = MEMORY_TOPICS.find((m) => m === i.topic) ?? "OTHER"; return t ? { kind: "remember", text: t, topic } : null; }
     case "forget": { const id = str(i.memory_id), t = str(i.text); return id && t ? { kind: "forget", memory_id: id, text: t } : null; }
     case "home_item": {
       const item = str(i.item), details = str(i.details), due = str(i.first_due);
       const every = typeof i.every === "number" && Number.isInteger(i.every) && i.every >= 1 && i.every <= 60 ? i.every : undefined;
       const unit = REPEAT_UNITS.find((u) => u === i.unit);
-      const repeats = every && unit && due && /^\d{4}-\d{2}-\d{2}$/.test(due);
+      const repeats = every && unit && due && isRealDate(due);
       if (!item || (!details && !repeats)) return null;
       return { kind: "home_item", item, details, ...(repeats ? { every, unit, first_due: due } : {}) };
     }

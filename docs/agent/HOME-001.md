@@ -43,3 +43,10 @@ add at 360px with axe and no overflow; plain fact without a job. Full verify, re
 
 Yearly "Home: " jobs stay out of People; Alfred's repeat rules must produce a real date (not just
 parse); a person card isn't offered for a date that doesn't exist.
+
+## Review of #360
+
+Fixed (blocking): an impossible date (Feb 30) was accepted from Alfred and the first repeat skipped a
+month. Every date Alfred proposes (reminders, project steps, new task dates, home jobs) must now be a
+real calendar date; Home's own check reads the date back. Known, not changed: a monthly job anchored
+on the 29th–31st skips months without that day (RFC 5545 behavior); pick the 28th or earlier for now.
