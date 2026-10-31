@@ -1,5 +1,6 @@
 import { readPersonalSources } from "./personalContext";
 import { db } from "../../persistence/db";
+import { parseProject } from "../../persistence/intentValidation";
 import { getDaySummaries } from "../dayLedgerQueries";
 import { dayLine } from "./alfredContext";
 import { formatLocalDate } from "../../engine/scheduledContext";
@@ -37,7 +38,7 @@ export async function searchRecords(query: string, limit = 30, includePersonal =
   for (const w of sessions) consider(w.startedAt, `WORKOUT ${w.status}`, { template: w.templateId, type: w.sessionType, ended: w.endedAt });
   for (const s of sets) consider(typeof s.recordedAt === "string" ? s.recordedAt : undefined, "SET", s);
   for (const m of memories) consider(m.savedAt, `MEMORY ${m.topic}`, m.text);
-  for (const p of projects) consider(p.updatedAt, `PROJECT ${p.status}`, { id: p.id, title: p.title, finish: p.finish });
+  for (const p of projects.map(parseProject).filter((x): x is NonNullable<typeof x> => x !== null)) consider(p.updatedAt, `PROJECT ${p.status}`, { id: p.id, title: p.title, finish: p.finish });
   hits.sort((a, b) => b.at.localeCompare(a.at));
   return hits.length ? `${hits.length} match${hits.length === 1 ? "" : "es"} for "${query}" (newest first${hits.length > limit ? `, first ${limit}` : ""}):\n${hits.slice(0, limit).map((h) => h.line).join("\n")}` : `No records match "${query}".`;
 }

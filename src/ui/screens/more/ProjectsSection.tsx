@@ -109,6 +109,7 @@ function ProjectCard({ view, missions, busy, run, onOpenObligation }: {
   const [pending, setPending] = useState<"COMPLETED" | "CLOSED" | null>(null);
   const [history, setHistory] = useState<DomainEvent[] | null>(null);
   const [historyFailed, setHistoryFailed] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   useSessionDraft(`intent-project-step-${project.id}`, newStep.length > 0);
   const mission = project.missionId ? missions.find((m) => m.id === project.missionId) : undefined;
   const unresolved = steps.filter((s) => s.status === "OPEN" || s.status === "WAITING");
@@ -174,8 +175,9 @@ function ProjectCard({ view, missions, busy, run, onOpenObligation }: {
             <button className="btn-secondary" disabled={busy} onClick={() => setPending(null)}>CANCEL</button>
           </div>
         </div>}
-        <FieldDisclosure summary={history ? `HISTORY · ${history.length} ${history.length === 1 ? "EVENT" : "EVENTS"}` : "HISTORY"} open={history !== null || historyFailed}
-          onToggle={(o) => { setHistoryFailed(false); if (!o) setHistory(null); else void getProjectHistory(project.id).then(setHistory).catch(() => setHistoryFailed(true)); }}>
+        <FieldDisclosure summary={history ? `HISTORY · ${history.length} ${history.length === 1 ? "EVENT" : "EVENTS"}` : "HISTORY"} open={historyOpen}
+          onToggle={(o) => { setHistoryOpen(o); setHistoryFailed(false); if (!o) setHistory(null); else void getProjectHistory(project.id).then(setHistory).catch(() => setHistoryFailed(true)); }}>
+          {historyOpen && !history && !historyFailed && <p role="status" className="meta">Reading history…</p>}
           {historyFailed && <p role="alert" className="meta">History could not be read. It is unavailable, not empty.</p>}
           {history?.length === 0 && <p className="meta">No history yet.</p>}
           {history?.map((e) => <div key={e.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "4px 0", borderTop: "1px solid var(--border-subtle)" }}>

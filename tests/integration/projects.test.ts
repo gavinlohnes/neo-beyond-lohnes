@@ -122,3 +122,14 @@ it("ignores an invalid project row instead of trusting it", async () => {
   await db.projects.add({ id: "bad", title: "", status: "ACTIVE", source: "USER", createdAt: "x", updatedAt: "x" } as never);
   expect(await getProjectViews()).toEqual([]);
 });
+
+it("Alfred's add-step card names its project, and the save checks it's the same one", async () => {
+  const { confirmProposal, describeProposal, toProposal } = await import("../../src/application/alfred/alfredActions");
+  const { project } = await createProject({ title: "Fix the fence" });
+  const card = toProposal("add_reminder", { title: "Buy posts", project_id: project.id, project_title: "Fix the fence" })!;
+  expect(describeProposal(card)).toBe("Add step to Fix the fence: Buy posts");
+  await expect(confirmProposal({ ...card, project_title: "Paint the shed" } as typeof card)).rejects.toThrow("PROJECT_MISMATCH");
+  expect(await db.obligations.count()).toBe(0);
+  await confirmProposal(card);
+  expect((await view(project.id)).progress.total).toBe(1);
+});
