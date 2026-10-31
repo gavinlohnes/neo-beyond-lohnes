@@ -6,12 +6,18 @@
 .alfred-turn { border-left: 2px solid var(--border-strong); padding: 2px 0 2px 12px; }
 .alfred-turn--alfred { border-left-color: var(--red); }
 .alfred-turn__who { margin: 0 0 4px; font-size: 11px; letter-spacing: 0.16em; color: var(--text-3-strong); }
-.alfred-turn__text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; color: var(--text-1); }
+.alfred-turn__text { overflow-wrap: anywhere; line-height: 1.5; color: var(--text-1); }
+.alfred-turn__text p { margin: 0 0 8px; }
+.alfred-turn__text ul { margin: 0 0 8px; padding-left: 18px; }
+.alfred-turn__text li { margin: 0 0 4px; }
+.alfred-turn__text strong, .alfred-turn__head { color: var(--text-1); font-weight: 700; }
+.alfred-turn__head { margin: 12px 0 4px !important; letter-spacing: .04em; }
 .alfred-card { margin-top: 8px; padding: 10px 12px; border: 1px solid var(--border-strong); background: var(--surface-1); }
 .alfred-card p { margin: 0 0 8px; overflow-wrap: anywhere; }
 .alfred-card__row { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
 .alfred-card__row button { margin: 0; }
-.alfred-input { display: grid; gap: 8px; }
+/* The input stays pinned to the bottom of the sheet, above the keyboard, however long the answer. */
+.alfred-input { display: grid; gap: 8px; position: sticky; bottom: 0; z-index: 1; background: var(--surface-1); padding: 8px 0 max(4px, env(safe-area-inset-bottom)); border-top: 1px solid var(--border-subtle); }
 .alfred-input textarea { resize: vertical; min-height: 64px; }
 .alfred-input__row { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
 .alfred-input__row button { margin: 0; }
