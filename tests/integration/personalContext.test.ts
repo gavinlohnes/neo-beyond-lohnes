@@ -96,3 +96,10 @@ it("preserves #352's automatic prep/recovery context without uploading new perso
   expect(conversation.text).not.toContain("Frozen backup is practical.");
   expect((await buildPlanningContext(true)).text).toContain("Frozen backup is practical.");
 });
+
+it("rejects a task card whose displayed name does not match the canonical target", async () => {
+  await startDay(); const task = await createObligation({ title: "Call the bank" });
+  const context = await buildPlanningContext(false), before = await all();
+  await expect(confirmContextProposal({ kind: "task_done", task_id: task.id, title: "Pay the car" }, context, false)).rejects.toThrow("CONTEXT_CHANGED");
+  expect(await all()).toEqual(before);
+});

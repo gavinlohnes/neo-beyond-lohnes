@@ -14,7 +14,7 @@ export function confirmContextProposal(proposal: AlfredProposal, expected: Propo
     }
     if (proposal.kind === "task_done" || proposal.kind === "task_new_date") {
       const current = await getObligation(proposal.task_id);
-      if (!current || expected.taskVersions[proposal.task_id] !== JSON.stringify(current)) throw new Error("CONTEXT_CHANGED");
+      if (!current || current.title !== proposal.title || expected.taskVersions[proposal.task_id] !== JSON.stringify(current)) throw new Error("CONTEXT_CHANGED");
     }
     return confirmProposal(proposal);
   });
