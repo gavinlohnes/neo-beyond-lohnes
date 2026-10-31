@@ -12,6 +12,19 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## BOOT-BRIEF-001 — the launch screen is a readable startup brief (owner choice 2026-10-30)
+
+Gavin, 2026-10-30: "this splash screen that pops up goes too quickly I can't read it. What are
+better options". Offered A (startup brief), B (slower logo), C (no splash); he chose **A**. Amends
+BOOT-001's "about one second" and its status lines.
+
+- The launch screen holds about 2.6 s (was 1.05 s); a tap anywhere still skips, reduced motion still
+  shows nothing, and it still plays once per cold launch only.
+- Under BEYOND: the mode, then where the shift stands ("SHIFT 1800", "SHIFT ENDS 0600", "SHIFT
+  DONE" or "SHIFT OFF"), last main sleep ("SLEEP 7:15" or "SLEEP NOT LOGGED"), protein so far
+  ("PROTEIN 48 / 159 G"), and the backup only when it needs you (DUE or OFF). The day count left.
+- Larger, brighter lines; "TAP TO CONTINUE" at the bottom. Read only, nothing stored.
+
 ## FOOD-001 — MEAL works like MyFitnessPal, protein first (owner go 2026-10-30)
 
 Gavin, 2026-10-30: "Let's make it closer to my fitness pal or some other food tracking and logging

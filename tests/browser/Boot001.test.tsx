@@ -6,7 +6,7 @@ import { describeBootStatus, getBootStatus } from "../../src/application/bootQue
 import { setAutoBackupPreferenceAndReset, snoozeBackupPrompt } from "../../src/application/autoBackupQueries";
 import { BOOT_TOTAL_MS, BootSequence, resetBootSequenceForTests } from "../../src/ui/components/BootSequence";
 
-/** BOOT-001: cold launch only, tap to skip, reduced motion skips, real status lines. */
+/** BOOT-001: cold launch only, tap to skip, reduced motion skips, real status lines (BOOT-BRIEF-001: a readable brief). */
 
 /** Lets the sequence run to its own end inside act, so its last update is flushed. */
 async function waitPastEnd() {
@@ -41,7 +41,10 @@ describe("BOOT-001", () => {
     expect(plate.getAttribute("d")).toBe("M0,0 H432 L512,80 V512 H0 Z");
     expect(getComputedStyle(plate).fill).toBe("rgb(247, 201, 40)");
     await expect.element(screen.getByText("BEYOND", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("DAY 1", { exact: true })).toBeVisible();
+    // BOOT-BRIEF-001: the brief, readable, with a way out.
+    await expect.element(screen.getByText("PROTEIN 0 G", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("SLEEP NOT LOGGED", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("TAP TO CONTINUE", { exact: true })).toBeVisible();
     await waitPastEnd();
     expect(document.querySelector(".boot")).toBeNull();
   });
@@ -82,6 +85,8 @@ describe("BOOT-001", () => {
     // Wed Oct 14 2026 is a day off under the default schedule; Fri Oct 16 is a work day.
     expect(describeBootStatus(await getBootStatus(new Date(2026, 9, 14, 14, 0)))).toEqual(["SHIFT OFF", "BACKUP OFF"]);
     expect((await getBootStatus(new Date(2026, 9, 16, 17, 0))).shift).toBe("SHIFT 1800");
+    // BOOT-BRIEF-001: where the shift stands, from the schedule.
+    expect((await getBootStatus(new Date(2026, 9, 16, 23, 0))).shift).toBe("SHIFT ENDS 0600");
     setAutoBackupPreferenceAndReset({ enabled: true, everyDays: 7 });
     expect((await getBootStatus()).backup).toBe("DUE");
     // LATER hides TODAY's line for a day; the backup is still overdue.
@@ -89,6 +94,18 @@ describe("BOOT-001", () => {
     expect((await getBootStatus()).backup).toBe("DUE");
     await startDay();
     expect((await getBootStatus()).day).toBe(1);
-    expect(describeBootStatus({ day: 14, shift: "SHIFT 1800", backup: "OK" })).toEqual(["DAY 14", "SHIFT 1800", "BACKUP OK"]);
+    // BOOT-BRIEF-001: shift, sleep, protein; the backup only when it needs you; no day count.
+    expect(describeBootStatus({ day: 14, shift: "SHIFT 1800", backup: "OK" })).toEqual(["SHIFT 1800"]);
+    expect(describeBootStatus({ day: 14, shift: "SHIFT ENDS 0600", backup: "DUE", sleep: 435, protein: { g: 48, target: 159 } }))
+      .toEqual(["SHIFT ENDS 0600", "SLEEP 7:15", "PROTEIN 48 / 159 G", "BACKUP DUE"]);
+    expect(describeBootStatus({ day: 1, shift: null, backup: null, sleep: "NONE", protein: { g: 0, target: null } })).toEqual(["SLEEP NOT LOGGED", "PROTEIN 0 G"]);
+  });
+
+  it("BOOT-BRIEF-001: after the active day's shift, the brief says it's done", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 16, 16, 40)); // Fri, a work day under the default schedule
+    await startDay();
+    expect((await getBootStatus(new Date(2026, 9, 17, 9, 0))).shift).toBe("SHIFT DONE");
+    vi.useRealTimers();
   });
 });

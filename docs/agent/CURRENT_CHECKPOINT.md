@@ -8,8 +8,10 @@
   rise into the timeline's labels. The COMMS line keeps its full height above the SHIFT row.
 - **Verified:** `npm run verify` green (3,173 passed); `tests/browser/CityFix001.test.tsx` fails
   without the fix.
-- **Open from the same report:** splash too quick (owner choosing an option); sleep and resting HR
-  not showing (needs the owner's Health Bridge check or a fresh backup).
+- **Also built (BOOT-BRIEF-001, owner chose option A):** the launch screen is a readable startup
+  brief (mode, shift, sleep, protein, backup when due), held about 2.6 s, tap to skip.
+- **Open from the same report:** sleep and resting HR not showing (needs the owner's Health Bridge
+  check or a fresh backup).
 - **Next:** CI and Gavin's merge.
 
 # FOOD-001 — MEAL works like MyFitnessPal, protein first

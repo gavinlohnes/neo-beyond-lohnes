@@ -6,10 +6,10 @@ import { Emblem } from "./Emblem";
 
 /**
  * BOOT-001 (owner brief 2026-10-05): the cold-launch boot sequence, right
- * after Android's own black splash. About one second: the existing app icon
+ * after Android's own black splash. About 2.6 seconds (BOOT-BRIEF-001; was one): the existing app icon
  * (owner ruling 2026-10-05: the mark is allowed on the icon and this screen
  * only, used as-is — the PNG itself, never redrawn), a 1px line drawing
- * across, "BEYOND" typing in, three status lines ticking in, then a cut to
+ * across, "BEYOND" typing in, the startup brief ticking in, then a cut to
  * whatever the app opened underneath (TODAY, a resumed workout, a
  * shortcut's destination). The app's own startup runs underneath unchanged.
  * SUIT-ALIVE-001 (owner ruling 2026-10-28): the mark is now the original red bat, opening from its
@@ -19,11 +19,14 @@ import { Emblem } from "./Emblem";
  * remounts the app, so it never replays. Tap anywhere skips. With reduced
  * motion it never shows.
  */
-export const BOOT_TOTAL_MS = 1050;
+// BOOT-BRIEF-001 (owner choice 2026-10-30, option A): about 2.6 s, long enough to read the brief; a
+// tap still skips. Was 1050 ms, which the owner couldn't read.
+export const BOOT_TOTAL_MS = 2600;
 const TYPE_START_MS = 380;
 const TYPE_STEP_MS = 40;
 const STATUS_START_MS = 640;
-const STATUS_STEP_MS = 90;
+const STATUS_STEP_MS = 120;
+const HINT_MS = 1100;
 const WORD = "BEYOND";
 
 /**
@@ -109,6 +112,7 @@ export function BootSequence() {
           <p key={line} className="boot__status-line">{line}</p>
         ))}
       </div>
+      {elapsed >= HINT_MS && <p className="boot__hint" aria-hidden="true">TAP TO CONTINUE</p>}
     </div>
   );
 }
