@@ -12,6 +12,13 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## KEYBOARD-001 — bottom sheets rise above the keyboard (owner report 2026-10-31)
+
+Gavin, on Alfred's first open: "Looks bad. I can't even see it to type." Chrome on Android keeps the
+page full height under the on-screen keyboard by default, so a sheet pinned to the bottom sat behind
+it. `index.html`'s viewport now sets `interactive-widget=resizes-content`: the keyboard shrinks the
+page and every bottom sheet (Alfred, MEAL, NOTE, check-in) stays above it.
+
 ## RULES-2026-10-31 — online allowed; Alfred is core (owner approval 2026-10-31)
 
 Gavin, 2026-10-31: "I don't necessarily need everything on my phone and super private and secretive.
