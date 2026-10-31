@@ -1,3 +1,19 @@
+# PERSONAL-CONTEXT-001 — Claude Code is Builder; PR #353 awaiting review and merge decision
+
+- Authority: Gavin, 2026-10-31: handed PERSONAL-CONTEXT-001 and the PERSONAL-OS campaign to
+  Claude Code ("finish it rather than starting over"). Brief approval ("Let's get after it") stands.
+- Branch `ccr-0be4f40f-16m0ja` = Codex's `codex/personal-context-001` (`cb07b1b`) merged with
+  no changes to its source, plus the existing one-line FullShift test budget (#353). PR #353 now
+  carries the whole slice. Master `f001049` (#352) already integrated; merged cleanly.
+- Claude's check: read the source diff (context catalog, opt-in sharing, atomic card guards,
+  search exclusions); typecheck and focused suites (22 tests) green; full verify run before push.
+- Remaining: independent exact-head review, green CI, Gavin's merge. Live Claude quality, API
+  cost and phone behavior unmeasured until he uses it.
+- Next after merge: reset branch onto master; tune from real conversations; then propose the
+  first campaign journey (Goals & Projects, design parked on `codex/goals-projects-design`).
+
+---
+
 # PERSONAL-CONTEXT-001 — handoff to Claude Code, built and verified
 
 - Authority: Gavin's “Let's get after it” approves the bounded connected-context slice;

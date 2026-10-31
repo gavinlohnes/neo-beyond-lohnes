@@ -65,3 +65,9 @@ Gavin: “Wrap up. We are handing it over to Claude Code.” Codex stops impleme
 transfers the existing objective/branch to Claude Code. See the [handoff](PERSONAL-CONTEXT-001-HANDOFF.md)
 for exact heads, completed verification, Git-note review evidence and PR/CI/merge gates.
 This transfer changes no product scope and supplies no merge approval.
+
+
+## Claude Code takeover
+
+Gavin handed the slice to Claude Code on 2026-10-31. Codex's branch was merged unchanged into
+`ccr-0be4f40f-16m0ja`; PR #353 carries it. No scope change; merge remains Gavin's.
