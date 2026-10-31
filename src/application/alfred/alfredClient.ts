@@ -91,7 +91,7 @@ export class AlfredSession {
     // ALFRED-004: read tools (search_records, get_days) are answered at once from the records and
     // Alfred continues; a few rounds at most. Proposals become cards; the last round's wait for the operator.
     for (let round = 0; round < 5; round++) {
-      // ALFRED-COST-001: no request once this month's limit is reached, also between tool rounds.
+      // ALFRED-COST-001: no new answer once this month's limit is reached; an answer already under way may finish its rounds.
       if (round === 0) assertWithinCap();
       await this.policy?.assertFresh();
       const response = await this.client.beta.messages.create({

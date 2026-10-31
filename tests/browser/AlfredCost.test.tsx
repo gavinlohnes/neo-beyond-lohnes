@@ -45,6 +45,9 @@ it("at the limit Alfred sends nothing, says why, and keeps your words", async ()
 it("sets a limit and turns automatic Alfred off from Limits", async () => {
   const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={() => {}} />);
   await screen.getByRole("button", { name: "Limits" }).click();
+  await screen.getByRole("spinbutton", { name: "Monthly limit ($)" }).fill("7.25");
+  await screen.getByRole("button", { name: "SET LIMIT" }).click();
+  await expect.poll(() => getMonthlyCap()).toBe(7.25);
   await screen.getByRole("spinbutton", { name: "Monthly limit ($)" }).fill("5");
   await screen.getByRole("button", { name: "SET LIMIT" }).click();
   expect(getMonthlyCap()).toBe(5);

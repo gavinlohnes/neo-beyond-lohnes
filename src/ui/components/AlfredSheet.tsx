@@ -231,7 +231,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       {limitsOpen && <div className="alfred-limits" role="group" aria-label="Alfred limits">
         <p className="meta">BEYOND's estimate of this month: ${usd(monthSpent)}{cap ? ` of your $${cap.toFixed(2)} limit` : ", no limit set"}. At the limit Alfred stops until next month; everything else keeps working. For a hard ceiling, also set a spend limit in the Anthropic console.</p>
         <form className="alfred-input__row" onSubmit={(e) => { e.preventDefault(); const v = Number(capDraft); if (Number.isFinite(v) && v > 0) { setMonthlyCap(v); setCap(getMonthlyCap()); } }}>
-          <label className="field">Monthly limit ($)<input className="input" type="number" inputMode="decimal" min={0.5} step={0.5} value={capDraft} onChange={(e) => setCapDraft(e.target.value)} /></label>
+          <label className="field">Monthly limit ($)<input className="input" type="number" inputMode="decimal" min={0.01} step="0.01" value={capDraft} onChange={(e) => setCapDraft(e.target.value)} /></label>
           <button type="submit" className="btn-secondary" disabled={!(Number(capDraft) > 0)}>SET LIMIT</button>
           {cap !== null && <button type="button" className="btn-secondary" onClick={() => { setMonthlyCap(null); setCap(null); setCapDraft(""); }}>NO LIMIT</button>}
         </form>
