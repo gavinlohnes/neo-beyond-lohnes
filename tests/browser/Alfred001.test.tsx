@@ -102,3 +102,15 @@ describe("ALFRED-001", () => {
     expect(context).toContain("LAST 14 LIVED DAYS");
   });
 });
+
+describe("ALFRED-001 text", () => {
+  it("renders Alfred's bold, lists and headings as text, never as HTML", async () => {
+    const { AlfredText } = await import("../../src/ui/components/AlfredSheet");
+    const screen = await render(<AlfredText text={"**Tonight**\n- Slept **7h30**\n- Water 44 oz\n\n## What stands out\nProtein. <img src=x onerror=alert(1)>"} />);
+    await expect.element(screen.getByText("Tonight")).toBeVisible();
+    expect(screen.container.querySelectorAll("li")).toHaveLength(2);
+    expect(screen.container.querySelector("strong")?.textContent).toBe("Tonight");
+    expect(screen.container.querySelector("img")).toBeNull();
+    expect(screen.container.textContent).toContain("<img src=x onerror=alert(1)>");
+  });
+});

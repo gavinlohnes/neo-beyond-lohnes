@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { LogSheet } from "./LogSheet";
 import { buildAlfredContext } from "../../application/alfred/alfredContext";
 // The Claude SDK loads only when Alfred is first used, so it stays out of BEYOND's start-up bundle.
@@ -92,7 +92,7 @@ export function AlfredSheet({ open, onClose, onSaved }: { open: boolean; onClose
         </div>}
         {turns.map((t, i) => <div key={i} className={`alfred-turn alfred-turn--${t.role}`}>
           <p className="alfred-turn__who">{t.role === "user" ? "YOU" : "ALFRED"}</p>
-          {t.text && <p className="alfred-turn__text">{t.text}</p>}
+          {t.text && <AlfredText text={t.text} />}
           {t.proposals?.map((p) => <div key={p.id} className="alfred-card" role="group" aria-label={describeProposal(p.proposal)}>
             <p>{describeProposal(p.proposal)}</p>
             {p.state === "pending" ? <div className="alfred-card__row">
@@ -115,4 +115,29 @@ export function AlfredSheet({ open, onClose, onSaved }: { open: boolean; onClose
       <p className="meta alfred-foot">This conversation ≈ ${spent.toFixed(2)} · <button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
     </>}
   </LogSheet>;
+}
+
+/**
+ * ALFRED-001: Alfred writes light Markdown (bold, "- " lists, short headings). Rendered as React
+ * elements, never as HTML, so nothing he writes can inject markup.
+ */
+function inline(line: string) {
+  return line.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith("**") && part.endsWith("**") && part.length > 4 ? <strong key={i}>{part.slice(2, -2)}</strong> : part);
+}
+export function AlfredText({ text }: { text: string }) {
+  const blocks: ReactElement[] = [];
+  let list: string[] = [];
+  const flush = () => { if (list.length) { blocks.push(<ul key={blocks.length}>{list.map((item, i) => <li key={i}>{inline(item)}</li>)}</ul>); list = []; } };
+  for (const raw of text.split("\n")) {
+    const line = raw.trimEnd();
+    const item = /^\s*(?:[-*•]|\d+\.)\s+(.*)$/.exec(line);
+    if (item) { list.push(item[1]!); continue; }
+    flush();
+    if (!line.trim()) continue;
+    const heading = /^#{1,4}\s+(.*)$/.exec(line);
+    blocks.push(heading ? <p key={blocks.length} className="alfred-turn__head">{inline(heading[1]!)}</p> : <p key={blocks.length}>{inline(line)}</p>);
+  }
+  flush();
+  return <div className="alfred-turn__text">{blocks}</div>;
 }
