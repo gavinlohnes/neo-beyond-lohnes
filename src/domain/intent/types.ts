@@ -102,9 +102,35 @@ export interface Obligation {
   /** Freeform evidence of how it was resolved — set only alongside resolvedAt. */
   resolutionNote?: string;
   recurrence?: RecurrenceRule;
+  /** PROJECTS-001: the one Project this commitment is a step of, if any. Optional; never inferred. */
+  projectId?: string;
   /** See Mission.source's doc comment — same vocabulary, same reservation for a future BEYOND-proposed flow. */
   source: "USER" | "ENGINE" | "SYSTEM";
   /** See StateCheckIn.seq's doc comment in ../common/types.ts — same deterministic tie-break, same shared counter. */
+  seq?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * PROJECTS-001 (owner approval 2026-10-31): a finite effort with steps. A Mission is ongoing
+ * direction and never completes; a Project does. ACTIVE and PAUSED are open; COMPLETED is the
+ * operator's own "done", CLOSED is "stopped" without claiming success. Changing a Project's
+ * status never changes its steps: their states, dates and eligibility stay exactly as they were.
+ * `nextObligationId` is the step the operator chose to do next. It is never chosen for them;
+ * once that step is resolved it simply stops being shown as next.
+ */
+export type ProjectStatus = "ACTIVE" | "PAUSED" | "COMPLETED" | "CLOSED";
+
+export interface Project {
+  id: string;
+  title: string;
+  /** What "finished" looks like, in the operator's words. */
+  finish?: string;
+  status: ProjectStatus;
+  missionId?: string;
+  nextObligationId?: string;
+  source: "USER" | "ENGINE" | "SYSTEM";
   seq?: number;
   createdAt: string;
   updatedAt: string;

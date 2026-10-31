@@ -13,7 +13,7 @@ import type {
   StateCheckIn,
   WorkoutSession,
 } from "../domain/common/types";
-import type { Mission, Obligation } from "../domain/intent/types";
+import type { Mission, Obligation, Project } from "../domain/intent/types";
 import type { DecisionJournalEntry } from "../domain/journal/types";
 import type { CustomExercise } from "../domain/workout/customExercise";
 import type { CustomWorkoutTemplate } from "../domain/workout/customTemplate";
@@ -51,6 +51,7 @@ export class BeyondDB extends Dexie {
   progressPhotos!: Table<ProgressPhoto, string>;
   alfredMemories!: Table<AlfredMemory, string>;
   alfredReviews!: Table<AlfredReview, string>;
+  projects!: Table<Project, string>;
 
   constructor() {
     super("beyond");
@@ -352,6 +353,11 @@ export class BeyondDB extends Dexie {
     // ALFRED-006: owner-approved additive table for the weekly reviews Alfred writes. Nothing else changes.
     this.version(17).stores({
       alfredReviews: "id, weekStart",
+    });
+    // PROJECTS-001: owner-approved additive table for finite efforts (2026-10-31). Obligations gain
+    // an optional, unindexed projectId field; no existing row or index changes. Nothing else changes.
+    this.version(18).stores({
+      projects: "id, status, createdAt",
     });
   }
 }

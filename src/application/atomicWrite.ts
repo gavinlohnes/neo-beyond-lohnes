@@ -41,7 +41,7 @@ export const DAY_WRITE_TABLES = [
 ] as const;
 
 /** Missions & Obligations lifecycle, recurring next occurrence, Capture conversion. */
-export const INTENT_WRITE_TABLES = ["missions", "obligations", "captureItems"] as const;
+export const INTENT_WRITE_TABLES = ["missions", "obligations", "captureItems", "projects"] as const;
 
 /** Decision Journal create / modify / review. */
 export const JOURNAL_WRITE_TABLES = ["decisionJournalEntries"] as const;

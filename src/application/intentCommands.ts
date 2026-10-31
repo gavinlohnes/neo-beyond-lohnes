@@ -33,7 +33,7 @@ import {
  * reasoning CaptureItem's own doc comment gives for being day-independent
  * — see domain/common/types.ts's DomainEvent.beyondDayId doc comment).
  */
-async function logIntentEvent(
+export async function logIntentEvent(
   type: DomainEvent["type"],
   payload: unknown,
   source: DomainEvent["source"],
@@ -59,7 +59,7 @@ async function logIntentEvent(
   return event.id;
 }
 
-function notFound(kind: "MISSION" | "OBLIGATION", id: string): Error {
+export function notFound(kind: "MISSION" | "OBLIGATION" | "PROJECT", id: string): Error {
   return new Error(`${kind}_NOT_FOUND: no ${kind.toLowerCase()} with id ${id}`);
 }
 
@@ -72,9 +72,18 @@ function notFound(kind: "MISSION" | "OBLIGATION", id: string): Error {
  * historical links predating this Drop are untouched by this check — it
  * only ever runs when a caller explicitly supplies a new missionId.
  */
-function assertMissionActive(mission: Mission): asserts mission is Mission & { status: "ACTIVE" } {
+export function assertMissionActive(mission: Mission): asserts mission is Mission & { status: "ACTIVE" } {
   if (mission.status === "ARCHIVED") {
     throw new Error(`MISSION_ARCHIVED: cannot link an obligation to archived mission ${mission.id}.`);
+  }
+}
+
+/** PROJECTS-001: new steps may join only an open (ACTIVE or PAUSED) Project. Existing links are never touched. */
+export async function assertProjectOpen(projectId: string): Promise<void> {
+  const project = await db.projects.get(projectId);
+  if (!project) throw notFound("PROJECT", projectId);
+  if (project.status === "COMPLETED" || project.status === "CLOSED") {
+    throw new Error(`PROJECT_FINISHED: this project is ${project.status.toLowerCase()}. Reopen it before adding steps.`);
   }
 }
 
@@ -170,6 +179,7 @@ export async function createObligation(
       if (!mission) throw notFound("MISSION", parsed.missionId);
       assertMissionActive(mission);
     }
+    if (parsed.projectId) await assertProjectOpen(parsed.projectId);
     const now = new Date().toISOString();
     const obligation: Obligation = {
       id: newId(),
@@ -180,6 +190,7 @@ export async function createObligation(
       ...(parsed.dueAt ? { dueAt: parsed.dueAt } : {}),
       ...(parsed.plannedAt ? { plannedAt: parsed.plannedAt } : {}),
       ...(parsed.recurrence ? { recurrence: parsed.recurrence } : {}),
+      ...(parsed.projectId ? { projectId: parsed.projectId } : {}),
       source: "USER",
       seq: await nextSeq(),
       createdAt: now,
@@ -194,6 +205,7 @@ export async function createObligation(
         obligationId: obligation.id,
         title: obligation.title,
         ...(obligation.missionId ? { missionId: obligation.missionId } : {}),
+        ...(obligation.projectId ? { projectId: obligation.projectId } : {}),
         ...(options?.sourceCaptureId ? { sourceCaptureId: options.sourceCaptureId } : {}),
       },
       "USER",
@@ -342,10 +354,15 @@ async function materializeNextOccurrence(existing: Obligation): Promise<void> {
       "RECURRING_MISSION_ARCHIVED: Nothing was saved. This repeats under an archived mission, so its next occurrence can't be created. Release it instead.",
     );
   }
+  // PROJECTS-001: the next occurrence stays in its Project while that Project is open; a
+  // completed or closed Project takes no new steps, so the occurrence stands on its own.
+  const project = existing.projectId ? await db.projects.get(existing.projectId) : undefined;
+  const keepProject = project && (project.status === "ACTIVE" || project.status === "PAUSED");
   await createObligation({
     title: existing.title,
     ...(existing.description ? { description: existing.description } : {}),
     ...(existing.missionId ? { missionId: existing.missionId } : {}),
+    ...(keepProject ? { projectId: project.id } : {}),
     dueAt: nextDueAt,
     recurrence: existing.recurrence,
   });
