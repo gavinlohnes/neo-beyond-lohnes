@@ -35,3 +35,4 @@
 /* ALFRED-004: what Alfred remembers, each with its own Forget. */
 .alfred-memory ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
 .alfred-memory li { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-subtle); overflow-wrap: anywhere; }
+.alfred-cost { margin: 0; }
