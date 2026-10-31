@@ -2,9 +2,9 @@ import { useEffect, useRef, useState, type ReactElement } from "react";
 import { LogSheet } from "./LogSheet";
 import { buildAlfredContext } from "../../application/alfred/alfredContext";
 // The Claude SDK loads only when Alfred is first used, so it stays out of BEYOND's start-up bundle.
-import type { AlfredSession, AlfredTurn } from "../../application/alfred/alfredClient";
+import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/alfred/alfredClient";
 const loadClient = () => import("../../application/alfred/alfredClient");
-import { confirmProposal, describeProposal } from "../../application/alfred/alfredActions";
+import { confirmLabel, confirmProposal, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
 import { captureCommitFeedback } from "../feel/feedback";
 import "./alfred.css";
 
@@ -24,7 +24,7 @@ function speechRecognition(): (new () => Recognition) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-export function AlfredSheet({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: () => void }) {
+export function AlfredSheet({ open, onClose, onSaved, onOpenTrain }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void }) {
   const [key, setKey] = useState<string | null>(() => readAlfredKey());
   const [draftKey, setDraftKey] = useState("");
   const [turns, setTurns] = useState<AlfredTurn[]>([]);
@@ -41,15 +41,15 @@ export function AlfredSheet({ open, onClose, onSaved }: { open: boolean; onClose
   useEffect(() => { if (open) { session.current = null; setTurns([]); setError(null); setSpent(0); } }, [open]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [turns, busy]);
 
-  async function ask(question: string) {
+  async function ask(question: string, depth: AlfredDepth = "everyday") {
     const q = question.trim();
     if (!q || busy || !key) return;
     setBusy(true); setError(null); setText("");
     const decisions = Object.fromEntries(turns.flatMap((t) => t.proposals ?? []).map((p) => [p.id, p.state]));
-    setTurns((all) => [...all, { role: "user", text: q }]);
+    setTurns((all) => [...all, { role: "user", text: q, ...(depth === "deep" ? { deep: true } : {}) }]);
     try {
       if (!session.current) { const { AlfredSession } = await loadClient(); session.current = new AlfredSession(key, await buildAlfredContext()); }
-      const reply = await session.current.send(q, decisions);
+      const reply = await session.current.send(q, decisions, depth);
       setSpent((s) => s + reply.costUsd);
       setTurns((all) => [...all, { role: "alfred", text: reply.text, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
     } catch (e) {
@@ -63,9 +63,11 @@ export function AlfredSheet({ open, onClose, onSaved }: { open: boolean; onClose
     if (!card || card.state !== "pending") return;
     const acknowledge = captureCommitFeedback();
     try {
-      if (save) { await confirmProposal(card.proposal); acknowledge("LIGHT"); onSaved(); }
+      const result = save ? await confirmProposal(card.proposal) : {};
+      if (save) { acknowledge("LIGHT"); onSaved(); }
       setTurns((all) => all.map((t, i) => i !== turnIndex ? t : { ...t, proposals: t.proposals!.map((p) => p.id === id ? { ...p, state: save ? "saved" : "skipped" } : p) }));
-    } catch { setError("That didn't save. Nothing changed. Try again."); }
+      if (result.open === "TRAIN" && onOpenTrain) { onClose(); onOpenTrain(); }
+    } catch (e) { setError(describeConfirmError(e)); }
   }
 
   function talk() {
@@ -91,14 +93,14 @@ export function AlfredSheet({ open, onClose, onSaved }: { open: boolean; onClose
           {STARTERS.map((q) => <button type="button" key={q} className="btn-secondary" disabled={busy} onClick={() => void ask(q)}>{q}</button>)}
         </div>}
         {turns.map((t, i) => <div key={i} className={`alfred-turn alfred-turn--${t.role}`}>
-          <p className="alfred-turn__who">{t.role === "user" ? "YOU" : "ALFRED"}</p>
+          <p className="alfred-turn__who">{t.role === "user" ? (t.deep ? "YOU · THINK HARDER" : "YOU") : "ALFRED"}</p>
           {t.text && <AlfredText text={t.text} />}
           {t.proposals?.map((p) => <div key={p.id} className="alfred-card" role="group" aria-label={describeProposal(p.proposal)}>
             <p>{describeProposal(p.proposal)}</p>
             {p.state === "pending" ? <div className="alfred-card__row">
-              <button type="button" className="btn-primary" onClick={() => void decide(i, p.id, true)}>SAVE</button>
+              <button type="button" className="btn-primary" onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
               <button type="button" className="btn-secondary" onClick={() => void decide(i, p.id, false)}>SKIP</button>
-            </div> : <p className="meta">{p.state === "saved" ? "Saved." : "Skipped."}</p>}
+            </div> : <p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : "Saved.") : "Skipped."}</p>}
           </div>)}
         </div>)}
         {busy && <p className="meta" role="status">Alfred is reading your records…</p>}
@@ -109,10 +111,12 @@ export function AlfredSheet({ open, onClose, onSaved }: { open: boolean; onClose
         <textarea className="input" rows={2} aria-label="Message Alfred" placeholder="Ate a McGriddle, remind me to call CPAP after I wake…" value={text} onChange={(e) => setText(e.target.value)} />
         <div className="alfred-input__row">
           <button type="button" className="btn-secondary" aria-pressed={listening} onClick={talk}>{listening ? "STOP" : "TALK"}</button>
+          {/* ALFRED-003: everyday answers are quick and cheap; this one question goes to the deeper model. */}
+          <button type="button" className="btn-secondary" disabled={busy || !text.trim()} onClick={() => void ask(text, "deep")}>THINK HARDER</button>
           <button type="submit" className="btn-primary" disabled={busy || !text.trim()}>SEND</button>
         </div>
       </form>
-      <p className="meta alfred-foot">This conversation ≈ ${spent.toFixed(2)} · <button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
+      <p className="meta alfred-foot">This conversation ≈ ${spent < 0.01 && spent > 0 ? spent.toFixed(3) : spent.toFixed(2)} · <button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
     </>}
   </LogSheet>;
 }

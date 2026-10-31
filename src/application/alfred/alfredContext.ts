@@ -3,7 +3,7 @@ import { getFoodDiary } from "../foodDiaryQueries";
 import { getSavedMeals } from "../nutritionQueries";
 import { getUnresolvedObligations } from "../intentQueries";
 import { getAllCaptureItems } from "../queries";
-import { getActiveDay, getMostRecentBodyweight, getSchedulePattern } from "../queries";
+import { getActiveDay, getLatestCheckIn, getMostRecentBodyweight, getSchedulePattern, getWorkPeriodEnded, getWorkPeriodStarted } from "../queries";
 import { getWeekAhead } from "../weekAheadQueries";
 import { getMeasuredSnapshot } from "../measuredQueries";
 import { getNutritionTargets } from "../nutritionTargetQueries";
@@ -36,6 +36,8 @@ export async function buildAlfredContext(now = new Date()): Promise<string> {
   if (active) {
     const shift = pattern ? livedDayShiftWindow(new Date(active.startedAt), pattern) : null;
     lines.push(`TODAY (lived day from ${day(active.startedAt)} ${hhmm(new Date(active.startedAt))}): work context ${active.workContext ?? "not set"}${shift ? `; scheduled shift ${day(shift.start.toISOString())} ${hhmm(shift.start)} → ${hhmm(shift.end)}` : "; no shift scheduled"}.`);
+    const [started, ended, checkIn] = await Promise.all([safe(() => getWorkPeriodStarted(active.id)), safe(() => getWorkPeriodEnded(active.id)), safe(() => getLatestCheckIn(active.id))]);
+    lines.push(`WORK TODAY: started ${started ? hhmm(new Date(started.occurredAt)) : "not recorded"}; ended ${ended ? hhmm(new Date(ended.occurredAt)) : "not recorded"}. CHECK-IN TODAY: ${checkIn ? `${hhmm(new Date(checkIn.recordedAt))} energy ${checkIn.energy}, stress ${checkIn.stress}, mood ${checkIn.mood}, soreness ${checkIn.soreness}, alcohol urge ${checkIn.alcoholUrge}` : "none yet"}.`);
     const diary = await safe(() => getFoodDiary(active.id));
     if (diary) {
       lines.push(`FOOD TODAY: ${Math.round(diary.proteinG)} g protein${diary.proteinTargetG ? ` of ${Math.round(diary.proteinTargetG)} g target` : ""}, ${Math.round(diary.calories)} kcal.${diary.entries.length ? " " + diary.entries.map((e) => `${hhmm(new Date(e.at))} ${e.name} (${Math.round(e.proteinG)} g${e.calories !== null ? `, ${Math.round(e.calories)} kcal` : ""})`).join("; ") : " Nothing logged yet."}`);
@@ -62,7 +64,7 @@ export async function buildAlfredContext(now = new Date()): Promise<string> {
     }
   }
 
-  if (tasks) lines.push(`OPEN TASKS/REMINDERS: ${tasks.length ? tasks.map((t) => `"${t.title}"${t.dueAt ? ` due ${t.dueAt}` : ""}${t.recurrence ? ` (repeats ${t.recurrence.rrule})` : ""}`).join("; ") : "none"}.`);
+  if (tasks) lines.push(`OPEN TASKS/REMINDERS ([id] title): ${tasks.length ? tasks.map((t) => `[${t.id}] "${t.title}"${t.dueAt ? ` due ${t.dueAt}` : ""}${t.recurrence ? ` (repeats ${t.recurrence.rrule})` : ""}`).join("; ") : "none"}.`);
   if (notes) {
     const open = notes.filter((n) => n.status === "OPEN").slice(-10);
     lines.push(`OPEN NOTES: ${open.length ? open.map((n) => `"${n.text}" (${day(n.capturedAt)})`).join("; ") : "none"}.`);
