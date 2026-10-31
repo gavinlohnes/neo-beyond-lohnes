@@ -155,6 +155,7 @@ function cost(u: Anthropic.Beta.BetaUsage, depth: AlfredDepth): number {
 
 /** A plain-words reason for a failed call, for the sheet. */
 export function describeAlfredError(e: unknown): string {
+  if (e instanceof Error && e.message === "CONTEXT_UNAVAILABLE") return "Your records could not be read. No message was sent. Try again; your words are kept.";
   if (e instanceof Error && e.message === "CONTEXT_CHANGED") return "Your context changed. Start again with the current records; nothing was saved.";
   if (e instanceof Anthropic.AuthenticationError) return "Your Claude key wasn't accepted. Check it in Alfred settings.";
   if (e instanceof Anthropic.RateLimitError) return "Claude is busy or your spend limit was reached. Try again shortly.";

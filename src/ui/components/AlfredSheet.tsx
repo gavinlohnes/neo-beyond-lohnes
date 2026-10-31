@@ -83,7 +83,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     setTurns((all) => [...all, { role: "user", text: q, ...(depth === "deep" ? { deep: true } : {}) }]);
     let meteredSession: AlfredSession | null = null, usageBefore = 0;
     try {
-      const next = await buildPlanningContext(included);
+      const next = await buildPlanningContext(included).catch(() => { throw new Error("CONTEXT_UNAVAILABLE"); });
       const changed = lastContext.current !== null && lastContext.current.personalVersion !== next.personalVersion;
       const policy = { includePersonal: included, assertFresh: async () => {
         if (await personalContextVersion(included) !== next.personalVersion) throw new Error("CONTEXT_CHANGED");

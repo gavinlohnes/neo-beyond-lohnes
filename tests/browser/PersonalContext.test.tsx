@@ -144,7 +144,7 @@ it("opens the exact original memory from an answer for correction through the ca
   await sheet.getByRole("button", { name: "Source: Keep my first morning quiet." }).click();
   const source = sheet.getByRole("region", { name: "Source record", exact: true });
   await source.getByRole("button", { name: "OPEN ORIGINAL RECORD", exact: true }).click();
-  await expect.element(sheet).not.toBeVisible();
+  await expect.element(sheet).not.toBeInTheDocument();
   const memory = screen.getByRole("region", { name: "What BEYOND should remember", exact: true });
   await expect.element(memory.getByRole("button", { name: "CORRECT MEMORY", exact: true })).toBeVisible();
   expect((document.activeElement as HTMLElement).dataset.memoryId).toBe("quiet");
