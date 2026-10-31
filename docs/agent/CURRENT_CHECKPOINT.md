@@ -1,11 +1,18 @@
-# PROJECTS-001 — help me get this done (built; PR next)
+# PERSONAL-OS campaign — status 2026-10-31 (Builder: Claude Code)
 
-- Authority: Gavin approved PROJECTS-001 incl. additive DB change, 2026-10-31. Builder Claude Code. PROTECTED.
-- Branch `ccr-0be4f40f-16m0ja` from master `9ccd93a` (#353 merged by Gavin). [Brief](PROJECTS-001.md).
-- Built: Dexie v18 `projects`; project commands/queries; Projects section in MISSIONS & OBLIGATIONS;
-  Alfred `project_new` card, project-aware reminders, OPEN PROJECTS in his records.
-- Next: full verify, PR, independent exact-head review, green CI, Gavin merges. Then on-phone use.
-- #353 follow-up: the re-reviewer judged its fix sound locally (24/24); Gavin merged before the formal PASS comment.
+Merged: #353 PERSONAL-CONTEXT-001, #354 PROJECTS-001 (independent PASS).
+In flight, merge in this order:
+1. #356 PROJECTS-001 review follow-up (branch `ccr-0be4f40f-16m0ja`). Routine.
+2. #355 RELATIONSHIPS-001 (branch `ccr-90736806-z9op9b`). Feature; no schema.
+3. ROUTINES-001 (branch `claude/routines-001`). PROTECTED: schema v19 + one TODAY row, both
+   approved by Gavin. PR after its full verify.
+4. HOME-001 (branch `claude/home-001`, stacked on #355). Feature; no schema. PR after #355 merges.
+
+Each PR: full verify, independent reviewer session, green CI, Gavin merges. After each merge, bring
+the remaining branches up to date with merge commits (no force-push).
+Not yet measured: live Alfred quality and phone use for any of these. Next after HOME: Gavin's
+on-shift feedback, then WEEK-PLAN-001 (proposed: place project steps / people dates / home jobs
+onto days via planned-date cards; no schema).
 
 ---
 
