@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getReview, lastFinishedWeek, reviewContext, saveReview, weekLabel } from "../../application/alfred/alfredReview";
-import { addSpend } from "../../application/alfred/alfredSpend";
+import { addSpend, automaticAlfredOn, capReached } from "../../application/alfred/alfredSpend";
 import type { AlfredReview } from "../../domain/alfred/types";
 import { AlfredText, readAlfredKey } from "./AlfredSheet";
 import "./alfred.css";
@@ -28,7 +28,8 @@ export function AlfredWeek({ active }: { active: boolean }) {
     void (async () => {
       try {
         let saved = await getReview(week.start);
-        if (!saved && navigator.onLine !== false) {
+        // ALFRED-COST-001: a saved review still shows; a new one is written only when automatic Alfred is on.
+        if (!saved && navigator.onLine !== false && automaticAlfredOn() && !capReached()) {
           const context = await reviewContext(week);
           if (context) {
             const { writeWeeklyReview } = await import("../../application/alfred/alfredClient");

@@ -6,6 +6,8 @@ import { createProject } from "../projectCommands";
 import { getProject } from "../projectQueries";
 import { logCleanDay, logUrge } from "../quitCommands";
 import { forgetFact, rememberFact } from "./alfredMemory";
+import { addPersonDate, anchorRule, describeMonthDay } from "../peopleCommands";
+import { formatLocalDate } from "../../engine/scheduledContext";
 import { getDays, searchRecords } from "./alfredSearch";
 import { MEMORY_TOPICS, type MemoryTopic } from "../../domain/alfred/types";
 import { URGE_TRIGGERS, type UrgeTrigger } from "../../domain/common/types";
@@ -33,6 +35,8 @@ export type AlfredProposal =
   | { kind: "remember"; text: string; topic: MemoryTopic }
   | { kind: "forget"; memory_id: string; text: string }
   | { kind: "log_urge"; trigger: UrgeTrigger }
+  // RELATIONSHIPS-001: a person's yearly date, kept as a fact plus a yearly reminder in one card.
+  | { kind: "person_date"; person: string; occasion: string; month: number; day: number; note?: string | undefined }
   // PROJECTS-001: a finite effort and its first steps, in one card.
   | { kind: "project_new"; title: string; finish?: string | undefined; steps: { title: string; due_date?: string | undefined }[] };
 type Scale = 1 | 2 | 3 | 4 | 5;
@@ -75,6 +79,11 @@ export const ALFRED_TOOLS: Anthropic.Beta.BetaTool[] = [
     input_schema: { type: "object", additionalProperties: false, required: ["task_id", "title", "due_date"], properties: { task_id: s("id from OPEN TASKS"), title: s("the task's title"), due_date: s("YYYY-MM-DD") } } },
   { name: "clean_day", description: "Propose logging today as a clean day in his QUIT TRACKER, only when he says today was clean.", input_schema: none },
   { name: "open_training", description: "Offer to open TRAIN so he can start or resume today's workout. BEYOND picks the session there.", input_schema: none },
+  { name: "person_date", description: "Propose keeping a person's yearly date (birthday, anniversary) as one card: it saves the fact and a reminder that repeats every year. Use it instead of remember plus add_reminder whenever he gives a person and a month and day. Only dates he stated; never guess a year or a date.",
+    input_schema: { type: "object", additionalProperties: false, required: ["person", "occasion", "month", "day"], properties: {
+      person: s("the person, as he names them"), occasion: s("Birthday, Anniversary, or a short name for the date"),
+      month: { type: "integer", minimum: 1, maximum: 12, description: "month number" }, day: { type: "integer", minimum: 1, maximum: 31, description: "day of the month" },
+      note: s("anything he added about them, e.g. a gift idea") } } },
   { name: "remember", description: "Propose keeping a fact he wants remembered: people (birthdays, sizes, gift ideas), money (a bill's amount and due day), health, home, work. One fact per call, in his words.",
     input_schema: { type: "object", additionalProperties: false, required: ["text", "topic"], properties: { text: s("the fact"), topic: { type: "string", enum: [...MEMORY_TOPICS], description: "what it's about" } } } },
   { name: "forget", description: "Propose forgetting one remembered fact, by its id, when he says it's wrong or no longer true.",
@@ -135,6 +144,12 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
     case "task_new_date": { const id = str(i.task_id), t = str(i.title), due = str(i.due_date); return id && t && due && /^\d{4}-\d{2}-\d{2}$/.test(due) ? { kind: "task_new_date", task_id: id, title: t, due_date: due } : null; }
     case "remember": { const t = str(i.text); const topic = MEMORY_TOPICS.find((m) => m === i.topic) ?? "OTHER"; return t ? { kind: "remember", text: t, topic } : null; }
     case "forget": { const id = str(i.memory_id), t = str(i.text); return id && t ? { kind: "forget", memory_id: id, text: t } : null; }
+    case "person_date": {
+      const person = str(i.person), occasion = str(i.occasion);
+      const month = typeof i.month === "number" && Number.isInteger(i.month) ? i.month : undefined;
+      const day = typeof i.day === "number" && Number.isInteger(i.day) ? i.day : undefined;
+      return person && occasion && month && day && month <= 12 && day <= 31 ? { kind: "person_date", person, occasion, month, day, note: str(i.note) } : null;
+    }
     case "log_urge": { const trigger = URGE_TRIGGERS.find((u) => u === i.trigger); return trigger ? { kind: "log_urge", trigger } : null; }
     default: return null;
   }
@@ -159,6 +174,7 @@ export function describeProposal(p: AlfredProposal): string {
     case "open_training": return "Open TRAIN for today's workout";
     case "remember": return `Remember (${p.topic.toLowerCase()}): ${p.text}`;
     case "forget": return `Forget: ${p.text}`;
+    case "person_date": return `Remember ${p.person}'s ${p.occasion.toLowerCase()} · ${describeMonthDay(p.month, p.day)} · reminder every year${p.note ? ` · ${p.note}` : ""}`;
     case "log_urge": return `Log an urge · ${p.trigger.toLowerCase().replace("_", " ")}`;
   }
 }
@@ -174,10 +190,17 @@ export function describeConfirmError(e: unknown): string {
   if (m.startsWith("OBLIGATION_ALREADY_RESOLVED")) return "That task is already closed. Nothing changed.";
   if (m.startsWith("MEMORY_NOT_FOUND")) return "That fact is already gone. Nothing changed.";
   if (m.startsWith("PROJECT_MISMATCH")) return "That project doesn't match the card. Nothing changed. Ask again.";
+  if (m.startsWith("INVALID_DATE")) return "That date doesn't exist. Nothing changed.";
+  if (m.startsWith("INVALID_REPEAT")) return "BEYOND couldn't read that repeat. Nothing changed. Ask again with the dates.";
   if (m.startsWith("PROJECT_FINISHED")) return "That project is finished. Reopen it first. Nothing changed.";
   if (m.startsWith("PROJECT_NOT_FOUND")) return "BEYOND couldn't find that project. Nothing changed.";
   if (m.includes("NOT_FOUND")) return "BEYOND couldn't find that task. Nothing changed.";
   return "That didn't save. Nothing changed. Try again.";
+}
+
+/** RELATIONSHIPS-001 fix: anchor Alfred's bare RRULE on its due date (or today) so repeats don't drift. */
+function anchoredRepeat(rule: string, due: string | undefined): string {
+  try { return anchorRule(rule, due ?? formatLocalDate(new Date())); } catch { throw new Error("INVALID_REPEAT: rrule could not be read."); }
 }
 
 /** The operator's confirm: runs the matching BEYOND command. */
@@ -188,6 +211,7 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }
   if (p.kind === "remember") { await rememberFact(p.text, p.topic); return {}; }
   if (p.kind === "forget") { await forgetFact(p.memory_id); return {}; }
+  if (p.kind === "person_date") { await addPersonDate({ person: p.person, occasion: p.occasion, month: p.month, day: p.day, note: p.note }); return {}; }
   if (p.kind === "add_reminder") {
     // PROJECTS-001 review: the card names the project; the save checks it's the same one.
     if (p.project_id) {
@@ -198,7 +222,7 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
       title: p.title,
       ...(p.when_note ? { description: p.when_note } : {}),
       ...(p.due_date ? { dueAt: p.due_date } : {}),
-      ...(p.repeat_rrule ? { recurrence: { rrule: p.repeat_rrule } } : {}),
+      ...(p.repeat_rrule ? { recurrence: { rrule: anchoredRepeat(p.repeat_rrule, p.due_date) } } : {}),
       ...(p.project_id ? { projectId: p.project_id } : {}),
     });
     return {};
