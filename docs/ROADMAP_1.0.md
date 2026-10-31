@@ -9,6 +9,22 @@ feature history, and product rulings below are preserved.
 
 ## Active priority
 
+**Completed, 2026-10-31 — Alfred is part of BEYOND (#346–#350).** Owner rulings RULES-2026-10-31
+(online allowed, Alfred core, Anthropic approved, notifications at key moments), then "go cheap + 1
+and 2" and "Make it so" for the fifteen ideas. Shipped:
+- Alfred on Claude, cheap by default with THINK HARDER; his brief leads TODAY; cards for food,
+  water, sleep, weight, reminders, notes, check-in, work start/end, tasks, clean day, urges.
+- Memory with Forget (schema v16); whole-history search and period reads.
+- Speak answers; DEBRIEF MY SHIFT; weekly review, flip plan, meal plan and grocery starters.
+- MONTH in DATA with sleep owed; "Ask Alfred" on a day and on every vital.
+- Health Bridge 0.9.0: notifications at the key moments around each shift and a home-screen widget.
+- The launch brief shows once per lived day.
+
+Briefs: [ALFRED-001](agent/ALFRED-001.md), [ALFRED-003](agent/ALFRED-003.md),
+[ALFRED-004](agent/ALFRED-004.md). Next candidates for Gavin to pick from: Alfred's monthly spend
+shown in the sheet; reminders that fire at a time (through the Bridge); Garmin sync without a tap;
+real-phone tuning of the brief and the moments after a week of use.
+
 **Completed, 2026-10-19 — TONIGHT-001 (#255, #256).** Gavin approved the TONIGHT release from the product
 discovery proposal: no frozen days (PR 1), then the morning call, wake card, quick log, night-closed
 summary, briefing and honest headline on TODAY (PR 2). Builder: Claude Code.
