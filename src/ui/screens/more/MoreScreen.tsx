@@ -11,8 +11,7 @@ import { MirrorView } from "../weekly/MirrorView";
 import { getReportTiming } from "../../../application/reportQueries";
 import { wasSeen, seenKey, markSeen } from "../../components/ReportReadyLine";
 import { DailyControls } from "../today/TodayScreen";
-import { HealthImportScreen } from "../health/HealthImportScreen";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { db } from "../../../persistence/db";
 import { exportBackup, getDaysSinceLastBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
@@ -22,15 +21,11 @@ import { getRecordMismatches, type RecordMismatch } from "../../../application/r
 import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { ENGINE_VERSION } from "../../../engine/evaluate";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../../app/buildInfo";
-import { HistoryScreen } from "../history/HistoryScreen";
 import { ReviewScreen } from "../review/ReviewScreen";
 import { SearchScreen } from "../search/SearchScreen";
 import type { SearchResult } from "../../../application/searchQueries";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
 import { IntentScreen, type IntentFocus } from "./IntentScreen";
-import { JournalScreen } from "./JournalScreen";
-import { ExerciseLibraryScreen } from "./ExerciseLibraryScreen";
-import { CustomTemplateScreen } from "./CustomTemplateScreen";
 import { NutritionTargetsSettings } from "./NutritionTargetsSettings";
 import { AutoBackupSettings } from "./AutoBackupSettings";
 import { TimeCapsuleSettings } from "./TimeCapsuleSettings";
@@ -56,6 +51,18 @@ import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES, type CommandS
 import { PlanTodayScreen } from "./PlanTodayScreen";
 import { SystemsReadout } from "../systems/SystemsReadout";
 import type { InsightMetric } from "../../../application/bodyInsightsQueries";
+
+/**
+ * BUNDLE-001: MORE-only screens load on first open, so the main bundle stays under the offline
+ * precache limit (Workbox skips files over 2 MiB). Split files are still precached: the service
+ * worker caches every built .js, so these open offline too.
+ */
+const HealthImportScreen = lazy(() => import("../health/HealthImportScreen").then((m) => ({ default: m.HealthImportScreen })));
+const JournalScreen = lazy(() => import("./JournalScreen").then((m) => ({ default: m.JournalScreen })));
+const ExerciseLibraryScreen = lazy(() => import("./ExerciseLibraryScreen").then((m) => ({ default: m.ExerciseLibraryScreen })));
+const CustomTemplateScreen = lazy(() => import("./CustomTemplateScreen").then((m) => ({ default: m.CustomTemplateScreen })));
+const HistoryScreen = lazy(() => import("../history/HistoryScreen").then((m) => ({ default: m.HistoryScreen })));
+const Opening = ({ children }: { children: ReactNode }) => <Suspense fallback={<p role="status" className="meta">Opening…</p>}>{children}</Suspense>;
 
 const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 
@@ -491,7 +498,7 @@ export function MoreScreen({
           <div hidden={view !== "DAILY_CONTROLS"}>{visited.has("DAILY_CONTROLS") && <DailyControls onReturnToFullTools={() => setDailyFocus(null)} commandFocus={dailyFocus} banners={dailyFocus === null ? dailyBanners : undefined} shiftHandoffRefreshKey={dailyRefreshKey} onWorkEnded={() => onDailyContextChanged?.()} onWorkContextChanged={() => onDailyContextChanged?.()} captureRequest={captureRequest} active={active && view === "DAILY_CONTROLS"} openToolsOnMount onOpenBody={(focus) => { if (focus) onOpenDestination?.({ kind: "body", focus }); }} onOpenTrain={() => { onOpenDestination?.({ kind: "workout" }); }} onOpenSystems={() => setView("SYSTEMS")} />}</div>
           {view === "SYSTEMS" && <><SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} onOpenCave={onOpenCave} /></>}
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
-          {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>BACK TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>BACK TO DATA</button>}<HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></>}
+          {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>BACK TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>BACK TO DATA</button>}<Opening><HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></Opening></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
           {view === "REPORT" && <><OperatorHeader destination="command">AFTER ACTION REPORT</OperatorHeader><ReportView /></>}
           {view === "MIRROR" && <><OperatorHeader destination="command">MIRROR</OperatorHeader><MirrorView /></>}
@@ -510,10 +517,10 @@ export function MoreScreen({
           <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><MemoryPanel active={active && view === "MEMORY"} focusFactId={memoryFocusId} /><AlfredMemoryList active={active && view === "MEMORY"} /></>}</div>
           {view === "WORK_SCHEDULE" && <><OperatorHeader destination="command">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
           <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="command">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
-          <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">MORE // DECISION JOURNAL</OperatorHeader><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></>}</div>
-          {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="command">MORE // EXERCISE LIBRARY</OperatorHeader><ExerciseLibraryScreen /></>}
-          <div hidden={view !== "HEALTH_IMPORT"}>{visited.has("HEALTH_IMPORT") && <HealthImportScreen active={active && view === "HEALTH_IMPORT"} />}</div>
-          {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="command">MORE // CUSTOM PROGRAMS</OperatorHeader><CustomTemplateScreen /></>}
+          <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">MORE // DECISION JOURNAL</OperatorHeader><Opening><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></Opening></>}</div>
+          {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="command">MORE // EXERCISE LIBRARY</OperatorHeader><Opening><ExerciseLibraryScreen /></Opening></>}
+          <div hidden={view !== "HEALTH_IMPORT"}>{visited.has("HEALTH_IMPORT") && <Opening><HealthImportScreen active={active && view === "HEALTH_IMPORT"} /></Opening>}</div>
+          {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="command">MORE // CUSTOM PROGRAMS</OperatorHeader><Opening><CustomTemplateScreen /></Opening></>}
         </div>
       {/* Keep local settings/disclosures/drafts mounted while inspecting a destination. */}
       <div ref={menuRef} hidden={view !== "MENU"} className="more-control-center">
