@@ -22,8 +22,15 @@ events). ALFRED-004 gave Alfred a separate fact list without joining the two; th
   Work, Other, where a fact can be added directly (no Alfred needed) or forgotten.
 - Alfred's records now include MEMORY-001's active notes ("WHAT WORKS FOR HIM").
 
+## ALFRED-007 — "Ask Alfred" in more places
+
+ASK ALFRED in the Garmin sheets TODAY's numbers open (sleep, steps, resting HR, calories; the sheet
+closes so Alfred's opens) and on TRAIN's workout summary ("I just finished a Push workout: 14 sets,
+8,240 lb volume, 1 new PR. How does it compare…"). TODAY's own layout is unchanged.
+
 ## Tests
 
 `tests/browser/Alfred006.test.tsx`: the week turns at Monday 16:30; one review written, shown, read,
 dismissed (axe) and never asked for twice; MONTH lists it; MORE → MEMORY adds, groups and forgets
-facts (axe) and Alfred reads MEMORY-001's notes. Schema migration tests cover v17.
+facts (axe) and Alfred reads MEMORY-001's notes. `Garmin004.test.tsx`: ASK ALFRED in a Garmin sheet
+opens Alfred with the question. Schema migration tests cover v17.

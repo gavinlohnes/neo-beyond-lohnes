@@ -35,6 +35,7 @@ export function formatMeasured(metric: MeasuredMetric, value: number): string {
   return metric === "steps" ? count(value) : metric === "resting" ? `${value} bpm` : metric === "calories" ? `${count(value)} kcal` : hoursMinutes(value);
 }
 import { markGarminSyncRequested } from "../../healthSyncRequest";
+import { askAlfred } from "../../components/AlfredSheet";
 import { buildBridgePlan, helperSyncUrl } from "../../../application/bridgePlan";
 
 /** SYNC-001: opens BEYOND Health Bridge (beyond-bridge://sync), which reads Health Connect and sends to BEYOND. */
@@ -197,6 +198,8 @@ export function MeasuredSheet({ open, metric, snapshot, onClose, onAllRecords }:
       {usual && <p className="meta measured-usual-line">{metric === "calories" ? describeUsual(metric, usual).replace("Usual:", "Usual burned:") : describeUsual(metric, usual)}</p>}
       {(metric === "calories" ? snapshot.caloriesAsOf : snapshot.garminAsOf) !== null && <p className="meta measured-asof">{describeGarminAsOf((metric === "calories" ? snapshot.caloriesAsOf : snapshot.garminAsOf)!, snapshot.readAt)}</p>}
       <SyncGarminLink />
+      {/* ALFRED-007: ask Alfred about this number; the sheet closes so his opens. */}
+      <button type="button" className="btn-secondary" onClick={() => { onClose(); askAlfred(`About my ${TITLES[metric].toLowerCase()} lately: what's the pattern against my shifts, and what would help?`); }}>ASK ALFRED</button>
       {metric === "calories" && <p className="meta">Burned is Garmin’s estimate, resting plus active; watch estimates can be off by 10–20%. Eaten is what you logged.</p>}
       <p className="meta">Measured by Garmin. A day with no measurement is missing, not zero. Nothing here changes BEYOND’s advice.</p>
       {metric === "sleep" && onAllRecords && <button type="button" className="btn-secondary" onClick={onAllRecords}>ALL SLEEP RECORDS</button>}
