@@ -2628,3 +2628,12 @@ The next step is the operator's own choice; BEYOND never picks one. Progress cou
 ("2 of 4 done"), not a goal percentage, and is not an Engine input. Projects live inside
 MISSIONS & OBLIGATIONS; no new tab or TODAY row. Alfred proposes a project and its steps as one
 card; nothing is saved until SAVE. Goals are deferred. [Brief](agent/PROJECTS-001.md).
+
+
+## 2026-10-31 — RELATIONSHIPS-001: remember the people who matter
+
+Owner: "Go relationships". A person's yearly date is a PERSON fact plus an ordinary yearly
+commitment, saved together on confirm. People in Personal Understanding is a view over those
+records, not a contacts app. No contact cadence, "you haven't called" prompts or scores; dates
+simply show when they come round. Alfred's repeat rules are anchored on their due date.
+[Brief](agent/RELATIONSHIPS-001.md).
