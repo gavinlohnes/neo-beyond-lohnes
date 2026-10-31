@@ -7,7 +7,10 @@
   carries the whole slice. Master `f001049` (#352) already integrated; merged cleanly.
 - Claude's check: read the source diff (context catalog, opt-in sharing, atomic card guards,
   search exclusions); typecheck and focused suites (22 tests) green; full verify run before push.
-- Remaining: independent exact-head review, green CI, Gavin's merge. Live Claude quality, API
+- Review 1 (`3a356a2`): BLOCK, because a confirmed "remember" card reset the conversation. Fixed with tests;
+  low/info findings handled (failed-send notice; no-downgrade note in brief). Re-review requested.
+  Gavin: "If it passes just merge" (merge approval for #353, conditional on review PASS + green CI).
+- Remaining: independent exact-head re-review, green CI, then merge. Live Claude quality, API
   cost and phone behavior unmeasured until he uses it.
 - Next after merge: reset branch onto master; tune from real conversations; then propose the
   first campaign journey (Goals & Projects, design parked on `codex/goals-projects-design`).

@@ -178,3 +178,20 @@ it("keeps an offline planning message without sending or blocking local context 
   await expect.element(screen.getByText("Keep my first morning quiet.", { exact: true })).toBeVisible();
   expect(requests).toHaveLength(0);
 });
+
+it("a saved remember card keeps sibling cards and the conversation going", async () => {
+  await startDay(); const screen = await show();
+  responses.push(() => new Response(JSON.stringify({ id: "msg_two", type: "message", role: "assistant", model: "claude-haiku-5-5",
+    content: [{ type: "text", text: "Two things." }, { type: "tool_use", id: "r1", name: "remember", input: { text: "Invented gift idea", topic: "OTHER" } }, { type: "tool_use", id: "w1", name: "log_water", input: { oz: 12 } }],
+    stop_reason: "tool_use", stop_sequence: null, usage: { input_tokens: 100, output_tokens: 20 } }), { headers: { "content-type": "application/json" } }));
+  await send(screen, "Remember the gift idea and log 12 oz water");
+  await screen.getByRole("group", { name: "Remember (other): Invented gift idea" }).getByRole("button", { name: "SAVE", exact: true }).click();
+  await expect.element(screen.getByText("Saved.", { exact: true })).toBeVisible();
+  await screen.getByRole("group", { name: "Log 12 oz water" }).getByRole("button", { name: "SAVE", exact: true }).click();
+  await expect.poll(() => db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
+  expect(screen.container.querySelector("[role=alert]")).toBeNull();
+  await send(screen, "Thanks");
+  expect(screen.container.textContent).not.toContain("Personal context changed");
+  await expect.element(screen.getByText("Two things.", { exact: true })).toBeVisible();
+  expect((requests.at(-1)!.messages as unknown[]).length).toBeGreaterThan(1);
+});

@@ -71,3 +71,10 @@ This transfer changes no product scope and supplies no merge approval.
 
 Gavin handed the slice to Claude Code on 2026-10-31. Codex's branch was merged unchanged into
 `ccr-0be4f40f-16m0ja`; PR #353 carries it. No scope change; merge remains Gavin's.
+
+Review at `3a356a2` (BLOCK) fixed: confirming Alfred's own "remember"/"forget" card no longer
+refuses the reply's other cards or resets the conversation. The save returns the new context
+version from inside its own transaction; outside changes still fail closed. A failed send now
+says the next message starts fresh. Forward-compatibility note: a backup holding DIRECTION or
+CONSTRAINT facts restored into a build older than this one makes that build's memory unavailable
+(fails closed, nothing lost). Don't restore such a backup into an older build.

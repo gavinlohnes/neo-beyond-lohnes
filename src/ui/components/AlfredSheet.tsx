@@ -101,6 +101,9 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       setTurns((all) => [...all, { role: "alfred", text: reply.text, sources: next.sources, context: { personalVersion: next.personalVersion, actionVersion: next.actionVersion, taskVersions: next.taskVersions }, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
       if (speak && reply.text && typeof speechSynthesis !== "undefined") { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(plain(reply.text))); }
     } catch (e) {
+      // A failed send may leave the model session half-written, so it's dropped. Say so when earlier
+      // turns stay on screen, so they don't read as if Alfred still has them.
+      if (session.current && turns.length > 0) setContextNotice("That request didn't go through. Your next message starts a fresh conversation; Alfred won't see the exchange above.");
       session.current = null;
       setError((await loadClient()).describeAlfredError(e));
       setTurns((all) => all.slice(0, -1)); setText(q);
@@ -118,9 +121,19 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     const acknowledge = captureCommitFeedback();
     try {
       if (save && !turn.context) throw new Error("CONTEXT_CHANGED");
-      const result = save ? await confirmContextProposal(card.proposal, turn.context!, included) : {};
+      const confirmed = save ? await confirmContextProposal(card.proposal, turn.context!, included) : null;
+      const result = confirmed?.result ?? {};
       if (save) { acknowledge("LIGHT"); onSaved(); if (memories) setMemories(await getMemories()); }
-      setTurns((all) => all.map((t, i) => i !== turnIndex ? t : { ...t, proposals: t.proposals!.map((p) => p.id === id ? { ...p, state: save ? "saved" : "skipped" } : p) }));
+      // The operator's own save (a "remember" card) is not an outside change: carry the new version
+      // forward for this conversation's other cards and its next question, nothing else.
+      const before = turn.context!.personalVersion, after = confirmed?.personalVersion;
+      const advance = (c: AlfredTurn["context"]) => (c && after && c.personalVersion === before ? { ...c, personalVersion: after } : c);
+      if (after && lastContext.current?.personalVersion === before) lastContext.current = { ...lastContext.current, personalVersion: after };
+      setTurns((all) => all.map((t, i) => {
+        const context = advance(t.context);
+        const next = context === t.context ? t : { ...t, ...(context ? { context } : {}) };
+        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, state: save ? "saved" : "skipped" } : p) };
+      }));
       if (result.open === "TRAIN" && onOpenTrain) { onClose(); onOpenTrain(); }
     } catch (e) {
       setError(e instanceof Error && e.message === "CONTEXT_CHANGED" ? "Your context changed. Ask again before saving this proposal. Nothing changed." : describeConfirmError(e));
