@@ -320,7 +320,9 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
     setReadState("loading");
     setReadError("");
     try {
-      const [everyMission, nextObligations, everyProject] = await Promise.all([getMissions(), showAllObligations ? getObligations() : getUnresolvedObligations(), getProjects()]);
+      const [everyMission, nextObligations, everyProject] = await Promise.all([getMissions(), showAllObligations ? getObligations() : getUnresolvedObligations(),
+        // PROJECTS-001 review: a projects read failure is shown by ProjectsSection itself, not here.
+        getProjects().catch(() => [])]);
       if (sequence !== readSequence.current) return;
       setProjects(everyProject); setProjectsKey((k) => k + 1);
       setAllMissions(everyMission);

@@ -3,6 +3,7 @@ import { captureItem, ensureActiveDay, logBodyweight, logSleep, logWater, markWo
 import { logManualMeal, logMeal } from "../nutritionCommands";
 import { createObligation, modifyObligation, satisfyObligation } from "../intentCommands";
 import { createProject } from "../projectCommands";
+import { getProject } from "../projectQueries";
 import { createRoutine, getRoutines, matchSteps, modifyRoutine } from "../routineCommands";
 import { ROUTINE_MOMENTS, ROUTINE_MOMENT_LABELS, type RoutineMoment } from "../../domain/routines";
 import { logCleanDay, logUrge } from "../quitCommands";
@@ -23,7 +24,7 @@ export type AlfredProposal =
   | { kind: "log_water"; oz: number }
   | { kind: "log_sleep"; minutes: number; nap?: boolean }
   | { kind: "log_weight"; lbs: number }
-  | { kind: "add_reminder"; title: string; due_date?: string | undefined; repeat_rrule?: string | undefined; when_note?: string | undefined; project_id?: string | undefined }
+  | { kind: "add_reminder"; title: string; due_date?: string | undefined; repeat_rrule?: string | undefined; when_note?: string | undefined; project_id?: string | undefined; project_title?: string | undefined }
   | { kind: "capture_note"; text: string }
   // ALFRED-003 (owner go "go cheap + 1 and 2"): Alfred can do what the buttons do, still one card at a time.
   | { kind: "check_in"; energy: Scale; stress: Scale; mood: Scale; soreness: Zero; alcohol_urge: Zero }
@@ -68,7 +69,7 @@ export const ALFRED_TOOLS: Anthropic.Beta.BetaTool[] = [
   { name: "log_weight", description: "Propose logging a bodyweight he reports, in pounds.",
     input_schema: { type: "object", additionalProperties: false, required: ["lbs"], properties: { lbs: n("pounds") } } },
   { name: "add_reminder", description: "Propose a reminder or task. due_date is the local calendar date it is due (YYYY-MM-DD). For repeats give an iCalendar RRULE (e.g. FREQ=MONTHLY;BYMONTHDAY=15). Put the time or moment he named (\"after I wake\", \"9:30\") in when_note.",
-    input_schema: { type: "object", additionalProperties: false, required: ["title"], properties: { title: s("short reminder text in his words"), due_date: s("YYYY-MM-DD"), repeat_rrule: s("RRULE, only if it repeats"), when_note: s("time or moment of day he named"), project_id: s("id from OPEN PROJECTS, only when this is a step of that project") } } },
+    input_schema: { type: "object", additionalProperties: false, required: ["title"], properties: { title: s("short reminder text in his words"), due_date: s("YYYY-MM-DD"), repeat_rrule: s("RRULE, only if it repeats"), when_note: s("time or moment of day he named"), project_id: s("id from OPEN PROJECTS, only when this is a step of that project"), project_title: s("that project's exact title, required with project_id") } } },
   { name: "routine_new", description: "Propose a ROUTINE he describes for one moment of his rotation: BEFORE_SHIFT, ON_SHIFT, AFTER_SHIFT or DAY_OFF. Steps are his own, short, in order (1 to 15). Use what he says he does; don't add steps he didn't mention without asking.",
     input_schema: { type: "object", additionalProperties: false, required: ["title", "moment", "steps"], properties: {
       title: s("short name, e.g. Pre-shift"), moment: { type: "string", enum: [...ROUTINE_MOMENTS], description: "when it applies" },
@@ -143,7 +144,7 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
     case "log_water": { const oz = num(i.oz); return oz ? { kind: "log_water", oz } : null; }
     case "log_sleep": { const m = num(i.minutes); return m ? { kind: "log_sleep", minutes: Math.round(m), nap: i.nap === true } : null; }
     case "log_weight": { const lbs = num(i.lbs); return lbs ? { kind: "log_weight", lbs } : null; }
-    case "add_reminder": { const t = str(i.title); const due = str(i.due_date); return t ? { kind: "add_reminder", title: t, due_date: due && isRealDate(due) ? due : undefined, repeat_rrule: str(i.repeat_rrule), when_note: str(i.when_note), project_id: str(i.project_id) } : null; }
+    case "add_reminder": { const t = str(i.title); const due = str(i.due_date); return t ? { kind: "add_reminder", title: t, due_date: due && isRealDate(due) ? due : undefined, repeat_rrule: str(i.repeat_rrule), when_note: str(i.when_note), project_id: str(i.project_id), project_title: str(i.project_title) } : null; }
     case "routine_new": case "routine_edit": {
       const t = str(i.title), moment = ROUTINE_MOMENTS.find((m) => m === i.moment);
       const steps = Array.isArray(i.steps) ? i.steps.flatMap((x) => (str(x) ? [str(x)!] : [])).slice(0, 15) : undefined;
@@ -200,7 +201,7 @@ export function describeProposal(p: AlfredProposal): string {
     case "log_water": return `Log ${Math.round(p.oz)} oz water`;
     case "log_sleep": return `Log ${p.nap ? "nap" : "main sleep"} ${Math.floor(p.minutes / 60)}h ${String(p.minutes % 60).padStart(2, "0")}m`;
     case "log_weight": return `Log weight ${p.lbs} lb`;
-    case "add_reminder": return `${p.project_id ? "Add step" : "Remind"}: ${p.title}${p.due_date ? ` · ${p.due_date}` : ""}${p.when_note ? ` · ${p.when_note}` : ""}${p.repeat_rrule ? " · repeats" : ""}`;
+    case "add_reminder": return `${p.project_id ? `Add step to ${p.project_title ?? "a project"}` : "Remind"}: ${p.title}${p.due_date ? ` · ${p.due_date}` : ""}${p.when_note ? ` · ${p.when_note}` : ""}${p.repeat_rrule ? " · repeats" : ""}`;
     case "routine_new": return `New routine · ${ROUTINE_MOMENT_LABELS[p.moment]}: ${p.title} · ${p.steps.map((st, n) => `${n + 1}. ${st}`).join("; ")}`;
     case "routine_edit": return `Change routine ${p.title}${p.moment ? ` · now ${ROUTINE_MOMENT_LABELS[p.moment].toLowerCase()}` : ""}${p.steps ? ` · steps: ${p.steps.map((st, n) => `${n + 1}. ${st}`).join("; ")}` : ""}`;
     case "project_new": return `New project: ${p.title}${p.finish ? ` (finished when ${p.finish})` : ""} · ${p.steps.length} ${p.steps.length === 1 ? "step" : "steps"}: ${p.steps.map((st, n) => `${n + 1}. ${st.title}${st.due_date ? ` (${st.due_date})` : ""}`).join("; ")}`;
@@ -230,6 +231,7 @@ export function describeConfirmError(e: unknown): string {
   if (m.startsWith("QUIT_HABIT_NOT_SET")) return "Set up the quit tracker first (MORE → Settings). Nothing changed.";
   if (m.startsWith("OBLIGATION_ALREADY_RESOLVED")) return "That task is already closed. Nothing changed.";
   if (m.startsWith("MEMORY_NOT_FOUND")) return "That fact is already gone. Nothing changed.";
+  if (m.startsWith("PROJECT_MISMATCH")) return "That project doesn't match the card. Nothing changed. Ask again.";
   if (m.startsWith("ROUTINE_NOT_FOUND")) return "BEYOND couldn't find that routine. Nothing changed.";
   if (m.startsWith("INVALID_DATE")) return "That date doesn't exist. Nothing changed.";
   if (m.startsWith("INVALID_REPEAT")) return "BEYOND couldn't read that repeat. Nothing changed. Ask again with the dates.";
@@ -258,6 +260,11 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   }
   if (p.kind === "person_date") { await addPersonDate({ person: p.person, occasion: p.occasion, month: p.month, day: p.day, note: p.note }); return {}; }
   if (p.kind === "add_reminder") {
+    // PROJECTS-001 review: the card names the project; the save checks it's the same one.
+    if (p.project_id) {
+      const project = await getProject(p.project_id);
+      if (!project || project.title !== p.project_title) throw new Error("PROJECT_MISMATCH: the card's project doesn't match BEYOND's.");
+    }
     await createObligation({
       title: p.title,
       ...(p.when_note ? { description: p.when_note } : {}),

@@ -1,15 +1,27 @@
-# PROJECTS-001 — help me get this done (built; PR next)
+# PERSONAL-OS campaign — end of 2026-10-31 (Builder: Claude Code)
 
-- Authority: Gavin approved PROJECTS-001 incl. additive DB change, 2026-10-31. Builder Claude Code. PROTECTED.
-- Branch `ccr-0be4f40f-16m0ja` from master `9ccd93a` (#353 merged by Gavin). [Brief](PROJECTS-001.md).
-- Built: Dexie v18 `projects`; project commands/queries; Projects section in MISSIONS & OBLIGATIONS;
-  Alfred `project_new` card, project-aware reminders, OPEN PROJECTS in his records.
-- Next: full verify, PR, independent exact-head review, green CI, Gavin merges. Then on-phone use.
-- #353 follow-up: the re-reviewer judged its fix sound locally (24/24); Gavin merged before the formal PASS comment.
+Merged today (each with an independent reviewer session, green CI, Gavin's merge or his "merge for me"):
+#353 PERSONAL-CONTEXT-001 · #354 PROJECTS-001 · #355 RELATIONSHIPS-001 · #359 BUNDLE-001 ·
+#358 ALFRED-COST-001 · #357 ROUTINES-001 (schema v19, one TODAY row) · #360 HOME-001.
+
+Open: #356 PROJECTS-001 review follow-up (branch `ccr-0be4f40f-16m0ja`, this checkpoint rides on it).
+Its reviewer found no problems but posts only on Gavin's own word: he types "post it" in the reviewer
+chat "Review PR #354 — PROJECTS-001". Then green CI, then Gavin merges.
+
+State to know:
+- Main bundle about 1.86 MB of the 2 MiB offline precache limit; split more MORE screens before it's tight.
+- Every Alfred-proposed date must be a real calendar date (`isRealDate`); Alfred's repeat rules are anchored.
+- Known limit: monthly jobs on the 29th–31st skip short months (RFC 5545).
+- GitHub reports 7 dependency advisories (1 high) on master; untouched; a dependency change needs Gavin's OK.
+- Live Alfred quality, real API cost and on-phone use of today's features are unmeasured.
+
+Next: Gavin uses it on shift (limit, pre-shift routine, one birthday, one project, one home job) and
+reports friction. Then one of: WEEK-PLAN-001 (place project steps, people dates and home jobs on days
+via planned-date cards; no schema), or a dependency audit for the 7 advisories.
 
 ---
 
-# PERSONAL-CONTEXT-001 — Claude Code is Builder; PR #353 awaiting review and merge decision
+# PERSONAL-CONTEXT-001 — merged as #353 (2026-10-31)
 
 - Authority: Gavin, 2026-10-31: handed PERSONAL-CONTEXT-001 and the PERSONAL-OS campaign to
   Claude Code ("finish it rather than starting over"). Brief approval ("Let's get after it") stands.

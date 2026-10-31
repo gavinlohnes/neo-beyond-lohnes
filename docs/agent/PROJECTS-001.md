@@ -52,3 +52,10 @@ on SAVE. Full verify, independent exact-head review, green CI; Gavin merges.
 
 Note: an older build refuses a backup taken on this one (newer database version) and changes nothing.
 Older backups restore here as before, with no projects.
+
+## Review follow-up (after #354 merged with independent PASS)
+
+Fixed: Alfred's add-step card names the project and the save checks the name matches (medium).
+A projects read failure no longer blanks Missions & Obligations; search skips invalid project rows;
+history shows "Reading history…" while it loads. Not yet built: renaming a project or changing
+"finished when" (the command exists; no screen uses it yet).
