@@ -149,7 +149,7 @@ it("opens the exact original memory from an answer for correction through the ca
   await expect.element(sheet).not.toBeInTheDocument();
   const memory = screen.getByRole("region", { name: "What BEYOND should remember", exact: true });
   await expect.element(memory.getByRole("button", { name: "CORRECT MEMORY", exact: true })).toBeVisible();
-  expect((document.activeElement as HTMLElement).dataset.memoryId).toBe("quiet");
+  await expect.poll(() => (document.activeElement as HTMLElement).dataset.memoryId).toBe("quiet");
 });
 
 it("retains a context draft across collapse and inactive/active Review refreshes", async () => {
