@@ -12,6 +12,16 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## ALFRED-003 — everyday Alfred is cheap; his brief leads TODAY; he can do it (owner go 2026-10-31)
+
+Gavin, 2026-10-31: "go cheap + 1 and 2". Everyday Alfred runs on Claude Haiku 5.5; THINK HARDER sends
+one question to Claude Opus 5.5. TODAY's first panel under the hero is Alfred's brief: a few sentences
+from the records, rewritten when they change (at most every 10 minutes) or after 3 hours, and shown
+only with a key. Tap it to talk. It sits above the Engine's recommendation and never replaces it. Alfred's
+cards now also cover check-in, started work, work ended, task done, task to a new date, clean day, and
+opening TRAIN. Every one is still confirmed by the owner and runs BEYOND's own command. Brief:
+`docs/agent/ALFRED-003.md`.
+
 ## KEYBOARD-001 — bottom sheets rise above the keyboard (owner report 2026-10-31)
 
 Gavin, on Alfred's first open: "Looks bad. I can't even see it to type." Chrome on Android keeps the

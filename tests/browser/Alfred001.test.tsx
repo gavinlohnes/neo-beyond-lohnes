@@ -10,6 +10,9 @@ import { db } from "../../src/persistence/db";
 
 /** ALFRED-001: the man in the chair — records in, cards out, nothing saved until the operator says so. */
 let requests: { url: string; body: Record<string, unknown> }[] = [];
+/** The conversation's requests (they carry tools); TODAY's brief asks without tools. */
+const chats = () => requests.filter((r) => r.body.tools);
+let briefText = "Sleep first: 4h12 so far and the shift starts 18:00.";
 function reply(content: unknown[], stop = "tool_use") {
   return new Response(JSON.stringify({ id: "msg_1", type: "message", role: "assistant", model: "claude-opus-5-5", content, stop_reason: stop, stop_sequence: null,
     usage: { input_tokens: 2000, output_tokens: 120, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } }), { headers: { "content-type": "application/json" } });
@@ -18,12 +21,14 @@ let next: () => Response;
 beforeEach(async () => {
   await page.viewport(412, 915);
   requests = [];
+  briefText = "Sleep first: 4h12 so far and the shift starts 18:00.";
   try { localStorage.clear(); } catch { /* ignore */ }
   vi.spyOn(window, "fetch").mockImplementation(async (input, init) => {
     const url = String(input instanceof Request ? input.url : input);
     if (!url.startsWith("https://api.anthropic.com/")) throw new Error(`unexpected fetch ${url}`);
-    requests.push({ url, body: JSON.parse(String(init?.body ?? "{}")) });
-    return next();
+    const body = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+    requests.push({ url, body });
+    return body.tools ? next() : reply([{ type: "text", text: briefText }], "end_turn");
   });
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
@@ -64,20 +69,22 @@ describe("ALFRED-001", () => {
     await sheet.getByRole("group", { name: /^Remind: Call CPAP place/ }).getByRole("button", { name: "SKIP" }).click();
     expect(await db.obligations.count()).toBe(0);
 
-    // The request: Opus 5.5 with the owner's key from the browser, BEYOND's records in a cached system block.
-    const body = requests[0]!.body;
-    expect(body.model).toBe("claude-opus-5-5");
+    // The request: the everyday model (ALFRED-003) with the owner's key, BEYOND's records in a cached system block.
+    const body = chats()[0]!.body;
+    expect(body.model).toBe("claude-haiku-5-5");
+    expect(body.fallbacks).toBeUndefined();
     const system = body.system as { text: string; cache_control?: unknown }[];
     expect(system[1]!.text).toMatch(/^BEYOND RECORDS/);
     expect(system[1]!.cache_control).toEqual({ type: "ephemeral" });
-    expect((body.tools as { name: string }[]).map((t) => t.name)).toEqual(["log_meal", "log_water", "log_sleep", "log_weight", "add_reminder", "capture_note"]);
+    expect((body.tools as { name: string }[]).map((t) => t.name)).toEqual(["log_meal", "log_water", "log_sleep", "log_weight", "add_reminder", "capture_note",
+      "check_in", "work_started", "work_ended", "task_done", "task_new_date", "clean_day", "open_training"]);
 
     // The next turn tells Alfred what happened to each card.
     next = () => reply([{ type: "text", text: "Noted." }], "end_turn");
     await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("thanks");
     await sheet.getByRole("button", { name: "SEND", exact: true }).click();
     await expect.element(sheet.getByText("Noted.")).toBeVisible();
-    const last = (requests[1]!.body.messages as { role: string; content: unknown }[]).at(-1)!;
+    const last = (chats()[1]!.body.messages as { role: string; content: unknown }[]).at(-1)!;
     expect(JSON.stringify(last.content)).toContain("confirmed it; it is saved");
     expect(JSON.stringify(last.content)).toContain("skipped it; nothing was saved");
   });

@@ -20,6 +20,7 @@ import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { CcIcon } from "../ui/cc/ccIcons";
 import { HeaderSearchContext, HeaderAlfredContext, EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
 import { AlfredSheet } from "../ui/components/AlfredSheet";
+import { AlfredBrief } from "../ui/components/AlfredBrief";
 import { StealthOverlay } from "../ui/components/StealthOverlay";
 import { getStealth, setStealth } from "../application/stealthQueries";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
@@ -690,6 +691,7 @@ function AppWorkspaces() {
               onOpenSystems={() => { openMore("SYSTEMS"); }}
               onOpenCave={(tab) => { openCave(tab); }}
               toolsRequest={toolsRequest}
+              brief={<AlfredBrief active={tab === "TODAY" && !alfredOpen} refreshKey={`${todayRefreshKey}|${workEndedKey}`} onOpen={() => setAlfredOpen(true)} />}
               banners={garminSync ? <GarminSyncLine state={garminSync} onDismiss={() => setGarminSync(null)} />
                 : syncShortcut ? <div className="backup-due" role="status"><div className="backup-due__row" style={{ justifyContent: "space-between" }}><p className="tool-label" style={{ margin: 0 }}>If the Bridge didn't open, tap</p><SyncGarminLink /></div></div> : undefined}
             />
@@ -777,7 +779,7 @@ function AppWorkspaces() {
     </div>
     {stealthOn && <StealthOverlay onExit={() => changeStealth(false)} onLogged={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((n) => n + 1); }} />}
     </StealthToggleContext.Provider>
-    <AlfredSheet open={alfredOpen} onClose={() => setAlfredOpen(false)} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); }} />
+    <AlfredSheet open={alfredOpen} onClose={() => setAlfredOpen(false)} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); setWorkEndedKey((key) => key + 1); }} onOpenTrain={() => { openTrain("WORKOUT"); }} />
     </HeaderAlfredContext.Provider>
     </HeaderSearchContext.Provider>
     </EmblemContext.Provider>
