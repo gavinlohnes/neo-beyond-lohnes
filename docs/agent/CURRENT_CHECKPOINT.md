@@ -1,3 +1,22 @@
+# PERSONAL-OS-001 — connected personal understanding (design only)
+
+- Authority: Gavin clarified MiLyfe/LifeOS/personal-OS references, approved research/design,
+  then “Begin”, 2026-10-31. Codex; no production implementation or merge authorized.
+- Baseline: fresh master `20743ae`; branch `codex/personal-os-design`.
+- [Research/design proposal](PERSONAL-OS-001.md): pinned source inspections, license
+  dispositions, current BEYOND gap map and proposed PERSONAL-CONTEXT-001 first journey.
+- Earlier Goals & Projects design remains preserved on `codex/goals-projects-design`
+  (`2e6c502`), parked after owner clarified broader connected personal-OS intent.
+- Findings: TELOS pattern fits; no wholesale harness import. Alfred initial context omits
+  Missions/MEMORY-001 and stays fixed within a session; use existing source records/commands.
+- Evidence: four external repository snapshots inspected; no donor code copied or executed;
+  documentation-only checks. No production tests or live external-app validation claimed.
+- Open work/CI: GitHub API access denied; active implementation ownership not assumed absent.
+- Next: Gavin reviews bounded personal-context-to-planning design. Implementation and any
+  new event/store/Alfred contract changes need approval, overlap check and independent review.
+
+---
+
 # GARMIN-AUTO-001 — Garmin checks itself every 3 hours
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 ("Yes, auto sync every few hours"). Claude Code;
