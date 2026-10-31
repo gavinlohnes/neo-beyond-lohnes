@@ -2655,3 +2655,11 @@ on shift, after shift, or a day off. TODAY shows only the current moment's routi
 next to prep; nothing when none fits. Ticks are today's only: no streaks, no "missed", no
 counts or percentages, no reminders. Alfred drafts and edits routines only as confirmed cards
 and never sees tick history. [Brief](agent/ROUTINES-001.md).
+
+
+## 2026-10-31 — HOME-001: keep the house running
+
+Owner: "Go home?" on the HOME-001 proposal. A home item is a HOME fact plus, if it recurs, an
+ordinary repeating commitment titled "Home: …", saved together on confirm. Home in Personal
+Understanding is a view over those records: what's coming round and what BEYOND knows about the
+house. No scores, overdue alarms or new notifications. [Brief](agent/HOME-001.md).

@@ -49,7 +49,9 @@ export function anchorRule(raw: string, anchor: string): string {
   const body = raw.trim().replace(/^RRULE:/i, "");
   if (/DTSTART/i.test(body)) { RRule.fromString(body); return body; }
   const anchored = `DTSTART:${anchor.replace(/-/g, "")}T000000Z\nRRULE:${body}`;
-  RRule.fromString(anchored);
+  // Review of #355: syntax alone isn't enough ("INTERVAL=abc" parses); it must produce a real date.
+  const rule = RRule.fromString(anchored);
+  if (!(Number.isInteger(rule.options.interval) && rule.options.interval > 0) || !rule.after(new Date(`${anchor}T00:00:00Z`), true)) throw new Error("INVALID_REPEAT");
   return anchored;
 }
 
@@ -85,7 +87,8 @@ export interface PeopleView {
   facts: AlfredMemory[];
 }
 
-const isYearly = (o: Obligation) => /FREQ=YEARLY/i.test(o.recurrence?.rrule ?? "");
+// HOME-001 (review of #355): yearly "Home: " jobs belong to Home, not People.
+const isYearly = (o: Obligation) => /FREQ=YEARLY/i.test(o.recurrence?.rrule ?? "") && !o.title.startsWith("Home: ");
 
 export async function getPeopleView(now = new Date()): Promise<PeopleView> {
   const today = formatLocalDate(now);
