@@ -322,3 +322,26 @@ fresh general review.
   token overrides; `application/caveLog.ts` rebuilds what the cave said from records. Reuse both.
 - CAVE-DATA D1: the cave lives in DATA (`BodyScreen` overview → `Cave` with a `lead` view). Open it with
   App's `openCave(view, vital?)`; never mount a second cave.
+
+
+## Connected personal OS — design research, 2026-10-31
+
+[PERSONAL-OS-001](PERSONAL-OS-001.md) pins inspected external revisions and license evidence.
+LifeOS TELOS/current-vs-desired and source-aware context are candidate patterns, not an installed
+harness. MiLyfe public civic repositories do not establish the owner's exact recalled reference;
+AGPL source is not cleared for copying. amanaiproduct/personal-os is CC BY-NC-SA, not permissive
+software. LifeOsApp is MIT, but its storage/shell do not fit BEYOND's history/atomic commands.
+No donor source copied, dependency added or implementation approved. Reuse existing personal
+understanding, memory, Intent and Alfred before a new store or dashboard. Goals/Projects design
+is parked; connected context/planning design awaits owner scope approval.
+
+
+### PERSONAL-CONTEXT-001 — implementation branch, not yet merged
+
+`application/alfred/personalContext.ts` composes typed source references from existing records;
+new personal sources are conversation-opt-in. `contextActions.ts` guards each proposal's own
+source/day/task snapshot atomically with existing canonical commands. MEMORY-001 supports
+DIRECTION/CONSTRAINT without a new table; PREP/recovery filters stay bounded. Personal
+Understanding has the local editor/planning entry; Alfred sources navigate original records.
+See [brief](PERSONAL-CONTEXT-001.md) and active checkpoint for verification/review/merge status.
+No new library, model, notifications or Engine rules. Reuse these paths before a new profile store.

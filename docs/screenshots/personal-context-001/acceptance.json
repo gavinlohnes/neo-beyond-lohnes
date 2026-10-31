@@ -1,0 +1,54 @@
+{
+  "sourceCommit": "579ae55b21977240ad8d90eacf3ca32b5fd17cd4",
+  "syntheticOnly": true,
+  "results": [
+    {
+      "width": 360,
+      "height": 800,
+      "offlineReload": true,
+      "localCapture": true,
+      "sourceInspection": true,
+      "mockedPlanning": true,
+      "reducedMotion": false,
+      "liveModelTested": false,
+      "overflow": false,
+      "pageErrors": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "offlineReload": true,
+      "localCapture": true,
+      "sourceInspection": true,
+      "mockedPlanning": true,
+      "reducedMotion": true,
+      "liveModelTested": false,
+      "overflow": false,
+      "pageErrors": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "offlineReload": true,
+      "localCapture": true,
+      "sourceInspection": true,
+      "mockedPlanning": true,
+      "reducedMotion": false,
+      "liveModelTested": false,
+      "overflow": false,
+      "pageErrors": []
+    },
+    {
+      "width": 1280,
+      "height": 900,
+      "offlineReload": true,
+      "localCapture": true,
+      "sourceInspection": true,
+      "mockedPlanning": true,
+      "reducedMotion": false,
+      "liveModelTested": false,
+      "overflow": false,
+      "pageErrors": []
+    }
+  ]
+}

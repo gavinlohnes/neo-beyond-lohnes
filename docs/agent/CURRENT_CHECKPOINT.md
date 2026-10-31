@@ -1,3 +1,55 @@
+# PERSONAL-CONTEXT-001 — handoff to Claude Code, built and verified
+
+- Authority: Gavin's “Let's get after it” approves the bounded connected-context slice;
+  guilt-free Delta-inspired voice. PROTECTED. Gavin explicitly transferred ownership to Claude Code:
+  “Wrap up. We are handing it over to Claude Code.” Codex stops implementation. No merge authorized.
+- Branch `codex/personal-context-001`; baseline `20743ae`, integrated master #352 `f001049`.
+  [Brief](PERSONAL-CONTEXT-001.md) · [Claude handoff](PERSONAL-CONTEXT-001-HANDOFF.md). PR pending: GitHub GraphQL/REST return Forbidden; git works.
+- Built: local direction/constraint revisions in Personal Understanding → My context; existing
+  Mission/memory source catalog, explicit per-conversation sharing, current-record inspection
+  and canonical editor navigation. Fresh sensitive context resets model history. Confirmed
+  existing commands guard each card's own day/task/source snapshot atomically.
+- Verification at source `579ae55`: full `npm run verify` PASS, architecture374 files,
+  362 test files passed / one skipped; 3,226 tests passed / two existing skipped; TypeScript,
+  production build and PWA pass. Full suite 613.82s. Existing bundle-size warning remains.
+- Independent exact-source review PASS; [review record](reviews/PERSONAL-CONTEXT-001.md).
+  Reviewer independent node8/8 PASS. Exact3ed0b02 PASS is on GitHub as
+  `refs/notes/personal-context-001-review`. This subsequent handoff is docs-only and needs
+  exact-head confirmation before integration; verified source/tests remain identical579ae55.
+- [Built PWA proof](../screenshots/personal-context-001/README.md): four sizes, offline reload,
+  local capture/source inspection, reduced motion at390; synthetic records/mocked replies.
+  Live Claude response quality, real API cost and physical-phone behavior are unmeasured.
+- Master #352 weekly review/shared memory preserved. Its automatic prep/recovery context stays;
+  new Mission/direction/constraint sources remain outside automatic briefs/reviews. No own
+  Engine, schema, dependency, workflow or protected-fixture change relative to fresh master.
+- Next (Claude): fetch/check overlap, renew docs-only exact-head review, use Claude’s GitHub
+  access to open the existing branch PR, require green CI, then Gavin decides merge.
+  No CI/deployment/merge claim. No source rebuild or new objective required.
+
+---
+
+# PERSONAL-OS-001 — connected personal understanding (design only)
+
+- Authority: Gavin clarified MiLyfe/LifeOS/personal-OS references, approved research/design,
+  then “Begin”, 2026-10-31. Codex; no production implementation or merge authorized.
+- Baseline: fresh master `20743ae`; branch `codex/personal-os-design`.
+- [Research/design proposal](PERSONAL-OS-001.md): pinned source inspections, license
+  dispositions, current BEYOND gap map and proposed PERSONAL-CONTEXT-001 first journey.
+- Communication: [Delta-inspired, guilt-free design](ALFRED-COMMUNICATION-DESIGN.md).
+  Owner explicitly rejects guilt; detailed voice remains proposed. Fresh literature access
+  blocked (403); references and evidence limits recorded, no production prompt change.
+- Earlier Goals & Projects design remains preserved on `codex/goals-projects-design`
+  (`2e6c502`), parked after owner clarified broader connected personal-OS intent.
+- Findings: TELOS pattern fits; no wholesale harness import. Alfred initial context omits
+  Missions/MEMORY-001 and stays fixed within a session; use existing source records/commands.
+- Evidence: four external repository snapshots inspected; no donor code copied or executed;
+  documentation-only checks. No production tests or live external-app validation claimed.
+- Open work/CI: GitHub API access denied; active implementation ownership not assumed absent.
+- Next: Gavin reviews bounded personal-context-to-planning design. Implementation and any
+  new event/store/Alfred contract changes need approval, overlap check and independent review.
+
+---
+
 # ALFRED-006/007 — weekly review writes itself; memory joined; Ask Alfred in more places
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 ("What do we do now?… we have until 0800").

@@ -2600,3 +2600,20 @@ bat asset is removed. The doctrine is amended in place (`OPERATOR_INTERFACE_DOCT
   cut, 0.156). It replaces the Drop's 60/512 placeholder.
 - **Install:** new `beyond-v3-*` icons; theme and background colors HUD black; service-worker cache
   `beyond-mark-v3`.
+
+
+## 2026-10-31 — PERSONAL-CONTEXT-001 / Alfred communication
+
+Owner direction: “Guilt is a no go”, Delta (Red vs Blue) as a style reference, then
+“That's what I want” and “Let's get after it” for the bounded connected-context slice.
+Alfred's original voice is calm, precise, observant and direct with practical warmth.
+No shame, disappointment, moral food judgments or repeated pressure after refusal.
+A missing log is not proof of a missed action. User choices and source uncertainty remain explicit.
+This authorizes no new proactivity, reminder cadence or recommendation authority.
+
+Bounded implementation: DIRECTION/CONSTRAINT extend confirmed-memory history; existing
+Missions retain their semantics. Newly connected personal sources require explicit inclusion
+per conversation and are not added to TODAY's automatic brief. Inspection/correction stays
+local and uses canonical sources. Sensitive-context changes reset the model conversation;
+earlier external requests cannot be recalled. Engine, priority and TODAY composition unchanged.
+[Implementation brief](agent/PERSONAL-CONTEXT-001.md); merge remains Gavin's.
