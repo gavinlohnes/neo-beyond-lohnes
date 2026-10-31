@@ -1,3 +1,18 @@
+# GOALS-PROJECTS-001 — design only, awaiting scope approval
+
+- Authority: Gavin approved expansion design and reuse assessment, 2026-10-31. Codex.
+- Baseline: fresh master `20743ae`; branch `codex/goals-projects-design`.
+- Proposal: [GOALS-PROJECTS-001.md](GOALS-PROJECTS-001.md). Preserve Mission/Obligation
+  semantics; proposed Goal/Project lifecycle and explicit existing-task links; no TODAY additions.
+- Reuse: existing Intent atomic commands/history, management and backup patterns; external
+  Super Productivity README/MIT license inspected, no donor code selected or copied.
+- Verification: documentation-only diff/whitespace checks; no runtime changes or tests needed.
+- Access: open PR/CI discovery blocked by GitHub API Forbidden; no overlapping implementation
+  claimed absent. PR pending. No implementation, doctrine amendment or merge authorized.
+- Next: Gavin reviews proposed model/manual scope; verify open work before implementation.
+
+---
+
 # GARMIN-AUTO-001 — Garmin checks itself every 3 hours
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 ("Yes, auto sync every few hours"). Claude Code;
