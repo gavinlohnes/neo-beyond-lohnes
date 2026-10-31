@@ -12,6 +12,15 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## ALFRED-006 — the weekly review writes itself (owner go 2026-10-31)
+
+Alfred writes each Monday–Sunday week's review once that week's last lived day ends (Monday 16:30),
+from that week and the one before. TODAY shows it under the brief until GOT IT, and every review is
+kept (new additive table, schema v17, in backups) and listed in DATA → MONTH. MORE → MEMORY gains
+ALFRED REMEMBERS (People, Money and bills, Health, Home, Work, Other; add or forget directly), and
+Alfred reads MEMORY-001's own prep and recovery notes. Brief:
+`docs/agent/ALFRED-006.md`.
+
 ## GARMIN-AUTO-001 — Garmin checks itself every 3 hours (owner go 2026-10-31)
 
 Gavin: "Yes, auto sync every few hours", then "Do whatever you think is best". Health Bridge 0.10.0

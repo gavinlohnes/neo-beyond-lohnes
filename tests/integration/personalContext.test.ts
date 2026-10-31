@@ -1,3 +1,4 @@
+import { buildAlfredContext } from "../../src/application/alfred/alfredContext";
 import { confirmContextProposal } from "../../src/application/alfred/contextActions";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
@@ -82,4 +83,16 @@ it("rejects changed tasks and rolled-over days in the same transaction as canoni
   vi.setSystemTime(new Date(2026, 10, 1, 17));
   await expect(confirmContextProposal({ kind: "log_water", oz: 8 }, next, false)).rejects.toThrow("CONTEXT_CHANGED");
   expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(0);
+});
+
+it("preserves #352's automatic prep/recovery context without uploading new personal kinds", async () => {
+  const day = await startDay(); await fact(day.id); await fact(day.id, "DIRECTION");
+  await recordMemory({ dayId: day.id, factId: "prep", kind: "PREP_FOOD", statement: "Frozen backup is practical.", action: "CREATED", expectedPreviousId: null });
+  const automatic = await buildAlfredContext();
+  expect(automatic).toContain("Frozen backup is practical.");
+  expect(automatic).not.toContain("Keep the first morning quiet");
+  expect(automatic).not.toContain("Have more energy outside work");
+  const conversation = await buildPlanningContext(false);
+  expect(conversation.text).not.toContain("Frozen backup is practical.");
+  expect((await buildPlanningContext(true)).text).toContain("Frozen backup is practical.");
 });

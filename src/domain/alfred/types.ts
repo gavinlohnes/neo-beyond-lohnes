@@ -10,3 +10,12 @@ export interface AlfredMemory {
   topic: MemoryTopic;
   savedAt: string; // ISO
 }
+
+/** ALFRED-006: a weekly review Alfred wrote (Monday–Sunday lived days, by their start date). */
+export interface AlfredReview {
+  id: string;
+  weekStart: string; // YYYY-MM-DD, a Monday
+  weekEnd: string; // YYYY-MM-DD, the Sunday
+  text: string;
+  writtenAt: string; // ISO
+}

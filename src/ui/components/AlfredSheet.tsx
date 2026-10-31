@@ -209,7 +209,8 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
         {memories.length === 0 ? <p className="meta">Nothing yet. Say "remember…" and confirm the card.</p>
           : <ul>{memories.map((m) => <li key={m.id}><span>{m.text}</span><button type="button" className="alfred-link" aria-label={`Forget: ${m.text}`} disabled={busy} onClick={() => void forget(m.id)}>Forget</button></li>)}</ul>}
       </div>}
-      <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}This conversation ≈ ${usd(spent)} · this month ≈ ${usd(monthSpent)} · <button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
+      <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}<button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
+      <p className="meta alfred-cost">This conversation ≈ ${usd(spent)} · this month ≈ ${usd(monthSpent)}</p>
     </>}
   </LogSheet>;
 }

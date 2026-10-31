@@ -28,3 +28,13 @@
   Fresh master and branch refs remain accessible. No claim that Claude has no unpublished work;
   we do not edit his branch or take over his broader campaign. Recheck before review/integration.
 - PR: pending. No merge authorized. Live results and review follow in checkpoint/PR.
+
+
+## Mainline integration
+
+Master #352 (`f001049`) landed during verification. Its weekly review, schema v17, shared
+Alfred-memory manager and other entry points are preserved. This slice still introduces no
+schema change relative to current master. Automatic brief/review retains #352's approved
+prep/recovery memory context; new DIRECTION/CONSTRAINT kinds remain excluded. Conversation
+planning uses the explicit opt-in catalog for all MEMORY-001 facts, avoiding a base-context
+bypass. Integration regression covers both paths. Earlier #351-baseline research is historical.

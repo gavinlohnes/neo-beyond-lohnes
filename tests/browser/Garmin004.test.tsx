@@ -128,5 +128,17 @@ describe("GARMIN-004 — Garmin numbers on TODAY", () => {
       expect(sheet.getByRole("link", { name: "SYNC GARMIN" }).elements()).toHaveLength(0);
     } finally { agent.mockRestore(); }
   });
+
+  it("ALFRED-007: ASK ALFRED in a Garmin sheet opens Alfred with the question ready", async () => {
+    await page.viewport(390, 844);
+    await seedGarmin();
+    localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
+    vi.spyOn(window, "fetch").mockRejectedValue(new TypeError("offline")); // TODAY's brief stays quiet
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: /open steps$/ }).click();
+    await screen.getByRole("dialog", { name: "STEPS", exact: true }).getByRole("button", { name: "ASK ALFRED" }).click();
+    await expect.element(screen.getByRole("dialog", { name: "ALFRED" }).getByRole("textbox", { name: "Message Alfred" }))
+      .toHaveValue("About my steps lately: what's the pattern against my shifts, and what would help?");
+  });
 });
 

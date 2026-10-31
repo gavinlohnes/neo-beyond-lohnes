@@ -46,7 +46,7 @@ export async function proposalContextVersion(): Promise<string> {
 export async function buildPlanningContext(includePersonal: boolean, now = new Date()): Promise<PlanningContext> {
   const [personal, legacy, days, tasks, schedule, base] = await Promise.all([
     includePersonal ? readPersonalSources() : Promise.resolve([]), getMemories(), getDaySummaries(),
-    getUnresolvedObligations(), getSchedulePattern(), buildAlfredContext(now),
+    getUnresolvedObligations(), getSchedulePattern(), buildAlfredContext(now, false),
   ]);
   const sources: ContextSource[] = [
     ...personal,

@@ -21,6 +21,7 @@ import { CcIcon } from "../ui/cc/ccIcons";
 import { HeaderSearchContext, HeaderAlfredContext, EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
 import { ASK_ALFRED_EVENT, AlfredSheet } from "../ui/components/AlfredSheet";
 import { AlfredBrief } from "../ui/components/AlfredBrief";
+import { AlfredWeek } from "../ui/components/AlfredWeek";
 import { StealthOverlay } from "../ui/components/StealthOverlay";
 import { getStealth, setStealth } from "../application/stealthQueries";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
@@ -706,7 +707,7 @@ function AppWorkspaces() {
               onOpenSystems={() => { openMore("SYSTEMS"); }}
               onOpenCave={(tab) => { openCave(tab); }}
               toolsRequest={toolsRequest}
-              brief={<AlfredBrief active={tab === "TODAY" && !alfredOpen} refreshKey={`${todayRefreshKey}|${workEndedKey}`} onOpen={() => setAlfredOpen(true)} />}
+              brief={<><AlfredBrief active={tab === "TODAY" && !alfredOpen} refreshKey={`${todayRefreshKey}|${workEndedKey}`} onOpen={() => setAlfredOpen(true)} /><AlfredWeek active={tab === "TODAY"} /></>}
               banners={garminSync ? <GarminSyncLine state={garminSync} onDismiss={() => setGarminSync(null)} />
                 : syncShortcut ? <div className="backup-due" role="status"><div className="backup-due__row" style={{ justifyContent: "space-between" }}><p className="tool-label" style={{ margin: 0 }}>If the Bridge didn't open, tap</p><SyncGarminLink /></div></div> : undefined}
             />

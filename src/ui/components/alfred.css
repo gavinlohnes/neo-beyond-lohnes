@@ -42,3 +42,15 @@
 .alfred-context label { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; }
 .alfred-context label input { flex: 0 0 auto; margin-top: 4px; }
 .alfred-context button, .alfred-turn .alfred-link { max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; }
+
+.alfred-cost { margin: 0; }
+/* ALFRED-006: the week's review on TODAY, under the brief. */
+.alfred-week .alfred-brief__open { cursor: default; }
+.alfred-week__row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.alfred-week__row button { margin: 0; }
+.month__reviews details { border-top: 1px solid var(--border-subtle); padding: 8px 0; }
+.month__reviews summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.alfred-memory-page { display: grid; gap: 10px; margin-top: 24px; }
+.alfred-memory-page h2 { margin: 0; }
+.alfred-memory-add { display: grid; gap: 8px; }
+.alfred-memory-add button { margin: 0; }
