@@ -87,10 +87,10 @@ export const ALFRED_READ_TOOLS: Anthropic.Beta.BetaTool[] = [
 ];
 
 /** Runs a read tool; null when `name` isn't one. */
-export async function runReadTool(name: string, input: unknown): Promise<string | null> {
+export async function runReadTool(name: string, input: unknown, includePersonal = false): Promise<string | null> {
   const i = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
   const date = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
-  if (name === "search_records") return typeof i.query === "string" ? searchRecords(i.query) : "Give a word to search for.";
+  if (name === "search_records") return typeof i.query === "string" ? searchRecords(i.query, 30, includePersonal) : "Give a word to search for.";
   if (name === "get_days") { const from = date(i.from), to = date(i.to); return from && to ? getDays(from, to) : "Give from and to as YYYY-MM-DD."; }
   return null;
 }

@@ -31,11 +31,11 @@ export function dayLine(s: DaySummary): string {
   return `- ${day(s.livedDayStart)}: ${s.work.declared}${s.work.declared !== s.work.scheduled ? ` (scheduled ${s.work.scheduled})` : ""}; sleep ${s.sleep.primaryMinutes !== undefined ? hm(s.sleep.primaryMinutes) : "-"}${s.sleep.napMinutes ? ` + nap ${hm(s.sleep.napMinutes)}` : ""}; protein ${s.proteinG !== undefined ? Math.round(s.proteinG) + " g" : "-"}; kcal ${s.kcal !== undefined ? Math.round(s.kcal) : "-"}; water ${s.waterOz !== undefined ? Math.round(s.waterOz) + " oz" : "-"}; check-in ${s.checkIn?.capacity ?? "-"}; workouts ${s.workouts.length ? `${s.workouts.length} (${sets} sets)` : "-"}; urges ${s.urges.length}; clean day ${s.cleanDay ? "yes" : "-"}.`;
 }
 
-async function safe<T>(read: () => Promise<T>): Promise<T | null> {
-  try { return await read(); } catch { return null; }
-}
-
-export async function buildAlfredContext(now = new Date()): Promise<string> {
+export async function buildAlfredContext(now = new Date(), includePreparationMemory = true): Promise<string> {
+  let unavailable = false;
+  async function safe<T>(read: () => Promise<T>): Promise<T | null> {
+    try { return await read(); } catch { unavailable = true; return null; }
+  }
   const [active, summaries, meals, tasks, notes, weekAhead, measured, targets, weight, pattern] = await Promise.all([
     safe(getActiveDay), safe(getDaySummaries), safe(() => getSavedMeals()), safe(getUnresolvedObligations),
     safe(getAllCaptureItems), safe(() => getWeekAhead(now)), safe(() => getMeasuredSnapshot(now.getTime())),
@@ -81,10 +81,11 @@ export async function buildAlfredContext(now = new Date()): Promise<string> {
     lines.push(`OPEN NOTES: ${open.length ? open.map((n) => `"${n.text}" (${day(n.capturedAt)})`).join("; ") : "none"}.`);
   }
   // MEMORY-001's own facts (prep and recovery), kept by the owner in MORE → MEMORY.
-  const known = await safe(getMemoryFacts);
-  if (known) { const active = known.filter((f) => f.status === "ACTIVE"); if (active.length) lines.push(`WHAT WORKS FOR HIM (his own notes in MORE → MEMORY): ${active.map((f) => `${MEMORY_LABELS[f.kind]}: ${f.statement}`).join("; ")}.`); }
+  const known = includePreparationMemory ? await safe(getMemoryFacts) : null;
+  if (known) { const active = known.filter((f) => f.status === "ACTIVE" && (f.kind.startsWith("PREP_") || f.kind === "RECOVERY")); if (active.length) lines.push(`WHAT WORKS FOR HIM (his own notes in MORE → MEMORY): ${active.map((f) => `${MEMORY_LABELS[f.kind]}: ${f.statement}`).join("; ")}.`); }
   const memories = await safe(getMemories);
   if (memories) lines.push(`WHAT HE ASKED YOU TO REMEMBER ([id] topic: fact): ${memories.length ? memories.map((m) => `[${m.id}] ${m.topic}: ${m.text}`).join("; ") : "nothing yet"}.`);
   if (meals) lines.push(`SAVED MEALS (id: name, per serving): ${meals.map((m) => `${m.id}: ${m.name} — ${m.calories} kcal, ${m.proteinG} g protein`).join("; ")}.`);
+  if (unavailable) lines.push("READ FAILURE: one or more sections could not be read. Missing sections and absent day/check-in markers may mean unavailable, not nothing recorded. Say what you cannot establish; do not invent values.");
   return lines.join("\n");
 }

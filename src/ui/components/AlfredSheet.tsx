@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { LogSheet } from "./LogSheet";
-import { buildAlfredContext } from "../../application/alfred/alfredContext";
+import { buildPlanningContext, personalContextVersion, type PlanningContext, type ContextSource } from "../../application/alfred/personalContext";
+import { confirmContextProposal } from "../../application/alfred/contextActions";
+import { AlfredContextPanel } from "./AlfredContextPanel";
 // The Claude SDK loads only when Alfred is first used, so it stays out of BEYOND's start-up bundle.
 import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/alfred/alfredClient";
 const loadClient = () => import("../../application/alfred/alfredClient");
-import { confirmLabel, confirmProposal, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
+import { confirmLabel, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
 import { forgetFact, getMemories } from "../../application/alfred/alfredMemory";
 import { addSpend, getMonthSpend } from "../../application/alfred/alfredSpend";
 import type { AlfredMemory } from "../../domain/alfred/types";
@@ -26,6 +28,7 @@ function writeAlfredKey(value: string | null) { try { if (value) localStorage.se
 
 // ALFRED-004: the starters are the ideas the owner asked for; each is one question Alfred already knows how to answer.
 const STARTERS: { label: string; ask?: string; fill?: string }[] = [
+  { label: "Plan my next days off", ask: "Help me plan my next days off around what matters to me. Use recorded context, say what is unknown, and offer a draft I can choose from." },
   { label: "How am I doing?" },
   { label: "What am I forgetting?" },
   { label: "Weekly review", ask: "Give me my weekly review: my last 7 lived days against the 7 before (sleep against shifts, protein, water, training, urges and clean days). What slipped, and one thing to try this week." },
@@ -42,9 +45,14 @@ function speechRecognition(): (new () => Recognition) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void; draft?: { key: number; text: string } | undefined }) {
+export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord, draft }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void; onOpenRecord?: ((source: ContextSource) => void) | undefined; draft?: { key: number; text: string } | undefined }) {
   const [key, setKey] = useState<string | null>(() => readAlfredKey());
   const [draftKey, setDraftKey] = useState("");
+  const [included, setIncluded] = useState(false);
+  const [snapshot, setSnapshot] = useState<PlanningContext | null>(null);
+  const [selectedSource, setSelectedSource] = useState<ContextSource | null>(null);
+  const [contextNotice, setContextNotice] = useState<string | null>(null);
+  const lastContext = useRef<PlanningContext | null>(null), working = useRef(false);
   const [turns, setTurns] = useState<AlfredTurn[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -62,39 +70,74 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { op
   const end = useRef<HTMLDivElement>(null);
 
   // A fresh conversation (and a fresh read of the records) each time the sheet opens.
-  useEffect(() => { if (open) { session.current = null; setTurns([]); setError(null); setSpent(0); setMonthSpent(getMonthSpend()); } }, [open]);
+  useEffect(() => { if (open) { session.current = null; setTurns([]); setError(null); setSpent(0); setMonthSpent(getMonthSpend()); setIncluded(false); setSnapshot(null); setSelectedSource(null); lastContext.current = null; setContextNotice(null); } }, [open]);
   useEffect(() => { if (open && draft) setText(draft.text); }, [open, draft?.key]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [turns, busy]);
 
   async function ask(question: string, depth: AlfredDepth = "everyday") {
     const q = question.trim();
-    if (!q || busy || !key) return;
+    if (!q || busy || working.current || !key) return;
+    if (!navigator.onLine) { setText(q); setError("Alfred needs a connection. Your local records and draft are still here."); return; }
+    working.current = true;
     setBusy(true); setError(null); setText("");
     const decisions = Object.fromEntries(turns.flatMap((t) => t.proposals ?? []).map((p) => [p.id, p.state]));
     setTurns((all) => [...all, { role: "user", text: q, ...(depth === "deep" ? { deep: true } : {}) }]);
+    let meteredSession: AlfredSession | null = null, usageBefore = 0;
     try {
-      if (!session.current) { const { AlfredSession } = await loadClient(); session.current = new AlfredSession(key, await buildAlfredContext()); }
+      const next = await buildPlanningContext(included).catch(() => { throw new Error("CONTEXT_UNAVAILABLE"); });
+      const changed = lastContext.current !== null && lastContext.current.personalVersion !== next.personalVersion;
+      const policy = { includePersonal: included, assertFresh: async () => {
+        if (await personalContextVersion(included) !== next.personalVersion) throw new Error("CONTEXT_CHANGED");
+      } };
+      if (changed) {
+        session.current = null; setTurns([{ role: "user", text: q }]);
+        setContextNotice("Personal context changed. This request starts a fresh model conversation. Earlier requests cannot be recalled.");
+      }
+      if (!session.current) { const { AlfredSession } = await loadClient(); session.current = new AlfredSession(key, next.text, policy); }
+      else session.current.updateContext(next.text, policy);
+      lastContext.current = next; setSnapshot(next);
+      meteredSession = session.current; usageBefore = meteredSession.usageUsd;
       const reply = await session.current.send(q, decisions, depth);
-      setSpent((s) => s + reply.costUsd);
-      setMonthSpent(addSpend(reply.costUsd));
-      setTurns((all) => [...all, { role: "alfred", text: reply.text, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
+      setTurns((all) => [...all, { role: "alfred", text: reply.text, sources: next.sources, context: { personalVersion: next.personalVersion, actionVersion: next.actionVersion, taskVersions: next.taskVersions }, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
       if (speak && reply.text && typeof speechSynthesis !== "undefined") { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(plain(reply.text))); }
     } catch (e) {
+      // A failed send may leave the model session half-written, so it's dropped. Say so when earlier
+      // turns stay on screen, so they don't read as if Alfred still has them.
+      if (session.current && turns.length > 0) setContextNotice("That request didn't go through. Your next message starts a fresh conversation; Alfred won't see the exchange above.");
+      session.current = null;
       setError((await loadClient()).describeAlfredError(e));
       setTurns((all) => all.slice(0, -1)); setText(q);
-    } finally { setBusy(false); }
+    } finally {
+      const charged = meteredSession ? meteredSession.usageUsd - usageBefore : 0;
+      if (charged > 0) { setSpent((s) => s + charged); setMonthSpent(addSpend(charged)); }
+      working.current = false; setBusy(false);
+    }
   }
 
   async function decide(turnIndex: number, id: string, save: boolean) {
     const turn = turns[turnIndex]; const card = turn?.proposals?.find((p) => p.id === id);
-    if (!card || card.state !== "pending") return;
+    if (!turn || !card || card.state !== "pending" || working.current) return;
+    working.current = true; setBusy(true);
     const acknowledge = captureCommitFeedback();
     try {
-      const result = save ? await confirmProposal(card.proposal) : {};
+      if (save && !turn.context) throw new Error("CONTEXT_CHANGED");
+      const confirmed = save ? await confirmContextProposal(card.proposal, turn.context!, included) : null;
+      const result = confirmed?.result ?? {};
       if (save) { acknowledge("LIGHT"); onSaved(); if (memories) setMemories(await getMemories()); }
-      setTurns((all) => all.map((t, i) => i !== turnIndex ? t : { ...t, proposals: t.proposals!.map((p) => p.id === id ? { ...p, state: save ? "saved" : "skipped" } : p) }));
+      // The operator's own save (a "remember" card) is not an outside change: carry the new version
+      // forward for this conversation's other cards and its next question, nothing else.
+      const before = turn.context!.personalVersion, after = confirmed?.personalVersion;
+      const advance = (c: AlfredTurn["context"]) => (c && after && c.personalVersion === before ? { ...c, personalVersion: after } : c);
+      if (after && lastContext.current?.personalVersion === before) lastContext.current = { ...lastContext.current, personalVersion: after };
+      setTurns((all) => all.map((t, i) => {
+        const context = advance(t.context);
+        const next = context === t.context ? t : { ...t, ...(context ? { context } : {}) };
+        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, state: save ? "saved" : "skipped" } : p) };
+      }));
       if (result.open === "TRAIN" && onOpenTrain) { onClose(); onOpenTrain(); }
-    } catch (e) { setError(describeConfirmError(e)); }
+    } catch (e) {
+      setError(e instanceof Error && e.message === "CONTEXT_CHANGED" ? "Your context changed. Ask again before saving this proposal. Nothing changed." : describeConfirmError(e));
+    } finally { working.current = false; setBusy(false); }
   }
 
   function talk(lead = "") {
@@ -110,6 +153,23 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { op
     recognition.current = r; setListening(true); r.start();
   }
 
+  function chooseContext(value: boolean) {
+    recognition.current?.stop();
+    setIncluded(value); session.current = null; lastContext.current = null;
+    setTurns([]); setSnapshot(null); setSelectedSource(null);
+    setContextNotice("Fresh conversation. Earlier requests sent to Claude cannot be recalled.");
+  }
+  async function forget(id: string) {
+    if (working.current) return;
+    working.current = true; setBusy(true); setError(null);
+    try {
+      await forgetFact(id); setMemories(await getMemories());
+      session.current = null; lastContext.current = null; setTurns([]); setSnapshot(null); setSelectedSource(null);
+      setContextNotice("Forgotten on this phone. Fresh conversation; earlier Claude requests and older backups cannot be recalled.");
+    } catch { setError("That memory could not be forgotten. Try again."); }
+    finally { working.current = false; setBusy(false); }
+  }
+
   function toggleSpeak() {
     const next = !speak; setSpeak(next);
     try { localStorage.setItem(SPEAK, next ? "1" : "0"); } catch { /* not kept */ }
@@ -117,6 +177,11 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { op
   }
 
   return <LogSheet open={open} title="ALFRED" onClose={onClose} canClose={() => !busy}>
+    <AlfredContextPanel included={included} onIncluded={chooseContext} busy={busy} snapshot={snapshot} selected={selectedSource} onSelected={setSelectedSource} onOpenRecord={(s) => {
+      if (s.kind === "ALFRED_MEMORY") void getMemories().then(setMemories).catch(() => setError("Alfred memory is unavailable."));
+      else onOpenRecord?.(s);
+    }} />
+    {contextNotice && <p role="status" className="meta">{contextNotice}</p>}
     {!key ? <div className="alfred-setup">
       <p>Alfred is BEYOND's man in the chair. He answers from your records and logs things for you; you confirm every record.</p>
       <p className="meta">He runs on Claude. Paste your key from console.anthropic.com → API Keys. It stays on this phone and is sent only to Anthropic.</p>
@@ -131,12 +196,12 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { op
         </div>}
         {turns.map((t, i) => <div key={i} className={`alfred-turn alfred-turn--${t.role}`}>
           <p className="alfred-turn__who">{t.role === "user" ? (t.deep ? "YOU · THINK HARDER" : "YOU") : "ALFRED"}</p>
-          {t.text && <AlfredText text={t.text} />}
+          {t.text && <AlfredText text={t.text} sources={t.sources} onSource={setSelectedSource} />}
           {t.proposals?.map((p) => <div key={p.id} className="alfred-card" role="group" aria-label={describeProposal(p.proposal)}>
             <p>{describeProposal(p.proposal)}</p>
             {p.state === "pending" ? <div className="alfred-card__row">
-              <button type="button" className="btn-primary" onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
-              <button type="button" className="btn-secondary" onClick={() => void decide(i, p.id, false)}>SKIP</button>
+              <button type="button" className="btn-primary" disabled={busy} onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
+              <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, false)}>SKIP</button>
             </div> : <p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : "Saved.") : "Skipped."}</p>}
           </div>)}
         </div>)}
@@ -155,7 +220,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { op
       </form>
       {memories && <div className="alfred-memory" role="group" aria-label="What Alfred remembers">
         {memories.length === 0 ? <p className="meta">Nothing yet. Say "remember…" and confirm the card.</p>
-          : <ul>{memories.map((m) => <li key={m.id}><span>{m.text}</span><button type="button" className="alfred-link" aria-label={`Forget: ${m.text}`} onClick={() => void forgetFact(m.id).then(getMemories).then(setMemories)}>Forget</button></li>)}</ul>}
+          : <ul>{memories.map((m) => <li key={m.id}><span>{m.text}</span><button type="button" className="alfred-link" aria-label={`Forget: ${m.text}`} disabled={busy} onClick={() => void forget(m.id)}>Forget</button></li>)}</ul>}
       </div>}
       <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}<button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
       <p className="meta alfred-cost">This conversation ≈ ${usd(spent)} · this month ≈ ${usd(monthSpent)}</p>
@@ -167,14 +232,18 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { op
  * ALFRED-001: Alfred writes light Markdown (bold, "- " lists, short headings). Rendered as React
  * elements, never as HTML, so nothing he writes can inject markup.
  */
-function inline(line: string) {
-  return line.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-    part.startsWith("**") && part.endsWith("**") && part.length > 4 ? <strong key={i}>{part.slice(2, -2)}</strong> : part);
+function inline(line: string, sources?: ContextSource[], onSource?: (source: ContextSource) => void) {
+  return line.split(/(\[\[[^\]]+\]\]|\*\*[^*]+\*\*)/g).map((part, i) => {
+    if (part.startsWith("[[")) {
+      const source = sources?.find((s) => s.key === part.slice(2, -2));
+      return source && onSource ? <button key={i} type="button" className="alfred-link" onClick={() => onSource(source)}>Source: {source.title}</button> : <span key={i}>[Source unavailable]</span>;
+    }
+    return part.startsWith("**") && part.endsWith("**") && part.length > 4 ? <strong key={i}>{part.slice(2, -2)}</strong> : part; });
 }
-export function AlfredText({ text }: { text: string }) {
+export function AlfredText({ text, sources, onSource }: { text: string; sources?: ContextSource[] | undefined; onSource?: ((source: ContextSource) => void) | undefined }) {
   const blocks: ReactElement[] = [];
   let list: string[] = [];
-  const flush = () => { if (list.length) { blocks.push(<ul key={blocks.length}>{list.map((item, i) => <li key={i}>{inline(item)}</li>)}</ul>); list = []; } };
+  const flush = () => { if (list.length) { blocks.push(<ul key={blocks.length}>{list.map((item, i) => <li key={i}>{inline(item, sources, onSource)}</li>)}</ul>); list = []; } };
   for (const raw of text.split("\n")) {
     const line = raw.trimEnd();
     const item = /^\s*(?:[-*•]|\d+\.)\s+(.*)$/.exec(line);
@@ -182,7 +251,7 @@ export function AlfredText({ text }: { text: string }) {
     flush();
     if (!line.trim()) continue;
     const heading = /^#{1,4}\s+(.*)$/.exec(line);
-    blocks.push(heading ? <p key={blocks.length} className="alfred-turn__head">{inline(heading[1]!)}</p> : <p key={blocks.length}>{inline(line)}</p>);
+    blocks.push(heading ? <p key={blocks.length} className="alfred-turn__head">{inline(heading[1]!, sources, onSource)}</p> : <p key={blocks.length}>{inline(line, sources, onSource)}</p>);
   }
   flush();
   return <div className="alfred-turn__text">{blocks}</div>;

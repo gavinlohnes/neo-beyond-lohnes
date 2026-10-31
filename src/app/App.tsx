@@ -288,6 +288,7 @@ function AppWorkspaces() {
   const [moreRequest, setMoreRequest] = useState(0);
   /** CAVE-DATA D1: TODAY's bands and SYSTEMS rows open DATA's cave on a view; each request counts up across mounts. */
   const [caveRequest, setCaveRequest] = useState<CaveRequest | undefined>(undefined);
+  const [memoryFocusId, setMemoryFocusId] = useState<string | null>(null);
   const [intentFocus, setIntentFocus] = useState<IntentFocus | null>(null);
   useEffect(() => {
     if (!shortcut) return;
@@ -526,7 +527,7 @@ function AppWorkspaces() {
     if (!canNavigate()) return false;
     setCommandTodayOrigin(tab === "TODAY" && view !== "MENU");
     setHealthHistoryOrigin(false); setHealthHistory(null);
-    setIntentFocus(focus);
+    setIntentFocus(focus); setMemoryFocusId(null);
     setMoreView(view);
     setMoreRequest((key) => key + 1);
     showTab("COMMAND", false);
@@ -723,7 +724,7 @@ function AppWorkspaces() {
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
         {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
-          <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} reviewDestination={reviewDestination}
+          <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} reviewDestination={reviewDestination}
             onReviewDestinationConsumed={(key) => setReviewDestination((current) => current?.key === key ? null : current)}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}
@@ -794,7 +795,13 @@ function AppWorkspaces() {
     </div>
     {stealthOn && <StealthOverlay onExit={() => changeStealth(false)} onLogged={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((n) => n + 1); }} />}
     </StealthToggleContext.Provider>
-    <AlfredSheet open={alfredOpen} onClose={() => { setAlfredOpen(false); setAlfredDraft(undefined); }} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); setWorkEndedKey((key) => key + 1); }} onOpenTrain={() => { openTrain("WORKOUT"); }} draft={alfredDraft} />
+    <AlfredSheet open={alfredOpen} onClose={() => { setAlfredOpen(false); setAlfredDraft(undefined); }} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); setWorkEndedKey((key) => key + 1); }} onOpenTrain={() => { openTrain("WORKOUT"); }} onOpenRecord={(source) => {
+      const opened = source.kind === "MISSION" ? openMore("INTENT", { kind: "MISSION", missionId: source.id })
+        : source.kind === "OBLIGATION" ? openMore("INTENT", { kind: "OBLIGATION", obligationId: source.id })
+        : source.kind === "MEMORY" ? openMore("MEMORY", null, false)
+        : source.kind === "SCHEDULE" ? openMore("WORK_SCHEDULE") : openMore("HISTORY");
+      if (opened) { if (source.kind === "MEMORY") setMemoryFocusId(source.id); if (source.kind === "DAY") setHealthHistory({ dayId: source.id }); setAlfredOpen(false); }
+    }} draft={alfredDraft} />
     </HeaderAlfredContext.Provider>
     </HeaderSearchContext.Provider>
     </EmblemContext.Provider>

@@ -8,17 +8,18 @@ import { ConfirmBanner } from "./ConfirmBanner";
 import { describeError } from "../errorMessage";
 import "./memory.css";
 
-type Scope = "ALL" | "PREP" | "RECOVERY";
+type Scope = "ALL" | "PREP" | "RECOVERY" | "PERSONAL";
 type Draft = { factId: string; previous: string | null; dayId: string | null; kind: MemoryKind; statement: string };
 const starters: Record<MemoryKind, string> = {
   PREP_FOOD: "Frozen meals are a good backup for me.", PREP_BOTTLE: "I prefer to fill my bottle before leaving for work.",
   PREP_OTHER: "Keeping my work essentials by the door helps me prepare.", RECOVERY: "I prefer quiet first after work.",
+  DIRECTION: "I want more energy for life outside work.", CONSTRAINT: "Keep my first morning after nights quiet.",
 };
 const date = (value: string) => new Date(value).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-const includes = (scope: Scope, kind: MemoryKind) => scope === "ALL" || (scope === "RECOVERY" ? kind === "RECOVERY" : kind !== "RECOVERY");
+const includes = (scope: Scope, kind: MemoryKind) => scope === "ALL" || (scope === "RECOVERY" ? kind === "RECOVERY" : scope === "PERSONAL" ? kind === "DIRECTION" || kind === "CONSTRAINT" : kind.startsWith("PREP_"));
 
 /** Shared operator editor and contextual hints. Opening a view never records a fact. */
-export function MemoryPanel({ active = true, scope = "ALL", contextual = false, blocked = false }: { active?: boolean; scope?: Scope; contextual?: boolean; blocked?: boolean }) {
+export function MemoryPanel({ active = true, scope = "ALL", contextual = false, blocked = false, focusFactId = null }: { active?: boolean; scope?: Scope; contextual?: boolean; blocked?: boolean; focusFactId?: string | null }) {
   const [data, setData] = useState<Awaited<ReturnType<typeof getMemoryWorkspace>> | null>(null);
   const [error, setError] = useState<string | null>(null), [notice, setNotice] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0), [busy, setBusy] = useState(false), [loading, setLoading] = useState(false);
@@ -27,6 +28,18 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   const [undo, setUndo] = useUndoWindow<MemoryFact>();
   const writing = useRef(false), sequence = useRef(0), lifecycle = useRef(0);
   const uid = useId();
+  const focused = useRef<string | null>(null);
+  useEffect(() => {
+    if (!active || !data || !focusFactId || focused.current === focusFactId) return;
+    const fact = data.facts.find((f) => f.factId === focusFactId);
+    if (!fact) return;
+    setStatus(fact.status); setLimit(Math.max(5, data.facts.filter((f) => f.status === fact.status).findIndex((f) => f.factId === focusFactId) + 1));
+    const frame = requestAnimationFrame(() => {
+      const article = [...document.querySelectorAll<HTMLElement>("[data-memory-id]")].find((el) => el.dataset.memoryId === focusFactId && el.getClientRects().length);
+      if (article) { article.focus(); focused.current = focusFactId; }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [active, data, focusFactId]);
   useSessionDraft(`memory-${uid}`, draft !== null && draft.statement.length > 0);
   useEffect(() => { lifecycle.current++; return () => { lifecycle.current++; }; }, [active, scope]);
   useEffect(() => {
@@ -48,7 +61,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   function edit(fact?: MemoryFact) {
     setNotice(null); setError(null);
     setDraft({ factId: fact?.factId ?? crypto.randomUUID(), previous: fact?.id ?? null, dayId: data?.dayId ?? null,
-      kind: fact?.kind ?? (scope === "RECOVERY" ? "RECOVERY" : "PREP_FOOD"), statement: fact?.statement ?? "" });
+      kind: fact?.kind ?? (scope === "RECOVERY" ? "RECOVERY" : scope === "PERSONAL" ? "DIRECTION" : "PREP_FOOD"), statement: fact?.statement ?? "" });
   }
   async function write(action: MemoryAction, fact?: MemoryFact) {
     if (writing.current || disabled) return;
@@ -75,7 +88,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   if (!active) return null;
   const facts = data?.facts.filter((fact) => includes(scope, fact.kind) && fact.status === status) ?? [];
   return <section className="memory-panel" aria-label={contextual ? scope === "RECOVERY" ? "Your recovery memory" : "Your preparation memory" : "What BEYOND should remember"}>
-    {!contextual && <><h2 className="tool-label">WHAT BEYOND SHOULD REMEMBER</h2><p>Your words. Prep and recovery only. Nothing here changes your plan or BEYOND’s advice.</p></>}
+    {!contextual && <><h2 className="tool-label">WHAT BEYOND SHOULD REMEMBER</h2><p>Your words. Nothing here changes your plan or BEYOND’s advice. Direction and constraints stay local until you share them with Alfred. Prep and recovery also support his briefs.</p></>}
     {loading && <p role="status" className="meta">Reading memory…</p>}
     {error && <div><p role="alert">{error} Unreadable memory is not empty memory.</p><button type="button" className="btn-secondary" disabled={busy} onClick={() => setRefresh((n) => n + 1)}>RELOAD MEMORY LIST</button></div>}
     {notice && !undo && <p role="status" className="meta confirm-banner">{notice}</p>}
@@ -85,10 +98,10 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
         {(["ACTIVE", "IRRELEVANT"] as const).map((value) => <button type="button" className="btn-secondary" key={value} aria-pressed={status === value} onClick={() => { setStatus(value); setLimit(5); }}>{value === "ACTIVE" ? "ACTIVE" : "NO LONGER RELEVANT"}</button>)}
       </div>}
       {!facts.length && !contextual && <p className="meta">{status === "ACTIVE" ? "No active memories yet. Add only what you want BEYOND to remember." : "No memories marked irrelevant."}</p>}
-      {facts.slice(0, limit).map((fact) => <article className="memory-fact" key={fact.factId}>
+      {facts.slice(0, limit).map((fact) => <article className="memory-fact" key={fact.factId} tabIndex={-1} data-memory-id={fact.factId}>
         <p className="memory-statement">{fact.statement}</p>
         <p className="meta">{MEMORY_LABELS[fact.kind]} · OPERATOR · confirmed {date(fact.lastConfirmedAt)}</p>
-        <details><summary>Inspect or fix this memory</summary>
+        <details open={fact.factId === focusFactId || undefined}><summary>Inspect or fix this memory</summary>
           <p className="meta">Source: OPERATOR · created {date(fact.createdAt)} · {fact.status === "ACTIVE" ? "Active" : "No longer relevant"}</p>
           <div className="memory-actions">
             <button type="button" className="btn-secondary" disabled={disabled || draft !== null} onClick={() => edit(fact)}>CORRECT MEMORY</button>
