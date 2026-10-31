@@ -14,7 +14,16 @@ and the one before (`get_days` lines), headlines it, and gives one thing to try.
 YOUR WEEK" under the brief with READ and GOT IT. Every review stays in DATA → MONTH under "Weekly
 reviews", in backups.
 
+## Memory, Bills and People (ideas 14 and 15 in full)
+
+BEYOND already had MEMORY-001 (MORE → MEMORY: the owner's own prep and recovery notes, kept as
+events). ALFRED-004 gave Alfred a separate fact list without joining the two; this joins them:
+- MORE → MEMORY now also shows **ALFRED REMEMBERS**, grouped People, Money and bills, Health, Home,
+  Work, Other, where a fact can be added directly (no Alfred needed) or forgotten.
+- Alfred's records now include MEMORY-001's active notes ("WHAT WORKS FOR HIM").
+
 ## Tests
 
 `tests/browser/Alfred006.test.tsx`: the week turns at Monday 16:30; one review written, shown, read,
-dismissed (axe) and never asked for twice; MONTH lists it. Schema migration tests cover v17.
+dismissed (axe) and never asked for twice; MONTH lists it; MORE → MEMORY adds, groups and forgets
+facts (axe) and Alfred reads MEMORY-001's notes. Schema migration tests cover v17.

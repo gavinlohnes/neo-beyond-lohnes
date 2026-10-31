@@ -42,3 +42,7 @@
 .alfred-week__row button { margin: 0; }
 .month__reviews details { border-top: 1px solid var(--border-subtle); padding: 8px 0; }
 .month__reviews summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.alfred-memory-page { display: grid; gap: 10px; margin-top: 24px; }
+.alfred-memory-page h2 { margin: 0; }
+.alfred-memory-add { display: grid; gap: 8px; }
+.alfred-memory-add button { margin: 0; }

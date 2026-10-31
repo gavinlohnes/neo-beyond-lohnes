@@ -7,6 +7,9 @@ import { startDay } from "../../src/application/commands";
 import { lastFinishedWeek, weekLabel } from "../../src/application/alfred/alfredReview";
 import { CaveMonthView } from "../../src/ui/screens/systems/CaveMonth";
 import { db } from "../../src/persistence/db";
+import { recordMemory } from "../../src/application/memory";
+import { buildAlfredContext } from "../../src/application/alfred/alfredContext";
+import { AlfredMemoryList } from "../../src/ui/components/AlfredMemoryList";
 
 /** ALFRED-006: Alfred writes the week's review once, TODAY shows it until GOT IT, MONTH keeps them all. */
 let asks: string[] = [];
@@ -58,5 +61,24 @@ describe("ALFRED-006", () => {
     const reviews = screen.getByRole("region", { name: "Weekly reviews" });
     await reviews.getByText("Oct 19–Oct 25").click();
     await expect.element(reviews.getByText("Steady week.")).toBeVisible();
+  });
+});
+
+describe("ALFRED-006 memory in MORE", () => {
+  it("adds, groups and forgets facts in MORE → MEMORY; Alfred also reads MEMORY-001's own notes", async () => {
+    const day = await startDay();
+    await recordMemory({ dayId: day.id, factId: "f1", expectedPreviousId: null, action: "CREATED", kind: "PREP_FOOD", statement: "Frozen meals are my backup." });
+    const screen = await render(<AlfredMemoryList active />);
+    await screen.getByLabelText("About").selectOptions("MONEY");
+    await screen.getByRole("textbox", { name: "Remember" }).fill("Car payment $412, due the 15th");
+    await screen.getByRole("button", { name: "REMEMBER" }).click();
+    const money = screen.getByRole("group", { name: "Money and bills" });
+    await expect.element(money).toHaveTextContent("Car payment $412, due the 15th");
+    expect((await axe.run(screen.container)).violations).toEqual([]);
+    const context = await buildAlfredContext();
+    expect(context).toContain("MONEY: Car payment $412, due the 15th");
+    expect(context).toContain("Food preparation: Frozen meals are my backup.");
+    await money.getByRole("button", { name: "Forget: Car payment $412, due the 15th" }).click();
+    await expect.poll(() => db.alfredMemories.count()).toBe(0);
   });
 });

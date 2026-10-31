@@ -4,6 +4,8 @@ import { getSavedMeals } from "../nutritionQueries";
 import { getUnresolvedObligations } from "../intentQueries";
 import { getAllCaptureItems } from "../queries";
 import { getMemories } from "./alfredMemory";
+import { getMemoryFacts } from "../memory";
+import { MEMORY_LABELS } from "../../domain/memory";
 import { getSleepDebt, SLEEP_NEED_MINUTES } from "../monthQueries";
 import { getActiveDay, getLatestCheckIn, getMostRecentBodyweight, getSchedulePattern, getWorkPeriodEnded, getWorkPeriodStarted } from "../queries";
 import { getWeekAhead } from "../weekAheadQueries";
@@ -78,6 +80,9 @@ export async function buildAlfredContext(now = new Date()): Promise<string> {
     const open = notes.filter((n) => n.status === "OPEN").slice(-10);
     lines.push(`OPEN NOTES: ${open.length ? open.map((n) => `"${n.text}" (${day(n.capturedAt)})`).join("; ") : "none"}.`);
   }
+  // MEMORY-001's own facts (prep and recovery), kept by the owner in MORE → MEMORY.
+  const known = await safe(getMemoryFacts);
+  if (known) { const active = known.filter((f) => f.status === "ACTIVE"); if (active.length) lines.push(`WHAT WORKS FOR HIM (his own notes in MORE → MEMORY): ${active.map((f) => `${MEMORY_LABELS[f.kind]}: ${f.statement}`).join("; ")}.`); }
   const memories = await safe(getMemories);
   if (memories) lines.push(`WHAT HE ASKED YOU TO REMEMBER ([id] topic: fact): ${memories.length ? memories.map((m) => `[${m.id}] ${m.topic}: ${m.text}`).join("; ") : "nothing yet"}.`);
   if (meals) lines.push(`SAVED MEALS (id: name, per serving): ${meals.map((m) => `${m.id}: ${m.name} — ${m.calories} kcal, ${m.proteinG} g protein`).join("; ")}.`);
