@@ -12,6 +12,15 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## GARMIN-AUTO-001 — Garmin checks itself every 3 hours (owner go 2026-10-31)
+
+Gavin: "Yes, auto sync every few hours", then "Do whatever you think is best". Health Bridge 0.10.0
+checks Health Connect every 3 hours in the background (with "Access data in background" allowed)
+and, when a new Garmin sleep has arrived, posts one quiet notification; its tap sends to BEYOND,
+which imports straight away once SYNC GARMIN has been used on the phone. A fully silent import isn't
+possible: Android lets no app open BEYOND or write into a web app's storage from the background,
+and the Bridge has no server or Internet by design. Only new sleep notifies; no nagging.
+
 ## BOOT-ONCE-001 — the launch brief shows once per lived day (owner 2026-10-31)
 
 Gavin, on the launch brief: "It's a good idea but having it pop up every time I open it or refresh it

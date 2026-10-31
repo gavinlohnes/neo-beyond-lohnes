@@ -38,13 +38,18 @@ jobs:
           key = '{http://schemas.android.com/apk/res/android}name'
           permissions = {e.attrib[key] for e in root.findall('uses-permission')}
           health = {p for p in permissions if p.startswith('android.permission.health.')}
-          assert health == {'android.permission.health.READ_SLEEP', 'android.permission.health.READ_STEPS', 'android.permission.health.READ_HEART_RATE', 'android.permission.health.READ_RESTING_HEART_RATE', 'android.permission.health.READ_TOTAL_CALORIES_BURNED', 'android.permission.health.READ_ACTIVE_CALORIES_BURNED', 'android.permission.health.READ_HEALTH_DATA_HISTORY'}, permissions
+          assert health == {'android.permission.health.READ_SLEEP', 'android.permission.health.READ_STEPS', 'android.permission.health.READ_HEART_RATE', 'android.permission.health.READ_RESTING_HEART_RATE', 'android.permission.health.READ_TOTAL_CALORIES_BURNED', 'android.permission.health.READ_ACTIVE_CALORIES_BURNED', 'android.permission.health.READ_HEALTH_DATA_HISTORY', 'android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND'}, permissions
           assert 'android.permission.INTERNET' not in permissions, permissions
           services = {e.attrib[key] for e in root.findall('application/service')}
-          # Official Health Connect bound IPC service; not a scheduled sync worker.
-          allowed = {'androidx.health.platform.client.impl.sdkservice.HealthDataSdkService'}
+          # Official Health Connect bound IPC service, plus WorkManager's own services for GARMIN-AUTO-001's
+          # 3-hourly check (owner go 2026-10-31: "auto sync every few hours"). Read only; still no Internet.
+          allowed = {'androidx.health.platform.client.impl.sdkservice.HealthDataSdkService',
+                     'androidx.work.impl.background.systemalarm.SystemAlarmService',
+                     'androidx.work.impl.background.systemjob.SystemJobService',
+                     'androidx.work.impl.foreground.SystemForegroundService',
+                     'androidx.room.MultiInstanceInvalidationService'}
           assert services <= allowed, services
-          print('Packaged manifest: sleep, steps, heart rate and calories read only; no Internet; SDK IPC service only')
+          print('Packaged manifest: sleep, steps, heart rate and calories read only (background check allowed); no Internet; SDK IPC and WorkManager services only')
           PY
       - name: Record build identity
         run: |

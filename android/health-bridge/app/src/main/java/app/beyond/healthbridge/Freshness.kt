@@ -35,3 +35,10 @@ fun freshnessLine(newestSleepEnd: Instant?, newestStepsHour: Instant?, newestRes
     return if (late.isEmpty()) line
     else "$line\nBehind: ${late.joinToString(", ")}. Open Garmin Connect, let it sync with your watch, then read again."
 }
+
+/** GARMIN-AUTO-001: the notification's line, e.g. "slept 7h12 · 8,400 steps today". */
+fun syncSummary(start: java.time.Instant, end: java.time.Instant, steps: Long?): String {
+    val minutes = java.time.Duration.between(start, end).toMinutes()
+    val slept = "slept ${minutes / 60}h${(minutes % 60).toString().padStart(2, '0')}"
+    return if (steps != null) "$slept · ${String.format(java.util.Locale.US, "%,d", steps)} steps today" else slept
+}

@@ -131,8 +131,10 @@ class MainActivity : ComponentActivity() {
                     try {
                         // Ask again only while something is missing; Health Connect stops prompting after repeated declines.
                         windowDays = 7
-                        if (client.permissionController.getGrantedPermissions().containsAll(permissions + activityPermissions)) readSleep()
-                        else requestPermission.launch(permissions + activityPermissions)
+                        // GARMIN-AUTO-001: "Access data in background" joins the request where this phone offers it.
+                        val wanted = permissions + activityPermissions + (if (BackgroundSync.available(client)) setOf(BackgroundSync.PERMISSION) else emptySet())
+                        if (client.permissionController.getGrantedPermissions().containsAll(wanted)) readSleep()
+                        else requestPermission.launch(wanted)
                     } catch (_: Exception) { clear("Health Connect could not be opened. Check sleep access in Android Settings and try again.") }
                 }
             }
@@ -164,7 +166,7 @@ class MainActivity : ComponentActivity() {
         more.addView(save, Look.spaced(dp, top = 8))
         saveActivity = Look.button(this, "SAVE STEPS AND HEART RATE FILE", primary = false, dp).apply { isEnabled = false; setOnClickListener { saveActivityFile.launch("beyond-activity-${Instant.now().toString().replace(':', '-')}.json") } }
         more.addView(saveActivity, Look.spaced(dp, top = 8))
-        text("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps, heart rate and calories (optional): hourly step totals, hourly heart-rate low/average/high, hourly total and active calories burned and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. READ FULL HISTORY reads up to a year and asks for the optional “Access past data” permission; without it, Health Connect only returns data from up to 30 days before you first granted access. SEND TO BEYOND hands the data straight to BEYOND; nothing is written where other apps can read it. Saved files may be private health information; choose a local folder and delete the file after importing. No account, server, Internet permission or other health categories. Your Health Connect data is never changed.", 14f, Look.TEXT_3, more)
+        text("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps, heart rate and calories (optional): hourly step totals, hourly heart-rate low/average/high, hourly total and active calories burned and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. READ FULL HISTORY reads up to a year and asks for the optional “Access past data” permission; without it, Health Connect only returns data from up to 30 days before you first granted access. SEND TO BEYOND hands the data straight to BEYOND; nothing is written where other apps can read it. Auto sync (Access data in background): every 3 hours the helper checks for a new Garmin sleep and only posts a notification; nothing is sent until you tap it. Saved files may be private health information; choose a local folder and delete the file after importing. No account, server, Internet permission or other health categories. Your Health Connect data is never changed.", 14f, Look.TEXT_3, more)
         clearShared()
         // SYNC-001: read straight away when access is already allowed; opened from BEYOND, also send.
         // Only a fresh launch sends: a recreated activity (rotation, process restore) must not reopen the share sheet.
@@ -223,12 +225,17 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 val granted = client.permissionController.getGrantedPermissions()
-                access.text = accessLine(listOf(
+                // GARMIN-AUTO-001: the 3-hourly check runs only while background access is allowed.
+                val offered = BackgroundSync.available(client)
+                val auto = offered && BackgroundSync.PERMISSION in granted && granted.containsAll(permissions)
+                if (auto) BackgroundSync.schedule(this@MainActivity) else BackgroundSync.cancel(this@MainActivity)
+                access.text = accessLine(listOfNotNull(
                     AccessItem("Sleep", granted.containsAll(permissions)),
                     AccessItem("Steps", stepsPermission in granted),
                     AccessItem("Heart rate", heartRatePermission in granted),
                     AccessItem("Resting heart rate", restingPermission in granted),
                     AccessItem("Calories", totalCaloriesPermission in granted),
+                    if (offered) AccessItem("Auto sync", auto) else null,
                 ))
                 access.visibility = View.VISIBLE
             } catch (_: Exception) { access.visibility = View.GONE }

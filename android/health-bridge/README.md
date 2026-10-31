@@ -23,6 +23,14 @@ moment (re-armed after a restart) and posts a notification that opens BEYOND; "S
 Alfred's debrief. A home-screen widget (BEYOND · Alfred) shows the brief and the next moment. It asks
 once to show notifications. Still no Internet permission; nothing leaves the phone.
 
+GARMIN-AUTO-001 (0.10.0, owner go 2026-10-31: "auto sync every few hours"): with Health Connect's
+"Access data in background" allowed (asked with ALLOW ACCESS AND READ, where the phone offers it),
+a WorkManager job checks every 3 hours for a new Garmin sleep. When one arrives it posts one quiet
+notification, "Garmin: slept 7h12 · 8,400 steps today. Tap to send to BEYOND"; the tap runs the usual
+sync and BEYOND imports it straight away (BEYOND trusts the Bridge once SYNC GARMIN has been used on
+that phone). Android lets no app open BEYOND or write into it from the background, so that one tap
+stays. CI allows exactly the WorkManager services and the one background permission; still no Internet.
+
 The packaged manifest allows the official Health Connect SDK's bound
 `HealthDataSdkService`, used for platform/client IPC. It is not a scheduled sync
 worker. CI rejects other services, other health permissions and Internet access.
