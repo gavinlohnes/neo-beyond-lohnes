@@ -4,9 +4,12 @@ import { logManualMeal, logMeal } from "../nutritionCommands";
 import { createObligation, modifyObligation, satisfyObligation } from "../intentCommands";
 import { createProject } from "../projectCommands";
 import { getProject } from "../projectQueries";
+import { createRoutine, getRoutines, matchSteps, modifyRoutine } from "../routineCommands";
+import { ROUTINE_MOMENTS, ROUTINE_MOMENT_LABELS, type RoutineMoment } from "../../domain/routines";
 import { logCleanDay, logUrge } from "../quitCommands";
 import { forgetFact, rememberFact } from "./alfredMemory";
 import { addPersonDate, anchorRule, describeMonthDay } from "../peopleCommands";
+import { addHomeItem, describeRepeat, isRealDate, REPEAT_UNITS, type RepeatUnit } from "../homeCommands";
 import { formatLocalDate } from "../../engine/scheduledContext";
 import { getDays, searchRecords } from "./alfredSearch";
 import { MEMORY_TOPICS, type MemoryTopic } from "../../domain/alfred/types";
@@ -37,8 +40,13 @@ export type AlfredProposal =
   | { kind: "log_urge"; trigger: UrgeTrigger }
   // RELATIONSHIPS-001: a person's yearly date, kept as a fact plus a yearly reminder in one card.
   | { kind: "person_date"; person: string; occasion: string; month: number; day: number; note?: string | undefined }
+  // HOME-001: a home item: what BEYOND should know about it and/or when it repeats.
+  | { kind: "home_item"; item: string; details?: string | undefined; every?: number | undefined; unit?: RepeatUnit | undefined; first_due?: string | undefined }
   // PROJECTS-001: a finite effort and its first steps, in one card.
-  | { kind: "project_new"; title: string; finish?: string | undefined; steps: { title: string; due_date?: string | undefined }[] };
+  | { kind: "project_new"; title: string; finish?: string | undefined; steps: { title: string; due_date?: string | undefined }[] }
+  // ROUTINES-001: a routine he describes, or a change he asked for to one of his ROUTINES.
+  | { kind: "routine_new"; title: string; moment: RoutineMoment; steps: string[] }
+  | { kind: "routine_edit"; routine_id: string; title: string; moment?: RoutineMoment | undefined; steps?: string[] | undefined };
 type Scale = 1 | 2 | 3 | 4 | 5;
 type Zero = 0 | Scale;
 
@@ -62,6 +70,14 @@ export const ALFRED_TOOLS: Anthropic.Beta.BetaTool[] = [
     input_schema: { type: "object", additionalProperties: false, required: ["lbs"], properties: { lbs: n("pounds") } } },
   { name: "add_reminder", description: "Propose a reminder or task. due_date is the local calendar date it is due (YYYY-MM-DD). For repeats give an iCalendar RRULE (e.g. FREQ=MONTHLY;BYMONTHDAY=15). Put the time or moment he named (\"after I wake\", \"9:30\") in when_note.",
     input_schema: { type: "object", additionalProperties: false, required: ["title"], properties: { title: s("short reminder text in his words"), due_date: s("YYYY-MM-DD"), repeat_rrule: s("RRULE, only if it repeats"), when_note: s("time or moment of day he named"), project_id: s("id from OPEN PROJECTS, only when this is a step of that project"), project_title: s("that project's exact title, required with project_id") } } },
+  { name: "routine_new", description: "Propose a ROUTINE he describes for one moment of his rotation: BEFORE_SHIFT, ON_SHIFT, AFTER_SHIFT or DAY_OFF. Steps are his own, short, in order (1 to 15). Use what he says he does; don't add steps he didn't mention without asking.",
+    input_schema: { type: "object", additionalProperties: false, required: ["title", "moment", "steps"], properties: {
+      title: s("short name, e.g. Pre-shift"), moment: { type: "string", enum: [...ROUTINE_MOMENTS], description: "when it applies" },
+      steps: { type: "array", minItems: 1, maxItems: 15, items: s("one step") } } } },
+  { name: "routine_edit", description: "Propose a change he asked for to one of his ROUTINES (by id): a new name, moment, or the full new list of steps in order. Only when he asks; never change a routine on your own.",
+    input_schema: { type: "object", additionalProperties: false, required: ["routine_id", "title"], properties: {
+      routine_id: s("id from ROUTINES"), title: s("the routine's name (new name if renaming)"), moment: { type: "string", enum: [...ROUTINE_MOMENTS], description: "new moment, if changing" },
+      steps: { type: "array", minItems: 1, maxItems: 15, items: s("one step"), description: "the full new list, if changing steps" } } } },
   { name: "project_new", description: "Propose a new PROJECT: something finite he wants to get done (renew a passport, clear the garage), with its first steps. Use it when he asks for help getting something done. Steps are concrete actions in his words, 1 to 8, in a sensible order. Give a due_date only for a date he named or one that is a fact (an appointment). Not for ongoing direction: that is a Mission.",
     input_schema: { type: "object", additionalProperties: false, required: ["title", "steps"], properties: {
       title: s("short project name"), finish: s("what finished looks like, in his words, if he said"),
@@ -84,6 +100,12 @@ export const ALFRED_TOOLS: Anthropic.Beta.BetaTool[] = [
       person: s("the person, as he names them"), occasion: s("Birthday, Anniversary, or a short name for the date"),
       month: { type: "integer", minimum: 1, maximum: 12, description: "month number" }, day: { type: "integer", minimum: 1, maximum: 31, description: "day of the month" },
       note: s("anything he added about them, e.g. a gift idea") } } },
+  { name: "home_item", description: "Propose keeping a HOME item as one card: what to know about it (size, model, who to call, warranty) and, if it recurs, how often and the next due date. Use it for house upkeep (furnace filter every 3 months, smoke alarm batteries every year). Only facts and intervals he stated; ask for the next due date rather than guessing it.",
+    input_schema: { type: "object", additionalProperties: false, required: ["item"], properties: {
+      item: s("short name, e.g. Furnace filter"), details: s("what to know, in his words, e.g. 16x25x1, Home Depot"),
+      every: { type: "integer", minimum: 1, maximum: 60, description: "repeat every N units, only if it recurs" },
+      unit: { type: "string", enum: [...REPEAT_UNITS], description: "WEEKS, MONTHS or YEARS" },
+      first_due: s("YYYY-MM-DD, next due date, required with every") } } },
   { name: "remember", description: "Propose keeping a fact he wants remembered: people (birthdays, sizes, gift ideas), money (a bill's amount and due day), health, home, work. One fact per call, in his words.",
     input_schema: { type: "object", additionalProperties: false, required: ["text", "topic"], properties: { text: s("the fact"), topic: { type: "string", enum: [...MEMORY_TOPICS], description: "what it's about" } } } },
   { name: "forget", description: "Propose forgetting one remembered fact, by its id, when he says it's wrong or no longer true.",
@@ -122,13 +144,20 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
     case "log_water": { const oz = num(i.oz); return oz ? { kind: "log_water", oz } : null; }
     case "log_sleep": { const m = num(i.minutes); return m ? { kind: "log_sleep", minutes: Math.round(m), nap: i.nap === true } : null; }
     case "log_weight": { const lbs = num(i.lbs); return lbs ? { kind: "log_weight", lbs } : null; }
-    case "add_reminder": { const t = str(i.title); const due = str(i.due_date); return t ? { kind: "add_reminder", title: t, due_date: due && /^\d{4}-\d{2}-\d{2}$/.test(due) ? due : undefined, repeat_rrule: str(i.repeat_rrule), when_note: str(i.when_note), project_id: str(i.project_id), project_title: str(i.project_title) } : null; }
+    case "add_reminder": { const t = str(i.title); const due = str(i.due_date); return t ? { kind: "add_reminder", title: t, due_date: due && isRealDate(due) ? due : undefined, repeat_rrule: str(i.repeat_rrule), when_note: str(i.when_note), project_id: str(i.project_id), project_title: str(i.project_title) } : null; }
+    case "routine_new": case "routine_edit": {
+      const t = str(i.title), moment = ROUTINE_MOMENTS.find((m) => m === i.moment);
+      const steps = Array.isArray(i.steps) ? i.steps.flatMap((x) => (str(x) ? [str(x)!] : [])).slice(0, 15) : undefined;
+      if (name === "routine_new") return t && moment && steps?.length ? { kind: "routine_new", title: t, moment, steps } : null;
+      const id = str(i.routine_id);
+      return id && t ? { kind: "routine_edit", routine_id: id, title: t, moment, steps: steps?.length ? steps : undefined } : null;
+    }
     case "project_new": {
       const t = str(i.title);
       const steps = (Array.isArray(i.steps) ? i.steps : []).slice(0, 8).flatMap((raw) => {
         const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
         const st = str(r.title), due = str(r.due_date);
-        return st ? [{ title: st, due_date: due && /^\d{4}-\d{2}-\d{2}$/.test(due) ? due : undefined }] : [];
+        return st ? [{ title: st, due_date: due && isRealDate(due) ? due : undefined }] : [];
       });
       return t && steps.length ? { kind: "project_new", title: t, finish: str(i.finish), steps } : null;
     }
@@ -141,14 +170,24 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
     }
     case "work_started": case "work_ended": case "clean_day": case "open_training": return { kind: name } as AlfredProposal;
     case "task_done": { const id = str(i.task_id), t = str(i.title); return id && t ? { kind: "task_done", task_id: id, title: t } : null; }
-    case "task_new_date": { const id = str(i.task_id), t = str(i.title), due = str(i.due_date); return id && t && due && /^\d{4}-\d{2}-\d{2}$/.test(due) ? { kind: "task_new_date", task_id: id, title: t, due_date: due } : null; }
+    case "task_new_date": { const id = str(i.task_id), t = str(i.title), due = str(i.due_date); return id && t && due && isRealDate(due) ? { kind: "task_new_date", task_id: id, title: t, due_date: due } : null; }
     case "remember": { const t = str(i.text); const topic = MEMORY_TOPICS.find((m) => m === i.topic) ?? "OTHER"; return t ? { kind: "remember", text: t, topic } : null; }
     case "forget": { const id = str(i.memory_id), t = str(i.text); return id && t ? { kind: "forget", memory_id: id, text: t } : null; }
+    case "home_item": {
+      const item = str(i.item), details = str(i.details), due = str(i.first_due);
+      const every = typeof i.every === "number" && Number.isInteger(i.every) && i.every >= 1 && i.every <= 60 ? i.every : undefined;
+      const unit = REPEAT_UNITS.find((u) => u === i.unit);
+      const repeats = every && unit && due && isRealDate(due);
+      if (!item || (!details && !repeats)) return null;
+      return { kind: "home_item", item, details, ...(repeats ? { every, unit, first_due: due } : {}) };
+    }
     case "person_date": {
       const person = str(i.person), occasion = str(i.occasion);
       const month = typeof i.month === "number" && Number.isInteger(i.month) ? i.month : undefined;
       const day = typeof i.day === "number" && Number.isInteger(i.day) ? i.day : undefined;
-      return person && occasion && month && day && month <= 12 && day <= 31 ? { kind: "person_date", person, occasion, month, day, note: str(i.note) } : null;
+      // Review of #355: don't offer a card for a date that doesn't exist (Feb 30).
+      const fits = month && day && month <= 12 && day <= [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1]!;
+      return person && occasion && fits ? { kind: "person_date", person, occasion, month, day, note: str(i.note) } : null;
     }
     case "log_urge": { const trigger = URGE_TRIGGERS.find((u) => u === i.trigger); return trigger ? { kind: "log_urge", trigger } : null; }
     default: return null;
@@ -163,6 +202,8 @@ export function describeProposal(p: AlfredProposal): string {
     case "log_sleep": return `Log ${p.nap ? "nap" : "main sleep"} ${Math.floor(p.minutes / 60)}h ${String(p.minutes % 60).padStart(2, "0")}m`;
     case "log_weight": return `Log weight ${p.lbs} lb`;
     case "add_reminder": return `${p.project_id ? `Add step to ${p.project_title ?? "a project"}` : "Remind"}: ${p.title}${p.due_date ? ` · ${p.due_date}` : ""}${p.when_note ? ` · ${p.when_note}` : ""}${p.repeat_rrule ? " · repeats" : ""}`;
+    case "routine_new": return `New routine · ${ROUTINE_MOMENT_LABELS[p.moment]}: ${p.title} · ${p.steps.map((st, n) => `${n + 1}. ${st}`).join("; ")}`;
+    case "routine_edit": return `Change routine ${p.title}${p.moment ? ` · now ${ROUTINE_MOMENT_LABELS[p.moment].toLowerCase()}` : ""}${p.steps ? ` · steps: ${p.steps.map((st, n) => `${n + 1}. ${st}`).join("; ")}` : ""}`;
     case "project_new": return `New project: ${p.title}${p.finish ? ` (finished when ${p.finish})` : ""} · ${p.steps.length} ${p.steps.length === 1 ? "step" : "steps"}: ${p.steps.map((st, n) => `${n + 1}. ${st.title}${st.due_date ? ` (${st.due_date})` : ""}`).join("; ")}`;
     case "capture_note": return `Note: ${p.text}`;
     case "check_in": return `Check in · energy ${p.energy} · stress ${p.stress} · mood ${p.mood} · soreness ${p.soreness} · urge ${p.alcohol_urge}`;
@@ -174,6 +215,7 @@ export function describeProposal(p: AlfredProposal): string {
     case "open_training": return "Open TRAIN for today's workout";
     case "remember": return `Remember (${p.topic.toLowerCase()}): ${p.text}`;
     case "forget": return `Forget: ${p.text}`;
+    case "home_item": return `Home: ${p.item}${p.details ? ` · ${p.details}` : ""}${p.every && p.unit && p.first_due ? ` · ${describeRepeat(p.every, p.unit)} from ${p.first_due}` : ""}`;
     case "person_date": return `Remember ${p.person}'s ${p.occasion.toLowerCase()} · ${describeMonthDay(p.month, p.day)} · reminder every year${p.note ? ` · ${p.note}` : ""}`;
     case "log_urge": return `Log an urge · ${p.trigger.toLowerCase().replace("_", " ")}`;
   }
@@ -190,6 +232,7 @@ export function describeConfirmError(e: unknown): string {
   if (m.startsWith("OBLIGATION_ALREADY_RESOLVED")) return "That task is already closed. Nothing changed.";
   if (m.startsWith("MEMORY_NOT_FOUND")) return "That fact is already gone. Nothing changed.";
   if (m.startsWith("PROJECT_MISMATCH")) return "That project doesn't match the card. Nothing changed. Ask again.";
+  if (m.startsWith("ROUTINE_NOT_FOUND")) return "BEYOND couldn't find that routine. Nothing changed.";
   if (m.startsWith("INVALID_DATE")) return "That date doesn't exist. Nothing changed.";
   if (m.startsWith("INVALID_REPEAT")) return "BEYOND couldn't read that repeat. Nothing changed. Ask again with the dates.";
   if (m.startsWith("PROJECT_FINISHED")) return "That project is finished. Reopen it first. Nothing changed.";
@@ -211,6 +254,10 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }
   if (p.kind === "remember") { await rememberFact(p.text, p.topic); return {}; }
   if (p.kind === "forget") { await forgetFact(p.memory_id); return {}; }
+  if (p.kind === "home_item") {
+    await addHomeItem({ item: p.item, details: p.details, ...(p.every && p.unit && p.first_due ? { repeat: { every: p.every, unit: p.unit, firstDue: p.first_due } } : {}) });
+    return {};
+  }
   if (p.kind === "person_date") { await addPersonDate({ person: p.person, occasion: p.occasion, month: p.month, day: p.day, note: p.note }); return {}; }
   if (p.kind === "add_reminder") {
     // PROJECTS-001 review: the card names the project; the save checks it's the same one.
@@ -225,6 +272,13 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
       ...(p.repeat_rrule ? { recurrence: { rrule: anchoredRepeat(p.repeat_rrule, p.due_date) } } : {}),
       ...(p.project_id ? { projectId: p.project_id } : {}),
     });
+    return {};
+  }
+  if (p.kind === "routine_new") { await createRoutine({ title: p.title, moment: p.moment, steps: p.steps }); return {}; }
+  if (p.kind === "routine_edit") {
+    const routine = (await getRoutines()).find((r) => r.id === p.routine_id);
+    if (!routine || routine.status !== "ACTIVE") throw new Error("ROUTINE_NOT_FOUND: no routine in use with that id.");
+    await modifyRoutine(routine.id, { title: p.title, ...(p.moment ? { moment: p.moment } : {}), ...(p.steps ? { steps: matchSteps(routine, p.steps) } : {}) }, routine.updatedAt);
     return {};
   }
   if (p.kind === "project_new") {

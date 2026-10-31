@@ -1,18 +1,23 @@
-# PERSONAL-OS campaign — status 2026-10-31 (Builder: Claude Code)
+# PERSONAL-OS campaign — end of 2026-10-31 (Builder: Claude Code)
 
-Merged: #353 PERSONAL-CONTEXT-001, #354 PROJECTS-001 (independent PASS).
-In flight, merge in this order:
-1. #356 PROJECTS-001 review follow-up (branch `ccr-0be4f40f-16m0ja`). Routine.
-2. #355 RELATIONSHIPS-001 (branch `ccr-90736806-z9op9b`). Feature; no schema.
-3. ROUTINES-001 (branch `claude/routines-001`). PROTECTED: schema v19 + one TODAY row, both
-   approved by Gavin. PR after its full verify.
-4. HOME-001 (branch `claude/home-001`, stacked on #355). Feature; no schema. PR after #355 merges.
+Merged today (each with an independent reviewer session, green CI, Gavin's merge or his "merge for me"):
+#353 PERSONAL-CONTEXT-001 · #354 PROJECTS-001 · #355 RELATIONSHIPS-001 · #359 BUNDLE-001 ·
+#358 ALFRED-COST-001 · #357 ROUTINES-001 (schema v19, one TODAY row) · #360 HOME-001.
 
-Each PR: full verify, independent reviewer session, green CI, Gavin merges. After each merge, bring
-the remaining branches up to date with merge commits (no force-push).
-Not yet measured: live Alfred quality and phone use for any of these. Next after HOME: Gavin's
-on-shift feedback, then WEEK-PLAN-001 (proposed: place project steps / people dates / home jobs
-onto days via planned-date cards; no schema).
+Open: #356 PROJECTS-001 review follow-up (branch `ccr-0be4f40f-16m0ja`, this checkpoint rides on it).
+Its reviewer found no problems but posts only on Gavin's own word: he types "post it" in the reviewer
+chat "Review PR #354 — PROJECTS-001". Then green CI, then Gavin merges.
+
+State to know:
+- Main bundle about 1.86 MB of the 2 MiB offline precache limit; split more MORE screens before it's tight.
+- Every Alfred-proposed date must be a real calendar date (`isRealDate`); Alfred's repeat rules are anchored.
+- Known limit: monthly jobs on the 29th–31st skip short months (RFC 5545).
+- GitHub reports 7 dependency advisories (1 high) on master; untouched; a dependency change needs Gavin's OK.
+- Live Alfred quality, real API cost and on-phone use of today's features are unmeasured.
+
+Next: Gavin uses it on shift (limit, pre-shift routine, one birthday, one project, one home job) and
+reports friction. Then one of: WEEK-PLAN-001 (place project steps, people dates and home jobs on days
+via planned-date cards; no schema), or a dependency audit for the 7 advisories.
 
 ---
 

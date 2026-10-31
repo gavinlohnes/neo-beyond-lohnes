@@ -231,6 +231,12 @@ export type DomainEventType =
   | "PROJECT_STATUS_CHANGED"
   | "PROJECT_NEXT_SET"
   | "OBLIGATION_PROJECT_SET"
+  /** ROUTINES-001: routine lifecycle, and a step ticked or unticked on a lived day. */
+  | "ROUTINE_CREATED"
+  | "ROUTINE_MODIFIED"
+  | "ROUTINE_ARCHIVED"
+  | "ROUTINE_RESTORED"
+  | "ROUTINE_STEP_SET"
   | "DECISION_JOURNAL_CREATED"
   | "DECISION_JOURNAL_MODIFIED"
   | "DECISION_JOURNAL_REVIEWED"

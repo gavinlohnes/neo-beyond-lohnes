@@ -28,6 +28,8 @@ export async function searchRecords(query: string, limit = 30, includePersonal =
   // A historical correction is not current memory; never leak opted-out personal facts via events.
   for (const e of events) {
     if (e.type === "MEMORY_RECORDED" || e.type.startsWith("MISSION_")) continue;
+    // ROUTINES-001: routine ticks are for the day they're on, not a record to tally.
+    if (e.type === "ROUTINE_STEP_SET") continue;
     consider(e.occurredAt, e.type, e.payload);
   }
   if (includePersonal) {
