@@ -1,6 +1,8 @@
 package app.beyond.healthbridge
 
 import android.content.ClipData
+import android.content.ComponentName
+import android.graphics.Typeface
 import android.content.Intent
 import android.os.Bundle
 import androidx.core.content.FileProvider
@@ -53,6 +55,7 @@ class MainActivity : ComponentActivity() {
     private var windowDays = 7L
     private val client by lazy { HealthConnectClient.getOrCreate(this) }
     private lateinit var status: TextView
+    private lateinit var access: TextView // BRIDGE-CHECK-001
     private lateinit var read: Button
     private lateinit var history: Button
     private lateinit var save: Button
@@ -63,6 +66,8 @@ class MainActivity : ComponentActivity() {
     private var activityGranted: Set<String> = emptySet() // what the prepared activity file was read with
     private var working = false
     private var newestStepsHour: Instant? = null // SYNC-001: for the freshness line
+    private var newestResting: Instant? = null // BRIDGE-CHECK-001: resting heart rate's freshness
+    private var handBack = false // BRIDGE-CHECK-001: a sync started from BEYOND closes the helper once sent
     private var pendingSend = false // SYNC-001: a SYNC request that arrived while a read was running
     private val requestPermission = registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { granted ->
         if (granted.containsAll(permissions)) readSleep() else clear("Sleep access was not granted. No export was created.")
@@ -94,15 +99,30 @@ class MainActivity : ComponentActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val padding = (16 * resources.displayMetrics.density).toInt()
-        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(padding, padding, padding, padding) }
-        fun paragraph(text: String) = TextView(this).apply { this.text = text; textSize = 18f; setPadding(0, 12, 0, 12); layout.addView(this) }
-        paragraph("BEYOND Health Bridge").apply { textSize = 26f; ViewCompat.setAccessibilityHeading(this, true) }
-        paragraph("Reads Garmin sleep, steps, heart rate and calories burned from the last 7 days when it opens, once access is allowed. Tap SEND TO BEYOND, choose BEYOND, then confirm there. BEYOND's SYNC GARMIN button opens this helper and sends for you. READ FULL HISTORY reads everything Health Connect has. This helper does not sync in the background.")
-        paragraph("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps, heart rate and calories (optional): hourly step totals, hourly heart-rate low/average/high, hourly total and active calories burned and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. READ FULL HISTORY reads up to a year and asks for the optional “Access past data” permission; without it, Health Connect only returns data from up to 30 days before you first granted access. Each goes into its own file you save, or is sent straight to BEYOND through Android's share sheet. No account, server, Internet permission or other health categories. Your Health Connect data is never changed. Files may be private health information; choose a local folder and delete the file after importing.")
-        status = paragraph("Ready. Complete Garmin's sync before reading. Sessions crossing the 7-day window edges are excluded.").apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }
-        read = Button(this).apply {
-            text = "ALLOW ACCESS AND READ"
+        // BRIDGE-LOOK-001 (owner, 2026-10-31: "I don't like the android app" → how it looks): BEYOND's own
+        // look — black, one red action, short words, the rarely used buttons under MORE. Same reads and sends.
+        val dp = resources.displayMetrics.density
+        val padding = (16 * dp).toInt()
+        window.statusBarColor = Look.BG; window.navigationBarColor = Look.BG
+        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(padding, padding, padding, padding); setBackgroundColor(Look.BG) }
+        fun text(value: String, size: Float, color: Int, parent: LinearLayout = layout) = TextView(this).apply {
+            text = value; textSize = size; setTextColor(color); setPadding(0, (6 * dp).toInt(), 0, (6 * dp).toInt()); parent.addView(this)
+        }
+        text("BEYOND // HEALTH BRIDGE", 13f, Look.TEXT_3).apply { letterSpacing = 0.18f; typeface = Typeface.MONOSPACE }
+        text("Garmin → BEYOND", 28f, Look.TEXT_1).apply { typeface = Typeface.DEFAULT_BOLD; ViewCompat.setAccessibilityHeading(this, true) }
+        text("Reads Garmin's sleep, steps and heart rate from Health Connect and hands them to BEYOND. Read only; nothing leaves your phone.", 16f, Look.TEXT_2)
+        status = text("Ready. Sync your watch in Garmin Connect first.", 16f, Look.TEXT_1).apply {
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            background = Look.panel(dp); setPadding(padding, padding, padding, padding)
+            layoutParams = Look.spaced(dp, top = 12)
+        }
+        // BRIDGE-CHECK-001: what Health Connect lets the helper read, and the two places to fix things.
+        access = text("", 14f, Look.TEXT_2).apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE; visibility = View.GONE }
+        send = Look.button(this, "SEND TO BEYOND", primary = true, dp).apply { isEnabled = false; setOnClickListener { sendToBeyond() } }
+        layout.addView(send, Look.spaced(dp, top = 16))
+        layout.addView(Look.button(this, "OPEN GARMIN CONNECT", primary = false, dp).apply { setOnClickListener { openGarminConnect() } }, Look.spaced(dp, top = 8))
+        layout.addView(Look.button(this, "HEALTH CONNECT ACCESS", primary = false, dp).apply { setOnClickListener { openHealthConnect() } }, Look.spaced(dp, top = 8))
+        read = Look.button(this, "ALLOW ACCESS AND READ", primary = false, dp).apply {
             setOnClickListener {
                 if (HealthConnectClient.getSdkStatus(this@MainActivity) != HealthConnectClient.SDK_AVAILABLE) {
                     clear("Health Connect is unavailable or needs an update. Open Android Settings → Health Connect, update it, then return.")
@@ -116,9 +136,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        layout.addView(read)
-        history = Button(this).apply {
-            text = "READ FULL HISTORY"
+        layout.addView(read, Look.spaced(dp, top = 8))
+        history = Look.button(this, "READ FULL HISTORY", primary = false, dp).apply {
             setOnClickListener {
                 if (HealthConnectClient.getSdkStatus(this@MainActivity) != HealthConnectClient.SDK_AVAILABLE) {
                     clear("Health Connect is unavailable or needs an update. Open Android Settings → Health Connect, update it, then return.")
@@ -132,18 +151,24 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        layout.addView(history)
-        save = Button(this).apply { text = "SAVE SLEEP FILE"; isEnabled = false; setOnClickListener { saveFile.launch("beyond-sleep-${Instant.now().toString().replace(':', '-')}.json") } }
-        layout.addView(save)
-        saveActivity = Button(this).apply { text = "SAVE STEPS AND HEART RATE FILE"; isEnabled = false; setOnClickListener { saveActivityFile.launch("beyond-activity-${Instant.now().toString().replace(':', '-')}.json") } }
-        layout.addView(saveActivity)
-        send = Button(this).apply { text = "SEND TO BEYOND"; isEnabled = false; setOnClickListener { sendToBeyond() } }
-        layout.addView(send)
+        layout.addView(history, Look.spaced(dp, top = 8))
+        // MORE: saving files and the full privacy note, folded away.
+        val more = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
+        val moreToggle = Look.button(this, "MORE", primary = false, dp).apply {
+            setOnClickListener { val open = more.visibility != View.VISIBLE; more.visibility = if (open) View.VISIBLE else View.GONE; text = if (open) "LESS" else "MORE" }
+        }
+        layout.addView(moreToggle, Look.spaced(dp, top = 24))
+        layout.addView(more)
+        save = Look.button(this, "SAVE SLEEP FILE", primary = false, dp).apply { isEnabled = false; setOnClickListener { saveFile.launch("beyond-sleep-${Instant.now().toString().replace(':', '-')}.json") } }
+        more.addView(save, Look.spaced(dp, top = 8))
+        saveActivity = Look.button(this, "SAVE STEPS AND HEART RATE FILE", primary = false, dp).apply { isEnabled = false; setOnClickListener { saveActivityFile.launch("beyond-activity-${Instant.now().toString().replace(':', '-')}.json") } }
+        more.addView(saveActivity, Look.spaced(dp, top = 8))
+        text("Privacy and permission use: read only. Sleep: Garmin record IDs, source, source modification time, session times, UTC offsets and sleep stages. Steps, heart rate and calories (optional): hourly step totals, hourly heart-rate low/average/high, hourly total and active calories burned and UTC offsets, plus Garmin resting heart rate with its record IDs, source, source modification time and UTC offsets. READ FULL HISTORY reads up to a year and asks for the optional “Access past data” permission; without it, Health Connect only returns data from up to 30 days before you first granted access. SEND TO BEYOND hands the data straight to BEYOND; nothing is written where other apps can read it. Saved files may be private health information; choose a local folder and delete the file after importing. No account, server, Internet permission or other health categories. Your Health Connect data is never changed.", 14f, Look.TEXT_3, more)
         clearShared()
         // SYNC-001: read straight away when access is already allowed; opened from BEYOND, also send.
         // Only a fresh launch sends: a recreated activity (rotation, process restore) must not reopen the share sheet.
         autoRead(sendAfter = savedInstanceState == null && intent?.data?.scheme == SYNC_SCHEME)
-        val scroll = ScrollView(this).apply { addView(layout) }
+        val scroll = ScrollView(this).apply { setBackgroundColor(Look.BG); isFillViewport = true; addView(layout) }
         ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
@@ -154,6 +179,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume()
+        refreshAccess()
         if (prepared != null && HealthConnectClient.getSdkStatus(this) == HealthConnectClient.SDK_AVAILABLE) lifecycleScope.launch {
             try { if (!client.permissionController.getGrantedPermissions().containsAll(permissions)) clear("Sleep access was revoked. No export is ready.") }
             catch (_: Exception) { clear("Sleep access could not be checked. Read again.") }
@@ -165,6 +191,7 @@ class MainActivity : ComponentActivity() {
     }
     /** SYNC-001: the daily 7-day read without a tap, only when every needed permission is already granted. */
     private fun autoRead(sendAfter: Boolean) {
+        handBack = sendAfter
         if (HealthConnectClient.getSdkStatus(this) != HealthConnectClient.SDK_AVAILABLE) return
         lifecycleScope.launch {
             try {
@@ -176,6 +203,31 @@ class MainActivity : ComponentActivity() {
                 else status.text = "Tap ALLOW ACCESS AND READ once to allow access. After that the helper reads when it opens."
             } catch (_: Exception) { /* leave the manual buttons; nothing was read */ }
         }
+    }
+    /** BRIDGE-CHECK-001: re-read on every return, so allowing access in Health Connect shows at once. */
+    private fun refreshAccess() {
+        if (HealthConnectClient.getSdkStatus(this) != HealthConnectClient.SDK_AVAILABLE) return
+        lifecycleScope.launch {
+            try {
+                val granted = client.permissionController.getGrantedPermissions()
+                access.text = accessLine(listOf(
+                    AccessItem("Sleep", granted.containsAll(permissions)),
+                    AccessItem("Steps", stepsPermission in granted),
+                    AccessItem("Heart rate", heartRatePermission in granted),
+                    AccessItem("Resting heart rate", restingPermission in granted),
+                    AccessItem("Calories", totalCaloriesPermission in granted),
+                ))
+                access.visibility = View.VISIBLE
+            } catch (_: Exception) { access.visibility = View.GONE }
+        }
+    }
+    private fun openGarminConnect() {
+        val launch = packageManager.getLaunchIntentForPackage(GARMIN_CONNECT_PACKAGE)
+        if (launch != null) startActivity(launch) else status.text = "Garmin Connect isn't installed on this phone."
+    }
+    private fun openHealthConnect() {
+        try { startActivity(Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS")) }
+        catch (_: Exception) { status.text = "Open Android Settings → Health Connect → App permissions → BEYOND Health Bridge." }
     }
     private fun setWorking(value: Boolean) {
         working = value; read.isEnabled = !value; history.isEnabled = !value
@@ -191,8 +243,9 @@ class MainActivity : ComponentActivity() {
     /** Shared copies live only in the helper's private cache and are removed on the next launch or send. */
     private fun clearShared() { shareDir().listFiles()?.forEach { it.delete() } }
     /**
-     * GARMIN-002 SEND TO BEYOND: hands the prepared files to Android's share sheet. Choosing the installed
-     * BEYOND app opens its import preview; nothing is imported until it is confirmed there.
+     * GARMIN-002 SEND TO BEYOND: hands the prepared files to BEYOND. SYNC-002 (owner go 2026-10-31): when
+     * exactly one installed BEYOND can take them, they go straight to it, and BEYOND imports them right
+     * after its own SYNC GARMIN tap; otherwise Android's share sheet opens as before.
      */
     private fun sendToBeyond() {
         val sleep = prepared; val activity = preparedActivity
@@ -219,8 +272,18 @@ class MainActivity : ComponentActivity() {
                     clipData = ClipData.newRawUri(null, uris.first()).apply { uris.drop(1).forEach { addItem(ClipData.Item(it)) } }
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                startActivity(Intent.createChooser(intent, "Send to BEYOND"))
-                status.text = "Choose BEYOND in the share sheet. BEYOND shows a preview; nothing is imported until you confirm there."
+                val target = pickBeyondTarget(packageManager.queryIntentActivities(intent, 0).map {
+                    ShareCandidate(it.loadLabel(packageManager).toString(), it.activityInfo.packageName, it.activityInfo.name)
+                }, packageName)
+                if (target != null) {
+                    startActivity(Intent(intent).setComponent(ComponentName(target.packageName, target.activityName)))
+                    status.text = "Sent to BEYOND at ${java.time.LocalTime.now().withNano(0).withSecond(0)}."
+                    // BRIDGE-CHECK-001: started from BEYOND's SYNC GARMIN, the helper steps out of the way.
+                    if (handBack) { handBack = false; finish() }
+                } else {
+                    startActivity(Intent.createChooser(intent, "Send to BEYOND"))
+                    status.text = "Choose BEYOND in the share sheet."
+                }
             } catch (_: Exception) { status.text = "Could not open the share sheet. Save the files instead, then import them in BEYOND." }
             finally { setWorking(false) }
         }
@@ -265,8 +328,8 @@ class MainActivity : ComponentActivity() {
                     preparedActivity = null
                     "Steps and heart rate could not be read; sleep is unaffected."
                 }
-                val freshness = freshnessLine(records.maxOfOrNull { it.end }, newestStepsHour, Instant.now(), ZoneId.systemDefault())
-                status.text = "$sleepLine $activityLine $freshness Tap SEND TO BEYOND to preview it there. No data has been imported."
+                val freshness = freshnessLine(records.maxOfOrNull { it.end }, newestStepsHour, newestResting, Instant.now(), ZoneId.systemDefault())
+                status.text = "$freshness\n\n$sleepLine $activityLine"
                 ready = true
             } catch (_: Exception) { clear("Sleep could not be read safely. Check Health Connect sleep access and Garmin sync, then try again. No partial export was kept.") }
             finally { setWorking(false) }
@@ -276,7 +339,7 @@ class MainActivity : ComponentActivity() {
     /** Hourly Garmin steps and heart rate, plus resting heart rate, for whichever of them were granted. */
     private suspend fun readActivity(): String {
         val granted = client.permissionController.getGrantedPermissions()
-        newestStepsHour = null
+        newestStepsHour = null; newestResting = null
         if (granted.intersect(activityPermissions).isEmpty()) return "Steps, heart rate and calories were not allowed; only sleep was read."
         val end = Instant.now().truncatedTo(ChronoUnit.HOURS)
         val start = end.minus(windowDays, ChronoUnit.DAYS)
@@ -322,6 +385,7 @@ class MainActivity : ComponentActivity() {
             } while (token != null)
         }
         newestStepsHour = hours.filter { it.steps != null }.maxOfOrNull { it.start }
+        newestResting = resting.maxOfOrNull { it.time }
         preparedActivity = activityExport(hours, resting, start, end, Instant.now(), BuildConfig.VERSION_NAME)
         activityGranted = granted.intersect(activityPermissions)
         val calorieHours = hours.count { it.totalCalories != null || it.activeCalories != null }

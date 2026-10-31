@@ -2,6 +2,11 @@ import { RecordSheets } from "../ui/components/RecordSheets";
 import type { RecordCorrectionRequest, RecordSheetTarget } from "../ui/recordSheets";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
+import { importBridgeFiles, type HealthSyncResult } from "../application/healthSync";
+import { takeSharedHealthFiles } from "../ui/screens/health/sharedHealthFiles";
+import { GarminSyncLine } from "../ui/components/GarminSyncLine";
+import { markGarminSyncRequested, takeGarminSyncRequest } from "../ui/healthSyncRequest";
+import { HELPER_SYNC_URL, SyncGarminLink, isAndroid } from "../ui/screens/today/MeasuredSheet";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
 import type { InsightMetric } from "../application/bodyInsightsQueries";
 import { readBootPhase } from "../ui/screens/today/bootMode";
@@ -132,8 +137,13 @@ function AppWorkspaces() {
   const [shortcut] = useState(() => parseShortcut(window.location.search));
   // GARMIN-002 SEND TO BEYOND: the service worker parks shared Health Bridge files and opens ?share=health.
   const [sharedHealth] = useState(() => new URLSearchParams(window.location.search).get("share") === "health");
+  // SYNC-002: files sent back right after SYNC GARMIN import straight away and land on TODAY.
+  const [oneTapSync] = useState(() => sharedHealth && takeGarminSyncRequest());
+  // SYNC-002: the SYNC GARMIN home-screen shortcut (?go=sync) remembers the request and opens the Bridge.
+  const [syncShortcut] = useState(() => new URLSearchParams(window.location.search).get("go") === "sync" && isAndroid());
+  const [garminSync, setGarminSync] = useState<"syncing" | { result: HealthSyncResult } | { error: string } | null>(oneTapSync ? "syncing" : null);
   // SHORTCUTS-001: START WORKOUT opens TRAIN; the others open BODY.
-  const [tab, setTab] = useState<Tab>(() => (sharedHealth ? "COMMAND" : shortcut === "workout" ? "TRAIN" : "TODAY"));
+  const [tab, setTab] = useState<Tab>(() => (sharedHealth && !oneTapSync ? "COMMAND" : shortcut === "workout" ? "TRAIN" : "TODAY"));
   const tabRef = useRef(tab);
   tabRef.current = tab;
   // Screen instances are session-local. Hiding a destination never discards its forms.
@@ -269,7 +279,7 @@ function AppWorkspaces() {
   const [trainDestination, setTrainDestination] = useState<TrainDestination | null>(shortcut === "workout" ? "WORKOUT" : null);
   // FIND-001: a LIFT/PR search result opens TRAIN → RECORDS at that lift; the top-bar icon opens SEARCH.
   const [trainRecordsFocus, setTrainRecordsFocus] = useState<string | null>(null);
-  const [moreView, setMoreView] = useState<MoreView>(sharedHealth ? "HEALTH_IMPORT" : "MENU");
+  const [moreView, setMoreView] = useState<MoreView>(sharedHealth && !oneTapSync ? "HEALTH_IMPORT" : "MENU");
   const [reviewDestination, setReviewDestination] = useState<{ key: number; view: WholePictureDestination } | null>(null);
   useEffect(() => {
     if (!sharedHealth) return;
@@ -277,6 +287,23 @@ function AppWorkspaces() {
     url.searchParams.delete("share");
     window.history.replaceState(null, "", url.toString());
   }, [sharedHealth]);
+  useEffect(() => {
+    if (!syncShortcut) return;
+    markGarminSyncRequested();
+    // Chrome may hold an app launch that no tap started; the line on TODAY offers the same link to tap.
+    try { window.location.assign(HELPER_SYNC_URL); } catch { /* the line below stays */ }
+  }, [syncShortcut]);
+  useEffect(() => {
+    if (!oneTapSync) return;
+    let current = true;
+    void takeSharedHealthFiles().then(async (files) => {
+      if (!files.length) throw new Error("Nothing arrived from the Health Bridge.");
+      const result = await importBridgeFiles(files);
+      if (!current) return;
+      setGarminSync({ result }); setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1);
+    }).catch((e: unknown) => { if (current) setGarminSync({ error: e instanceof Error ? e.message : "The files couldn't be read." }); });
+    return () => { current = false; };
+  }, [oneTapSync]);
   // SUIT-001: the readout was opened from TODAY's SYSTEMS line, so it offers the way back.
   const [commandTodayOrigin, setCommandTodayOrigin] = useState(false);
   const [continuityResolved, setContinuityResolved] = useState(false);
@@ -659,6 +686,8 @@ function AppWorkspaces() {
               onOpenSystems={() => { openMore("SYSTEMS"); }}
               onOpenCave={(tab) => { openCave(tab); }}
               toolsRequest={toolsRequest}
+              banners={garminSync ? <GarminSyncLine state={garminSync} onDismiss={() => setGarminSync(null)} />
+                : syncShortcut ? <div className="backup-due" role="status"><div className="backup-due__row" style={{ justifyContent: "space-between" }}><p className="tool-label" style={{ margin: 0 }}>If the Bridge didn't open, tap</p><SyncGarminLink /></div></div> : undefined}
             />
           </RootErrorBoundary>
         </div>}

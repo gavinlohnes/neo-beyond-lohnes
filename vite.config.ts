@@ -67,7 +67,9 @@ export default defineConfig({
         shortcuts: [
           { name: "START WORKOUT", short_name: "START WORKOUT", url: "./?go=workout", icons: [{ src: "icons/beyond-v3-192.png", sizes: "192x192", type: "image/png" }] },
           { name: "+WATER", short_name: "+WATER", url: "./?go=water", icons: [{ src: "icons/beyond-v3-192.png", sizes: "192x192", type: "image/png" }] },
-          { name: "LOG MEAL", short_name: "LOG MEAL", url: "./?go=meal", icons: [{ src: "icons/beyond-v3-192.png", sizes: "192x192", type: "image/png" }] }
+          { name: "LOG MEAL", short_name: "LOG MEAL", url: "./?go=meal", icons: [{ src: "icons/beyond-v3-192.png", sizes: "192x192", type: "image/png" }] },
+          // SYNC-002: long-press BEYOND → SYNC GARMIN opens the Health Bridge, which sends and closes itself.
+          { name: "SYNC GARMIN", short_name: "SYNC GARMIN", url: "./?go=sync", icons: [{ src: "icons/beyond-v3-192.png", sizes: "192x192", type: "image/png" }] }
         ]
       }
     })

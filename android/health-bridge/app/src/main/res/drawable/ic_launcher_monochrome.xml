@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BRIDGE-LOOK-001: BEYOND's angular B (an original drawing), inside the adaptive icon's safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <group android:pivotX="54" android:pivotY="54" android:scaleX="0.78" android:scaleY="0.78">
+        <path android:fillType="evenOdd" android:fillColor="#FF000000" android:pathData="M18 22 L84 22 L66 48 L88 56 L50 90 L30 90 L40 58 L28 52 L36 50 Z M42 30 L70 30 L58 45 L42 45 Z M46 62 L73 62 L50 82 L40 82 Z" />
+    </group>
+</vector>
