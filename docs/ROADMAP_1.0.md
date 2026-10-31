@@ -22,7 +22,7 @@ and 2" and "Make it so" for the fifteen ideas. Shipped:
 
 Briefs: [ALFRED-001](agent/ALFRED-001.md), [ALFRED-003](agent/ALFRED-003.md),
 [ALFRED-004](agent/ALFRED-004.md). Alfred's monthly spend now shows in the sheet (ALFRED-005). Next candidates for Gavin to pick
-from: reminders that fire at a time (through the Bridge); Garmin sync without a tap;
+from: reminders at an exact time of day (tasks due this week now notify at 16:00 on the day); Garmin sync without a tap;
 real-phone tuning of the brief and the moments after a week of use.
 
 **Completed, 2026-10-19 — TONIGHT-001 (#255, #256).** Gavin approved the TONIGHT release from the product

@@ -4,7 +4,8 @@
   list"). Claude Code; Routine. Branch `ccr-0be4f40f-16m0ja`.
 - **Built:** awaited `unmount()` in Boot001/Alfred003 (later renders in Boot001 were blank, so two
   tests passed vacuously); the roadmap records tonight's Alfred work; Alfred's sheet shows this
-  month's estimated spend (ALFRED-005).
+  month's estimated spend (ALFRED-005); open tasks due this week notify through the Bridge at 16:00
+  on their day (BRIDGE-MOMENTS-002).
 - **Next:** CI and Gavin's merge; then his pick from the roadmap's next candidates.
 
 # BOOT-ONCE-001 — the launch brief shows once per lived day

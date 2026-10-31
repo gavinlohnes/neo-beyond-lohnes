@@ -1,4 +1,5 @@
 import { getSchedulePattern } from "./queries";
+import { getUnresolvedObligations } from "./intentQueries";
 import { livedDayShiftWindow } from "../engine/scheduledContext";
 
 /**
@@ -27,7 +28,15 @@ export async function buildBridgePlan(home: string, brief: string, now = new Dat
       { at: end.getTime(), title: "Shift's done", text: "Tap to debrief with Alfred: say how it went.", go: "?alfred=debrief" },
     );
   }
-  return { home, brief: brief.slice(0, 400), moments: moments.filter((m) => m.at > now.getTime()).slice(0, 24) };
+  // BRIDGE-MOMENTS-002: an open task due in the next week also reaches the phone, at 16:00 on its day.
+  const tasks = await getUnresolvedObligations().catch(() => []);
+  for (const t of tasks) {
+    if (!t.dueAt || !/^\d{4}-\d{2}-\d{2}$/.test(t.dueAt)) continue;
+    const [y, m, d] = t.dueAt.split("-").map(Number) as [number, number, number];
+    const at = new Date(y, m - 1, d, 16, 0).getTime();
+    if (at > now.getTime() && at - now.getTime() < 8 * 24 * 60 * MIN) moments.push({ at, title: "Due today", text: t.title.slice(0, 120), go: "" });
+  }
+  return { home, brief: brief.slice(0, 400), moments: moments.filter((m) => m.at > now.getTime()).sort((a, b) => a.at - b.at).slice(0, 24) };
 }
 
 /** The SYNC GARMIN link, carrying the plan to the Bridge. */
