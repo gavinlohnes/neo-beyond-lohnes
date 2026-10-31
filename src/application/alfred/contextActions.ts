@@ -4,7 +4,7 @@ import { writeAtomically } from "../atomicWrite";
 import { confirmProposal, type AlfredProposal } from "./alfredActions";
 import { personalContextVersion, proposalContextVersion } from "./personalContext";
 
-export interface ProposalContext { personalVersion: string; actionVersion: string; taskVersions: Record<string, string> }
+export interface ProposalContext { personalVersion: string; actionVersion: string; taskVersions: Record<string, string>; routineVersions?: Record<string, string> }
 
 /**
  * Guard and canonical write share one local transaction; another tab cannot interleave edits.
@@ -20,6 +20,11 @@ export function confirmContextProposal(proposal: AlfredProposal, expected: Propo
     if (proposal.kind === "task_done" || proposal.kind === "task_new_date") {
       const current = await getObligation(proposal.task_id);
       if (!current || current.title !== proposal.title || expected.taskVersions[proposal.task_id] !== JSON.stringify(current)) throw new Error("CONTEXT_CHANGED");
+    }
+    // ROUTINES-001 (review of #357, L3): an edit card applies only to the routine it was proposed for.
+    if (proposal.kind === "routine_edit") {
+      const current = await db.routines.get(proposal.routine_id);
+      if (!current || expected.routineVersions?.[proposal.routine_id] !== current.updatedAt) throw new Error("CONTEXT_CHANGED");
     }
     const result = await confirmProposal(proposal);
     return { result, personalVersion: await personalContextVersion(includePersonal) };

@@ -2645,3 +2645,13 @@ Owner concern: Alfred costing too much and being too big a part; "Build those 2"
 monthly limit (no requests once BEYOND's estimate reaches it; plainly stated; everything else works)
 and an Automatic Alfred switch (off: no TODAY brief or auto weekly review; he speaks only when
 asked). The Anthropic console limit remains the hard ceiling. [Brief](agent/ALFRED-COST-001.md).
+
+
+## 2026-10-31 — ROUTINES-001: my shift rhythm
+
+Owner: "Routines sound better to me! Let's do that"; approved the additive routines table and
+"One quiet row on TODAY". A routine is the operator's own list for one moment: before shift,
+on shift, after shift, or a day off. TODAY shows only the current moment's routines, collapsed,
+next to prep; nothing when none fits. Ticks are today's only: no streaks, no "missed", no
+counts or percentages, no reminders. Alfred drafts and edits routines only as confirmed cards
+and never sees tick history. [Brief](agent/ROUTINES-001.md).

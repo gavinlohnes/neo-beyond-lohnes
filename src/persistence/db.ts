@@ -14,6 +14,7 @@ import type {
   WorkoutSession,
 } from "../domain/common/types";
 import type { Mission, Obligation, Project } from "../domain/intent/types";
+import type { Routine } from "../domain/routines";
 import type { DecisionJournalEntry } from "../domain/journal/types";
 import type { CustomExercise } from "../domain/workout/customExercise";
 import type { CustomWorkoutTemplate } from "../domain/workout/customTemplate";
@@ -52,6 +53,7 @@ export class BeyondDB extends Dexie {
   alfredMemories!: Table<AlfredMemory, string>;
   alfredReviews!: Table<AlfredReview, string>;
   projects!: Table<Project, string>;
+  routines!: Table<Routine, string>;
 
   constructor() {
     super("beyond");
@@ -358,6 +360,11 @@ export class BeyondDB extends Dexie {
     // an optional, unindexed projectId field; no existing row or index changes. Nothing else changes.
     this.version(18).stores({
       projects: "id, status, createdAt",
+    });
+    // ROUTINES-001: owner-approved additive table for operator-written routines (2026-10-31).
+    // Ticks are events in the existing events table. Nothing else changes.
+    this.version(19).stores({
+      routines: "id, status, moment, createdAt",
     });
   }
 }
