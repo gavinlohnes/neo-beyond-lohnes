@@ -1,0 +1,21 @@
+/* ALFRED-001: the conversation, the confirm cards, the input. BEYOND's own grammar: black, 1px lines, one red action. */
+.alfred-setup p { margin: 0 0 12px; }
+.alfred-log { display: grid; gap: 12px; margin-bottom: 12px; }
+.alfred-starters { display: grid; gap: 8px; }
+.alfred-starters .btn-secondary { margin: 0; text-align: left; }
+.alfred-turn { border-left: 2px solid var(--border-strong); padding: 2px 0 2px 12px; }
+.alfred-turn--alfred { border-left-color: var(--red); }
+.alfred-turn__who { margin: 0 0 4px; font-size: 11px; letter-spacing: 0.16em; color: var(--text-3-strong); }
+.alfred-turn__text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; color: var(--text-1); }
+.alfred-card { margin-top: 8px; padding: 10px 12px; border: 1px solid var(--border-strong); background: var(--surface-1); }
+.alfred-card p { margin: 0 0 8px; overflow-wrap: anywhere; }
+.alfred-card__row { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
+.alfred-card__row button { margin: 0; }
+.alfred-input { display: grid; gap: 8px; }
+.alfred-input textarea { resize: vertical; min-height: 64px; }
+.alfred-input__row { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
+.alfred-input__row button { margin: 0; }
+.alfred-foot { margin-top: 10px; }
+.alfred-link { background: none; border: 0; padding: 0; color: var(--text-2); text-decoration: underline; font: inherit; cursor: pointer; min-height: 44px; }
+.cc-hdr .cc-alfred-btn { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--p-t2); cursor: pointer; }
+.cc-hdr .cc-alfred-btn + .cc-search-btn { margin-left: 0; }

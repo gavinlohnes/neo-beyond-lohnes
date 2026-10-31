@@ -60,7 +60,7 @@ describe("TODAY action row", () => {
     const events = await db.events.count();
     let sheet = await openLog(screen);
     expect([...sheet.element().querySelectorAll(".today-sheet__option")].map((el) => el.textContent))
-      .toEqual(["WATER", "MEAL", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "WORKOUT SET → TRAIN"]);
+      .toEqual(["SAY IT TO ALFRED", "WATER", "MEAL", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "WORKOUT SET → TRAIN"]);
     // POLISH-002: the sheet rises in (0.22 s); measure it settled, as the other axe checks do.
     for (const animation of document.getAnimations()) animation.finish();
     expect((await axe.run(sheet.element())).violations).toEqual([]);

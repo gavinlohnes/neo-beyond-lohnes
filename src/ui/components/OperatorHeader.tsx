@@ -17,6 +17,8 @@ export const EmblemContext = createContext<(() => void) | null>(null);
 
 /** FIND-001 → POLISH-002: record search, one tap from every primary screen, beside the header clock. */
 export const HeaderSearchContext = createContext<(() => void) | null>(null);
+/** ALFRED-001: opens Alfred from every screen's header. */
+export const HeaderAlfredContext = createContext<(() => void) | null>(null);
 
 /** SUIT-001: a long-press on the emblem toggles stealth. Absent, the emblem only goes home. */
 export const StealthToggleContext = createContext<(() => void) | null>(null);
@@ -37,6 +39,7 @@ export function OperatorHeader({ destination: _destination, children, headingId,
   const hintId = useId();
   const clock = useMinuteClock();
   const search = useContext(HeaderSearchContext);
+  const alfred = useContext(HeaderAlfredContext);
   // POLISH-002: the prototype's header row — emblem, BEYOND // WHERE, the clock on the right.
   const split = children.indexOf(" // ");
   const lead = split < 0 ? children : children.slice(0, split);
@@ -59,6 +62,10 @@ export function OperatorHeader({ destination: _destination, children, headingId,
         <h1 id={headingId} ref={headingRef} tabIndex={focusable ? -1 : undefined} className="eyebrow cc-title">
           {lead}{where && <span className="cc-where">{where}</span>}
         </h1>
+        {alfred && <button type="button" className="cc-alfred-btn" aria-label="Ask Alfred" onClick={alfred} style={search ? undefined : { marginLeft: "auto" }}>
+          {/* An angular speech mark in BEYOND's geometry. */}
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v12h-9l-5 4v-4H3z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="miter" /><path d="M8 10h8" stroke="currentColor" strokeWidth="1.6" /></svg>
+        </button>}
         {search && <button type="button" className="cc-search-btn" aria-label="Search everything" onClick={search}><CcIcon.command /></button>}
         {/* Decorative: it repeats the phone's own clock, so it stays out of text and the a11y tree. */}
         <span className="cc-clock" aria-hidden="true" data-clock={clock} />

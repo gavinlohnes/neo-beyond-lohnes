@@ -47,11 +47,13 @@ function parse(form: MealForm) {
 }
 
 /** The shell owns one stable modal. Drafts live here, never in persistent storage. */
-export function RecordSheets({ mealRequest, correctionRequest, target, open, close, onSaved, onBusy, onHistory, onWorkout, onNotes }: {
+export function RecordSheets({ mealRequest, correctionRequest, target, open, close, onSaved, onBusy, onHistory, onWorkout, onNotes, onAlfred }: {
   mealRequest?: { id: string; key: number } | null;
   correctionRequest?: RecordCorrectionRequest | null;
   target: RecordSheetTarget | null; open: (target: RecordSheetTarget) => void; close: () => void;
   onSaved: () => void; onBusy: (busy: boolean) => void; onHistory: (metric: "water" | "protein") => void; onWorkout: () => void; onNotes: () => void;
+  /** ALFRED-001: LOG's first option — say it in plain words. */
+  onAlfred?: () => void;
 }) {
   const hiddenFeatures = useHiddenFeatures();
   const [busy, setBusyState] = useState(false); const busyRef = useRef(false);
@@ -248,7 +250,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
     const acknowledge = captureCommitFeedback(); if (busyRef.current) return; setBusy(true); try { if (await archiveSavedMeal(selected.id)) acknowledge("HEAVY"); setRetry((key) => key + 1); setPage("list"); } catch (cause) { setError(describeError(cause, "Could not archive meal.")); } finally { setBusy(false); } }}>ARCHIVE MEAL</HoldButton>
         </>}
       </>}
-      {target === "log" && <>{(["water", "meal", "sleep", "weight", "note", "urge"] as const).map((kind) => <button type="button" className="today-sheet__option" key={kind} onClick={() => open(kind)}>{TITLE[kind]}</button>)}<button type="button" className="today-sheet__option" onClick={onWorkout}>WORKOUT SET → TRAIN</button></>}
+      {target === "log" && <>{onAlfred && <button type="button" className="today-sheet__option" onClick={() => { close(); onAlfred(); }}>SAY IT TO ALFRED</button>}{(["water", "meal", "sleep", "weight", "note", "urge"] as const).map((kind) => <button type="button" className="today-sheet__option" key={kind} onClick={() => open(kind)}>{TITLE[kind]}</button>)}<button type="button" className="today-sheet__option" onClick={onWorkout}>WORKOUT SET → TRAIN</button></>}
       {target === "note" && <><label className="field">Note<textarea className="input" aria-label="Capture a thought" value={note} onChange={(event) => setNote(event.target.value)} /></label><button type="button" className="btn-primary" disabled={busy || !note.trim()} onClick={() => void commit(async () => { const result = await captureItem(note); setNote(""); return { message: "Note captured.", notes: true, undo: () => deleteCaptureItem(result.id) }; })}>CAPTURE</button></>}
       <div hidden={!bodyVisible}>{bodyFocus && <BodyScreen foodLookupEnabled={hiddenFeatures.foodLookup} correctionRequest={target === "record" ? correctionRequest : null} sheetFocus={bodyFocus === "foodLookup" ? "meal" : bodyFocus} focus={bodyFocus === "protein" ? null : bodyFocus} focusRequest={bodyRequest} visible={bodyVisible && target !== null} onMealJourneyInFlightChange={(next) => { const wasBusy = busyRef.current; setBusy(next); if (wasBusy && !next) onSaved(); }} />}</div>
     </LogSheet>

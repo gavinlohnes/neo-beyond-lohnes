@@ -22,8 +22,9 @@ doctrine, `docs/UX_DECISIONS.md`, or `.claude/rules/*`. Development procedure is
 - History and correction truth are never silently erased — corrections supersede, they never
   overwrite (the `*_CORRECTED` event pattern; `.claude/rules/persistence.md`).
 - Provenance matters — a fact's origin is preserved, not inferred after the fact.
-- Local-first / offline-first correctness — no feature may require a backend or degrade
-  silently offline.
+- The operator's data is his — the local store stays the system of record, backup/export stay
+  complete, and logging plus the core day work offline. Online features (Alfred, food lookups) are
+  allowed (owner ruling RULES-2026-10-31) but must say so when unavailable, never degrade silently.
 
 ## Architecture-layer boundaries
 
