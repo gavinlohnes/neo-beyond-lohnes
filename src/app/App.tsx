@@ -6,7 +6,7 @@ import { importBridgeFiles, type HealthSyncResult } from "../application/healthS
 import { takeSharedHealthFiles } from "../ui/screens/health/sharedHealthFiles";
 import { GarminSyncLine } from "../ui/components/GarminSyncLine";
 import { markGarminSyncRequested, takeGarminSyncRequest } from "../ui/healthSyncRequest";
-import { HELPER_SYNC_URL, SyncGarminLink, isAndroid } from "../ui/screens/today/MeasuredSheet";
+import { HELPER_SYNC_URL, SyncGarminLink, bridgeSyncUrl, isAndroid } from "../ui/screens/today/MeasuredSheet";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
 import type { InsightMetric } from "../application/bodyInsightsQueries";
 import { readBootPhase } from "../ui/screens/today/bootMode";
@@ -141,8 +141,16 @@ function AppWorkspaces() {
   const [sharedHealth] = useState(() => new URLSearchParams(window.location.search).get("share") === "health");
   // SYNC-002: files sent back right after SYNC GARMIN import straight away and land on TODAY.
   // ALFRED-001: the man in the chair, from the header or LOG.
-  const [alfredOpen, setAlfredOpen] = useState(false);
-  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string } | undefined>(undefined);
+  // BRIDGE-MOMENTS-001: the Bridge's "Shift's done" notification opens BEYOND on ?alfred=debrief.
+  const [alfredLaunch] = useState(() => new URLSearchParams(window.location.search).get("alfred"));
+  const [alfredOpen, setAlfredOpen] = useState(alfredLaunch === "debrief");
+  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : undefined);
+  useEffect(() => {
+    if (!alfredLaunch) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("alfred");
+    window.history.replaceState(null, "", url.toString());
+  }, [alfredLaunch]);
   useEffect(() => {
     const onAsk = (e: Event) => { setAlfredDraft((d) => ({ key: (d?.key ?? 0) + 1, text: (e as CustomEvent<string>).detail })); setAlfredOpen(true); };
     window.addEventListener(ASK_ALFRED_EVENT, onAsk);
@@ -301,7 +309,7 @@ function AppWorkspaces() {
     if (!syncShortcut) return;
     markGarminSyncRequested();
     // Chrome may hold an app launch that no tap started; the line on TODAY offers the same link to tap.
-    try { window.location.assign(HELPER_SYNC_URL); } catch { /* the line below stays */ }
+    void bridgeSyncUrl().then((url) => { try { window.location.assign(url); } catch { /* the line below stays */ } }, () => { try { window.location.assign(HELPER_SYNC_URL); } catch { /* the line below stays */ } });
   }, [syncShortcut]);
   useEffect(() => {
     if (!oneTapSync) return;

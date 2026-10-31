@@ -2,7 +2,7 @@
 
 - **Authority:** Gavin, 2026-10-31: "I like all of the ideas. Let's start implementing them… reuse
   other people's code… Keep it simple and move quickly. Make it so" (the fifteen ideas offered that
-  night). This slice is ideas 1–11, 14 and 15.
+  night). This covers all fifteen ideas.
 - **Builder / lane:** Claude Code; Protected within the owner's go. One additive table (schema v16,
   `alfredMemories`); new Alfred tools over existing commands. Branch `ccr-0be4f40f-16m0ja`.
 
@@ -31,6 +31,13 @@
 - **#11 "Ask about this".** `askAlfred(question)` opens Alfred anywhere with the question ready: ASK
   ALFRED ABOUT THIS DAY on MONTH, ASK ALFRED on every VITALS reading.
 
+- **#12 Alfred speaks first, #13 home-screen widget (BRIDGE-MOMENTS-001, Health Bridge 0.9.0).**
+  SYNC GARMIN hands the Bridge this week's key moments (3 hours before each shift, 30 minutes
+  before, the end) and Alfred's brief (`application/bridgePlan.ts`). The Bridge sets an alarm per
+  moment and posts a notification that opens BEYOND; "Shift's done" opens Alfred's debrief
+  (`?alfred=debrief`). Its widget shows the brief and the next moment. Native, so it works with
+  BEYOND closed; no server, no Internet permission in the Bridge.
+
 Read tools run on their own (a few rounds at most) and never write; every write is still a card.
 
 ## Leverage
@@ -45,4 +52,5 @@ Read tools run on their own (a few rounds at most) and never write; every write 
 `tests/browser/Alfred004.test.tsx`: remember → SAVE → in the records → Forget (axe); search_records
 runs in the loop and its result reaches Alfred; search and get_days read stored records only;
 starters and Speak answers. `tests/browser/Month001.test.tsx`: sleep owed, a day's numbers, axe, and
-"ask about this" opening Alfred with the question. Schema migration tests cover v16.
+"ask about this" opening Alfred with the question. `tests/integration/bridgePlan.test.ts` and the
+Bridge's `MomentsTest.kt` (plan parsing, only BEYOND's address opens). Schema migration tests cover v16.

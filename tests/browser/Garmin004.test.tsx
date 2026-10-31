@@ -120,8 +120,9 @@ describe("GARMIN-004 — Garmin numbers on TODAY", () => {
       const screen = await render(<App />);
       await screen.getByRole("button", { name: /open steps$/ }).click();
       const sheet = screen.getByRole("dialog", { name: "STEPS", exact: true });
+      // BRIDGE-MOMENTS-001: the link carries this week's moments and Alfred's brief to the Bridge.
       await expect.element(sheet.getByRole("link", { name: "SYNC GARMIN", exact: true }))
-        .toHaveAttribute("href", "intent://sync#Intent;scheme=beyond-bridge;package=app.beyond.healthbridge;end");
+        .toHaveAttribute("href", expect.stringMatching(/^intent:\/\/sync\?plan=%7B%22home%22.*#Intent;scheme=beyond-bridge;package=app\.beyond\.healthbridge;end$/));
       agent.mockReturnValue("Mozilla/5.0 (Macintosh) Safari/605");
       await sheet.getByRole("button", { name: "4W", exact: true }).click(); // re-render
       expect(sheet.getByRole("link", { name: "SYNC GARMIN" }).elements()).toHaveLength(0);

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BRIDGE-MOMENTS-001: Alfred's brief and the next key moment, on BEYOND's black with one red line. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp" android:background="#FF060606">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="ALFRED" android:textColor="#FFD0141B" android:textSize="11sp" android:letterSpacing="0.16" android:textStyle="bold" />
+    <TextView android:id="@+id/widget_brief" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:textColor="#FFFFFFFF" android:textSize="14sp" android:ellipsize="end" android:maxLines="5" />
+    <TextView android:id="@+id/widget_next" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#FFB5B5B5" android:textSize="11sp" android:maxLines="1" android:ellipsize="end" />
+</LinearLayout>

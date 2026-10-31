@@ -20,6 +20,8 @@ whole history and read any period of lived days himself; those reads never write
 answers, a debrief becomes one card per record, and plans (flip, meals, groceries, date nights) stay
 suggestions until kept as reminders or notes. DATA's cave gains MONTH (the month on one page) with
 the sleep owed against 7 hours, and "Ask Alfred" opens him with a question about a day or a reading.
+Health Bridge 0.9.0 speaks at the key moments around each shift (from the schedule BEYOND hands it
+on SYNC GARMIN) and shows Alfred's brief in a home-screen widget; still no Internet in the Bridge.
 Brief: `docs/agent/ALFRED-004.md`.
 
 ## ALFRED-003 — everyday Alfred is cheap; his brief leads TODAY; he can do it (owner go 2026-10-31)

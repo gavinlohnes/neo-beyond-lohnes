@@ -35,6 +35,7 @@ export function formatMeasured(metric: MeasuredMetric, value: number): string {
   return metric === "steps" ? count(value) : metric === "resting" ? `${value} bpm` : metric === "calories" ? `${count(value)} kcal` : hoursMinutes(value);
 }
 import { markGarminSyncRequested } from "../../healthSyncRequest";
+import { buildBridgePlan, helperSyncUrl } from "../../../application/bridgePlan";
 
 /** SYNC-001: opens BEYOND Health Bridge (beyond-bridge://sync), which reads Health Connect and sends to BEYOND. */
 export const HELPER_SYNC_URL = "intent://sync#Intent;scheme=beyond-bridge;package=app.beyond.healthbridge;end";
@@ -42,10 +43,20 @@ export const HELPER_SYNC_URL = "intent://sync#Intent;scheme=beyond-bridge;packag
 export function isAndroid(): boolean {
   return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
 }
+/** BRIDGE-MOMENTS-001: the link also hands the Bridge this week's key moments and Alfred's brief. */
+export async function bridgeSyncUrl(): Promise<string> {
+  try {
+    let brief = "";
+    try { brief = (JSON.parse(localStorage.getItem("beyond.alfredBrief") ?? "null") as { text?: string } | null)?.text ?? ""; } catch { /* none */ }
+    return helperSyncUrl(await buildBridgePlan(new URL(import.meta.env.BASE_URL, window.location.origin).toString(), brief));
+  } catch { return HELPER_SYNC_URL; }
+}
 export function SyncGarminLink() {
+  const [href, setHref] = useState(HELPER_SYNC_URL);
+  useEffect(() => { let live = true; void bridgeSyncUrl().then((url) => { if (live) setHref(url); }); return () => { live = false; }; }, []);
   if (!isAndroid()) return null;
   // SYNC-002: remember the tap, so what the helper sends back imports straight away.
-  return <a className="btn-secondary measured-sync" href={HELPER_SYNC_URL} onClick={() => markGarminSyncRequested()}>SYNC GARMIN</a>;
+  return <a className="btn-secondary measured-sync" href={href} onClick={() => markGarminSyncRequested()}>SYNC GARMIN</a>;
 }
 
 /** "Garmin as of 14:20" today, otherwise with the date. */

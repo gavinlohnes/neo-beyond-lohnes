@@ -6,7 +6,10 @@
 - **Built:** memory with Forget; search_records and get_days read tools; Speak answers and hands-free
   send; DEBRIEF MY SHIFT; weekly review, flip, meal plan and grocery starters; log-urge card; MONTH
   in DATA's cave with sleep owed; "Ask Alfred" on a day and on every vital.
-- **Next:** ideas 12–13 in the Bridge (notifications at key moments, home-screen widget).
+  Health Bridge 0.9.0: notifications at the key moments around each shift and a home-screen widget
+  with Alfred's brief, both fed by SYNC GARMIN.
+- **Next:** CI (PR Verification + Health Bridge), Gavin's merge, install Bridge 0.9.0, tap SYNC
+  GARMIN once to arm the moments, add the widget.
 
 # ALFRED-003 — cheap everyday Alfred, his brief on TODAY, Alfred can do it
 

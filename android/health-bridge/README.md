@@ -16,6 +16,13 @@ opens only when there isn't exactly one), and because BEYOND remembers its own S
 imports those files straight away; any other share still opens BEYOND's preview. Still no
 background sync.
 
+BRIDGE-MOMENTS-001 (0.9.0): BEYOND's SYNC GARMIN link also carries a small plan — BEYOND's own
+address, Alfred's brief and this week's key moments from the saved schedule (3 hours before each
+shift, 30 minutes before, and its end). The Bridge keeps it on the phone, sets one inexact alarm per
+moment (re-armed after a restart) and posts a notification that opens BEYOND; "Shift's done" opens
+Alfred's debrief. A home-screen widget (BEYOND · Alfred) shows the brief and the next moment. It asks
+once to show notifications. Still no Internet permission; nothing leaves the phone.
+
 The packaged manifest allows the official Health Connect SDK's bound
 `HealthDataSdkService`, used for platform/client IPC. It is not a scheduled sync
 worker. CI rejects other services, other health permissions and Internet access.
