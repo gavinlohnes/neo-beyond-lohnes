@@ -16,7 +16,7 @@ onto days via planned-date cards; no schema).
 
 ---
 
-# PERSONAL-CONTEXT-001 — Claude Code is Builder; PR #353 awaiting review and merge decision
+# PERSONAL-CONTEXT-001 — merged as #353 (2026-10-31)
 
 - Authority: Gavin, 2026-10-31: handed PERSONAL-CONTEXT-001 and the PERSONAL-OS campaign to
   Claude Code ("finish it rather than starting over"). Brief approval ("Let's get after it") stands.
