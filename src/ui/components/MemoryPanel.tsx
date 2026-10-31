@@ -8,14 +8,15 @@ import { ConfirmBanner } from "./ConfirmBanner";
 import { describeError } from "../errorMessage";
 import "./memory.css";
 
-type Scope = "ALL" | "PREP" | "RECOVERY";
+type Scope = "ALL" | "PREP" | "RECOVERY" | "PERSONAL";
 type Draft = { factId: string; previous: string | null; dayId: string | null; kind: MemoryKind; statement: string };
 const starters: Record<MemoryKind, string> = {
   PREP_FOOD: "Frozen meals are a good backup for me.", PREP_BOTTLE: "I prefer to fill my bottle before leaving for work.",
   PREP_OTHER: "Keeping my work essentials by the door helps me prepare.", RECOVERY: "I prefer quiet first after work.",
+  DIRECTION: "I want more energy for life outside work.", CONSTRAINT: "Keep my first morning after nights quiet.",
 };
 const date = (value: string) => new Date(value).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-const includes = (scope: Scope, kind: MemoryKind) => scope === "ALL" || (scope === "RECOVERY" ? kind === "RECOVERY" : kind !== "RECOVERY");
+const includes = (scope: Scope, kind: MemoryKind) => scope === "ALL" || (scope === "RECOVERY" ? kind === "RECOVERY" : scope === "PERSONAL" ? kind === "DIRECTION" || kind === "CONSTRAINT" : kind.startsWith("PREP_"));
 
 /** Shared operator editor and contextual hints. Opening a view never records a fact. */
 export function MemoryPanel({ active = true, scope = "ALL", contextual = false, blocked = false }: { active?: boolean; scope?: Scope; contextual?: boolean; blocked?: boolean }) {
@@ -48,7 +49,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   function edit(fact?: MemoryFact) {
     setNotice(null); setError(null);
     setDraft({ factId: fact?.factId ?? crypto.randomUUID(), previous: fact?.id ?? null, dayId: data?.dayId ?? null,
-      kind: fact?.kind ?? (scope === "RECOVERY" ? "RECOVERY" : "PREP_FOOD"), statement: fact?.statement ?? "" });
+      kind: fact?.kind ?? (scope === "RECOVERY" ? "RECOVERY" : scope === "PERSONAL" ? "DIRECTION" : "PREP_FOOD"), statement: fact?.statement ?? "" });
   }
   async function write(action: MemoryAction, fact?: MemoryFact) {
     if (writing.current || disabled) return;
@@ -75,7 +76,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   if (!active) return null;
   const facts = data?.facts.filter((fact) => includes(scope, fact.kind) && fact.status === status) ?? [];
   return <section className="memory-panel" aria-label={contextual ? scope === "RECOVERY" ? "Your recovery memory" : "Your preparation memory" : "What BEYOND should remember"}>
-    {!contextual && <><h2 className="tool-label">WHAT BEYOND SHOULD REMEMBER</h2><p>Your words. Prep and recovery only. Nothing here changes your plan or BEYOND’s advice.</p></>}
+    {!contextual && <><h2 className="tool-label">WHAT BEYOND SHOULD REMEMBER</h2><p>Your words. Nothing here changes your plan or BEYOND’s advice. Personal context stays local unless you choose to include it in Alfred.</p></>}
     {loading && <p role="status" className="meta">Reading memory…</p>}
     {error && <div><p role="alert">{error} Unreadable memory is not empty memory.</p><button type="button" className="btn-secondary" disabled={busy} onClick={() => setRefresh((n) => n + 1)}>RELOAD MEMORY LIST</button></div>}
     {notice && !undo && <p role="status" className="meta confirm-banner">{notice}</p>}

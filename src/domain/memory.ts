@@ -1,8 +1,8 @@
 /** MEMORY-001: operator-authored facts; never inferred or recommendation inputs. */
-export const MEMORY_KINDS = ["PREP_FOOD", "PREP_BOTTLE", "PREP_OTHER", "RECOVERY"] as const;
+export const MEMORY_KINDS = ["PREP_FOOD", "PREP_BOTTLE", "PREP_OTHER", "RECOVERY", "DIRECTION", "CONSTRAINT"] as const;
 export type MemoryKind = typeof MEMORY_KINDS[number];
 export const MEMORY_LABELS: Record<MemoryKind, string> = {
-  PREP_FOOD: "Food preparation", PREP_BOTTLE: "Bottle preparation", PREP_OTHER: "Other preparation", RECOVERY: "Recovery",
+  PREP_FOOD: "Food preparation", PREP_BOTTLE: "Bottle preparation", PREP_OTHER: "Other preparation", RECOVERY: "Recovery", DIRECTION: "Desired direction", CONSTRAINT: "Planning constraint",
 };
 export type MemoryStatus = "ACTIVE" | "IRRELEVANT";
 export type MemoryAction = "CREATED" | "CORRECTED" | "CONFIRMED" | "IRRELEVANT" | "RESTORED";

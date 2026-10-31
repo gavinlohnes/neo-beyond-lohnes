@@ -793,7 +793,13 @@ function AppWorkspaces() {
     </div>
     {stealthOn && <StealthOverlay onExit={() => changeStealth(false)} onLogged={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((n) => n + 1); }} />}
     </StealthToggleContext.Provider>
-    <AlfredSheet open={alfredOpen} onClose={() => { setAlfredOpen(false); setAlfredDraft(undefined); }} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); setWorkEndedKey((key) => key + 1); }} onOpenTrain={() => { openTrain("WORKOUT"); }} draft={alfredDraft} />
+    <AlfredSheet open={alfredOpen} onClose={() => { setAlfredOpen(false); setAlfredDraft(undefined); }} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); setWorkEndedKey((key) => key + 1); }} onOpenTrain={() => { openTrain("WORKOUT"); }} onOpenRecord={(source) => {
+      const opened = source.kind === "MISSION" ? openMore("INTENT", { kind: "MISSION", missionId: source.id })
+        : source.kind === "OBLIGATION" ? openMore("INTENT", { kind: "OBLIGATION", obligationId: source.id })
+        : source.kind === "MEMORY" ? openMore("MEMORY")
+        : source.kind === "SCHEDULE" ? openMore("WORK_SCHEDULE") : openMore("HISTORY");
+      if (opened) { if (source.kind === "DAY") setHealthHistory({ dayId: source.id }); setAlfredOpen(false); }
+    }} draft={alfredDraft} />
     </HeaderAlfredContext.Provider>
     </HeaderSearchContext.Provider>
     </EmblemContext.Provider>

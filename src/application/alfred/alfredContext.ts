@@ -29,11 +29,11 @@ export function dayLine(s: DaySummary): string {
   return `- ${day(s.livedDayStart)}: ${s.work.declared}${s.work.declared !== s.work.scheduled ? ` (scheduled ${s.work.scheduled})` : ""}; sleep ${s.sleep.primaryMinutes !== undefined ? hm(s.sleep.primaryMinutes) : "-"}${s.sleep.napMinutes ? ` + nap ${hm(s.sleep.napMinutes)}` : ""}; protein ${s.proteinG !== undefined ? Math.round(s.proteinG) + " g" : "-"}; kcal ${s.kcal !== undefined ? Math.round(s.kcal) : "-"}; water ${s.waterOz !== undefined ? Math.round(s.waterOz) + " oz" : "-"}; check-in ${s.checkIn?.capacity ?? "-"}; workouts ${s.workouts.length ? `${s.workouts.length} (${sets} sets)` : "-"}; urges ${s.urges.length}; clean day ${s.cleanDay ? "yes" : "-"}.`;
 }
 
-async function safe<T>(read: () => Promise<T>): Promise<T | null> {
-  try { return await read(); } catch { return null; }
-}
-
 export async function buildAlfredContext(now = new Date()): Promise<string> {
+  let unavailable = false;
+  async function safe<T>(read: () => Promise<T>): Promise<T | null> {
+    try { return await read(); } catch { unavailable = true; return null; }
+  }
   const [active, summaries, meals, tasks, notes, weekAhead, measured, targets, weight, pattern] = await Promise.all([
     safe(getActiveDay), safe(getDaySummaries), safe(() => getSavedMeals()), safe(getUnresolvedObligations),
     safe(getAllCaptureItems), safe(() => getWeekAhead(now)), safe(() => getMeasuredSnapshot(now.getTime())),
@@ -81,5 +81,6 @@ export async function buildAlfredContext(now = new Date()): Promise<string> {
   const memories = await safe(getMemories);
   if (memories) lines.push(`WHAT HE ASKED YOU TO REMEMBER ([id] topic: fact): ${memories.length ? memories.map((m) => `[${m.id}] ${m.topic}: ${m.text}`).join("; ") : "nothing yet"}.`);
   if (meals) lines.push(`SAVED MEALS (id: name, per serving): ${meals.map((m) => `${m.id}: ${m.name} — ${m.calories} kcal, ${m.proteinG} g protein`).join("; ")}.`);
+  if (unavailable) lines.push("READ FAILURE: one or more sections could not be read. Missing sections and absent day/check-in markers may mean unavailable, not nothing recorded. Say what you cannot establish; do not invent values.");
   return lines.join("\n");
 }

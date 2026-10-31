@@ -77,7 +77,7 @@ describe("ALFRED-004 reading the whole history", () => {
     const result = JSON.stringify((chats()[1]!.messages as { content: unknown }[]).at(-1)!.content);
     expect(result).toContain("tool_result");
     expect(result).toContain("CPAP supply place");
-    expect(sheet.getByRole("group").elements()).toHaveLength(0);
+    expect(sheet.element().querySelectorAll(".alfred-card")).toHaveLength(0);
   });
 
   it("search and get_days read stored records only", async () => {
