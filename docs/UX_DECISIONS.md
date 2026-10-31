@@ -12,6 +12,12 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## BOOT-ONCE-001 — the launch brief shows once per lived day (owner 2026-10-31)
+
+Gavin, on the launch brief: "It's a good idea but having it pop up every time I open it or refresh it
+is too much." It now shows on the first launch of each lived day (after 16:30) and not on later
+opens or reloads that day; a tap still skips it. Supersedes BOOT-001's "once per page load".
+
 ## ALFRED-004 — Alfred remembers and reads the whole history (owner go 2026-10-31)
 
 Gavin, 2026-10-31: "I like all of the ideas… Make it so." Alfred keeps the facts the owner confirms

@@ -18,6 +18,9 @@ import { Emblem } from "./Emblem";
  * Once per page load (cold launch): a resume from the background never
  * remounts the app, so it never replays. Tap anywhere skips. With reduced
  * motion it never shows.
+ *
+ * BOOT-ONCE-001 (owner 2026-10-31: "having it pop up every time I open it or refresh it is too
+ * much"): once per lived day — the first launch after 16:30 — remembered on this phone.
  */
 // BOOT-BRIEF-001 (owner choice 2026-10-30, option A): about 2.6 s, long enough to read the brief; a
 // tap still skips. Was 1050 ms, which the owner couldn't read.
@@ -37,10 +40,27 @@ const WORD = "BEYOND";
 let startedAt: number | null = null;
 let skipped = false;
 
-/** Tests only: lets a fresh render play the sequence again. */
-export function resetBootSequenceForTests(): void {
+const SHOWN = "beyond.bootShownFor";
+/** The lived day a moment belongs to (16:30 → 16:30), as the local date it starts on. */
+export function livedDayKey(now: Date): string {
+  const start = new Date(now);
+  if (now.getHours() * 60 + now.getMinutes() < 16 * 60 + 30) start.setDate(start.getDate() - 1);
+  return `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
+}
+let shownToday: boolean | null = null;
+function alreadyShownToday(): boolean {
+  if (shownToday === null) {
+    try { shownToday = localStorage.getItem(SHOWN) === livedDayKey(new Date()); } catch { shownToday = false; }
+  }
+  return shownToday;
+}
+
+/** Tests only: lets a fresh render play the sequence again (a new page load; `keepDay` keeps today's mark). */
+export function resetBootSequenceForTests(keepDay = false): void {
   startedAt = null;
   skipped = false;
+  shownToday = null;
+  if (!keepDay) try { localStorage.removeItem(SHOWN); } catch { /* none */ }
 }
 
 function prefersReducedMotion(): boolean {
@@ -49,6 +69,7 @@ function prefersReducedMotion(): boolean {
 
 function stillPlaying(): boolean {
   if (skipped || prefersReducedMotion()) return false;
+  if (startedAt === null && alreadyShownToday()) return false;
   return startedAt === null || performance.now() - startedAt < BOOT_TOTAL_MS;
 }
 
@@ -70,7 +91,10 @@ export function BootSequence() {
 
   useEffect(() => {
     if (!show) return;
-    if (startedAt === null) startedAt = performance.now();
+    if (startedAt === null) {
+      startedAt = performance.now();
+      try { localStorage.setItem(SHOWN, livedDayKey(new Date())); } catch { /* shows again next launch */ }
+    }
     const begun = startedAt;
     let current = true;
     void getBootStatus()
