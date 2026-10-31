@@ -11,6 +11,8 @@ import { MirrorView } from "../weekly/MirrorView";
 import { getReportTiming } from "../../../application/reportQueries";
 import { wasSeen, seenKey, markSeen } from "../../components/ReportReadyLine";
 import { DailyControls } from "../today/TodayScreen";
+// Kept in the main bundle: Health Bridge files shared to the app arrive through this screen.
+import { HealthImportScreen } from "../health/HealthImportScreen";
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { db } from "../../../persistence/db";
 import { exportBackup, getDaysSinceLastBackup, shareBackup } from "../../../persistence/backup";
@@ -57,7 +59,6 @@ import type { InsightMetric } from "../../../application/bodyInsightsQueries";
  * precache limit (Workbox skips files over 2 MiB). Split files are still precached: the service
  * worker caches every built .js, so these open offline too.
  */
-const HealthImportScreen = lazy(() => import("../health/HealthImportScreen").then((m) => ({ default: m.HealthImportScreen })));
 const JournalScreen = lazy(() => import("./JournalScreen").then((m) => ({ default: m.JournalScreen })));
 const ExerciseLibraryScreen = lazy(() => import("./ExerciseLibraryScreen").then((m) => ({ default: m.ExerciseLibraryScreen })));
 const CustomTemplateScreen = lazy(() => import("./CustomTemplateScreen").then((m) => ({ default: m.CustomTemplateScreen })));
@@ -519,7 +520,7 @@ export function MoreScreen({
           <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="command">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
           <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">MORE // DECISION JOURNAL</OperatorHeader><Opening><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></Opening></>}</div>
           {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="command">MORE // EXERCISE LIBRARY</OperatorHeader><Opening><ExerciseLibraryScreen /></Opening></>}
-          <div hidden={view !== "HEALTH_IMPORT"}>{visited.has("HEALTH_IMPORT") && <Opening><HealthImportScreen active={active && view === "HEALTH_IMPORT"} /></Opening>}</div>
+          <div hidden={view !== "HEALTH_IMPORT"}>{visited.has("HEALTH_IMPORT") && <HealthImportScreen active={active && view === "HEALTH_IMPORT"} />}</div>
           {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="command">MORE // CUSTOM PROGRAMS</OperatorHeader><Opening><CustomTemplateScreen /></Opening></>}
         </div>
       {/* Keep local settings/disclosures/drafts mounted while inspecting a destination. */}
