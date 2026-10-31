@@ -112,19 +112,19 @@ export class AlfredSession {
 const BRIEF_ASK = `Write Alfred's brief for the top of TODAY: what matters right now and next, from the records. Two to four short sentences, plain text, no list, no heading, no greeting. Lead with the one thing most worth his attention (sleep before a shift, food and water against target, a task due, the shift ahead). Name times and numbers from the records. If the records are thin, say what's missing in one sentence.`;
 
 /** ALFRED-003 #1: one short, cheap read of the records for TODAY. No tools; nothing is proposed or saved. */
-export async function writeAlfredBrief(apiKey: string, context: string): Promise<{ text: string; costUsd: number }> {
+export async function writeAlfredBrief(apiKey: string, context: string, ask = BRIEF_ASK, maxTokens = 2000): Promise<{ text: string; costUsd: number }> {
   const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
   const response = await client.beta.messages.create({
     model: ALFRED_MODELS.everyday,
-    max_tokens: 2000,
+    max_tokens: maxTokens,
     output_config: { effort: "low" },
     system: [
       { type: "text", text: PERSONA },
       { type: "text", text: `BEYOND RECORDS (read just now):\n${context}`, cache_control: { type: "ephemeral" } },
     ],
-    messages: [{ role: "user", content: BRIEF_ASK }],
+    messages: [{ role: "user", content: ask }],
   });
-  const text = response.stop_reason === "refusal" ? "" : response.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join(" ").trim();
+  const text = response.stop_reason === "refusal" ? "" : response.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("\n\n").trim();
   return { text, costUsd: cost(response.usage, "everyday") };
 }
 
@@ -141,4 +141,12 @@ export function describeAlfredError(e: unknown): string {
   if (e instanceof Anthropic.APIConnectionError) return "No connection to Claude. BEYOND still works; Alfred needs a signal.";
   if (e instanceof Anthropic.APIError) return `Claude returned an error (${e.status}). Try again.`;
   return "Alfred couldn't answer. Try again.";
+}
+
+/**
+ * ALFRED-006: the weekly review Alfred writes himself, once a week, from the two weeks of lived days
+ * he is given (the week and the one before it). Read only; the caller saves the text.
+ */
+export async function writeWeeklyReview(apiKey: string, context: string, weekLabel: string): Promise<{ text: string; costUsd: number }> {
+  return writeAlfredBrief(apiKey, context, `Write his weekly review for ${weekLabel} from the lived days below, comparing it with the week before. At most 8 short lines: a one-line headline; sleep against his shifts; protein and water against target; training; urges and clean days; then one thing to try this week. Cite numbers exactly as they appear and how many days each rests on. Light Markdown (bold, "- " lists) is fine. No cheerleading, guilt or streaks.`, 3000);
 }

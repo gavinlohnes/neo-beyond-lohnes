@@ -18,7 +18,7 @@ import type { DecisionJournalEntry } from "../domain/journal/types";
 import type { CustomExercise } from "../domain/workout/customExercise";
 import type { CustomWorkoutTemplate } from "../domain/workout/customTemplate";
 import type { ProgressPhoto } from "../domain/body/types";
-import type { AlfredMemory } from "../domain/alfred/types";
+import type { AlfredMemory, AlfredReview } from "../domain/alfred/types";
 import { DEFAULT_SCHEDULE_PATTERN } from "../engine/scheduledContext";
 import { DEFAULT_NUTRITION_TARGETS } from "../engine/nutritionTargets";
 
@@ -50,6 +50,7 @@ export class BeyondDB extends Dexie {
   quitHabits!: Table<QuitHabit, string>;
   progressPhotos!: Table<ProgressPhoto, string>;
   alfredMemories!: Table<AlfredMemory, string>;
+  alfredReviews!: Table<AlfredReview, string>;
 
   constructor() {
     super("beyond");
@@ -347,6 +348,10 @@ export class BeyondDB extends Dexie {
     // ALFRED-004: owner-approved additive table for facts the owner asks Alfred to keep. Nothing else changes.
     this.version(16).stores({
       alfredMemories: "id, savedAt",
+    });
+    // ALFRED-006: owner-approved additive table for the weekly reviews Alfred writes. Nothing else changes.
+    this.version(17).stores({
+      alfredReviews: "id, weekStart",
     });
   }
 }
