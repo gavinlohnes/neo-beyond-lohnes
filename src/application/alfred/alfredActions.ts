@@ -6,6 +6,7 @@ import { createProject } from "../projectCommands";
 import { logCleanDay, logUrge } from "../quitCommands";
 import { forgetFact, rememberFact } from "./alfredMemory";
 import { addPersonDate, anchorRule, describeMonthDay } from "../peopleCommands";
+import { addHomeItem, describeRepeat, REPEAT_UNITS, type RepeatUnit } from "../homeCommands";
 import { formatLocalDate } from "../../engine/scheduledContext";
 import { getDays, searchRecords } from "./alfredSearch";
 import { MEMORY_TOPICS, type MemoryTopic } from "../../domain/alfred/types";
@@ -36,6 +37,8 @@ export type AlfredProposal =
   | { kind: "log_urge"; trigger: UrgeTrigger }
   // RELATIONSHIPS-001: a person's yearly date, kept as a fact plus a yearly reminder in one card.
   | { kind: "person_date"; person: string; occasion: string; month: number; day: number; note?: string | undefined }
+  // HOME-001: a home item: what BEYOND should know about it and/or when it repeats.
+  | { kind: "home_item"; item: string; details?: string | undefined; every?: number | undefined; unit?: RepeatUnit | undefined; first_due?: string | undefined }
   // PROJECTS-001: a finite effort and its first steps, in one card.
   | { kind: "project_new"; title: string; finish?: string | undefined; steps: { title: string; due_date?: string | undefined }[] };
 type Scale = 1 | 2 | 3 | 4 | 5;
@@ -83,6 +86,12 @@ export const ALFRED_TOOLS: Anthropic.Beta.BetaTool[] = [
       person: s("the person, as he names them"), occasion: s("Birthday, Anniversary, or a short name for the date"),
       month: { type: "integer", minimum: 1, maximum: 12, description: "month number" }, day: { type: "integer", minimum: 1, maximum: 31, description: "day of the month" },
       note: s("anything he added about them, e.g. a gift idea") } } },
+  { name: "home_item", description: "Propose keeping a HOME item as one card: what to know about it (size, model, who to call, warranty) and, if it recurs, how often and the next due date. Use it for house upkeep (furnace filter every 3 months, smoke alarm batteries every year). Only facts and intervals he stated; ask for the next due date rather than guessing it.",
+    input_schema: { type: "object", additionalProperties: false, required: ["item"], properties: {
+      item: s("short name, e.g. Furnace filter"), details: s("what to know, in his words, e.g. 16x25x1, Home Depot"),
+      every: { type: "integer", minimum: 1, maximum: 60, description: "repeat every N units, only if it recurs" },
+      unit: { type: "string", enum: [...REPEAT_UNITS], description: "WEEKS, MONTHS or YEARS" },
+      first_due: s("YYYY-MM-DD, next due date, required with every") } } },
   { name: "remember", description: "Propose keeping a fact he wants remembered: people (birthdays, sizes, gift ideas), money (a bill's amount and due day), health, home, work. One fact per call, in his words.",
     input_schema: { type: "object", additionalProperties: false, required: ["text", "topic"], properties: { text: s("the fact"), topic: { type: "string", enum: [...MEMORY_TOPICS], description: "what it's about" } } } },
   { name: "forget", description: "Propose forgetting one remembered fact, by its id, when he says it's wrong or no longer true.",
@@ -143,6 +152,14 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
     case "task_new_date": { const id = str(i.task_id), t = str(i.title), due = str(i.due_date); return id && t && due && /^\d{4}-\d{2}-\d{2}$/.test(due) ? { kind: "task_new_date", task_id: id, title: t, due_date: due } : null; }
     case "remember": { const t = str(i.text); const topic = MEMORY_TOPICS.find((m) => m === i.topic) ?? "OTHER"; return t ? { kind: "remember", text: t, topic } : null; }
     case "forget": { const id = str(i.memory_id), t = str(i.text); return id && t ? { kind: "forget", memory_id: id, text: t } : null; }
+    case "home_item": {
+      const item = str(i.item), details = str(i.details), due = str(i.first_due);
+      const every = typeof i.every === "number" && Number.isInteger(i.every) && i.every >= 1 && i.every <= 60 ? i.every : undefined;
+      const unit = REPEAT_UNITS.find((u) => u === i.unit);
+      const repeats = every && unit && due && /^\d{4}-\d{2}-\d{2}$/.test(due);
+      if (!item || (!details && !repeats)) return null;
+      return { kind: "home_item", item, details, ...(repeats ? { every, unit, first_due: due } : {}) };
+    }
     case "person_date": {
       const person = str(i.person), occasion = str(i.occasion);
       const month = typeof i.month === "number" && Number.isInteger(i.month) ? i.month : undefined;
@@ -173,6 +190,7 @@ export function describeProposal(p: AlfredProposal): string {
     case "open_training": return "Open TRAIN for today's workout";
     case "remember": return `Remember (${p.topic.toLowerCase()}): ${p.text}`;
     case "forget": return `Forget: ${p.text}`;
+    case "home_item": return `Home: ${p.item}${p.details ? ` · ${p.details}` : ""}${p.every && p.unit && p.first_due ? ` · ${describeRepeat(p.every, p.unit)} from ${p.first_due}` : ""}`;
     case "person_date": return `Remember ${p.person}'s ${p.occasion.toLowerCase()} · ${describeMonthDay(p.month, p.day)} · reminder every year${p.note ? ` · ${p.note}` : ""}`;
     case "log_urge": return `Log an urge · ${p.trigger.toLowerCase().replace("_", " ")}`;
   }
@@ -209,6 +227,10 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }
   if (p.kind === "remember") { await rememberFact(p.text, p.topic); return {}; }
   if (p.kind === "forget") { await forgetFact(p.memory_id); return {}; }
+  if (p.kind === "home_item") {
+    await addHomeItem({ item: p.item, details: p.details, ...(p.every && p.unit && p.first_due ? { repeat: { every: p.every, unit: p.unit, firstDue: p.first_due } } : {}) });
+    return {};
+  }
   if (p.kind === "person_date") { await addPersonDate({ person: p.person, occasion: p.occasion, month: p.month, day: p.day, note: p.note }); return {}; }
   if (p.kind === "add_reminder") {
     await createObligation({
