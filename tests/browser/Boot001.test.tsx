@@ -4,7 +4,7 @@ import { render, cleanup } from "vitest-browser-react";
 import { startDay } from "../../src/application/commands";
 import { describeBootStatus, getBootStatus } from "../../src/application/bootQueries";
 import { setAutoBackupPreferenceAndReset, snoozeBackupPrompt } from "../../src/application/autoBackupQueries";
-import { BOOT_TOTAL_MS, BootSequence, resetBootSequenceForTests } from "../../src/ui/components/BootSequence";
+import { BOOT_TOTAL_MS, BootSequence, livedDayKey, resetBootSequenceForTests } from "../../src/ui/components/BootSequence";
 
 /** BOOT-001: cold launch only, tap to skip, reduced motion skips, real status lines (BOOT-BRIEF-001: a readable brief). */
 
@@ -30,6 +30,23 @@ describe("BOOT-001", () => {
     await expect.element(boot).toBeVisible();
     boot.element().dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
     await expect.poll(() => document.querySelector(".boot")).toBeNull();
+  });
+
+  it("BOOT-ONCE-001: already shown this lived day (a reload), it goes straight in", async () => {
+    localStorage.setItem("beyond.bootShownFor", livedDayKey(new Date()));
+    resetBootSequenceForTests(true);
+    const screen = await render(<><p>TODAY</p><BootSequence /></>);
+    await expect.element(screen.getByText("TODAY")).toBeVisible();
+    // (Kept before the remount test below: its manual unmounts leave later renders in this file blank.)
+    expect(screen.container.querySelector(".boot")).toBeNull();
+  });
+
+  it("BOOT-ONCE-001: the first launch of a lived day plays and remembers the day", async () => {
+    localStorage.setItem("beyond.bootShownFor", "2000-01-01");
+    resetBootSequenceForTests(true);
+    const screen = await render(<BootSequence />);
+    await expect.element(screen.getByRole("status", { name: /BEYOND starting/ })).toBeVisible();
+    expect(localStorage.getItem("beyond.bootShownFor")).toBe(livedDayKey(new Date()));
   });
 
   it("plays: the emblem plate, BEYOND types in, the status lines tick in, then it cuts away", async () => {
@@ -107,5 +124,11 @@ describe("BOOT-001", () => {
     await startDay();
     expect((await getBootStatus(new Date(2026, 9, 17, 9, 0))).shift).toBe("SHIFT DONE");
     vi.useRealTimers();
+  });
+
+  it("BOOT-ONCE-001: the lived day turns at 16:30", () => {
+    expect(livedDayKey(new Date(2026, 9, 31, 16, 29))).toBe("2026-10-30");
+    expect(livedDayKey(new Date(2026, 9, 31, 16, 30))).toBe("2026-10-31");
+    expect(livedDayKey(new Date(2026, 10, 1, 0, 27))).toBe("2026-10-31");
   });
 });

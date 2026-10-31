@@ -116,6 +116,8 @@ describe("ALFRED-003 brief on TODAY", () => {
     await expect.element(brief).toHaveTextContent("Sleep first: the shift starts 18:00");
     expect(briefs()[0]!.model).toBe("claude-haiku-5-5");
     expect(JSON.parse(localStorage.getItem("beyond.alfredBrief")!).text).toMatch(/^Sleep first/);
+    // TODAY fades in; read contrast once the fade has finished (CI read it mid-fade).
+    for (const animation of document.getAnimations()) animation.finish();
     expect((await axe.run(brief.element())).violations).toEqual([]);
     await brief.getByRole("button").click();
     await expect.element(screen.getByRole("dialog", { name: "ALFRED" })).toBeVisible();

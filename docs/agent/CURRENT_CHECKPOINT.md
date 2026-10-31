@@ -1,3 +1,12 @@
+# BOOT-ONCE-001 — the launch brief shows once per lived day
+
+- **Authority / Builder / lane:** Gavin, 2026-10-31 ("having it pop up every time I open it or
+  refresh it is too much"). Claude Code; Routine (presentation of an approved screen). Branch
+  `ccr-0be4f40f-16m0ja`.
+- **Built:** the launch brief plays on the first launch after 16:30 and is remembered on the phone.
+- **Next:** CI and Gavin's merge. ALFRED-003/004, MONTH-001 and BRIDGE-MOMENTS-001 merged in #349;
+  Gavin installed Health Bridge 0.9.0.
+
 # ALFRED-004 — Alfred remembers, reads the whole history, talks back, plans
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 ("I like all of the ideas… Make it so"). Claude
