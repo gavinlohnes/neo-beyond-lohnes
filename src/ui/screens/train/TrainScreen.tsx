@@ -1,6 +1,7 @@
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { MemoryPanel } from "../../components/MemoryPanel";
+import { askAlfred } from "../../components/AlfredSheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { haptic } from "../../feel/haptics";
 import { describeError } from "../../errorMessage";
@@ -1087,6 +1088,11 @@ export function TrainScreen({
               ))}
             </div>
           )}
+          {/* ALFRED-007: ask Alfred about the workout just finished. */}
+          <button className="btn-secondary" style={{ marginTop: 8, width: "auto", padding: "8px 16px", marginRight: 8 }} onClick={() => askAlfred(
+            `I just finished a ${sentenceCase(completionSummary.bodyAreas) || "workout"}: ${completionSummary.setsLogged} sets${completionSummary.volumeLbs > 0 ? `, ${completionSummary.volumeLbs.toLocaleString("en-US")} lb volume` : ""}${completionSummary.records.length ? `, ${completionSummary.records.length} new PR${completionSummary.records.length === 1 ? "" : "s"}` : ""}. How does it compare with my last ones, and what should I do next time?`)}>
+            ASK ALFRED
+          </button>
           <button className="btn-secondary" style={{ marginTop: 8, width: "auto", padding: "8px 16px" }} onClick={() => {
             setCompletionSummary(null);
             headingRef.current?.focus();

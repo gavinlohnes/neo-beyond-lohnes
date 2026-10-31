@@ -1,3 +1,15 @@
+# ALFRED-006/007 — weekly review writes itself; memory joined; Ask Alfred in more places
+
+- **Authority / Builder / lane:** Gavin, 2026-10-31 ("What do we do now?… we have until 0800").
+  Claude Code; Protected within the owner's go (additive schema v17 `alfredReviews`). Brief:
+  `docs/agent/ALFRED-006.md`. Branch `ccr-0be4f40f-16m0ja`.
+- **Built:** a real-data phone-size walk of tonight's screens (fixed Alfred's footer wrap); the
+  weekly review Alfred writes once a week, on TODAY until GOT IT and kept in MONTH; ALFRED REMEMBERS
+  in MORE → MEMORY (People, Money and bills…) beside MEMORY-001, which Alfred now reads too; ASK
+  ALFRED in the Garmin sheets and after a workout.
+- **Next:** CI and Gavin's merge. Then from the roadmap: reminders at an exact time of day, and
+  real-phone tuning after a week of use.
+
 # GARMIN-AUTO-001 — Garmin checks itself every 3 hours
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 ("Yes, auto sync every few hours"). Claude Code;

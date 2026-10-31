@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getMonth, getSleepDebt, SLEEP_NEED_MINUTES, type MonthDay } from "../../../application/monthQueries";
-import { askAlfred } from "../../components/AlfredSheet";
+import { AlfredText, askAlfred } from "../../components/AlfredSheet";
+import { listReviews, weekLabel } from "../../../application/alfred/alfredReview";
+import type { AlfredReview } from "../../../domain/alfred/types";
 import { describeError } from "../../errorMessage";
 
 /**
@@ -18,6 +20,8 @@ export function CaveMonthView() {
   const [debt, setDebt] = useState<{ owedMinutes: number; days: number } | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<AlfredReview[]>([]);
+  useEffect(() => { void listReviews().then(setReviews).catch(() => {}); }, []);
 
   useEffect(() => {
     let live = true;
@@ -66,6 +70,11 @@ export function CaveMonthView() {
         <li>{day.workouts ? `${day.workouts} workout${day.workouts === 1 ? "" : "s"}` : "No workout"}{day.urges ? ` · ${day.urges} urge${day.urges === 1 ? "" : "s"}` : ""}{day.clean ? " · clean day" : ""}</li>
       </ul> : <p className="meta">Nothing logged that day.</p>}
       <button type="button" className="btn-secondary" onClick={() => askAlfred(`Tell me about ${longDate(day.date)}: what happened, what went well, what didn't, and why. Use get_days for that day and the days around it.`)}>ASK ALFRED ABOUT THIS DAY</button>
+    </section>}
+    {/* ALFRED-006: every weekly review Alfred has written, newest first. */}
+    {reviews.length > 0 && <section className="cave__block month__reviews" aria-label="Weekly reviews">
+      <h3 className="cave__cap">Weekly reviews</h3>
+      {reviews.map((r) => <details key={r.id}><summary>{weekLabel({ start: r.weekStart, end: r.weekEnd })}</summary><AlfredText text={r.text} /></details>)}
     </section>}
   </div>;
 }

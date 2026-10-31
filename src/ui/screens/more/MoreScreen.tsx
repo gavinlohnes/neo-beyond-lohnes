@@ -1,6 +1,7 @@
 import type { CaveVitalId } from "../../../application/caveVitals";
 import { useHiddenFeatures, setHiddenFeature, type HiddenFeature } from "../../hiddenFeatures";
 import { MemoryPanel } from "../../components/MemoryPanel";
+import { AlfredMemoryList } from "../../components/AlfredMemoryList";
 import { getExerciseNames } from "../../../application/exerciseLibraryQueries";
 import { getSavedMeals } from "../../../application/nutritionQueries";
 import type { SavedMeal } from "../../../domain/common/types";
@@ -505,7 +506,7 @@ export function MoreScreen({
             setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
           }} />}</div>
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} />}
-          <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><MemoryPanel active={active && view === "MEMORY"} /></>}</div>
+          <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><MemoryPanel active={active && view === "MEMORY"} /><AlfredMemoryList active={active && view === "MEMORY"} /></>}</div>
           {view === "WORK_SCHEDULE" && <><OperatorHeader destination="command">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
           <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="command">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
           <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">MORE // DECISION JOURNAL</OperatorHeader><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></>}</div>
