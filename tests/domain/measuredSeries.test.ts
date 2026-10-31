@@ -44,6 +44,10 @@ describe("GARMIN-004 measured series", () => {
     expect(sleepByPeriod(periods, [night, nap], now).map((s) => s.value)).toEqual([360, null]);
     expect(lastNight([night, nap], base + 9 * DAY)?.id).toBe(night.id);
     expect(lastNight([night], now + 2 * DAY)).toBeNull();
+    // SLEEP-WINDOW-001: a night worker's sleep before a shift still counts 30 hours later, not 37.
+    const ended = base + 8 * DAY + 11 * H;
+    expect(lastNight([night], ended + 30 * H)?.id).toBe(night.id);
+    expect(lastNight([night], ended + 37 * H)).toBeNull();
   });
 
   it("totals weeks (steps) or averages them (heart rate), oldest first", () => {

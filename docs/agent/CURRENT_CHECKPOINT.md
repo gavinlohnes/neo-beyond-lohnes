@@ -1,3 +1,14 @@
+# SLEEP-WINDOW-001 — "last night" reaches 36 hours
+
+- **Authority / Builder / lane:** Gavin, 2026-10-31 (sleep in DATA but not TODAY). Claude Code;
+  Routine (a display window aligned to the existing 36-hour rule; a Bridge display fix). Branch
+  `ccr-0be4f40f-16m0ja`.
+- **Built:** `lastNight` reaches 36 hours (was 24); Health Bridge 0.8.1 keeps the per-kind freshness
+  line after a send.
+- **Verified:** `npm run verify` green (3,178 passed); Bridge builds in Health Bridge CI.
+- **Next:** CI and Gavin's merge; Gavin reads the Bridge's freshness line after a sync. If sleep,
+  steps or resting HR read "Behind", Garmin Connect's Health Connect write access for that kind is off.
+
 # SYNC-002 — SYNC GARMIN is one tap
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 ("Go A"). Claude Code; Protected within the

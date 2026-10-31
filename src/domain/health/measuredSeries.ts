@@ -125,9 +125,17 @@ export function hypnogram(sleep: ExternalSleep): { from: number; to: number; sta
   }).sort((a, b) => a.from - b.from);
 }
 
-/** The latest Garmin sleep that ended within the last 24 hours of `now`, if any. */
+/**
+ * SLEEP-WINDOW-001 (owner, 2026-10-31: "Is it because I work overnight and sleep at unusual times"):
+ * how far back "last night" reaches. A night worker sleeps before a shift and next sleeps after it,
+ * so the main sleep can have ended over a day ago; 36 hours matches TODAY's own logged-sleep rule
+ * (MAIN_SLEEP_FRESH_HOURS). Was 24 hours.
+ */
+export const LAST_NIGHT_WINDOW_MS = 36 * 60 * 60 * 1000;
+
+/** The latest Garmin main sleep that ended within LAST_NIGHT_WINDOW_MS of `now`, if any. */
 export function lastNight(sleeps: readonly ExternalSleep[], now: number): ExternalSleep | null {
-  const recent = sleeps.filter((s) => { const end = Date.parse(s.endTime); return end <= now && end > now - DAY_MS; });
+  const recent = sleeps.filter((s) => { const end = Date.parse(s.endTime); return end <= now && end > now - LAST_NIGHT_WINDOW_MS; });
   if (!recent.length) return null;
   // The main sleep: the longest of the recent sessions, so a nap never replaces the night.
   return recent.reduce((best, s) => (sleepMinutes(s) > sleepMinutes(best) ? s : best));
