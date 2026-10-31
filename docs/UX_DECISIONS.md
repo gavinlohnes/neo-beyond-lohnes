@@ -2628,3 +2628,13 @@ The next step is the operator's own choice; BEYOND never picks one. Progress cou
 ("2 of 4 done"), not a goal percentage, and is not an Engine input. Projects live inside
 MISSIONS & OBLIGATIONS; no new tab or TODAY row. Alfred proposes a project and its steps as one
 card; nothing is saved until SAVE. Goals are deferred. [Brief](agent/PROJECTS-001.md).
+
+
+## 2026-10-31 — ROUTINES-001: my shift rhythm
+
+Owner: "Routines sound better to me! Let's do that"; approved the additive routines table and
+"One quiet row on TODAY". A routine is the operator's own list for one moment: before shift,
+on shift, after shift, or a day off. TODAY shows only the current moment's routines, collapsed,
+next to prep; nothing when none fits. Ticks are today's only: no streaks, no "missed", no
+counts or percentages, no reminders. Alfred drafts and edits routines only as confirmed cards
+and never sees tick history. [Brief](agent/ROUTINES-001.md).

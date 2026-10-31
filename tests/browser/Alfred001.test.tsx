@@ -76,7 +76,7 @@ describe("ALFRED-001", () => {
     const system = body.system as { text: string; cache_control?: unknown }[];
     expect(system[1]!.text).toMatch(/^BEYOND RECORDS/);
     expect(system[1]!.cache_control).toEqual({ type: "ephemeral" });
-    expect((body.tools as { name: string }[]).map((t) => t.name)).toEqual(["log_meal", "log_water", "log_sleep", "log_weight", "add_reminder", "project_new", "capture_note",
+    expect((body.tools as { name: string }[]).map((t) => t.name)).toEqual(["log_meal", "log_water", "log_sleep", "log_weight", "add_reminder", "routine_new", "routine_edit", "project_new", "capture_note",
       "check_in", "work_started", "work_ended", "task_done", "task_new_date", "clean_day", "open_training",
       "remember", "forget", "log_urge", "search_records", "get_days"]);
 
