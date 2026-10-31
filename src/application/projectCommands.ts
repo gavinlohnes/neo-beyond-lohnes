@@ -1,13 +1,14 @@
 import { db } from "../persistence/db";
 import { newId, nextSeq } from "./commands";
 import { INTENT_WRITE_TABLES, writeAtomically } from "./atomicWrite";
-import { assertMissionActive, assertProjectOpen, createObligation, logIntentEvent, notFound } from "./intentCommands";
+import { assertMissionActive, assertProjectOpen, createObligation, logIntentEvent, modifyObligation, notFound } from "./intentCommands";
 import type { Obligation, Project, ProjectStatus } from "../domain/intent/types";
 import {
   obligationInputSchema,
   projectInputSchema,
   projectModifyInputSchema,
   type ObligationInput,
+  type ObligationModifyInput,
   type ProjectInput,
   type ProjectModifyInput,
 } from "../persistence/intentValidation";
@@ -156,5 +157,13 @@ export async function setObligationProject(obligationId: string, projectId: stri
       }
     }
     return true;
+  });
+}
+
+/** The Obligation editor's SAVE: field edits and a Project move commit together or not at all. */
+export async function saveObligationEdits(obligationId: string, changes: ObligationModifyInput, projectId: string | null): Promise<void> {
+  await writeAtomically(INTENT_WRITE_TABLES, async () => {
+    await modifyObligation(obligationId, changes);
+    await setObligationProject(obligationId, projectId);
   });
 }
