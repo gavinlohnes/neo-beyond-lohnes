@@ -51,3 +51,12 @@ it("Alfred's home card describes itself and saves on confirm; needs a date to re
   await confirmProposal(p);
   expect((await getHomeView()).due[0]!.reminder.title).toBe("Home: Furnace filter");
 });
+
+it("yearly home jobs stay out of People; bad repeats and impossible person dates are refused up front", async () => {
+  const { getPeopleView, anchorRule } = await import("../../src/application/peopleCommands");
+  await addHomeItem({ item: "Smoke alarm batteries", repeat: { every: 1, unit: "YEARS", firstDue: "2027-01-01" } });
+  expect((await getPeopleView()).upcoming).toEqual([]);
+  expect(() => anchorRule("FREQ=WEEKLY;INTERVAL=abc", "2026-11-02")).toThrow();
+  expect(toProposal("person_date", { person: "Sam", occasion: "Birthday", month: 2, day: 30 })).toBeNull();
+  expect(toProposal("person_date", { person: "Sam", occasion: "Birthday", month: 2, day: 29 })).not.toBeNull();
+});

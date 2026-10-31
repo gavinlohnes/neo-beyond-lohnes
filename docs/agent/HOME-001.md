@@ -38,3 +38,8 @@ beyond the existing due-this-week, schema changes.
 `tests/integration/home.test.ts`: fact + job together, next occurrence on schedule, fact-only and
 job-only, validation, rollback, weekday stability, Alfred card. `tests/browser/Home.test.tsx`: by-hand
 add at 360px with axe and no overflow; plain fact without a job. Full verify, review, green CI; Gavin merges.
+
+## Includes review notes from #355 (RELATIONSHIPS-001, PASS)
+
+Yearly "Home: " jobs stay out of People; Alfred's repeat rules must produce a real date (not just
+parse); a person card isn't offered for a date that doesn't exist.

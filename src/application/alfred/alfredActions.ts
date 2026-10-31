@@ -164,7 +164,9 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
       const person = str(i.person), occasion = str(i.occasion);
       const month = typeof i.month === "number" && Number.isInteger(i.month) ? i.month : undefined;
       const day = typeof i.day === "number" && Number.isInteger(i.day) ? i.day : undefined;
-      return person && occasion && month && day && month <= 12 && day <= 31 ? { kind: "person_date", person, occasion, month, day, note: str(i.note) } : null;
+      // Review of #355: don't offer a card for a date that doesn't exist (Feb 30).
+      const fits = month && day && month <= 12 && day <= [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1]!;
+      return person && occasion && fits ? { kind: "person_date", person, occasion, month, day, note: str(i.note) } : null;
     }
     case "log_urge": { const trigger = URGE_TRIGGERS.find((u) => u === i.trigger); return trigger ? { kind: "log_urge", trigger } : null; }
     default: return null;
