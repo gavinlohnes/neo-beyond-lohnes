@@ -23,6 +23,10 @@ import {
   satisfyObligation,
 } from "../../../application/intentCommands";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { ProjectsSection } from "./ProjectsSection";
+import { saveObligationEdits } from "../../../application/projectCommands";
+import { getProjects } from "../../../application/projectQueries";
+import type { Project } from "../../../domain/intent/types";
 import {
   buildRecurrenceRule,
   describeRecurrence,
@@ -256,6 +260,8 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
   const readSequence = useRef(0);
   const [readState, setReadState] = useState<"loading" | "ready" | "error">("loading");
   const [readError, setReadError] = useState("");
+  const [projectsKey, setProjectsKey] = useState(0);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   const [newMissionTitle, setNewMissionTitle] = useState("");
   const [newObligationTitle, setNewObligationTitle] = useState("");
@@ -314,8 +320,9 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
     setReadState("loading");
     setReadError("");
     try {
-      const [everyMission, nextObligations] = await Promise.all([getMissions(), showAllObligations ? getObligations() : getUnresolvedObligations()]);
+      const [everyMission, nextObligations, everyProject] = await Promise.all([getMissions(), showAllObligations ? getObligations() : getUnresolvedObligations(), getProjects()]);
       if (sequence !== readSequence.current) return;
+      setProjects(everyProject); setProjectsKey((k) => k + 1);
       setAllMissions(everyMission);
       setMissions(showAllMissions ? everyMission : everyMission.filter((mission) => mission.status === "ACTIVE"));
       setObligations(nextObligations);
@@ -391,7 +398,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
         <div key={key} hidden={!shown}>
           {detail.kind === "MISSION_DETAIL"
             ? <MissionDetail active={active && shown} missionId={detail.missionId} onBack={backToList} />
-            : <ObligationDetail active={active && shown} obligationId={detail.obligationId} missions={allMissions} onBack={backToList} />}
+            : <ObligationDetail active={active && shown} obligationId={detail.obligationId} missions={allMissions} projects={projects} onBack={backToList} />}
         </div>
       );
     })}
@@ -461,6 +468,8 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
       </div>
       </section>
 
+      <ProjectsSection missions={allMissions} refreshKey={projectsKey} active={active} onChanged={() => void refreshList()} onOpenObligation={(id) => setView({ kind: "OBLIGATION_DETAIL", obligationId: id })} />
+
       <section aria-labelledby="obligations-heading">
       <h2 id="obligations-heading" className="section-label">Obligations · commitments</h2>
       <div className="intent-filter" role="group" aria-label="Obligation visibility">
@@ -479,7 +488,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
           status={o.status}
           title={o.title}
           {...(o.description ? { description: o.description } : {})}
-          summary={describeObligationSummary(o, allMissions)}
+          summary={describeObligationSummary(o, allMissions, projects)}
           onOpen={() => setView({ kind: "OBLIGATION_DETAIL", obligationId: o.id })}
         />
       ))}
@@ -534,11 +543,15 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
   );
 }
 
-function describeObligationSummary(o: Obligation, missions: Mission[]): string {
+function describeObligationSummary(o: Obligation, missions: Mission[], projects: Project[]): string {
   const parts: string[] = [o.status];
   if (o.missionId) {
     const mission = missions.find((m) => m.id === o.missionId);
     if (mission) parts.push(mission.title);
+  }
+  if (o.projectId) {
+    const project = projects.find((p) => p.id === o.projectId);
+    if (project) parts.push(`project ${project.title}`);
   }
   if (o.dueAt) parts.push(`due ${o.dueAt}`);
   if (o.plannedAt) parts.push(`planned ${o.plannedAt}`);
@@ -689,11 +702,13 @@ function ObligationDetail({
   active,
   obligationId,
   missions,
+  projects,
   onBack,
 }: {
   active: boolean;
   obligationId: string;
   missions: Mission[];
+  projects: Project[];
   onBack: () => void;
 }) {
   const [obligation, setObligation] = useState<Obligation | null>(null);
@@ -704,13 +719,15 @@ function ObligationDetail({
   const [dueAt, setDueAt] = useState("");
   const [plannedAt, setPlannedAt] = useState("");
   const [recurrenceForm, setRecurrenceForm] = useState<RecurrenceFormState>(EMPTY_RECURRENCE);
+  const [projectId, setProjectId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingResolution, setPendingResolution] = useState<"SATISFY" | "RELEASE" | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   useSessionDraft(`intent-obligation-edit-${obligationId}`, editing && obligation !== null
     && (title !== obligation.title || description !== (obligation.description ?? "") || dueAt !== (obligation.dueAt ?? "")
-      || plannedAt !== (obligation.plannedAt ?? "") || !sameRecurrence(recurrenceForm, recurrenceFormFor(obligation.recurrence))));
+      || plannedAt !== (obligation.plannedAt ?? "") || !sameRecurrence(recurrenceForm, recurrenceFormFor(obligation.recurrence))
+      || projectId !== (obligation.projectId ?? "")));
 
   const loadSequence = useRef(0);
   useEffect(() => {
@@ -726,7 +743,7 @@ function ObligationDetail({
     setObligation(found);
     if (found && !keepInput) {
       setTitle(found.title); setDescription(found.description ?? ""); setDueAt(found.dueAt ?? "");
-      setPlannedAt(found.plannedAt ?? ""); setRecurrenceForm(recurrenceFormFor(found.recurrence));
+      setPlannedAt(found.plannedAt ?? ""); setRecurrenceForm(recurrenceFormFor(found.recurrence)); setProjectId(found.projectId ?? "");
     }
     setHistory(trail);
   }
@@ -743,13 +760,13 @@ function ObligationDetail({
       // have here — no clear-to-unset path yet for any of these fields).
       const anchor = dueAt || formatLocalDate(new Date());
       const recurrence = recurrenceInputFor(recurrenceForm, anchor);
-      await modifyObligation(obligationId, {
+      await saveObligationEdits(obligationId, {
         title: title.trim() || undefined,
         description: description.trim() || undefined,
         dueAt: dueAt || undefined,
         plannedAt: plannedAt || undefined,
         ...(recurrence ? { recurrence } : {}),
-      });
+      }, projectId || null);
       acknowledge("LIGHT");
       setEditing(false);
       await load();
@@ -777,6 +794,8 @@ function ObligationDetail({
   }
 
   const mission = obligation?.missionId ? missions.find((m) => m.id === obligation.missionId) : undefined;
+  const project = obligation?.projectId ? projects.find((p) => p.id === obligation.projectId) : undefined;
+  const openProjects = projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED" || p.id === obligation?.projectId);
 
   return (
     <div>
@@ -793,6 +812,8 @@ function ObligationDetail({
                 <h2 className="card-title">{obligation.title}</h2>
                 {obligation.description && <p className="card-body">{obligation.description}</p>}
                 {mission && <p className="meta">Mission: {mission.title}</p>}
+                {project && <p className="meta">Project: {project.title}</p>}
+                {obligation.projectId && !project && <p className="meta">Project: unavailable</p>}
                 {obligation.dueAt && <p className="meta">Due: {obligation.dueAt}</p>}
                 {obligation.plannedAt && <p className="meta">Planned: {obligation.plannedAt}</p>}
                 {obligation.recurrence && <p className="meta">Repeats: {describeRecurrence(obligation.recurrence.rrule)}</p>}
@@ -856,6 +877,10 @@ function ObligationDetail({
                   </div>
                 </div>
                 <RecurrencePicker form={recurrenceForm} onChange={setRecurrenceForm} idPrefix={`obligation-recurrence-${obligationId}`} disabled={busy} />
+                <select className="input" style={{ marginBottom: 8 }} aria-label="Project" value={projectId} disabled={busy} onChange={(e) => setProjectId(e.target.value)}>
+                  <option value="">No project</option>
+                  {openProjects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+                </select>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button className="btn-primary" disabled={busy} onClick={() => void handleSave()}>
                     SAVE

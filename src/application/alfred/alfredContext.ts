@@ -5,6 +5,7 @@ import { getUnresolvedObligations } from "../intentQueries";
 import { getAllCaptureItems } from "../queries";
 import { getMemories } from "./alfredMemory";
 import { getMemoryFacts } from "../memory";
+import { getProjectViews } from "../projectQueries";
 import { MEMORY_LABELS } from "../../domain/memory";
 import { getSleepDebt, SLEEP_NEED_MINUTES } from "../monthQueries";
 import { getActiveDay, getLatestCheckIn, getMostRecentBodyweight, getSchedulePattern, getWorkPeriodEnded, getWorkPeriodStarted } from "../queries";
@@ -75,7 +76,13 @@ export async function buildAlfredContext(now = new Date(), includePreparationMem
     for (const s of recent) lines.push(dayLine(s));
   }
 
-  if (tasks) lines.push(`OPEN TASKS/REMINDERS ([id] title): ${tasks.length ? tasks.map((t) => `[${t.id}] "${t.title}"${t.dueAt ? ` due ${t.dueAt}` : ""}${t.recurrence ? ` (repeats ${t.recurrence.rrule})` : ""}`).join("; ") : "none"}.`);
+  if (tasks) lines.push(`OPEN TASKS/REMINDERS ([id] title): ${tasks.length ? tasks.map((t) => `[${t.id}] "${t.title}"${t.dueAt ? ` due ${t.dueAt}` : ""}${t.recurrence ? ` (repeats ${t.recurrence.rrule})` : ""}${t.projectId ? ` (step of project [${t.projectId}])` : ""}`).join("; ") : "none"}.`);
+  // PROJECTS-001: finite efforts he set up; "next" is his own choice, never Alfred's ranking.
+  const projects = await safe(getProjectViews);
+  if (projects) {
+    const open = projects.filter((v) => v.project.status === "ACTIVE" || v.project.status === "PAUSED");
+    lines.push(`OPEN PROJECTS ([id] title — status; steps done of total; his chosen next step): ${open.length ? open.map((v) => `[${v.project.id}] "${v.project.title}" — ${v.project.status.toLowerCase()}; ${v.progress.done} of ${v.progress.total - v.progress.released} done${v.progress.next ? `; next: "${v.progress.next.title}"` : ""}${v.project.finish ? `; finished when: ${v.project.finish}` : ""}`).join("; ") : "none"}.`);
+  }
   if (notes) {
     const open = notes.filter((n) => n.status === "OPEN").slice(-10);
     lines.push(`OPEN NOTES: ${open.length ? open.map((n) => `"${n.text}" (${day(n.capturedAt)})`).join("; ") : "none"}.`);

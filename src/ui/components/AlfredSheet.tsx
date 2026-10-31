@@ -29,6 +29,7 @@ function writeAlfredKey(value: string | null) { try { if (value) localStorage.se
 // ALFRED-004: the starters are the ideas the owner asked for; each is one question Alfred already knows how to answer.
 const STARTERS: { label: string; ask?: string; fill?: string }[] = [
   { label: "Plan my next days off", ask: "Help me plan my next days off around what matters to me. Use recorded context, say what is unknown, and offer a draft I can choose from." },
+  { label: "Help me get something done", fill: "Help me get this done: " },
   { label: "How am I doing?" },
   { label: "What am I forgetting?" },
   { label: "Weekly review", ask: "Give me my weekly review: my last 7 lived days against the 7 before (sleep against shifts, protein, water, training, urges and clean days). What slipped, and one thing to try this week." },
