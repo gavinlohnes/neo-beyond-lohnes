@@ -106,4 +106,4 @@ it("walks one whole shift through the screens: preflight, a late-logged meal, a 
   await secured.getByRole("button", { name: "CONTINUE", exact: true }).click();
   await expect.element(secured).not.toBeInTheDocument();
   await check("6-after");
-});
+}, 45_000); // Seven screens in one walk: the default 15 s ran out on a slower machine (twice on 2026-10-31), never on CI.
