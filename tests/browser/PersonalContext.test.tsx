@@ -1,3 +1,4 @@
+import { App } from "../../src/app/App";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page, cdp } from "vitest/browser";
@@ -41,7 +42,7 @@ it("keeps direction and constraints correctable offline without leaking them int
   await screen.getByRole("combobox", { name: "Applies to" }).selectOptions("CONSTRAINT");
   await screen.getByRole("textbox", { name: "What should BEYOND remember?" }).fill("Keep my first morning quiet.");
   await screen.getByRole("button", { name: "SAVE & CONFIRM MEMORY" }).click();
-  await expect.element(screen.getByText("Keep my first morning quiet.", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("Keep my first morning quiet.", { exact: true }).first()).toBeVisible();
   await screen.getByText("Inspect or fix this memory").click();
   await screen.getByRole("button", { name: "CORRECT MEMORY" }).click();
   await screen.getByRole("textbox", { name: "What should BEYOND remember?" }).fill("Keep my afternoon quiet.");
@@ -116,4 +117,35 @@ it("does not present an answer whose personal sources changed while Claude was a
   await expect.element(screen.getByRole("alert")).toHaveTextContent("Your context changed");
   expect(screen.getByText("Stale answer must not appear.").elements()).toHaveLength(0);
   expect(await db.obligations.count()).toBe(0);
+});
+
+it("keeps an old card bound to its original lived day after asking another question", async () => {
+  await startDay(); const screen = await show();
+  responses.push(() => response("", { name: "log_water", input: { oz: 8 } }));
+  await send(screen, "Log eight ounces");
+  await expect.element(screen.getByRole("button", { name: "SAVE", exact: true })).toBeVisible();
+  vi.setSystemTime(new Date(2026, 10, 1, 17)); await startDay();
+  await send(screen, "What is my schedule now?");
+  await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+  await expect.element(screen.getByRole("alert")).toHaveTextContent("Your context changed");
+  expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(0);
+});
+
+it("opens the exact original memory from an answer for correction through the canonical route", async () => {
+  const day = await startDay(); await fact(day.id);
+  const screen = await render(<App />);
+  await screen.getByRole("button", { name: "Ask Alfred", exact: true }).first().click();
+  const sheet = screen.getByRole("dialog", { name: "ALFRED", exact: true });
+  await sheet.getByText("CONTEXT & SOURCES", { exact: true }).click();
+  await sheet.getByRole("checkbox").click();
+  responses.push(() => response("Your constraint. [[MEMORY:quiet]]"));
+  await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("Help me plan");
+  await sheet.getByRole("button", { name: "SEND", exact: true }).click();
+  await sheet.getByRole("button", { name: "Source: Keep my first morning quiet." }).click();
+  const source = sheet.getByRole("region", { name: "Source record", exact: true });
+  await source.getByRole("button", { name: "OPEN ORIGINAL RECORD", exact: true }).click();
+  await expect.element(sheet).not.toBeVisible();
+  const memory = screen.getByRole("region", { name: "What BEYOND should remember", exact: true });
+  await expect.element(memory.getByRole("button", { name: "CORRECT MEMORY", exact: true })).toBeVisible();
+  expect((document.activeElement as HTMLElement).dataset.memoryId).toBe("quiet");
 });

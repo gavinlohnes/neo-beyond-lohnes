@@ -1,3 +1,4 @@
+import { readPersonalSources } from "./personalContext";
 import { db } from "../../persistence/db";
 import { getDaySummaries } from "../dayLedgerQueries";
 import { dayLine } from "./alfredContext";
@@ -29,7 +30,6 @@ export async function searchRecords(query: string, limit = 30, includePersonal =
     consider(e.occurredAt, e.type, e.payload);
   }
   if (includePersonal) {
-    const { readPersonalSources } = await import("./personalContext");
     for (const s of await readPersonalSources()) consider(new Date().toISOString(), s.kind, { source: s.key, text: s.text });
   }
   for (const n of notes) consider(n.capturedAt, `NOTE ${n.status}`, n.text);

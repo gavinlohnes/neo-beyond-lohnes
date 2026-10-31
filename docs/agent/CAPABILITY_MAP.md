@@ -334,3 +334,14 @@ software. LifeOsApp is MIT, but its storage/shell do not fit BEYOND's history/at
 No donor source copied, dependency added or implementation approved. Reuse existing personal
 understanding, memory, Intent and Alfred before a new store or dashboard. Goals/Projects design
 is parked; connected context/planning design awaits owner scope approval.
+
+
+### PERSONAL-CONTEXT-001 — implementation branch, not yet merged
+
+`application/alfred/personalContext.ts` composes typed source references from existing records;
+new personal sources are conversation-opt-in. `contextActions.ts` guards each proposal's own
+source/day/task snapshot atomically with existing canonical commands. MEMORY-001 supports
+DIRECTION/CONSTRAINT without a new table; PREP/recovery filters stay bounded. Personal
+Understanding has the local editor/planning entry; Alfred sources navigate original records.
+See [brief](PERSONAL-CONTEXT-001.md) and active checkpoint for verification/review/merge status.
+No new library, model, notifications or Engine rules. Reuse these paths before a new profile store.

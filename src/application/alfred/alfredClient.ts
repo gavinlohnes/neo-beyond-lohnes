@@ -1,3 +1,4 @@
+import type { ProposalContext } from "./contextActions";
 import type { ContextSource } from "./personalContext";
 import Anthropic from "@anthropic-ai/sdk";
 import { ALFRED_READ_TOOLS, ALFRED_TOOLS, runReadTool, toProposal, type AlfredProposal } from "./alfredActions";
@@ -38,7 +39,7 @@ How you work:
 - BEYOND's own Engine makes recommendations. You explain, plan and remember; you don't override it.
 - Be calm, short and concrete, like a trusted aide. No cheerleading, guilt, streaks or urgency. Plain sentences; short lists only when they help. Use his local times (24-hour).`;
 
-export interface AlfredTurn { role: "user" | "alfred"; text: string; deep?: boolean; sources?: ContextSource[]; proposals?: { id: string; proposal: AlfredProposal; state: "pending" | "saved" | "skipped" }[] }
+export interface AlfredTurn { role: "user" | "alfred"; text: string; deep?: boolean; sources?: ContextSource[]; context?: ProposalContext; proposals?: { id: string; proposal: AlfredProposal; state: "pending" | "saved" | "skipped" }[] }
 export interface AlfredContextPolicy { includePersonal: boolean; assertFresh: () => Promise<void> }
 export interface AlfredReply { text: string; proposals: { id: string; proposal: AlfredProposal }[]; costUsd: number }
 

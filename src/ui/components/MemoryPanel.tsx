@@ -19,7 +19,7 @@ const date = (value: string) => new Date(value).toLocaleString("en-US", { weekda
 const includes = (scope: Scope, kind: MemoryKind) => scope === "ALL" || (scope === "RECOVERY" ? kind === "RECOVERY" : scope === "PERSONAL" ? kind === "DIRECTION" || kind === "CONSTRAINT" : kind.startsWith("PREP_"));
 
 /** Shared operator editor and contextual hints. Opening a view never records a fact. */
-export function MemoryPanel({ active = true, scope = "ALL", contextual = false, blocked = false }: { active?: boolean; scope?: Scope; contextual?: boolean; blocked?: boolean }) {
+export function MemoryPanel({ active = true, scope = "ALL", contextual = false, blocked = false, focusFactId = null }: { active?: boolean; scope?: Scope; contextual?: boolean; blocked?: boolean; focusFactId?: string | null }) {
   const [data, setData] = useState<Awaited<ReturnType<typeof getMemoryWorkspace>> | null>(null);
   const [error, setError] = useState<string | null>(null), [notice, setNotice] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0), [busy, setBusy] = useState(false), [loading, setLoading] = useState(false);
@@ -28,6 +28,18 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   const [undo, setUndo] = useUndoWindow<MemoryFact>();
   const writing = useRef(false), sequence = useRef(0), lifecycle = useRef(0);
   const uid = useId();
+  const focused = useRef<string | null>(null);
+  useEffect(() => {
+    if (!active || !data || !focusFactId || focused.current === focusFactId) return;
+    const fact = data.facts.find((f) => f.factId === focusFactId);
+    if (!fact) return;
+    setStatus(fact.status); setLimit(Math.max(5, data.facts.filter((f) => f.status === fact.status).findIndex((f) => f.factId === focusFactId) + 1));
+    const frame = requestAnimationFrame(() => {
+      const article = [...document.querySelectorAll<HTMLElement>("[data-memory-id]")].find((el) => el.dataset.memoryId === focusFactId && el.getClientRects().length);
+      if (article) { article.focus(); focused.current = focusFactId; }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [active, data, focusFactId]);
   useSessionDraft(`memory-${uid}`, draft !== null && draft.statement.length > 0);
   useEffect(() => { lifecycle.current++; return () => { lifecycle.current++; }; }, [active, scope]);
   useEffect(() => {
@@ -86,10 +98,10 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
         {(["ACTIVE", "IRRELEVANT"] as const).map((value) => <button type="button" className="btn-secondary" key={value} aria-pressed={status === value} onClick={() => { setStatus(value); setLimit(5); }}>{value === "ACTIVE" ? "ACTIVE" : "NO LONGER RELEVANT"}</button>)}
       </div>}
       {!facts.length && !contextual && <p className="meta">{status === "ACTIVE" ? "No active memories yet. Add only what you want BEYOND to remember." : "No memories marked irrelevant."}</p>}
-      {facts.slice(0, limit).map((fact) => <article className="memory-fact" key={fact.factId}>
+      {facts.slice(0, limit).map((fact) => <article className="memory-fact" key={fact.factId} tabIndex={-1} data-memory-id={fact.factId}>
         <p className="memory-statement">{fact.statement}</p>
         <p className="meta">{MEMORY_LABELS[fact.kind]} · OPERATOR · confirmed {date(fact.lastConfirmedAt)}</p>
-        <details><summary>Inspect or fix this memory</summary>
+        <details open={fact.factId === focusFactId || undefined}><summary>Inspect or fix this memory</summary>
           <p className="meta">Source: OPERATOR · created {date(fact.createdAt)} · {fact.status === "ACTIVE" ? "Active" : "No longer relevant"}</p>
           <div className="memory-actions">
             <button type="button" className="btn-secondary" disabled={disabled || draft !== null} onClick={() => edit(fact)}>CORRECT MEMORY</button>

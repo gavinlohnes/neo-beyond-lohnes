@@ -13,6 +13,7 @@ export function AlfredContextPanel({ included, onIncluded, busy, snapshot, selec
   const [previewLoading, setPreviewLoading] = useState(false);
   const [open, setOpen] = useState(false), [limit, setLimit] = useState(5);
   const [available, setAvailable] = useState<ContextSource[]>([]), [error, setError] = useState<string | null>(null);
+  const [sourceReadAt, setSourceReadAt] = useState<string | null>(null);
   const [current, setCurrent] = useState<ContextSource | null>(null), [reading, setReading] = useState(false);
   useEffect(() => {
     if (!open) return;
@@ -24,7 +25,7 @@ export function AlfredContextPanel({ included, onIncluded, busy, snapshot, selec
   useEffect(() => {
     setCurrent(null); if (!selected) return;
     let alive = true; setReading(true); setError(null);
-    void inspectContextSource(selected, included).then((s) => { if (alive) { setCurrent(s); if (!s) setError("That source is no longer available in the current context."); } })
+    void inspectContextSource(selected, included).then((s) => { if (alive) { setCurrent(s); setSourceReadAt(new Date().toISOString()); if (!s) setError("That source is no longer available in the current context."); } })
       .catch(() => { if (alive) setError("That source could not be read. It is unavailable, not empty."); })
       .finally(() => { if (alive) setReading(false); });
     return () => { alive = false; };
@@ -59,8 +60,9 @@ export function AlfredContextPanel({ included, onIncluded, busy, snapshot, selec
     {error && <p role="alert">{error}</p>}
     {selected && <section ref={inspection} tabIndex={-1} aria-label="Source record">
       <h3>Source record</h3>{reading && <p role="status">Reading current source…</p>}
-      {current && <><p>{current.text}</p><p className="meta">{current.kind} · {current.revision !== selected.revision ? "Changed since this answer. Current record shown." : "Current record matches the supplied revision."}</p>
+      {current && <><p>{current.text}</p><p className="meta">{current.kind} · {sourceReadAt ? `read ${date(sourceReadAt)} · ` : ""}{current.revision !== selected.revision ? "Changed since this answer. Current record shown." : "Current record matches the supplied revision."}</p>
         {onOpenRecord && <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpenRecord(current)}>OPEN ORIGINAL RECORD</button>}</>}
+      <button type="button" className="btn-secondary" disabled={reading} onClick={() => onSelected({ ...selected })}>RELOAD SOURCE</button>
       <button type="button" className="btn-secondary" onClick={() => onSelected(null)}>CLOSE SOURCE</button>
     </section>}
   </section>;

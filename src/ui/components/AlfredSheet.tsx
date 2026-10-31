@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { LogSheet } from "./LogSheet";
-import { buildPlanningContext, personalContextVersion, proposalContextVersion, type PlanningContext, type ContextSource } from "../../application/alfred/personalContext";
+import { buildPlanningContext, personalContextVersion, type PlanningContext, type ContextSource } from "../../application/alfred/personalContext";
+import { confirmContextProposal } from "../../application/alfred/contextActions";
 import { AlfredContextPanel } from "./AlfredContextPanel";
 // The Claude SDK loads only when Alfred is first used, so it stays out of BEYOND's start-up bundle.
 import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/alfred/alfredClient";
 const loadClient = () => import("../../application/alfred/alfredClient");
-import { confirmLabel, confirmProposal, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
+import { confirmLabel, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
 import { forgetFact, getMemories } from "../../application/alfred/alfredMemory";
 import { addSpend, getMonthSpend } from "../../application/alfred/alfredSpend";
 import type { AlfredMemory } from "../../domain/alfred/types";
@@ -96,7 +97,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       lastContext.current = next; setSnapshot(next);
       meteredSession = session.current; usageBefore = meteredSession.usageUsd;
       const reply = await session.current.send(q, decisions, depth);
-      setTurns((all) => [...all, { role: "alfred", text: reply.text, sources: next.sources, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
+      setTurns((all) => [...all, { role: "alfred", text: reply.text, sources: next.sources, context: { personalVersion: next.personalVersion, actionVersion: next.actionVersion, taskVersions: next.taskVersions }, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
       if (speak && reply.text && typeof speechSynthesis !== "undefined") { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(plain(reply.text))); }
     } catch (e) {
       session.current = null;
@@ -111,12 +112,12 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
 
   async function decide(turnIndex: number, id: string, save: boolean) {
     const turn = turns[turnIndex]; const card = turn?.proposals?.find((p) => p.id === id);
-    if (!card || card.state !== "pending" || working.current) return;
+    if (!turn || !card || card.state !== "pending" || working.current) return;
     working.current = true; setBusy(true);
     const acknowledge = captureCommitFeedback();
     try {
-      if (save && lastContext.current && (await personalContextVersion(included) !== lastContext.current.personalVersion || await proposalContextVersion() !== lastContext.current.actionVersion)) throw new Error("CONTEXT_CHANGED");
-      const result = save ? await confirmProposal(card.proposal) : {};
+      if (save && !turn.context) throw new Error("CONTEXT_CHANGED");
+      const result = save ? await confirmContextProposal(card.proposal, turn.context!, included) : {};
       if (save) { acknowledge("LIGHT"); onSaved(); if (memories) setMemories(await getMemories()); }
       setTurns((all) => all.map((t, i) => i !== turnIndex ? t : { ...t, proposals: t.proposals!.map((p) => p.id === id ? { ...p, state: save ? "saved" : "skipped" } : p) }));
       if (result.open === "TRAIN" && onOpenTrain) { onClose(); onOpenTrain(); }

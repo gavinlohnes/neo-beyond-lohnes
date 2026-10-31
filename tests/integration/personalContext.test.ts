@@ -1,7 +1,8 @@
+import { confirmContextProposal } from "../../src/application/alfred/contextActions";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
 import { startDay } from "../../src/application/commands";
-import { createMission, archiveMission, createObligation } from "../../src/application/intentCommands";
+import { createMission, archiveMission, createObligation, modifyObligation } from "../../src/application/intentCommands";
 import { recordMemory, getMemoryFacts } from "../../src/application/memory";
 import { rememberFact } from "../../src/application/alfred/alfredMemory";
 import { buildPlanningContext, inspectContextSource, personalContextVersion, readPersonalSources } from "../../src/application/alfred/personalContext";
@@ -68,4 +69,17 @@ it("fails closed when selected personal history is corrupt; an unreadable fact i
   const e = (await db.events.where("type").equals("MEMORY_RECORDED").toArray())[0]!;
   await db.events.update(e.id, { payload: { broken: true } });
   await expect(buildPlanningContext(true)).rejects.toThrow();
+});
+
+it("rejects changed tasks and rolled-over days in the same transaction as canonical confirmation", async () => {
+  await startDay(); const task = await createObligation({ title: "A real task" });
+  const before = await buildPlanningContext(false);
+  vi.setSystemTime(new Date(2026, 9, 31, 17, 1));
+  await modifyObligation(task.id, { title: "A corrected task" });
+  await expect(confirmContextProposal({ kind: "task_done", task_id: task.id, title: task.title }, before, false)).rejects.toThrow("CONTEXT_CHANGED");
+  expect((await db.obligations.get(task.id))!.status).toBe("OPEN");
+  const next = await buildPlanningContext(false);
+  vi.setSystemTime(new Date(2026, 10, 1, 17));
+  await expect(confirmContextProposal({ kind: "log_water", oz: 8 }, next, false)).rejects.toThrow("CONTEXT_CHANGED");
+  expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(0);
 });
