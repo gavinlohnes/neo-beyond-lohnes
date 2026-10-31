@@ -38,3 +38,22 @@ schema change relative to current master. Automatic brief/review retains #352's 
 prep/recovery memory context; new DIRECTION/CONSTRAINT kinds remain excluded. Conversation
 planning uses the explicit opt-in catalog for all MEMORY-001 facts, avoiding a base-context
 bypass. Integration regression covers both paths. Earlier #351-baseline research is historical.
+
+
+## Release evidence and remaining gates
+
+- Source `579ae55b21977240ad8d90eacf3ca32b5fd17cd4`: full verify exit0; architecture374 files,
+  362 files passed/one skipped, 3226 tests passed/two skipped, TypeScript/build/PWA pass.
+  Skips are existing compile-time nutrition guard and environment-gated visual audit.
+- Independent exact-source PASS, reviewer node8/8; copied [record](reviews/PERSONAL-CONTEXT-001.md).
+- Built four-size offline/reduced-motion/source acceptance: [artifacts](../screenshots/personal-context-001/README.md),
+  source SHA in acceptance.json. API replies mocked; no live quality/cost/effectiveness claim.
+- Full-gate history: earlier runs deliberately stopped for draft retention and master integration.
+  Completed a809 run3225pass/one failed/two skipped: synchronous focus assertion raced the RAF.
+  Corrected to await the same required focus under the default bounded polling assertion;
+  no timeout/config/assertion weakened. Focused9/9 and subsequent entire gate green.
+- GitHub PR creation attempted via gh with body file: GraphQL Forbidden; REST listing also
+  Forbidden. Branch pushed. CI and native PR/review comments unavailable. Final docs-only
+  commit does not change verified source; obtain exact-head reviewer confirmation.
+- No merge/deployment authorized or performed. Live phone/Claude tuning follows a reviewed,
+  green-CI owner-approved merge, not a new automatic feature campaign.

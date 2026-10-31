@@ -1,10 +1,26 @@
-# PERSONAL-CONTEXT-001 — implementation authorized
+# PERSONAL-CONTEXT-001 — built and verified, PR access blocked
 
-- Gavin: “Let's get after it”, approving the bounded connected-context slice and agreed
-  guilt-free communication. Codex; PROTECTED, no Engine or TODAY recommendation changes.
-- Baseline `20743ae`; branch `codex/personal-context-001`; [brief](PERSONAL-CONTEXT-001.md).
-- Next: implement, verify, independent exact-head review and owner merge decision.
-- GitHub API remains Forbidden; git fetch/push works, PR pending. No green-CI claim.
+- Authority: Gavin's “Let's get after it” approves the bounded connected-context slice;
+  guilt-free Delta-inspired voice. Codex; PROTECTED. No merge authorized.
+- Branch `codex/personal-context-001`; baseline `20743ae`, integrated master #352 `f001049`.
+  [Brief](PERSONAL-CONTEXT-001.md). PR pending: GitHub GraphQL/REST return Forbidden; git works.
+- Built: local direction/constraint revisions in Personal Understanding → My context; existing
+  Mission/memory source catalog, explicit per-conversation sharing, current-record inspection
+  and canonical editor navigation. Fresh sensitive context resets model history. Confirmed
+  existing commands guard each card's own day/task/source snapshot atomically.
+- Verification at source `579ae55`: full `npm run verify` PASS, architecture374 files,
+  362 test files passed / one skipped; 3,226 tests passed / two existing skipped; TypeScript,
+  production build and PWA pass. Full suite 613.82s. Existing bundle-size warning remains.
+- Independent exact-source review PASS; [review record](reviews/PERSONAL-CONTEXT-001.md).
+  Reviewer independent node8/8 PASS. Final evidence-only head gets renewed confirmation.
+- [Built PWA proof](../screenshots/personal-context-001/README.md): four sizes, offline reload,
+  local capture/source inspection, reduced motion at390; synthetic records/mocked replies.
+  Live Claude response quality, real API cost and physical-phone behavior are unmeasured.
+- Master #352 weekly review/shared memory preserved. Its automatic prep/recovery context stays;
+  new Mission/direction/constraint sources remain outside automatic briefs/reviews. No own
+  Engine, schema, dependency, workflow or protected-fixture change relative to fresh master.
+- Next: restore GitHub API access, open PR against master, persist exact-head review evidence,
+  require green CI, then Gavin decides merge. No CI/deployment/merge claim.
 
 ---
 
