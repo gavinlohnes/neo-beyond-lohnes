@@ -19,7 +19,7 @@ import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { CcIcon } from "../ui/cc/ccIcons";
 import { HeaderSearchContext, HeaderAlfredContext, EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
-import { AlfredSheet } from "../ui/components/AlfredSheet";
+import { ASK_ALFRED_EVENT, AlfredSheet } from "../ui/components/AlfredSheet";
 import { AlfredBrief } from "../ui/components/AlfredBrief";
 import { StealthOverlay } from "../ui/components/StealthOverlay";
 import { getStealth, setStealth } from "../application/stealthQueries";
@@ -142,6 +142,12 @@ function AppWorkspaces() {
   // SYNC-002: files sent back right after SYNC GARMIN import straight away and land on TODAY.
   // ALFRED-001: the man in the chair, from the header or LOG.
   const [alfredOpen, setAlfredOpen] = useState(false);
+  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string } | undefined>(undefined);
+  useEffect(() => {
+    const onAsk = (e: Event) => { setAlfredDraft((d) => ({ key: (d?.key ?? 0) + 1, text: (e as CustomEvent<string>).detail })); setAlfredOpen(true); };
+    window.addEventListener(ASK_ALFRED_EVENT, onAsk);
+    return () => window.removeEventListener(ASK_ALFRED_EVENT, onAsk);
+  }, []);
   const [oneTapSync] = useState(() => sharedHealth && takeGarminSyncRequest());
   // SYNC-002: the SYNC GARMIN home-screen shortcut (?go=sync) remembers the request and opens the Bridge.
   const [syncShortcut] = useState(() => new URLSearchParams(window.location.search).get("go") === "sync" && isAndroid());
@@ -779,7 +785,7 @@ function AppWorkspaces() {
     </div>
     {stealthOn && <StealthOverlay onExit={() => changeStealth(false)} onLogged={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((n) => n + 1); }} />}
     </StealthToggleContext.Provider>
-    <AlfredSheet open={alfredOpen} onClose={() => setAlfredOpen(false)} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); setWorkEndedKey((key) => key + 1); }} onOpenTrain={() => { openTrain("WORKOUT"); }} />
+    <AlfredSheet open={alfredOpen} onClose={() => { setAlfredOpen(false); setAlfredDraft(undefined); }} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); setWorkEndedKey((key) => key + 1); }} onOpenTrain={() => { openTrain("WORKOUT"); }} draft={alfredDraft} />
     </HeaderAlfredContext.Provider>
     </HeaderSearchContext.Provider>
     </EmblemContext.Provider>

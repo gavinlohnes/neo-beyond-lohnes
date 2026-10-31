@@ -16,6 +16,10 @@ import "./alfred.css";
  * leaves nothing. The Claude key is the owner's, kept on this phone (never in backups or the code).
  */
 const KEY = "beyond.alfredKey";
+/** ALFRED-004 #11 "Ask about this": any screen opens Alfred with a question ready to send. */
+export const ASK_ALFRED_EVENT = "beyond:ask-alfred";
+export function askAlfred(question: string) { window.dispatchEvent(new CustomEvent<string>(ASK_ALFRED_EVENT, { detail: question })); }
+
 export function readAlfredKey(): string | null { try { return localStorage.getItem(KEY); } catch { return null; } }
 function writeAlfredKey(value: string | null) { try { if (value) localStorage.setItem(KEY, value); else localStorage.removeItem(KEY); } catch { /* not kept */ } }
 
@@ -36,7 +40,7 @@ function speechRecognition(): (new () => Recognition) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-export function AlfredSheet({ open, onClose, onSaved, onOpenTrain }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void }) {
+export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, draft }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void; draft?: { key: number; text: string } | undefined }) {
   const [key, setKey] = useState<string | null>(() => readAlfredKey());
   const [draftKey, setDraftKey] = useState("");
   const [turns, setTurns] = useState<AlfredTurn[]>([]);
@@ -56,6 +60,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain }: { open: boo
 
   // A fresh conversation (and a fresh read of the records) each time the sheet opens.
   useEffect(() => { if (open) { session.current = null; setTurns([]); setError(null); setSpent(0); } }, [open]);
+  useEffect(() => { if (open && draft) setText(draft.text); }, [open, draft?.key]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [turns, busy]);
 
   async function ask(question: string, depth: AlfredDepth = "everyday") {

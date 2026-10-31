@@ -4,6 +4,7 @@ import { getSavedMeals } from "../nutritionQueries";
 import { getUnresolvedObligations } from "../intentQueries";
 import { getAllCaptureItems } from "../queries";
 import { getMemories } from "./alfredMemory";
+import { getSleepDebt, SLEEP_NEED_MINUTES } from "../monthQueries";
 import { getActiveDay, getLatestCheckIn, getMostRecentBodyweight, getSchedulePattern, getWorkPeriodEnded, getWorkPeriodStarted } from "../queries";
 import { getWeekAhead } from "../weekAheadQueries";
 import { getMeasuredSnapshot } from "../measuredQueries";
@@ -62,6 +63,9 @@ export async function buildAlfredContext(now = new Date()): Promise<string> {
     const last = measured.lastNight;
     lines.push(`GARMIN: ${last ? `last main sleep ${hm(sleepMinutes(last))}, ${day(last.startTime)} ${hhmm(new Date(last.startTime))} → ${hhmm(new Date(last.endTime))}` : "no Garmin sleep in the last 36 hours"}; steps so far today ${measured.stepsToday.at(-1)?.total ?? "not measured"}; latest resting HR ${measured.resting.at(-1)?.value ?? measured.resting.at(-2)?.value ?? "not measured"}.`);
   }
+
+  const debt = await safe(() => getSleepDebt(now));
+  if (debt && debt.days) lines.push(`SLEEP OWED: ${hm(debt.owedMinutes)} over the last ${debt.days} days with sleep logged, against ${SLEEP_NEED_MINUTES / 60} h a day.`);
 
   if (summaries) {
     const recent = [...summaries].sort((a, b) => b.livedDayStart.localeCompare(a.livedDayStart)).slice(0, 14);

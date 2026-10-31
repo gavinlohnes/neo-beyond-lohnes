@@ -4,8 +4,9 @@
   Code; Protected within the owner's go (additive schema v16). Brief: `docs/agent/ALFRED-004.md`.
   Branch `ccr-0be4f40f-16m0ja`, with ALFRED-003 in PR #349.
 - **Built:** memory with Forget; search_records and get_days read tools; Speak answers and hands-free
-  send; DEBRIEF MY SHIFT; weekly review, flip, meal plan and grocery starters; log-urge card.
-- **Next:** ideas 9–11 (month on one page, sleep debt, "Ask about this"), then 12–13 in the Bridge.
+  send; DEBRIEF MY SHIFT; weekly review, flip, meal plan and grocery starters; log-urge card; MONTH
+  in DATA's cave with sleep owed; "Ask Alfred" on a day and on every vital.
+- **Next:** ideas 12–13 in the Bridge (notifications at key moments, home-screen widget).
 
 # ALFRED-003 — cheap everyday Alfred, his brief on TODAY, Alfred can do it
 

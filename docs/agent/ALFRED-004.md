@@ -2,7 +2,7 @@
 
 - **Authority:** Gavin, 2026-10-31: "I like all of the ideas. Let's start implementing them… reuse
   other people's code… Keep it simple and move quickly. Make it so" (the fifteen ideas offered that
-  night). This slice is ideas 1–8, 14 and 15.
+  night). This slice is ideas 1–11, 14 and 15.
 - **Builder / lane:** Claude Code; Protected within the owner's go. One additive table (schema v16,
   `alfredMemories`); new Alfred tools over existing commands. Branch `ccr-0be4f40f-16m0ja`.
 
@@ -23,6 +23,14 @@
   keeps become reminders or a note.
 - **#14 Life admin, #15 people.** Bills and birthdays are remembered facts plus a repeating reminder.
 
+- **#9 MONTH (MONTH-001).** A new MONTH view in DATA's cave: a seven-column calendar of lived days with
+  each day's shift (red top line), sleep (underlined red under 7 h), protein, training ▲ and clean ✓.
+  Tap a day for its numbers. `application/monthQueries.ts`.
+- **#10 Sleep owed.** Over the last 7 days with sleep logged, against the 7-hour adult guideline
+  (AASM / Sleep Research Society). Shown on MONTH and in Alfred's records.
+- **#11 "Ask about this".** `askAlfred(question)` opens Alfred anywhere with the question ready: ASK
+  ALFRED ABOUT THIS DAY on MONTH, ASK ALFRED on every VITALS reading.
+
 Read tools run on their own (a few rounds at most) and never write; every write is still a card.
 
 ## Leverage
@@ -36,4 +44,5 @@ Read tools run on their own (a few rounds at most) and never write; every write 
 
 `tests/browser/Alfred004.test.tsx`: remember → SAVE → in the records → Forget (axe); search_records
 runs in the loop and its result reaches Alfred; search and get_days read stored records only;
-starters and Speak answers. Schema migration tests cover v16.
+starters and Speak answers. `tests/browser/Month001.test.tsx`: sleep owed, a day's numbers, axe, and
+"ask about this" opening Alfred with the question. Schema migration tests cover v16.

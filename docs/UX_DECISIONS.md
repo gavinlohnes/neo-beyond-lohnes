@@ -18,7 +18,9 @@ Gavin, 2026-10-31: "I like all of the ideas… Make it so." Alfred keeps the fac
 (new additive table, schema v16, carried by backups) and forgets them on his word. He can search the
 whole history and read any period of lived days himself; those reads never write. He can speak his
 answers, a debrief becomes one card per record, and plans (flip, meals, groceries, date nights) stay
-suggestions until kept as reminders or notes. Brief: `docs/agent/ALFRED-004.md`.
+suggestions until kept as reminders or notes. DATA's cave gains MONTH (the month on one page) with
+the sleep owed against 7 hours, and "Ask Alfred" opens him with a question about a day or a reading.
+Brief: `docs/agent/ALFRED-004.md`.
 
 ## ALFRED-003 — everyday Alfred is cheap; his brief leads TODAY; he can do it (owner go 2026-10-31)
 

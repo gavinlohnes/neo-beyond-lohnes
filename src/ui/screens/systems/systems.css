@@ -161,3 +161,17 @@
 .cave__asks .chip { min-height: 44px; }
 .brief__on { margin: 8px 0 0; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; color: var(--text-1); }
 .brief__start { width: auto; min-height: 44px; margin-top: 10px; padding-inline: 18px; }
+/* MONTH-001: the month on one page. Seven columns, one quiet cell per day; red marks only what's short. */
+.month { display: grid; gap: 12px; min-width: 0; }
+.month__debt { margin: 0; font-size: 15px; }
+.month__head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }
+.month__head button { margin: 0; min-height: 44px; padding: 0; }
+.month__head h3 { margin: 0; }
+.month__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.month__wd { text-align: center; font-size: 11px; color: var(--text-2); }
+.month__day { display: grid; align-content: start; gap: 1px; min-height: 64px; min-width: 0; padding: 3px 2px; border: 1px solid var(--border-subtle); border-top: 2px solid transparent; background: none; color: var(--text-1); font: inherit; font-size: 10px; line-height: 1.25; text-align: left; cursor: pointer; overflow: hidden; }
+.month__day--work { border-top-color: var(--red); }
+.month__day[aria-pressed="true"] { border-color: var(--text-1); }
+.month__n { font-size: 12px; font-weight: 700; }
+.month__short { color: var(--red-text); text-decoration: underline 2px var(--red); text-underline-offset: 2px; }
+.month__marks { letter-spacing: .1em; }
