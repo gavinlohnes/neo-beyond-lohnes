@@ -1,3 +1,13 @@
+# PERSONAL-CONTEXT-001 — implementation authorized
+
+- Gavin: “Let's get after it”, approving the bounded connected-context slice and agreed
+  guilt-free communication. Codex; PROTECTED, no Engine or TODAY recommendation changes.
+- Baseline `20743ae`; branch `codex/personal-context-001`; [brief](PERSONAL-CONTEXT-001.md).
+- Next: implement, verify, independent exact-head review and owner merge decision.
+- GitHub API remains Forbidden; git fetch/push works, PR pending. No green-CI claim.
+
+---
+
 # PERSONAL-OS-001 — connected personal understanding (design only)
 
 - Authority: Gavin clarified MiLyfe/LifeOS/personal-OS references, approved research/design,
